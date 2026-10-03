@@ -1,5 +1,81 @@
 # Changelog
 
+## 0.19.0 (2026-10-03)
+
+## What's Changed
+* feat(web): Add movable Model composition workbench by @dunay2 in https://github.com/dunay2/dvt/pull/3424
+* feat(web): Compose dataset transformations in a dedicated Transform card by @dunay2 in https://github.com/dunay2/dvt/pull/3423
+* feat(web): Complete producer-consumer semantic authoring by @dunay2 in https://github.com/dunay2/dvt/pull/3436
+* perf(ci): Persist new Turbo results across workflow runs by @dunay2 in https://github.com/dunay2/dvt/pull/3438
+* perf(ci): Reject invalid PR metadata before dependency setup by @dunay2 in https://github.com/dunay2/dvt/pull/3440
+* fix(ci): Require event-scoped Code Quality outcomes by @dunay2 in https://github.com/dunay2/dvt/pull/3441
+* feat(web): Add visual Transform Formula Builder by @dunay2 in https://github.com/dunay2/dvt/pull/3433
+* perf(web): Reuse Node environment in Canvas focus suites by @dunay2 in https://github.com/dunay2/dvt/pull/3444
+* feat(transform): Admit governed bigint DIVIDE formulas by @dunay2 in https://github.com/dunay2/dvt/pull/3443
+* chore(web): Retire unused JOIN normalization proposal by @dunay2 in https://github.com/dunay2/dvt/pull/3447
+* fix(web): Restore Canvas preview and source output boundaries by @dunay2 in https://github.com/dunay2/dvt/pull/3450
+* fix(web): Keep relational cards anchored during drag by @dunay2 in https://github.com/dunay2/dvt/pull/3453
+* feat(web): Integrate field flow and assisted Transform editor by @dunay2 in https://github.com/dunay2/dvt/pull/3455
+* feat(web): Complete catalog SQL authoring and progressive verticals by @dunay2 in https://github.com/dunay2/dvt/pull/3457
+* fix(web): Retire completed wiring snapshots that duplicate Transform output by @dunay2 in https://github.com/dunay2/dvt/pull/3460
+* fix(web): Preserve source identity and separate authoring responsibilities by @dunay2 in https://github.com/dunay2/dvt/pull/3461
+* feat(web): Replace Source column split view with focused detail by @dunay2 in https://github.com/dunay2/dvt/pull/3462
+* feat(web): Select fields through canonical tree gestures by @dunay2 in https://github.com/dunay2/dvt/pull/3463
+* fix(web): Generalize Transform expression removal and field-driven connections by @dunay2 in https://github.com/dunay2/dvt/pull/3464
+* fix(web): Expose calculated expressions in Transform Output by @dunay2 in https://github.com/dunay2/dvt/pull/3465
+* feat(web): Chain staged Transform fields by @dunay2 in https://github.com/dunay2/dvt/pull/3466
+* fix(web): Verify live Transform chaining and staged card sizing by @dunay2 in https://github.com/dunay2/dvt/pull/3467
+* docs(docs): Consolidate superseded document retirements by @dunay2 in https://github.com/dunay2/dvt/pull/3412
+* docs(architecture): Define workflow failure handling model by @dunay2 in https://github.com/dunay2/dvt/pull/3164
+* refactor(web): Generalize staged Canvas composition by @dunay2 in https://github.com/dunay2/dvt/pull/3473
+* refactor(web): Dispatch staged configuration by composition strategy by @dunay2 in https://github.com/dunay2/dvt/pull/3482
+* refactor(web): Route staged editors through composition contract by @dunay2 in https://github.com/dunay2/dvt/pull/3486
+* refactor(web): Simplify Workbench semantic draft readiness by @dunay2 in https://github.com/dunay2/dvt/pull/3488
+* refactor(web): Audit shared composition and preserve no-op commands by @dunay2 in https://github.com/dunay2/dvt/pull/3490
+* test(web): Prove general composition sequences and protect readonly commands by @dunay2 in https://github.com/dunay2/dvt/pull/3491
+* refactor(web): Hard-cut obsolete guided composition factories by @dunay2 in https://github.com/dunay2/dvt/pull/3492
+* fix(engine): Preserve start authority and isolate concerns by @dunay2 in https://github.com/dunay2/dvt/pull/3493
+* test(web): Preserve visual boundary proof across equivalent prose by @dunay2 in https://github.com/dunay2/dvt/pull/3499
+* fix(ci): Enforce real engine coverage evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3497
+* ci(ci): Run engine tests once with scope-complete evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3500
+* fix(ci): Close domain dependency boundary bypasses by @dunay2 in https://github.com/dunay2/dvt/pull/3501
+* fix(contracts): Require explicit capability admission postures by @dunay2 in https://github.com/dunay2/dvt/pull/3502
+* fix(web): Resolve Canvas connection provenance across every input by @dunay2 in https://github.com/dunay2/dvt/pull/3503
+* fix(temporal): Reject duplicate retained workflow identities by @dunay2 in https://github.com/dunay2/dvt/pull/3505
+* fix(engine): Fence start ownership and reconcile unknown outcomes without redispatch by @dunay2 in https://github.com/dunay2/dvt/pull/3506
+* test(temporal): Prove safe retry admission boundaries by @dunay2 in https://github.com/dunay2/dvt/pull/3507
+* fix(web): Make Source preview publication-safe by @dunay2 in https://github.com/dunay2/dvt/pull/3509
+* fix(web): Preserve nested formula lineage through reopen by @dunay2 in https://github.com/dunay2/dvt/pull/3520
+* fix(web): Keep cancelled card movement out of confirmed layout by @dunay2 in https://github.com/dunay2/dvt/pull/3522
+* fix(web): Invalidate relational analysis across producer dependencies by @dunay2 in https://github.com/dunay2/dvt/pull/3524
+* fix(web): Retain manual relational layout across Apply and reopen by @dunay2 in https://github.com/dunay2/dvt/pull/3527
+* fix(contracts): Require complete pending Read field identity coverage by @dunay2 in https://github.com/dunay2/dvt/pull/3529
+* fix(web): Retire scalar function authoring inside JOIN by @dunay2 in https://github.com/dunay2/dvt/pull/3531
+* refactor(web): Retire obsolete card scalar editor by @dunay2 in https://github.com/dunay2/dvt/pull/3532
+* feat(contracts): Define explicit LIVE and LOCAL data access contracts by @dunay2 in https://github.com/dunay2/dvt/pull/3533
+* feat(ci): Separate local application, demo, and proof data by @dunay2 in https://github.com/dunay2/dvt/pull/3539
+* test(web): Retire obsolete JOIN function authoring expectation by @dunay2 in https://github.com/dunay2/dvt/pull/3541
+* perf(ci): Cache runtime dependency preparation without widening scope by @dunay2 in https://github.com/dunay2/dvt/pull/3542
+* perf(web): Preserve test obligations and deduplicate Canvas suites by @dunay2 in https://github.com/dunay2/dvt/pull/3543
+* docs(docs): Retire historical proposal backlog by @dunay2 in https://github.com/dunay2/dvt/pull/3489
+* fix(ci): Isolate Git test fixtures and retire stale documentation expectations by @dunay2 in https://github.com/dunay2/dvt/pull/3545
+* test(ci): Retire stale planning-document dependencies from architecture tests by @dunay2 in https://github.com/dunay2/dvt/pull/3546
+* perf(ci): Share package test setup without weakening failure reporting by @dunay2 in https://github.com/dunay2/dvt/pull/3544
+* fix(ci): Complete clean bootstrap and remove redundant validation by @dunay2 in https://github.com/dunay2/dvt/pull/3547
+* fix(ci): Validate governed source authority without imports by @dunay2 in https://github.com/dunay2/dvt/pull/3550
+* test(ci): Retire obsolete browser proof without losing governed evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3551
+* fix(ci): Route browser changes to real evidence and reuse runtime builds by @dunay2 in https://github.com/dunay2/dvt/pull/3552
+* feat(web): Show Source LIVE provenance and explicit preview refresh by @dunay2 in https://github.com/dunay2/dvt/pull/3554
+* feat(web): Complete Transform LIVE provenance and refresh by @dunay2 in https://github.com/dunay2/dvt/pull/3556
+* fix(ci): Avoid repeated validation from generated browser evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3562
+* fix(ci): Avoid product test fan-out for root release metadata by @dunay2 in https://github.com/dunay2/dvt/pull/3563
+* fix(ci): Classify workspace metadata through the shared scope policy by @dunay2 in https://github.com/dunay2/dvt/pull/3564
+* refactor(ci): Consolidate CI scope acquisition behind one entrypoint by @dunay2 in https://github.com/dunay2/dvt/pull/3565
+* fix(ci): Emit CodeQL scope for every selected event by @dunay2 in https://github.com/dunay2/dvt/pull/3566
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.18.0...v0.19.0
+
 ## 0.18.0 (2026-09-25)
 
 ## What's Changed
