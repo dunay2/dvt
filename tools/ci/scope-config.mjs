@@ -560,9 +560,12 @@ function stripScripts(packageJson) {
   return rest;
 }
 
-function stripDeveloperWorkflowMetadata(packageJson) {
+function stripNonRuntimeMetadata(packageJson) {
   const rest = stripScripts(packageJson);
   delete rest['lint-staged'];
+  for (const field of ['version', 'description', 'homepage', 'repository']) {
+    if (typeof rest[field] === 'string') delete rest[field];
+  }
   return rest;
 }
 
@@ -598,6 +601,13 @@ function isDeterminismJobScript(name) {
 }
 
 export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) {
+  if (
+    [previousPackageJson, nextPackageJson].some(
+      (value) => value === null || typeof value !== 'object' || Array.isArray(value)
+    )
+  ) {
+    return failClosedPackageJsonChange('PACKAGE_JSON_OBJECT_REQUIRED');
+  }
   const previousScripts = previousPackageJson?.scripts ?? {};
   const nextScripts = nextPackageJson?.scripts ?? {};
   const changedScriptNames = [
@@ -613,17 +623,13 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
   const developerWorkflowMetadataChange =
     stableJson(previousPackageJson?.['lint-staged']) !==
     stableJson(nextPackageJson?.['lint-staged']);
-  const nonDeveloperWorkflowMetadataChange =
-    stableJson(stripDeveloperWorkflowMetadata(previousPackageJson)) !==
-    stableJson(stripDeveloperWorkflowMetadata(nextPackageJson));
-  const developerWorkflowMetadataOnly =
-    developerWorkflowMetadataChange &&
-    !nonDeveloperWorkflowMetadataChange &&
-    changedScriptNames.length === 0;
-  const dependencySensitive = nonDeveloperWorkflowMetadataChange;
+  const runtimeMetadataChange =
+    stableJson(stripNonRuntimeMetadata(previousPackageJson)) !==
+    stableJson(stripNonRuntimeMetadata(nextPackageJson));
+  const dependencySensitive = runtimeMetadataChange;
   const lifecycleSensitive = changedScriptNames.some(isLifecycleScript);
   const rootBuildSensitive =
-    nonDeveloperWorkflowMetadataChange ||
+    runtimeMetadataChange ||
     lifecycleSensitive ||
     commandClasses.some((commandClass) => isRuntimeFanoutCommand(commandClass));
   const governanceToolingOnly =
@@ -636,7 +642,6 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
     commandClasses,
     nonScriptChange,
     developerWorkflowMetadataChange,
-    developerWorkflowMetadataOnly,
     packageScriptsOnly: changedScriptNames.length > 0 && !nonScriptChange,
     dependencySensitive,
     lifecycleSensitive,
@@ -886,7 +891,6 @@ function failClosedPackageJsonChange(error) {
     commandClasses: [],
     nonScriptChange: true,
     developerWorkflowMetadataChange: false,
-    developerWorkflowMetadataOnly: false,
     packageScriptsOnly: false,
     dependencySensitive: true,
     lifecycleSensitive: true,
