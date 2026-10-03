@@ -31,6 +31,10 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/run-selected-closure-live-proof.cjs': 'scripts/run-selected-closure-live-proof.test.cjs',
   'scripts/run-selected-closure-live-proof.test.cjs':
     'scripts/run-selected-closure-live-proof.test.cjs',
+  'scripts/run-selected-closure-cypress.cjs': 'scripts/run-selected-closure-cypress.test.cjs',
+  'scripts/run-selected-closure-cypress.test.cjs': 'scripts/run-selected-closure-cypress.test.cjs',
+  'scripts/live-proof-process.cjs': 'scripts/live-proof-process.test.cjs',
+  'scripts/live-proof-process.test.cjs': 'scripts/live-proof-process.test.cjs',
   'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
@@ -331,7 +335,17 @@ function documentationPublicationTestSteps(changedFiles) {
 }
 
 function hasWebChange(changedFiles) {
-  return changedFiles.some((filePath) => filePath.startsWith('apps/web/'));
+  return changedFiles.some(
+    (filePath) =>
+      filePath.startsWith('apps/web/') ||
+      [
+        'apps/api/package.json',
+        '.github/workflows/test.yml',
+        'scripts/run-selected-closure-live-proof.cjs',
+        'scripts/run-selected-closure-cypress.cjs',
+        'scripts/live-proof-process.cjs',
+      ].includes(filePath)
+  );
 }
 
 function hasDeveloperWorkflowVerifierChange(changedFiles) {

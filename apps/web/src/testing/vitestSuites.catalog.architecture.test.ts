@@ -4,6 +4,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { load } from 'js-yaml';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -158,7 +159,29 @@ describe('web Vitest suite catalog', () => {
     expect(workflow).toContain('pnpm test:web:ci');
     expect(workflow).toContain('web-frontend-tests:');
     expect(workflow).toContain('name: Web Frontend Tests');
-    expect(workflow.split(ciNodeOptionsLine)).toHaveLength(3);
+    const webJob = (
+      load(workflow) as {
+        jobs: Record<
+          string,
+          {
+            env?: Record<string, string>;
+            steps: Array<{
+              run?: string;
+              env?: Record<string, string>;
+            }>;
+          }
+        >;
+      }
+    ).jobs['web-frontend-tests'];
+    if (!webJob) throw new Error('Missing governed Web test job');
+    const executionSteps = webJob.steps.filter(
+      (step) => step.run?.includes('pnpm test:web:') && !step.run.includes('--plan')
+    );
+    expect(executionSteps.some((step) => step.run === 'pnpm test:web:ci')).toBe(true);
+    expect(executionSteps.some((step) => step.run === 'pnpm test:web:changed')).toBe(true);
+    for (const step of executionSteps) {
+      expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    }
     expect(ciWorkflow).toContain(ciNodeOptionsLine);
 
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {

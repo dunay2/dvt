@@ -3,7 +3,7 @@
  * commands without owning suite taxonomy or CI merge-gate semantics.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { appendFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -16,13 +16,38 @@ type ReadChangedFilesOptions = Readonly<{
   gitOutput?: GitOutputRunner;
 }>;
 
-function parseExplicitFiles(argv: readonly string[]): string[] {
-  const filesFlagIndex = argv.indexOf('--files');
-  if (filesFlagIndex === -1) {
-    return argv.filter((arg) => !arg.startsWith('--'));
+export function parseChangedSuiteArgs(argv: readonly string[]): {
+  plan: boolean;
+  full: boolean;
+  browserOnly: boolean;
+  files: string[];
+} {
+  const flags = new Set<string>();
+  const files: string[] = [];
+  for (const arg of argv) {
+    if (arg === '--') continue;
+    if (!arg.startsWith('--')) {
+      files.push(arg);
+      continue;
+    }
+    if (!['--plan', '--full', '--browser-only', '--files'].includes(arg) || flags.has(arg)) {
+      throw new Error(`Invalid or repeated changed-suite argument: ${arg}`);
+    }
+    flags.add(arg);
   }
-
-  return argv.slice(filesFlagIndex + 1).filter((arg) => !arg.startsWith('--'));
+  const plan = flags.has('--plan');
+  const full = flags.has('--full');
+  const browserOnly = flags.has('--browser-only');
+  if (
+    (browserOnly && !full) ||
+    (full && !plan && !browserOnly) ||
+    (flags.has('--files') && files.length === 0)
+  ) {
+    throw new Error(
+      'Use --browser-only with --full alongside the full Vitest gate; --files requires paths.'
+    );
+  }
+  return { plan, full, browserOnly, files };
 }
 
 function gitOutput(args: readonly string[], cwd: string): string[] {
@@ -32,28 +57,7 @@ function gitOutput(args: readonly string[], cwd: string): string[] {
     stdio: ['ignore', 'pipe', 'ignore'],
   });
 
-  return output
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-}
-
-function tryGitOutput(
-  runGitOutput: GitOutputRunner,
-  args: readonly string[],
-  cwd: string
-): string[] | null {
-  try {
-    return runGitOutput(args, cwd);
-  } catch {
-    return null;
-  }
-}
-
-function addChangedFiles(files: Set<string>, filePaths: readonly string[] | null): void {
-  for (const filePath of filePaths ?? []) {
-    files.add(filePath);
-  }
+  return output.split('\0').filter((line) => line.length > 0);
 }
 
 export function readChangedFiles(
@@ -64,38 +68,22 @@ export function readChangedFiles(
   const env = options.env ?? process.env;
   const baseRef = env.GIT_BASE || 'origin/main';
   const headRef = env.GIT_HEAD || 'HEAD';
-  const files = new Set<string>();
-  const diffArgs = ['diff', '--name-only', '--diff-filter=ACMR'] as const;
-  const directDiffFiles = tryGitOutput(runGitOutput, [...diffArgs, baseRef, headRef], repoRoot);
-
-  if (directDiffFiles !== null) {
-    addChangedFiles(files, directDiffFiles);
-  } else {
-    const mergeBase = tryGitOutput(runGitOutput, ['merge-base', baseRef, headRef], repoRoot)?.[0];
-    addChangedFiles(
-      files,
-      mergeBase === undefined
-        ? tryGitOutput(runGitOutput, [...diffArgs, baseRef, 'HEAD'], repoRoot)
-        : tryGitOutput(runGitOutput, [...diffArgs, mergeBase, headRef], repoRoot)
-    );
-  }
-
-  addChangedFiles(files, tryGitOutput(runGitOutput, [...diffArgs, '--cached'], repoRoot));
-  addChangedFiles(files, tryGitOutput(runGitOutput, diffArgs, repoRoot));
-  addChangedFiles(
-    files,
-    tryGitOutput(runGitOutput, ['ls-files', '--others', '--exclude-standard'], repoRoot)
-  );
-
+  const diffArgs = ['diff', '--name-only', '--no-renames', '-z'] as const;
+  const files = new Set([
+    ...runGitOutput([...diffArgs, baseRef, headRef], repoRoot),
+    ...runGitOutput([...diffArgs, '--cached'], repoRoot),
+    ...runGitOutput(diffArgs, repoRoot),
+    ...runGitOutput(['ls-files', '-z', '--others', '--exclude-standard'], repoRoot),
+  ]);
   return [...files].sort((left, right) => left.localeCompare(right));
 }
 
-function runCommand(command: string, cwd: string): void {
+function runCommand(command: string, cwd: string, env = process.env): void {
   const result = spawnSync(command, {
     cwd,
     shell: true,
     stdio: 'inherit',
-    env: process.env,
+    env,
   });
 
   if (result.status !== 0) {
@@ -162,25 +150,46 @@ function main(): void {
     throw new Error(`Unable to resolve web workspace at ${webRoot}.`);
   }
 
-  const explicitFiles = parseExplicitFiles(process.argv.slice(2));
-  const changedFiles = explicitFiles.length > 0 ? explicitFiles : readChangedFiles(repoRoot);
-  const plan = resolveWebVitestChangedSuitePlan(changedFiles);
+  const args = parseChangedSuiteArgs(process.argv.slice(2));
+  const changedFiles = args.files.length > 0 ? args.files : readChangedFiles(repoRoot);
+  const plan = resolveWebVitestChangedSuitePlan(changedFiles, { full: args.full });
 
-  if (plan.commands.length === 0) {
-    process.stdout.write('[web:test:changed] no web Vitest suite selected.\n');
+  if (args.plan) {
+    process.stdout.write(`${JSON.stringify(plan)}\n`);
+    if (process.env.GITHUB_OUTPUT) {
+      appendFileSync(
+        process.env.GITHUB_OUTPUT,
+        `browser_required=${plan.browserCommands.length > 0}\n`
+      );
+    }
+    return;
+  }
+
+  if (plan.commands.length === 0 && plan.browserCommands.length === 0) {
+    process.stdout.write('[web:test:changed] no web test obligation selected.\n');
     return;
   }
 
   process.stdout.write(`[web:test:changed] suites=${plan.suites.join(',')}\n`);
-  if (shouldRunTestDeps(plan.requiresDependencies)) {
+  if (
+    !args.browserOnly &&
+    plan.commands.length > 0 &&
+    shouldRunTestDeps(plan.requiresDependencies)
+  ) {
     runCommand('pnpm run test:deps', webRoot);
   }
-  for (const entry of plan.commandPlan) {
+  for (const entry of args.browserOnly ? [] : plan.commandPlan) {
     if (entry.kind === 'shell') {
       runCommand(entry.command, webRoot);
     } else {
       runVitestFilesCommand(entry.config, entry.filePaths, webRoot);
     }
+  }
+  for (const command of plan.browserCommands) {
+    runCommand(command, webRoot, {
+      ...process.env,
+      DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native',
+    });
   }
 }
 

@@ -14,6 +14,18 @@ import {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
+test('admitted browser child and process lifecycle remain test tooling, without widening unknown admission', () => {
+  for (const file of [
+    'scripts/run-selected-closure-cypress.cjs',
+    'scripts/live-proof-process.cjs',
+  ]) {
+    const classification = classifyScriptFilePath(file);
+    assert.equal(classification.domain, 'test-tooling', file);
+    assert.equal(classification.runtimeFanout, false, file);
+  }
+  assert.equal(classifyScriptFilePath('scripts/unadmitted-proof-runner.cjs').domain, 'unknown');
+});
+
 test('classifies planning and governance database aliases as planning-db commands', () => {
   const planningQuery = classifyPackageScriptCommand(
     'planning:db:query',

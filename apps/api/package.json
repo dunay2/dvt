@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.1.0",
   "scripts": {
-    "predev": "pnpm --filter \"dvt-api^...\" build",
+    "predev": "node ../../scripts/build-workspace-runtime-deps.cjs dvt-api",
     "dev": "tsx watch src/server.ts",
     "prebuild": "node ../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm --filter \"dvt-api^...\" build",
     "build": "tsc -p tsconfig.json",

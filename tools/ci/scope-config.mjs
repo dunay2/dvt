@@ -365,7 +365,15 @@ export const TEST_SCOPE_PATTERNS = {
   temporal_http_json_plugin: WORKFLOW_SCOPE_POLICY.workspace_temporal_http_json_plugin,
   temporal_object_file_postgres_plugin:
     WORKFLOW_SCOPE_POLICY.workspace_temporal_object_file_postgres_plugin,
-  web: ['apps/web/**', ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS],
+  web: [
+    'apps/web/**',
+    'apps/api/package.json',
+    '.github/workflows/test.yml',
+    'scripts/run-selected-closure-live-proof.cjs',
+    'scripts/run-selected-closure-cypress.cjs',
+    'scripts/live-proof-process.cjs',
+    ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS,
+  ],
   artifacts: ['packages/@dvt/artifacts/**'],
   crypto: ['packages/@dvt/crypto/**'],
   delivery: ['packages/@dvt/delivery/**'],
