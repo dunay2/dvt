@@ -53,6 +53,7 @@ async function main(argv = process.argv.slice(2), deps = {}) {
     throw new Error('Native proof requires one literal Cypress spec and optional --headed.');
   }
   const project = path.resolve(__dirname, '../apps/web');
+  const evidenceRoot = path.resolve(__dirname, '../.dvt/evidence/selected-closure');
   const run =
     deps.run ??
     ((options) => require(require.resolve('cypress', { paths: [project] })).run(options));
@@ -61,6 +62,11 @@ async function main(argv = process.argv.slice(2), deps = {}) {
     result = await run({
       project,
       configFile: path.join(project, 'cypress.config.ts'),
+      config: {
+        screenshotsFolder: path.join(evidenceRoot, 'screenshots'),
+        downloadsFolder: path.join(evidenceRoot, 'downloads'),
+        videosFolder: path.join(evidenceRoot, 'videos'),
+      },
       spec: path.resolve(project, spec),
       browser: 'chrome',
       headed: argv.includes('--headed'),

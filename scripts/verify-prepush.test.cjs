@@ -17,6 +17,7 @@
     isPrepushStampValid,
     main,
     parseArgs,
+    readPrepushStamp,
     validationLevelSatisfies,
   } = require('./verify-prepush.cjs');
 
@@ -251,7 +252,7 @@
         })
       );
     };
-    return { git, write, commit, base, head, inspect };
+    return { root, git, write, commit, base, head, inspect };
   }
 
   test('real Git identities reuse equivalent aliases without hiding changed inputs or modes', (t) => {
@@ -323,7 +324,6 @@
       changedFiles,
       stateFingerprint: 'same-tree',
       readPrepushStamp: () => stamp,
-      removePrepushStamp: () => calls.push('remove'),
       executePrepushPlan: () => calls.push('execute'),
       writePrepushStamp: () => calls.push('write'),
       printPrepushPlan: () => {},
@@ -345,14 +345,49 @@
       changedFiles,
       stateFingerprint: 'same-tree',
       readPrepushStamp: () => defaultStamp,
-      removePrepushStamp: () => calls.push('remove'),
       executePrepushPlan: () => calls.push('execute'),
       writePrepushStamp: () => calls.push('write'),
       printPrepushPlan: () => {},
     });
 
     assert.equal(status, 0);
-    assert.deepEqual(calls, ['remove', 'execute', 'write']);
+    assert.deepEqual(calls, ['execute', 'write']);
+  });
+
+  test('failed changed input preserves a receipt only reusable for its exact validated state', (t) => {
+    const { root, write } = prepushRepository(t);
+    let executions = 0;
+    let fail = true;
+    const options = {
+      repoRootPath: root,
+      printPrepushPlan: () => {},
+      executePrepushPlan: () => {
+        executions += 1;
+        if (fail) throw new Error('Validation failed');
+      },
+    };
+    assert.throws(() => main([], options), /Validation failed/);
+    assert.equal(readPrepushStamp(options), null, 'failure cannot fabricate evidence');
+    fail = false;
+    main([], options);
+    const successful = readPrepushStamp(options);
+    assert.ok(successful);
+
+    write('sample.txt', 'broken\n');
+    fail = true;
+    main(['--plan'], options);
+    assert.equal(executions, 2, 'planning does not execute validation');
+    assert.throws(() => main([], options), /Validation failed/);
+    assert.deepEqual(readPrepushStamp(options), successful);
+    write('sample.txt', 'after\n');
+    main(['--hook'], options);
+    assert.equal(executions, 3, 'restoring exact validated inputs avoids another run');
+
+    fail = false;
+    write('sample.txt', 'fixed differently\n');
+    main([], options);
+    assert.equal(executions, 4, 'different content must execute validation');
+    assert.notDeepEqual(readPrepushStamp(options), successful);
   });
 
   test('scope classification exposes reasons for skipped conditional groups', () => {
