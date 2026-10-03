@@ -197,12 +197,12 @@ fowlerSignals:
   - Documentation Drift
 architectureGuards:
   - node --test tools/ci/planner-package-governance.test.mjs
-  - node --test tools/ci/ci-scope-outputs.test.mjs tools/ci/package-test-matrix.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs
+  - node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/emit-test-matrix.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs
 cypressFlows:
   - Not applicable - no user-visible behavior changes
 completionGate:
   - node --test tools/ci/planner-package-governance.test.mjs
-  - node --test tools/ci/ci-scope-outputs.test.mjs tools/ci/package-test-matrix.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs
+  - node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/emit-test-matrix.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs
   - pnpm --filter @dvt/contracts test
   - pnpm --filter @dvt/contracts build
   - pnpm --filter @dvt/planner test
@@ -245,7 +245,7 @@ symbols:
     architectureGuard: node --test tools/ci/planner-package-governance.test.mjs
     cypressCoverage: Not applicable - CI topology only
     unitTests:
-      - node --test tools/ci/ci-scope-outputs.test.mjs tools/ci/package-test-matrix.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs
+      - node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/emit-test-matrix.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs
 ```
 
 ## Completion Rule

@@ -673,6 +673,9 @@ The matrix-only CLIs and mode argument are retired, without compatibility
 aliases. The five workflows still acquire scope independently; shared acquisition
 across the whole PR DAG remains owned by #2926/#2928. This cut removes three of
 the previous eight invocations, not the remaining five workflow checkouts.
+This current CLI contract supersedes the matrix commands and `--mode` examples
+in earlier CI implementation proposals; those proposals retain their historical
+evidence and are not executable instructions for the current workflows.
 PR Quality retains PR-only automatic integrations and existing manual opt-ins;
 non-PR full validation and required status names are unchanged.
 

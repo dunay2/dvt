@@ -179,14 +179,14 @@ allowedImplementationSurfaces:
   - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/scope-config.mjs
   - tools/ci/emit-scope.mjs
-  - tools/ci/emit-scope.mjs
+  - tools/ci/emit-workspace-matrix.mjs
   - tools/ci/policy/workflow-scope.json
   - tools/ci/validate-policy.js
   - tools/ci/workflow-scope-classification.test.mjs
   - tools/ci/package-json-scope-classification.test.mjs
   - tools/ci/prepush-typecheck-scope.mjs
   - tools/ci/emit-scope.test.mjs
-  - tools/ci/ci-scope-outputs.test.mjs
+  - tools/ci/emit-workspace-matrix.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
   - tools/ci/test/path-matcher.test.mjs
   - docs/guides/testing-and-ci-capabilities.md
@@ -242,7 +242,7 @@ architectureGuards:
 cypressFlows:
   - N/A - CI and repository tooling only
 completionGate:
-  - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
+  - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
   - pnpm test:ci-tools
   - pnpm governance:refresh
   - pnpm docs:feature-mechanization -- --feature REPOSITORY-COMMAND-CATALOG-NORMALIZATION-20260508
@@ -363,10 +363,10 @@ symbols:
       - ConsumeCommandCatalogForCiScope
     fowlerSignals:
       - Divergent change between package command names, script files, and CI filters
-    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/ci-scope-outputs.test.mjs
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-workspace-matrix.test.mjs
     cypressCoverage: N/A - CI and repository tooling only
     unitTests:
-      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/ci-scope-outputs.test.mjs
+      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-workspace-matrix.test.mjs
   - name: buildRepositoryCommandCatalog
     path: tools/ci/repository-command-catalog.mjs
     dddOwner: RepositoryCommandCatalog
@@ -620,6 +620,17 @@ symbols:
     cypressCoverage: N/A - CI and repository tooling only
     unitTests:
       - node --test tools/ci/emit-scope.test.mjs
+  - name: parseScopeMode
+    path: tools/ci/scope-config.mjs
+    dddOwner: WorkflowModeScopeOutputs
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Divergent change between package command names, script files, and CI filters
+    architectureGuard: node --test tools/ci/emit-scope.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-scope.test.mjs
   - name: failClosedPackageJsonChange
     path: tools/ci/scope-config.mjs
     dddOwner: PackageJsonChangeClass
@@ -627,21 +638,32 @@ symbols:
       - ConsumeCommandCatalogForCiScope
     fowlerSignals:
       - Primitive obsession in script path and package-script scope decisions
-    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/ci-scope-outputs.test.mjs
+    architectureGuard: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-workspace-matrix.test.mjs
     cypressCoverage: N/A - CI and repository tooling only
     unitTests:
-      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/ci-scope-outputs.test.mjs
-  - name: buildCiScopeOutputs
-    path: tools/ci/ci-scope-outputs.mjs
+      - node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-workspace-matrix.test.mjs
+  - name: buildWorkspaceMatrixOutputs
+    path: tools/ci/emit-workspace-matrix.mjs
     dddOwner: WorkspaceMatrix
     cqRails:
       - ConsumeCommandCatalogForCiScope
     fowlerSignals:
       - Shotgun surgery from repeated command lists in package scripts and workflows
-    architectureGuard: node --test tools/ci/ci-scope-outputs.test.mjs
+    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs
     cypressCoverage: N/A - CI and repository tooling only
     unitTests:
-      - node --test tools/ci/ci-scope-outputs.test.mjs
+      - node --test tools/ci/emit-workspace-matrix.test.mjs
+  - name: main
+    path: tools/ci/emit-workspace-matrix.mjs
+    dddOwner: WorkspaceMatrix
+    cqRails:
+      - ConsumeCommandCatalogForCiScope
+    fowlerSignals:
+      - Shotgun surgery from repeated command lists in package scripts and workflows
+    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI and repository tooling only
+    unitTests:
+      - node --test tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs
   - name: main
     path: tools/ci/emit-scope.mjs
     dddOwner: WorkflowModeScopeOutputs
@@ -731,7 +753,7 @@ because docs governance checks and changed-file validation own that risk.
 - Modify `tools/ci/scope-config.mjs`: consume catalog classes for package
   script changes, root `package.json` script diffs, and script-file path
   changes.
-- Modify `tools/ci/emit-scope.mjs`: pass the root `package.json`
+- Modify `tools/ci/emit-workspace-matrix.mjs`: pass the root `package.json`
   diff into workspace-matrix classification on pull requests.
 - Modify `tools/ci/policy/workflow-scope.json`: remove broad package/script and
   helper wildcard fan-out after catalog-backed classification is available.
@@ -1303,7 +1325,7 @@ Expected: all repository command catalog tests pass.
 **Files:**
 
 - Modify: `tools/ci/scope-config.mjs`
-- Modify: `tools/ci/emit-scope.mjs`
+- Modify: `tools/ci/emit-workspace-matrix.mjs`
 - Modify: `tools/ci/workflow-scope-classification.test.mjs`
 - Create: `tools/ci/package-json-scope-classification.test.mjs`
 - Test: `tools/ci/workflow-scope-classification.test.mjs`
@@ -1540,7 +1562,7 @@ export async function readRootPackageJsonChange(baseRef, headRef) {
 }
 ```
 
-Update `tools/ci/emit-scope.mjs` so PR runs pass the package diff:
+Update `tools/ci/emit-workspace-matrix.mjs` so PR runs pass the package diff:
 
 ```js
 const packageJsonChange = changedFiles.includes('package.json')
@@ -1848,7 +1870,7 @@ Expected: pre-push verification passes without bypassing hooks or checks.
 The implementation slice must run:
 
 ```bash
-node --test tools/ci/repository-command-catalog.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
+node --test tools/ci/repository-command-catalog.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
 pnpm test:ci-tools
 pnpm docs:feature-mechanization -- --feature REPOSITORY-COMMAND-CATALOG-NORMALIZATION-20260508
 pnpm docs:feature-mechanization:implementation
