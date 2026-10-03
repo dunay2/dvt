@@ -83,6 +83,13 @@ sort/fetch scenarios now register in that same terminal run. A routing/import
 guard proves the consumer set and one registration each; unknown browser paths
 remain rejected. No new browser spec, CI job or database bootstrap was introduced.
 
+That expanded run exposed five failures in historical gestures: expecting outputs
+inside Properties, obsolete move buttons, and implicit connection/modal insertion
+of CROSS, Sort and Fetch. The scenarios now use Output, accessible keyboard reorder,
+explicit producer/Input ports and the current inline configuration. Their saved
+semantic identity, row-query, no-implicit-read and reopen assertions are retained;
+the product is not changed to restore the retired interaction model.
+
 Exact candidate SHAs and final lint, typecheck, package, pre-push and CI outcomes
 are recorded on the governing issue and implementation PR. Intermediate failures
 are not claimed as successful evidence. This does not complete parent issues
