@@ -194,10 +194,6 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
   );
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs');
-  assertWorkflowContains(
-    testWorkflow,
-    'postgres_capability_changed: ${{ fromJSON(steps.scope.outputs.test_scope).postgres_capability_changed }}'
-  );
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs');
   assert.doesNotMatch(testWorkflow, /generate-paths-filter\.js/u);
 
@@ -407,14 +403,15 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
     1
   );
 
+  const outputs = yaml.load(testWorkflow).jobs.detect_test_matrix.outputs;
   for (const output of [
-    'adapter_temporal: ${{ fromJSON(steps.scope.outputs.test_scope).adapter_temporal }}',
-    'web: ${{ fromJSON(steps.scope.outputs.test_scope).web }}',
-    'root_build_sensitive: ${{ fromJSON(steps.scope.outputs.test_scope).root_build_sensitive }}',
-    'coverage_relevant: ${{ fromJSON(steps.scope.outputs.test_scope).coverage_relevant }}',
-    'postgres_capability_changed: ${{ fromJSON(steps.scope.outputs.test_scope).postgres_capability_changed }}',
+    'adapter_temporal',
+    'web',
+    'root_build_sensitive',
+    'coverage_relevant',
+    'postgres_capability_changed',
   ]) {
-    assertWorkflowContains(testWorkflow, output);
+    assert.equal(outputs[output], '${{ fromJSON(steps.scope.outputs.test_scope).' + output + ' }}');
   }
 
   for (const predicate of [
