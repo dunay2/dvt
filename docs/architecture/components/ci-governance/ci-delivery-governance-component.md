@@ -58,7 +58,12 @@ Command/query rail:
 2. The `CI tool contracts` lane runs `pnpm test:ci-tools`; workflow parity tests
    keep that wiring executable.
 3. Shared scope decisions remain owned by `tools/ci/scope-config.mjs`,
-   `tools/ci/emit-scope.mjs`, and `tools/ci/emit-workspace-matrix.mjs`.
+   `tools/ci/emit-scope.mjs`, and `tools/ci/ci-scope-outputs.mjs`.
+   The CLI acquires one committed diff/context per workflow and emits separate
+   capability projections plus both matrices. No workflow invokes a second
+   matrix reader. Projection booleans are read with `fromJSON`; same-named
+   flags from distinct policy projections retain their own semantics. Package
+   grouping in `tools/ci/package-test-matrix.mjs` has no Git or output side effects.
 4. Generated-doc single-writer policy remains owned by
    `docs/generated-docs-policy.json` and its checker, not by the CI delivery
    action plan text.

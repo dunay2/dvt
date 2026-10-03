@@ -50,7 +50,7 @@ The component does not own:
 | `computeWorkflowModeScopeOutputs('test', changedFiles, context)` | `tools/ci/scope-config.mjs`  | Returns `coverage_relevant` and package-scope booleans for Test Suite consumers.      |
 | `TEST_SCOPE_PATTERNS.coverage_relevant`                          | `tools/ci/scope-config.mjs`  | Names the file patterns that can require engine coverage threshold enforcement.       |
 | `TEST_SCOPE_PATTERNS.engine`                                     | `tools/ci/scope-config.mjs`  | Names the engine workspace package scope used by package tests and coverage canaries. |
-| `node tools/ci/emit-scope.mjs --mode test`                       | `tools/ci/emit-scope.mjs`    | Emits GitHub Action outputs for Test Suite jobs.                                      |
+| `node tools/ci/emit-scope.mjs`                                   | `tools/ci/emit-scope.mjs`    | Emits GitHub Action outputs for Test Suite jobs.                                      |
 | `detect_test_matrix.outputs.coverage_relevant`                   | `.github/workflows/test.yml` | Gates the Engine Coverage Gate job before runner setup on pull requests.              |
 | `pnpm test:coverage:engine`                                      | root `package.json`          | Runs the engine coverage command whose execution is gated by `coverage_relevant`.     |
 | `pnpm test:ci-tools`                                             | root `package.json`          | Runs semantic CI scope tests that prevent coverage false negatives.                   |
@@ -60,7 +60,7 @@ The component does not own:
 | Rail                                  | Type  | DDD owner                  | Application port                  | Adapter surface               | Negative tests                                                        |
 | ------------------------------------- | ----- | -------------------------- | --------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
 | `ClassifyChangedCiScope`              | query | Repository CI scope policy | `computeWorkflowModeScopeOutputs` | GitHub Actions scope emission | Engine config changes must set `coverage_relevant=true`.              |
-| `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy | `emit-scope.mjs --mode test`      | `.github/workflows/test.yml`  | PR coverage job must consume `coverage_relevant` before runner setup. |
+| `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy | `emit-scope.mjs`                  | `.github/workflows/test.yml`  | PR coverage job must consume `coverage_relevant` before runner setup. |
 | `ValidateEngineCoverageScopeContract` | query | CI tool contract tests     | `node --test tools/ci/*.test.mjs` | `pnpm test:ci-tools`          | Test fails if coverage stops covering the engine workspace policy.    |
 
 No new user-facing command is introduced. This slice changes an internal CI
@@ -194,7 +194,7 @@ stateDiagram-v2
 sequenceDiagram
     participant PR as PR diff
     participant Scope as ClassifyChangedCiScope
-    participant Emit as emit-scope --mode test
+    participant Emit as emit-scope
     participant Detect as detect_test_matrix outputs
     participant Workflow as Test Suite coverage job
     participant Coverage as pnpm test:coverage:engine
@@ -211,7 +211,7 @@ sequenceDiagram
 
 - `.github/workflows/test.yml` consumes `coverage_relevant` in the Engine
   Coverage Gate job.
-- `tools/ci/emit-scope.mjs` emits `coverage_relevant` for PR and non-PR events.
+- `tools/ci/emit-scope.mjs` emits `test_scope.coverage_relevant` for PR and non-PR events.
 - `tools/ci/emit-scope.test.mjs` proves concrete changed-file behavior.
 - `tools/ci/workflow-pattern-parity.test.mjs` proves the workflow and scope
   policy stay wired to the component contract.

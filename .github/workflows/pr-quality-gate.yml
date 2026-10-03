@@ -45,15 +45,20 @@ jobs:
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
       temporal_changed:
-        ${{ steps.detect_changes.outputs.temporal_changed || steps.wd_scope.outputs.temporal_changed
-        }}
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_changed) ||
+        steps.wd_scope.outputs.temporal_changed }}
       temporal_transformation_changed:
-        ${{ steps.detect_changes.outputs.temporal_transformation_changed ||
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_transformation_changed) ||
         steps.wd_scope.outputs.temporal_transformation_changed }}
       temporal_postgres_changed:
-        ${{ steps.detect_changes.outputs.temporal_postgres_changed ||
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).temporal_postgres_changed) ||
         steps.wd_scope.outputs.temporal_postgres_changed }}
-      adapter_postgres_changed: ${{ steps.detect_changes.outputs.adapter_postgres_changed }}
+      adapter_postgres_changed:
+        ${{ github.event_name == 'pull_request' &&
+        toJSON(fromJSON(steps.scope.outputs.pr_quality_scope).adapter_postgres_changed) || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -87,7 +92,7 @@ jobs:
 
       - name: Detect workflow scope
         id: scope
-        run: node tools/ci/emit-scope.mjs --mode workflow
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
@@ -116,15 +121,17 @@ jobs:
       - name: Validate changed file format and lint
         if:
           github.event_name == 'pull_request' &&
-          (steps.scope.outputs.changed_file_validation_relevant == 'true' ||
-          steps.scope.outputs.docs_changed == 'true')
+          (fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true ||
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true)
         run: node scripts/check-changed.cjs
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Lint changed Markdown
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
         run: pnpm lint:md:changed
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -133,7 +140,7 @@ jobs:
       - name: Run focused committed-diff tests
         if:
           github.event_name == 'pull_request' &&
-          steps.scope.outputs.changed_file_validation_relevant == 'true'
+          fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true
         run: pnpm verify:changed --committed-tests
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -151,18 +158,19 @@ jobs:
         run: ARC_JSON=arc.json node tools/ci/doc-check.mjs
         env:
           DOCS_ONLY_SCOPE:
-            ${{ steps.scope.outputs.any_code != 'true' && steps.scope.outputs.docs_changed == 'true'
-            }}
+            ${{ fromJSON(steps.scope.outputs.workflow_scope).any_code != true &&
+            fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true }}
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Prepare planning DB for DB-backed validation
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.planning_db_inventory_relevant == 'true' ||
-          steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.docs_structure_changed == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          (fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true ||
+          fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true ||
+          fromJSON(steps.scope.outputs.workflow_scope).docs_structure_changed == true)) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          'true')
         uses: ./.github/actions/prepare-planning-db
         env:
           GIT_BASE:
@@ -172,14 +180,14 @@ jobs:
 
       - name: Validate Planning DB inventory for committed changes
         if:
-          github.event_name == 'pull_request' && steps.scope.outputs.planning_db_inventory_relevant
-          == 'true'
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true
         run: pnpm planning:db:inventory:check
 
       - name: Validate Planning DB integrity for committed changes
         if:
-          github.event_name == 'pull_request' && steps.scope.outputs.planning_db_inventory_relevant
-          == 'true'
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
@@ -198,7 +206,9 @@ jobs:
         run: pnpm docs:doctor
 
       - name: Enforce changed Markdown location policy
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:locations -- --changed-only
 
       - name: Enforce Markdown location policy
@@ -214,15 +224,21 @@ jobs:
         run: pnpm docs:canonical:check
 
       - name: Enforce changed docs filename policy
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:filenames:changed
 
       - name: Enforce changed docs frontmatter policy
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:frontmatter:changed
 
       - name: Enforce changed docs links
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'pull_request' &&
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true
         run: pnpm docs:gov:links:changed
         env:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
@@ -231,10 +247,11 @@ jobs:
       - name: Validate governance unit coverage
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.governance_global_relevant == 'true' ||
-          steps.scope.outputs.governance_tooling_changed == 'true' ||
-          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          (fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true ||
+          fromJSON(steps.scope.outputs.workflow_scope).governance_tooling_changed == true ||
+          fromJSON(steps.scope.outputs.workflow_scope).root_build_sensitive == true)) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          'true')
         run: pnpm docs:governance:unit-coverage
 
       - name: Build Git governance runtime dependency
@@ -251,22 +268,24 @@ jobs:
       - name: Validate feature mechanization manifests
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          fromJSON(steps.scope.outputs.workflow_scope).feature_mechanization_relevant == true) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          'true')
         run: pnpm docs:feature-mechanization
 
       - name: ADR-0000 traceability gate
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          steps.scope.outputs.traceability_adr0_relevant == 'true') || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          fromJSON(steps.scope.outputs.workflow_scope).traceability_adr0_relevant == true) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          'true')
         run: pnpm traceability:adr0
 
       - name: Validate QA artifacts
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          steps.scope.outputs.docs_changed == 'true') || (github.event_name == 'workflow_dispatch'
-          && github.event.inputs.run_typecheck_gate == 'true')
+          fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true) || (github.event_name
+          == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm qa:artifact:check
 
       - name: Fetch architecture push comparison base
@@ -280,21 +299,14 @@ jobs:
       - name: Validate architecture dependency boundaries
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          steps.scope.outputs.code_validation_relevant == 'true') || (github.event_name ==
-          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+          fromJSON(steps.scope.outputs.workflow_scope).code_validation_relevant == true) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.run_typecheck_gate ==
+          'true')
         run: pnpm arch:deps
         env:
           GIT_BASE:
             ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
             github.event_name == 'push' && github.event.before || 'origin/main' }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Detect PR changes relevant to Temporal and adapter-postgres
-        id: detect_changes
-        if: github.event_name == 'pull_request'
-        run: node tools/ci/emit-scope.mjs --mode pr-quality
-        env:
-          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Set temporal_changed for workflow_dispatch

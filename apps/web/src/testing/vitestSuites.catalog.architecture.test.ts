@@ -150,7 +150,8 @@ describe('web Vitest suite catalog', () => {
     expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
     expect(workflow).toContain('detect_test_matrix:');
-    expect(workflow).toContain('node tools/ci/emit-test-matrix.mjs');
+    expect(workflow).toContain('node tools/ci/emit-scope.mjs');
+    expect(workflow).toContain('matrix: ${{ steps.scope.outputs.test_matrix }}');
     expect(workflow).toContain(
       "if: github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.any_tests == 'true'"
     );

@@ -3,12 +3,11 @@ import { pathToFileURL } from 'node:url';
 
 import {
   buildChangedScopeContext,
-  computeWorkflowModeScopeOutputs,
   getChangedFiles,
   isPullRequestEvent,
-  parseScopeMode,
   setGitHubOutput,
 } from './scope-config.mjs';
+import { buildCiScopeOutputs } from './ci-scope-outputs.mjs';
 
 function ensureGitCommitAvailable(ref) {
   if (!ref) return;
@@ -26,23 +25,19 @@ function ensureGitCommitAvailable(ref) {
 }
 
 export async function main() {
-  const mode = parseScopeMode(process.argv.slice(2));
+  if (process.argv.length > 2) throw new TypeError('SCOPE_ARGUMENTS_NOT_SUPPORTED');
   const eventName = process.env.GITHUB_EVENT_NAME ?? '';
-
-  if (!isPullRequestEvent(eventName)) {
-    const scope = computeWorkflowModeScopeOutputs(mode, ['.github/workflows/ci.yml']);
-    for (const key of Object.keys(scope)) {
-      setGitHubOutput(key, true);
-    }
-    return;
+  const full = !isPullRequestEvent(eventName);
+  let changedFiles = [];
+  let scopeContext = {};
+  if (!full) {
+    const baseRef = process.env.GIT_BASE;
+    const headRef = process.env.GIT_HEAD;
+    ensureGitCommitAvailable(baseRef);
+    changedFiles = await getChangedFiles(baseRef, headRef);
+    scopeContext = await buildChangedScopeContext(changedFiles, { baseRef, headRef });
   }
-
-  const baseRef = process.env.GIT_BASE;
-  const headRef = process.env.GIT_HEAD;
-  ensureGitCommitAvailable(baseRef);
-  const changedFiles = await getChangedFiles(baseRef, headRef);
-  const scopeContext = await buildChangedScopeContext(changedFiles, { baseRef, headRef });
-  const scope = computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext);
+  const scope = buildCiScopeOutputs(changedFiles, scopeContext, { full });
 
   for (const [key, value] of Object.entries(scope)) {
     setGitHubOutput(key, value);

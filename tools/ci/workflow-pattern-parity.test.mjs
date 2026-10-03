@@ -35,6 +35,67 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
 const DRAFT_AWARE_PR_TYPES =
   'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
 
+test('every scope consumer acquires its committed diff once through the shared entrypoint', () => {
+  for (const name of ['ci', 'test', 'contracts', 'pr-quality-gate', 'codeql']) {
+    const source = readFileSync(`.github/workflows/${name}.yml`, 'utf8');
+    const workflow = yaml.load(source);
+    const steps = Object.values(workflow.jobs).flatMap((job) => job.steps ?? []);
+    const scopes = steps.filter((step) => step.run?.includes('tools/ci/emit-'));
+    assert.equal(scopes.length, 1, name);
+    assert.equal(scopes[0].id, 'scope');
+    assert.equal(scopes[0].run, 'node tools/ci/emit-scope.mjs');
+    assert.ok(scopes[0].env.GIT_BASE);
+    assert.ok(scopes[0].env.GIT_HEAD);
+    assert.doesNotMatch(
+      source,
+      /fromJSON\(steps\.scope\.outputs\.\w+\)\.\w+\s*[!=]=\s*'(?:true|false)'/u
+    );
+  }
+});
+
+test('combined scope preserves PR-only integration selection and manual opt-ins', () => {
+  const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
+  const outputs = workflow.jobs['pr-checks'].outputs;
+  const keys = [
+    'temporal_changed',
+    'temporal_transformation_changed',
+    'temporal_postgres_changed',
+    'adapter_postgres_changed',
+  ];
+  for (const event of ['pull_request', 'push', 'workflow_dispatch']) {
+    for (const selected of [true, false]) {
+      for (const manual of [true, false]) {
+        const selectedScope = Object.fromEntries(keys.map((key) => [key, selected]));
+        const manualOutputs = Object.fromEntries(
+          keys.map((key) => [
+            key,
+            key !== 'adapter_postgres_changed' && event === 'workflow_dispatch' && manual
+              ? 'true'
+              : '',
+          ])
+        );
+        for (const key of keys) {
+          const expression = outputs[key].replace(/^\s*\$\{\{\s*|\s*\}\}\s*$/gu, '');
+          const actual = runInNewContext(expression, {
+            github: { event_name: event },
+            steps: {
+              scope: { outputs: { pr_quality_scope: JSON.stringify(selectedScope) } },
+              wd_scope: { outputs: manualOutputs },
+            },
+            fromJSON: JSON.parse,
+            toJSON: JSON.stringify,
+          });
+          assert.equal(
+            actual,
+            event === 'pull_request' ? String(selected) : manualOutputs[key],
+            `${event}:${selected}:${manual}:${key}`
+          );
+        }
+      }
+    }
+  }
+});
+
 test('Turbo cache uses a fresh writer key and a stable per-producer restore prefix', () => {
   const action = yaml.load(readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8'));
   const cache = action.runs.steps.find((step) => step.name === 'Cache Turbo');
@@ -132,12 +193,8 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
     testWorkflow,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
   );
-  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
-  assertWorkflowContains(
-    testWorkflow,
-    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
-  );
-  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
+  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs');
+  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs');
   assert.doesNotMatch(testWorkflow, /generate-paths-filter\.js/u);
 
   assert.deepEqual(ADAPTER_POSTGRES_RELEVANT_PATTERNS, policy.adapter_postgres_relevant);
@@ -201,15 +258,21 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     ciWorkflow,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
   );
-  assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-scope.mjs --mode workflow');
-  assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-workspace-matrix.mjs');
+  assertWorkflowContains(ciWorkflow, 'node tools/ci/emit-scope.mjs');
+  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.workspace_matrix');
   assert.doesNotMatch(
     ciWorkflow,
     /changed_file_validation_relevant:\s*\$\{\{\s*steps\.scope\.outputs/u
   );
-  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.security_analysis_relevant');
+  assertWorkflowContains(
+    ciWorkflow,
+    'fromJSON(steps.scope.outputs.workflow_scope).security_analysis_relevant'
+  );
   assertWorkflowContains(ciWorkflow, 'ci_tool_executable_contracts_relevant:');
-  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.ci_tool_executable_contracts_relevant');
+  assertWorkflowContains(
+    ciWorkflow,
+    'fromJSON(steps.scope.outputs.workflow_scope).ci_tool_executable_contracts_relevant'
+  );
   assertWorkflowContains(
     ciWorkflow,
     "needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true'"
@@ -218,9 +281,16 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     ciWorkflow,
     /needs\.detect-affected\.outputs\.changed_file_validation_relevant/u
   );
-  assert.match(
-    prQualityGate,
-    /steps\.scope\.outputs\.changed_file_validation_relevant\s*== 'true'[\s\S]*steps\.scope\.outputs\.docs_changed\s*== 'true'/u
+  const lintStep = yaml
+    .load(prQualityGate)
+    .jobs['pr-checks'].steps.find((step) => step.run === 'node scripts/check-changed.cjs');
+  assert.ok(
+    lintStep.if.includes(
+      'fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true'
+    )
+  );
+  assert.ok(
+    lintStep.if.includes('fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true')
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm lint:md:changed');
   assertWorkflowContains(prQualityGate, 'run: node scripts/check-changed.cjs');
@@ -232,7 +302,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   );
   assertWorkflowContains(
     prQualityGate,
-    "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
+    'fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:inventory:check');
   assertWorkflowContains(prQualityGate, 'run: pnpm planning:db:integrity:check --bootstrap');
@@ -265,7 +335,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     prQualityGate,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
   );
-  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs');
   assertWorkflowContains(prQualityGate, 'run_temporal_transformation_integration');
   assertWorkflowContains(prQualityGate, 'temporal_transformation_changed');
 
@@ -293,9 +363,9 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
-  assertWorkflowContains(contractsWorkflow, 'node tools/ci/emit-scope.mjs --mode contracts');
-  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
-  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-test-matrix.mjs');
+  assertWorkflowContains(contractsWorkflow, 'node tools/ci/emit-scope.mjs');
+  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.test_matrix');
   assertWorkflowContains(testWorkflow, 'name: Package Tests (${{ matrix.name }})');
   assertWorkflowContains(
     testWorkflow,
@@ -303,9 +373,15 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   );
   assertWorkflowContains(testWorkflow, 'run: ${{ matrix.command }}');
   assertWorkflowContains(testWorkflow, 'name: Adapter Temporal Tests');
-  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.adapter_temporal');
-  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.coverage_relevant');
-  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.root_build_sensitive');
+  assertWorkflowContains(testWorkflow, 'fromJSON(steps.scope.outputs.test_scope).adapter_temporal');
+  assertWorkflowContains(
+    testWorkflow,
+    'fromJSON(steps.scope.outputs.test_scope).coverage_relevant'
+  );
+  assertWorkflowContains(
+    testWorkflow,
+    'fromJSON(steps.scope.outputs.test_scope).root_build_sensitive'
+  );
 
   assert.doesNotMatch(contractsWorkflow, /dorny\/paths-filter/u);
   assert.doesNotMatch(testWorkflow, /dorny\/paths-filter/u);
@@ -318,7 +394,7 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
 
   assertWorkflowContains(testWorkflow, DRAFT_AWARE_PR_TYPES);
   assertWorkflowContains(testWorkflow, 'github.event.pull_request.draft');
-  assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
+  assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs'), 1);
   assert.equal(
     countWorkflowCommand(
       testWorkflow,
@@ -327,14 +403,15 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
     1
   );
 
+  const outputs = yaml.load(testWorkflow).jobs.detect_test_matrix.outputs;
   for (const output of [
-    'adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}',
-    'web: ${{ steps.scope.outputs.web }}',
-    'root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}',
-    'coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}',
-    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}',
+    'adapter_temporal',
+    'web',
+    'root_build_sensitive',
+    'coverage_relevant',
+    'postgres_capability_changed',
   ]) {
-    assertWorkflowContains(testWorkflow, output);
+    assert.equal(outputs[output], '${{ fromJSON(steps.scope.outputs.test_scope).' + output + ' }}');
   }
 
   for (const predicate of [
@@ -556,10 +633,22 @@ test('code quality workflow exposes a stable merge-blocking outcome', () => {
 test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
-  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.governance_global_relevant');
-  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.traceability_adr0_relevant');
-  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.feature_mechanization_relevant');
-  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
+  assertWorkflowContains(
+    prQualityGate,
+    'fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant'
+  );
+  assertWorkflowContains(
+    prQualityGate,
+    'fromJSON(steps.scope.outputs.workflow_scope).traceability_adr0_relevant'
+  );
+  assertWorkflowContains(
+    prQualityGate,
+    'fromJSON(steps.scope.outputs.workflow_scope).feature_mechanization_relevant'
+  );
+  assertWorkflowContains(
+    prQualityGate,
+    'fromJSON(steps.scope.outputs.workflow_scope).code_validation_relevant'
+  );
 });
 
 test('PR quality gate prepares planning DB for its remaining DB-backed consumers', () => {
@@ -585,10 +674,16 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
   assertWorkflowExcludes(prepareDbStep, 'feature_mechanization_relevant');
   assertWorkflowContains(
     prepareDbStep,
-    "steps.scope.outputs.planning_db_inventory_relevant == 'true'"
+    'fromJSON(steps.scope.outputs.workflow_scope).planning_db_inventory_relevant == true'
   );
-  assertWorkflowContains(prepareDbStep, "steps.scope.outputs.docs_structure_changed == 'true'");
-  assertWorkflowContains(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'");
+  assertWorkflowContains(
+    prepareDbStep,
+    'fromJSON(steps.scope.outputs.workflow_scope).docs_structure_changed == true'
+  );
+  assertWorkflowContains(
+    prepareDbStep,
+    'fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true'
+  );
   assertWorkflowExcludes(prQualityGate, 'pnpm docs:dbt-roundtrip-capabilities:check');
   assertWorkflowExcludes(prQualityGate, 'DVT_GIT_EVIDENCE_REPO');
   assert.doesNotMatch(prQualityGate, /import-governance:/u);
@@ -599,7 +694,10 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
   assert.ok(cryptoBuildIndex < planningImportIndex);
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
   assert.equal(
-    countWorkflowCommand(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'"),
+    countWorkflowCommand(
+      prepareDbStep,
+      'fromJSON(steps.scope.outputs.workflow_scope).governance_global_relevant == true'
+    ),
     1,
     'governance scope must activate the single current-schema preparation action'
   );
@@ -887,7 +985,7 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
   assertWorkflowContains(codeql, "github.event.repository.visibility == 'public'");
   assertWorkflowContains(codeql, 'name: Detect security analysis scope');
-  assertWorkflowContains(codeql, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(codeql, 'node tools/ci/emit-scope.mjs');
   assertWorkflowContains(codeql, 'security_analysis_relevant:');
   assertWorkflowContains(
     codeql,
