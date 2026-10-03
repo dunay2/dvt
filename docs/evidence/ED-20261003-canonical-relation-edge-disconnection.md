@@ -11,6 +11,7 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasCanonicalGraphDisconnect.ts
   - apps/web/src/app/views/canvas/canvasCanonicalGraphDisconnectCommand.ts
   - apps/web/src/app/views/canvas/canvasRetainedOperationConfiguration.ts
+  - apps/web/src/app/views/canvas/canvasCanonicalProducerIdentity.ts
   - apps/web/src/app/views/canvas/relational-layout/RelationalCanonicalEdges.tsx
   - packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts
 evidence:
@@ -58,7 +59,10 @@ flowchart LR
 `configurationDocument` retains the same canonical Substrait and sidecar as
 non-executable authoring configuration. It cannot coexist with
 `semanticDocument`. Exact reconnect requires both original relation identities
-and byte-equivalent canonical producer contents. Changed producers remain
+and identical canonical producer contents after composition-local anchor
+normalization through the existing mapper. Unused consumer function declarations
+are excluded; used function identities, fields, aliases, schema, provenance, and
+expressions remain part of identity. Changed producers remain
 pending and require explicit reconfiguration, not inferred field remapping.
 No parallel AST, persistence version, migration, endpoint, or business logic in
 the edge renderer was introduced. N-input operators beyond the existing staged
@@ -68,10 +72,12 @@ profile.
 ## Validation performed
 
 - Contracts: 71 files / 786 tests passed; contract build/typecheck passed.
-- Canonical command and projection: 13 tests passed, including read-only,
+- Canonical command and projection: 15 tests passed, including read-only,
   failed/stale/disposed analysis, individual JOIN ports, invalid ports,
   exact and changed producer reconnect, downstream invalidation, and Apply
   withdrawing previous semantic authority.
+- Existing connection-boundary regression: 3 tests passed after composition-local
+  producer identity was normalized; no assertion or existing flow was relaxed.
 - Shared edge interaction and existing tree presentation: 21 tests passed.
 - Existing workbench architecture boundary: 9 tests passed.
 - Related graph action, composition sequence, semantic chain, draft codec, and

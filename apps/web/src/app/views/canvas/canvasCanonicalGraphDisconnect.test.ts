@@ -17,6 +17,12 @@ import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { graphModel, graphJoin } from './canvasRelationGraph.test-support';
 import { createCanvasCanonicalGraphDisconnectCommand } from './canvasCanonicalGraphDisconnectCommand';
 import { vi } from 'vitest';
+import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { createSourceDocument } from './canvasSourceDocument';
+import { source } from './canvasRelationalOperator.test-support';
+import { canvasCanonicalProducerIdentity } from './canvasCanonicalProducerIdentity';
+import { disconnectCanvasStagedOperation } from './canvasStagedOperation';
 
 describe('canonical graph disconnection', () => {
   it.each([0, 1])('disconnects only JOIN port %s and retains its exact predicate', (port) => {
@@ -190,5 +196,47 @@ describe('canonical graph disconnection', () => {
     expect(changed.metadata?.relationalAuthoringDraft).toEqual(relationalAuthoringDraft);
     expect(relationalAuthoringDraft.operations[0]!.inputs).toEqual([null]);
     expect(relationalAuthoringDraft.operations[0]!.configurationDocument).toBeDefined();
+  });
+  it('restores a staged JOIN across composition-local anchors and consumer-only functions', () => {
+    const inputs = ['left', 'right'].map((name) => ({
+      ...source(name),
+      fields: source(name).fields.map((field) => ({
+        name: field.name,
+        dataType: field.type,
+        joinDataType: field.type,
+      })),
+    }));
+    const sources = inputs.map(createPendingSourceOccurrence);
+    const configured = configureCanvasStagedBinary(
+      {
+        id: 'join',
+        operation: 'inner_join',
+        inputs: sources.map((entry) => entry.read.binding.relationId),
+      },
+      inputs,
+      sources,
+      []
+    );
+    expect(configured.semanticDocument).toBeDefined();
+    const detached = disconnectCanvasStagedOperation(configured, 1);
+    const producers = sources.map((entry) => createSourceDocument([entry.read], entry.read));
+    expect(
+      restoreCanvasOperationConfiguration({ ...detached, inputs: configured.inputs }, producers)
+        .semanticDocument
+    ).toEqual(configured.semanticDocument);
+  });
+  it('does not equate different used function identities', () => {
+    const { document, session } = graphJoin();
+    const changed = structuredClone(document);
+    const extension = changed.plan.extensions.find(
+      (entry) => entry.mappingType.case === 'extensionFunction'
+    )!;
+    if (extension.mappingType.case !== 'extensionFunction')
+      throw new Error('Missing fixture function');
+    extension.mappingType.value.name = 'not_equal';
+    const identity = canvasCanonicalProducerIdentity(document);
+    expect(identity).not.toBeNull();
+    expect(canvasCanonicalProducerIdentity(changed)).not.toEqual(identity);
+    session.dispose();
   });
 });

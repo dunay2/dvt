@@ -353,7 +353,10 @@ the existing incomplete-authoring graph, preserving identities and unrelated
 pending cards. Disconnected operations retain their exact Substrait configuration
 under the non-executable `configurationDocument` member; affected consumers have
 no published fields or Preview. Exact reconnect restores configuration only when
-the original Input identities and documents match. Different producers require
+the original Input identities and canonical contents match after composition-local
+anchor normalization and unused consumer function declarations are excluded.
+Field identities, schemas, aliases, provenance, and used function identities remain
+part of the comparison. Different producers require
 explicit reconfiguration. Apply/save/reopen cannot restore a removed edge from
 the obsolete complete semantic document. The owning persistence contract defines
 this distinction; the SVG layer only dispatches consumer identity and port.

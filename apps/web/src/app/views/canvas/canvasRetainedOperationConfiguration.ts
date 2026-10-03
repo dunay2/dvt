@@ -1,12 +1,9 @@
 /** Retain non-executable configuration and restore only against exact original Inputs. */
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
-import { jcsCanonicalize } from '@dvt/crypto';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
-import {
-  decodeDvtSubstraitSemanticDocument,
-  encodeDvtSubstraitSemanticDocument,
-} from './canvasDvtSubstraitSemanticDocument';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { projectCanvasStagedDocument } from './canvasStagedOperationDocument';
+import { canvasCanonicalProducerIdentity } from './canvasCanonicalProducerIdentity';
 
 export function invalidateCanvasOperationConfiguration(
   operation: CanvasStagedOperation
@@ -38,12 +35,9 @@ export function restoreCanvasOperationConfiguration(
   if (
     producers.some((producer, port) => {
       const saved = projectCanvasStagedDocument(document, previous[port]!);
-      return (
-        producer == null ||
-        saved == null ||
-        jcsCanonicalize(encodeDvtSubstraitSemanticDocument(producer)) !==
-          jcsCanonicalize(encodeDvtSubstraitSemanticDocument(saved))
-      );
+      if (producer == null || saved == null) return true;
+      const identity = canvasCanonicalProducerIdentity(producer);
+      return identity == null || identity !== canvasCanonicalProducerIdentity(saved);
     })
   )
     return operation;
