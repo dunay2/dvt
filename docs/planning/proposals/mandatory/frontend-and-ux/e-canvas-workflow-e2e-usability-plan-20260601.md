@@ -216,7 +216,7 @@ flowchart LR
 | Inspector data exists but is hard to navigate or edit in context.                         | Primitive obsession, review friction      | Tabbed presentation model                    | Canvas node properties                             | `GetWorkspaceGraphDraft`, `ImportWarehouseSources`                    | `InspectorPanel`, `CanvasInspectorPanel`, focused rendered test           | `CanvasInspectorPanel.test.tsx`                         | Browser select-node inspector check  | Plugin-owned mutation          |
 | Execution-plan preview overflows and renders missing estimates as `$`.                    | Primitive obsession, review friction      | Presentation model / responsive review       | Executable plan preview                            | `PreviewExecutablePlan`, `StartRun`                                   | `PlanPreviewModal`, focused rendered test                                 | `Modals.test.tsx`                                       | Browser plan-preview modal check     | Plan contract changes          |
 | Run detail traps the user and hides which source/sink selection executed.                 | Hidden authority, review friction         | Read model projection / orientation UI       | Run detail execution scope                         | GetRunSnapshot, ListRunEvents                                         | Run read model, runtime DTOs, RunWorkspaceStateView                       | getRunStatusUseCase.test.ts, RunStates.test.tsx         | Browser completed-run detail check   | Timeline-derived result truth  |
-| User needs source import, plan, run, and inspect status as one usable flow.               | Hidden authority                          | Gateway-backed E2E workflow                  | Protected runtime rails                            | Source import, plan preview, start run, run status/events             | Existing API/web focused tests plus E2E proof                             | `canvas-preview-run-live.cy.ts`                         | Browser E2E on real stack            | External warehouse credentials |
+| User needs source import, plan, run, and inspect status as one usable flow.               | Hidden authority                          | Gateway-backed E2E workflow                  | Protected runtime rails                            | Source import, plan preview, start run, run status/events             | Existing API/web focused tests plus E2E proof                             | Current terminal Transform and Source Import live specs | Browser E2E on real stack            | External warehouse credentials |
 | Local stack cannot prove source import or SQL execution without real seed data.           | Fixture leakage risk                      | Dev proof data as infrastructure composition | Local protected runtime                            | Source import, workspace files, run worker                            | `run-dev-stack` scripts and tests                                         | `run-dev-stack.test.cjs`, `run-dev-stack.auth.test.cjs` | Cypress live proof                   | Production seed behavior       |
 
 ## Pre-Implementation Brief
@@ -250,6 +250,18 @@ flowchart LR
   - `pnpm verify:prepush`
 
 ## Feature Mechanization
+
+The current browser routes are the terminal Transform Preview/Run and clean
+Source Import proofs below. They replace the retired explicit three-node
+selection flow; no fixture compatibility path remains. The terminal proof
+also verifies cursor recovery, event identity/order and the rendered timeline
+against the live API.
+
+Symbol-level historical Cypress references are pinned to the
+[original proof revision](https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts); they are not claims that the current terminal smoke
+covers every historical UI or SQL-first implementation symbol. Obsolete test
+symbol declarations and the retired live-cycle entry have been removed;
+Git retains the original declarations and execution history.
 
 ```feature-mechanization
 version: 1
@@ -478,7 +490,8 @@ architectureGuards:
   - pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
-  - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
 completionGate:
   - pnpm docs:sync
@@ -493,7 +506,8 @@ completionGate:
   - pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts
   - pnpm --filter @dvt/web test
   - node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
-  - pnpm --dir apps/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/canvas-preview-run-live.cy.ts --browser electron
+  - pnpm --filter @dvt/web test:e2e:selected-closure:live
+  - pnpm --filter @dvt/web test:e2e:source-import:live
   - pnpm --filter @dvt/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/code-workbench-workspace-files.cy.ts --browser electron
   - pnpm --filter dvt-api typecheck
   - pnpm --filter dvt-api lint
@@ -544,14 +558,6 @@ redGreenCycles:
       - scripts/run-dev-stack.test.cjs
       - scripts/run-dev-stack.auth.test.cjs
     greenTest: node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
-  - id: canvas-live-sql-run-and-source-import
-    redTest: pnpm --dir apps/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/canvas-preview-run-live.cy.ts --browser electron
-    expectedFailure: The live route cannot complete a SQL-first run or import seeded warehouse metadata.
-    patchSurfaces:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-      - apps/web/cypress/support/liveProtectedRuntime.ts
-      - apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
-    greenTest: pnpm --dir apps/web exec cypress run --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:5173 --spec cypress/e2e/canvas/canvas-preview-run-live.cy.ts --browser electron
   - id: code-route-graph-file-scope
     redTest: pnpm --filter @dvt/web test -- src/app/views/code/codeViewFileSelection.test.ts src/app/views/CodeView.test.tsx
     expectedFailure: Code exposes persisted dbt files that are not part of the active graph and can open stale model SQL.
@@ -654,7 +660,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu, CreateCanvasAuthoringNode, RemoveCanvasEdgeFromContext]
     fowlerSignals: [Context-menu gestures must render app-owned actions instead of leaking browser defaults.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
   - name: CanvasViewportContextMenuProps
@@ -663,7 +669,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu, CreateCanvasAuthoringNode, RemoveCanvasEdgeFromContext]
     fowlerSignals: [The contextual action contract must stay explicit at the viewport boundary.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
   - name: CanvasAuthoringNodePosition
@@ -672,7 +678,7 @@ symbols:
     cqRails: [CreateCanvasAuthoringNode]
     fowlerSignals: [Toolbar and context-menu node creation must share the same command shape.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasAuthoringNodeCommand.test.ts
   - name: CreateCanvasAuthoringNode
@@ -681,7 +687,7 @@ symbols:
     cqRails: [CreateCanvasAuthoringNode]
     fowlerSignals: [Graph node creation must stay behind the route-owned command seam.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- useCanvasGraphHandlers.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/CanvasStateViews.test.tsx
   - name: BuildCanvasContextMenuModelArgs
@@ -690,7 +696,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu]
     fowlerSignals: [Context-menu read-model inputs must stay pure and testable.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: CanvasContextMenuCreateNodeAction
@@ -699,7 +705,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu, CreateCanvasAuthoringNode]
     fowlerSignals: [Pane context menus must advertise node creation without bypassing the node catalog.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: CanvasContextMenuEdgeAction
@@ -708,7 +714,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu, RemoveCanvasEdgeFromContext]
     fowlerSignals: [Edge context menus must expose deletion through the existing edge lifecycle.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: CanvasContextMenuModel
@@ -717,7 +723,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu]
     fowlerSignals: [The viewport must consume a read model, not infer commands inline.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: CanvasContextMenuPosition
@@ -726,7 +732,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu]
     fowlerSignals: [Context-menu placement must be explicit and independent of browser menu state.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: CanvasContextMenuTarget
@@ -735,7 +741,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu]
     fowlerSignals: [Pane and edge gestures must be discriminated before actions are built.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: buildCanvasContextMenuModel
@@ -744,7 +750,7 @@ symbols:
     cqRails: [ResolveCanvasContextMenu]
     fowlerSignals: [Contextual menu visibility must follow graph posture and selected target.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: buildCanvasEdgeContextRemovalChange
@@ -753,7 +759,7 @@ symbols:
     cqRails: [RemoveCanvasEdgeFromContext]
     fowlerSignals: [Edge deletion must reuse the React Flow removal lifecycle instead of mutating graph state directly.]
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- canvasInteractionCommandSurface.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts
   - name: PlanPreviewModal
@@ -762,7 +768,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [The plan preview must stay readable and contained while preserving immutable plan semantics.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/components/Modals.test.tsx
   - name: PlanPreviewSection
@@ -771,7 +777,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [The preview review surface must use consistent contained sections instead of ad hoc overflowing cards.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/components/Modals.test.tsx
   - name: PlanPreviewField
@@ -780,7 +786,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Plan preview values must wrap long identifiers without escaping the modal.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/components/Modals.test.tsx
   - name: formatPlanCost
@@ -789,7 +795,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Missing estimated-cost data must be presented explicitly instead of as an orphaned currency symbol.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/components/Modals.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/components/Modals.test.tsx
   - name: derivePlanSummary
@@ -798,7 +804,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run detail source and sink scope must come from persisted plan evidence, not timeline inference.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: RunDiagnosticPointer
@@ -807,7 +813,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Trace and log pointers must be explicit runtime DTOs, not strings inferred by the view.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: RunDiagnostics
@@ -816,7 +822,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run diagnostics must carry run, plan, step, adapter, duration, status, and error evidence together.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: OtelObservability.withContext
@@ -825,7 +831,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Structured runtime logs inherit active run diagnostic context unless the log entry provides an explicit context.]
     architectureGuard: pnpm --filter @dvt/observability-otel test
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - packages/@dvt/observability-otel/test/OtelObservability.test.ts
   - name: deriveDiagnostics
@@ -834,7 +840,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Runtime diagnostics must be projected from persisted run evidence instead of frontend timeline guesses.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: deriveDurationMs
@@ -843,7 +849,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run duration must be computed once at the read-model boundary.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: deriveLatestEventString
@@ -852,7 +858,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Step, attempt, and error evidence must be extracted by named read-model helpers.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: deriveLatestStepId
@@ -861,7 +867,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Step diagnostics must prefer persisted snapshot step evidence before falling back to events.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: formatDiagnosticPointer
@@ -870,7 +876,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Trace and log pointers must stay provider-neutral until a concrete observability backend is configured.]
     architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
   - name: DEFAULT_FORBIDDEN
@@ -879,7 +885,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [High-cardinality plan and run identifiers must stay out of metrics labels.]
     architectureGuard: pnpm --filter @dvt/observability test
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - packages/@dvt/observability/test/cardinalityPolicy.test.ts
   - name: RunPlanExecutionSummary
@@ -888,7 +894,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [The frontend run DTO must preserve persisted source and sink plan scope.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
       - apps/web/src/app/views/runs/RunStates.test.tsx
@@ -898,7 +904,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Malformed source and sink arrays must not become caller-visible run scope.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
   - name: parsePlanExecutionSummary
@@ -907,7 +913,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run detail must decode plan scope only from the governed snapshot read model.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
   - name: RunDiagnosticPointer
@@ -916,7 +922,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [The frontend runtime port must carry trace and log pointers without view-side reconstruction.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
       - apps/web/src/app/views/runs/RunStates.test.tsx
@@ -926,7 +932,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run Detail must consume a cohesive diagnostics read model instead of separate ambient values.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
       - apps/web/src/app/views/runs/RunStates.test.tsx
@@ -936,7 +942,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Malformed diagnostics pointers must be rejected at the API decoder boundary.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
   - name: parseRunDiagnosticPointers
@@ -945,7 +951,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run diagnostics must expose at least one usable trace or log pointer before rendering.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
   - name: parseRunDiagnostics
@@ -954,7 +960,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run diagnostics must decode from the governed snapshot read model before entering the UI.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
   - name: RunDiagnosticsCard
@@ -963,7 +969,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Run Detail must show trace and log pointers near persisted runtime evidence.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/runs/RunStates.test.tsx
   - name: formatRunScopeList
@@ -972,7 +978,7 @@ symbols:
     cqRails: [GetRunSnapshot]
     fowlerSignals: [Source and sink values must render as readable run scope instead of disappearing into the timeline.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/runs/RunStates.test.tsx
   - name: RunItineraryCard
@@ -981,7 +987,7 @@ symbols:
     cqRails: [GetRunSnapshot, ListRunEvents]
     fowlerSignals: [Run detail must orient the user with plan scope and direct return navigation.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/runs/RunStates.test.tsx
   - name: CanvasInspectorPanel
@@ -990,7 +996,7 @@ symbols:
     cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources]
     fowlerSignals: [The route-owned wrapper must provide visible graph context to the passive inspector without moving mutation semantics.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - name: CoreNodeDetails
@@ -999,7 +1005,7 @@ symbols:
     cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources]
     fowlerSignals: [The passive inspector must project selected-node metadata, columns, and dependencies into useful read-only context.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - name: CanvasWorkbenchTabIconName
@@ -1082,7 +1088,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [SQL-first plans must execute through real worker activity wiring.]
     architectureGuard: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
   - name: buildLocalWarehouseConnectionCatalog
@@ -1091,7 +1097,7 @@ symbols:
     cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
     fowlerSignals: [Local proof stack needs real source metadata without bypassing API rails.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
       - scripts/run-dev-stack.auth.test.cjs
@@ -1101,7 +1107,7 @@ symbols:
     cqRails: [GetRunSnapshot, ListRunEvents]
     fowlerSignals: [Completed-run materialization evidence must be visible before lower-priority provenance.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/runs/RunStates.test.tsx
   - name: DVT_WAREHOUSE_SOURCE_PLUGIN_ID
@@ -1110,7 +1116,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
     fowlerSignals: [Imported source plugin identity needs a declared tabular data-port bridge.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/plugins/contracts/ConnectionRules.test.ts
       - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
@@ -1120,7 +1126,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
     fowlerSignals: [Imported warehouse source nodes must be real plugin participants, not inert decorations.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/contracts/ConnectionRules.test.ts src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/plugins/contracts/ConnectionRules.test.ts
       - apps/web/src/app/plugins/dvt/dvtContributions.connectionRules.test.ts
@@ -1130,7 +1136,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
     fowlerSignals: [Imported source nodes need DVT authoring metadata without changing their source plugin identity.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
       - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
@@ -1140,7 +1146,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
     fowlerSignals: [The inspector must recognize imported warehouse sources as configurable DVT source nodes.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
       - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
@@ -1150,7 +1156,7 @@ symbols:
     cqRails: [PreviewExecutablePlan]
     fowlerSignals: [Preview planning must read server-owned import metadata before asking users to restate it locally.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
   - name: buildImportedWarehouseSourceNode
@@ -1159,7 +1165,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
     fowlerSignals: [Imported source fixtures must carry the real source plugin identity.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
   - name: buildImportedWarehouseSourceNode
@@ -1168,7 +1174,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan]
     fowlerSignals: [Rendered inspector tests must cover imported source configuration, not only native DVT source nodes.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasInspectorPanel.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - name: TemporalWorkerStepCapability
@@ -1177,7 +1183,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [SQL-first step activities need explicit runtime capability ownership.]
     architectureGuard: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
   - name: POSTGRES_RELATIONAL_PLUGIN_ID
@@ -1186,7 +1192,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [SQL-first Postgres execution is a named worker capability.]
     architectureGuard: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
   - name: TemporalWorkerPostgresProfile
@@ -1195,7 +1201,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [SQL-first Postgres execution is a named worker capability.]
     architectureGuard: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
   - name: createDefaultPostgresRelationalCapability
@@ -1204,7 +1210,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [SQL-first Postgres execution is wired without DBT fallback.]
     architectureGuard: pnpm --filter dvt-temporal-worker test -- test/runtime/createTemporalWorkerRuntime.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.test.ts
   - name: TRANSFORMATION_REQUIRED_NODE_COUNT
@@ -1213,7 +1219,7 @@ symbols:
     cqRails: [PreviewExecutablePlan]
     fowlerSignals: [Partial edit selection must not shrink a valid workflow scope.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/transformationGraphValidation.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: validateTransformationGraph
@@ -1222,7 +1228,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Readiness validates executable workflow scope instead of total canvas node count.]
     architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
@@ -1233,7 +1239,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [The inferred executable path still reuses strict three-node validation rules.]
     architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: ExecutableTransformationPath
@@ -1242,7 +1248,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Execution readiness can isolate one SQL-first path inside a larger authoring canvas.]
     architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: ExecutableTransformationPathResolution
@@ -1251,7 +1257,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Missing or ambiguous executable paths remain plan-integrity blockers.]
     architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: collectNodesByRole
@@ -1260,7 +1266,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Role mapping is centralized before executable-path discovery.]
     architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: resolveExecutableTransformationPath
@@ -1269,7 +1275,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Extra authoring nodes are scoped out only when exactly one executable SQL-first path exists.]
     architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: CODE_GRAPH_FILE_SCOPE_VIEW_ID
@@ -1424,7 +1430,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun]
     fowlerSignals: [Created-at drift alone must not make plan replay non-idempotent.]
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.lifecycle.integration.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - packages/@dvt/adapter-postgres/test/PostgresPlanStore.lifecycle.integration.test.ts
   - name: sqlPruneLegacyExecutionPlanSchemaRows
@@ -1433,7 +1439,7 @@ symbols:
     cqRails: [PreviewExecutablePlan, StartRun, ValidateExecutionPlanAdmission]
     fowlerSignals: [Legacy v1.2 persisted rows must be pruned after the hard-cut.]
     architectureGuard: pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.records-core.integration.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts
   - name: LOCAL_WAREHOUSE_CATALOG_RELATIVE_PATH
@@ -1442,7 +1448,7 @@ symbols:
     cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects]
     fowlerSignals: [Local proof stack needs governed source catalog metadata.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: buildCoordinatedTemporalWorkerEnv
@@ -1451,7 +1457,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Worker queue must match tenant-scoped API scheduling.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: WORKSPACE_RUNTIME_DEPENDENCIES_BUILD_SCRIPT
@@ -1460,7 +1466,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Worker startup must resolve its canonical runtime-closure builder explicitly.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: prepareTemporalWorkerRuntimeDependencies
@@ -1469,7 +1475,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Clean local startup must build worker runtime dependencies before exposing a partial stack.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: buildLocalPostgresProofSeedSql
@@ -1478,7 +1484,7 @@ symbols:
     cqRails: [ListWarehouseConnectionSourceObjects, StartRun]
     fowlerSignals: [Local SQL execution needs real source relations.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: fs
@@ -1487,7 +1493,7 @@ symbols:
     cqRails: [ListWarehouseConnections]
     fowlerSignals: [Local source catalog is written as a workspace-owned file.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: resolveProcessStartupOrder
@@ -1496,7 +1502,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [API build must finish before worker startup to avoid dist-watch port churn.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: seedLocalPostgresProofData
@@ -1505,7 +1511,7 @@ symbols:
     cqRails: [ListWarehouseConnectionSourceObjects, StartRun]
     fowlerSignals: [Local SQL execution needs real source relations.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: seedLocalWorkspaceWarehouseCatalog
@@ -1514,7 +1520,7 @@ symbols:
     cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects]
     fowlerSignals: [Local proof stack needs governed source catalog metadata.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: DEFAULT_LOCAL_PROTECTED_RUNTIME_TENANT_ID
@@ -1523,7 +1529,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Worker queue must match tenant-scoped API scheduling.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: resolveLocalProtectedRuntimeTenantId
@@ -1532,7 +1538,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Worker queue must match tenant-scoped API scheduling.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: toTenantScopedTaskQueue
@@ -1541,7 +1547,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Worker queue must match tenant-scoped API scheduling.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: allocateFreePort
@@ -1550,7 +1556,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must avoid hidden port coupling.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: buildTemporalCliStartDevArgs
@@ -1559,7 +1565,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must be hermetic and not inherit operator CLI config.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: resolveTemporalCliExecutable
@@ -1568,7 +1574,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must not depend on SDK native dev-server spawn on Windows.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: startTemporalCliDevServer
@@ -1577,7 +1583,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must use an owned process lifecycle.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: terminateTemporalCliProcess
@@ -1586,7 +1592,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must cleanly own child process teardown.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: waitForTcpPort
@@ -1595,7 +1601,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal readiness must be a real port probe, not process-spawn optimism.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: TEMPORAL_CLI_CACHE_PREFIX
@@ -1604,7 +1610,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must locate the SDK-managed CLI deterministically.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: TEMPORAL_CLI_ENV_PATH
@@ -1613,7 +1619,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal bootstrap must allow an explicit operator-owned CLI override.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: TEMPORAL_CLI_POLL_INTERVAL_MS
@@ -1622,7 +1628,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Temporal readiness polling must be explicit instead of hidden behind arbitrary sleeps.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: TEMPORAL_CLI_READY_TIMEOUT_MS
@@ -1631,7 +1637,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Temporal readiness timeout belongs to the local runtime composition seam.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: fs
@@ -1640,7 +1646,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local Temporal CLI discovery must inspect filesystem candidates explicitly.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: net
@@ -1649,7 +1655,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Temporal readiness must probe TCP availability through the local runtime boundary.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: os
@@ -1658,7 +1664,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Temporal CLI cache lookup must be scoped to the host temp directory.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: startLocalTemporalService
@@ -1667,7 +1673,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Local protected runtime startup must expose one owned Temporal service seam.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-dev-stack.test.cjs
   - name: SELECTED_CLOSURE_LIVE_PROOF_ROOT
@@ -1676,7 +1682,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan, StartRun, GetRunSnapshot]
     fowlerSignals: [Selected closure proof state must live in an explicit local proof root.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: buildLiveProofApiEnv
@@ -1685,7 +1691,7 @@ symbols:
     cqRails: [ImportWarehouseSources, PreviewExecutablePlan, StartRun]
     fowlerSignals: [Live proof API posture must compose real workspace files, catalog, and Temporal rails.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: buildLiveProofTemporalEnvOverrides
@@ -1694,7 +1700,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Live proof Temporal overrides must be derived at the orchestration boundary.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: buildLiveProofTemporalOptions
@@ -1703,7 +1709,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Live proof Temporal namespace and queue options must share one source of truth.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: buildLiveProofTemporalWorkerEnv
@@ -1712,7 +1718,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Live proof worker posture must derive from the same API runtime contract.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: readNonEmptyEnv
@@ -1721,7 +1727,7 @@ symbols:
     cqRails: [ImportWarehouseSources, StartRun]
     fowlerSignals: [Live proof environment defaults must distinguish absent values from empty overrides.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: resolveLiveProofWorkspaceFilesRoot
@@ -1730,7 +1736,7 @@ symbols:
     cqRails: [ImportWarehouseSources]
     fowlerSignals: [Workspace catalog discovery must use an explicit filesystem root.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: seedSelectedClosureLocalWarehouseProof
@@ -1739,7 +1745,7 @@ symbols:
     cqRails: [ImportWarehouseSources, StartRun]
     fowlerSignals: [Selected closure proof must seed real source tables and governed connection metadata.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: assert
@@ -1748,7 +1754,7 @@ symbols:
     cqRails: [ImportWarehouseSources, StartRun]
     fowlerSignals: [Live proof unit assertions must guard orchestration environment invariants.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
   - name: test
@@ -1757,88 +1763,16 @@ symbols:
     cqRails: [ImportWarehouseSources, StartRun]
     fowlerSignals: [Live proof orchestration tests must remain first-class mechanized coverage.]
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - scripts/run-selected-closure-live-proof.test.cjs
-  - name: LiveMaterializationEvidence
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: RunMaterializationEvidence
-    cqRails: [GetRunSnapshot]
-    fowlerSignals: [Live proof must assert concrete materialization evidence.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: LiveRunEventResponse
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: RunMaterializationEvidence
-    cqRails: [ListRunEvents]
-    fowlerSignals: [Live proof must assert concrete run timeline events.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: LiveRunSnapshot
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: RunMaterializationEvidence
-    cqRails: [GetRunSnapshot]
-    fowlerSignals: [Live proof must assert concrete completed snapshots.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: assertCompletedMaterialization
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: RunMaterializationEvidence
-    cqRails: [GetRunSnapshot]
-    fowlerSignals: [Live proof must assert concrete materialization evidence.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: waitForCompletedLiveRun
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: RunMaterializationEvidence
-    cqRails: [GetRunSnapshot]
-    fowlerSignals: [Live proof must wait for real completion instead of route navigation only.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: showExplorerPanel
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: WarehouseConnectionCatalog
-    cqRails: [ListWarehouseConnections]
-    fowlerSignals: [Source import must be reachable through the real Canvas explorer.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: clickWizardNext
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: WarehouseConnectionCatalog
-    cqRails: [ImportWarehouseSources]
-    fowlerSignals: [Source import must complete through user-facing wizard steps.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-  - name: closeRunConsoleIfOpen
-    path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    dddOwner: RunMaterializationEvidence
-    cqRails: [GetRunSnapshot]
-    fowlerSignals: [Completed evidence must remain inspectable when the console is open.]
-    architectureGuard: pnpm --filter @dvt/web lint
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
-    unitTests:
-      - apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
   - name: useRunEventsQuery
     path: apps/web/src/app/queries/runsQueries.ts
     dddOwner: DbtNodeRunHistory
     cqRails: [ListRunEvents]
     fowlerSignals: [dbt Inspector history must consume runtime events through the governed query boundary.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/queries/queryKeyPolicy.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - name: DbtNodeRunHistoryEntry
@@ -1847,7 +1781,7 @@ symbols:
     cqRails: [ListRunEvents]
     fowlerSignals: [dbt Inspector history must render node-scoped runtime facts, not placeholder copy.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
   - name: buildDbtNodeRunHistoryEntries
@@ -1856,7 +1790,7 @@ symbols:
     cqRails: [ListRunEvents]
     fowlerSignals: [dbt Inspector history must filter runtime events by selected graph node.]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests:
       - apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx
 ```

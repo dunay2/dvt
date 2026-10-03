@@ -31,7 +31,7 @@ evidence:
     - pnpm --filter dvt-temporal-worker typecheck
     - pnpm --filter dvt-api typecheck
     - DATABASE_URL=postgres://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts
-    - node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    - 'Historical browser proof: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
 ---
 
 ## Decision
@@ -62,6 +62,11 @@ inserts and reads with forced RLS, and rejects committed-row updates or deletes.
 
 ## Evidence
 
+The historical selected-closure browser invocation is pinned to its original
+Git revision above. It is not a current runnable route or evidence that the new
+terminal DVT proof covers DBT credential resolution. The focused DBT runtime,
+authorization and cleanup tests listed here retain those obligations.
+
 Focused contract tests reject plaintext credential values and prove the exact
 authorized reference is stored. Runtime tests prove unavailable references fail
 before process invocation, returned failures do not contain process output, the
@@ -69,6 +74,6 @@ temporary file has restrictive permissions, and a real cancelled subprocess is
 terminated before both temporary directories are removed.
 
 PostgreSQL-backed tests prove one record per decision identity, cross-tenant
-read isolation, and append-only mutation rejection. The selected-closure live
-proof runs a real dbt-postgres command through the protected API, Temporal
+read isolation, and append-only mutation rejection. The historical selected-closure
+live proof ran a real dbt-postgres command through the protected API, Temporal
 worker, PostgreSQL, and Cypress flow.

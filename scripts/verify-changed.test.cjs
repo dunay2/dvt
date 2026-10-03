@@ -246,6 +246,8 @@ test('buildVerifyChangedPlan routes catalog reconciliation to one canonical comm
     'scripts/planning-db/catalog-reconciliation.cjs',
     'scripts/planning-db/catalog-reconciliation-write.cjs',
     'scripts/planning-db-operate-tests/catalog-reconciliation.test.cjs',
+    'scripts/planning-db/feature-mechanization-evidence-retirement.cjs',
+    'scripts/planning-db-operate-tests/feature-mechanization-retirement.test.cjs',
   ];
   for (const changed of [...paths.map((path) => [path]), paths]) {
     const labels = labelsFor(changed);

@@ -1,5 +1,9 @@
 /** Owned concern: validate and plan lossless catalog provenance/reference patches. */
 const { sha256HexUtf8 } = require('@dvt/crypto');
+const {
+  validateFeatureMechanizationEvidenceRetirementCommand,
+  projectFeatureMechanizationEvidenceRetirement,
+} = require('./feature-mechanization-evidence-retirement.cjs');
 
 function catalogRowHash(value) {
   const serialize = (item) => {
@@ -50,7 +54,11 @@ function parseCatalogReconciliation(value) {
     throw new Error('CATALOG-REQUEST: Changes must be nonempty.');
   const targets = new Set();
   for (const change of value.changes) {
-    object(change, ['origin', 'railId', 'expectedRowSha256', 'source', 'reference'], 'change');
+    object(
+      change,
+      ['origin', 'railId', 'expectedRowSha256', 'source', 'reference', 'evidenceRetirement'],
+      'change'
+    );
     if (!['imported', 'local'].includes(change.origin))
       throw new Error('CATALOG-REQUEST: Exact origin required.');
     text(change.railId, 'railId');
@@ -59,8 +67,17 @@ function parseCatalogReconciliation(value) {
     const key = `${change.origin}:${change.railId}`;
     if (targets.has(key)) throw new Error('CATALOG-REQUEST: Duplicate target.');
     targets.add(key);
-    if (!change.source && !change.reference)
-      throw new Error('CATALOG-REQUEST: Explicit source or reference patch required.');
+    if (!change.source && !change.reference && !change.evidenceRetirement)
+      throw new Error(
+        'CATALOG-REQUEST: Explicit source, reference or evidence retirement patch required.'
+      );
+    if (Object.hasOwn(change, 'evidenceRetirement')) {
+      if (Object.hasOwn(change, 'source') || Object.hasOwn(change, 'reference'))
+        throw new Error(
+          'EVIDENCE-RETIREMENT-EXCLUSIVE: Cannot combine evidence retirement with provenance or reference patches.'
+        );
+      validateFeatureMechanizationEvidenceRetirementCommand(change.evidenceRetirement);
+    }
     if (Object.hasOwn(change, 'source')) {
       object(change.source, ['commit', 'path'], 'source');
       if (!/^[a-f0-9]{40}$/u.test(change.source.commit || ''))
@@ -96,6 +113,11 @@ function planCatalogReconciliation(request, storedRows, sourceProofs) {
       throw new Error(`CATALOG-STALE: ${change.railId}.`);
     const before = snapshot.row;
     const after = structuredClone(before);
+    if (change.evidenceRetirement)
+      Object.assign(
+        after,
+        projectFeatureMechanizationEvidenceRetirement(before, change.evidenceRetirement)
+      );
     let proof = null;
     if (change.source) {
       proof = sourceProofs.get(`${change.source.commit}:${change.source.path}`);
