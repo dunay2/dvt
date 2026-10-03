@@ -2,6 +2,7 @@ require('./planning-db-operate-tests/cli.test.cjs');
 require('./planning-db-operate-tests/docs-resolution.test.cjs');
 require('./planning-db-operate-tests/db-surface.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization.test.cjs');
+require('./planning-db-operate-tests/catalog-reconciliation.test.cjs');
 require('./planning-db-operate-tests/fowler-analysis.test.cjs');
 require('./planning-db-operate-tests/component-create.test.cjs');
 require('./planning-db-operate-tests/architecture-parse.test.cjs');

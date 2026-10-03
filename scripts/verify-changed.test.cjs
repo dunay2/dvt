@@ -241,6 +241,22 @@ test('buildVerifyChangedPlan routes planning DB query shards to the canonical su
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan routes catalog reconciliation to one canonical command suite', () => {
+  const paths = [
+    'scripts/planning-db/catalog-reconciliation.cjs',
+    'scripts/planning-db/catalog-reconciliation-write.cjs',
+    'scripts/planning-db-operate-tests/catalog-reconciliation.test.cjs',
+  ];
+  for (const changed of [...paths.map((path) => [path]), paths]) {
+    const labels = labelsFor(changed);
+    assert.equal(
+      labels.filter((label) => label === 'node --test scripts/planning-db-operate.test.cjs').length,
+      1
+    );
+    assert.ok(!labels.includes('pnpm test:planning:db'));
+  }
+});
+
 test('buildVerifyChangedPlan runs focused frontend component inventory tests directly', () => {
   const labels = labelsFor(['scripts/planning-db/frontend-component-inventory.cjs']);
 

@@ -2,7 +2,7 @@
 title: Planning DB Operational Integrity Reconciliation Plan
 status: Accepted
 owner: Architecture Governance / Planning DB
-last_reviewed: 2026-09-12
+last_reviewed: 2026-10-03
 planning_type: mandatory-proposal
 issue: 2748
 ---
@@ -149,6 +149,71 @@ Negative proof must cover each incomplete or invalid pair and prove that no
 reference metadata is silently dropped. The positive proof must show the pair
 in `rawRail` and `rawManifest`, effective state `referenced`, and unchanged
 canonical authority selection.
+
+## Lossless catalog reconciliation (#3549)
+
+Git-owned source retirement must not erase DB-owned architecture. The existing
+`RecordFeatureMechanizationRail` command accepts an explicit
+`--catalog-reconciliation <json-file>` mode, separate from ordinary declaration.
+This is an operator-requested repair, never a query, startup, refresh or import
+side effect. Its owner remains the Planning DB feature mechanization catalog.
+
+```mermaid
+flowchart LR
+  Before[Exact imported or local rail snapshots] --> Command[RecordFeatureMechanizationRail]
+  Git[Verified historical Git blobs] --> Command
+  Design[Scoped design and explicit operator request] --> Command
+  Command --> Transaction[Atomic metadata-only reconciliation]
+  Transaction --> Guard[Same canonical winners and intact implementation evidence]
+  Guard --> Audit[Existing operation audit with before and after]
+```
+
+The request names its design, actor, idempotency key and exact changes. Each
+change names the origin (`imported` or `local`), rail identity and SHA-256 of
+the complete expected stored row, including source/hash and local revision.
+PostgreSQL computes that fingerprint with the existing `sha256_text` and
+`stable_jsonb_text` functions over `to_jsonb(row)`. Native JSONB snapshots back
+the audit; JSON parsed through JavaScript is not a lossless fingerprint or
+write format for arbitrary JSONB numbers. Updates touch only requested columns
+and use native JSONB patches for selected reference attributes.
+There is no wildcard target, implicit selection or fallback to another origin.
+An approved/reviewed design must admit the physical tables being changed.
+
+For a retired repository source, the command verifies an ancestor commit,
+regular-file blob and matching original path in Git, and its absence at the
+current candidate. It records the immutable repository URL and content hash.
+It must not recreate the file, rebuild the DB or invent a replacement authority.
+Reference-only reconciliation is explicit, names the existing canonical
+authority and updates only the selected rail/reference metadata; it cannot
+reconstruct or homogenize symbols, cycles, owners, states or tests. Dependent
+`authorityRef` changes must be selected explicitly or the transaction rejects.
+
+The bounded writer may update provenance in `command_query_rails` as well as
+`feature_mechanization_local_rails`. It preserves identity and ranking timestamps;
+local revisions advance. This exception does not authorize general edits to
+imported projections. The existing `feature_mechanization_local_operations`
+audit records the exact before/after, request and source proof. No schema change
+or new command rail is introduced.
+
+Imported rows have no revision: their guard is the complete stored-row hash.
+The legacy non-null audit revision slot uses zero for these records, with origin
+and the actual optimistic-concurrency guard explicit in the payload; zero does
+not assert that an imported row has a revision. Local revisions remain real.
+
+One transaction excludes concurrent catalog writes, checks every expected row
+before writing, resolves references and verifies that the canonical winner for
+every rail remains unchanged. Any missing row, stale snapshot, invalid Git proof,
+unscoped design, dangling authority, changed winner or failed audit rolls back
+the whole request. Identical retries return the committed receipt; reusing an
+idempotency key with another request rejects. Product databases are out of scope.
+
+| Scenario                                      | Opportunity / pattern                                  | DDD / rail                                                     | Allowed surfaces                                                                                    | Required proof                                                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Retired source and duplicate-reference repair | Lossless metadata patch; explicit transaction boundary | Feature mechanization catalog / RecordFeatureMechanizationRail | Existing CLI adapter; focused catalog policy and PostgreSQL writer; focused tests and local routing | Full-row CAS, real Git provenance, unchanged symbols/cycles/winner, atomic rollback, idempotency and dependency rejection; real PostgreSQL proof |
+
+Replaying ordinary record commands was rejected because they rebuild symbol
+metadata. Deleting rows, raising integrity tolerances or importing the database
+was rejected because each can hide or replace the authority being preserved.
 
 ## Feature mechanization
 

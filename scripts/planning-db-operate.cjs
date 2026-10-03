@@ -8,6 +8,7 @@
  * @version 1.2.0
  */
 const { spawnSync } = require('node:child_process');
+const { readFileSync } = require('node:fs');
 const { Client } = require('pg');
 const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
@@ -35,6 +36,8 @@ const {
 const {
   applyGovernedSourceRefreshOperation,
 } = require('./planning-db/governed-source-refresh-write-rail.cjs');
+const { parseCatalogReconciliation } = require('./planning-db/catalog-reconciliation.cjs');
+const { applyCatalogReconciliation } = require('./planning-db/catalog-reconciliation-write.cjs');
 
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 const allowedFowlerAnalysisDispositionStatuses = new Set([
@@ -438,6 +441,7 @@ const operationHelp = Object.freeze({
       '--red-green-cycle <existing-id> reconciles one cycle with --expected-revision and explicit admitted --patch-surface evidence.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'Referenced rails require the exact pair --reference-only true and --authority-ref <canonical-source>.',
+      'record --catalog-reconciliation <json-file> performs explicitly scoped, atomic metadata repair without rebuilding declarations; no other CLI flags may be mixed into this mode.',
       'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
   },
@@ -3265,6 +3269,14 @@ function validateFeatureMechanizationRecordCommand(command) {
 }
 
 function parseFeatureMechanizationCommand(action, args) {
+  if (args.includes('--catalog-reconciliation')) {
+    if (action !== 'record' || args.length !== 2 || args[0] !== '--catalog-reconciliation') {
+      throw new Error(
+        'Catalog reconciliation requires record --catalog-reconciliation <json-file> only.'
+      );
+    }
+    return parseCatalogReconciliation(JSON.parse(readFileSync(args[1], 'utf8')));
+  }
   const options = parseFlagOptions(args);
   const featureId = validateFeatureMechanizationFeatureId(requireOption(options, 'feature'));
   const railName = requireOption(options, 'rail');
@@ -8110,6 +8122,9 @@ async function applyDbSurfaceUpsertOperation(command, options = {}) {
 }
 
 async function applyFeatureMechanizationRailRecordOperation(command, options = {}) {
+  if (command.catalogReconciliation) {
+    return applyCatalogReconciliation(command.catalogReconciliation, options);
+  }
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
@@ -8241,6 +8256,12 @@ async function applyFowlerAnalysisOperation(command, options = {}) {
 }
 
 function printOperationResult(result) {
+  if (result.catalogReconciliation) {
+    console.log(
+      `[planning:db:operate] catalog reconciliation changed=${result.catalogReconciliation.changed} idempotent=${result.idempotent}`
+    );
+    return;
+  }
   if (result.idempotent) {
     if (result.audit.source_commit_sha && result.audit.paths) {
       console.log(

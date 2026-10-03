@@ -34,8 +34,8 @@
     {
       "surfaceName": "Command/query rail catalog",
       "canonicalSource": "Feature manifests, explicit rail documentation, and current canonical rail decisions",
-      "writeRail": "Use the owning bounded-context rail; publish derived projections only on explicit request",
-      "writeRailKind": "import",
+      "writeRail": "RecordFeatureMechanizationRail for local declarations and design-scoped metadata reconciliation; import only for explicit bootstrap or recovery",
+      "writeRailKind": "db_command",
       "readQueryRail": "pnpm planning:db:query command-query-rails; pnpm planning:db:query creation-intent",
       "projection": "planning_query_store.command_query_rail_query rows",
       "validation": "pnpm test:planning:db; pnpm planning:db:inventory:check; pnpm docs:feature-mechanization:implementation",
