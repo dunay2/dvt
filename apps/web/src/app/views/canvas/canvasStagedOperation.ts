@@ -16,6 +16,7 @@ export type CanvasStagedOperation = Readonly<{
   operation: CanvasStagedOperationKind;
   inputs: readonly (string | null)[];
   semanticDocument?: DvtSubstraitSemanticDocumentV1;
+  configurationDocument?: DvtSubstraitSemanticDocumentV1;
 }>;
 
 type CanvasStagedCompositionInput = Readonly<{
@@ -169,8 +170,12 @@ export function connectCanvasStagedOperation(
     return operation;
   const inputs = [...operation.inputs];
   inputs[port] = relationId;
-  const { semanticDocument: _discarded, ...pending } = operation;
-  return { ...pending, inputs };
+  const { semanticDocument, ...pending } = operation;
+  return {
+    ...pending,
+    inputs,
+    ...(semanticDocument == null ? {} : { configurationDocument: semanticDocument }),
+  };
 }
 
 export function disconnectCanvasStagedOperation(
@@ -187,8 +192,12 @@ export function disconnectCanvasStagedOperation(
     return operation;
   const inputs = [...operation.inputs];
   inputs[port] = null;
-  const { semanticDocument: _discarded, ...pending } = operation;
-  return { ...pending, inputs };
+  const { semanticDocument, ...pending } = operation;
+  return {
+    ...pending,
+    inputs,
+    ...(semanticDocument == null ? {} : { configurationDocument: semanticDocument }),
+  };
 }
 
 export function createsCanvasStagedOperationCycle(

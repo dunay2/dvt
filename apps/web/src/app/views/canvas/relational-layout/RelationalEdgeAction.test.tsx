@@ -5,6 +5,11 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { RelationalEdgeAction } from './RelationalEdgeAction';
+import { RelationalTreeEdges } from './RelationalTreeEdges';
+import { graphJoin } from '../canvasRelationGraph.test-support';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { buildCanvasRelationalTreeRelation } from '../canvasRelationalTreeRelationProjection';
+import { layoutCanvasRelationalTree } from '../canvasRelationalTreeGeometry';
 
 describe('RelationalEdgeAction', () => {
   let container: HTMLDivElement;
@@ -62,5 +67,39 @@ describe('RelationalEdgeAction', () => {
     expect(remove).not.toBeNull();
     await act(async () => fireEvent.click(remove!));
     expect(onDisconnect).toHaveBeenCalledTimes(2);
+  });
+
+  it('binds each canonical Input to the same accessible disconnect action, not operation retirement', () => {
+    const { document, session } = graphJoin();
+    const indexed = indexSubstraitRelations(document);
+    if (!indexed.ok) throw indexed.error;
+    const tree = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'test' });
+    const layout = layoutCanvasRelationalTree(tree);
+    const disconnect = vi.fn();
+    act(() =>
+      root.render(
+        <RelationalTreeEdges
+          layout={layout}
+          removeConnectionLabel="Remove connection"
+          outputRelationId={null}
+          onDisconnectRelation={disconnect}
+        />
+      )
+    );
+    const edges = container.querySelectorAll('[data-slot="canvas-relational-edge-action"]');
+    expect(edges).toHaveLength(2);
+    act(() => fireEvent.keyDown(edges[1]!, { key: 'Backspace' }));
+    expect(disconnect).toHaveBeenCalledExactlyOnceWith(session.rootId, 1);
+    act(() =>
+      root.render(
+        <RelationalTreeEdges
+          layout={layout}
+          removeConnectionLabel="Remove connection"
+          outputRelationId={null}
+        />
+      )
+    );
+    expect(container.querySelector('[data-slot="canvas-relational-edge-action"]')).toBeNull();
+    session.dispose();
   });
 });

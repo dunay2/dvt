@@ -10,6 +10,7 @@ import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocu
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
+import { restoreCanvasOperationConfiguration } from './canvasRetainedOperationConfiguration';
 
 type DraftState = ReturnType<typeof useCanvasRelationalTreeDraftState>;
 
@@ -21,6 +22,18 @@ export function useCanvasStagedOperationConfiguration(args: {
   const { analysis, inputs, state } = args;
   const configureImmediate = useCallback(
     (operation: CanvasStagedOperation) => {
+      if (operation.configurationDocument != null)
+        return restoreCanvasOperationConfiguration(
+          operation,
+          operation.inputs.map((relationId) =>
+            resolveCanvasStagedProducerDocument({
+              relationId,
+              canonical: analysis?.document ?? null,
+              operations: state.stagedOperations,
+              sources: state.pendingSources,
+            })
+          )
+        );
       const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
       return strategy === 'binary'
         ? configureCanvasStagedBinary(
@@ -39,6 +52,7 @@ export function useCanvasStagedOperationConfiguration(args: {
     const snapshot = state.stagedOperations;
     void Promise.all(
       snapshot.map(async (operation) => {
+        if (operation.configurationDocument != null) return configureImmediate(operation);
         const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
         if (strategy === 'binary') return configureImmediate(operation);
         if (strategy === 'manual') return operation;

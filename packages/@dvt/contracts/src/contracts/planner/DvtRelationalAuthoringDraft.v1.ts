@@ -79,6 +79,7 @@ const OperationDraftSchema = z
     operation: OperationSchema,
     inputs: z.array(NonBlankStringSchema.nullable()).min(1).max(2),
     semanticDocument: DvtSubstraitSemanticDocumentV1Schema.optional(),
+    configurationDocument: DvtSubstraitSemanticDocumentV1Schema.optional(),
   })
   .strict();
 
@@ -153,6 +154,20 @@ export const DvtRelationalAuthoringDraftV1Schema = z
         });
     });
     draft.operations.forEach((operation, index) => {
+      if (operation.configurationDocument != null) {
+        if (
+          operation.semanticDocument != null ||
+          !operation.configurationDocument.sidecar.relations.some(
+            (relation) => relation.relationId === operation.relationId
+          )
+        )
+          context.addIssue({
+            code: 'custom',
+            path: ['operations', index, 'configurationDocument'],
+            message:
+              'Retained configuration must own this operation and cannot be executable simultaneously.',
+          });
+      }
       const arity = BinaryOperations.has(operation.operation) ? 2 : 1;
       if (operation.inputs.length !== arity)
         context.addIssue({

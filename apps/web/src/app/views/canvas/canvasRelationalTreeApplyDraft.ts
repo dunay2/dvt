@@ -122,7 +122,9 @@ export function createCanvasRelationalTreeApplyDraft(args: {
     args.relationalAuthoringDraft === null
       ? createCanvasRelationalTreeNodeDraft(args.transformNode, null, null)
       : applied.operation == null || applied.document == null
-        ? createCanvasInspectorNodeDraft(args.transformNode)
+        ? args.relationalAuthoringDraft != null && args.joinDraft == null
+          ? createCanvasRelationalTreeNodeDraft(args.transformNode, null, null)
+          : createCanvasInspectorNodeDraft(args.transformNode)
         : createCanvasRelationalTreeNodeDraft(
             args.transformNode,
             applied.operation,

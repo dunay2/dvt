@@ -346,6 +346,18 @@ cover this prerequisite, unchanged physical schemas and producer identity.
 
 ### Staged operation connection boundary
 
+Canonical edges use the same accessible connection action as staged edges:
+contextual removal or Delete/Backspace disconnects only the selected Input.
+The existing `ConfigureCanvasDvtNode` session projects the complete tree into
+the existing incomplete-authoring graph, preserving identities and unrelated
+pending cards. Disconnected operations retain their exact Substrait configuration
+under the non-executable `configurationDocument` member; affected consumers have
+no published fields or Preview. Exact reconnect restores configuration only when
+the original Input identities and documents match. Different producers require
+explicit reconfiguration. Apply/save/reopen cannot restore a removed edge from
+the obsolete complete semantic document. The owning persistence contract defines
+this distinction; the SVG layer only dispatches consumer identity and port.
+
 Dropping a palette item stages one movable operation card in the discardable
 editor session; it does not select an arbitrary relation and does not mutate the
 canonical document. Every operation exposes the Input ports required by its

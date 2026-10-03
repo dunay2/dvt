@@ -1,9 +1,5 @@
 /** Owned concern: render connections and operand roles from projected geometry. */
-import type { CanvasRelationalTreeChildRole } from '../canvasRelationalTreeProjection';
-import {
-  type CanvasRelationalTreeLayout,
-  type CanvasRelationalTreePlacedEdge,
-} from '../canvasRelationalTreeGeometry';
+import type { CanvasRelationalTreeLayout } from '../canvasRelationalTreeGeometry';
 import type { CanvasStagedOperation } from '../canvasStagedOperation';
 import {
   indexPlacedRelations,
@@ -12,37 +8,7 @@ import {
 } from './relationalTreeEdgeProjection';
 import { RelationalEdgeAction } from './RelationalEdgeAction';
 import { RelationalOutputEdge } from './RelationalOutputEdge';
-
-function childRoleBadge(role: CanvasRelationalTreeChildRole, ordinal: number): string | null {
-  if (role === 'left') return 'L';
-  if (role === 'right') return 'R';
-  if (role === 'primary') return '1';
-  if (role === 'secondary') return String(ordinal + 1);
-  return null;
-}
-
-function EdgeRoleBadge({ edge }: Readonly<{ edge: CanvasRelationalTreePlacedEdge }>) {
-  const badge = childRoleBadge(edge.role, edge.ordinal);
-  return badge == null ? null : (
-    <g
-      data-slot="canvas-relational-tree-input-label"
-      data-role={edge.role}
-      transform={`translate(${edge.toX - 24} ${edge.toY - 10})`}
-    >
-      <rect width="20" height="20" rx="4" fill="var(--surface-panel)" stroke="var(--status-info)" />
-      <text
-        x="10"
-        y="14"
-        fill="var(--text-strong)"
-        fontSize="12"
-        fontWeight="500"
-        textAnchor="middle"
-      >
-        {badge}
-      </text>
-    </g>
-  );
-}
+import { RelationalCanonicalEdges } from './RelationalCanonicalEdges';
 
 export function RelationalTreeEdges({
   layout,
@@ -50,6 +16,7 @@ export function RelationalTreeEdges({
   removeConnectionLabel,
   onSelectStagedOperation,
   onDisconnectStagedOperation,
+  onDisconnectRelation,
   outputRelationId,
   onSelectOutput,
   onDisconnectOutput,
@@ -59,6 +26,7 @@ export function RelationalTreeEdges({
   removeConnectionLabel: string;
   onSelectStagedOperation?: (id: string) => void;
   onDisconnectStagedOperation?: (id: string, port: number) => void;
+  onDisconnectRelation?: (id: string, port: number) => void;
   outputRelationId: string | null;
   onSelectOutput?: () => void;
   onDisconnectOutput?: () => void;
@@ -103,31 +71,11 @@ export function RelationalTreeEdges({
           )}
         </g>
       ))}
-      {layout.nodes
-        .filter((parent) => parent.node.children.length > 0)
-        .map((parent) => (
-          <g
-            key={parent.node.locator}
-            data-slot="canvas-relational-tree-children"
-            data-parent-locator={parent.node.locator}
-            data-child-count={parent.node.children.length}
-          >
-            {layout.edges
-              .filter((edge) => edge.parentLocator === parent.node.locator)
-              .map((edge) => (
-                <g key={edge.key}>
-                  <path
-                    d={relationalEdgePath(edge)}
-                    fill="none"
-                    stroke="var(--status-info)"
-                    strokeOpacity="0.8"
-                    strokeWidth="1.5"
-                  />
-                  <EdgeRoleBadge edge={edge} />
-                </g>
-              ))}
-          </g>
-        ))}
+      <RelationalCanonicalEdges
+        layout={layout}
+        removeLabel={removeConnectionLabel}
+        onDisconnect={onDisconnectRelation}
+      />
     </svg>
   );
 }

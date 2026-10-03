@@ -114,6 +114,7 @@ function DraftViewport({
             onSelectStagedOperation={actions.selectStagedOperation}
             onConnectStagedOperation={actions.connectStagedOperation}
             onDisconnectStagedOperation={actions.disconnectStagedOperation}
+            onDisconnectRelation={actions.disconnectRelation}
             outputRelationId={data.outputRelationId}
             onConnectOutput={actions.connectOutput}
             onDisconnectOutput={actions.disconnectOutput}
