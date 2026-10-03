@@ -5,6 +5,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
   openWorkbenchModel,
   dragWorkbenchSource,
   connectWorkbenchProducer,
@@ -81,7 +82,7 @@ describe('Workbench cross', () => {
     cy.get('[data-slot="canvas-relational-tree"] [data-operator="cross"]').should('have.length', 2);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
-    visitWorkbenchCanvas();
+    revisitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-relational-tree"] [data-operator="cross"]').should('have.length', 2);
   });

@@ -7,6 +7,7 @@ import {
   openWorkbenchModel,
   previewWorkbenchModel,
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
   connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
@@ -28,10 +29,20 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       cy.viewport(1440, 1000);
       visitWorkbenchCanvas();
       openWorkbenchModel();
-      cy.get('[data-operator="join"]').closest('li').as('producer', { type: 'static' });
+      cy.get('[data-operator="join"]').closest('li').as('producer');
       for (const [index, operation] of ordering.entries()) {
         workbenchOperation(operation).click();
         cy.get('[data-pending-operation="true"]').last().as(`unary${index}`, { type: 'static' });
+        if (index === 0) {
+          cy.get('[data-slot="canvas-relational-output-input-port"]').focus().trigger('keydown', {
+            eventConstructor: 'KeyboardEvent',
+            key: 'Delete',
+          });
+          cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+            'not.have.attr',
+            'data-connected'
+          );
+        }
         connectWorkbenchProducer(index === 0 ? '@producer' : '@unary0', `@unary${index}`);
         const editor = '[data-slot="canvas-staged-operation-inspector"]';
         if (operation === 'fetch')
@@ -45,6 +56,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       );
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() => expect(semanticWrites('join-transform')).not.to.have.length(0));
+      cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
 
       let sortId = '';
       let fetchId = '';
@@ -128,7 +140,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       });
 
       cy.get('[data-slot="canvas-model-tab-close"]').click();
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
       cy.get('[data-slot="canvas-relational-edit"]').click();

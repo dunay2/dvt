@@ -172,6 +172,12 @@ unregistered consumer of that sample helper. The other persistence exports
 (semantic-write inspection) are unchanged by this response-shape cut. Unknown
 browser paths still fail closed; Vitest is not substituted for browser evidence.
 
+Reopen evidence waits for a fresh draft GET from that navigation, not a recorded
+request from the preceding visit. The dedicated revisit gesture is consumed only
+by these saved-preview scenarios; initial navigation and other workbench gestures
+are unchanged. Current DOM queries replace cached references across edit-mode
+transitions. Neither arbitrary sleeps nor relaxed assertions establish readiness.
+
 | Scenario                    | Opportunity             | Pattern / DDD owner                           | Rail                         | Implementation surfaces                           | Unit or package test                                                            | Architecture test                                     | User-flow test                                                                      | Out of scope                                    |
 | --------------------------- | ----------------------- | --------------------------------------------- | ---------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------- |
 | Actual Transform provenance | Hidden authority        | Service Layer / CanvasTransformDataSample     | `PreviewCanvasTransformRows` | Existing contract, projection, use case and probe | Strict LIVE shape, actual fan-in/subrelation sources, empty results and denials | Existing read-only query boundary and DTO rejection   | Real PostgreSQL Transform preview and changed rows in the existing disposable lease | LOCAL and deep paging                           |

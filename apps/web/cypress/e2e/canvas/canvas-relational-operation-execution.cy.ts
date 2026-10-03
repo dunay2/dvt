@@ -27,10 +27,19 @@ describe('Internal operation card execution', () => {
       visitWorkbenchCanvas();
       openWorkbenchModel();
       waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+      cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       if (wrapped) {
-        cy.get(card).closest('li').as('joinInput', { type: 'static' });
+        cy.get(card).closest('li').as('joinInput');
         workbenchOperation('fetch').click();
         cy.get('[data-pending-operation="true"]').last().as('fetch', { type: 'static' });
+        cy.get('[data-slot="canvas-relational-output-input-port"]').focus().trigger('keydown', {
+          eventConstructor: 'KeyboardEvent',
+          key: 'Delete',
+        });
+        cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+          'not.have.attr',
+          'data-connected'
+        );
         connectWorkbenchProducer('@joinInput', '@fetch');
         cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
         connectWorkbenchProducer(
@@ -39,6 +48,7 @@ describe('Internal operation card execution', () => {
           null
         );
         cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+        cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       }
       let relationId = '';
       cy.get(card)
@@ -63,10 +73,22 @@ describe('Internal operation card execution', () => {
       cy.get(`${outputs} [data-field-id]`).then((fields) => {
         const ids = [...fields].map((field) => field.getAttribute('data-field-id'));
         const expected = [ids[1], ids[0], ...ids.slice(2)];
-        cy.get(`${outputs} [data-field-id]`).first().focus().trigger('keydown', {
-          key: 'ArrowDown',
-          altKey: true,
-        });
+        cy.get(`${outputs} [data-field-id]`)
+          .first()
+          .should('have.attr', 'draggable', 'true')
+          .focus()
+          .then(($row) => {
+            const row = $row[0]!;
+            const event = new row.ownerDocument.defaultView!.KeyboardEvent('keydown', {
+              key: 'ArrowDown',
+              code: 'ArrowDown',
+              altKey: true,
+              bubbles: true,
+              cancelable: true,
+            });
+            row.dispatchEvent(event);
+            expect(event.defaultPrevented, 'output reorder handles Alt+ArrowDown').to.equal(true);
+          });
         cy.get(`${outputs} [data-field-id]`).should((ordered) => {
           expect([...ordered].map((field) => field.getAttribute('data-field-id'))).to.deep.equal(
             expected

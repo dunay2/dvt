@@ -90,6 +90,16 @@ explicit producer/Input ports and the current inline configuration. Their saved
 semantic identity, row-query, no-implicit-read and reopen assertions are retained;
 the product is not changed to restore the retired interaction model.
 
+Subsequent runs exposed stale DOM aliases across edit-mode entry and reopening
+checks accepting the previous navigation's draft GET. Revisit evidence now waits
+for its own GET, and post-save interactions wait for the existing Synced state.
+Saved-output rewiring disconnects the terminal first, retaining the one-edge rule.
+Keyboard evidence dispatches a browser KeyboardEvent and asserts it was handled;
+no optional unregistered Cypress command is required. One native Cypress startup
+stalled before executing tests; that attempt is recorded as an environment failure,
+not successful evidence. The identified orphaned headless proof browser was stopped
+without touching interactive browsers or application data.
+
 Exact candidate SHAs and final lint, typecheck, package, pre-push and CI outcomes
 are recorded on the governing issue and implementation PR. Intermediate failures
 are not claimed as successful evidence. This does not complete parent issues

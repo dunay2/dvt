@@ -11,6 +11,7 @@ const spec = 'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-
 const helper = 'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts';
 const dataHelper = 'apps/web/cypress/e2e/canvas/canvasNodeDataActions.proof.ts';
 const savedSampleHelper = 'apps/web/cypress/support/relationalWorkbench/persistence.ts';
+const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.ts';
 const savedSampleConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
@@ -25,6 +26,7 @@ describe('governed browser evidence routing', () => {
     helper,
     dataHelper,
     savedSampleHelper,
+    revisitHelper,
     ...savedSampleConsumers,
     spec.replaceAll('/', '\\'),
     spec.slice('apps/web/'.length),
@@ -153,8 +155,10 @@ describe('governed browser evidence routing', () => {
 
   it('registers every saved-sample consumer once in the admitted terminal run', () => {
     const consumers: string[] = [];
+    const revisitConsumers: string[] = [];
     const registrations: string[] = [];
     const target = resolve(savedSampleHelper.slice('apps/web/'.length));
+    const revisitTarget = resolve(revisitHelper.slice('apps/web/'.length));
     const entry = resolve(spec.slice('apps/web/'.length));
     for (const file of readdirSync(resolve('cypress'), { recursive: true, withFileTypes: true })) {
       if (!file.isFile() || !file.name.endsWith('.ts')) continue;
@@ -170,7 +174,7 @@ describe('governed browser evidence routing', () => {
           continue;
         const imported = resolve(dirname(path), `${statement.moduleSpecifier.text}.ts`);
         if (path === entry) registrations.push(imported);
-        if (imported !== target) continue;
+        if (imported !== target && imported !== revisitTarget) continue;
         const bindings = statement.importClause?.namedBindings;
         expect(
           bindings != null && ts.isNamedImports(bindings),
@@ -179,15 +183,30 @@ describe('governed browser evidence routing', () => {
         if (
           bindings != null &&
           ts.isNamedImports(bindings) &&
+          imported === target &&
           bindings.elements.some(
             (binding) => (binding.propertyName ?? binding.name).text === 'stubSavedWorkbenchSample'
           )
         )
           consumers.push(path);
+        if (
+          bindings != null &&
+          ts.isNamedImports(bindings) &&
+          imported === revisitTarget &&
+          bindings.elements.some(
+            (binding) => (binding.propertyName ?? binding.name).text === 'revisitWorkbenchCanvas'
+          )
+        )
+          revisitConsumers.push(path);
       }
     }
     const expected = savedSampleConsumers.map((path) => resolve(path.slice('apps/web/'.length)));
     expect(consumers.sort()).toEqual(expected.sort());
+    expect(revisitConsumers.sort()).toEqual(
+      expected
+        .filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts'))
+        .sort()
+    );
     for (const consumer of expected)
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });
