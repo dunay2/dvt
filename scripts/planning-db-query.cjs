@@ -119,12 +119,14 @@ const {
   buildCodeSymbolDuplicateRows,
   buildCodeSymbolRows,
   buildGovernanceProblemRows,
-  buildSourceDriftRows,
   readCodeSymbolDuplicateRows,
   readCodeSymbolRows,
   readGovernanceProblemRows,
-  readSourceDriftRows,
 } = require('./planning-db/queries/code-symbol-query.cjs');
+const {
+  buildSourceDriftRows,
+  readSourceDriftRows,
+} = require('./planning-db/queries/source-drift-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 const {
   buildDbtProjectRoundtripCapabilityStatusRows,

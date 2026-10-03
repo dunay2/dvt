@@ -94,6 +94,22 @@ test('unrelated script changes do not select runtime runner contracts', () => {
   ]);
 });
 
+test('source drift and dashboard changes select the shared query contract once', () => {
+  const files = [
+    'scripts/planning-db/queries/source-drift-query.cjs',
+    'scripts/planning-db/queries/code-symbol-query.cjs',
+    'scripts/planning-db-query-tests/source-drift.test.cjs',
+  ];
+  const expected = 'node --test scripts/planning-db-query.test.cjs';
+  for (const changed of [...files.map((file) => [file]), files]) {
+    assert.deepEqual(focusedLabelsFor(changed), [expected], changed.join(', '));
+  }
+  assert.deepEqual(focusedLabelsFor([...files, 'scripts/planning-db-integrity-check.cjs']), [
+    'node --test scripts/planning-db-integrity-check.test.cjs',
+    expected,
+  ]);
+});
+
 test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', () => {
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
 
@@ -223,6 +239,22 @@ test('buildVerifyChangedPlan routes planning DB query shards to the canonical su
     1
   );
   assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan routes catalog reconciliation to one canonical command suite', () => {
+  const paths = [
+    'scripts/planning-db/catalog-reconciliation.cjs',
+    'scripts/planning-db/catalog-reconciliation-write.cjs',
+    'scripts/planning-db-operate-tests/catalog-reconciliation.test.cjs',
+  ];
+  for (const changed of [...paths.map((path) => [path]), paths]) {
+    const labels = labelsFor(changed);
+    assert.equal(
+      labels.filter((label) => label === 'node --test scripts/planning-db-operate.test.cjs').length,
+      1
+    );
+    assert.ok(!labels.includes('pnpm test:planning:db'));
+  }
 });
 
 test('buildVerifyChangedPlan runs focused frontend component inventory tests directly', () => {

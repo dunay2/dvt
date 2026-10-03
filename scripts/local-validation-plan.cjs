@@ -89,6 +89,10 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/catalog-reconciliation.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/catalog-reconciliation-write.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/catalog-reconciliation.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-parse.test.cjs':
     'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-plan.test.cjs':
@@ -113,9 +117,12 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-query-tests/fowler-analysis.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/governance-refresh.test.cjs':
     'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/source-drift.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/helpers.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/component-integrity-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/rail-vocabulary-query.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db/queries/source-drift-query.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db/queries/code-symbol-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-run.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-run.test.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-surface-inventory-check.cjs':
