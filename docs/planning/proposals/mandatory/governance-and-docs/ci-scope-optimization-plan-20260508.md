@@ -8,6 +8,17 @@ planning_type: mandatory-proposal
 
 # CI Scope Optimization Implementation Plan
 
+## Current acquisition boundary
+
+The #2926 single-entrypoint cut supersedes separate matrix acquisition and CLI
+mode selection in this plan. `emit-scope.mjs` reads the diff and manifest context
+once per workflow; `ci-scope-outputs.mjs` projects the existing policy into four
+named JSON scopes and both matrices. The projection methods below remain the
+policy API, not independent CLI routes. The current wire shape and event rules
+are documented in [Testing and CI Capabilities](../../../../guides/testing-and-ci-capabilities.md#shared-ci-scope-logic).
+Cross-workflow acquisition and the single aggregate DAG remain separate work;
+no required context, full-event posture or evidence selection is removed here.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
 > superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use
@@ -28,7 +39,7 @@ separately governed by `CDG-W1-3`.
 **Architecture:** Keep `tools/ci/scope-config.mjs` as the workflow scope API and
 orchestrator, but move package-script and script-path semantics into the
 repository command catalog defined by the command catalog normalization plan.
-`emit-scope.mjs` and `emit-workspace-matrix.mjs` must load semantic context from
+`emit-scope.mjs` must load semantic context from
 `GIT_BASE` and `GIT_HEAD` before computing workflow outputs, so `package.json`
 decisions are based on old/new content and catalog classifications rather than
 filename presence alone. Workflows keep consuming those stable entrypoints; the
@@ -158,7 +169,7 @@ flowchart TD
 | ------------------------------------- | ----- | --------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `ClassifyRepositoryCommand`           | query | Repository command catalog        | `tools/ci/repository-command-catalog.mjs`                               | Classifies package scripts and script-file paths into domain and CI sensitivity.  |
 | `ClassifyChangedCiScope`              | query | Repository CI scope policy        | `tools/ci/scope-config.mjs`, `tools/ci/policy/workflow-scope.json`      | Composes catalog classifications and root package base/head blobs into scopes.    |
-| `EmitAffectedWorkspaceMatrix`         | query | Repository CI scope policy        | `tools/ci/emit-workspace-matrix.mjs`, `.github/workflows/ci.yml`        | Emits only affected workspace build/typecheck jobs for PRs.                       |
+| `EmitAffectedWorkspaceMatrix`         | query | Repository CI scope policy        | `tools/ci/emit-scope.mjs`, `.github/workflows/ci.yml`                   | Emits only affected workspace build/typecheck jobs for PRs.                       |
 | `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy        | `tools/ci/emit-scope.mjs`, workflow consumers                           | Emits test, PR-quality, adapter-postgres, and contract scopes from one model.     |
 | `ValidateCiScopeOptimizationContract` | query | Repository CI tool contract tests | `tools/ci/workflow-scope-classification.test.mjs`, `pnpm test:ci-tools` | Fails when tooling-only changes reopen runtime-wide CI or skip changed-file lint. |
 
@@ -206,8 +217,8 @@ allowedImplementationSurfaces:
   - tools/ci/ci-tool-test-suite.mjs
   - tools/ci/ci-tool-test-suite.test.mjs
   - tools/ci/emit-scope.mjs
-  - tools/ci/emit-workspace-matrix.mjs
-  - tools/ci/emit-test-matrix.mjs
+  - tools/ci/emit-scope.mjs
+  - tools/ci/package-test-matrix.mjs
   - tools/ci/policy/workflow-scope.json
   - tools/ci/policy/adapter-postgres-relevance.json
   - tools/ci/workflow-scope-classification.test.mjs
@@ -219,8 +230,8 @@ allowedImplementationSurfaces:
   - tools/ci/package-json-scope-classification.test.mjs
   - tools/ci/prepush-typecheck-scope.mjs
   - tools/ci/emit-scope.test.mjs
-  - tools/ci/emit-workspace-matrix.test.mjs
-  - tools/ci/emit-test-matrix.test.mjs
+  - tools/ci/ci-scope-outputs.test.mjs
+  - tools/ci/package-test-matrix.test.mjs
   - scripts/local-validation-plan.cjs
   - scripts/check-governance-unit-coverage.cjs
   - scripts/check-governance-unit-coverage.test.cjs
@@ -291,13 +302,13 @@ fowlerSignals:
   - Shotgun CI fan-out from root script aliases
   - Duplicate scope authority between workflow paths and local gates
 architectureGuards:
-  - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
+  - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
   - pnpm test:ci-tools
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - CI scope tooling only
 completionGate:
-  - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
+  - node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
   - pnpm test:ci-tools
   - pnpm governance:refresh
   - pnpm docs:feature-mechanization:implementation
@@ -329,7 +340,7 @@ redGreenCycles:
       - tools/ci/repository-command-catalog.mjs
       - tools/ci/scope-config.mjs
       - tools/ci/emit-scope.mjs
-      - tools/ci/emit-workspace-matrix.mjs
+      - tools/ci/emit-scope.mjs
       - tools/ci/package-json-scope-classification.test.mjs
       - tools/ci/workflow-scope-classification.test.mjs
     greenTest: node --test tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs
@@ -346,7 +357,7 @@ redGreenCycles:
     patchSurfaces:
       - tools/ci/scope-config.mjs
       - tools/ci/emit-scope.mjs
-      - tools/ci/emit-workspace-matrix.mjs
+      - tools/ci/emit-scope.mjs
       - tools/ci/package-json-scope-classification.test.mjs
     greenTest: node --test tools/ci/package-json-scope-classification.test.mjs
   - id: package-json-read-failure-fails-closed
@@ -358,14 +369,14 @@ redGreenCycles:
       - tools/ci/package-json-scope-classification.test.mjs
     greenTest: node --test tools/ci/package-json-scope-classification.test.mjs
   - id: emitters-use-semantic-context
-    redTest: node --test tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs
+    redTest: node --test tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs
     expectedFailure: emitters currently pass only changed file names into scope computation and do not prove semantic package-json outputs.
     patchSurfaces:
       - tools/ci/emit-scope.mjs
-      - tools/ci/emit-workspace-matrix.mjs
+      - tools/ci/emit-scope.mjs
       - tools/ci/emit-scope.test.mjs
-      - tools/ci/emit-workspace-matrix.test.mjs
-    greenTest: node --test tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs
+      - tools/ci/ci-scope-outputs.test.mjs
+    greenTest: node --test tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs
   - id: changed-file-validation-survives-empty-matrix
     redTest: node --test tools/ci/workflow-scope-classification.test.mjs tools/ci/workflow-pattern-parity.test.mjs
     expectedFailure: a governance/planning script can produce an empty workspace matrix without any CI changed-file validation signal.
@@ -1077,17 +1088,17 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/workflow-scope-classification.test.mjs
-  - name: buildNonPullRequestWorkspaceMatrixOutputs
-    path: tools/ci/emit-workspace-matrix.mjs
+  - name: buildCiScopeOutputs
+    path: tools/ci/ci-scope-outputs.mjs
     dddOwner: WorkspaceMatrix
     cqRails:
       - EmitAffectedWorkspaceMatrix
     fowlerSignals:
       - Preserve non-PR full workspace fan-out without widening PR workflow diffs
-    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs
+    architectureGuard: node --test tools/ci/ci-scope-outputs.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-workspace-matrix.test.mjs
+      - node --test tools/ci/ci-scope-outputs.test.mjs
   - name: computeBooleanScope
     path: tools/ci/scope-config.mjs
     dddOwner: ChangedFileSet
@@ -1194,10 +1205,10 @@ symbols:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Keep explicit runtime lanes out of package matrix duplication
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: TEST_PACKAGE_ENTRIES
     path: tools/ci/scope-config.mjs
     dddOwner: TestPackageMatrix
@@ -1205,10 +1216,10 @@ symbols:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Replace duplicated package test workflow steps with a governed matrix
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: computeTestPackageMatrix
     path: tools/ci/scope-config.mjs
     dddOwner: TestPackageMatrix
@@ -1216,76 +1227,65 @@ symbols:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Compose package test fan-out from shared scope outputs
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: buildTestMatrixOutputs
-    path: tools/ci/emit-test-matrix.mjs
+    path: tools/ci/package-test-matrix.mjs
     dddOwner: TestPackageMatrix
     cqRails:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Keep workflow matrix emission behind a testable function
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: buildNonPullRequestTestMatrixOutputs
-    path: tools/ci/emit-test-matrix.mjs
+    path: tools/ci/package-test-matrix.mjs
     dddOwner: TestPackageMatrix
     cqRails:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Preserve non-PR full package test fan-out without widening PR workflow diffs
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
-  - name: main
-    path: tools/ci/emit-test-matrix.mjs
-    dddOwner: TestPackageMatrix
-    cqRails:
-      - EmitWorkflowCapabilityScopes
-    fowlerSignals:
-      - Emit GitHub Actions outputs from the governed CI scope model
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
-    cypressCoverage: N/A - CI scope tooling only
-    unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: DEDICATED_TEST_PACKAGES
-    path: tools/ci/emit-test-matrix.test.mjs
+    path: tools/ci/package-test-matrix.test.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
     fowlerSignals:
       - Guard explicit workflow lanes against duplicate matrix ownership
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: collectWorkspaceTestPackages
-    path: tools/ci/emit-test-matrix.test.mjs
+    path: tools/ci/package-test-matrix.test.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
     fowlerSignals:
       - Prove every workspace package test script is represented
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: collectWorkspacePackagesByName
-    path: tools/ci/emit-test-matrix.test.mjs
+    path: tools/ci/package-test-matrix.test.mjs
     dddOwner: ValidateCiScopeOptimizationContract
     cqRails:
       - ValidateCiScopeOptimizationContract
     fowlerSignals:
       - Prevent matrix entries for workspaces without test scripts
-    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    architectureGuard: node --test tools/ci/package-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
-      - node --test tools/ci/emit-test-matrix.test.mjs
+      - node --test tools/ci/package-test-matrix.test.mjs
   - name: repoRoot
     path: scripts/local-validation-plan.cjs
     dddOwner: LocalValidationPlan
@@ -1566,7 +1566,7 @@ symbols:
   changing existing consumer names until workflow consumers are migrated; it
   must build the semantic scope context from `GIT_BASE` and `GIT_HEAD` before
   calling scope functions.
-- Modify `tools/ci/emit-workspace-matrix.mjs`: keep the output shape stable,
+- Modify `tools/ci/emit-scope.mjs`: keep the output shape stable,
   but pass semantic context into matrix calculation so root package changes can
   be narrowed safely.
 - Modify `.github/workflows/ci.yml`: keep the matrix consumer unchanged, add a
@@ -1580,12 +1580,12 @@ symbols:
   lanes from treating unrelated root package aliases and unrelated `tools/ci/**`
   edits as capability changes.
 - Modify `.github/workflows/contracts.yml`: replace inline `paths-filter`
-  package-root rules with `emit-scope.mjs --mode contracts` outputs.
+  package-root rules with `emit-scope.mjs` outputs.
 - Create `tools/ci/package-json-scope-classification.test.mjs`: tests package
   script, dependency, override, lifecycle, and lint-staged scenarios.
 - Create `tools/ci/emit-scope.test.mjs`: tests mode output mapping and semantic
   emitter behavior.
-- Create `tools/ci/emit-workspace-matrix.test.mjs`: tests matrix emitter
+- Create `tools/ci/ci-scope-outputs.test.mjs`: tests matrix emitter
   behavior with semantic package context.
 - Modify `tools/ci/workflow-scope-classification.test.mjs`: tests script path
   classes, `any_test`, changed-file validation, and workspace matrix size.
@@ -1759,7 +1759,7 @@ test('governance query alias is tooling-only package change', () => {
 ```js
 test('ci helper script alias is CI-tooling sensitive but not root-build by default', () => {
   const next = clone(basePackage);
-  next.scripts['ci:scope'] = 'node tools/ci/emit-scope.mjs --mode workflow';
+  next.scripts['ci:scope'] = 'node tools/ci/emit-scope.mjs';
 
   const classification = classifyPackageJsonChange(basePackage, next);
 
@@ -1865,7 +1865,7 @@ Expected before implementation: `tools/ci/repository-command-catalog.mjs`,
 - Modify: `tools/ci/policy/workflow-scope.json`
 - Modify: `tools/ci/policy/adapter-postgres-relevance.json`
 - Modify: `tools/ci/emit-scope.mjs`
-- Modify: `tools/ci/emit-workspace-matrix.mjs`
+- Modify: `tools/ci/emit-scope.mjs`
 - Test: `tools/ci/package-json-scope-classification.test.mjs`
 - Test: `tools/ci/workflow-scope-classification.test.mjs`
 
@@ -1922,7 +1922,7 @@ Rules:
 - keep the loader injectable in tests through the `readJsonAtRef` option shown
   in Task 2.
 
-`emit-scope.mjs` and `emit-workspace-matrix.mjs` must call this context builder
+`emit-scope.mjs` must call this context builder
 with `GIT_BASE`, `GIT_HEAD`, and `getChangedFiles(...)` before computing
 outputs.
 
@@ -2048,11 +2048,11 @@ Expected: all package JSON and matrix scope tests pass.
 **Files:**
 
 - Create: `tools/ci/emit-scope.test.mjs`
-- Create: `tools/ci/emit-workspace-matrix.test.mjs`
+- Create: `tools/ci/ci-scope-outputs.test.mjs`
 - Modify: `tools/ci/emit-scope.mjs`
-- Modify: `tools/ci/emit-workspace-matrix.mjs`
+- Modify: `tools/ci/emit-scope.mjs`
 - Test: `tools/ci/emit-scope.test.mjs`
-- Test: `tools/ci/emit-workspace-matrix.test.mjs`
+- Test: `tools/ci/ci-scope-outputs.test.mjs`
 
 - [ ] **Step 1: Add `emit-scope` semantic output tests**
 
@@ -2095,7 +2095,7 @@ test('emit-scope contracts mode keeps scripts-only package json out of contract 
 });
 ```
 
-- [ ] **Step 2: Add `emit-workspace-matrix` semantic output tests**
+- [ ] **Step 2: Add workspace-matrix semantic output tests**
 
 Create a test proving the matrix emitter uses the semantic context:
 
@@ -2142,7 +2142,7 @@ test('workspace matrix emitter fails closed for package json read failure', () =
 Run:
 
 ```bash
-node --test tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs
+node --test tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs
 ```
 
 Expected before implementation: failure because
@@ -2206,7 +2206,7 @@ needs.detect-affected.outputs.changed_file_validation_relevant == 'true'
 ```
 
 This preserves ESLint/Prettier changed-file validation for
-`scripts/planning-db-query.cjs` even when `emit-workspace-matrix.mjs` returns an
+`scripts/planning-db-query.cjs` even when `emit-scope.mjs` returns an
 empty workspace matrix.
 
 - [ ] **Step 3: Update `test.yml` root-config checks**
@@ -2222,7 +2222,7 @@ with a narrower output:
 - [ ] **Step 4: Update `test.yml` adapter-postgres detection**
 
 Replace the current `detect-pg-scope` generated `paths-filter` usage with
-`emit-scope.mjs --mode test`. The job output must come from the semantic
+`emit-scope.mjs`. The job output must come from the semantic
 boolean:
 
 ```yaml
@@ -2255,7 +2255,7 @@ should not run for `governance:db:query` or planning DB query scripts.
 - [ ] **Step 6: Update `contracts.yml` scope detection**
 
 Replace inline `paths-filter` package-root assumptions with
-`emit-scope.mjs --mode contracts`. The workflow should keep the existing output
+`emit-scope.mjs`. The workflow should keep the existing output
 names for downstream jobs, but their values must come from semantic outputs:
 
 ```yaml
@@ -2271,7 +2271,7 @@ and contract-tooling changes must still leave the relevant outputs true.
 - [ ] **Step 7: Update `test.yml` determinism and coverage detection**
 
 Replace the inline `paths-filter` blocks in `test-determinism` and `coverage`
-with `emit-scope.mjs --mode test` outputs:
+with `emit-scope.mjs` outputs:
 
 ```yaml
 determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
@@ -2298,7 +2298,7 @@ Extend `tools/ci/workflow-pattern-parity.test.mjs` to assert:
 - workflows do not include new broad inline `package.json` filters for
   contracts or capability lanes;
 - `ci.yml` wires `changed_file_validation_relevant` into `lint-and-format`;
-- `ci.yml` still consumes `emit-workspace-matrix.mjs`;
+- `ci.yml` still consumes `emit-scope.mjs`;
 - `package.json` keeps `pnpm test:ci-tools` covering
   `tools/ci/test/*.test.mjs`.
 
@@ -2344,7 +2344,7 @@ Run:
 
 ```bash
 pnpm docs:sync
-node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
+node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
 pnpm test:ci-tools
 pnpm docs:feature-mechanization -- --feature CI-SCOPE-OPTIMIZATION-20260508
 pnpm docs:feature-mechanization:implementation
@@ -2379,7 +2379,7 @@ forbidden generated files are tracked.
 - `pnpm test:ci-tools` runs both `tools/ci/*.test.mjs` and
   `tools/ci/test/*.test.mjs`.
 - Workflow tests prove the expected fan-out for the triggering scenarios.
-- Emitter tests prove `emit-scope.mjs` and `emit-workspace-matrix.mjs` consume
+- Emitter tests prove `emit-scope.mjs` consume
   semantic base/head context instead of path names alone.
 - Documentation names the current scope behavior and recovery commands.
 
@@ -2396,7 +2396,7 @@ forbidden generated files are tracked.
 The implementation slice must run:
 
 ```bash
-node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/emit-workspace-matrix.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
+node --test tools/ci/repository-command-catalog.test.mjs tools/ci/package-json-scope-classification.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/emit-scope.test.mjs tools/ci/ci-scope-outputs.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/test/path-matcher.test.mjs
 pnpm test:ci-tools
 pnpm docs:feature-mechanization -- --feature CI-SCOPE-OPTIMIZATION-20260508
 pnpm docs:feature-mechanization:implementation

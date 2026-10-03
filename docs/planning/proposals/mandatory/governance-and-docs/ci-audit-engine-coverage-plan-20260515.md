@@ -13,7 +13,7 @@ scope with the governed engine package scope, so engine Vitest configuration
 changes cannot bypass coverage threshold enforcement.
 
 **Architecture:** Keep `.github/workflows/test.yml` as a consumer of
-`tools/ci/emit-scope.mjs --mode test`. The fix belongs in the CI scope query
+`tools/ci/emit-scope.mjs` through its `test_scope` JSON output. The fix belongs in the CI scope query
 model, not in a new inline workflow filter. `coverage_relevant` must become a
 semantic output derived from the engine workspace policy plus the existing
 contract and root test configuration inputs.
@@ -38,7 +38,7 @@ commands, branch protection settings, adapter behavior, or contract contents.
 | Rail                                  | Type  | Owning bounded context | DDD object or read model     | Application port                  | Adapter surface              | Scope and authorization               | Negative tests                                                           |
 | ------------------------------------- | ----- | ---------------------- | ---------------------------- | --------------------------------- | ---------------------------- | ------------------------------------- | ------------------------------------------------------------------------ |
 | `ClassifyChangedCiScope`              | query | CI Governance          | `EngineCoverageScope` policy | `computeWorkflowModeScopeOutputs` | `tools/ci/emit-scope.mjs`    | Repository PR changed-file read only. | Engine package config must not leave `coverage_relevant=false`.          |
-| `EmitWorkflowCapabilityScopes`        | query | CI Governance          | `WorkflowModeScopeOutputs`   | `emit-scope.mjs --mode test`      | `.github/workflows/test.yml` | GitHub Actions job output emission.   | Coverage workflow must not use a parallel inline path filter.            |
+| `EmitWorkflowCapabilityScopes`        | query | CI Governance          | `WorkflowModeScopeOutputs`   | `emit-scope.mjs` / `test_scope`   | `.github/workflows/test.yml` | GitHub Actions job output emission.   | Coverage workflow must not use a parallel inline path filter.            |
 | `ValidateEngineCoverageScopeContract` | query | CI Governance          | CI tool contract test suite  | `node --test tools/ci/*.test.mjs` | `pnpm test:ci-tools`         | Local and CI validation command.      | Test fails if coverage scope no longer includes engine workspace policy. |
 
 ## Feature Mechanization Manifest

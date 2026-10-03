@@ -23,13 +23,14 @@ jobs:
     timeout-minutes: 5
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
-      any_tests: ${{ steps.matrix.outputs.any_tests }}
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}
-      web: ${{ steps.scope.outputs.web }}
-      root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}
-      coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}
-      postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}
+      any_tests: ${{ steps.scope.outputs.any_tests }}
+      matrix: ${{ steps.scope.outputs.test_matrix }}
+      adapter_temporal: ${{ fromJSON(steps.scope.outputs.test_scope).adapter_temporal }}
+      web: ${{ fromJSON(steps.scope.outputs.test_scope).web }}
+      root_build_sensitive: ${{ fromJSON(steps.scope.outputs.test_scope).root_build_sensitive }}
+      coverage_relevant: ${{ fromJSON(steps.scope.outputs.test_scope).coverage_relevant }}
+      postgres_capability_changed:
+        ${{ fromJSON(steps.scope.outputs.test_scope).postgres_capability_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -46,14 +47,7 @@ jobs:
 
       - name: Emit test scope outputs
         id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Build package test matrix
-        id: matrix
-        run: node tools/ci/emit-test-matrix.mjs
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}

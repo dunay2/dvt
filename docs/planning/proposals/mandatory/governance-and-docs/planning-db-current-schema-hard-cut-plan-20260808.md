@@ -211,7 +211,7 @@ allowedImplementationSurfaces:
   - tools/ci/check-pr-size.mjs
   - tools/ci/check-pr-size.test.mjs
   - tools/ci/emit-scope.test.mjs
-  - tools/ci/emit-test-matrix.test.mjs
+  - tools/ci/package-test-matrix.test.mjs
   - tools/ci/sync-docs-status-policy.test.mjs
   - tools/ci/workflow-scope-classification.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs

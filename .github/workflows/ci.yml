@@ -41,12 +41,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      any_changed: ${{ steps.matrix.outputs.any_changed }}
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      docs_changed: ${{ steps.scope.outputs.docs_changed }}
-      security_analysis_relevant: ${{ steps.scope.outputs.security_analysis_relevant }}
+      any_changed: ${{ steps.scope.outputs.any_changed }}
+      matrix: ${{ steps.scope.outputs.workspace_matrix }}
+      docs_changed: ${{ fromJSON(steps.scope.outputs.workflow_scope).docs_changed }}
+      security_analysis_relevant:
+        ${{ fromJSON(steps.scope.outputs.workflow_scope).security_analysis_relevant }}
       ci_tool_executable_contracts_relevant:
-        ${{ steps.scope.outputs.ci_tool_executable_contracts_relevant }}
+        ${{ fromJSON(steps.scope.outputs.workflow_scope).ci_tool_executable_contracts_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -63,14 +64,7 @@ jobs:
 
       - name: Emit workflow scope outputs
         id: scope
-        run: node tools/ci/emit-scope.mjs --mode workflow
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Build matrix from affected workspaces
-        id: matrix
-        run: node tools/ci/emit-workspace-matrix.mjs
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}

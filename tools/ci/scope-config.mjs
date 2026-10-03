@@ -862,20 +862,6 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   };
 }
 
-export function parseScopeMode(argv) {
-  const modeFlagIndex = argv.indexOf('--mode');
-  if (modeFlagIndex === -1) {
-    throw new TypeError('MODE_REQUIRED');
-  }
-
-  const mode = argv[modeFlagIndex + 1];
-  if (!mode || !(mode in SCOPE_MODES)) {
-    throw new TypeError(`UNSUPPORTED_MODE: ${mode ?? 'undefined'}`);
-  }
-
-  return mode;
-}
-
 export function computeWorkspaceMatrix(changedFiles, options = {}) {
   const normalizedFiles = buildFilesForPathPolicy(changedFiles, options);
   const packageJsonRootSensitive = normalizedFiles.includes('package.json');

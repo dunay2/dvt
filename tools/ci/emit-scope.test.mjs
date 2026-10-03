@@ -4,11 +4,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  classifyPackageJsonChange,
-  computeWorkflowModeScopeOutputs,
-  parseScopeMode,
-} from './scope-config.mjs';
+import { classifyPackageJsonChange, computeWorkflowModeScopeOutputs } from './scope-config.mjs';
 
 const scriptsOnlyContext = {
   'package.json': {
@@ -358,10 +354,4 @@ test('emit-scope workflow mode routes traceability only for ADRs and governed so
   assert.equal(engineScope.traceability_adr0_relevant, true);
   assert.equal(engineScope.feature_mechanization_relevant, true);
   assert.equal(engineScope.code_validation_relevant, true);
-});
-
-test('parseScopeMode accepts known modes and rejects missing or unknown mode', () => {
-  assert.equal(parseScopeMode(['--mode', 'workflow']), 'workflow');
-  assert.throws(() => parseScopeMode([]), /MODE_REQUIRED/);
-  assert.throws(() => parseScopeMode(['--mode', 'unknown']), /UNSUPPORTED_MODE/);
 });

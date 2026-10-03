@@ -656,8 +656,25 @@ this exemption. Pushes to `main` and manual full validation remain unchanged.
 The repository centralizes workflow scope detection in:
 
 - [`tools/ci/scope-config.mjs`](../../tools/ci/scope-config.mjs)
-- [`tools/ci/emit-workspace-matrix.mjs`](../../tools/ci/emit-workspace-matrix.mjs)
 - [`tools/ci/emit-scope.mjs`](../../tools/ci/emit-scope.mjs)
+- [`tools/ci/ci-scope-outputs.mjs`](../../tools/ci/ci-scope-outputs.mjs)
+
+Each consuming workflow calls `node tools/ci/emit-scope.mjs` once. The adapter
+acquires the committed diff and manifest context once, then publishes the four
+JSON projections `workflow_scope`, `test_scope`, `contracts_scope`, and
+`pr_quality_scope`, together with `workspace_matrix`, `test_matrix`,
+`any_changed`, and `any_tests`. Projection flags are JSON booleans: consumers use
+`fromJSON` and boolean comparisons; job outputs remain GitHub output strings.
+Same-named flags in different projections are not merged: their evidence owners
+can have different widening rules. Package-test grouping stays pure in
+[`package-test-matrix.mjs`](../../tools/ci/package-test-matrix.mjs).
+
+The matrix-only CLIs and mode argument are retired, without compatibility
+aliases. The five workflows still acquire scope independently; shared acquisition
+across the whole PR DAG remains owned by #2926/#2928. This cut removes three of
+the previous eight invocations, not the remaining five workflow checkouts.
+PR Quality retains PR-only automatic integrations and existing manual opt-ins;
+non-PR full validation and required status names are unchanged.
 
 These files are the canonical source of truth for:
 
@@ -704,7 +721,7 @@ Current workflow consumers:
   shallow checkout plus `fetch-scope-base` instead of fetching full PR history
   before routing.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
-  `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
+  `emit-scope` once in `detect_test_matrix` for PR test routing
   across the web app, workers, and library workspaces. Dedicated web,
   adapter-temporal, adapter-postgres, and engine coverage
   jobs consume that detector's outputs at job level, so irrelevant PRs do not
@@ -731,7 +748,7 @@ Current workflow consumers:
   contracts and changed-file checks without forcing package tests, web frontend
   tests, coverage, or adapter-postgres integration by
   filename alone. Adapter-postgres integration and engine coverage consume the shared
-  `emit-scope --mode test` read model instead of local `dorny/paths-filter`
+  `emit-scope` read model instead of local `dorny/paths-filter`
   package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
   engine package scope, so engine Vitest config changes cannot bypass
@@ -765,7 +782,7 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   The web architecture suite checks that these package scripts, Vitest config delegates,
   and workflow commands stay aligned with `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
-  `emit-scope --mode contracts` for contract, determinism, and golden routing.
+  `emit-scope` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those
   lanes. Its detector uses shallow checkout plus `fetch-scope-base`; contract
   hash execution no longer requests full PR history.

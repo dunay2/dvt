@@ -530,7 +530,7 @@ Current scope decisions are distributed across:
 - separate diff resolution in [`scripts/check-changed.cjs`](../../../../../scripts/check-changed.cjs)
 - partial centralization in [`tools/ci/scope-config.mjs`](../../../../../tools/ci/scope-config.mjs),
   [`tools/ci/emit-scope.mjs`](../../../../../tools/ci/emit-scope.mjs), and
-  [`tools/ci/emit-workspace-matrix.mjs`](../../../../../tools/ci/emit-workspace-matrix.mjs)
+  [`tools/ci/emit-scope.mjs`](../../../../../tools/ci/emit-scope.mjs)
 
 Why this matters:
 
@@ -891,7 +891,7 @@ instead of repeating path lists in workflows and scope helpers.
 
 | Task       | Files / surfaces                                                                                   | Action                                                                                                                                      | Validation                                                                                 | Exit criteria                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `CDG-W1-1` | `ci.yml`, `tools/ci/emit-workspace-matrix.mjs`, `tools/ci/scope-config.mjs`                        | Rewire `detect-affected` in `ci.yml` to use `emit-workspace-matrix.mjs` instead of maintaining inline workspace inventories.                | `pnpm test:ci-tools`, targeted workflow parity tests, `pnpm verify:prepush`                | `ci.yml` no longer owns a separate workspace path inventory.                                      |
+| `CDG-W1-1` | `ci.yml`, `tools/ci/emit-scope.mjs`, `tools/ci/scope-config.mjs`                                   | Rewire `detect-affected` in `ci.yml` to use `emit-scope.mjs` instead of maintaining inline workspace inventories.                           | `pnpm test:ci-tools`, targeted workflow parity tests, `pnpm verify:prepush`                | `ci.yml` no longer owns a separate workspace path inventory.                                      |
 | `CDG-W1-2` | `test.yml`, `contracts.yml`, `tools/ci/emit-scope.mjs`, `tools/ci/scope-config.mjs`                | Move remaining inline PR scope definitions into shared scope modules. Preserve the adapter-postgres policy JSON as the canonical exception. | `pnpm test:ci-tools`, `pnpm verify:prepush`                                                | `test.yml` and `contracts.yml` read scope from shared tooling rather than duplicating path rules. |
 | `CDG-W1-3` | `.husky/pre-push`, `scripts/check-changed.cjs`, new local scope helper under `tools/ci/` if needed | Replace grep-based hook scope classification with the same underlying scope policy used by CI. Standardize diff-base fallback order.        | `pnpm test:ci-tools`, manual docs-only and code-change smoke checks, `pnpm verify:prepush` | Hook and workflow scope decisions are derived from the same source of truth.                      |
 
@@ -1074,7 +1074,7 @@ This plan is grounded in the current tracked repo wiring, especially:
 - [`.github/workflows/release.yml`](../../../../../.github/workflows/release.yml)
 - [`tools/ci/scope-config.mjs`](../../../../../tools/ci/scope-config.mjs)
 - [`tools/ci/emit-scope.mjs`](../../../../../tools/ci/emit-scope.mjs)
-- [`tools/ci/emit-workspace-matrix.mjs`](../../../../../tools/ci/emit-workspace-matrix.mjs)
+- [`tools/ci/emit-scope.mjs`](../../../../../tools/ci/emit-scope.mjs)
 - [`tools/ci/workflow-pattern-parity.test.mjs`](../../../../../tools/ci/workflow-pattern-parity.test.mjs)
 - [`tools/docs/generate-docs-manifest.ts`](../../../../../tools/docs/generate-docs-manifest.ts)
 - [Testing and CI Capabilities](../../../../guides/testing-and-ci-capabilities.md)
