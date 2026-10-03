@@ -273,6 +273,20 @@ export const WORKSPACE_ENTRIES = [
 
 export const CI_GLOBAL_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_global;
 
+const WORKSPACE_PACKAGE_FILES = new Set(
+  WORKSPACE_ENTRIES.flatMap(({ patterns }) =>
+    patterns
+      .filter((pattern) => pattern.endsWith('/**'))
+      .map((pattern) => `${pattern.slice(0, -3)}/package.json`)
+  )
+);
+
+const TEXT_METADATA_FIELDS = new Set(['version', 'description', 'homepage', 'repository', 'bugs']);
+const OBJECT_METADATA_FIELDS = new Map([
+  ['repository', ['type', 'url', 'directory']],
+  ['bugs', ['url', 'email']],
+]);
+
 const TEST_ROOT_BUILD_PATTERNS = [
   ...ROOT_CONFIG_PATTERNS,
   'vitest.config.ts',
@@ -563,10 +577,27 @@ function stripScripts(packageJson) {
 function stripNonRuntimeMetadata(packageJson) {
   const rest = stripScripts(packageJson);
   delete rest['lint-staged'];
-  for (const field of ['version', 'description', 'homepage', 'repository']) {
-    if (typeof rest[field] === 'string') delete rest[field];
+  for (const [field, value] of Object.entries(rest)) {
+    if (isDisplayMetadata(field, value)) delete rest[field];
   }
   return rest;
+}
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isDisplayMetadata(field, value) {
+  if (TEXT_METADATA_FIELDS.has(field) && typeof value === 'string') return true;
+  if (field === 'keywords') {
+    return Array.isArray(value) && value.every((keyword) => typeof keyword === 'string');
+  }
+  const fields = OBJECT_METADATA_FIELDS.get(field);
+  if (!fields || !isRecord(value) || Object.keys(value).length === 0) return false;
+  if (field === 'repository' && typeof value.url !== 'string') return false;
+  return Object.entries(value).every(
+    ([key, entry]) => fields.includes(key) && typeof entry === 'string'
+  );
 }
 
 function stableJson(value) {
@@ -601,12 +632,17 @@ function isDeterminismJobScript(name) {
 }
 
 export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) {
+  if ([previousPackageJson, nextPackageJson].some((value) => !isRecord(value))) {
+    return failClosedPackageJsonChange('PACKAGE_JSON_OBJECT_REQUIRED');
+  }
   if (
-    [previousPackageJson, nextPackageJson].some(
-      (value) => value === null || typeof value !== 'object' || Array.isArray(value)
+    [previousPackageJson.scripts, nextPackageJson.scripts].some(
+      (value) =>
+        value !== undefined &&
+        (!isRecord(value) || Object.values(value).some((command) => typeof command !== 'string'))
     )
   ) {
-    return failClosedPackageJsonChange('PACKAGE_JSON_OBJECT_REQUIRED');
+    return failClosedPackageJsonChange('PACKAGE_JSON_SCRIPTS_OBJECT_REQUIRED');
   }
   const previousScripts = previousPackageJson?.scripts ?? {};
   const nextScripts = nextPackageJson?.scripts ?? {};
@@ -638,6 +674,8 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
     commandClasses.every((commandClass) => isGovernanceToolingCommand(commandClass));
 
   return {
+    metadataOnly:
+      !runtimeMetadataChange && !developerWorkflowMetadataChange && changedScriptNames.length === 0,
     changedScriptNames,
     commandClasses,
     nonScriptChange,
@@ -665,15 +703,13 @@ export function classifyPackageJsonChange(previousPackageJson, nextPackageJson) 
   };
 }
 
-function isSemanticallyNarrowPackageJson(scopeContext) {
-  return scopeContext?.packageJsonChange?.rootBuildSensitive === false;
-}
-
-function buildFilesForPathPolicy(changedFiles, scopeContext) {
-  const normalizedFiles = changedFiles.map(normalizePath);
-  return isSemanticallyNarrowPackageJson(scopeContext)
-    ? normalizedFiles.filter((path) => path !== 'package.json')
-    : normalizedFiles;
+function buildFilesForPathPolicy(changedFiles, scopeContext = {}) {
+  return changedFiles.map(normalizePath).filter((path) => {
+    const change = scopeContext[path];
+    return path === 'package.json'
+      ? change?.rootBuildSensitive !== false
+      : !WORKSPACE_PACKAGE_FILES.has(path) || change?.metadataOnly !== true;
+  });
 }
 
 function computeRepositoryValidationScope(changedFiles, scopeContext = {}) {
@@ -700,7 +736,11 @@ export function computeBooleanScope(changedFiles, scopePatterns, scopeContext = 
     ])
   );
 
-  if (changedFiles.map(normalizePath).includes('package.json')) {
+  if (
+    changedFiles
+      .map(normalizePath)
+      .some((path) => path === 'package.json' || path.endsWith('/package.json'))
+  ) {
     if ('changed_file_validation_relevant' in scope) {
       scope.changed_file_validation_relevant = true;
     }
@@ -720,7 +760,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
     changedFiles,
     scopeContext
   );
-  const packageJsonChange = scopeContext.packageJsonChange;
+  const packageJsonChange = scopeContext['package.json'];
 
   if (mode === 'contracts') {
     return {
@@ -837,11 +877,8 @@ export function parseScopeMode(argv) {
 }
 
 export function computeWorkspaceMatrix(changedFiles, options = {}) {
-  const normalizedFiles = changedFiles.map(normalizePath);
-  const packageJsonChanged = normalizedFiles.includes('package.json');
-  const packageJsonRootSensitive =
-    packageJsonChanged &&
-    (!options.packageJsonChange || options.packageJsonChange.rootBuildSensitive === true);
+  const normalizedFiles = buildFilesForPathPolicy(changedFiles, options);
+  const packageJsonRootSensitive = normalizedFiles.includes('package.json');
   const filesForPathPolicy = normalizedFiles.filter((path) => path !== 'package.json');
   const fileScopes = filesForPathPolicy.map((path) => classifyRepositoryFileScope(path));
   const nonCommandFiles = fileScopes
@@ -887,6 +924,7 @@ export async function readJsonAtGitRef(ref, filePath) {
 
 function failClosedPackageJsonChange(error) {
   return {
+    metadataOnly: false,
     changedScriptNames: [],
     commandClasses: [],
     nonScriptChange: true,
@@ -905,12 +943,14 @@ function failClosedPackageJsonChange(error) {
   };
 }
 
-export async function readRootPackageJsonChange(baseRef, headRef, options = {}) {
+async function readPackageJsonChange(filePath, options) {
+  const { baseRef, headRef } = options;
+  if (!baseRef || !headRef) return failClosedPackageJsonChange('BASE_AND_HEAD_REQUIRED');
   const readJsonAtRef = options.readJsonAtRef ?? readJsonAtGitRef;
   try {
     const [previousPackageJson, nextPackageJson] = await Promise.all([
-      readJsonAtRef(baseRef, 'package.json'),
-      readJsonAtRef(headRef, 'package.json'),
+      readJsonAtRef(baseRef, filePath),
+      readJsonAtRef(headRef, filePath),
     ]);
     return classifyPackageJsonChange(previousPackageJson, nextPackageJson);
   } catch (error) {
@@ -919,22 +959,14 @@ export async function readRootPackageJsonChange(baseRef, headRef, options = {}) 
 }
 
 export async function buildChangedScopeContext(changedFiles, options = {}) {
-  const normalizedFiles = changedFiles.map(normalizePath);
-  if (!normalizedFiles.includes('package.json')) {
-    return {};
-  }
-
-  const baseRef = options.baseRef;
-  const headRef = options.headRef;
-  if (!baseRef || !headRef) {
-    return {
-      packageJsonChange: failClosedPackageJsonChange('BASE_AND_HEAD_REQUIRED'),
-    };
-  }
-
-  return {
-    packageJsonChange: await readRootPackageJsonChange(baseRef, headRef, options),
-  };
+  const manifests = [...new Set(changedFiles.map(normalizePath))].filter(
+    (path) => path === 'package.json' || WORKSPACE_PACKAGE_FILES.has(path)
+  );
+  return Object.fromEntries(
+    await Promise.all(
+      manifests.map(async (filePath) => [filePath, await readPackageJsonChange(filePath, options)])
+    )
+  );
 }
 
 export async function getChangedFiles(baseRef, headRef) {

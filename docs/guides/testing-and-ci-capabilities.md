@@ -622,12 +622,21 @@ contracts, determinism, golden, and coverage lanes closed, while
 active. Dependency, lifecycle, unknown, and runtime-capability script changes
 remain fail-closed and root-build sensitive.
 
-Root text metadata (`version`, `description`, `homepage`, and string-form
-`repository`) does not widen runtime scope. Changed-file validation and release
-checks remain active; accompanying source or lockfile changes retain their own
-scope. Non-string metadata, malformed package objects, unknown fields, and
-unreadable comparison blobs stay conservative. Workspace package metadata and
-object-form display metadata are not narrowed by this rule.
+Root and cataloged workspace manifests share one base/head Git reader and a
+path-keyed classification context. Display metadata, including supported
+repository/bugs objects and keyword lists, does not widen runtime scope. The
+allowed fields and shapes are owned by
+[`scope-config.mjs`](../../tools/ci/scope-config.mjs); unknown fields, malformed
+values, missing refs, and unreadable blobs retain the existing path-based scope.
+Only metadata-only workspace changes are narrowed: workspace scripts and
+`lint-staged` do not inherit the root command-alias exemptions. Fixture and
+uncataloged manifests cannot use these exemptions either.
+
+Changed-file validation and release checks remain active; accompanying source
+or lockfile changes retain their own scope. Current internal dependencies use
+`workspace:*`; product code does not consume internal package versions. A new
+executable version consumer must be reflected in scope policy before relying on
+this exemption. Pushes to `main` and manual full validation remain unchanged.
 
 - `pnpm test:web:changed` is the web changed-file router. It reads changed
   files or explicit `--files` arguments, runs `@dvt/web` dependency
