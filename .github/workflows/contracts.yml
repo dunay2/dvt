@@ -35,10 +35,12 @@ jobs:
     runs-on: ubuntu-latest
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
-      contracts_relevant: ${{ steps.scope.outputs.contracts_relevant }}
-      determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
-      golden_relevant: ${{ steps.scope.outputs.golden_relevant }}
-      hash_compare_relevant: ${{ steps.scope.outputs.hash_compare_relevant }}
+      contracts_relevant: ${{ fromJSON(steps.scope.outputs.contracts_scope).contracts_relevant }}
+      determinism_relevant:
+        ${{ fromJSON(steps.scope.outputs.contracts_scope).determinism_relevant }}
+      golden_relevant: ${{ fromJSON(steps.scope.outputs.contracts_scope).golden_relevant }}
+      hash_compare_relevant:
+        ${{ fromJSON(steps.scope.outputs.contracts_scope).hash_compare_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -55,7 +57,7 @@ jobs:
 
       - name: Emit contracts scope outputs
         id: scope
-        run: node tools/ci/emit-scope.mjs --mode contracts
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}

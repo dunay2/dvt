@@ -194,9 +194,12 @@ test('Web proof allocation and cleanup are bounded to the container created by t
     );
   }
   const artifacts = web.steps.filter((step) => step.uses?.startsWith('actions/upload-artifact@'));
-  for (const artifact of artifacts) {
-    assert.doesNotMatch(artifact.with.path, /\.dvt\/|profiles|result\.json/u);
-  }
+  assert.equal(artifacts.length, 1);
+  const artifact = artifacts[0];
+  assert.equal(artifact.with.path, '.dvt/evidence/selected-closure/screenshots');
+  assert.equal(artifact.with['include-hidden-files'], true);
+  assert.equal(artifact.if, "failure() && steps.web_plan.outputs.browser_required == 'true'");
+  assert.doesNotMatch(artifact.with.path, /profiles|result\.json|\*/u);
 });
 
 test('Web planning reads the exact PR, push or manual comparison without an empty-ref fallback', () => {

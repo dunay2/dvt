@@ -29,8 +29,7 @@ jobs:
         vars.GH_ADVANCED_SECURITY_ENABLED == 'true')
     outputs:
       security_analysis_relevant:
-        ${{ steps.scope.outputs.security_analysis_relevant ||
-        steps.non_pr_scope.outputs.security_analysis_relevant }}
+        ${{ fromJSON(steps.scope.outputs.workflow_scope).security_analysis_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,21 +43,14 @@ jobs:
           base-ref: ${{ github.base_ref }}
 
       - name: Validate workflow scope policy JSON
-        if: github.event_name == 'pull_request'
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
 
-      - name: Emit PR security scope outputs
+      - name: Emit security scope outputs
         id: scope
-        if: github.event_name == 'pull_request'
-        run: node tools/ci/emit-scope.mjs --mode workflow
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
-
-      - name: Open security scope for non-PR events
-        id: non_pr_scope
-        if: github.event_name != 'pull_request'
-        run: echo "security_analysis_relevant=true" >> "$GITHUB_OUTPUT"
 
   analyze:
     name: CodeQL analyze

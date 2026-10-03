@@ -13,7 +13,7 @@ import {
 import {
   buildNonPullRequestTestMatrixOutputs,
   buildTestMatrixOutputs,
-} from './emit-test-matrix.mjs';
+} from './package-test-matrix.mjs';
 
 const DEDICATED_TEST_PACKAGES = new Set([
   '@dvt/adapter-postgres',

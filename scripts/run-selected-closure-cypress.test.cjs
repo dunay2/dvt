@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 const { validateCypressProofResult, main } = require('./run-selected-closure-cypress.cjs');
 
 const spec = 'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
@@ -102,6 +103,32 @@ test('native adapter awaits the module API and exports only validated evidence',
   assert.equal(options.browser, 'chrome');
   assert.equal(options.headed, true);
   assert.equal(options.project, path.resolve(__dirname, '../apps/web'));
+  for (const kind of ['screenshots', 'downloads', 'videos']) {
+    const directory = path.resolve(__dirname, '../.dvt/evidence/selected-closure', kind);
+    assert.equal(options.config?.[`${kind}Folder`], directory);
+    assert.equal(
+      spawnSync(
+        'git',
+        ['check-ignore', '--quiet', '--no-index', path.join(directory, 'proof.png')],
+        {
+          cwd: path.resolve(__dirname, '..'),
+        }
+      ).status,
+      0,
+      `${kind} must not enter source inventory`
+    );
+  }
+  assert.equal(
+    spawnSync(
+      'git',
+      ['check-ignore', '--quiet', '--no-index', 'apps/web/cypress/fixtures/new.json'],
+      {
+        cwd: path.resolve(__dirname, '..'),
+      }
+    ).status,
+    1,
+    'authored browser fixtures must remain governed source inputs'
+  );
   assert.equal(Object.hasOwn(options, 'env'), false);
   assert.deepEqual(result, { spec, tests: 3, passed: 3 });
   assert.doesNotMatch(JSON.stringify(messages), /must-not-escape|apiBearerToken/);
