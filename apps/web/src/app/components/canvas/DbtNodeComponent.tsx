@@ -74,6 +74,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   onSelectNode?: (nodeId: string) => void;
   onOpenSourceDataSample?: (nodeId: string) => void;
   dataActionLabel?: string;
+  sourceMetricAvailability?: 'unavailable';
   canOpenNodeCode?: boolean;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;

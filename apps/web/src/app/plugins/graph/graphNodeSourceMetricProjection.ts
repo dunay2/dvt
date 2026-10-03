@@ -45,7 +45,7 @@ function buildSourceProjection(
   locale?: string
 ): GraphNodeVolumeMetricProjection {
   const evidence = readSourceObjectMetricEvidence(metadata.sourceMetricEvidence);
-  if (evidence === null) {
+  if (evidence === null || data.sourceMetricAvailability === 'unavailable') {
     return { rowCount: null, sizeEvidence: null, metrics: [] };
   }
   const { rowCount: rowEvidence, byteSize: byteEvidence } = evidence;

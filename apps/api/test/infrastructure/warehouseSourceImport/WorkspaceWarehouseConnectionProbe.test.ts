@@ -13,9 +13,15 @@ const pgMock = vi.hoisted(() => {
       fields?: readonly { name: string; dataTypeID?: number }[];
     }>
   >();
-  const Client = vi.fn(() => ({ connect, end, query }));
+  const databaseQuery = vi.fn();
+  const Client = vi.fn(() => ({
+    connect,
+    end,
+    query: (sql: string, values?: readonly unknown[]) =>
+      sql === 'select current_database() as database' ? databaseQuery() : query(sql, values),
+  }));
 
-  return { Client, connect, end, query };
+  return { Client, connect, end, query, databaseQuery };
 });
 
 vi.mock('pg', () => ({
@@ -64,6 +70,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     pgMock.connect.mockReset();
     pgMock.end.mockReset();
     pgMock.query.mockReset();
+    pgMock.databaseQuery.mockReset().mockResolvedValue({ rows: [{ database: 'dvt' }] });
     pgMock.connect.mockResolvedValue(undefined);
     pgMock.end.mockResolvedValue(undefined);
   });
@@ -96,26 +103,48 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['', 2]);
   });
 
-  it('uses the database resolved by the credential for schema discovery', async () => {
-    pgMock.query.mockResolvedValueOnce({
-      rows: [{ table_catalog: 'dvt', table_schema: 'public', object_count: '1' }],
-    });
-    const probe = new WorkspaceWarehouseConnectionProbe({
-      credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
-      now: () => new Date('2026-09-07T12:00:00.000Z'),
-    });
+  it.each(['inspect', 'test', 'schemas', 'objects', 'preview'] as const)(
+    'rejects a credential bound to another database before %s reads',
+    async (operation) => {
+      pgMock.databaseQuery.mockResolvedValue({ rows: [{ database: 'another_database' }] });
+      pgMock.query.mockResolvedValue({ rows: [{ object_count: '0' }] });
+      const probe = new WorkspaceWarehouseConnectionProbe({
+        credentialResolver: { resolveCredential: async () => 'postgres://warehouse.local/dvt' },
+        now: () => new Date('2026-09-07T12:00:00.000Z'),
+      });
 
-    await expect(
-      probe.listSourceObjectCatalog(
-        { ...CATALOG_TARGET, database: 'stale-configured-name' },
-        { kind: 'schema-list', limit: 10 }
-      )
-    ).resolves.toMatchObject({
-      schemas: [{ catalog: 'dvt', schema: 'public', objectCount: 1 }],
-    });
-    expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('current_database() =');
-    expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['', 11]);
-  });
+      if (operation === 'inspect' || operation === 'test') {
+        const result =
+          operation === 'inspect'
+            ? await probe.inspectConnection(CATALOG_TARGET)
+            : await probe.testConnection({
+                ...CATALOG_TARGET,
+                id: 'conn-1',
+                name: 'Warehouse',
+                sourceObjects: [],
+              });
+        expect(result).toMatchObject({ status: 'failed', reason: 'invalid_credentials' });
+      } else {
+        const result =
+          operation === 'preview'
+            ? probe.previewSourceObjectRows({
+                ...CATALOG_TARGET,
+                objectId: expectedRelationIdentity('orders').objectId,
+                limit: 20,
+              })
+            : probe.listSourceObjectCatalog(
+                CATALOG_TARGET,
+                operation === 'schemas'
+                  ? { kind: 'schema-list', limit: 10 }
+                  : { kind: 'schema-page', catalog: 'dvt', schema: 'public', limit: 10 }
+              );
+        await expect(result).rejects.toMatchObject({ reason: 'invalid_credentials' });
+      }
+      expect(pgMock.databaseQuery).toHaveBeenCalledOnce();
+      expect(pgMock.query).not.toHaveBeenCalled();
+      expect(pgMock.end).toHaveBeenCalledOnce();
+    }
+  );
   it('binds signed cursors to the connection, scope, request kind and filter', async () => {
     pgMock.query.mockResolvedValueOnce({
       rows: [

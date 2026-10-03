@@ -327,6 +327,7 @@ export default function CanvasShell({
             : new Map(data.runStatusByNodeId).set(node.id, sinkEvidence.status);
         const projectedData: DbtNodeData = {
           ...data,
+          sourceMetricAvailability: dataSampleProjection.sourceMetricAvailability,
           dataActionLabel: dataSampleProjection.canOpen
             ? resolveCanvasSemanticEditorCopy(applicationLanguage).previewAction
             : undefined,
