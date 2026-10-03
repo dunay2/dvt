@@ -93,6 +93,23 @@ profile.
 
 ## Integration and safety
 
+### Review of the pending cut in #3561
+
+The review found a producer-removal defect: detaching direct consumers before
+computing reachability hid later consumers from invalidation. A three-operation
+regression failed before the fix. `invalidateCanvasOperationConsumers` now owns
+the shared transitive invalidation used by canonical disconnection and staged
+actions. Removal traverses the original graph before detaching edges, retains
+configuration, and preserves unrelated operation objects.
+
+The same review separated `CanvasShell` card projection, Model selection, Code
+workbench scope, shared focus, and operation-data docking. The existing Model
+leave guard remains authoritative. Unused import-port forwarding and duplicated
+shell fixtures were retired; pure card checks now run without a DOM. Design,
+current/target diagrams, test mapping, and rationale are recorded in
+[issue #3561](https://github.com/dunay2/dvt/issues/3561) and the Canvas workbench
+catalog. No parallel DTO or policy path was added.
+
 Full `pnpm verify:prepush`, required ARC checks, review, and integration remain
 to be recorded in #3560. The affected scoped checks above are not a substitute
 for that gate. This evidence is Draft until the closeout completes.

@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-09-22
+last_reviewed: 2026-10-03
 planning_type: architecture
 ---
 
@@ -59,6 +59,39 @@ DDD ownership rules:
   preferences or workbench tab placement.
 
 <!-- markdownlint-disable MD060 -->
+
+## Contextual surface composition ownership
+
+`RenderCanvasContextualGraphSurface` retains its existing authority. The
+`GH-3561-CANVAS-SHELL-CONCERNS` design separates presentation concerns without a
+new command, query, DTO, or data-acquisition path:
+
+- `CanvasShell` composes the existing layout contracts and contextual dialogs.
+- `canvasShellNodeProjection` projects card actions and already-observed run
+  evidence without React, stores, or service calls. Workspace paths are resolved
+  once by `canvasWorkspaceFilePath`; the Code contribution owner reuses it.
+- `useCanvasModelSelection` owns the selected Model tab; protected leave/apply
+  decisions remain in the existing `useCanvasModelNavigation` inside the editor.
+- `useCanvasCodeWorkbench` owns Code scope and flush-on-close, while
+  `useCanvasOperationDataTab` owns the existing drawer tab and portal host.
+- `useCanvasWorkbenchFocus` shares opener capture/restoration between editors.
+
+Pure card decisions are tested without mounting the shell. DOM tests retain the
+observable editor lifecycle, permissions, focus, query revision, and drawer
+contracts. TypeScript import-boundary checks prevent card policy or acquisition
+from moving back into the shell.
+
+```mermaid
+flowchart LR
+  Route[Route-owned contracts] --> Shell[CanvasShell composition]
+  Route --> Cards[Pure card projection]
+  Cards --> Shell
+  Shell --> Model[Model selection and existing leave guard]
+  Shell --> Code[Scoped Code workbench and flush]
+  Shell --> Data[Operation data drawer host]
+  Model --> Focus[Shared opener focus]
+  Code --> Focus
+```
 
 ## C&Q Summary
 

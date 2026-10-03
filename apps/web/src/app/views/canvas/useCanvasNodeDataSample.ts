@@ -9,7 +9,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useCanvasTransformDataSample } from './useCanvasTransformDataSample';
 import { useCanvasSourceDataSample } from './useCanvasSourceDataSample';
 
-type CanvasNodeDataSampleProjection = Readonly<{
+export type CanvasNodeDataSampleProjection = Readonly<{
   canOpen: boolean;
   onOpen?: () => void;
   sourceMetricAvailability?: 'unavailable';

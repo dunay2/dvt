@@ -16,6 +16,7 @@ mitigation:
   - configurationDocument is distinct from semanticDocument in the existing strict contract.
   - Both documents cannot coexist on one operation; configuration ownership is checked.
   - Missing Inputs invalidate the consumer and downstream semantic authority.
+  - Producer removal computes downstream reachability before detaching direct inputs.
   - Exact reconnect requires original relation IDs and identical canonical producer documents.
   - Apply removes the former complete document when the selected output is incomplete.
   - Canonical disconnection rejects failed, stale, disposed, and read-only analysis before mutation.

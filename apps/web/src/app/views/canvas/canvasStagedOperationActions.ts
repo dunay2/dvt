@@ -14,7 +14,10 @@ import {
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { admitCanvasStagedConnection } from './canvasStagedConnectionAdmission';
-import { invalidateCanvasOperationConfiguration } from './canvasRetainedOperationConfiguration';
+import {
+  invalidateCanvasOperationConfiguration,
+  invalidateCanvasOperationConsumers,
+} from './canvasRetainedOperationConfiguration';
 
 export function createCanvasStagedOperationActions(
   args: Readonly<{
@@ -34,7 +37,7 @@ export function createCanvasStagedOperationActions(
   const remove = (id: string) => {
     if (!args.editable) return;
     args.setOperations((current) => {
-      const detached = current
+      return invalidateCanvasOperationConsumers(current, new Set([id]))
         .filter((operation) => operation.id !== id)
         .map((operation) =>
           operation.inputs.includes(id)
@@ -44,7 +47,6 @@ export function createCanvasStagedOperationActions(
               })
             : operation
         );
-      return invalidateConsumers(detached, new Set([id]));
     });
     if (args.selectedId === id) args.setSelectedId(null);
   };
@@ -87,7 +89,7 @@ export function createCanvasStagedOperationActions(
         const disconnected = current.map((operation) =>
           operation === target ? detached : operation
         );
-        return invalidateConsumers(disconnected, new Set([id]));
+        return invalidateCanvasOperationConsumers(disconnected, new Set([id]));
       });
     },
     disconnectProducer: (relationId: string) => {
@@ -102,7 +104,7 @@ export function createCanvasStagedOperationActions(
             inputs: operation.inputs.map((input) => (input === relationId ? null : input)),
           });
         });
-        return invalidateConsumers(disconnected, invalidated);
+        return invalidateCanvasOperationConsumers(disconnected, invalidated);
       });
     },
     updateConfiguration: (
@@ -143,30 +145,3 @@ export function createCanvasStagedOperationActions(
 }
 
 export type CanvasStagedOperationActions = ReturnType<typeof createCanvasStagedOperationActions>;
-
-function invalidateConsumers(
-  operations: readonly CanvasStagedOperation[],
-  changedProducers: ReadonlySet<string>
-): readonly CanvasStagedOperation[] {
-  const invalidated = new Set(changedProducers);
-  let changed = true;
-  while (changed) {
-    changed = false;
-    operations.forEach((operation) => {
-      if (
-        !invalidated.has(operation.id) &&
-        operation.inputs.some((input) => input != null && invalidated.has(input))
-      ) {
-        invalidated.add(operation.id);
-        changed = true;
-      }
-    });
-  }
-  return operations.map((operation) =>
-    changedProducers.has(operation.id)
-      ? operation
-      : invalidated.has(operation.id)
-        ? invalidateCanvasOperationConfiguration(operation)
-        : operation
-  );
-}

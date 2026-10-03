@@ -9,7 +9,7 @@ import {
   canvasStagedOperationArity,
   type CanvasStagedOperation,
 } from './canvasStagedOperation';
-import { invalidateCanvasOperationConfiguration } from './canvasRetainedOperationConfiguration';
+import { invalidateCanvasOperationConsumers } from './canvasRetainedOperationConfiguration';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 
 export function disconnectCanvasCanonicalGraph(
@@ -61,20 +61,13 @@ export function disconnectCanvasCanonicalGraph(
       semanticDocument: encodeDvtSubstraitSemanticDocument(subtree),
     });
   }
-  const changed = new Set([consumerId]);
-  for (let size = -1; size !== changed.size;) {
-    size = changed.size;
-    for (const operation of operations)
-      if (operation.inputs.some((id) => id != null && changed.has(id))) changed.add(operation.id);
-  }
   return {
     sources,
-    operations: operations.map((operation) =>
-      operation.id === consumerId
-        ? disconnectCanvasStagedOperation(operation, port)
-        : changed.has(operation.id)
-          ? invalidateCanvasOperationConfiguration(operation)
-          : operation
+    operations: invalidateCanvasOperationConsumers(
+      operations.map((operation) =>
+        operation.id === consumerId ? disconnectCanvasStagedOperation(operation, port) : operation
+      ),
+      new Set([consumerId])
     ),
   };
 }

@@ -4,7 +4,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../../ports/workspace';
+import type { ImportSourcesResult } from '../../ports/workspace';
 import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import {
   buildCanvasShellProps,
@@ -50,21 +50,7 @@ describe('CanvasShell source import lifecycle', () => {
   });
 
   it('opens the source import wizard from the viewport contextual source command', async () => {
-    const warehouseSourceImport = {
-      listWarehouseConnections: vi.fn(),
-      listSourceObjectCatalog: vi.fn(async () => ({
-        kind: 'schema-list' as const,
-        schemas: [],
-        truncated: false,
-      })),
-      createWarehouseConnection: vi.fn(),
-      renameWarehouseConnection: vi.fn(),
-      testWarehouseConnection: vi.fn(),
-      validatePostgresTransformSql: vi.fn(),
-      importSources: vi.fn(),
-    } satisfies IWarehouseSourceImportPort;
-
-    await renderShell({ warehouseSourceImport });
+    await renderShell();
 
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
 

@@ -41,6 +41,49 @@ describe('staged operation commands', () => {
     expect(state.operations).toBe(operations);
   });
 
+  it('removing a producer invalidates every consumer before detaching its direct inputs', async () => {
+    const document = connectedNamesProjectionDraft();
+    const session = new CanvasRelationAnalysisSession('remove-chain');
+    try {
+      session.receive(document);
+      const producer: CanvasStagedOperation = {
+        id: session.rootId,
+        operation: 'field_transform',
+        inputs: session.locate(session.rootId, session.revision).inputs,
+        semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+      };
+      const consumer = await configureCanvasStagedTransform(
+        { id: 'consumer', operation: 'field_transform', inputs: [producer.id] },
+        document
+      );
+      const terminal = await configureCanvasStagedTransform(
+        { id: 'terminal', operation: 'field_transform', inputs: [consumer.id] },
+        decodeCanvasStagedOperation(consumer)
+      );
+      const unrelated: CanvasStagedOperation = {
+        id: 'unrelated',
+        operation: 'filter',
+        inputs: [null],
+      };
+      const state = { operations: [producer, consumer, terminal, unrelated] };
+      actionsFor(state).remove(producer.id);
+      expect(state.operations.map((item) => item.id)).toEqual([
+        'consumer',
+        'terminal',
+        'unrelated',
+      ]);
+      expect(state.operations[0]!.inputs).toEqual([null]);
+      expect(state.operations[1]!.inputs).toEqual(['consumer']);
+      for (const [index, original] of [consumer, terminal].entries()) {
+        expect(state.operations[index]!.semanticDocument).toBeUndefined();
+        expect(state.operations[index]!.configurationDocument).toBe(original.semanticDocument);
+      }
+      expect(state.operations[2]).toBe(unrelated);
+    } finally {
+      session.dispose();
+    }
+  });
+
   it('does not invalidate configured consumers when a disconnect is rejected', async () => {
     const document = connectedNamesProjectionDraft();
     const session = new CanvasRelationAnalysisSession('invalid-disconnect');

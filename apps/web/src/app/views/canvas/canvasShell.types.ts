@@ -8,7 +8,6 @@ import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@
 import type {
   ImportSourcesResult,
   IWarehouseSourceDataSampleQueryPort,
-  IWarehouseSourceImportPort,
 } from '../../ports/workspace';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
@@ -185,7 +184,6 @@ export type CanvasShellProps = Readonly<{
   canvasCommands: CanvasShellCanvasCommands;
   runControls: OperationalDrawerRunControls | null;
   workspaceCommands?: CanvasShellWorkspaceCommands;
-  warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   prepareModelPreview?: CanvasModelPreviewPreparation;

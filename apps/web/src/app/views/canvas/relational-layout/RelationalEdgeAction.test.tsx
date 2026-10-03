@@ -69,14 +69,14 @@ describe('RelationalEdgeAction', () => {
     expect(onDisconnect).toHaveBeenCalledTimes(2);
   });
 
-  it('binds each canonical Input to the same accessible disconnect action, not operation retirement', () => {
+  it('binds each canonical Input to the same accessible disconnect action, not operation retirement', async () => {
     const { document, session } = graphJoin();
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) throw indexed.error;
     const tree = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'test' });
     const layout = layoutCanvasRelationalTree(tree);
     const disconnect = vi.fn();
-    act(() =>
+    await act(async () =>
       root.render(
         <RelationalTreeEdges
           layout={layout}
@@ -88,9 +88,9 @@ describe('RelationalEdgeAction', () => {
     );
     const edges = container.querySelectorAll('[data-slot="canvas-relational-edge-action"]');
     expect(edges).toHaveLength(2);
-    act(() => fireEvent.keyDown(edges[1]!, { key: 'Backspace' }));
+    await act(async () => fireEvent.keyDown(edges[1]!, { key: 'Backspace' }));
     expect(disconnect).toHaveBeenCalledExactlyOnceWith(session.rootId, 1);
-    act(() =>
+    await act(async () =>
       root.render(
         <RelationalTreeEdges
           layout={layout}

@@ -13,6 +13,26 @@ export function invalidateCanvasOperationConfiguration(
   return { ...pending, configurationDocument: semanticDocument };
 }
 
+export function invalidateCanvasOperationConsumers(
+  operations: readonly CanvasStagedOperation[],
+  changedProducers: ReadonlySet<string>
+): readonly CanvasStagedOperation[] {
+  const invalidated = new Set(changedProducers);
+  for (let size = -1; size !== invalidated.size;) {
+    size = invalidated.size;
+    for (const operation of operations) {
+      if (operation.inputs.some((input) => input != null && invalidated.has(input))) {
+        invalidated.add(operation.id);
+      }
+    }
+  }
+  return operations.map((operation) =>
+    !changedProducers.has(operation.id) && invalidated.has(operation.id)
+      ? invalidateCanvasOperationConfiguration(operation)
+      : operation
+  );
+}
+
 export function restoreCanvasOperationConfiguration(
   operation: CanvasStagedOperation,
   producers: readonly (SubstraitDocument | null)[]
