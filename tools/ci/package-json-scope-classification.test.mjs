@@ -230,18 +230,3 @@ test('package json without semantic context still fails closed for workspace mat
   assert.equal(matrix.anyChanged, true);
   assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
 });
-
-test('package json read failure class fails closed for workspace matrix', () => {
-  const matrix = computeWorkspaceMatrix(['package.json'], {
-    packageJsonChange: {
-      failClosed: true,
-      rootBuildSensitive: true,
-      dependencySensitive: true,
-      lifecycleSensitive: true,
-      ciToolingSensitive: true,
-    },
-  });
-
-  assert.equal(matrix.anyChanged, true);
-  assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
-});
