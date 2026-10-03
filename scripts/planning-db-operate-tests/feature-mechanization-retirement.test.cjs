@@ -191,6 +191,62 @@ test('retirement rejects broad or foreign history, ambiguous selectors and unhan
   }
 });
 
+test('exact symbols preserve the active file, sibling symbols and every unrelated obligation', () => {
+  const fixture = featureMechanizationRetirementFixture();
+  const { row, request, snapshot, evidenceRetirement } = fixture;
+  const { surface } = evidenceRetirement;
+  Object.assign(evidenceRetirement, {
+    symbols: ['oldProof'],
+    cycles: [],
+    gates: [],
+    flows: [],
+    completionGates: [],
+  });
+  row.raw_manifest.symbols[1].path = surface;
+  row.symbol_refs.push(`${surface}#oldProofExtra`, { path: surface, name: 'first' });
+  const expected = structuredClone(row);
+  expected.raw_manifest.symbols.shift();
+  expected.symbol_refs.shift();
+  expected.implementation_refs.shift();
+  assert.deepEqual(planCatalogReconciliation(request, [snapshot], new Map())[0].after, expected);
+  for (const mutate of [
+    (item) => {
+      item.evidenceRetirement.symbols = [];
+    },
+    (item) => {
+      item.evidenceRetirement.symbols = ['oldProof', 'oldProof'];
+    },
+    (item) => {
+      item.evidenceRetirement.symbols = ['missing'];
+    },
+    (item) => {
+      item.evidenceRetirement.cycles = ['retired-proof'];
+    },
+    (item) => {
+      item.evidenceRetirement.flows = ['new.cy.ts'];
+    },
+    (item) => {
+      item.row.raw_manifest.symbols.push({ path: surface, name: 'oldProof' });
+    },
+    (item) => {
+      item.row.raw_manifest.symbols = [{ path: surface, name: 'oldProof' }];
+    },
+    (item) => {
+      item.row.raw_manifest.custom = `${surface}#oldProof`;
+    },
+    (item) => {
+      item.row.raw_manifest.custom = { path: surface, name: 'oldProof' };
+    },
+  ]) {
+    const invalid = structuredClone(fixture);
+    mutate(invalid);
+    assert.throws(
+      () => planCatalogReconciliation(invalid.request, [invalid.snapshot], new Map()),
+      /EVIDENCE-RETIREMENT/
+    );
+  }
+});
+
 test('native retirement SQL binds only selectors, keeps ordinal arrays and never serializes stored metadata', () => {
   const {
     buildFeatureMechanizationEvidenceRetirementSql,
@@ -223,6 +279,27 @@ test('native retirement SQL binds only selectors, keeps ordinal arrays and never
     false
   );
   assert.ok(Object.values(columns).every((expression) => expression.includes('$99::jsonb')));
+  const selected = buildFeatureMechanizationEvidenceRetirementSql(
+    {
+      ...evidenceRetirement,
+      symbols: ['oldProof'],
+      cycles: [],
+      gates: [],
+      flows: [],
+      completionGates: [],
+    },
+    {
+      bind: (value) => {
+        values.push(value);
+        return `$${values.length}`;
+      },
+      beforeSnapshot: '$99::jsonb',
+    }
+  );
+  assert.deepEqual(Object.keys(selected), ['raw_manifest', 'symbol_refs', 'implementation_refs']);
+  assert.match(selected.raw_manifest, /jsonb_set/u);
+  assert.match(selected.raw_manifest, /jsonb_typeof\(item\.value->'name'\) = 'string'/u);
+  assert.ok(Object.values(selected).every((expression) => expression.includes('is not true')));
 });
 
 test('current source content changes only a local hash and revision with exclusive exact-row proof', () => {

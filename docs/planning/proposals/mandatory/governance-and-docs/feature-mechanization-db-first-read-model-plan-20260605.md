@@ -138,6 +138,40 @@ native JSONB precision, atomic failure/replay, and a real PostgreSQL transaction
 whose rollback is checked before the authorized batch is applied. GitHub remains
 the task journal; historical runs are not relabeled as current proof.
 
+### Retire exact symbols while their file remains active
+
+`evidenceRetirement` may include an optional `symbols` array of exact names in
+its selected `surface`. Omitting it retains the whole-file retirement contract.
+Providing it requires a nonempty unique list, with each selected symbol present
+exactly once in the manifest, and empty `cycles`, `gates`, `flows` and
+`completionGates` selectors. This narrows the existing command; it is not a new
+operation or permission to replace an imported declaration.
+
+```mermaid
+flowchart LR
+  Old[Removed helpers in an active file] --> Select[Exact surface and symbol names]
+  Select --> Record[Existing evidenceRetirement command]
+  Record --> Patch[Native JSONB symbol and implementation reference filters]
+  Patch --> Keep[Same file scope, live symbols, cycles, coverage and rail winners]
+```
+
+Whole-file retirement was rejected for this case: it would remove unrelated
+live bindings, and a declaration containing only that file would become empty.
+Instead, remove only the selected `path` and `name` identities from
+`raw_manifest.symbols`, `symbol_refs` and `implementation_refs`. Preserve all
+other manifest keys, permitted surfaces, cycles, gates, coverage, ordering,
+unselected duplicates and JSONB number precision. Unhandled selected references
+outside those three slots reject; references to the still-active file or its
+other symbols remain valid. Historical file proof, no-empty checks, native CAS,
+audit, rollback, idempotency and both winner guards remain unchanged.
+
+The bounded implementation uses the existing evidence retirement policy and its
+existing test file. Tests cover retained same-file symbols, empty/duplicate/
+missing/ambiguous selectors, mixed selectors, unhandled exact references and
+no-empty rejection. PostgreSQL proof must verify exact native preservation,
+rollback and replay before applying the three explicitly selected historical
+rows for #3540. No whole rail is retired and no binding is transferred.
+
 ### Refresh the content identity of an existing local declaration
 
 The same catalog command accepts an exclusive `sourceContent: { path, commit }`

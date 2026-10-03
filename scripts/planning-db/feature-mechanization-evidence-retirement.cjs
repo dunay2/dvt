@@ -1,6 +1,14 @@
 /** Owned concern: retire explicitly selected evidence without replacing retained authority. */
 function validateFeatureMechanizationEvidenceRetirementCommand(request) {
-  const keys = ['surface', 'historicalRef', 'cycles', 'gates', 'flows', 'completionGates'];
+  const keys = [
+    'surface',
+    'historicalRef',
+    'cycles',
+    'gates',
+    'flows',
+    'completionGates',
+    'symbols',
+  ];
   if (
     !request ||
     Object.getPrototypeOf(request) !== Object.prototype ||
@@ -27,6 +35,7 @@ function validateFeatureMechanizationEvidenceRetirementCommand(request) {
     );
   }
   for (const key of keys.slice(2)) {
+    if (key === 'symbols' && !Object.hasOwn(request, key)) continue;
     const values = request[key];
     if (
       !Array.isArray(values) ||
@@ -40,6 +49,14 @@ function validateFeatureMechanizationEvidenceRetirementCommand(request) {
       );
     }
   }
+  if (
+    Object.hasOwn(request, 'symbols') &&
+    (!request.symbols.length || keys.slice(2, -1).some((key) => request[key].length))
+  ) {
+    throw new Error(
+      'EVIDENCE-RETIREMENT-SELECTOR: Exact symbols cannot be empty or mixed with other selectors.'
+    );
+  }
   return { commit: match[1], path: surface };
 }
 
@@ -47,7 +64,7 @@ function projectFeatureMechanizationEvidenceRetirement(existing, request) {
   validateFeatureMechanizationEvidenceRetirementCommand(request);
   const after = structuredClone(existing);
   const manifest = after.raw_manifest;
-  const { surface, historicalRef, cycles, gates, flows, completionGates } = request;
+  const { surface, historicalRef, cycles, gates, flows, completionGates, symbols } = request;
   const history = `Historical coverage: ${historicalRef}`;
   const array = (object, key) => {
     if (Object.hasOwn(object, key) && !Array.isArray(object[key]))
@@ -69,12 +86,23 @@ function projectFeatureMechanizationEvidenceRetirement(existing, request) {
       );
     }
   }
-  const retiredSymbols = array(manifest, 'symbols').filter((symbol) => symbol.path === surface);
+  const selected = (symbol) =>
+    symbol?.path === surface && (!symbols || symbols.includes(symbol.name));
+  const retiredSymbols = array(manifest, 'symbols').filter(selected);
+  if (
+    symbols?.some((name) => retiredSymbols.filter((symbol) => symbol.name === name).length !== 1)
+  ) {
+    throw new Error('EVIDENCE-RETIREMENT-SELECTOR: Each exact symbol must exist once.');
+  }
   if (new Set(retiredSymbols.map((symbol) => symbol.name)).size !== retiredSymbols.length) {
     throw new Error('EVIDENCE-RETIREMENT-SELECTOR: Selected symbol identity is ambiguous.');
   }
   const withoutReferences = (values) =>
     values.filter((value) => {
+      if (symbols)
+        return typeof value === 'string'
+          ? !symbols.some((name) => value === `${surface}#${name}`)
+          : !selected(value);
       if (typeof value === 'string') return value !== surface && !value.startsWith(`${surface}#`);
       if (value && typeof value.path === 'string' && typeof value.name === 'string')
         return value.path !== surface;
@@ -85,51 +113,60 @@ function projectFeatureMechanizationEvidenceRetirement(existing, request) {
     ...incoming.filter((value) => !retained.includes(value)),
   ];
   manifest.symbols = array(manifest, 'symbols')
-    .filter((symbol) => symbol.path !== surface)
+    .filter((symbol) => !selected(symbol))
     .map((symbol) =>
-      symbol.cypressCoverage === surface ? { ...symbol, cypressCoverage: history } : symbol
+      !symbols && symbol.cypressCoverage === surface
+        ? { ...symbol, cypressCoverage: history }
+        : symbol
     );
-  manifest.allowedImplementationSurfaces = array(manifest, 'allowedImplementationSurfaces').filter(
-    (value) => value !== surface
-  );
-  manifest.redGreenCycles = array(manifest, 'redGreenCycles').filter(
-    (cycle) => !cycles.includes(cycle?.id)
-  );
-  manifest.cypressFlows = append(
-    array(manifest, 'cypressFlows').filter((value) => value !== surface),
-    flows
-  );
-  manifest.completionGate = append(
-    array(manifest, 'completionGate').filter((value) => !gates.includes(value)),
-    completionGates
-  );
   after.symbol_refs = withoutReferences(array(after, 'symbol_refs'));
   after.implementation_refs = withoutReferences(array(after, 'implementation_refs'));
-  after.allowed_implementation_surfaces = array(after, 'allowed_implementation_surfaces').filter(
-    (value) => value !== surface
-  );
-  after.completion_gate = append(
-    array(after, 'completion_gate').filter((value) => !gates.includes(value)),
-    completionGates
-  );
+  if (!symbols) {
+    manifest.allowedImplementationSurfaces = array(
+      manifest,
+      'allowedImplementationSurfaces'
+    ).filter((value) => value !== surface);
+    manifest.redGreenCycles = array(manifest, 'redGreenCycles').filter(
+      (cycle) => !cycles.includes(cycle?.id)
+    );
+    manifest.cypressFlows = append(
+      array(manifest, 'cypressFlows').filter((value) => value !== surface),
+      flows
+    );
+    manifest.completionGate = append(
+      array(manifest, 'completionGate').filter((value) => !gates.includes(value)),
+      completionGates
+    );
+    after.allowed_implementation_surfaces = array(after, 'allowed_implementation_surfaces').filter(
+      (value) => value !== surface
+    );
+    after.completion_gate = append(
+      array(after, 'completion_gate').filter((value) => !gates.includes(value)),
+      completionGates
+    );
+  }
   if (
     !manifest.symbols.length ||
-    !manifest.redGreenCycles.length ||
-    !manifest.allowedImplementationSurfaces.length
+    !array(manifest, 'redGreenCycles').length ||
+    !array(manifest, 'allowedImplementationSurfaces').length
   ) {
     throw new Error(
       'EVIDENCE-RETIREMENT-EMPTY: Active symbols, cycles and allowed surfaces must remain.'
     );
   }
   if (
-    !manifest.cypressFlows.length ||
-    !manifest.completionGate.includes('pnpm verify:prepush') ||
-    !after.completion_gate.includes('pnpm verify:prepush')
+    !array(manifest, 'cypressFlows').length ||
+    !array(manifest, 'completionGate').includes('pnpm verify:prepush') ||
+    !array(after, 'completion_gate').includes('pnpm verify:prepush')
   ) {
     throw new Error('EVIDENCE-RETIREMENT-OBLIGATIONS: Live flows and verify:prepush must remain.');
   }
   const inspect = (value, slot) => {
-    if (typeof value === 'string' && value.includes(surface.split('/').at(-1))) {
+    const matches = symbols
+      ? selected(value) ||
+        (typeof value === 'string' && symbols.some((name) => value === `${surface}#${name}`))
+      : typeof value === 'string' && value.includes(surface.split('/').at(-1));
+    if (matches) {
       if (/^raw_manifest\.symbols\.\d+\.cypressCoverage$/u.test(slot) && value === history) return;
       throw new Error(`EVIDENCE-RETIREMENT-UNHANDLED: Remaining reference at ${slot}.`);
     }
@@ -145,9 +182,6 @@ function projectFeatureMechanizationEvidenceRetirement(existing, request) {
 function buildFeatureMechanizationEvidenceRetirementSql(request, { bind, beforeSnapshot }) {
   validateFeatureMechanizationEvidenceRetirementCommand(request);
   const surface = `${bind(request.surface)}::text`;
-  const history = `${bind(`Historical coverage: ${request.historicalRef}`)}::text`;
-  const cycles = `${bind(request.cycles)}::text[]`;
-  const gates = `${bind(request.gates)}::text[]`;
   const manifest = `(${beforeSnapshot}->'raw_manifest')`;
   const filtered = (
     source,
@@ -155,6 +189,20 @@ function buildFeatureMechanizationEvidenceRetirementSql(request, { bind, beforeS
     projection = 'item.value'
   ) => `(select coalesce(jsonb_agg(${projection} order by item.ordinality), '[]'::jsonb)
     from jsonb_array_elements(coalesce(${source}, '[]'::jsonb)) with ordinality item(value, ordinality) where ${predicate})`;
+  if (request.symbols) {
+    const names = `${bind(request.symbols)}::text[]`;
+    const references = `${bind(request.symbols.map((name) => `${request.surface}#${name}`))}::text[]`;
+    const selected = `(item.value->'path' = to_jsonb(${surface}) and jsonb_typeof(item.value->'name') = 'string' and item.value->>'name' = any(${names}))`;
+    const retained = `(case when jsonb_typeof(item.value) = 'string' then item.value #>> '{}' = any(${references}) else ${selected} end) is not true`;
+    return {
+      raw_manifest: `jsonb_set(${manifest}, '{symbols}', ${filtered(`${manifest}->'symbols'`, `${selected} is not true`)}, false)`,
+      symbol_refs: filtered(`${beforeSnapshot}->'symbol_refs'`, retained),
+      implementation_refs: filtered(`${beforeSnapshot}->'implementation_refs'`, retained),
+    };
+  }
+  const history = `${bind(`Historical coverage: ${request.historicalRef}`)}::text`;
+  const cycles = `${bind(request.cycles)}::text[]`;
+  const gates = `${bind(request.gates)}::text[]`;
   const append = (retained, incoming) => {
     if (!incoming.length) return retained;
     const additions = `${bind(JSON.stringify(incoming))}::jsonb`;
