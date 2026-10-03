@@ -82,5 +82,7 @@ flow. No new browser spec, CI job or database bootstrap was introduced.
 Exact candidate SHAs and final lint, typecheck, package, pre-push and CI outcomes
 are recorded on the governing issue and implementation PR. Intermediate failures
 are not claimed as successful evidence. This does not complete parent issues
-#3512/#3516, LOCAL acquisition/readiness, or stable/deep pagination. No rule was
+[#3512](https://github.com/dunay2/dvt/issues/3512) or
+[#3516](https://github.com/dunay2/dvt/issues/3516), LOCAL acquisition/readiness,
+or stable/deep pagination. No rule was
 relaxed, hook bypassed, production stub introduced, or Planning DB imported/rebuilt.
