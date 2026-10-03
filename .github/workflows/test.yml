@@ -131,6 +131,16 @@ jobs:
       !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
       (github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.web == 'true' ||
        needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
+    env:
+      DVT_CI: '1'
+      NODE_OPTIONS: --max-old-space-size=4096
+      DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: native
+      DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: available
+      GIT_BASE: >-
+        ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
+        github.event_name == 'push' && github.event.before || github.sha }}
+      GIT_HEAD: ${{ github.sha }}
+      PROOF_OWNER: ${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -142,10 +152,56 @@ jobs:
         with:
           base-ref: ${{ github.base_ref }}
 
+      - name: Fetch exact push comparison base
+        if: github.event_name == 'push'
+        run:
+          git cat-file -e "$GIT_BASE^{commit}" || git fetch --no-tags --depth=1 origin "$GIT_BASE"
+
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+
+      - name: Resolve governed Web evidence plan
+        id: web_plan
+        run: >-
+          pnpm test:web:changed --plan ${{ (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true') && '--full' || '' }}
+
+      - name: Setup browser proof Python
+        id: browser_python
+        if: steps.web_plan.outputs.browser_required == 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Install native browser proof dependencies
+        id: browser_dependencies
+        if: steps.web_plan.outputs.browser_required == 'true'
+        run: |
+          python -m pip install --disable-pip-version-check dbt-postgres==1.10.0 dbt-core==1.11.11
+          pnpm --filter @dvt/web exec cypress install
+          pnpm --filter @dvt/web exec cypress verify
+
+      - name: Allocate browser proof PostgreSQL
+        id: browser_postgres
+        if: steps.web_plan.outputs.browser_required == 'true'
+        run: |
+          proof_container=$(docker create --name "dvt-web-proof-$PROOF_OWNER" \
+            --label "dvt.ci.proof=$PROOF_OWNER" --publish 127.0.0.1::5432 \
+            --env POSTGRES_USER=dvt_proof --env POSTGRES_DB=postgres \
+            --env "POSTGRES_PASSWORD=$PROOF_OWNER" postgres:15)
+          echo "container_id=$proof_container" >> "$GITHUB_OUTPUT"
+          docker start "$proof_container"
+          for attempt in {1..30}; do
+            if docker exec "$proof_container" pg_isready -h 127.0.0.1 -U dvt_proof -d postgres; then break; fi
+            sleep 1
+          done
+          docker exec "$proof_container" pg_isready -h 127.0.0.1 -U dvt_proof -d postgres
+          proof_address=$(docker port "$proof_container" 5432/tcp)
+          echo "DATABASE_URL=postgresql://dvt_proof:$PROOF_OWNER@$proof_address/postgres" >> "$GITHUB_ENV"
 
       - name: Build web dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
@@ -153,25 +209,40 @@ jobs:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
-      - name: Run governed web Vitest changed suites (PR)
+      - name: Run governed Web changed evidence (PR)
         if:
           github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
           needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
         run: pnpm test:web:changed
-        env:
-          DVT_CI: '1'
-          NODE_OPTIONS: --max-old-space-size=4096
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
 
       - name: Run governed web Vitest primary suites
         if:
           github.event_name != 'pull_request' ||
           needs.detect_test_matrix.outputs.root_build_sensitive == 'true'
         run: pnpm test:web:ci
+
+      - name: Run admitted live browser baseline
+        if:
+          github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true'
+        run: pnpm test:web:changed --full --browser-only
+
+      - name: Upload browser failure screenshots
+        if: failure() && steps.web_plan.outputs.browser_required == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web-live-proof-screenshots
+          path: apps/web/cypress/screenshots
+          if-no-files-found: ignore
+
+      - name: Remove browser proof PostgreSQL
+        if: always() && steps.browser_postgres.outputs.container_id != ''
         env:
-          DVT_CI: '1'
-          NODE_OPTIONS: --max-old-space-size=4096
+          PROOF_CONTAINER_ID: ${{ steps.browser_postgres.outputs.container_id }}
+        run: |
+          proof_owner=$(docker inspect --format '{{ index .Config.Labels "dvt.ci.proof" }}' "$PROOF_CONTAINER_ID")
+          test "$proof_owner" = "$PROOF_OWNER"
+          docker rm --force "$PROOF_CONTAINER_ID"
 
   adapter-postgres:
     name: Adapter Postgres Tests

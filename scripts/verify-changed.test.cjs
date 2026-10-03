@@ -55,7 +55,12 @@ test('buildFocusedChangedTestPlan validates changes to the changed-file lint gat
 });
 
 test('runtime runner source and test changes select their isolated contract exactly once', () => {
-  for (const name of ['run-selected-closure-live-proof', 'run-dev-stack']) {
+  for (const name of [
+    'run-selected-closure-live-proof',
+    'run-selected-closure-cypress',
+    'live-proof-process',
+    'run-dev-stack',
+  ]) {
     const source = `scripts/${name}.cjs`;
     const contract = `scripts/${name}.test.cjs`;
     for (const files of [[source], [contract], [source, contract]]) {
@@ -63,6 +68,22 @@ test('runtime runner source and test changes select their isolated contract exac
       assert.deepEqual(plan.map(commandLabel), [`node --test ${contract}`], files.join(', '));
       assert.equal(plan[0].kind, 'test');
     }
+  }
+});
+
+test('live browser runtime inputs select the existing Web router without broad API routing', () => {
+  const files = [
+    '.github/workflows/test.yml',
+    'apps/api/package.json',
+    'scripts/run-selected-closure-live-proof.cjs',
+    'scripts/run-selected-closure-cypress.cjs',
+    'scripts/live-proof-process.cjs',
+  ];
+  for (const changed of [...files.map((file) => [file]), files]) {
+    assert.equal(labelsFor(changed).filter((label) => label === 'pnpm test:web:changed').length, 1);
+  }
+  for (const file of ['scripts/ai-preflight.cjs', 'apps/api/src/server.ts']) {
+    assert.ok(!labelsFor([file]).includes('pnpm test:web:changed'), file);
   }
 });
 

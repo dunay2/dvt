@@ -148,6 +148,24 @@ test('workflow policy changes stay on CI contracts without runtime fan-out', () 
   assert.equal(testScope.coverage_relevant, false);
 });
 
+test('admitted browser runtime changes require Web evidence without unrelated package fan-out', () => {
+  for (const file of [
+    '.github/workflows/test.yml',
+    'apps/api/package.json',
+    'scripts/run-selected-closure-live-proof.cjs',
+    'scripts/run-selected-closure-cypress.cjs',
+    'scripts/live-proof-process.cjs',
+  ]) {
+    const scope = computeWorkflowModeScopeOutputs('test', [file]);
+    assert.equal(scope.web, true, file);
+    assert.equal(scope.root_build_sensitive, false, file);
+    assert.equal(scope.coverage_relevant, false, file);
+  }
+  for (const file of ['scripts/ai-preflight.cjs', 'apps/api/src/server.ts']) {
+    assert.equal(computeWorkflowModeScopeOutputs('test', [file]).web, false, file);
+  }
+});
+
 test('classifies dependency-cruiser config as CI policy validation without workspace fan-out', () => {
   const scope = computeBooleanScope(['.dependency-cruiser.cjs'], WORKFLOW_SCOPE_PATTERNS);
   const matrix = computeWorkspaceMatrix(['.dependency-cruiser.cjs']);

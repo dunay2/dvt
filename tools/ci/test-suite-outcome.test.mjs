@@ -108,6 +108,125 @@ test('PostgreSQL integration files run once in the full suite with the real data
   }
 });
 
+test('Web resolves browser obligations before conditional infrastructure and preserves full suites', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const plan = web.steps.find((step) => step.id === 'web_plan');
+  assert.ok(plan, 'Resolve the existing Web plan before allocating browser infrastructure');
+  assert.equal(web.services, undefined, 'Ordinary Web-only changes must not allocate PostgreSQL');
+  const primary = web.steps.find((step) => step.run === 'pnpm test:web:ci');
+  const changed = web.steps.find((step) => step.run === 'pnpm test:web:changed');
+  const browser = web.steps.find(
+    (step) => step.run === 'pnpm test:web:changed --full --browser-only'
+  );
+  assert.ok(primary && changed && browser);
+  for (const [event, root, full] of [
+    ['pull_request', false, false],
+    ['pull_request', true, true],
+    ['push', false, true],
+    ['workflow_dispatch', false, true],
+  ]) {
+    const context = {
+      github: { event_name: event },
+      needs: {
+        detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } },
+      },
+    };
+    const planned = plan.run.replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
+      String(runInNewContext(expression, context))
+    );
+    assert.equal(planned.trim(), `pnpm test:web:changed --plan${full ? ' --full' : ''}`);
+    assert.equal(runInNewContext(primary.if, context), full, event);
+    assert.equal(runInNewContext(browser.if, context), full, event);
+    assert.equal(runInNewContext(changed.if, context), !full, event);
+  }
+  for (const id of ['browser_python', 'browser_dependencies', 'browser_postgres']) {
+    const step = web.steps.find((entry) => entry.id === id);
+    assert.ok(step, id);
+    assert.ok(web.steps.indexOf(plan) < web.steps.indexOf(step));
+    for (const required of ['true', 'false', '', undefined]) {
+      assert.equal(
+        runInNewContext(step.if, {
+          steps: { web_plan: { outputs: { browser_required: required } } },
+        }),
+        required === 'true',
+        `${id}: ${required}`
+      );
+    }
+    assert.notEqual(step['continue-on-error'], true);
+  }
+  assert.equal(web.env.DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME, 'native');
+  assert.equal(web.env.DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME, 'available');
+  const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
+  assert.equal(install.env.CYPRESS_INSTALL_BINARY, '0');
+  const browserDependencies = web.steps.find((step) => step.id === 'browser_dependencies');
+  assert.match(browserDependencies.run, /dbt-postgres==\d+\.\d+\.\d+/u);
+  assert.match(browserDependencies.run, /dbt-core==\d+\.\d+\.\d+/u);
+  assert.match(browserDependencies.run, /cypress install/u);
+  assert.match(browserDependencies.run, /cypress verify/u);
+  assert.equal(browserDependencies.env?.CYPRESS_INSTALL_BINARY, undefined);
+});
+
+test('Web proof allocation and cleanup are bounded to the container created by this run', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const allocate = web.steps.find((step) => step.id === 'browser_postgres');
+  const cleanup = web.steps.find((step) => step.name === 'Remove browser proof PostgreSQL');
+  assert.ok(allocate && cleanup);
+  assert.match(allocate.run, /docker create/u);
+  assert.match(allocate.run, /--publish 127\.0\.0\.1::5432/u);
+  assert.match(allocate.run, /--label "dvt\.ci\.proof=\$PROOF_OWNER"/u);
+  assert.ok(allocate.run.indexOf('container_id=') < allocate.run.indexOf('docker start'));
+  assert.match(allocate.run, /DATABASE_URL=postgresql:\/\//u);
+  assert.match(allocate.run, /pg_isready -h 127\.0\.0\.1/u);
+  assert.equal(
+    cleanup.env.PROOF_CONTAINER_ID,
+    '${{ steps.browser_postgres.outputs.container_id }}'
+  );
+  assert.match(cleanup.run, /docker inspect/u);
+  assert.match(cleanup.run, /docker rm --force "\$PROOF_CONTAINER_ID"/u);
+  assert.doesNotMatch(cleanup.run, /prune|docker ps|\|\s*xargs/u);
+  for (const containerId of ['', 'allocated-container']) {
+    assert.equal(
+      runInNewContext(cleanup.if, {
+        always: () => true,
+        steps: { browser_postgres: { outputs: { container_id: containerId } } },
+      }),
+      containerId !== ''
+    );
+  }
+  const artifacts = web.steps.filter((step) => step.uses?.startsWith('actions/upload-artifact@'));
+  for (const artifact of artifacts) {
+    assert.doesNotMatch(artifact.with.path, /\.dvt\/|profiles|result\.json/u);
+  }
+});
+
+test('Web planning reads the exact PR, push or manual comparison without an empty-ref fallback', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const expression = web.env.GIT_BASE.replace(/^\$\{\{|\}\}$/gu, '');
+  for (const [event, expected] of [
+    ['pull_request', 'origin/release'],
+    ['push', 'before-sha'],
+    ['workflow_dispatch', 'head-sha'],
+  ]) {
+    assert.equal(
+      runInNewContext(expression, {
+        github: {
+          event_name: event,
+          base_ref: 'release',
+          event: { before: 'before-sha' },
+          sha: 'head-sha',
+        },
+        format: (pattern, value) => pattern.replace('{0}', value),
+      }),
+      expected
+    );
+  }
+  assert.equal(web.env.GIT_HEAD, '${{ github.sha }}');
+  const fetch = web.steps.find((step) => step.name === 'Fetch exact push comparison base');
+  assert.ok(fetch);
+  assert.match(fetch.run, /git fetch --no-tags --depth=1 origin "\$GIT_BASE"/u);
+  assert.ok(web.steps.indexOf(fetch) < web.steps.findIndex((step) => step.id === 'web_plan'));
+});
+
 test('ready PRs accept every scope combination only with its selected evidence', () => {
   for (let mask = 0; mask < 2 ** scopeKeys.length; mask += 1) {
     const selected = scopeKeys.filter((_, index) => mask & (1 << index));

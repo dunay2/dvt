@@ -8,6 +8,11 @@ const repoRoot = path.resolve('.');
 const source = readFileSync('scripts/build-workspace-runtime-deps.cjs', 'utf8');
 const workspace = (name) => ({ name, path: path.join(repoRoot, 'packages', name) });
 
+test('API predev delegates its production closure to the canonical runtime builder', () => {
+  const api = JSON.parse(readFileSync('apps/api/package.json', 'utf8'));
+  assert.equal(api.scripts.predev, 'node ../../scripts/build-workspace-runtime-deps.cjs dvt-api');
+});
+
 function runPreparation(
   argv,
   {

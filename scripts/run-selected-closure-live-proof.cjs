@@ -2,15 +2,14 @@
 /**
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
  */
-const { spawn, spawnSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const { existsSync, readdirSync } = require('node:fs');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
-const http = require('node:http');
-const https = require('node:https');
 const path = require('node:path');
 const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
+const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
 const {
   allocateDisposablePostgresDatabase,
   installDisposablePostgresInterruptCleanup,
@@ -68,65 +67,19 @@ function pipePrefixedOutput(stream, prefix) {
 }
 
 function spawnProcess(name, args, envOverrides = {}) {
-  const child = spawn(PNPM_COMMAND, args, {
+  const handle = spawnLiveProofProcess(name, PNPM_COMMAND, args, {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, ...envOverrides },
     shell: process.platform === 'win32',
     windowsHide: true,
   });
+  const { child } = handle;
 
   return {
-    name,
-    child,
+    ...handle,
     stdoutReader: pipePrefixedOutput(child.stdout, `[${name}]`),
     stderrReader: pipePrefixedOutput(child.stderr, `[${name}]`),
   };
-}
-
-function request(url) {
-  const transport = url.startsWith('https:') ? https : http;
-
-  return new Promise((resolve, reject) => {
-    const req = transport.get(
-      url,
-      {
-        timeout: 5_000,
-        headers: { Accept: 'application/json,text/html,*/*' },
-      },
-      (response) => {
-        response.resume();
-        resolve(response);
-      }
-    );
-
-    req.on('timeout', () => req.destroy(new Error(`Timeout while requesting ${url}`)));
-    req.on('error', reject);
-  });
-}
-
-async function waitForUrl(url, validator, label) {
-  const startedAt = Date.now();
-  let lastError = null;
-
-  while (Date.now() - startedAt < DEFAULT_READY_TIMEOUT_MS) {
-    try {
-      const response = await request(url);
-      if (validator(response)) {
-        return;
-      }
-      lastError = new Error(`${label} responded with ${response.statusCode}`);
-    } catch (error) {
-      lastError = error;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, DEFAULT_POLL_INTERVAL_MS));
-  }
-
-  throw new Error(
-    `${label} did not become ready within ${DEFAULT_READY_TIMEOUT_MS}ms. Last error: ${
-      lastError?.message ?? 'unknown'
-    }`
-  );
 }
 
 function ensureLocalPostgresReady(shouldBootstrap) {
@@ -195,29 +148,9 @@ function buildLiveProofTemporalTimeSkippingOptions(sourceEnv = process.env) {
       };
 }
 
-async function terminateProcess(processHandle) {
-  if (processHandle.child.killed || processHandle.child.exitCode !== null) {
-    return;
-  }
-
-  if (process.platform === 'win32') {
-    await new Promise((resolve) => {
-      const killer = spawn('taskkill', ['/pid', String(processHandle.child.pid), '/t', '/f'], {
-        stdio: 'ignore',
-        windowsHide: true,
-      });
-      killer.on('exit', () => resolve());
-      killer.on('error', () => resolve());
-    });
-    return;
-  }
-
-  processHandle.child.kill('SIGTERM');
-}
-
 async function closeReaders(processHandle) {
-  processHandle.stdoutReader.close();
-  processHandle.stderrReader.close();
+  processHandle.stdoutReader?.close();
+  processHandle.stderrReader?.close();
 }
 
 function readNonEmptyEnv(value) {
@@ -346,26 +279,22 @@ function buildLiveProofCypressDockerInvocation(
     '-w',
     '/repo/apps/web',
     '-e',
-    `CYPRESS_baseUrl=http://host.docker.internal:${args.webPort}`,
+    'CYPRESS_baseUrl',
     '-e',
-    `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
+    'CYPRESS_apiBaseUrl',
     '-e',
-    `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
+    'CYPRESS_apiBearerToken',
     ...(args.restrictedApiBearerToken === undefined
       ? []
-      : ['-e', `CYPRESS_restrictedApiBearerToken=${args.restrictedApiBearerToken}`]),
+      : ['-e', 'CYPRESS_restrictedApiBearerToken']),
     '-e',
-    `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
+    'CYPRESS_workspaceTenantId',
     '-e',
-    `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
+    'CYPRESS_workspaceProjectId',
     '-e',
-    `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
-    ...(args.postgresTargetSchema === undefined
-      ? []
-      : ['-e', `CYPRESS_postgresTargetSchema=${args.postgresTargetSchema}`]),
-    ...(args.postgresDatabaseName === undefined
-      ? []
-      : ['-e', `CYPRESS_postgresDatabaseName=${args.postgresDatabaseName}`]),
+    'CYPRESS_workspaceEnvironmentId',
+    ...(args.postgresTargetSchema === undefined ? [] : ['-e', 'CYPRESS_postgresTargetSchema']),
+    ...(args.postgresDatabaseName === undefined ? [] : ['-e', 'CYPRESS_postgresDatabaseName']),
     CYPRESS_IMAGE,
     '--project',
     '/repo/apps/web',
@@ -385,20 +314,12 @@ function buildLiveProofCypressNativeInvocation(args) {
   }
 
   return {
-    command: PNPM_COMMAND,
+    command: process.execPath,
     args: [
-      '--filter',
-      '@dvt/web',
-      'exec',
-      'cypress',
-      'run',
-      '--config-file',
-      'cypress.config.ts',
-      '--browser',
-      'chrome',
-      ...(args.headed ? ['--headed'] : []),
+      path.join(__dirname, 'run-selected-closure-cypress.cjs'),
       '--spec',
       args.specPath.slice(specPrefix.length),
+      ...(args.headed ? ['--headed'] : []),
     ],
     env: {
       CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
@@ -620,35 +541,34 @@ async function seedSelectedClosureLocalWarehouseProof(
   await deps.seedLocalPostgresProofData(databaseUrl);
 }
 
-async function runCypress(args, runtime) {
-  const nativeInvocation =
-    runtime === 'native' ? buildLiveProofCypressNativeInvocation(args) : undefined;
-  const childEnv = { ...process.env, ...(nativeInvocation?.env ?? {}) };
+async function runCypress(args, runtime, processHandles, deps = {}) {
+  const nativeInvocation = buildLiveProofCypressNativeInvocation(args);
+  const childEnv = {
+    ...process.env,
+    ...nativeInvocation.env,
+    ...(runtime === 'docker'
+      ? {
+          CYPRESS_baseUrl: `http://host.docker.internal:${args.webPort}`,
+          CYPRESS_apiBaseUrl: `http://host.docker.internal:${args.apiPort}`,
+        }
+      : {}),
+  };
   delete childEnv.ELECTRON_RUN_AS_NODE;
-  const child = spawn(
-    nativeInvocation?.command ?? 'docker',
-    nativeInvocation?.args ?? buildLiveProofCypressDockerInvocation(args),
+  const handle = (deps.spawnLiveProofProcess ?? spawnLiveProofProcess)(
+    'cypress-live-proof',
+    runtime === 'native' ? nativeInvocation.command : 'docker',
+    runtime === 'native' ? nativeInvocation.args : buildLiveProofCypressDockerInvocation(args),
     {
       stdio: 'inherit',
       env: childEnv,
-      shell: runtime === 'native' && process.platform === 'win32',
+      shell: false,
       windowsHide: true,
     }
   );
-
-  const exitCode = await new Promise((resolve, reject) => {
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (signal != null) {
-        reject(new Error(`Cypress live selected-closure proof exited from signal ${signal}`));
-        return;
-      }
-      resolve(code);
-    });
-  });
-
-  if (typeof exitCode !== 'number' || exitCode !== 0) {
-    throw new Error(`Cypress live selected-closure proof failed with exit code ${exitCode}`);
+  processHandles.push(handle);
+  const { code, signal } = await handle.completion;
+  if (signal != null || code !== 0) {
+    throw new Error(`Cypress live selected-closure proof failed: exit ${code}, signal ${signal}`);
   }
 }
 
@@ -669,12 +589,33 @@ async function main() {
   let localProtectedRuntimeAuth;
   const liveProofSchema = allocateLiveProofSchema();
   const processHandles = [];
+  let shutdownPromise;
 
   async function shutdown() {
-    await Promise.all(processHandles.map((handle) => terminateProcess(handle)));
-    await Promise.all(processHandles.map((handle) => closeReaders(handle)));
-    await localProtectedRuntimeAuth?.close();
-    await temporalEnv?.teardown();
+    shutdownPromise ??= (async () => {
+      const processes = await Promise.allSettled(
+        processHandles.map(async (handle) => {
+          try {
+            await terminateLiveProofProcess(handle);
+          } finally {
+            await closeReaders(handle);
+          }
+        })
+      );
+      const resources = await Promise.allSettled([
+        Promise.resolve().then(() => localProtectedRuntimeAuth?.close()),
+        Promise.resolve().then(() => temporalEnv?.teardown()),
+      ]);
+      const failures = [...processes, ...resources].filter(
+        (result) => result.status === 'rejected'
+      );
+      if (failures.length)
+        throw new AggregateError(
+          failures.map((result) => result.reason),
+          'Live proof shutdown failed'
+        );
+    })();
+    return shutdownPromise;
   }
   const removeInterruptCleanup = installDisposablePostgresInterruptCleanup(lease, shutdown);
 
@@ -715,25 +656,37 @@ async function main() {
     const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], apiEnv);
     processHandles.push(apiHandle);
 
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/healthz`,
       (response) => response.statusCode === 200,
-      'API healthz'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API healthz',
+      apiHandle
     );
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/db/ready`,
       (response) => response.statusCode === 200,
-      'API db/ready'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API db/ready',
+      apiHandle
     );
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/readyz`,
       (response) => response.statusCode === 200,
-      'API readyz'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API readyz',
+      apiHandle
     );
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/version`,
       (response) => response.statusCode === 200,
-      'API version'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API version',
+      apiHandle
     );
 
     await seedLocalProtectedRuntimeGrant({
@@ -817,10 +770,13 @@ async function main() {
     );
     processHandles.push(webHandle);
 
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_WEB_PORT}/`,
       (response) => (response.statusCode ?? 500) < 500,
-      'Web dev server'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'Web dev server',
+      webHandle
     );
 
     await runCypress(
@@ -835,7 +791,8 @@ async function main() {
         specPath,
         headed: cypressHeaded,
       },
-      cypressRuntime
+      cypressRuntime,
+      processHandles
     );
   } finally {
     removeInterruptCleanup();
@@ -865,6 +822,7 @@ module.exports = {
   resolveLiveProofSpecPath,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
+  runCypress,
 };
 
 if (require.main === module) {

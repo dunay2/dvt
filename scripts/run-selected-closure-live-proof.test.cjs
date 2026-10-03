@@ -19,6 +19,7 @@ const {
   resolveLiveProofSpecPath,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
+  runCypress,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
 
@@ -97,23 +98,23 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       '-w',
       '/repo/apps/web',
       '-e',
-      'CYPRESS_baseUrl=http://host.docker.internal:4174',
+      'CYPRESS_baseUrl',
       '-e',
-      'CYPRESS_apiBaseUrl=http://host.docker.internal:3300',
+      'CYPRESS_apiBaseUrl',
       '-e',
-      'CYPRESS_apiBearerToken=proof-token',
+      'CYPRESS_apiBearerToken',
       '-e',
-      'CYPRESS_restrictedApiBearerToken=restricted-proof-token',
+      'CYPRESS_restrictedApiBearerToken',
       '-e',
-      'CYPRESS_workspaceTenantId=tenant',
+      'CYPRESS_workspaceTenantId',
       '-e',
-      'CYPRESS_workspaceProjectId=project',
+      'CYPRESS_workspaceProjectId',
       '-e',
-      'CYPRESS_workspaceEnvironmentId=dev',
+      'CYPRESS_workspaceEnvironmentId',
       '-e',
-      'CYPRESS_postgresTargetSchema=proof_schema',
+      'CYPRESS_postgresTargetSchema',
       '-e',
-      'CYPRESS_postgresDatabaseName=dvt_proof_selected_closure_1234',
+      'CYPRESS_postgresDatabaseName',
       'cypress/included:15.18.1',
       '--project',
       '/repo/apps/web',
@@ -176,17 +177,9 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
       postgresDatabaseName: 'dvt_proof_selected_closure_1234',
     }),
     {
-      command: process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+      command: process.execPath,
       args: [
-        '--filter',
-        '@dvt/web',
-        'exec',
-        'cypress',
-        'run',
-        '--config-file',
-        'cypress.config.ts',
-        '--browser',
-        'chrome',
+        path.join(__dirname, 'run-selected-closure-cypress.cjs'),
         '--spec',
         'cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
       ],
@@ -219,13 +212,52 @@ test('buildLiveProofCypressNativeInvocation opens Chrome only when headed is exp
     headed: true,
   });
 
-  assert.deepEqual(invocation.args.slice(-5), [
-    '--browser',
-    'chrome',
-    '--headed',
+  assert.deepEqual(invocation.args.slice(-3), [
     '--spec',
     'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+    '--headed',
   ]);
+});
+
+test('native and manual Docker browser children are registered before awaiting and keep tokens out of argv', async () => {
+  const args = {
+    apiPort: 3300,
+    webPort: 4174,
+    apiBearerToken: 'secret-token',
+    specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+    workspaceScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' },
+  };
+  for (const runtime of ['native', 'docker']) {
+    const handles = [];
+    let complete;
+    const handle = {
+      completion: new Promise((resolve) => {
+        complete = resolve;
+      }),
+    };
+    const proof = runCypress(args, runtime, handles, {
+      spawnLiveProofProcess: (_name, _command, argv, options) => {
+        assert.doesNotMatch(JSON.stringify(argv), /secret-token/);
+        assert.equal(options.env.CYPRESS_apiBearerToken, 'secret-token');
+        assert.equal(options.shell, false);
+        return handle;
+      },
+    });
+    assert.deepEqual(handles, [handle]);
+    complete({ code: 0, signal: null });
+    await proof;
+  }
+  for (const outcome of [
+    { code: 1, signal: null },
+    { code: null, signal: 'SIGTERM' },
+  ]) {
+    await assert.rejects(
+      runCypress(args, 'native', [], {
+        spawnLiveProofProcess: () => ({ completion: Promise.resolve(outcome) }),
+      }),
+      /Cypress live selected-closure proof/
+    );
+  }
 });
 
 test('live proof selects Docker by default and native Cypress only when explicitly requested', () => {

@@ -40,7 +40,8 @@ function visitEnglishLiveCanvas(): void {
 
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
-    if (!hasLiveProtectedRuntimeEnv()) this.skip();
+    if (!hasLiveProtectedRuntimeEnv())
+      throw new Error('Terminal live proof requires protected runtime credentials.');
     resetE2eApiStubs();
   });
 
