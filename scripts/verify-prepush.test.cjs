@@ -355,7 +355,16 @@
   });
 
   test('failed changed input preserves a receipt only reusable for its exact validated state', (t) => {
-    const { root, write } = prepushRepository(t);
+    const { root, write, base } = prepushRepository(t);
+    const comparisonRefs = ['GIT_BASE', 'GIT_HEAD'].map((key) => [key, process.env[key]]);
+    t.after(() => {
+      for (const [key, value] of comparisonRefs) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    });
+    process.env.GIT_BASE = base;
+    delete process.env.GIT_HEAD;
     let executions = 0;
     let fail = true;
     const options = {
