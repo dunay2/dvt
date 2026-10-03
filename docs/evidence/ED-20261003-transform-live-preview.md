@@ -77,7 +77,11 @@ The existing native terminal browser suite passed all fifteen scenarios, with
 zero failures, pending or skipped tests. It checks Source and Transform refresh,
 keyboard focus, no implicit tab query, compact operation facts, and protected
 Transform HTTP provenance before the existing Preview/Run/Temporal/publication
-flow. No new browser spec, CI job or database bootstrap was introduced.
+flow. The pre-push admission gate then exposed the saved-sample helper's four
+previously unadmitted consumers. Their existing eight CROSS, chain, operation and
+sort/fetch scenarios now register in that same terminal run. A routing/import
+guard proves the consumer set and one registration each; unknown browser paths
+remain rejected. No new browser spec, CI job or database bootstrap was introduced.
 
 Exact candidate SHAs and final lint, typecheck, package, pre-push and CI outcomes
 are recorded on the governing issue and implementation PR. Intermediate failures

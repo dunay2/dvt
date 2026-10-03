@@ -4,6 +4,12 @@
  */
 import { KNOWN_STEP_KINDS } from '@dvt/contracts';
 
+// Existing saved-preview consumers share this runtime instead of bootstrapping another one.
+import './canvas-relational-operation-execution.cy';
+import './canvas-relational-workbench-chain-persistence.cy';
+import './canvas-relational-workbench-cross.cy';
+import './canvas-sort-fetch-data-navigation.cy';
+
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
