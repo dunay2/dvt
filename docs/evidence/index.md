@@ -24,6 +24,7 @@ Evidence documents that justify or validate relevant changes.
 - [AR-D4 zero-downtime schema rollback evidence](ed-20260513-ar-d4-zero-downtime-schema-rollback.md)
 - [Authoritative Transform output sample](ED-20260915-authoritative-transform-output-sample.md)
 - [Canonical artifact authority and compiled-code hard cut](ED-20260905-artifact-authority-compiled-code-hard-cut.md)
+- [Canonical edge disconnection](ED-20261003-canonical-relation-edge-disconnection.md)
 - [Canonical Plan Admission Findings](ED-20260731-plan-admission-findings.md)
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
 - [Canvas edge execution gate evidence](ED-20260902-canvas-edge-execution-gate.md)

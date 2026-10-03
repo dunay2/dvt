@@ -1,0 +1,24 @@
+---
+id: R-20261003-CANVAS-RETAINED-CONFIGURATION
+title: Retained disconnected configuration must not become executable against changed Inputs
+status: Open
+date: 2026-10-03
+owners:
+  - dvt-web
+  - '@dvt/contracts'
+severity: High
+probability: Low
+description: >
+  Canonical edge disconnection retains expressions and predicates for later authoring. Treating that
+  configuration as executable, or restoring it against a producer with different contents, could
+  publish stale fields or predicates.
+mitigation:
+  - configurationDocument is distinct from semanticDocument in the existing strict contract.
+  - Both documents cannot coexist on one operation; configuration ownership is checked.
+  - Missing Inputs invalidate the consumer and downstream semantic authority.
+  - Exact reconnect requires original relation IDs and identical canonical producer documents.
+  - Apply removes the former complete document when the selected output is incomplete.
+  - Canonical disconnection rejects failed, stale, disposed, and read-only analysis before mutation.
+  - Unit, contract, and real-browser evidence is recorded in
+    ED-20261003-canonical-relation-edge-disconnection.
+---
