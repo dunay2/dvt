@@ -658,7 +658,7 @@ symbols:
     cqRails: [SelectCanvasExecutionNode]
     fowlerSignals: [Duplicate semantics, Test-only confidence]
     architectureGuard: pnpm --filter @dvt/web test:canvas
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests: [pnpm --filter @dvt/web typecheck]
   - path: apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
     name: openModelCodeEditor

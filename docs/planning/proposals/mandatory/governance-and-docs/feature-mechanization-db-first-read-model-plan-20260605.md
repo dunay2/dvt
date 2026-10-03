@@ -2,7 +2,7 @@
 title: Feature Mechanization Read Model Current Contract
 status: Accepted
 owner: Architecture Governance
-last_reviewed: 2026-09-27
+last_reviewed: 2026-10-03
 planning_type: mandatory-proposal
 ---
 
@@ -79,6 +79,95 @@ flowchart LR
 The operator repairs the historical declarations with current source and test
 references through the command, then runs the unchanged implementation gate. A green
 governance gate does not establish Canvas product acceptance or live-provider proof.
+
+## Retire exact evidence without replacing authority
+
+Retiring an obsolete proof is not a replacement of the retained feature. Recursive
+forbidden-surface pruning can erase retained symbols' coverage metadata; rebuilding
+their manifests through one rail can overwrite heterogeneous ownership. Promoting
+an imported record to a local record also changes its identity and precedence.
+
+```mermaid
+flowchart LR
+  Old[Obsolete proof] --> Rebuild[Prune or reconstruct whole manifest]
+  Rebuild --> Loss[Metadata loss or changed authority]
+  Select[Exact evidence selectors and row digest] --> Record[RecordFeatureMechanizationRail]
+  Record --> Policy[Validate bounded retirement policy]
+  Policy --> Patch[Native JSONB patch of selected evidence]
+  Patch --> Guard[Preserve unrelated metadata and rail winners]
+  Guard --> Audit[Atomic audited commit or rollback]
+```
+
+The existing `record --catalog-reconciliation <json-file>` command admits an
+`evidenceRetirement` change, owned by `FeatureMechanizationLocalRail`. It reuses
+the operational-integrity contract's exact physical row identity, native SQL
+snapshot digest, reviewed design scopes, locks, idempotency, winner checks and
+before/after audit. It neither promotes imported rows nor introduces another
+writer, import, generic JSON Patch API or application-data mutation.
+
+The typed request names one exact repository-relative `surface`, its
+`historicalRef` (the same file in this repository at a full ancestor commit),
+explicit `cycles` and `gates` to retire, and `flows` and `completionGates` that
+remain current obligations. Historical provenance must resolve to a regular Git
+blob; it is not attributed to replacement smoke coverage. This change cannot be
+combined with source/reference patches on the same row.
+
+The policy removes only symbols owned by the retired file, its exact implementation
+references and allowed surface, and the explicitly selected cycles and gates.
+Retained symbols stay intact except that an exact `cypressCoverage` match becomes
+`Historical coverage: <historicalRef>`. Exact live-flow references are removed;
+declared replacement flows/gates are appended only if absent. Existing ordering,
+duplicates outside selected identities, JSONB numeric precision, ownership,
+restrictions and unrelated cycles remain unchanged. No existing metadata is
+serialized through JavaScript for storage or audit.
+
+Missing or ambiguous selectors, broad paths, unresolvable history, stale row
+digests, unhandled remaining references or an empty required live obligation
+reject before commit. Active symbols, cycles, allowed surfaces and live flows
+must remain; `pnpm verify:prepush` stays required. An absent optional manifest
+property remains absent unless its explicit replacement adds content.
+
+All affected physical rows must be enumerated, including imported rows shadowed
+by local authority. The command never discovers and mutates extra targets.
+Retiring a test does not retire its historical acceptance evidence or prove its
+replacement: the replacement browser vertical must pass on its own candidate.
+
+The evidence policy and its tests route through the existing operate suite.
+Validation includes exact removals and retained metadata, invalid selectors,
+native JSONB precision, atomic failure/replay, and a real PostgreSQL transaction
+whose rollback is checked before the authorized batch is applied. GitHub remains
+the task journal; historical runs are not relabeled as current proof.
+
+### Refresh the content identity of an existing local declaration
+
+The same catalog command accepts an exclusive `sourceContent: { path, commit }`
+change for a local row. This is not a declaration replay or an import. The
+ordinary record operation merges symbols and cycles, so replaying it merely to
+refresh a document hash can alter unrelated authority. The current-content
+override updates the governed file read model, not local declaration rows.
+
+```mermaid
+flowchart LR
+  Head[Exact clean HEAD document] --> Proof[Existing governed-source snapshot reader]
+  Proof --> CAS[Explicit local row and full native row digest]
+  CAS --> Update[Hash and revision only]
+  Update --> Audit[Native before/after audit and unchanged winners]
+```
+
+`path` must equal the stored source path and `commit` must be the full current
+HEAD commit. Reuse the existing governed-source snapshot reader to require a
+clean, tracked regular file and derive its canonical content hash and blob.
+Reject imported rows, other patch modes, stale revisions or row digests, dirty
+files, different paths, symbolic links and a changed HEAD. The update must keep
+the source path, timestamps, raw manifests, symbols, arrays, ownership and both
+effective and canonical winner maps unchanged. Only `source_content_sha256`
+and the local revision may change; the existing native SQL audit and idempotent
+batch receipt remain mandatory. A caller selects every row explicitly.
+
+Tests must reject each boundary violation and prove through PostgreSQL rollback
+that the native metadata and winner maps are identical before applying a batch.
+This preserves the distinction between current Git content and semantic
+authority; it neither reconstructs authority from Git nor weakens freshness.
 
 ## Single-team validation boundary
 

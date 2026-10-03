@@ -93,6 +93,10 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db/catalog-reconciliation-write.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/catalog-reconciliation.test.cjs':
     'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/feature-mechanization-evidence-retirement.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/feature-mechanization-retirement.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-parse.test.cjs':
     'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-plan.test.cjs':

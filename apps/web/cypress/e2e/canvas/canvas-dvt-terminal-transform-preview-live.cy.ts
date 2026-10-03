@@ -4,6 +4,7 @@
  */
 import { KNOWN_STEP_KINDS } from '@dvt/contracts';
 
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   getVisibleCanvasNode,
@@ -19,6 +20,23 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
+
+import {
+  assertAuthoritativeLiveRunTimeline,
+  interruptLiveRunEventFeed,
+  type LiveRunEventIdentity,
+} from './liveRunEventRecovery.proof';
+
+function visitEnglishLiveCanvas(): void {
+  visitWithLiveWorkspaceSession('/canvas', {
+    onBeforeLoad(window) {
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
+    },
+  });
+}
 
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
@@ -36,18 +54,20 @@ describe('DVT terminal Transform Preview and Run live', () => {
       readonly persisted?: { readonly canonicalPlanSha256?: string };
     };
     type RunEventResponse = {
-      readonly items?: ReadonlyArray<{
-        readonly eventType?: string;
-        readonly payload?: {
-          readonly resultEvidence?: {
-            readonly evidenceType?: string;
-            readonly plan?: { readonly sha256?: string };
-            readonly target?: { readonly schema?: string; readonly relation?: string };
-            readonly publication?: { readonly token?: string; readonly outcome?: string };
-            readonly rowsWritten?: number;
+      readonly items?: ReadonlyArray<
+        LiveRunEventIdentity & {
+          readonly eventType?: string;
+          readonly payload?: {
+            readonly resultEvidence?: {
+              readonly evidenceType?: string;
+              readonly plan?: { readonly sha256?: string };
+              readonly target?: { readonly schema?: string; readonly relation?: string };
+              readonly publication?: { readonly token?: string; readonly outcome?: string };
+              readonly rowsWritten?: number;
+            };
           };
-        };
-      }>;
+        }
+      >;
     };
     const targetSchemaValue = Cypress.env('postgresTargetSchema');
     if (typeof targetSchemaValue !== 'string' || targetSchemaValue.trim().length === 0) {
@@ -90,7 +110,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
       request.continue();
     });
 
-    visitWithLiveWorkspaceSession('/canvas');
+    visitEnglishLiveCanvas();
     getVisibleCanvasNode('source-1').should('be.visible');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
     selectCanvasClosure(['dvt-transform-1']);
@@ -113,9 +133,11 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
       .should('be.visible')
       .and('contain.text', KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD);
+    const assertEventFeedRecovery = interruptLiveRunEventFeed();
     cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
+    assertEventFeedRecovery();
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
@@ -141,13 +163,14 @@ describe('DVT terminal Transform Preview and Run live', () => {
             'verified-existing',
           ]);
           expect(evidence?.rowsWritten).to.equal(3);
+          cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
+            .should('be.visible')
+            .and('contain.text', 'completed');
+          assertAuthoritativeLiveRunTimeline((response.body as RunEventResponse).items ?? []);
         });
       });
     });
 
-    cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
-      .should('be.visible')
-      .and('contain.text', 'completed');
     cy.get('[data-slot="run-result-tab"]').click();
     cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 })
       .should('be.visible')
@@ -202,7 +225,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
       startRunRequests += 1;
       request.continue();
     });
-    visitWithLiveWorkspaceSession('/canvas');
+    visitEnglishLiveCanvas();
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
@@ -261,7 +284,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
       startRunRequests += 1;
       request.continue();
     });
-    visitWithLiveWorkspaceSession('/canvas');
+    visitEnglishLiveCanvas();
 
     getVisibleCanvasNode('dvt-transform-1')
       .find('[data-slot="canvas-node-shell"]')

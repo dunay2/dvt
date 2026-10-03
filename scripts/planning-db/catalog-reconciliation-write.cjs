@@ -6,11 +6,16 @@ const { randomUuidV4, sha256Hex } = require('@dvt/crypto');
 const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
+const { readGovernedSourceSnapshots } = require('./governed-source-refresh-write-rail.cjs');
 const {
   catalogRowHash,
   parseCatalogReconciliation,
   planCatalogReconciliation,
 } = require('./catalog-reconciliation.cjs');
+const {
+  validateFeatureMechanizationEvidenceRetirementCommand,
+  buildFeatureMechanizationEvidenceRetirementSql,
+} = require('./feature-mechanization-evidence-retirement.cjs');
 
 function verifyHistoricalSource(source, expectedPath, options = {}) {
   if (source.path !== expectedPath)
@@ -35,7 +40,10 @@ function verifyHistoricalSource(source, expectedPath, options = {}) {
   } catch {
     throw new Error('CATALOG-SOURCE-ANCESTOR: Historical commit must be an ancestor of HEAD.');
   }
-  if (git(['ls-tree', '-z', head, '--', source.path]).length !== 0)
+  if (
+    options.requireAbsent !== false &&
+    git(['ls-tree', '-z', head, '--', source.path]).length !== 0
+  )
     throw new Error('CATALOG-SOURCE-CURRENT: Source still exists at HEAD.');
   const entry = git(['ls-tree', '-z', source.commit, '--', source.path]).toString();
   const match = /^(100644|100755) blob ([a-f0-9]{40})\t([^\0]+)\0$/u.exec(entry);
@@ -49,6 +57,39 @@ function verifyHistoricalSource(source, expectedPath, options = {}) {
     blob: match[2],
     contentSha256,
     sourcePath: `https://github.com/dunay2/dvt/blob/${source.commit}/${source.path.split('/').map(encodeURIComponent).join('/')}`,
+  };
+}
+
+function verifyEvidenceRetirementHistory(request, options = {}) {
+  const source = validateFeatureMechanizationEvidenceRetirementCommand(request);
+  return verifyHistoricalSource(source, request.surface, { ...options, requireAbsent: false });
+}
+
+function verifyCurrentSourceContent(source, expectedPath, options = {}) {
+  if (source.path !== expectedPath)
+    throw new Error('CATALOG-SOURCE-PATH: Current content path must equal the stored source.');
+  const repoRoot = options.repoRoot || path.resolve(__dirname, '..', '..');
+  const snapshot = readGovernedSourceSnapshots({
+    paths: [source.path],
+    repoRoot,
+    git: (args) =>
+      execFileSync('git', ['--literal-pathspecs', ...args], {
+        cwd: repoRoot,
+        env: createGitRepositoryEnvironment(),
+        encoding: null,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        maxBuffer: 16 * 1024 * 1024,
+      }),
+  });
+  if (snapshot.sourceCommitSha !== source.commit)
+    throw new Error('CATALOG-SOURCE-HEAD: Current content commit must equal HEAD.');
+  const current = snapshot.sources[0];
+  return {
+    commit: source.commit,
+    head: source.commit,
+    path: current.path,
+    blob: current.blobSha,
+    contentSha256: current.contentHash,
   };
 }
 
@@ -177,13 +218,35 @@ async function applyCatalogReconciliation(input, options = {}) {
       if (change.source) {
         const key = `${change.source.commit}:${change.source.path}`;
         if (!sourceProofs.has(key))
-          sourceProofs.set(key, verifyHistoricalSource(change.source, before.source_path, options));
+          sourceProofs.set(
+            key,
+            verifyHistoricalSource(change.source, before.source_path, {
+              ...options,
+              requireAbsent: true,
+            })
+          );
+      }
+      if (change.evidenceRetirement) {
+        const key = `evidence:${change.evidenceRetirement.historicalRef}`;
+        if (!sourceProofs.has(key))
+          sourceProofs.set(
+            key,
+            verifyEvidenceRetirementHistory(change.evidenceRetirement, options)
+          );
+      }
+      if (change.sourceContent) {
+        const key = `current:${change.sourceContent.commit}:${change.sourceContent.path}`;
+        if (!sourceProofs.has(key))
+          sourceProofs.set(
+            key,
+            verifyCurrentSourceContent(change.sourceContent, before.source_path, options)
+          );
       }
     }
     const planned = planCatalogReconciliation(request, selected.rows, sourceProofs);
     const previousWinners = await winners();
     for (const [index, entry] of planned.entries()) {
-      const { before, after, origin, proof } = entry;
+      const { before, after, origin } = entry;
       const values = [after.rail_id];
       const bind = (value) => {
         values.push(value);
@@ -193,13 +256,32 @@ async function applyCatalogReconciliation(input, options = {}) {
       const preserved = [];
       const changedColumns = [];
       const beforeSnapshot = `${bind(entry.beforeText)}::jsonb`;
-      if (proof) {
+      const retirement = request.changes[index].evidenceRetirement;
+      if (retirement) {
+        const columns = buildFeatureMechanizationEvidenceRetirementSql(retirement, {
+          bind,
+          beforeSnapshot,
+        });
+        for (const [column, expression] of Object.entries(columns)) {
+          assignments.push(`${column} = ${expression}`);
+          preserved.push(`${column} = (${expression})`);
+          changedColumns.push(column);
+        }
+        entry.evidenceHistory = sourceProofs.get(`evidence:${retirement.historicalRef}`);
+      }
+      if (request.changes[index].source) {
         assignments.push(
           `source_path = ${bind(after.source_path)}`,
           `source_content_sha256 = ${bind(after.source_content_sha256)}`
         );
         preserved.push(...assignments);
         changedColumns.push('source_path', 'source_content_sha256');
+      }
+      if (request.changes[index].sourceContent) {
+        const content = `source_content_sha256 = ${bind(after.source_content_sha256)}`;
+        assignments.push(content);
+        preserved.push(content);
+        changedColumns.push('source_content_sha256');
       }
       const reference = request.changes[index].reference;
       if (reference) {
@@ -247,7 +329,7 @@ async function applyCatalogReconciliation(input, options = {}) {
       );
     }
     const affectedPaths = planned
-      .filter((entry) => entry.proof)
+      .filter((entry) => entry.proof && entry.before.source_path !== entry.after.source_path)
       .map((entry) => entry.before.source_path);
     const references = await client.query(
       `with affected_references as (
@@ -304,6 +386,7 @@ async function applyCatalogReconciliation(input, options = {}) {
             change: request.changes[index],
             origin,
             proof,
+            evidenceHistory: entry.evidenceHistory,
           }),
           beforeText,
           afterText,
@@ -334,4 +417,9 @@ async function applyCatalogReconciliation(input, options = {}) {
   }
 }
 
-module.exports = { applyCatalogReconciliation, verifyHistoricalSource };
+module.exports = {
+  applyCatalogReconciliation,
+  verifyHistoricalSource,
+  verifyEvidenceRetirementHistory,
+  verifyCurrentSourceContent,
+};
