@@ -439,6 +439,14 @@ Command semantics:
   the hook skips only when that exact state already passed an equivalent or
   stronger gate. If any file content, staged state, untracked file, base ref,
   or `HEAD` changes, the hook runs normally.
+  The single receipt is replaced only after success: failure on different inputs
+  does not erase evidence for the previously validated state. Restoring those
+  exact inputs can reuse that receipt; changed inputs cannot.
+  The selected-closure native Cypress adapter writes generated screenshots,
+  downloads and optional videos under `.dvt/evidence/selected-closure/`, outside
+  the source inventory. CI uploads only its `screenshots` subdirectory on failure,
+  never the surrounding runtime profiles or credentials. Authored Cypress
+  fixtures remain source inputs; no broad browser-source ignore is added.
 - `pnpm verify:prepush` is routed through
   [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
   gets repository path semantics from

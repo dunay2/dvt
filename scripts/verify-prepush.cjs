@@ -197,14 +197,6 @@
     fs.writeFileSync(stampPath, `${JSON.stringify(stamp, null, 2)}\n`);
   }
 
-  function removePrepushStamp(options = {}) {
-    try {
-      fs.rmSync(resolvePrepushStampPath(options), { force: true });
-    } catch {
-      // A missing validation stamp only means the hook must run normally.
-    }
-  }
-
   function printPrepushPlan(changedFiles, scope, plan) {
     console.log('[verify:prepush] changed files:');
     if (changedFiles.length === 0) {
@@ -239,7 +231,6 @@
       stateFingerprint: options.stateFingerprint,
     });
     const readStamp = options.readPrepushStamp || readPrepushStamp;
-    const removeStamp = options.removePrepushStamp || removePrepushStamp;
     const writeStamp = options.writePrepushStamp || writePrepushStamp;
     const executePlan = options.executePrepushPlan || executePrepushPlan;
     const printPlan = options.printPrepushPlan || printPrepushPlan;
@@ -253,7 +244,6 @@
       return 0;
     }
     if (!args.dryRun) {
-      removeStamp({ repoRootPath: root });
       executePlan(plan, { repoRootPath: root });
       writeStamp(expectedStamp, { repoRootPath: root });
     }
@@ -282,7 +272,6 @@
     main,
     parseArgs,
     readPrepushStamp,
-    removePrepushStamp,
     validationLevelSatisfies,
     writePrepushStamp,
   };
