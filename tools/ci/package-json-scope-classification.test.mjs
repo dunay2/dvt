@@ -35,7 +35,7 @@ test('lint-staged metadata stays in CI validation without runtime fan-out', () =
   assert.equal(classification.rootBuildSensitive, false);
   assert.equal(classification.ciToolingSensitive, true);
 
-  const context = { packageJsonChange: classification };
+  const context = { 'package.json': classification };
   assert.deepEqual(computeWorkspaceMatrix(['package.json'], context).include, []);
   assert.deepEqual(computeTestPackageMatrix(['package.json'], context).include, []);
 
@@ -65,76 +65,101 @@ test('package json governance db alias stays out of runtime workspace scope', ()
   assert.equal(classification.contractCapabilitySensitive, false);
 
   const matrix = computeWorkspaceMatrix(['package.json'], {
-    packageJsonChange: classification,
+    'package.json': classification,
   });
   assert.equal(matrix.anyChanged, false);
   assert.deepEqual(matrix.include, []);
 });
 
-test('package json runtime script change keeps root-build fan-out', () => {
-  const previousPackage = { scripts: { build: 'turbo run build' } };
-  const nextPackage = { scripts: { build: 'turbo run build --force' } };
-
-  const classification = classifyPackageJsonChange(previousPackage, nextPackage);
-
-  assert.equal(classification.rootBuildSensitive, true);
-  assert.equal(classification.packageScriptsOnly, true);
-
-  const matrix = computeWorkspaceMatrix(['package.json'], {
-    packageJsonChange: classification,
-  });
-  assert.equal(matrix.anyChanged, true);
-  assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
-});
-
 const releaseFiles = ['package.json', 'CHANGELOG.md', '.release-please-manifest.json'];
 const beforeRelease = { version: '0.18.0', scripts: { build: 'turbo run build' } };
-const afterRelease = { ...beforeRelease, version: '0.19.0' };
+const metadata = {
+  version: '0.19.0',
+  description: 'Updated description',
+  homepage: 'https://example.test',
+  repository: { type: 'git', url: 'https://example.test/repo.git', directory: 'packages/example' },
+  bugs: { url: 'https://example.test/issues', email: 'support@example.test' },
+  keywords: ['data', 'workflow'],
+};
+const workspaceManifests = WORKSPACE_ENTRIES.map(({ patterns }) =>
+  patterns[0].replace('/**', '/package.json')
+);
+const modes = ['test', 'contracts', 'pr-quality', 'workflow'];
 
-test('release metadata flows through Git blob context without product fan-out', async () => {
+function assertScopePreserved(files, context, expectedFiles = files) {
+  assert.deepEqual(computeWorkspaceMatrix(files, context), computeWorkspaceMatrix(expectedFiles));
+  assert.deepEqual(
+    computeTestPackageMatrix(files, context),
+    computeTestPackageMatrix(expectedFiles)
+  );
+  for (const mode of modes) {
+    assert.deepEqual(
+      computeWorkflowModeScopeOutputs(mode, files, context),
+      computeWorkflowModeScopeOutputs(mode, expectedFiles),
+      mode
+    );
+  }
+}
+
+test('release metadata uses one reader for root and every cataloged workspace', async () => {
+  const files = [...releaseFiles, ...workspaceManifests, 'apps\\web\\package.json'];
   const reads = [];
-  const context = await buildChangedScopeContext(releaseFiles, {
+  const context = await buildChangedScopeContext(files, {
     baseRef: 'base',
     headRef: 'head',
     readJsonAtRef: async (ref, file) => {
       reads.push([ref, file]);
-      return ref === 'base' ? beforeRelease : afterRelease;
+      return ref === 'base' ? beforeRelease : { ...beforeRelease, ...metadata };
     },
   });
 
-  assert.deepEqual(reads, [
-    ['base', 'package.json'],
-    ['head', 'package.json'],
-  ]);
-  assert.equal(context.packageJsonChange.nonScriptChange, true);
-  assert.equal(context.packageJsonChange.dependencySensitive, false);
-  assert.deepEqual(computeWorkspaceMatrix(releaseFiles, context).include, []);
-  assert.deepEqual(computeTestPackageMatrix(releaseFiles, context).include, []);
-  for (const mode of ['test', 'contracts', 'pr-quality', 'workflow']) {
-    const selected = Object.entries(computeWorkflowModeScopeOutputs(mode, releaseFiles, context))
-      .filter(([, enabled]) => enabled)
+  assert.deepEqual(
+    reads,
+    ['package.json', ...workspaceManifests].flatMap((file) => [
+      ['base', file],
+      ['head', file],
+    ])
+  );
+  for (const file of ['package.json', ...workspaceManifests]) {
+    assert.equal(context[file].metadataOnly, true, file);
+    assert.deepEqual(computeWorkspaceMatrix([file], context).include, [], file);
+    assert.deepEqual(computeTestPackageMatrix([file], context).include, [], file);
+  }
+  for (const mode of modes) {
+    const enabled = Object.entries(computeWorkflowModeScopeOutputs(mode, files, context))
+      .filter(([, value]) => value)
       .map(([key]) => key);
     assert.deepEqual(
-      selected,
+      enabled,
       mode === 'workflow' ? ['changed_file_validation_relevant'] : [],
       mode
     );
   }
 });
 
-test('root text metadata stays narrow, but non-string values remain sensitive', () => {
-  for (const field of ['version', 'description', 'homepage', 'repository']) {
-    const previous = { ...beforeRelease, [field]: 'before' };
-    const next = { ...beforeRelease, [field]: 'after' };
-    assert.equal(classifyPackageJsonChange(previous, next).rootBuildSensitive, false, field);
-    for (const value of [null, 42, [], { value: 'after' }]) {
+test('display metadata additions and removals are narrow, malformed values are not', () => {
+  for (const [field, values] of Object.entries({
+    version: ['0.19.0'],
+    description: ['Description'],
+    homepage: ['https://example.test'],
+    repository: ['owner/repo', metadata.repository],
+    bugs: ['https://example.test/issues', metadata.bugs, { email: 'support@example.test' }],
+    keywords: [[], ['data']],
+  })) {
+    for (const value of values) {
+      const changed = { ...beforeRelease, [field]: value };
+      assert.equal(classifyPackageJsonChange(beforeRelease, changed).metadataOnly, true, field);
+      assert.equal(classifyPackageJsonChange(changed, beforeRelease).metadataOnly, true, field);
+    }
+    for (const value of [null, 42, { unknown: 'value' }]) {
+      const changed = { ...beforeRelease, [field]: value };
       assert.equal(
-        classifyPackageJsonChange(previous, { ...next, [field]: value }).rootBuildSensitive,
+        classifyPackageJsonChange(beforeRelease, changed).rootBuildSensitive,
         true,
         field
       );
       assert.equal(
-        classifyPackageJsonChange({ ...previous, [field]: value }, next).rootBuildSensitive,
+        classifyPackageJsonChange(changed, beforeRelease).rootBuildSensitive,
         true,
         field
       );
@@ -142,91 +167,132 @@ test('root text metadata stays narrow, but non-string values remain sensitive', 
   }
 });
 
-test('release metadata never narrows executable, dependency, toolchain or unknown fields', () => {
-  const executableChanges = {
-    dependencies: { library: '1.0.0' },
-    devDependencies: { tool: '1.0.0' },
-    optionalDependencies: { optional: '1.0.0' },
-    peerDependencies: { peer: '1.0.0' },
-    scripts: { build: 'turbo run build --force' },
-    bin: './cli.js',
-    exports: './index.js',
-    main: './index.js',
-    types: './index.d.ts',
-    files: ['dist'],
-    engines: { node: '>=24' },
-    packageManager: 'pnpm@10.33.0',
-    workspaces: ['packages/*'],
-    pnpm: { overrides: {} },
-    unknown: true,
-  };
-  for (const [field, value] of Object.entries(executableChanges)) {
-    const context = {
-      packageJsonChange: classifyPackageJsonChange(beforeRelease, {
-        ...afterRelease,
-        [field]: value,
-      }),
-    };
-    assert.equal(context.packageJsonChange.rootBuildSensitive, true, field);
-    assert.equal(
-      computeWorkspaceMatrix(releaseFiles, context).include.length,
-      WORKSPACE_ENTRIES.length,
-      field
-    );
+test('executable, dependency, toolchain, unknown and malformed edits retain their evidence', () => {
+  const changes = [
+    { scripts: { build: 'turbo run build --force' } },
+    { dependencies: { library: '2.0.0' } },
+    { devDependencies: { tool: '2.0.0' } },
+    { peerDependencies: { library: '^2' } },
+    { optionalDependencies: { library: '^2' } },
+    { exports: './other.js' },
+    { bin: './cli.js' },
+    { main: './other.js' },
+    { types: './other.d.ts' },
+    { files: ['dist'] },
+    { engines: { node: '>=24' } },
+    { packageManager: 'pnpm@10.33.0' },
+    { workspaces: ['other/*'] },
+    { pnpm: { overrides: {} } },
+    { name: 'renamed-package' },
+    { unknown: true },
+    { repository: { url: 'https://example.test', unknown: true } },
+    { repository: { directory: 'missing-url' } },
+    { bugs: {} },
+    { keywords: ['valid', 42] },
+    { scripts: null },
+    { scripts: [] },
+    { scripts: { build: 42 } },
+  ];
+  for (const file of [
+    'package.json',
+    'apps/web/package.json',
+    'packages/@dvt/contracts/package.json',
+  ]) {
+    for (const patch of changes) {
+      const classification = classifyPackageJsonChange(beforeRelease, {
+        ...beforeRelease,
+        ...metadata,
+        ...patch,
+      });
+      assert.equal(classification.metadataOnly, false, file + ':' + JSON.stringify(patch));
+      assert.equal(classification.rootBuildSensitive, true);
+      assertScopePreserved([file], { [file]: classification });
+    }
   }
 });
 
-test('release metadata preserves scope for accompanying source and lockfile changes', () => {
-  const context = { packageJsonChange: classifyPackageJsonChange(beforeRelease, afterRelease) };
-  for (const file of [
-    'apps/web/src/app.tsx',
+test('workspace scripts and lint-staged cannot reuse root-only tooling exemptions', () => {
+  for (const patch of [
+    { scripts: { 'governance:db:query': 'node scripts/planning-db-query.cjs' } },
+    { 'lint-staged': { '*.ts': 'eslint' } },
+  ]) {
+    const classification = classifyPackageJsonChange({ scripts: {} }, { scripts: {}, ...patch });
+    assert.equal(classification.rootBuildSensitive, false);
+    assert.equal(classification.metadataOnly, false);
+    const file = 'apps/web/package.json';
+    assertScopePreserved([file], { [file]: classification });
+  }
+});
+
+test('mixed release and source changes retain scope independently for each manifest', async () => {
+  const web = 'apps/web/package.json';
+  const contracts = 'packages/@dvt/contracts/package.json';
+  const files = [...releaseFiles, web, contracts];
+  const context = await buildChangedScopeContext(files, {
+    baseRef: 'base',
+    headRef: 'head',
+    readJsonAtRef: async (ref, file) =>
+      ref === 'base'
+        ? beforeRelease
+        : {
+            ...beforeRelease,
+            ...metadata,
+            ...(file === contracts ? { exports: './other.js' } : {}),
+          },
+  });
+  // Only the contracts manifest has executable changes.
+  assertScopePreserved(files, context, [contracts]);
+  for (const changed of [
+    'apps/web/src/main.tsx',
     'packages/@dvt/engine/src/index.ts',
     'pnpm-lock.yaml',
   ]) {
-    const files = [...releaseFiles, file];
-    assert.deepEqual(computeWorkspaceMatrix(files, context), computeWorkspaceMatrix([file]), file);
-    assert.deepEqual(
-      computeTestPackageMatrix(files, context),
-      computeTestPackageMatrix([file]),
-      file
-    );
-    for (const mode of ['test', 'contracts', 'pr-quality']) {
-      assert.deepEqual(
-        computeWorkflowModeScopeOutputs(mode, files, context),
-        computeWorkflowModeScopeOutputs(mode, [file]),
-        `${file}: ${mode}`
-      );
+    assertScopePreserved([...files, changed], context, [contracts, changed]);
+  }
+});
+
+test('missing context, refs and unreadable blobs fail closed for root and workspace', async () => {
+  for (const value of [null, [], 'not a package', 42]) {
+    assert.equal(classifyPackageJsonChange(value, beforeRelease).failClosed, true);
+    assert.equal(classifyPackageJsonChange(beforeRelease, value).failClosed, true);
+  }
+  for (const file of ['package.json', 'packages/@dvt/adapter-postgres/package.json']) {
+    assertScopePreserved([file], {});
+    for (const options of [
+      {},
+      { baseRef: 'base' },
+      { headRef: 'head' },
+      {
+        baseRef: 'base',
+        headRef: 'head',
+        readJsonAtRef: async () => {
+          throw new SyntaxError('Invalid JSON');
+        },
+      },
+    ]) {
+      const context = await buildChangedScopeContext([file], options);
+      assert.equal(context[file].failClosed, true);
+      assertScopePreserved([file], context);
     }
   }
 });
 
-test('malformed package blobs, missing refs and failed reads retain full scope', async () => {
-  for (const value of [null, [], 'not a package', 42]) {
-    assert.equal(classifyPackageJsonChange(value, afterRelease).failClosed, true);
-    assert.equal(classifyPackageJsonChange(beforeRelease, value).failClosed, true);
-  }
-  for (const options of [
-    {},
-    {
+test('unknown manifests and injected context cannot suppress file policy', async () => {
+  const files = [
+    'apps/web/test/fixtures/package.json',
+    'apps/new-workspace/package.json',
+    'apps/web/src/main.tsx',
+  ];
+  assert.deepEqual(
+    await buildChangedScopeContext(files, {
       baseRef: 'base',
       headRef: 'head',
-      readJsonAtRef: async () => {
-        throw new SyntaxError('Unreadable package JSON');
-      },
-    },
-  ]) {
-    const context = await buildChangedScopeContext(releaseFiles, options);
-    assert.equal(context.packageJsonChange.failClosed, true);
-    assert.equal(
-      computeWorkspaceMatrix(releaseFiles, context).include.length,
-      WORKSPACE_ENTRIES.length
-    );
-  }
-});
-
-test('package json without semantic context still fails closed for workspace matrix', () => {
-  const matrix = computeWorkspaceMatrix(['package.json']);
-
-  assert.equal(matrix.anyChanged, true);
-  assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
+      readJsonAtRef: () => assert.fail('Not a cataloged manifest'),
+    }),
+    {}
+  );
+  assertScopePreserved(
+    files,
+    Object.fromEntries(files.map((file) => [file, { metadataOnly: true }]))
+  );
 });

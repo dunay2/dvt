@@ -11,7 +11,7 @@ import {
 } from './scope-config.mjs';
 
 const scriptsOnlyContext = {
-  packageJsonChange: {
+  'package.json': {
     packageScriptsOnly: true,
     rootBuildSensitive: false,
     dependencySensitive: false,
@@ -68,7 +68,7 @@ test('emit-scope workflow mode preserves non-package matches mixed with scripts-
 
 test('emit-scope workflow mode routes dependency-sensitive package json to security analysis', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
-    packageJsonChange: {
+    'package.json': {
       packageScriptsOnly: false,
       rootBuildSensitive: true,
       dependencySensitive: true,
@@ -94,8 +94,8 @@ test('emit-scope contracts mode keeps scripts-only package json out of contract 
 
 test('emit-scope contracts mode routes contract tooling package aliases to contracts', () => {
   const contractToolingContext = {
-    packageJsonChange: {
-      ...scriptsOnlyContext.packageJsonChange,
+    'package.json': {
+      ...scriptsOnlyContext['package.json'],
       contractCapabilitySensitive: true,
     },
   };
@@ -111,7 +111,7 @@ test('emit-scope contracts mode routes contract tooling package aliases to contr
 
 test('emit-scope contracts mode routes lint:determinism script changes to determinism scan', () => {
   const scope = computeWorkflowModeScopeOutputs('contracts', ['package.json'], {
-    packageJsonChange: packageJsonScriptChange(
+    'package.json': packageJsonScriptChange(
       'lint:determinism',
       'pnpm --filter @dvt/engine lint',
       'pnpm --filter @dvt/engine lint --max-warnings 0'
@@ -184,7 +184,7 @@ test('emit-scope fails closed for an uncatalogued CI configuration', () => {
 
 test('emit-scope test mode routes test:determinism script changes to full engine evidence', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
-    packageJsonChange: packageJsonScriptChange(
+    'package.json': packageJsonScriptChange(
       'test:determinism',
       'pnpm --filter @dvt/engine test --testNamePattern determinism',
       'pnpm --filter @dvt/engine test --testNamePattern deterministic'
@@ -198,7 +198,7 @@ test('emit-scope test mode routes test:determinism script changes to full engine
 
 test('emit-scope test mode routes test:replay script changes to full engine evidence', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
-    packageJsonChange: packageJsonScriptChange(
+    'package.json': packageJsonScriptChange(
       'test:replay',
       'pnpm --filter @dvt/engine test --testNamePattern replay',
       'pnpm --filter @dvt/engine test --testNamePattern replay-consistency'
@@ -315,7 +315,7 @@ test('emit-scope workflow mode routes executable CI tool contracts only for inst
   assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
 
   const packageScriptScope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
-    packageJsonChange: {
+    'package.json': {
       packageScriptsOnly: true,
       rootBuildSensitive: false,
       dependencySensitive: false,

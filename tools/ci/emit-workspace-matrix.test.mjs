@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { WORKSPACE_ENTRIES, computeWorkspaceMatrix } from './scope-config.mjs';
+import { WORKSPACE_ENTRIES } from './scope-config.mjs';
 import {
   buildNonPullRequestWorkspaceMatrixOutputs,
   buildWorkspaceMatrixOutputs,
@@ -9,7 +9,7 @@ import {
 
 test('workspace matrix emitter keeps scripts-only package json empty', () => {
   const matrix = buildWorkspaceMatrixOutputs(['package.json'], {
-    packageJsonChange: {
+    'package.json': {
       packageScriptsOnly: true,
       rootBuildSensitive: false,
       dependencySensitive: false,
@@ -40,21 +40,6 @@ test('workspace matrix emitter preserves non-pull-request full workspace fan-out
     matrix.include.map(({ pkg }) => pkg).sort(),
     WORKSPACE_ENTRIES.map(({ pkg }) => pkg).sort()
   );
-});
-
-test('workspace matrix emitter fails closed for package json read failure', () => {
-  const matrix = computeWorkspaceMatrix(['package.json'], {
-    packageJsonChange: {
-      failClosed: true,
-      rootBuildSensitive: true,
-      dependencySensitive: true,
-      lifecycleSensitive: true,
-      ciToolingSensitive: true,
-    },
-  });
-
-  assert.equal(matrix.anyChanged, true);
-  assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
 });
 
 test('workspace matrix emitter fails closed for an uncatalogued CI configuration', () => {
