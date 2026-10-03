@@ -93,9 +93,9 @@ describe('governed browser evidence routing', () => {
     const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = new Set<string>();
     let registrations = 0;
-    for (const file of readdirSync(cypressRoot, { recursive: true, encoding: 'utf8' })) {
-      if (!file.endsWith('.ts')) continue;
-      const path = resolve(cypressRoot, file);
+    for (const file of readdirSync(cypressRoot, { recursive: true, withFileTypes: true })) {
+      if (!file.isFile() || !file.name.endsWith('.ts')) continue;
+      const path = resolve(file.parentPath, file.name);
       const ast = ts.createSourceFile(
         path,
         readFileSync(path, 'utf8'),
