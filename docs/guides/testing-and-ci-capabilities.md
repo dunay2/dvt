@@ -622,6 +622,13 @@ contracts, determinism, golden, and coverage lanes closed, while
 active. Dependency, lifecycle, unknown, and runtime-capability script changes
 remain fail-closed and root-build sensitive.
 
+Root text metadata (`version`, `description`, `homepage`, and string-form
+`repository`) does not widen runtime scope. Changed-file validation and release
+checks remain active; accompanying source or lockfile changes retain their own
+scope. Non-string metadata, malformed package objects, unknown fields, and
+unreadable comparison blobs stay conservative. Workspace package metadata and
+object-form display metadata are not narrowed by this rule.
+
 - `pnpm test:web:changed` is the web changed-file router. It reads changed
   files or explicit `--files` arguments, runs `@dvt/web` dependency
   preparation once, and delegates to the routed Vitest suite command from the
