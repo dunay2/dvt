@@ -10,20 +10,34 @@ import { parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 const spec = 'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
 const helper = 'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts';
 const dataHelper = 'apps/web/cypress/e2e/canvas/canvasNodeDataActions.proof.ts';
+const savedSampleHelper = 'apps/web/cypress/support/relationalWorkbench/persistence.ts';
+const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.ts';
+const savedSampleConsumers = [
+  'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-cross.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-sort-fetch-data-navigation.cy.ts',
+];
 const retired = 'apps/web/cypress/e2e/canvas/canvas-node-data-actions.cy.ts';
 
 describe('governed browser evidence routing', () => {
-  it.each([spec, helper, dataHelper, spec.replaceAll('/', '\\'), spec.slice('apps/web/'.length)])(
-    'selects the real browser command, not Vitest, for %s',
-    (file) => {
-      expect(resolveWebVitestChangedSuitePlan([file])).toMatchObject({
-        suites: [],
-        commandPlan: [],
-        requiresDependencies: false,
-        browserCommands: ['pnpm run test:e2e:selected-closure:live'],
-      });
-    }
-  );
+  it.each([
+    spec,
+    helper,
+    dataHelper,
+    savedSampleHelper,
+    revisitHelper,
+    ...savedSampleConsumers,
+    spec.replaceAll('/', '\\'),
+    spec.slice('apps/web/'.length),
+  ])('selects the real browser command, not Vitest, for %s', (file) => {
+    expect(resolveWebVitestChangedSuitePlan([file])).toMatchObject({
+      suites: [],
+      commandPlan: [],
+      requiresDependencies: false,
+      browserCommands: ['pnpm run test:e2e:selected-closure:live'],
+    });
+  });
 
   it.each([retired, retired.replaceAll('/', '\\'), retired.slice('apps/web/'.length)])(
     'requires the retirement guard and real proof when the retired path changes: %s',
@@ -137,5 +151,63 @@ describe('governed browser evidence routing', () => {
     ]) {
       expect(() => parseChangedSuiteArgs(args)).toThrow();
     }
+  });
+
+  it('registers every saved-sample consumer once in the admitted terminal run', () => {
+    const consumers: string[] = [];
+    const revisitConsumers: string[] = [];
+    const registrations: string[] = [];
+    const target = resolve(savedSampleHelper.slice('apps/web/'.length));
+    const revisitTarget = resolve(revisitHelper.slice('apps/web/'.length));
+    const entry = resolve(spec.slice('apps/web/'.length));
+    for (const file of readdirSync(resolve('cypress'), { recursive: true, withFileTypes: true })) {
+      if (!file.isFile() || !file.name.endsWith('.ts')) continue;
+      const path = resolve(file.parentPath, file.name);
+      const ast = ts.createSourceFile(
+        path,
+        readFileSync(path, 'utf8'),
+        ts.ScriptTarget.Latest,
+        true
+      );
+      for (const statement of ast.statements) {
+        if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
+          continue;
+        const imported = resolve(dirname(path), `${statement.moduleSpecifier.text}.ts`);
+        if (path === entry) registrations.push(imported);
+        if (imported !== target && imported !== revisitTarget) continue;
+        const bindings = statement.importClause?.namedBindings;
+        expect(
+          bindings != null && ts.isNamedImports(bindings),
+          'sample helpers require explicit imports'
+        ).toBe(true);
+        if (
+          bindings != null &&
+          ts.isNamedImports(bindings) &&
+          imported === target &&
+          bindings.elements.some(
+            (binding) => (binding.propertyName ?? binding.name).text === 'stubSavedWorkbenchSample'
+          )
+        )
+          consumers.push(path);
+        if (
+          bindings != null &&
+          ts.isNamedImports(bindings) &&
+          imported === revisitTarget &&
+          bindings.elements.some(
+            (binding) => (binding.propertyName ?? binding.name).text === 'revisitWorkbenchCanvas'
+          )
+        )
+          revisitConsumers.push(path);
+      }
+    }
+    const expected = savedSampleConsumers.map((path) => resolve(path.slice('apps/web/'.length)));
+    expect(consumers.sort()).toEqual(expected.sort());
+    expect(revisitConsumers.sort()).toEqual(
+      expected
+        .filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts'))
+        .sort()
+    );
+    for (const consumer of expected)
+      expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });
 });

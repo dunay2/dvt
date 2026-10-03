@@ -1,13 +1,12 @@
 /** Owned concern: project Canvas nodes onto the existing governed data-sample query. */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasShellProps } from './canvasShell.types';
 import { type CanvasSourceDataSampleTarget } from './canvasSourceDataSample';
 import { useCanvasDataSample } from './useCanvasDataSample';
-import type { CanonicalNode } from '../../types/canonical';
-import { queryCanvasModelDataSample } from './useCanvasModelDataQuery';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { useCanvasTransformDataSample } from './useCanvasTransformDataSample';
 import { useCanvasSourceDataSample } from './useCanvasSourceDataSample';
 
 type CanvasNodeDataSampleProjection = Readonly<{
@@ -22,6 +21,7 @@ type CanvasNodeDataSampleArgs = Pick<
   Readonly<{
     activeCanvasId: string | null;
     canonicalNodes: readonly CanonicalNode[];
+    canonicalEdges: readonly CanonicalEdge[];
     canEditModel: boolean;
     nodes: CanvasShellProps['graph']['nodesWithImpact'];
   }>;
@@ -32,6 +32,7 @@ export function useCanvasNodeDataSample({
   warehouseSourceDataSampleQuery,
   prepareModelPreview,
   canonicalNodes,
+  canonicalEdges,
   canEditModel,
   nodes,
 }: CanvasNodeDataSampleArgs): Readonly<{
@@ -51,79 +52,35 @@ export function useCanvasNodeDataSample({
     openDataSample,
     invalidateDataSample,
   });
-  const current = useRef<{ canvasId: string | null; nodes: readonly CanonicalNode[] } | null>(null);
-  useEffect(() => {
-    current.current = { canvasId: activeCanvasId, nodes: canonicalNodes };
-    return () => {
-      current.current = null;
-    };
-  }, [activeCanvasId, canonicalNodes]);
-  const openTransform = useCallback(
-    (nodeId: string, nodeName: string, semanticDigest: string) => {
-      if (activeCanvasId == null || canvasTransformDataSampleQuery == null) return;
-      openDataSample(nodeId, nodeName, () =>
-        queryCanvasModelDataSample(
-          {
-            canvasId: activeCanvasId,
-            nodeId,
-            semanticDigest,
-            canEditModel,
-            preparePreview: prepareModelPreview,
-            query: canvasTransformDataSampleQuery,
-          },
-          () => {
-            const node = current.current?.nodes.find((entry) => entry.id === nodeId);
-            return (
-              current.current?.canvasId === activeCanvasId &&
-              node != null &&
-              readDvtTransformAuthoringAuthority(node)?.semanticDocument.semanticPlan.sha256 ===
-                semanticDigest
-            );
-          }
-        )
-      );
-    },
-    [
-      activeCanvasId,
-      canvasTransformDataSampleQuery,
-      canEditModel,
-      prepareModelPreview,
-      openDataSample,
-    ]
-  );
+  const projectTransform = useCanvasTransformDataSample({
+    canvasId: activeCanvasId,
+    nodes: canonicalNodes,
+    edges: canonicalEdges,
+    query: canvasTransformDataSampleQuery,
+    preparePreview: prepareModelPreview,
+    canEditModel,
+    openDataSample,
+    invalidateDataSample,
+  });
   const projectNode = useCallback(
     (nodeId: string, data: DbtNodeData): CanvasNodeDataSampleProjection => {
       const isNativeTransform = data.pluginKind === 'dvt:transform';
-      const code = data.presentationTruth?.code;
-      const semanticDigest = code?.kind === 'canonical' ? code.digest : null;
-      const onOpen = isNativeTransform
-        ? activeCanvasId != null &&
-          canvasTransformDataSampleQuery != null &&
-          semanticDigest != null &&
-          (!canEditModel || prepareModelPreview != null)
-          ? () => openTransform(nodeId, data.name, semanticDigest)
-          : undefined
-        : projectSource(nodeId);
+      const onOpen = isNativeTransform ? projectTransform(nodeId) : projectSource(nodeId);
 
       return { canOpen: onOpen != null, onOpen };
     },
-    [
-      activeCanvasId,
-      canvasTransformDataSampleQuery,
-      canEditModel,
-      prepareModelPreview,
-      projectSource,
-      openTransform,
-    ]
+    [projectSource, projectTransform]
   );
 
   const refreshableTabs = useMemo(
     () =>
       dataSampleTabs.map((tab) => ({
         ...tab,
-        onRefresh: projectSource(tab.id.slice('data:'.length)),
+        onRefresh:
+          projectTransform(tab.id.slice('data:'.length)) ??
+          projectSource(tab.id.slice('data:'.length)),
       })),
-    [dataSampleTabs, projectSource]
+    [dataSampleTabs, projectSource, projectTransform]
   );
   return {
     dataSampleTabs: refreshableTabs,

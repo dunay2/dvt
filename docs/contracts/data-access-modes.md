@@ -57,7 +57,7 @@ The negative proof for this contract rejects AUTO/HYBRID, a LIVE request with LO
 `PreviewWarehouseSourceObjectRows` returns required LIVE `provenance` in the
 existing `SourceDataSampleResponse`. This is an in-place hard cut: `sampledAt`
 is removed from Source responses, not accepted as a legacy alternative.
-Transform responses remain unchanged in this slice.
+Transform responses use the same LIVE value object as described below.
 
 The authorized connection catalog owns provider and binding identity. The
 provider probe owns `queriedAt`, the time it completed the bounded read in its
@@ -115,3 +115,70 @@ in the application use case; view components only render facts and emit actions.
 | Source provenance         | Hidden authority        | Service Layer / WarehouseSourceDataSample      | `PreviewWarehouseSourceObjectRows` | Existing contracts, use case and PostgreSQL probe | Strict LIVE shape, binding/limit consistency, empty result and denials | No legacy response or retired API consumer            | Real protected Source read and provider-change proof | LOCAL and Transform provenance               |
 | Explicit refresh          | Responsibility overload | Presentation Model / Canvas source publication | Same query                         | Source sample hook and operational drawer         | Current selection, stale response, deletion, no automatic query        | View receives facts/actions, never credentials or SQL | Pointer/keyboard Refresh and unchanged tab behavior  | Automatic refresh and nested-scope refresh   |
 | Retire dead sample action | Duplicate semantics     | Remove obsolete adapter / Run evidence         | No new rail                        | Web Run/Sink ports, service and views             | Persisted evidence remains; no row-query action                        | Existing API retired-route rejection                  | Existing terminal Run proof remains green            | Reinterpreting historical execution evidence |
+
+## Transform LIVE preview
+
+The Transform continuation is owned by [#3555](https://github.com/dunay2/dvt/issues/3555).
+`PreviewCanvasTransformRows` reuses the shared required LIVE provenance in its
+existing response, replacing `sampledAt` in place. It remains a protected,
+read-only query, not a Run or an acquisition. Its default 20-row and maximum
+50-row limits and PostgreSQL statement timeout remain unchanged.
+
+```mermaid
+flowchart LR
+    Before[Protected Transform query] --> Old[Rows and sampledAt]
+    Old --> Ambiguous[No LIVE facts or main-card refresh]
+```
+
+```mermaid
+flowchart LR
+    Action[Preview or explicit Refresh] --> Revision[Current saved semantic revision]
+    Revision --> Query[PreviewCanvasTransformRows]
+    Query --> Projection[Canonical selected-relation projection]
+    Projection --> Sources[Actual admitted physical source references]
+    Projection --> Probe[Bounded read-only provider query]
+    Sources --> Response[Rows and LIVE provenance]
+    Probe --> Response
+    Response --> View[Shared facts in Canvas and Model preview]
+```
+
+The provenance source set is the distinct physical inputs of the admitted
+projection. A selected inner operation must not claim sources used only by a
+later operation; repeated occurrences of one physical source are listed once.
+All inputs retain the existing one-authorized-PostgreSQL-connection admission.
+The provider probe owns query time and navigation facts; the use case owns the
+source identities and requested limit. Neither SQL nor credentials are exposed.
+`bounded-first-page` promises no stable cursor or continuation, even when the
+selected relation has an explicit sort. Empty results retain provenance and
+column headers.
+
+Refresh reuses the existing revision-checked query lifecycle and current model
+authority. Stale or deleted model results are invalidated; late responses cannot
+become current. Tab selection and card movement do not query. The Model and
+operation view renders the same provenance facts, without acquiring query or
+authorization responsibilities. Technical binding identifiers remain secondary
+details rather than primary headings.
+
+The selected solution reuses the existing query and shared provenance contract.
+A new endpoint, UI-derived source lineage, fallback to LOCAL or historical Run
+rows, background refresh and a legacy `sampledAt` decoder are rejected.
+
+The saved-preview response fixture has four consumers: CROSS selected-stage preview,
+four-source chain persistence, operation execution and sort/fetch navigation.
+Their existing cases register once in the
+terminal browser run, sharing its real runtime; the changed-suite router admits
+those paths and the fixture together. An import/registration guard rejects an
+unregistered consumer of that sample helper. The other persistence exports
+(semantic-write inspection) are unchanged by this response-shape cut. Unknown
+browser paths still fail closed; Vitest is not substituted for browser evidence.
+
+Reopen evidence waits for a fresh draft GET from that navigation, not a recorded
+request from the preceding visit. The dedicated revisit gesture is consumed only
+by these saved-preview scenarios; initial navigation and other workbench gestures
+are unchanged. Current DOM queries replace cached references across edit-mode
+transitions. Neither arbitrary sleeps nor relaxed assertions establish readiness.
+
+| Scenario                    | Opportunity             | Pattern / DDD owner                           | Rail                         | Implementation surfaces                           | Unit or package test                                                            | Architecture test                                     | User-flow test                                                                      | Out of scope                                    |
+| --------------------------- | ----------------------- | --------------------------------------------- | ---------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------- |
+| Actual Transform provenance | Hidden authority        | Service Layer / CanvasTransformDataSample     | `PreviewCanvasTransformRows` | Existing contract, projection, use case and probe | Strict LIVE shape, actual fan-in/subrelation sources, empty results and denials | Existing read-only query boundary and DTO rejection   | Real PostgreSQL Transform preview and changed rows in the existing disposable lease | LOCAL and deep paging                           |
+| Current Transform refresh   | Responsibility overload | Presentation Model / current Canvas authority | Same query                   | Sample lifecycle hooks and shared facts view      | Current revision, deleted model, late response and no automatic query           | Rendering never queries or determines source identity | Pointer/keyboard Refresh in existing terminal runner                                | Background polling and new proof infrastructure |

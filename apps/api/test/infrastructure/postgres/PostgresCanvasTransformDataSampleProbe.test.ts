@@ -44,7 +44,8 @@ describe('PostgresCanvasTransformDataSampleProbe', () => {
       columns: [{ name: 'order_id', type: 'integer', nullable: true }],
       rows: [{ values: ['1'] }, { values: ['2'] }],
       truncated: true,
-      sampledAt: '2026-09-15T10:00:00.000Z',
+      queriedAt: '2026-09-15T10:00:00.000Z',
+      navigation: 'bounded-first-page' as const,
     });
     expect(query.mock.calls.map(([sql]) => sql)).toEqual([
       'begin transaction isolation level repeatable read read only',

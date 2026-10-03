@@ -110,7 +110,8 @@ function harness(
       columns: [{ name: 'order_id', type: 'integer', nullable: true }],
       rows: [{ values: ['1'] }],
       truncated: false,
-      sampledAt: '2026-09-15T10:00:00.000Z',
+      queriedAt: '2026-09-15T10:00:00.000Z',
+      navigation: 'bounded-first-page' as const,
     })
   );
   const probe: ICanvasTransformDataSampleProbe = { previewTransformRows };
@@ -159,6 +160,12 @@ describe('PreviewCanvasTransformRowsUseCase', () => {
     });
     const result = await useCase.execute(selection, context());
     expect(result).toMatchObject({ relationId, semanticPlanSha256 });
+    expect(result.provenance.sourceRefs).toHaveLength(2);
+    const wholeModel = await useCase.execute(request, context());
+    expect(wholeModel.provenance.sourceRefs).toHaveLength(3);
+    expect(wholeModel.provenance.sourceRefs).toEqual(
+      expect.arrayContaining(result.provenance.sourceRefs)
+    );
     expect(previewTransformRows.mock.calls[0]?.[0].sql.match(/\bJOIN\b/g)).toHaveLength(1);
   });
 
@@ -222,6 +229,19 @@ describe('PreviewCanvasTransformRowsUseCase', () => {
     });
     expect(result).not.toHaveProperty('sql');
     expect(result).not.toHaveProperty('credentialRef');
+    expect(result).not.toHaveProperty('sampledAt');
+    expect(result.provenance).toMatchObject({
+      mode: 'live',
+      queriedAt: '2026-09-15T10:00:00.000Z',
+      navigation: 'bounded-first-page',
+      limit: 20,
+    });
+    expect(result.provenance.sourceRefs).toHaveLength(2);
+    expect(
+      result.provenance.sourceRefs.every(
+        (ref) => ref.connectionRef.connectionId === 'local-postgres-proof'
+      )
+    ).toBe(true);
   });
 
   it('fails closed before querying when the active Canvas changed', async () => {

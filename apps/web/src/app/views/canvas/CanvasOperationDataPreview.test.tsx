@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { asIsoUtcString } from '@dvt/contracts';
 import { act, useContext } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -43,7 +44,23 @@ describe('selected operation data preview', () => {
       rows: [{ values: ['intermediate-result'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-09-19T00:00:00.000Z',
+      provenance: {
+        mode: 'live' as const,
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1' as const,
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1' as const,
+              connectionId: 'local-postgres-proof',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/public/orders',
+          },
+        ],
+        queriedAt: asIsoUtcString('2026-09-19T00:00:00.000Z'),
+        limit: 20,
+        navigation: 'bounded-first-page' as const,
+      },
     });
   beforeEach(() => {
     (
@@ -129,6 +146,7 @@ describe('selected operation data preview', () => {
         ...sample('join-1'),
         rows: Array.from({ length: count }, () => ({ values: ['result'] })),
         limit,
+        provenance: { ...sample('join-1').provenance, limit },
         truncated,
       });
       render('join-1');
@@ -139,7 +157,12 @@ describe('selected operation data preview', () => {
       expect(header?.textContent).toBe(`INNER JOIN${expected}`);
       expect(header?.querySelector('p')).toBeNull();
       expect(container.querySelector('code')).toBeNull();
-      expect(container.querySelector('time')).toBeNull();
+      expect(header?.querySelector('time')).toBeNull();
+      expect(container.querySelector('[data-slot="live-preview-facts"]')?.textContent).toContain(
+        'LIVE'
+      );
+      expect(container.querySelector('time')?.dateTime).toBe('2026-09-19T00:00:00.000Z');
+      expect(container.querySelector('thead')?.textContent).toContain('id');
       expect(container.textContent).not.toContain('r7');
       expect(
         container.querySelector('header')?.querySelector('[data-slot="canvas-model-preview"]')

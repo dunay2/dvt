@@ -115,8 +115,17 @@ export class PreviewCanvasTransformRowsUseCase {
       ...(input.relationId === undefined ? {} : { relationId: input.relationId }),
       draftRevision: authorizedDraft.revision,
       semanticPlanSha256: closure.authority.semanticDocument.semanticPlan.sha256,
-      ...sample,
+      columns: sample.columns,
+      rows: sample.rows,
+      truncated: sample.truncated,
       limit: input.limit,
+      provenance: {
+        mode: 'live',
+        sourceRefs: projection.sourceRefs,
+        queriedAt: sample.queriedAt,
+        navigation: sample.navigation,
+        limit: input.limit,
+      },
     });
   }
 }

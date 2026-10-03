@@ -1,5 +1,5 @@
 /** Owned concern: enter the semantic editor through supported user interactions. */
-import { waitForE2eApiCall } from '../e2eApiStub';
+import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
 export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
@@ -19,6 +19,17 @@ export function openWorkbenchModel(nodeId = 'join-transform'): void {
     .should('be.visible')
     .dblclick(40, 18);
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+}
+
+/** Reopening must observe this navigation's draft, not a previous recorded GET. */
+export function revisitWorkbenchCanvas(): void {
+  cy.then(() => {
+    const previous = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
+    visitWorkbenchCanvas();
+    cy.wrap(null, { timeout: 20_000 }).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'GET').length).to.be.greaterThan(previous);
+    });
+  });
 }
 
 /** Request the model sample through the existing card action, not editor navigation. */

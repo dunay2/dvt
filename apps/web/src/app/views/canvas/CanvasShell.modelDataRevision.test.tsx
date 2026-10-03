@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 /** Prove that the real Canvas card action cannot bypass the saved-model revision boundary. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import {
   useOperationalDrawerContributionStore,
   type OperationalDrawerDataSample,
+  type OperationalDrawerTab,
 } from '../../components/shell/operationalDrawerContributionStore';
 import { fixture, node } from './canvasOutputExpression.test.fixtures';
 import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
@@ -35,7 +37,23 @@ describe('Canvas Model card revision-safe execution', () => {
     rows: [{ values: ['42'] }],
     limit: 20,
     truncated: false,
-    sampledAt: '2026-09-23T09:00:00.000Z',
+    provenance: {
+      mode: 'live' as const,
+      sourceRefs: [
+        {
+          schemaVersion: 'connected-source-ref.v1' as const,
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1' as const,
+            connectionId: 'local-postgres-proof',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/orders',
+        },
+      ],
+      queriedAt: asIsoUtcString('2026-09-23T09:00:00.000Z'),
+      limit: 20,
+      navigation: 'bounded-first-page' as const,
+    },
   };
   let harness: ReturnType<typeof createCanvasShellHarness>;
   const query = { previewTransformRows: vi.fn() };
@@ -109,6 +127,66 @@ describe('Canvas Model card revision-safe execution', () => {
       y: 70,
       zoom: 0.8,
     });
+  });
+  it('refreshes explicitly from the current model and invalidates the previously displayed revision', async () => {
+    await mount();
+    await execute();
+    const tab = (): OperationalDrawerTab | undefined =>
+      useOperationalDrawerContributionStore
+        .getState()
+        .contribution?.tabs.find((entry) => entry.id === `data:${model.id}`);
+    expect(tab()?.onRefresh).toBeTypeOf('function');
+    const staleRefresh = tab()!.onRefresh!;
+    const nextDigest =
+      readDvtTransformAuthoringAuthority(changedModel)!.semanticDocument.semanticPlan.sha256;
+    await mount(true, true, changedModel);
+    expect(result()?.status).not.toBe('ready');
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+    await act(async () => staleRefresh());
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+    prepare.mockResolvedValue({ ...saved, canonicalNodes: [changedModel] });
+    query.previewTransformRows.mockResolvedValue({ ...sample, semanticPlanSha256: nextDigest });
+    await act(async () => tab()!.onRefresh!());
+    expect(query.previewTransformRows).toHaveBeenLastCalledWith(
+      expect.objectContaining({ semanticPlanSha256: nextDigest })
+    );
+    expect(result()?.status).toBe('ready');
+  });
+  it('removes refresh and invalidates ready rows when the model disappears', async () => {
+    const props = await mount();
+    await execute();
+    await harness.renderProps({
+      ...props,
+      panels: { ...props.panels, inspectorGraphNodes: [] },
+      graph: { ...props.graph, nodesWithImpact: [] },
+    });
+    expect(result()?.status).not.toBe('ready');
+    expect(
+      useOperationalDrawerContributionStore
+        .getState()
+        .contribution?.tabs.find((entry) => entry.id === `data:${model.id}`)?.onRefresh
+    ).toBeUndefined();
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
+  });
+  it('keeps samples on movement but invalidates them on an input-binding change without another query', async () => {
+    const props = await mount();
+    await execute();
+    await harness.renderProps({
+      ...props,
+      graph: { ...props.graph, viewport: { x: 250, y: 50, zoom: 1.2 } },
+    });
+    expect(result()?.status).toBe('ready');
+    await harness.renderProps({
+      ...props,
+      panels: {
+        ...props.panels,
+        inspectorGraphEdges: [
+          { id: 'changed-binding', sourceId: 'source', targetId: model.id, relation: 'lineage' },
+        ],
+      },
+    });
+    expect(result()?.status).not.toBe('ready');
+    expect(query.previewTransformRows).toHaveBeenCalledOnce();
   });
   it.each([
     ['persistence conflict', { ok: false, message: 'Conflict' } as const],

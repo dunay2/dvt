@@ -13,8 +13,8 @@ description: >-
   resolved a READY local generation or that a LIVE result came from the current remote provider.
   Exposing a mode label before the data path is wired could misstate provenance.
 mitigations:
-  - Wire only the authorized Source LIVE query in GH-3553; keep LOCAL and Transform provenance
-    outside this cut
+  - Wire the authorized Source LIVE query in GH-3553 and existing Transform LIVE query in GH-3555;
+    keep LOCAL acquisition and readiness outside these cuts
   - Require authorization and READY-generation resolution before LOCAL calculation
   - Reject provisional or missing generations and never substitute the latest generation
   - Preserve no-fallback LIVE/LOCAL behavior through DAM1.05-DAM1.07 implementation
@@ -27,3 +27,9 @@ mitigations:
     freshness
   - Deploy the Source response hard cut with its Web consumer; reject sampledAt-only responses
     instead of silently accepting legacy data
+  - Derive Transform provenance from actual selected-relation physical inputs, deduplicate repeated
+    physical bindings without collapsing logical occurrences, and reject mixed connections
+  - Invalidate Transform samples when graph query inputs change or the model is removed; reject
+    stale callbacks and late responses without automatically querying
+  - Require Transform provenance on empty results and deploy its response hard cut with Web; refresh
+    through the existing protected query, never through LOCAL or an execution fallback

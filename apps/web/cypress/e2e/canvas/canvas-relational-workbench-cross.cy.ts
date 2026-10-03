@@ -5,8 +5,12 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
   openWorkbenchModel,
+  dragWorkbenchSource,
+  connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
+import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
   semanticWrites,
   semanticDocumentFromWrite,
@@ -24,19 +28,24 @@ describe('Workbench cross', () => {
     visitWorkbenchCanvas();
 
     openWorkbenchModel('join-transform');
-    cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers').click();
-    cy.contains('[data-slot="canvas-relational-tree-source"]', 'orders').click();
-    cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
-    cy.get('[data-slot="dvt-select-operation-cross-join"]')
-      .should('have.attr', 'aria-disabled', 'false')
-      .click();
+    for (const [index, source] of ['customers', 'orders', 'shipments'].entries()) {
+      dragWorkbenchSource(source);
+      cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', source)
+        .closest('li')
+        .as(`source${index}`, { type: 'static' });
+      if (index === 0) continue;
+      workbenchOperation('cross_join').click();
+      cy.get('[data-pending-operation="true"]').last().as(`cross${index}`, { type: 'static' });
+      connectWorkbenchProducer(index === 1 ? '@source0' : '@cross1', `@cross${index}`, 0);
+      connectWorkbenchProducer(`@source${index}`, `@cross${index}`, 1);
+    }
     cy.get('[data-slot="canvas-relational-cross-warning"]').should('be.visible');
     cy.get('[data-slot="dvt-substrait-join-predicate-editors"]').should('not.exist');
-    cy.contains('[data-slot="canvas-relational-tree-source"]', 'shipments').click();
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="cross"]').should(
       'have.length',
       2
     );
+    connectWorkbenchProducer('@cross2', '[data-slot="canvas-relational-output-input-port"]', null);
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
 
     cy.wrap(null).should(() => {
@@ -73,7 +82,7 @@ describe('Workbench cross', () => {
     cy.get('[data-slot="canvas-relational-tree"] [data-operator="cross"]').should('have.length', 2);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
-    visitWorkbenchCanvas();
+    revisitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-relational-tree"] [data-operator="cross"]').should('have.length', 2);
   });

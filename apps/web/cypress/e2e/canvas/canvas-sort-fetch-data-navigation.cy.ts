@@ -7,6 +7,8 @@ import {
   openWorkbenchModel,
   previewWorkbenchModel,
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
+  connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -27,14 +29,34 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       cy.viewport(1440, 1000);
       visitWorkbenchCanvas();
       openWorkbenchModel();
-      for (const operation of ordering) {
+      cy.get('[data-operator="join"]').closest('li').as('producer');
+      for (const [index, operation] of ordering.entries()) {
         workbenchOperation(operation).click();
+        cy.get('[data-pending-operation="true"]').last().as(`unary${index}`, { type: 'static' });
+        if (index === 0) {
+          cy.get('[data-slot="canvas-relational-output-input-port"]').focus().trigger('keydown', {
+            eventConstructor: 'KeyboardEvent',
+            key: 'Delete',
+          });
+          cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+            'not.have.attr',
+            'data-connected'
+          );
+        }
+        connectWorkbenchProducer(index === 0 ? '@producer' : '@unary0', `@unary${index}`);
+        const editor = '[data-slot="canvas-staged-operation-inspector"]';
         if (operation === 'fetch')
-          cy.contains('[role="dialog"] label', 'LIMIT').find('input').clear().type('100');
-        cy.get('[role="dialog"] button[type="submit"]').click();
+          cy.contains(`${editor} label`, 'LIMIT').find('input').clear().type('100');
+        cy.get(`${editor} button[type="submit"]`).click();
       }
+      connectWorkbenchProducer(
+        '@unary1',
+        '[data-slot="canvas-relational-output-input-port"]',
+        null
+      );
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() => expect(semanticWrites('join-transform')).not.to.have.length(0));
+      cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
 
       let sortId = '';
       let fetchId = '';
@@ -118,7 +140,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       });
 
       cy.get('[data-slot="canvas-model-tab-close"]').click();
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get('[data-operator="sort"]').should('contain.text', 'DESC NULLS LAST').click();
       cy.get('[data-slot="canvas-relational-edit"]').click();

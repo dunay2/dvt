@@ -2,6 +2,7 @@
 import { AlertTriangle, Play, RefreshCw, Table2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { OperationalDrawerDataTable } from '../../components/shell/OperationalDrawerDataTable';
+import { OperationalDrawerLivePreviewFacts } from '../../components/shell/OperationalDrawerLivePreviewFacts';
 import { CanvasModelUnresolvedInputs } from './CanvasModelUnresolvedInputs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { TransformDataSampleResponse } from '@dvt/contracts';
@@ -69,8 +70,10 @@ export function CanvasModelDataPanel({
           title={sample == null ? copy.preview : copy.refresh}
           aria-label={sample == null ? copy.preview : copy.refresh}
           className={compact ? 'size-8 shrink-0 p-0' : undefined}
-          disabled={!available || loading}
-          onClick={() => void load()}
+          disabled={!available}
+          aria-disabled={loading || !available}
+          aria-busy={loading}
+          onClick={loading ? undefined : () => void load()}
         >
           {sample == null ? (
             <Play className="size-4" aria-hidden="true" />
@@ -117,6 +120,7 @@ export function CanvasModelDataPanel({
         </div>
       ) : (
         <>
+          <OperationalDrawerLivePreviewFacts provenance={sample.provenance} copy={copy} />
           {compact ? null : (
             <div className="flex flex-wrap items-center gap-4 text-xs text-(--text-muted)">
               <span>
@@ -129,22 +133,18 @@ export function CanvasModelDataPanel({
               <span title={sample.semanticPlanSha256}>
                 {copy.revision}: <code>{sample.draftRevision}</code>
               </span>
-              <time dateTime={sample.sampledAt}>{sample.sampledAt}</time>
             </div>
           )}
-          {sample.rows.length === 0 ? (
-            <p>{copy.empty}</p>
-          ) : (
-            <div className="min-h-0 flex-1 overflow-auto">
-              <OperationalDrawerDataTable
-                key={`${sample.draftRevision}:${sample.semanticPlanSha256}`}
-                caption={nodeName}
-                columns={sample.columns}
-                rows={sample.rows}
-                nullValueLabel="NULL"
-              />
-            </div>
-          )}
+          {sample.rows.length === 0 ? <p>{copy.empty}</p> : null}
+          <div className="min-h-0 flex-1 overflow-auto">
+            <OperationalDrawerDataTable
+              key={`${sample.draftRevision}:${sample.semanticPlanSha256}`}
+              caption={nodeName}
+              columns={sample.columns}
+              rows={sample.rows}
+              nullValueLabel="NULL"
+            />
+          </div>
         </>
       )}
     </section>

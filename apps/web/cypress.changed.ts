@@ -22,6 +22,12 @@ export function resolveWebCypressChangedPlan(
           'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
           'cypress/e2e/canvas/liveRunEventRecovery.proof.ts',
           'cypress/e2e/canvas/canvasNodeDataActions.proof.ts',
+          'cypress/support/relationalWorkbench/persistence.ts',
+          'cypress/support/relationalWorkbench/navigation.ts',
+          'cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
+          'cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
+          'cypress/e2e/canvas/canvas-relational-workbench-cross.cy.ts',
+          'cypress/e2e/canvas/canvas-sort-fetch-data-navigation.cy.ts',
         ].includes(webPath)
       ) {
         throw new Error(

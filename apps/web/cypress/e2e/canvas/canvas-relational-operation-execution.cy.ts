@@ -4,6 +4,7 @@ import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
+  connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -26,10 +27,28 @@ describe('Internal operation card execution', () => {
       visitWorkbenchCanvas();
       openWorkbenchModel();
       waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+      cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       if (wrapped) {
+        cy.get(card).closest('li').as('joinInput');
         workbenchOperation('fetch').click();
-        cy.get('[role="dialog"] button[type="submit"]').click();
+        cy.get('[data-pending-operation="true"]').last().as('fetch', { type: 'static' });
+        cy.get('[data-slot="canvas-relational-output-input-port"]').focus().trigger('keydown', {
+          eventConstructor: 'KeyboardEvent',
+          key: 'Delete',
+        });
+        cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+          'not.have.attr',
+          'data-connected'
+        );
+        connectWorkbenchProducer('@joinInput', '@fetch');
+        cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
+        connectWorkbenchProducer(
+          '@fetch',
+          '[data-slot="canvas-relational-output-input-port"]',
+          null
+        );
         cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+        cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
       }
       let relationId = '';
       cy.get(card)
@@ -49,11 +68,27 @@ describe('Internal operation card execution', () => {
         'be.visible'
       );
       const outputs = `${properties} [data-slot="canvas-relation-outputs"]`;
-      cy.get(`${outputs} h3`).should('have.text', 'Output');
+      cy.get(`${properties} [data-slot="canvas-operation-output-tab"]`).click();
+      cy.get(outputs).should('be.visible');
       cy.get(`${outputs} [data-field-id]`).then((fields) => {
         const ids = [...fields].map((field) => field.getAttribute('data-field-id'));
         const expected = [ids[1], ids[0], ...ids.slice(2)];
-        cy.get(`${outputs} [data-field-id]`).first().find('button').last().click();
+        cy.get(`${outputs} [data-field-id]`)
+          .first()
+          .should('have.attr', 'draggable', 'true')
+          .focus()
+          .then(($row) => {
+            const row = $row[0]!;
+            const event = new row.ownerDocument.defaultView!.KeyboardEvent('keydown', {
+              key: 'ArrowDown',
+              code: 'ArrowDown',
+              altKey: true,
+              bubbles: true,
+              cancelable: true,
+            });
+            row.dispatchEvent(event);
+            expect(event.defaultPrevented, 'output reorder handles Alt+ArrowDown').to.equal(true);
+          });
         cy.get(`${outputs} [data-field-id]`).should((ordered) => {
           expect([...ordered].map((field) => field.getAttribute('data-field-id'))).to.deep.equal(
             expected
@@ -93,6 +128,7 @@ describe('Internal operation card execution', () => {
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
       });
       cy.get(card).click();
+      cy.get(`${properties} [data-slot="canvas-operation-properties-tab"]`).click();
       cy.get(properties).should('not.have.descendants', 'input, select, textarea');
       cy.get(`${data} table`).should('contain.text', 'C-001');
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(1));

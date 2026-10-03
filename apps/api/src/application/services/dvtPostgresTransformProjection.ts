@@ -1,12 +1,12 @@
 /** Render one authorized Substrait relation without selecting a reader by tree shape. */
-import { readDvtInputBindings } from '@dvt/contracts';
+import { readDvtInputBindings, type ConnectedSourceRef } from '@dvt/contracts';
 import {
   projectSubstraitProducerGraph,
   type DvtPostgresOrderKey,
   type PostgresAstNode,
 } from '@dvt/postgres-projection';
 
-import { requireDvtProjectedSourceCoverage } from './dvtSourceCoverage.js';
+import { requireDvtProjectedSourceCoverage, sameConnectedSource } from './dvtSourceCoverage.js';
 import { dvtSourcePublication } from './dvtSourcePublication.js';
 import type { DvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
@@ -14,6 +14,7 @@ export type DvtPostgresTransformProjection = Readonly<{
   sql: string;
   ast: PostgresAstNode;
   orderBy: readonly DvtPostgresOrderKey[] | null;
+  sourceRefs: readonly ConnectedSourceRef[];
   outputs: readonly Readonly<{
     name: string;
     dataType: string;
@@ -51,6 +52,11 @@ export async function projectDvtPostgresTransform(
     sql: result.sql,
     ast: result.ast,
     orderBy: result.orderBy,
+    sourceRefs: result.projection.inputs
+      .map((input) => input.sourceRef)
+      .filter(
+        (ref, index, refs) => refs.findIndex((other) => sameConnectedSource(ref, other)) === index
+      ),
     outputs: result.projection.outputs,
   };
 }

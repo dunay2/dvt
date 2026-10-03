@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { asIsoUtcString } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 import { TransformDataSampleRequestSchema } from '@dvt/contracts';
 
@@ -50,7 +51,23 @@ describe('canvasTransformDataSample.api', () => {
       rows: [{ values: ['1'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-09-15T10:00:00.000Z',
+      provenance: {
+        mode: 'live' as const,
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1' as const,
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1' as const,
+              connectionId: 'local-postgres-proof',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/public/orders',
+          },
+        ],
+        queriedAt: asIsoUtcString('2026-09-15T10:00:00.000Z'),
+        limit: 20,
+        navigation: 'bounded-first-page' as const,
+      },
     };
     const { apiClient, getJson } = createApiClientHarness({
       getJson: async <TResponse>() => sample as TResponse,

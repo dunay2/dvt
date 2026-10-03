@@ -11,6 +11,7 @@ import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { authorFourSourceChain } from '../../support/relationalWorkbench/joinChain';
 import {
   visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
   openWorkbenchModel,
   previewWorkbenchModel,
   dragWorkbenchSource,
@@ -72,7 +73,7 @@ describe('Workbench chain-persistence', () => {
         WorkspaceGraphAuthoringDraftSchema.parse(draft);
       });
       cy.get('[data-slot="canvas-model-tab-close"]').click();
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       if (change === 'rename') {
         cy.get('[data-slot="canvas-relational-tree-unavailable"]').should('be.visible');
@@ -113,7 +114,7 @@ describe('Workbench chain-persistence', () => {
     cy.get('[data-slot="bottom-operational-drawer-data"] table').should('contain.text', 'C-001');
     cy.screenshot('semantic-editor-data-preview');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
-    visitWorkbenchCanvas();
+    revisitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
       'have.length',

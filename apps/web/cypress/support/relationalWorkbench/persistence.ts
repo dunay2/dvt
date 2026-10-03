@@ -1,4 +1,6 @@
 /** Owned concern: assert saved canonical documents and bind controlled samples to their revision. */
+import { asIsoUtcString } from '@dvt/contracts';
+
 import { getE2eApiCalls, stubE2eApi } from '../e2eApiStub';
 
 export const semanticWrites = (targetNodeId: string): ReturnType<typeof getE2eApiCalls> =>
@@ -49,7 +51,23 @@ export function stubSavedWorkbenchSample(): void {
           rows: [{ values: ['C-001'] }],
           limit: Number(url.searchParams.get('limit')),
           truncated: false,
-          sampledAt: '2026-09-17T10:00:00.000Z',
+          provenance: {
+            mode: 'live' as const,
+            sourceRefs: [
+              {
+                schemaVersion: 'connected-source-ref.v1' as const,
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1' as const,
+                  connectionId: 'local-postgres-proof',
+                  provider: 'postgres',
+                },
+                sourceObjectId: 'relation/dvt/public/orders',
+              },
+            ],
+            queriedAt: asIsoUtcString('2026-09-17T10:00:00.000Z'),
+            limit: 20,
+            navigation: 'bounded-first-page' as const,
+          },
         },
       };
     }
