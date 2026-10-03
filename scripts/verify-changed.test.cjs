@@ -94,6 +94,22 @@ test('unrelated script changes do not select runtime runner contracts', () => {
   ]);
 });
 
+test('source drift and dashboard changes select the shared query contract once', () => {
+  const files = [
+    'scripts/planning-db/queries/source-drift-query.cjs',
+    'scripts/planning-db/queries/code-symbol-query.cjs',
+    'scripts/planning-db-query-tests/source-drift.test.cjs',
+  ];
+  const expected = 'node --test scripts/planning-db-query.test.cjs';
+  for (const changed of [...files.map((file) => [file]), files]) {
+    assert.deepEqual(focusedLabelsFor(changed), [expected], changed.join(', '));
+  }
+  assert.deepEqual(focusedLabelsFor([...files, 'scripts/planning-db-integrity-check.cjs']), [
+    'node --test scripts/planning-db-integrity-check.test.cjs',
+    expected,
+  ]);
+});
+
 test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', () => {
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
 

@@ -180,6 +180,9 @@ jobs:
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.planning_db_inventory_relevant
           == 'true'
+        env:
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
+          GIT_HEAD: ${{ github.sha }}
         run: pnpm planning:db:integrity:check --bootstrap
 
       - name: Validate docs quality policy (English/no duplicate indexes)

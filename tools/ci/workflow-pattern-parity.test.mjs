@@ -251,6 +251,16 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   assert.ok(preparePlanningDb < planningInventory);
   assert.ok(planningInventory < planningIntegrity);
 
+  const integrityStep = yaml
+    .load(prQualityGate)
+    .jobs['pr-checks'].steps.find(
+      (step) => step.name === 'Validate Planning DB integrity for committed changes'
+    );
+  assert.deepEqual(integrityStep.env, {
+    GIT_BASE: '${{ github.event.pull_request.base.sha }}',
+    GIT_HEAD: '${{ github.sha }}',
+  });
+
   assertWorkflowContains(
     prQualityGate,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
