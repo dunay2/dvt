@@ -1,6 +1,6 @@
 ---
 title: Canonical Canvas edge disconnection retains non-executable configuration
-status: Draft
+status: Active
 date: 2026-10-03
 owners:
   - dvt-web
@@ -110,9 +110,10 @@ current/target diagrams, test mapping, and rationale are recorded in
 [issue #3561](https://github.com/dunay2/dvt/issues/3561) and the Canvas workbench
 catalog. No parallel DTO or policy path was added.
 
-Full `pnpm verify:prepush`, required ARC checks, review, and integration remain
-to be recorded in #3560. The affected scoped checks above are not a substitute
-for that gate. This evidence is Draft until the closeout completes.
+Final-candidate `pnpm verify:prepush`, required ARC checks, exact-SHA authority
+validation, and integration results are recorded in #3560 and #3561. The scoped
+checks above are not a substitute for those gates; GitHub owns their current
+delivery status.
 
 No application tables, schemas, or warehouse data were changed. Only the
 existing Planning DB feature mechanization writer registered the governed
