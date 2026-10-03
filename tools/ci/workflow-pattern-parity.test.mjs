@@ -8,6 +8,7 @@ import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 
 import yaml from 'js-yaml';
+import { buildCiScopeOutputs } from './ci-scope-outputs.mjs';
 import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
 
 import {
@@ -44,6 +45,7 @@ test('every scope consumer acquires its committed diff once through the shared e
     assert.equal(scopes.length, 1, name);
     assert.equal(scopes[0].id, 'scope');
     assert.equal(scopes[0].run, 'node tools/ci/emit-scope.mjs');
+    assert.equal(scopes[0].if, undefined, `${name}: scope must also run for non-PR events`);
     assert.ok(scopes[0].env.GIT_BASE);
     assert.ok(scopes[0].env.GIT_HEAD);
     assert.doesNotMatch(
@@ -51,6 +53,32 @@ test('every scope consumer acquires its committed diff once through the shared e
       /fromJSON\(steps\.scope\.outputs\.\w+\)\.\w+\s*[!=]=\s*'(?:true|false)'/u
     );
   }
+});
+
+test('CodeQL consumes shared scope for PR, push, manual and scheduled events', () => {
+  const job = yaml.load(readFileSync('.github/workflows/codeql.yml', 'utf8')).jobs[
+    'detect-security-scope'
+  ];
+  const expression = job.outputs.security_analysis_relevant.replace(
+    /^\s*\$\{\{\s*|\s*\}\}\s*$/gu,
+    ''
+  );
+  const evaluate = (outputs) =>
+    runInNewContext(expression, {
+      steps: { scope: { outputs } },
+      fromJSON: JSON.parse,
+    });
+  for (const event of ['pull_request', 'push', 'workflow_dispatch', 'schedule']) {
+    for (const files of [['docs/README.md'], ['apps/web/src/App.tsx']]) {
+      const full = event !== 'pull_request';
+      assert.equal(
+        evaluate(buildCiScopeOutputs(files, {}, { full })),
+        full || computeWorkflowModeScopeOutputs('workflow', files).security_analysis_relevant,
+        `${event}:${files}`
+      );
+    }
+  }
+  assert.throws(() => evaluate({ workflow_scope: '' }));
 });
 
 test('combined scope preserves PR-only integration selection and manual opt-ins', () => {
