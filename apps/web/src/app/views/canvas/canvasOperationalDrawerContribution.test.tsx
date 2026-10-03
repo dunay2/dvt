@@ -1,4 +1,5 @@
 /** Owned concern: prove Canvas operational drawer read-model projection. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { OperationalDrawerDataSampleTab } from '../../components/shell/operationalDrawerContributionStore';
@@ -192,7 +193,23 @@ describe('buildCanvasOperationalDrawerContribution', () => {
             rows: [{ values: ['1'] }, { values: ['2'] }],
             limit: 20,
             truncated: false,
-            sampledAt: '2026-09-03T10:00:00.000Z',
+            provenance: {
+              mode: 'live',
+              sourceRefs: [
+                {
+                  schemaVersion: 'connected-source-ref.v1',
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1',
+                    connectionId: 'postgresql-local',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/dvt/public/curated_customers',
+                },
+              ],
+              queriedAt: asIsoUtcString('2026-09-03T10:00:00.000Z'),
+              limit: 20,
+              navigation: 'bounded-first-page',
+            },
           },
         },
       },

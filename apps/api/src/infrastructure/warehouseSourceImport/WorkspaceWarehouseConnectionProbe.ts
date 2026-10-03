@@ -279,7 +279,8 @@ export class WorkspaceWarehouseConnectionProbe
         })),
         rows,
         truncated,
-        sampledAt: this.checkedAt(),
+        queriedAt: this.checkedAt(),
+        navigation: 'bounded-first-page',
       };
     } catch (error) {
       if (transactionStarted) {

@@ -332,7 +332,8 @@ class TestWarehouseConnectionProbe
       ],
       rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }].slice(0, input.limit),
       truncated: input.limit < 2,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      queriedAt: '2026-08-17T10:00:00.000Z',
+      navigation: 'bounded-first-page',
     };
   }
 }
@@ -672,7 +673,23 @@ describe('warehouseSourceImportRoutes', () => {
       rows: [{ values: ['1', 'Ada'] }],
       limit: 1,
       truncated: true,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      provenance: {
+        mode: 'live',
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-prod',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/analytics/erp/orders',
+          },
+        ],
+        queriedAt: '2026-08-17T10:00:00.000Z',
+        limit: 1,
+        navigation: 'bounded-first-page',
+      },
     });
     expect(response.json()).not.toHaveProperty('credentialRef');
     expect(authorize).toHaveBeenCalledWith(

@@ -167,8 +167,7 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerPreviewReadyStatus: 'Vista previa lista',
   operationalDrawerPreviewBlockedStatus: 'Vista previa bloqueada',
   operationalDrawerDataAriaLabel: 'Muestra de datos del origen',
-  operationalDrawerDataIdleMessage:
-    'Haz doble clic en la zona de filas y tamaño de un origen importado para ver una muestra.',
+  operationalDrawerDataIdleMessage: 'Usa Preview en una tarjeta para consultar sus datos.',
   operationalDrawerDataLoadingTemplate: 'Cargando una muestra de datos de {nodeName}…',
   operationalDrawerDataEmptyTemplate: '{nodeName} no ha devuelto filas.',
   operationalDrawerDataConnectionNotFoundTemplate:
@@ -182,6 +181,10 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerDataRowsLabel: 'filas',
   operationalDrawerDataColumnsLabel: 'columnas',
   operationalDrawerDataNullValue: 'NULO',
+  operationalDrawerDataRefreshAction: 'Actualizar',
+  operationalDrawerDataQueriedAtLabel: 'Consultado a las',
+  operationalDrawerDataBoundedLiveTemplate:
+    'Hasta {limit} filas · Solo la primera página · Sin orden de filas garantizado. El origen puede haber cambiado desde esta consulta.',
   operationalDrawerTabsAriaLabel: 'Cajón operativo del Canvas',
   operationalDrawerInfoSeverity: 'Información',
   operationalDrawerWarningSeverity: 'Advertencia',

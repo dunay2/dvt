@@ -2,12 +2,12 @@
 title: LIVE and LOCAL data access boundary
 status: Active
 owner: Contracts / Local Data / Preview
-last_reviewed: 2026-10-01
+last_reviewed: 2026-10-03
 ---
 
 # LIVE and LOCAL data access boundary
 
-This contract implements the first, contract-only cut of [DAM1 #3510](https://github.com/dunay2/dvt/issues/3510) and [#3511](https://github.com/dunay2/dvt/issues/3511). It does not enable a LOCAL runtime or change an existing Preview/Run endpoint by itself.
+This contract defines the boundary introduced by [DAM1 #3510](https://github.com/dunay2/dvt/issues/3510) and [#3511](https://github.com/dunay2/dvt/issues/3511). The Source LIVE wiring below is owned by [#3553](https://github.com/dunay2/dvt/issues/3553). It does not enable a LOCAL runtime.
 
 ## Authority and vocabulary
 
@@ -51,3 +51,67 @@ This contract validates shapes and selection invariants. The acquisition state m
 `PreviewWarehouseSourceObjectRows`, `PreviewCanvasTransformRows`, `PreviewPlan` and Run remain the product intents. DAM1 wiring will carry the explicit mode and generation through those rails where applicable, without a second semantic IR, a browser SQL surface or a raw DuckDB handle. #3512 owns visible selection/state, #3515 LOCAL preview, #3516 LIVE preview, and #3518 provider/browser proof. Existing preview DTOs remain bounded display contracts until those tasks connect this context end-to-end.
 
 The negative proof for this contract rejects AUTO/HYBRID, a LIVE request with LOCAL identifiers, LOCAL without both identifiers, provisional calculation, a fake full copy without complete coverage, and any attempt to pass SQL, credentials or filesystem paths as mode context.
+
+## Source LIVE preview
+
+`PreviewWarehouseSourceObjectRows` returns required LIVE `provenance` in the
+existing `SourceDataSampleResponse`. This is an in-place hard cut: `sampledAt`
+is removed from Source responses, not accepted as a legacy alternative.
+Transform responses remain unchanged in this slice.
+
+The authorized connection catalog owns provider and binding identity. The
+provider probe owns `queriedAt`, the time it completed the bounded read in its
+read-only transaction; this is neither capture time nor a guarantee that the
+source has not changed since. The existing response identity and limit must
+match the single provenance binding and limit. Empty results retain the same
+provenance. PostgreSQL currently reports `bounded-first-page`: no stable ordering,
+cursor, deep paging or snapshot continuation is promised.
+
+```mermaid
+flowchart LR
+    Before[Source query] --> Ambiguous[Rows and sampledAt]
+    Ambiguous --> Grid[Grid without provenance or refresh]
+    Old[Run or Sink sample action] --> Gone[Retired materialization-rows API]
+```
+
+```mermaid
+flowchart LR
+    Action[Preview or explicit Refresh] --> Current[Current Source publication]
+    Current --> Rail[PreviewWarehouseSourceObjectRows]
+    Rail --> Catalog[Authorized binding and provider]
+    Rail --> Probe[Bounded read and query time]
+    Catalog --> Result[Rows and validated LIVE provenance]
+    Probe --> Result
+    Result --> View[Source identity, LIVE, query time and limit]
+```
+
+The main Canvas Source tab exposes Refresh using its current published selection,
+not the callback captured by an older sample. Loading disables repeat activation;
+publication changes invalidate displayed rows and in-flight responses. Deletion,
+unavailable publication or an empty selected output disables the query. Selecting
+a tab never refreshes it. The grid still projects only selected columns; sorting
+and column movement remain local presentation. The nested operation editor does
+not receive a synthetic refresh callback from a different scope.
+
+Retired Run/Sink row-query consumers are removed, without removing persisted Run
+evidence or restoring the retired endpoint. Current destination rows must not be
+presented as execution-time evidence.
+
+The real PostgreSQL freshness proof reuses the terminal browser runner's disposable
+database lease and observes a provider mutation followed by a new read, then an
+empty result. Its explicit proof file is admitted by the existing integration
+config only with that lease; it is not part of the generic API integration suite.
+Local and CI routing both require the terminal proof when this file or its
+admission changes. The retired standalone browser spec must remain absent; its
+UI scenarios register inside the terminal spec and share the same runtime.
+
+The selected solution reuses the existing query, result and provenance value
+object. A new endpoint, browser clock as freshness authority, optional legacy
+parser, automatic refresh, and LOCAL fallback are rejected. Query ownership stays
+in the application use case; view components only render facts and emit actions.
+
+| Scenario                  | Opportunity             | Pattern / DDD owner                            | Rail                               | Implementation surfaces                           | Unit or package test                                                   | Architecture test                                     | User-flow test                                       | Out of scope                                 |
+| ------------------------- | ----------------------- | ---------------------------------------------- | ---------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------- |
+| Source provenance         | Hidden authority        | Service Layer / WarehouseSourceDataSample      | `PreviewWarehouseSourceObjectRows` | Existing contracts, use case and PostgreSQL probe | Strict LIVE shape, binding/limit consistency, empty result and denials | No legacy response or retired API consumer            | Real protected Source read and provider-change proof | LOCAL and Transform provenance               |
+| Explicit refresh          | Responsibility overload | Presentation Model / Canvas source publication | Same query                         | Source sample hook and operational drawer         | Current selection, stale response, deletion, no automatic query        | View receives facts/actions, never credentials or SQL | Pointer/keyboard Refresh and unchanged tab behavior  | Automatic refresh and nested-scope refresh   |
+| Retire dead sample action | Duplicate semantics     | Remove obsolete adapter / Run evidence         | No new rail                        | Web Run/Sink ports, service and views             | Persisted evidence remains; no row-query action                        | Existing API retired-route rejection                  | Existing terminal Run proof remains green            | Reinterpreting historical execution evidence |

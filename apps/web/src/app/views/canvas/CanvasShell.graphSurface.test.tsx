@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell keeps the graph as the base work surface. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent } from '@testing-library/dom';
 import { act } from 'react';
@@ -469,17 +470,7 @@ describe('CanvasShell graph base surface', () => {
     expect(forwardedNodes[1]?.data.durationMs).toBeUndefined();
   });
 
-  it('projects a completed run result onto its exact sink and opens the existing data drawer', async () => {
-    const getRunMaterializationSample = vi.fn().mockResolvedValue({
-      contractVersion: 1,
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/public/sink_1',
-      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-      rows: [{ values: ['1'] }],
-      limit: 20,
-      truncated: false,
-      sampledAt: '2026-08-18T10:00:02.000Z',
-    });
+  it('projects persisted sink evidence without offering the retired row query', async () => {
     const sinkNodeData = {
       name: 'Sink 1',
       status: 'idle',
@@ -534,7 +525,6 @@ describe('CanvasShell graph base surface', () => {
           durationMs: 1_500,
         },
       },
-      runMaterializationSampleQuery: getRunMaterializationSample,
       graph: {
         nodesWithImpact: [draftSinkNode],
       },
@@ -567,12 +557,11 @@ describe('CanvasShell graph base surface', () => {
     });
     expect(forwardedNode?.data.runStatusByNodeId?.get('sink-1')).toBe('completed');
     expect(forwardedNode?.ariaLabel).toBe('Sink 1, Output, Completed');
-    expect(getRunMaterializationSample).toHaveBeenCalledWith('run-1', 20);
+    expect(forwardedNode?.data.onOpenSourceDataSample).toBeUndefined();
     const sinkDataState = useOperationalDrawerContributionStore.getState();
-    expect(sinkDataState.activeTab).toBe('data:sink-1');
-    expect(sinkDataState.contribution?.tabs.find((tab) => tab.id === 'data:sink-1')).toMatchObject({
-      dataSample: { status: 'ready', nodeName: 'Sink 1' },
-    });
+    expect(
+      sinkDataState.contribution?.tabs.find((tab) => tab.id === 'data:sink-1')
+    ).toBeUndefined();
   });
 
   it('keeps both source samples when their responses finish out of order', async () => {
@@ -624,7 +613,13 @@ describe('CanvasShell graph base surface', () => {
       rows: [{ values: ['1'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      provenance: {
+        mode: 'live',
+        sourceRefs: [connectedSourceRef(table)],
+        queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+        limit: 20,
+        navigation: 'bounded-first-page',
+      },
     });
     await act(async () => {
       resolvers.get('relation/dvt/public/customers')?.(sample('customers'));

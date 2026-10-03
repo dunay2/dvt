@@ -217,7 +217,6 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
           workspace={state.workspace}
           runControls={runControls}
           onRetryEventFeed={canRetryEventFeed ? retryEventFeed : undefined}
-          loadMaterializationSample={runsService.getRunMaterializationSample}
         />
       );
   }

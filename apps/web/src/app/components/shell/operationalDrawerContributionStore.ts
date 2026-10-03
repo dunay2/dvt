@@ -32,6 +32,7 @@ export type OperationalDrawerDataSample =
 export type OperationalDrawerDataSampleTab = Readonly<{
   id: OperationalDrawerDataTabId;
   dataSample: OperationalDrawerDataSample;
+  onRefresh?: () => void;
 }>;
 
 export type OperationalDrawerTab = Readonly<{
@@ -40,6 +41,7 @@ export type OperationalDrawerTab = Readonly<{
   count: number | null;
   content?: ReactNode;
   dataSample?: OperationalDrawerDataSample;
+  onRefresh?: () => void;
 }>;
 
 export type OperationalDrawerProblem = Readonly<{
@@ -90,6 +92,9 @@ export type OperationalDrawerContribution = Readonly<{
     dataRowsLabel: string;
     dataColumnsLabel: string;
     dataNullValue: string;
+    dataRefreshAction: string;
+    dataQueriedAtLabel: string;
+    dataBoundedLiveTemplate: string;
     tabsAriaLabel: string;
     severity: Readonly<Record<OperationalDrawerProblem['severity'], string>>;
   }>;

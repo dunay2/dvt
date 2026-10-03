@@ -34,7 +34,7 @@ import type {
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
-import type { IRunsPort, RunSnapshot } from '../../ports/runs';
+import type { RunSnapshot } from '../../ports/runs';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 
@@ -190,7 +190,6 @@ export type CanvasShellProps = Readonly<{
   canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   prepareModelPreview?: CanvasModelPreviewPreparation;
   runSnapshot?: RunSnapshot | null;
-  runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition
   ) => CanvasContextMenuPosition;

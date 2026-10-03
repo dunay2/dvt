@@ -9,6 +9,7 @@
 import { z } from 'zod';
 
 import { isSha256HexString } from '../../utils/contractPrimitives.js';
+import { LiveDataPreviewProvenanceSchema } from '../data-access/DataAccess.v1.js';
 
 import { SourceObjectColumnSchema } from './SourceObjectCatalog.js';
 
@@ -17,12 +18,6 @@ export const SOURCE_DATA_SAMPLE_DEFAULT_LIMIT = 20 as const;
 export const SOURCE_DATA_SAMPLE_MAX_LIMIT = 50 as const;
 
 const NonBlankStringSchema = z.string().trim().min(1);
-const CanonicalIsoTimestampSchema = z
-  .string()
-  .refine(
-    (value) => Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value,
-    'Expected a canonical ISO-8601 timestamp.'
-  );
 
 export const SourceDataSampleRequestSchema = z
   .object({
@@ -58,10 +53,23 @@ export const SourceDataSampleResponseSchema = z
     rows: z.array(SourceDataSampleRowSchema).max(SOURCE_DATA_SAMPLE_MAX_LIMIT),
     limit: z.number().int().positive().max(SOURCE_DATA_SAMPLE_MAX_LIMIT),
     truncated: z.boolean(),
-    sampledAt: CanonicalIsoTimestampSchema,
+    provenance: LiveDataPreviewProvenanceSchema,
   })
   .strict()
   .superRefine((sample, context) => {
+    const [source] = sample.provenance.sourceRefs;
+    if (
+      sample.provenance.sourceRefs.length !== 1 ||
+      source?.connectionRef.connectionId !== sample.connectionId ||
+      source.sourceObjectId !== sample.objectId ||
+      sample.provenance.limit !== sample.limit
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Source provenance must match the single sampled binding and requested limit.',
+        path: ['provenance'],
+      });
+    }
     sample.rows.forEach((row, rowIndex) => {
       if (row.values.length !== sample.columns.length) {
         context.addIssue({

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** Source Preview consumes current publication, never stale card/physical columns. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { act } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -23,7 +24,23 @@ const sample: SourceDataSample = {
   rows: [{ values: ['C-001', 'ES'] }],
   limit: 20,
   truncated: false,
-  sampledAt: '2026-10-01T10:00:00.000Z',
+  provenance: {
+    mode: 'live',
+    sourceRefs: [
+      {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/dvt/raw/orders',
+      },
+    ],
+    queriedAt: asIsoUtcString('2026-10-01T10:00:00.000Z'),
+    limit: 20,
+    navigation: 'bounded-first-page',
+  },
 };
 
 let harness: ReturnType<typeof createCanvasShellHarness>;
@@ -36,7 +53,8 @@ afterEach(() => harness.unmount());
 
 async function render(
   state: CanvasNodeColumnTruth['state'],
-  selected = ['country']
+  selected = ['country'],
+  connectionId = 'warehouse'
 ): Promise<DbtNodeData> {
   const data: DbtNodeData = {
     name: 'orders',
@@ -66,7 +84,7 @@ async function render(
         schemaVersion: 'connected-source-ref.v1',
         connectionRef: {
           schemaVersion: 'connection-ref.v1',
-          connectionId: 'warehouse',
+          connectionId,
           provider: 'postgres',
         },
         sourceObjectId: sample.objectId,
@@ -86,6 +104,11 @@ function dataState(): OperationalDrawerDataSample | undefined {
   return useOperationalDrawerContributionStore
     .getState()
     .contribution?.tabs.find((tab) => tab.id === 'data:orders')?.dataSample;
+}
+function refreshAction(): (() => void) | undefined {
+  return useOperationalDrawerContributionStore
+    .getState()
+    .contribution?.tabs.find((tab) => tab.id === 'data:orders')?.onRefresh;
 }
 async function preview(data: DbtNodeData): Promise<void> {
   await act(async () => {
@@ -163,6 +186,73 @@ it('does not invalidate samples or query again for unchanged publication', async
   await render('ready');
   expect(dataState()?.status).toBe('ready');
   expect(query).toHaveBeenCalledOnce();
+});
+
+it('refreshes the current publication explicitly, without marking old rows as fresh', async () => {
+  await preview(await render('ready', ['client_id', 'country']));
+  expect(typeof refreshAction()).toBe('function');
+  await render('ready', ['country']);
+  expect(dataState()?.status).toBe('error');
+  expect(query).toHaveBeenCalledOnce();
+  const next = {
+    ...sample,
+    rows: [{ values: ['C-001', 'PT'] }],
+    provenance: {
+      ...sample.provenance,
+      queriedAt: asIsoUtcString('2026-10-01T11:00:00.000Z'),
+    },
+  };
+  query.mockResolvedValueOnce(next);
+  await act(async () => refreshAction()?.());
+  expect(query).toHaveBeenCalledTimes(2);
+  expect(dataState()).toMatchObject({
+    status: 'ready',
+    sample: {
+      columns: [{ name: 'country' }],
+      rows: [{ values: ['PT'] }],
+      provenance: next.provenance,
+    },
+  });
+});
+
+it.each(['pending', 'unavailable', 'empty', 'deleted'] as const)(
+  'withdraws refresh when the current Source is %s',
+  async (state) => {
+    await preview(await render('ready'));
+    const obsolete = refreshAction();
+    expect(typeof obsolete).toBe('function');
+    if (state === 'deleted') await harness.render({ graph: { nodesWithImpact: [] } });
+    else await render(state === 'empty' ? 'ready' : state, state === 'empty' ? [] : ['country']);
+    expect(refreshAction()).toBeUndefined();
+    await act(async () => obsolete?.());
+    expect(query).toHaveBeenCalledOnce();
+    expect(dataState()?.status).toBe('error');
+  }
+);
+
+it('rejects a late refresh after rebinding and queries only the new binding on the next action', async () => {
+  await preview(await render('ready'));
+  let complete!: (value: SourceDataSample) => void;
+  query.mockReturnValueOnce(
+    new Promise<SourceDataSample>((resolve) => {
+      complete = resolve;
+    })
+  );
+  const obsolete = refreshAction();
+  await act(async () => obsolete?.());
+  expect(dataState()?.status).toBe('loading');
+  await render('ready', ['country'], 'new-warehouse');
+  await act(async () => {
+    complete(sample);
+    obsolete?.();
+  });
+  expect(dataState()?.status).toBe('error');
+  expect(query).toHaveBeenCalledTimes(2);
+  await act(async () => refreshAction()?.());
+  expect(query).toHaveBeenCalledTimes(3);
+  expect(query).toHaveBeenLastCalledWith(
+    expect.objectContaining({ connectionId: 'new-warehouse' })
+  );
 });
 
 it.each(['unchanged', 'moved', 'withdrawn'] as const)(

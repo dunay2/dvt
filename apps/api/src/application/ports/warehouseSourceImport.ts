@@ -142,10 +142,14 @@ export type WarehouseSourceDataSampleProbeTarget = WarehouseConnectionProbeTarge
   readonly expectedPublicationToken?: string;
 };
 
-export type WarehouseSourceDataSampleProbeResult = Omit<
+export type WarehouseSourceDataSampleProbeResult = Pick<
   SourceDataSampleResponse,
-  'contractVersion' | 'connectionId' | 'objectId' | 'limit'
->;
+  'columns' | 'rows' | 'truncated'
+> &
+  Readonly<{
+    queriedAt: string;
+    navigation: SourceDataSampleResponse['provenance']['navigation'];
+  }>;
 
 export interface IWarehouseSourceDataSampleProbe {
   previewSourceObjectRows(

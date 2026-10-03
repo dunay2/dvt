@@ -2,6 +2,7 @@
 import type { ReactNode } from 'react';
 
 import { OperationalDrawerDataTable } from './OperationalDrawerDataTable';
+import { OperationalDrawerLivePreviewFacts } from './OperationalDrawerLivePreviewFacts';
 import {
   OperationalDrawerDataNotice,
   OperationalDrawerEmptyState,
@@ -22,9 +23,11 @@ function formatDataSampleTemplate(
 export function OperationalDrawerDataSamplePanel({
   contribution,
   dataSample: state,
+  onRefresh,
 }: Readonly<{
   contribution: OperationalDrawerContribution;
   dataSample: OperationalDrawerDataSample;
+  onRefresh?: () => void;
 }>): JSX.Element {
   let content: ReactNode;
 
@@ -62,6 +65,12 @@ export function OperationalDrawerDataSamplePanel({
     });
     content = (
       <>
+        {'provenance' in state.sample ? (
+          <OperationalDrawerLivePreviewFacts
+            provenance={state.sample.provenance}
+            copy={contribution.copy}
+          />
+        ) : null}
         <div
           data-slot="data-sample-summary"
           className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-(--border-subtle) pb-2"
@@ -111,6 +120,20 @@ export function OperationalDrawerDataSamplePanel({
       ariaLabel={contribution.copy.dataAriaLabel}
       textSm
     >
+      {onRefresh == null ? null : (
+        <div className="mb-2 flex justify-end">
+          <button
+            type="button"
+            data-slot="data-sample-refresh"
+            aria-disabled={state.status === 'loading'}
+            aria-busy={state.status === 'loading'}
+            onClick={state.status === 'loading' ? undefined : onRefresh}
+            className="rounded border border-(--border-subtle) px-3 py-1 text-xs text-(--text-primary) hover:bg-(--surface-hover) focus-visible:outline-2 focus-visible:outline-(--accent) aria-disabled:cursor-wait aria-disabled:opacity-50"
+          >
+            {contribution.copy.dataRefreshAction}
+          </button>
+        </div>
+      )}
       {content}
     </OperationalDrawerPanelSurface>
   );

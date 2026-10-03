@@ -779,6 +779,26 @@ async function main() {
       webHandle
     );
 
+    const sourceProof = spawnProcess(
+      'source-live-provider-proof',
+      [
+        '--filter',
+        'dvt-api',
+        'exec',
+        'vitest',
+        'run',
+        '--config',
+        'vitest.integration.config.ts',
+        'test/integration/sourceLivePreviewPostgres.proof.ts',
+      ],
+      { DVT_SOURCE_LIVE_PROOF_DATABASE_URL: databaseUrl }
+    );
+    processHandles.push(sourceProof);
+    const providerResult = await sourceProof.completion;
+    if (providerResult.code !== 0 || providerResult.signal != null) {
+      throw new Error('Source LIVE provider proof failed.');
+    }
+
     await runCypress(
       {
         apiPort: DEFAULT_API_PORT,

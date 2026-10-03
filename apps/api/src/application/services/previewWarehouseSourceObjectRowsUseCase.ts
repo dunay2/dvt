@@ -1,6 +1,8 @@
 /** Owned concern: execute the PreviewWarehouseSourceObjectRows query rail. */
 import {
   SOURCE_DATA_SAMPLE_CONTRACT_VERSION,
+  CONNECTED_SOURCE_REF_SCHEMA_VERSION,
+  CONNECTION_REF_SCHEMA_VERSION,
   SourceDataSampleResponseSchema,
   type SourceDataSampleResponse,
 } from '@dvt/contracts';
@@ -43,8 +45,27 @@ export class PreviewWarehouseSourceObjectRowsUseCase {
       contractVersion: SOURCE_DATA_SAMPLE_CONTRACT_VERSION,
       connectionId: input.connectionId,
       objectId: input.objectId,
-      ...sample,
+      columns: sample.columns,
+      rows: sample.rows,
+      truncated: sample.truncated,
       limit: input.limit,
+      provenance: {
+        mode: 'live',
+        sourceRefs: [
+          {
+            schemaVersion: CONNECTED_SOURCE_REF_SCHEMA_VERSION,
+            connectionRef: {
+              schemaVersion: CONNECTION_REF_SCHEMA_VERSION,
+              connectionId: connection.id,
+              provider: connection.type,
+            },
+            sourceObjectId: input.objectId,
+          },
+        ],
+        queriedAt: sample.queriedAt,
+        limit: input.limit,
+        navigation: sample.navigation,
+      },
     });
   }
 }

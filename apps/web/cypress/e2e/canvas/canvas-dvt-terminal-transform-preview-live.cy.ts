@@ -21,6 +21,7 @@ import {
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 
+import { registerCanvasNodeDataActionsProof } from './canvasNodeDataActions.proof';
 import {
   assertAuthoritativeLiveRunTimeline,
   interruptLiveRunEventFeed,
@@ -37,6 +38,8 @@ function visitEnglishLiveCanvas(): void {
     },
   });
 }
+
+registerCanvasNodeDataActionsProof();
 
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
@@ -114,6 +117,22 @@ describe('DVT terminal Transform Preview and Run live', () => {
     visitEnglishLiveCanvas();
     getVisibleCanvasNode('source-1').should('be.visible');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
+    cy.intercept('GET', '**/source-data-sample?*').as('sourceLivePreview');
+    getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').focus().click();
+    cy.wait('@sourceLivePreview').then(({ response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(response?.body.provenance).to.deep.include({
+        mode: 'live',
+        limit: 20,
+        navigation: 'bounded-first-page',
+      });
+      expect(response?.body.rows).to.have.length(3);
+    });
+    cy.get('[data-slot="source-live-preview-facts"]')
+      .should('contain.text', 'LIVE')
+      .and('contain.text', 'PostgreSQL');
+    cy.get('[data-slot="data-sample-refresh"]').click();
+    cy.wait('@sourceLivePreview').its('response.statusCode').should('equal', 200);
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
 

@@ -8,6 +8,11 @@ export function resolveWebCypressChangedPlan(
   for (const filePath of filePaths) {
     const normalized = filePath.replaceAll('\\', '/').replace(/^\.\//, '');
     const webPath = normalized.replace(/^apps\/web\//, '');
+    if (webPath === 'cypress/e2e/canvas/canvas-node-data-actions.cy.ts') {
+      vitestFiles.push('apps/web/src/testing/vitestSuites.browserRouting.architecture.test.ts');
+      required = true;
+      continue;
+    }
     if (
       webPath.startsWith('cypress/') ||
       (webPath.startsWith('cypress.') && webPath !== 'cypress.changed.ts')
@@ -16,6 +21,7 @@ export function resolveWebCypressChangedPlan(
         ![
           'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
           'cypress/e2e/canvas/liveRunEventRecovery.proof.ts',
+          'cypress/e2e/canvas/canvasNodeDataActions.proof.ts',
         ].includes(webPath)
       ) {
         throw new Error(
@@ -38,6 +44,8 @@ export function resolveWebCypressChangedPlan(
         'scripts/run-selected-closure-cypress.cjs',
         'scripts/live-proof-process.cjs',
         'apps/api/package.json',
+        'apps/api/vitest.integration.config.ts',
+        'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
       ].includes(normalized)
     )
       required = true;
