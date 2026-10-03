@@ -20,10 +20,7 @@ describe('web Vitest changed-file discovery', () => {
       env: { GIT_BASE: 'origin/release', GIT_HEAD: 'merge-sha' },
       gitOutput(args) {
         calls.push(args.join(' '));
-        if (
-          args.join(' ') ===
-          'diff --name-only --no-renames --diff-filter=ACDMR -z origin/release merge-sha'
-        ) {
+        if (args.join(' ') === 'diff --name-only --no-renames -z origin/release merge-sha') {
           return ['apps/web/src/app/views/canvas/CanvasToolbar.tsx'];
         }
         if (args[0] === 'merge-base') {
@@ -65,15 +62,21 @@ describe('web Vitest changed-file discovery', () => {
       env: {},
       gitOutput(args) {
         if (args[0] === 'ls-files') return ['new.ts'];
-        expect(args).toContain('--diff-filter=ACDMR');
+        expect(args.some((arg) => arg.startsWith('--diff-filter'))).toBe(false);
         expect(args).toContain('--no-renames');
         return args.includes('--cached')
           ? ['staged.ts']
           : args.includes('HEAD')
-            ? ['deleted.cy.ts', 'source.ts']
+            ? ['deleted.cy.ts', 'type-changed.cy.ts', 'source.ts']
             : ['source.ts'];
       },
     });
-    expect(files).toEqual(['deleted.cy.ts', 'new.ts', 'source.ts', 'staged.ts']);
+    expect(files).toEqual([
+      'deleted.cy.ts',
+      'new.ts',
+      'source.ts',
+      'staged.ts',
+      'type-changed.cy.ts',
+    ]);
   });
 });

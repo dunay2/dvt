@@ -68,7 +68,7 @@ export function readChangedFiles(
   const env = options.env ?? process.env;
   const baseRef = env.GIT_BASE || 'origin/main';
   const headRef = env.GIT_HEAD || 'HEAD';
-  const diffArgs = ['diff', '--name-only', '--no-renames', '--diff-filter=ACDMR', '-z'] as const;
+  const diffArgs = ['diff', '--name-only', '--no-renames', '-z'] as const;
   const files = new Set([
     ...runGitOutput([...diffArgs, baseRef, headRef], repoRoot),
     ...runGitOutput([...diffArgs, '--cached'], repoRoot),
