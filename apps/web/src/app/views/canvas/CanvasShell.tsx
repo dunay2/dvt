@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
+import { resolveCanvasSinkRunEvidence } from './canvasSinkRunEvidence';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { canOpenCanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import { CanvasModelEditor } from './CanvasModelEditor';
@@ -73,7 +74,6 @@ export default function CanvasShell({
   canvasTransformDataSampleQuery,
   prepareModelPreview,
   runSnapshot,
-  runMaterializationSampleQuery,
 }: CanvasShellProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
@@ -91,8 +91,6 @@ export default function CanvasShell({
     prepareModelPreview,
     canonicalNodes: panels.inspectorGraphNodes,
     canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
-    runMaterializationSampleQuery,
-    runSnapshot,
     warehouseSourceDataSampleQuery,
   });
   const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
@@ -318,14 +316,14 @@ export default function CanvasShell({
             codeTruthKind === 'canonical');
         const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
         const dataSampleProjection = projectNodeDataSample(node.id, data);
-        const sinkDataSampleTarget = dataSampleProjection.sinkResult;
+        const sinkEvidence = resolveCanvasSinkRunEvidence(data, runSnapshot);
         const participatesInActiveRun = data.runStatusByNodeId?.has(node.id) === true;
         const activeRunAt =
           runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
         const runStatusByNodeId =
-          sinkDataSampleTarget == null
+          sinkEvidence == null
             ? data.runStatusByNodeId
-            : new Map(data.runStatusByNodeId).set(node.id, sinkDataSampleTarget.status);
+            : new Map(data.runStatusByNodeId).set(node.id, sinkEvidence.status);
         const projectedData: DbtNodeData = {
           ...data,
           dataActionLabel: dataSampleProjection.canOpen
@@ -338,12 +336,12 @@ export default function CanvasShell({
                 ...(runSnapshot?.durationMs == null ? {} : { durationMs: runSnapshot.durationMs }),
               }
             : {}),
-          ...(sinkDataSampleTarget == null
+          ...(sinkEvidence == null
             ? {}
             : {
-                rows: sinkDataSampleTarget.rowsWritten,
-                durationMs: sinkDataSampleTarget.durationMs,
-                lastRunAt: sinkDataSampleTarget.completedAt,
+                rows: sinkEvidence.rowsWritten,
+                durationMs: sinkEvidence.durationMs,
+                lastRunAt: sinkEvidence.completedAt,
                 runStatusByNodeId,
               }),
           onOpenSourceDataSample: dataSampleProjection.onOpen,

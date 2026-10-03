@@ -84,7 +84,6 @@ function GraphDraftAuthorityContent({
     warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery,
     runSnapshot: runSnapshotQuery.data ?? null,
-    runMaterializationSampleQuery: runsService.getRunMaterializationSample,
     canvasContextScreenToFlowPosition: (screenPosition) =>
       reactFlow.screenToFlowPosition(screenPosition),
     onDbtProjectImported,

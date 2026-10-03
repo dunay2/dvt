@@ -178,6 +178,9 @@ export function buildCanvasOperationalDrawerContribution({
       dataRowsLabel: copy.operationalDrawerDataRowsLabel,
       dataColumnsLabel: copy.operationalDrawerDataColumnsLabel,
       dataNullValue: copy.operationalDrawerDataNullValue,
+      dataRefreshAction: copy.operationalDrawerDataRefreshAction,
+      dataQueriedAtLabel: copy.operationalDrawerDataQueriedAtLabel,
+      dataBoundedLiveTemplate: copy.operationalDrawerDataBoundedLiveTemplate,
       tabsAriaLabel: copy.operationalDrawerTabsAriaLabel,
       severity: {
         info: copy.operationalDrawerInfoSeverity,
@@ -194,6 +197,7 @@ export function buildCanvasOperationalDrawerContribution({
               label: tab.dataSample.status === 'idle' ? tab.id : tab.dataSample.nodeName,
               count: null,
               dataSample: tab.dataSample,
+              onRefresh: tab.onRefresh,
             })),
           ]
         : [

@@ -166,7 +166,11 @@ export function BottomOperationalDrawerBody({
     if (tab.id === 'preview') return <BottomOperationalPreviewPanel contribution={contribution} />;
     if (tab.dataSample !== undefined) {
       return (
-        <OperationalDrawerDataSamplePanel contribution={contribution} dataSample={tab.dataSample} />
+        <OperationalDrawerDataSamplePanel
+          contribution={contribution}
+          dataSample={tab.dataSample}
+          onRefresh={tab.onRefresh}
+        />
       );
     }
     return logBody;

@@ -63,16 +63,18 @@ export const WorkingDataCoverageSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('full'), eofObserved: z.literal(true) }).strict(),
 ]);
 
+export const LiveDataPreviewProvenanceSchema = z
+  .object({
+    mode: z.literal('live'),
+    sourceRefs: z.array(ConnectedSourceRefSchema).min(1),
+    queriedAt: CapturedAtSchema,
+    limit: PositiveRowLimitSchema,
+    navigation: z.enum(['bounded-first-page', 'cursor', 'keyset', 'unavailable']),
+  })
+  .strict();
+
 export const DataPreviewProvenanceSchema = z.discriminatedUnion('mode', [
-  z
-    .object({
-      mode: z.literal('live'),
-      sourceRefs: z.array(ConnectedSourceRefSchema).min(1),
-      queriedAt: CapturedAtSchema,
-      limit: PositiveRowLimitSchema,
-      navigation: z.enum(['bounded-first-page', 'cursor', 'keyset', 'unavailable']),
-    })
-    .strict(),
+  LiveDataPreviewProvenanceSchema,
   LocalSelectionSchema.safeExtend({
     capturedAt: CapturedAtSchema,
     limit: PositiveRowLimitSchema,

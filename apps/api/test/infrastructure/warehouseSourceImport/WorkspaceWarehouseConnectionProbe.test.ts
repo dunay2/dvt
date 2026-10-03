@@ -372,7 +372,8 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       ],
       rows: [{ values: ['1', 'Ada'] }, { values: ['2', null] }],
       truncated: true,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      queriedAt: '2026-08-17T10:00:00.000Z',
+      navigation: 'bounded-first-page',
     });
     expect(pgMock.query.mock.calls[0]?.[0]).toBe(
       'begin transaction isolation level repeatable read read only'

@@ -85,7 +85,6 @@ export type CanvasShellPropsOverrides = {
   canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   prepareModelPreview?: CanvasShellProps['prepareModelPreview'];
   runSnapshot?: CanvasShellProps['runSnapshot'];
-  runMaterializationSampleQuery?: CanvasShellProps['runMaterializationSampleQuery'];
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
@@ -248,7 +247,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     canvasTransformDataSampleQuery: overrides?.canvasTransformDataSampleQuery,
     prepareModelPreview: overrides?.prepareModelPreview,
     runSnapshot: overrides?.runSnapshot,
-    runMaterializationSampleQuery: overrides?.runMaterializationSampleQuery,
     sourceImportInitialSelection: overrides?.sourceImportInitialSelection,
     onSourceImportInitialSelectionConsumed: overrides?.onSourceImportInitialSelectionConsumed,
     onDbtProjectImported: overrides?.onDbtProjectImported,

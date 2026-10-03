@@ -73,6 +73,8 @@ test('runtime runner source and test changes select their isolated contract exac
 
 test('live browser runtime inputs select the existing Web router without broad API routing', () => {
   const files = [
+    'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
+    'apps/api/vitest.integration.config.ts',
     '.github/workflows/test.yml',
     'apps/api/package.json',
     'scripts/run-selected-closure-live-proof.cjs',

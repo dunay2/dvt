@@ -1,14 +1,9 @@
 /** Owned concern: project Canvas nodes onto the existing governed data-sample query. */
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasShellProps } from './canvasShell.types';
-import {
-  CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-  resolveCanvasSinkDataSampleTarget,
-  type CanvasSinkDataSampleTarget,
-  type CanvasSourceDataSampleTarget,
-} from './canvasSourceDataSample';
+import { type CanvasSourceDataSampleTarget } from './canvasSourceDataSample';
 import { useCanvasDataSample } from './useCanvasDataSample';
 import type { CanonicalNode } from '../../types/canonical';
 import { queryCanvasModelDataSample } from './useCanvasModelDataQuery';
@@ -18,16 +13,11 @@ import { useCanvasSourceDataSample } from './useCanvasSourceDataSample';
 type CanvasNodeDataSampleProjection = Readonly<{
   canOpen: boolean;
   onOpen?: () => void;
-  sinkResult: CanvasSinkDataSampleTarget | null;
 }>;
 
 type CanvasNodeDataSampleArgs = Pick<
   CanvasShellProps,
-  | 'canvasTransformDataSampleQuery'
-  | 'runMaterializationSampleQuery'
-  | 'runSnapshot'
-  | 'warehouseSourceDataSampleQuery'
-  | 'prepareModelPreview'
+  'canvasTransformDataSampleQuery' | 'warehouseSourceDataSampleQuery' | 'prepareModelPreview'
 > &
   Readonly<{
     activeCanvasId: string | null;
@@ -39,8 +29,6 @@ type CanvasNodeDataSampleArgs = Pick<
 export function useCanvasNodeDataSample({
   activeCanvasId,
   canvasTransformDataSampleQuery,
-  runMaterializationSampleQuery,
-  runSnapshot,
   warehouseSourceDataSampleQuery,
   prepareModelPreview,
   canonicalNodes,
@@ -70,15 +58,6 @@ export function useCanvasNodeDataSample({
       current.current = null;
     };
   }, [activeCanvasId, canonicalNodes]);
-  const openSink = useCallback(
-    (nodeId: string, target: CanvasSinkDataSampleTarget) => {
-      if (runMaterializationSampleQuery == null) return;
-      openDataSample(nodeId, target.nodeName, () =>
-        runMaterializationSampleQuery(target.runId, CANVAS_SOURCE_DATA_SAMPLE_LIMIT)
-      );
-    },
-    [openDataSample, runMaterializationSampleQuery]
-  );
   const openTransform = useCallback(
     (nodeId: string, nodeName: string, semanticDigest: string) => {
       if (activeCanvasId == null || canvasTransformDataSampleQuery == null) return;
@@ -117,7 +96,6 @@ export function useCanvasNodeDataSample({
       const isNativeTransform = data.pluginKind === 'dvt:transform';
       const code = data.presentationTruth?.code;
       const semanticDigest = code?.kind === 'canonical' ? code.digest : null;
-      const sinkTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
       const onOpen = isNativeTransform
         ? activeCanvasId != null &&
           canvasTransformDataSampleQuery != null &&
@@ -125,28 +103,30 @@ export function useCanvasNodeDataSample({
           (!canEditModel || prepareModelPreview != null)
           ? () => openTransform(nodeId, data.name, semanticDigest)
           : undefined
-        : (projectSource(nodeId) ??
-          (sinkTarget != null && runMaterializationSampleQuery != null
-            ? () => openSink(nodeId, sinkTarget)
-            : undefined));
+        : projectSource(nodeId);
 
-      return { canOpen: onOpen != null, onOpen, sinkResult: sinkTarget };
+      return { canOpen: onOpen != null, onOpen };
     },
     [
       activeCanvasId,
       canvasTransformDataSampleQuery,
       canEditModel,
       prepareModelPreview,
-      openSink,
       projectSource,
       openTransform,
-      runMaterializationSampleQuery,
-      runSnapshot,
     ]
   );
 
+  const refreshableTabs = useMemo(
+    () =>
+      dataSampleTabs.map((tab) => ({
+        ...tab,
+        onRefresh: projectSource(tab.id.slice('data:'.length)),
+      })),
+    [dataSampleTabs, projectSource]
+  );
   return {
-    dataSampleTabs,
+    dataSampleTabs: refreshableTabs,
     projectNode,
     openSource,
   };

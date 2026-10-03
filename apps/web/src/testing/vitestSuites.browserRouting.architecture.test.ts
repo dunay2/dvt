@@ -1,5 +1,5 @@
 /** @ownedConcern Prove browser obligations are independent from Vitest coverage. */
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -9,9 +9,11 @@ import { parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 
 const spec = 'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
 const helper = 'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts';
+const dataHelper = 'apps/web/cypress/e2e/canvas/canvasNodeDataActions.proof.ts';
+const retired = 'apps/web/cypress/e2e/canvas/canvas-node-data-actions.cy.ts';
 
 describe('governed browser evidence routing', () => {
-  it.each([spec, helper, spec.replaceAll('/', '\\'), spec.slice('apps/web/'.length)])(
+  it.each([spec, helper, dataHelper, spec.replaceAll('/', '\\'), spec.slice('apps/web/'.length)])(
     'selects the real browser command, not Vitest, for %s',
     (file) => {
       expect(resolveWebVitestChangedSuitePlan([file])).toMatchObject({
@@ -20,6 +22,21 @@ describe('governed browser evidence routing', () => {
         requiresDependencies: false,
         browserCommands: ['pnpm run test:e2e:selected-closure:live'],
       });
+    }
+  );
+
+  it.each([retired, retired.replaceAll('/', '\\'), retired.slice('apps/web/'.length)])(
+    'requires the retirement guard and real proof when the retired path changes: %s',
+    (file) => {
+      const plan = resolveWebVitestChangedSuitePlan([file]);
+      expect(plan.suites).toEqual(['architecture']);
+      expect(plan.commandPlan).toEqual(
+        resolveWebVitestChangedSuitePlan([
+          'apps/web/src/testing/vitestSuites.browserRouting.architecture.test.ts',
+        ]).commandPlan
+      );
+      expect(plan.browserCommands).toEqual(['pnpm run test:e2e:selected-closure:live']);
+      expect(existsSync(resolve(retired.slice('apps/web/'.length)))).toBe(false);
     }
   );
 
@@ -53,6 +70,8 @@ describe('governed browser evidence routing', () => {
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
     'apps/api/package.json',
+    'apps/api/vitest.integration.config.ts',
+    'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
   ])('requires the live baseline for changes to its execution boundary: %s', (file) => {
     expect(resolveWebVitestChangedSuitePlan([file]).browserCommands).toEqual([
       'pnpm run test:e2e:selected-closure:live',
@@ -66,13 +85,17 @@ describe('governed browser evidence routing', () => {
     expect(resolveWebVitestChangedSuitePlan([]).browserCommands).toEqual([]);
   });
 
-  it('guards the exclusive helper ownership against new consumers, including re-exports', () => {
+  it.each([
+    [helper, 'interruptLiveRunEventFeed'],
+    [dataHelper, 'registerCanvasNodeDataActionsProof'],
+  ])('guards exclusive ownership and registration of %s', (helperPath, registerName) => {
     const cypressRoot = resolve('cypress');
-    const target = resolve('cypress/e2e/canvas/liveRunEventRecovery.proof.ts');
+    const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = new Set<string>();
-    for (const file of readdirSync(cypressRoot, { recursive: true, encoding: 'utf8' })) {
-      if (!file.endsWith('.ts')) continue;
-      const path = resolve(cypressRoot, file);
+    let registrations = 0;
+    for (const file of readdirSync(cypressRoot, { recursive: true, withFileTypes: true })) {
+      if (!file.isFile() || !file.name.endsWith('.ts')) continue;
+      const path = resolve(file.parentPath, file.name);
       const ast = ts.createSourceFile(
         path,
         readFileSync(path, 'utf8'),
@@ -80,6 +103,13 @@ describe('governed browser evidence routing', () => {
         true
       );
       const visit = (node: ts.Node): void => {
+        if (
+          path === resolve(spec.slice('apps/web/'.length)) &&
+          ts.isCallExpression(node) &&
+          ts.isIdentifier(node.expression) &&
+          node.expression.text === registerName
+        )
+          registrations++;
         if (ts.isStringLiteral(node) && node.text.startsWith('.')) {
           const imported = resolve(dirname(path), node.text);
           if ([imported, `${imported}.ts`].includes(target)) consumers.add(path);
@@ -89,6 +119,7 @@ describe('governed browser evidence routing', () => {
       visit(ast);
     }
     expect([...consumers]).toEqual([resolve(spec.slice('apps/web/'.length))]);
+    expect(registrations).toBe(1);
   });
 
   it('admits explicit plans but rejects ambiguous or coverage-dropping CLI modes', () => {

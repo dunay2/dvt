@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell publishes Canvas operations into the bottom drawer. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -231,7 +232,6 @@ describe('CanvasShell operational drawer registration', () => {
           resolveSample = resolve;
         })
     );
-    const runMaterializationSampleQuery = vi.fn();
     const transformSample = {
       contractVersion: 1 as const,
       canvasId: 'canvas-test',
@@ -249,7 +249,6 @@ describe('CanvasShell operational drawer registration', () => {
     await renderShell({
       warehouseSourceDataSampleQuery: { previewSourceObjectRows },
       canvasTransformDataSampleQuery: { previewTransformRows },
-      runMaterializationSampleQuery,
       panels: { inspectorGraphNodes: [...fixture.sources, fixture.transform] },
       graph: {
         nodesWithImpact: [
@@ -301,7 +300,23 @@ describe('CanvasShell operational drawer registration', () => {
       rows: [{ values: ['1'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-09-14T00:00:00Z',
+      provenance: {
+        mode: 'live',
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'postgres',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/public/orders',
+          },
+        ],
+        queriedAt: asIsoUtcString('2026-09-14T00:00:00.000Z'),
+        limit: 20,
+        navigation: 'bounded-first-page',
+      },
     };
     await act(async () => {
       resolveSample?.(sourceSample);
@@ -321,7 +336,6 @@ describe('CanvasShell operational drawer registration', () => {
     expect(previewSourceObjectRows).toHaveBeenCalledOnce();
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(document.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
-    expect(runMaterializationSampleQuery).not.toHaveBeenCalled();
     expect(onInspectNode).not.toHaveBeenCalled();
     act(() => {
       useOperationalDrawerContributionStore.getState().selectOperationalDrawerTab('data:source');

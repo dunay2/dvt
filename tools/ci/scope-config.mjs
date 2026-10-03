@@ -368,6 +368,8 @@ export const TEST_SCOPE_PATTERNS = {
   web: [
     'apps/web/**',
     'apps/api/package.json',
+    'apps/api/vitest.integration.config.ts',
+    'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
     '.github/workflows/test.yml',
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',

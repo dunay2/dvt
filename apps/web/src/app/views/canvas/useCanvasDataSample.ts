@@ -67,21 +67,23 @@ export function useCanvasDataSample() {
           : { status: 'loading', nodeName }
       );
       const layout = useUiLayoutStore.getState();
+      const alreadySelected = useOperationalDrawerContributionStore.getState().activeTab === tabId;
       if (layout.focusMode) layout.toggleFocusMode();
       selectTab(tabId);
       showBottomDrawer(300);
       const opener = document.activeElement;
-      window.requestAnimationFrame(() => {
-        if (document.activeElement !== opener || requestIdsRef.current.get(tabId) !== requestId)
-          return;
-        Array.from(
-          document.querySelectorAll<HTMLButtonElement>(
-            '[data-slot="bottom-operational-drawer-tab"]'
+      if (!alreadySelected)
+        window.requestAnimationFrame(() => {
+          if (document.activeElement !== opener || requestIdsRef.current.get(tabId) !== requestId)
+            return;
+          Array.from(
+            document.querySelectorAll<HTMLButtonElement>(
+              '[data-slot="bottom-operational-drawer-tab"]'
+            )
           )
-        )
-          .find((tab) => tab.dataset.tab === tabId)
-          ?.focus({ preventScroll: true });
-      });
+            .find((tab) => tab.dataset.tab === tabId)
+            ?.focus({ preventScroll: true });
+        });
       if (load == null) return;
 
       void load()

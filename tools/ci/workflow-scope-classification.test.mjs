@@ -150,6 +150,8 @@ test('workflow policy changes stay on CI contracts without runtime fan-out', () 
 
 test('admitted browser runtime changes require Web evidence without unrelated package fan-out', () => {
   for (const file of [
+    'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
+    'apps/api/vitest.integration.config.ts',
     '.github/workflows/test.yml',
     'apps/api/package.json',
     'scripts/run-selected-closure-live-proof.cjs',

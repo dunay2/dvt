@@ -13,8 +13,17 @@ description: >-
   resolved a READY local generation or that a LIVE result came from the current remote provider.
   Exposing a mode label before the data path is wired could misstate provenance.
 mitigations:
-  - Keep the new contract unwired and existing preview behavior unchanged in DAM1.01
+  - Wire only the authorized Source LIVE query in GH-3553; keep LOCAL and Transform provenance
+    outside this cut
   - Require authorization and READY-generation resolution before LOCAL calculation
   - Reject provisional or missing generations and never substitute the latest generation
   - Preserve no-fallback LIVE/LOCAL behavior through DAM1.05-DAM1.07 implementation
   - Prove provider and browser provenance, pagination and zero hidden reads in DAM1.10
+  - Require Source provenance to match the single response binding and limit, including empty
+    results
+  - Invalidate old Source rows on publication change or rebinding and refresh only through an
+    explicit current-source action
+  - Show bounded-first-page and query time without claiming stable order, capture time or remote
+    freshness
+  - Deploy the Source response hard cut with its Web consumer; reject sampledAt-only responses
+    instead of silently accepting legacy data

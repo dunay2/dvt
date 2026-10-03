@@ -9,12 +9,9 @@ import type {
   RecoverRunReceipt,
   RunControlAvailability,
   RunControlUnavailableReason,
-  SourceDataSampleResponse,
 } from '@dvt/contracts';
 import type { PlanRef, RunEvent } from '../types/engine';
 import type { WorkspaceScope } from './sessionContext';
-
-export type { SourceDataSampleResponse };
 
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the runs domain
@@ -183,7 +180,6 @@ export type RunEventTimelinePage = {
 export interface IRunsPort {
   listRunSummaries: () => Promise<RunSummaryItem[]>;
   getRunSnapshot: (runId: string) => Promise<RunSnapshot | null>;
-  getRunMaterializationSample?: (runId: string, limit: number) => Promise<SourceDataSampleResponse>;
   startRun: (input: StartRunInput) => Promise<RunStartReceipt>;
   cancelRun: (runId: string) => Promise<CancelRunReceipt>;
   recoverRun: (runId: string) => Promise<RecoverRunReceipt>;

@@ -561,7 +561,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerDataIdleMessage: {
     key: 'canvas.operationalDrawer.dataIdleMessage',
-    fallback: 'Double-click the rows and size area of an imported source to inspect a sample.',
+    fallback: 'Use Preview on a card to inspect its data.',
   },
   operationalDrawerDataLoadingTemplate: {
     key: 'canvas.operationalDrawer.dataLoadingTemplate',
@@ -606,6 +606,19 @@ export const canvasViewExecutionCopyByKey = {
   operationalDrawerDataNullValue: {
     key: 'canvas.operationalDrawer.dataNullValue',
     fallback: 'NULL',
+  },
+  operationalDrawerDataRefreshAction: {
+    key: 'canvas.operationalDrawer.dataRefreshAction',
+    fallback: 'Refresh',
+  },
+  operationalDrawerDataQueriedAtLabel: {
+    key: 'canvas.operationalDrawer.dataQueriedAtLabel',
+    fallback: 'Queried at',
+  },
+  operationalDrawerDataBoundedLiveTemplate: {
+    key: 'canvas.operationalDrawer.dataBoundedLiveTemplate',
+    fallback:
+      'Up to {limit} rows · First page only · No guaranteed row order. The source may have changed since this query.',
   },
   operationalDrawerTabsAriaLabel: {
     key: 'canvas.operationalDrawer.tabsAriaLabel',

@@ -419,7 +419,23 @@ describe('workspace ports api warehouse source import', () => {
       rows: [{ values: ['1'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      provenance: {
+        mode: 'live',
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-prod',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/analytics/erp/orders',
+          },
+        ],
+        queriedAt: '2026-08-17T10:00:00.000Z',
+        limit: 20,
+        navigation: 'bounded-first-page',
+      },
     };
     const { getJson, warehouseSourceDataSampleQuery } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() => sample as TResponse,

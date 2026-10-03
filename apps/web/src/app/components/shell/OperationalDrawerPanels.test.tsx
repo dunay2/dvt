@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { asIsoUtcString } from '@dvt/contracts';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -38,6 +39,9 @@ function buildCanvasOperationalDrawerContribution(
       dataRowsLabel: 'rows',
       dataColumnsLabel: 'columns',
       dataNullValue: 'NULL',
+      dataRefreshAction: 'Refresh',
+      dataQueriedAtLabel: 'Queried at',
+      dataBoundedLiveTemplate: 'Up to {limit} rows · First page only · No guaranteed row order.',
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
@@ -98,6 +102,7 @@ describe('OperationalDrawerPanels', () => {
   });
 
   it('renders a bounded source sample as an accessible data table', async () => {
+    const onRefresh = vi.fn();
     const longPayload = '{"runId":"run_019fc867-d439-7319-995f-4af3457311ba","planId":"5579993a"}';
     const contribution = buildCanvasOperationalDrawerContribution({
       tabs: [
@@ -109,6 +114,7 @@ describe('OperationalDrawerPanels', () => {
           id: 'data:orders',
           label: 'orders',
           count: null,
+          onRefresh,
           dataSample: {
             status: 'ready',
             nodeName: 'orders',
@@ -123,7 +129,23 @@ describe('OperationalDrawerPanels', () => {
               rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
               limit: 20,
               truncated: true,
-              sampledAt: '2026-08-17T10:00:00.000Z',
+              provenance: {
+                mode: 'live',
+                sourceRefs: [
+                  {
+                    schemaVersion: 'connected-source-ref.v1',
+                    connectionRef: {
+                      schemaVersion: 'connection-ref.v1',
+                      connectionId: 'postgresql-local',
+                      provider: 'postgres',
+                    },
+                    sourceObjectId: 'relation/dvt/public/orders',
+                  },
+                ],
+                queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+                limit: 20,
+                navigation: 'bounded-first-page',
+              },
             },
           },
         },
@@ -171,6 +193,16 @@ describe('OperationalDrawerPanels', () => {
     expect(longValue?.getAttribute('aria-label')).toBe(longPayload);
     expect(table?.textContent).toContain('NULL');
     expect(container.textContent).toContain('Showing 20 rows.');
+    const facts = container.querySelector('[data-slot="source-live-preview-facts"]');
+    expect(facts?.textContent).toContain('LIVE');
+    expect(facts?.textContent).toContain('PostgreSQL');
+    expect(facts?.textContent).not.toContain('postgresql-local');
+    expect(facts?.querySelector('time')?.dateTime).toBe('2026-08-17T10:00:00.000Z');
+    expect(onRefresh).not.toHaveBeenCalled();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')?.click()
+    );
+    expect(onRefresh).toHaveBeenCalledOnce();
   });
 
   it('keeps loading, ready, and failure states isolated per card tab', async () => {
@@ -245,7 +277,23 @@ describe('OperationalDrawerPanels', () => {
                     rows: [],
                     limit: 20,
                     truncated: false,
-                    sampledAt: '2026-08-17T10:00:00.000Z',
+                    provenance: {
+                      mode: 'live',
+                      sourceRefs: [
+                        {
+                          schemaVersion: 'connected-source-ref.v1',
+                          connectionRef: {
+                            schemaVersion: 'connection-ref.v1',
+                            connectionId: 'postgresql-local',
+                            provider: 'postgres',
+                          },
+                          sourceObjectId: 'relation/dvt/public/orders',
+                        },
+                      ],
+                      queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+                      limit: 20,
+                      navigation: 'bounded-first-page',
+                    },
                   },
                 },
               },
@@ -267,6 +315,38 @@ describe('OperationalDrawerPanels', () => {
     expect(container.querySelector('thead')?.textContent).toContain('integer');
     expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
     expect(container.textContent).not.toContain('Could not read customers.');
+  });
+
+  it('keeps explicit refresh disabled while its query is loading', async () => {
+    const onRefresh = vi.fn();
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          logBody={null}
+          contribution={buildCanvasOperationalDrawerContribution({
+            tabs: [
+              {
+                id: 'data:orders',
+                label: 'orders',
+                count: null,
+                onRefresh,
+                dataSample: { status: 'loading', nodeName: 'orders' },
+              },
+            ],
+          })}
+        />
+      );
+    });
+    const button = container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')!;
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    button.focus();
+    expect(document.activeElement).toBe(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(onRefresh).not.toHaveBeenCalled();
   });
 
   it('renders problems, runs, and preview bodies from the route contribution', async () => {

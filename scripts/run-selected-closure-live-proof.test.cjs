@@ -4,6 +4,8 @@ const { mkdtemp, readFile, rm } = require('node:fs/promises');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
 const yaml = require('js-yaml');
+const ts = require('typescript');
+const { runInNewContext } = require('node:vm');
 
 const {
   buildLiveProofCypressDockerInvocation,
@@ -22,6 +24,31 @@ const {
   runCypress,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
+
+test('Source provider proof requires explicit lease admission in the existing integration config', async () => {
+  const source = await readFile(
+    path.join(__dirname, '../apps/api/vitest.integration.config.ts'),
+    'utf8'
+  );
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS },
+  }).outputText;
+  for (const value of [undefined, '', 'postgresql://localhost/dvt_proof_test']) {
+    const exports = {};
+    runInNewContext(compiled, {
+      exports,
+      require: (id) => {
+        assert.equal(id, 'vitest/config');
+        return { defineConfig: (config) => config };
+      },
+      process: { env: value === undefined ? {} : { DVT_SOURCE_LIVE_PROOF_DATABASE_URL: value } },
+    });
+    assert.deepEqual(Array.from(exports.default.test.include), [
+      'test/integration/**/*.test.ts',
+      ...(value === undefined ? [] : ['test/integration/sourceLivePreviewPostgres.proof.ts']),
+    ]);
+  }
+});
 
 test('selected closure explicitly prepares an available worker before starting the API', async () => {
   const source = await readFile(

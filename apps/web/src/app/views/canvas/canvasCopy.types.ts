@@ -382,6 +382,9 @@ export type CanvasViewCopy = {
   readonly operationalDrawerDataRowsLabel: string;
   readonly operationalDrawerDataColumnsLabel: string;
   readonly operationalDrawerDataNullValue: string;
+  readonly operationalDrawerDataRefreshAction: string;
+  readonly operationalDrawerDataQueriedAtLabel: string;
+  readonly operationalDrawerDataBoundedLiveTemplate: string;
   readonly operationalDrawerTabsAriaLabel: string;
   readonly operationalDrawerInfoSeverity: string;
   readonly operationalDrawerWarningSeverity: string;
