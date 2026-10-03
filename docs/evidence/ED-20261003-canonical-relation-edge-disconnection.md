@@ -1,6 +1,6 @@
 ---
 title: Canonical Canvas edge disconnection retains non-executable configuration
-status: Active
+status: accepted
 date: 2026-10-03
 owners:
   - dvt-web
