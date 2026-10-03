@@ -271,7 +271,7 @@ export function registerCanvasNodeDataActionsProof(): void {
       });
     }
 
-    it('queries the canonical source from inside the model without calling transform preview', () => {
+    it('keeps nested Source and Transform LIVE preview actions separate', () => {
       openWorkbenchModel('dvt-transform-1');
       const source = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
       cy.get(source).click();

@@ -242,6 +242,7 @@ Evidence documents that justify or validate relevant changes.
 - [Transform bigint DIVIDE evidence](ED-20260928-transform-bigint-divide.md)
 - [Transform column comment authoring evidence](ED-20260902-transform-column-comments.md)
 - [Transform function alias authoring evidence](ED-20260902-transform-function-alias-authoring.md)
+- [Transform LIVE preview](ED-20261003-transform-live-preview.md)
 - [UNION DISTINCT end to end](ED-20260919-union-distinct-end-to-end.md)
 - [VTX1 authoring authority hard cut](ED-20260903-vtx1-authoring-hardcut.md)
 - [VTX2 durable semantic document evidence](ED-20260903-vtx2-durable-semantic-document.md)
