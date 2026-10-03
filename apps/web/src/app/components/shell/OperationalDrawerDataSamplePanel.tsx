@@ -65,12 +65,10 @@ export function OperationalDrawerDataSamplePanel({
     });
     content = (
       <>
-        {'provenance' in state.sample ? (
-          <OperationalDrawerLivePreviewFacts
-            provenance={state.sample.provenance}
-            copy={contribution.copy}
-          />
-        ) : null}
+        <OperationalDrawerLivePreviewFacts
+          provenance={state.sample.provenance}
+          copy={contribution.copy}
+        />
         <div
           data-slot="data-sample-summary"
           className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-(--border-subtle) pb-2"

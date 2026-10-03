@@ -8,6 +8,7 @@
 import { z } from 'zod';
 
 import { isSha256HexString } from '../../utils/contractPrimitives.js';
+import { LiveDataPreviewProvenanceSchema } from '../data-access/DataAccess.v1.js';
 import { SourceObjectColumnSchema } from '../source-import/SourceObjectCatalog.js';
 
 export const TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION = 1 as const;
@@ -16,12 +17,6 @@ export const TRANSFORM_DATA_SAMPLE_MAX_LIMIT = 50 as const;
 export const TRANSFORM_DATA_SAMPLE_MAX_COLUMNS = 512 as const;
 
 const NonBlankStringSchema = z.string().trim().min(1);
-const CanonicalIsoTimestampSchema = z
-  .string()
-  .refine(
-    (value) => Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value,
-    'Expected a canonical ISO-8601 timestamp.'
-  );
 
 export const TransformDataSampleRequestSchema = z
   .object({
@@ -62,10 +57,17 @@ export const TransformDataSampleResponseSchema = z
     rows: z.array(TransformDataSampleRowSchema).max(TRANSFORM_DATA_SAMPLE_MAX_LIMIT),
     limit: z.number().int().positive().max(TRANSFORM_DATA_SAMPLE_MAX_LIMIT),
     truncated: z.boolean(),
-    sampledAt: CanonicalIsoTimestampSchema,
+    provenance: LiveDataPreviewProvenanceSchema,
   })
   .strict()
   .superRefine((sample, context) => {
+    if (sample.provenance.limit !== sample.limit) {
+      context.addIssue({
+        code: 'custom',
+        message: 'LIVE provenance must match the requested limit.',
+        path: ['provenance', 'limit'],
+      });
+    }
     sample.rows.forEach((row, rowIndex) => {
       if (row.values.length !== sample.columns.length) {
         context.addIssue({

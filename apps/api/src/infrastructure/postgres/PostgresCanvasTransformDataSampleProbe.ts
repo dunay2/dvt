@@ -79,7 +79,8 @@ export class PostgresCanvasTransformDataSampleProbe implements ICanvasTransformD
         })),
         rows,
         truncated,
-        sampledAt: this.options.now().toISOString(),
+        queriedAt: this.options.now().toISOString(),
+        navigation: 'bounded-first-page',
       };
     } catch (error) {
       if (transactionStarted) {

@@ -25,6 +25,9 @@ const en = {
   draft: 'Unapplied changes',
   preview: 'Preview data',
   refresh: 'Refresh preview',
+  dataQueriedAtLabel: 'Queried at',
+  dataBoundedLiveTemplate:
+    'Up to {limit} rows · First page only · No guaranteed row order. The source may have changed since this query.',
   previewHint: 'Explore the applied model without publishing a result.',
   previewEmpty: 'Run a preview to explore this model’s rows.',
   operationPreviewRecords: '{count}/{limit} records',
@@ -157,6 +160,9 @@ const es: typeof en = {
   draft: 'Cambios sin aplicar',
   preview: 'Vista previa de datos',
   refresh: 'Actualizar vista previa',
+  dataQueriedAtLabel: 'Consultado a las',
+  dataBoundedLiveTemplate:
+    'Hasta {limit} filas · Solo primera página · Sin orden garantizado. El origen puede haber cambiado desde esta consulta.',
   previewHint: 'Explora el modelo aplicado sin publicar un resultado.',
   previewEmpty: 'Ejecuta una vista previa para explorar las filas del modelo.',
   operationPreviewRecords: '{count}/{limit} registros',

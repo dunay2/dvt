@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 /** Real card actions own data requests; the Properties frame never owns their lifecycle. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { act, Fragment, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { expect, it, vi } from 'vitest';
@@ -35,7 +36,23 @@ it.each([false, true])(
           rows: [{ values: ['intermediate-result'] }],
           limit: 20,
           truncated: false,
-          sampledAt: '2026-09-22T00:00:00.000Z',
+          provenance: {
+            mode: 'live' as const,
+            sourceRefs: [
+              {
+                schemaVersion: 'connected-source-ref.v1' as const,
+                connectionRef: {
+                  schemaVersion: 'connection-ref.v1' as const,
+                  connectionId: 'local-postgres-proof',
+                  provider: 'postgres',
+                },
+                sourceObjectId: 'relation/dvt/public/orders',
+              },
+            ],
+            queriedAt: asIsoUtcString('2026-09-22T00:00:00.000Z'),
+            limit: 20,
+            navigation: 'bounded-first-page' as const,
+          },
         })
       ),
     };

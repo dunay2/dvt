@@ -128,11 +128,32 @@ describe('DVT terminal Transform Preview and Run live', () => {
       });
       expect(response?.body.rows).to.have.length(3);
     });
-    cy.get('[data-slot="source-live-preview-facts"]')
+    cy.get('[data-slot="live-preview-facts"]')
       .should('contain.text', 'LIVE')
       .and('contain.text', 'PostgreSQL');
     cy.get('[data-slot="data-sample-refresh"]').click();
     cy.wait('@sourceLivePreview').its('response.statusCode').should('equal', 200);
+    cy.intercept('GET', '**/transforms/dvt-transform-1/data-sample?*').as('transformLivePreview');
+    getVisibleCanvasNode('dvt-transform-1')
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .click();
+    cy.wait('@transformLivePreview').then(({ response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(response?.body.provenance).to.deep.include({
+        mode: 'live',
+        limit: 20,
+        navigation: 'bounded-first-page',
+      });
+      expect(response?.body.provenance.sourceRefs).to.have.length(1);
+      expect(response?.body.rows).to.have.length(3);
+      expect(response?.body).not.to.have.property('sampledAt');
+    });
+    cy.get('[data-slot="live-preview-facts"]')
+      .should('contain.text', 'LIVE')
+      .and('contain.text', 'PostgreSQL');
+    cy.get('[data-slot="data-sample-refresh"]').click();
+    cy.wait('@transformLivePreview').its('response.statusCode').should('equal', 200);
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
 

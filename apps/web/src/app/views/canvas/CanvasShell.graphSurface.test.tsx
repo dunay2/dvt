@@ -200,7 +200,23 @@ describe('CanvasShell graph base surface', () => {
         rows: [{ values: ['1'] }],
         limit: 20,
         truncated: false,
-        sampledAt: '2026-08-17T10:00:00.000Z',
+        provenance: {
+          mode: 'live' as const,
+          sourceRefs: [
+            {
+              schemaVersion: 'connected-source-ref.v1' as const,
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1' as const,
+                connectionId: 'local-postgres-proof',
+                provider: 'postgres',
+              },
+              sourceObjectId: 'relation/dvt/public/orders',
+            },
+          ],
+          queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+          limit: 20,
+          navigation: 'bounded-first-page' as const,
+        },
       });
       await renderShell({
         warehouseSourceDataSampleQuery: { previewSourceObjectRows },
@@ -298,7 +314,23 @@ describe('CanvasShell graph base surface', () => {
       rows: [{ values: ['1', 'C-001', 'Ada', '125.50'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-09-28T10:00:00.000Z',
+      provenance: {
+        mode: 'live' as const,
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1' as const,
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1' as const,
+              connectionId: 'local-postgres-proof',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/public/orders',
+          },
+        ],
+        queriedAt: asIsoUtcString('2026-09-28T10:00:00.000Z'),
+        limit: 20,
+        navigation: 'bounded-first-page' as const,
+      },
     });
     await renderShell({
       warehouseSourceDataSampleQuery: { previewSourceObjectRows },

@@ -24,6 +24,7 @@ import {
   producerDocument,
   withProducerDocument,
 } from '../../fixtures/dvtProducerPreviewFixture.js';
+import { repeatedSourceInput } from '../../fixtures/dvtRepeatedSourceFixture.js';
 
 const context: AuthorizedExecutionContext = {
   principal: {
@@ -75,7 +76,8 @@ function harness(
     columns: [],
     rows: [],
     truncated: false,
-    sampledAt: '2026-09-26T10:00:00.000Z',
+    queriedAt: '2026-09-26T10:00:00.000Z',
+    navigation: 'bounded-first-page' as const,
   }));
   const getConnection = vi.fn(async () => ({
     id: 'local-postgres-proof',
@@ -125,6 +127,14 @@ function closure(
 }
 
 describe('protected producer/consumer row preview', () => {
+  it('reports a repeated physical input once without removing either logical JOIN input', async () => {
+    const projection = await projectDvtPostgresTransform(
+      resolveDvtTerminalTransformClosure(repeatedSourceInput())
+    );
+    expect(projection.sourceRefs).toHaveLength(1);
+    expect(projection.sql).toContain('JOIN');
+    expect(projection.outputs).toHaveLength(4);
+  });
   it('projects only immediate published fields through a chain without copying producer operations', async () => {
     const h = harness();
     const before = globalThis.structuredClone(h.draft);

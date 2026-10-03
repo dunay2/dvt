@@ -8,6 +8,24 @@ import {
   TransformDataSampleResponseSchema,
 } from '../../src/contracts/canvas/TransformDataSample.v1.js';
 
+const provenance = {
+  mode: 'live',
+  sourceRefs: [
+    {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'relation/dvt/raw/orders',
+    },
+  ],
+  queriedAt: '2026-09-15T10:00:00.000Z',
+  limit: 20,
+  navigation: 'bounded-first-page',
+};
+
 describe('TransformDataSample v1', () => {
   it('requires a pinned semantic revision when selecting an intermediate relation', () => {
     const input = {
@@ -39,11 +57,38 @@ describe('TransformDataSample v1', () => {
       rows: [{ values: ['1'] }],
       limit: request.limit,
       truncated: false,
-      sampledAt: '2026-09-15T10:00:00.000Z',
+      provenance,
     });
 
     expect(request.limit).toBe(TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT);
     expect(response.rows).toEqual([{ values: ['1'] }]);
+    expect(response.provenance).toEqual(provenance);
+    expect(response).not.toHaveProperty('sampledAt');
+  });
+
+  it.each([
+    { provenance: undefined, sampledAt: provenance.queriedAt },
+    { sampledAt: provenance.queriedAt },
+    { provenance: { ...provenance, mode: 'local' } },
+    { provenance: { ...provenance, sourceRefs: [] } },
+    { provenance: { ...provenance, limit: 21 } },
+    { provenance: { ...provenance, queriedAt: 'not-a-time' } },
+  ])('rejects ambiguous or incompatible LIVE facts: %j', (invalid) => {
+    expect(
+      TransformDataSampleResponseSchema.safeParse({
+        contractVersion: 1,
+        canvasId: 'canvas',
+        transformNodeId: 'model',
+        draftRevision: 'revision',
+        semanticPlanSha256: 'a'.repeat(64),
+        columns: [],
+        rows: [],
+        limit: 20,
+        truncated: false,
+        provenance,
+        ...invalid,
+      }).success
+    ).toBe(false);
   });
 
   it('rejects client SQL, connection details, and limits outside the governed bound', () => {
@@ -82,7 +127,7 @@ describe('TransformDataSample v1', () => {
         rows: [{ values: ['1', 'unexpected'] }],
         limit: TRANSFORM_DATA_SAMPLE_DEFAULT_LIMIT,
         truncated: false,
-        sampledAt: '2026-09-15T10:00:00.000Z',
+        provenance,
       })
     ).toThrow(/row values must match/i);
   });

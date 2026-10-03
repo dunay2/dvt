@@ -90,6 +90,7 @@ export default function CanvasShell({
     canvasTransformDataSampleQuery,
     prepareModelPreview,
     canonicalNodes: panels.inspectorGraphNodes,
+    canonicalEdges: panels.inspectorGraphEdges,
     canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
     warehouseSourceDataSampleQuery,
   });

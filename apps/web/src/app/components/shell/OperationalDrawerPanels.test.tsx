@@ -193,10 +193,12 @@ describe('OperationalDrawerPanels', () => {
     expect(longValue?.getAttribute('aria-label')).toBe(longPayload);
     expect(table?.textContent).toContain('NULL');
     expect(container.textContent).toContain('Showing 20 rows.');
-    const facts = container.querySelector('[data-slot="source-live-preview-facts"]');
+    const facts = container.querySelector('[data-slot="live-preview-facts"]');
     expect(facts?.textContent).toContain('LIVE');
     expect(facts?.textContent).toContain('PostgreSQL');
-    expect(facts?.textContent).not.toContain('postgresql-local');
+    expect(facts?.querySelector('details')?.open).toBe(false);
+    expect(facts?.querySelector('summary')?.textContent).not.toContain('postgresql-local');
+    expect(facts?.querySelector('details li')?.textContent).toContain('postgresql-local');
     expect(facts?.querySelector('time')?.dateTime).toBe('2026-08-17T10:00:00.000Z');
     expect(onRefresh).not.toHaveBeenCalled();
     await act(async () =>

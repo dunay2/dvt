@@ -1,4 +1,5 @@
 /** UI contracts registered in the admitted terminal proof; one browser/runtime bootstrap. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { SourceDataSampleResponseSchema, TransformDataSampleResponseSchema } from '@dvt/contracts';
 
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
@@ -32,9 +33,11 @@ export function registerCanvasNodeDataActionsProof(): void {
   describe('Canvas explicit data action', () => {
     let emptyResults = false;
     let sourceReads = 0;
+    let transformReads = 0;
     beforeEach(() => {
       emptyResults = false;
       sourceReads = 0;
+      transformReads = 0;
       cy.viewport(1920, 1080);
       stubShellBootstrapApis({
         scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
@@ -85,17 +88,41 @@ export function registerCanvasNodeDataActionsProof(): void {
           }),
         };
       });
-      stubE2eApi('GET', transformPath, ({ url }) => ({
-        body: TransformDataSampleResponseSchema.parse({
-          ...sample,
-          sampledAt: '2026-09-22T10:00:00.000Z',
-          rows: emptyResults ? [] : sample.rows,
-          canvasId: url.pathname.split('/')[4],
-          transformNodeId: 'dvt-transform-1',
-          draftRevision: 'revision-1',
-          semanticPlanSha256: url.searchParams.get('semanticPlanSha256'),
-        }),
-      }));
+      stubE2eApi('GET', transformPath, ({ url }) => {
+        transformReads += 1;
+        return {
+          body: TransformDataSampleResponseSchema.parse({
+            ...sample,
+            provenance: {
+              mode: 'live' as const,
+              sourceRefs: [
+                {
+                  schemaVersion: 'connected-source-ref.v1' as const,
+                  connectionRef: {
+                    schemaVersion: 'connection-ref.v1' as const,
+                    connectionId: 'local-postgres-proof',
+                    provider: 'postgres',
+                  },
+                  sourceObjectId: 'relation/dvt/public/orders',
+                },
+              ],
+              queriedAt: asIsoUtcString(
+                transformReads === 1 ? '2026-09-22T10:00:00.000Z' : '2026-09-22T11:00:00.000Z'
+              ),
+              limit: 20,
+              navigation: 'bounded-first-page' as const,
+            },
+            rows: emptyResults ? [] : [{ values: [transformReads === 1 ? 'Ada' : 'Grace'] }],
+            canvasId: url.pathname.split('/')[4],
+            transformNodeId: 'dvt-transform-1',
+            draftRevision: 'revision-1',
+            semanticPlanSha256: url.searchParams.get('semanticPlanSha256'),
+            ...(url.searchParams.has('relationId')
+              ? { relationId: url.searchParams.get('relationId') }
+              : {}),
+          }),
+        };
+      });
       visitWithE2eWorkspaceSession('/canvas', {
         onBeforeLoad(window) {
           window.localStorage.setItem(
@@ -217,34 +244,30 @@ export function registerCanvasNodeDataActionsProof(): void {
           expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
           expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
         });
-        if (nodeId === 'source-1') {
-          cy.get('[data-slot="source-live-preview-facts"]')
-            .should('contain.text', 'LIVE')
-            .and('contain.text', 'PostgreSQL')
-            .and('contain.text', '20')
-            .and('contain.text', 'No guaranteed row order');
-          cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="log"]').click();
-          cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:source-1"]').click();
-          cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(1));
-          cy.get('[data-slot="data-sample-refresh"]')
-            .focus()
-            .then(($button) =>
-              gesture === 'pointer'
-                ? cy.wrap($button).click()
-                : cy.press(Cypress.Keyboard.Keys.SPACE)
-            );
-          cy.get('[data-slot="bottom-operational-drawer-data"]')
-            .should('contain.text', 'Grace')
-            .and('not.contain.text', 'Ada')
-            .and('not.contain.text', 'must stay hidden');
-          cy.get('[data-slot="source-live-preview-facts"] time').should(
-            'have.attr',
-            'datetime',
-            '2026-09-22T11:00:00.000Z'
+        cy.get('[data-slot="live-preview-facts"]')
+          .should('contain.text', 'LIVE')
+          .and('contain.text', 'PostgreSQL')
+          .and('contain.text', '20')
+          .and('contain.text', 'No guaranteed row order');
+        cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="log"]').click();
+        cy.get(`[data-slot="bottom-operational-drawer-tab"][data-tab="data:${nodeId}"]`).click();
+        cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(1));
+        cy.get('[data-slot="data-sample-refresh"]')
+          .focus()
+          .then(($button) =>
+            gesture === 'pointer' ? cy.wrap($button).click() : cy.press(Cypress.Keyboard.Keys.SPACE)
           );
-          cy.get('[data-slot="data-sample-refresh"]').should('have.focus');
-          cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(2));
-        }
+        cy.get('[data-slot="bottom-operational-drawer-data"]')
+          .should('contain.text', 'Grace')
+          .and('not.contain.text', 'Ada')
+          .and('not.contain.text', 'must stay hidden');
+        cy.get('[data-slot="live-preview-facts"] time').should(
+          'have.attr',
+          'datetime',
+          '2026-09-22T11:00:00.000Z'
+        );
+        cy.get('[data-slot="data-sample-refresh"]').should('have.focus');
+        cy.then(() => expect(getE2eApiCalls(path, 'GET')).to.have.length(2));
       });
     }
 
@@ -266,6 +289,18 @@ export function registerCanvasNodeDataActionsProof(): void {
         expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(0);
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
       });
+      const operation = '[data-slot="canvas-relational-tree-node"][data-operator="project"]';
+      hoverWorkbenchCard(operation);
+      cy.get(operation).parent().find('[data-slot="canvas-node-execute"]').focus().click();
+      waitForE2eApiCall(transformPath, 'GET');
+      cy.get('[data-slot="canvas-model-data"] [data-slot="live-preview-facts"]')
+        .should('contain.text', 'LIVE')
+        .and('contain.text', 'PostgreSQL');
+      cy.get('[data-slot="canvas-model-preview"]').focus();
+      cy.press(Cypress.Keyboard.Keys.SPACE);
+      cy.get('[data-slot="canvas-model-data"]').should('contain.text', 'Grace');
+      cy.get('[data-slot="canvas-model-preview"]').should('have.focus');
+      cy.then(() => expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(2));
     });
 
     for (const nodeId of ['source-1', 'dvt-transform-1']) {

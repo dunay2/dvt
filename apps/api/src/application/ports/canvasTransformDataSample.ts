@@ -15,8 +15,12 @@ export type CanvasTransformDataSampleProbeInput = Readonly<{
 
 export type CanvasTransformDataSampleProbeResult = Pick<
   TransformDataSampleResponse,
-  'columns' | 'rows' | 'truncated' | 'sampledAt'
->;
+  'columns' | 'rows' | 'truncated'
+> &
+  Readonly<{
+    queriedAt: string;
+    navigation: TransformDataSampleResponse['provenance']['navigation'];
+  }>;
 
 export interface ICanvasTransformDataSampleProbe {
   previewTransformRows(
