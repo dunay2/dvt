@@ -30,7 +30,7 @@ export function createCanvasCanonicalGraphDisconnectCommand(
     )
       return;
     const detached = disconnectCanvasCanonicalGraph(
-      args.analysis.document,
+      analysis.document,
       consumerId,
       port,
       args.sourceNodeIds
