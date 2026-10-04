@@ -61,8 +61,10 @@ The root index remains a publication-only surface. Repeated complete-module
 export lists are reduced; partial exports remain explicit. A TypeScript export
 comparison against `origin/main` initially found 956 exports before and after:
 the four retired V2/compatibility names were replaced by four Preview/Run V1
-variant names. The i18n correction explicitly adds three rejection-catalog
-exports (959 total); the index simplification exposes no unrelated internal symbols.
+variant names. The initial i18n correction added three rejection-catalog
+exports. The following user-approved descriptor refactor replaces the factory
+and diagnostic-only map with named catalogs and shared message types; the index
+remains exports-only.
 
 The requested tabs separation already exists: controller decisions in
 `CanvasWorkspaceModelTabs.tsx`, markup in its `.templates.tsx` and styles in
@@ -77,6 +79,22 @@ retain non-semantic diagnostic descriptions; Web uses EN/ES copy by cause and a
 safe fallback for unknown DVT causes. Preview follows language changes without
 duplicated state or effects. No new translation framework or wire version is added.
 The redundant multi-workload loop and unreachable connection branches are removed.
+
+The [typed-definition continuation](https://github.com/dunay2/dvt/issues/2524#issuecomment-5983906038)
+and Planning DB design `GH-2524-TYPED-REJECTION-DEFINITIONS` replace raw cause
+construction with named frozen DVT/Run definitions. `MessageDescriptor` reuses
+the contract-error structure; expected rejections are values, not exceptions.
+Run's string overload and bundle-message switch are removed, and its DBT
+binding branches now retain distinct causes with EN/ES presentation. Existing
+wire `code`/`cause`/`reason` fields remain; fixed messages need no new wire key
+or parameters. No provider generalization or CI-routing change is included.
+
+Continuation evidence: 795 contracts tests, 77 affected API tests, 78 Web service
+tests and 6 rendered Preview tests pass. Descriptor tests first failed because
+the catalogs did not exist, then passed. Type assertions were additionally
+compiled with TypeScript (not inferred from Vitest execution). Final lint,
+typecheck, mechanization and prepush outcomes are recorded on the issue for the
+exact committed candidate; previous runs are not evidence for a later SHA.
 
 ## Executed evidence and limits
 

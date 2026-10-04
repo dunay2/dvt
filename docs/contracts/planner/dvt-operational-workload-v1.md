@@ -58,12 +58,14 @@ Publication remains governed by [ADR-0066](../../adr/ADR-0066-postgresql-stable-
 ## Rejection presentation
 
 PreviewPlan and StartRun reuse their existing `code`, `cause`, and `reason`
-envelopes. `DvtOperationalRejection.v1.ts` owns the typed DVT causes and safe
-diagnostic descriptions. Binding and projection select causes, not translated
+envelopes. `DvtOperationalRejection.v1.ts` owns named immutable DVT definitions;
+`RunExecutionRejection.v1.ts` owns execution-context and DBT Run definitions.
+Both reuse the structural message descriptor from ContractsErrorModel.v1.
+Binding and projection select definitions, not free-text causes or translated
 text. Diagnostic `reason` is not a presentation or branching authority.
 
 Web translates the cause through its existing English/Spanish language preference,
-both for StartRun errors and the Preview rejection panel. An unknown DVT cause
+both for StartRun errors and the Preview rejection panel. An unknown DVT or Run cause
 gets a localized generic rejection; arbitrary server/provider text is not shown.
 No second error envelope, translation infrastructure, or contract version is added.
 

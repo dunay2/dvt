@@ -7,7 +7,7 @@ import type {
   ExecutionSelection,
   GenericGraphSourceV1,
 } from '@dvt/contracts';
-import { createDvtOperationalRejection, type DvtOperationalRejectionCause } from '@dvt/contracts';
+import { DVT_REJECTIONS, type DvtOperationalRejection } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
@@ -55,7 +55,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
     const projectId = context.scope.projectId?.value;
     const environmentId = context.scope.environmentId?.value;
     if (projectId === undefined || environmentId === undefined) {
-      return reject('dvt_preview_scope_incomplete');
+      return reject(DVT_REJECTIONS.previewScopeIncomplete);
     }
 
     const resolved = await this.deps.graphDraftResolver.executeWithAuthorizedDraft(
@@ -67,7 +67,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
     const { authorizedDraft } = resolved.value;
     const activeCanvasId = authorizedDraft.draft.activeCanvasId ?? authorizedDraft.draft.canvas.id;
     if (activeCanvasId !== input.provenance.canvasId) {
-      return reject('dvt_preview_canvas_mismatch');
+      return reject(DVT_REJECTIONS.previewCanvasMismatch);
     }
 
     const scope = {
@@ -85,7 +85,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
         selectedEdgeIds: resolved.value.edgeIds,
       });
     } catch {
-      return reject('dvt_preview_target_projection_failed');
+      return reject(DVT_REJECTIONS.previewTargetProjectionFailed);
     }
 
     const workload = this.deps.workloadProjector.project({
@@ -98,7 +98,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
       targetProjection,
     });
     if (!workload.ok) {
-      return reject(workload.cause);
+      return reject(workload);
     }
 
     const workloadNodeIds = workload.graphSource.nodes.map((node) => node.nodeId);
@@ -115,10 +115,10 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
 }
 
 function reject(
-  cause: DvtOperationalRejectionCause
+  rejection: DvtOperationalRejection
 ): Extract<AuthorizedDvtPreviewSelectionResolution, { readonly ok: false }> {
   return {
     ok: false,
-    rejection: createDvtOperationalRejection(cause),
+    rejection,
   };
 }

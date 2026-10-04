@@ -3,6 +3,7 @@
  * into one generic PostgreSQL workload with explicit Preview or Run intent.
  */
 import {
+  DVT_REJECTIONS,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
   DvtTransformResultTargetV1Schema,
@@ -10,7 +11,7 @@ import {
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type DvtOperationalWorkloadV1,
-  type DvtOperationalRejectionCause,
+  type DvtOperationalRejection,
   type DvtTransformResultTargetV1,
   type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
@@ -40,7 +41,7 @@ export type DvtOperationalWorkloadProjectorInput = {
 
 export type DvtOperationalWorkloadProjectionResult =
   | { readonly ok: true; readonly graphSource: GenericGraphSourceV1 }
-  | { readonly ok: false; readonly cause: DvtOperationalRejectionCause };
+  | ({ readonly ok: false } & DvtOperationalRejection);
 
 export class DvtOperationalWorkloadProjector {
   public project(
@@ -59,11 +60,11 @@ export class DvtOperationalWorkloadProjector {
         projection.profileId !== closure.profileId ||
         !sameConnection(projection.connectionRef, closure.connectionRef)
       ) {
-        return { ok: false, cause: 'dvt_projection_stale' };
+        return { ok: false, ...DVT_REJECTIONS.projectionStale };
       }
 
       if (runTarget !== null && projection.schemaDigestSha256 === undefined) {
-        return { ok: false, cause: 'dvt_run_schema_digest_required' };
+        return { ok: false, ...DVT_REJECTIONS.runSchemaDigestRequired };
       }
 
       const commonWorkload = {
@@ -136,7 +137,7 @@ export class DvtOperationalWorkloadProjector {
         },
       };
     } catch {
-      return { ok: false, cause: 'dvt_preview_workload_projection_failed' };
+      return { ok: false, ...DVT_REJECTIONS.previewWorkloadProjectionFailed };
     }
   }
 }
@@ -149,19 +150,19 @@ function resolveRunTarget(
   const config = transform.metadata?.['config'];
   if (config === undefined) return { ok: true, target: null };
   if (!isRecord(config)) {
-    return { ok: false, cause: 'dvt_run_config_invalid' };
+    return { ok: false, ...DVT_REJECTIONS.runConfigInvalid };
   }
 
   const hasDisposition = Object.hasOwn(config, 'materialized');
   const hasTarget = Object.hasOwn(config, 'resultTarget');
   if (!hasDisposition && !hasTarget) return { ok: true, target: null };
   if (config['materialized'] !== 'table') {
-    return { ok: false, cause: 'dvt_run_disposition_unsupported' };
+    return { ok: false, ...DVT_REJECTIONS.runDispositionUnsupported };
   }
   const target = DvtTransformResultTargetV1Schema.safeParse(config['resultTarget']);
   return target.success
     ? { ok: true, target: target.data }
-    : { ok: false, cause: 'dvt_run_target_invalid' };
+    : { ok: false, ...DVT_REJECTIONS.runTargetInvalid };
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

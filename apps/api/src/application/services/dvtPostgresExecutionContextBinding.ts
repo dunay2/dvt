@@ -6,12 +6,13 @@
  * @version 1.0.0
  */
 import {
+  DVT_REJECTIONS,
   DVT_POSTGRES_PLUGIN_CONTEXT_KEY,
   DvtOperationalRunWorkloadV1Schema,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type DvtOperationalRunWorkloadV1,
-  type DvtOperationalRejectionCause,
+  type DvtOperationalRejection,
   type ExecutionPlan,
   type PlanRef,
 } from '@dvt/contracts';
@@ -35,7 +36,7 @@ export type DvtPostgresExecutionContextBinding =
         readonly expectedPredecessorToken: string;
       };
     }
-  | { readonly kind: 'rejected'; readonly cause: DvtOperationalRejectionCause };
+  | ({ readonly kind: 'rejected' } & DvtOperationalRejection);
 
 export async function resolveDvtPostgresExecutionContextBinding(input: {
   readonly plan: ExecutionPlan;
@@ -50,12 +51,12 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
   );
   if (steps.length === 0) return { kind: 'not-required' };
   if (steps.length !== 1) {
-    return { kind: 'rejected', cause: 'dvt_run_workload_count_invalid' };
+    return { kind: 'rejected', ...DVT_REJECTIONS.runWorkloadCountInvalid };
   }
 
   const parsed = DvtOperationalRunWorkloadV1Schema.safeParse(steps[0]!.stepTypeConfig);
   if (!parsed.success) {
-    return { kind: 'rejected', cause: 'dvt_run_intent_required' };
+    return { kind: 'rejected', ...DVT_REJECTIONS.runIntentRequired };
   }
   const workload = parsed.data;
   const { connectionRef } = workload;
@@ -67,12 +68,12 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
       connection.type !== 'postgres' ||
       connection.credentialRef === undefined
     ) {
-      return { kind: 'rejected', cause: 'dvt_run_connection_unavailable' };
+      return { kind: 'rejected', ...DVT_REJECTIONS.runConnectionUnavailable };
     }
     if (input.predecessorReader === undefined) {
       return {
         kind: 'rejected',
-        cause: 'dvt_run_publication_unavailable',
+        ...DVT_REJECTIONS.runPublicationUnavailable,
       };
     }
     const predecessor = await input.predecessorReader.observe({
@@ -81,7 +82,7 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
       schemaDigestSha256: workload.targetProjection.schemaDigestSha256,
     });
     if (!predecessor.ok) {
-      return { kind: 'rejected', cause: PREDECESSOR_REJECTION_CAUSES[predecessor.reason] };
+      return { kind: 'rejected', ...PREDECESSOR_REJECTIONS[predecessor.reason] };
     }
     const workloadSha256 = sha256HexUtf8(jcsCanonicalize(workload));
     const publicationToken = sha256HexUtf8(
@@ -109,7 +110,7 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
     };
   } catch (error) {
     if (error instanceof WarehouseConnectionNotFoundError) {
-      return { kind: 'rejected', cause: 'dvt_run_connection_not_found' };
+      return { kind: 'rejected', ...DVT_REJECTIONS.runConnectionNotFound };
     }
     throw error;
   }
@@ -129,8 +130,8 @@ export interface DvtPostgresPublicationPredecessorReader {
   >;
 }
 
-const PREDECESSOR_REJECTION_CAUSES = {
-  credential_unavailable: 'dvt_run_connection_unavailable',
-  unmanaged_target: 'dvt_run_target_unmanaged',
-  schema_mismatch: 'dvt_run_schema_mismatch',
-} as const satisfies Record<string, DvtOperationalRejectionCause>;
+const PREDECESSOR_REJECTIONS = {
+  credential_unavailable: DVT_REJECTIONS.runConnectionUnavailable,
+  unmanaged_target: DVT_REJECTIONS.runTargetUnmanaged,
+  schema_mismatch: DVT_REJECTIONS.runSchemaMismatch,
+} as const satisfies Record<string, DvtOperationalRejection>;

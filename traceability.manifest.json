@@ -987,10 +987,14 @@
     {
       "number": "ADR-0044",
       "decisions": [
-        "Reuse code/cause/reason; Web localizes by cause, never by diagnostic text."
+        "Define each expected rejection once with stable message metadata.",
+        "Reuse named immutable definitions; translations belong to Web.",
+        "Reuse structural message metadata and the existing rejection envelope."
       ],
       "implemented_by": [
-        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts"
+        "packages/@dvt/contracts/src/contracts/engine/RunExecutionRejection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/OperationalRejection.v1.ts"
       ],
       "title": "ADR-0044 - Structured contracts error metadata and non-semantic messages"
     },

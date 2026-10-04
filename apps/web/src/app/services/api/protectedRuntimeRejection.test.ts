@@ -1,10 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import {
-  DVT_OPERATIONAL_REJECTION_DIAGNOSTICS,
-  createDvtOperationalRejection,
-  type DvtOperationalRejectionCause,
-} from '@dvt/contracts';
+import { DVT_REJECTIONS, RUN_REJECTIONS } from '@dvt/contracts';
 import {
   getApplicationLanguage,
   useApplicationLanguageStore,
@@ -30,10 +26,13 @@ function protectedRuntimeError(cause: string): ApiError {
 }
 
 describe('normalizeProtectedRuntimeRejection', () => {
-  it.each(Object.keys(DVT_OPERATIONAL_REJECTION_DIAGNOSTICS) as DvtOperationalRejectionCause[])(
-    'has distinct EN/ES presentation for %s, independent of diagnostics',
-    (cause) => {
+  it.each([...Object.values(DVT_REJECTIONS), ...Object.values(RUN_REJECTIONS)])(
+    'has distinct EN/ES presentation for $cause, independent of diagnostics',
+    ({ cause, reason }) => {
       const error = protectedRuntimeError(cause);
+      (
+        error.responseBody as { error: { details: Record<string, unknown> } }
+      ).error.details.message = 'private://provider-credential';
       const en = normalizeProtectedRuntimeRejection(error, 'en')?.message;
       const es = normalizeProtectedRuntimeRejection(error, 'es')?.message;
       expect(en).toBeTruthy();
@@ -41,7 +40,21 @@ describe('normalizeProtectedRuntimeRejection', () => {
       expect(es).not.toBe(en);
       expect(en).not.toContain(cause);
       expect(es).not.toContain(cause);
-      expect(createDvtOperationalRejection(cause)).toMatchObject({ code: 'REJECTED', cause });
+      expect(en).not.toBe(reason);
+      expect(es).not.toContain('private://');
+    }
+  );
+
+  it.each(['run_dbt_unknown', 'run_execution_context_unknown'])(
+    'hides diagnostics for unknown Run cause %s',
+    (cause) => {
+      const error = protectedRuntimeError(cause);
+      (
+        error.responseBody as { error: { details: Record<string, unknown> } }
+      ).error.details.message = 'private://provider-credential';
+      expect(normalizeProtectedRuntimeRejection(error, 'es')?.message).toBe(
+        'No se pudo preparar la ejecución. Revisa su configuración y repite la vista previa.'
+      );
     }
   );
 

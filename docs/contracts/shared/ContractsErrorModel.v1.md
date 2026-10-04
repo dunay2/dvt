@@ -72,6 +72,19 @@ Rules:
 
 ## Notes
 
+`MessageDescriptor<Key, Params>` is the structural message metadata shared by
+contract exceptions and expected admission results. It does not require an
+`Error` instance, a severity field or a translation service in application logic.
+
+For PreviewPlan and StartRun, named frozen `DVT_REJECTIONS` and `RUN_REJECTIONS`
+definitions own the existing `code`/`cause`/diagnostic `reason` plus the message
+descriptor. These fixed messages reuse `cause` as `messageKey` and one frozen
+empty `messageParams` value. The existing wire envelope carries that identity;
+Web resolves the catalog definition and localized copy. No redundant wire field,
+new version, dynamic text substitution or second message identity is introduced.
+Parameterized exception messages retain their existing key-specific parameter
+types. Application callers select definitions, not English strings.
+
 - This contract does not introduce localization infrastructure.
 - This contract does not require every nested Zod issue message to be
   internationalized.

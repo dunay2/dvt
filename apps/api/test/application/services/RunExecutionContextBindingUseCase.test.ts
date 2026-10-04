@@ -136,7 +136,7 @@ describe('RunExecutionContextBindingUseCase', () => {
       value: {
         kind: 'plan_rejected',
         accepted: false,
-        reason: 'The DBT project changed after Preview. Run Preview again before Run.',
+        cause: 'run_dbt_project_revision_mismatch',
       },
     });
     expect(contextWriter.write).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      value: { reason: 'The DBT project bundle artifact store is not configured.' },
+      value: { cause: 'run_dbt_bundle_store_unavailable' },
     });
     expect(bundleBuilder.build).toHaveBeenCalledOnce();
     expect(delegate.execute).not.toHaveBeenCalled();
@@ -217,7 +217,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      value: { reason: 'The DBT project bundle artifact store is not configured.' },
+      value: { cause: 'run_dbt_bundle_store_unavailable' },
     });
     expect(delegate.execute).not.toHaveBeenCalled();
   });
@@ -243,7 +243,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      value: { reason: 'The Preview-bound DBT connection is not in this workspace.' },
+      value: { cause: 'run_dbt_connection_not_found' },
     });
     expect(bundleBuilder.build).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
@@ -276,8 +276,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     });
     expect(result).toMatchObject({
       value: {
-        reason:
-          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+        cause: 'run_dbt_profile_mismatch',
       },
     });
     expect(bundleBuilder.build).not.toHaveBeenCalled();
@@ -312,8 +311,7 @@ describe('RunExecutionContextBindingUseCase', () => {
 
     expect(result).toMatchObject({
       value: {
-        reason:
-          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+        cause: 'run_dbt_profile_mismatch',
       },
     });
     expect(verify).not.toHaveBeenCalled();

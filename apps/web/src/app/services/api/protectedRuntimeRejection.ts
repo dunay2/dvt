@@ -8,6 +8,7 @@ import {
   type ApplicationLanguage,
 } from '../../stores/applicationLanguageStore';
 import { resolveDvtOperationalRejectionCopy } from './dvtOperationalRejectionCopy';
+import { resolveRunExecutionRejectionCopy } from './runExecutionRejectionCopy';
 
 type HttpErrorEnvelope = {
   error: {
@@ -68,7 +69,9 @@ export function normalizeProtectedRuntimeRejection(
   }
 
   if (reason === 'plan_rejected') {
-    const localized = resolveDvtOperationalRejectionCopy(cause, language);
+    const localized =
+      resolveDvtOperationalRejectionCopy(cause, language) ??
+      resolveRunExecutionRejectionCopy(cause, language);
     if (localized !== null) return new Error(localized);
 
     if (cause === 'dependency_gap') {

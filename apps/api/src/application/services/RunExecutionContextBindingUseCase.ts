@@ -4,10 +4,11 @@
  */
 import {
   DBT_STEP_REQUIRED_CAPABILITY,
-  START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
   collectRequiredCapabilitiesForSteps,
-  createDvtOperationalRejection,
+  RUN_REJECTIONS,
+  type DvtOperationalRejection,
+  type RunExecutionRejection,
   type ExecutionPlan,
   type IStepTypeRegistry,
   type StartRunCommand,
@@ -79,15 +80,13 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         : { predecessorReader: this.deps.dvtPostgresPublicationPredecessorReader }),
     });
     if (dvtBinding.kind === 'rejected') {
-      return rejectRunExecutionContext(createDvtOperationalRejection(dvtBinding.cause));
+      return rejectRunExecutionContext(dvtBinding);
     }
     if (!bindsDbt && dvtBinding.kind === 'not-required') {
       return this.deps.delegate.execute(command, context);
     }
     if (command.runExecutionContextRef !== undefined) {
-      return rejectRunExecutionContext(
-        createDvtOperationalRejection('run_execution_context_caller_ref_rejected')
-      );
+      return rejectRunExecutionContext(RUN_REJECTIONS.callerContextProvided);
     }
 
     const scope: WorkspaceStorageScope = {
@@ -107,7 +106,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         targetAdapter: commandWithPlanRef.targetAdapter,
         executionTarget: this.deps.executionTargetResolver.resolve(),
       });
-      if (!sourceBinding.ok) return rejectRunExecutionContext(sourceBinding.reason);
+      if (!sourceBinding.ok) return rejectRunExecutionContext(sourceBinding);
       const executionConnection = await resolveDbtExecutionConnectionBinding({
         catalog: this.deps.warehouseConnectionCatalog,
         verifier: this.deps.executionConnectionBindingVerifier,
@@ -117,7 +116,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         runtimeCredentialRef: sourceBinding.credentialRef,
       });
       if (!executionConnection.ok) {
-        return rejectRunExecutionContext(executionConnection.reason);
+        return rejectRunExecutionContext(executionConnection);
       }
 
       const bundle = await this.deps.bundleBuilder.build({
@@ -127,7 +126,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
           ? {}
           : { expectedContentSetSha256: sourceBinding.expectedContentSetSha256 }),
       });
-      if (!bundle.ok) return rejectRunExecutionContext(renderBundleFailure(bundle));
+      if (!bundle.ok) return rejectRunExecutionContext(BUNDLE_REJECTIONS[bundle.reason]);
 
       pluginContexts['dbt'] = {
         projectBundleRef: bundle.projectBundleRef,
@@ -153,9 +152,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       context: runExecutionContext,
     });
     if (!writtenContext.ok) {
-      return rejectRunExecutionContext(
-        createDvtOperationalRejection('run_execution_context_store_unavailable')
-      );
+      return rejectRunExecutionContext(RUN_REJECTIONS.contextStoreUnavailable);
     }
 
     return this.deps.delegate.execute(
@@ -171,36 +168,30 @@ function isDbtPlan(plan: ExecutionPlan, stepTypeRegistry: IStepTypeRegistry): bo
   );
 }
 
-function renderBundleFailure(failure: Extract<DbtProjectBundleBuildResult, { ok: false }>): string {
-  switch (failure.reason) {
-    case 'artifact_store_unavailable':
-      return 'The DBT project bundle artifact store is not configured.';
-    case 'artifact_store_unsupported':
-      return 'The configured DBT project bundle store cannot create execution bundles.';
-    case 'project_unavailable':
-      return 'The authorized DBT project root is not available.';
-    case 'project_unreadable':
-      return 'The authorized DBT project could not be bundled safely.';
-    case 'revision_mismatch':
-      return 'The DBT project changed after Preview. Run Preview again before Run.';
-  }
-}
+const BUNDLE_REJECTIONS = {
+  artifact_store_unavailable: RUN_REJECTIONS.bundleStoreUnavailable,
+  artifact_store_unsupported: RUN_REJECTIONS.bundleStoreUnsupported,
+  project_unavailable: RUN_REJECTIONS.projectUnavailable,
+  project_unreadable: RUN_REJECTIONS.projectUnreadable,
+  revision_mismatch: RUN_REJECTIONS.projectRevisionMismatch,
+} satisfies Record<
+  Extract<DbtProjectBundleBuildResult, { ok: false }>['reason'],
+  RunExecutionRejection
+>;
 
-function rejectRunExecutionContext(
-  rejection: string | ReturnType<typeof createDvtOperationalRejection>
-): StartRunUseCaseResult {
+function rejectRunExecutionContext({
+  code,
+  cause,
+  reason,
+}: DvtOperationalRejection | RunExecutionRejection): StartRunUseCaseResult {
   return {
     ok: true,
     value: {
       kind: START_RUN_RESULT_KIND.planRejected,
       accepted: false,
-      ...(typeof rejection === 'string'
-        ? {
-            code: START_RUN_PLAN_REJECTION_CODE.rejected,
-            reason: rejection,
-            cause: 'run_execution_context',
-          }
-        : rejection),
+      code,
+      cause,
+      reason,
     },
   };
 }

@@ -90,11 +90,18 @@ export type AnyContractsErrorMessageParams = {
   [K in ContractsErrorMessageKeyName]: ContractsErrorMessageParams<K>;
 }[ContractsErrorMessageKeyName];
 
-const EMPTY_MESSAGE_PARAMS = Object.freeze({}) as Readonly<Record<string, never>>;
+export type MessageDescriptor<
+  Key extends string = string,
+  Params extends object = Readonly<Record<string, never>>,
+> = Readonly<{ messageKey: Key; messageParams: Readonly<Params> }>;
 
-export class DvtContractError<
-  K extends ContractsErrorMessageKeyName = ContractsErrorMessageKeyName,
-> extends Error {
+export const EMPTY_MESSAGE_PARAMS = Object.freeze({}) as Readonly<Record<string, never>>;
+
+export class DvtContractError<K extends ContractsErrorMessageKeyName = ContractsErrorMessageKeyName>
+  extends Error
+  implements
+    MessageDescriptor<(typeof CONTRACTS_ERROR_MESSAGE_KEY)[K], ContractsErrorMessageParams<K>>
+{
   readonly cause: unknown = undefined;
   readonly details: unknown = undefined;
   readonly messageKey: (typeof CONTRACTS_ERROR_MESSAGE_KEY)[K];

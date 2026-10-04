@@ -1,4 +1,5 @@
 import {
+  DVT_REJECTIONS,
   DvtOperationalWorkloadContractV1,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
@@ -231,7 +232,7 @@ describe('DvtOperationalWorkloadProjector', () => {
   ] as const)('fails closed for configured Run with %s', (_label, candidate, cause) => {
     expect(new DvtOperationalWorkloadProjector().project(candidate())).toEqual({
       ok: false,
-      cause,
+      ...Object.values(DVT_REJECTIONS).find((definition) => definition.cause === cause),
     });
   });
 
