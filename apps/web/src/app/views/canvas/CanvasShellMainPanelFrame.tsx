@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
 import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
+import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
 
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
@@ -21,36 +22,46 @@ export function CanvasShellWorkspaceSurfaces({
   viewport,
   editor,
   editorVisible,
+  hasWorkspaceTabs,
 }: Readonly<{
   viewport: ReactNode;
   editor: ReactNode;
   editorVisible: boolean;
+  hasWorkspaceTabs: boolean;
 }>): JSX.Element {
   return (
     <div
       data-slot="canvas-workspace-surfaces"
       className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}
     >
-      <div
-        aria-hidden={editorVisible}
-        {...(editorVisible ? { inert: '' } : {})}
-        data-slot="canvas-workspace-surface"
-        className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
-          editorVisible ? canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive : ''
-        }`}
-      >
-        {viewport}
-      </div>
-      <div
-        aria-hidden={!editorVisible}
-        {...(editorVisible ? {} : { inert: '' })}
-        data-slot="canvas-model-workspace-surface"
-        className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
-          editorVisible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
-        }`}
-      >
-        {editor}
-      </div>
+      {(
+        [
+          { kind: 'canvas', content: viewport, visible: !editorVisible },
+          { kind: 'model', content: editor, visible: editorVisible },
+        ] as const
+      ).map(({ kind, content, visible }) =>
+        content == null ? null : (
+          <div
+            key={kind}
+            {...(hasWorkspaceTabs
+              ? {
+                  id: canvasWorkspaceTabs[kind].panelId,
+                  role: 'tabpanel',
+                  'aria-labelledby': canvasWorkspaceTabs[kind].tabId,
+                  tabIndex: 0,
+                }
+              : {})}
+            aria-hidden={!visible}
+            {...(visible ? {} : { inert: '' })}
+            data-slot={canvasWorkspaceTabs[kind].panelId}
+            className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
+              visible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
+            }`}
+          >
+            {content}
+          </div>
+        )
+      )}
     </div>
   );
 }

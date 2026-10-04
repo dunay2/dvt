@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { CanvasModelWorkspaceTabContribution } from './canvasWorkspaceMenuContributionStore';
+import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
 
 export function CanvasWorkspaceModelTabs({
   canvasTitle,
@@ -18,18 +19,18 @@ export function CanvasWorkspaceModelTabs({
   const tabs = [
     {
       key: 'canvas',
+      ...canvasWorkspaceTabs.canvas,
       label: canvasTitle,
       select: tab?.onCanvas,
-      slot: 'canvas-workspace-tab',
     },
     ...(tab == null
       ? []
       : [
           {
             key: 'model',
+            ...canvasWorkspaceTabs.model,
             label: tab.label,
             select: tab.onSelect,
-            slot: 'canvas-model-main-tab',
           },
         ]),
   ];
@@ -47,7 +48,9 @@ export function CanvasWorkspaceModelTabs({
           <div key={item.key} className="flex min-w-0 items-center">
             <TabsTrigger
               value={item.key}
-              data-slot={item.slot}
+              id={item.tabId}
+              aria-controls={item.panelId}
+              data-slot={item.tabId}
               title={item.label}
               className="workspace-navigation-tab rounded-none border-0 shadow-none data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
