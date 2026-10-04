@@ -174,6 +174,26 @@ flowchart LR
   Query --> View[Canvas presentation]
 ```
 
+### Disconnected operation configuration
+
+Removing an incorporated relation edge uses the existing incomplete authoring
+draft, preserving source and operation identities. `configurationDocument` retains
+the original canonical Substrait subtree solely for editing and exact reconnect;
+it is not executable authority. It must own the same operation relation identity
+and cannot coexist with `semanticDocument`. The latter still requires every Input.
+Disconnect invalidates the consumer and all its descendants: they publish no
+fields or Preview. Only reconnect to the exact original producer identities and
+canonical contents can restore that configuration automatically. Comparison uses
+the existing composition mapper to normalize embedding-local relation/function
+anchors and excludes unused function declarations inherited from a consumer.
+It preserves field identities, schema, aliases, provenance, and expression meaning;
+changed function identities or producer contents must not compare equal.
+Changed producers require explicit
+reconfiguration; display-name matching, default expression replacement and stale
+semantic resurrection are forbidden. Apply removes obsolete complete authority
+when the terminal is incomplete. Save/reopen preserves this state through the
+existing protected draft boundary. No new version or migration is introduced.
+
 ### Completed relational layout
 
 Completed relational authoring retains nonempty `positions` in the existing v1

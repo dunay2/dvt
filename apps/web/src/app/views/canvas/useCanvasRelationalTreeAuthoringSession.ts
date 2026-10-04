@@ -84,6 +84,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     state,
     start,
     outputRelationId: effectiveOutputRelationId,
+    sourceNodeIds: !state.active && seed != null ? seed.inputIds : state.slots.selectedInputIds,
   });
   const removal = useCanvasRelationalTreeRemoval({
     analysis,

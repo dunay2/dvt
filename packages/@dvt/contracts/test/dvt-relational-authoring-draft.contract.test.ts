@@ -80,6 +80,30 @@ function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: strin
 }
 
 describe('DVT relational authoring draft v1', () => {
+  it('retains non-executable canonical configuration without admitting incomplete semantics', () => {
+    const configurationDocument = buildDvtSubstraitSemanticDocumentFixture();
+    const relationId = configurationDocument.sidecar.relations.at(-1)!.relationId;
+    const pending = {
+      ...relationalDraft,
+      operations: [
+        { relationId, operation: 'field_transform', inputs: [null], configurationDocument },
+      ],
+    };
+    expect(DvtRelationalAuthoringDraftV1Schema.safeParse(pending).success).toBe(true);
+    expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(pending)).success).toBe(true);
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...pending,
+        operations: [{ ...pending.operations[0], semanticDocument: configurationDocument }],
+      }).success
+    ).toBe(false);
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...pending,
+        operations: [{ ...pending.operations[0], relationId: 'foreign' }],
+      }).success
+    ).toBe(false);
+  });
   describe.each(['physical', 'producer'] as const)('%s pending Read coverage', (kind) => {
     it.each(['complete', 'missing', 'duplicate-position', 'out-of-range', 'wrong-parent'] as const)(
       'validates %s field identities at both persisted boundaries',

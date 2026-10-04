@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-09-22
+last_reviewed: 2026-10-03
 planning_type: architecture
 ---
 
@@ -59,6 +59,39 @@ DDD ownership rules:
   preferences or workbench tab placement.
 
 <!-- markdownlint-disable MD060 -->
+
+## Contextual surface composition ownership
+
+`RenderCanvasContextualGraphSurface` retains its existing authority. The
+`GH-3561-CANVAS-SHELL-CONCERNS` design separates presentation concerns without a
+new command, query, DTO, or data-acquisition path:
+
+- `CanvasShell` composes the existing layout contracts and contextual dialogs.
+- `canvasShellNodeProjection` projects card actions and already-observed run
+  evidence without React, stores, or service calls. Workspace paths are resolved
+  once by `canvasWorkspaceFilePath`; the Code contribution owner reuses it.
+- `useCanvasModelSelection` owns the selected Model tab; protected leave/apply
+  decisions remain in the existing `useCanvasModelNavigation` inside the editor.
+- `useCanvasCodeWorkbench` owns Code scope and flush-on-close, while
+  `useCanvasOperationDataTab` owns the existing drawer tab and portal host.
+- `useCanvasWorkbenchFocus` shares opener capture/restoration between editors.
+
+Pure card decisions are tested without mounting the shell. DOM tests retain the
+observable editor lifecycle, permissions, focus, query revision, and drawer
+contracts. TypeScript import-boundary checks prevent card policy or acquisition
+from moving back into the shell.
+
+```mermaid
+flowchart LR
+  Route[Route-owned contracts] --> Shell[CanvasShell composition]
+  Route --> Cards[Pure card projection]
+  Cards --> Shell
+  Shell --> Model[Model selection and existing leave guard]
+  Shell --> Code[Scoped Code workbench and flush]
+  Shell --> Data[Operation data drawer host]
+  Model --> Focus[Shared opener focus]
+  Code --> Focus
+```
 
 ## C&Q Summary
 
@@ -345,6 +378,21 @@ projecting each input first and must not be used as a shortcut. Negative tests
 cover this prerequisite, unchanged physical schemas and producer identity.
 
 ### Staged operation connection boundary
+
+Canonical edges use the same accessible connection action as staged edges:
+contextual removal or Delete/Backspace disconnects only the selected Input.
+The existing `ConfigureCanvasDvtNode` session projects the complete tree into
+the existing incomplete-authoring graph, preserving identities and unrelated
+pending cards. Disconnected operations retain their exact Substrait configuration
+under the non-executable `configurationDocument` member; affected consumers have
+no published fields or Preview. Exact reconnect restores configuration only when
+the original Input identities and canonical contents match after composition-local
+anchor normalization and unused consumer function declarations are excluded.
+Field identities, schemas, aliases, provenance, and used function identities remain
+part of the comparison. Different producers require
+explicit reconfiguration. Apply/save/reopen cannot restore a removed edge from
+the obsolete complete semantic document. The owning persistence contract defines
+this distinction; the SVG layer only dispatches consumer identity and port.
 
 Dropping a palette item stages one movable operation card in the discardable
 editor session; it does not select an arbitrary relation and does not mutate the

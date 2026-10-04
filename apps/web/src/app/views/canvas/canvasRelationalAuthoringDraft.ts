@@ -56,6 +56,9 @@ export function createCanvasRelationalAuthoringDraft(
       relationId: operation.id,
       operation: operation.operation,
       inputs: operation.inputs,
+      ...(operation.configurationDocument == null
+        ? {}
+        : { configurationDocument: operation.configurationDocument }),
       ...(operation.semanticDocument == null
         ? {}
         : { semanticDocument: operation.semanticDocument }),
@@ -92,6 +95,9 @@ export function restoreCanvasRelationalAuthoringDraft(
         id: operation.relationId,
         operation: operation.operation,
         inputs: operation.inputs,
+        ...(operation.configurationDocument == null
+          ? {}
+          : { configurationDocument: operation.configurationDocument }),
         ...(operation.semanticDocument == null
           ? {}
           : { semanticDocument: operation.semanticDocument }),

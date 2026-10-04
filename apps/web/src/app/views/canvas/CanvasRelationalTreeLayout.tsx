@@ -30,6 +30,7 @@ export function CanvasRelationalTreeLayout({
   onSelectStagedOperation,
   onConnectStagedOperation,
   onDisconnectStagedOperation,
+  onDisconnectRelation,
   onRemoveStagedOperation,
   outputRelationId,
   onConnectOutput,
@@ -44,6 +45,7 @@ export function CanvasRelationalTreeLayout({
   onSelectStagedOperation?: (id: string) => void;
   onConnectStagedOperation?: (id: string, port: number, relationId: string) => void;
   onDisconnectStagedOperation?: (id: string, port: number) => void;
+  onDisconnectRelation?: (id: string, port: number) => void;
   onRemoveStagedOperation?: (id: string) => void;
   outputRelationId?: string | null;
   onConnectOutput?: (relationId: string) => void;
@@ -89,6 +91,7 @@ export function CanvasRelationalTreeLayout({
         removeConnectionLabel={copy.canvasContextMenuRemoveEdgeLabel}
         onSelectStagedOperation={onSelectStagedOperation}
         onDisconnectStagedOperation={onDisconnectStagedOperation}
+        onDisconnectRelation={onDisconnectRelation}
         outputRelationId={effectiveOutputRelationId}
         onSelectOutput={onOpenOutput}
         onDisconnectOutput={onDisconnectOutput}

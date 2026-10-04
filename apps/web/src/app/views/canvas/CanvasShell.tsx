@@ -1,60 +1,29 @@
-/**
- * Owned concern: compose the Canvas shell from route-owned presentation contracts.
- */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+/** Owned concern: compose the Canvas shell from route-owned presentation contracts. */
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
+import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
+import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
-import { resolveCanvasSinkRunEvidence } from './canvasSinkRunEvidence';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
-import { canOpenCanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import { CanvasModelEditor } from './CanvasModelEditor';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
-import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
 import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
-import type {
-  CanvasShellContextualWorkbench,
-  CanvasShellOpenDataRegistryCommand,
-  CanvasShellProps,
-} from './canvasShell.types';
+import type { CanvasShellOpenDataRegistryCommand, CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
-import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
-import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { buildGraphDraftWorkspaceFileCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
-import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { buildCanvasInspectorCodeContributions } from './graphDraftWorkspaceFileCodeContribution';
+import { projectCanvasShellNodes } from './canvasShellNodeProjection';
 import { useCanvasNodeDataSample } from './useCanvasNodeDataSample';
 import { useCanvasOutputExpressionInspection } from './useCanvasOutputExpressionInspection';
-import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
-import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import {
-  useOperationalDrawerContributionStore,
-  type OperationalDrawerTab,
-} from '../../components/shell/operationalDrawerContributionStore';
-
-type WorkbenchOpener = Readonly<{
-  element: HTMLElement | null;
-  fallbackSelector?: string;
-  fallbackNodeId?: string;
-}>;
-
-export function resolveWorkspaceFilePath(data: DbtNodeData): string | null {
-  const codeTruth = data.presentationTruth?.code;
-  if (codeTruth?.kind === 'workspace-file') {
-    return codeTruth.path;
-  }
-
-  if (typeof data.path === 'string' && data.path.trim().length > 0) {
-    return data.path;
-  }
-
-  return null;
-}
+import { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
+import { useCanvasModelSelection } from './useCanvasModelSelection';
+import { useCanvasCodeWorkbench } from './useCanvasCodeWorkbench';
+import { useCanvasOperationDataTab } from './useCanvasOperationDataTab';
 
 export default function CanvasShell({
   layout,
@@ -75,368 +44,121 @@ export default function CanvasShell({
   prepareModelPreview,
   runSnapshot,
 }: CanvasShellProps): JSX.Element {
-  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
-  const copy = resolveCanvasViewCopy(applicationLanguage);
-  const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
-  const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
-  const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const {
-    dataSampleTabs,
-    projectNode: projectNodeDataSample,
-    openSource,
-  } = useCanvasNodeDataSample({
-    activeCanvasId: panels.activeCanvasId,
-    nodes: graph.nodesWithImpact,
-    canvasTransformDataSampleQuery,
-    prepareModelPreview,
-    canonicalNodes: panels.inspectorGraphNodes,
-    canonicalEdges: panels.inspectorGraphEdges,
-    canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
-    warehouseSourceDataSampleQuery,
-  });
-  const [relationalTreeTransformId, setRelationalTreeTransformId] = useState<string | null>(null);
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(language);
+  const semanticCopy = resolveCanvasSemanticEditorCopy(language);
+  const focus = useCanvasWorkbenchFocus();
+  const model = useCanvasModelSelection(panels.activeCanvasId, panels.inspectorGraphNodes, focus);
+  const code = useCanvasCodeWorkbench(
+    layout,
+    panels.activeCanvasId,
+    copy,
+    focus,
+    workspaceCommands
+  );
+  const operationData = useCanvasOperationDataTab(semanticCopy);
   const outputInspection = useCanvasOutputExpressionInspection(
     panels.activeCanvasId,
     panels.inspectorGraphNodes
   );
-  const [modelTabActive, setModelTabActive] = useState(true);
-  const [operationDataHost, setOperationDataHost] = useState<HTMLDivElement | null>(null);
-  const selectDrawerTab = useOperationalDrawerContributionStore(
-    (state) => state.selectOperationalDrawerTab
-  );
-  const showBottomDrawer = useUiLayoutStore((state) => state.showBottomDrawer);
-  const openOperationData = useCallback(() => {
-    selectDrawerTab('data:operation');
-    showBottomDrawer(Math.max(260, useUiLayoutStore.getState().bottomDrawerHeight));
-  }, [selectDrawerTab, showBottomDrawer]);
-  const operationDataTab = useMemo<OperationalDrawerTab>(() => {
-    const semanticCopy = resolveCanvasSemanticEditorCopy(applicationLanguage);
-    return {
-      id: 'data:operation',
-      label: semanticCopy.operationData,
-      count: null,
-      content: (
-        <div
-          ref={setOperationDataHost}
-          data-slot="canvas-operation-data-host"
-          className="h-full min-h-0 min-w-0"
-        >
-          <p className="p-4 text-sm text-(--text-muted)">{semanticCopy.selectOperation}</p>
-        </div>
-      ),
-    };
-  }, [applicationLanguage]);
-  const relationalTreeTransformIds = useMemo(
+  const { dataSampleTabs, projectNode, openSource } = useCanvasNodeDataSample({
+    activeCanvasId: panels.activeCanvasId,
+    nodes: graph.nodesWithImpact,
+    canonicalNodes: panels.inspectorGraphNodes,
+    canonicalEdges: panels.inspectorGraphEdges,
+    canEditModel: panels.relationalTreeAuthoring?.canEditNode === true,
+    warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery,
+    prepareModelPreview,
+  });
+  const nodes = useMemo(
     () =>
-      new Set(
-        panels.inspectorGraphNodes
-          .filter(canOpenCanvasRelationalTreeWorkbench)
-          .map((node) => node.id)
-      ),
-    [panels.inspectorGraphNodes]
+      projectCanvasShellNodes(graph.nodesWithImpact, {
+        modelIds: model.modelIds,
+        openModel: model.open,
+        inspectOutput: outputInspection.open,
+        previewLabel: semanticCopy.previewAction,
+        projectSample: projectNode,
+        runSnapshot,
+      }),
+    [
+      graph.nodesWithImpact,
+      model.modelIds,
+      model.open,
+      outputInspection.open,
+      semanticCopy.previewAction,
+      projectNode,
+      runSnapshot,
+    ]
   );
-  const relationalTreeTransform = useMemo(
+  const presentedGraph = useMemo(() => ({ ...graph, nodesWithImpact: nodes }), [graph, nodes]);
+  const { inspectorNode, inspectorWorkbenchContributions } = panels;
+  const inspectorContributions = useMemo(
     () =>
-      panels.inspectorGraphNodes.find(
-        (node) => node.id === relationalTreeTransformId && relationalTreeTransformIds.has(node.id)
-      ) ?? null,
-    [panels.inspectorGraphNodes, relationalTreeTransformId, relationalTreeTransformIds]
+      buildCanvasInspectorCodeContributions(
+        { inspectorNode, inspectorWorkbenchContributions },
+        graph.nodesWithImpact
+      ),
+    [inspectorNode, inspectorWorkbenchContributions, graph.nodesWithImpact]
   );
-  const openRelationalTree = useCallback(
-    (nodeId: string) => {
-      if (!relationalTreeTransformIds.has(nodeId)) return;
-      workbenchOpenerRef.current = {
-        element: document.activeElement instanceof HTMLElement ? document.activeElement : null,
-        fallbackNodeId: nodeId,
-      };
-      const open = () => {
-        setRelationalTreeTransformId(nodeId);
-        setModelTabActive(true);
-      };
-      const current = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
-      if (current?.canvasId === panels.activeCanvasId && current.nodeId !== nodeId)
-        current.onClose(open);
-      else open();
-    },
-    [relationalTreeTransformIds, panels.activeCanvasId]
+  const presentedPanels = useMemo(
+    () => ({ ...panels, inspectorWorkbenchContributions: inspectorContributions }),
+    [panels, inspectorContributions]
   );
-  const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
-  const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
-  const contextualWorkbenchOwnerKey = useCanvasInteractionStore(
-    (state) => state.contextualWorkbenchOwnerKey
-  );
-  const openContextualWorkbench = useCanvasInteractionStore(
-    (state) => state.openContextualWorkbench
-  );
-  const closeContextualWorkbench = useCanvasInteractionStore(
-    (state) => state.closeContextualWorkbench
-  );
-  const activeContextualWorkbenchOwnerKey =
-    layout.surfaceStrategy == null || panels.activeCanvasId == null
-      ? null
-      : `${layout.surfaceStrategy.id}:${panels.activeCanvasId}`;
-  const scopedContextualWorkbenchId =
-    contextualWorkbenchOwnerKey === activeContextualWorkbenchOwnerKey
-      ? contextualWorkbenchId
-      : null;
-  const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
-  const captureWorkbenchOpener = useCallback(
-    (fallbackSelector?: string, fallbackNodeId?: string) => {
-      workbenchOpenerRef.current = {
-        element: document.activeElement instanceof HTMLElement ? document.activeElement : null,
-        ...(fallbackSelector == null ? {} : { fallbackSelector }),
-        ...(fallbackNodeId == null ? {} : { fallbackNodeId }),
-      };
-    },
-    []
-  );
-  const restoreWorkbenchFocus = useCallback(() => {
-    const opener = workbenchOpenerRef.current;
-    workbenchOpenerRef.current = null;
-    window.requestAnimationFrame(() => {
-      const fallbackNode = findCanvasGraphNodeElement(opener?.fallbackNodeId ?? null);
-      const target =
-        opener?.element?.isConnected === true
-          ? opener.element
-          : (fallbackNode ??
-            (opener?.fallbackSelector == null
-              ? null
-              : document.querySelector<HTMLElement>(opener.fallbackSelector)));
-      target?.focus({ preventScroll: true });
-    });
-  }, []);
-  const openProjectCodeWorkbench = useCallback(() => {
-    if (activeContextualWorkbenchOwnerKey != null) {
-      openContextualWorkbench('project-code', activeContextualWorkbenchOwnerKey);
-    }
-  }, [activeContextualWorkbenchOwnerKey, openContextualWorkbench]);
+
+  const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
+  const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
+  const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
+  const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
+  const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
   const restoreProjectExplorerFocus = useCallback(() => {
     document
       .querySelector<HTMLButtonElement>('[data-slot="shell-workspace-menu-trigger"]')
       ?.focus({ preventScroll: true });
   }, []);
-  const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
-  const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
-  const canEditGraph = panels.userPermissions.canEditEdges;
-  const sourceImportContributions = useMemo(
-    () => getSourceImportContributions(panels.runtimeCapabilities),
-    [panels.runtimeCapabilities]
-  );
   const sourceImportOptions = useMemo(
     () => getSourceImportOptions(panels.runtimeCapabilities),
     [panels.runtimeCapabilities]
   );
-  const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
-  const canOpenDataRegistry = canBrowseDataRegistry;
+  const sourceImportContributions = useMemo(
+    () => getSourceImportContributions(panels.runtimeCapabilities),
+    [panels.runtimeCapabilities]
+  );
+  const canOpenDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
   useEffect(() => {
-    if (sourceImportInitialSelection == null || sourceImportDialog.openCommand == null) {
-      return;
-    }
-    sourceImportDialog.openCommand(sourceImportInitialSelection);
+    if (sourceImportInitialSelection != null)
+      sourceImportDialog.openCommand?.(sourceImportInitialSelection);
   }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
   const openSourceImport = useMemo<CanvasShellOpenDataRegistryCommand | undefined>(() => {
-    const openCommand = sourceImportDialog.openCommand;
-    return openCommand == null
+    const open = sourceImportDialog.openCommand;
+    return open == null
       ? undefined
       : (initialSelection, placement) =>
-          openCommand(initialSelection ?? sourceImportInitialSelection, placement);
+          open(initialSelection ?? sourceImportInitialSelection, placement);
   }, [sourceImportDialog.openCommand, sourceImportInitialSelection]);
-  useEffect(() => {
-    if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
-      closeContextualWorkbench();
-    }
-  }, [closeContextualWorkbench, contextualWorkbenchId, scopedContextualWorkbenchId]);
-  const internalContextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
-    if (scopedContextualWorkbenchId !== 'project-code') {
-      return undefined;
-    }
-
-    return {
-      id: 'project-code',
-      title: copy.sqlContextWorkbenchProjectTitle,
-      closeLabel: copy.nodeWorkbenchCloseLabel,
-      moveLabel: copy.sqlContextWorkbenchMoveLabel,
-      description: copy.sqlContextWorkbenchProjectDescription,
-      requestClose: async () => {
-        const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
-        if (flushed) {
-          closeContextualWorkbench();
-        }
-        return flushed;
-      },
-      panel: <SqlContextWorkbench ref={codeWorkbenchRef} />,
-    };
-  }, [
-    scopedContextualWorkbenchId,
-    copy.nodeWorkbenchCloseLabel,
-    copy.sqlContextWorkbenchMoveLabel,
-    copy.sqlContextWorkbenchProjectDescription,
-    copy.sqlContextWorkbenchProjectTitle,
-    closeContextualWorkbench,
-  ]);
-  const selectedContextualWorkbench = layout.contextualWorkbench ?? internalContextualWorkbench;
-  const shellLayout = useMemo(() => {
-    if (selectedContextualWorkbench == null) {
-      return layout;
-    }
-
-    return {
-      ...layout,
-      contextualWorkbench: {
-        ...selectedContextualWorkbench,
-        requestClose: async () => {
-          const closed = await selectedContextualWorkbench.requestClose();
-          if (closed) {
-            restoreWorkbenchFocus();
-          }
-          return closed;
-        },
-      },
-    };
-  }, [layout, restoreWorkbenchFocus, selectedContextualWorkbench]);
-  const onOpenProjectCode = useCallback(() => {
-    captureWorkbenchOpener('[data-slot="shell-workspace-menu-trigger"]');
-    (workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench)();
-  }, [captureWorkbenchOpener, openProjectCodeWorkbench, workspaceCommands?.onOpenProjectCode]);
-  const graphWithCanonicalCodeCommands = useMemo(
-    () => ({
-      ...graph,
-      nodesWithImpact: graph.nodesWithImpact.map((node) => {
-        const data = node.data as DbtNodeData;
-        const isNativeTransform = data.pluginKind === 'dvt:transform';
-        const canOpenRelationalTree = relationalTreeTransformIds.has(node.id);
-        const workspaceFilePath = resolveWorkspaceFilePath(data);
-        const codeTruthKind = data.presentationTruth?.code.kind;
-        const canInspectNodeCode =
-          typeof data.onInspectNode === 'function' &&
-          (workspaceFilePath != null ||
-            codeTruthKind === 'inline' ||
-            codeTruthKind === 'generated' ||
-            codeTruthKind === 'canonical');
-        const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectNodeCode;
-        const dataSampleProjection = projectNodeDataSample(node.id, data);
-        const sinkEvidence = resolveCanvasSinkRunEvidence(data, runSnapshot);
-        const participatesInActiveRun = data.runStatusByNodeId?.has(node.id) === true;
-        const activeRunAt =
-          runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
-        const runStatusByNodeId =
-          sinkEvidence == null
-            ? data.runStatusByNodeId
-            : new Map(data.runStatusByNodeId).set(node.id, sinkEvidence.status);
-        const projectedData: DbtNodeData = {
-          ...data,
-          dataActionLabel: dataSampleProjection.canOpen
-            ? resolveCanvasSemanticEditorCopy(applicationLanguage).previewAction
-            : undefined,
-          canOpenNodeCode,
-          ...(participatesInActiveRun
-            ? {
-                ...(activeRunAt == null ? {} : { lastRunAt: activeRunAt }),
-                ...(runSnapshot?.durationMs == null ? {} : { durationMs: runSnapshot.durationMs }),
-              }
-            : {}),
-          ...(sinkEvidence == null
-            ? {}
-            : {
-                rows: sinkEvidence.rowsWritten,
-                durationMs: sinkEvidence.durationMs,
-                lastRunAt: sinkEvidence.completedAt,
-                runStatusByNodeId,
-              }),
-          onOpenSourceDataSample: dataSampleProjection.onOpen,
-          onSelectNode: data.onSelectNode,
-          onInspectCanvasColumn: isNativeTransform ? outputInspection.open : undefined,
-          onOpenNode:
-            isNativeTransform && canOpenRelationalTree
-              ? () => openRelationalTree(node.id)
-              : (data.role === 'input' || data.role === 'transform') &&
-                  typeof data.onInspectNode === 'function'
-                ? () => data.onInspectNode?.(node.id, 'general')
-                : data.onOpenNode,
-        };
-
-        return {
-          ...node,
-          ariaLabel: projectedData.projectAccessibleHealthLabel?.(projectedData) ?? node.ariaLabel,
-          data: projectedData,
-        };
-      }),
-      edges: graph.edges,
-    }),
-    [
-      applicationLanguage,
-      graph,
-      openRelationalTree,
-      outputInspection.open,
-      projectNodeDataSample,
-      relationalTreeTransformIds,
-      runSnapshot,
-    ]
-  );
-  const graphOwnedPaths = useMemo(
-    () =>
-      new Set(
-        graphWithCanonicalCodeCommands.nodesWithImpact.flatMap((node) => {
-          const path = resolveWorkspaceFilePath(node.data as DbtNodeData);
-          return path == null ? [] : [path];
-        })
-      ),
-    [graphWithCanonicalCodeCommands.nodesWithImpact]
-  );
-  const inspectorWorkspaceFilePath =
-    panels.inspectorNode == null
-      ? null
-      : resolveWorkspaceFilePath(panels.inspectorNode as unknown as DbtNodeData);
-  const hasRouteOwnedCodeContribution = panels.inspectorWorkbenchContributions.some(
-    (contribution) =>
-      contribution.nodeId === panels.inspectorNode?.id && contribution.sectionId === 'code'
-  );
-  const panelsWithCanonicalCodeContribution = useMemo(
-    () => ({
-      ...panels,
-      inspectorWorkbenchContributions: hasRouteOwnedCodeContribution
-        ? panels.inspectorWorkbenchContributions
-        : [
-            ...panels.inspectorWorkbenchContributions,
-            ...buildGraphDraftWorkspaceFileCodeContributions({
-              node: panels.inspectorNode,
-              path: inspectorWorkspaceFilePath,
-              graphOwnedPaths,
-            }),
-          ],
-    }),
-    [graphOwnedPaths, hasRouteOwnedCodeContribution, inspectorWorkspaceFilePath, panels]
-  );
-  const onOpenProjectExplorer =
-    workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer;
   const contextMenuPresenter = useCanvasContextMenuPresenter({
-    canEditEdges: canEditGraph,
+    canEditEdges: panels.userPermissions.canEditEdges,
     canOpenSourceImport: canOpenDataRegistry,
     canOpenCanvasSettings: true,
     authoringNodeKinds: panels.authoringNodeKinds,
-    screenToFlowPosition: canvasContextScreenToFlowPosition ?? ((screenPosition) => screenPosition),
+    screenToFlowPosition: canvasContextScreenToFlowPosition ?? ((position) => position),
     onCreateAuthoringNode: graphCommands.onCreateAuthoringNode,
     onEdgesChange: graphCommands.onEdgesChange,
     onSetEdgeExecutionGate: graphCommands.onSetEdgeExecutionGate,
     onOpenSourceImport:
       sourceImportDialog.openCommand == null
         ? undefined
-        : (flowPosition) =>
+        : (position) =>
             sourceImportDialog.openCommand?.(
               undefined,
-              flowPosition == null ? undefined : { canvasPosition: flowPosition }
+              position == null ? undefined : { canvasPosition: position }
             ),
     onOpenCanvasSettings: openCanvasSettings,
   });
-
-  const relationalTreeGraphNodeData =
-    relationalTreeTransform == null
-      ? undefined
-      : (graphWithCanonicalCodeCommands.nodesWithImpact.find(
-          (node) => node.id === relationalTreeTransform.id
-        )?.data as DbtNodeData | undefined);
+  const modelData = nodes.find((node) => node.id === model.selected?.id)?.data as
+    DbtNodeData | undefined;
 
   return (
     <ResizablePanelGroup
@@ -458,28 +180,28 @@ export default function CanvasShell({
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
           dataSampleTabs={dataSampleTabs}
-          operationDataTab={relationalTreeTransform == null ? undefined : operationDataTab}
+          operationDataTab={model.selected == null ? undefined : operationData.tab}
         />
       )}
       <CanvasShellMainPanel
         layout={
-          relationalTreeTransform == null || panels.activeCanvasId == null
+          model.selected == null || panels.activeCanvasId == null
             ? {
-                ...shellLayout,
-                contextualWorkbench: outputInspection.workbench ?? shellLayout.contextualWorkbench,
+                ...code.layout,
+                contextualWorkbench: outputInspection.workbench ?? code.layout.contextualWorkbench,
               }
             : {
-                ...shellLayout,
-                inspectorPanelVisible: modelTabActive ? false : shellLayout.inspectorPanelVisible,
-                contextualWorkbench: modelTabActive
+                ...code.layout,
+                inspectorPanelVisible: model.active ? false : code.layout.inspectorPanelVisible,
+                contextualWorkbench: model.active
                   ? undefined
-                  : (outputInspection.workbench ?? shellLayout.contextualWorkbench),
-                centerSurfaceVisible: modelTabActive,
+                  : (outputInspection.workbench ?? code.layout.contextualWorkbench),
+                centerSurfaceVisible: model.active,
                 centerSurface: (
                   <CanvasModelEditor
-                    key={`${panels.activeCanvasId}:${relationalTreeTransform.id}`}
+                    key={`${panels.activeCanvasId}:${model.selected.id}`}
                     canvasId={panels.activeCanvasId}
-                    transformNode={relationalTreeTransform}
+                    transformNode={model.selected}
                     nodes={panels.inspectorGraphNodes}
                     edges={panels.inspectorGraphEdges}
                     authoring={
@@ -487,41 +209,40 @@ export default function CanvasShell({
                         ? undefined
                         : {
                             ...panels.relationalTreeAuthoring,
-                            onMapInput: relationalTreeGraphNodeData?.onMapCanvasInput,
-                            onRemoveInput: relationalTreeGraphNodeData?.onRemoveCanvasInput,
+                            onMapInput: modelData?.onMapCanvasInput,
+                            onRemoveInput: modelData?.onRemoveCanvasInput,
                           }
                     }
                     draftStatus={chromeState.draftStatusState}
                     query={canvasTransformDataSampleQuery}
                     onExecuteSource={openSource}
                     preparePreview={prepareModelPreview}
-                    operationDataHost={operationDataHost}
-                    onOpenOperationData={openOperationData}
-                    active={modelTabActive}
-                    onSelect={() => setModelTabActive(true)}
-                    onShowCanvas={() => setModelTabActive(false)}
-                    onClose={() => {
-                      setRelationalTreeTransformId(null);
-                      restoreWorkbenchFocus();
-                    }}
+                    operationDataHost={operationData.host}
+                    onOpenOperationData={operationData.open}
+                    active={model.active}
+                    onSelect={() => model.setActive(true)}
+                    onShowCanvas={() => model.setActive(false)}
+                    onClose={model.close}
                   />
                 ),
               }
         }
-        panels={panelsWithCanonicalCodeContribution}
-        graph={graphWithCanonicalCodeCommands}
+        panels={presentedPanels}
+        graph={presentedGraph}
         chromeState={chromeState}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
         onOpenSourceImport={openSourceImport}
-        onOpenProjectExplorer={onOpenProjectExplorer}
-        onOpenProjectCode={onOpenProjectCode}
+        onOpenProjectExplorer={
+          workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer
+        }
+        onOpenProjectCode={code.openProjectCode}
         onImportDbtProject={onDbtProjectImported == null ? undefined : openDbtProjectImport}
         onOpenCanvasSettings={openCanvasSettings}
-        onOpenModelEditor={openRelationalTree}
+        onOpenModelEditor={model.open}
         contextMenuPresenter={contextMenuPresenter}
       />
-      {panels.activeCanvasId != null ? (
+      {panels.activeCanvasId == null ? null : (
         <CanvasSourceImportDialogHost
           open={sourceImportDialog.open}
           canvasId={panels.activeCanvasId}
@@ -529,15 +250,14 @@ export default function CanvasShell({
           onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
           onComplete={(result, placement) => {
             graphCommands.onSourceImportComplete(result, placement);
-            if (sourceImportInitialSelection?.kind === 'dbt-source-binding') {
+            if (sourceImportInitialSelection?.kind === 'dbt-source-binding')
               onSourceImportInitialSelectionConsumed?.();
-            }
           }}
           sourceImportOptions={sourceImportOptions}
           initialSelection={sourceImportDialog.initialSelection}
           placement={sourceImportDialog.placement}
         />
-      ) : null}
+      )}
       <CanvasProjectExplorerDialog
         open={projectExplorerOpen}
         activeCanvasId={panels.activeCanvasId}
@@ -574,9 +294,9 @@ export default function CanvasShell({
         open={dbtProjectImportOpen}
         onClose={() => setDbtProjectImportOpen(false)}
         onRestoreFocus={restoreProjectExplorerFocus}
-        onImported={(result, sourceTableDeclarations) => {
+        onImported={(result, declarations) => {
           setDbtProjectImportOpen(false);
-          onDbtProjectImported?.(result, sourceTableDeclarations);
+          onDbtProjectImported?.(result, declarations);
         }}
       />
     </ResizablePanelGroup>

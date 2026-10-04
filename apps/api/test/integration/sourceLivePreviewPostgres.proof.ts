@@ -41,6 +41,51 @@ beforeAll(async () => {
   await client.query(`INSERT INTO "${schema}".items VALUES ('before'), ('before'), ('before')`);
 });
 
+it('rejects a mismatched declared database across inspection, test, discovery and Preview', async () => {
+  const probe = new WorkspaceWarehouseConnectionProbe({
+    credentialResolver: { resolveCredential: async () => databaseUrl },
+    now: () => new Date(),
+  });
+  const target = {
+    connectionId: 'proof',
+    id: 'proof',
+    name: 'Proof',
+    type: 'postgres' as const,
+    database: 'wrong_binding',
+    credentialRef: 'postgres:source-live-proof',
+    sourceObjects: [],
+    scope: { tenantId: 'proof', projectId: 'proof', environmentId: 'dev' },
+  };
+  expect(await probe.inspectConnection(target)).toMatchObject({
+    status: 'failed',
+    reason: 'invalid_credentials',
+  });
+  expect(await probe.testConnection(target)).toMatchObject({
+    status: 'failed',
+    reason: 'invalid_credentials',
+  });
+  await expect(
+    probe.listSourceObjectCatalog(target, { kind: 'schema-list', limit: 10 })
+  ).rejects.toMatchObject({ reason: 'invalid_credentials' });
+  await expect(
+    probe.listSourceObjectCatalog(target, {
+      kind: 'schema-page',
+      catalog: target.database,
+      schema,
+      limit: 10,
+    })
+  ).rejects.toMatchObject({ reason: 'invalid_credentials' });
+  await expect(
+    probe.previewSourceObjectRows({
+      ...target,
+      objectId: `relation/${target.database}/${schema}/items`,
+      limit: 20,
+    })
+  ).rejects.toMatchObject({ reason: 'invalid_credentials' });
+  const unchanged = await client.query(`SELECT count(*)::int AS rows FROM "${schema}".items`);
+  expect(unchanged.rows).toEqual([{ rows: 3 }]);
+});
+
 it('refreshes a projected Transform from PostgreSQL without acquiring or publishing data', async () => {
   await client.query(`CREATE TABLE "${schema}".orders (order_id integer)`);
   await client.query(`INSERT INTO "${schema}".orders VALUES (1), (1), (1)`);

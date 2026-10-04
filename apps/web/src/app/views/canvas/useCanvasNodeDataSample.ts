@@ -9,9 +9,10 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useCanvasTransformDataSample } from './useCanvasTransformDataSample';
 import { useCanvasSourceDataSample } from './useCanvasSourceDataSample';
 
-type CanvasNodeDataSampleProjection = Readonly<{
+export type CanvasNodeDataSampleProjection = Readonly<{
   canOpen: boolean;
   onOpen?: () => void;
+  sourceMetricAvailability?: 'unavailable';
 }>;
 
 type CanvasNodeDataSampleArgs = Pick<
@@ -67,9 +68,16 @@ export function useCanvasNodeDataSample({
       const isNativeTransform = data.pluginKind === 'dvt:transform';
       const onOpen = isNativeTransform ? projectTransform(nodeId) : projectSource(nodeId);
 
-      return { canOpen: onOpen != null, onOpen };
+      const sample = dataSampleTabs.find((tab) => tab.id === `data:${nodeId}`)?.dataSample;
+      const sourceMetricAvailability =
+        !isNativeTransform &&
+        sample != null &&
+        (sample.status !== 'ready' || sample.sample.rows.length === 0)
+          ? ('unavailable' as const)
+          : undefined;
+      return { canOpen: onOpen != null, onOpen, sourceMetricAvailability };
     },
-    [projectSource, projectTransform]
+    [projectSource, projectTransform, dataSampleTabs]
   );
 
   const refreshableTabs = useMemo(

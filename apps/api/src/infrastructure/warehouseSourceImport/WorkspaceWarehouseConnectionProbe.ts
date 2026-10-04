@@ -41,6 +41,7 @@ import {
   serializePostgresSampleCell,
 } from '../postgres/postgresDataSampleSerialization.js';
 
+import { assertPostgresWarehouseDatabase } from './assertPostgresWarehouseDatabase.js';
 import {
   buildPostgresSourceObjectMetricEvidence,
   type PostgresRowCountEvidence,
@@ -124,7 +125,7 @@ export class WorkspaceWarehouseConnectionProbe
     }
 
     const observedAt = this.checkedAt();
-    const sourceObjects = await this.loadPostgresSourceObjects(input.credentialRef, observedAt);
+    const sourceObjects = await this.loadPostgresSourceObjects(input, observedAt);
     if (!sourceObjects.ok) {
       return this.failedInspection(sourceObjects.reason, sourceObjects.message);
     }
@@ -157,6 +158,7 @@ export class WorkspaceWarehouseConnectionProbe
     const client = new Client({ connectionString });
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, input.database);
       if (request.kind === 'schema-list') {
         return await loadPostgresSchemaCatalogPage(client, request, cursorAuthority);
       }
@@ -195,7 +197,7 @@ export class WorkspaceWarehouseConnectionProbe
       return this.failed(input.id, 'invalid_credentials', 'Credential reference is missing.');
     }
 
-    const connection = await this.testPostgresConnection(input.credentialRef);
+    const connection = await this.testPostgresConnection(input.credentialRef, input.database);
     if (!connection.ok) {
       return this.failed(input.id, connection.reason, connection.message);
     }
@@ -231,6 +233,7 @@ export class WorkspaceWarehouseConnectionProbe
     let transactionStarted = false;
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, input.database);
       await client.query('begin transaction isolation level repeatable read read only');
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${SOURCE_DATA_SAMPLE_TIMEOUT_MS}ms'`);
@@ -301,7 +304,7 @@ export class WorkspaceWarehouseConnectionProbe
   }
 
   private async loadPostgresSourceObjects(
-    credentialRef: string,
+    input: WarehouseConnectionProbeTarget,
     observedAt: string
   ): Promise<
     | {
@@ -315,7 +318,9 @@ export class WorkspaceWarehouseConnectionProbe
         readonly message: string;
       }
   > {
-    const connectionString = await this.options.credentialResolver.resolveCredential(credentialRef);
+    const connectionString = await this.options.credentialResolver.resolveCredential(
+      input.credentialRef
+    );
     if (connectionString === null || connectionString.trim().length === 0) {
       return {
         ok: false,
@@ -326,6 +331,7 @@ export class WorkspaceWarehouseConnectionProbe
     const client = new Client({ connectionString });
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, input.database);
       const result = await client.query<PostgresTableDiscoveryRow>(
         [
           'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
@@ -366,14 +372,20 @@ export class WorkspaceWarehouseConnectionProbe
       return {
         ok: false,
         reason: classifyPostgresProbeFailure(error),
-        message: 'Warehouse connection test failed.',
+        message:
+          error instanceof WarehouseSourceDiscoveryFailedError
+            ? error.message
+            : 'Warehouse connection test failed.',
       };
     } finally {
       await client.end().catch(() => undefined);
     }
   }
 
-  private async testPostgresConnection(credentialRef: string): Promise<
+  private async testPostgresConnection(
+    credentialRef: string,
+    database: string
+  ): Promise<
     | { readonly ok: true; readonly objectCount: number }
     | {
         readonly ok: false;
@@ -392,6 +404,7 @@ export class WorkspaceWarehouseConnectionProbe
     const client = new Client({ connectionString });
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, database);
       const result = await client.query<PostgresObjectCountRow>(
         [
           'select count(*)::bigint as object_count',
@@ -411,7 +424,10 @@ export class WorkspaceWarehouseConnectionProbe
       return {
         ok: false,
         reason: classifyPostgresProbeFailure(error),
-        message: 'Warehouse connection test failed.',
+        message:
+          error instanceof WarehouseSourceDiscoveryFailedError
+            ? error.message
+            : 'Warehouse connection test failed.',
       };
     } finally {
       await client.end().catch(() => undefined);
@@ -1019,7 +1035,10 @@ function parseOptionalNonNegativeInteger(value: unknown): number | undefined {
 }
 
 function classifyPostgresProbeFailure(error: unknown): 'invalid_credentials' | 'connection_failed' {
-  return isPgAuthError(error) ? 'invalid_credentials' : 'connection_failed';
+  return isPgAuthError(error) ||
+    (error instanceof WarehouseSourceDiscoveryFailedError && error.reason === 'invalid_credentials')
+    ? 'invalid_credentials'
+    : 'connection_failed';
 }
 
 function isPgAuthError(error: unknown): boolean {

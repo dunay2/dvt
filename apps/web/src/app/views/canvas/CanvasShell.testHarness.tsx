@@ -22,10 +22,7 @@ import type {
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
-import type {
-  IWarehouseSourceDataSampleQueryPort,
-  IWarehouseSourceImportPort,
-} from '../../ports/workspace';
+import type { IWarehouseSourceDataSampleQueryPort } from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
@@ -80,7 +77,6 @@ export type CanvasShellPropsOverrides = {
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
   workspaceCommands?: CanvasShellWorkspaceCommands;
-  warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
   canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
   prepareModelPreview?: CanvasShellProps['prepareModelPreview'];
@@ -242,7 +238,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     },
     runControls: overrides?.runControls ?? null,
     workspaceCommands: overrides?.workspaceCommands,
-    warehouseSourceImport: overrides?.warehouseSourceImport,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
     canvasTransformDataSampleQuery: overrides?.canvasTransformDataSampleQuery,
     prepareModelPreview: overrides?.prepareModelPreview,

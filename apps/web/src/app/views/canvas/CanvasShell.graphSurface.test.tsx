@@ -17,7 +17,6 @@ import type { CanvasShellProps } from './canvasShell.types';
 import type { SourceDataSample } from '../../ports/workspace';
 import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
 import { canvasViewCopy } from './copy';
-import { resolveWorkspaceFilePath } from './CanvasShell';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -25,7 +24,6 @@ import type { CanonicalNode } from '../../types/canonical';
 import { dvtGraphNodeCardStrategy } from '../../plugins/dvt/dvtGraphNodeCardStrategy';
 import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/sharedSourceModelGraphNodeCardStrategy';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
-import { canvasColumnTruth } from './canvasPresentationColumns';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -41,106 +39,6 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
-  });
-
-  it('does not fabricate a dbt model workspace path when the draft omitted it', () => {
-    expect(
-      resolveWorkspaceFilePath({
-        name: 'Model 1',
-        pluginKind: 'dvt:transform',
-        status: 'idle',
-      })
-    ).toBeNull();
-  });
-
-  it('routes generated dbt model code to the node authoring surface', async () => {
-    const onInspectNode = vi.fn();
-    await renderShell({
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'dbt-model-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Model 1',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              presentationTruth: {
-                code: {
-                  kind: 'generated',
-                  content: 'select * from source_1',
-                  path: 'models/model_1.sql',
-                  language: 'sql',
-                },
-              },
-              onInspectNode,
-            },
-          },
-        ],
-      },
-    });
-
-    const forwardedNode = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        | Array<{
-            data: {
-              canOpenNodeCode?: boolean;
-              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
-            };
-          }>
-        | undefined
-    )?.[0];
-    forwardedNode?.data.onInspectNode?.('dbt-model-1', 'code');
-
-    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
-    expect(onInspectNode).toHaveBeenCalledWith('dbt-model-1', 'code');
-    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
-  });
-
-  it('routes canonical Transform code to the node inspector', async () => {
-    const onInspectNode = vi.fn();
-    await renderShell({
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'transform-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Transform 1',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              presentationTruth: {
-                code: {
-                  kind: 'canonical',
-                  content: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
-                  language: 'json',
-                  schemaVersion: 'dvt-substrait-semantic-document.v1',
-                  digest: 'a'.repeat(64),
-                },
-              },
-              onInspectNode,
-            },
-          },
-        ],
-      },
-    });
-
-    const forwardedNode = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        | Array<{
-            data: {
-              canOpenNodeCode?: boolean;
-              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
-            };
-          }>
-        | undefined
-    )?.[0];
-    forwardedNode?.data.onInspectNode?.('transform-1', 'code');
-
-    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
-    expect(onInspectNode).toHaveBeenCalledWith('transform-1', 'code');
   });
 
   it('keeps workspace-file Code inside the preserved node Properties context', async () => {
@@ -299,208 +197,6 @@ describe('CanvasShell graph base surface', () => {
       ).toMatchObject({ status: 'error', reason: 'source_object_not_found' });
     }
   );
-
-  it('projects checked Source outputs into Preview without exposing unchecked physical fields', async () => {
-    const previewSourceObjectRows = vi.fn().mockResolvedValue({
-      contractVersion: 1,
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/public/orders',
-      columns: [
-        { name: 'order_id', type: 'text', nullable: false },
-        { name: 'client_id', type: 'text', nullable: false },
-        { name: 'customer', type: 'text', nullable: true },
-        { name: 'amount', type: 'numeric', nullable: true },
-      ],
-      rows: [{ values: ['1', 'C-001', 'Ada', '125.50'] }],
-      limit: 20,
-      truncated: false,
-      provenance: {
-        mode: 'live' as const,
-        sourceRefs: [
-          {
-            schemaVersion: 'connected-source-ref.v1' as const,
-            connectionRef: {
-              schemaVersion: 'connection-ref.v1' as const,
-              connectionId: 'local-postgres-proof',
-              provider: 'postgres',
-            },
-            sourceObjectId: 'relation/dvt/public/orders',
-          },
-        ],
-        queriedAt: asIsoUtcString('2026-09-28T10:00:00.000Z'),
-        limit: 20,
-        navigation: 'bounded-first-page' as const,
-      },
-    });
-    await renderShell({
-      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'source-orders',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'orders',
-              role: 'input',
-              pluginKind: 'dvt:source',
-              status: 'idle',
-              presentationTruth: {
-                code: { kind: 'unavailable' },
-                columns: {
-                  ...canvasColumnTruth(
-                    [
-                      {
-                        name: 'orders.customer',
-                        sourceFieldName: 'customer',
-                        type: 'text',
-                        provenance: 'declared',
-                        selected: true,
-                      },
-                      {
-                        name: 'orders.amount',
-                        sourceFieldName: 'amount',
-                        type: 'numeric',
-                        provenance: 'declared',
-                        selected: true,
-                      },
-                      { name: 'order_id', type: 'text', provenance: 'declared', selected: false },
-                      { name: 'client_id', type: 'text', provenance: 'declared', selected: false },
-                    ],
-                    []
-                  ),
-                  state: 'ready',
-                },
-              },
-              columns: [
-                {
-                  name: 'orders.customer',
-                  sourceFieldName: 'customer',
-                  type: 'text',
-                  output: true,
-                },
-                { name: 'orders.amount', sourceFieldName: 'amount', type: 'numeric', output: true },
-                { name: 'order_id', type: 'text', output: false },
-                { name: 'client_id', type: 'text', output: false },
-              ],
-              metadata: {
-                connectedSourceRef: {
-                  schemaVersion: 'connected-source-ref.v1',
-                  connectionRef: {
-                    schemaVersion: 'connection-ref.v1',
-                    connectionId: 'postgresql-local',
-                    provider: 'postgres',
-                  },
-                  sourceObjectId: 'relation/dvt/public/orders',
-                },
-              },
-            },
-          },
-        ],
-      },
-    });
-    const node = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        Array<{ data: { onOpenSourceDataSample?: () => void } }> | undefined
-    )?.[0];
-    await act(async () => {
-      node?.data.onOpenSourceDataSample?.();
-      await Promise.resolve();
-    });
-    expect(
-      useOperationalDrawerContributionStore
-        .getState()
-        .contribution?.tabs.find((tab) => tab.id === 'data:source-orders')?.dataSample
-    ).toMatchObject({
-      status: 'ready',
-      sample: {
-        columns: [{ name: 'customer' }, { name: 'amount' }],
-        rows: [{ values: ['Ada', '125.50'] }],
-      },
-    });
-  });
-
-  it('opens Source properties rather than the Code tab from the card', async () => {
-    const onInspectNode = vi.fn();
-    await renderShell({
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'source-client',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'client',
-              role: 'input',
-              pluginKind: 'dvt:source',
-              status: 'idle',
-              onInspectNode,
-            },
-          },
-        ],
-      },
-    });
-    const source = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
-        data: DbtNodeData;
-      }>
-    )[0]!;
-    act(() => source.data.onOpenNode?.('source-client'));
-
-    expect(onInspectNode).toHaveBeenCalledExactlyOnceWith('source-client', 'general');
-  });
-
-  it('projects the active run timestamp onto each participating Transform', async () => {
-    await renderShell({
-      runSnapshot: {
-        runId: 'run-1',
-        status: 'completed',
-        startedAt: '2026-08-18T10:00:00.000Z',
-        completedAt: '2026-08-18T10:00:01.500Z',
-        durationMs: 1_500,
-      },
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'transform-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Transform 1',
-              pluginId: 'dvt',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              runStatusByNodeId: new Map([['transform-1', 'completed']]),
-            },
-          },
-          {
-            id: 'transform-outside-run',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Transform outside run',
-              pluginId: 'dvt',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              runStatusByNodeId: new Map(),
-            },
-          },
-        ],
-      },
-    });
-
-    const forwardedNodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
-      id: string;
-      data: { lastRunAt?: string; durationMs?: number };
-    }>;
-
-    expect(forwardedNodes[0]?.data).toMatchObject({
-      lastRunAt: '2026-08-18T10:00:01.500Z',
-      durationMs: 1_500,
-    });
-    expect(forwardedNodes[1]?.data.lastRunAt).toBeUndefined();
-    expect(forwardedNodes[1]?.data.durationMs).toBeUndefined();
-  });
 
   it('projects persisted sink evidence without offering the retired row query', async () => {
     const sinkNodeData = {
@@ -687,13 +383,6 @@ describe('CanvasShell graph base surface', () => {
 
     expect('onNodeClick' in props.graphCommands).toBe(false);
     expect('onSelectionChange' in props.graphCommands).toBe(false);
-    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
-  });
-
-  it('keeps host-owned tab chrome out of the graph base panel', async () => {
-    await renderShell();
-
-    expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).toBeNull();
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 

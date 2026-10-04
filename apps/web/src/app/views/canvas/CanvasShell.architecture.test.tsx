@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 
@@ -76,44 +77,45 @@ const LEGACY_CANVAS_TOOLBAR_PATHS = [
 ].map((fileName) => resolve(import.meta.dirname, fileName));
 
 describe('CanvasShell architecture', () => {
-  it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
-    expect(CANVAS_SHELL_SOURCE).toContain(
-      'Owned concern: compose the Canvas shell from route-owned presentation contracts.'
-    );
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
-      'Owned concern: define the semantic component contract for CanvasShell.'
-    );
-    expect(CANVAS_SHELL_SOURCE).toContain('CanvasShellProps');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellLayout');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellPanels');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraph');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeState');
-    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('export type CanvasShellToolbar');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('chromeState: CanvasShellChromeState;');
-    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('toolbar: CanvasShell');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
-      "import type { CanvasDraftStatusState } from './canvasDraftStatusState';"
-    );
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('draftStatusState: CanvasDraftStatusState;');
-    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('CanvasDraftToolbarState');
-    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('draftToolbarState');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('chromeState: CanvasShellChromeState;');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('toolbar: CanvasShell');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
-      'draftStatusState={chromeState.draftStatusState}'
-    );
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('chromeState.draftToolbarState');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraphCommands');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeCommands');
-    expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).toContain('CanvasShellChromeStateBuilderArgs');
-    expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).not.toContain('CanvasShellToolbarBuilderArgs');
-    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain("from './canvasShellChromeStateBuilder'");
-    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).not.toContain('canvasShellToolbarBuilder');
-    expect(CANVAS_SHELL_SOURCE).not.toContain('useCanvasController(');
-    expect(CANVAS_SHELL_SOURCE).not.toContain('workspaceService');
-    expect(CANVAS_SHELL_SOURCE).not.toContain('useQuery(');
-  });
+  it('keeps card rules and editor lifecycles behind their owning module boundaries', () => {
+    const imports = (fileName: string): string[] =>
+      ts
+        .createSourceFile(
+          fileName,
+          readArchitectureSiblingSource(import.meta.dirname, fileName),
+          ts.ScriptTarget.Latest,
+          true,
+          ts.ScriptKind.TSX
+        )
+        .statements.filter(ts.isImportDeclaration)
+        .filter((statement) => !statement.importClause?.isTypeOnly)
+        .map((statement) => (statement.moduleSpecifier as ts.StringLiteral).text);
 
+    const shell = imports('CanvasShell.tsx');
+    expect(shell).toEqual(
+      expect.arrayContaining([
+        './canvasShellNodeProjection',
+        './useCanvasModelSelection',
+        './useCanvasCodeWorkbench',
+        './useCanvasOperationDataTab',
+      ])
+    );
+    expect(
+      shell.filter((path) =>
+        /services\/|ports\/|useCanvasController|canvasSinkRunEvidence|canvasWorkspaceFilePath/.test(
+          path
+        )
+      )
+    ).toEqual([]);
+    for (const file of ['canvasShellNodeProjection.ts', 'canvasWorkspaceFilePath.ts']) {
+      expect(
+        imports(file).filter((path) =>
+          /(?:^react|stores\/|services\/|\/use[A-Z]|CanvasShell$)/.test(path)
+        ),
+        file
+      ).toEqual([]);
+    }
+  });
   it('keeps shell composition canvas-first without fixed side rails', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
     expect(CANVAS_SHELL_SOURCE).not.toContain("'./CanvasContextMenuLayer'");

@@ -12,6 +12,7 @@ import {
 } from '../../components/shell/operationalDrawerContributionStore';
 import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
 import { canvasColumnTruth } from './canvasPresentationColumns';
+import { buildGraphNodeVolumeMetricProjection } from '../../plugins/graph/graphNodeSourceMetricProjection';
 
 const sample: SourceDataSample = {
   contractVersion: 1,
@@ -80,6 +81,18 @@ async function render(
       },
     },
     metadata: {
+      sourceMetricEvidence: {
+        observedAt: '2026-10-01T09:00:00.000Z',
+        observationScope: { kind: 'snapshot' },
+        rowCount: { value: 12, provenance: 'measured', method: 'data-scan', confidence: 'exact' },
+        byteSize: {
+          value: 32768,
+          provenance: 'measured',
+          method: 'provider-storage-metadata',
+          confidence: 'exact',
+          basis: 'physical-allocation',
+        },
+      },
       connectedSourceRef: {
         schemaVersion: 'connected-source-ref.v1',
         connectionRef: {
@@ -144,6 +157,33 @@ it('uses authoritative published fields and their order', async () => {
     },
   });
 });
+
+it.each(['failed', 'empty'] as const)(
+  'withdraws %s metric snapshots and restores only their original evidence after recovery',
+  async (outcome) => {
+    const before = await render('ready');
+    const metrics = (data: DbtNodeData): ReturnType<typeof buildGraphNodeVolumeMetricProjection> =>
+      buildGraphNodeVolumeMetricProjection({
+        isSourceObject: true,
+        data,
+        metadata: data.metadata!,
+      });
+    expect(metrics(before).rowCount).toBe(12);
+    if (outcome === 'failed') query.mockRejectedValueOnce(new Error('Source unavailable'));
+    else query.mockResolvedValueOnce({ ...sample, rows: [] });
+    await preview(before);
+    const failed = await render('ready');
+    expect(dataState()?.status).toBe(outcome === 'failed' ? 'error' : 'ready');
+    expect(metrics(failed)).toEqual({ rowCount: null, sizeEvidence: null, metrics: [] });
+    expect(failed.metadata).toEqual(before.metadata);
+    await preview(failed);
+    const recovered = await render('ready');
+    expect(dataState()?.status).toBe('ready');
+    expect(metrics(recovered).rowCount).toBe(12); // Never the bounded sample's one row.
+    expect(metrics(recovered).sizeEvidence?.observedAt).toBe('2026-10-01T09:00:00.000Z');
+    expect(query).toHaveBeenCalledTimes(2);
+  }
+);
 
 it.each(['pending', 'unavailable', 'ready'] as const)(
   'withdraws old samples on changed publication (%s), without requery',

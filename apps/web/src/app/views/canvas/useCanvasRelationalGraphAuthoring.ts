@@ -1,22 +1,21 @@
 /** Commands for a freely connected producer/consumer draft graph. */
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { createSourceOccurrenceActions } from './relational-source-occurrence/sourceOccurrenceActions';
-import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasStagedOperationSession } from './useCanvasStagedOperationSession';
 import { useCanvasStagedOperationConfiguration } from './useCanvasStagedOperationConfiguration';
+import { createCanvasCanonicalGraphDisconnectCommand } from './canvasCanonicalGraphDisconnectCommand';
 
 type DraftState = ReturnType<typeof useCanvasRelationalTreeDraftState>;
 
 export function useCanvasRelationalGraphAuthoring(
-  args: Readonly<{
-    editable: boolean;
-    inputs: readonly CanvasDvtCompositionInput[];
-    analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
-    state: DraftState;
-    start: () => boolean;
-    outputRelationId: string | null;
-  }>
+  args: Readonly<
+    Parameters<typeof createCanvasCanonicalGraphDisconnectCommand>[0] & {
+      inputs: readonly CanvasDvtCompositionInput[];
+      state: DraftState;
+      outputRelationId: string | null;
+    }
+  >
 ) {
   const { analysis, editable, inputs, outputRelationId, start, state } = args;
   const configure = useCanvasStagedOperationConfiguration({ analysis, inputs, state });
@@ -51,6 +50,7 @@ export function useCanvasRelationalGraphAuthoring(
     setSelectedId: state.setPendingSourceId,
   });
   return {
+    disconnectRelation: createCanvasCanonicalGraphDisconnectCommand(args),
     occurrences: {
       ...occurrences,
       drop: (id: string) => {

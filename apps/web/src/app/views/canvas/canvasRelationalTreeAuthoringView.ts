@@ -38,6 +38,7 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   clearStagedOperationSelection: CanvasStagedOperationActions['clearSelection'];
   connectStagedOperation: CanvasStagedOperationActions['connect'];
   disconnectStagedOperation: CanvasStagedOperationActions['disconnect'];
+  disconnectRelation: (id: string, port: number) => void;
   connectOutput: (relationId: string) => void;
   disconnectOutput: () => void;
   removeStagedOperation: CanvasStagedOperationActions['remove'];
@@ -90,6 +91,7 @@ export function projectCanvasRelationalTreeAuthoringView(
       clearStagedOperationSelection: session.staged.clearSelection,
       connectStagedOperation: session.staged.connect,
       disconnectStagedOperation: session.staged.disconnect,
+      disconnectRelation: session.disconnectRelation,
       connectOutput: session.output.connect,
       disconnectOutput: session.output.disconnect,
       removeStagedOperation: session.staged.remove,
