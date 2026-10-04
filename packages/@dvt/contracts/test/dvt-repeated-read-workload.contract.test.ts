@@ -4,14 +4,11 @@ import {
   DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  DvtOperationalWorkloadContract,
+  DvtOperationalWorkloadContractV1,
   type DvtOperationalWorkloadV1,
-  type DvtOperationalWorkloadV2,
 } from '../src/index.js';
 
-function buildRepeatedReadWorkload(
-  version: 'v1' | 'v2'
-): DvtOperationalWorkloadV1 | DvtOperationalWorkloadV2 {
+function buildRepeatedReadWorkload(intent: 'preview' | 'run'): DvtOperationalWorkloadV1 {
   const connectionRef = {
     schemaVersion: 'connection-ref.v1',
     provider: 'postgres',
@@ -23,7 +20,7 @@ function buildRepeatedReadWorkload(
     schema: 'analytics',
     relation: 'records',
   };
-  const shared: Omit<DvtOperationalWorkloadV1, 'schemaVersion' | 'output'> = {
+  const shared: Omit<DvtOperationalWorkloadV1, 'schemaVersion' | 'output' | 'executionIntent'> = {
     scope: { tenantId: 'tenant', projectId: 'project', environmentId: 'environment' },
     graph: {
       draftRevision: 'revision',
@@ -52,10 +49,10 @@ function buildRepeatedReadWorkload(
     },
     connectionRef,
   };
-  return version === 'v2'
+  return intent === 'run'
     ? {
         ...shared,
-        schemaVersion: 'dvt-operational-workload.v2',
+        schemaVersion: 'dvt-operational-workload.v1',
         targetProjection: { ...shared.targetProjection, schemaDigestSha256: 'c'.repeat(64) },
         executionIntent: 'run',
         publicationBoundaries: [],
@@ -71,19 +68,20 @@ function buildRepeatedReadWorkload(
         ...shared,
         schemaVersion: 'dvt-operational-workload.v1',
         output: { kind: 'ephemeral-preview', nodeId: 'model' },
+        executionIntent: 'preview',
       };
 }
 
-describe.each(['v1', 'v2'] as const)('repeated Read workload %s', (version) => {
+describe.each(['preview', 'run'] as const)('repeated Read workload %s', (intent) => {
   it('admits one physical dependency without changing wire shape or logical profile', () => {
-    const workload = buildRepeatedReadWorkload(version);
-    expect(DvtOperationalWorkloadContract.schema.parse(workload)).toEqual(workload);
+    const workload = buildRepeatedReadWorkload(intent);
+    expect(DvtOperationalWorkloadContractV1.schema.parse(workload)).toEqual(workload);
   });
 
   it.each(['missing source', 'missing edge', 'duplicate source', 'duplicate edge', 'stale hash'])(
     'rejects %s even when repeated Reads are allowed',
     (corruption) => {
-      const workload = buildRepeatedReadWorkload(version);
+      const workload = buildRepeatedReadWorkload(intent);
       if (corruption === 'missing source') workload.graph.selectedNodeIds = ['model'];
       if (corruption === 'missing edge') workload.graph.selectedEdgeIds = [];
       if (corruption === 'duplicate source')
@@ -91,7 +89,7 @@ describe.each(['v1', 'v2'] as const)('repeated Read workload %s', (version) => {
       if (corruption === 'duplicate edge') workload.graph.selectedEdgeIds.push('source-model');
       if (corruption === 'stale hash')
         workload.targetProjection.semanticPlanSha256 = 'd'.repeat(64);
-      expect(DvtOperationalWorkloadContract.schema.safeParse(workload).success).toBe(false);
+      expect(DvtOperationalWorkloadContractV1.schema.safeParse(workload).success).toBe(false);
     }
   );
 });

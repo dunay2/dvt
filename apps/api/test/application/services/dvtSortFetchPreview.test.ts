@@ -1,6 +1,6 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
-  DvtOperationalWorkloadContractV2,
+  DvtOperationalWorkloadContractV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
@@ -63,7 +63,7 @@ describe('protected SortRel/FetchRel projection', () => {
 
     if (!result.ok) throw new Error(result.reason);
     expect(
-      DvtOperationalWorkloadContractV2.schema.parse(result.graphSource.nodes[0]?.stepTypeConfig)
+      DvtOperationalWorkloadContractV1.schema.parse(result.graphSource.nodes[0]?.stepTypeConfig)
         .executionIntent
     ).toBe('run');
     const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');

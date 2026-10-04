@@ -16,7 +16,7 @@ import type {
 } from '@dvt/adapter-temporal';
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import type {
-  DvtOperationalWorkloadV2,
+  DvtOperationalRunWorkloadV1,
   DvtPostgresPluginContext,
   ResolvedRunContext,
   RunExecutionContext,
@@ -24,7 +24,7 @@ import type {
 
 export interface DvtPostgresPluginExecutionInput {
   readonly step: StepDefinition;
-  readonly config: DvtOperationalWorkloadV2;
+  readonly config: DvtOperationalRunWorkloadV1;
   readonly executionIdentity: StepExecutionIdentity;
   readonly runContext: ResolvedRunContext;
   readonly runExecutionContext: RunExecutionContext;

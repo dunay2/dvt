@@ -166,7 +166,7 @@ describe('N-input DVT Run live', () => {
         KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD
       );
       const workload = preview.plan?.steps?.[0]?.stepTypeConfig;
-      expect(workload?.schemaVersion).to.equal('dvt-operational-workload.v2');
+      expect(workload?.schemaVersion).to.equal('dvt-operational-workload.v1');
       expect(workload?.targetProjection?.profileId).to.equal(DVT_POSTGRES_JOIN_PROFILE_ID);
       expect(workload?.graph?.selectedNodeIds).to.deep.equal([...draft.nodeIds].sort());
       expect(workload?.graph?.selectedEdgeIds).to.deep.equal(

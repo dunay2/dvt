@@ -1,7 +1,7 @@
 /**
- * Owns identities and validation shared by Preview v1 and Run v2 workloads.
+ * Owns identities and validation shared by Preview and Run intents in V1.
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
- * @decision Keep protected graph, semantic, projection, and connection identity checks shared across workload versions.
+ * @decision Keep protected graph, semantic, projection, and connection identity checks shared across execution intents.
  * @consequence Preview and Run cannot drift in their authorization-bound identities.
  * @version 1.0.0
  */

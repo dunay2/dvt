@@ -1,6 +1,5 @@
 import {
   DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadContractV2,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type ConnectedSourceRef,
@@ -179,17 +178,17 @@ describe('DvtOperationalWorkloadProjector', () => {
     const result = new DvtOperationalWorkloadProjector().project(input({ draft: runDraft() }));
 
     if (!result.ok) throw new Error(result.reason);
-    const workload = DvtOperationalWorkloadContractV2.schema.parse(
+    const workload = DvtOperationalWorkloadContractV1.schema.parse(
       result.graphSource.nodes[0]?.stepTypeConfig
     );
     expect(workload.executionIntent).toBe('run');
-    expect(workload.targetProjection.schemaDigestSha256).toBe('d'.repeat(64));
+    expect(workload.targetProjection).toHaveProperty('schemaDigestSha256', 'd'.repeat(64));
     expect(workload.output).toMatchObject({
       kind: 'transform-result',
       disposition: 'table',
       target: { schema: 'analytics', relation: 'orders_result' },
     });
-    expect(workload.publicationBoundaries).toEqual([]);
+    expect(workload).toHaveProperty('publicationBoundaries', []);
   });
 
   it.each([

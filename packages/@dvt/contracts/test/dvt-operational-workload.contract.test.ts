@@ -21,6 +21,7 @@ const DIGESTS = {
 function buildWorkload(): DvtOperationalWorkloadV1 {
   return {
     schemaVersion: 'dvt-operational-workload.v1',
+    executionIntent: 'preview',
     scope: {
       tenantId: 'tenant-a',
       projectId: 'project-a',
@@ -169,6 +170,14 @@ describe('DVT terminal Transform operational workload contract', () => {
   });
 
   it.each([
+    [
+      'an implicit preview intent',
+      (workload: DvtOperationalWorkloadV1) => ({ ...workload, executionIntent: undefined }),
+    ],
+    [
+      'run intent without a durable output',
+      (workload: DvtOperationalWorkloadV1) => ({ ...workload, executionIntent: 'run' }),
+    ],
     [
       'duplicate selected nodes',
       (workload: DvtOperationalWorkloadV1) => ({

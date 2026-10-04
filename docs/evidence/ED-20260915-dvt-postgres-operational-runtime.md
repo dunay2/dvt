@@ -41,7 +41,9 @@ ADR-0035, ADR-0064 and accepted ADR-0066 govern this slice. Planning DB design
 `DVT-POSTGRES-OPERATIONAL-RUNTIME-2723` preceded implementation. The existing
 `StartRun` command remains the sole command rail.
 
-The runtime accepts only `dvt-operational-workload.v2`. StartRun resolves the
+At this delivery the runtime accepted only `dvt-operational-workload.v2`.
+The subsequent [single V1 contract](../contracts/planner/dvt-operational-workload-v1.md)
+replaces that wire version and has separate admission evidence. StartRun resolves the
 governed PostgreSQL binding, observes the expected predecessor and persists an
 immutable execution context. Temporal resolves that context and the verified SQL
 artifact without interpreting Substrait, Canvas cards or dbt semantics.

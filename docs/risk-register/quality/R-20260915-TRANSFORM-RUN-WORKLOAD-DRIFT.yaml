@@ -14,8 +14,10 @@ description: >-
   A persisted Run plan could otherwise detach its canonical semantic revision, PostgreSQL target, or
   expected output schema from the provider activity that eventually materializes it.
 mitigations:
-  - Strict V2 workload identities and exact target-to-workload connection equality
+  - One strict V1 workload with explicit intent and exact target-to-workload connection equality
   - JCS and SHA-256 fingerprint of ordered, admitted PostgreSQL output metadata
   - Fail-closed lowering for incomplete target configuration or unknown output types
   - PostgreSQL-backed plan persistence and replay regression coverage
   - Issue 2723 must revalidate immutable refs before any provider effect
+  - Deploy producer and worker together; reject V2 and missing intent instead of rewriting old plans
+  - Preview intent is rejected before context reads and provider effects

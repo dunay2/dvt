@@ -10,7 +10,7 @@ import {
   KNOWN_STEP_KINDS,
   createDvtPostgresOutputSchemaDigestV1,
   parseExecutionPlan,
-  type DvtOperationalWorkloadV2,
+  type DvtOperationalRunWorkloadV1,
   type DvtPostgresOutputSchemaV1,
   type ExecutionPlan,
 } from '@dvt/contracts';
@@ -38,7 +38,7 @@ export function createDvtPostgresExecutionPlan(input: DvtPostgresPlanFixtureInpu
       kind: KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
       dependsOn: [],
       stepTypeConfig: {
-        schemaVersion: 'dvt-operational-workload.v2',
+        schemaVersion: 'dvt-operational-workload.v1',
         executionIntent: 'run',
         scope: {
           tenantId: input.tenantId,
@@ -116,7 +116,7 @@ export function digest(value: Uint8Array | string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
-function connectionRef(): DvtOperationalWorkloadV2['connectionRef'] {
+function connectionRef(): DvtOperationalRunWorkloadV1['connectionRef'] {
   return {
     schemaVersion: 'connection-ref.v1' as const,
     connectionId: 'warehouse-a',

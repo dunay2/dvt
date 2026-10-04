@@ -9,7 +9,7 @@ import {
   parseExecutionSelection,
   parsePlanRef,
   parseRunExecutionContextRef,
-  type DvtOperationalWorkloadV2,
+  type DvtOperationalRunWorkloadV1,
   type StartRunCommand,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
@@ -264,10 +264,10 @@ function admission(
   };
 }
 
-function buildRunWorkload(): DvtOperationalWorkloadV2 {
+function buildRunWorkload(): DvtOperationalRunWorkloadV1 {
   const semanticPlanSha256 = '1'.repeat(64);
   return {
-    schemaVersion: 'dvt-operational-workload.v2',
+    schemaVersion: 'dvt-operational-workload.v1',
     executionIntent: 'run',
     scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
     graph: {
@@ -341,6 +341,7 @@ function buildPreviewWorkload(): unknown {
   const { schemaDigestSha256: _schemaDigestSha256, ...targetProjection } = run.targetProjection;
   return {
     schemaVersion: 'dvt-operational-workload.v1',
+    executionIntent: 'preview',
     scope: run.scope,
     graph: run.graph,
     semantics: run.semantics,

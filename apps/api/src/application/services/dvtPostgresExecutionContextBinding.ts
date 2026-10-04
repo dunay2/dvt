@@ -7,10 +7,10 @@
  */
 import {
   DVT_POSTGRES_PLUGIN_CONTEXT_KEY,
-  DvtOperationalWorkloadV2Schema,
+  DvtOperationalRunWorkloadV1Schema,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
-  type DvtOperationalWorkloadV2,
+  type DvtOperationalRunWorkloadV1,
   type ExecutionPlan,
   type PlanRef,
 } from '@dvt/contracts';
@@ -52,9 +52,9 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
     return { kind: 'rejected', reason: 'DVT operational Run requires exactly one workload.' };
   }
 
-  const workloads: DvtOperationalWorkloadV2[] = [];
+  const workloads: DvtOperationalRunWorkloadV1[] = [];
   for (const step of steps) {
-    const workload = DvtOperationalWorkloadV2Schema.safeParse(step.stepTypeConfig);
+    const workload = DvtOperationalRunWorkloadV1Schema.safeParse(step.stepTypeConfig);
     if (!workload.success) {
       return { kind: 'rejected', reason: 'DVT operational Run requires workload schema v2.' };
     }
@@ -138,7 +138,7 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
 export interface DvtPostgresPublicationPredecessorReader {
   observe(input: {
     readonly credentialRef: string;
-    readonly target: DvtOperationalWorkloadV2['output']['target'];
+    readonly target: DvtOperationalRunWorkloadV1['output']['target'];
     readonly schemaDigestSha256: string;
   }): Promise<
     | { readonly ok: true; readonly predecessorToken: string | null }

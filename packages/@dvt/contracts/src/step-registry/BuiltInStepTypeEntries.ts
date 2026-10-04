@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY } from '../contracts/planner/DvtOperationalWorkload.v1.js';
-import { DvtOperationalWorkloadContract } from '../contracts/planner/DvtOperationalWorkload.v2.js';
+import { DvtOperationalWorkloadContractV1 } from '../contracts/planner/DvtOperationalWorkload.v1.js';
 import {
   ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
   HttpJsonArtifactStepTypeConfigSchema,
@@ -53,10 +53,10 @@ export function createBuiltInStepTypeEntries(
     [
       KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
       {
-        schema: DvtOperationalWorkloadContract.schema,
+        schema: DvtOperationalWorkloadContractV1.schema,
         profile: dvtOperationalProfile,
         validateContext: (config, context) =>
-          DvtOperationalWorkloadContract.validatePlanOwnership(config, context?.planOwnership),
+          DvtOperationalWorkloadContractV1.validatePlanOwnership(config, context?.planOwnership),
       },
     ],
     [

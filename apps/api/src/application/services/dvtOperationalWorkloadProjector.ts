@@ -1,11 +1,10 @@
 /**
  * Owned concern: lower one exact protected Source -> terminal Transform closure
- * into one generic ephemeral PostgreSQL workload.
+ * into one generic PostgreSQL workload with explicit Preview or Run intent.
  */
 import {
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadContractV2,
   DvtTransformResultTargetV1Schema,
   GENERIC_GRAPH_SOURCE_KIND,
   KNOWN_STEP_KINDS,
@@ -65,6 +64,7 @@ export class DvtOperationalWorkloadProjector {
       }
 
       const commonWorkload = {
+        schemaVersion: 'dvt-operational-workload.v1',
         scope: input.scope,
         graph: {
           draftRevision: input.draftRevision,
@@ -90,16 +90,15 @@ export class DvtOperationalWorkloadProjector {
         },
         connectionRef: closure.connectionRef,
       };
-      const workload =
+      const workload = DvtOperationalWorkloadContractV1.schema.parse(
         runTarget === null
-          ? DvtOperationalWorkloadContractV1.schema.parse({
+          ? {
               ...commonWorkload,
-              schemaVersion: 'dvt-operational-workload.v1',
+              executionIntent: 'preview',
               output: { kind: 'ephemeral-preview', nodeId: closure.transform.id },
-            })
-          : DvtOperationalWorkloadContractV2.schema.parse({
+            }
+          : {
               ...commonWorkload,
-              schemaVersion: 'dvt-operational-workload.v2',
               executionIntent: 'run',
               targetProjection: {
                 ...commonWorkload.targetProjection,
@@ -113,7 +112,8 @@ export class DvtOperationalWorkloadProjector {
                 publicationPolicy: 'postgres-stable-table-publication.v1',
               },
               publicationBoundaries: [],
-            });
+            }
+      );
 
       return {
         ok: true,

@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+import * as contracts from '../src/index.js';
 import {
   DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  DvtOperationalWorkloadContract,
-  DvtOperationalWorkloadContractV2,
+  DvtOperationalWorkloadContractV1,
   createDvtPostgresOutputSchemaDigestV1,
-  type DvtOperationalWorkloadV2,
+  type DvtOperationalRunWorkloadV1,
 } from '../src/index.js';
 
 const SEMANTIC_DIGEST = 'a'.repeat(64);
 
-function buildWorkload(): DvtOperationalWorkloadV2 {
+function buildWorkload(): DvtOperationalRunWorkloadV1 {
   const schemaDigestSha256 = createDvtPostgresOutputSchemaDigestV1({
     schemaVersion: 'dvt-postgres-output-schema.v1',
     columns: [
@@ -32,7 +32,7 @@ function buildWorkload(): DvtOperationalWorkloadV2 {
   });
 
   return {
-    schemaVersion: 'dvt-operational-workload.v2',
+    schemaVersion: 'dvt-operational-workload.v1',
     executionIntent: 'run',
     scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
     graph: {
@@ -86,20 +86,29 @@ function buildWorkload(): DvtOperationalWorkloadV2 {
   };
 }
 
-describe('DVT operational Run workload v2', () => {
+describe('DVT operational Run intent under the single V1 contract', () => {
+  it('does not publish a second version or a compatibility contract', () => {
+    for (const name of [
+      'DvtOperationalWorkloadContractV2',
+      'DvtOperationalWorkloadV2Schema',
+      'DvtOperationalWorkloadContract',
+    ]) {
+      expect(contracts).not.toHaveProperty(name);
+    }
+  });
+
   it('binds one table result to its exact target and expected schema', () => {
     const workload = buildWorkload();
-    const parsed = DvtOperationalWorkloadContractV2.schema.parse(workload);
+    const parsed = DvtOperationalWorkloadContractV1.schema.parse(workload);
 
     expect(parsed.executionIntent).toBe('run');
     expect(parsed.output).toEqual(workload.output);
-    expect(parsed.publicationBoundaries).toEqual([]);
-    expect(DvtOperationalWorkloadContract.schema.parse(workload)).toEqual(parsed);
+    expect(parsed).toHaveProperty('publicationBoundaries', []);
   });
 
   it('normalizes the historical INNER profile while reading a Run workload', () => {
     const workload = buildWorkload();
-    const parsed = DvtOperationalWorkloadContractV2.schema.parse({
+    const parsed = DvtOperationalWorkloadContractV1.schema.parse({
       ...workload,
       graph: {
         ...workload.graph,
@@ -113,7 +122,6 @@ describe('DVT operational Run workload v2', () => {
     });
 
     expect(parsed.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
-    expect(DvtOperationalWorkloadContract.schema.parse(parsed)).toEqual(parsed);
   });
 
   it('keeps the output-schema digest deterministic and order-sensitive', () => {
@@ -163,7 +171,7 @@ describe('DVT operational Run workload v2', () => {
   it.each([
     [
       'a target on another connection',
-      (value: DvtOperationalWorkloadV2) => ({
+      (value: DvtOperationalRunWorkloadV1) => ({
         ...value,
         output: {
           ...value.output,
@@ -176,21 +184,43 @@ describe('DVT operational Run workload v2', () => {
     ],
     [
       'a non-empty publication boundary',
-      (value: DvtOperationalWorkloadV2) => ({
+      (value: DvtOperationalRunWorkloadV1) => ({
         ...value,
         publicationBoundaries: [{ kind: 'sink' }],
       }),
     ],
     [
       'a view disposition',
-      (value: DvtOperationalWorkloadV2) => ({
+      (value: DvtOperationalRunWorkloadV1) => ({
         ...value,
         output: { ...value.output, disposition: 'view' },
       }),
     ],
-    ['an unknown member', (value: DvtOperationalWorkloadV2) => ({ ...value, sql: 'select 1' })],
+    ['an unknown member', (value: DvtOperationalRunWorkloadV1) => ({ ...value, sql: 'select 1' })],
+    [
+      'the retired V2 wire format',
+      (value: DvtOperationalRunWorkloadV1) => ({
+        ...value,
+        schemaVersion: 'dvt-operational-workload.v2',
+      }),
+    ],
+    [
+      'an absent intent',
+      (value: DvtOperationalRunWorkloadV1) => ({ ...value, executionIntent: undefined }),
+    ],
+    [
+      'a preview intent with a durable output',
+      (value: DvtOperationalRunWorkloadV1) => ({ ...value, executionIntent: 'preview' }),
+    ],
+    [
+      'a missing schema digest',
+      (value: DvtOperationalRunWorkloadV1) => ({
+        ...value,
+        targetProjection: { ...value.targetProjection, schemaDigestSha256: undefined },
+      }),
+    ],
   ])('rejects %s', (_label, mutate) => {
-    expect(DvtOperationalWorkloadContractV2.schema.safeParse(mutate(buildWorkload())).success).toBe(
+    expect(DvtOperationalWorkloadContractV1.schema.safeParse(mutate(buildWorkload())).success).toBe(
       false
     );
   });

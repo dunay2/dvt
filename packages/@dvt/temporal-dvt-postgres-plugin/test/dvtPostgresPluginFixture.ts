@@ -3,9 +3,9 @@ import {
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  DvtOperationalWorkloadV2Schema,
+  DvtOperationalRunWorkloadV1Schema,
   RunExecutionContextSchema,
-  type DvtOperationalWorkloadV2,
+  type DvtOperationalRunWorkloadV1,
   type RunExecutionContext,
 } from '@dvt/contracts';
 
@@ -19,9 +19,9 @@ export const SHA = {
   semantic: '1'.repeat(64),
 } as const;
 
-export function buildDvtWorkload(): DvtOperationalWorkloadV2 {
-  return DvtOperationalWorkloadV2Schema.parse({
-    schemaVersion: 'dvt-operational-workload.v2',
+export function buildDvtWorkload(): DvtOperationalRunWorkloadV1 {
+  return DvtOperationalRunWorkloadV1Schema.parse({
+    schemaVersion: 'dvt-operational-workload.v1',
     executionIntent: 'run',
     scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
     graph: {
