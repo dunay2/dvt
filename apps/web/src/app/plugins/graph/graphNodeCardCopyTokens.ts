@@ -1,5 +1,6 @@
 /** Owned concern: centralize localized GraphNodeCard copy consumed by card read-model strategies. */
 type GraphNodeCardCopy = Readonly<{
+  outputStateLabels: Readonly<Record<'pending' | 'unavailable' | 'unconfigured', string>>;
   columnsLabel: string;
   rowsLabel: string;
   sizeLabel: string;
@@ -102,6 +103,11 @@ type GraphNodeCardCopy = Readonly<{
 }>;
 
 const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
+  outputStateLabels: {
+    pending: 'Updating schema',
+    unavailable: 'Unavailable',
+    unconfigured: 'Not configured',
+  },
   columnsLabel: 'Columns',
   rowsLabel: 'Rows',
   sizeLabel: 'Size',
@@ -233,6 +239,11 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
 };
 
 const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
+  outputStateLabels: {
+    pending: 'Calculando esquema',
+    unavailable: 'No disponible',
+    unconfigured: 'Sin configurar',
+  },
   columnsLabel: 'Columnas',
   rowsLabel: 'Filas',
   sizeLabel: 'Tamaño',

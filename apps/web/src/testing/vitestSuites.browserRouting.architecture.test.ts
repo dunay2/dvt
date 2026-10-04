@@ -12,6 +12,7 @@ const helper = 'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts';
 const dataHelper = 'apps/web/cypress/e2e/canvas/canvasNodeDataActions.proof.ts';
 const savedSampleHelper = 'apps/web/cypress/support/relationalWorkbench/persistence.ts';
 const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.ts';
+const modelChain = 'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts';
 const savedSampleConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
@@ -27,6 +28,7 @@ describe('governed browser evidence routing', () => {
     dataHelper,
     savedSampleHelper,
     revisitHelper,
+    modelChain,
     ...savedSampleConsumers,
     spec.replaceAll('/', '\\'),
     spec.slice('apps/web/'.length),
@@ -207,7 +209,7 @@ describe('governed browser evidence routing', () => {
         .filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts'))
         .sort()
     );
-    for (const consumer of expected)
+    for (const consumer of [...expected, resolve(modelChain.slice('apps/web/'.length))])
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });
 });

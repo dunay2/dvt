@@ -28,6 +28,7 @@ export function resolveWebCypressChangedPlan(
           'cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
           'cypress/e2e/canvas/canvas-relational-workbench-cross.cy.ts',
           'cypress/e2e/canvas/canvas-sort-fetch-data-navigation.cy.ts',
+          'cypress/e2e/canvas/canvas-model-chain-fields.cy.ts',
         ].includes(webPath)
       ) {
         throw new Error(

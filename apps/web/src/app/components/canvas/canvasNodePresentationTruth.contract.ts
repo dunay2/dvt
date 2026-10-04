@@ -25,7 +25,7 @@ export type CanvasNodePresentationColumn = Readonly<{
 }>;
 
 export type CanvasNodeColumnTruth = Readonly<{
-  state?: 'ready' | 'pending' | 'unavailable';
+  state?: 'ready' | 'pending' | 'unavailable' | 'unconfigured';
   diagnostic?: string;
   declared: readonly CanvasNodePresentationColumn[];
   inherited: readonly CanvasNodePresentationColumn[];

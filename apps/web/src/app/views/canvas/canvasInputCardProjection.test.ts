@@ -48,6 +48,7 @@ describe('consumer card input publication boundary', () => {
       true
     );
     expect(selectGraphNodeCardColumns(truth)).toEqual([]);
+    expect(truth.columns.state).toBe('unconfigured');
     expect(consumer.metadata).toBeUndefined();
   });
   it('draws every producer field to its Input slot, including the second producer', async () => {

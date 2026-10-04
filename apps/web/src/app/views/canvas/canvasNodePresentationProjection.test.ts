@@ -2,6 +2,7 @@ import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
+import { selectGraphNodeCardColumns } from './canvasGraphNodeColumnProjection';
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -261,7 +262,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       ],
     });
 
-    expect(truth.columns.declared).toEqual([
+    expect(selectGraphNodeCardColumns(truth)).toEqual([
       expect.objectContaining({
         reference: input.fields[0]!.fieldId,
         sourceNodeId: upstreamB.id,

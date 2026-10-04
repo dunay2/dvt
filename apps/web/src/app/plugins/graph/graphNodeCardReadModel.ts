@@ -12,6 +12,7 @@ import type {
 import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
 import { resolveGraphNodeTagActionProps } from './GraphNodeTagList';
 import { readGraphNodeMaterializationControl } from './graphNodeMaterializationControl';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 
 export type {
   GraphNodeCardMetric,
@@ -88,6 +89,9 @@ export function projectGraphNodeCardViewProps(
       ? {
           ...columnProps,
           columns,
+          outputState: isCanvasNodePresentationTruth(data.presentationTruth)
+            ? data.presentationTruth.columns.state
+            : undefined,
           portDirections: columnPortDirections,
           expanded: columnDisclosureExpanded,
           onDisclosureChange:
