@@ -107,8 +107,30 @@ describe('CanvasShell architecture', () => {
         )
       )
     ).toEqual([]);
-    expect(imports('CanvasWorkspaceModelTabs.tsx')).toContain('../../components/ui/tabs');
+    expect(imports('CanvasWorkspaceModelTabs.tsx')).not.toContain('../../components/ui/tabs');
     expect(imports('CanvasWorkspaceModelTabs.tsx')).not.toContain('react');
+    const controller = ts.createSourceFile(
+      'CanvasWorkspaceModelTabs.tsx',
+      readArchitectureSiblingSource(import.meta.dirname, 'CanvasWorkspaceModelTabs.tsx'),
+      ts.ScriptTarget.Latest,
+      true,
+      ts.ScriptKind.TSX
+    );
+    const tags: string[] = [];
+    const visit = (node: ts.Node): void => {
+      if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
+        tags.push(node.tagName.getText(controller));
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(controller);
+    expect(tags).toEqual(['CanvasWorkspaceModelTabsTemplate']);
+    const templateImports = imports('CanvasWorkspaceModelTabs.templates.tsx');
+    expect(templateImports).toContain('../../components/ui/tabs');
+    expect(templateImports).not.toContain('react');
+    expect(
+      templateImports.filter((path) => /stores\/|services\/|ports\/|\/use[A-Z]/.test(path))
+    ).toEqual([]);
     for (const file of [
       'canvasShellNodeProjection.ts',
       'canvasWorkspaceFilePath.ts',

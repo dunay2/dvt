@@ -160,6 +160,11 @@ relational editing share the Model Workbench and its selected-node forms.
 Shared semantic constructors remain with their existing owners; no compatibility
 editor, automatic conversion or second draft authority is retained.
 
+Workspace navigation follows the same controller/view boundary:
+`CanvasWorkspaceModelTabs` prepares localized tab data and dispatches navigation;
+`CanvasWorkspaceModelTabsTemplate` owns only markup, styles and accessibility.
+The passive template consumes no stores, effects, queries or persistence ports.
+
 This presentation follows #3293/#3296 and supersedes the grouped edge badge
 presentation from #3227. It does not change persisted graph topology or the
 execution snapshot. `canvasViewportEdgeProjection.ts` must not decode internal

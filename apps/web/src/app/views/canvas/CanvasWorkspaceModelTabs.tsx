@@ -1,7 +1,6 @@
-/** Owned concern: present the Canvas and Model as peer workspace tabs. */
-import { Table2, X } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
+/** Prepare workspace tab identity, localized copy and navigation callbacks. */
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasWorkspaceModelTabsTemplate } from './CanvasWorkspaceModelTabs.templates';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { CanvasModelWorkspaceTabContribution } from './canvasWorkspaceMenuContributionStore';
 import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
@@ -35,42 +34,12 @@ export function CanvasWorkspaceModelTabs({
         ]),
   ];
   return (
-    <Tabs
-      value={tab?.active === true ? 'model' : 'canvas'}
-      onValueChange={(value) => tabs.find((item) => item.key === value)?.select?.()}
-      className="canvas-workspace-model-tabs min-w-0 flex-row items-center gap-0 self-stretch"
-    >
-      <TabsList
-        aria-label={copy.workspaceTabs}
-        className="workspace-navigation-tabs h-full justify-start rounded-none bg-transparent p-0"
-      >
-        {tabs.map((item, index) => (
-          <TabsTrigger
-            key={item.key}
-            value={item.key}
-            id={item.tabId}
-            aria-controls={item.panelId}
-            data-slot={item.tabId}
-            title={item.label}
-            className="workspace-navigation-tab rounded-none border-0 shadow-none data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-          >
-            {index === 1 ? <Table2 aria-hidden="true" className="size-4 shrink-0" /> : null}
-            <span className="max-w-64 truncate">{item.label}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      {tab != null ? (
-        <button
-          type="button"
-          data-slot="canvas-model-tab-close"
-          aria-label={copy.closeEditor}
-          title={copy.closeEditor}
-          className="shrink-0 rounded p-1 text-(--text-muted) hover:bg-(--surface-panel) hover:text-(--text-primary) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
-          onClick={() => tab.onClose()}
-        >
-          <X aria-hidden="true" className="size-3.5" />
-        </button>
-      ) : null}
-    </Tabs>
+    <CanvasWorkspaceModelTabsTemplate
+      tabs={tabs}
+      activeKey={tab?.active === true ? 'model' : 'canvas'}
+      copy={copy}
+      onSelect={(key) => tabs.find((item) => item.key === key)?.select?.()}
+      onClose={tab == null ? undefined : () => tab.onClose()}
+    />
   );
 }
