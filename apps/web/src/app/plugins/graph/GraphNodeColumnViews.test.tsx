@@ -110,14 +110,14 @@ describe('card Input / Output boundary', () => {
     ['unconfigured', 'Not configured', 'Sin configurar'],
   ] as const)(
     'does not publish stale fields or a zero count while Output is %s',
-    (state, en, es) => {
+    async (state, en, es) => {
       const previousLanguage = useApplicationLanguageStore.getState().language;
       try {
         for (const [language, label] of [
           ['en', en],
           ['es', es],
         ] as const) {
-          act(() => useApplicationLanguageStore.setState({ language }));
+          await act(() => useApplicationLanguageStore.setState({ language }));
           const map = vi.fn();
           render(map, { outputState: state, view: 'output' });
           expect(container.textContent).toContain(`Output (${label})`);
@@ -133,7 +133,7 @@ describe('card Input / Output boundary', () => {
           expect(map).toHaveBeenCalledOnce();
         }
       } finally {
-        act(() => useApplicationLanguageStore.setState({ language: previousLanguage }));
+        await act(() => useApplicationLanguageStore.setState({ language: previousLanguage }));
       }
     }
   );
