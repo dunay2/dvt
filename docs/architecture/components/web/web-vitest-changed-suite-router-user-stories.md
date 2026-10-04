@@ -2,11 +2,17 @@
 title: Web Vitest Changed Suite Router User Stories
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-04
 planning_type: architecture
 ---
 
 # Web Vitest Changed Suite Router User Stories
+
+For every source-edit scenario below, the behavioral lane is accompanied by
+one complete `test:architecture:run`. Filesystem-reading architecture guards
+cross focus boundaries, so a paired test cannot replace that evidence.
+Test-only changes remain exact; a complete architecture run absorbs exact and
+Canvas architecture batches through the existing suite normalization.
 
 ## US-1 Local Canvas Change
 
@@ -184,9 +190,9 @@ Acceptance:
 - Then the selected commands are direct `vitest run` batches using
   `vitest.canvas-unit.config.ts`, `vitest.canvas-presentation.config.ts`, or
   `vitest.canvas-architecture.config.ts`.
-- Then the selected suites do not include the full `unit`, `presentation`, or
-  `architecture` primary suite unless a non-Canvas or governance file also
-  selects one.
+- Then the selected suites do not include the full `unit` or `presentation`
+  primary suite unless another file also selects one. Source edits still
+  require complete architecture coverage.
 
 ## US-5C Mixed Canvas And General Changes
 

@@ -270,9 +270,12 @@ describe('web Vitest suite catalog', () => {
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/code/useCodeEditableBuffer.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['monaco'],
+      suites: ['monaco', 'architecture'],
     });
   });
 });

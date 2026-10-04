@@ -58,7 +58,7 @@ describe('governed browser evidence routing', () => {
     const source = 'apps/web/src/lib/format.ts';
     const mixed = resolveWebVitestChangedSuitePlan([helper, spec, source, helper]);
     expect(mixed.commandPlan).toEqual(resolveWebVitestChangedSuitePlan([source]).commandPlan);
-    expect(mixed.suites).toEqual(['unit']);
+    expect(mixed.suites).toEqual(['unit', 'architecture']);
     expect(mixed.browserCommands).toEqual(['pnpm run test:e2e:selected-closure:live']);
     expect(resolveWebVitestChangedSuitePlan([source]).browserCommands).toEqual([]);
   });

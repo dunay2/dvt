@@ -12,27 +12,18 @@ import {
 import { suiteMatchesFile } from './vitestSuites.architecture.support';
 
 describe('web Vitest changed-file routing', () => {
-  it('routes Canvas source changes to the smallest governed suite', () => {
-    expect(
-      resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/canvas/CanvasToolbar.tsx'])
-    ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
+  it.each([
+    'apps/web/src/app/views/canvas/CanvasShell.tsx',
+    'apps/web/src/app/views/Canvas.tsx',
+    'apps/web/src/app/views/Canvas.test.support.tsx',
+  ])('routes %s with focused behavior and cross-module architecture', (file) => {
+    expect(resolveWebVitestChangedSuitePlan([file])).toMatchObject({
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['canvas-presentation'],
-    });
-
-    expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/Canvas.tsx'])).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
-      requiresDependencies: true,
-      suites: ['canvas-presentation'],
-    });
-
-    expect(
-      resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/Canvas.test.support.tsx'])
-    ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
-      requiresDependencies: true,
-      suites: ['canvas-presentation'],
+      suites: ['canvas-presentation', 'architecture'],
     });
   });
 
@@ -55,9 +46,10 @@ describe('web Vitest changed-file routing', () => {
     ).toMatchObject({
       commands: [
         'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx',
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
       ],
-      requiresDependencies: false,
-      suites: ['canvas-presentation'],
+      requiresDependencies: true,
+      suites: ['canvas-presentation', 'architecture'],
     });
   });
 
@@ -74,10 +66,10 @@ describe('web Vitest changed-file routing', () => {
       commands: [
         'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
         WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
-        'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
       ],
       requiresDependencies: true,
-      suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
+      suites: ['canvas-unit', 'canvas-presentation', 'architecture'],
     });
 
     expect(
@@ -99,10 +91,10 @@ describe('web Vitest changed-file routing', () => {
           'src/app/components/inspector/nodePropertiesReadModel.test.ts',
         ].join(' '),
         WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'],
-        'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/components/canvas/DbtNodeComponent.architecture.test.ts',
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
       ],
       requiresDependencies: true,
-      suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
+      suites: ['canvas-unit', 'canvas-presentation', 'architecture'],
     });
   });
 
@@ -110,9 +102,12 @@ describe('web Vitest changed-file routing', () => {
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/components/monaco/MonacoCodeSurface.tsx'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['monaco'],
+      suites: ['monaco', 'architecture'],
     });
 
     expect(
@@ -120,9 +115,12 @@ describe('web Vitest changed-file routing', () => {
         'apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx',
       ])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session']],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session'],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['shell-session'],
+      suites: ['shell-session', 'architecture'],
     });
 
     expect(
@@ -130,9 +128,12 @@ describe('web Vitest changed-file routing', () => {
         'apps/web/src/app/services/session/workspaceScopeSelectionPort.ts',
       ])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session']],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session'],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['shell-session'],
+      suites: ['shell-session', 'architecture'],
     });
 
     expect(
@@ -145,33 +146,43 @@ describe('web Vitest changed-file routing', () => {
       commands: [
         WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session'],
         WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services'],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
       ],
       requiresDependencies: true,
-      suites: ['shell-session', 'workspace-services'],
+      suites: ['shell-session', 'workspace-services', 'architecture'],
     });
   });
 
   it('routes generic source changes and ignores non-web paths', () => {
     expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/CodeView.tsx'])).toMatchObject(
       {
-        commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+        commands: [
+          WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco,
+          WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+        ],
         requiresDependencies: true,
-        suites: ['monaco'],
+        suites: ['monaco', 'architecture'],
       }
     );
 
     expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/Root.tsx'])).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.presentation,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['presentation'],
+      suites: ['presentation', 'architecture'],
     });
 
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/services/runs/runsService.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.unit],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.unit,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['unit'],
+      suites: ['unit', 'architecture'],
     });
 
     expect(WEB_VITEST_CHANGED_SUITE_COMMANDS).not.toHaveProperty('canvas');
@@ -192,7 +203,10 @@ describe('web Vitest changed-file routing', () => {
       [first, firstTest, second],
     ]) {
       const plan = resolveWebVitestChangedSuitePlan(changed);
-      expect(plan.commands).toEqual([WEB_VITEST_CHANGED_SUITE_COMMANDS[suite]]);
+      expect(plan.commands).toEqual([
+        WEB_VITEST_CHANGED_SUITE_COMMANDS[suite],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ]);
       expect(plan.requiresDependencies).toBe(true);
     }
   });
@@ -210,8 +224,11 @@ describe('web Vitest changed-file routing', () => {
         [focus, focusTest, general],
       ]) {
         const plan = resolveWebVitestChangedSuitePlan(changed);
-        expect(plan.commands).toEqual([WEB_VITEST_CHANGED_SUITE_COMMANDS[primary]]);
-        expect(plan.suites).toEqual([primary]);
+        expect(plan.commands).toEqual([
+          WEB_VITEST_CHANGED_SUITE_COMMANDS[primary],
+          WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+        ]);
+        expect(plan.suites).toEqual([primary, 'architecture']);
         expect(resolveWebVitestChangedSuitePlan([...changed].reverse())).toEqual(plan);
       }
     }
@@ -222,7 +239,7 @@ describe('web Vitest changed-file routing', () => {
       'src/app/views/canvas/CanvasToolbar.tsx',
       'src/app/Root.test.tsx',
     ]);
-    expect(plan.suites).toEqual(['canvas-presentation', 'presentation']);
+    expect(plan.suites).toEqual(['canvas-presentation', 'presentation', 'architecture']);
     expect(plan.commandPlan).toEqual([
       { kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'] },
       {
@@ -230,6 +247,7 @@ describe('web Vitest changed-file routing', () => {
         config: 'vitest.presentation.config.ts',
         filePaths: ['src/app/Root.test.tsx'],
       },
+      { kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture },
     ]);
   });
 
@@ -241,6 +259,7 @@ describe('web Vitest changed-file routing', () => {
     expect(resolveWebVitestChangedSuitePlan([file, 'src/app/lib/general.ts']).suites).toEqual([
       focus,
       'unit',
+      'architecture',
     ]);
   });
 

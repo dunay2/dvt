@@ -421,6 +421,9 @@ export function resolveWebVitestChangedSuitePlan(
       continue;
     }
 
+    // Filesystem-reading guards cross focus-lane boundaries, even for paired source edits.
+    if (webPath.startsWith('src/') && /\.tsx?$/.test(webPath)) selectedSuites.add('architecture');
+
     const directChangedTestPath = findDirectChangedTestPath(webPath);
     if (directChangedTestPath) {
       const suiteName = resolveChangedSuiteForWebPath(directChangedTestPath);
