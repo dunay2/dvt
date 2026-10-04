@@ -3,6 +3,7 @@ import { AlertTriangle, Play, RefreshCw, Table2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { OperationalDrawerDataTable } from '../../components/shell/OperationalDrawerDataTable';
 import { OperationalDrawerLivePreviewFacts } from '../../components/shell/OperationalDrawerLivePreviewFacts';
+import styles from '../../components/shell/OperationalDrawerDataTable.module.css';
 import { CanvasModelUnresolvedInputs } from './CanvasModelUnresolvedInputs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { TransformDataSampleResponse } from '@dvt/contracts';
@@ -39,7 +40,7 @@ export function CanvasModelDataPanel({
   return (
     <section
       data-slot="canvas-model-data"
-      className={`flex h-full min-h-0 min-w-0 flex-col ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
+      className={`${styles.modelPanel} flex h-full min-h-0 min-w-0 flex-col ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
     >
       <header
         className={`flex shrink-0 items-center justify-between gap-3 ${compact ? '' : 'flex-wrap'}`}
@@ -136,15 +137,13 @@ export function CanvasModelDataPanel({
             </div>
           )}
           {sample.rows.length === 0 ? <p>{copy.empty}</p> : null}
-          <div className="min-h-0 flex-1 overflow-auto">
-            <OperationalDrawerDataTable
-              key={`${sample.draftRevision}:${sample.semanticPlanSha256}`}
-              caption={nodeName}
-              columns={sample.columns}
-              rows={sample.rows}
-              nullValueLabel="NULL"
-            />
-          </div>
+          <OperationalDrawerDataTable
+            key={`${sample.draftRevision}:${sample.semanticPlanSha256}`}
+            caption={nodeName}
+            columns={sample.columns}
+            rows={sample.rows}
+            nullValueLabel="NULL"
+          />
         </>
       )}
     </section>

@@ -3,20 +3,23 @@
   --grid-line: color-mix(in srgb, var(--border-default) 55%, transparent);
   --grid-row-height: 24px;
   display: flex;
+  flex: 1;
   flex-direction: column;
   min-width: 0;
-  min-height: 0;
-  height: 100%;
+  min-height: 128px;
   color: var(--text-default);
   font-size: 12px;
 }
 .grid[data-density='comfortable'] {
   --grid-row-height: 32px;
 }
+.modelPanel,
+.samplePanel {
+  overflow: auto;
+}
 .samplePanel {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   gap: 4px;
   padding: 8px;
 }
@@ -106,7 +109,7 @@
 }
 .frame {
   flex: 1;
-  min-height: 0;
+  min-height: calc(32px + var(--grid-row-height));
   overflow: auto;
   border: 1px solid var(--grid-line);
   border-radius: 4px;
