@@ -1,6 +1,4 @@
 // @vitest-environment jsdom
-import { fireEvent } from '@testing-library/dom';
-import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { useAuthoringFieldsHarness } from './DvtAuthoringFields.test-support';
 import {
@@ -10,9 +8,9 @@ import {
   TRANSFORM,
 } from './canvasOutputProjection.test-support';
 
-describe('explicit model-producer Transform control', () => {
+describe('model-producer Transform inspector boundary', () => {
   const view = useAuthoringFieldsHarness();
-  it('creates authority only when the user requests the Transform', async () => {
+  it('does not offer a second initializer or create authority while inspecting a producer', () => {
     const producer = buildCanonicalTransform();
     const consumer = { ...TRANSFORM, id: 'consumer' };
     const nodes = [SOURCE, producer, consumer];
@@ -25,17 +23,8 @@ describe('explicit model-producer Transform control', () => {
     const button = view.container.querySelector<HTMLButtonElement>(
       '[data-slot="dvt-start-substrait-projection"]'
     );
-    expect(button).not.toBeNull();
-    expect(button!.disabled).toBe(false);
+    expect(button).toBeNull();
     expect(view.draftJson()).toContain('"mode":"uninitialized"');
-    await act(async () => {
-      fireEvent.click(button!);
-    });
-    const draft = JSON.parse(view.draftJson());
-    expect(draft.shape).toBe('projection');
-    expect(draft.sidecar.relations).toHaveLength(2);
-    expect(draft.sidecar.relations[0].producerRef.nodeId).toBe(producer.id);
-    expect(draft.sidecar.relations[0].sourceRef).toBeUndefined();
     expect(JSON.stringify(nodes)).toBe(before);
   });
 });

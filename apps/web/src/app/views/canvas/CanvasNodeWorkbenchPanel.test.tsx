@@ -867,88 +867,88 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
-  it('keeps pending relational information out of the contextual inspector', async () => {
-    const onOpenSemanticEditor = vi.fn();
-    const pendingTransform: CanonicalNode = {
-      ...DVT_SUBSTRAIT_TRANSFORM_NODE,
-      metadata: {
-        ...DVT_SUBSTRAIT_TRANSFORM_NODE.metadata,
-        transformAuthoring: undefined,
-      },
-    };
-    const clients: CanonicalNode = {
-      ...SOURCE_NODE,
-      id: 'source.clients',
-      name: 'Clients Source',
-      metadata: {
-        ...SOURCE_NODE.metadata,
-        connectedSourceRef: {
-          schemaVersion: 'connected-source-ref.v1',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            connectionId: 'warehouse-prod',
-            provider: 'postgres',
-          },
-          sourceObjectId: 'relation/dvt/raw/clients',
+  it.each([1, 2])(
+    'routes a pending Transform with %s inputs to the Model editor',
+    async (inputCount) => {
+      const onOpenSemanticEditor = vi.fn();
+      const onApplyNodeDraft = vi.fn();
+      const pendingTransform: CanonicalNode = {
+        ...DVT_SUBSTRAIT_TRANSFORM_NODE,
+        metadata: {
+          ...DVT_SUBSTRAIT_TRANSFORM_NODE.metadata,
+          transformAuthoring: undefined,
         },
-        tableName: 'clients',
-        columns: [{ name: 'client_id', type: 'integer', nullable: false }],
-      },
-    };
-    await renderNodePanel(
-      root,
-      pendingTransform,
-      'code',
-      { canEditNode: true, onApplyNodeDraft: vi.fn() },
-      1,
-      undefined,
-      {
-        nodes: [SOURCE_NODE, clients, pendingTransform],
-        edges: [
-          {
-            id: 'edge-orders-transform',
-            sourceId: SOURCE_NODE.id,
-            targetId: pendingTransform.id,
-            relation: 'lineage',
+      };
+      const clients: CanonicalNode = {
+        ...SOURCE_NODE,
+        id: 'source.clients',
+        name: 'Clients Source',
+        metadata: {
+          ...SOURCE_NODE.metadata,
+          connectedSourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-prod',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/raw/clients',
           },
-          {
-            id: 'edge-clients-transform',
-            sourceId: clients.id,
+          tableName: 'clients',
+          columns: [{ name: 'client_id', type: 'integer', nullable: false }],
+        },
+      };
+      await renderNodePanel(
+        root,
+        pendingTransform,
+        'code',
+        { canEditNode: true, onApplyNodeDraft },
+        1,
+        undefined,
+        {
+          nodes: [SOURCE_NODE, clients, pendingTransform],
+          edges: [SOURCE_NODE, clients].slice(0, inputCount).map((source) => ({
+            id: `edge-${source.id}-transform`,
+            sourceId: source.id,
             targetId: pendingTransform.id,
-            relation: 'lineage',
-          },
-        ],
-        onOpenSemanticEditor,
-      }
-    );
+            relation: 'lineage' as const,
+          })),
+          onOpenSemanticEditor,
+        }
+      );
 
-    const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
-    const header = container.querySelector(
-      '[data-slot="canvas-node-workbench-header-actions"]'
-    )?.parentElement;
-    expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
-    const openEditor = panel?.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-open-semantic-editor"]'
-    );
-    expect(openEditor).not.toBeNull();
-    await act(async () => openEditor!.click());
-    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
-    expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
-    expect(panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).not.toBeNull();
-    expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
-    expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
-      'Model'
-    );
-    const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
-    const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
-    const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
-    expect(tabList?.parentElement).toBe(tabsList);
-    expect(moreTrigger?.parentElement).toBe(tabsList);
-    expect(tabList?.className).toContain('flex-1');
-    expect(tabList?.className).not.toContain('w-full');
-    expect(header?.textContent).toContain('Clean Orders');
-    expect(header?.querySelector('p')).toBeNull();
-  });
+      const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
+      const header = container.querySelector(
+        '[data-slot="canvas-node-workbench-header-actions"]'
+      )?.parentElement;
+      expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
+      expect(panel?.querySelector('[data-slot="dvt-start-substrait-projection"]')).toBeNull();
+      const openEditor = panel?.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-open-semantic-editor"]'
+      );
+      expect(openEditor).not.toBeNull();
+      await act(async () => openEditor!.click());
+      expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
+      expect(
+        panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')
+      ).not.toBeNull();
+      expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
+      expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
+        'Model'
+      );
+      const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+      const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
+      const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
+      expect(tabList?.parentElement).toBe(tabsList);
+      expect(moreTrigger?.parentElement).toBe(tabsList);
+      expect(tabList?.className).toContain('flex-1');
+      expect(tabList?.className).not.toContain('w-full');
+      expect(header?.textContent).toContain('Clean Orders');
+      expect(header?.querySelector('p')).toBeNull();
+    }
+  );
 
   it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', async () => {
     await renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');

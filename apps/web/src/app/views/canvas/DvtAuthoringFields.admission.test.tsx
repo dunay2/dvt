@@ -1,57 +1,46 @@
 // @vitest-environment jsdom
-import React from 'react';
-import type { CanonicalEdge } from '../../types/canonical';
 import { describe, expect, it } from 'vitest';
 import { useAuthoringFieldsHarness } from './DvtAuthoringFields.test-support';
 import { buildDvtNode, buildJoinWarehouseSourceNode } from './DvtAuthoringFields.test-fixtures';
-describe('DVT composition admission', () => {
+
+describe('pending Transform inspector boundary', () => {
   const view = useAuthoringFieldsHarness();
 
-  it('does not offer INNER JOIN when the connected datasets use different connections', async () => {
-    const customers = buildJoinWarehouseSourceNode({
-      id: 'source-customers',
-      table: 'customers',
-      columns: ['customer_id', 'name'],
-      connectionId: 'warehouse-a',
-    });
-    const orders = buildJoinWarehouseSourceNode({
-      id: 'source-orders',
-      table: 'orders',
-      columns: ['order_id', 'customer_id'],
-      connectionId: 'warehouse-b',
-    });
-    const transform = buildDvtNode('dvt:transform');
-    const edges: readonly CanonicalEdge[] = [
-      {
-        id: 'customers-transform',
-        sourceId: customers.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      },
-      {
-        id: 'orders-transform',
-        sourceId: orders.id,
-        targetId: transform.id,
-        relation: 'lineage',
-      },
-    ];
+  it.each(['general', 'columns', 'code', 'all'] as const)(
+    'does not initialize semantic authority from the %s section',
+    (section) => {
+      const source = buildJoinWarehouseSourceNode({
+        id: 'source-customers',
+        table: 'customers',
+        columns: ['customer_id', 'name'],
+      });
+      const transform = buildDvtNode('dvt:transform');
+      view.renderFields(
+        transform,
+        undefined,
+        undefined,
+        [source, transform],
+        [
+          {
+            id: 'customers-transform',
+            sourceId: source.id,
+            targetId: transform.id,
+            relation: 'lineage',
+          },
+        ],
+        section
+      );
 
-    view.renderFields(
-      transform,
-      undefined,
-      undefined,
-      [customers, orders, transform],
-      edges,
-      'code'
-    );
-
-    expect(
-      view.container.querySelector('[data-slot="dvt-start-configured-inner-join"]')
-    ).toBeNull();
-    const choice = view.container.querySelector<HTMLButtonElement>(
-      '[data-slot="dvt-select-operation-inner-join"]'
-    );
-    expect(choice?.disabled).toBe(true);
-    expect(choice?.textContent).toContain('Target unavailable');
-  });
+      expect(
+        view.container.querySelector('[data-slot="dvt-start-substrait-projection"]')
+      ).toBeNull();
+      expect(
+        view.container.querySelector('[data-slot="dvt-relational-operation-chooser"]')
+      ).toBeNull();
+      expect(JSON.parse(view.draftJson())).toMatchObject({
+        kind: 'transform',
+        mode: 'uninitialized',
+      });
+    }
+  );
 });
