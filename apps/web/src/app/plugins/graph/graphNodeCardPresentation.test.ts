@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { projectGraphNodeCardViewProps } from './graphNodeCardReadModel';
+import { canvasColumnTruth } from '../../views/canvas/canvasPresentationColumns';
 
 function rendererProps(): NodeRendererProps {
   return {
@@ -33,6 +34,29 @@ function rendererProps(): NodeRendererProps {
 }
 
 describe('projectGraphNodeCardViewProps', () => {
+  it.each(['ready', 'pending', 'unavailable', 'unconfigured'] as const)(
+    'preserves %s output state even when the canonical schema has no fields',
+    (state) => {
+      const props = rendererProps();
+      const view = projectGraphNodeCardViewProps({
+        ...props,
+        data: {
+          ...props.data,
+          columns: [],
+          inputColumns: [],
+          presentationTruth: {
+            columns: { ...canvasColumnTruth([], []), state },
+            code: { kind: 'unavailable' },
+          },
+        },
+      });
+      expect(view.columnSection).toMatchObject({
+        outputState: state,
+        columns: [],
+        inputColumns: [],
+      });
+    }
+  );
   it('projects one shared renderer contract without losing presentation state', () => {
     const props = projectGraphNodeCardViewProps(rendererProps());
 

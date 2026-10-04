@@ -2,6 +2,8 @@
 
 export const graphNodeColumnClasses = {
   views: 'mt-2 gap-0',
+  outputStatus:
+    'nodrag nopan px-3 py-2 text-xs text-slate-400 data-[state=unavailable]:text-red-300',
   viewList:
     'nodrag nopan h-7 w-full justify-start rounded-none border-b border-slate-700 bg-transparent p-0',
   viewTrigger:

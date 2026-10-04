@@ -2,7 +2,8 @@
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -15,26 +16,27 @@ const columns = '[data-slot="graph-node-column-piece"]';
 const outputToggle = '[data-slot="graph-node-column-output-state"]';
 
 function visitCanvas(): void {
-  visitWithE2eWorkspaceSession('/canvas', {
-    onBeforeLoad(window) {
-      window.localStorage.setItem(
-        'dvt-web-application-language',
-        JSON.stringify({ state: { language: 'en' }, version: 0 })
-      );
-      window.localStorage.setItem(
-        'dvt-web-canvas-interaction',
-        JSON.stringify({
-          state: {
-            impactOverlayEnabled: false,
-            columnLevelLineageEnabled: true,
-            canvasLayouts: {},
-          },
-          version: 0,
-        })
-      );
-    },
+  revisitWorkbenchCanvas(() => {
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+        window.localStorage.setItem(
+          'dvt-web-canvas-interaction',
+          JSON.stringify({
+            state: {
+              impactOverlayEnabled: false,
+              columnLevelLineageEnabled: true,
+              canvasLayouts: {},
+            },
+            version: 0,
+          })
+        );
+      },
+    });
   });
-  waitForE2eApiCall('/workspace/graph/draft', 'GET');
   cy.viewport(1700, 1100);
   cy.get('.react-flow__controls-fitview').click();
 }
@@ -92,7 +94,7 @@ describe('Model card field flow', () => {
       });
     });
     cy.get(`${consumer} [role="tab"]`).contains('Input (2)').should('be.visible');
-    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (Not configured)').should('be.visible');
     cy.get(consumer).should('not.contain.text', 'RECONNECT');
     cy.get('[data-sonner-toaster]').should('have.attr', 'data-y-position', 'bottom');
     cy.get(consumer).contains('button[aria-expanded]', 'Columns').click();
@@ -116,7 +118,8 @@ describe('Model card field flow', () => {
     cy.get(`${consumer} [role="tab"]`).contains('Input (2)').should('be.visible');
     cy.get(`${consumer} ${columns}`).should('have.length', 2);
     cy.get(`${consumer} ${outputToggle}`).should('not.exist');
-    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').click();
+    cy.get(`${consumer} [role="tab"]`).contains('Output (Not configured)').click();
+    cy.get(`${consumer} [role="status"]`).should('have.text', 'Not configured');
     cy.get(`${producer} ${columns}[data-column-name="total"]`)
       .should('have.attr', 'draggable', 'true')
       .trigger('dragstart', { dataTransfer: transfer });
@@ -126,7 +129,7 @@ describe('Model card field flow', () => {
     cy.get(`${producer} ${columns}[data-column-name="total"]`).trigger('dragend', {
       dataTransfer: transfer,
     });
-    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (Not configured)').should('be.visible');
     cy.get(`${consumer} ${columns}`).should('not.exist');
     cy.get(`${consumer} [data-port-variant="column"][data-port="source"]`).should('not.exist');
     cy.wrap(null).should(() => {
@@ -142,7 +145,8 @@ describe('Model card field flow', () => {
     cy.screenshot('model-chain-input-output');
     visitCanvas();
     cy.get(`${consumer} [role="tab"]`).contains('Input (2)').should('be.visible');
-    cy.get(`${consumer} [role="tab"]`).contains('Output (0)').should('be.visible');
+    cy.get(`${consumer} [role="tab"]`).contains('Output (Not configured)').click();
+    cy.get(`${consumer} [role="status"]`).should('have.text', 'Not configured');
     cy.get(consumer).should('not.contain.text', 'RECONNECT');
   });
 });

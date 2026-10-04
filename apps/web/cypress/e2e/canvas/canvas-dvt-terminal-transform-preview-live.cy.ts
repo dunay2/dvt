@@ -9,6 +9,8 @@ import './canvas-relational-operation-execution.cy';
 import './canvas-relational-workbench-chain-persistence.cy';
 import './canvas-relational-workbench-cross.cy';
 import './canvas-sort-fetch-data-navigation.cy';
+import './canvas-model-chain-fields.cy';
+import './canvas-column-lineage-mapping.cy';
 
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {

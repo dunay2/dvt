@@ -116,7 +116,7 @@ export async function projectCanvasPresentationNode(
         columns:
           args.node.role === 'input'
             ? { ...base.columns, state: 'ready' }
-            : canvasColumnTruth([], inherited, []),
+            : { ...canvasColumnTruth([], inherited, []), state: 'unconfigured' },
       };
     const authority = args.node.metadata!.transformAuthoring as {
       semanticDocument: { schemaVersion: string; semanticPlan: { sha256: string } };

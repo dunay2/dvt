@@ -10,6 +10,7 @@ import {
 } from '../../views/canvas/CanvasRelationalTreeWorkbench.test-support';
 import { GraphNodeColumnViews } from './GraphNodeColumnViews';
 import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 describe('card Input / Output boundary', () => {
   setupWorkbenchTest();
@@ -32,7 +33,8 @@ describe('card Input / Output boundary', () => {
     },
   ];
   function render(
-    onInputMapping?: GraphNodeColumnSectionProps['onInputMapping']
+    onInputMapping?: GraphNodeColumnSectionProps['onInputMapping'],
+    overrides: Partial<GraphNodeColumnSectionProps> = {}
   ): ReturnType<typeof vi.fn> {
     const mutation = vi.fn();
     act(() =>
@@ -47,6 +49,7 @@ describe('card Input / Output boundary', () => {
             onColumnOutputToggle={mutation}
             onAutomap={mutation}
             onColumnReorder={mutation}
+            {...overrides}
           />
         </ReactFlowProvider>
       )
@@ -100,5 +103,43 @@ describe('card Input / Output boundary', () => {
     drop('');
     drop('producer-b', '');
     expect(map).not.toHaveBeenCalled();
+  });
+  it.each([
+    ['pending', 'Updating schema', 'Calculando esquema'],
+    ['unavailable', 'Unavailable', 'No disponible'],
+    ['unconfigured', 'Not configured', 'Sin configurar'],
+  ] as const)(
+    'does not publish stale fields or a zero count while Output is %s',
+    async (state, en, es) => {
+      const previousLanguage = useApplicationLanguageStore.getState().language;
+      try {
+        for (const [language, label] of [
+          ['en', en],
+          ['es', es],
+        ] as const) {
+          await act(() => useApplicationLanguageStore.setState({ language }));
+          const map = vi.fn();
+          render(map, { outputState: state, view: 'output' });
+          expect(container.textContent).toContain(`Output (${label})`);
+          expect(container.querySelector('[role="status"]')?.textContent).toBe(label);
+          expect(container.querySelector('[draggable="true"]')).toBeNull();
+          expect(container.querySelector('[data-slot="graph-node-column-row"]')).toBeNull();
+          expect(container.querySelector('[data-port="source"]')).toBeNull();
+          drop();
+          expect(map).not.toHaveBeenCalled();
+          render(map, { outputState: state, view: 'input' });
+          expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(2);
+          drop();
+          expect(map).toHaveBeenCalledOnce();
+        }
+      } finally {
+        await act(() => useApplicationLanguageStore.setState({ language: previousLanguage }));
+      }
+    }
+  );
+  it('distinguishes a valid empty projection from an unavailable schema', () => {
+    render(undefined, { outputState: 'ready', view: 'output', columns: [] });
+    expect(container.textContent).toContain('Output (0)');
+    expect(container.querySelector('[role="status"]')).toBeNull();
   });
 });

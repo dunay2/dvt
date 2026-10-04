@@ -2,6 +2,7 @@
 import type { DvtSubstraitProjectionAuthoringRejection } from '../../views/canvas/canvasDvtSubstraitProjection';
 import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type { ActiveColumnPlacement } from './useGraphNodeColumnOrder';
+import type { CanvasNodeColumnTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 
 export type GraphNodeColumnFunction = Readonly<{
   capabilityId: string;
@@ -91,6 +92,7 @@ export type GraphNodeColumnSectionProps = Readonly<{
   onColumnInspect?: GraphNodeColumnInspect;
   columns: readonly GraphNodeColumn[];
   inputColumns?: readonly GraphNodeColumn[];
+  outputState?: CanvasNodeColumnTruth['state'];
   view?: 'input' | 'output';
   onViewChange?: (view: 'input' | 'output') => void;
   showSourceName?: boolean;

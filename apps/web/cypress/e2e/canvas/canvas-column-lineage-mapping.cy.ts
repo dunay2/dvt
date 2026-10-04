@@ -7,6 +7,7 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -72,7 +73,8 @@ function showAll(id: string): void {
   node(id).contains('button', 'Show remaining columns').click();
 }
 function assertNoOutputAuthoring(): void {
-  node('model-orders').contains('[role="tab"]', 'Output (0)').click();
+  node('model-orders').contains('[role="tab"]', 'Output (Not configured)').click();
+  node('model-orders').find('[role="status"]').should('have.text', 'Not configured');
   node('model-orders').find('[data-slot="graph-node-column-row"]').should('not.exist');
   node('model-orders').find('[data-slot="graph-node-column-output-state"]').should('not.exist');
   node('model-orders').contains('Map compatible columns').should('not.exist');
@@ -165,9 +167,11 @@ describe('Producer fields enter Input; Output is passive', () => {
     assertSavedWithoutSemantics();
     cy.screenshot('source-properties-one-field');
     cy.on('window:before:load', installE2eApiFetchStub);
-    cy.reload();
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
     node('model-orders').contains('[role="tab"]', 'Input (1)').should('be.visible');
-    node('model-orders').contains('[role="tab"]', 'Output (0)').should('be.visible');
+    node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
   });
 
   it('connects a producer without inventing operations or published fields', () => {
@@ -223,9 +227,11 @@ describe('Producer fields enter Input; Output is passive', () => {
     assertNoOutputAuthoring();
     assertSavedWithoutSemantics();
     cy.on('window:before:load', installE2eApiFetchStub);
-    cy.reload();
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
     node('model-orders').contains('[role="tab"]', 'Input (8)').should('be.visible');
-    node('model-orders').contains('[role="tab"]', 'Output (0)').should('be.visible');
+    node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
   });
 
   it('does not accept a field drop on Output', () => {
@@ -237,7 +243,7 @@ describe('Producer fields enter Input; Output is passive', () => {
     assertNoOutputAuthoring();
     dropPublishedField('source-orders', 'customer');
     node('model-orders').contains('[role="tab"]', 'Input (5)').should('be.visible');
-    node('model-orders').contains('[role="tab"]', 'Output (0)').should('be.visible');
+    node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Input (5)').click();
     dropPublishedField('source-orders', 'customer');
     node('model-orders').contains('[role="tab"]', 'Input (6)').should('be.visible');

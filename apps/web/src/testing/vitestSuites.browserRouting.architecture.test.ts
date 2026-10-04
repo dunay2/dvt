@@ -12,6 +12,8 @@ const helper = 'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts';
 const dataHelper = 'apps/web/cypress/e2e/canvas/canvasNodeDataActions.proof.ts';
 const savedSampleHelper = 'apps/web/cypress/support/relationalWorkbench/persistence.ts';
 const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.ts';
+const modelChain = 'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts';
+const inputMapping = 'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts';
 const savedSampleConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
@@ -27,6 +29,8 @@ describe('governed browser evidence routing', () => {
     dataHelper,
     savedSampleHelper,
     revisitHelper,
+    modelChain,
+    inputMapping,
     ...savedSampleConsumers,
     spec.replaceAll('/', '\\'),
     spec.slice('apps/web/'.length),
@@ -201,13 +205,17 @@ describe('governed browser evidence routing', () => {
       }
     }
     const expected = savedSampleConsumers.map((path) => resolve(path.slice('apps/web/'.length)));
+    const inputConsumers = [modelChain, inputMapping].map((path) =>
+      resolve(path.slice('apps/web/'.length))
+    );
     expect(consumers.sort()).toEqual(expected.sort());
     expect(revisitConsumers.sort()).toEqual(
-      expected
-        .filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts'))
-        .sort()
+      [
+        ...expected.filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts')),
+        ...inputConsumers,
+      ].sort()
     );
-    for (const consumer of expected)
+    for (const consumer of [...expected, ...inputConsumers])
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });
 });

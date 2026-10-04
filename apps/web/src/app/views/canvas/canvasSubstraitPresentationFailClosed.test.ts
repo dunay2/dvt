@@ -60,6 +60,7 @@ describe('Substrait card presentation fail-closed behavior', () => {
     });
 
     expect(presentation.columns).toMatchObject({
+      state: 'unavailable',
       declared: [],
       inherited: [],
       visible: [],

@@ -11,6 +11,7 @@ import {
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { encodeDvtSubstraitStructuredFieldDocument } from './canvasDvtSubstraitStructuredField';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
+import { selectGraphNodeCardColumns } from './canvasGraphNodeColumnProjection';
 
 const connectedSourceRef: ConnectedSourceRef = {
   schemaVersion: 'connected-source-ref.v1',
@@ -107,6 +108,10 @@ describe('Transform output-selection presentation', () => {
     expect(truth.columns.visible.find((column) => column.name === 'customer')?.nullable).toBe(
       false
     );
+    expect(selectGraphNodeCardColumns(truth).map((column) => column.name)).toEqual([
+      'order_id',
+      'amount',
+    ]);
   });
   it('keeps original roots and inherited inactive fields visible beside a derived struct', async () => {
     const sourceWithInactive: CanonicalNode = {
@@ -244,6 +249,8 @@ describe('Transform output-selection presentation', () => {
       }),
     ]);
     expect(truth.columns.visible[0]?.selected).toBe(false);
+    expect(truth.columns.state).toBe('ready');
+    expect(selectGraphNodeCardColumns(truth)).toEqual([]);
   });
 
   it('keeps physical source fields visible and receives their publication only at consumer Input', async () => {
