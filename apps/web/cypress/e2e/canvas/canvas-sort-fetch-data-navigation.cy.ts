@@ -96,8 +96,8 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
           ['End', 'canvas-model-main-tab'],
           ['ArrowLeft', 'canvas-workspace-tab'],
           ['ArrowRight', 'canvas-model-main-tab'],
-        ]) {
-          cy.focused().trigger('keydown', { eventConstructor: 'KeyboardEvent', key });
+        ] as const) {
+          cy.press(key);
           cy.get(`[data-slot="${slot}"]`)
             .should('be.focused')
             .and('have.attr', 'aria-selected', 'true')
