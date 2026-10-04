@@ -14,7 +14,10 @@ import {
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type { IRunExecutionContextPreparer } from '../ports/runExecutionContextPreparer.js';
+import {
+  DuplicateRunContextPreparerError,
+  type IRunExecutionContextPreparer,
+} from '../ports/runExecutionContextPreparer.js';
 import type { IRunExecutionContextWriter } from '../ports/runExecutionContextWriter.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
@@ -32,7 +35,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
   ) {
     const keys = deps.preparers.map((preparer) => preparer.contextKey);
     if (new Set(keys).size !== keys.length) {
-      throw new Error('Run execution-context preparers must have unique context keys.');
+      throw new DuplicateRunContextPreparerError();
     }
   }
 

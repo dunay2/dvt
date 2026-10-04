@@ -114,6 +114,15 @@ is added to the coordinator. A failing preparer or context store prevents
 dispatch. The provider-neutral test failed first on the coordinator's concrete
 DBT registry dependency, then passed after extraction.
 
+The [paired assembly review](https://github.com/dunay2/dvt/issues/2524#issuecomment-5985453344)
+replaces the generic duplicate-owner exception with the application-owned
+`DuplicateRunContextPreparerError`. The existing test now asserts its class,
+not diagnostic English text. Its red run observed the original generic error;
+all 34 binding/provider-boundary cases pass after the correction. PostgreSQL's
+predecessor rejection map is exhaustive over its actual failure union, matching
+the existing DBT mapping discipline. No new test case, source file, public error
+envelope or provider is introduced.
+
 Common workload identities no longer depend on PostgreSQL profiles or DBT.
 The SQL projection, graph cardinality and durable-output constraints are owned
 by `planner/postgres/DvtPostgresWorkloadConstraints.ts`; V1 explicitly composes

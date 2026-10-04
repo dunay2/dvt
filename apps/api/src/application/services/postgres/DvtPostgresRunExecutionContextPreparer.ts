@@ -133,4 +133,10 @@ const PREDECESSOR_REJECTIONS = {
   credential_unavailable: DVT_REJECTIONS.runConnectionUnavailable,
   unmanaged_target: DVT_REJECTIONS.runTargetUnmanaged,
   schema_mismatch: DVT_REJECTIONS.runSchemaMismatch,
-} as const satisfies Record<string, DvtOperationalRejection>;
+} as const satisfies Record<
+  Extract<
+    Awaited<ReturnType<DvtPostgresPublicationPredecessorReader['observe']>>,
+    { ok: false }
+  >['reason'],
+  DvtOperationalRejection
+>;

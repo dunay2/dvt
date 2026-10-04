@@ -11,6 +11,7 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { DuplicateRunContextPreparerError } from '../../../src/application/ports/runExecutionContextPreparer.js';
 import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
 import { DbtRunExecutionContextPreparer } from '../../../src/application/services/dbt/DbtRunExecutionContextPreparer.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
@@ -158,7 +159,7 @@ describe('RunExecutionContextBindingUseCase', () => {
           contextWriter: { write: vi.fn() },
           preparers: [preparer, preparer],
         })
-    ).toThrow('unique context keys');
+    ).toThrow(DuplicateRunContextPreparerError);
   });
 
   it('prepares an injected plugin without built-in provider dependencies', async () => {

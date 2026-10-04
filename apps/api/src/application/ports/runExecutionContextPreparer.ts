@@ -26,3 +26,11 @@ export interface IRunExecutionContextPreparer {
   isRequired(plan: ExecutionPlan): boolean;
   prepare(input: RunExecutionContextPreparation): Promise<PreparedRunPluginContext>;
 }
+
+export class DuplicateRunContextPreparerError extends Error {
+  public readonly name = 'DuplicateRunContextPreparerError';
+
+  public constructor() {
+    super('Run execution-context preparers must have unique context keys.');
+  }
+}
