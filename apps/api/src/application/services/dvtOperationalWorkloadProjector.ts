@@ -59,12 +59,12 @@ export class DvtOperationalWorkloadProjector {
       const target = resolveRunTarget(closure.transform);
       if (!target.ok) return target;
       const runTarget = target.target;
-      if (
+      const projectionIsStale =
         projection.outputNodeId !== closure.transform.id ||
         projection.semanticPlanSha256 !== semanticDocument.semanticPlan.sha256 ||
         projection.profileId !== closure.profileId ||
-        !sameConnection(projection.connectionRef, closure.connectionRef)
-      ) {
+        !sameConnection(projection.connectionRef, closure.connectionRef);
+      if (projectionIsStale) {
         return { ok: false, ...DVT_REJECTIONS.projectionStale };
       }
 
@@ -99,30 +99,32 @@ export class DvtOperationalWorkloadProjector {
         },
         connectionRef: closure.connectionRef,
       };
-      const workload = DvtOperationalWorkloadContractV1.schema.parse(
-        runTarget === null
-          ? {
-              ...commonWorkload,
-              executionIntent: 'preview',
-              output: { kind: 'ephemeral-preview', nodeId: closure.transform.id },
-            }
-          : {
-              ...commonWorkload,
-              executionIntent: 'run',
-              targetProjection: {
-                ...commonWorkload.targetProjection,
-                schemaDigestSha256: projection.schemaDigestSha256,
-              },
-              output: {
-                kind: 'transform-result',
-                nodeId: closure.transform.id,
-                disposition: 'table',
-                target: runTarget,
-                publicationPolicy: 'postgres-stable-table-publication.v1',
-              },
-              publicationBoundaries: [],
-            }
-      );
+      let workloadInput: unknown;
+      if (runTarget === null) {
+        workloadInput = {
+          ...commonWorkload,
+          executionIntent: 'preview',
+          output: { kind: 'ephemeral-preview', nodeId: closure.transform.id },
+        };
+      } else {
+        workloadInput = {
+          ...commonWorkload,
+          executionIntent: 'run',
+          targetProjection: {
+            ...commonWorkload.targetProjection,
+            schemaDigestSha256: projection.schemaDigestSha256,
+          },
+          output: {
+            kind: 'transform-result',
+            nodeId: closure.transform.id,
+            disposition: 'table',
+            target: runTarget,
+            publicationPolicy: 'postgres-stable-table-publication.v1',
+          },
+          publicationBoundaries: [],
+        };
+      }
+      const workload = DvtOperationalWorkloadContractV1.schema.parse(workloadInput);
 
       return {
         ok: true,
