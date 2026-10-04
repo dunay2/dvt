@@ -61,6 +61,12 @@ PreviewPlan and StartRun reuse their existing `code`, `cause`, and `reason`
 envelopes. `DvtOperationalRejection.v1.ts` owns named immutable DVT definitions;
 `RunExecutionRejection.v1.ts` owns execution-context and DBT Run definitions.
 Both reuse the structural message descriptor from ContractsErrorModel.v1.
+`MessageDescriptor<Key, Params>` requires no exception instance or translation
+service in admission logic. These fixed-message definitions reuse `cause` as
+`messageKey` and one frozen empty `messageParams` value; Web resolves the known
+definition from the existing wire identity. No redundant wire fields, dynamic
+text substitution or new version is introduced. Parameterized contract exceptions
+retain their existing key-specific parameter types.
 Binding and projection select definitions, not free-text causes or translated
 text. Diagnostic `reason` is not a presentation or branching authority.
 

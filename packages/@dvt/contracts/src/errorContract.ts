@@ -97,11 +97,9 @@ export type MessageDescriptor<
 
 export const EMPTY_MESSAGE_PARAMS = Object.freeze({}) as Readonly<Record<string, never>>;
 
-export class DvtContractError<K extends ContractsErrorMessageKeyName = ContractsErrorMessageKeyName>
-  extends Error
-  implements
-    MessageDescriptor<(typeof CONTRACTS_ERROR_MESSAGE_KEY)[K], ContractsErrorMessageParams<K>>
-{
+export class DvtContractError<
+  K extends ContractsErrorMessageKeyName = ContractsErrorMessageKeyName,
+> extends Error {
   readonly cause: unknown = undefined;
   readonly details: unknown = undefined;
   readonly messageKey: (typeof CONTRACTS_ERROR_MESSAGE_KEY)[K];

@@ -5,6 +5,7 @@ import {
   RUN_REJECTIONS,
   type OperationalRejection,
   type MessageDescriptor,
+  type DvtContractError,
 } from '../src/index.js';
 
 describe('operational rejection definitions', () => {
@@ -27,6 +28,7 @@ describe('operational rejection definitions', () => {
   });
 
   it('keeps message metadata structural and rejects untyped rejection values', () => {
+    expectTypeOf<DvtContractError>().toExtend<MessageDescriptor<string, object>>();
     expectTypeOf(RUN_REJECTIONS.callerContextProvided).toExtend<OperationalRejection>();
     expectTypeOf<string>().not.toExtend<OperationalRejection>();
     expectTypeOf<{ messageKey: 'example'; messageParams: { count: number } }>().toExtend<
