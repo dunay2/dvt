@@ -20,6 +20,10 @@ export function resolveWebCypressChangedPlan(
       if (
         ![
           'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+          'cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
+          'cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
+          'cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
+          'cypress/support/semanticLive/execution.ts',
           'cypress/e2e/canvas/liveRunEventRecovery.proof.ts',
           'cypress/e2e/canvas/canvasNodeDataActions.proof.ts',
           'cypress/support/relationalWorkbench/persistence.ts',

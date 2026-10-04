@@ -14,6 +14,12 @@ const savedSampleHelper = 'apps/web/cypress/support/relationalWorkbench/persiste
 const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.ts';
 const modelChain = 'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts';
 const inputMapping = 'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts';
+const semanticExecution = 'apps/web/cypress/support/semanticLive/execution.ts';
+const liveWorkloadConsumers = [
+  'apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
+];
 const inspectorConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts',
@@ -37,6 +43,8 @@ describe('governed browser evidence routing', () => {
     revisitHelper,
     modelChain,
     inputMapping,
+    semanticExecution,
+    ...liveWorkloadConsumers,
     ...savedSampleConsumers,
     ...inspectorConsumers,
     spec.replaceAll('/', '\\'),
@@ -67,7 +75,14 @@ describe('governed browser evidence routing', () => {
 
   it('retains source obligations and runs shared browser evidence only once in a mixed diff', () => {
     const source = 'apps/web/src/lib/format.ts';
-    const mixed = resolveWebVitestChangedSuitePlan([helper, spec, source, helper]);
+    const mixed = resolveWebVitestChangedSuitePlan([
+      helper,
+      spec,
+      source,
+      helper,
+      semanticExecution,
+      ...liveWorkloadConsumers,
+    ]);
     expect(mixed.commandPlan).toEqual(resolveWebVitestChangedSuitePlan([source]).commandPlan);
     expect(mixed.suites).toEqual(['unit', 'architecture']);
     expect(mixed.browserCommands).toEqual(['pnpm run test:e2e:selected-closure:live']);
@@ -164,7 +179,7 @@ describe('governed browser evidence routing', () => {
     }
   });
 
-  it('registers every saved-sample consumer once in the admitted terminal run', () => {
+  it('registers every admitted consumer once in the shared terminal runtime', () => {
     const consumers: string[] = [];
     const revisitConsumers: string[] = [];
     const registrations: string[] = [];
@@ -227,6 +242,7 @@ describe('governed browser evidence routing', () => {
       ...expected,
       ...inputConsumers,
       ...inspectorConsumers.map((path) => resolve(path.slice('apps/web/'.length))),
+      ...liveWorkloadConsumers.map((path) => resolve(path.slice('apps/web/'.length))),
     ])
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });

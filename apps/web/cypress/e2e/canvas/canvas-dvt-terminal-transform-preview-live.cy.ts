@@ -15,6 +15,9 @@ import './canvas-relational-workbench-viewport.cy';
 import './canvas-sort-fetch-data-navigation.cy';
 import './canvas-model-chain-fields.cy';
 import './canvas-column-lineage-mapping.cy';
+import './canvas-dvt-join-preview-live.cy';
+import './canvas-semantic-persistence-run-live.cy';
+import './canvas-sql-progressive-live.cy';
 
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
