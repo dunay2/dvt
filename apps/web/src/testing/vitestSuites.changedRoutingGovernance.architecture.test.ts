@@ -16,6 +16,26 @@ const governanceTestPaths = listWebVitestFiles().filter((filePath) =>
 
 describe('web Vitest governance-test routing', () => {
   it.each([
+    'src/app/views/Canvas.tsx',
+    'src/app/views/canvas/CanvasShell.tsx',
+    'src/app/views/canvas/useCanvasCodeWorkbench.tsx',
+    'src/app/lib/general.ts',
+  ])('retains cross-module architecture guards for the source %s', (source) => {
+    const pairedTest = source.replace(/\.(tsx?)$/, '.test.$1');
+    for (const changed of [
+      [source],
+      [source, pairedTest],
+      [source, pairedTest, 'src/app/views/canvas/CanvasShell.architecture.test.tsx'],
+    ]) {
+      const plan = resolveWebVitestChangedSuitePlan(changed);
+      expect(plan.commands.filter((command) => command.includes('architecture'))).toEqual([
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ]);
+      expect(resolveWebVitestChangedSuitePlan([...changed].reverse())).toEqual(plan);
+    }
+  });
+
+  it.each([
     'apps/web/vitest.suites.ts',
     'apps/web/scripts/run-vitest-changed-suites.ts',
     'apps/web/vitest.canvas-unit.config.ts',
@@ -47,11 +67,7 @@ describe('web Vitest governance-test routing', () => {
     ]);
     expect(plan.commandPlan).toEqual([
       { kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation'] },
-      {
-        kind: 'vitest-files',
-        config: 'vitest.architecture.config.ts',
-        filePaths: governanceTestPaths,
-      },
+      { kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture },
     ]);
     expect(plan.requiresDependencies).toBe(true);
   });

@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-03
+last_reviewed: 2026-10-04
 planning_type: architecture
 ---
 
@@ -43,14 +43,20 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 
 - The router never changes primary suite ownership.
 - Architecture-governance paths route to `architecture`.
+- Web source edits also require the complete `architecture` primary suite:
+  filesystem-reading guards can inspect sources outside their own focus lane.
+  A paired changed test does not replace this obligation. Test-only diffs keep
+  exact routing, and the existing full-suite normalization absorbs exact and
+  Canvas architecture batches. This retains cross-module boundary evidence
+  without another dependency catalog or running every behavioral suite.
 - Canvas route paths and Canvas-owned component/inspector surfaces route to
   `canvas-unit`, `canvas-presentation`, or `canvas-architecture` when the file
   type makes that safe.
 - Canvas-owned component surfaces under `src/app/components/canvas/**`,
   `src/app/components/inspector/**`, and `src/app/components/InspectorPanel.tsx`
-  stay in Canvas focus lanes. They must not fall back to the full `unit`,
-  `presentation`, or `architecture` primary suites only because they live
-  outside `src/app/views/canvas/**`.
+  stay in Canvas behavioral focus lanes. They must not fall back to the full
+  `unit` or `presentation` primary suites only because they live outside
+  `src/app/views/canvas/**`. The architecture obligation is independent.
 - Monaco-scoped paths route to `monaco` when the change is local to Code,
   Artifacts/Diff Monaco guards, or shared Monaco code surfaces.
 - App shell, session context, workspace-scope selection, session store,
@@ -97,6 +103,7 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 stateDiagram-v2
   [*] --> ChangedFiles
   ChangedFiles --> GovernedPath: suite catalog/config/docs
+  ChangedFiles --> ArchitectureCommand: Web source edit, including paired source
   ChangedFiles --> PairedSource: source plus changed same-stem test
   ChangedFiles --> RequiredSuite: source without a paired changed test
   ChangedFiles --> CanvasPath: Canvas route, canvas component, or inspector surface
