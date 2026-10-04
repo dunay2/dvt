@@ -7,6 +7,7 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -166,7 +167,9 @@ describe('Producer fields enter Input; Output is passive', () => {
     assertSavedWithoutSemantics();
     cy.screenshot('source-properties-one-field');
     cy.on('window:before:load', installE2eApiFetchStub);
-    cy.reload();
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
     node('model-orders').contains('[role="tab"]', 'Input (1)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
   });
@@ -224,7 +227,9 @@ describe('Producer fields enter Input; Output is passive', () => {
     assertNoOutputAuthoring();
     assertSavedWithoutSemantics();
     cy.on('window:before:load', installE2eApiFetchStub);
-    cy.reload();
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
     node('model-orders').contains('[role="tab"]', 'Input (8)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
   });

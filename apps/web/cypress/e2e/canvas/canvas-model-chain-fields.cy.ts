@@ -2,7 +2,8 @@
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -15,26 +16,27 @@ const columns = '[data-slot="graph-node-column-piece"]';
 const outputToggle = '[data-slot="graph-node-column-output-state"]';
 
 function visitCanvas(): void {
-  visitWithE2eWorkspaceSession('/canvas', {
-    onBeforeLoad(window) {
-      window.localStorage.setItem(
-        'dvt-web-application-language',
-        JSON.stringify({ state: { language: 'en' }, version: 0 })
-      );
-      window.localStorage.setItem(
-        'dvt-web-canvas-interaction',
-        JSON.stringify({
-          state: {
-            impactOverlayEnabled: false,
-            columnLevelLineageEnabled: true,
-            canvasLayouts: {},
-          },
-          version: 0,
-        })
-      );
-    },
+  revisitWorkbenchCanvas(() => {
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+        window.localStorage.setItem(
+          'dvt-web-canvas-interaction',
+          JSON.stringify({
+            state: {
+              impactOverlayEnabled: false,
+              columnLevelLineageEnabled: true,
+              canvasLayouts: {},
+            },
+            version: 0,
+          })
+        );
+      },
+    });
   });
-  waitForE2eApiCall('/workspace/graph/draft', 'GET');
   cy.viewport(1700, 1100);
   cy.get('.react-flow__controls-fitview').click();
 }

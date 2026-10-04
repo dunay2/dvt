@@ -22,10 +22,10 @@ export function openWorkbenchModel(nodeId = 'join-transform'): void {
 }
 
 /** Reopening must observe this navigation's draft, not a previous recorded GET. */
-export function revisitWorkbenchCanvas(): void {
+export function revisitWorkbenchCanvas(navigate: () => void = visitWorkbenchCanvas): void {
   cy.then(() => {
     const previous = getE2eApiCalls('/workspace/graph/draft', 'GET').length;
-    visitWorkbenchCanvas();
+    navigate();
     cy.wrap(null, { timeout: 20_000 }).should(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'GET').length).to.be.greaterThan(previous);
     });
