@@ -867,16 +867,24 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
-  it.each([1, 2])(
-    'routes a pending Transform with %s inputs to the Model editor',
-    async (inputCount) => {
+  it.each([
+    { canonical: false, inputCount: 1, canEditNode: true },
+    { canonical: false, inputCount: 2, canEditNode: true },
+    { canonical: true, inputCount: 1, canEditNode: true },
+    { canonical: true, inputCount: 2, canEditNode: true },
+    { canonical: true, inputCount: 2, canEditNode: false },
+  ])(
+    'routes Model editing through one entry ($canonical, $inputCount inputs, editable: $canEditNode)',
+    async ({ canonical, inputCount, canEditNode }) => {
       const onOpenSemanticEditor = vi.fn();
       const onApplyNodeDraft = vi.fn();
       const pendingTransform: CanonicalNode = {
         ...DVT_SUBSTRAIT_TRANSFORM_NODE,
         metadata: {
           ...DVT_SUBSTRAIT_TRANSFORM_NODE.metadata,
-          transformAuthoring: undefined,
+          transformAuthoring: canonical
+            ? DVT_SUBSTRAIT_TRANSFORM_NODE.metadata?.transformAuthoring
+            : undefined,
         },
       };
       const clients: CanonicalNode = {
@@ -898,24 +906,27 @@ describe('CanvasNodeWorkbenchPanel', () => {
           columns: [{ name: 'client_id', type: 'integer', nullable: false }],
         },
       };
-      await renderNodePanel(
-        root,
-        pendingTransform,
-        'code',
-        { canEditNode: true, onApplyNodeDraft },
-        1,
-        undefined,
-        {
-          nodes: [SOURCE_NODE, clients, pendingTransform],
-          edges: [SOURCE_NODE, clients].slice(0, inputCount).map((source) => ({
-            id: `edge-${source.id}-transform`,
-            sourceId: source.id,
-            targetId: pendingTransform.id,
-            relation: 'lineage' as const,
-          })),
-          onOpenSemanticEditor,
-        }
-      );
+      const graph = {
+        nodes: [SOURCE_NODE, clients, pendingTransform],
+        edges: [SOURCE_NODE, clients].slice(0, inputCount).map((source) => ({
+          id: `edge-${source.id}-transform`,
+          sourceId: source.id,
+          targetId: pendingTransform.id,
+          relation: 'lineage' as const,
+        })),
+        onOpenSemanticEditor,
+      };
+      const renderSection = (section: string, request: number): Promise<void> =>
+        renderNodePanel(
+          root,
+          pendingTransform,
+          section,
+          { canEditNode, onApplyNodeDraft },
+          request,
+          undefined,
+          graph
+        );
+      await renderSection('columns', 1);
 
       const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
       const header = container.querySelector(
@@ -923,6 +934,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
       )?.parentElement;
       expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
       expect(panel?.querySelector('[data-slot="dvt-start-substrait-projection"]')).toBeNull();
+      expect(panel?.querySelector('[data-slot="dvt-relation-authoring"]')).toBeNull();
+      expect(panel?.querySelector('[data-slot="canvas-relation-outputs"]')).toBeNull();
+      if (canonical) expect(panel?.textContent).toContain('order_id');
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      if (!canEditNode) return;
+      await renderSection('code', 2);
       const openEditor = panel?.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-open-semantic-editor"]'
       );

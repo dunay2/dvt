@@ -2,6 +2,7 @@
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
@@ -17,6 +18,14 @@ describe('Workbench UNION ALL', () => {
     cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_south').click();
     cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-union-all"]').click();
+    cy.get('[data-pending-operation="true"]').last().as('union', { type: 'static' });
+    for (const [port, source] of ['customers_north', 'customers_south'].entries()) {
+      cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', source)
+        .closest('li')
+        .as('producer');
+      connectWorkbenchProducer('@producer', '@union', port);
+    }
+    connectWorkbenchProducer('@union', '[data-slot="canvas-relational-output-input-port"]', null);
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.be.disabled').click();
 
     cy.wrap(null).should(() => {

@@ -14,6 +14,10 @@ const savedSampleHelper = 'apps/web/cypress/support/relationalWorkbench/persiste
 const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.ts';
 const modelChain = 'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts';
 const inputMapping = 'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts';
+const inspectorConsumers = [
+  'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts',
+];
 const savedSampleConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
@@ -32,6 +36,7 @@ describe('governed browser evidence routing', () => {
     modelChain,
     inputMapping,
     ...savedSampleConsumers,
+    ...inspectorConsumers,
     spec.replaceAll('/', '\\'),
     spec.slice('apps/web/'.length),
   ])('selects the real browser command, not Vitest, for %s', (file) => {
@@ -215,7 +220,11 @@ describe('governed browser evidence routing', () => {
         ...inputConsumers,
       ].sort()
     );
-    for (const consumer of [...expected, ...inputConsumers])
+    for (const consumer of [
+      ...expected,
+      ...inputConsumers,
+      ...inspectorConsumers.map((path) => resolve(path.slice('apps/web/'.length))),
+    ])
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });
 });

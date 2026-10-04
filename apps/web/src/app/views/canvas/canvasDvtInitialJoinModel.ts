@@ -44,28 +44,6 @@ export function resolveCanvasDvtInitialJoinPairForInputs(
       };
 }
 
-export function resolveCanvasDvtInitialJoinInputs(
-  inputs: readonly CanvasDvtCompositionInput[]
-): readonly CanvasDvtCompositionInput[] {
-  return inputs.filter((left) =>
-    inputs.some((right) => resolveCanvasDvtInitialJoinPairForInputs(left, right) != null)
-  );
-}
-
-export function resolveCanvasDvtInitialJoinPair(
-  inputs: readonly CanvasDvtCompositionInput[]
-): CanvasDvtInitialJoinPair | null {
-  if (inputs.length !== 2) return null;
-  return resolveCanvasDvtInitialJoinPairForInputs(inputs[0]!, inputs[1]!);
-}
-
-export function resolveCanvasDvtInitialJoinRightInputs(
-  inputs: readonly CanvasDvtCompositionInput[],
-  left: CanvasDvtCompositionInput
-): readonly CanvasDvtCompositionInput[] {
-  return inputs.filter((right) => resolveCanvasDvtInitialJoinPairForInputs(left, right) != null);
-}
-
 export function createCanvasDvtInitialJoinDraft(
   inputs: readonly CanvasDvtCompositionInput[],
   pair: CanvasDvtInitialJoinPair,

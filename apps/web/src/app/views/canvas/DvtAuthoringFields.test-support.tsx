@@ -68,7 +68,6 @@ function DvtAuthoringFieldsHarness({
         onChange={setDraft}
       />
       <output data-slot="dvt-draft-json">{JSON.stringify(draft.dvt)}</output>
-      <output data-slot="output-name-drafts">{JSON.stringify(draft.outputNameDrafts ?? {})}</output>
     </>
   );
   if (!warehouseSourceImport) return fields;
@@ -130,13 +129,9 @@ export function useAuthoringFieldsHarness() {
   function draftJson(): string {
     return container.querySelector('[data-slot="dvt-draft-json"]')?.textContent ?? '';
   }
-  function outputNameDraftsJson(): string {
-    return container.querySelector('[data-slot="output-name-drafts"]')?.textContent ?? '';
-  }
   return {
     renderFields,
     draftJson,
-    outputNameDraftsJson,
     get container() {
       return container;
     },

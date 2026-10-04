@@ -11,16 +11,10 @@ import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { RelationOutputRow } from './RelationOutputRow';
 import { useInspectorListReorder } from '../../components/inspector/useInspectorListReorder';
 
-export type RelationOutputNames = Readonly<{
-  values: Readonly<Record<string, string>>;
-  onChange: (fieldId: string, value: string) => void;
-}>;
-
 export function CanvasRelationOutputs({
   relationId,
   disabled,
   onChange,
-  names,
   onPendingChange,
   orderingOnly = false,
 }: Readonly<{
@@ -28,7 +22,6 @@ export function CanvasRelationOutputs({
   disabled: boolean;
   onChange: (document: SubstraitDocument) => void | boolean;
   orderingOnly?: boolean;
-  names?: RelationOutputNames;
   onPendingChange?: (pending: boolean) => void;
 }>) {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -38,7 +31,7 @@ export function CanvasRelationOutputs({
   const command = useRelationCommand(relationId, onChange);
   const [localNames, setLocalNames] = useState<Readonly<Record<string, string>>>({});
   const [rowOrder, setRowOrder] = useState<readonly number[] | null>(null);
-  const drafts = names ?? {
+  const drafts = {
     values: localNames,
     onChange: (id: string, value: string) =>
       setLocalNames((current) => ({ ...current, [id]: value })),

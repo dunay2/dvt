@@ -1,5 +1,4 @@
 /** Owned concern: route DVT Inspector sections to focused authoring components. */
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -11,8 +10,6 @@ import { resolveDvtConnectionProvenance } from './canvasDvtConnectionProvenance'
 import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
-import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
-import { DvtRelationAuthoringSection } from './DvtRelationAuthoringSection';
 import { DvtTransformMaterializationField } from './DvtTransformMaterializationField';
 
 type DvtAuthoringFieldsProps = Readonly<{
@@ -59,6 +56,7 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'transform') {
+    if (section !== 'all' && section !== 'general') return null;
     const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
     const materializationField = (
       <div className="space-y-4">
@@ -83,43 +81,7 @@ export function DvtAuthoringFields({
         />
       </div>
     );
-    if (section === 'general') return materializationField;
-
-    let semanticFields: JSX.Element | null;
-    if (draft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
-      semanticFields = null;
-    } else {
-      semanticFields = (
-        <div className="space-y-4">
-          {draft.dvt.shape === 'projection' ? (
-            <DvtSubstraitCompositionStart
-              disabled={disabled}
-              node={node}
-              nodes={nodes}
-              edges={edges}
-              onChange={onChange}
-            />
-          ) : null}
-          <DvtRelationAuthoringSection
-            nodeId={node.id}
-            inputScope={{ nodes, edges }}
-            disabled={disabled}
-            draft={draft.dvt}
-            outputNameDrafts={draft.outputNameDrafts}
-            onChange={onChange}
-          />
-        </div>
-      );
-    }
-
-    return section === 'all' ? (
-      <div className="space-y-4">
-        {materializationField}
-        {semanticFields}
-      </div>
-    ) : (
-      semanticFields
-    );
+    return materializationField;
   }
 
   if (section !== 'all' && section !== 'general') return null;
