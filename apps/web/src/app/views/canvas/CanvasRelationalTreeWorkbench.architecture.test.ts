@@ -294,5 +294,6 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CodeWorkbenchSource).not.toContain('pendingCompositionAuthoring');
     expect(CodeWorkbenchSource).not.toContain('CanvasRelationalCompositionTruth');
     expect(CodeWorkbenchSource).toContain('canvas-open-semantic-editor');
+    expect(Object.keys(import.meta.glob('./DvtSubstraitTransformStart.tsx'))).toEqual([]);
   });
 });

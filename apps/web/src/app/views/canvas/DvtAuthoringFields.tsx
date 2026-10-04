@@ -13,7 +13,6 @@ import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtSubstraitCompositionStart } from './DvtSubstraitCompositionStart';
 import { DvtRelationAuthoringSection } from './DvtRelationAuthoringSection';
-import { DvtSubstraitTransformStart } from './DvtSubstraitTransformStart';
 import { DvtTransformMaterializationField } from './DvtTransformMaterializationField';
 
 type DvtAuthoringFieldsProps = Readonly<{
@@ -87,17 +86,7 @@ export function DvtAuthoringFields({
     if (section === 'general') return materializationField;
 
     let semanticFields: JSX.Element | null;
-    if (draft.dvt.mode === 'uninitialized') {
-      semanticFields = (
-        <DvtSubstraitTransformStart
-          disabled={disabled}
-          node={node}
-          nodes={nodes}
-          edges={edges}
-          onChange={onChange}
-        />
-      );
-    } else if (draft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
+    if (draft.dvt.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) {
       semanticFields = null;
     } else {
       semanticFields = (
