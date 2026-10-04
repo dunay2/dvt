@@ -205,16 +205,17 @@ describe('governed browser evidence routing', () => {
       }
     }
     const expected = savedSampleConsumers.map((path) => resolve(path.slice('apps/web/'.length)));
+    const inputConsumers = [modelChain, inputMapping].map((path) =>
+      resolve(path.slice('apps/web/'.length))
+    );
     expect(consumers.sort()).toEqual(expected.sort());
     expect(revisitConsumers.sort()).toEqual(
-      expected
-        .filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts'))
-        .sort()
+      [
+        ...expected.filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts')),
+        ...inputConsumers,
+      ].sort()
     );
-    for (const consumer of [
-      ...expected,
-      ...[modelChain, inputMapping].map((path) => resolve(path.slice('apps/web/'.length))),
-    ])
+    for (const consumer of [...expected, ...inputConsumers])
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });
 });
