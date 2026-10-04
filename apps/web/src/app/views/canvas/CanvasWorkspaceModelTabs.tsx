@@ -38,40 +38,39 @@ export function CanvasWorkspaceModelTabs({
     <Tabs
       value={tab?.active === true ? 'model' : 'canvas'}
       onValueChange={(value) => tabs.find((item) => item.key === value)?.select?.()}
-      className="self-stretch"
+      className="flex-row items-center gap-0 self-stretch"
     >
       <TabsList
         aria-label={copy.workspaceTabs}
         className="workspace-navigation-tabs h-full justify-start rounded-none bg-transparent p-0"
       >
         {tabs.map((item, index) => (
-          <div key={item.key} className="flex min-w-0 items-center">
-            <TabsTrigger
-              value={item.key}
-              id={item.tabId}
-              aria-controls={item.panelId}
-              data-slot={item.tabId}
-              title={item.label}
-              className="workspace-navigation-tab rounded-none border-0 shadow-none data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              {index === 1 ? <Table2 aria-hidden="true" className="size-4 shrink-0" /> : null}
-              <span className="max-w-64 truncate">{item.label}</span>
-            </TabsTrigger>
-            {item.key === 'model' && tab != null ? (
-              <button
-                type="button"
-                data-slot="canvas-model-tab-close"
-                aria-label={copy.closeEditor}
-                title={copy.closeEditor}
-                className="rounded p-1 text-(--text-muted) hover:bg-(--surface-panel) hover:text-(--text-primary) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
-                onClick={() => tab.onClose()}
-              >
-                <X aria-hidden="true" className="size-3.5" />
-              </button>
-            ) : null}
-          </div>
+          <TabsTrigger
+            key={item.key}
+            value={item.key}
+            id={item.tabId}
+            aria-controls={item.panelId}
+            data-slot={item.tabId}
+            title={item.label}
+            className="workspace-navigation-tab rounded-none border-0 shadow-none data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+          >
+            {index === 1 ? <Table2 aria-hidden="true" className="size-4 shrink-0" /> : null}
+            <span className="max-w-64 truncate">{item.label}</span>
+          </TabsTrigger>
         ))}
       </TabsList>
+      {tab != null ? (
+        <button
+          type="button"
+          data-slot="canvas-model-tab-close"
+          aria-label={copy.closeEditor}
+          title={copy.closeEditor}
+          className="rounded p-1 text-(--text-muted) hover:bg-(--surface-panel) hover:text-(--text-primary) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+          onClick={() => tab.onClose()}
+        >
+          <X aria-hidden="true" className="size-3.5" />
+        </button>
+      ) : null}
     </Tabs>
   );
 }

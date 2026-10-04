@@ -58,6 +58,11 @@ describe('Canvas Model inspection', () => {
     )!;
     const modelPanel = panelFor(model);
     expect(
+      model
+        .closest('[role="tablist"]')
+        ?.contains(navigation.querySelector('[data-slot="canvas-model-tab-close"]'))
+    ).toBe(false);
+    expect(
       modelPanel.contains(harness.container.querySelector('[data-slot="canvas-model-editor"]'))
     ).toBe(true);
     await act(async () => model.focus());
