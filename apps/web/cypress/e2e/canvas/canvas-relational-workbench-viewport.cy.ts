@@ -13,10 +13,7 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 
 describe('Workbench viewport', () => {
   beforeEach(() => {
-    stubWorkbenchScenario(
-      'saved-join',
-      'Customer orders with a deliberately long workspace name for reflow'
-    );
+    stubWorkbenchScenario('saved-join');
   });
   it('keeps zoom and source search while expanding and collapsing the rail', () => {
     let writesBeforeZoom = 0;
