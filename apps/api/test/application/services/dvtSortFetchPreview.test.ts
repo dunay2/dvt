@@ -61,7 +61,7 @@ describe('protected SortRel/FetchRel projection', () => {
       targetProjection: binding,
     });
 
-    if (!result.ok) throw new Error(result.reason);
+    if (!result.ok) throw new Error(result.cause);
     expect(
       DvtOperationalWorkloadContractV1.schema.parse(result.graphSource.nodes[0]?.stepTypeConfig)
         .executionIntent

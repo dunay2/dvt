@@ -3,6 +3,11 @@
  * user-facing web errors for preview and start-run client flows.
  */
 import { ApiError } from './createApiClient';
+import {
+  getApplicationLanguage,
+  type ApplicationLanguage,
+} from '../../stores/applicationLanguageStore';
+import { resolveDvtOperationalRejectionCopy } from './dvtOperationalRejectionCopy';
 
 type HttpErrorEnvelope = {
   error: {
@@ -42,7 +47,10 @@ export function isProtectedRuntimeHttpErrorEnvelope(value: unknown): value is Ht
   );
 }
 
-export function normalizeProtectedRuntimeRejection(error: unknown): Error | null {
+export function normalizeProtectedRuntimeRejection(
+  error: unknown,
+  language: ApplicationLanguage = getApplicationLanguage()
+): Error | null {
   if (!(error instanceof ApiError) || !isProtectedRuntimeHttpErrorEnvelope(error.responseBody)) {
     return null;
   }
@@ -60,6 +68,9 @@ export function normalizeProtectedRuntimeRejection(error: unknown): Error | null
   }
 
   if (reason === 'plan_rejected') {
+    const localized = resolveDvtOperationalRejectionCopy(cause, language);
+    if (localized !== null) return new Error(localized);
+
     if (cause === 'dependency_gap') {
       return new Error(DEPENDENCY_GAP_MESSAGE);
     }

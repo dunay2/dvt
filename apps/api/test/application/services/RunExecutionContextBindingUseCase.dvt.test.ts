@@ -14,8 +14,10 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { mapStartRunResult } from '../../../src/entrypoints/http/httpErrorMapper.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
@@ -89,7 +91,11 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
     );
   });
 
-  it('rejects Preview workload v1 before dispatch', async () => {
+  it.each([
+    ['Preview intent', buildPreviewWorkload],
+    ['retired V2', () => ({ ...buildRunWorkload(), schemaVersion: 'dvt-operational-workload.v2' })],
+    ['missing intent', () => ({ ...buildRunWorkload(), executionIntent: undefined })],
+  ] as const)('rejects %s before dispatch', async (_label, workload) => {
     const delegate = makeDelegate();
     const contextWriter = { write: vi.fn() };
     const getConnection = vi.fn();
@@ -100,16 +106,168 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
     const result = await useCase.executeAdmitted(
       command(),
       authorizedContext(),
-      admission(buildPreviewWorkload())
+      admission(workload())
     );
 
     expect(result).toMatchObject({
       value: {
         kind: 'plan_rejected',
-        reason: 'DVT operational Run requires workload schema v2.',
+        code: 'REJECTED',
+        cause: 'dvt_run_intent_required',
       },
     });
     expect(getConnection).not.toHaveBeenCalled();
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+    if (!result.ok) throw new Error('Expected a rejected StartRun result');
+    expect(mapStartRunResult(result.value)).toMatchObject({
+      status: 422,
+      body: { error: { reason: 'plan_rejected', details: { cause: 'dvt_run_intent_required' } } },
+    });
+  });
+
+  it.each([0, 2])(
+    'handles %i DVT workloads without reading a provider or writing context',
+    async (count) => {
+      const delegate = makeDelegate();
+      const contextWriter = { write: vi.fn() };
+      const getConnection = vi.fn();
+      const useCase = new RunExecutionContextBindingUseCase(
+        dependencies({ delegate, contextWriter, getConnection })
+      );
+      const admitted = admission(buildRunWorkload());
+      const plan = admitted.materialized.plan;
+      const steps = Array.from({ length: count }, (_, index) => ({
+        ...plan.steps[0]!,
+        stepId: `transform-${index}`,
+      }));
+      const result = await useCase.executeAdmitted(command(), authorizedContext(), {
+        ...admitted,
+        materialized: { ...admitted.materialized, plan: { ...plan, steps } },
+      });
+      expect(result).toMatchObject({
+        value:
+          count === 0
+            ? { kind: 'accepted' }
+            : { kind: 'plan_rejected', cause: 'dvt_run_workload_count_invalid' },
+      });
+      expect(getConnection).not.toHaveBeenCalled();
+      expect(contextWriter.write).not.toHaveBeenCalled();
+      expect(delegate.execute).toHaveBeenCalledTimes(count === 0 ? 1 : 0);
+    }
+  );
+
+  it.each([
+    ['foreign identity', 'warehouse-other', 'postgres:warehouse-a'],
+    ['missing credentials', 'warehouse-a', null],
+  ] as const)('rejects %s without observing publication', async (_label, id, credentialRef) => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const observe = vi.fn();
+    const useCase = new RunExecutionContextBindingUseCase(
+      dependencies({
+        delegate,
+        contextWriter,
+        observe,
+        getConnection: vi.fn(async () => ({
+          id,
+          name: 'Warehouse A',
+          type: 'postgres' as const,
+          database: 'analytics',
+          sourceObjects: [],
+          ...(credentialRef === null ? {} : { credentialRef }),
+        })),
+      })
+    );
+    const result = await useCase.executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
+    );
+    expect(result).toMatchObject({ value: { cause: 'dvt_run_connection_unavailable' } });
+    expect(observe).not.toHaveBeenCalled();
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects absent publication admission without writes or dispatch', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const { dvtPostgresPublicationPredecessorReader: _reader, ...deps } = dependencies({
+      delegate,
+      contextWriter,
+      getConnection: vi.fn(async () => ({
+        id: 'warehouse-a',
+        name: 'Warehouse A',
+        type: 'postgres' as const,
+        database: 'analytics',
+        credentialRef: 'postgres:warehouse-a',
+        sourceObjects: [],
+      })),
+    });
+    const result = await new RunExecutionContextBindingUseCase(deps).executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
+    );
+    expect(result).toMatchObject({ value: { cause: 'dvt_run_publication_unavailable' } });
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['credential_unavailable', 'dvt_run_connection_unavailable'],
+    ['unmanaged_target', 'dvt_run_target_unmanaged'],
+    ['schema_mismatch', 'dvt_run_schema_mismatch'],
+  ] as const)('preserves %s as a typed rejection without dispatch', async (reason, cause) => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const useCase = new RunExecutionContextBindingUseCase(
+      dependencies({
+        delegate,
+        contextWriter,
+        getConnection: vi.fn(async () => ({
+          id: 'warehouse-a',
+          name: 'Warehouse A',
+          type: 'postgres' as const,
+          database: 'analytics',
+          credentialRef: 'postgres:warehouse-a',
+          sourceObjects: [],
+        })),
+        observe: vi.fn(async () => ({ ok: false as const, reason })),
+      })
+    );
+    const result = await useCase.executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
+    );
+    expect(result).toMatchObject({ value: { kind: 'plan_rejected', code: 'REJECTED', cause } });
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects a connection outside the authorized workspace before provider effects', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const observe = vi.fn();
+    const useCase = new RunExecutionContextBindingUseCase(
+      dependencies({
+        delegate,
+        contextWriter,
+        observe,
+        getConnection: vi.fn(async () => {
+          throw new WarehouseConnectionNotFoundError('warehouse-a');
+        }),
+      })
+    );
+    const result = await useCase.executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
+    );
+    expect(result).toMatchObject({ value: { cause: 'dvt_run_connection_not_found' } });
+    expect(observe).not.toHaveBeenCalled();
     expect(contextWriter.write).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
   });

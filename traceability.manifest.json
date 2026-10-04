@@ -985,6 +985,16 @@
       "title": "ADR-0043 - Plan record, plan store, and artifacts ownership"
     },
     {
+      "number": "ADR-0044",
+      "decisions": [
+        "Reuse code/cause/reason; Web localizes by cause, never by diagnostic text."
+      ],
+      "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts"
+      ],
+      "title": "ADR-0044 - Structured contracts error metadata and non-semantic messages"
+    },
+    {
       "number": "ADR-0046",
       "decisions": [
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",

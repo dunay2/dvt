@@ -74,7 +74,7 @@ export function publicationHarness(
       canvasId: draft.canvas.id!,
       targetProjection: binding,
     });
-    if (!result.ok) throw new Error(result.reason);
+    if (!result.ok) throw new Error(result.cause);
     return {
       binding,
       graph: result.graphSource,

@@ -3,6 +3,8 @@ import { AlertTriangle, Clock, Download, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import type { PlanPreviewOutcome } from '../ports/plans';
+import { resolveDvtOperationalRejectionCopy } from '../services/api/dvtOperationalRejectionCopy';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import type { PlanPreviewSelectionIntentViewModel, PlanViewModel } from '../types/plans';
 import { projectDbtExecutionTargetBinding } from './dbtExecutionTargetBinding';
 
@@ -188,7 +190,10 @@ function PlanPreviewRejectionPanel({
   details: PlanPreviewRejectionDetails;
   messages: PlanPreviewModalMessages;
 }>) {
-  const safeReason = details.knownCode ? details.reason : messages.planPreviewUnknownCodeMessage;
+  const language = useApplicationLanguageStore((state) => state.language);
+  const safeReason = details.knownCode
+    ? (resolveDvtOperationalRejectionCopy(details.cause, language) ?? details.reason)
+    : messages.planPreviewUnknownCodeMessage;
   const safeCause = details.knownCode ? details.cause : undefined;
 
   return (

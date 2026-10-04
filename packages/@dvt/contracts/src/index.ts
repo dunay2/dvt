@@ -39,6 +39,7 @@ export {
 } from './contracts/planner/ExecutionPlan.v1.js';
 export * from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 export * from './contracts/planner/DvtOperationalWorkload.v1.js';
+export * from './contracts/planner/DvtOperationalRejection.v1.js';
 export * from './contracts/planner/DvtPostgresOutputSchema.v1.js';
 export * from './contracts/planner/DvtTransformResultTarget.v1.js';
 export * from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';

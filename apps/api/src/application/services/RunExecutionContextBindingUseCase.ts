@@ -7,6 +7,7 @@ import {
   START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
   collectRequiredCapabilitiesForSteps,
+  createDvtOperationalRejection,
   type ExecutionPlan,
   type IStepTypeRegistry,
   type StartRunCommand,
@@ -21,10 +22,7 @@ import type {
   DbtProjectBundleBuildResult,
   IDbtProjectBundleBuilder,
 } from '../ports/dbtProjectBundle.js';
-import type {
-  IRunExecutionContextWriter,
-  RunExecutionContextWriteResult,
-} from '../ports/runExecutionContextWriter.js';
+import type { IRunExecutionContextWriter } from '../ports/runExecutionContextWriter.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
 import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
@@ -35,9 +33,6 @@ import { resolveDvtPostgresExecutionContextBinding } from './dvtPostgresExecutio
 import type { DvtPostgresPublicationPredecessorReader } from './dvtPostgresExecutionContextBinding.js';
 import { buildRunExecutionContext } from './runExecutionContextFactory.js';
 import type { StoredPlanAdmissionResult } from './StoredPlanAdmissionCoordinator.js';
-
-const CALLER_CONTEXT_REJECTION =
-  'Caller-provided run execution context references are not accepted for governed execution.';
 
 export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
   public constructor(
@@ -84,13 +79,15 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
         : { predecessorReader: this.deps.dvtPostgresPublicationPredecessorReader }),
     });
     if (dvtBinding.kind === 'rejected') {
-      return rejectRunExecutionContext(dvtBinding.reason);
+      return rejectRunExecutionContext(createDvtOperationalRejection(dvtBinding.cause));
     }
     if (!bindsDbt && dvtBinding.kind === 'not-required') {
       return this.deps.delegate.execute(command, context);
     }
     if (command.runExecutionContextRef !== undefined) {
-      return rejectRunExecutionContext(CALLER_CONTEXT_REJECTION);
+      return rejectRunExecutionContext(
+        createDvtOperationalRejection('run_execution_context_caller_ref_rejected')
+      );
     }
 
     const scope: WorkspaceStorageScope = {
@@ -156,7 +153,9 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       context: runExecutionContext,
     });
     if (!writtenContext.ok) {
-      return rejectRunExecutionContext(renderContextWriteFailure(writtenContext));
+      return rejectRunExecutionContext(
+        createDvtOperationalRejection('run_execution_context_store_unavailable')
+      );
     }
 
     return this.deps.delegate.execute(
@@ -187,23 +186,21 @@ function renderBundleFailure(failure: Extract<DbtProjectBundleBuildResult, { ok:
   }
 }
 
-function renderContextWriteFailure(
-  failure: Extract<RunExecutionContextWriteResult, { ok: false }>
-): string {
-  return failure.reason === 'artifact_store_unavailable'
-    ? 'The run-context artifact store is not configured.'
-    : failure.reason;
-}
-
-function rejectRunExecutionContext(reason: string): StartRunUseCaseResult {
+function rejectRunExecutionContext(
+  rejection: string | ReturnType<typeof createDvtOperationalRejection>
+): StartRunUseCaseResult {
   return {
     ok: true,
     value: {
       kind: START_RUN_RESULT_KIND.planRejected,
       accepted: false,
-      code: START_RUN_PLAN_REJECTION_CODE.rejected,
-      reason,
-      cause: 'run_execution_context',
+      ...(typeof rejection === 'string'
+        ? {
+            code: START_RUN_PLAN_REJECTION_CODE.rejected,
+            reason: rejection,
+            cause: 'run_execution_context',
+          }
+        : rejection),
     },
   };
 }

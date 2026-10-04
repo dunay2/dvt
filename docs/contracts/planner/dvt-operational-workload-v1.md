@@ -55,6 +55,18 @@ observations belong to the existing StartRun binding, not the stable plan.
 Previewing a configured Run plan never executes SQL or publishes the result.
 Publication remains governed by [ADR-0066](../../adr/ADR-0066-postgresql-stable-table-publication.md).
 
+## Rejection presentation
+
+PreviewPlan and StartRun reuse their existing `code`, `cause`, and `reason`
+envelopes. `DvtOperationalRejection.v1.ts` owns the typed DVT causes and safe
+diagnostic descriptions. Binding and projection select causes, not translated
+text. Diagnostic `reason` is not a presentation or branching authority.
+
+Web translates the cause through its existing English/Spanish language preference,
+both for StartRun errors and the Preview rejection panel. An unknown DVT cause
+gets a localized generic rejection; arbitrary server/provider text is not shown.
+No second error envelope, translation infrastructure, or contract version is added.
+
 ## Development hard cut and rollout
 
 API, contracts and worker must be deployed together. V2 and old Preview payloads

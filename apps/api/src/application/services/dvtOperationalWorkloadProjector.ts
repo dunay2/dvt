@@ -10,6 +10,7 @@ import {
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type DvtOperationalWorkloadV1,
+  type DvtOperationalRejectionCause,
   type DvtTransformResultTargetV1,
   type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
@@ -39,7 +40,7 @@ export type DvtOperationalWorkloadProjectorInput = {
 
 export type DvtOperationalWorkloadProjectionResult =
   | { readonly ok: true; readonly graphSource: GenericGraphSourceV1 }
-  | { readonly ok: false; readonly reason: string };
+  | { readonly ok: false; readonly cause: DvtOperationalRejectionCause };
 
 export class DvtOperationalWorkloadProjector {
   public project(
@@ -49,18 +50,20 @@ export class DvtOperationalWorkloadProjector {
       const closure = resolveDvtTerminalTransformClosure(input);
       const semanticDocument = closure.authority.semanticDocument;
       const projection = input.targetProjection;
-      const runTarget = resolveRunTarget(closure.transform);
+      const target = resolveRunTarget(closure.transform);
+      if (!target.ok) return target;
+      const runTarget = target.target;
       if (
         projection.outputNodeId !== closure.transform.id ||
         projection.semanticPlanSha256 !== semanticDocument.semanticPlan.sha256 ||
         projection.profileId !== closure.profileId ||
         !sameConnection(projection.connectionRef, closure.connectionRef)
       ) {
-        throw new Error('Target projection is stale or belongs to another output or connection.');
+        return { ok: false, cause: 'dvt_projection_stale' };
       }
 
       if (runTarget !== null && projection.schemaDigestSha256 === undefined) {
-        throw new Error('Configured Run requires a canonical PostgreSQL output schema digest.');
+        return { ok: false, cause: 'dvt_run_schema_digest_required' };
       }
 
       const commonWorkload = {
@@ -132,34 +135,33 @@ export class DvtOperationalWorkloadProjector {
           ],
         },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        reason: error instanceof Error ? error.message : 'DVT workload projection failed.',
-      };
+    } catch {
+      return { ok: false, cause: 'dvt_preview_workload_projection_failed' };
     }
   }
 }
 
 function resolveRunTarget(
   transform: WorkspaceGraphAuthoringDraft['nodes'][number]
-): DvtTransformResultTargetV1 | null {
+):
+  | { readonly ok: true; readonly target: DvtTransformResultTargetV1 | null }
+  | Extract<DvtOperationalWorkloadProjectionResult, { ok: false }> {
   const config = transform.metadata?.['config'];
-  if (config === undefined) return null;
+  if (config === undefined) return { ok: true, target: null };
   if (!isRecord(config)) {
-    throw new Error('Transform config must be an object.');
+    return { ok: false, cause: 'dvt_run_config_invalid' };
   }
 
   const hasDisposition = Object.hasOwn(config, 'materialized');
   const hasTarget = Object.hasOwn(config, 'resultTarget');
-  if (!hasDisposition && !hasTarget) return null;
+  if (!hasDisposition && !hasTarget) return { ok: true, target: null };
   if (config['materialized'] !== 'table') {
-    throw new Error('Configured Run supports only table result disposition.');
+    return { ok: false, cause: 'dvt_run_disposition_unsupported' };
   }
   const target = DvtTransformResultTargetV1Schema.safeParse(config['resultTarget']);
-  if (!target.success)
-    throw new Error('Configured Run requires one valid PostgreSQL result target.');
-  return target.data;
+  return target.success
+    ? { ok: true, target: target.data }
+    : { ok: false, cause: 'dvt_run_target_invalid' };
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

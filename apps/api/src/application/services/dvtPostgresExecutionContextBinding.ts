@@ -11,6 +11,7 @@ import {
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type DvtOperationalRunWorkloadV1,
+  type DvtOperationalRejectionCause,
   type ExecutionPlan,
   type PlanRef,
 } from '@dvt/contracts';
@@ -34,7 +35,7 @@ export type DvtPostgresExecutionContextBinding =
         readonly expectedPredecessorToken: string;
       };
     }
-  | { readonly kind: 'rejected'; readonly reason: string };
+  | { readonly kind: 'rejected'; readonly cause: DvtOperationalRejectionCause };
 
 export async function resolveDvtPostgresExecutionContextBinding(input: {
   readonly plan: ExecutionPlan;
@@ -49,32 +50,15 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
   );
   if (steps.length === 0) return { kind: 'not-required' };
   if (steps.length !== 1) {
-    return { kind: 'rejected', reason: 'DVT operational Run requires exactly one workload.' };
+    return { kind: 'rejected', cause: 'dvt_run_workload_count_invalid' };
   }
 
-  const workloads: DvtOperationalRunWorkloadV1[] = [];
-  for (const step of steps) {
-    const workload = DvtOperationalRunWorkloadV1Schema.safeParse(step.stepTypeConfig);
-    if (!workload.success) {
-      return { kind: 'rejected', reason: 'DVT operational Run requires workload schema v2.' };
-    }
-    workloads.push(workload.data);
+  const parsed = DvtOperationalRunWorkloadV1Schema.safeParse(steps[0]!.stepTypeConfig);
+  if (!parsed.success) {
+    return { kind: 'rejected', cause: 'dvt_run_intent_required' };
   }
-
-  const connectionRef = workloads[0]?.connectionRef;
-  if (
-    connectionRef === undefined ||
-    workloads.some(
-      (workload) =>
-        workload.connectionRef.connectionId !== connectionRef.connectionId ||
-        workload.connectionRef.provider !== connectionRef.provider
-    )
-  ) {
-    return {
-      kind: 'rejected',
-      reason: 'One DVT operational Run context cannot span multiple connections.',
-    };
-  }
+  const workload = parsed.data;
+  const { connectionRef } = workload;
 
   try {
     const connection = await input.catalog.getConnection(input.scope, connectionRef.connectionId);
@@ -83,17 +67,13 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
       connection.type !== 'postgres' ||
       connection.credentialRef === undefined
     ) {
-      return { kind: 'rejected', reason: 'The DVT Run connection is not executable.' };
+      return { kind: 'rejected', cause: 'dvt_run_connection_unavailable' };
     }
     if (input.predecessorReader === undefined) {
       return {
         kind: 'rejected',
-        reason: 'DVT PostgreSQL publication admission is not configured.',
+        cause: 'dvt_run_publication_unavailable',
       };
-    }
-    const workload = workloads[0];
-    if (workload === undefined) {
-      return { kind: 'rejected', reason: 'DVT operational Run requires exactly one workload.' };
     }
     const predecessor = await input.predecessorReader.observe({
       credentialRef: connection.credentialRef,
@@ -101,7 +81,7 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
       schemaDigestSha256: workload.targetProjection.schemaDigestSha256,
     });
     if (!predecessor.ok) {
-      return { kind: 'rejected', reason: renderPredecessorFailure(predecessor.reason) };
+      return { kind: 'rejected', cause: PREDECESSOR_REJECTION_CAUSES[predecessor.reason] };
     }
     const workloadSha256 = sha256HexUtf8(jcsCanonicalize(workload));
     const publicationToken = sha256HexUtf8(
@@ -129,7 +109,7 @@ export async function resolveDvtPostgresExecutionContextBinding(input: {
     };
   } catch (error) {
     if (error instanceof WarehouseConnectionNotFoundError) {
-      return { kind: 'rejected', reason: 'The DVT Run connection is not in this workspace.' };
+      return { kind: 'rejected', cause: 'dvt_run_connection_not_found' };
     }
     throw error;
   }
@@ -149,15 +129,8 @@ export interface DvtPostgresPublicationPredecessorReader {
   >;
 }
 
-function renderPredecessorFailure(
-  reason: 'credential_unavailable' | 'unmanaged_target' | 'schema_mismatch'
-): string {
-  switch (reason) {
-    case 'credential_unavailable':
-      return 'The DVT Run connection is not executable.';
-    case 'unmanaged_target':
-      return 'The DVT Run target is not managed by DVT.';
-    case 'schema_mismatch':
-      return 'The DVT Run target schema differs from Preview.';
-  }
-}
+const PREDECESSOR_REJECTION_CAUSES = {
+  credential_unavailable: 'dvt_run_connection_unavailable',
+  unmanaged_target: 'dvt_run_target_unmanaged',
+  schema_mismatch: 'dvt_run_schema_mismatch',
+} as const satisfies Record<string, DvtOperationalRejectionCause>;
