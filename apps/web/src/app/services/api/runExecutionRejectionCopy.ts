@@ -1,4 +1,4 @@
-/** Presentation copy for Run admission; no diagnostic strings are rendered. */
+/** Owned concern: localize Run admission rejections without rendering diagnostic strings. */
 import { RUN_REJECTIONS, type RunExecutionRejection } from '@dvt/contracts';
 import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
 

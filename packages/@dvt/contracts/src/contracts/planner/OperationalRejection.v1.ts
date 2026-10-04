@@ -1,5 +1,5 @@
 /**
- * Named values for expected admission rejections, not exceptions.
+ * Owned concern: define named values for expected admission rejections, not exceptions.
  * @baseline ADR-0044: Diagnostic prose is not a semantic contract.
  * @decision Reuse structural message metadata and the existing rejection envelope.
  * @consequence Callers use definitions; presentation owns translated copy.

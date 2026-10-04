@@ -1,4 +1,4 @@
-/** Presentation copy for DVT rejection causes; server prose is diagnostic only. */
+/** Owned concern: localize DVT admission rejections without rendering diagnostic strings. */
 import { DVT_REJECTIONS, type DvtOperationalRejection } from '@dvt/contracts';
 import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
 

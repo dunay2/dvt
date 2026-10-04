@@ -1,5 +1,5 @@
 /**
- * Owns DVT admission rejection definitions for PreviewPlan and StartRun.
+ * Owned concern: define DVT admission rejections for PreviewPlan and StartRun.
  * @baseline ADR-0044: Diagnostic prose is not a semantic or presentation contract.
  * @decision Reuse named immutable definitions; translations belong to Web.
  * @consequence DVT decisions do not construct messages or repeat wire identifiers.

@@ -1,5 +1,5 @@
 /**
- * Run-owned rejection definitions for execution context and DBT binding.
+ * Owned concern: define Run rejections for execution context and DBT binding.
  * @baseline ADR-0044: Diagnostic prose is not a semantic contract.
  * @decision Define each expected rejection once with stable message metadata.
  * @consequence The use case consumes values without rendering or string overloads.

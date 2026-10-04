@@ -1,6 +1,6 @@
+/** Owned concern: verify that a DBT target resolves to its governed workspace connection. */
 import { RUN_REJECTIONS, type RunExecutionRejection } from '@dvt/contracts';
 
-/** Owned concern: verify that a DBT target resolves to its governed workspace connection. */
 import type { IDbtExecutionConnectionBindingVerifier } from '../ports/dbtExecutionTarget.js';
 import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 import { WarehouseConnectionNotFoundError } from '../ports/warehouseSourceImport.js';
