@@ -9,6 +9,7 @@ import {
   container,
 } from '../../views/canvas/CanvasRelationalTreeWorkbench.test-support';
 import { GraphNodeColumnViews } from './GraphNodeColumnViews';
+import { graphColumnTransferTarget } from './graphColumnTransfer';
 import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
@@ -40,17 +41,19 @@ describe('card Input / Output boundary', () => {
     act(() =>
       root.render(
         <ReactFlowProvider>
-          <GraphNodeColumnViews
-            columns={columns}
-            inputColumns={inputs}
-            expanded
-            nodeId="consumer"
-            onInputMapping={onInputMapping}
-            onColumnOutputToggle={mutation}
-            onAutomap={mutation}
-            onColumnReorder={mutation}
-            {...overrides}
-          />
+          <div {...graphColumnTransferTarget({ nodeId: 'consumer', onInputMapping })}>
+            <GraphNodeColumnViews
+              columns={columns}
+              inputColumns={inputs}
+              expanded
+              nodeId="consumer"
+              onInputMapping={onInputMapping}
+              onColumnOutputToggle={mutation}
+              onAutomap={mutation}
+              onColumnReorder={mutation}
+              {...overrides}
+            />
+          </div>
         </ReactFlowProvider>
       )
     );
@@ -66,7 +69,7 @@ describe('card Input / Output boundary', () => {
   }
   function drop(nodeId = 'producer-b', columnId = 'email'): void {
     act(() => {
-      fireEvent.drop(container.querySelector('[data-slot="tabs"]')!, {
+      fireEvent.drop(container.querySelector('[role="tabpanel"]')!, {
         dataTransfer: { getData: () => JSON.stringify({ nodeId, columnId }) },
       });
     });

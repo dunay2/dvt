@@ -84,6 +84,7 @@ export function projectViewportNodes(args: {
       data: {
         ...projectedNode.data,
         columnDisclosureExpanded: fallbackNode?.data.columnDisclosureExpanded === true,
+        columnView: fallbackNode?.data.columnView,
       },
     };
   });
