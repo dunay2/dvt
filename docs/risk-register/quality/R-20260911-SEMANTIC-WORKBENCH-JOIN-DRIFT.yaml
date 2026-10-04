@@ -24,14 +24,16 @@ mitigation:
     CROSS uses the exact predicate-free CrossRel identity and preserves both sides in SQL even when
     one contributes no output fields. Left-associated chains and the admitted outer-JOIN subtree are
     rendered without reassociation. Grouping and grouped-window wrappers delegate to that same
-    JOIN-family projector, so they cannot downgrade a LEFT stage to INNER. Historical INNER workload
-    identities are normalized only at the v1/v2 contract read seam and current producers emit only
-    the JOIN-family profile. Cardinality remains unknown until execution and no hidden COUNT or
-    per-input LIMIT is introduced.
+    JOIN-family projector, so they cannot downgrade a LEFT stage to INNER. The single V1 contract
+    rejects historical INNER workload identities before context or provider effects; current
+    producers emit only the JOIN-family profile. Affected plans must be recreated through protected
+    Preview, without read-time normalization. Cardinality remains unknown until execution and no
+    hidden COUNT or per-input LIMIT is introduced.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
     - docs/evidence/ED-20260919-left-join-end-to-end.md
+    - docs/evidence/ED-20261004-single-operational-workload-v1.md
     - docs/evidence/ED-20260919-right-full-join-end-to-end.md
     - docs/evidence/ED-20260919-semi-anti-join-end-to-end.md
     - docs/evidence/ED-20260919-cross-join-end-to-end.md

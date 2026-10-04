@@ -93,7 +93,9 @@ No second error envelope, translation infrastructure, or contract version is add
 ## Development hard cut and rollout
 
 API, contracts and worker must be deployed together. V2 and old Preview payloads
-without an explicit intent are rejected, not rewritten. Recreate affected plans
+without an explicit intent are rejected, not rewritten. The retired
+`dvt.vtx2.postgres.inner-join.v1` projection identity also rejects for both
+intents; current producers emit `dvt.vtx2.postgres.join.v1`. Recreate affected plans
 through protected Preview; no migration, alias, fallback or database deletion is
 performed. Drain existing executions before changing workers; do not replay old
 workloads through a mixed-version deployment. Rollback requires restoring the

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import * as contracts from '../src/index.js';
 import {
-  DVT_POSTGRES_JOIN_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
@@ -106,9 +105,9 @@ describe('DVT operational Run intent under the single V1 contract', () => {
     expect(parsed).toHaveProperty('publicationBoundaries', []);
   });
 
-  it('normalizes the historical INNER profile while reading a Run workload', () => {
+  it('rejects the retired INNER profile in a Run workload', () => {
     const workload = buildWorkload();
-    const parsed = DvtOperationalWorkloadContractV1.schema.parse({
+    const parsed = DvtOperationalWorkloadContractV1.schema.safeParse({
       ...workload,
       graph: {
         ...workload.graph,
@@ -121,7 +120,7 @@ describe('DVT operational Run intent under the single V1 contract', () => {
       },
     });
 
-    expect(parsed.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    expect(parsed.success).toBe(false);
   });
 
   it('keeps the output-schema digest deterministic and order-sensitive', () => {

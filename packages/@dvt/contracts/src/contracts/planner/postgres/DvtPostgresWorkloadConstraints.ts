@@ -1,7 +1,7 @@
 /**
  * Owned concern: constrain the admitted PostgreSQL workload projection and publication.
  * @baseline ADR-0064 and ADR-0066: Bounded PostgreSQL projection and stable-table publication.
- * @decision Keep dialect profiles, cardinality and durable output rules in this provider module.
+ * @decision Admit only current dialect profiles; keep cardinality and durable output rules here.
  * @consequence Shared workload identity facts remain independent of database providers.
  * @version 1.0.0
  */
@@ -21,9 +21,8 @@ export const DVT_POSTGRES_PROJECT_REL_PROFILE_ID = 'dvt.vtx2.postgres.project-re
 export const DVT_POSTGRES_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.join.v1' as const;
 export const DVT_POSTGRES_SET_PROFILE_ID = 'dvt.vtx2.postgres.set.v1' as const;
 export const DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY = 'pgsql-deparser@16.1.1' as const;
-const DVT_POSTGRES_HISTORICAL_INNER_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.inner-join.v1' as const;
 
-const DvtOperationalTargetProjectionRefObjectSchema = z
+export const DvtOperationalTargetProjectionRefSchema = z
   .object({
     profileId: z.enum([
       DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
@@ -36,30 +35,10 @@ const DvtOperationalTargetProjectionRefObjectSchema = z
   })
   .strict();
 
-function normalizeHistoricalInnerJoinProjection(value: unknown): unknown {
-  if (
-    typeof value !== 'object' ||
-    value == null ||
-    Array.isArray(value) ||
-    !('profileId' in value) ||
-    value.profileId !== DVT_POSTGRES_HISTORICAL_INNER_JOIN_PROFILE_ID
-  ) {
-    return value;
-  }
-  return { ...value, profileId: DVT_POSTGRES_JOIN_PROFILE_ID };
-}
-
-export const DvtOperationalTargetProjectionRefSchema = z.preprocess(
-  normalizeHistoricalInnerJoinProjection,
-  DvtOperationalTargetProjectionRefObjectSchema
-);
-
-export const DvtOperationalRunTargetProjectionRefSchema = z.preprocess(
-  normalizeHistoricalInnerJoinProjection,
-  DvtOperationalTargetProjectionRefObjectSchema.extend({
+export const DvtOperationalRunTargetProjectionRefSchema =
+  DvtOperationalTargetProjectionRefSchema.extend({
     schemaDigestSha256: DvtOperationalWorkloadSha256Schema,
-  }).strict()
-);
+  }).strict();
 export const DvtOperationalPostgresConnectionRefSchema = ConnectionRefSchema.extend({
   provider: z.literal('postgres'),
 }).strict();

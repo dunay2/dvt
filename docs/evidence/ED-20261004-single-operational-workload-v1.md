@@ -171,6 +171,13 @@ The exact final gate results and commit IDs are recorded on #2524. No integratio
 or green pre-push result is implied by this draft evidence record. No rules were
 relaxed, hooks bypassed, or stubs/compatibility aliases/debt entries introduced.
 
+The paired retirement review also removes the historical INNER-profile read
+normalizer retained by the prior LEFT JOIN slice. No current producer emits that
+identity. Existing Preview, Run and context-binding cases become rejection
+negatives, with no connection reads, context writes or dispatch on the retired
+profile. Current JOIN identity and cardinality remain unchanged. Red/green and
+final candidate validation outcomes are recorded on #2524.
+
 The existing [Run workload drift risk](../risk-register/quality/R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT.yaml)
 now explicitly includes rejecting old formats and coordinating producer/worker
 deployment. Old persisted plans must be recreated through protected Preview;

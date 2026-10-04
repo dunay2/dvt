@@ -50,7 +50,7 @@ describe('DvtPostgresStepActivity', () => {
     );
   });
 
-  it.each(['preview', 'retired-v2'] as const)(
+  it.each(['preview', 'retired-v2', 'retired-inner-profile'] as const)(
     'rejects %s before context reads or provider effects',
     async (invalid) => {
       const resolve = vi.fn();
@@ -71,10 +71,21 @@ describe('DvtPostgresStepActivity', () => {
         targetProjection,
         output: { kind: 'ephemeral-preview', nodeId: run.output.nodeId },
       });
-      const config =
-        invalid === 'preview' ? preview : { ...run, schemaVersion: 'dvt-operational-workload.v2' };
+      const rejected = {
+        preview,
+        'retired-v2': { ...run, schemaVersion: 'dvt-operational-workload.v2' },
+        'retired-inner-profile': {
+          ...run,
+          targetProjection: {
+            ...run.targetProjection,
+            profileId: 'dvt.vtx2.postgres.inner-join.v1',
+          },
+        },
+      };
 
-      await expect(activity.execute(buildStep(config), buildStepContext())).rejects.toMatchObject({
+      await expect(
+        activity.execute(buildStep(rejected[invalid]), buildStepContext())
+      ).rejects.toMatchObject({
         nonRetryable: true,
         message: 'DVT_RUN_WORKLOAD_V1_REQUIRED:transform-a',
       });

@@ -96,12 +96,26 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
     ['Preview intent', buildPreviewWorkload],
     ['retired V2', () => ({ ...buildRunWorkload(), schemaVersion: 'dvt-operational-workload.v2' })],
     ['missing intent', () => ({ ...buildRunWorkload(), executionIntent: undefined })],
+    [
+      'retired INNER profile',
+      () => {
+        const workload = buildRunWorkload();
+        return {
+          ...workload,
+          targetProjection: {
+            ...workload.targetProjection,
+            profileId: 'dvt.vtx2.postgres.inner-join.v1',
+          },
+        };
+      },
+    ],
   ] as const)('rejects %s before dispatch', async (_label, workload) => {
     const delegate = makeDelegate();
     const contextWriter = { write: vi.fn() };
     const getConnection = vi.fn();
+    const observe = vi.fn();
     const useCase = new RunExecutionContextBindingUseCase(
-      dependencies({ delegate, contextWriter, getConnection })
+      dependencies({ delegate, contextWriter, getConnection, observe })
     );
 
     const result = await useCase.executeAdmitted(
@@ -118,6 +132,7 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
       },
     });
     expect(getConnection).not.toHaveBeenCalled();
+    expect(observe).not.toHaveBeenCalled();
     expect(contextWriter.write).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
     if (!result.ok) throw new Error('Expected a rejected StartRun result');
@@ -271,54 +286,6 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
     expect(observe).not.toHaveBeenCalled();
     expect(contextWriter.write).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
-  });
-
-  it('dispatches a historical INNER Run workload through the current JOIN profile', async () => {
-    const delegate = makeDelegate();
-    const contextWriter = {
-      write: vi.fn(async () => ({ ok: true as const, ref: RUN_CONTEXT_REF })),
-    };
-    const getConnection = vi.fn(async () => ({
-      id: 'warehouse-a',
-      name: 'Warehouse A',
-      type: 'postgres' as const,
-      database: 'analytics',
-      credentialRef: 'postgres:warehouse-a',
-      sourceObjects: [],
-    }));
-    const observe = vi.fn(async () => ({
-      ok: true as const,
-      predecessorToken: null,
-    }));
-    const useCase = new RunExecutionContextBindingUseCase(
-      dependencies({ delegate, contextWriter, getConnection, observe })
-    );
-    const workload = buildRunWorkload();
-    const historical = {
-      ...workload,
-      graph: {
-        ...workload.graph,
-        selectedNodeIds: ['source-customers', 'source-orders', 'transform-a'],
-        selectedEdgeIds: ['customers-transform', 'orders-transform'],
-      },
-      targetProjection: {
-        ...workload.targetProjection,
-        profileId: 'dvt.vtx2.postgres.inner-join.v1',
-      },
-    };
-
-    const result = await useCase.executeAdmitted(
-      command(),
-      authorizedContext(),
-      admission(historical)
-    );
-
-    expect(result).toMatchObject({ ok: true, value: { kind: 'accepted' } });
-    expect(delegate.execute).toHaveBeenCalledOnce();
-    expect(getConnection).toHaveBeenCalledWith(
-      { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
-      'warehouse-a'
-    );
   });
 });
 
