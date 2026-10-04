@@ -1,8 +1,8 @@
 /** Owned concern: adapt existing admission read models to grouped presentation items. */
 import type { CanvasRelationalOperationChoice } from '../canvasRelationalOperationChoices';
 import type { CanvasStagedOperationKind } from '../canvasStagedOperation';
-import { canvasRelationalAvailabilityLabel } from '../DvtRelationalOperationChooser';
 import {
+  canvasRelationalAvailabilityLabel,
   resolveCanvasRelationalOperationPresentation,
   type CanvasRelationalOperationPresentation,
 } from '../canvasRelationalOperationPresentation';

@@ -295,5 +295,17 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(CodeWorkbenchSource).not.toContain('CanvasRelationalCompositionTruth');
     expect(CodeWorkbenchSource).toContain('canvas-open-semantic-editor');
     expect(Object.keys(import.meta.glob('./DvtSubstraitTransformStart.tsx'))).toEqual([]);
+    expect(
+      Object.keys(
+        import.meta.glob([
+          './DvtSubstraitCompositionStart*.tsx',
+          './DvtSubstraitInnerJoinStartSection.tsx',
+          './DvtRelationCompositionConfirmation*.tsx',
+          './DvtRelationalOperationChooser.tsx',
+          './DvtRelationAuthoringSection.tsx',
+          './CanvasRelationOperatorFields.tsx',
+        ])
+      )
+    ).toEqual([]);
   });
 });

@@ -6,7 +6,6 @@ import {
   CanvasTagsV1Schema,
   countUnicodeCodePoints,
   isWellFormedCanvasText,
-  DvtSemanticFieldNameV1Schema,
   DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
   DvtRelationalAuthoringDraftV1Schema,
 } from '@dvt/contracts';
@@ -29,8 +28,6 @@ import {
   resolveDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
-import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
-import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
@@ -71,29 +68,6 @@ function normalizeNodeDescription(value: string): string | undefined {
 
 function normalizeNodeTags(tags: readonly string[]): string[] {
   return tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
-}
-
-export function resolveCanvasDvtOutputNameDraftError(
-  dvt: DvtNodeAuthoringMetadata | undefined,
-  outputNameDrafts: Readonly<Record<string, string>>,
-  key: string
-): CanvasInspectorNodeDraftErrorCode | null {
-  const value = outputNameDrafts[key];
-  if (value == null) return null;
-  if (value.trim().length === 0) return 'dvt_alias_required';
-  if (!DvtSemanticFieldNameV1Schema.safeParse(value).success) return 'dvt_semantic_field_invalid';
-  if (dvt?.kind !== 'transform' || dvt.mode !== 'substrait') return null;
-
-  const fieldOwner = dvt.sidecar.fields.find((field) => field.fieldId === key);
-  if (fieldOwner == null) return null;
-  const duplicate = dvt.sidecar.fields.some(
-    (field) =>
-      field.relationId === fieldOwner.relationId &&
-      field.parentFieldId === fieldOwner.parentFieldId &&
-      field.fieldId !== key &&
-      field.displayName === value
-  );
-  return duplicate ? 'dvt_alias_duplicate' : null;
 }
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
@@ -219,11 +193,6 @@ export function validateCanvasInspectorNodeDraft(
   }
   if (!CanvasTagsV1Schema.safeParse(normalizedTags).success) {
     return { tags: 'node_tags_invalid' };
-  }
-  const outputNameDrafts = draft.outputNameDrafts ?? {};
-  for (const key of Object.keys(outputNameDrafts)) {
-    const error = resolveCanvasDvtOutputNameDraftError(draft.dvt, outputNameDrafts, key);
-    if (error != null) return { outputNames: error };
   }
   if (
     draft.relationalAuthoringDraft != null &&
@@ -364,7 +333,6 @@ export function hasCanvasInspectorNodeDraftChanges(
       originalDraft.relationalAuthoringDraft ?? null,
       draft.relationalAuthoringDraft ?? null
     ) ||
-    Object.keys(draft.outputNameDrafts ?? {}).length > 0 ||
     !areInspectorValuesEqual(
       originalDraft.objectFilePostgres ?? null,
       draft.objectFilePostgres ?? null

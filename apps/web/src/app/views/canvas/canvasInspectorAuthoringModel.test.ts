@@ -931,47 +931,6 @@ describe('canvasInspectorAuthoringModel', () => {
     expect(invalidNode.metadata?.transformAuthoring).toEqual(invalidAuthority);
   });
 
-  it('blocks Apply when an output alias duplicates another root output', () => {
-    const source = buildImportedWarehouseSourceNode({
-      connectedSourceRef: {
-        schemaVersion: 'connected-source-ref.v1',
-        connectionRef: {
-          schemaVersion: 'connection-ref.v1',
-          connectionId: 'warehouse-main',
-          provider: 'postgres',
-        },
-        sourceObjectId: 'erp.orders',
-      },
-      columns: [
-        { name: 'order_id', type: 'integer', nullable: false },
-        { name: 'customer', type: 'text', nullable: false },
-      ],
-    });
-    const projectionSource = resolveDvtSubstraitProjectionSource(source);
-    if (projectionSource == null) throw new Error('Expected a connected source fixture.');
-    const node = applyDvtSubstraitSemanticDocument(
-      buildDvtNode('dvt:transform'),
-      encodeDvtSubstraitProjectionDocument(
-        createDvtSubstraitProjectionDraft({
-          source: projectionSource,
-          targetNodeId: 'node_transform',
-          outputs: [
-            { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-            { fieldId: 'output:customer', name: 'customer', sourceFieldName: 'customer' },
-          ],
-        })
-      )
-    );
-    const draft = createCanvasInspectorNodeDraft(node);
-
-    expect(
-      validateCanvasInspectorNodeDraft({
-        ...draft,
-        outputNameDrafts: { 'output:order_id': 'customer' },
-      })
-    ).toEqual({ outputNames: 'dvt_alias_duplicate' });
-  });
-
   it('rejects persisted legacy Source filter authority without changing physical identity', async () => {
     const source = buildImportedWarehouseSourceNode({
       connectedSourceRef: {
@@ -1105,12 +1064,6 @@ describe('canvasInspectorAuthoringModel', () => {
         tags: Array.from({ length: limits.tagsPerNode + 1 }, (_, index) => `tag_${index}`),
       })
     ).toEqual({ tags: 'node_tags_invalid' });
-    expect(
-      validateCanvasInspectorNodeDraft({
-        ...base,
-        outputNameDrafts: { output_id: 'invalid\0identifier' },
-      })
-    ).toEqual({ outputNames: 'dvt_semantic_field_invalid' });
   });
 
   it('rejects Source and Sink PostgreSQL identifiers above 63 UTF-8 bytes', () => {

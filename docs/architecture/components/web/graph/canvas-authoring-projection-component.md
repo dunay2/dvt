@@ -152,6 +152,14 @@ an edge badge, shared relational junction, synthetic node or shared trunk.
 Substrait remains the semantic authority inside the Model; internal operations
 are inspected and edited in the semantic editor reached from the Model.
 
+The outer node inspector shows factual columns and read-only canonical code,
+alongside metadata and the existing Open semantic editor action. It must not
+mount composition starters or relation/operator forms in Columns, including
+when the Model already contains a canonical projection. Pending and applied
+relational editing share the Model Workbench and its selected-node forms.
+Shared semantic constructors remain with their existing owners; no compatibility
+editor, automatic conversion or second draft authority is retained.
+
 This presentation follows #3293/#3296 and supersedes the grouped edge badge
 presentation from #3227. It does not change persisted graph topology or the
 execution snapshot. `canvasViewportEdgeProjection.ts` must not decode internal

@@ -66,7 +66,6 @@ export function CanvasNodeWorkbenchSections({
     transferColumns,
     presentationTruth,
     semanticDvtTransform,
-    canonicalDvtRelationColumnAuthority,
     approvedWarehouseSourceOverview,
     baseModel,
     contributionModel,
@@ -154,14 +153,6 @@ export function CanvasNodeWorkbenchSections({
         <>
           {sectionAfterChildren[sectionId]}
           {renderAuthoringSection(sectionId)}
-        </>
-      );
-    }
-    if (canonicalDvtRelationColumnAuthority) {
-      sectionAfterChildren.columns = (
-        <>
-          {sectionAfterChildren.columns}
-          {renderAuthoringSection('columns')}
         </>
       );
     }

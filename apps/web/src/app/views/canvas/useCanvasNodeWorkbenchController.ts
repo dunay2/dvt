@@ -113,11 +113,6 @@ export function useCanvasNodeWorkbenchController({
     node.pluginId === 'dvt' && node.kind === 'dvt:transform' && !isDbtCompatibleModel(node);
   const canonicalSubstraitTransformAuthority =
     dvtTransformAuthoringMode === DVT_TRANSFORM_AUTHORING_MODE.substrait;
-  const canonicalDvtRelationColumnAuthority =
-    canonicalSubstraitTransformAuthority ||
-    (node.kind === 'dvt:source' &&
-      draftController.draft.dvt?.kind === 'source' &&
-      draftController.draft.dvt.semantic != null);
   const approvedWarehouseSourceOverview =
     node.kind === 'dvt:source' && node.pluginId === 'dvt.warehouse-source';
   const baseModel = buildNodePropertiesReadModel({
@@ -181,7 +176,6 @@ export function useCanvasNodeWorkbenchController({
     transferColumns,
     presentationTruth,
     semanticDvtTransform,
-    canonicalDvtRelationColumnAuthority,
     approvedWarehouseSourceOverview,
     baseModel,
     contributionModel,

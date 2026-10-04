@@ -130,5 +130,23 @@ describe('Workbench navigation', () => {
     cy.screenshot('semantic-editor-compact');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('.react-flow__node[data-id="join-transform"]').should('exist');
+    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').click(
+      40,
+      18
+    );
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="canvas-node-workbench-columns-section"]').should(
+      'contain.text',
+      'customer'
+    );
+    cy.get(
+      '[data-slot="dvt-relation-authoring"], [data-slot="dvt-relational-operation-chooser"]'
+    ).should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="canvas-open-semantic-editor"]').click();
+    cy.get('[data-slot="canvas-model-main-tab"]')
+      .should('have.length', 1)
+      .and('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-relational-tree"]').should('contain.text', 'JOIN');
   });
 });

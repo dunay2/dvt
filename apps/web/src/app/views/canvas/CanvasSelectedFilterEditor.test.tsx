@@ -13,6 +13,8 @@ import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
 import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
 import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
+import { createSourceSet } from './canvasSourceSet';
+import { source as setSource } from './canvasRelationalOperator.test-support';
 
 describe('selected Filter form', () => {
   setupWorkbenchTest();
@@ -88,13 +90,14 @@ describe('selected Filter form', () => {
       }
     }
   );
-  it.each(
-    ['postgres', 'duckdb'].flatMap((provider) =>
-      ['submit', 'cancel', 'cancel-pending'].map((action) => ({ provider, action }))
-    )
-  )(
-    '$action respects input identity and the draft boundary on $provider',
-    async ({ action, provider }) => {
+  it.each([
+    ...['postgres', 'duckdb'].flatMap((provider) =>
+      ['submit', 'cancel', 'cancel-pending'].map((action) => ({ provider, action, parent: 'join' }))
+    ),
+    { provider: 'postgres', action: 'submit', parent: 'set' },
+  ])(
+    '$action respects input identity and the draft boundary on $provider beneath $parent',
+    async ({ action, provider, parent }) => {
       const source = (table: string): Parameters<typeof createCustomerOrdersJoin>[0]['left'] => ({
         nodeId: table,
         schema: 'raw',
@@ -109,11 +112,17 @@ describe('selected Filter form', () => {
           },
         },
       });
-      const document = createCustomerOrdersJoin({
-        left: source('orders'),
-        right: source('customers'),
-        targetNodeId: 'model',
-      });
+      const document =
+        parent === 'set'
+          ? createSourceSet({
+              inputs: [setSource('north'), setSource('south')],
+              targetNodeId: 'model',
+            })
+          : createCustomerOrdersJoin({
+              left: source('orders'),
+              right: source('customers'),
+              targetNodeId: 'model',
+            });
       for (const relation of document.sidecar.relations) {
         if (relation.sourceRef != null) relation.sourceRef.connectionRef.provider = provider;
       }

@@ -13,7 +13,10 @@ import {
 } from 'lucide-react';
 import { CanvasRelationalJoinIcon } from './CanvasRelationalJoinIcon';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
+import type {
+  CanvasRelationalOperation,
+  CanvasRelationalOperationChoice,
+} from './canvasRelationalOperationChoices';
 
 export type CanvasRelationalOperationPresentation = Readonly<{
   labelKey: keyof CanvasViewCopy;
@@ -151,3 +154,20 @@ export function resolveCanvasRelationalOperationPresentation(operation: unknown)
 }
 
 export { canvasPresentationOperationForRel } from './canvasRelationalOperationSelector';
+
+const availabilityLabels = {
+  available: 'inspectorDvtRelationalAvailable',
+  'needs-predicate': 'inspectorDvtRelationalNeedsPredicate',
+  'needs-input': 'relationalTreeSelectNextSourceMessage',
+  'needs-schema-alignment': 'inspectorDvtRelationalNeedsSchemaAlignment',
+  'target-unavailable': 'inspectorDvtRelationalTargetUnavailable',
+  'read-only': 'inspectorDvtRelationalReadOnly',
+  'semantically-unavailable': 'inspectorDvtRelationalUnavailable',
+} as const satisfies Record<CanvasRelationalOperationChoice['availability'], keyof CanvasViewCopy>;
+
+export function canvasRelationalAvailabilityLabel(
+  availability: CanvasRelationalOperationChoice['availability'],
+  copy: Pick<CanvasViewCopy, (typeof availabilityLabels)[keyof typeof availabilityLabels]>
+): string {
+  return copy[availabilityLabels[availability]];
+}
