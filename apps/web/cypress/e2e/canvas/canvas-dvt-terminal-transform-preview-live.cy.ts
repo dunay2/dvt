@@ -10,6 +10,8 @@ import './canvas-relational-workbench-chain-persistence.cy';
 import './canvas-relational-workbench-cross.cy';
 import './canvas-relational-tree-workbench.cy';
 import './canvas-relational-workbench-union.cy';
+import './canvas-relational-workbench-removal.cy';
+import './canvas-relational-workbench-viewport.cy';
 import './canvas-sort-fetch-data-navigation.cy';
 import './canvas-model-chain-fields.cy';
 import './canvas-column-lineage-mapping.cy';

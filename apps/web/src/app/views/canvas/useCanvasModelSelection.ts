@@ -1,7 +1,7 @@
 /** Own Model tab selection and delegate protected replacement to the current editor. */
 import { useCallback, useMemo, useState } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
-import { canOpenCanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
+import { canOpenCanvasRelationalTreeWorkbench } from './useCanvasRelationalTreeWorkbenchModel';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import type { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 
@@ -17,7 +17,7 @@ export function useCanvasModelSelection(
     [nodes]
   );
   const selected = nodes.find((node) => node.id === selectedId && modelIds.has(node.id)) ?? null;
-  const { capture, restore } = focus;
+  const { capture, enter, restore } = focus;
   const open = useCallback(
     (nodeId: string) => {
       if (!modelIds.has(nodeId)) return;
@@ -25,12 +25,13 @@ export function useCanvasModelSelection(
       const select = () => {
         setSelectedId(nodeId);
         setActive(true);
+        enter('[data-slot="canvas-model-editor"]');
       };
       const current = useCanvasWorkspaceMenuContributionStore.getState().modelTab;
       if (current?.canvasId === canvasId && current.nodeId !== nodeId) current.onClose(select);
       else select();
     },
-    [modelIds, canvasId, capture]
+    [modelIds, canvasId, capture, enter]
   );
   const close = useCallback(() => {
     setSelectedId(null);

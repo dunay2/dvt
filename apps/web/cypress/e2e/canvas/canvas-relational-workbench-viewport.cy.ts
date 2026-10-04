@@ -59,5 +59,28 @@ describe('Workbench viewport', () => {
       .should('have.value', 'customers')
       .clear();
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
+    // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,
+    // independently of the graph's own zoom control.
+    cy.viewport(640, 450);
+    cy.get('[data-slot="shell-active-canvas-identity"]').should(($identity) => {
+      const bounds = $identity[0]!.getBoundingClientRect();
+      $identity.find('[role="tab"], [data-slot="canvas-model-tab-close"]').each((_, control) => {
+        const tab = control.getBoundingClientRect();
+        expect(tab.left).to.be.at.least(bounds.left);
+        expect(tab.right).to.be.at.most(bounds.right);
+      });
+    });
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
+    cy.get('[data-canvas-inspector="true"]:visible').should(($panel) => {
+      const bounds = $panel[0]!.getBoundingClientRect();
+      expect(bounds.left).to.be.at.least(0);
+      expect(bounds.right).to.be.at.most(640);
+      expect(bounds.bottom).to.be.at.most(450);
+    });
+    cy.get('[data-slot="canvas-relational-collapse"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-model-toolbar"]').should(($footer) => {
+      expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
+    });
+    cy.screenshot('semantic-editor-200-percent-equivalent-reflow');
   });
 });

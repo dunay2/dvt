@@ -5,6 +5,18 @@ import type {
   CanvasInspectorNodeDraftApplyResult,
 } from './canvasInspectorAuthoring.types';
 import type { GraphNodeInputMapping } from '../../plugins/graph/graphNodeColumnContracts';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
+
+export type CanvasRelationalTreeWorkbenchProps = Readonly<{
+  transformNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  copy: CanvasRelationalTreeWorkbenchCopy;
+  authoring?: CanvasRelationalTreeAuthoringContract;
+  actionsHost?: HTMLElement | null;
+  preview?: CanvasOperationPreviewPorts;
+}>;
 
 export type CanvasRelationalTreeApplyResult =
   | CanvasInspectorNodeDraftApplyResult

@@ -16,6 +16,7 @@ export function CanvasModelEditorTemplate({
     <section
       data-slot="canvas-model-editor"
       aria-label={label}
+      tabIndex={-1}
       className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-(--surface-app) text-(--text-default)"
     >
       <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">{editor}</div>

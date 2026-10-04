@@ -1,42 +1,28 @@
 import { forwardRef, useEffect, useState } from 'react';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type {
-  CanvasRelationalTreeAuthoringContract,
-  CanvasRelationalTreeWorkbenchCopy,
-} from './canvasRelationalTreeWorkbench.types';
+import type { CanvasRelationalTreeWorkbenchProps } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessionActions';
 import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalConfirmation';
 import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
-import {
-  CanvasOperationPreviewProvider,
-  type CanvasOperationPreviewPorts,
-} from './CanvasOperationDataPreview';
+import { useCanvasWorkbenchFocusRecovery } from './useCanvasWorkbenchFocus';
+import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
 import {
   useCanvasRelationalTreeWorkbenchHandle,
   type CanvasRelationalTreeWorkbenchHandle,
 } from './useCanvasRelationalTreeWorkbenchHandle';
 export type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
-export { canOpenCanvasRelationalTreeWorkbench } from './useCanvasRelationalTreeWorkbenchModel';
 export const CanvasRelationalTreeWorkbench = forwardRef<
   CanvasRelationalTreeWorkbenchHandle,
-  Readonly<{
-    transformNode: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly CanonicalEdge[];
-    copy: CanvasRelationalTreeWorkbenchCopy;
-    authoring?: CanvasRelationalTreeAuthoringContract;
-    actionsHost?: HTMLElement | null;
-    preview?: CanvasOperationPreviewPorts;
-  }>
+  CanvasRelationalTreeWorkbenchProps
 >(function CanvasRelationalTreeWorkbench(
   { transformNode, nodes, edges, copy, authoring, actionsHost, preview },
   ref
 ) {
+  const focus = useCanvasWorkbenchFocusRecovery();
   const model = useCanvasRelationalTreeWorkbenchModel({
     transformNode,
     nodes,
@@ -81,6 +67,8 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
         onPositionsChange={model.session.setPositions}
       >
         <div
+          {...focus}
+          tabIndex={-1}
           data-slot="canvas-relational-tree-workbench"
           onContextMenu={(event) => {
             event.preventDefault();

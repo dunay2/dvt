@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench inspection shell behavior. */
 import React, { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
+import * as analysis from './canvasRelationalAnalysis';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import {
@@ -16,6 +18,44 @@ import {
 
 describe('Canvas relational-tree Workbench ', () => {
   setupWorkbenchTest();
+  it('reuses semantic analysis during selection, disclosure, focus and viewport controls', () => {
+    const fixture = buildSemanticWorkbenchFixture();
+    const analyze = vi.spyOn(analysis, 'analyzeCanvasRelations');
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    try {
+      act(() =>
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={fixture.transform}
+            nodes={[...fixture.sources, fixture.transform]}
+            edges={fixture.edges}
+            copy={COPY}
+            authoring={{ canEditNode: true, onApplyNodeDraft }}
+          />
+        )
+      );
+      const baseline = analyze.mock.calls.length;
+      expect(baseline).toBeGreaterThan(0);
+      for (const selector of [
+        '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
+        '[data-slot="canvas-relational-node-expand"]',
+        '[data-slot="canvas-relational-tree-sources-toggle"]',
+        'button[aria-label="Zoom in"]',
+        '[data-slot="canvas-relational-tree-fit"]',
+      ]) {
+        const button = container.querySelector<HTMLButtonElement>(selector);
+        expect(button, selector).not.toBeNull();
+        act(() => {
+          button!.focus();
+          button!.click();
+        });
+        expect(analyze.mock.calls.length, selector).toBe(baseline);
+      }
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    } finally {
+      analyze.mockRestore();
+    }
+  });
   it('keeps the same properties controls mounted while activating inspection tabs by keyboard', () => {
     act(() =>
       root.render(

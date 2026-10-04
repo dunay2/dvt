@@ -17,6 +17,8 @@ const inputMapping = 'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.
 const inspectorConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-relational-workbench-viewport.cy.ts',
 ];
 const savedSampleConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
@@ -218,6 +220,7 @@ describe('governed browser evidence routing', () => {
       [
         ...expected.filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts')),
         ...inputConsumers,
+        resolve('cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts'),
       ].sort()
     );
     for (const consumer of [
