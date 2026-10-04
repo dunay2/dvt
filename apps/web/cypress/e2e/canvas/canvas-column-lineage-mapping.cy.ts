@@ -96,15 +96,21 @@ function removeInput(name: string): void {
   });
   cy.get(`button[aria-label="Remove mapping ${name} to ${name}"]`).click({ force: true });
 }
-function dropPublishedField(producerId: string, name: string): void {
+function dropPublishedField(producerId: string, name: string, view = 'Input'): void {
   const transfer = new DataTransfer();
   node(producerId)
     .find(`[data-slot="graph-node-column-piece"][data-column-name="${name}"]`)
     .trigger('dragstart', { dataTransfer: transfer });
   node('model-orders')
+    .contains('[role="tab"]', `${view} (`)
+    .should('have.attr', 'aria-selected', 'true');
+  node('model-orders')
     .find('[role="tabpanel"]')
     .trigger('dragover', { dataTransfer: transfer })
     .trigger('drop', { dataTransfer: transfer });
+  node(producerId)
+    .find(`[data-slot="graph-node-column-piece"][data-column-name="${name}"]`)
+    .trigger('dragend', { dataTransfer: transfer });
 }
 
 describe('Producer fields enter Input; Output is passive', () => {
@@ -241,7 +247,7 @@ describe('Producer fields enter Input; Output is passive', () => {
     removeInput('customer');
     node('model-orders').contains('[role="tab"]', 'Input (5)').should('be.visible');
     assertNoOutputAuthoring();
-    dropPublishedField('source-orders', 'customer');
+    dropPublishedField('source-orders', 'customer', 'Output');
     node('model-orders').contains('[role="tab"]', 'Input (5)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Input (5)').click();
