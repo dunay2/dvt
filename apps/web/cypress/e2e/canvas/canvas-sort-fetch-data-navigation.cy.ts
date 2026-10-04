@@ -81,11 +81,47 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
       cy.get(
         '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
       )
+        .as('sortDirection', { type: 'static' })
         .select('DESC · NULLS LAST')
         .invoke('val')
         .then((value) => {
           selectedDirection = String(value);
         });
+      cy.then(() => {
+        const writes = semanticWrites('join-transform').length;
+        const queries = getE2eApiCalls(/\/data-sample/, 'GET').length;
+        cy.get('[data-slot="canvas-model-main-tab"]').focus();
+        for (const [key, slot] of [
+          ['Home', 'canvas-workspace-tab'],
+          ['End', 'canvas-model-main-tab'],
+          ['ArrowLeft', 'canvas-workspace-tab'],
+          ['ArrowRight', 'canvas-model-main-tab'],
+        ] as const) {
+          cy.press(key);
+          cy.get(`[data-slot="${slot}"]`)
+            .should('be.focused')
+            .and('have.attr', 'aria-selected', 'true')
+            .then(($tab) => {
+              cy.get(`[id="${$tab.attr('aria-controls')}"]`)
+                .should('have.attr', 'role', 'tabpanel')
+                .and('have.attr', 'aria-labelledby', $tab.attr('id'))
+                .and('have.attr', 'aria-hidden', 'false');
+            });
+        }
+        cy.get('[data-slot="canvas-model-tab-close"]').focus().click();
+        cy.contains('[role="alertdialog"] button', 'Keep editing').click();
+        cy.get('@sortDirection')
+          .should('be.visible')
+          .and(($select) => {
+            expect($select.val()).to.equal(selectedDirection);
+          });
+        cy.then(() => {
+          expect(semanticWrites('join-transform')).to.have.length(writes);
+          expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(queries);
+        });
+      });
+      cy.injectAxe();
+      cy.checkA11y('[data-slot="shell-active-canvas-identity"]');
       cy.get(
         '[data-slot="canvas-relational-tree-inline-editor"]:visible button[type="submit"]'
       ).click();

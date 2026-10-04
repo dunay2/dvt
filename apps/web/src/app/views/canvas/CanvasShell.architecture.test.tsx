@@ -107,7 +107,13 @@ describe('CanvasShell architecture', () => {
         )
       )
     ).toEqual([]);
-    for (const file of ['canvasShellNodeProjection.ts', 'canvasWorkspaceFilePath.ts']) {
+    expect(imports('CanvasWorkspaceModelTabs.tsx')).toContain('../../components/ui/tabs');
+    expect(imports('CanvasWorkspaceModelTabs.tsx')).not.toContain('react');
+    for (const file of [
+      'canvasShellNodeProjection.ts',
+      'canvasWorkspaceFilePath.ts',
+      'canvasWorkspaceTabs.ts',
+    ]) {
       expect(
         imports(file).filter((path) =>
           /(?:^react|stores\/|services\/|\/use[A-Z]|CanvasShell$)/.test(path)

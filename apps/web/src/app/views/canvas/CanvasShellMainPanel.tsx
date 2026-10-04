@@ -187,20 +187,15 @@ function CanvasShellMainSurface({
     />
   );
 
-  const baseSurface =
-    layout.centerSurfaceVisible == null ? (
-      layout.centerSurface == null ? (
-        viewport
-      ) : (
-        <>{layout.centerSurface}</>
-      )
-    ) : (
-      <CanvasShellWorkspaceSurfaces
-        viewport={viewport}
-        editor={layout.centerSurface}
-        editorVisible={layout.centerSurfaceVisible}
-      />
-    );
+  const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
+  const baseSurface = (
+    <CanvasShellWorkspaceSurfaces
+      viewport={modelWorkspaceOpen ? viewport : (layout.centerSurface ?? viewport)}
+      editor={modelWorkspaceOpen ? layout.centerSurface : null}
+      editorVisible={layout.centerSurfaceVisible === true}
+      hasWorkspaceTabs={panels.activeCanvas != null}
+    />
+  );
 
   return (
     <CanvasShellContextualWorkbenchSplit
