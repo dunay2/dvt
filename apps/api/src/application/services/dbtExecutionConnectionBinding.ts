@@ -1,4 +1,10 @@
-/** Owned concern: verify that a DBT target resolves to its governed workspace connection. */
+/**
+ * Owned concern: verify that a DBT target resolves to its governed workspace connection.
+ * @baseline StartRun binds execution credentials to the authorized workspace connection.
+ * @decision Verify connection and profile identity; select named rejection definitions.
+ * @consequence Binding failures remain distinct without depending on diagnostic prose.
+ * @version 1.0.0
+ */
 import { RUN_REJECTIONS, type RunExecutionRejection } from '@dvt/contracts';
 
 import type { IDbtExecutionConnectionBindingVerifier } from '../ports/dbtExecutionTarget.js';

@@ -1,4 +1,10 @@
-/** Owned concern: localize Run admission rejections without rendering diagnostic strings. */
+/**
+ * Owned concern: localize Run admission rejections without rendering diagnostic strings.
+ * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
+ * @decision Resolve named Run definitions through exhaustive EN/ES copy.
+ * @consequence Unknown Run causes receive a localized fallback, never provider prose.
+ * @version 1.0.0
+ */
 import { RUN_REJECTIONS, type RunExecutionRejection } from '@dvt/contracts';
 import type { ApplicationLanguage } from '../../stores/applicationLanguageStore';
 

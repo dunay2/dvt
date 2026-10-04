@@ -15,6 +15,7 @@ description: >-
   expected output schema from the provider activity that eventually materializes it.
 mitigations:
   - One strict V1 workload with explicit intent and exact target-to-workload connection equality
+  - Ordinal selected-graph ID ordering distinguishes Unicode identities without locale dependence
   - JCS and SHA-256 fingerprint of ordered, admitted PostgreSQL output metadata
   - Fail-closed lowering for incomplete target configuration or unknown output types
   - PostgreSQL-backed plan persistence and replay regression coverage

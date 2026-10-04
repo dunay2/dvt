@@ -98,6 +98,15 @@ exact committed candidate; previous runs are not evidence for a later SHA.
 
 ## Executed evidence and limits
 
+The [bounded identity cleanup](https://github.com/dunay2/dvt/issues/2524#issuecomment-5984108516)
+uses one API-owned ordinal comparator for Preview graph identity, topology comparison
+and workload ID lists. It removes both locale comparators and a redundant array copy.
+The regression first rejected the same selected IDs in a different order because
+locale collation equated distinct Unicode strings. Identity comparison must not
+normalize those strings. Semantic JOIN/Set operand and output-column order remain
+unchanged. Complete file ownership/decision headers are preserved; no Planner
+internal helper is exposed. Final validation belongs to the exact candidate on #2524.
+
 - TDD: three Run/publication assertions failed against the old V1; they pass
   after the hard cut. Retired V2, missing intent, mismatched output/intent and
   absent Run digest are explicit negative cases.

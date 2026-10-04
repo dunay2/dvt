@@ -1,6 +1,10 @@
 /**
  * Owned concern: resolve Preview selection from the single authority named by
  * the request, then return server-verified planner input.
+ * @baseline PreviewPlan binds selection to the authorized graph and project revision.
+ * @decision Re-resolve the named authority and canonicalize technical IDs without locale.
+ * @consequence Reordered equivalent graphs match; different identities still reject.
+ * @version 1.0.0
  */
 import type {
   DbtProjectFilesProvenance,
@@ -13,6 +17,7 @@ import type {
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
+import { compareGraphIds } from './compareGraphIds.js';
 import type { ProjectDbtGraphFromFilesUseCase } from './projectDbtGraphFromFilesUseCase.js';
 import type { ResolveAuthorizedDvtPreviewSelectionService } from './resolveAuthorizedDvtPreviewSelection.js';
 import type {
@@ -179,7 +184,7 @@ export class ResolveAuthorizedPreviewSelectionService {
         decisionScopeNodeIds: projection.nodes
           .filter((node) => node.resourceType in EXECUTABLE_RESOURCE)
           .map((node) => node.uniqueId)
-          .sort(compareStrings),
+          .sort(compareGraphIds),
       },
     };
   }
@@ -255,7 +260,7 @@ function buildAuthoritativeGraph(
     graphNodes.push({
       nodeId,
       stepKind: presentation.stepKind,
-      dependsOn: [...new Set(incomingExecutableIds)].sort(compareStrings),
+      dependsOn: [...new Set(incomingExecutableIds)].sort(compareGraphIds),
       metadata: {
         displayName: node.name,
         tags: { kind: presentation.kind, pluginId: 'dbt', role: presentation.role },
@@ -269,7 +274,7 @@ function buildAuthoritativeGraph(
       kind: 'generic-graph-v1',
       sourceFamily: 'dbt',
       sourceVersion: '1.0',
-      nodes: graphNodes.sort((left, right) => compareStrings(left.nodeId, right.nodeId)),
+      nodes: graphNodes.sort((left, right) => compareGraphIds(left.nodeId, right.nodeId)),
     },
   };
 }
@@ -301,7 +306,7 @@ function normalizeGraphSource(graphSource: GenericGraphSourceV1): unknown {
       .map((node) => ({
         nodeId: node.nodeId,
         stepKind: node.stepKind,
-        dependsOn: [...node.dependsOn].sort(compareStrings),
+        dependsOn: [...node.dependsOn].sort(compareGraphIds),
         ...(node.stepTypeConfig === undefined ? {} : { stepTypeConfig: node.stepTypeConfig }),
         ...(node.metadata === undefined
           ? {}
@@ -318,26 +323,22 @@ function normalizeGraphSource(graphSource: GenericGraphSourceV1): unknown {
                   : {
                       tags: Object.fromEntries(
                         Object.entries(node.metadata.tags).sort(([left], [right]) =>
-                          compareStrings(left, right)
+                          compareGraphIds(left, right)
                         )
                       ),
                     }),
               },
             }),
       }))
-      .sort((left, right) => compareStrings(left.nodeId, right.nodeId)),
+      .sort((left, right) => compareGraphIds(left.nodeId, right.nodeId)),
   };
 }
 
 function sameStringSet(left: readonly string[], right: readonly string[]): boolean {
   if (left.length !== right.length) return false;
-  const sortedLeft = [...left].sort(compareStrings);
-  const sortedRight = [...right].sort(compareStrings);
+  const sortedLeft = [...left].sort(compareGraphIds);
+  const sortedRight = [...right].sort(compareGraphIds);
   return sortedLeft.every((value, index) => value === sortedRight[index]);
-}
-
-function compareStrings(left: string, right: string): number {
-  return left.localeCompare(right);
 }
 
 function reject(cause: string, reason: string): PreviewSelectionRejection {

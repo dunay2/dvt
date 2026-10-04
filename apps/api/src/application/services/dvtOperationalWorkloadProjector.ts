@@ -1,6 +1,10 @@
 /**
  * Owned concern: lower one exact protected Source -> terminal Transform closure
  * into one generic PostgreSQL workload with explicit Preview or Run intent.
+ * @baseline Workload V1 binds the exact authorized closure and semantic revision.
+ * @decision Canonicalize graph ID lists without reordering semantic operands.
+ * @consequence Preview and Run retain the same locale-independent graph identity.
+ * @version 1.0.0
  */
 import {
   DVT_REJECTIONS,
@@ -17,6 +21,7 @@ import {
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
+import { compareGraphIds } from './compareGraphIds.js';
 import { sameConnection } from './dvtSourceCoverage.js';
 import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
@@ -76,8 +81,8 @@ export class DvtOperationalWorkloadProjector {
           selectedNodeIds: [
             ...closure.sources.map(({ node }) => node.id),
             closure.transform.id,
-          ].sort(),
-          selectedEdgeIds: closure.edges.map((edge) => edge.id).sort(),
+          ].sort(compareGraphIds),
+          selectedEdgeIds: closure.edges.map((edge) => edge.id).sort(compareGraphIds),
         },
         semantics: [
           {
