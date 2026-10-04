@@ -162,8 +162,11 @@ editor, automatic conversion or second draft authority is retained.
 
 Workspace navigation follows the same controller/view boundary:
 `CanvasWorkspaceModelTabs` prepares localized tab data and dispatches navigation;
-`CanvasWorkspaceModelTabsTemplate` owns only markup, styles and accessibility.
-The passive template consumes no stores, effects, queries or persistence ports.
+`CanvasWorkspaceModelTabsTemplate` owns only markup, accessibility and semantic
+class names. Shared workspace tab styles remain in `styles/index.css`;
+component-specific styles belong to `canvasSemanticEditor.css`, not utility
+strings or style attributes in the template. The passive template consumes no
+stores, effects, queries or persistence ports.
 
 This presentation follows #3293/#3296 and supersedes the grouped edge badge
 presentation from #3227. It does not change persisted graph topology or the

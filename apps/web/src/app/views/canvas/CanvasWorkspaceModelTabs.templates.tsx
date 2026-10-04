@@ -1,4 +1,5 @@
-/** Passive workspace tab strip: markup, styling and accessibility only. */
+/** Passive workspace tab strip: markup, accessibility and semantic class names. */
+import './canvasSemanticEditor.css';
 import { Table2, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -17,15 +18,8 @@ export function CanvasWorkspaceModelTabsTemplate({
   onClose?: () => void;
 }>) {
   return (
-    <Tabs
-      value={activeKey}
-      onValueChange={onSelect}
-      className="canvas-workspace-model-tabs min-w-0 flex-row items-center gap-0 self-stretch"
-    >
-      <TabsList
-        aria-label={copy.workspaceTabs}
-        className="workspace-navigation-tabs h-full justify-start rounded-none bg-transparent p-0"
-      >
+    <Tabs value={activeKey} onValueChange={onSelect} className="canvas-workspace-model-tabs">
+      <TabsList aria-label={copy.workspaceTabs} className="workspace-navigation-tabs">
         {tabs.map((item) => (
           <TabsTrigger
             key={item.key}
@@ -34,12 +28,12 @@ export function CanvasWorkspaceModelTabsTemplate({
             aria-controls={item.panelId}
             data-slot={item.tabId}
             title={item.label}
-            className="workspace-navigation-tab rounded-none border-0 shadow-none data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            className="workspace-navigation-tab"
           >
             {item.key === 'model' ? (
-              <Table2 aria-hidden="true" className="size-4 shrink-0" />
+              <Table2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
             ) : null}
-            <span className="max-w-64 truncate">{item.label}</span>
+            <span className="canvas-workspace-model-tab-label">{item.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
@@ -49,10 +43,10 @@ export function CanvasWorkspaceModelTabsTemplate({
           data-slot="canvas-model-tab-close"
           aria-label={copy.closeEditor}
           title={copy.closeEditor}
-          className="shrink-0 rounded p-1 text-(--text-muted) hover:bg-(--surface-panel) hover:text-(--text-primary) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+          className="canvas-workspace-model-tab-close"
           onClick={onClose}
         >
-          <X aria-hidden="true" className="size-3.5" />
+          <X aria-hidden="true" />
         </button>
       ) : null}
     </Tabs>

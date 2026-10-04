@@ -126,6 +126,16 @@ describe('CanvasShell architecture', () => {
     visit(controller);
     expect(tags).toEqual(['CanvasWorkspaceModelTabsTemplate']);
     const templateImports = imports('CanvasWorkspaceModelTabs.templates.tsx');
+    const templateSource = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'CanvasWorkspaceModelTabs.templates.tsx'
+    );
+    expect(templateSource).not.toMatch(/\bstyle\s*=/);
+    expect(
+      [...templateSource.matchAll(/className="([^"]+)"/g)]
+        .flatMap(([, names]) => names!.split(/\s+/))
+        .filter((name) => !/^(canvas-workspace-model-|workspace-navigation-)/.test(name))
+    ).toEqual([]);
     expect(templateImports).toContain('../../components/ui/tabs');
     expect(templateImports).not.toContain('react');
     expect(
