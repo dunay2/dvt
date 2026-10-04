@@ -65,6 +65,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresWorkloadConstraints.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
