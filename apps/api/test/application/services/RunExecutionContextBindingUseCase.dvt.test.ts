@@ -3,7 +3,6 @@ import {
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   KNOWN_STEP_KINDS,
-  createDefaultStepTypeRegistry,
   createDvtPostgresOutputSchemaDigestV1,
   parseExecutionPlan,
   parseExecutionSelection,
@@ -15,6 +14,7 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 
 import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import { DvtPostgresRunExecutionContextPreparer } from '../../../src/application/services/postgres/DvtPostgresRunExecutionContextPreparer.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import { mapStartRunResult } from '../../../src/entrypoints/http/httpErrorMapper.js';
@@ -22,6 +22,7 @@ import { mapStartRunResult } from '../../../src/entrypoints/http/httpErrorMapper
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
 type Dependencies = ConstructorParameters<typeof RunExecutionContextBindingUseCase>[0];
+type PostgresDependencies = ConstructorParameters<typeof DvtPostgresRunExecutionContextPreparer>[0];
 
 const PLAN_ID = 'd'.repeat(64);
 const PLAN_REF = parsePlanRef({
@@ -193,7 +194,7 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
   it('rejects absent publication admission without writes or dispatch', async () => {
     const delegate = makeDelegate();
     const contextWriter = { write: vi.fn() };
-    const { dvtPostgresPublicationPredecessorReader: _reader, ...deps } = dependencies({
+    const deps = dependencies({
       delegate,
       contextWriter,
       getConnection: vi.fn(async () => ({
@@ -324,35 +325,27 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
 function dependencies(input: {
   readonly delegate: Dependencies['delegate'];
   readonly contextWriter: Dependencies['contextWriter'];
-  readonly getConnection: Dependencies['warehouseConnectionCatalog']['getConnection'];
-  readonly observe?: NonNullable<
-    Dependencies['dvtPostgresPublicationPredecessorReader']
-  >['observe'];
+  readonly getConnection: PostgresDependencies['catalog']['getConnection'];
+  readonly observe?: NonNullable<PostgresDependencies['predecessorReader']>['observe'];
 }): Dependencies {
   const unexpected = vi.fn(async (): Promise<never> => {
     throw new Error('Unexpected dependency call');
   });
   return {
     delegate: input.delegate,
-    bundleBuilder: { build: unexpected },
     contextWriter: input.contextWriter,
-    executionTargetResolver: {
-      resolve() {
-        throw new Error('Unexpected dependency call');
-      },
-    },
-    executionConnectionBindingVerifier: { verify: unexpected },
-    stepTypeRegistry: createDefaultStepTypeRegistry(),
-    warehouseConnectionCatalog: {
-      listConnections: unexpected,
-      listSourceObjects: unexpected,
-      getConnection: input.getConnection,
-      createConnection: unexpected,
-      renameConnection: unexpected,
-    },
-    dvtPostgresPublicationPredecessorReader: {
-      observe: input.observe ?? unexpected,
-    },
+    preparers: [
+      new DvtPostgresRunExecutionContextPreparer({
+        catalog: {
+          listConnections: unexpected,
+          listSourceObjects: unexpected,
+          getConnection: input.getConnection,
+          createConnection: unexpected,
+          renameConnection: unexpected,
+        },
+        ...(input.observe === undefined ? {} : { predecessorReader: { observe: input.observe } }),
+      }),
+    ],
   };
 }
 

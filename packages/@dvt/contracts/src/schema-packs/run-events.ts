@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { StepArtifactRefSchema } from '../step-registry/StepTypeRegistry.js';
+import { StepArtifactRefSchema } from '../step-registry/StepArtifactRef.js';
 
 import {
   IsoUtcStringSchema,

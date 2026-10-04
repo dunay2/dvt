@@ -11,7 +11,7 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
-  - apps/api/src/application/services/dvtPostgresExecutionContextBinding.ts
+  - apps/api/src/application/services/postgres/DvtPostgresRunExecutionContextPreparer.ts
   - packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts
   - packages/@dvt/contracts/src/schema-packs/common.ts
   - packages/@dvt/adapter-postgres/src/PostgresDvtStableTablePublisher.ts

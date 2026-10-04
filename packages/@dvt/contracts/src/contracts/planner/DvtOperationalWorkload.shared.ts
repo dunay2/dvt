@@ -1,5 +1,5 @@
 /**
- * Owns identities and validation shared by Preview and Run intents in V1.
+ * Owned concern: define identities and validation shared by Preview and Run intents in V1.
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
  * @decision Keep protected graph, semantic, projection, and connection identity checks shared across execution intents.
  * @consequence Preview and Run cannot drift in their authorization-bound identities.
@@ -7,18 +7,7 @@
  */
 import { z } from 'zod';
 
-import { StepArtifactRefSchema } from '../../step-registry/DbtStepTypeConfig.js';
-import { ConnectionRefSchema } from '../source-import/ConnectedSourceRef.v1.js';
-
 import { DvtSubstraitProfileRefV1Schema } from './DvtSubstraitProfile.v1.js';
-
-export const DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY =
-  'executor.dvt-postgres-operational-workload' as const;
-export const DVT_POSTGRES_PROJECT_REL_PROFILE_ID = 'dvt.vtx2.postgres.project-rel.v1' as const;
-export const DVT_POSTGRES_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.join.v1' as const;
-export const DVT_POSTGRES_SET_PROFILE_ID = 'dvt.vtx2.postgres.set.v1' as const;
-export const DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY = 'pgsql-deparser@16.1.1' as const;
-const DVT_POSTGRES_HISTORICAL_INNER_JOIN_PROFILE_ID = 'dvt.vtx2.postgres.inner-join.v1' as const;
 
 const NonBlankStringSchema = z
   .string()
@@ -47,74 +36,17 @@ export const DvtOperationalWorkloadSemanticRefSchema = z
     profile: DvtSubstraitProfileRefV1Schema,
   })
   .strict();
-const DvtOperationalTargetProjectionRefObjectSchema = z
-  .object({
-    profileId: z.enum([
-      DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
-      DVT_POSTGRES_JOIN_PROFILE_ID,
-      DVT_POSTGRES_SET_PROFILE_ID,
-    ]),
-    toolIdentity: z.literal(DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY),
-    semanticPlanSha256: DvtOperationalWorkloadSha256Schema,
-    artifact: StepArtifactRefSchema.extend({ artifactKind: z.literal('compiled-sql') }).strict(),
-  })
-  .strict();
-
-function normalizeHistoricalInnerJoinProjection(value: unknown): unknown {
-  if (
-    typeof value !== 'object' ||
-    value == null ||
-    Array.isArray(value) ||
-    !('profileId' in value) ||
-    value.profileId !== DVT_POSTGRES_HISTORICAL_INNER_JOIN_PROFILE_ID
-  ) {
-    return value;
-  }
-  return { ...value, profileId: DVT_POSTGRES_JOIN_PROFILE_ID };
-}
-
-export const DvtOperationalTargetProjectionRefSchema = z.preprocess(
-  normalizeHistoricalInnerJoinProjection,
-  DvtOperationalTargetProjectionRefObjectSchema
-);
-
-export const DvtOperationalRunTargetProjectionRefSchema = z.preprocess(
-  normalizeHistoricalInnerJoinProjection,
-  DvtOperationalTargetProjectionRefObjectSchema.extend({
-    schemaDigestSha256: DvtOperationalWorkloadSha256Schema,
-  }).strict()
-);
-export const DvtOperationalPostgresConnectionRefSchema = ConnectionRefSchema.extend({
-  provider: z.literal('postgres'),
-}).strict();
-
 export function addDvtOperationalWorkloadIdentityIssues(
   workload: {
     readonly graph: z.infer<typeof DvtOperationalWorkloadGraphRefSchema>;
     readonly semantics: readonly z.infer<typeof DvtOperationalWorkloadSemanticRefSchema>[];
-    readonly targetProjection: z.infer<typeof DvtOperationalTargetProjectionRefSchema>;
+    readonly targetProjection: { readonly semanticPlanSha256: string };
     readonly output: { readonly nodeId: string };
   },
   context: z.RefinementCtx
 ): void {
   addUniqueIssue(workload.graph.selectedNodeIds, ['graph', 'selectedNodeIds'], context);
   addUniqueIssue(workload.graph.selectedEdgeIds, ['graph', 'selectedEdgeIds'], context);
-
-  const nodeCount = workload.graph.selectedNodeIds.length;
-  const edgeCount = workload.graph.selectedEdgeIds.length;
-  // JOIN operands may be distinct occurrences of one physical source.
-  const minimumNodes = workload.targetProjection.profileId === DVT_POSTGRES_JOIN_PROFILE_ID ? 2 : 3;
-  const cardinalityMatches =
-    workload.targetProjection.profileId === DVT_POSTGRES_PROJECT_REL_PROFILE_ID
-      ? nodeCount === 2 && edgeCount === 1
-      : nodeCount >= minimumNodes && edgeCount === nodeCount - 1;
-  if (!cardinalityMatches) {
-    context.addIssue({
-      code: 'custom',
-      path: ['graph'],
-      message: 'Selected graph cardinality must match the bounded target projection profile.',
-    });
-  }
 
   const semantic = workload.semantics[0];
   if (semantic === undefined) return;

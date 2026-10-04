@@ -12,16 +12,19 @@ import { z } from 'zod';
 import { CommonStepTypeConfigSchema } from '../../step-registry/CommonStepTypeConfig.js';
 
 import {
-  DvtOperationalPostgresConnectionRefSchema,
-  DvtOperationalRunTargetProjectionRefSchema,
-  DvtOperationalTargetProjectionRefSchema,
   DvtOperationalWorkloadGraphRefSchema,
   DvtOperationalWorkloadScopeSchema,
   DvtOperationalWorkloadSemanticRefSchema,
   addDvtOperationalWorkloadIdentityIssues,
 } from './DvtOperationalWorkload.shared.js';
-import { DvtTransformResultTargetV1Schema } from './DvtTransformResultTarget.v1.js';
 import type { PlanOwnership } from './ExecutionPlan.v1.js';
+import {
+  DvtOperationalPostgresConnectionRefSchema,
+  DvtOperationalRunTargetProjectionRefSchema,
+  DvtOperationalTargetProjectionRefSchema,
+  DvtOperationalRunOutputSchema,
+  addDvtPostgresWorkloadProfileIssues,
+} from './postgres/DvtPostgresWorkloadConstraints.js';
 
 export {
   DVT_POSTGRES_JOIN_PROFILE_ID,
@@ -29,7 +32,7 @@ export {
   DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
   DVT_POSTGRES_SET_PROFILE_ID,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
-} from './DvtOperationalWorkload.shared.js';
+} from './postgres/DvtPostgresWorkloadConstraints.js';
 
 const EphemeralPreviewOutputIntentSchema = z
   .object({
@@ -57,17 +60,10 @@ export const DvtOperationalPreviewWorkloadV1Schema = DvtOperationalWorkloadEnvel
   output: EphemeralPreviewOutputIntentSchema,
 })
   .strict()
-  .superRefine(addDvtOperationalWorkloadIdentityIssues);
-
-const DvtOperationalRunOutputSchema = z
-  .object({
-    kind: z.literal('transform-result'),
-    nodeId: z.string().min(1),
-    disposition: z.literal('table'),
-    target: DvtTransformResultTargetV1Schema,
-    publicationPolicy: z.literal('postgres-stable-table-publication.v1'),
-  })
-  .strict();
+  .superRefine((workload, context) => {
+    addDvtOperationalWorkloadIdentityIssues(workload, context);
+    addDvtPostgresWorkloadProfileIssues(workload, context);
+  });
 
 export const DvtOperationalRunWorkloadV1Schema = DvtOperationalWorkloadEnvelopeSchema.extend({
   executionIntent: z.literal('run'),
@@ -78,6 +74,7 @@ export const DvtOperationalRunWorkloadV1Schema = DvtOperationalWorkloadEnvelopeS
   .strict()
   .superRefine((workload, context) => {
     addDvtOperationalWorkloadIdentityIssues(workload, context);
+    addDvtPostgresWorkloadProfileIssues(workload, context);
     const target = workload.output.target.connectionRef;
     if (
       target.schemaVersion !== workload.connectionRef.schemaVersion ||

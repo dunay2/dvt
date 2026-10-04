@@ -6,7 +6,8 @@ import { RUNTIME_PROVIDER_VALUES, type Provider } from '../types/contracts.js';
 
 import { createBuiltInStepTypeEntries } from './BuiltInStepTypeEntries.js';
 
-export { DbtStepTypeConfigSchema, StepArtifactRefSchema } from './DbtStepTypeConfig.js';
+export { DbtStepTypeConfigSchema } from './DbtStepTypeConfig.js';
+export { StepArtifactRefSchema } from './StepArtifactRef.js';
 export {
   DBT_STEP_REQUIRED_CAPABILITY,
   ACQUIRE_HTTP_JSON_ARTIFACT_EXECUTION_PROFILE,

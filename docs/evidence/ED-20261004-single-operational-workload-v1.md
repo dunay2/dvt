@@ -12,7 +12,7 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts
   - packages/@dvt/contracts/src/index.ts
   - apps/api/src/application/services/dvtOperationalWorkloadProjector.ts
-  - apps/api/src/application/services/dvtPostgresExecutionContextBinding.ts
+  - apps/api/src/application/services/postgres/DvtPostgresRunExecutionContextPreparer.ts
   - packages/@dvt/temporal-dvt-postgres-plugin/src/DvtPostgresStepActivity.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts
   - apps/web/src/app/services/api/dvtOperationalRejectionCopy.ts
@@ -97,6 +97,38 @@ typecheck, mechanization and prepush outcomes are recorded on the issue for the
 exact committed candidate; previous runs are not evidence for a later SHA.
 
 ## Executed evidence and limits
+
+### Provider-preparation boundary continuation
+
+The [approved decoupling rationale and diagrams](https://github.com/dunay2/dvt/issues/2524#issuecomment-5984235380)
+and Planning DB design `GH-2524-PROVIDER-PREPARATION-BOUNDARY` apply ADR-0018 to
+the existing StartRun rail. An application-owned preparation port replaces the
+coordinator's concrete DBT/PG dependencies. The composition root supplies the
+real DBT bundle/target preparer and PostgreSQL connection/publication preparer.
+The old flat PostgreSQL binder is removed, without a compatibility wrapper.
+
+The coordinator rejects caller contexts before preparation, checks unique
+context ownership, collects successful preparations, writes once and only then
+dispatches. No translated text, provider catalog or database-specific branch
+is added to the coordinator. A failing preparer or context store prevents
+dispatch. The provider-neutral test failed first on the coordinator's concrete
+DBT registry dependency, then passed after extraction.
+
+Common workload identities no longer depend on PostgreSQL profiles or DBT.
+The SQL projection, graph cardinality and durable-output constraints are owned
+by `planner/postgres/DvtPostgresWorkloadConstraints.ts`; V1 explicitly composes
+them without relaxing admission. The artifact schema moves from DBT config to
+the neutral `StepArtifactRef.ts`, preserving its public export and wire shape.
+The existing central context contract still explicitly validates supported
+built-in plugin contexts; this is not a new DuckDB execution capability.
+
+The separate DBT-only caller-context test is replaced by parameterized coverage
+using the existing admission harness. Empty-plan integration no longer builds
+unused DBT/PG mocks. Ownership guards inspect imports and re-exports, including
+named public-barrel imports. Contracts (795), existing API/architecture cases,
+protected StartRun integration (3) and PostgreSQL plugin tests (9) pass; final
+counts and complete lint/type/prepush evidence belong to the issue closeout.
+The user's pre-existing projector edits are preserved outside this commit.
 
 The [bounded identity cleanup](https://github.com/dunay2/dvt/issues/2524#issuecomment-5984108516)
 uses one API-owned ordinal comparator for Preview graph identity, topology comparison

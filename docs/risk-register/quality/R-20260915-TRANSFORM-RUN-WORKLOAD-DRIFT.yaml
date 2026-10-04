@@ -14,6 +14,10 @@ description: >-
   A persisted Run plan could otherwise detach its canonical semantic revision, PostgreSQL target, or
   expected output schema from the provider activity that eventually materializes it.
 mitigations:
+  - Provider-owned context preparers share one immutable-write and dispatch coordinator; duplicate
+    ownership and caller-provided contexts reject before preparation
+  - Neutral workload identity and artifact schemas remain independent of DBT and PostgreSQL; the V1
+    composition retains strict PostgreSQL profile, graph and publication constraints
   - One strict V1 workload with explicit intent and exact target-to-workload connection equality
   - Ordinal selected-graph ID ordering distinguishes Unicode identities without locale dependence
   - JCS and SHA-256 fingerprint of ordered, admitted PostgreSQL output metadata

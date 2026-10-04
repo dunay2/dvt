@@ -49,6 +49,21 @@ Project, JOIN and Set cardinality checks remain unchanged by this hard cut.
 
 ## Stable plan versus attempt
 
+### Ownership boundary
+
+The workload's shared graph, scope and semantic identity checks do not select a
+database or depend on DBT. PostgreSQL owns its projection profiles, SQL artifact
+constraints, graph cardinality and stable-table publication fields. The V1
+composition admits that implementation explicitly; it does not accept an unknown
+provider merely because its common envelope is valid.
+
+StartRun coordinates application-owned execution-context preparers. DBT owns
+bundle/target preparation; PostgreSQL owns connection/publication preparation.
+The existing composition root supplies the implementations. The coordinator owns
+caller-reference rejection, one immutable context write and dispatch, not either
+provider's rules. Its admitted PlanRef and authorized scope remain authoritative.
+No new command, provider registry, wire version or DuckDB executor is introduced.
+
 The plan contains the target, SQL artifact, expected ordered PostgreSQL schema
 digest and publication policy. Attempt-specific publication tokens and predecessor
 observations belong to the existing StartRun binding, not the stable plan.
