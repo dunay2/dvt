@@ -215,6 +215,10 @@ flowchart LR
   Cypress inventory. Shared support, other specs, Cypress configuration and
   unknown executable paths require explicit consumer/runtime admission; they
   cannot silently fall back to Vitest or succeed with no command.
+- GH-3271 also admits `canvas-relational-tree-workbench.cy.ts` and
+  `canvas-relational-workbench-union.cy.ts` through the same terminal entry.
+  They retain their existing UI fixtures; the shared protected-runtime proof
+  remains a separate real-provider obligation within that single execution.
 - The browser policy is a small pure module (`apps/web/cypress.changed.ts`),
   composed by the existing query. It is not a second repository diff detector
   or a new Vitest suite catalog. The adapter still owns Git discovery and
