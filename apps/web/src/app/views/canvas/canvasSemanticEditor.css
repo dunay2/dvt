@@ -14,6 +14,11 @@
   container-type: inline-size;
 }
 
+.canvas-workspace-model-tabs .workspace-navigation-tabs[role='tablist'],
+.canvas-workspace-model-tabs .workspace-navigation-tab[role='tab'] {
+  flex: 1 1 auto;
+}
+
 .canvas-operation-properties {
   container-type: inline-size;
   width: clamp(340px, 38%, 480px);

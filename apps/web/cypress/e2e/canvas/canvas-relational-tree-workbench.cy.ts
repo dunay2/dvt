@@ -72,6 +72,9 @@ describe('Workbench navigation', () => {
       .type('{enter}');
 
     cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-model-editor"]').should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('[data-slot="canvas-relational-tree-sources-toggle"]').should('be.focused');
     cy.get('[data-slot="canvas-model-view-tab"]').should('not.exist');
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');

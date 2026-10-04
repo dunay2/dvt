@@ -1,5 +1,5 @@
-/** Capture and restore the opener shared by Canvas contextual editors. */
-import { useCallback, useRef } from 'react';
+/** Transfer focus into Canvas contextual editors and restore their opener. */
+import { useCallback, useLayoutEffect, useRef, type FocusEvent } from 'react';
 import { findCanvasGraphNodeElement } from './canvasNodeWorkbenchDomGeometry';
 
 type WorkbenchOpener = Readonly<{
@@ -17,6 +17,13 @@ export function useCanvasWorkbenchFocus() {
       fallbackNodeId,
     };
   }, []);
+  const enter = useCallback((selector: string) => {
+    const previous = document.activeElement;
+    window.requestAnimationFrame(() => {
+      if (document.activeElement !== previous && document.activeElement !== document.body) return;
+      document.querySelector<HTMLElement>(selector)?.focus({ preventScroll: true });
+    });
+  }, []);
   const restore = useCallback(() => {
     const opener = openerRef.current;
     openerRef.current = null;
@@ -31,5 +38,30 @@ export function useCanvasWorkbenchFocus() {
       target?.focus({ preventScroll: true });
     });
   }, []);
-  return { capture, restore };
+  return { capture, enter, restore };
+}
+
+/** Recover only focus lost to a removed control, including the portalled session footer. */
+export function useCanvasWorkbenchFocusRecovery() {
+  const ref = useRef<HTMLDivElement>(null);
+  const focused = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    if (
+      focused.current == null ||
+      focused.current.isConnected ||
+      document.activeElement !== document.body
+    )
+      return;
+    const scope = ref.current;
+    if (scope == null || scope.closest('[inert]') != null) return;
+    const target =
+      scope.querySelector<HTMLElement>('[role="treeitem"][aria-selected="true"]') ?? scope;
+    target.focus({ preventScroll: true });
+  });
+  return {
+    ref,
+    onFocusCapture: (event: FocusEvent<HTMLDivElement>) => {
+      focused.current = event.target;
+    },
+  };
 }

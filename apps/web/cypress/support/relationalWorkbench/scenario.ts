@@ -11,7 +11,8 @@ export function stubWorkbenchScenario(
     | 'pending-chain'
     | 'pending-set'
     | 'projection'
-    | 'withdrawn-projection'
+    | 'withdrawn-projection',
+  title = 'Relational tree Workbench'
 ): void {
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
   stubE2eJsonApi('GET', '/workspace/context', {
@@ -30,6 +31,6 @@ export function stubWorkbenchScenario(
     substraitNInputJoin: scenario === 'partial-join' || scenario === 'pending-chain',
     substraitPendingComposition: scenario === 'pending-join' || scenario === 'pending-chain',
     substraitUnionAll: scenario === 'pending-set',
-    title: 'Relational tree Workbench',
+    title,
   });
 }

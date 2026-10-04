@@ -38,7 +38,7 @@ export function CanvasWorkspaceModelTabs({
     <Tabs
       value={tab?.active === true ? 'model' : 'canvas'}
       onValueChange={(value) => tabs.find((item) => item.key === value)?.select?.()}
-      className="flex-row items-center gap-0 self-stretch"
+      className="canvas-workspace-model-tabs min-w-0 flex-row items-center gap-0 self-stretch"
     >
       <TabsList
         aria-label={copy.workspaceTabs}
@@ -65,7 +65,7 @@ export function CanvasWorkspaceModelTabs({
           data-slot="canvas-model-tab-close"
           aria-label={copy.closeEditor}
           title={copy.closeEditor}
-          className="rounded p-1 text-(--text-muted) hover:bg-(--surface-panel) hover:text-(--text-primary) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
+          className="shrink-0 rounded p-1 text-(--text-muted) hover:bg-(--surface-panel) hover:text-(--text-primary) focus-visible:outline-2 focus-visible:outline-(--focus-ring)"
           onClick={() => tab.onClose()}
         >
           <X aria-hidden="true" className="size-3.5" />

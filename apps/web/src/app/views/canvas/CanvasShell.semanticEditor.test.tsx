@@ -15,6 +15,37 @@ import {
 
 describe('Canvas Model inspection', () => {
   setupSemanticEditorShell();
+  it.each([false, true])('hands off entry focus unless the user moved it (%s)', async (moved) => {
+    const { data, fixture } = await mountModel();
+    const frames: FrameRequestCallback[] = [];
+    const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const opener = document.createElement('button');
+    document.body.append(opener);
+    try {
+      opener.focus();
+      await act(async () => data.onOpenNode?.(fixture.transform.id));
+      const editor = harness.container.querySelector<HTMLElement>(
+        '[data-slot="canvas-model-editor"]'
+      )!;
+      const modelTab = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-model-main-tab"]'
+      )!;
+      if (moved) await act(async () => modelTab.focus());
+      await act(async () => frames.splice(0).forEach((callback) => callback(0)));
+      expect(document.activeElement).toBe(moved ? modelTab : editor);
+      await act(async () =>
+        navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
+      );
+      await act(async () => frames.splice(0).forEach((callback) => callback(0)));
+      expect(document.activeElement).toBe(opener);
+    } finally {
+      schedule.mockRestore();
+      opener.remove();
+    }
+  });
   it('opens only the model workspace and leaves existing data results in the drawer', async () => {
     const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
     await act(async () => data.onOpenNode?.(fixture.transform.id));
