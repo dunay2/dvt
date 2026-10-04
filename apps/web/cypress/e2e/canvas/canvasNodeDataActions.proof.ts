@@ -301,6 +301,26 @@ export function registerCanvasNodeDataActionsProof(): void {
       cy.get('[data-slot="canvas-model-data"]').should('contain.text', 'Grace');
       cy.get('[data-slot="canvas-model-preview"]').should('have.focus');
       cy.then(() => expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(2));
+      const grid = '[data-slot="canvas-model-data"] [data-slot="bottom-operational-data-grid"]';
+      cy.get(grid).should('have.attr', 'data-density', 'compact');
+      cy.get(`${grid} [data-slot="bottom-operational-data-value"]`)
+        .first()
+        .should('have.css', 'font-size', '11px')
+        .click();
+      cy.get(`${grid} td[data-selected="true"]`).should('have.length', 1);
+      cy.get(`${grid} button[aria-label="Copy cell"]`).should('be.enabled');
+      cy.get(`${grid} button[aria-label="Comfortable rows"]`).click();
+      cy.get(grid).should('have.attr', 'data-density', 'comfortable');
+      cy.get(`${grid} button[aria-label="Compact rows"]`).click();
+      cy.get(`${grid} button[aria-label="Wrap text"]`).click();
+      cy.get(grid).should('have.attr', 'data-wrap', 'true');
+      cy.get(`${grid} input[type="search"]`).type('absent');
+      cy.get(grid).should('contain.text', 'No matching rows in this sample');
+      cy.get(`${grid} button[aria-label="Copy cell"]`).should('be.disabled');
+      cy.get(`${grid} input[type="search"]`).clear();
+      cy.get(grid).should('contain.text', 'Grace');
+      cy.get('[data-slot="canvas-model-data"]').screenshot('compact-operation-data-grid');
+      cy.then(() => expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(2));
     });
 
     for (const nodeId of ['source-1', 'dvt-transform-1']) {
