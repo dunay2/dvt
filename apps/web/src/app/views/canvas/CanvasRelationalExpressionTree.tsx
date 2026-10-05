@@ -8,12 +8,8 @@
 import { useContext, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CanvasOperationExpressionHost } from './CanvasRelationalTreeEditorFrame';
-import type { CanonicalNode } from '../../types/canonical';
-import {
-  indexSubstraitRelations,
-  readSubstraitAuthoringGroup,
-  type SubstraitDocument,
-} from '@dvt/substrait-analysis';
+import type { CanvasRelationalSemanticContext } from './canvasRelationalTreeDetails';
+import { indexSubstraitRelations, readSubstraitAuthoringGroup } from '@dvt/substrait-analysis';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { projectSemanticWorkbenchGraph } from './semanticWorkbenchProjection';
@@ -32,14 +28,14 @@ export function CanvasRelationalExpressionTree({
   onSelectCondition,
   operation = 'inner_join',
   showSummary = false,
-}: Readonly<{
-  transformNode: CanonicalNode;
-  draft?: SubstraitDocument;
-  relationId: string | null;
-  onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
-  operation?: CanvasRelationalOperation;
-  showSummary?: boolean;
-}>): JSX.Element | null {
+}: Readonly<
+  CanvasRelationalSemanticContext & {
+    relationId: string | null;
+    onSelectCondition?: (index: number, operand?: 'left' | 'right') => void;
+    operation?: CanvasRelationalOperation;
+    showSummary?: boolean;
+  }
+>): JSX.Element | null {
   const dock = useContext(CanvasOperationExpressionHost);
   const graph = useMemo(() => {
     if (relationId == null) return null;
