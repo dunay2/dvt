@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { getPluginPortMap } from '../../plugins/registry';
@@ -11,10 +12,12 @@ import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftS
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import {
   createDvtSubstraitProjectionDraft,
-  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { transformExpressionDependencies } from './canvasTransformExpressionReferences';
+import { rootFields } from './canvasDerivedOutputExpression';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -222,25 +225,45 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
       alias: 'customer_alias',
       inputFieldId: 'output:customer',
     };
-    expect(await runner.addCalculated(request)).toMatchObject({ outcome: 'applied' });
+    const first = await runner.addCalculated(request);
+    expect(first.outcome).toBe('applied');
+    if (first.outcome !== 'applied') throw new Error('Expected calculated output.');
+    const appliedSession = currentSession;
     expect(await runner.addCalculated(request)).toEqual({
       outcome: 'rejected',
       reason: 'duplicate_alias',
     });
     expect(commandCalls).toBe(3);
+    expect(currentSession).toBe(appliedSession);
 
     const updated = currentSession.localNodeCatalog?.[transform.id];
     if (updated == null) throw new Error('Expected updated Transform.');
     const authority = readDvtTransformAuthoringAuthority(updated);
     if (authority?.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    const { index } = deriveSubstraitSchemas(
+      decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
     );
-    expect(inspection.ok && inspection.projection.outputs.map((output) => output.name)).toEqual([
+    const model = readCanvasTransformDependencyModel(index.relations.get(index.rootId)!, (id) =>
+      index.relations.get(id)!
+    );
+    const outputs = rootFields(model.root.fields);
+    expect(outputs.map((output) => output.displayName)).toEqual([
       'order_id',
       'customer',
       'amount',
       'customer_alias',
+    ]);
+    expect(outputs.map((output) => output.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+      first.createdFieldId,
+    ]);
+    expect(model.definitions).toHaveLength(1);
+    const definition = model.definitions[0]!;
+    expect(definition.output?.fieldId).toBe(first.createdFieldId);
+    expect(transformExpressionDependencies(definition.expression, definition.inputIds)).toEqual([
+      model.input.fields.find((field) => field.displayName === 'customer')!.fieldId,
     ]);
   });
 

@@ -1,0 +1,26 @@
+---
+id: R-20261005-TRANSFORM-DEPENDENCIES
+title: Calculated-field dependencies must survive edits without snapshot semantics
+status: Open
+date: 2026-10-05
+owners:
+  - dvt-web
+  - '@dvt/contracts'
+  - '@dvt/substrait-analysis'
+severity: High
+probability: Low
+description: >
+  Treating aliases as copied expressions can leave consumers using stale logic. Losing group
+  ownership or remapping only public field IDs can also change meaning after duplication,
+  reordering, hiding outputs or restoring a disconnected graph.
+mitigation:
+  - Canonical ProjectRel dependencies own execution; no second expression AST is persisted.
+  - Explicit V1 ownership validates contiguous Project chains under one public root.
+  - Stable producer and public identities are distinct and remapped together on duplication.
+  - Cycle, dependent type conflict and referenced-definition deletion reject atomically.
+  - Hiding a public output retains its definition and source dependency protection.
+  - Legacy copied expressions are never guessed into new dependencies.
+  - Readers and writers deploy together as a development hard cut, without migration or V2.
+  - Mutation, roundtrip, composition, browser and validation evidence is recorded in
+    ED-20261005-transform-alias-dependencies.
+---
