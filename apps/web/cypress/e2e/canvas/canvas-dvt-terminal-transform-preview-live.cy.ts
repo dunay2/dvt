@@ -195,7 +195,11 @@ describe('DVT terminal Transform Preview and Run live', () => {
       .should('be.visible')
       .and('contain.text', KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD);
     const assertEventFeedRecovery = interruptLiveRunEventFeed();
+    cy.intercept('POST', '**/runs/start').as('terminalRunStart');
     cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
+    cy.wait('@terminalRunStart').then(({ response }) => {
+      expect(response?.statusCode, response?.body?.error?.reason).to.equal(202);
+    });
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
     assertEventFeedRecovery();

@@ -10,7 +10,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
 import { getE2eApiCalls } from '../e2eApiStub';
 
-import { openWorkbenchModel, visitWorkbenchCanvas } from './navigation';
+import { openWorkbenchModel, revisitWorkbenchCanvas } from './navigation';
 import { dragWorkbenchField } from './pointer';
 
 const inspector = '[data-slot="canvas-transform-inspector"]';
@@ -148,7 +148,7 @@ export function exerciseTransformTreeSelection(): void {
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
   cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
   expectSavedExpressionCount(3);
-  visitWorkbenchCanvas();
+  revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).click();
   cy.get(inspector)
@@ -235,7 +235,7 @@ export function exerciseTransformTreeSelection(): void {
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
   cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
   expectSavedExpressionCount(2);
-  visitWorkbenchCanvas();
+  revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).click();
   cy.get(inspector)

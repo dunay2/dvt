@@ -126,11 +126,40 @@ is still the actual contract; negative tests first prove their fixture is valid.
   `.dvt/evidence/3593-transform-stage-electron/screenshots`. The direct-edit journey
   proves exactly three successful saves, stable A/B identities and reference,
   updated SQL after reopening, and zero writes for the rejected cycle.
+- Native Chrome 154 diagnostics reproduced the missing completion signal after
+  `test end`, before `test:after:run`; a later attempt stalled in the first
+  existing test. No active dialog was observed and no root cause is claimed.
+  The dependency journey now also cancels its rejected draft through the UI and
+  checks that the saved document and write count remain unchanged. All prior
+  rejection assertions remain. Additional LIVE evidence uses the existing default
+  Docker Chrome runtime with the complete terminal suite and real protected
+  services. It does not substitute for the changed-suite adapter's native
+  browser command or its strict result validation. No isolation setting, case,
+  timeout or required gate is removed. Incomplete native diagnostics are not
+  reported as successful commands or a fixed browser defect. The same isolated
+  spec subsequently completed in native Chrome's existing headed mode: three
+  passed, zero failed, pending or skipped, exit 0, 48.22 seconds. This is a
+  diagnostic receipt, not the full pre-push gate.
+- The additional Docker LIVE run passed the A-to-B journey and all three real
+  SQL verticals, including dependent `line_total` computation, persisted-plan
+  digest checks, Preview and publication. It also exposed a failed model-reopen
+  visibility assertion in the older Transform journey. Its two reopen calls
+  accepted an already-recorded draft GET. They now reuse the existing
+  `revisitWorkbenchCanvas` boundary to require a fresh read, preserving all
+  visibility and persisted-output assertions without extending action timeouts.
+  Its final result was 42 passed and two failed out of 44, with no pending or
+  skipped cases. The second failure was terminal StartRun HTTP 503; its precise
+  admission cause was not captured. The test now checks the real start response
+  and reports its structural reason before checking navigation. No backend
+  change, retry or relaxed expectation is inferred from that unexplained 503.
+  A complete subsequent gate is required; passing individual cases does not make
+  that Docker run a successful command.
 - Planning DB implementation acceptance passed against base
   `926713bfd65ad004e04bbcde47c5ba12be195506` and head
   `588b2b431ebe040f9e660bddf397a889de3f2c45` with 482 native manifests. This is
-  historical evidence, not acceptance of a later commit. The final exact-SHA DB
-  acceptance, pre-push and required PR CI remain closeout gates.
+  historical evidence, not acceptance of a later commit. Final exact-SHA DB
+  acceptance, pre-push and required PR CI receipts belong on the governing issue
+  and delivery PR; the historical counts above do not substitute for those gates.
 
 Browser tests use controlled HTTP transport and real client commands, canonical
 save payloads and SQL lowering. They are not live-provider execution evidence.
