@@ -91,6 +91,18 @@ part of this product diff.
   with zero failures, pending cases or skips. The first run exposed a Cypress
   subject-changing assertion; the corrected callback retains both the pending
   state and ordinal assertions. Product behavior was not changed to fit the test.
+- After rebasing onto integrated #3580, both browser cases passed again in 21s,
+  now requiring exactly one PUT per Apply and the unchanged physical identity of
+  both Source-to-Model edges. Metadata bindings are not confused with physical
+  edge identity. The initial build correctly rejected stale compiled Contracts
+  from the previously checked-out branch; the existing `test:deps` command
+  prepared the runtime dependency closure before the successful browser run.
+- The early implementation gate found nine undeclared private browser-proof
+  symbols. Their file was already admitted in the design. The native registration
+  added their implementation references to the existing command record, without
+  a new rail or DB rebuild; the clean comparison then passed all 482 manifests.
+  This receipt correction is recorded as postimplementation, not retroactive
+  design admission. Final rebased-SHA acceptance remains mandatory.
 - Final complete-diff validation, ARC evaluation, `verify:prepush`, exact-SHA DB
   validation and required PR checks are
   still required. Earlier branch results are not substituted for this candidate.

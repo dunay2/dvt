@@ -79,11 +79,13 @@ function addOccurrence(side: 'north' | 'south'): Cypress.Chainable<string> {
 }
 
 function applyUnion(): void {
+  synced();
   cy.then(() => {
     const before = writes().length;
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.be.disabled').click();
-    cy.wrap(null).should(() => expect(writes().length).to.be.greaterThan(before));
+    cy.wrap(null).should(() => expect(writes().length).to.equal(before + 1));
     synced();
+    cy.then(() => expect(writes().length, 'Apply saves exactly once').to.equal(before + 1));
   });
 }
 
@@ -113,6 +115,22 @@ describe('Workbench UNION', () => {
       let first: SavedUnion;
       const assertSaved = (ordinals: readonly number[]): SavedUnion => {
         const current = savedUnion();
+        expect(
+          current.draft.edges.map(({ id, sourceId, targetId, relation }) => ({
+            id,
+            sourceId,
+            targetId,
+            relation,
+          })),
+          'semantic operand changes preserve physical Source connections'
+        ).to.have.deep.members(
+          ['north', 'south'].map((side) => ({
+            id: `${side}-union`,
+            sourceId: `source-customers-${side}`,
+            targetId: modelId,
+            relation: 'lineage',
+          }))
+        );
         expect(current.root.relation.relType.case).to.equal('set');
         if (current.root.relation.relType.case === 'set')
           expect(current.root.relation.relType.value.op).to.equal(setOp);
