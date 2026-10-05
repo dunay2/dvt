@@ -1,5 +1,5 @@
 /** The fixed inspector for dataset field transformations, scalar and Window alike. */
-import { useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
@@ -15,6 +15,8 @@ import { useSelectedRelation } from './useSelectedRelation';
 import { relationExpressionRefs } from './canvasRelationalTreeRelationProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
+import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 export function CanvasTransformInspector({
   relationId,
@@ -35,7 +37,18 @@ export function CanvasTransformInspector({
   const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
   const [setFormulaPending, setWindowPending] = usePendingRelationEdits(setPropertiesPending);
   const selected = useSelectedRelation(relationId);
-  const hasExpression = selected != null && relationExpressionRefs(selected.relation).length > 0;
+  const analysis = useContext(CanvasRelationAnalysisContext);
+  const hasExpression = useMemo(() => {
+    if (selected == null) return false;
+    if (relationExpressionRefs(selected.relation).length > 0) return true;
+    return (
+      selected.relation.relType.case === 'project' &&
+      analysis != null &&
+      readCanvasTransformDependencyModel(selected, (id) =>
+        analysis.session.locate(id, analysis.revision)
+      ).definitions.length > 0
+    );
+  }, [analysis, selected]);
   const window = useSelectedRelationTool(relationId, 'window', 'edit');
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);

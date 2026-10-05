@@ -22,7 +22,10 @@ import {
   type CanvasRelationalFieldReference,
 } from './canvasRelationalTreeDrag';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import {
+  formatCanvasTransformDependencyError,
+  resolveCanvasSemanticEditorCopy,
+} from './canvasSemanticEditorCopy';
 import type { useCanvasStagedFieldConnection } from './useCanvasStagedFieldConnection';
 
 type FieldSelectionActions = Readonly<{
@@ -65,6 +68,7 @@ export function CanvasRelationalFieldSelectionProvider({
     };
   }, [enabled]);
   const [affected, setAffected] = useState<readonly string[]>([]);
+  const [rejection, setRejection] = useState<unknown>(null);
   const command = useRelationCommand('', (document) => {
     if (document !== analysis?.document) return onChange(document);
   });
@@ -85,22 +89,27 @@ export function CanvasRelationalFieldSelectionProvider({
   ) => {
     if (!editable) return;
     setAffected([]);
-    void command.executeAt(
-      target.kind === 'remove' ? reference.relationId : target.relationId,
-      async (session, request) => {
-        const consumers =
-          target.kind === 'remove' ? canvasRelationalFieldConsumers(session, reference) : [];
-        try {
-          return (
-            (await selectCanvasRelationalField(session, reference, target, request.signal)) ??
-            analysis.document!
-          );
-        } catch (error) {
-          if (!request.signal.aborted) setAffected(consumers);
-          throw error;
+    setRejection(null);
+    void command
+      .executeAtDetailed(
+        target.kind === 'remove' ? reference.relationId : target.relationId,
+        async (session, request) => {
+          const consumers =
+            target.kind === 'remove' ? canvasRelationalFieldConsumers(session, reference) : [];
+          try {
+            return (
+              (await selectCanvasRelationalField(session, reference, target, request.signal)) ??
+              analysis.document!
+            );
+          } catch (error) {
+            if (!request.signal.aborted) setAffected(consumers);
+            throw error;
+          }
         }
-      }
-    );
+      )
+      .then((result) => {
+        if (!result.ok && result.error != null) setRejection(result.error);
+      });
   };
   const background = (event: DragEvent<HTMLDivElement>) => {
     const view = event.currentTarget.ownerDocument.defaultView;
@@ -123,15 +132,21 @@ export function CanvasRelationalFieldSelectionProvider({
     removeExpression: (relationId, expressionOrdinal) => {
       if (!editable) return;
       setAffected([]);
-      void command.executeAt(relationId, (session, request) =>
-        removeCanvasRelationalExpression(session, { ...request, expressionOrdinal })
-      );
+      setRejection(null);
+      void command
+        .executeAtDetailed(relationId, (session, request) =>
+          removeCanvasRelationalExpression(session, { ...request, expressionOrdinal })
+        )
+        .then((result) => {
+          if (!result.ok && result.error != null) setRejection(result.error);
+        });
     },
     connect: (reference, id, port) => {
       if (!editable || connection.current != null || !isActive(reference)) return;
       const controller = new AbortController();
       connection.current = controller;
       setAffected([]);
+      setRejection(null);
       setConnectionState('busy');
       void (onConnect?.(reference, id, port, controller.signal) ?? Promise.resolve(false))
         .then((accepted) => {
@@ -180,7 +195,9 @@ export function CanvasRelationalFieldSelectionProvider({
           data-slot="canvas-field-selection-error"
           className="pointer-events-none absolute bottom-16 left-3 z-20 max-w-sm rounded border border-(--status-danger) bg-(--surface-panel) p-3 text-sm"
         >
-          <p>{copy.fieldSelectionRejected}</p>
+          <p>
+            {formatCanvasTransformDependencyError(rejection, copy) ?? copy.fieldSelectionRejected}
+          </p>
           {affected.length > 0 ? (
             <p>
               {copy.fieldSelectionDependencies}: {affected.join(', ')}

@@ -3,7 +3,10 @@ import { useId, useMemo, useState, type FormEvent } from 'react';
 import { DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import {
+  formatCanvasTransformDependencyError,
+  type CanvasSemanticEditorCopy,
+} from './canvasSemanticEditorCopy';
 import type { DerivedOutputField } from './canvasFormulaAssist';
 import { formulaSuggestions, projectFormulaFeedback } from './canvasFormulaAssist';
 import { DerivedOutputFormulaEditor } from './DerivedOutputFormulaEditor';
@@ -39,10 +42,17 @@ export function DerivedOutputFormulaForm({
   const [formula, setFormula] = useState(initial?.formula ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const feedback = useMemo(
-    () => projectFormulaFeedback(formula, fields, provider),
-    [formula, fields, provider]
-  );
+  const feedback = useMemo(() => {
+    const result = projectFormulaFeedback(formula, fields, provider);
+    return !result.ok && 'error' in result
+      ? {
+          ...result,
+          message:
+            formatCanvasTransformDependencyError(result.error, { derivedOutput: copy }) ??
+            result.message,
+        }
+      : result;
+  }, [formula, fields, provider, copy]);
   const suggestions = useMemo(() => formulaSuggestions(fields, provider), [fields, provider]);
   const aliasError =
     alias.trim() === ''
@@ -68,8 +78,8 @@ export function DerivedOutputFormulaForm({
       const failure = await onSubmit({ alias: alias.trim(), formula });
       setError(failure);
       if (failure == null) onCancel();
-    } catch {
-      setError(copy.failed);
+    } catch (cause) {
+      setError(formatCanvasTransformDependencyError(cause, { derivedOutput: copy }) ?? copy.failed);
     } finally {
       setBusy(false);
     }

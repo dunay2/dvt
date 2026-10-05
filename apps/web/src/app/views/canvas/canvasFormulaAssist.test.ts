@@ -8,6 +8,19 @@ const fields = [
 ];
 
 describe('assisted formula projection', () => {
+  it('keeps input and calculated operand origins separate without losing their identities', () => {
+    const suggestions = formulaSuggestions(
+      [
+        { fieldId: 'input-name', name: 'name', dataType: 'string', origin: 'input' },
+        { fieldId: 'derived-name', name: 'normalized', dataType: 'string', origin: 'calculated' },
+      ],
+      'postgres'
+    );
+    expect(suggestions.filter((item) => item.kind === 'field')).toMatchObject([
+      { fieldId: 'input-name', origin: 'input', label: 'name' },
+      { fieldId: 'derived-name', origin: 'calculated', label: 'normalized' },
+    ]);
+  });
   it('projects type, stable dependencies and the existing canonical expression tree', () => {
     const feedback = projectFormulaFeedback('(price + 2) * quantity', fields, 'postgres');
     expect(feedback.ok).toBe(true);

@@ -14,6 +14,8 @@ type Command = (
   }>
 ) => Promise<SubstraitDocument>;
 
+export type RelationCommandResult = Readonly<{ ok: true } | { ok: false; error?: unknown }>;
+
 export function useRelationCommand(
   relationId: string,
   onChange: (document: SubstraitDocument) => void | boolean,
@@ -32,9 +34,12 @@ export function useRelationCommand(
       pending.current = null;
     };
   }, [analysis, relationId]);
-  const executeAt = async (targetRelationId: string, command: Command): Promise<boolean> => {
+  const executeAtDetailed = async (
+    targetRelationId: string,
+    command: Command
+  ): Promise<RelationCommandResult> => {
     if (pending.current != null || analysis?.document == null || analysis.error != null)
-      return false;
+      return { ok: false };
     const controller = new AbortController();
     pending.current = controller;
     setState('busy');
@@ -49,16 +54,25 @@ export function useRelationCommand(
         analysis.session.receive(analysis.document);
         analysis.refresh();
         setState('error');
-        return false;
+        return { ok: false };
       }
       setState('idle');
-      return true;
-    } catch {
-      if (!controller.signal.aborted) setState('error');
-      return false;
+      return { ok: true };
+    } catch (error) {
+      if (controller.signal.aborted) return { ok: false };
+      setState('error');
+      return { ok: false, error };
     } finally {
       if (pending.current === controller) pending.current = null;
     }
   };
-  return { state, execute: (command: Command) => executeAt(relationId, command), executeAt };
+  const executeAt = async (targetRelationId: string, command: Command): Promise<boolean> =>
+    (await executeAtDetailed(targetRelationId, command)).ok;
+  return {
+    state,
+    execute: (command: Command) => executeAt(relationId, command),
+    executeAt,
+    executeDetailed: (command: Command) => executeAtDetailed(relationId, command),
+    executeAtDetailed,
+  };
 }

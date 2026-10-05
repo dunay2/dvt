@@ -1,4 +1,10 @@
-/** Adapt one field token's gestures to the existing selection and connection commands. */
+/**
+ * Owned concern: adapt a field token's gestures to existing selection and connection commands.
+ * @baseline ADR-0064: a hidden definition has a physical location, not a public output identity.
+ * @decision Route published fields by identity and hidden expressions by canonical location.
+ * @consequence Both gestures share revision-checked commands without inferred field authority.
+ * @version 1.0.0
+ */
 import {
   useContext,
   type DragEvent,
@@ -58,7 +64,10 @@ export function useCanvasRelationalFieldToken(
   const removeExpression = () => {
     if (reference?.selectedOutput) actions?.remove(reference);
     else if (data.projectExpressionOrdinal != null)
-      actions?.removeExpression(relationId, data.projectExpressionOrdinal);
+      actions?.removeExpression(
+        data.projectExpressionRelationId ?? relationId,
+        data.projectExpressionOrdinal
+      );
   };
   const onDragStart = (event: DragEvent<HTMLSpanElement>) => {
     event.stopPropagation();

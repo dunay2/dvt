@@ -6,7 +6,10 @@ import { Button } from '../../components/ui/button';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { DerivedOutputFormulaForm } from './DerivedOutputFormulaForm';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import {
+  formatCanvasTransformDependencyError,
+  resolveCanvasSemanticEditorCopy,
+} from './canvasSemanticEditorCopy';
 import { useCanvasDerivedOutputAuthoring } from './useCanvasDerivedOutputAuthoring';
 import { useRelationCommand } from './useRelationCommand';
 
@@ -56,7 +59,7 @@ export function CanvasDerivedOutputSection({
             .map((field) => field.name)}
           onCancel={() => setEditing(null)}
           onSubmit={async (request) => {
-            const applied = await command.execute((session, identity) =>
+            const result = await command.executeDetailed((session, identity) =>
               applySelectedRelationDerivedOutput(session, {
                 ...identity,
                 ...request,
@@ -65,7 +68,10 @@ export function CanvasDerivedOutputSection({
                 intent: model.intent,
               })
             );
-            return applied ? null : copy.derivedOutput.failed;
+            return result.ok
+              ? null
+              : (formatCanvasTransformDependencyError(result.error, copy) ??
+                  copy.derivedOutput.failed);
           }}
         />
       ) : (

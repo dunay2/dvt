@@ -19,6 +19,12 @@ import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import { CanvasRelationalOperationPorts } from './CanvasRelationalOperationPorts';
 import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
+import * as fieldSelectionCommands from './canvasRelationalFieldSelection';
+import {
+  TRANSFORM_DEPENDENCY_REJECTION,
+  TransformDependencyError,
+} from './TransformDependencyError';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 function FieldSelectionSurface({
   document,
@@ -160,6 +166,32 @@ describe('relational tree selection gestures', () => {
     expect(outputs()).toHaveLength(2);
     expect(writes).toHaveBeenCalledTimes(2);
   });
+
+  it.each(['en', 'es'] as const)(
+    'names dependent definitions when deletion is rejected in %s',
+    async (language) => {
+      const writes = await mount();
+      await act(async () => useApplicationLanguageStore.setState({ language }));
+      const reject = vi
+        .spyOn(fieldSelectionCommands, 'selectCanvasRelationalField')
+        .mockRejectedValueOnce(
+          new TransformDependencyError(TRANSFORM_DEPENDENCY_REJECTION.referenced, ['B', 'C'])
+        );
+      try {
+        await act(async () => fireEvent.keyDown(outputs()[0]!, { key: 'Delete' }));
+        const error = container.querySelector(
+          '[data-slot="canvas-field-selection-error"]'
+        )?.textContent;
+        expect(error).toContain('B, C');
+        expect(error).toContain(language === 'en' ? 'before deleting it' : 'antes de eliminarla');
+        expect(outputs()).toHaveLength(2);
+        expect(writes).not.toHaveBeenCalled();
+      } finally {
+        reject.mockRestore();
+        await act(async () => useApplicationLanguageStore.setState({ language: 'en' }));
+      }
+    }
+  );
 
   it('only removes on explicit background drop and accepts a compatible Output drop first', async () => {
     const writes = await mount();

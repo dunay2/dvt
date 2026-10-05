@@ -46,10 +46,16 @@
   color: var(--status-info);
   border-color: var(--status-info);
 }
-.formula-palette-items {
+.formula-palette-groups {
   max-height: 9rem;
   overflow: auto;
   margin-top: 0.4rem;
+}
+.formula-palette-group-heading {
+  padding: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 .formula-palette-item {
   display: flex;
