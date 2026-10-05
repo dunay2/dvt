@@ -341,6 +341,7 @@ describe('governed browser evidence routing', () => {
         resolve('cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts'),
         resolve(transformStage.slice('apps/web/'.length)),
+        resolve(treeJourney.slice('apps/web/'.length)),
       ].sort()
     );
     for (const consumer of [
