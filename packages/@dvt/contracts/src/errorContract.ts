@@ -1,4 +1,5 @@
 /**
+ * Owned concern: define structured shared-kernel error identity and message metadata.
  * @file packages/@dvt/contracts/src/errorContract.ts
  * @baseline ADR-0005: Contract Formalization Tooling
  * @baseline ADR-0006: Contract Tooling Governance

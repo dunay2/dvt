@@ -1,3 +1,10 @@
+/**
+ * Owned concern: register step schemas and query their validation and execution profiles.
+ * @baseline ADR-0018: shared registry consumers use canonical step contracts.
+ * @decision Delegate built-in assembly and artifact schemas to their owning modules.
+ * @consequence Registry mechanics do not implement provider preparation or execution.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import type { PlanOwnership } from '../contracts/planner/ExecutionPlan.v1.js';

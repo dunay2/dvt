@@ -1,3 +1,10 @@
+/**
+ * Owned concern: assemble the built-in step schemas and execution profiles.
+ * @baseline ADR-0018: shared step admission uses canonical contract definitions.
+ * @decision Bind each supported kind to its owning schema and contextual validator.
+ * @consequence Built-in provider requirements stay outside generic registry mechanics.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY } from '../contracts/planner/DvtOperationalWorkload.v1.js';

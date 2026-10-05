@@ -1,3 +1,10 @@
+/**
+ * Owned concern: validate persisted RunEvents against the active wire contract.
+ * @baseline RunEvents.v1: event payload schemas belong to the shared contract.
+ * @decision Reuse the provider-neutral artifact reference schema across event payloads.
+ * @consequence Event validation does not acquire a dependency on DBT configuration.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { StepArtifactRefSchema } from '../step-registry/StepArtifactRef.js';

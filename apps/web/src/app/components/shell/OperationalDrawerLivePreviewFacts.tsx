@@ -1,4 +1,10 @@
-/** Present server-owned LIVE facts. This view neither admits nor starts a query. */
+/**
+ * Owned concern: present server-owned LIVE sample provenance and query limits.
+ * @baseline GH-3577-COMPACT-DATA-GRID: loaded samples retain their authoritative context.
+ * @decision Keep facts in a passive view with shared copy and stylesheet.
+ * @consequence This view neither admits nor starts a query.
+ * @version 1.0.0
+ */
 import type { DataPreviewProvenance } from '@dvt/contracts';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 import styles from './OperationalDrawerLivePreviewFacts.module.css';

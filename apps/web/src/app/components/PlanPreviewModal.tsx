@@ -1,3 +1,10 @@
+/**
+ * Owned concern: present the authoritative Preview outcome and its available actions.
+ * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
+ * @decision Resolve rejection copy by cause while retaining structural diagnostics.
+ * @consequence Language changes affect presentation, never execution admission.
+ * @version 1.0.0
+ */
 import { EXECUTABILITY_REJECTION_CODES } from '@dvt/contracts';
 import { AlertTriangle, Clock, Download, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';

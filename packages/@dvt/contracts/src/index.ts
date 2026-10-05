@@ -1,4 +1,10 @@
-/** Public contract exports only; validation and behavior stay in their owning modules. */
+/**
+ * Owned concern: expose the shared kernel's public contract surface.
+ * @baseline ADR-0018: Shared Kernel Ownership Governance.
+ * @decision Export contracts without duplicating their validation or behavior.
+ * @consequence Each owning module remains the sole implementation authority.
+ * @version 1.0.0
+ */
 export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
