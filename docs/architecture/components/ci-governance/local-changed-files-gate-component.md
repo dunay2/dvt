@@ -98,6 +98,12 @@ The component does not own:
 - `verify:changed` is an iteration helper, not a replacement for the full
   `verify:prepush` closeout gate.
 - Any skipped full-scan behavior must remain covered by `verify:prepush`.
+- Governance and feature-mechanization admission precede the complete changed-file
+  lint/format check. That check runs once before every affected test step, including
+  provider and browser acceptance; the forbidden-tracked-file check remains last.
+- Reordering validation does not change the selected commands, their arguments,
+  test classification, environment isolation or receipt identity. Any failed step
+  preserves its failure status, stops all later steps and produces no success stamp.
 - The canonical plan marks test steps explicitly, including package-script
   aliases. `executeCommandPlan` removes Git's repository-local environment
   variables only from those child processes. Git itself supplies the variable
@@ -145,6 +151,23 @@ sequenceDiagram
 ```
 
 ## Consumers
+
+### Changed-slice execution order
+
+```mermaid
+flowchart LR
+  Admission[Governance and feature mechanization] --> Static[Typed lint and format]
+  Static --> Tests[Same affected tests and browser acceptance]
+  Tests --> Tracked[Forbidden tracked files]
+  Tracked --> Receipt[Success stamp]
+  Static -->|failure: original exit status| Reject[Stop; no later steps or stamp]
+```
+
+`BuildChangedSliceVerificationPlan` owns this ordering; neither the executor nor
+individual checks invent another plan. Failing static validation is detected
+before expensive tests, without reducing the successful run's coverage or changing
+the `--committed-tests` path. The existing integrated failure test exercises
+`main` through `executeVerifyChangedPlan`, not a synthetic successful executor.
 
 ### Changed-file lint execution
 
