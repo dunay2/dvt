@@ -1,8 +1,8 @@
 /**
  * Owned concern: prove independent browser and Vitest obligations remain complete.
  * @baseline GH-3540: browser admission is independent of Vitest ownership.
- * @decision GH-3583: exercise the same adapter through both execution phases.
- * @consequence No phase can hide invalid input or replace the other phase's evidence.
+ * @decision GH-3583/GH-3593: exercise shared phases and register each admitted browser consumer once.
+ * @consequence No phase or helper change can hide input obligations or replace real browser evidence.
  * @version 1.0.0
  */
 import { spawnSync } from 'node:child_process';
@@ -45,6 +45,9 @@ const revisitHelper = 'apps/web/cypress/support/relationalWorkbench/navigation.t
 const modelChain = 'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts';
 const inputMapping = 'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts';
 const semanticExecution = 'apps/web/cypress/support/semanticLive/execution.ts';
+const transformStage = 'apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts';
+const formulaJourney = 'apps/web/cypress/support/relationalWorkbench/transformFormulaJourney.ts';
+const treeJourney = 'apps/web/cypress/support/relationalWorkbench/transformTreeJourney.ts';
 const liveWorkloadConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
@@ -74,6 +77,9 @@ describe('governed browser evidence routing', () => {
     modelChain,
     inputMapping,
     semanticExecution,
+    transformStage,
+    formulaJourney,
+    treeJourney,
     ...liveWorkloadConsumers,
     ...savedSampleConsumers,
     ...inspectorConsumers,
@@ -111,6 +117,9 @@ describe('governed browser evidence routing', () => {
       source,
       helper,
       semanticExecution,
+      transformStage,
+      formulaJourney,
+      treeJourney,
       ...liveWorkloadConsumers,
     ]);
     expect(mixed.commandPlan).toEqual(resolveWebVitestChangedSuitePlan([source]).commandPlan);
@@ -156,9 +165,11 @@ describe('governed browser evidence routing', () => {
   });
 
   it.each([
-    [helper, 'interruptLiveRunEventFeed'],
-    [dataHelper, 'registerCanvasNodeDataActionsProof'],
-  ])('guards exclusive ownership and registration of %s', (helperPath, registerName) => {
+    [helper, 'interruptLiveRunEventFeed', spec],
+    [dataHelper, 'registerCanvasNodeDataActionsProof', spec],
+    [formulaJourney, 'exerciseTransformFormulaAuthoring', transformStage],
+    [treeJourney, 'exerciseTransformTreeSelection', transformStage],
+  ])('guards exclusive ownership and registration of %s', (helperPath, registerName, owner) => {
     const cypressRoot = resolve('cypress');
     const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = new Set<string>();
@@ -174,7 +185,7 @@ describe('governed browser evidence routing', () => {
       );
       const visit = (node: ts.Node): void => {
         if (
-          path === resolve(spec.slice('apps/web/'.length)) &&
+          path === resolve(owner.slice('apps/web/'.length)) &&
           ts.isCallExpression(node) &&
           ts.isIdentifier(node.expression) &&
           node.expression.text === registerName
@@ -188,7 +199,7 @@ describe('governed browser evidence routing', () => {
       };
       visit(ast);
     }
-    expect([...consumers]).toEqual([resolve(spec.slice('apps/web/'.length))]);
+    expect([...consumers]).toEqual([resolve(owner.slice('apps/web/'.length))]);
     expect(registrations).toBe(1);
   });
 
@@ -329,6 +340,7 @@ describe('governed browser evidence routing', () => {
         ...inputConsumers,
         resolve('cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts'),
+        resolve(transformStage.slice('apps/web/'.length)),
       ].sort()
     );
     for (const consumer of [
@@ -336,6 +348,7 @@ describe('governed browser evidence routing', () => {
       ...inputConsumers,
       ...inspectorConsumers.map((path) => resolve(path.slice('apps/web/'.length))),
       ...liveWorkloadConsumers.map((path) => resolve(path.slice('apps/web/'.length))),
+      resolve(transformStage.slice('apps/web/'.length)),
     ])
       expect(registrations.filter((path) => path === consumer)).toHaveLength(1);
   });

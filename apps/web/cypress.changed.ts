@@ -1,4 +1,10 @@
-/** @ownedConcern Admit browser evidence obligations; do not own Git discovery or execution. */
+/**
+ * Owned concern: admit browser evidence obligations, not Git discovery or execution.
+ * @baseline GH-3540: browser changes require explicitly admitted real-runtime evidence.
+ * @decision GH-3593: reuse the shared terminal runtime for Transform and its owned journeys.
+ * @consequence Unknown paths fail closed; related changes still select only one browser command.
+ * @version 1.0.0
+ */
 export function resolveWebCypressChangedPlan(
   filePaths: readonly string[],
   full = false
@@ -28,6 +34,9 @@ export function resolveWebCypressChangedPlan(
           'cypress/e2e/canvas/canvasNodeDataActions.proof.ts',
           'cypress/support/relationalWorkbench/persistence.ts',
           'cypress/support/relationalWorkbench/navigation.ts',
+          'cypress/support/relationalWorkbench/transformFormulaJourney.ts',
+          'cypress/support/relationalWorkbench/transformTreeJourney.ts',
+          'cypress/e2e/canvas/canvas-transform-stage.cy.ts',
           'cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
           'cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
           'cypress/e2e/canvas/canvas-relational-workbench-cross.cy.ts',

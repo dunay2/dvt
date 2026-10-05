@@ -2,7 +2,7 @@
  * Owned concern: prove one protected terminal DVT Transform from persisted
  * Canvas revision through PreviewPlan, StartRun, Temporal and PostgreSQL.
  * @baseline ADR-0044: Structural rejection causes are stable; Web owns translated copy.
- * @decision Verify the current V1 response and localized refusal through the native UI.
+ * @decision Verify V1 responses and register admitted authoring consumers once in this runtime.
  * @consequence Unsupported output dispositions cannot expose Run or create an execution.
  * @version 1.0.0
  */
@@ -19,6 +19,7 @@ import './canvas-relational-workbench-viewport.cy';
 import './canvas-sort-fetch-data-navigation.cy';
 import './canvas-model-chain-fields.cy';
 import './canvas-column-lineage-mapping.cy';
+import './canvas-transform-stage.cy';
 import './canvas-dvt-join-preview-live.cy';
 import './canvas-semantic-persistence-run-live.cy';
 import './canvas-sql-progressive-live.cy';
