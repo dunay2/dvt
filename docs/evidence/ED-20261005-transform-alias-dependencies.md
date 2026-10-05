@@ -90,9 +90,19 @@ is still the actual contract; negative tests first prove their fixture is valid.
 - Source dependency regression: the new case failed before the correction;
   all nine cases passed afterward, protecting hidden dependencies while allowing
   removal of an unused source field.
-- Full Web unit run: 401 files and 2726 tests passed. Full architecture: 114 files
-  and 434 tests passed after removing redundant layout assignments and admitting
-  the Transform journey in the existing governed browser runtime.
+- Full Web unit run: 401 files and 2726 tests passed. The pre-commit architecture
+  run passed 434 tests across 114 files after removing redundant layout assignments
+  and admitting the Transform journey in the existing governed browser runtime.
+  The later pre-push against hook-formatted commit `588b2b431` passed 1896 affected
+  unit tests and 912 presentation tests, but failed two architecture size guards
+  (114 lines against `<100`, and 211 against `<210`). Integration remained blocked;
+  the limits were not relaxed. The correction reuses canonical graph projection
+  directly and shares gesture rejection handling, removing redundant conversions
+  and control flow. A subsequently reached inspector guard was corrected by
+  reusing its existing semantic-context type, without changing runtime behavior.
+  After hook formatting, commit `7b48f87e4` passed all 434 architecture tests;
+  the three bounded files measured 99, 209 and 98 lines respectively. The final
+  exact-SHA closeout receipt belongs on the issue and PR.
 - PostgreSQL projection: all 269 tests passed. Contracts and analysis typechecks,
   contract schema synchronization (25 tests), Web typecheck, package lint and
   strict changed-file lint passed.
@@ -116,7 +126,11 @@ is still the actual contract; negative tests first prove their fixture is valid.
   `.dvt/evidence/3593-transform-stage-electron/screenshots`. The direct-edit journey
   proves exactly three successful saves, stable A/B identities and reference,
   updated SQL after reopening, and zero writes for the rejected cycle.
-- Exact-SHA DB acceptance, pre-push and required PR CI remain closeout gates.
+- Planning DB implementation acceptance passed against base
+  `926713bfd65ad004e04bbcde47c5ba12be195506` and head
+  `588b2b431ebe040f9e660bddf397a889de3f2c45` with 482 native manifests. This is
+  historical evidence, not acceptance of a later commit. The final exact-SHA DB
+  acceptance, pre-push and required PR CI remain closeout gates.
 
 Browser tests use controlled HTTP transport and real client commands, canonical
 save payloads and SQL lowering. They are not live-provider execution evidence.
