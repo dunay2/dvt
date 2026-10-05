@@ -1,4 +1,10 @@
-/** Owned concern: prove the scope-aware changed-slice verification plan. */
+/**
+ * Owned concern: prove scope-aware validation order and fail-closed success receipts.
+ * @baseline Local Changed Files Gate: governance admission precedes affected checks.
+ * @decision Exercise the canonical plan and executor; inject only child execution and receipts.
+ * @consequence Static rejection starts no tests and cannot create a success stamp.
+ * @version 1.0.0
+ */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -10,6 +16,13 @@ const {
   main,
   parseArgs,
 } = require('./verify-changed.cjs');
+
+const MIXED_CHANGED_FILES = [
+  'apps/web/src/testing/vitestSuites.architecture.test.ts',
+  'tools/planning-db/schema.sql',
+  'scripts/local-validation-plan.cjs',
+  'scripts/check-changed.cjs',
+];
 
 function labelsFor(files) {
   return buildVerifyChangedPlan(files).map(commandLabel);
@@ -396,17 +409,38 @@ test('buildVerifyChangedPlan runs changed governance report tests directly', () 
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
-test('buildVerifyChangedPlan runs governed changed web suites for web changes', () => {
-  const labels = labelsFor(['apps/web/src/testing/vitestSuites.architecture.test.ts']);
+test('buildVerifyChangedPlan retains every mixed-scope gate once with static checks before tests', () => {
+  const plan = buildVerifyChangedPlan(MIXED_CHANGED_FILES);
+  const labels = plan.map(commandLabel);
 
-  assert.equal(labels.filter((label) => label === 'pnpm test:web:changed').length, 1);
-  assert.ok(
-    labels.indexOf('pnpm docs:feature-mechanization:implementation') <
-      labels.indexOf('pnpm test:web:changed')
-  );
-  assert.ok(
-    labels.indexOf('pnpm test:web:changed') < labels.indexOf('node scripts/check-changed.cjs')
-  );
+  assert.deepEqual(labels, [
+    'pnpm planning:db:knowledge-intake:retirement:check',
+    'pnpm planning:db:inventory:check',
+    'pnpm planning:db:integrity:check',
+    'pnpm docs:gov:locations -- --changed-only',
+    'pnpm docs:gov:filenames:changed',
+    'pnpm docs:gov:frontmatter:changed',
+    'pnpm docs:arc:evidence:check -- --changed-only',
+    'pnpm qa:artifact:check',
+    'pnpm lint:md:changed',
+    'pnpm docs:feature-mechanization:implementation',
+    'node scripts/check-changed.cjs',
+    'pnpm test:web:changed',
+    'node --test scripts/check-changed.test.cjs',
+    'pnpm test:planning:db:current-schema',
+    'node --test scripts/verify-changed.test.cjs',
+    'node --test scripts/verify-prepush.test.cjs',
+    'node scripts/check-forbidden-tracked-files.cjs',
+  ]);
+  assert.equal(new Set(labels).size, plan.length);
+  assert.equal(new Set(plan.map((step) => step.id)).size, plan.length);
+  assert.deepEqual(plan.filter((step) => step.kind === 'test').map(commandLabel), [
+    'pnpm test:web:changed',
+    'node --test scripts/check-changed.test.cjs',
+    'pnpm test:planning:db:current-schema',
+    'node --test scripts/verify-changed.test.cjs',
+    'node --test scripts/verify-prepush.test.cjs',
+  ]);
 });
 
 test('buildVerifyChangedPlan self-tests developer workflow verifier changes', () => {
@@ -472,61 +506,73 @@ test('buildVerifyChangedPlan self-tests prepush verifier changes without changed
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
-test('executeVerifyChangedPlan stops at the first failed check', () => {
-  const calls = [];
-  const status = executeVerifyChangedPlan(
-    [
-      { id: 'first', command: 'node', args: ['first.cjs'] },
-      { id: 'second', command: 'node', args: ['second.cjs'] },
-    ],
-    {
-      spawn: (command, args) => {
-        calls.push(commandLabel({ command, args }));
-        return { status: calls.length === 1 ? 7 : 0 };
-      },
-    }
-  );
-
-  assert.equal(status, 7);
-  assert.deepEqual(calls, ['node first.cjs']);
-});
-
-test('main records a reusable prepush stamp after successful changed verification', () => {
-  const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
+test('main executes every gate once before building and writing the success stamp', () => {
+  const plan = buildVerifyChangedPlan(MIXED_CHANGED_FILES);
+  const events = [];
   const stamps = [];
   const status = main([], {
-    changedFiles,
-    executeVerifyChangedPlan: () => 0,
+    changedFiles: MIXED_CHANGED_FILES,
+    executeVerifyChangedPlan: (steps, options) =>
+      executeVerifyChangedPlan(steps, {
+        ...options,
+        spawn: (command, args, spawnOptions) => {
+          assert.equal(Object.hasOwn(spawnOptions, 'env'), plan[events.length].kind === 'test');
+          events.push(commandLabel({ command, args }));
+          return { status: 0 };
+        },
+      }),
     printPlan: () => {},
-    writePrepushStamp: (stamp) => stamps.push(stamp),
-    buildPrepushStamp: (files) => ({
-      validationLevel: 'default',
-      changedFiles: files,
-      stateFingerprint: 'same-tree',
-    }),
+    buildPrepushStamp: (files) => {
+      events.push('build-stamp');
+      return {
+        validationLevel: 'default',
+        changedFiles: files,
+        stateFingerprint: 'same-tree',
+      };
+    },
+    writePrepushStamp: (stamp) => {
+      events.push('write-stamp');
+      stamps.push(stamp);
+    },
   });
 
   assert.equal(status, 0);
+  assert.deepEqual(events, [...plan.map(commandLabel), 'build-stamp', 'write-stamp']);
   assert.deepEqual(stamps, [
     {
       validationLevel: 'default',
-      changedFiles,
+      changedFiles: MIXED_CHANGED_FILES,
       stateFingerprint: 'same-tree',
     },
   ]);
 });
 
-test('main does not record a prepush stamp when changed verification fails', () => {
-  const stamps = [];
+test('main preserves static failure without running any tests, later gates or stamp operations', () => {
+  const plan = buildVerifyChangedPlan(MIXED_CHANGED_FILES);
+  const calls = [];
   const status = main([], {
-    changedFiles: ['apps/web/src/app/AppProviders.tsx'],
-    executeVerifyChangedPlan: () => 7,
+    changedFiles: MIXED_CHANGED_FILES,
+    executeVerifyChangedPlan: (steps, options) =>
+      executeVerifyChangedPlan(steps, {
+        ...options,
+        spawn: (command, args) => {
+          const label = commandLabel({ command, args });
+          calls.push(label);
+          return { status: label === 'node scripts/check-changed.cjs' ? 7 : 0 };
+        },
+      }),
     printPlan: () => {},
-    writePrepushStamp: (stamp) => stamps.push(stamp),
+    buildPrepushStamp: () => assert.fail('Failed validation must not build a stamp'),
+    writePrepushStamp: () => assert.fail('Failed validation must not write a stamp'),
   });
 
   assert.equal(status, 7);
-  assert.deepEqual(stamps, []);
+  const failedIndex = plan.findIndex((step) => step.id === 'check-changed');
+  assert.deepEqual(calls, plan.slice(0, failedIndex + 1).map(commandLabel));
+  assert.deepEqual(
+    plan.filter((step) => step.kind === 'test' && calls.includes(commandLabel(step))),
+    []
+  );
 });
 
 test('main runs focused tests from the exact committed diff without writing a local stamp', () => {
