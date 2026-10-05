@@ -1,7 +1,7 @@
 /**
  * Owned concern: prove one N-input JOIN through the protected DVT PostgreSQL Run path.
  * @baseline GH-2524-LIVE-V1-CONSUMERS: prove current authoring and publication contracts.
- * @decision Fix the application language before boot, independent of the host locale.
+ * @decision Declare the language before boot and await route readiness before interaction.
  * @consequence Localized UI assertions and provider evidence remain exact on every host.
  * @version 1.0.0
  */
@@ -134,6 +134,7 @@ describe('N-input DVT Run live', () => {
       },
     });
     cy.get('html').should('have.attr', 'lang', 'es');
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
