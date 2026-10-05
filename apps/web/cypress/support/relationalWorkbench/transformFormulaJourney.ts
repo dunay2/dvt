@@ -223,7 +223,9 @@ export function exerciseTransformFormulaAuthoring(): void {
   cy.get('.suggest-widget.visible').contains('.monaco-list-row', 'UPPER').click();
   cy.get(formulaText).should('contain.text', 'UPPER()');
   cy.get(formulaInput).type('{selectall}UPPER(missing)', { force: true });
-  cy.get('.formula-diagnostic').should('contain.text', 'Unknown');
+  cy.get('.formula-diagnostic')
+    .should('contain.text', 'unavailable')
+    .and('contain.text', 'missing');
   cy.get(form).find('button[type="submit"]').should('be.disabled');
   cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
   cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
