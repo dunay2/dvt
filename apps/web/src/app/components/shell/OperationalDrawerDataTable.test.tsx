@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
 
+/**
+ * Owned concern: verify interactions over the shared bounded preview sample.
+ * @baseline GH-3577-COMPACT-DATA-GRID: local controls never query or mutate source data.
+ * @decision Await interaction work before asserting observable state and copy feedback.
+ * @consequence Tests cover settled user behavior without fire-and-forget updates.
+ * @version 1.0.0
+ */
 import { fireEvent, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -144,10 +151,10 @@ describe('OperationalDrawerDataTable', () => {
     expect(visibleRows()[0]).toEqual(['1', 'beta']);
   });
 
-  it('filters only loaded rows and provides compact density and wrapping controls', () => {
+  it('filters only loaded rows and provides compact density and wrapping controls', async () => {
     renderTable();
     const search = getByRole(container, 'searchbox', { name: 'Search loaded rows' });
-    act(() => fireEvent.change(search, { target: { value: 'ALPHA' } }));
+    await act(() => fireEvent.change(search, { target: { value: 'ALPHA' } }));
     expect(visibleRows()).toEqual([
       ['2', 'alpha'],
       ['3', 'alpha'],
@@ -155,11 +162,11 @@ describe('OperationalDrawerDataTable', () => {
     expect(container.textContent).toContain('2 / 4 loaded rows');
     const grid = container.querySelector('[data-slot="bottom-operational-data-grid"]')!;
     expect(grid.getAttribute('data-density')).toBe('compact');
-    act(() => fireEvent.click(getByRole(container, 'button', { name: 'Comfortable rows' })));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'Comfortable rows' })));
     expect(grid.getAttribute('data-density')).toBe('comfortable');
-    act(() => fireEvent.click(getByRole(container, 'button', { name: 'Wrap text' })));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'Wrap text' })));
     expect(grid.getAttribute('data-wrap')).toBe('true');
-    act(() => fireEvent.change(search, { target: { value: 'absent' } }));
+    await act(() => fireEvent.change(search, { target: { value: 'absent' } }));
     expect(visibleRows()).toEqual([]);
     expect(container.textContent).toContain('No matching rows in this sample');
   });
@@ -170,7 +177,7 @@ describe('OperationalDrawerDataTable', () => {
     renderTable();
     const copy = getByRole(container, 'button', { name: 'Copy cell' });
     expect((copy as HTMLButtonElement).disabled).toBe(true);
-    act(() => fireEvent.click(getByRole(container, 'button', { name: 'beta' })));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'beta' })));
     await act(async () => fireEvent.click(copy));
     expect(writeText).toHaveBeenCalledWith('beta');
     expect(container.textContent).toContain('Cell copied');
@@ -183,7 +190,7 @@ describe('OperationalDrawerDataTable', () => {
       clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
     });
     renderTable();
-    act(() => fireEvent.click(getByRole(container, 'button', { name: 'NULL' })));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'NULL' })));
     await act(async () => fireEvent.click(getByRole(container, 'button', { name: 'Copy cell' })));
     expect(container.textContent).toContain('Could not copy the cell');
     expect(container.textContent).not.toContain('Cell copied');
@@ -202,10 +209,12 @@ describe('OperationalDrawerDataTable', () => {
         />
       )
     );
-    act(() => fireEvent.click(getByRole(container, 'button', { name: 'Empty text' })));
+    await act(() => fireEvent.click(getByRole(container, 'button', { name: 'Empty text' })));
     await act(async () => fireEvent.click(getByRole(container, 'button', { name: 'Copy cell' })));
     expect(writeText).toHaveBeenLastCalledWith('');
-    act(() => fireEvent.change(getByRole(container, 'searchbox'), { target: { value: 'needle' } }));
+    await act(() =>
+      fireEvent.change(getByRole(container, 'searchbox'), { target: { value: 'needle' } })
+    );
     expect(visibleRows()).toEqual([['needle']]);
   });
 
