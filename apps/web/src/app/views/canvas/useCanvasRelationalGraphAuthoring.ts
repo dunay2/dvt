@@ -4,13 +4,14 @@ import { createSourceOccurrenceActions } from './relational-source-occurrence/so
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import { useCanvasStagedOperationSession } from './useCanvasStagedOperationSession';
 import { useCanvasStagedOperationConfiguration } from './useCanvasStagedOperationConfiguration';
-import { createCanvasCanonicalGraphDisconnectCommand } from './canvasCanonicalGraphDisconnectCommand';
+import { createCanvasCanonicalGraphEditingCommands } from './canvasCanonicalGraphEditingCommand';
+import { createCanvasRelationalOutputActions } from './canvasRelationalOutputActions';
 
 type DraftState = ReturnType<typeof useCanvasRelationalTreeDraftState>;
 
 export function useCanvasRelationalGraphAuthoring(
   args: Readonly<
-    Parameters<typeof createCanvasCanonicalGraphDisconnectCommand>[0] & {
+    Parameters<typeof createCanvasCanonicalGraphEditingCommands>[0] & {
       inputs: readonly CanvasDvtCompositionInput[];
       state: DraftState;
       outputRelationId: string | null;
@@ -18,6 +19,7 @@ export function useCanvasRelationalGraphAuthoring(
   >
 ) {
   const { analysis, editable, inputs, outputRelationId, start, state } = args;
+  const canonical = createCanvasCanonicalGraphEditingCommands(args);
   const configure = useCanvasStagedOperationConfiguration({ analysis, inputs, state });
   const canonicalIds =
     analysis?.document?.sidecar.relations.map((relation) => relation.relationId) ?? [];
@@ -50,7 +52,7 @@ export function useCanvasRelationalGraphAuthoring(
     setSelectedId: state.setPendingSourceId,
   });
   return {
-    disconnectRelation: createCanvasCanonicalGraphDisconnectCommand(args),
+    disconnectRelation: canonical.disconnect,
     occurrences: {
       ...occurrences,
       drop: (id: string) => {
@@ -83,35 +85,26 @@ export function useCanvasRelationalGraphAuthoring(
       },
       connect: (id: string, port: number, relationId: string) => {
         occurrences.clearSelection();
-        staged.connect(id, port, relationId);
+        if (state.stagedOperations.some((operation) => operation.id === id))
+          staged.connect(id, port, relationId);
+        else
+          canonical.connect(
+            id,
+            port,
+            relationId,
+            {
+              editable,
+              producerIds,
+              consumedProducerIds: outputRelationId == null ? [] : [outputRelationId],
+            },
+            state.stagedOperations
+          );
       },
       remove: (id: string) => {
         if (outputRelationId === id) state.setOutputRelationId(null);
         staged.remove(id);
       },
     },
-    output: {
-      relationId: outputRelationId,
-      connect: (relationId: string) => {
-        const isOperation =
-          state.stagedOperations.some((operation) => operation.id === relationId) ||
-          (analysis?.document != null &&
-            relationId === analysis.session.rootId &&
-            analysis.session.locate(relationId, analysis.revision).relation.relType.case !==
-              'read');
-        if (
-          editable &&
-          isOperation &&
-          !canonicalConsumers.includes(relationId) &&
-          !state.stagedOperations.some((operation) => operation.inputs.includes(relationId)) &&
-          (outputRelationId == null || outputRelationId === relationId) &&
-          start()
-        )
-          state.setOutputRelationId(relationId);
-      },
-      disconnect: () => {
-        if (editable && start()) state.setOutputRelationId(null);
-      },
-    },
+    output: createCanvasRelationalOutputActions({ ...args, canonicalConsumers }),
   } as const;
 }

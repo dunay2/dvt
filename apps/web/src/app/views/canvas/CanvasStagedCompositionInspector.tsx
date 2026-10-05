@@ -1,4 +1,10 @@
-/** Inspect a configured binary operation with the canonical properties and output controls. */
+/**
+ * Owned concern: coordinate configured composition inspection through existing semantic editors.
+ * @baseline GH-3271-COMPOSITION-CONCERNS: fixed and repeated inputs share the same editor.
+ * @decision Reuse the canonical analysis session, property form and output controls.
+ * @consequence No UNION-specific inspector, copied semantic state or parallel save rail is added.
+ * @version 1.0.0
+ */
 import { useMemo } from 'react';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
@@ -26,7 +32,7 @@ function operationFor(document: SubstraitDocument, staged: CanvasStagedOperation
   return isCanvasJoinOperation(operation) ? operation : null;
 }
 
-export function CanvasStagedBinaryInspector({
+export function CanvasStagedCompositionInspector({
   staged,
   editingDocument,
   copy,

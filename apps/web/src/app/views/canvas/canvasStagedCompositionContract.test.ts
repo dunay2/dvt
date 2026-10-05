@@ -22,6 +22,20 @@ const kinds = Object.keys(canvasStagedCompositionSignatures).filter(isCanvasStag
 const producerIds = ['source:0', 'source:1'];
 const scope: CanvasStagedConnectionScope = { editable: true, producerIds, consumedProducerIds: [] };
 
+describe.each(['union_all', 'union_distinct'] as const)('%s repeated inputs', (kind) => {
+  it('appends an ordered third producer and removes only the middle input', () => {
+    let operation = createCanvasStagedOperation(kind);
+    for (const [port, id] of ['north', 'south', 'west'].entries())
+      operation = connectCanvasStagedOperation(operation, port, id);
+    expect(operation.inputs).toEqual(['north', 'south', 'west']);
+    expect(deriveCanvasStagedCompositionState(operation)).toBe('ready');
+    const removed = disconnectCanvasStagedOperation(operation, 1);
+    expect(removed.id).toBe(operation.id);
+    expect(removed.inputs).toEqual(['north', 'west']);
+    expect(disconnectCanvasStagedOperation(removed, 0).inputs).toEqual([null, 'west']);
+  });
+});
+
 describe.each(kinds)('composition contract: %s', (kind) => {
   const signature = readCanvasStagedCompositionSignature(kind);
 

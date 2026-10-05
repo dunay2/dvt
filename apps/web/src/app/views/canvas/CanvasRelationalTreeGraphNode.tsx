@@ -82,7 +82,7 @@ export function CanvasRelationalTreeGraphNode({
         />
         {onSelectConnectionSource == null || onConnectOperation == null ? null : (
           <CanvasRelationalOperationPorts
-            relationId={placed.node.relationId}
+            node={placed.node}
             staged={stagedOperation}
             copy={copy}
             selectedSource={selectedConnectionSource ?? null}

@@ -167,7 +167,15 @@ describe('single-consumer internal connection boundary', () => {
     const canonicalRoot = ports.find(
       (port) => port.parentElement?.querySelector('[data-operator="join"]') != null
     )!;
-    const input = find('canvas-relational-input-port');
+    // Reconnecting an existing canonical wire must not enter staged authoring.
+    const canonicalInput = canonicalRoot.parentElement!.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-input-port"]'
+    )!;
+    await connect(source, canonicalInput);
+    expect(pendingEdges()).toBe(0);
+    const input = container.querySelector<HTMLElement>(
+      '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]'
+    )!;
     await connect(source, input);
     await connect(canonicalRoot, input);
     expect(pendingEdges()).toBe(0);

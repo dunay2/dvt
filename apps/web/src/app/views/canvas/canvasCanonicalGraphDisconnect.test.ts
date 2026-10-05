@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
-import { disconnectCanvasCanonicalGraph } from './canvasCanonicalGraphDisconnect';
+import { disconnectCanvasCanonicalGraph } from './canvasCanonicalGraphEditing';
 import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { restoreCanvasOperationConfiguration } from './canvasRetainedOperationConfiguration';
 import {
@@ -15,14 +15,15 @@ import { createCanvasRelationalTreeApplyDraft } from './canvasRelationalTreeAppl
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { graphModel, graphJoin } from './canvasRelationGraph.test-support';
-import { createCanvasCanonicalGraphDisconnectCommand } from './canvasCanonicalGraphDisconnectCommand';
+import { createCanvasCanonicalGraphEditingCommands } from './canvasCanonicalGraphEditingCommand';
 import { vi } from 'vitest';
 import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
-import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
 import { createSourceDocument } from './canvasSourceDocument';
 import { source } from './canvasRelationalOperator.test-support';
 import { canvasCanonicalProducerIdentity } from './canvasCanonicalProducerIdentity';
 import { disconnectCanvasStagedOperation } from './canvasStagedOperation';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 
 describe('canonical graph disconnection', () => {
   it.each([0, 1])('disconnects only JOIN port %s and retains its exact predicate', (port) => {
@@ -42,56 +43,66 @@ describe('canonical graph disconnection', () => {
     session.dispose();
   });
 
-  it('does not start or mutate a read-only session', () => {
-    const { document, session } = graphJoin();
-    const write = vi.fn();
-    const start = vi.fn(() => true);
-    createCanvasCanonicalGraphDisconnectCommand({
-      editable: false,
-      analysis: { document, session, revision: session.revision, error: null, refresh: vi.fn() },
-      start,
-      sourceNodeIds: ['left', 'right'],
-      state: {
-        setJoinDraft: write,
-        setOperation: write,
-        setPendingSources: write,
-        setStagedOperations: write,
-        setSelectedStagedOperationId: write,
-      },
-    })(session.rootId, 0);
-    expect(write).not.toHaveBeenCalled();
-    expect(start).not.toHaveBeenCalled();
-    session.dispose();
-  });
-  it.each(['failed', 'stale', 'disposed'])('does not mutate a %s analysis session', (condition) => {
-    const { document, session } = graphJoin();
-    const revision = condition === 'stale' ? session.revision - 1 : session.revision;
-    if (condition === 'disposed') session.dispose();
-    const write = vi.fn();
-    const start = vi.fn(() => true);
-    createCanvasCanonicalGraphDisconnectCommand({
-      editable: true,
-      analysis: {
-        document,
-        session,
-        revision,
-        error: condition === 'failed' ? new Error('analysis failed') : null,
-        refresh: vi.fn(),
-      },
-      start,
-      sourceNodeIds: ['left', 'right'],
-      state: {
-        setJoinDraft: write,
-        setOperation: write,
-        setPendingSources: write,
-        setStagedOperations: write,
-        setSelectedStagedOperationId: write,
-      },
-    })(document.sidecar.relations.at(-1)!.relationId, 0);
-    expect(write).not.toHaveBeenCalled();
-    expect(start).not.toHaveBeenCalled();
-    session.dispose();
-  });
+  it.each(['current', 'read-only', 'failed', 'stale', 'disposed'])(
+    'admits both topology commands only for a current writable session: %s',
+    (condition) => {
+      const sample = source('places');
+      const input = {
+        ...sample,
+        fields: sample.fields.map((field) => ({
+          name: field.name,
+          dataType: field.type,
+          joinDataType: field.type,
+        })),
+      };
+      const sources = Array.from({ length: 3 }, () => createPendingSourceOccurrence(input));
+      const ids = sources.map((entry) => entry.read.binding.relationId);
+      const configured = configureCanvasStagedComposition(
+        { id: 'union', operation: 'union_all', inputs: ids.slice(0, 2) },
+        [input],
+        sources,
+        []
+      );
+      const document = decodeCanvasStagedOperation(configured)!;
+      const session = new CanvasRelationAnalysisSession('topology-admission');
+      session.receive(document);
+      const revision = condition === 'stale' ? session.revision - 1 : session.revision;
+      if (condition === 'disposed') session.dispose();
+      const write = vi.fn();
+      const start = vi.fn(() => true);
+      const commands = createCanvasCanonicalGraphEditingCommands({
+        editable: condition !== 'read-only',
+        analysis: {
+          document,
+          session,
+          revision,
+          error: condition === 'failed' ? new Error('analysis failed') : null,
+          refresh: vi.fn(),
+        },
+        start,
+        sourceNodeIds: [input.nodeId, input.nodeId],
+        state: {
+          setJoinDraft: write,
+          setOperation: write,
+          setPendingSources: write,
+          setStagedOperations: write,
+          setSelectedStagedOperationId: write,
+        },
+      });
+      const scope = { editable: true, producerIds: ids, consumedProducerIds: [] };
+      for (const command of [
+        (): void => commands.disconnect('union', 0),
+        (): void => commands.connect('union', 2, ids[2]!, scope, []),
+      ]) {
+        command();
+        expect(start).toHaveBeenCalledTimes(condition === 'current' ? 1 : 0);
+        expect(write).toHaveBeenCalledTimes(condition === 'current' ? 5 : 0);
+        start.mockClear();
+        write.mockClear();
+      }
+      session.dispose();
+    }
+  );
   it('retains operation identity and configuration without advertising executable output', () => {
     const document = connectedNamesProjectionDraft();
     const index = indexSubstraitRelations(document);
@@ -207,7 +218,7 @@ describe('canonical graph disconnection', () => {
       })),
     }));
     const sources = inputs.map(createPendingSourceOccurrence);
-    const configured = configureCanvasStagedBinary(
+    const configured = configureCanvasStagedComposition(
       {
         id: 'join',
         operation: 'inner_join',

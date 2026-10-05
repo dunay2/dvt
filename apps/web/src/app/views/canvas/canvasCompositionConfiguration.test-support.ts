@@ -3,10 +3,11 @@ import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/su
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { compositionGraphHarness } from './canvasCompositionSequence.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 import {
   readCanvasStagedCompositionSignature,
+  type CanvasStagedOperation,
   type CanvasStagedOperationKind,
 } from './canvasStagedOperation';
 import {
@@ -18,6 +19,7 @@ import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
 import { insertSelectedRelationTransform } from './canvasSelectedRelationTransform';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { applySelectedUnaryTool } from './relational-operator-form/applySelectedUnaryTool';
+import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
 
 export async function configureCompositionStep(
   harness: ReturnType<typeof compositionGraphHarness>,
@@ -27,71 +29,72 @@ export async function configureCompositionStep(
   const id = harness.commands().stage(kind)!;
   producers.forEach((producer, port) => harness.commands().connect(id, port, producer));
   const operation = harness.state.operations.find((entry) => entry.id === id)!;
-  const signature = readCanvasStagedCompositionSignature(kind);
-  let configured = operation;
-  if (signature.configuration === 'binary') {
-    configured = configureCanvasStagedBinary(
+  const configured = await configureOperation(harness, operation);
+  if (
+    configured.semanticDocument == null ||
+    !harness.commands().updateConfiguration(id, configured)
+  )
+    throw new Error(`Configuration rejected for ${kind}`);
+  return id;
+}
+
+async function configureOperation(
+  harness: ReturnType<typeof compositionGraphHarness>,
+  operation: CanvasStagedOperation
+): Promise<CanvasStagedOperation> {
+  const signature = readCanvasStagedCompositionSignature(operation.operation);
+  if (signature.configuration === 'composition')
+    return configureCanvasStagedComposition(
       operation,
       harness.inputs,
       harness.state.sources,
       harness.state.operations
     );
-  } else {
-    const document = resolveCanvasStagedProducerDocument({
-      relationId: producers[0]!,
-      canonical: null,
-      ...harness.state,
-    });
-    if (document == null) throw new Error(`Missing input for ${kind}`);
-    if (signature.configuration === 'transform') {
-      configured = await configureCanvasStagedTransform(operation, document);
-    } else {
-      const session = new CanvasRelationAnalysisSession(id);
-      try {
-        session.receive(document);
-        const request = { relationId: session.rootId, expectedRevision: session.revision };
-        let next: SubstraitDocument;
-        if (kind === 'projection') {
-          next = (await insertSelectedRelationTransform(session, request)).document;
-        } else if (
-          kind === 'filter' ||
-          kind === 'sort' ||
-          kind === 'fetch' ||
-          kind === 'aggregate' ||
-          kind === 'window'
-        ) {
-          const fieldId = (await session.query(session.rootId)).bindings[0]!.fieldId;
-          next = await applySelectedUnaryTool(session, {
-            ...request,
-            intent: 'insert',
-            tool: kind,
-            fieldId,
-            alias: 'metric',
-            value: 'C-001',
-            capabilityId: dvtSubstraitTextComparison.capabilities[0]!.capabilityId,
-            sortKeys: [{ fieldId, direction: SortField_SortDirection.DESC_NULLS_LAST }],
-            offset: '1',
-            count: '7',
-          });
-        } else {
-          throw new Error(`No semantic test configuration for catalog operation ${kind}`);
-        }
-        configured = {
-          ...operation,
-          semanticDocument: encodeDvtSubstraitSemanticDocument(assignCanvasStagedRoot(next, id)),
-        };
-      } finally {
-        session.dispose();
-      }
-    }
+  const document = resolveCanvasStagedProducerDocument({
+    relationId: operation.inputs[0] ?? null,
+    canonical: null,
+    ...harness.state,
+  });
+  if (document == null) throw new Error(`Missing input for ${operation.operation}`);
+  if (signature.configuration === 'transform')
+    return configureCanvasStagedTransform(operation, document);
+  const session = new CanvasRelationAnalysisSession(operation.id);
+  try {
+    session.receive(document);
+    const next = await configureManualSample(session, operation.operation);
+    return {
+      ...operation,
+      semanticDocument: encodeDvtSubstraitSemanticDocument(
+        assignCanvasStagedRoot(next, operation.id)
+      ),
+    };
+  } finally {
+    session.dispose();
   }
-  if (
-    configured.semanticDocument == null ||
-    !harness.commands().updateConfiguration(id, configured)
-  ) {
-    throw new Error(`Configuration rejected for ${kind}`);
-  }
-  return id;
+}
+
+async function configureManualSample(
+  session: CanvasRelationAnalysisSession,
+  kind: CanvasStagedOperationKind
+): Promise<SubstraitDocument> {
+  const request = { relationId: session.rootId, expectedRevision: session.revision };
+  if (kind === 'projection')
+    return (await insertSelectedRelationTransform(session, request)).document;
+  if (readCanvasStagedCompositionSignature(kind).editor !== 'unary')
+    throw new Error(`No semantic test configuration for catalog operation ${kind}`);
+  const fieldId = (await session.query(session.rootId)).bindings[0]!.fieldId;
+  return applySelectedUnaryTool(session, {
+    ...request,
+    intent: 'insert',
+    tool: kind as CanvasRelationalOperatorTool['id'],
+    fieldId,
+    alias: 'metric',
+    value: 'C-001',
+    capabilityId: dvtSubstraitTextComparison.capabilities[0]!.capabilityId,
+    sortKeys: [{ fieldId, direction: SortField_SortDirection.DESC_NULLS_LAST }],
+    offset: '1',
+    count: '7',
+  });
 }
 
 export async function configureCalculatedProducer(

@@ -72,10 +72,11 @@ export function createCanvasStagedOperationActions(
         if (target == null) return current;
         const connected = connectCanvasStagedOperation(target, port, relationId);
         if (connected === target) return current;
-        return current.map((operation) => {
+        const configured = current.map((operation) => {
           if (operation !== target) return operation;
           return args.configure?.(connected) ?? connected;
         });
+        return invalidateCanvasOperationConsumers(configured, new Set([id]));
       });
       args.setSelectedId(id);
     },
