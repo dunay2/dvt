@@ -330,6 +330,7 @@ export function registerCanvasNodeDataActionsProof(): void {
 
     it('keeps nested Source and Transform LIVE preview actions separate', () => {
       cy.viewport(1200, 600);
+      cy.get('.react-flow__controls-fitview').click();
       openWorkbenchModel('dvt-transform-1');
       const source = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
       cy.get(source).click();
