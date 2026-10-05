@@ -2,7 +2,7 @@
 title: Local Changed Files Gate Component
 status: Accepted
 owner: Engineering / CI Governance
-last_reviewed: 2026-05-03
+last_reviewed: 2026-10-05
 planning_type: architecture
 ---
 

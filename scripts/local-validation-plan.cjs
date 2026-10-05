@@ -1,4 +1,10 @@
-/** Owned concern: shared local validation plan definitions and execution helpers. */
+/**
+ * Owned concern: shared local validation plan definitions and execution helpers.
+ * @baseline Local Changed Files Gate: keep every affected check and its execution semantics.
+ * @decision Reject static defects after governance admission and before expensive tests.
+ * @consequence Fail earlier without changing test selection, isolation or success receipts.
+ * @version 1.0.0
+ */
 const path = require('node:path');
 const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
@@ -165,10 +171,10 @@ const VERIFY_CHANGED_PRE_TEST_STEPS = Object.freeze([
   step('qa-artifact-check', 'pnpm', 'qa:artifact:check'),
   step('lint-md-changed', 'pnpm', 'lint:md:changed'),
   step('feature-mechanization-implementation', 'pnpm', 'docs:feature-mechanization:implementation'),
+  step('check-changed', 'node', 'scripts/check-changed.cjs'),
 ]);
 
 const VERIFY_CHANGED_POST_TEST_STEPS = Object.freeze([
-  step('check-changed', 'node', 'scripts/check-changed.cjs'),
   step('forbidden-tracked-files', 'node', 'scripts/check-forbidden-tracked-files.cjs'),
 ]);
 
