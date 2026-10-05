@@ -171,6 +171,17 @@ The exact final gate results and commit IDs are recorded on #2524. No integratio
 or green pre-push result is implied by this draft evidence record. No rules were
 relaxed, hooks bypassed, or stubs/compatibility aliases/debt entries introduced.
 
+The full native browser run exposed a rejection-envelope boundary defect:
+internal definition metadata and projector state reached the strict HTTP V1
+rejection unchanged. The existing HTTP mapper now projects only `code`, optional
+`cause` and `reason`. The existing route test includes the real named rejection
+definition and checks the strict contract parser, without plan construction or
+storage. The terminal browser case checks the structural cause, translated copy
+and zero Run requests. Contract strictness is unchanged. Its companion compact
+grid proof uses the real Fit View control after reducing the viewport; geometry
+assertions and normal click actionability remain enabled. Final browser and
+pre-push acceptance must be rerun on the corrected candidate.
+
 The paired retirement review also removes the historical INNER-profile read
 normalizer retained by the prior LEFT JOIN slice. No current producer emits that
 identity. Existing Preview, Run and context-binding cases become rejection
