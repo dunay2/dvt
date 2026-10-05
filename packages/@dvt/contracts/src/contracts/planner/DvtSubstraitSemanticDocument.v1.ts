@@ -4,8 +4,10 @@
  *
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
  * @decision Bind exact pinned Plan bytes to one identity-only DVT sidecar.
+ * @consequence Explicit card groups are checked against the same canonical Plan.
  * @version 1.0.0
  */
+import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { base64Bytes, jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { z } from 'zod';
 
@@ -19,6 +21,7 @@ import {
   CanvasHumanNameV1Schema,
   DvtSemanticFieldNameV1Schema,
 } from './CanvasAuthoringFieldPolicy.v1.js';
+import { validateDvtSubstraitAuthoringGroupsV1 } from './DvtSubstraitAuthoringGroup.v1.js';
 import { validateDvtSubstraitFieldHierarchyV1 } from './DvtSubstraitFieldBindingHierarchy.v1.js';
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
 import { addDvtSubstraitPlanFieldPolicyIssues } from './DvtSubstraitPlanFieldPolicy.v1.js';
@@ -72,6 +75,7 @@ export const DvtSubstraitRelationBindingV1Schema = z
     sourceRef: ConnectedSourceRefSchema.optional(),
     producerRef: DvtSubstraitProducerReferenceV1Schema.optional(),
     displayName: CanvasHumanNameV1Schema.optional(),
+    authoringOwnerRelationId: NonBlankStringSchema.optional(),
   })
   .strict();
 
@@ -145,7 +149,28 @@ export const DvtSubstraitSemanticDocumentV1Schema = z
       });
     }
     try {
-      addDvtSubstraitPlanFieldPolicyIssues(decodeDvtSubstraitPlanV1(document), context);
+      const relations = new Map<number, Rel | undefined>();
+      addDvtSubstraitPlanFieldPolicyIssues(
+        decodeDvtSubstraitPlanV1(document),
+        context,
+        (relation) => {
+          const variant = relation.relType;
+          const anchor =
+            variant.case != null && 'common' in variant.value
+              ? variant.value.common?.relAnchor
+              : undefined;
+          if (anchor != null) relations.set(anchor, relations.has(anchor) ? undefined : relation);
+        }
+      );
+      const issue = validateDvtSubstraitAuthoringGroupsV1(document.sidecar.relations, (anchor) =>
+        relations.get(anchor)
+      );
+      if (issue != null)
+        context.addIssue({
+          code: 'custom',
+          message: issue.message,
+          path: ['sidecar', 'relations'],
+        });
     } catch {
       context.addIssue({
         code: 'custom',

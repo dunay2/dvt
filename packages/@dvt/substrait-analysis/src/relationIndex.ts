@@ -1,7 +1,14 @@
-/** One structural index over existing messages and bindings; no SQL, copies or semantic admission. */
+/**
+ * Owned concern: index canonical messages and validate structural identity boundaries.
+ * @baseline ADR-0064: One Plan and identity sidecar, without a second semantic model.
+ * @decision Reuse the contract group invariant before exposing indexed relations.
+ * @consequence Readers cannot observe orphaned or externally shared internal members.
+ * @version 1.0.0
+ */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import {
   DvtSubstraitAuthoringSidecarV1Schema,
+  validateDvtSubstraitAuthoringGroupsV1,
   type DvtSubstraitFieldBindingV1,
   type DvtSubstraitRelationBindingV1,
 } from '@dvt/contracts';
@@ -98,6 +105,12 @@ function buildRelationIndex(document: SubstraitDocument): SubstraitRelationIndex
   if (relations.size !== bindings.size) {
     throw new SubstraitAnalysisError('invalid_binding', 'A relation binding is outside the plan.');
   }
+  const groupIssue = validateDvtSubstraitAuthoringGroupsV1(
+    bindings.values(),
+    (anchor) => relations.get(byAnchor.get(anchor)!)?.relation
+  );
+  if (groupIssue != null)
+    throw new SubstraitAnalysisError('invalid_binding', groupIssue.message, groupIssue.relationId);
   const fields = new Map<string, DvtSubstraitFieldBindingV1>();
   for (const field of document.sidecar.fields) {
     fields.set(field.fieldId, field);

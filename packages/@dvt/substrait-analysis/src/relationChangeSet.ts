@@ -1,4 +1,10 @@
-/** A trusted local command reports canonical changed messages; it does not invent another IR. */
+/**
+ * Owned concern: validate and atomically publish localized canonical relation changes.
+ * @baseline ADR-0064: Canonical Plan messages remain the only semantic authority.
+ * @decision Check complete authoring ownership against staged messages before publication.
+ * @consequence A rejected group edit preserves the previous revision and queryable snapshot.
+ * @version 1.0.0
+ */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { clone } from '@bufbuild/protobuf';
@@ -8,6 +14,7 @@ import {
   type DvtSubstraitFieldBindingV1,
   type DvtSubstraitRelationBindingV1,
   DvtSemanticFieldNameV1Schema,
+  validateDvtSubstraitAuthoringGroupsV1,
 } from '@dvt/contracts';
 
 import { SubstraitAnalysisError } from './document.js';
@@ -135,6 +142,17 @@ export function applyRelationChanges(snapshot: RelationSnapshot, change: Relatio
   }
   get(rootId);
   const order = relationChangeOrder(affected, removed, get);
+  const groupBindings = new Map(snapshot.relations);
+  for (const id of removed) groupBindings.delete(id);
+  for (const [id, entry] of staged) groupBindings.set(id, entry);
+  const groupIssue = validateDvtSubstraitAuthoringGroupsV1(
+    [...groupBindings.values()].map((entry) => entry.binding),
+    (anchor) => {
+      const id = anchors.get(anchor) ?? snapshot.anchors.get(anchor);
+      return id == null || removed.has(id) ? undefined : get(id).relation;
+    }
+  );
+  if (groupIssue != null) invalid(groupIssue.message);
   const fields = prepareFieldChanges(snapshot, touched, staged, rootId);
   const fingerprints = new Map<string, string>();
   for (const id of order) {
