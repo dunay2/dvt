@@ -31,18 +31,8 @@ import {
 } from './canvasStagedOperationDocument';
 
 const input: CanvasDvtCompositionInput = {
+  ...source('places'),
   nodeId: 'places-source',
-  schema: 'public',
-  table: 'places',
-  sourceRef: {
-    schemaVersion: 'connected-source-ref.v1',
-    sourceObjectId: 'public.places',
-    connectionRef: {
-      schemaVersion: 'connection-ref.v1',
-      provider: 'postgres',
-      connectionId: 'warehouse',
-    },
-  },
   fields: [
     { id: 'places-id', name: 'id', dataType: 'bigint', joinDataType: 'i64', nullable: false },
     {

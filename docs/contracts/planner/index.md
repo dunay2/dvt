@@ -22,6 +22,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtRelationalOperationInputs.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
