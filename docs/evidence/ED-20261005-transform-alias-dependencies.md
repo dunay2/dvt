@@ -16,12 +16,14 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasSelectedRelationDerivedOutput.ts
   - apps/web/src/app/views/canvas/removeCanvasTransformDefinition.ts
   - apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts
+  - scripts/run-selected-closure-live-proof.cjs
 evidence:
   tests:
     - pnpm exec vitest run packages/@dvt/contracts/test packages/@dvt/substrait-analysis/test --maxWorkers=2 --minWorkers=1
     - pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasTransformDependencies.test.ts src/app/views/canvas/canvasTransformDependencyTypes.test.ts
     - pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasSourceColumnOutputAuthoring.test.ts
     - pnpm --filter @dvt/web test:e2e:native --browser electron --spec cypress/e2e/canvas/canvas-transform-stage.cy.ts
+    - node --test scripts/run-selected-closure-live-proof.test.cjs
 ---
 
 # Durable calculated-field dependencies inside one Transform
@@ -161,8 +163,54 @@ is still the actual contract; negative tests first prove their fixture is valid.
   acceptance, pre-push and required PR CI receipts belong on the governing issue
   and delivery PR; the historical counts above do not substitute for those gates.
 
-Browser tests use controlled HTTP transport and real client commands, canonical
-save payloads and SQL lowering. They are not live-provider execution evidence.
+Controlled browser journeys prove real client commands, canonical save payloads
+and SQL lowering, not provider execution. The separate protected-runtime cases
+in the shared entry point supply the live-provider evidence recorded above.
+
+## LIVE closeout correction
+
+The complete native headed gate at `e680e42be` passed 43 of 44 browser cases;
+the remaining Sort action lacked a real pointer gesture. Its correction at
+`cd14ae55e` passed the selected Sort query, including exact digest and rows.
+That next complete run passed 34 of 44, with zero pending or skipped cases:
+six failures shared another incomplete hover precondition, three reopens accepted
+a historical draft GET, and the terminal Run returned `system_backpressure`.
+Neither full command is reported as a successful gate.
+
+The browser correction reuses `hoverWorkbenchCard` and
+`revisitWorkbenchCanvas` at those existing consumers. Pointer actionability,
+fresh reads, output identity, saved digests, expected rows and zero implicit
+queries remain required. No timeout, forced click, retry or isolation change is
+introduced. The bounded designs and independent pair consensus are recorded in
+[#3593](https://github.com/dunay2/dvt/issues/3593).
+
+The separate proof-composition defect belongs to
+[#3594](https://github.com/dunay2/dvt/issues/3594), admitted as
+`GH-3594-LIVE-OUTBOX-COMPOSITION` on the existing `RunWebCypressNative` rail.
+Planning DB assigns the runner to `SYS-CI-GOVERNANCE-ROOT` and the reused worker
+to `SYS-WORKERS-ROOT`. The worker README and outbox runbook govern its ownership,
+readiness, delivery and shutdown; no new product command is introduced.
+
+```text
+Before: API / Temporal -> outbox -> no consumer -> stale backlog -> Run rejected
+After:  API / Temporal -> outbox -> existing owned worker -> local logging sink
+```
+
+A read-only query using the production backlog SQL against the exact disposable
+proof database measured five pending records, zero stuck records and 396563 ms
+of oldest-pending age. The enforced limit was 300000 ms. The final HTTP 503
+therefore exposed an incomplete proof topology, not permission to relax
+admission. The repair composes the existing standalone worker, prepares its
+normal runtime dependencies, waits for effective-owner readiness and registers
+it in the proof's existing cleanup lifecycle. Database, schema, shard ownership
+and operational endpoints stay scoped to that disposable proof.
+
+The existing `LoggingEventBus` is an explicit controlled-local sink, not a fake
+acknowledgement or proof of delivery to an external business subscriber. The real
+dispatcher owns claiming, publication and acknowledgement. Production admission,
+retention defaults and the user's development processes are not modified.
+Focused tests, a fresh complete pre-push and exact-SHA acceptance remain required;
+their final receipts belong in the two issues and delivery PR.
 
 ## Development hard cut and no-debt boundary
 
