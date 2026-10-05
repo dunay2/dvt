@@ -182,6 +182,14 @@ grid proof uses the real Fit View control after reducing the viewport; geometry
 assertions and normal click actionability remain enabled. Final browser and
 pre-push acceptance must be rerun on the corrected candidate.
 
+The next native run passed 39/40 cases and exposed the same diagnostic leak in
+the readiness summary, separate from the already-localized rejection detail.
+The existing readiness projection now reuses the named rejection-copy resolver;
+the diagnostic remains unchanged. Owner-level EN/ES and unknown-DVT cases failed
+first, then passed, with Run still blocked and non-DVT behavior preserved. No
+second message catalog, presentation workaround or browser assertion relaxation
+was added. Exact-candidate full-gate acceptance remains recorded on #2524.
+
 The paired retirement review also removes the historical INNER-profile read
 normalizer retained by the prior LEFT JOIN slice. No current producer emits that
 identity. Existing Preview, Run and context-binding cases become rejection
