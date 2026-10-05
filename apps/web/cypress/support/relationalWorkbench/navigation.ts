@@ -9,6 +9,7 @@ import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
 import { workbenchOperation } from './operationMenu';
+import { hoverWorkbenchCard } from './pointer';
 
 export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
   visitWithE2eWorkspaceSession('/canvas', {
@@ -43,6 +44,7 @@ export function revisitWorkbenchCanvas(navigate: () => void = visitWorkbenchCanv
 /** Request the model sample through the existing card action, not editor navigation. */
 export function previewWorkbenchModel(nodeId = 'join-transform'): void {
   cy.get('[data-slot="canvas-workspace-tab"]').click();
+  hoverWorkbenchCard(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`);
   cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-execute"]`)
     .focus()
     .click();

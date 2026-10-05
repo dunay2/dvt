@@ -104,7 +104,7 @@ describe('Semantic dataset Transform', () => {
     cy.wrap(null).should(() =>
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(writes)
     );
-    visitWorkbenchCanvas();
+    revisitWorkbenchCanvas();
     openModel();
     cy.get(card).click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();

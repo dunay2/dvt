@@ -1,7 +1,7 @@
 /** One stateful journey through Transform formula creation and editing. */
 import { getE2eApiCalls } from '../e2eApiStub';
 
-import { openWorkbenchModel, visitWorkbenchCanvas } from './navigation';
+import { openWorkbenchModel, visitWorkbenchCanvas, revisitWorkbenchCanvas } from './navigation';
 import { stubWorkbenchScenario } from './scenario';
 
 const inspector = '[data-slot="canvas-transform-inspector"]';
@@ -145,7 +145,7 @@ export function exerciseTransformFormulaAuthoring(): void {
     const saved = JSON.stringify(getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body);
     expect(saved).to.include('normalized_name').and.include('fallback_name');
   });
-  visitWorkbenchCanvas();
+  revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).should('have.length', 1).click();
   cy.get(inspector).should('be.visible');

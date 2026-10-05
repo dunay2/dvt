@@ -16,6 +16,7 @@ import {
   semanticDocumentFromWrite,
 } from '../../support/relationalWorkbench/persistence';
 import { stubSavedWorkbenchSample } from '../../support/relationalWorkbench/persistence';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench cross', () => {
@@ -60,6 +61,7 @@ describe('Workbench cross', () => {
       expect(entries.filter((entry) => entry.relation.relType.case === 'cross')).to.have.length(2);
     });
 
+    hoverWorkbenchCard('[data-operator="cross"]');
     cy.get('[data-operator="cross"]')
       .first()
       .parent()

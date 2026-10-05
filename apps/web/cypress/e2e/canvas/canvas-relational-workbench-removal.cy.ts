@@ -105,7 +105,7 @@ describe('Workbench removal', () => {
       expect(reads[0]!.binding.sourceRef?.sourceObjectId).to.equal('relation/dvt/public/customers');
     });
     cy.get('[data-slot="canvas-model-tab-close"]').click();
-    visitWorkbenchCanvas();
+    revisitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
       'have.length',

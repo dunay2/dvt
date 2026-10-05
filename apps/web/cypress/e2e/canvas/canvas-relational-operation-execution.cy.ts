@@ -12,6 +12,7 @@ import {
   semanticDocumentFromWrite,
   stubSavedWorkbenchSample,
 } from '../../support/relationalWorkbench/persistence';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const card = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
@@ -109,6 +110,7 @@ describe('Internal operation card execution', () => {
       });
       cy.then(() => expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0));
       cy.get(`${properties} [data-slot="canvas-relational-collapse"]`).click();
+      hoverWorkbenchCard(card);
       cy.get(card)
         .parent()
         .find('[data-slot="canvas-node-execute"]')

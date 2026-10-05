@@ -40,6 +40,7 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 
 import { registerCanvasNodeDataActionsProof } from './canvasNodeDataActions.proof';
 import {
@@ -138,6 +139,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     getVisibleCanvasNode('source-1').should('be.visible');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
     cy.intercept('GET', '**/source-data-sample?*').as('sourceLivePreview');
+    hoverWorkbenchCard('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]');
     getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').focus().click();
     cy.wait('@sourceLivePreview').then(({ response }) => {
       expect(response?.statusCode).to.equal(200);
@@ -154,6 +156,9 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-slot="data-sample-refresh"]').click();
     cy.wait('@sourceLivePreview').its('response.statusCode').should('equal', 200);
     cy.intercept('GET', '**/transforms/dvt-transform-1/data-sample?*').as('transformLivePreview');
+    hoverWorkbenchCard(
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
+    );
     getVisibleCanvasNode('dvt-transform-1')
       .find('[data-slot="canvas-node-execute"]')
       .focus()
