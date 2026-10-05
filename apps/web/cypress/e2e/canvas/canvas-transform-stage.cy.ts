@@ -270,5 +270,11 @@ describe('Semantic dataset Transform', () => {
       expect(writes().length, 'cycle rejection does not save').to.equal(before + 3);
       expect(writes().at(-1)!.body).to.deep.equal(savedBody);
     });
+    cy.get(form).find('[data-slot="canvas-derived-output-cancel"]').click();
+    cy.get(form).should('not.exist');
+    cy.then(() => {
+      expect(writes().length, 'discarding the rejected draft does not save').to.equal(before + 3);
+      expect(writes().at(-1)!.body).to.deep.equal(savedBody);
+    });
   });
 });
