@@ -1,4 +1,11 @@
-/** Owned concern: zoom and source-rail layout preserve the draft, search and graph fit. */
+/**
+ * Owned concern: zoom and source-rail layout preserve the draft, search and graph fit.
+ * @baseline SaveWorkspaceGraphDraft: viewport gestures do not persist draft changes.
+ * @decision Measure all writes after the hydrated model has been durably synchronized.
+ * @consequence Bootstrap normalization cannot race the viewport-only assertions.
+ * @version 1.0.0
+ */
+import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   verifyWheelZoom,
   revealCardDetails,
@@ -8,7 +15,6 @@ import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
-import { semanticWrites } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench viewport', () => {
@@ -20,17 +26,17 @@ describe('Workbench viewport', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     openWorkbenchModel();
-    verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => {
-      writesBeforeZoom = semanticWrites('join-transform').length;
+      writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
+    verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
     revealCardDetails(1);
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-card-detail"]')
       .scrollIntoView()
       .should('contain.text', 'EQUAL');
     cy.screenshot('semantic-editor-card-expressions');
-    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writesBeforeZoom));
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
@@ -82,5 +88,9 @@ describe('Workbench viewport', () => {
       expect($footer[0]!.getBoundingClientRect().bottom).to.be.at.most(450);
     });
     cy.screenshot('semantic-editor-200-percent-equivalent-reflow');
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeZoom)
+    );
   });
 });

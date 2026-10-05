@@ -1,7 +1,14 @@
-/** Proves one N-input JOIN through the protected DVT PostgreSQL Run path. */
+/**
+ * Owned concern: prove one N-input JOIN through the protected DVT PostgreSQL Run path.
+ * @baseline GH-2524-LIVE-V1-CONSUMERS: prove current authoring and publication contracts.
+ * @decision Fix the application language before boot, independent of the host locale.
+ * @consequence Localized UI assertions and provider evidence remain exact on every host.
+ * @version 1.0.0
+ */
 import { DVT_POSTGRES_JOIN_PROFILE_ID, KNOWN_STEP_KINDS } from '@dvt/contracts';
 
 import documents from '../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { exportProjectSnapshot } from '../../../src/app/views/canvas/canvasProjectSnapshot';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
 import {
@@ -118,7 +125,15 @@ describe('N-input DVT Run live', () => {
     }).contents;
 
     seedLiveSelectedClosureDraft({ emptyCanvas: true });
-    visitWithLiveWorkspaceSession('/canvas');
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          APPLICATION_LANGUAGE_STORAGE_KEY,
+          JSON.stringify({ state: { language: 'es' }, version: 0 })
+        );
+      },
+    });
+    cy.get('html').should('have.attr', 'lang', 'es');
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
