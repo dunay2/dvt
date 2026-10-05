@@ -5,7 +5,7 @@ import {
   readCanvasStagedCompositionSignature,
   type CanvasStagedOperation,
 } from './canvasStagedOperation';
-import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 import type { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
@@ -22,7 +22,8 @@ export function useCanvasStagedOperationConfiguration(args: {
   const { analysis, inputs, state } = args;
   const configureImmediate = useCallback(
     (operation: CanvasStagedOperation) => {
-      if (operation.configurationDocument != null)
+      const signature = readCanvasStagedCompositionSignature(operation.operation);
+      if (operation.configurationDocument != null && signature.repeatedInput == null)
         return restoreCanvasOperationConfiguration(
           operation,
           operation.inputs.map((relationId) =>
@@ -34,9 +35,9 @@ export function useCanvasStagedOperationConfiguration(args: {
             })
           )
         );
-      const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
-      return strategy === 'binary'
-        ? configureCanvasStagedBinary(
+      const strategy = signature.configuration;
+      return strategy === 'composition'
+        ? configureCanvasStagedComposition(
             operation,
             inputs,
             state.pendingSources,
@@ -54,7 +55,7 @@ export function useCanvasStagedOperationConfiguration(args: {
       snapshot.map(async (operation) => {
         if (operation.configurationDocument != null) return configureImmediate(operation);
         const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
-        if (strategy === 'binary') return configureImmediate(operation);
+        if (strategy === 'composition') return configureImmediate(operation);
         if (strategy === 'manual') return operation;
         return configureCanvasStagedTransform(
           operation,
@@ -78,6 +79,7 @@ export function useCanvasStagedOperationConfiguration(args: {
             operation.semanticDocument != null ||
             candidate.semanticDocument == null ||
             operation.operation !== snapshot[index]?.operation ||
+            operation.inputs.length !== snapshot[index]?.inputs.length ||
             operation.inputs.some((input, port) => input !== snapshot[index]?.inputs[port])
           )
             return operation;

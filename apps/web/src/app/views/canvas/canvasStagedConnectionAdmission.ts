@@ -27,7 +27,6 @@ export function admitCanvasStagedConnection(
     id === relationId ||
     !Number.isInteger(port) ||
     port < 0 ||
-    port >= target.inputs.length ||
     !canvasStagedOperationAcceptsConnection(target, port, intent) ||
     !scope.producerIds.includes(relationId) ||
     scope.consumedProducerIds.includes(relationId) ||

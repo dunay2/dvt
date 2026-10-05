@@ -11,23 +11,28 @@ probability: Low
 ---
 mitigation:
   summary: >
-    The first Canvas set cut admits only pinned Substrait v0.101.0 SetRel with SET_OP_UNION_ALL,
-    exactly two distinct PostgreSQL inputs on one ConnectionRef, and identical ordered non-empty
-    string schemas. Authoring, reload, card presentation, lineage, graph validation, and PostgreSQL
-    Preview inspect the same typed Plan and stable DVT sidecar. Mismatched schemas, providers,
-    connections, input counts, operations, extensions, hashes, and bindings fail closed. Other set
-    operations, wider input cardinality, coercion, dbt projection, and hidden materialization remain
-    outside this evidence.
+    The admitted capability catalogue owns SetRel semantics and target support. The #3271
+    development hard cut gives UNION ALL and DISTINCT one ordered N-input operation with at least
+    two operands; fixed-arity operators retain their shared contract limits. Authoring and reload
+    retain relation, producer and output identities, aliases and explicit output selection.
+    Mismatched schemas, providers, connections, unsupported operations, extensions, hashes and
+    bindings fail closed. Reconnecting the same wire must not enter staged authoring. Input removal,
+    cancellation and reload require browser evidence before integration. Older readers may reject
+    new N-input drafts: deploy shared contracts and Web together, without truncation or silent
+    migration. Coercion and additional target profiles require separate admission.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260831-vtx2-substrait-union-all.md
+    - docs/evidence/ED-20261004-union-inputs-composition-concerns.md
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitSetComposition.test.ts
     - apps/web/src/app/views/canvas/canvasOutputProjectionSet.test.ts
-    - apps/web/cypress/e2e/canvas/canvas-substrait-union-all.cy.ts
+    - packages/@dvt/contracts/src/contracts/planner/DvtRelationalOperationInputs.ts
+    - apps/web/src/app/views/canvas/canvasStagedCompositionConfiguration.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts
   follow_up:
-    - Issue #2634 owns later multi-input and additional Set composition.
+    - Issue #3271 owns ordered-input editing and the remaining full product acceptance.
     - Each additional Set operation requires separate #2641 admission and target conformance.
     - Issue #2737 owns dbt projection; this risk does not authorize reverse import.

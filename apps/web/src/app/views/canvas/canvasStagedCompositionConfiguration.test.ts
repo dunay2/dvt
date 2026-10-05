@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
-import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { createSourceDocument } from './canvasSourceDocument';
@@ -8,31 +8,31 @@ import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { graphJoin } from './canvasRelationGraph.test-support';
 import { source } from './canvasRelationalOperator.test-support';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
+import { indexSubstraitRelations, SubstraitAnalysisError } from '@dvt/substrait-analysis';
+import { mergeCanvasCompositionOperands } from './canvasCompositionOperands';
+import { rebindCanvasUnionComposition } from './canvasRetainedUnionComposition';
 import {
   resolveDvtSubstraitColumnFunctions,
   resolveFunctionReference,
 } from '@dvt/postgres-projection';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import {
+  connectCanvasStagedOperation,
+  disconnectCanvasStagedOperation,
+} from './canvasStagedOperation';
 import {
   assignCanvasStagedRoot,
   resolveCanvasStagedProducerDocument,
 } from './canvasStagedOperationDocument';
 
 const input: CanvasDvtCompositionInput = {
+  ...source('places'),
   nodeId: 'places-source',
-  schema: 'public',
-  table: 'places',
-  sourceRef: {
-    schemaVersion: 'connected-source-ref.v1',
-    sourceObjectId: 'public.places',
-    connectionRef: {
-      schemaVersion: 'connection-ref.v1',
-      provider: 'postgres',
-      connectionId: 'warehouse',
-    },
-  },
   fields: [
     { id: 'places-id', name: 'id', dataType: 'bigint', joinDataType: 'i64', nullable: false },
     {
@@ -45,7 +45,159 @@ const input: CanvasDvtCompositionInput = {
   ],
 };
 
-describe('staged binary configuration', () => {
+describe('staged composition configuration', () => {
+  it.each(['identity', 'schema'] as const)(
+    'rejects retained UNION with incompatible %s without publishing partial semantics',
+    (reason) => {
+      const thirdInput: CanvasDvtCompositionInput =
+        reason === 'schema'
+          ? {
+              ...input,
+              fields: [
+                { ...input.fields[0]!, dataType: 'text', joinDataType: 'string' },
+                input.fields[1]!,
+              ],
+            }
+          : input;
+      const sources = [input, input, thirdInput].map(createPendingSourceOccurrence);
+      const ids = sources.map((source) => source.read.binding.relationId);
+      const configured = configureCanvasStagedComposition(
+        { id: 'union', operation: 'union_all', inputs: ids.slice(0, 2) },
+        [input],
+        sources,
+        []
+      );
+      expect(configured.semanticDocument).toBeDefined();
+      let pending = connectCanvasStagedOperation(configured, 2, ids[2]!);
+      if (reason === 'identity') {
+        pending = {
+          ...pending,
+          configurationDocument: encodeDvtSubstraitSemanticDocument(
+            assignCanvasStagedRoot(
+              decodeDvtSubstraitSemanticDocument(pending.configurationDocument!),
+              'another-union'
+            )
+          ),
+        };
+        const merged = mergeCanvasCompositionOperands(
+          sources.map((source) => createSourceDocument([source.read], source.read))
+        );
+        const rebind = (): ReturnType<typeof rebindCanvasUnionComposition> =>
+          rebindCanvasUnionComposition(pending, merged);
+        expect(rebind).toThrowError(SubstraitAnalysisError);
+        expect(rebind).toThrowError(
+          expect.objectContaining({
+            code: 'invalid_binding',
+            relationId: pending.id,
+          })
+        );
+      }
+      const before = JSON.stringify({ pending, sources });
+      expect(configureCanvasStagedComposition(pending, [input, thirdInput], sources, [])).toBe(
+        pending
+      );
+      expect(pending.semanticDocument).toBeUndefined();
+      expect(JSON.stringify({ pending, sources })).toBe(before);
+    }
+  );
+  it.each(['union_all', 'union_distinct'] as const)(
+    'retains selected output identity and aliases when extending and reducing %s',
+    async (operation) => {
+      const sources = Array.from({ length: 4 }, () => createPendingSourceOccurrence(input));
+      const ids = sources.map((source) => source.read.binding.relationId);
+      let configured = configureCanvasStagedComposition(
+        { id: 'union', operation, inputs: ids.slice(0, 2) },
+        [input],
+        sources,
+        []
+      );
+      const session = new CanvasRelationAnalysisSession('union');
+      try {
+        session.receive(decodeCanvasStagedOperation(configured)!);
+        const selected = await changeSelectedRelationOutputs(session, {
+          relationId: 'union',
+          expectedRevision: session.revision,
+          outputs: [{ slot: 1, alias: 'selected_parent' }],
+        });
+        configured = {
+          ...configured,
+          semanticDocument: encodeDvtSubstraitSemanticDocument(selected),
+        };
+        const field = selected.sidecar.fields.find((entry) => entry.relationId === 'union')!;
+        for (const port of [2, 3]) {
+          configured = configureCanvasStagedComposition(
+            connectCanvasStagedOperation(configured, port, ids[port]!),
+            [input],
+            sources,
+            []
+          );
+          expect(configured.semanticDocument).toBeDefined();
+        }
+        configured = configureCanvasStagedComposition(
+          disconnectCanvasStagedOperation(configured, 1),
+          [input],
+          sources,
+          []
+        );
+        const document = decodeCanvasStagedOperation(configured)!;
+        const indexed = indexSubstraitRelations(document);
+        expect(indexed.ok && indexed.index.relations.get('union')?.inputs).toEqual([
+          ids[0],
+          ids[2],
+          ids[3],
+        ]);
+        const outputs = document.sidecar.fields.filter((entry) => entry.relationId === 'union');
+        expect(outputs).toHaveLength(1);
+        expect(outputs[0]).toMatchObject({
+          fieldId: field.fieldId,
+          displayName: 'selected_parent',
+        });
+        expect(outputs[0]!.operandFieldIds).toEqual(
+          [sources[0], sources[2], sources[3]].map((source) => source!.read.fields[1]!.fieldId)
+        );
+      } finally {
+        session.dispose();
+      }
+    }
+  );
+  it.each([
+    ['union_all', 'shared'],
+    ['union_all', 'distinct'],
+    ['union_distinct', 'shared'],
+    ['union_distinct', 'distinct'],
+  ] as const)(
+    'configures one %s with three ordered occurrences of %s physical sources',
+    (operation, provenance) => {
+      const inputs = Array.from({ length: 3 }, (_, ordinal) =>
+        provenance === 'shared'
+          ? input
+          : {
+              ...input,
+              nodeId: `places-${ordinal}`,
+              table: `places_${ordinal}`,
+              sourceRef: { ...input.sourceRef!, sourceObjectId: `public.places_${ordinal}` },
+            }
+      );
+      const sources = inputs.map(createPendingSourceOccurrence);
+      const ids = sources.map((source) => source.read.binding.relationId);
+      const configured = configureCanvasStagedComposition(
+        { id: 'union', operation, inputs: ids },
+        inputs,
+        sources,
+        []
+      );
+      const document = decodeCanvasStagedOperation(configured);
+      expect(document).not.toBeNull();
+      const indexed = indexSubstraitRelations(document!);
+      expect(indexed.ok && indexed.index.relations.get('union')?.inputs).toEqual(ids);
+      expect(document!.sidecar.relations).toHaveLength(4);
+      expect(
+        document!.sidecar.relations
+          .filter((binding) => binding.sourceRef != null)
+          .map((binding) => binding.sourceRef)
+      ).toEqual(inputs.map((entry) => entry.sourceRef));
+    }
+  );
   it.each([
     'inner_join',
     'left_join',
@@ -77,7 +229,7 @@ describe('staged binary configuration', () => {
       )
     );
     expect(producers.every((producer) => producer.semanticDocument != null)).toBe(true);
-    const configured = configureCanvasStagedBinary(
+    const configured = configureCanvasStagedComposition(
       {
         id: 'pending-operation:binary',
         operation,
@@ -144,7 +296,7 @@ describe('staged binary configuration', () => {
       })
     );
     const before = producers.map((producer) => JSON.stringify(producer.semanticDocument));
-    const configured = configureCanvasStagedBinary(
+    const configured = configureCanvasStagedComposition(
       {
         id: 'joined-functions',
         operation: 'inner_join',
@@ -214,9 +366,9 @@ describe('staged binary configuration', () => {
         operation: reason === 'set-schema' ? ('union_all' as const) : ('inner_join' as const),
         inputs: [left.read.binding.relationId, right.read.binding.relationId],
       };
-      expect(configureCanvasStagedBinary(operation, [input, rightInput], [left, right], [])).toBe(
-        operation
-      );
+      expect(
+        configureCanvasStagedComposition(operation, [input, rightInput], [left, right], [])
+      ).toBe(operation);
     }
   );
   it('keeps two occurrences of the same producer distinct in a self-join', () => {
@@ -229,7 +381,7 @@ describe('staged binary configuration', () => {
         binding: { ...createdRight.read.binding, displayName: 'places 2' },
       },
     };
-    const configured = configureCanvasStagedBinary(
+    const configured = configureCanvasStagedComposition(
       {
         id: 'pending-operation:self-join',
         operation: 'inner_join',
@@ -253,7 +405,7 @@ describe('staged binary configuration', () => {
   });
 
   it('drops stale semantics as soon as one Input is disconnected', () => {
-    const pending = configureCanvasStagedBinary(
+    const pending = configureCanvasStagedComposition(
       {
         id: 'pending-operation:join',
         operation: 'inner_join',
@@ -274,7 +426,7 @@ describe('staged binary configuration', () => {
     const document = createSourceDocument([canonical.read], canonical.read);
     const session = new CanvasRelationAnalysisSession('staged-join-test');
     session.receive(document);
-    const configured = configureCanvasStagedBinary(
+    const configured = configureCanvasStagedComposition(
       {
         id: 'pending-operation:mixed-join',
         operation: 'inner_join',
@@ -313,7 +465,7 @@ describe('staged binary configuration', () => {
             ? [rich.session.rootId, pending.read.binding.relationId]
             : [pending.read.binding.relationId, rich.session.rootId],
       };
-      const configured = configureCanvasStagedBinary(
+      const configured = configureCanvasStagedComposition(
         operation,
         inputs,
         [pending],

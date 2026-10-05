@@ -38,6 +38,30 @@ export function setCompositionOutputs(relationId: string, inputs: readonly Field
   );
 }
 
+/** UNION changes its operands, not the identity or selection of its output slots. */
+export function rebindSetCompositionOutputs(
+  fields: Fields,
+  previousInputs: readonly Fields[],
+  inputs: readonly Fields[]
+) {
+  const previousPaths = new Map(
+    previousInputs.flatMap((input) =>
+      [...ordinalPaths(input)].map(([path, id]) => [id, path] as const)
+    )
+  );
+  const paths = inputs.map(ordinalPaths);
+  return fields.map((field) => {
+    const references = field.operandFieldIds ?? [];
+    const path = previousPaths.get(references[0] ?? '');
+    if (path == null || references.some((id) => previousPaths.get(id) !== path))
+      throw new SubstraitAnalysisError('invalid_binding', 'SET output provenance does not align.');
+    const operandFieldIds = paths.map((input) => input.get(path));
+    if (operandFieldIds.some((id) => id == null))
+      throw new SubstraitAnalysisError('invalid_binding', 'SET input field paths do not align.');
+    return { ...field, operandFieldIds: operandFieldIds as string[] };
+  });
+}
+
 export function retainCompositionOutputs(fields: Fields, ordinals: readonly number[]) {
   const kept = new Set(
     fields

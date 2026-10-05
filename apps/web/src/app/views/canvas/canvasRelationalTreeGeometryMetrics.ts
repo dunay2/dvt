@@ -1,4 +1,8 @@
 /** Owned concern: measure variable relational-card bounds before positioning their edges. */
+import {
+  canvasRelationalInputOwner,
+  canvasRelationalInputPortHeight,
+} from './canvasRelationalInputPorts';
 import type {
   CanvasRelationalTreeNode,
   CanvasRelationalTreeChildRole,
@@ -38,7 +42,16 @@ export function measureCanvasRelationalTree(
   const spans = new Map<string, number>();
   const widths = new Map<number, number>();
   const rows = new Map<string, number>();
-  const sizeFor = (node: CanvasRelationalTreeNode) => sizes.get(node.locator) ?? DEFAULT_SIZE;
+  const sizeFor = (node: CanvasRelationalTreeNode) => {
+    const size = sizes.get(node.locator) ?? DEFAULT_SIZE;
+    return {
+      ...size,
+      height: Math.max(
+        size.height,
+        canvasRelationalInputPortHeight(canvasRelationalInputOwner(node))
+      ),
+    };
+  };
   const measure = (node: CanvasRelationalTreeNode): number => {
     const childDepths = node.children.map((child) => measure(child.node));
     const depth = childDepths.length === 0 ? 0 : Math.max(...childDepths) + 1;

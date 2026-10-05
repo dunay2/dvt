@@ -11,6 +11,7 @@ import {
   type CanvasRelationalTreePlacedEdge,
 } from './canvasRelationalTreeGeometryMetrics';
 import { projectCanvasRelationalCardExpansion } from './canvasRelationalCardExpansion';
+import { projectCanonicalRelationEdges } from './relational-layout/relationalTreeEdgeProjection';
 
 export type {
   CardPosition,
@@ -66,7 +67,6 @@ export function layoutCanvasRelationalTree(
     sizes
   );
   const nodes: CanvasRelationalTreePlacedNode[] = [];
-  const edges: CanvasRelationalTreePlacedEdge[] = [];
   const positionFor = (node: CanvasRelationalTreeNode): CardPosition =>
     effectivePositions.get(node.relationId ?? node.locator) ?? {
       x: columnLeft[depths.get(node.locator) ?? 0]!,
@@ -94,18 +94,7 @@ export function layoutCanvasRelationalTree(
       siblingCount,
     });
 
-    node.children.forEach((child, index) => {
-      const { x: childX, y: childY } = positionFor(child.node);
-      edges.push({
-        key: `${node.locator}:${child.role}:${child.ordinal}`,
-        parentLocator: node.locator,
-        role: child.role,
-        ordinal: child.ordinal,
-        fromX: childX + sizeFor(child.node).width,
-        fromY: childY + sizeFor(child.node).height / 2,
-        toX: x,
-        toY: y + ((index + 1) * sizeFor(node).height) / (node.children.length + 1),
-      });
+    node.children.forEach((child) => {
       place(child.node, node.locator, child.role, child.ordinal, node.children.length);
     });
   };
@@ -142,6 +131,6 @@ export function layoutCanvasRelationalTree(
     height: Math.max(...bounds.map((node) => node.y + node.height)) + BOTTOM_PADDING,
     output,
     nodes,
-    edges,
+    edges: projectCanonicalRelationEdges(nodes),
   };
 }

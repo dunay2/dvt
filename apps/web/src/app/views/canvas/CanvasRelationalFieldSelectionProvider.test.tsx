@@ -18,6 +18,7 @@ import { COPY } from './CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import { CanvasRelationalOperationPorts } from './CanvasRelationalOperationPorts';
+import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 
 function FieldSelectionSurface({
   document,
@@ -36,7 +37,11 @@ function FieldSelectionSurface({
       <div data-slot="canvas-relational-card">
         <button type="button">Invalid card target</button>
         <CanvasRelationalOperationPorts
-          relationId="pending-operation:one"
+          node={projectCanvasStagedOperation({
+            id: 'pending-operation:one',
+            operation: 'field_transform',
+            inputs: [null],
+          })}
           staged={{ id: 'pending-operation:one', operation: 'field_transform', inputs: [null] }}
           copy={COPY}
           selectedSource={null}

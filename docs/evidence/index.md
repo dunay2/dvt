@@ -157,6 +157,7 @@ Evidence documents that justify or validate relevant changes.
 - [LEFT JOIN end to end](ED-20260919-left-join-end-to-end.md)
 - [MW-D2 Temporal Worker Routing By Capability](ed-20260513-mw-d2-temporal-worker-routing.md)
 - [Opaque DVT authoring identity evidence](ED-20260906-opaque-dvt-authoring-identity.md)
+- [Ordered UNION inputs and bounded composition concerns](ED-20261004-union-inputs-composition-concerns.md)
 - [Pending Read complete identity coverage](ED-20261001-pending-read-coverage.md)
 - [Pending source identity and authoring responsibility boundaries](ED-20260929-pending-source-identity.md)
 - [Planner environment input removal evidence](ED-20260902-planner-environment-contract-truth.md)

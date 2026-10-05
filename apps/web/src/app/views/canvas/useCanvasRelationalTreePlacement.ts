@@ -13,6 +13,7 @@ import { projectPendingSourceOccurrence } from './canvasRelationalTreeAuthoringP
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { projectCanvasRelationalMovableCards } from './projectCanvasRelationalMovableCards';
+import { canvasRelationalInputPortHeight } from './canvasRelationalInputPorts';
 
 export function useCanvasRelationalTreePlacement({
   root,
@@ -59,8 +60,13 @@ export function useCanvasRelationalTreePlacement({
     };
     if (root != null) visit(root);
     detached.forEach(visit);
+    for (const operation of stagedOperations) {
+      const size = visible.get(operation.id) ?? { width: 224, height: 76 };
+      const height = Math.max(size.height, canvasRelationalInputPortHeight(operation));
+      if (height > size.height) visible.set(operation.id, { ...size, height });
+    }
     return visible;
-  }, [root, detached, detail, expanded, zoomRevealsDetail]);
+  }, [root, detached, detail, expanded, zoomRevealsDetail, stagedOperations]);
   const layout = useMemo(
     () => projectLayout(root, sizes, detached),
     [root, sizes, detached, projectLayout]

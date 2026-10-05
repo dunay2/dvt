@@ -51,18 +51,20 @@
   font-weight: 600;
 }
 
-.labeledInputPort[data-position='center'] {
-  top: 50%;
+.inputPorts {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  width: 0;
 }
 
-.labeledInputPort[data-position='left'] {
-  top: 35%;
+.inputSlot {
+  position: relative;
+  flex: 1;
 }
 
-.labeledInputPort[data-position='right'] {
-  top: 65%;
-}
-
+.labeledInputPort,
 .centeredInputPort,
 .outputPort {
   top: 50%;

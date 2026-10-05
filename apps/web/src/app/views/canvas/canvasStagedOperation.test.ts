@@ -2,7 +2,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   canvasStagedOperationAppliedOperation,
-  canvasStagedOperationArity,
   connectCanvasStagedOperation,
   createsCanvasStagedOperationCycle,
   createCanvasStagedOperation,
@@ -64,8 +63,8 @@ describe('staged operation projection', () => {
     expect(readCanvasStagedCompositionSignature('inner_join')).toMatchObject({
       output: 'relation',
       operator: 'join',
-      configuration: 'binary',
-      editor: 'binary',
+      configuration: 'composition',
+      editor: 'composition',
     });
     expect(readCanvasStagedCompositionSignature('field_transform')).toMatchObject({
       configuration: 'transform',
@@ -78,7 +77,7 @@ describe('staged operation projection', () => {
       inputs: [{ accepts: ['relation'] }],
     });
     expect(readCanvasStagedCompositionSignature('projection').editor).toBe('properties');
-    expect(canvasStagedOperationArity('inner_join')).toBe(2);
+    expect(createCanvasStagedOperation('inner_join').inputs).toHaveLength(2);
     expect(deriveCanvasStagedCompositionState(join)).toBe('unbound');
 
     const partial = connectCanvasStagedOperation(join, 0, 'producer:left');

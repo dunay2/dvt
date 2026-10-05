@@ -1,6 +1,12 @@
-/** Configure binary operations from exact Input operands, independent of their tree shapes. */
+/**
+ * Owned concern: configure staged compositions from exact producer operands.
+ * @baseline GH-3271-COMPOSITION-CONCERNS: configuration consumes canonical subtrees.
+ * @decision Reuse composition, connection and schema owners for fixed and repeated inputs.
+ * @consequence Rejected configuration preserves the pending operation without partial semantics.
+ * @version 1.0.0
+ */
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { SubstraitAnalysisError, type SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { createCanonicalComposition } from './canvasCanonicalComposition';
 import { mergeCanvasCompositionOperands } from './canvasCompositionOperands';
@@ -17,6 +23,7 @@ import {
 } from './canvasStagedOperation';
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { rebindCanvasUnionComposition } from './canvasRetainedUnionComposition';
 
 function compositionConnection(
   documents: readonly SubstraitDocument[],
@@ -27,7 +34,12 @@ function compositionConnection(
       if (binding.sourceRef != null) return [binding.sourceRef.connectionRef];
       if (binding.producerRef == null) return [];
       const input = inputs.find((candidate) => candidate.nodeId === binding.producerRef?.nodeId);
-      if (input == null) throw new Error('Unavailable producer connection.');
+      if (input == null)
+        throw new SubstraitAnalysisError(
+          'invalid_binding',
+          'Unavailable producer connection.',
+          binding.relationId
+        );
       return [canvasInputConnection(input)];
     })
   );
@@ -58,7 +70,7 @@ function compositionPredicate(
     : { leftFieldId: pair.left.fieldId, rightFieldId: pair.right.fieldId };
 }
 
-export function configureCanvasStagedBinary(
+export function configureCanvasStagedComposition(
   operation: CanvasStagedOperation,
   inputs: readonly CanvasDvtCompositionInput[],
   sources: readonly PendingSourceOccurrence[],
@@ -66,14 +78,10 @@ export function configureCanvasStagedBinary(
   canonical: SubstraitDocument | null = null
 ): CanvasStagedOperation {
   const signature = readCanvasStagedCompositionSignature(operation.operation);
-  if (signature.configuration !== 'binary') return operation;
+  if (signature.configuration !== 'composition') return operation;
   const canonicalOperation = canvasStagedOperationAppliedOperation(operation.operation, null);
   const state = deriveCanvasStagedCompositionState(operation);
-  if (
-    operation.inputs.length !== signature.inputs.length ||
-    state === 'unbound' ||
-    state === 'partially-bound'
-  ) {
+  if (state === 'unbound' || state === 'partially-bound') {
     const { semanticDocument: _discarded, ...pending } = operation;
     return operation.semanticDocument == null ? operation : pending;
   }
@@ -85,26 +93,31 @@ export function configureCanvasStagedBinary(
     if (documents.some((document) => document == null)) return operation;
     const resolved = documents.filter((document) => document != null);
     if (!compositionConnection(resolved, inputs)) return operation;
-    const { plan, operands, nextAnchor } = mergeCanvasCompositionOperands(resolved);
-    const root = createCanonicalComposition({
-      plan,
-      binding: {
-        relationId: operation.id,
-        relAnchor: nextAnchor,
-        displayName: canonicalOperation,
-      },
-      operation: canonicalOperation,
-      inputs: operands.map((operand) => operand.root),
-      schemas: operands.map((operand) => operand.schema),
-      predicate: signature.operator === 'join' ? compositionPredicate(operands) : undefined,
-    });
+    const merged = mergeCanvasCompositionOperands(resolved);
+    const { plan, operands, nextAnchor } = merged;
+    const root =
+      operation.configurationDocument != null
+        ? rebindCanvasUnionComposition(operation, merged)
+        : createCanonicalComposition({
+            plan,
+            binding: {
+              relationId: operation.id,
+              relAnchor: nextAnchor,
+              displayName: canonicalOperation,
+            },
+            operation: canonicalOperation,
+            inputs: operands.map((operand) => operand.root),
+            schemas: operands.map((operand) => operand.schema),
+            predicate: signature.operator === 'join' ? compositionPredicate(operands) : undefined,
+          });
+    const { configurationDocument: _retained, ...configured } = operation;
     return {
-      ...operation,
+      ...configured,
       semanticDocument: encodeDvtSubstraitSemanticDocument(
         createSourceDocument(
           [...operands.flatMap((operand) => operand.entries), root],
           root,
-          root.extensions ?? plan
+          'extensions' in root ? (root.extensions ?? plan) : plan
         )
       ),
     };

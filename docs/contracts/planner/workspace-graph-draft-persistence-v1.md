@@ -176,6 +176,15 @@ flowchart LR
 
 ### Disconnected operation configuration
 
+Operation input cardinality has one contract-owned policy, consumed by both
+the draft parser and Web admission. UNION ALL and UNION DISTINCT accept two or
+more ordered ports. Other operations retain their declared fixed cardinality.
+Null ports represent incomplete authoring, not executable semantics. The current
+contract is corrected in place; no new payload version, migration or compatibility
+reader is introduced. An explicit UNION topology edit preserves output selection,
+aliases and identities and rebinds operand lineage; incompatible schemas or
+connections cannot produce executable semantics.
+
 Removing an incorporated relation edge uses the existing incomplete authoring
 draft, preserving source and operation identities. `configurationDocument` retains
 the original canonical Substrait subtree solely for editing and exact reconnect;

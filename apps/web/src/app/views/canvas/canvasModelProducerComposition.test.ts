@@ -10,7 +10,7 @@ import {
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
-import { configureCanvasStagedBinary } from './canvasStagedBinaryConfiguration';
+import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { compositionKinds } from './canvasCompositionSequence.test-support';
@@ -176,7 +176,7 @@ describe('explicit composition consumes producer references', () => {
         'intersect_distinct',
         'except_distinct',
       ] as const) {
-        const configured = configureCanvasStagedBinary(
+        const configured = configureCanvasStagedComposition(
           {
             id: 'composition',
             operation,
@@ -222,14 +222,14 @@ describe('explicit composition consumes producer references', () => {
       const sources = graph.inputs.map(createPendingSourceOccurrence);
       const before = JSON.stringify({ graph, sources });
       for (const operation of compositionKinds.filter(
-        (kind) => readCanvasStagedCompositionSignature(kind).configuration === 'binary'
+        (kind) => readCanvasStagedCompositionSignature(kind).configuration === 'composition'
       )) {
         const pending = {
           id: 'composition',
           operation,
           inputs: sources.map((source) => source.read.binding.relationId),
         };
-        const configured = configureCanvasStagedBinary(pending, graph.inputs, sources, []);
+        const configured = configureCanvasStagedComposition(pending, graph.inputs, sources, []);
         expect(configured).toBe(pending);
         expect(decodeCanvasStagedOperation(configured)).toBeNull();
       }

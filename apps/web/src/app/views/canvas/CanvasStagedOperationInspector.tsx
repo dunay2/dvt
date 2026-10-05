@@ -1,7 +1,7 @@
 /** Route a selected staged operation to its specific property editor. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
-import { CanvasStagedBinaryInspector } from './CanvasStagedBinaryInspector';
+import { CanvasStagedCompositionInspector } from './CanvasStagedCompositionInspector';
 import { CanvasStagedTransformInspector } from './CanvasStagedTransformInspector';
 import {
   CanvasStagedUnaryOperationInspector,
@@ -14,6 +14,7 @@ import {
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import styles from './CanvasStagedOperationInspector.module.css';
+import { canvasRelationalInputPortLabel } from './canvasRelationalInputPorts';
 
 export function CanvasStagedOperationInspector({
   staged,
@@ -37,9 +38,9 @@ export function CanvasStagedOperationInspector({
   ) => void | boolean;
 }>): JSX.Element {
   const editor = readCanvasStagedCompositionSignature(staged.operation).editor;
-  if (editor === 'binary' && staged.semanticDocument != null)
+  if (editor === 'composition' && staged.semanticDocument != null)
     return (
-      <CanvasStagedBinaryInspector
+      <CanvasStagedCompositionInspector
         staged={staged}
         editingDocument={editingDocument}
         copy={copy}
@@ -57,9 +58,7 @@ export function CanvasStagedOperationInspector({
         transformNode={transformNode}
         onClose={onClose}
         onPendingChange={onPendingChange}
-        onChange={(semanticDocument) =>
-          onUpdate({ operation: staged.operation, semanticDocument })
-        }
+        onChange={(semanticDocument) => onUpdate({ operation: staged.operation, semanticDocument })}
       />
     );
   if (editor === 'unary' && producerDocument != null)
@@ -100,7 +99,9 @@ function CanvasStagedOperationProperties({
             data-port={port}
             className={styles.input}
           >
-            <dt className={styles.inputLabel}>{inputLabel(staged, port, copy)}</dt>
+            <dt className={styles.inputLabel}>
+              {canvasRelationalInputPortLabel(staged, port, copy)}
+            </dt>
             <dd className={styles.inputValue}>
               {connected == null
                 ? copy.relationalTreeMissingLabel
@@ -111,13 +112,4 @@ function CanvasStagedOperationProperties({
       </dl>
     </aside>
   );
-}
-
-function inputLabel(
-  staged: CanvasStagedOperation,
-  port: number,
-  copy: CanvasRelationalTreeWorkbenchCopy
-): string {
-  if (staged.inputs.length === 1) return copy.relationalTreePrimaryInputLabel;
-  return port === 0 ? copy.inspectorDvtRelationalLeftInput : copy.inspectorDvtRelationalRightInput;
 }
