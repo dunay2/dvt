@@ -80,6 +80,34 @@ function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: strin
 }
 
 describe('DVT relational authoring draft v1', () => {
+  it.each(['union_all', 'union_distinct'])('persists ordered incomplete N-input %s', (kind) => {
+    for (const count of [2, 3, 4]) {
+      const pending = {
+        ...relationalDraft,
+        operations: [
+          { ...operation, operation: kind, inputs: Array.from({ length: count }, () => null) },
+        ],
+      };
+      expect(DvtRelationalAuthoringDraftV1Schema.safeParse(pending).success).toBe(true);
+      expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(pending)).success).toBe(true);
+    }
+  });
+  it.each([
+    ['union_all', 1],
+    ['union_distinct', 1],
+    ['inner_join', 3],
+    ['filter', 2],
+    ['unknown', 2],
+  ] as const)('rejects %s with %i input ports', (kind, count) => {
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...relationalDraft,
+        operations: [
+          { ...operation, operation: kind, inputs: Array.from({ length: count }, () => null) },
+        ],
+      }).success
+    ).toBe(false);
+  });
   it('retains non-executable canonical configuration without admitting incomplete semantics', () => {
     const configurationDocument = buildDvtSubstraitSemanticDocumentFixture();
     const relationId = configurationDocument.sidecar.relations.at(-1)!.relationId;

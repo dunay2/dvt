@@ -8,6 +8,11 @@
  */
 import { z } from 'zod';
 
+import {
+  DVT_RELATIONAL_OPERATION_INPUTS,
+  acceptsDvtRelationalOperationInputCount,
+  type DvtRelationalOperationKind,
+} from './DvtRelationalOperationInputs.js';
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
 import { validateDvtSubstraitReadFieldCoverageV1 } from './DvtSubstraitReadFieldCoverage.v1.js';
 import { DvtSubstraitSemanticDocumentV1Schema } from './DvtSubstraitSemanticDocument.v1.js';
@@ -24,47 +29,12 @@ const NonBlankStringSchema = z
 const PositionSchema = z
   .object({ x: z.number().finite().nonnegative(), y: z.number().finite().nonnegative() })
   .strict();
-const OperationSchema = z.enum([
-  'projection',
-  'field_transform',
-  'filter',
-  'aggregate',
-  'window',
-  'sort',
-  'fetch',
-  'inner_join',
-  'left_join',
-  'right_join',
-  'full_outer_join',
-  'left_semi_join',
-  'left_anti_join',
-  'right_semi_join',
-  'right_anti_join',
-  'cross_join',
-  'union_all',
-  'union_distinct',
-  'intersect_distinct',
-  'except_distinct',
-  'intersect_all',
-  'except_all',
-]);
-const BinaryOperations = new Set<string>([
-  'inner_join',
-  'left_join',
-  'right_join',
-  'full_outer_join',
-  'left_semi_join',
-  'left_anti_join',
-  'right_semi_join',
-  'right_anti_join',
-  'cross_join',
-  'union_all',
-  'union_distinct',
-  'intersect_distinct',
-  'except_distinct',
-  'intersect_all',
-  'except_all',
-]);
+const OperationSchema = z.enum(
+  Object.keys(DVT_RELATIONAL_OPERATION_INPUTS) as [
+    DvtRelationalOperationKind,
+    ...DvtRelationalOperationKind[],
+  ]
+);
 const SourceSchema = z
   .object({
     relationId: NonBlankStringSchema,
@@ -77,7 +47,7 @@ const OperationDraftSchema = z
   .object({
     relationId: NonBlankStringSchema,
     operation: OperationSchema,
-    inputs: z.array(NonBlankStringSchema.nullable()).min(1).max(2),
+    inputs: z.array(NonBlankStringSchema.nullable()).min(1),
     semanticDocument: DvtSubstraitSemanticDocumentV1Schema.optional(),
     configurationDocument: DvtSubstraitSemanticDocumentV1Schema.optional(),
   })
@@ -168,12 +138,11 @@ export const DvtRelationalAuthoringDraftV1Schema = z
               'Retained configuration must own this operation and cannot be executable simultaneously.',
           });
       }
-      const arity = BinaryOperations.has(operation.operation) ? 2 : 1;
-      if (operation.inputs.length !== arity)
+      if (!acceptsDvtRelationalOperationInputCount(operation.operation, operation.inputs.length))
         context.addIssue({
           code: 'custom',
           path: ['operations', index, 'inputs'],
-          message: `Operation ${operation.operation} requires ${arity} input port(s).`,
+          message: `Operation ${operation.operation} has invalid input cardinality.`,
         });
       if (operation.semanticDocument != null && operation.inputs.some((input) => input == null))
         context.addIssue({

@@ -112,6 +112,7 @@ export type {
 export * from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
 export * from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
 export * from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
+export * from './contracts/planner/DvtRelationalOperationInputs.js';
 export * from './contracts/planner/DvtSubstraitReadFieldCoverage.v1.js';
 export * from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
 export * from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';

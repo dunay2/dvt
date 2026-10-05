@@ -403,8 +403,31 @@ requires two distinct source instances with their own aliases, not one instance
 wired to both ports. Left and right ports retain their algebraic meaning, but no
 prior card selection or hidden gesture sequence assigns their producers. A
 typed producer-to-Input connection supplies the exact relation target.
-Configuration is completed in the fixed inspector before the existing
+Configuration is completed in the selected-node editor within the Model Workbench before the existing
 `ConfigureCanvasDvtNode` command admits the change.
+
+UNION ALL and UNION DISTINCT use one SetRel with at least two ordered inputs,
+not a chain of synthetic binary cards. The existing composition signature owns
+repeated-input admission; JOIN retains exactly two inputs. Numbered input ports
+and an append target project that policy, without implementing it in markup.
+Removing an input above the minimum compacts only the ordered operand list;
+at the minimum it leaves an explicit unbound port. Neither action deletes the
+producer or changes other operand identities. Reopening uses the same graph
+editing projection as disconnection, never a second UNION editor.
+
+An explicit UNION topology edit retains the SetRel identity, output selection,
+field identities and aliases while rebinding operand provenance by canonical
+ordinal path. Schema compatibility and connection agreement are still validated
+by the existing semantic owners. Retained configuration of other operators is
+not automatically rewritten. Read-only, stale, occupied, cyclic, duplicate and
+unavailable producers remain rejected. Cancel performs no semantic write.
+
+```text
+Signature cardinality -> admission -> existing canonical composition
+                    \-> port read model -> passive template / CSS
+Saved tree <-> existing authoring graph -> Apply / protected save
+                                      -> revision-bound Preview
+```
 
 ```mermaid
 flowchart LR
