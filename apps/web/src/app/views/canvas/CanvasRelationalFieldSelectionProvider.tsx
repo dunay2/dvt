@@ -1,4 +1,10 @@
-/** One transient gesture boundary; semantic decisions stay in the canonical command adapter. */
+/**
+ * Owned concern: adapt transient field gestures and report command feedback.
+ * @baseline ADR-0064: semantic decisions remain in the canonical command adapter.
+ * @decision Share command execution and rejection handling across selection gestures.
+ * @consequence Public fields and hidden expressions retain one feedback lifecycle.
+ * @version 1.0.0
+ */
 import {
   createContext,
   useContext,
@@ -83,33 +89,33 @@ export function CanvasRelationalFieldSelectionProvider({
     active.current.revision === reference.revision &&
     active.current.rootId === reference.rootId &&
     active.current.relationId === reference.relationId;
+  const execute = async (...args: Parameters<typeof command.executeAtDetailed>) => {
+    if (!editable) return;
+    setAffected([]);
+    setRejection(null);
+    const result = await command.executeAtDetailed(...args);
+    if (!result.ok && result.error != null) setRejection(result.error);
+  };
   const edit = (
     reference: CanvasRelationalFieldReference,
     target: Parameters<typeof selectCanvasRelationalField>[2]
   ) => {
-    if (!editable) return;
-    setAffected([]);
-    setRejection(null);
-    void command
-      .executeAtDetailed(
-        target.kind === 'remove' ? reference.relationId : target.relationId,
-        async (session, request) => {
-          const consumers =
-            target.kind === 'remove' ? canvasRelationalFieldConsumers(session, reference) : [];
-          try {
-            return (
-              (await selectCanvasRelationalField(session, reference, target, request.signal)) ??
-              analysis.document!
-            );
-          } catch (error) {
-            if (!request.signal.aborted) setAffected(consumers);
-            throw error;
-          }
+    const document = analysis?.document;
+    if (document == null) return;
+    void execute(
+      target.kind === 'remove' ? reference.relationId : target.relationId,
+      async (session, { signal }) => {
+        const consumers =
+          target.kind === 'remove' ? canvasRelationalFieldConsumers(session, reference) : [];
+        try {
+          const selected = await selectCanvasRelationalField(session, reference, target, signal);
+          return selected ?? document;
+        } catch (error) {
+          if (!signal.aborted) setAffected(consumers);
+          throw error;
         }
-      )
-      .then((result) => {
-        if (!result.ok && result.error != null) setRejection(result.error);
-      });
+      }
+    );
   };
   const background = (event: DragEvent<HTMLDivElement>) => {
     const view = event.currentTarget.ownerDocument.defaultView;
@@ -129,18 +135,10 @@ export function CanvasRelationalFieldSelectionProvider({
     },
     add: (reference, relationId) => edit(reference, { kind: 'add', relationId }),
     remove: (reference) => edit(reference, { kind: 'remove' }),
-    removeExpression: (relationId, expressionOrdinal) => {
-      if (!editable) return;
-      setAffected([]);
-      setRejection(null);
-      void command
-        .executeAtDetailed(relationId, (session, request) =>
-          removeCanvasRelationalExpression(session, { ...request, expressionOrdinal })
-        )
-        .then((result) => {
-          if (!result.ok && result.error != null) setRejection(result.error);
-        });
-    },
+    removeExpression: (relationId, expressionOrdinal) =>
+      void execute(relationId, (session, request) =>
+        removeCanvasRelationalExpression(session, { ...request, expressionOrdinal })
+      ),
     connect: (reference, id, port) => {
       if (!editable || connection.current != null || !isActive(reference)) return;
       const controller = new AbortController();

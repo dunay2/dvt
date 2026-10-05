@@ -11,13 +11,9 @@ import {
   readSubstraitAuthoringGroup,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
-import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
-import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
-import {
-  projectSemanticWorkbenchGraph,
-  type SemanticWorkbenchGraph,
-} from './semanticWorkbenchProjection';
+import type { SemanticWorkbenchGraph } from './semanticWorkbenchProjection';
+import { projectSemanticWorkbenchRelations } from './semanticWorkbenchRelations';
 import type { CanvasRelationalTreeNodeSize } from './canvasRelationalTreeGeometryMetrics';
 import { flattenCanvasRelationalTree } from './canvasRelationalTreeWorkbenchModel';
 import { relationalExpressionSlices } from './canvasRelationalExpressionSlice';
@@ -49,51 +45,40 @@ export function projectCanvasRelationalTreeDetails(
   const sizes = new Map<string, CanvasRelationalTreeNodeSize>();
   if (context == null) return { graphs, sizes };
   if (root != null) {
-    const node =
-      context.draft == null
-        ? context.transformNode
-        : applyCanvasInspectorNodeDraft(
-            context.transformNode,
-            createCanvasRelationalTreeNodeDraft(context.transformNode, 'inner_join', context.draft)
-          );
-    const projection = projectSemanticWorkbenchGraph(node, { view: 'unlaid' });
     const document =
       context.draft ??
       decodeDvtSubstraitSemanticDocument(
-        readDvtTransformAuthoringAuthority(node)!.semanticDocument
+        readDvtTransformAuthoringAuthority(context.transformNode)!.semanticDocument
       );
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) throw indexed.error;
-    const unavailable = new Set(
-      flattenCanvasRelationalTree(root).flatMap((relation) =>
-        (relation.unavailableFields ?? []).map((field) => field.fieldId)
-      )
+    const locate = (id: string) => indexed.index.relations.get(id)!;
+    const projection = projectSemanticWorkbenchRelations(
+      document,
+      locate(indexed.index.rootId).relation,
+      context.transformNode.id
     );
-    const slice = relationalExpressionSlices(projection, unavailable);
-    const visit = (relation: CanvasRelationalTreeNode): void => {
-      if (relation.operator !== 'unsupported' && relation.relationId != null) {
-        const group = readSubstraitAuthoringGroup(indexed.index, relation.relationId);
-        const graph = projectCanvasRelationalDetailGraph(
-          relation,
-          slice(
-            relation.relationId,
-            group == null
-              ? undefined
-              : readCanvasTransformDependencyModel(group.root, (id) =>
-                  indexed.index.relations.get(id)!
-                )
-          ),
-          sourceOutputFieldsByRelationId
-        );
-        graphs.set(relation.locator, graph);
-        sizes.set(relation.locator, {
-          width: 420,
-          height: 76 + Math.min(352, 16 + graph.nodes.length * 32),
-        });
-      }
-      relation.children.forEach((child) => visit(child.node));
-    };
-    visit(root);
+    const relations = flattenCanvasRelationalTree(root);
+    const unavailable = relations.flatMap((relation) =>
+      (relation.unavailableFields ?? []).map((field) => field.fieldId)
+    );
+    const slice = relationalExpressionSlices(projection, new Set(unavailable));
+    for (const relation of relations) {
+      if (relation.operator === 'unsupported' || relation.relationId == null) continue;
+      const group = readSubstraitAuthoringGroup(indexed.index, relation.relationId);
+      const model =
+        group == null ? undefined : readCanvasTransformDependencyModel(group.root, locate);
+      const graph = projectCanvasRelationalDetailGraph(
+        relation,
+        slice(relation.relationId, model),
+        sourceOutputFieldsByRelationId
+      );
+      graphs.set(relation.locator, graph);
+      sizes.set(relation.locator, {
+        width: 420,
+        height: 76 + Math.min(352, 16 + graph.nodes.length * 32),
+      });
+    }
   }
   for (const operation of stagedOperations) {
     const draft = decodeCanvasStagedOperation(operation);
