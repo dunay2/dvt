@@ -10,6 +10,10 @@ import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 import { derivedOutputDataType } from './canvasDerivedOutputExpression';
 import { bindFormulaNulls, formulaNull } from './canvasFormulaNull';
+import {
+  TransformDependencyError,
+  TRANSFORM_DEPENDENCY_REJECTION,
+} from './TransformDependencyError';
 
 export type FormulaField = Readonly<{
   fieldId: string;
@@ -176,7 +180,13 @@ class FormulaReader {
         };
       if (token.kind === 'name' && token.value.toUpperCase() === 'NULL') return formulaNull();
       const fields = this.args.fields.filter((field) => field.name === token.value);
-      if (fields.length !== 1) throw new Error(`Unknown or ambiguous field: ${token.value}.`);
+      if (fields.length !== 1)
+        throw new TransformDependencyError(
+          fields.length === 0
+            ? TRANSFORM_DEPENDENCY_REJECTION.unavailable
+            : TRANSFORM_DEPENDENCY_REJECTION.ambiguous,
+          [token.value]
+        );
       return {
         expression: fields[0]!.expression,
         dataType: fields[0]!.dataType,
@@ -395,6 +405,7 @@ export function inspectDerivedOutputFormula(
   } catch (error) {
     return {
       ok: false as const,
+      error,
       message: error instanceof Error ? error.message : 'Invalid formula.',
     };
   }

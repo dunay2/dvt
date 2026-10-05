@@ -1,37 +1,36 @@
-/** Add one scalar-derived field at an exact selected relation. */
+/**
+ * Owned concern: apply one calculated-field command at the revisioned Transform boundary.
+ * @baseline ADR-0064: definitions and dependencies persist only as canonical Substrait.
+ * @decision Stage the complete dependency plan before the shared atomic commit.
+ * @consequence Producer edits preserve public identities and update downstream calculations.
+ * @version 1.0.0
+ */
 import { clone, create } from '@bufbuild/protobuf';
-import {
-  RelSchema,
-  type Expression,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
-import { cloneLocalRelation } from '@dvt/substrait-analysis';
 import type { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
-import { buildDvtSubstraitCalculatedExpression } from './canvasDvtSubstraitCalculatedExpression';
-import { compileDerivedOutputFormula, type FormulaField } from './canvasDerivedOutputFormula';
-import { relationOutputMapping } from './canvasRelationOutputBindings';
 import {
   rootFields,
-  derivedOutputDataType,
-  resolveOperandExpression,
   reject,
-  buildScalarChain,
-  referencedInputField,
   type DvtSubstraitOutputExpressionCandidate,
 } from './canvasDerivedOutputExpression';
 import {
-  commitSelectedRelationUnary,
   prepareSelectedRelationUnary,
   type SelectedUnaryRequest,
 } from './canvasSelectedRelationUnary';
+import { commitSelectedRelation } from './canvasCommitSelectedRelation';
+import {
+  readCanvasTransformDependencyModel,
+  type TransformDefinition,
+  type TransformDependencyModel,
+} from './canvasTransformDependencyModel';
+import { readTransformFormulaScope } from './canvasTransformFormulaScope';
+import { compileTransformCommandExpression } from './canvasTransformCommandExpression';
+import { buildTransformDependencyPlan } from './canvasTransformDependencyPlan';
 
 export type SelectedRelationDerivedOutputRequest = SelectedUnaryRequest &
-  Readonly<{
-    alias: string;
-    outputFieldId?: string;
-  }> &
+  Readonly<{ alias: string; outputFieldId?: string }> &
   (
     | Readonly<{ formula: string }>
     | Readonly<{
@@ -49,179 +48,117 @@ export async function applySelectedRelationDerivedOutput(
 ) {
   const alias = DvtSemanticFieldNameV1Schema.parse(request.alias.trim());
   const prepared = await prepareSelectedRelationUnary(session, request, 'project');
-  const available =
-    request.intent === 'edit'
-      ? await session.query(request.relationId, request.signal)
-      : prepared.schema;
-  const replacing =
-    request.outputFieldId == null
-      ? undefined
-      : prepared.fields.find(
-          (field) => field.fieldId === request.outputFieldId && field.parentFieldId == null
-        );
-  if (request.outputFieldId != null && (replacing == null || request.intent !== 'edit'))
-    reject('Output is unavailable for editing.', request.relationId);
-  const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
-  const formulaFields = [available, prepared.schema]
-    .flatMap((scope) =>
-      rootFields(scope.bindings).flatMap((field): FormulaField[] => {
-        const schema = scope.fields[field.outputOrdinal]!;
-        const dataType = derivedOutputDataType(schema.type);
-        const expression = resolveOperandExpression(prepared, field.fieldId);
-        return field.fieldId === request.outputFieldId ||
-          expression == null ||
-          dataType == null ||
-          !session.allowsInputSchema(schema)
-          ? []
-          : [
-              {
-                fieldId: field.fieldId,
-                name: field.displayName ?? field.fieldId,
-                dataType,
-                expression,
-              },
-            ];
-      })
-    )
-    .filter(
-      (field, index, fields) =>
-        fields.findIndex((candidate) => candidate.name === field.name) === index
-    );
-  const compiled =
-    'formula' in request
-      ? compileDerivedOutputFormula({
-          formula: request.formula,
-          plan,
-          fields: formulaFields,
-          provider: session.executionProvider(request.expectedRevision),
-        })
-      : null;
-  const operandIds =
-    compiled != null
-      ? compiled.fieldIds
-      : 'formula' in request
-        ? []
-        : 'operandFieldIds' in request
-          ? request.operandFieldIds
-          : request.expression.kind === 'field-ref'
-            ? [request.expression.inputFieldId]
-            : request.expression.kind === 'row-number'
-              ? [request.expression.orderFieldId]
-              : [];
-  const operands = new Map(
-    [prepared.schema, available].flatMap((schema) =>
-      rootFields(schema.bindings)
-        .filter((field) => session.allowsInputSchema(schema.fields[field.outputOrdinal]!))
-        .map(
-          (field) =>
-            [field.fieldId, { field, type: schema.fields[field.outputOrdinal]!.type }] as const
-        )
-    )
+  const root = preparedTransformRoot(prepared);
+  const model = readCanvasTransformDependencyModel(root, (id) =>
+    session.locate(id, request.expectedRevision)
   );
-  if (
-    rootFields(available.bindings).some(
-      (field) => field.displayName === alias && field.fieldId !== request.outputFieldId
-    ) ||
-    operandIds.some((fieldId) => !operands.has(fieldId))
-  )
-    reject('Derived-output alias or operand is unavailable.', request.relationId);
-
-  const expressions = operandIds.map((fieldId) => resolveOperandExpression(prepared, fieldId));
-  const dataTypes = operandIds.map((fieldId) => derivedOutputDataType(operands.get(fieldId)!.type));
-  if (
-    expressions.some((expression) => expression == null) ||
-    dataTypes.some((type) => type == null)
-  )
-    reject('Derived-output operand cannot be projected.', request.relationId);
-
-  const expression =
-    compiled != null
-      ? compiled.expression
-      : 'formula' in request
-        ? null
-        : 'capabilityIds' in request
-          ? buildScalarChain({
-              plan,
-              capabilityIds: request.capabilityIds,
-              dataTypes: dataTypes.filter((type): type is string => type != null),
-              operands: expressions.filter((item): item is Expression => item != null),
-              provider: session.executionProvider(request.expectedRevision),
-            })
-          : request.expression.kind === 'field-ref'
-            ? expressions[0]!
-            : buildDvtSubstraitCalculatedExpression(
-                plan,
-                request.expression.kind === 'row-number'
-                  ? {
-                      kind: 'row-number',
-                      orderSourceOrdinal:
-                        dvtSubstraitExpression.fieldOrdinal(expressions[0]!) ??
-                        reject('Window order requires an input field.', request.relationId),
-                    }
-                  : request.expression
-              );
+  const edit = resolveDefinitionEdit(model, request, alias);
+  const scope = await readTransformFormulaScope(session, model, request.signal);
+  const plan = clone(PlanSchema, { ...prepared.target.plan, relations: [] });
+  const provider = session.executionProvider(request.expectedRevision);
+  const expression = compileTransformCommandExpression(request, scope, plan, provider);
   if (expression == null) reject('Derived-output capability is unavailable.', request.relationId);
+  const replacement = stageDefinitionReplacement(model, edit, alias, expression, scope.symbols);
+  const changes = buildTransformDependencyPlan({
+    model,
+    ...replacement,
+    inputSchema: scope.input.fields,
+    plan,
+    provider,
+    nextAnchor: prepared.target.nextAnchor + (request.intent === 'insert' ? 1 : 0),
+  });
+  if (request.intent === 'insert')
+    changes.createdInputs.set(root.binding.relationId, [prepared.input.binding.relationId]);
+  return commitSelectedRelation(session, { ...request, ...changes, extensions: plan });
+}
 
-  const relation =
-    request.intent === 'edit'
-      ? cloneLocalRelation(prepared.target.relation, [prepared.input.relation])
-      : create(RelSchema, {
+function preparedTransformRoot(prepared: Awaited<ReturnType<typeof prepareSelectedRelationUnary>>) {
+  return prepared.request.intent === 'edit'
+    ? prepared.target
+    : {
+        ...prepared.target,
+        binding: prepared.binding,
+        fields: prepared.fields,
+        inputs: [prepared.input.binding.relationId],
+        relation: create(RelSchema, {
           relType: {
             case: 'project',
             value: {
-              common: { relAnchor: prepared.binding.relAnchor },
               input: prepared.input.relation,
+              common: { relAnchor: prepared.binding.relAnchor },
             },
           },
-        });
-  if (relation.relType.case !== 'project')
-    reject('Expected selected ProjectRel.', request.relationId);
-  const project = relation.relType.value;
-  if (replacing != null) {
-    const inputCount = rootFields(prepared.schema.bindings).length;
-    const mapping = [...relationOutputMapping(relation, inputCount + project.expressions.length)];
-    const slot = mapping[replacing.outputOrdinal];
-    if (slot == null) reject('Output expression is unavailable.', request.relationId);
-    if (slot >= inputCount && mapping.filter((item) => item === slot).length === 1)
-      project.expressions[slot - inputCount] = expression;
-    else {
-      project.expressions.push(expression);
-      mapping[replacing.outputOrdinal] = inputCount + project.expressions.length - 1;
-      project.common!.emitKind = {
-        case: 'emit',
-        value: { $typeName: 'substrait.RelCommon.Emit', outputMapping: mapping },
+        }),
       };
-    }
-  } else {
-    project.expressions.push(expression);
-  }
-  if (replacing == null && project.common?.emitKind.case === 'emit') {
-    project.common.emitKind.value.outputMapping.push(
-      rootFields(prepared.schema.bindings).length + project.expressions.length - 1
-    );
-  }
-  const dependencies = [...new Set(operandIds)];
-  const referencedInput =
-    dependencies.length === 1
-      ? referencedInputField(expressions[0]!, prepared.schema.bindings)
-      : undefined;
-  const updated = {
-    ...(replacing == null
-      ? {}
-      : { ...replacing, sourceFieldId: undefined, operandFieldIds: undefined }),
-    fieldId: replacing?.fieldId ?? allocateDvtFieldId(),
-    relationId: prepared.binding.relationId,
-    outputOrdinal: replacing?.outputOrdinal ?? available.fields.length,
+}
+
+function resolveDefinitionEdit(
+  model: TransformDependencyModel,
+  request: SelectedRelationDerivedOutputRequest,
+  alias: string
+) {
+  const outputs = rootFields(model.root.fields).map((field) => ({
+    field,
+    symbol: model.outputIds[field.outputOrdinal]!,
+  }));
+  const replacing = outputs.find((output) => output.field.fieldId === request.outputFieldId);
+  const previous = model.definitions.find(
+    (definition) =>
+      definition.id === replacing?.symbol || definition.binding.fieldId === request.outputFieldId
+  );
+  if (
+    request.outputFieldId != null &&
+    ((replacing == null && previous == null) || request.intent !== 'edit')
+  )
+    reject('Output is unavailable for editing.', request.relationId);
+  if (
+    outputs.some(
+      ({ field }) => field.displayName === alias && field.fieldId !== request.outputFieldId
+    )
+  )
+    reject('Derived-output alias is already used.', request.relationId);
+  if (
+    model.definitions.some(
+      (definition) =>
+        definition !== previous &&
+        definition.output == null &&
+        definition.binding.displayName === alias
+    )
+  )
+    reject('Derived-output alias is already used.', request.relationId);
+  return { outputs, replacing, previous };
+}
+
+function stageDefinitionReplacement(
+  model: TransformDependencyModel,
+  edit: ReturnType<typeof resolveDefinitionEdit>,
+  alias: string,
+  expression: TransformDefinition['expression'],
+  inputIds: TransformDefinition['inputIds']
+) {
+  const { outputs, replacing, previous } = edit;
+  const hidden = previous != null && replacing == null;
+  const field = {
+    ...replacing?.field,
+    fieldId: replacing?.field.fieldId ?? allocateDvtFieldId(),
+    relationId: model.root.binding.relationId,
+    outputOrdinal: replacing?.field.outputOrdinal ?? outputs.length,
     displayName: alias,
-    ...(dependencies.length > 1
-      ? { operandFieldIds: dependencies }
-      : referencedInput == null
-        ? {}
-        : { sourceFieldId: referencedInput }),
   };
-  const fields =
-    replacing == null
-      ? [...prepared.fields, updated]
-      : prepared.fields.map((field) => (field.fieldId === replacing.fieldId ? updated : field));
-  return commitSelectedRelationUnary(session, { ...prepared, fields }, relation, plan);
+  const definition: TransformDefinition = {
+    id: previous?.id ?? allocateDvtFieldId(),
+    binding: previous == null ? field : { ...previous.binding, displayName: alias },
+    owner: previous?.owner ?? model.root,
+    ordinal: previous?.ordinal ?? model.definitions.length,
+    expression,
+    inputIds,
+    ...(hidden ? {} : { output: field }),
+  };
+  const definitions = [...model.definitions.filter((entry) => entry !== previous), definition];
+  const output = { field, symbol: definition.id };
+  if (!hidden) {
+    if (replacing == null) outputs.push(output);
+    else outputs[replacing.field.outputOrdinal] = output;
+  }
+  return { definitions, outputs };
 }

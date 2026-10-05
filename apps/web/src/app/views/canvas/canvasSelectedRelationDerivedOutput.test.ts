@@ -12,6 +12,8 @@ import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import { relationOutputSlots } from './canvasRelationOutputSchema';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { isDvtSubstraitJoinConditionGroup } from './canvasDvtSubstraitJoinCondition';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { transformExpressionDependencies } from './canvasTransformExpressionReferences';
 
 function capability(name: 'trim' | 'upper'): string {
   const resolved = resolveDvtSubstraitColumnFunctions({
@@ -120,7 +122,7 @@ describe('selected relation derived output authoring', () => {
     expect(session.revision).toBe(revision);
   });
 
-  it('inserts one ProjectRel over an exact JOIN operand and reconnects its consumer', async () => {
+  it('inserts one Transform group over an exact JOIN operand and reconnects its consumer', async () => {
     const { session, root } = selectedUnaryScenario();
     const inputId = root.inputs[0]!;
     const input = await session.query(inputId);
@@ -141,11 +143,15 @@ describe('selected relation derived output authoring', () => {
     const projectId = nextRoot.inputs[0]!;
     const project = session.locate(projectId, session.revision);
     expect(project.relation.relType.case).toBe('project');
-    expect(project.inputs).toEqual([inputId]);
+    const model = readCanvasTransformDependencyModel(project, (id) =>
+      session.locate(id, session.revision)
+    );
+    expect(model.input.binding.relationId).toBe(inputId);
+    expect(model.members).toHaveLength(2);
     expect((await session.query(projectId)).bindings.at(-1)?.displayName).toBe('normalized_name');
   });
 
-  it('composes a new scalar over an existing derived FieldId in the same ProjectRel', async () => {
+  it('references an existing calculated FieldId within the same Transform group', async () => {
     const session = new CanvasRelationAnalysisSession('nested-derived-output');
     session.receive(connectedNamesProjectionDraft());
     const projectId = session.rootId;
@@ -178,14 +184,22 @@ describe('selected relation derived output authoring', () => {
       composed.sidecar.fields.find((field) => field.displayName === 'trimmed_name')?.fieldId
     ).toBe(trimmedField.fieldId);
     const target = session.locate(projectId, session.revision);
-    if (target.relation.relType.case !== 'project') throw new Error('Expected ProjectRel.');
-    const expression = target.relation.relType.value.expressions.at(-1)?.rexType;
+    const model = readCanvasTransformDependencyModel(target, (id) =>
+      session.locate(id, session.revision)
+    );
+    const definition = model.definitions.find(
+      (entry) => entry.output?.displayName === 'normalized_name'
+    )!;
+    const expression = definition.expression.rexType;
     expect(expression?.case).toBe('scalarFunction');
     if (expression?.case !== 'scalarFunction') throw new Error('Expected scalar expression.');
     const argument = expression.value.arguments[0]?.argType;
     expect(argument?.case).toBe('value');
     if (argument?.case !== 'value') throw new Error('Expected expression argument.');
-    expect(argument.value.rexType.case).toBe('scalarFunction');
+    expect(argument.value.rexType.case).toBe('selection');
+    expect(transformExpressionDependencies(definition.expression, definition.inputIds)).toEqual([
+      model.definitions.find((entry) => entry.output?.fieldId === trimmedField.fieldId)!.id,
+    ]);
   });
 
   it('creates one output for a nested admitted capability chain', async () => {
@@ -208,19 +222,22 @@ describe('selected relation derived output authoring', () => {
     });
 
     const target = session.locate(projectId, session.revision);
-    if (before.relation.relType.case !== 'project' || target.relation.relType.case !== 'project')
-      throw new Error('Expected ProjectRel.');
-    expect(target.relation.relType.value.expressions).toHaveLength(
-      before.relation.relType.value.expressions.length + 1
+    const model = readCanvasTransformDependencyModel(target, (id) =>
+      session.locate(id, session.revision)
     );
-    expect(
-      document.sidecar.fields.find((field) => field.displayName === 'normalized_name')
-        ?.sourceFieldId
-    ).toBe(
+    expect(model.definitions).toHaveLength(1);
+    const definition = model.definitions[0]!;
+    expect(definition.expression.rexType.case).toBe('scalarFunction');
+    expect(transformExpressionDependencies(definition.expression, definition.inputIds)).toEqual([
       (await session.query(before.inputs[0]!)).bindings.find(
         (field) => field.displayName === 'first_name'
-      )!.fieldId
-    );
+      )!.fieldId,
+    ]);
+    expect(
+      document.sidecar.fields.find(
+        (field) => field.relationId === projectId && field.displayName === 'normalized_name'
+      )?.sourceFieldId
+    ).toBe(definition.binding.fieldId);
   });
 
   it('rejects duplicate aliases and stale revisions without changing the session', async () => {
