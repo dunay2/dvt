@@ -1,8 +1,12 @@
 /**
  * Owned concern: prove one protected terminal DVT Transform from persisted
  * Canvas revision through PreviewPlan, StartRun, Temporal and PostgreSQL.
+ * @baseline ADR-0044: Structural rejection causes are stable; Web owns translated copy.
+ * @decision Verify the current V1 response and localized refusal through the native UI.
+ * @consequence Unsupported output dispositions cannot expose Run or create an execution.
+ * @version 1.0.0
  */
-import { KNOWN_STEP_KINDS } from '@dvt/contracts';
+import { DVT_REJECTIONS, KNOWN_STEP_KINDS } from '@dvt/contracts';
 
 // Existing saved-preview consumers share this runtime instead of bootstrapping another one.
 import './canvas-relational-operation-execution.cy';
@@ -15,6 +19,9 @@ import './canvas-relational-workbench-viewport.cy';
 import './canvas-sort-fetch-data-navigation.cy';
 import './canvas-model-chain-fields.cy';
 import './canvas-column-lineage-mapping.cy';
+import './canvas-dvt-join-preview-live.cy';
+import './canvas-semantic-persistence-run-live.cy';
+import './canvas-sql-progressive-live.cy';
 
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
@@ -352,12 +359,16 @@ describe('DVT terminal Transform Preview and Run live', () => {
 
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.wait('@unsupportedDispositionPreview', { timeout: 30_000 })
-      .its('response.statusCode')
-      .should('equal', 422);
+    cy.wait('@unsupportedDispositionPreview', { timeout: 30_000 }).then(({ response }) => {
+      expect(response?.statusCode).to.equal(422);
+      expect(response?.body.error.details.rejection.cause).to.equal(
+        DVT_REJECTIONS.runDispositionUnsupported.cause
+      );
+    });
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
       .should('be.visible')
-      .and('contain.text', 'Configured Run supports only table result disposition.');
+      .and('contain.text', 'Run currently requires a table output. Change the output type.')
+      .and('not.contain.text', DVT_REJECTIONS.runDispositionUnsupported.reason);
     cy.get('[data-slot="plan-preview-start-run"]').should('not.exist');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     cy.then(() => {

@@ -174,6 +174,7 @@ Evidence documents that justify or validate relevant changes.
 - [Scope and authority](ED-20260914-n-input-join-preview.md)
 - [Semantic Workbench join composition evidence](ED-20260911-semantic-workbench-join-composition.md)
 - [SEMI and ANTI JOIN end to end](ED-20260919-semi-anti-join-end-to-end.md)
+- [Single operational workload V1 hard cut](ED-20261004-single-operational-workload-v1.md)
 - [SortRel and FetchRel end to end](ED-20260920-sort-fetch-end-to-end.md)
 - [Source LIVE preview](ED-20261003-source-live-preview.md)
 - [Start Authority Read Boundaries And Concern Isolation](ed-20260930-start-authority-read-boundaries.md)

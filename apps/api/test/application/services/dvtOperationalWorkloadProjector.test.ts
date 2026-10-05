@@ -1,6 +1,6 @@
 import {
+  DVT_REJECTIONS,
   DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadContractV2,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type ConnectedSourceRef,
@@ -156,7 +156,7 @@ describe('DvtOperationalWorkloadProjector', () => {
   it('lowers one terminal Transform closure to one ephemeral workload', () => {
     const result = new DvtOperationalWorkloadProjector().project(input());
 
-    if (!result.ok) throw new Error(result.reason);
+    if (!result.ok) throw new Error(result.cause);
     expect(result.graphSource.nodes).toHaveLength(1);
     expect(result.graphSource.nodes[0]).toMatchObject({
       nodeId: 'transform-a',
@@ -178,23 +178,31 @@ describe('DvtOperationalWorkloadProjector', () => {
   it('lowers one configured table result to the Run workload contract', () => {
     const result = new DvtOperationalWorkloadProjector().project(input({ draft: runDraft() }));
 
-    if (!result.ok) throw new Error(result.reason);
-    const workload = DvtOperationalWorkloadContractV2.schema.parse(
+    if (!result.ok) throw new Error(result.cause);
+    const workload = DvtOperationalWorkloadContractV1.schema.parse(
       result.graphSource.nodes[0]?.stepTypeConfig
     );
     expect(workload.executionIntent).toBe('run');
-    expect(workload.targetProjection.schemaDigestSha256).toBe('d'.repeat(64));
+    expect(workload.targetProjection).toHaveProperty('schemaDigestSha256', 'd'.repeat(64));
     expect(workload.output).toMatchObject({
       kind: 'transform-result',
       disposition: 'table',
       target: { schema: 'analytics', relation: 'orders_result' },
     });
-    expect(workload.publicationBoundaries).toEqual([]);
+    expect(workload).toHaveProperty('publicationBoundaries', []);
   });
 
   it.each([
-    ['view disposition', () => input({ draft: runDraft({ materialized: 'view' }) })],
-    ['missing target', () => input({ draft: runDraft({ materialized: 'table' }) })],
+    [
+      'view disposition',
+      () => input({ draft: runDraft({ materialized: 'view' }) }),
+      'dvt_run_disposition_unsupported',
+    ],
+    [
+      'missing target',
+      () => input({ draft: runDraft({ materialized: 'table' }) }),
+      'dvt_run_target_invalid',
+    ],
     [
       'missing output schema digest',
       () => {
@@ -203,6 +211,7 @@ describe('DvtOperationalWorkloadProjector', () => {
           candidate.targetProjection;
         return { ...candidate, targetProjection };
       },
+      'dvt_run_schema_digest_required',
     ],
     [
       'target on another connection',
@@ -218,9 +227,13 @@ describe('DvtOperationalWorkloadProjector', () => {
             },
           }),
         }),
+      'dvt_preview_workload_projection_failed',
     ],
-  ])('fails closed for configured Run with %s', (_label, candidate) => {
-    expect(new DvtOperationalWorkloadProjector().project(candidate()).ok).toBe(false);
+  ] as const)('fails closed for configured Run with %s', (_label, candidate, cause) => {
+    expect(new DvtOperationalWorkloadProjector().project(candidate())).toEqual({
+      ok: false,
+      ...Object.values(DVT_REJECTIONS).find((definition) => definition.cause === cause),
+    });
   });
 
   it.each([

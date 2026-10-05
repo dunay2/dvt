@@ -1,3 +1,10 @@
+/**
+ * Owned concern: register step schemas and query their validation and execution profiles.
+ * @baseline ADR-0018: shared registry consumers use canonical step contracts.
+ * @decision Delegate built-in assembly and artifact schemas to their owning modules.
+ * @consequence Registry mechanics do not implement provider preparation or execution.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import type { PlanOwnership } from '../contracts/planner/ExecutionPlan.v1.js';
@@ -6,7 +13,8 @@ import { RUNTIME_PROVIDER_VALUES, type Provider } from '../types/contracts.js';
 
 import { createBuiltInStepTypeEntries } from './BuiltInStepTypeEntries.js';
 
-export { DbtStepTypeConfigSchema, StepArtifactRefSchema } from './DbtStepTypeConfig.js';
+export { DbtStepTypeConfigSchema } from './DbtStepTypeConfig.js';
+export { StepArtifactRefSchema } from './StepArtifactRef.js';
 export {
   DBT_STEP_REQUIRED_CAPABILITY,
   ACQUIRE_HTTP_JSON_ARTIFACT_EXECUTION_PROFILE,

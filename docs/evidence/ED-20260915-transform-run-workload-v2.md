@@ -9,7 +9,7 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
-  - packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts
+  - https://github.com/dunay2/dvt/blob/1b21ba2c6a44c6ab3336331feeacece229f4d2ec/packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts
   - packages/@dvt/postgres-projection/src/dvtPostgresOutputSchema.ts
   - apps/api/src/application/services/dvtOperationalWorkloadProjector.ts
@@ -32,10 +32,14 @@ evidence:
 ## Authority and boundary
 
 Issues #2524 and #3115, ADR-0064, ADR-0066 and the approved
-[Run workload contract](../contracts/planner/dvt-operational-run-workload-v2.md)
+[historical Run workload contract](https://github.com/dunay2/dvt/blob/1b21ba2c6a44c6ab3336331feeacece229f4d2ec/docs/contracts/planner/dvt-operational-run-workload-v2.md)
 govern this slice. Planning DB design `GH-2524-TRANSFORM-RUN-WORKLOAD-V2` and
 feature `DVT-TRANSFORM-RUN-WORKLOAD-V2-2524` preceded implementation. The
 existing `PreviewPlan` rail remains authoritative.
+
+This records the September delivery, not the current wire format. The subsequent
+[single V1 hard cut](../contracts/planner/dvt-operational-workload-v1.md) replaces
+the version split below and requires its own producer/consumer evidence.
 
 `dvt-operational-workload.v1` remains Preview-only. V2 adds explicit Run
 intent, one `table` Transform result, its exact PostgreSQL target, the expected

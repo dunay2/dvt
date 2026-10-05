@@ -3,23 +3,26 @@ import {
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
   KNOWN_STEP_KINDS,
-  createDefaultStepTypeRegistry,
   createDvtPostgresOutputSchemaDigestV1,
   parseExecutionPlan,
   parseExecutionSelection,
   parsePlanRef,
   parseRunExecutionContextRef,
-  type DvtOperationalWorkloadV2,
+  type DvtOperationalRunWorkloadV1,
   type StartRunCommand,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import { DvtPostgresRunExecutionContextPreparer } from '../../../src/application/services/postgres/DvtPostgresRunExecutionContextPreparer.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { mapStartRunResult } from '../../../src/entrypoints/http/httpErrorMapper.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
 type Dependencies = ConstructorParameters<typeof RunExecutionContextBindingUseCase>[0];
+type PostgresDependencies = ConstructorParameters<typeof DvtPostgresRunExecutionContextPreparer>[0];
 
 const PLAN_ID = 'd'.repeat(64);
 const PLAN_REF = parsePlanRef({
@@ -89,112 +92,227 @@ describe('RunExecutionContextBindingUseCase DVT runtime binding', () => {
     );
   });
 
-  it('rejects Preview workload v1 before dispatch', async () => {
+  it.each([
+    ['Preview intent', buildPreviewWorkload],
+    ['retired V2', () => ({ ...buildRunWorkload(), schemaVersion: 'dvt-operational-workload.v2' })],
+    ['missing intent', () => ({ ...buildRunWorkload(), executionIntent: undefined })],
+    [
+      'retired INNER profile',
+      () => {
+        const workload = buildRunWorkload();
+        return {
+          ...workload,
+          targetProjection: {
+            ...workload.targetProjection,
+            profileId: 'dvt.vtx2.postgres.inner-join.v1',
+          },
+        };
+      },
+    ],
+  ] as const)('rejects %s before dispatch', async (_label, workload) => {
     const delegate = makeDelegate();
     const contextWriter = { write: vi.fn() };
     const getConnection = vi.fn();
+    const observe = vi.fn();
     const useCase = new RunExecutionContextBindingUseCase(
-      dependencies({ delegate, contextWriter, getConnection })
+      dependencies({ delegate, contextWriter, getConnection, observe })
     );
 
     const result = await useCase.executeAdmitted(
       command(),
       authorizedContext(),
-      admission(buildPreviewWorkload())
+      admission(workload())
     );
 
     expect(result).toMatchObject({
       value: {
         kind: 'plan_rejected',
-        reason: 'DVT operational Run requires workload schema v2.',
+        code: 'REJECTED',
+        cause: 'dvt_run_intent_required',
       },
     });
     expect(getConnection).not.toHaveBeenCalled();
+    expect(observe).not.toHaveBeenCalled();
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+    if (!result.ok) throw new Error('Expected a rejected StartRun result');
+    expect(mapStartRunResult(result.value)).toMatchObject({
+      status: 422,
+      body: { error: { reason: 'plan_rejected', details: { cause: 'dvt_run_intent_required' } } },
+    });
+  });
+
+  it.each([0, 2])(
+    'handles %i DVT workloads without reading a provider or writing context',
+    async (count) => {
+      const delegate = makeDelegate();
+      const contextWriter = { write: vi.fn() };
+      const getConnection = vi.fn();
+      const useCase = new RunExecutionContextBindingUseCase(
+        dependencies({ delegate, contextWriter, getConnection })
+      );
+      const admitted = admission(buildRunWorkload());
+      const plan = admitted.materialized.plan;
+      const steps = Array.from({ length: count }, (_, index) => ({
+        ...plan.steps[0]!,
+        stepId: `transform-${index}`,
+      }));
+      const result = await useCase.executeAdmitted(command(), authorizedContext(), {
+        ...admitted,
+        materialized: { ...admitted.materialized, plan: { ...plan, steps } },
+      });
+      expect(result).toMatchObject({
+        value:
+          count === 0
+            ? { kind: 'accepted' }
+            : { kind: 'plan_rejected', cause: 'dvt_run_workload_count_invalid' },
+      });
+      expect(getConnection).not.toHaveBeenCalled();
+      expect(contextWriter.write).not.toHaveBeenCalled();
+      expect(delegate.execute).toHaveBeenCalledTimes(count === 0 ? 1 : 0);
+    }
+  );
+
+  it.each([
+    ['foreign identity', 'warehouse-other', 'postgres:warehouse-a'],
+    ['missing credentials', 'warehouse-a', null],
+  ] as const)('rejects %s without observing publication', async (_label, id, credentialRef) => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const observe = vi.fn();
+    const useCase = new RunExecutionContextBindingUseCase(
+      dependencies({
+        delegate,
+        contextWriter,
+        observe,
+        getConnection: vi.fn(async () => ({
+          id,
+          name: 'Warehouse A',
+          type: 'postgres' as const,
+          database: 'analytics',
+          sourceObjects: [],
+          ...(credentialRef === null ? {} : { credentialRef }),
+        })),
+      })
+    );
+    const result = await useCase.executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
+    );
+    expect(result).toMatchObject({ value: { cause: 'dvt_run_connection_unavailable' } });
+    expect(observe).not.toHaveBeenCalled();
     expect(contextWriter.write).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
   });
 
-  it('dispatches a historical INNER Run workload through the current JOIN profile', async () => {
+  it('rejects absent publication admission without writes or dispatch', async () => {
     const delegate = makeDelegate();
-    const contextWriter = {
-      write: vi.fn(async () => ({ ok: true as const, ref: RUN_CONTEXT_REF })),
-    };
-    const getConnection = vi.fn(async () => ({
-      id: 'warehouse-a',
-      name: 'Warehouse A',
-      type: 'postgres' as const,
-      database: 'analytics',
-      credentialRef: 'postgres:warehouse-a',
-      sourceObjects: [],
-    }));
-    const observe = vi.fn(async () => ({
-      ok: true as const,
-      predecessorToken: null,
-    }));
-    const useCase = new RunExecutionContextBindingUseCase(
-      dependencies({ delegate, contextWriter, getConnection, observe })
+    const contextWriter = { write: vi.fn() };
+    const deps = dependencies({
+      delegate,
+      contextWriter,
+      getConnection: vi.fn(async () => ({
+        id: 'warehouse-a',
+        name: 'Warehouse A',
+        type: 'postgres' as const,
+        database: 'analytics',
+        credentialRef: 'postgres:warehouse-a',
+        sourceObjects: [],
+      })),
+    });
+    const result = await new RunExecutionContextBindingUseCase(deps).executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
     );
-    const workload = buildRunWorkload();
-    const historical = {
-      ...workload,
-      graph: {
-        ...workload.graph,
-        selectedNodeIds: ['source-customers', 'source-orders', 'transform-a'],
-        selectedEdgeIds: ['customers-transform', 'orders-transform'],
-      },
-      targetProjection: {
-        ...workload.targetProjection,
-        profileId: 'dvt.vtx2.postgres.inner-join.v1',
-      },
-    };
+    expect(result).toMatchObject({ value: { cause: 'dvt_run_publication_unavailable' } });
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
 
+  it.each([
+    ['credential_unavailable', 'dvt_run_connection_unavailable'],
+    ['unmanaged_target', 'dvt_run_target_unmanaged'],
+    ['schema_mismatch', 'dvt_run_schema_mismatch'],
+  ] as const)('preserves %s as a typed rejection without dispatch', async (reason, cause) => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const useCase = new RunExecutionContextBindingUseCase(
+      dependencies({
+        delegate,
+        contextWriter,
+        getConnection: vi.fn(async () => ({
+          id: 'warehouse-a',
+          name: 'Warehouse A',
+          type: 'postgres' as const,
+          database: 'analytics',
+          credentialRef: 'postgres:warehouse-a',
+          sourceObjects: [],
+        })),
+        observe: vi.fn(async () => ({ ok: false as const, reason })),
+      })
+    );
     const result = await useCase.executeAdmitted(
       command(),
       authorizedContext(),
-      admission(historical)
+      admission(buildRunWorkload())
     );
+    expect(result).toMatchObject({ value: { kind: 'plan_rejected', code: 'REJECTED', cause } });
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
 
-    expect(result).toMatchObject({ ok: true, value: { kind: 'accepted' } });
-    expect(delegate.execute).toHaveBeenCalledOnce();
-    expect(getConnection).toHaveBeenCalledWith(
-      { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
-      'warehouse-a'
+  it('rejects a connection outside the authorized workspace before provider effects', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
+    const observe = vi.fn();
+    const useCase = new RunExecutionContextBindingUseCase(
+      dependencies({
+        delegate,
+        contextWriter,
+        observe,
+        getConnection: vi.fn(async () => {
+          throw new WarehouseConnectionNotFoundError('warehouse-a');
+        }),
+      })
     );
+    const result = await useCase.executeAdmitted(
+      command(),
+      authorizedContext(),
+      admission(buildRunWorkload())
+    );
+    expect(result).toMatchObject({ value: { cause: 'dvt_run_connection_not_found' } });
+    expect(observe).not.toHaveBeenCalled();
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
   });
 });
 
 function dependencies(input: {
   readonly delegate: Dependencies['delegate'];
   readonly contextWriter: Dependencies['contextWriter'];
-  readonly getConnection: Dependencies['warehouseConnectionCatalog']['getConnection'];
-  readonly observe?: NonNullable<
-    Dependencies['dvtPostgresPublicationPredecessorReader']
-  >['observe'];
+  readonly getConnection: PostgresDependencies['catalog']['getConnection'];
+  readonly observe?: NonNullable<PostgresDependencies['predecessorReader']>['observe'];
 }): Dependencies {
   const unexpected = vi.fn(async (): Promise<never> => {
     throw new Error('Unexpected dependency call');
   });
   return {
     delegate: input.delegate,
-    bundleBuilder: { build: unexpected },
     contextWriter: input.contextWriter,
-    executionTargetResolver: {
-      resolve() {
-        throw new Error('Unexpected dependency call');
-      },
-    },
-    executionConnectionBindingVerifier: { verify: unexpected },
-    stepTypeRegistry: createDefaultStepTypeRegistry(),
-    warehouseConnectionCatalog: {
-      listConnections: unexpected,
-      listSourceObjects: unexpected,
-      getConnection: input.getConnection,
-      createConnection: unexpected,
-      renameConnection: unexpected,
-    },
-    dvtPostgresPublicationPredecessorReader: {
-      observe: input.observe ?? unexpected,
-    },
+    preparers: [
+      new DvtPostgresRunExecutionContextPreparer({
+        catalog: {
+          listConnections: unexpected,
+          listSourceObjects: unexpected,
+          getConnection: input.getConnection,
+          createConnection: unexpected,
+          renameConnection: unexpected,
+        },
+        ...(input.observe === undefined ? {} : { predecessorReader: { observe: input.observe } }),
+      }),
+    ],
   };
 }
 
@@ -264,10 +382,10 @@ function admission(
   };
 }
 
-function buildRunWorkload(): DvtOperationalWorkloadV2 {
+function buildRunWorkload(): DvtOperationalRunWorkloadV1 {
   const semanticPlanSha256 = '1'.repeat(64);
   return {
-    schemaVersion: 'dvt-operational-workload.v2',
+    schemaVersion: 'dvt-operational-workload.v1',
     executionIntent: 'run',
     scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
     graph: {
@@ -341,6 +459,7 @@ function buildPreviewWorkload(): unknown {
   const { schemaDigestSha256: _schemaDigestSha256, ...targetProjection } = run.targetProjection;
   return {
     schemaVersion: 'dvt-operational-workload.v1',
+    executionIntent: 'preview',
     scope: run.scope,
     graph: run.graph,
     semantics: run.semantics,

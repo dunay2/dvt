@@ -11,7 +11,6 @@ import {
 import {
   DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
   DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadContractV2,
   KNOWN_STEP_KINDS,
   createDefaultStepTypeRegistry,
   parseExecutionSelection,
@@ -230,10 +229,9 @@ describeIfPostgres('protected DVT Preview integration', () => {
           dependsOn: [],
         }),
       ]);
-      const workload =
-        intent === 'preview'
-          ? DvtOperationalWorkloadContractV1.schema.parse(result.plan.steps[0]?.stepTypeConfig)
-          : DvtOperationalWorkloadContractV2.schema.parse(result.plan.steps[0]?.stepTypeConfig);
+      const workload = DvtOperationalWorkloadContractV1.schema.parse(
+        result.plan.steps[0]?.stepTypeConfig
+      );
       expect(workload.graph.selectedNodeIds).toEqual([...draft.nodeIds].sort());
       expect(workload.graph.selectedEdgeIds).toEqual(draft.edges.map((edge) => edge.id).sort());
       expect(workload.semantics).toHaveLength(1);

@@ -1,7 +1,14 @@
-/** Proves one N-input JOIN through the protected DVT PostgreSQL Run path. */
+/**
+ * Owned concern: prove one N-input JOIN through the protected DVT PostgreSQL Run path.
+ * @baseline GH-2524-LIVE-V1-CONSUMERS: prove current authoring and publication contracts.
+ * @decision Declare the language before boot and await route readiness before interaction.
+ * @consequence Localized UI assertions and provider evidence remain exact on every host.
+ * @version 1.0.0
+ */
 import { DVT_POSTGRES_JOIN_PROFILE_ID, KNOWN_STEP_KINDS } from '@dvt/contracts';
 
 import documents from '../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { exportProjectSnapshot } from '../../../src/app/views/canvas/canvasProjectSnapshot';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
 import {
@@ -118,7 +125,16 @@ describe('N-input DVT Run live', () => {
     }).contents;
 
     seedLiveSelectedClosureDraft({ emptyCanvas: true });
-    visitWithLiveWorkspaceSession('/canvas');
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          APPLICATION_LANGUAGE_STORAGE_KEY,
+          JSON.stringify({ state: { language: 'es' }, version: 0 })
+        );
+      },
+    });
+    cy.get('html').should('have.attr', 'lang', 'es');
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
@@ -166,7 +182,7 @@ describe('N-input DVT Run live', () => {
         KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD
       );
       const workload = preview.plan?.steps?.[0]?.stepTypeConfig;
-      expect(workload?.schemaVersion).to.equal('dvt-operational-workload.v2');
+      expect(workload?.schemaVersion).to.equal('dvt-operational-workload.v1');
       expect(workload?.targetProjection?.profileId).to.equal(DVT_POSTGRES_JOIN_PROFILE_ID);
       expect(workload?.graph?.selectedNodeIds).to.deep.equal([...draft.nodeIds].sort());
       expect(workload?.graph?.selectedEdgeIds).to.deep.equal(

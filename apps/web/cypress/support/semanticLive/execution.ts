@@ -1,6 +1,6 @@
 /** Owns live execution fidelity: accepted plan -> Run evidence -> published PostgreSQL rows. */
 import {
-  DvtOperationalWorkloadV2Schema,
+  DvtOperationalRunWorkloadV1Schema,
   KNOWN_STEP_KINDS,
   SourceObjectCatalogResponseSchema,
 } from '@dvt/contracts';
@@ -52,7 +52,7 @@ export function executePersistedModel(
     const preview = response!.body;
     expect(preview.plan.steps).to.have.length(1);
     expect(preview.plan.steps[0].kind).to.equal(KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD);
-    const workload = DvtOperationalWorkloadV2Schema.parse(preview.plan.steps[0].stepTypeConfig);
+    const workload = DvtOperationalRunWorkloadV1Schema.parse(preview.plan.steps[0].stepTypeConfig);
     expect(workload.semantics[0]).to.deep.include({
       transformNodeId: modelId,
       semanticPlanSha256: semanticSha,

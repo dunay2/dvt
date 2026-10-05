@@ -2,9 +2,7 @@ import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
   ConnectedSourceRefSchema,
   DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadContractV2,
   type DvtOperationalWorkloadV1,
-  type DvtOperationalWorkloadV2,
   type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
@@ -22,7 +20,7 @@ import {
 type PublishedWorkload = {
   binding: DvtTerminalTransformProjectionBinding;
   graph: GenericGraphSourceV1;
-  workload: DvtOperationalWorkloadV1 | DvtOperationalWorkloadV2;
+  workload: DvtOperationalWorkloadV1;
 };
 
 export function publicationHarness(
@@ -76,12 +74,13 @@ export function publicationHarness(
       canvasId: draft.canvas.id!,
       targetProjection: binding,
     });
-    if (!result.ok) throw new Error(result.reason);
-    const contract = run ? DvtOperationalWorkloadContractV2 : DvtOperationalWorkloadContractV1;
+    if (!result.ok) throw new Error(result.cause);
     return {
       binding,
       graph: result.graphSource,
-      workload: contract.schema.parse(result.graphSource.nodes[0]?.stepTypeConfig),
+      workload: DvtOperationalWorkloadContractV1.schema.parse(
+        result.graphSource.nodes[0]?.stepTypeConfig
+      ),
     };
   }
   return { input, publisher, publish, execute };

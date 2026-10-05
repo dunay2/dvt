@@ -1,4 +1,12 @@
-/** Owned concern: verify that a DBT target resolves to its governed workspace connection. */
+/**
+ * Owned concern: verify that a DBT target resolves to its governed workspace connection.
+ * @baseline StartRun binds execution credentials to the authorized workspace connection.
+ * @decision Verify connection and profile identity; select named rejection definitions.
+ * @consequence Binding failures remain distinct without depending on diagnostic prose.
+ * @version 1.0.0
+ */
+import { RUN_REJECTIONS, type RunExecutionRejection } from '@dvt/contracts';
+
 import type { IDbtExecutionConnectionBindingVerifier } from '../ports/dbtExecutionTarget.js';
 import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 import { WarehouseConnectionNotFoundError } from '../ports/warehouseSourceImport.js';
@@ -11,7 +19,7 @@ export async function resolveDbtExecutionConnectionBinding(input: {
   readonly connectionRef: Readonly<{ connectionId: string; provider: string }>;
   readonly targetProfile: string;
   readonly runtimeCredentialRef: string;
-}): Promise<{ readonly ok: true } | { readonly ok: false; readonly reason: string }> {
+}): Promise<{ readonly ok: true } | ({ readonly ok: false } & RunExecutionRejection)> {
   let connection: Awaited<ReturnType<IWarehouseConnectionCatalog['getConnection']>>;
   try {
     connection = await input.catalog.getConnection(input.scope, input.connectionRef.connectionId);
@@ -19,7 +27,7 @@ export async function resolveDbtExecutionConnectionBinding(input: {
     if (error instanceof WarehouseConnectionNotFoundError) {
       return {
         ok: false,
-        reason: 'The Preview-bound DBT connection is not in this workspace.',
+        ...RUN_REJECTIONS.dbtConnectionNotFound,
       };
     }
     throw error;
@@ -29,7 +37,7 @@ export async function resolveDbtExecutionConnectionBinding(input: {
     connection.id !== input.connectionRef.connectionId ||
     connection.type !== input.connectionRef.provider
   ) {
-    return { ok: false, reason: 'The Preview-bound DBT connection identity is invalid.' };
+    return { ok: false, ...RUN_REJECTIONS.dbtConnectionInvalid };
   }
   if (
     connection.credentialRef === undefined ||
@@ -41,8 +49,7 @@ export async function resolveDbtExecutionConnectionBinding(input: {
   ) {
     return {
       ok: false,
-      reason:
-        'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+      ...RUN_REJECTIONS.dbtProfileMismatch,
     };
   }
   return { ok: true };

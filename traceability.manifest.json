@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-10-01",
+  "generated": "2026-10-04",
   "repo": {
     "sha": "local"
   },
@@ -985,6 +985,20 @@
       "title": "ADR-0043 - Plan record, plan store, and artifacts ownership"
     },
     {
+      "number": "ADR-0044",
+      "decisions": [
+        "Define each expected rejection once with stable message metadata.",
+        "Reuse named immutable definitions; translations belong to Web.",
+        "Reuse structural message metadata and the existing rejection envelope."
+      ],
+      "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/engine/RunExecutionRejection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/OperationalRejection.v1.ts"
+      ],
+      "title": "ADR-0044 - Structured contracts error metadata and non-semantic messages"
+    },
+    {
       "number": "ADR-0046",
       "decisions": [
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
@@ -1122,6 +1136,7 @@
         "Keep protected source discovery and import request/response DTOs in one canonical contract component.",
         "Keep row samples separate from source-object catalog discovery and reject client SQL.",
         "Keep source import scope bound to protected runtime workspace authorization.",
+        "Mode, provisional state and preview provenance are explicit values, not UI inference.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Re-export only source-object catalog and source-import operation contracts from this barrel.",
         "Rebind a persisted logical Source to one discovered physical object without changing logical identity.",
@@ -1129,6 +1144,7 @@
       ],
       "implemented_by": [
         "apps/api/src/application/ports/warehouseSourceImport.ts",
+        "packages/@dvt/contracts/src/contracts/data-access/DataAccess.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
@@ -1213,14 +1229,15 @@
         "Bind catalog entries to exact core or official extension identities.",
         "Bind exact pinned Plan bytes to one identity-only DVT sidecar.",
         "Bind producer fields to stable consumer input slots as provenance, not copied semantics.",
-        "Bind terminal Transform Preview to the exact protected graph, semantic plan, target SQL projection, and governed connection.",
         "Compose one catalog from standard candidates, admissions, and product gaps.",
         "Explore a protected Transform through semantic identity and server-owned bounds, never client SQL.",
         "Export the pinned Substrait profile, stable authoring bindings, and single semantic capability catalog through one bounded public contract surface.",
         "Fail closed when persisted bytes are not one decodable Plan at the pinned version.",
         "Identify producer dependencies by stable node and field identities in the sidecar.",
-        "Keep protected graph, semantic, projection, and connection identity checks shared across workload versions.",
+        "Keep protected graph, semantic, projection, and connection identity checks shared across execution intents.",
         "Logical transformation semantics stay outside ExecutionPlan; plan steps represent runtime responsibilities only.",
+        "Mode, provisional state and preview provenance are explicit values, not UI inference.",
+        "One V1 contract distinguishes Preview and Run by explicit execution intent.",
         "Persist one strict, versioned ConnectedSourceRef instead of parallel loose connection and object binding coordinates.",
         "Pin one exact Substrait release and map stable DVT ids to rel_anchor/output ordinals.",
         "Re-export only governed Canvas contracts from this narrow barrel.",
@@ -1232,16 +1249,15 @@
         "Store occurrence identity, operation ports and layout as a versioned authoring DTO.",
         "Validate and serialize the capability read model deterministically.",
         "Validate canonical Plan values independently of provider identifier limits.",
-        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity.",
-        "Version Run separately from the existing Preview workload and bind it to one explicit result target."
+        "Validate stable FieldId hierarchy against the current structural binding independently from document transport. FieldId/relationId own logical identity; outputOrdinal is only the current sibling position and must never be used to mint or repair identity."
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/canvas/TransformDataSample.v1.ts",
         "packages/@dvt/contracts/src/contracts/canvas/index.ts",
+        "packages/@dvt/contracts/src/contracts/data-access/DataAccess.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtInputBindings.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts",
-        "packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts",

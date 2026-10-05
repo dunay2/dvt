@@ -1,4 +1,4 @@
-import { DvtOperationalWorkloadContractV2 } from '@dvt/contracts';
+import { DvtOperationalWorkloadContractV1 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { DvtOperationalWorkloadProjector } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
@@ -31,9 +31,9 @@ describe('repeated source Run workload', () => {
       canvasId: input.draft.canvas.id!,
     };
     const result = projector.project(request);
-    if (!result.ok) throw new Error(result.reason);
+    if (!result.ok) throw new Error(result.cause);
     expect(result.graphSource.nodes).toHaveLength(1);
-    const workload = DvtOperationalWorkloadContractV2.schema.parse(
+    const workload = DvtOperationalWorkloadContractV1.schema.parse(
       result.graphSource.nodes[0]!.stepTypeConfig
     );
     expect(workload.graph.selectedNodeIds).toEqual([...input.draft.nodeIds].sort());
@@ -46,7 +46,7 @@ describe('repeated source Run workload', () => {
       })
     ).toMatchObject({
       ok: false,
-      reason: 'Target projection is stale or belongs to another output or connection.',
+      cause: 'dvt_projection_stale',
     });
   });
 });

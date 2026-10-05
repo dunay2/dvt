@@ -1,21 +1,27 @@
 /**
  * Owned concern: lower one exact protected Source -> terminal Transform closure
- * into one generic ephemeral PostgreSQL workload.
+ * into one generic PostgreSQL workload with explicit Preview or Run intent.
+ * @baseline Workload V1 binds the exact authorized closure and semantic revision.
+ * @decision Canonicalize graph ID lists without reordering semantic operands.
+ * @consequence Preview and Run retain the same locale-independent graph identity.
+ * @version 1.0.0
  */
 import {
+  DVT_REJECTIONS,
   DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
   DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadContractV2,
   DvtTransformResultTargetV1Schema,
   GENERIC_GRAPH_SOURCE_KIND,
   KNOWN_STEP_KINDS,
   type ConnectionRef,
   type DvtOperationalWorkloadV1,
+  type DvtOperationalRejection,
   type DvtTransformResultTargetV1,
   type GenericGraphSourceV1,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
+import { compareGraphIds } from './compareGraphIds.js';
 import { sameConnection } from './dvtSourceCoverage.js';
 import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
@@ -40,7 +46,7 @@ export type DvtOperationalWorkloadProjectorInput = {
 
 export type DvtOperationalWorkloadProjectionResult =
   | { readonly ok: true; readonly graphSource: GenericGraphSourceV1 }
-  | { readonly ok: false; readonly reason: string };
+  | ({ readonly ok: false } & DvtOperationalRejection);
 
 export class DvtOperationalWorkloadProjector {
   public project(
@@ -50,21 +56,24 @@ export class DvtOperationalWorkloadProjector {
       const closure = resolveDvtTerminalTransformClosure(input);
       const semanticDocument = closure.authority.semanticDocument;
       const projection = input.targetProjection;
-      const runTarget = resolveRunTarget(closure.transform);
-      if (
+      const target = resolveRunTarget(closure.transform);
+      if (!target.ok) return target;
+      const runTarget = target.target;
+      const projectionIsStale =
         projection.outputNodeId !== closure.transform.id ||
         projection.semanticPlanSha256 !== semanticDocument.semanticPlan.sha256 ||
         projection.profileId !== closure.profileId ||
-        !sameConnection(projection.connectionRef, closure.connectionRef)
-      ) {
-        throw new Error('Target projection is stale or belongs to another output or connection.');
+        !sameConnection(projection.connectionRef, closure.connectionRef);
+      if (projectionIsStale) {
+        return { ok: false, ...DVT_REJECTIONS.projectionStale };
       }
 
       if (runTarget !== null && projection.schemaDigestSha256 === undefined) {
-        throw new Error('Configured Run requires a canonical PostgreSQL output schema digest.');
+        return { ok: false, ...DVT_REJECTIONS.runSchemaDigestRequired };
       }
 
       const commonWorkload = {
+        schemaVersion: 'dvt-operational-workload.v1',
         scope: input.scope,
         graph: {
           draftRevision: input.draftRevision,
@@ -72,8 +81,8 @@ export class DvtOperationalWorkloadProjector {
           selectedNodeIds: [
             ...closure.sources.map(({ node }) => node.id),
             closure.transform.id,
-          ].sort(),
-          selectedEdgeIds: closure.edges.map((edge) => edge.id).sort(),
+          ].sort(compareGraphIds),
+          selectedEdgeIds: closure.edges.map((edge) => edge.id).sort(compareGraphIds),
         },
         semantics: [
           {
@@ -90,30 +99,32 @@ export class DvtOperationalWorkloadProjector {
         },
         connectionRef: closure.connectionRef,
       };
-      const workload =
-        runTarget === null
-          ? DvtOperationalWorkloadContractV1.schema.parse({
-              ...commonWorkload,
-              schemaVersion: 'dvt-operational-workload.v1',
-              output: { kind: 'ephemeral-preview', nodeId: closure.transform.id },
-            })
-          : DvtOperationalWorkloadContractV2.schema.parse({
-              ...commonWorkload,
-              schemaVersion: 'dvt-operational-workload.v2',
-              executionIntent: 'run',
-              targetProjection: {
-                ...commonWorkload.targetProjection,
-                schemaDigestSha256: projection.schemaDigestSha256,
-              },
-              output: {
-                kind: 'transform-result',
-                nodeId: closure.transform.id,
-                disposition: 'table',
-                target: runTarget,
-                publicationPolicy: 'postgres-stable-table-publication.v1',
-              },
-              publicationBoundaries: [],
-            });
+      let workloadInput: unknown;
+      if (runTarget === null) {
+        workloadInput = {
+          ...commonWorkload,
+          executionIntent: 'preview',
+          output: { kind: 'ephemeral-preview', nodeId: closure.transform.id },
+        };
+      } else {
+        workloadInput = {
+          ...commonWorkload,
+          executionIntent: 'run',
+          targetProjection: {
+            ...commonWorkload.targetProjection,
+            schemaDigestSha256: projection.schemaDigestSha256,
+          },
+          output: {
+            kind: 'transform-result',
+            nodeId: closure.transform.id,
+            disposition: 'table',
+            target: runTarget,
+            publicationPolicy: 'postgres-stable-table-publication.v1',
+          },
+          publicationBoundaries: [],
+        };
+      }
+      const workload = DvtOperationalWorkloadContractV1.schema.parse(workloadInput);
 
       return {
         ok: true,
@@ -132,34 +143,33 @@ export class DvtOperationalWorkloadProjector {
           ],
         },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        reason: error instanceof Error ? error.message : 'DVT workload projection failed.',
-      };
+    } catch {
+      return { ok: false, ...DVT_REJECTIONS.previewWorkloadProjectionFailed };
     }
   }
 }
 
 function resolveRunTarget(
   transform: WorkspaceGraphAuthoringDraft['nodes'][number]
-): DvtTransformResultTargetV1 | null {
+):
+  | { readonly ok: true; readonly target: DvtTransformResultTargetV1 | null }
+  | Extract<DvtOperationalWorkloadProjectionResult, { ok: false }> {
   const config = transform.metadata?.['config'];
-  if (config === undefined) return null;
+  if (config === undefined) return { ok: true, target: null };
   if (!isRecord(config)) {
-    throw new Error('Transform config must be an object.');
+    return { ok: false, ...DVT_REJECTIONS.runConfigInvalid };
   }
 
   const hasDisposition = Object.hasOwn(config, 'materialized');
   const hasTarget = Object.hasOwn(config, 'resultTarget');
-  if (!hasDisposition && !hasTarget) return null;
+  if (!hasDisposition && !hasTarget) return { ok: true, target: null };
   if (config['materialized'] !== 'table') {
-    throw new Error('Configured Run supports only table result disposition.');
+    return { ok: false, ...DVT_REJECTIONS.runDispositionUnsupported };
   }
   const target = DvtTransformResultTargetV1Schema.safeParse(config['resultTarget']);
-  if (!target.success)
-    throw new Error('Configured Run requires one valid PostgreSQL result target.');
-  return target.data;
+  return target.success
+    ? { ok: true, target: target.data }
+    : { ok: false, ...DVT_REJECTIONS.runTargetInvalid };
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {

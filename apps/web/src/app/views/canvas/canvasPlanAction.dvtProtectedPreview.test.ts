@@ -1,3 +1,11 @@
+/**
+ * Owned concern: verify protected DVT Preview selection and its readiness projection.
+ * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
+ * @decision Exercise the existing command and read model with real rejection definitions.
+ * @consequence Localized summaries cannot accidentally grant Run or replace diagnostics.
+ * @version 1.0.0
+ */
+import { DVT_REJECTIONS } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
@@ -264,5 +272,49 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     expect(state.canPlanGraph).toBe(true);
     expect(state.canStartRun).toBe(false);
     expect(state.executableGraphFailureMessage).toBeNull();
+  });
+
+  it.each([
+    [
+      'en-US',
+      DVT_REJECTIONS.runDispositionUnsupported.cause,
+      'Run currently requires a table output. Change the output type.',
+    ],
+    [
+      'es-ES',
+      DVT_REJECTIONS.runDispositionUnsupported.cause,
+      'La ejecución requiere una salida de tipo tabla. Cambia el tipo de salida.',
+    ],
+    [
+      'es',
+      'dvt_future_rejection',
+      'No se puede ejecutar este modelo. Revisa su configuración y repite la vista previa.',
+    ],
+    ['en', 'non_dvt_rejection', DVT_REJECTIONS.runDispositionUnsupported.reason],
+  ])('projects the %s readiness summary for %s', (applicationLanguage, cause, expected) => {
+    const rejection = {
+      code: DVT_REJECTIONS.runDispositionUnsupported.code,
+      cause,
+      reason: DVT_REJECTIONS.runDispositionUnsupported.reason,
+    };
+    const state = deriveCanvasExecutionState({
+      graphDraftCanvasId: 'canvas-main',
+      canRun: true,
+      executionStrategy: strategy,
+      currentPlan: null,
+      lastPlannedDraftSignature: null,
+      canonicalNodes: [source, transform],
+      canonicalEdges: [lineage],
+      selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
+      workspaceNodeIds: [source.id, transform.id],
+      latestPreviewOutcome: { kind: 'selection-rejected', rejection },
+      applicationLanguage,
+    });
+
+    expect(state.planStatusSummary).toBe(expected);
+    expect(state.planRunReadiness.summary).toBe(expected);
+    expect(state.planRunReadiness.blockers).toContain('plan_integrity');
+    expect(state.canStartRun).toBe(false);
+    expect(rejection.reason).toBe(DVT_REJECTIONS.runDispositionUnsupported.reason);
   });
 });

@@ -11,6 +11,7 @@ import {
 import { sha256Hex } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
+import { DbtRunExecutionContextPreparer } from '../../../src/application/services/dbt/DbtRunExecutionContextPreparer.js';
 import { PlannerBackedStartRunUseCase } from '../../../src/application/services/PlannerBackedStartRunUseCase.js';
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
@@ -190,18 +191,6 @@ describe('stored plan authority flow', () => {
     };
     const runContextBinding = new RunExecutionContextBindingUseCase({
       delegate: engineDelegate,
-      bundleBuilder: {
-        build: vi.fn(async () => ({
-          ok: true as const,
-          contentSetSha256: 'f'.repeat(64),
-          projectBundleRef: {
-            uri: `file:///bundles/tenants/tenant-1/${'f'.repeat(64)}`,
-            kind: 'dbt-project-bundle' as const,
-            sha256: 'f'.repeat(64),
-            tenantId: 'tenant-1',
-          },
-        })),
-      },
       contextWriter: {
         write: vi.fn(async () => ({
           ok: true as const,
@@ -214,36 +203,52 @@ describe('stored plan authority flow', () => {
           }),
         })),
       },
-      executionTargetResolver: {
-        resolve: () => ({
-          provider: 'temporal',
-          adapter: 'postgres',
-          targetName: 'production',
-          connectionRef: {
-            schemaVersion: 'connection-ref.v1',
-            connectionId: 'warehouse-production',
-            provider: 'postgres',
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder: {
+            build: vi.fn(async () => ({
+              ok: true as const,
+              contentSetSha256: 'f'.repeat(64),
+              projectBundleRef: {
+                uri: `file:///bundles/tenants/tenant-1/${'f'.repeat(64)}`,
+                kind: 'dbt-project-bundle' as const,
+                sha256: 'f'.repeat(64),
+                tenantId: 'tenant-1',
+              },
+            })),
           },
-          resolutionSource: 'environment-default',
-          credentialRef: 'vault:dbt/production',
+          executionTargetResolver: {
+            resolve: () => ({
+              provider: 'temporal',
+              adapter: 'postgres',
+              targetName: 'production',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                connectionId: 'warehouse-production',
+                provider: 'postgres',
+              },
+              resolutionSource: 'environment-default',
+              credentialRef: 'vault:dbt/production',
+            }),
+          },
+          executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
+          stepTypeRegistry: harness.stepTypeRegistry,
+          warehouseConnectionCatalog: {
+            listConnections: vi.fn(),
+            listSourceObjects: vi.fn(),
+            getConnection: vi.fn(async () => ({
+              id: 'warehouse-production',
+              name: 'Production warehouse',
+              type: 'postgres' as const,
+              database: 'analytics',
+              credentialRef: 'postgres:warehouse-production',
+              sourceObjects: [],
+            })),
+            createConnection: vi.fn(),
+            renameConnection: vi.fn(),
+          },
         }),
-      },
-      executionConnectionBindingVerifier: { verify: vi.fn(async () => true) },
-      stepTypeRegistry: harness.stepTypeRegistry,
-      warehouseConnectionCatalog: {
-        listConnections: vi.fn(),
-        listSourceObjects: vi.fn(),
-        getConnection: vi.fn(async () => ({
-          id: 'warehouse-production',
-          name: 'Production warehouse',
-          type: 'postgres' as const,
-          database: 'analytics',
-          credentialRef: 'postgres:warehouse-production',
-          sourceObjects: [],
-        })),
-        createConnection: vi.fn(),
-        renameConnection: vi.fn(),
-      },
+      ],
     });
     const start = new PlannerBackedStartRunUseCase({
       planner: { buildPlan: vi.fn() } as never,

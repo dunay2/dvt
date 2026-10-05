@@ -108,49 +108,78 @@ test('PostgreSQL integration files run once in the full suite with the real data
   }
 });
 
-test('Web resolves browser obligations before conditional infrastructure and preserves full suites', () => {
+test('Web keeps two independent bounded phases with isolated cache producers', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  assert.equal(web.name, 'Web Frontend Tests (${{ matrix.phase }})');
+  assert.deepEqual(web.strategy, {
+    'fail-fast': false,
+    matrix: { phase: ['vitest', 'browser'] },
+  });
+  assert.equal(web['timeout-minutes'], 25);
+  assert.notEqual(web['continue-on-error'], true);
+  const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
+  assert.equal(install.with['turbo-cache-variant'], '${{ matrix.phase }}');
+});
+
+test('Web phases resolve one plan and execute disjoint changed or full obligations', () => {
   const web = workflow.jobs['web-frontend-tests'];
   const plan = web.steps.find((step) => step.id === 'web_plan');
   assert.ok(plan, 'Resolve the existing Web plan before allocating browser infrastructure');
   assert.equal(web.services, undefined, 'Ordinary Web-only changes must not allocate PostgreSQL');
   const primary = web.steps.find((step) => step.run === 'pnpm test:web:ci');
-  const changed = web.steps.find((step) => step.run === 'pnpm test:web:changed');
+  const changed = web.steps.find(
+    (step) => step.run === 'pnpm test:web:changed --phase=${{ matrix.phase }}'
+  );
   const browser = web.steps.find(
-    (step) => step.run === 'pnpm test:web:changed --full --browser-only'
+    (step) => step.run === 'pnpm test:web:changed --full --phase=browser'
   );
   assert.ok(primary && changed && browser);
+  const executions = web.steps.filter(
+    (step) => step.run?.startsWith('pnpm test:web:') && step !== plan
+  );
+  assert.equal(executions.length, 3, 'No duplicate or legacy Web execution command');
   for (const [event, root, full] of [
     ['pull_request', false, false],
     ['pull_request', true, true],
     ['push', false, true],
     ['workflow_dispatch', false, true],
   ]) {
-    const context = {
-      github: { event_name: event },
-      needs: {
-        detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } },
-      },
-    };
-    const planned = plan.run.replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
-      String(runInNewContext(expression, context))
-    );
-    assert.equal(planned.trim(), `pnpm test:web:changed --plan${full ? ' --full' : ''}`);
-    assert.equal(runInNewContext(primary.if, context), full, event);
-    assert.equal(runInNewContext(browser.if, context), full, event);
-    assert.equal(runInNewContext(changed.if, context), !full, event);
+    for (const phase of ['vitest', 'browser']) {
+      const context = {
+        matrix: { phase },
+        github: { event_name: event },
+        needs: {
+          detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } },
+        },
+      };
+      const planned = plan.run.replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
+        String(runInNewContext(expression, context))
+      );
+      assert.equal(planned.trim(), `pnpm test:web:changed --plan${full ? ' --full' : ''}`);
+      const expected = full ? (phase === 'vitest' ? primary : browser) : changed;
+      assert.deepEqual(
+        executions.filter((step) => runInNewContext(step.if, context)),
+        [expected],
+        `${event}: root=${root}, phase=${phase}`
+      );
+      assert.notEqual(expected['continue-on-error'], true);
+    }
   }
   for (const id of ['browser_python', 'browser_dependencies', 'browser_postgres']) {
     const step = web.steps.find((entry) => entry.id === id);
     assert.ok(step, id);
     assert.ok(web.steps.indexOf(plan) < web.steps.indexOf(step));
-    for (const required of ['true', 'false', '', undefined]) {
-      assert.equal(
-        runInNewContext(step.if, {
-          steps: { web_plan: { outputs: { browser_required: required } } },
-        }),
-        required === 'true',
-        `${id}: ${required}`
-      );
+    for (const phase of ['vitest', 'browser']) {
+      for (const required of ['true', 'false', '', undefined]) {
+        assert.equal(
+          runInNewContext(step.if, {
+            matrix: { phase },
+            steps: { web_plan: { outputs: { browser_required: required } } },
+          }),
+          phase === 'browser' && required === 'true',
+          `${id}: ${phase}, ${required}`
+        );
+      }
     }
     assert.notEqual(step['continue-on-error'], true);
   }
@@ -198,7 +227,27 @@ test('Web proof allocation and cleanup are bounded to the container created by t
   const artifact = artifacts[0];
   assert.equal(artifact.with.path, '.dvt/evidence/selected-closure/screenshots');
   assert.equal(artifact.with['include-hidden-files'], true);
-  assert.equal(artifact.if, "failure() && steps.web_plan.outputs.browser_required == 'true'");
+  for (const [phase, required, outcome, expected] of [
+    ['vitest', 'true', 'failure', false],
+    ['vitest', 'true', 'cancelled', false],
+    ['browser', 'true', 'failure', true],
+    ['browser', 'true', 'cancelled', true],
+    ['browser', 'true', 'success', false],
+    ['browser', 'false', 'failure', false],
+    ['browser', '', 'cancelled', false],
+    ['browser', undefined, 'failure', false],
+  ]) {
+    assert.equal(
+      runInNewContext(artifact.if, {
+        matrix: { phase },
+        failure: () => outcome === 'failure',
+        cancelled: () => outcome === 'cancelled',
+        steps: { web_plan: { outputs: { browser_required: required } } },
+      }),
+      expected,
+      `screenshots: ${phase}, ${required}, ${outcome}`
+    );
+  }
   assert.doesNotMatch(artifact.with.path, /profiles|result\.json|\*/u);
 });
 
@@ -249,6 +298,14 @@ test('drafts skip all work and ready_for_review requires the new current scope',
   const draft = fixture('pull_request', scopeKeys, true);
   draft.context.payload.action = 'converted_to_draft';
   assert.deepEqual(assess(draft), []);
+  assert.equal(
+    runInNewContext(`Boolean(${workflow.jobs['web-frontend-tests'].if})`, {
+      github: { event_name: 'pull_request', event: draft.context.payload },
+      needs: draft.jobs,
+    }),
+    false,
+    'Drafts cannot schedule either Web phase'
+  );
   const ready = fixture('pull_request', scopeKeys);
   ready.context.payload.action = 'ready_for_review';
   assert.deepEqual(assess(ready), []);

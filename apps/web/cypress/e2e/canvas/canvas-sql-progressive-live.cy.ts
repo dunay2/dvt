@@ -1,4 +1,10 @@
-/** Progressively harder real PostgreSQL verticals; no API or row stubs. */
+/**
+ * Owned concern: prove progressively harder SQL verticals against real protected PostgreSQL.
+ * @baseline GH-2524-LIVE-V1-CONSUMERS: one workload V1 from authoring to publication.
+ * @decision Reuse shared user gestures; keep exact semantic revision and rows in each scenario.
+ * @consequence No duplicated drag engine, mocked query or alternative acceptance path.
+ * @version 1.0.0
+ */
 import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
@@ -10,8 +16,9 @@ import {
 import {
   openWorkbenchModel,
   previewWorkbenchModel,
+  connectWorkbenchProducer,
+  stageWorkbenchUnary,
 } from '../../support/relationalWorkbench/navigation';
-import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import { connectStagedTransformChain } from '../../support/relationalWorkbench/transformChainJourney';
 import { readPersistedDocument } from '../../support/semanticLive/canonicalAssertions';
 import { executePersistedModel } from '../../support/semanticLive/execution';
@@ -25,35 +32,6 @@ import {
   addLiveFormula,
   progressiveScenarios,
 } from '../../support/semanticLive/progressive';
-
-function stageUnary(operation: string, producer: string, disconnectOutput = false): void {
-  workbenchOperation(operation).should('have.attr', 'aria-disabled', 'false').click();
-  cy.get(`[data-pending-operation="true"] [data-operator="${operation}"]`).should('exist');
-  if (disconnectOutput) {
-    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
-    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
-      'not.have.attr',
-      'data-connected'
-    );
-  }
-  cy.window().then((window) => {
-    const dataTransfer = new window.DataTransfer();
-    cy.get(producer)
-      .last()
-      .closest('li')
-      .find('[data-slot="canvas-relational-output-port"]')
-      .trigger('dragstart', { dataTransfer });
-    cy.get(`[data-pending-operation="true"] [data-operator="${operation}"]`)
-      .closest('li')
-      .find('[data-slot="canvas-relational-input-port"]')
-      .trigger('dragover', { dataTransfer })
-      .trigger('drop', { dataTransfer });
-  });
-  cy.get(`[data-pending-operation="true"] [data-operator="${operation}"]`)
-    .closest('li')
-    .find('[data-slot="canvas-relational-input-port"]')
-    .should('have.attr', 'data-connected', 'true');
-}
 
 describe('Progressive SQL verticals', () => {
   beforeEach(function () {
@@ -99,7 +77,7 @@ describe('Progressive SQL verticals', () => {
         cy.get('[data-slot="canvas-model-tab-close"]').click();
         visitSemanticCanvas();
         openWorkbenchModel(modelId);
-        stageUnary('aggregate', '[data-operator="project"]', true);
+        stageWorkbenchUnary('aggregate', '[data-operator="project"]', true);
         cy.get('[data-slot="canvas-staged-operation-inspector"] form').within(() => {
           cy.contains('label', 'GROUP BY').find('select').select('region');
           cy.contains('label', 'Aggregate function').find('select').select('SUM');
@@ -108,7 +86,7 @@ describe('Progressive SQL verticals', () => {
           cy.get('button[type="submit"]').click();
         });
         cy.get('[data-operator="aggregate"]').click();
-        stageUnary('window', '[data-operator="aggregate"]');
+        stageWorkbenchUnary('window', '[data-operator="aggregate"]');
         cy.get('[data-slot="canvas-relational-tree-node"][data-presentation="window"]')
           .invoke('attr', 'data-relation-id')
           .should('be.a', 'string')
@@ -119,7 +97,7 @@ describe('Progressive SQL verticals', () => {
           cy.get('button[type="submit"]').click();
         });
         cy.get<string>('@windowRelationId').then((relationId) => {
-          stageUnary(
+          stageWorkbenchUnary(
             'sort',
             `[data-slot="canvas-relational-tree-node"][data-relation-id="${relationId}"]`
           );
@@ -130,21 +108,17 @@ describe('Progressive SQL verticals', () => {
           cy.get('button[type="submit"]').click();
         });
         cy.get('[data-operator="sort"]').click();
-        stageUnary('fetch', '[data-operator="sort"]');
+        stageWorkbenchUnary('fetch', '[data-operator="sort"]');
         cy.contains('[data-slot="canvas-staged-operation-inspector"] label', 'LIMIT')
           .find('input')
           .type('1');
         cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
-        cy.window().then((window) => {
-          const dataTransfer = new window.DataTransfer();
-          cy.get('[data-operator="fetch"]')
-            .closest('li')
-            .find('[data-slot="canvas-relational-output-port"]')
-            .trigger('dragstart', { dataTransfer });
-          cy.get('[data-slot="canvas-relational-output-input-port"]')
-            .trigger('dragover', { dataTransfer })
-            .trigger('drop', { dataTransfer });
-        });
+        cy.get('[data-operator="fetch"]').closest('li').as('fetchOutput');
+        connectWorkbenchProducer(
+          '@fetchOutput',
+          '[data-slot="canvas-relational-output-input-port"]',
+          null
+        );
         cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
         cy.get('[data-pending-operation="true"]').should('not.exist');
         cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');

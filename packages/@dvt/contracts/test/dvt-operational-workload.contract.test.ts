@@ -21,6 +21,7 @@ const DIGESTS = {
 function buildWorkload(): DvtOperationalWorkloadV1 {
   return {
     schemaVersion: 'dvt-operational-workload.v1',
+    executionIntent: 'preview',
     scope: {
       tenantId: 'tenant-a',
       projectId: 'project-a',
@@ -92,7 +93,7 @@ describe('DVT terminal Transform operational workload contract', () => {
     ).toBe(false);
   });
 
-  it('normalizes the historical INNER profile while reading a Preview workload', () => {
+  it('rejects the retired INNER profile in a Preview workload and registry', () => {
     const workload = buildWorkload();
     const historical = {
       ...workload,
@@ -106,9 +107,7 @@ describe('DVT terminal Transform operational workload contract', () => {
         profileId: 'dvt.vtx2.postgres.inner-join.v1',
       },
     };
-    const parsed = DvtOperationalWorkloadContractV1.schema.parse(historical);
-
-    expect(parsed.targetProjection.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    expect(DvtOperationalWorkloadContractV1.schema.safeParse(historical).success).toBe(false);
     expect(
       createDefaultStepTypeRegistry().validate(
         KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD,
@@ -121,7 +120,7 @@ describe('DVT terminal Transform operational workload contract', () => {
           },
         }
       ).success
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it.each([2, 3])('admits %i Set inputs as one Preview workload', (sourceCount) => {
@@ -169,6 +168,14 @@ describe('DVT terminal Transform operational workload contract', () => {
   });
 
   it.each([
+    [
+      'an implicit preview intent',
+      (workload: DvtOperationalWorkloadV1) => ({ ...workload, executionIntent: undefined }),
+    ],
+    [
+      'run intent without a durable output',
+      (workload: DvtOperationalWorkloadV1) => ({ ...workload, executionIntent: 'run' }),
+    ],
     [
       'duplicate selected nodes',
       (workload: DvtOperationalWorkloadV1) => ({

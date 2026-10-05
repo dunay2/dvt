@@ -1,6 +1,9 @@
 /**
- * @ownedConcern Validate web Vitest suite catalog ownership and CI command
- * wiring without mixing changed-file routing cases into the same file.
+ * Owned concern: validate Vitest catalog ownership and CI command wiring.
+ * @baseline GH-3540: the catalog owns suites, not browser execution.
+ * @decision GH-3583: preserve primary commands across separate evidence lifecycles.
+ * @consequence Phased CI keeps the same configuration and full Vitest route.
+ * @version 1.0.0
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -179,7 +182,14 @@ describe('web Vitest suite catalog', () => {
       (step) => step.run?.includes('pnpm test:web:') && !step.run.includes('--plan')
     );
     expect(executionSteps.some((step) => step.run === 'pnpm test:web:ci')).toBe(true);
-    expect(executionSteps.some((step) => step.run === 'pnpm test:web:changed')).toBe(true);
+    expect(
+      executionSteps.some(
+        (step) => step.run === 'pnpm test:web:changed --phase=${{ matrix.phase }}'
+      )
+    ).toBe(true);
+    expect(
+      executionSteps.some((step) => step.run === 'pnpm test:web:changed --full --phase=browser')
+    ).toBe(true);
     for (const step of executionSteps) {
       expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
     }

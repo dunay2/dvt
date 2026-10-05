@@ -8,6 +8,10 @@ import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanPreviewOutcome } from '../ports/plans';
 import { resolveCanvasViewCopy } from '../views/canvas/copy';
 import { PlanPreviewModal } from './PlanPreviewModal';
+import {
+  getApplicationLanguage,
+  useApplicationLanguageStore,
+} from '../stores/applicationLanguageStore';
 
 const MESSAGES = resolveCanvasViewCopy('en');
 
@@ -79,6 +83,29 @@ describe('PlanPreviewModal rejected outcomes', () => {
     expect(text).not.toContain(mockExecutionPlan.planId);
     expect(text).not.toContain('Execution steps');
     expect(text).not.toContain('Start Run');
+  });
+
+  it('localizes DVT rejection causes and updates an open Preview when language changes', async () => {
+    const previous = getApplicationLanguage();
+    try {
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('es'));
+      await renderOutcome({
+        kind: 'selection-rejected',
+        rejection: {
+          code: 'REJECTED',
+          cause: 'dvt_run_target_invalid',
+          reason: 'private diagnostic',
+        },
+      });
+      const panel = document.querySelector('[data-testid="plan-preview-rejection"]');
+      expect(panel?.textContent).toContain('Configura una conexión, un esquema y una tabla');
+      expect(panel?.textContent).not.toContain('private diagnostic');
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage('en'));
+      expect(panel?.textContent).toContain('Configure a valid output connection, schema and table');
+      expect(panel?.textContent).not.toContain('Configura una conexión');
+    } finally {
+      act(() => useApplicationLanguageStore.getState().configureApplicationLanguage(previous));
+    }
   });
 
   it('keeps long selection rejection diagnostics inside a scrollable viewport', async () => {

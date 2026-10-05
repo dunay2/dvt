@@ -1,6 +1,13 @@
-/** Present server-owned LIVE facts. This view neither admits nor starts a query. */
+/**
+ * Owned concern: present server-owned LIVE sample provenance and query limits.
+ * @baseline GH-3577-COMPACT-DATA-GRID: loaded samples retain their authoritative context.
+ * @decision Keep facts in a passive view with shared copy and stylesheet.
+ * @consequence This view neither admits nor starts a query.
+ * @version 1.0.0
+ */
 import type { DataPreviewProvenance } from '@dvt/contracts';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
+import styles from './OperationalDrawerLivePreviewFacts.module.css';
 
 export function OperationalDrawerLivePreviewFacts({
   provenance,
@@ -20,18 +27,16 @@ export function OperationalDrawerLivePreviewFacts({
     ),
   ];
   return (
-    <div data-slot="live-preview-facts" className="mb-3 space-y-2 text-xs text-(--text-muted)">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="rounded border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 font-semibold text-cyan-400">
-          LIVE
-        </span>
+    <div data-slot="live-preview-facts" className={styles.facts}>
+      <div className={styles.summary}>
+        <span className={styles.live}>LIVE</span>
         <details>
-          <summary className="cursor-pointer">{providers.join(' · ')}</summary>
-          <ul className="mt-1 space-y-1 break-all">
+          <summary>{providers.join(' · ')}</summary>
+          <ul className={styles.sources}>
             {provenance.sourceRefs.map((ref) => (
               <li key={JSON.stringify(ref)}>
                 {ref.sourceObjectId}{' '}
-                <span className="opacity-70">({ref.connectionRef.connectionId})</span>
+                <span className={styles.connection}>({ref.connectionRef.connectionId})</span>
               </li>
             ))}
           </ul>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { OperationalDrawerDataTable } from './OperationalDrawerDataTable';
 import { OperationalDrawerLivePreviewFacts } from './OperationalDrawerLivePreviewFacts';
+import styles from './OperationalDrawerDataTable.module.css';
 import {
   OperationalDrawerDataNotice,
   OperationalDrawerEmptyState,
@@ -117,6 +118,7 @@ export function OperationalDrawerDataSamplePanel({
       dataSlot="bottom-operational-drawer-data"
       ariaLabel={contribution.copy.dataAriaLabel}
       textSm
+      className={styles.samplePanel}
     >
       {onRefresh == null ? null : (
         <div className="mb-2 flex justify-end">

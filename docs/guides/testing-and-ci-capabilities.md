@@ -760,10 +760,18 @@ Current workflow consumers:
   focused commands remain available. `Test Suite Required for Merge` requires
   success for each selected lane and accepts skipped only for justified scope
   or draft posture. Missing scope/results and cancelled/failed jobs reject.
-  For ordinary web PRs, the web lane runs
-  `pnpm test:web:changed` with `GIT_BASE` pointing at the pull-request base ref.
-  The same lane runs `pnpm test:web:ci` for pushes to `main`, manual workflow
-  runs, and root-build-sensitive pull requests. `test:web:ci` expands to
+  The web job uses fixed `vitest` and `browser` matrix phases, each with the
+  unchanged 25-minute deadline and an isolated existing Turbo-cache variant.
+  For ordinary web PRs, both execute the same `pnpm test:web:changed` plan with
+  their `--phase=vitest` / `--phase=browser` selector and `GIT_BASE` pointing at
+  the pull-request base ref. Local default execution still runs both. Browser
+  dependencies and disposable PostgreSQL are provisioned only in the browser
+  phase when the complete plan requires them. Cancellation or failure of either
+  phase rejects the existing required aggregate; fail-fast is disabled so the
+  sibling can finish. Pushes to `main`, manual runs and root-sensitive PRs keep
+  `pnpm test:web:ci` in the Vitest phase and run
+  `pnpm test:web:changed --full --phase=browser` in the browser phase. The router's
+  `--full` is not a full-Vitest selector. `test:web:ci` expands to
   `@dvt/web` `test:deps` followed by the unit, presentation, and architecture
   Vitest delegates. `pnpm test:web` and `pnpm --filter @dvt/web test` use the
   same primary-suite delegate sequence through the package `pretest` lifecycle,

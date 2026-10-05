@@ -1,0 +1,212 @@
+---
+title: Single operational workload V1 hard cut
+status: draft
+date: 2026-10-04
+owners:
+  - '@dvt/contracts'
+  - dvt-api
+  - '@dvt/temporal-dvt-postgres-plugin'
+arc_level: ARC-2
+breaking: true
+code_refs:
+  - packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts
+  - packages/@dvt/contracts/src/index.ts
+  - apps/api/src/application/services/dvtOperationalWorkloadProjector.ts
+  - apps/api/src/application/services/postgres/DvtPostgresRunExecutionContextPreparer.ts
+  - packages/@dvt/temporal-dvt-postgres-plugin/src/DvtPostgresStepActivity.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts
+  - apps/web/src/app/services/api/dvtOperationalRejectionCopy.ts
+  - apps/web/src/app/components/PlanPreviewModal.tsx
+evidence:
+  tests:
+    - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/contracts typecheck
+    - pnpm --filter dvt-api typecheck
+    - pnpm --filter dvt-api lint
+    - pnpm --filter dvt-api test:unit test/application/services/dvtOperationalWorkloadProjector.test.ts test/application/services/RunExecutionContextBindingUseCase.dvt.test.ts test/application/services/dvtSortFetchPreview.test.ts test/application/services/dvtRepeatedSourceRun.test.ts test/application/services/dvtNInputPreview.test.ts
+    - pnpm --filter dvt-api test:integration:ci test/integration/dvtProtectedPreview.integration.test.ts
+    - pnpm --filter @dvt/temporal-dvt-postgres-plugin test
+    - pnpm --filter @dvt/temporal-dvt-postgres-plugin typecheck
+    - pnpm --filter dvt-temporal-worker typecheck
+    - pnpm --filter @dvt/web test:architecture:run src/app/views/canvas/CanvasShell.architecture.test.tsx
+    - pnpm --filter @dvt/web test:unit:run src/app/services/api/protectedRuntimeRejection.test.ts src/app/services/runs/runsService.test.ts src/app/services/plans/plansService.preview.test.ts
+    - pnpm --filter @dvt/web test:presentation:run src/app/components/PlanPreviewModal.outcomes.test.tsx
+    - pnpm --filter @dvt/web typecheck
+    - pnpm --filter @dvt/web lint
+    - pnpm verify:prepush
+---
+
+# Single operational workload V1 hard cut
+
+## Governing authority
+
+The [user-directed scope and Fowler analysis](https://github.com/dunay2/dvt/issues/2524#issuecomment-5983363139)
+preceded implementation. Planning DB design `GH-2524-SINGLE-WORKLOAD-V1` supersedes
+the Preview-V1/Run-V2 design. Existing `PreviewPlan`, `CompilePlan` and `StartRun`
+rails, ADR-0035, ADR-0064 and ADR-0066 remain authoritative. The
+[active contract](../contracts/planner/dvt-operational-workload-v1.md) owns admission
+and coordinated producer/worker rollout; no migration or parallel rail is added.
+
+## Real change
+
+One shared V1 envelope and ownership check serve two explicit intent variants.
+Run keeps its target, digest, publication policy and connection equality checks.
+The API projector parses once, and the registry no longer tries V2 then falls back
+to V1. The context binder and plugin admit only Run; Preview rejects before any
+context resolution or provider effects. All source consumers and fixtures use V1.
+The V2 source and its stale generated artifacts are removed. Historical evidence
+links to the exact prior Git revision instead of a nonexistent active contract.
+
+The root index remains a publication-only surface. Repeated complete-module
+export lists are reduced; partial exports remain explicit. A TypeScript export
+comparison against `origin/main` initially found 956 exports before and after:
+the four retired V2/compatibility names were replaced by four Preview/Run V1
+variant names. The initial i18n correction added three rejection-catalog
+exports. The following user-approved descriptor refactor replaces the factory
+and diagnostic-only map with named catalogs and shared message types; the index
+remains exports-only.
+
+The requested tabs separation already exists: controller decisions in
+`CanvasWorkspaceModelTabs.tsx`, markup in its `.templates.tsx` and styles in
+`canvasSemanticEditor.css`. The existing architecture test verifies passive
+templates, no inline styles and no intrinsic controller markup. No extra layer
+or duplicate stylesheet was introduced.
+
+The [i18n review and preimplementation rationale](https://github.com/dunay2/dvt/issues/2524#issuecomment-5983629070)
+and Planning DB design `GH-2524-WORKLOAD-REJECTION-I18N` add ADR-0044 as governing
+authority. Binding and projection return typed causes. Existing HTTP envelopes
+retain non-semantic diagnostic descriptions; Web uses EN/ES copy by cause and a
+safe fallback for unknown DVT causes. Preview follows language changes without
+duplicated state or effects. No new translation framework or wire version is added.
+The redundant multi-workload loop and unreachable connection branches are removed.
+
+The [typed-definition continuation](https://github.com/dunay2/dvt/issues/2524#issuecomment-5983906038)
+and Planning DB design `GH-2524-TYPED-REJECTION-DEFINITIONS` replace raw cause
+construction with named frozen DVT/Run definitions. `MessageDescriptor` reuses
+the contract-error structure; expected rejections are values, not exceptions.
+Run's string overload and bundle-message switch are removed, and its DBT
+binding branches now retain distinct causes with EN/ES presentation. Existing
+wire `code`/`cause`/`reason` fields remain; fixed messages need no new wire key
+or parameters. No provider generalization or CI-routing change is included.
+
+Continuation evidence: 795 contracts tests, 77 affected API tests, 78 Web service
+tests and 6 rendered Preview tests pass. Descriptor tests first failed because
+the catalogs did not exist, then passed. Type assertions were additionally
+compiled with TypeScript (not inferred from Vitest execution). Final lint,
+typecheck, mechanization and prepush outcomes are recorded on the issue for the
+exact committed candidate; previous runs are not evidence for a later SHA.
+
+## Executed evidence and limits
+
+### Provider-preparation boundary continuation
+
+The [approved decoupling rationale and diagrams](https://github.com/dunay2/dvt/issues/2524#issuecomment-5984235380)
+and Planning DB design `GH-2524-PROVIDER-PREPARATION-BOUNDARY` apply ADR-0018 to
+the existing StartRun rail. An application-owned preparation port replaces the
+coordinator's concrete DBT/PG dependencies. The composition root supplies the
+real DBT bundle/target preparer and PostgreSQL connection/publication preparer.
+The old flat PostgreSQL binder is removed, without a compatibility wrapper.
+
+The coordinator rejects caller contexts before preparation, checks unique
+context ownership, collects successful preparations, writes once and only then
+dispatches. No translated text, provider catalog or database-specific branch
+is added to the coordinator. A failing preparer or context store prevents
+dispatch. The provider-neutral test failed first on the coordinator's concrete
+DBT registry dependency, then passed after extraction.
+
+The [paired assembly review](https://github.com/dunay2/dvt/issues/2524#issuecomment-5985453344)
+replaces the generic duplicate-owner exception with the application-owned
+`DuplicateRunContextPreparerError`. The existing test now asserts its class,
+not diagnostic English text. Its red run observed the original generic error;
+all 34 binding/provider-boundary cases pass after the correction. PostgreSQL's
+predecessor rejection map is exhaustive over its actual failure union, matching
+the existing DBT mapping discipline. No new test case, source file, public error
+envelope or provider is introduced.
+
+Common workload identities no longer depend on PostgreSQL profiles or DBT.
+The SQL projection, graph cardinality and durable-output constraints are owned
+by `planner/postgres/DvtPostgresWorkloadConstraints.ts`; V1 explicitly composes
+them without relaxing admission. The artifact schema moves from DBT config to
+the neutral `StepArtifactRef.ts`, preserving its public export and wire shape.
+The existing central context contract still explicitly validates supported
+built-in plugin contexts; this is not a new DuckDB execution capability.
+
+The separate DBT-only caller-context test is replaced by parameterized coverage
+using the existing admission harness. Empty-plan integration no longer builds
+unused DBT/PG mocks. Ownership guards inspect imports and re-exports, including
+named public-barrel imports. Contracts (795), existing API/architecture cases,
+protected StartRun integration (3) and PostgreSQL plugin tests (9) pass; final
+counts and complete lint/type/prepush evidence belong to the issue closeout.
+The user's pre-existing projector edits are preserved outside this commit.
+
+The [bounded identity cleanup](https://github.com/dunay2/dvt/issues/2524#issuecomment-5984108516)
+uses one API-owned ordinal comparator for Preview graph identity, topology comparison
+and workload ID lists. It removes both locale comparators and a redundant array copy.
+The regression first rejected the same selected IDs in a different order because
+locale collation equated distinct Unicode strings. Identity comparison must not
+normalize those strings. Semantic JOIN/Set operand and output-column order remain
+unchanged. Complete file ownership/decision headers are preserved; no Planner
+internal helper is exposed. Final validation belongs to the exact candidate on #2524.
+
+- TDD: three Run/publication assertions failed against the old V1; they pass
+  after the hard cut. Retired V2, missing intent, mismatched output/intent and
+  absent Run digest are explicit negative cases.
+- Contracts: all 793 tests passed after the final Preview-intent negatives.
+- API affected units: 77 passed. Protected PostgreSQL integration: 4 passed,
+  persisting/replaying one, two and three Preview inputs and a Run plan.
+- Plugin: 9 passed, including valid Preview and retired V2 rejection before effects.
+- Tabs architecture: 10 passed. Contracts and API typechecks passed.
+- Web rejection/service tests: 63 passed. Rendered Preview tests: 6 passed,
+  including language changes while open and suppression of raw diagnostics.
+- i18n TDD: one API cause assertion and three Web presentation assertions failed
+  before implementation and pass after correction. No test branches on English
+  business diagnostics; localized-copy assertions remain presentation tests.
+- Traceability was regenerated with the owning generator, not manually patched.
+
+The PostgreSQL integration used the existing test database and only its generated
+UUID-scoped schema, removed by the test. No application/source data or database
+was deleted. This is not a new live Temporal/browser execution claim.
+
+The exact final gate results and commit IDs are recorded on #2524. No integration
+or green pre-push result is implied by this draft evidence record. No rules were
+relaxed, hooks bypassed, or stubs/compatibility aliases/debt entries introduced.
+
+The full native browser run exposed a rejection-envelope boundary defect:
+internal definition metadata and projector state reached the strict HTTP V1
+rejection unchanged. The existing HTTP mapper now projects only `code`, optional
+`cause` and `reason`. The existing route test includes the real named rejection
+definition and checks the strict contract parser, without plan construction or
+storage. The terminal browser case checks the structural cause, translated copy
+and zero Run requests. Contract strictness is unchanged. Its companion compact
+grid proof uses the real Fit View control after reducing the viewport; geometry
+assertions and normal click actionability remain enabled. Final browser and
+pre-push acceptance must be rerun on the corrected candidate.
+
+The next native run passed 39/40 cases and exposed the same diagnostic leak in
+the readiness summary, separate from the already-localized rejection detail.
+The existing readiness projection now reuses the named rejection-copy resolver;
+the diagnostic remains unchanged. Owner-level EN/ES and unknown-DVT cases failed
+first, then passed, with Run still blocked and non-DVT behavior preserved. No
+second message catalog, presentation workaround or browser assertion relaxation
+was added. Exact-candidate full-gate acceptance remains recorded on #2524.
+
+The paired retirement review also removes the historical INNER-profile read
+normalizer retained by the prior LEFT JOIN slice. No current producer emits that
+identity. Existing Preview, Run and context-binding cases become rejection
+negatives, with no connection reads, context writes or dispatch on the retired
+profile. Current JOIN identity and cardinality remain unchanged. Red/green and
+final candidate validation outcomes are recorded on #2524.
+
+Remote acceptance on `813e842da` passed all 4673 Web Vitest cases but exceeded
+the Web job's 25-minute deadline during browser execution: only 24 of the 40
+cases had finished. The required aggregate correctly rejected this incomplete
+evidence. The [GH-3583 paired correction](https://github.com/dunay2/dvt/issues/3583)
+separates those unchanged obligations into fixed Vitest/browser variants of the
+existing job and retains its strict aggregate. The previous local 40/40 receipt
+does not replace final-head remote acceptance. No timeout, worker, assertion,
+skip policy or browser runtime is relaxed by this scheduling change.
+
+The existing [Run workload drift risk](../risk-register/quality/R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT.yaml)
+now explicitly includes rejecting old formats and coordinating producer/worker
+deployment. Old persisted plans must be recreated through protected Preview;
+they are not silently converted or truncated.

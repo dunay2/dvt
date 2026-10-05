@@ -1,4 +1,16 @@
-import { asSha256HexString, type ExecutionPlan, type GitArtifactRef } from '@dvt/contracts';
+/**
+ * Owned concern: verify exact project and target binding, including structured rejections.
+ * @baseline ADR-0044: Diagnostic prose is not a semantic contract.
+ * @decision Assert named rejection definitions with strict equality.
+ * @consequence Tests retain every rejection field without duplicating message copy.
+ * @version 1.0.0
+ */
+import {
+  asSha256HexString,
+  RUN_REJECTIONS,
+  type ExecutionPlan,
+  type GitArtifactRef,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { resolveDbtPlanExecutionBinding } from '../../../src/application/services/dbtPlanExecutionBinding.js';
@@ -43,7 +55,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
       })
     ).toEqual({
       ok: false,
-      reason: 'The configured DBT execution target changed after Preview. Run Preview again.',
+      ...RUN_REJECTIONS.dbtTargetChanged,
     });
   });
 
@@ -60,7 +72,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
       })
     ).toEqual({
       ok: false,
-      reason: 'The persisted plan provenance does not describe a DBT project.',
+      ...RUN_REJECTIONS.dbtProvenanceNotProject,
     });
   });
 

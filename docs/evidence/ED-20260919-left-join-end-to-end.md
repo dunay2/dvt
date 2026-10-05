@@ -35,6 +35,17 @@ evidence:
 
 # LEFT JOIN end to end
 
+## Historical replay policy retired
+
+The [single V1 hard cut](../contracts/planner/dvt-operational-workload-v1.md)
+supersedes only the historical INNER-profile replay policy recorded below.
+Preview and Run now reject `dvt.vtx2.postgres.inner-join.v1`; affected plans must
+be recreated through protected Preview. No current producer emits that identity.
+The original validation results remain historical evidence, not current admission
+rules. Exact LEFT JOIN semantics and the current JOIN-family profile are unchanged.
+The [retirement review](https://github.com/dunay2/dvt/issues/2524#issuecomment-5985670203)
+owns current rejection and no-provider-effect validation.
+
 ## Authority and solution rationale
 
 [Issue #3307](https://github.com/dunay2/dvt/issues/3307), ADR-0064, the

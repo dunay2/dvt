@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-02
+last_reviewed: 2026-10-05
 planning_type: architecture
 ---
 
@@ -71,8 +71,12 @@ contract validation, or engine determinism tests.
   ten-file shared-fork batches introduce presentation-test interference; bounded
   memory alone is not sufficient evidence to remove isolation. See the
   [benchmark evidence and closeout in issue #2900](https://github.com/dunay2/dvt/issues/2900).
-- The CI job name for the web Vitest lane is `Web Frontend Tests`.
-- Ordinary web pull requests route through `pnpm test:web:changed`.
+- The `Web Frontend Tests` job has fixed `vitest` and `browser` variants;
+  the existing required aggregate requires both. Each variant uses its own
+  existing Turbo-cache producer identity, with matrix fail-fast disabled.
+- Ordinary web pull requests route through the same `pnpm test:web:changed`
+  plan with `--phase=vitest` or `--phase=browser`. Local default execution
+  remains both phases, and browser admission is never replaced by Vitest.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route
   through `pnpm test:web:ci`.
 - The package default `test` command delegates to the same primary-suite
@@ -85,10 +89,10 @@ contract validation, or engine determinism tests.
   `NODE_OPTIONS` at the workflow step boundary. That keeps the actual Vitest
   parent and forked worker processes aligned when GitHub runners execute
   `pnpm test:web:ci` or root `turbo run test` through `pnpm ci:full`.
-- The `Web Frontend Tests` job reserves a 25-minute budget for full coverage
-  routes because the CI worker cap deliberately trades parallelism for hosted
-  runner memory and process-exit stability; ordinary PRs remain on changed-suite
-  routing.
+- Each `Web Frontend Tests` variant retains a 25-minute budget: Vitest no
+  longer consumes the browser lifecycle's deadline. The CI worker cap still
+  trades parallelism for memory and process-exit stability; ordinary PRs remain
+  on changed-suite routing. This is not a timeout increase or evidence waiver.
 - Test support under `apps/web/src/testing/**` remains test-only and must not
   become a production adapter surface.
 - `vitest*.config.ts` files are adapters over the suite catalog. They do not own

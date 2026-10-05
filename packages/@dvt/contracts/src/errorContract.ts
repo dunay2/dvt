@@ -1,4 +1,5 @@
 /**
+ * Owned concern: define structured shared-kernel error identity and message metadata.
  * @file packages/@dvt/contracts/src/errorContract.ts
  * @baseline ADR-0005: Contract Formalization Tooling
  * @baseline ADR-0006: Contract Tooling Governance
@@ -90,7 +91,12 @@ export type AnyContractsErrorMessageParams = {
   [K in ContractsErrorMessageKeyName]: ContractsErrorMessageParams<K>;
 }[ContractsErrorMessageKeyName];
 
-const EMPTY_MESSAGE_PARAMS = Object.freeze({}) as Readonly<Record<string, never>>;
+export type MessageDescriptor<
+  Key extends string = string,
+  Params extends object = Readonly<Record<string, never>>,
+> = Readonly<{ messageKey: Key; messageParams: Readonly<Params> }>;
+
+export const EMPTY_MESSAGE_PARAMS = Object.freeze({}) as Readonly<Record<string, never>>;
 
 export class DvtContractError<
   K extends ContractsErrorMessageKeyName = ContractsErrorMessageKeyName,

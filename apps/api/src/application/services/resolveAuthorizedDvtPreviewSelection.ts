@@ -7,6 +7,7 @@ import type {
   ExecutionSelection,
   GenericGraphSourceV1,
 } from '@dvt/contracts';
+import { DVT_REJECTIONS, type DvtOperationalRejection } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
@@ -54,10 +55,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
     const projectId = context.scope.projectId?.value;
     const environmentId = context.scope.environmentId?.value;
     if (projectId === undefined || environmentId === undefined) {
-      return reject(
-        'authorized_scope_incomplete',
-        'Authorized scope is missing projectId or environmentId.'
-      );
+      return reject(DVT_REJECTIONS.previewScopeIncomplete);
     }
 
     const resolved = await this.deps.graphDraftResolver.executeWithAuthorizedDraft(
@@ -69,10 +67,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
     const { authorizedDraft } = resolved.value;
     const activeCanvasId = authorizedDraft.draft.activeCanvasId ?? authorizedDraft.draft.canvas.id;
     if (activeCanvasId !== input.provenance.canvasId) {
-      return reject(
-        'dvt_preview_canvas_mismatch',
-        'The requested Canvas no longer matches the active protected Canvas.'
-      );
+      return reject(DVT_REJECTIONS.previewCanvasMismatch);
     }
 
     const scope = {
@@ -90,10 +85,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
         selectedEdgeIds: resolved.value.edgeIds,
       });
     } catch {
-      return reject(
-        'dvt_preview_target_projection_failed',
-        'The protected Transform could not be projected to its PostgreSQL target.'
-      );
+      return reject(DVT_REJECTIONS.previewTargetProjectionFailed);
     }
 
     const workload = this.deps.workloadProjector.project({
@@ -106,7 +98,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
       targetProjection,
     });
     if (!workload.ok) {
-      return reject('dvt_preview_workload_projection_failed', workload.reason);
+      return reject(workload);
     }
 
     const workloadNodeIds = workload.graphSource.nodes.map((node) => node.nodeId);
@@ -123,15 +115,10 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
 }
 
 function reject(
-  cause: string,
-  reason: string
+  rejection: DvtOperationalRejection
 ): Extract<AuthorizedDvtPreviewSelectionResolution, { readonly ok: false }> {
   return {
     ok: false,
-    rejection: {
-      code: 'REJECTED',
-      cause,
-      reason,
-    },
+    rejection,
   };
 }

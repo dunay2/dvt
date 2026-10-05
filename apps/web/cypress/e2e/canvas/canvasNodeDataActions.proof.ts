@@ -29,6 +29,63 @@ const sample = {
   truncated: false,
 };
 
+function proveResizableDataGrid(host: string, screenshot: string): void {
+  const handle = '#app-shell-bottom-drawer-resize-handle';
+  const grid = `${host} [data-slot="bottom-operational-data-grid"]`;
+  const value = `${host} [data-slot="bottom-operational-data-value"]`;
+  const fullyVisible = ($element: JQuery<HTMLElement>): void => {
+    const element = $element[0];
+    const bounds = element.getBoundingClientRect();
+    const panel = element.closest(host)!.getBoundingClientRect();
+    const viewport = element.ownerDocument.defaultView!;
+    // Scrolling rounds to device pixels; resizable panel bounds retain fractional CSS pixels.
+    expect(bounds.top, 'content begins inside panel and viewport').to.be.at.least(
+      Math.max(0, panel.top) - 1
+    );
+    expect(bounds.bottom, 'content ends inside panel and viewport').to.be.at.most(
+      Math.min(panel.bottom, viewport.innerHeight) + 1
+    );
+    expect(bounds.left, 'content starts inside panel and viewport').to.be.at.least(
+      Math.max(0, panel.left) - 1
+    );
+    expect(bounds.right, 'content finishes inside panel and viewport').to.be.at.most(
+      Math.min(panel.right, viewport.innerWidth) + 1
+    );
+  };
+  // At this viewport, one step above minimum leaves a row below shell chrome.
+  cy.get(handle).focus().trigger('keydown', { key: 'End' }).trigger('keydown', { key: 'ArrowUp' });
+  cy.get(host)
+    .should('have.css', 'overflow-y', 'auto')
+    .should(($host) => {
+      const panel = $host[0];
+      const row = $host.find('[data-slot="bottom-operational-data-value"]')[0];
+      expect(panel.clientHeight, 'compact host can contain a data row').to.be.at.least(
+        row.clientHeight
+      );
+      expect(panel.scrollHeight, 'compact host exposes overflowing content').to.be.greaterThan(
+        panel.clientHeight
+      );
+    });
+  cy.get(`${host} [data-slot="bottom-operational-data-table-frame"]`).should(($frame) => {
+    expect(
+      $frame[0].clientHeight,
+      'header and at least one compact row remain usable'
+    ).to.be.at.least(54);
+  });
+  cy.get(value).first().scrollIntoView().should('be.visible').should(fullyVisible);
+  cy.get(handle).focus().trigger('keydown', { key: 'Home' });
+  cy.get(host).scrollTo('top', { ensureScrollable: false });
+  cy.get(value).first().should('be.visible').should(fullyVisible);
+  cy.get(`${grid} button[aria-label="Copy cell"]`).should('be.visible').should(fullyVisible);
+  cy.get(grid).children().last().should(fullyVisible);
+  cy.get(host).screenshot(screenshot, { scale: true });
+  cy.get(handle).focus().trigger('keydown', { key: 'ArrowDown', shiftKey: true });
+  cy.get(handle)
+    .trigger('keydown', { key: 'ArrowUp' })
+    .trigger('keydown', { key: 'ArrowUp' })
+    .trigger('keydown', { key: 'ArrowUp' });
+}
+
 export function registerCanvasNodeDataActionsProof(): void {
   describe('Canvas explicit data action', () => {
     let emptyResults = false;
@@ -272,6 +329,8 @@ export function registerCanvasNodeDataActionsProof(): void {
     }
 
     it('keeps nested Source and Transform LIVE preview actions separate', () => {
+      cy.viewport(1200, 600);
+      cy.get('.react-flow__controls-fitview').click();
       openWorkbenchModel('dvt-transform-1');
       const source = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
       cy.get(source).click();
@@ -280,6 +339,10 @@ export function registerCanvasNodeDataActionsProof(): void {
       cy.get(source).parent().find('[data-slot="canvas-node-execute"]').focus().click();
       waitForE2eApiCall(sourcePath, 'GET');
       cy.get('[data-slot="bottom-operational-drawer-data"]').should('contain.text', 'Ada');
+      proveResizableDataGrid(
+        '[data-slot="bottom-operational-drawer-data"]',
+        'compact-source-data-grid'
+      );
       cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
       cy.then(() => {
         const calls = getE2eApiCalls(sourcePath, 'GET');
@@ -300,6 +363,26 @@ export function registerCanvasNodeDataActionsProof(): void {
       cy.press(Cypress.Keyboard.Keys.SPACE);
       cy.get('[data-slot="canvas-model-data"]').should('contain.text', 'Grace');
       cy.get('[data-slot="canvas-model-preview"]').should('have.focus');
+      cy.then(() => expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(2));
+      const grid = '[data-slot="canvas-model-data"] [data-slot="bottom-operational-data-grid"]';
+      cy.get(grid).should('have.attr', 'data-density', 'compact');
+      cy.get(`${grid} [data-slot="bottom-operational-data-value"]`)
+        .first()
+        .should('have.css', 'font-size', '11px')
+        .click();
+      cy.get(`${grid} td[data-selected="true"]`).should('have.length', 1);
+      cy.get(`${grid} button[aria-label="Copy cell"]`).should('be.enabled');
+      cy.get(`${grid} button[aria-label="Comfortable rows"]`).click();
+      cy.get(grid).should('have.attr', 'data-density', 'comfortable');
+      cy.get(`${grid} button[aria-label="Compact rows"]`).click();
+      cy.get(`${grid} button[aria-label="Wrap text"]`).click();
+      cy.get(grid).should('have.attr', 'data-wrap', 'true');
+      cy.get(`${grid} input[type="search"]`).type('absent');
+      cy.get(grid).should('contain.text', 'No matching rows in this sample');
+      cy.get(`${grid} button[aria-label="Copy cell"]`).should('be.disabled');
+      cy.get(`${grid} input[type="search"]`).clear();
+      cy.get(grid).should('contain.text', 'Grace');
+      proveResizableDataGrid('[data-slot="canvas-model-data"]', 'compact-operation-data-grid');
       cy.then(() => expect(getE2eApiCalls(transformPath, 'GET')).to.have.length(2));
     });
 

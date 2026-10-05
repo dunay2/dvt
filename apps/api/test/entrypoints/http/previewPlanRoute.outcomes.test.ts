@@ -1,3 +1,11 @@
+/**
+ * Owned concern: verify PreviewPlan HTTP outcomes against the existing V1 contract.
+ * @baseline ADR-0044: Internal rejection definitions do not widen a wire envelope.
+ * @decision Exercise the route with named rejection metadata and the real strict parser.
+ * @consequence Rejected selections stay renderable without building or storing a plan.
+ * @version 1.0.0
+ */
+import { DVT_REJECTIONS, parsePlanPreviewRejectedOutcome } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
@@ -212,36 +220,48 @@ describe('previewPlanRoute outcomes', () => {
     });
   });
 
-  it('returns typed selection-rejected without building or storing a plan', async () => {
-    const reply = createReply();
-    const rejection = {
+  it.each([
+    {
       code: 'REJECTED' as const,
       cause: 'dependency_gap',
       reason: 'Selected closure is missing required dependencies.',
-    };
-    const deps = createPreviewDeps({
-      previewSelectionResolver: {
-        execute: vi.fn(async () => ({ ok: false as const, rejection })),
-      },
-    });
-
-    await executePreviewRequest(reply, deps, { id: 'req-preview-selection-rejected' });
-
-    expect(reply.statusCode).toBe(422);
-    expect(reply.payload).toEqual({
-      error: {
-        type: 'unprocessable',
-        reason: 'plan_rejected',
-        details: {
-          contractVersion: '1.0.0',
-          kind: 'selection-rejected',
-          rejection,
+    },
+    { ok: false, ...DVT_REJECTIONS.runDispositionUnsupported },
+  ])(
+    'returns V1 selection-rejected for $cause without building or storing a plan',
+    async (rejection) => {
+      const reply = createReply();
+      const { code, cause, reason } = rejection;
+      const deps = createPreviewDeps({
+        previewSelectionResolver: {
+          execute: vi.fn(async () => ({ ok: false as const, rejection })),
         },
-      },
-    });
-    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
-    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
-  });
+      });
+
+      await executePreviewRequest(reply, deps, { id: 'req-preview-selection-rejected' });
+
+      expect(reply.statusCode).toBe(422);
+      expect(reply.payload).toEqual({
+        error: {
+          type: 'unprocessable',
+          reason: 'plan_rejected',
+          details: {
+            contractVersion: '1.0.0',
+            kind: 'selection-rejected',
+            rejection: { code, cause, reason },
+          },
+        },
+      });
+      const { details } = (reply.payload as { error: { details: unknown } }).error;
+      expect(parsePlanPreviewRejectedOutcome(details)).toEqual({
+        contractVersion: '1.0.0',
+        kind: 'selection-rejected',
+        rejection: { code, cause, reason },
+      });
+      expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+      expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
+    }
+  );
 
   it('returns 500 when the planner throws an unexpected error', async () => {
     const reply = createReply();

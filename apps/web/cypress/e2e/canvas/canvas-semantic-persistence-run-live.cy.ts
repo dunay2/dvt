@@ -1,4 +1,10 @@
-/** Proves editing and reopening canonical semantics before querying and executing the same revision. */
+/**
+ * Owned concern: prove edited canonical semantics survive reopening, querying and execution.
+ * @baseline GH-2524-LIVE-V1-CONSUMERS: protected Preview and Run consume the saved revision.
+ * @decision Use staged authoring and shared gestures, never retired modal shortcuts.
+ * @consequence Semantic identity, negative query assertions and real publication stay authoritative.
+ * @version 1.0.0
+ */
 import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
@@ -9,8 +15,9 @@ import {
 import {
   openWorkbenchModel,
   previewWorkbenchModel,
+  connectWorkbenchProducer,
+  stageWorkbenchUnary,
 } from '../../support/relationalWorkbench/navigation';
-import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
   expectCanonicalOrdering,
   readPersistedDocument,
@@ -61,12 +68,21 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     });
     cy.then(() => importSemanticModel(initialDocument));
     openWorkbenchModel(modelId);
-    workbenchOperation('sort').click();
-    cy.get('[role="dialog"] button[type="submit"]').click();
+    stageWorkbenchUnary('sort', '[data-operator="join"]', true);
+    cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
     cy.get('[data-operator="sort"]').click();
-    workbenchOperation('fetch').click();
-    cy.contains('[role="dialog"] label', 'LIMIT').find('input').clear().type('2');
-    cy.get('[role="dialog"] button[type="submit"]').click();
+    stageWorkbenchUnary('fetch', '[data-operator="sort"]');
+    cy.contains('[data-slot="canvas-staged-operation-inspector"] label', 'LIMIT')
+      .find('input')
+      .clear()
+      .type('2');
+    cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
+    cy.get('[data-operator="fetch"]').closest('li').as('fetchOutput');
+    connectWorkbenchProducer(
+      '@fetchOutput',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.then(() => readPersistedDocument(initialDocument.semanticPlan.sha256)).then((document) => {

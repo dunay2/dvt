@@ -1,6 +1,14 @@
-/** Owned concern: enter the semantic editor through supported user interactions. */
+/**
+ * Owned concern: navigate and connect the semantic editor through supported user gestures.
+ * @baseline GH-2524-LIVE-V1-CONSUMERS: prove current authoring before protected execution.
+ * @decision Share gestures, while each caller owns semantic and provider assertions.
+ * @consequence No alternate editor, persistence or drag semantics live in a proof.
+ * @version 1.0.0
+ */
 import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
+
+import { workbenchOperation } from './operationMenu';
 
 export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
   visitWithE2eWorkspaceSession('/canvas', {
@@ -77,4 +85,28 @@ export function connectWorkbenchProducer(
         : cy.get(consumer).find('[data-slot="canvas-relational-input-port"]').eq(port);
     target.trigger('dragover', { dataTransfer }).trigger('drop', { dataTransfer });
   });
+}
+
+/** Stage a unary operation and explicitly connect its primary input. */
+export function stageWorkbenchUnary(
+  operation: string,
+  producer: string,
+  disconnectOutput = false
+): void {
+  const staged = `[data-pending-operation="true"] [data-operator="${operation}"]`;
+  workbenchOperation(operation).should('have.attr', 'aria-disabled', 'false').click();
+  cy.get(staged).should('exist').closest('li').as('stagedUnaryTarget');
+  if (disconnectOutput) {
+    cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'not.have.attr',
+      'data-connected'
+    );
+  }
+  cy.get(producer).last().closest('li').as('stagedUnaryProducer');
+  connectWorkbenchProducer('@stagedUnaryProducer', '@stagedUnaryTarget');
+  cy.get(staged)
+    .closest('li')
+    .find('[data-slot="canvas-relational-input-port"]')
+    .should('have.attr', 'data-connected', 'true');
 }

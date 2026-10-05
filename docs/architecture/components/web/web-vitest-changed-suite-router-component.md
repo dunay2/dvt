@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-04
+last_reviewed: 2026-10-05
 planning_type: architecture
 ---
 
@@ -142,8 +142,9 @@ stateDiagram-v2
 - Local frontend developers use `pnpm --filter @dvt/web test:changed`.
 - Reviewers use `pnpm test:web:changed -- --files <paths>` to validate a patch
   without running the full web suite.
-- The `Web Frontend Tests` GitHub job uses `pnpm test:web:changed` for
-  ordinary web pull requests after the dependency graph has been built.
+- The `Web Frontend Tests` GitHub job uses the same changed plan in fixed
+  `vitest` and `browser` phases for ordinary web pull requests after building
+  dependencies. Local execution without a phase still runs both obligations.
 - Architecture tests use the router API to prevent command drift.
 - Documentation uses this component to explain local feedback-loop sizing.
 
@@ -237,9 +238,20 @@ flowchart LR
   dbt and Cypress preparation is conditional on a browser obligation. Use an
   explicit disposable CI PostgreSQL URL and generated local proof identity;
   no tenant credential, repository secret or development database is required.
+- GH-3583 separates the existing job into a fixed `vitest` / `browser` matrix
+  with `fail-fast: false`, a 25-minute limit per phase and a distinct existing
+  Turbo-cache variant per producer. This removes the shared serial deadline;
+  it does not alter suite selection, workers, assertions or browser admission.
+  `--phase=vitest` and `--phase=browser` select disjoint obligations from the
+  same complete plan. Planning still rejects unknown browser paths in either
+  phase. The old `--browser-only` flag is removed, not retained as an alias.
+  Provider setup, cleanup and sanitized failure/cancellation screenshots belong
+  only to the browser phase. The existing required aggregate requires the
+  complete matrix result; cancelled, failed or absent evidence still rejects.
 - `main`, manual and root-sensitive runs retain `test:web:ci` and execute the
-  admitted browser baseline as a separate obligation. A browser-only adapter
-  invocation is not a substitute for that full Vitest command. Required check
+  admitted browser baseline with `--full --phase=browser`. `--full` only adds
+  browser baseline obligations to the router: executing it with the Vitest
+  phase is invalid, and cannot replace `test:web:ci`. Required check
   names and the Test Suite aggregate stay unchanged.
 - The existing live runner owns allocation and cleanup. Missing runtime,
   zero executed tests, pending tests or skipped tests are failures. POSIX
@@ -275,3 +287,15 @@ The implementation must record exact commands, local and CI timings, and
 comparison limits in the issue. Fewer Vitest launches alone do not establish
 the repository-wide 50% time target. No isolation, coverage, worker or
 authorization rule is relaxed by this boundary.
+
+The [GH-3583 paired rationale and conformity matrix](https://github.com/dunay2/dvt/issues/3583)
+govern the independent execution lifecycles. Previously the same 25-minute
+deadline covered Vitest followed by browser execution. The new boundary is:
+
+```text
+Exact diff -> one governed plan -> Vitest phase  -> required matrix result
+                              -> browser phase -> required matrix result
+```
+
+The matrix changes elapsed scheduling, not total evidence or CPU guarantees.
+Actual complete CI timings are required before claiming a speed improvement.
