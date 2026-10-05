@@ -1,4 +1,10 @@
-/** Resolve and normalize semantic documents owned by staged graph operations. */
+/**
+ * Owned concern: resolve and normalize semantic documents owned by staged graph operations.
+ * @baseline ADR-0064: canonical subtrees and explicit authoring identities are retained together.
+ * @decision Rebind internal ownership whenever a staged public root changes identity.
+ * @consequence Staging preserves group semantics without materializing a second expression model.
+ * @version 1.0.0
+ */
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
@@ -138,7 +144,9 @@ export function assignCanvasStagedRoot(
       relations: document.sidecar.relations.map((binding) =>
         binding.relationId === rootId
           ? { ...binding, relationId, displayName: 'field_transform' }
-          : binding
+          : binding.authoringOwnerRelationId === rootId
+            ? { ...binding, authoringOwnerRelationId: relationId }
+            : binding
       ),
       fields: document.sidecar.fields.map((field) =>
         field.relationId === rootId ? { ...field, relationId } : field

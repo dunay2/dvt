@@ -1,4 +1,10 @@
-/** Present natural operator slots and selected outputs from canonical emit, not execution profiles. */
+/**
+ * Owned concern: present natural operator slots and selected outputs from canonical emit.
+ * @baseline ADR-0064: canonical slots, not execution profiles, own output identity.
+ * @decision Accept an explicit dependency model only to describe grouped calculations.
+ * @consequence Presentation retains formulas without changing selection or lineage semantics.
+ * @version 1.0.0
+ */
 import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
 import {
   deriveOperatorSchema,
@@ -10,6 +16,9 @@ import {
 import { relationOutputMapping } from './canvasRelationOutputBindings';
 import { joinOutputScope } from './canvasSelectedJoinType';
 import { createSemanticExpressionDescription } from './semanticExpressionDescription';
+import type { TransformDependencyModel } from './canvasTransformDependencyModel';
+import { describeCanvasTransformDefinitions } from './canvasTransformDefinitionPresentation';
+import { rootFields } from './canvasDerivedOutputExpression';
 
 type Fields = readonly DvtSubstraitFieldBindingV1[];
 export type RelationOutputSlot = Readonly<{
@@ -46,7 +55,8 @@ function inputOrigins(
 
 export function relationOutputSlots(
   entry: IndexedRelation & Pick<SubstraitDocument, 'plan'>,
-  inputs: readonly RelationAnalysisResult[]
+  inputs: readonly RelationAnalysisResult[],
+  dependencies?: TransformDependencyModel
 ): readonly RelationOutputSlot[] {
   const natural = deriveOperatorSchema(
     entry,
@@ -56,6 +66,20 @@ export function relationOutputSlots(
   const origins = inputOrigins(entry, inputs);
   const inputNames = origins.map((fields) => fields[0]?.displayName ?? '');
   const describe = createSemanticExpressionDescription(entry.plan).describeExpression;
+  const descriptions =
+    dependencies == null ? null : describeCanvasTransformDefinitions(entry.plan, dependencies);
+  const symbols =
+    dependencies == null
+      ? []
+      : [
+          ...(dependencies.memberOutputIds.get(entry.inputs[0]!) ??
+            rootFields(dependencies.input.fields).map((field) => field.fieldId)),
+          ...dependencies.definitions
+            .filter(
+              (definition) => definition.owner.binding.relationId === entry.binding.relationId
+            )
+            .map((definition) => definition.id),
+        ];
   const fieldsById = new Map(
     [...inputs.flatMap((input) => input.bindings), ...entry.fields].map((field) => [
       field.fieldId,
@@ -125,6 +149,9 @@ export function relationOutputSlots(
       entry.relation.relType.case === 'project'
         ? entry.relation.relType.value.expressions[slot - origins.length]
         : undefined;
+    const description =
+      descriptions?.get(symbols[slot]!)?.description ??
+      (expression == null ? undefined : describe(expression, inputNames));
     return {
       slot,
       key,
@@ -132,7 +159,7 @@ export function relationOutputSlots(
       schema,
       output,
       fields,
-      ...(expression == null ? {} : { expression: describe(expression, inputNames) }),
+      ...(description == null ? {} : { expression: description }),
     };
   });
 }

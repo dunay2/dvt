@@ -8,6 +8,7 @@
 import { acceptsDvtRelationalOperationInputCount } from '@dvt/contracts';
 import {
   indexSubstraitRelations,
+  readSubstraitAuthoringGroup,
   type IndexedRelation,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
@@ -35,8 +36,14 @@ export function projectCanvasCanonicalGraphEditing(
   const sources = projectSources(entries, sourceNodeIds);
   if (sources == null) return null;
   const operations = entries
-    .filter((entry) => entry.relation.relType.case !== 'read')
-    .map((entry) => projectOperation(document, entry));
+    .filter(
+      (entry) =>
+        entry.relation.relType.case !== 'read' && entry.binding.authoringOwnerRelationId == null
+    )
+    .map((entry) => {
+      const group = readSubstraitAuthoringGroup(indexed.index, entry.binding.relationId);
+      return projectOperation(document, entry, group == null ? entry.inputs : [group.inputId]);
+    });
   if (operations.some((operation) => operation == null)) return null;
   return { sources, operations: operations.filter((operation) => operation != null) };
 }
@@ -65,20 +72,21 @@ function projectSources(
 
 function projectOperation(
   document: SubstraitDocument,
-  entry: IndexedRelation
+  entry: IndexedRelation,
+  inputs: readonly string[]
 ): CanvasStagedOperation | null {
   const operation = canvasPresentationOperationForRel(entry.relation);
   const subtree = projectCanvasStagedDocument(document, entry.binding.relationId);
   if (
     !isCanvasStagedOperationKind(operation) ||
     subtree == null ||
-    !acceptsDvtRelationalOperationInputCount(operation, entry.inputs.length)
+    !acceptsDvtRelationalOperationInputCount(operation, inputs.length)
   )
     return null;
   return {
     id: entry.binding.relationId,
     operation,
-    inputs: entry.inputs,
+    inputs,
     semanticDocument: encodeDvtSubstraitSemanticDocument(subtree),
   };
 }

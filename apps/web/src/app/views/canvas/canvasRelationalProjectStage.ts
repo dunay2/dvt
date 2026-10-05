@@ -1,9 +1,19 @@
-/** Project emitted ProjectRel fields into a disposable field-transformation summary. */
-import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import type { SubstraitRelationIndex } from '@dvt/substrait-analysis';
+/**
+ * Owned concern: summarize published Transform definitions at the visible authoring boundary.
+ * @baseline ADR-0064: canonical expressions and emit mappings own field meaning.
+ * @decision Reuse the disposable dependency read model across explicitly owned stages.
+ * @consequence Forwarding a calculation does not mislabel it as an input passthrough.
+ * @version 1.0.0
+ */
+import {
+  SubstraitAnalysisError,
+  type IndexedRelation,
+  type SubstraitRelationIndex,
+} from '@dvt/substrait-analysis';
 
 import type { CanvasPresentationOperation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 export type CanvasRelationalProjectStage = Readonly<{
   operation: Extract<CanvasPresentationOperation, 'field_transform'>;
@@ -11,31 +21,25 @@ export type CanvasRelationalProjectStage = Readonly<{
 }>;
 
 export function projectCanvasRelationalProjectStage(
-  rel: Rel,
+  entry: IndexedRelation,
   index: SubstraitRelationIndex,
-  inputRelationIds: readonly string[],
   availableOutputOrdinals?: ReadonlySet<number>
 ): CanvasRelationalProjectStage | null {
-  if (rel.relType.case !== 'project') return null;
-  const inputFieldCount =
-    inputRelationIds[0] == null
-      ? 0
-      : (index.relations.get(inputRelationIds[0])?.fields.length ?? 0);
-  const project = rel.relType.value;
-  const availableFieldCount = inputFieldCount + project.expressions.length;
-  const emitted =
-    project.common?.emitKind.case === 'emit'
-      ? project.common.emitKind.value.outputMapping
-      : Array.from({ length: availableFieldCount }, (_, ordinal) => ordinal);
-  if (emitted.some((ordinal) => ordinal < 0 || ordinal >= availableFieldCount)) {
-    throw new Error('ProjectRel emits an unavailable field.');
-  }
-  const published = emitted.filter(
+  if (entry.relation.relType.case !== 'project') return null;
+  const model = readCanvasTransformDependencyModel(entry, (id) => index.relations.get(id)!);
+  if (model.outputIds.some((id) => id == null))
+    throw new SubstraitAnalysisError(
+      'invalid_binding',
+      'ProjectRel emits an unavailable field.',
+      entry.binding.relationId
+    );
+  const published = model.outputIds.filter(
     (_, ordinal) => availableOutputOrdinals == null || availableOutputOrdinals.has(ordinal)
   );
-  const expressions = published
-    .filter((ordinal) => ordinal >= inputFieldCount)
-    .map((ordinal) => project.expressions[ordinal - inputFieldCount]!);
+  const definitions = new Map(
+    model.definitions.map((definition) => [definition.id, definition.expression])
+  );
+  const expressions = published.flatMap((id) => definitions.get(id) ?? []);
   const scalarFieldCount = expressions.filter(
     (expression) => expression.rexType.case !== 'windowFunction'
   ).length;
@@ -43,7 +47,7 @@ export function projectCanvasRelationalProjectStage(
   return {
     operation: 'field_transform',
     summary: {
-      passthroughFieldCount: published.filter((ordinal) => ordinal < inputFieldCount).length,
+      passthroughFieldCount: published.length - expressions.length,
       scalarFieldCount,
       windowFieldCount,
     },

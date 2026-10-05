@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
-import { disconnectCanvasCanonicalGraph } from './canvasCanonicalGraphEditing';
+import {
+  disconnectCanvasCanonicalGraph,
+  projectCanvasCanonicalGraphEditing,
+} from './canvasCanonicalGraphEditing';
 import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { restoreCanvasOperationConfiguration } from './canvasRetainedOperationConfiguration';
 import {
   decodeCanvasStagedOperation,
+  assignCanvasStagedRoot,
   projectCanvasStagedDocument,
 } from './canvasStagedOperationDocument';
 import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
@@ -24,8 +28,67 @@ import { source } from './canvasRelationalOperator.test-support';
 import { canvasCanonicalProducerIdentity } from './canvasCanonicalProducerIdentity';
 import { disconnectCanvasStagedOperation } from './canvasStagedOperation';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import {
+  withPublicExpressionStage,
+  withScalarOutput,
+} from './canvasRelationalExpressionStage.test-support';
 
 describe('canonical graph disconnection', () => {
+  it('disconnects and restores a grouped Transform through its external input only', async () => {
+    const document = await withPublicExpressionStage(withScalarOutput(), true);
+    const indexed = indexSubstraitRelations(document);
+    if (!indexed.ok) throw indexed.error;
+    const input = [...indexed.index.relations.values()].find(
+      (entry) => entry.relation.relType.case === 'read'
+    )!;
+    const graph = projectCanvasCanonicalGraphEditing(document, ['customers'])!;
+    expect(graph.operations).toHaveLength(1);
+    expect(graph.operations[0]).toMatchObject({
+      id: 'public-transform',
+      inputs: [input.binding.relationId],
+    });
+    const detached = disconnectCanvasCanonicalGraph(document, 'public-transform', 0, [
+      'customers',
+    ])!;
+    expect(detached.operations).toHaveLength(1);
+    const pending = detached.operations[0]!;
+    expect(pending.inputs).toEqual([null]);
+    expect(pending.semanticDocument).toBeUndefined();
+    expect(pending.configurationDocument).toEqual(encodeDvtSubstraitSemanticDocument(document));
+    const producer = projectCanvasStagedDocument(document, input.binding.relationId)!;
+    const restored = restoreCanvasOperationConfiguration(
+      { ...pending, inputs: [input.binding.relationId] },
+      [producer]
+    );
+    expect(restored.semanticDocument).toEqual(encodeDvtSubstraitSemanticDocument(document));
+    expect(restored.configurationDocument).toBeUndefined();
+    const changed = structuredClone(producer);
+    changed.sidecar.fields[0]!.displayName = 'changed';
+    expect(
+      restoreCanvasOperationConfiguration({ ...pending, inputs: [input.binding.relationId] }, [
+        changed,
+      ]).semanticDocument
+    ).toBeUndefined();
+  });
+
+  it('reassigns the public root without orphaning internal authoring bindings', async () => {
+    const document = await withPublicExpressionStage(withScalarOutput(), true);
+    const renamed = assignCanvasStagedRoot(document, 'renamed-transform');
+    expect(
+      renamed.sidecar.relations
+        .filter((binding) => binding.authoringOwnerRelationId != null)
+        .map((binding) => binding.authoringOwnerRelationId)
+    ).toEqual(['renamed-transform']);
+    const indexed = indexSubstraitRelations(renamed);
+    expect(indexed.ok).toBe(true);
+    if (!indexed.ok) throw indexed.error;
+    expect(indexed.index.rootId).toBe('renamed-transform');
+    expect(renamed.plan).toBe(document.plan);
+    expect(renamed.sidecar.fields.map((field) => field.fieldId)).toEqual(
+      document.sidecar.fields.map((field) => field.fieldId)
+    );
+  });
+
   it.each([0, 1])('disconnects only JOIN port %s and retains its exact predicate', (port) => {
     const { document, session } = graphJoin();
     const previousInputs = session.locate(session.rootId, session.revision).inputs;
@@ -154,32 +217,38 @@ describe('canonical graph disconnection', () => {
     }
   );
 
-  it('invalidates the consumer chain and refuses stale producer content on reconnect', async () => {
-    const producer = connectedNamesProjectionDraft();
-    const index = indexSubstraitRelations(producer);
-    if (!index.ok) throw index.error;
-    const configured = await configureCanvasStagedTransform(
-      { id: 'outer', operation: 'field_transform', inputs: [index.index.rootId] },
-      producer
-    );
-    const complete = decodeCanvasStagedOperation(configured)!;
-    const detached = disconnectCanvasCanonicalGraph(complete, index.index.rootId, 0, [
-      'source-people',
-    ])!;
-    expect(
-      detached.operations.every(
-        (operation) => operation.semanticDocument == null && operation.configurationDocument != null
-      )
-    ).toBe(true);
-    const outer = detached.operations.find((operation) => operation.id === 'outer')!;
-    expect(restoreCanvasOperationConfiguration(outer, [null])).toBe(outer);
-    const renamed = structuredClone(producer);
-    renamed.sidecar.fields[0]!.displayName = 'changed';
-    expect(restoreCanvasOperationConfiguration(outer, [renamed])).toBe(outer);
-    expect(restoreCanvasOperationConfiguration(outer, [producer]).semanticDocument).toEqual(
-      configured.semanticDocument
-    );
-  });
+  it.each([false, true])(
+    'invalidates the consumer chain and refuses stale producer content on reconnect (grouped=%s)',
+    async (grouped) => {
+      const producer = grouped
+        ? await withPublicExpressionStage(withScalarOutput(), true)
+        : connectedNamesProjectionDraft();
+      const index = indexSubstraitRelations(producer);
+      if (!index.ok) throw index.error;
+      const configured = await configureCanvasStagedTransform(
+        { id: 'outer', operation: 'field_transform', inputs: [index.index.rootId] },
+        producer
+      );
+      const complete = decodeCanvasStagedOperation(configured)!;
+      const detached = disconnectCanvasCanonicalGraph(complete, index.index.rootId, 0, [
+        grouped ? 'customers' : 'source-people',
+      ])!;
+      expect(
+        detached.operations.every(
+          (operation) =>
+            operation.semanticDocument == null && operation.configurationDocument != null
+        )
+      ).toBe(true);
+      const outer = detached.operations.find((operation) => operation.id === 'outer')!;
+      expect(restoreCanvasOperationConfiguration(outer, [null])).toBe(outer);
+      const renamed = structuredClone(producer);
+      renamed.sidecar.fields[0]!.displayName = 'changed';
+      expect(restoreCanvasOperationConfiguration(outer, [renamed])).toBe(outer);
+      expect(restoreCanvasOperationConfiguration(outer, [producer]).semanticDocument).toEqual(
+        configured.semanticDocument
+      );
+    }
+  );
 
   it('Apply withdraws old semantic authority and preserves the disconnected topology', () => {
     const document = connectedNamesProjectionDraft();

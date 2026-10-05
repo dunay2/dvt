@@ -1,4 +1,10 @@
-/** Owned concern: derive semantic duplicate-node commands from a source node and current graph state. */
+/**
+ * Owned concern: derive semantic duplicate-node commands from a source node and graph state.
+ * @baseline ADR-0064: sidecar identities are independent of canonical Plan semantics.
+ * @decision Reidentify ownership and lineage with the same relation and field maps.
+ * @consequence Duplicates retain meaning without referencing the original authoring group.
+ * @version 1.0.0
+ */
 
 import {
   allocateDvtFieldId,
@@ -106,6 +112,9 @@ export function buildDuplicateNodeCommand({
           relations: sidecar.relations.map((relation) => ({
             ...relation,
             relationId: relationIds.get(relation.relationId)!,
+            ...(relation.authoringOwnerRelationId == null
+              ? {}
+              : { authoringOwnerRelationId: relationIds.get(relation.authoringOwnerRelationId)! }),
           })),
           fields: sidecar.fields.map((field) => ({
             ...field,
@@ -117,6 +126,9 @@ export function buildDuplicateNodeCommand({
             ...(field.parentFieldId == null
               ? {}
               : { parentFieldId: fieldIds.get(field.parentFieldId)! }),
+            ...(field.operandFieldIds == null
+              ? {}
+              : { operandFieldIds: field.operandFieldIds.map((id) => fieldIds.get(id)!) }),
           })),
         },
       });

@@ -10,9 +10,61 @@ import {
   projectedModel,
   outputFixture,
   publishedOutputs,
+  projectionDraft,
+  emptyModel,
 } from './canvasColumnOutputAuthoring.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { relationOutputSlots } from './canvasRelationOutputSchema';
 
 describe('Source output authoring', () => {
+  it('protects hidden calculated dependencies without locking unrelated source columns', async () => {
+    const source = sourceNode();
+    const session = new CanvasRelationAnalysisSession('source-calculated-dependencies');
+    session.receive(projectionDraft(source, ['order_id']));
+    await applySelectedRelationDerivedOutput(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: 'edit',
+      alias: 'clean',
+      formula: 'TRIM("customer")',
+    });
+    const root = session.locate(session.rootId, session.revision);
+    const slots = relationOutputSlots(root, [await session.query(root.inputs[0]!)]);
+    const retained = slots.filter((slot) => slot.output != null && slot.name !== 'clean');
+    const document = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: retained.map((slot) => ({ slot: slot.slot, alias: slot.name })),
+    });
+    const model = applyDvtSubstraitSemanticDocument(
+      emptyModel(),
+      encodeDvtSubstraitSemanticDocument(document)
+    );
+    const fixture = outputFixture(source, model);
+    expect(
+      setCanvasColumnOutputIncluded({
+        ...fixture,
+        targetNodeId: source.id,
+        columnId: 'amount',
+        output: false,
+      }).outcome
+    ).toBe('applied');
+    expect(
+      setCanvasColumnOutputIncluded({
+        ...fixture,
+        targetNodeId: source.id,
+        columnId: 'customer',
+        output: false,
+      })
+    ).toEqual({ outcome: 'rejected', reason: 'source_output_required' });
+    expect(fixture.draftSession.localNodeCatalog![source.id]).toBe(source);
+    session.dispose();
+  });
+
   it('persists a subset and restores physical order without changing surviving ids', () => {
     const source = sourceNode();
     const fixture = outputFixture(source);

@@ -1,6 +1,6 @@
 /** General chain laws use every registered signature, not a pairwise scenario matrix. */
 import { describe, expect, it } from 'vitest';
-import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { deriveSubstraitSchemas, readSubstraitAuthoringGroup } from '@dvt/substrait-analysis';
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { DvtRelationalAuthoringDraftV1Schema } from '@dvt/contracts';
 import {
@@ -48,7 +48,10 @@ describe('catalog-wide configured semantic chains', () => {
         const document = decodeCanvasStagedOperation(operation)!;
         const { index, schemas } = deriveSubstraitSchemas(document);
         expect(index.rootId).toBe(operation.id);
-        expect(index.relations.get(operation.id)!.inputs).toEqual(operation.inputs);
+        const group = readSubstraitAuthoringGroup(index, operation.id);
+        expect(group == null ? index.relations.get(operation.id)!.inputs : [group.inputId]).toEqual(
+          operation.inputs
+        );
         for (const [id, entry] of index.relations) {
           expect(schemas.get(id)).toHaveLength(
             entry.fields.filter((field) => field.parentFieldId == null).length

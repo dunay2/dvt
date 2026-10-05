@@ -1,6 +1,16 @@
-/** Owned concern: project local card details for explicit or zoom-driven disclosure. */
+/**
+ * Owned concern: project local card details for explicit or zoom-driven disclosure.
+ * @baseline ADR-0064: the complete semantic graph remains canonical behind every visible card.
+ * @decision Reuse explicit ownership and the shared dependency read model for grouped detail.
+ * @consequence Public aliases identify internal calculations without exposing internal cards.
+ * @version 1.0.0
+ */
 import type { CanonicalNode } from '../../types/canonical';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import {
+  indexSubstraitRelations,
+  readSubstraitAuthoringGroup,
+  type SubstraitDocument,
+} from '@dvt/substrait-analysis';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { createCanvasRelationalTreeNodeDraft } from './canvasRelationalTreeAuthoringModel';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
@@ -15,6 +25,9 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { projectCanvasStagedOperation } from './canvasStagedOperationProjection';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import { projectCanvasRelationalDetailGraph } from './canvasRelationalDetailGraph';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 export const CANVAS_RELATIONAL_DETAIL_ZOOM = 1.2;
 
@@ -44,6 +57,13 @@ export function projectCanvasRelationalTreeDetails(
             createCanvasRelationalTreeNodeDraft(context.transformNode, 'inner_join', context.draft)
           );
     const projection = projectSemanticWorkbenchGraph(node, { view: 'unlaid' });
+    const document =
+      context.draft ??
+      decodeDvtSubstraitSemanticDocument(
+        readDvtTransformAuthoringAuthority(node)!.semanticDocument
+      );
+    const indexed = indexSubstraitRelations(document);
+    if (!indexed.ok) throw indexed.error;
     const unavailable = new Set(
       flattenCanvasRelationalTree(root).flatMap((relation) =>
         (relation.unavailableFields ?? []).map((field) => field.fieldId)
@@ -52,9 +72,17 @@ export function projectCanvasRelationalTreeDetails(
     const slice = relationalExpressionSlices(projection, unavailable);
     const visit = (relation: CanvasRelationalTreeNode): void => {
       if (relation.operator !== 'unsupported' && relation.relationId != null) {
+        const group = readSubstraitAuthoringGroup(indexed.index, relation.relationId);
         const graph = projectCanvasRelationalDetailGraph(
           relation,
-          slice(relation.relationId),
+          slice(
+            relation.relationId,
+            group == null
+              ? undefined
+              : readCanvasTransformDependencyModel(group.root, (id) =>
+                  indexed.index.relations.get(id)!
+                )
+          ),
           sourceOutputFieldsByRelationId
         );
         graphs.set(relation.locator, graph);

@@ -1,4 +1,10 @@
-/** Select and lay out the shared canonical semantic graph projection. */
+/**
+ * Owned concern: select and lay out the shared canonical semantic graph projection.
+ * @baseline ADR-0064: Substrait remains the semantic graph authority.
+ * @decision Carry expression locations separately from public field identities.
+ * @consequence Grouped detail can address hidden definitions without inventing output fields.
+ * @version 1.0.0
+ */
 import { Position, type Edge, type Node, type SmoothStepPathOptions } from '@xyflow/react';
 import type { CanonicalNode } from '../../types/canonical';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
@@ -27,6 +33,7 @@ export type SemanticWorkbenchNodeData = Readonly<{
   fieldReference?: Readonly<{ fieldId: string; relationId: string; sourceFieldId?: string }>;
   fieldSelection?: 'input' | 'output';
   projectExpressionOrdinal?: number;
+  projectExpressionRelationId?: string;
   fieldTargetRelationId?: string;
 }>;
 

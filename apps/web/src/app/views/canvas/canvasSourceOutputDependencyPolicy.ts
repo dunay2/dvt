@@ -1,46 +1,53 @@
-/** Owned concern: protect Source outputs consumed by connected Transform expressions. */
+/**
+ * Owned concern: protect source columns used by canonical connected computations.
+ * @baseline ADR-0064: canonical expressions own dependencies, not presentation profiles.
+ * @decision Reuse schema provenance and publication analysis, including hidden definitions.
+ * @consequence Internal passthrough columns alone do not prevent source output edits.
+ * @version 1.0.0
+ */
+import { jcsCanonicalize } from '@dvt/crypto';
+import {
+  deriveExpressionSchema,
+  deriveSubstraitPublication,
+  deriveSubstraitSchemas,
+  type SubstraitDocument,
+} from '@dvt/substrait-analysis';
+import type { ConnectedSourceRef } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { inspectDvtSubstraitFilter, removeDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionOutput,
-  type DvtSubstraitScalarExpression,
-} from './canvasDvtSubstraitProjection';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
-function scalarExpressionUsesSourceField(
-  expression: DvtSubstraitScalarExpression | undefined,
+function documentUsesSourceColumn(
+  document: SubstraitDocument,
+  sourceRef: ConnectedSourceRef,
   columnName: string
 ): boolean {
-  if (expression == null) return false;
-  if (expression.kind === 'field-reference') return expression.sourceFieldName === columnName;
-  if (expression.kind !== 'scalar-function') return false;
-  return expression.arguments.some((argument) =>
-    scalarExpressionUsesSourceField(argument, columnName)
+  const { index, schemas } = deriveSubstraitSchemas(document);
+  const sourceKey = jcsCanonicalize(sourceRef);
+  const reads = [...index.relations.values()].filter(
+    (entry) =>
+      entry.relation.relType.case === 'read' &&
+      entry.binding.sourceRef != null &&
+      jcsCanonicalize(entry.binding.sourceRef) === sourceKey
   );
-}
-
-function projectionOutputUsesSourceField(
-  output: DvtSubstraitProjectionOutput,
-  inputFields: readonly Readonly<{ fieldId: string; name: string }>[],
-  columnName: string
-): boolean {
-  if (output.sourceFieldName === columnName) return true;
-  if (scalarExpressionUsesSourceField(output.scalarExpression, columnName)) return true;
-  if (
-    output.calculation?.kind === 'row-number' &&
-    inputFields[output.calculation.orderSourceOrdinal]?.name === columnName
-  ) {
-    return true;
-  }
-  const inputNameById = new Map(inputFields.map((field) => [field.fieldId, field.name] as const));
-  return (output.operandFieldIds ?? []).some(
-    (fieldId) => inputNameById.get(fieldId) === columnName
+  if (reads.length === 0) return true;
+  const denied = new Set(
+    reads.flatMap((read) =>
+      read.fields.filter((field) => field.displayName === columnName).map((field) => field.fieldId)
+    )
   );
+  const published = deriveSubstraitPublication(document, denied).get(index.rootId)!;
+  if (published.rowUnavailable || published.unavailableFieldIds.length > 0) return true;
+  return [...index.relations.values()].some((entry) => {
+    if (entry.relation.relType.case !== 'project') return false;
+    const input = entry.inputs.flatMap((id) => schemas.get(id)!);
+    return entry.relation.relType.value.expressions.some((expression) =>
+      deriveExpressionSchema(expression, input).sourceFieldIds.some((id) => denied.has(id))
+    );
+  });
 }
 
 export function sourceOutputIsRequired(args: {
@@ -49,61 +56,29 @@ export function sourceOutputIsRequired(args: {
   sourceNode: CanonicalNode;
   columnName: string;
 }): boolean {
-  let sourceProjection;
   try {
-    sourceProjection = readDvtSourceOutputProjection(args.sourceNode);
+    const source = readDvtSourceOutputProjection(args.sourceNode);
+    if (source == null) return true;
+    const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
+    const targets = new Set(
+      args.draftSession.workingSet.visibleEdges
+        .filter((edge) => edge.sourceId === args.sourceNode.id)
+        .map((edge) => edge.targetId)
+    );
+    return [...targets].some((id) => {
+      const node = nodes.find((candidate) => candidate.id === id);
+      if (node?.pluginId !== 'dvt' || node.kind !== 'dvt:transform') return true;
+      const authority = readDvtTransformAuthoringAuthority(node);
+      return (
+        authority != null &&
+        documentUsesSourceColumn(
+          decodeDvtSubstraitSemanticDocument(authority.semanticDocument),
+          source.source.sourceRef,
+          args.columnName
+        )
+      );
+    });
   } catch {
     return true;
   }
-  if (sourceProjection == null) return true;
-  const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
-  const targetIds = new Set(
-    args.draftSession.workingSet.visibleEdges
-      .filter((edge) => edge.sourceId === args.sourceNode.id)
-      .map((edge) => edge.targetId)
-  );
-
-  for (const targetId of targetIds) {
-    const targetNode = nodes.find((node) => node.id === targetId);
-    if (
-      targetNode == null ||
-      targetNode.pluginId !== 'dvt' ||
-      targetNode.kind !== 'dvt:transform'
-    ) {
-      return true;
-    }
-    try {
-      const authority = readDvtTransformAuthoringAuthority(targetNode);
-      if (authority == null) continue;
-      const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-      const projectionDraft =
-        inspectDvtSubstraitFilter(draft) == null ? draft : removeDvtSubstraitFilter(draft);
-      const inspection = inspectDvtSubstraitProjectionDraft(projectionDraft);
-      if (!inspection.ok) return true;
-      const source = inspection.projection.source;
-      if (
-        source.schema !== sourceProjection.source.schema ||
-        source.table !== sourceProjection.source.table ||
-        source.sourceRef.sourceObjectId !== sourceProjection.source.sourceRef.sourceObjectId ||
-        source.sourceRef.connectionRef.connectionId !==
-          sourceProjection.source.sourceRef.connectionRef.connectionId
-      ) {
-        return true;
-      }
-      if (
-        inspection.projection.outputs.some((output) =>
-          projectionOutputUsesSourceField(
-            output,
-            inspection.projection.inputFields,
-            args.columnName
-          )
-        )
-      ) {
-        return true;
-      }
-    } catch {
-      return true;
-    }
-  }
-  return false;
 }
