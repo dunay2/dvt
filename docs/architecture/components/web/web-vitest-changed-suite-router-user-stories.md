@@ -221,7 +221,11 @@ Acceptance:
 - Given a pull request with web-relevant files and no root-build-sensitive
   changes
 - When the `Web Frontend Tests` job runs
-- Then it executes `pnpm test:web:changed` with the pull-request base ref.
+- Then both fixed matrix phases execute `pnpm test:web:changed` with the
+  pull-request base ref and their `--phase=vitest` / `--phase=browser` selection.
 - Given a push to `main`, a manual run, or a root-build-sensitive pull request
 - When the `Web Frontend Tests` job runs
-- Then it executes `pnpm test:web:ci`.
+- Then the Vitest phase executes `pnpm test:web:ci` and the browser phase
+  executes `pnpm test:web:changed --full --phase=browser`.
+- Either phase failing or being cancelled prevents the required aggregate
+  from succeeding. Neither phase cancels its sibling on failure.

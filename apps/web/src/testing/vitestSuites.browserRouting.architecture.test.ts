@@ -1,11 +1,41 @@
-/** @ownedConcern Prove browser obligations are independent from Vitest coverage. */
+/**
+ * Owned concern: prove independent browser and Vitest obligations remain complete.
+ * @baseline GH-3540: browser admission is independent of Vitest ownership.
+ * @decision GH-3583: exercise the same adapter through both execution phases.
+ * @consequence No phase can hide invalid input or replace the other phase's evidence.
+ * @version 1.0.0
+ */
+import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
-import { parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
+import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
+
+vi.mock('node:child_process', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('node:child_process')>()),
+  spawnSync: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(spawnSync).mockReset().mockReturnValue({
+    status: 0,
+    signal: null,
+    pid: 1,
+    output: [],
+    stdout: '',
+    stderr: '',
+  });
+  vi.stubEnv('CI', '');
+  vi.stubEnv('DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME', 'docker');
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
 
 const spec = 'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
 const helper = 'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts';
@@ -164,12 +194,22 @@ describe('governed browser evidence routing', () => {
 
   it('admits explicit plans but rejects ambiguous or coverage-dropping CLI modes', () => {
     expect(parseChangedSuiteArgs(['--plan', '--full'])).toMatchObject({ plan: true, full: true });
-    expect(parseChangedSuiteArgs(['--full', '--browser-only'])).toMatchObject({
-      browserOnly: true,
+    expect(parseChangedSuiteArgs([])).toMatchObject({ phase: 'all' });
+    expect(parseChangedSuiteArgs(['--phase=vitest'])).toMatchObject({ phase: 'vitest' });
+    expect(parseChangedSuiteArgs(['--full', '--phase=browser'])).toMatchObject({
+      full: true,
+      phase: 'browser',
     });
     expect(parseChangedSuiteArgs(['--files', spec])).toMatchObject({ files: [spec] });
     for (const args of [
       ['--browser-only'],
+      ['--full', '--browser-only'],
+      ['--phase='],
+      ['--phase=unknown'],
+      ['--phase=all'],
+      ['--phase=vitest', '--phase=browser'],
+      ['--phase=browser', '--phase=browser'],
+      ['--full', '--phase=vitest'],
       ['--unknown'],
       ['--files'],
       ['--full'],
@@ -177,6 +217,58 @@ describe('governed browser evidence routing', () => {
     ]) {
       expect(() => parseChangedSuiteArgs(args)).toThrow();
     }
+  });
+
+  it('executes the complete mixed plan once as two disjoint phases with unchanged arguments', () => {
+    const files = [
+      spec,
+      helper,
+      'apps/web/src/lib/format.ts',
+      'apps/web/src/app/views/Canvas.routeStates.smoke.test.tsx',
+    ];
+    const plan = resolveWebVitestChangedSuitePlan(files);
+    const execute = (args: string[]): Parameters<typeof spawnSync>[] => {
+      vi.mocked(spawnSync).mockClear();
+      main([...args, '--files', ...files]);
+      return [...vi.mocked(spawnSync).mock.calls];
+    };
+    const combined = execute([]);
+    const vitest = execute(['--phase=vitest']);
+    const browser = execute(['--phase=browser']);
+    expect([...vitest, ...browser]).toEqual(combined);
+    expect(vitest).toHaveLength(plan.commandPlan.length + 1);
+    expect(vitest[0]?.[0]).toBe('pnpm run test:deps');
+    expect(vitest.map(([command]) => command)).not.toContain(plan.browserCommands[0]);
+    expect(browser).toEqual([
+      [
+        plan.browserCommands[0],
+        expect.objectContaining({
+          shell: true,
+          env: { ...process.env, DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native' },
+        }),
+      ],
+    ]);
+    expect(plan.commandPlan.some((entry) => entry.kind === 'vitest-files')).toBe(true);
+  });
+
+  it.each(['all', 'vitest', 'browser'])(
+    'rejects unknown browser input before executing %s',
+    (phase) => {
+      const unknown = 'apps/web/cypress/e2e/unregistered.cy.ts';
+      const args = phase === 'all' ? [] : [`--phase=${phase}`];
+      expect(() => main([...args, '--files', spec, unknown])).toThrow(unknown);
+      expect(spawnSync).not.toHaveBeenCalled();
+    }
+  );
+
+  it('executes no unselected work and preserves the full browser baseline', () => {
+    for (const args of [[], ['--phase=vitest'], ['--phase=browser']]) {
+      main([...args, '--files', 'README.md']);
+      expect(spawnSync).not.toHaveBeenCalled();
+    }
+    main(['--full', '--phase=browser', '--files', 'README.md']);
+    expect(spawnSync).toHaveBeenCalledOnce();
+    expect(vi.mocked(spawnSync).mock.calls[0]?.[0]).toBe('pnpm run test:e2e:selected-closure:live');
   });
 
   it('registers every admitted consumer once in the shared terminal runtime', () => {

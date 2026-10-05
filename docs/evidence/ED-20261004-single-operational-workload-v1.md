@@ -197,6 +197,15 @@ negatives, with no connection reads, context writes or dispatch on the retired
 profile. Current JOIN identity and cardinality remain unchanged. Red/green and
 final candidate validation outcomes are recorded on #2524.
 
+Remote acceptance on `813e842da` passed all 4673 Web Vitest cases but exceeded
+the Web job's 25-minute deadline during browser execution: only 24 of the 40
+cases had finished. The required aggregate correctly rejected this incomplete
+evidence. The [GH-3583 paired correction](https://github.com/dunay2/dvt/issues/3583)
+separates those unchanged obligations into fixed Vitest/browser variants of the
+existing job and retains its strict aggregate. The previous local 40/40 receipt
+does not replace final-head remote acceptance. No timeout, worker, assertion,
+skip policy or browser runtime is relaxed by this scheduling change.
+
 The existing [Run workload drift risk](../risk-register/quality/R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT.yaml)
 now explicitly includes rejecting old formats and coordinating producer/worker
 deployment. Old persisted plans must be recreated through protected Preview;
