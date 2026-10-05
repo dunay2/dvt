@@ -21,6 +21,7 @@ evidence:
     - pnpm exec vitest run packages/@dvt/contracts/test packages/@dvt/substrait-analysis/test --maxWorkers=2 --minWorkers=1
     - pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasTransformDependencies.test.ts src/app/views/canvas/canvasTransformDependencyTypes.test.ts
     - pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasSourceColumnOutputAuthoring.test.ts
+    - pnpm --filter @dvt/web test:e2e:native --browser electron --spec cypress/e2e/canvas/canvas-transform-stage.cy.ts
 ---
 
 # Durable calculated-field dependencies inside one Transform
@@ -96,16 +97,26 @@ is still the actual contract; negative tests first prove their fixture is valid.
   contract schema synchronization (25 tests), Web typecheck, package lint and
   strict changed-file lint passed.
 - Full presentation ran 1459 tests: 1456 passed and three assertions still used
-  the narrow legacy inspector. Two were corrected and passed in the 16-case
-  edge-authoring suite; the command-runner assertion is being corrected.
+  the narrow legacy inspector. All three were corrected, and the two affected
+  files then passed together (20 tests), preserving serial execution, duplicate
+  alias rejection, exact identities and unchanged state on rejection.
 - Native-browser acceptance initially passed one of three journeys. The failed
   journeys exposed an obsolete Output description assertion and an extra quote
   inserted by the test's Monaco typing sequence. A later run identified an
   incorrect test assumption about direct edits versus staged Apply. Existing
   Transform edits use direct save; pending Transform edits use Apply. The new
   dependency journey must prove the former without changing persistence policy,
-  while the existing journey continues to prove the latter. Final browser proof,
-  validation, exact-SHA DB acceptance, pre-push and CI remain required.
+  while the existing journey continues to prove the latter. The corrected Chrome
+  run passed all three journeys but stalled before reporting its final result;
+  its owned Cypress process was terminated and its preview cleaned up. This is
+  not recorded as a successful command. The supported Electron runtime then
+  completed successfully with the same assertions: three passed, zero failed,
+  pending or skipped, exit 0, 67 seconds. Its log and eight screenshots are in the
+  isolated worktree under `.dvt/tmp/3593-transform-stage-electron.log` and
+  `.dvt/evidence/3593-transform-stage-electron/screenshots`. The direct-edit journey
+  proves exactly three successful saves, stable A/B identities and reference,
+  updated SQL after reopening, and zero writes for the rejected cycle.
+- Exact-SHA DB acceptance, pre-push and required PR CI remain closeout gates.
 
 Browser tests use controlled HTTP transport and real client commands, canonical
 save payloads and SQL lowering. They are not live-provider execution evidence.
