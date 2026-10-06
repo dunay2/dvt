@@ -575,9 +575,14 @@ describe('governed browser evidence routing', () => {
         .flat()
         .map((path) => resolve(path.slice('apps/web/'.length)))
     );
-    const graph = new Map([...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)]));
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
     for (const consumer of revisitConsumers)
-      expect([...admitted].some((owner) => reachesModule(graph, owner, consumer)), consumer).toBe(true);
+      expect(
+        [...admitted].some((owner) => reachesModule(graph, owner, consumer)),
+        consumer
+      ).toBe(true);
     for (const consumer of [
       ...expected,
       ...inputConsumers,
