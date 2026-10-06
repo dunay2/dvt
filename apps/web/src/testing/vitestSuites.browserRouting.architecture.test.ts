@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Owned concern: prove independent browser and Vitest obligations remain complete.
  * @baseline GH-3540: browser admission is independent of Vitest ownership.
@@ -580,6 +581,7 @@ describe('governed browser evidence routing', () => {
         resolve('cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-set-persistence.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts'),
+        resolve('cypress/e2e/canvas/canvas-transform-chain.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-unary-lifecycle.cy.ts'),
       ].sort()
     );
