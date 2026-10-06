@@ -1,7 +1,17 @@
+/**
+ * Owned concern: prove Aggregate and Window composition, persistence and discardable removal.
+ * @baseline GH-3578: applied Window forms save directly while card removal opens a draft.
+ * @decision Follow the saved Project identity and inspect its Window definition across Cancel and reload.
+ * @consequence Pipelines retain canonical identities and reload without writes from cancelled edits.
+ * @version 1.0.0
+ */
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog';
 import { dvtSubstraitExpression } from '../../../src/app/views/canvas/canvasDvtSubstraitExpression';
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasSemanticEditorCopy } from '../../../src/app/views/canvas/canvasSemanticEditorCopy';
+import { operatorFormCopy } from '../../../src/app/views/canvas/relational-operator-form/operatorFormCopy';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
@@ -19,6 +29,19 @@ import {
 } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
+
+function inspectSavedWindow(relationId: string, language: 'en' | 'es'): void {
+  cy.get(`[data-operator="project"][data-relation-id="${relationId}"]`).rightclick();
+  activateMenu('canvas-relational-edit-operation');
+  const action = `${resolveCanvasSemanticEditorCopy(language).edit} · ${resolveCanvasViewCopy(language).operationWindowLabel}`;
+  cy.contains('[data-slot="canvas-transform-inspector"] button', action).click();
+  cy.get(form).find('input').should('have.value', 'ranked_customer');
+  cy.contains(`${form} label`, 'ORDER BY')
+    .find('select option:checked')
+    .should('have.text', 'customer_count');
+  cy.contains(`${form} button`, operatorFormCopy[language].cancel).click();
+  cy.get(form).should('not.exist');
+}
 
 describe('measure-pipeline', () => {
   for (const union of [false, true]) {
@@ -49,6 +72,7 @@ describe('measure-pipeline', () => {
         '[data-slot="canvas-relational-output-input-port"]',
         null
       );
+      let savedRootId = '';
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       cy.wrap(null).should(() => {
         const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT');
@@ -69,25 +93,42 @@ describe('measure-pipeline', () => {
         const draft = decodeDvtSubstraitSemanticDocument(document);
         const { index, schemas } = deriveSubstraitSchemas(draft);
         const root = index.relations.get(index.rootId)!;
+        savedRootId = index.rootId;
         expect(root.relation.relType.case).to.equal('project');
+        if (root.relation.relType.case !== 'project') throw new Error('Expected Window Project');
+        expect(root.relation.relType.value.expressions[0]!.rexType.case).to.equal('windowFunction');
         expect(root.fields.at(-1)?.displayName).to.equal('ranked_customer');
         expect(schemas.get(index.rootId)?.at(-1)?.type.kind.case).to.equal('i64');
         expect(index.relations.get(root.inputs[0]!)?.relation.relType.case).to.equal('aggregate');
       });
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+      let savedWriteCount = 0;
+      cy.then(() => {
+        savedWriteCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      });
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.screenshot(`operators-${union ? 'union' : 'join'}-count-window`);
-      cy.contains('[data-operator="project"]', 'Window').rightclick();
-      activateMenu('canvas-relational-edit-operation');
-      cy.contains('[data-slot="canvas-transform-inspector"] button', 'Edit · Window').click();
-      cy.get(form).find('input').should('have.value', 'ranked_customer');
-      cy.contains(form + ' button', 'Remove operation').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
+      cy.then(() => inspectSavedWindow(savedRootId, 'en'));
+      cy.then(() =>
+        cy.get(`[data-operator="project"][data-relation-id="${savedRootId}"]`).rightclick()
+      );
+      activateMenu('canvas-relational-remove-source');
+      cy.then(() => cy.get(`[data-relation-id="${savedRootId}"]`).should('not.exist'));
+      cy.then(() =>
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(savedWriteCount)
+      );
       cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
-      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Window');
+      cy.then(() => inspectSavedWindow(savedRootId, 'en'));
+      cy.then(() =>
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(savedWriteCount)
+      );
       revisitWorkbenchCanvas(() => visitWithE2eWorkspaceSession('/canvas'));
       openWorkbenchModel(union ? 'union-transform' : 'join-transform');
       // The workspace-session fixture restores the default Spanish locale on reload.
-      cy.get('[data-slot="canvas-relational-node-title"]').should('contain.text', 'Ventana');
+      cy.then(() => inspectSavedWindow(savedRootId, 'es'));
+      cy.then(() =>
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(savedWriteCount)
+      );
     });
   }
 

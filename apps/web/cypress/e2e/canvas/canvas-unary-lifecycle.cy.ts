@@ -1,3 +1,10 @@
+/**
+ * Owned concern: prove unary editing, persistence and discardable removal through Canvas gestures.
+ * @baseline GH-3578: an applied operation opens inspection before its explicit Edit action.
+ * @decision Enter the existing draft editor before exercising the canonical operator form.
+ * @consequence Values, relation identities and Cancel restoration remain observable end to end.
+ * @version 1.0.0
+ */
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
@@ -50,6 +57,7 @@ describe('unary-lifecycle', () => {
     });
     cy.get('[data-operator="filter"]').rightclick();
     activateMenu('canvas-relational-edit-operation');
+    cy.get('[data-slot="canvas-relational-edit"]').should('be.visible').click();
     cy.get(form).find('input').should('have.value', 'C-001');
     cy.contains(form + ' button', 'Remove operation').click();
     cy.get('[data-operator="filter"]').should('not.exist');
@@ -112,6 +120,7 @@ describe('unary-lifecycle', () => {
 
     cy.get('[data-operator="sort"]').rightclick();
     activateMenu('canvas-relational-edit-operation');
+    cy.get('[data-slot="canvas-relational-edit"]').should('be.visible').click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]')
       .find('select[aria-label="Direction and nulls 1"]')
       .select('ASC · NULLS FIRST');
