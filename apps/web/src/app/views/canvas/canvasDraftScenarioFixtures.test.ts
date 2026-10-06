@@ -47,7 +47,7 @@ const [liveRuntime] = Object.values(
 );
 const [workbench] = Object.values(
   import.meta.glob<{
-    stubWorkbenchScenario(scenario: 'saved-join'): CanvasAuthoringDraft;
+    stubWorkbenchScenario(scenario: 'saved-join' | 'generated'): CanvasAuthoringDraft;
   }>('../../../../cypress/support/relationalWorkbench/scenario.ts', { eager: true })
 );
 const [workspace] = Object.values(
@@ -125,42 +125,49 @@ describe('Canvas draft scenarios', () => {
     });
   });
 
-  it('normalizes the captured GET seed without changing semantics or positions', async () => {
-    const register = vi.spyOn(draftHttp, 'stubE2eApi');
-    const originalSeed = draftAdapter.stubStatefulCanvasDraftAuthoring;
-    const originals: CanvasAuthoringDraft[] = [];
-    const seed = vi
-      .spyOn(draftAdapter, 'stubStatefulCanvasDraftAuthoring')
-      .mockImplementation((...args) => {
-        const draft = originalSeed(...args);
-        originals.push(structuredClone(draft));
-        return draft;
+  it.each([
+    ['saved-join', { substraitInnerJoin: true }, ['source', 'source', 'transform']],
+    ['generated', { authoringGenerated: true }, ['source', 'transform', 'sink']],
+  ] as const)(
+    'normalizes the captured %s GET seed without changing semantics or positions',
+    async (scenario, options, kinds) => {
+      const register = vi.spyOn(draftHttp, 'stubE2eApi');
+      const originalSeed = draftAdapter.stubStatefulCanvasDraftAuthoring;
+      const originals: CanvasAuthoringDraft[] = [];
+      const seed = vi
+        .spyOn(draftAdapter, 'stubStatefulCanvasDraftAuthoring')
+        .mockImplementation((...args) => {
+          const draft = originalSeed(...args);
+          originals.push(structuredClone(draft));
+          return draft;
+        });
+      const draft = workbench.stubWorkbenchScenario(scenario);
+      expect(seed).toHaveBeenCalledTimes(1);
+      expect(draft).toBe(seed.mock.results[0]?.value);
+      const responder = register.mock.calls.find(
+        ([method, path]) => method === 'GET' && path === '/workspace/graph/draft'
+      )![2];
+      const response = await responder({
+        method: 'GET',
+        url: new URL(
+          `https://fixture.invalid/workspace/graph/draft?${new URLSearchParams({ ...workspace.E2E_WORKSPACE_SESSION })}`
+        ),
+        body: undefined,
+        headers: {},
       });
-    const draft = workbench.stubWorkbenchScenario('saved-join');
-    expect(seed).toHaveBeenCalledTimes(1);
-    expect(draft).toBe(seed.mock.results[0]?.value);
-    const responder = register.mock.calls.find(
-      ([method, path]) => method === 'GET' && path === '/workspace/graph/draft'
-    )![2];
-    const response = await responder({
-      method: 'GET',
-      url: new URL(
-        `https://fixture.invalid/workspace/graph/draft?${new URLSearchParams({ ...workspace.E2E_WORKSPACE_SESSION })}`
-      ),
-      body: undefined,
-      headers: {},
-    });
-    const body = response.body as WorkspaceGraphDraftReadResponse;
-    assert(body.kind === 'ok');
-    expect(body.record.draft).toBe(draft);
-    expect(normalizeProjectCanvasDraft(draft)).toEqual(draft);
-    expect(draft.nodes.map(({ kind }) => kind)).toEqual(['source', 'source', 'transform']);
-    expect(draft.nodes.map(({ metadata }) => metadata)).toEqual(
-      originals[0]!.nodes.map(({ metadata }) => metadata)
-    );
-    expect(draft.nodePositions).toEqual(originals[0]!.nodePositions);
-    expect(draft.edges).toEqual(originals[0]!.edges);
-  });
+      const body = response.body as WorkspaceGraphDraftReadResponse;
+      assert(body.kind === 'ok');
+      expect(body.record.draft).toBe(draft);
+      expect(draft.nodeIds).toEqual(buildCanvasAuthoringDraft(options).nodeIds);
+      expect(normalizeProjectCanvasDraft(draft)).toEqual(draft);
+      expect(draft.nodes.map(({ kind }) => kind)).toEqual(kinds);
+      expect(draft.nodes.map(({ metadata }) => metadata)).toEqual(
+        originals[0]!.nodes.map(({ metadata }) => metadata)
+      );
+      expect(draft.nodePositions).toEqual(originals[0]!.nodePositions);
+      expect(draft.edges).toEqual(originals[0]!.edges);
+    }
+  );
 });
 
 describe('Shared protected LIVE request contract', () => {

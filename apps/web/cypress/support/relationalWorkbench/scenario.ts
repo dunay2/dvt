@@ -11,6 +11,7 @@ import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../workspaceSessi
 export function stubWorkbenchScenario(
   scenario:
     | 'saved-join'
+    | 'generated'
     | 'pending-join'
     | 'partial-join'
     | 'pending-chain'
@@ -29,6 +30,7 @@ export function stubWorkbenchScenario(
     plugins: { dvt: { available: true } },
   });
   const draft = stubStatefulCanvasDraftAuthoring({
+    authoringGenerated: scenario === 'generated',
     projectionModel: scenario === 'projection' || scenario === 'withdrawn-projection',
     ...(scenario === 'withdrawn-projection' ? { projectionInputFields: ['country'] } : {}),
     substraitInnerJoin: scenario === 'saved-join',
