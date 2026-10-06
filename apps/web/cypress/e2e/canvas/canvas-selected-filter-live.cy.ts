@@ -1,4 +1,10 @@
-/** Real browser -> composed input operations -> saved Substrait -> protected PostgreSQL sample. */
+/**
+ * Owned concern: prove composed input operations against real PostgreSQL rows.
+ * @baseline GH-3578: placement, connection, configuration and execution are explicit gestures.
+ * @decision Reuse current Workbench commands while retaining the original LEFT JOIN.
+ * @consequence No sample is requested before Preview; its exact persisted SHA owns the rows.
+ * @version 1.0.0
+ */
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
@@ -8,8 +14,12 @@ import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import { hasLiveProtectedRuntimeEnv } from '../../support/liveProtectedRuntime';
 import { exteriorOutputColumns } from '../../support/relationalWorkbench/columns';
-import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
+import {
+  connectWorkbenchProducer,
+  openWorkbenchModel,
+} from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { readPersistedDocument } from '../../support/semanticLive/canonicalAssertions';
 import {
   expectedColumns,
@@ -43,35 +53,63 @@ describe('Selected input transformations through real PostgreSQL', () => {
     cy.then(() => importSemanticModel(initial));
     exteriorOutputColumns(modelId).should('deep.equal', expectedColumns);
     openWorkbenchModel(modelId);
-    for (const [source, field, value] of [
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+      .then(($join) => {
+        joinId = $join.attr('data-relation-id')!;
+      })
+      .click();
+    cy.get('[data-slot="canvas-relational-edit"]').click();
+    const form = '[data-slot="canvas-relational-operator-form"]';
+    for (const [port, [source, field, value]] of [
       ['orders', 'client_id', 'C-001'],
       ['client', 'country', 'US'],
-    ]) {
+    ].entries()) {
+      cy.get(`[data-slot="canvas-relational-edge-action"][data-port="${port}"]`)
+        .focus()
+        .type('{del}');
       cy.then(() => {
         const id = initial.sidecar.relations.find(
           (relation) => relation.sourceRef != null && relation.displayName === source
         )!.relationId;
-        cy.get(`[data-operator="read"][data-relation-id="${id}"]`).click();
+        cy.get(`[data-operator="read"][data-relation-id="${id}"]`)
+          .closest('li')
+          .as(`input-${port}`);
       });
-      workbenchOperation('filter').click();
-      cy.get('[role="dialog"] form select').first().select(field!);
-      cy.get('[role="dialog"] form input').type(value!);
-      cy.get('[role="dialog"] button[type="submit"]').click();
-      cy.get('[data-operator="filter"]').last().click();
-      workbenchOperation('sort').click();
-      cy.get('[role="dialog"] form select')
-        .first()
-        .select(source === 'orders' ? 'order_id' : 'client_id');
-      cy.get('[role="dialog"] form select')
-        .eq(1)
-        .select(String(SortField_SortDirection.DESC_NULLS_LAST));
-      cy.get('[role="dialog"] button[type="submit"]').click();
-      cy.get('[data-operator="sort"]').last().click();
-      workbenchOperation('fetch').click();
-      cy.contains('[role="dialog"] label', /^LIMIT$/)
-        .find('input')
-        .type('1');
-      cy.get('[role="dialog"] button[type="submit"]').click();
+      for (const [operation, producer] of [
+        ['filter', 'input'],
+        ['sort', 'filter'],
+        ['fetch', 'sort'],
+      ]) {
+        workbenchOperation(operation!).click();
+        cy.get(`[data-operator="${operation}"][aria-selected="true"]`)
+          .should('have.length', 1)
+          .invoke('attr', 'data-relation-id')
+          .then((id) => {
+            cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${id}"]`)
+              .closest('li')
+              .as(`${operation}-${port}`);
+            connectWorkbenchProducer(`@${producer}-${port}`, `@${operation}-${port}`);
+          });
+        if (operation === 'filter') {
+          cy.get(`${form} select`).first().select(field!);
+          cy.get(`${form} input`).type(value!);
+        } else if (operation === 'sort') {
+          cy.get(`${form} select`)
+            .first()
+            .select(source === 'orders' ? 'order_id' : 'client_id');
+          cy.get(`${form} select`).eq(1).select(String(SortField_SortDirection.DESC_NULLS_LAST));
+        } else {
+          cy.contains(`${form} label`, /^LIMIT$/)
+            .find('input')
+            .clear()
+            .type('1');
+        }
+        cy.get(`${form} button[type="submit"]`).click();
+      }
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+        .closest('li')
+        .as('join');
+      connectWorkbenchProducer(`@fetch-${port}`, '@join', port);
     }
     cy.get('[data-operator="filter"]').should('have.length', 2);
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
@@ -82,7 +120,7 @@ describe('Selected input transformations through real PostgreSQL', () => {
       const join = [...indexed.index.relations.values()].find(
         (entry) => entry.relation.relType.case === 'join'
       )!;
-      joinId = join.binding.relationId;
+      expect(join.binding.relationId, 'original LEFT JOIN identity').to.equal(joinId);
       for (const input of join.inputs) {
         let relation = indexed.index.relations.get(input)!;
         for (const operator of ['fetch', 'sort', 'filter', 'read']) {
@@ -98,11 +136,9 @@ describe('Selected input transformations through real PostgreSQL', () => {
     exteriorOutputColumns(modelId).should('deep.equal', expectedColumns);
     openWorkbenchModel(modelId);
     cy.get('[data-operator="filter"]').should('have.length', 2);
-    cy.get('[data-operator="join"]')
-      .parent()
-      .find('[data-slot="canvas-node-execute"]')
-      .focus()
-      .click();
+    const joinCard = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
+    hoverWorkbenchCard(joinCard);
+    cy.get(joinCard).closest('li').find('[data-slot="canvas-node-execute"]').focus().click();
     cy.wait('@rows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(response?.statusCode).to.equal(200);
       const query = new URL(request.url).searchParams;
