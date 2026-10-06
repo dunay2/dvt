@@ -1129,7 +1129,7 @@ describe('Canvas workbench screen composition', () => {
         .should('be.visible')
         .click();
       waitForE2eApiCall(`/workspace/files/${encodeURIComponent(path)}`, 'GET');
-      cy.get('[data-slot="canvas-contextual-workbench"] [data-testid="monaco-code-editor"]')
+      cy.get('[data-slot="canvas-contextual-workbench"] [data-testid="monaco-code-viewer"]')
         .find('.view-line')
         .should(($lines) => {
           const renderedSql = [...$lines]
