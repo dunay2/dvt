@@ -64,7 +64,10 @@ describe('Selected input transformations through real PostgreSQL', () => {
       ['orders', 'client_id', 'C-001'],
       ['client', 'country', 'US'],
     ].entries()) {
-      cy.get(`[data-slot="canvas-relational-edge-action"][data-port="${port}"]`)
+      const edgeAction =
+        port === 0 ? 'canvas-relational-edge-action' : 'canvas-relational-pending-edge-action';
+      cy.get(`[data-slot="${edgeAction}"][data-port="${port}"]`)
+        .should('have.length', 1)
         .focus()
         .type('{del}');
       cy.then(() => {
