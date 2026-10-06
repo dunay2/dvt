@@ -81,9 +81,10 @@ export function resolveCanvasSourceDataSampleError(
   error: unknown,
   nodeName: string
 ): OperationalDrawerDataSample {
+  const reason = error instanceof WarehouseSourceDataSampleQueryError ? error.reason : 'unknown';
   return {
     status: 'error',
     nodeName,
-    reason: error instanceof WarehouseSourceDataSampleQueryError ? error.reason : 'unknown',
+    reason: reason === 'publication_changed' ? 'unavailable' : reason,
   };
 }

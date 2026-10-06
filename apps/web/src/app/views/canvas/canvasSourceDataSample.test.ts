@@ -93,6 +93,12 @@ describe('canvas source data sample projection', () => {
   it('preserves stable query failure reasons and hides unknown failures', () => {
     expect(
       resolveCanvasSourceDataSampleError(
+        new WarehouseSourceDataSampleQueryError('publication_changed'),
+        'orders'
+      )
+    ).toEqual({ status: 'error', nodeName: 'orders', reason: 'unavailable' });
+    expect(
+      resolveCanvasSourceDataSampleError(
         new WarehouseSourceDataSampleQueryError('source_object_not_found'),
         'orders'
       )

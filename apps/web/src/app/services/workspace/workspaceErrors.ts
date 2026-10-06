@@ -1,7 +1,14 @@
+/**
+ * Owned concern: preserve typed workspace failures without presentation copy.
+ * @baseline ADR-0044: Diagnostic prose is not a semantic contract.
+ * @decision Keep publication replacement distinct from general unavailability.
+ * @consequence Consumers translate stable reasons without exposing diagnostics.
+ * @version 1.0.0
+ */
 export type WorkspaceFileLoadErrorKind = 'not_found';
 
 export type WarehouseSourceDataSampleQueryErrorReason =
-  'connection_not_found' | 'source_object_not_found' | 'unavailable';
+  'connection_not_found' | 'source_object_not_found' | 'publication_changed' | 'unavailable';
 
 export class WarehouseSourceDataSampleQueryError extends Error {
   public constructor(readonly reason: WarehouseSourceDataSampleQueryErrorReason) {

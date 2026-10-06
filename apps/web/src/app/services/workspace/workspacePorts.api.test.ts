@@ -478,7 +478,7 @@ describe('workspace ports api warehouse source import', () => {
         expectedPublicationToken: asSha256HexString('a'.repeat(64)),
         limit: 20,
       })
-    ).rejects.toEqual(new WarehouseSourceDataSampleQueryError('unavailable'));
+    ).rejects.toEqual(new WarehouseSourceDataSampleQueryError('publication_changed'));
   });
 
   it('rejects a malformed source-object catalog response', async () => {
