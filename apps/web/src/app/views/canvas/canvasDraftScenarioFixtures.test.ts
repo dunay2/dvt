@@ -1,28 +1,62 @@
 /**
  * Owned concern: preserve scenario payloads and identities during fixture extraction.
  * @baseline GH-3578: separating builders must not change retained consumer semantics.
- * @decision Validate the V1 draft contract and topology across the existing scenario families.
+ * @decision Keep builders typed statically and load real browser adapters through narrow runtime seams.
  * @consequence Browser consumers retain their data while fixture construction remains pure.
  * @version 1.0.0
  */
-import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import * as draftAdapter from '../../../../cypress/support/canvasDraftAuthoring';
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphDraftReadResponse,
+  type WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
+import { afterEach, assert, describe, expect, it, vi } from 'vitest';
 import { buildCanvasAuthoringDraft } from '../../../../cypress/support/canvasDrafts/buildCanvasAuthoringDraft';
 import type {
   CanvasAuthoringDraft,
   CanvasDraftScenarioOptions,
 } from '../../../../cypress/support/canvasDrafts/scenario';
-import * as draftHttp from '../../../../cypress/support/e2eApiStub';
-import {
-  readLiveGraphDraft,
-  readLiveRunIds,
-  readLiveWorkspaceFile,
-} from '../../../../cypress/support/liveProtectedRuntime';
-import { stubWorkbenchScenario } from '../../../../cypress/support/relationalWorkbench/scenario';
-import { E2E_WORKSPACE_SESSION } from '../../../../cypress/support/workspaceSession';
-import type { buildDraftReadOkResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { normalizeProjectCanvasDraft } from './canvasProjectCanvasLifecycle';
+
+// Load real browser adapters without adding their ambient Cypress types to the app program.
+const [draftAdapter] = Object.values(
+  import.meta.glob<{
+    stubStatefulCanvasDraftAuthoring(options?: CanvasDraftScenarioOptions): CanvasAuthoringDraft;
+  }>('../../../../cypress/support/canvasDraftAuthoring.ts', { eager: true })
+);
+const [draftHttp] = Object.values(
+  import.meta.glob<{
+    stubE2eApi(
+      method: string,
+      path: string | RegExp,
+      responder: (request: {
+        method: string;
+        url: URL;
+        body: unknown;
+        headers: Record<string, string>;
+      }) => { body?: unknown } | Promise<{ body?: unknown }>
+    ): void;
+  }>('../../../../cypress/support/e2eApiStub.ts', { eager: true })
+);
+const [liveRuntime] = Object.values(
+  import.meta.glob<{
+    readLiveGraphDraft(): unknown;
+    readLiveRunIds(): unknown;
+    readLiveWorkspaceFile(path: string): unknown;
+  }>('../../../../cypress/support/liveProtectedRuntime.ts', { eager: true })
+);
+const [workbench] = Object.values(
+  import.meta.glob<{
+    stubWorkbenchScenario(scenario: 'saved-join'): CanvasAuthoringDraft;
+  }>('../../../../cypress/support/relationalWorkbench/scenario.ts', { eager: true })
+);
+const [workspace] = Object.values(
+  import.meta.glob<{ E2E_WORKSPACE_SESSION: WorkspaceGraphDraftScope }>(
+    '../../../../cypress/support/workspaceSession.ts',
+    { eager: true }
+  )
+);
+assert(draftAdapter && draftHttp && liveRuntime && workbench && workspace);
 
 const cases: readonly [string, CanvasDraftScenarioOptions, number, number][] = [
   ['ordinary', {}, 3, 2],
@@ -102,7 +136,7 @@ describe('Canvas draft scenarios', () => {
         originals.push(structuredClone(draft));
         return draft;
       });
-    const draft = stubWorkbenchScenario('saved-join');
+    const draft = workbench.stubWorkbenchScenario('saved-join');
     expect(seed).toHaveBeenCalledTimes(1);
     expect(draft).toBe(seed.mock.results[0]?.value);
     const responder = register.mock.calls.find(
@@ -111,12 +145,14 @@ describe('Canvas draft scenarios', () => {
     const response = await responder({
       method: 'GET',
       url: new URL(
-        `https://fixture.invalid/workspace/graph/draft?${new URLSearchParams(E2E_WORKSPACE_SESSION)}`
+        `https://fixture.invalid/workspace/graph/draft?${new URLSearchParams({ ...workspace.E2E_WORKSPACE_SESSION })}`
       ),
       body: undefined,
       headers: {},
     });
-    expect((response.body as ReturnType<typeof buildDraftReadOkResponse>).record.draft).toBe(draft);
+    const body = response.body as WorkspaceGraphDraftReadResponse;
+    assert(body.kind === 'ok');
+    expect(body.record.draft).toBe(draft);
     expect(normalizeProjectCanvasDraft(draft)).toEqual(draft);
     expect(draft.nodes.map(({ kind }) => kind)).toEqual(['source', 'source', 'transform']);
     expect(draft.nodes.map(({ metadata }) => metadata)).toEqual(
@@ -139,10 +175,10 @@ describe('Shared protected LIVE request contract', () => {
   };
 
   it.each([
-    [() => readLiveGraphDraft(), '/workspace/graph/draft'],
-    [() => readLiveRunIds(), '/runs'],
+    [() => liveRuntime.readLiveGraphDraft(), '/workspace/graph/draft'],
+    [() => liveRuntime.readLiveRunIds(), '/runs'],
     [
-      () => readLiveWorkspaceFile('models/orders view.sql'),
+      () => liveRuntime.readLiveWorkspaceFile('models/orders view.sql'),
       '/workspace/files/models%2Forders%20view.sql',
     ],
   ] as const)(
@@ -170,7 +206,7 @@ describe('Shared protected LIVE request contract', () => {
         env: (name: string) => (name === missing ? ' ' : environment[name]),
       });
       vi.stubGlobal('cy', { request });
-      expect(() => readLiveGraphDraft()).toThrow(`Cypress env ${missing} is required`);
+      expect(() => liveRuntime.readLiveGraphDraft()).toThrow(`Cypress env ${missing} is required`);
       expect(request).not.toHaveBeenCalled();
     }
   );

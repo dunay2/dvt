@@ -313,8 +313,8 @@ The existing command plan represents three distinct runtime obligations:
 
 - Controlled API consumers execute once through the native browser runner.
 - Available LIVE consumers share the existing terminal entry and one protected
-  runtime bootstrap. Its 21 source families are one executed Cypress entry, not
-  21 independent runtime launches.
+  runtime bootstrap. All admitted source families run through one Cypress entry,
+  not independent runtime launches.
 - Unavailable LIVE evidence uses its existing spec and invocation-local
   environment; that environment cannot leak into another obligation.
 

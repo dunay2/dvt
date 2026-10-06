@@ -32,15 +32,17 @@ describe('Canvas fixture and transport ownership', () => {
     expect('Cypress' in globalThis).toBe(false);
     expect(Object.keys(scenarios)).toHaveLength(11);
     expect(Object.keys(liveModules)).toHaveLength(3);
-    for (const load of Object.values({ ...scenarios, ...liveModules })) {
-      await expect(load()).resolves.toBeDefined();
-    }
+    await Promise.all(
+      Object.values({ ...scenarios, ...liveModules }).map((load) =>
+        expect(load()).resolves.toBeDefined()
+      )
+    );
     expect('cy' in globalThis).toBe(false);
     expect('Cypress' in globalThis).toBe(false);
   });
 
   it('keeps scenario construction out of generic LIVE transport', async () => {
-    const runtime = await import('../../../../cypress/support/liveProtectedRuntime');
+    const runtime = await liveModules['../../../../cypress/support/liveProtectedRuntime.ts']!();
     expect(runtime).not.toHaveProperty('seedLiveSelectedClosureDraft');
     for (const [path, source] of Object.entries(transportSources)) {
       expect(source, path).not.toMatch(
