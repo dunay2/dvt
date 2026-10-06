@@ -1,14 +1,23 @@
-/** Exercise output selection, pointer/keyboard ordering, focus and reload on the real card. */
+/**
+ * Owned concern: prove output selection, ordering and focus through the Model inspector.
+ * @baseline GH-3578: canonical identities, operands and predicates survive each save.
+ * @decision Retain row/control identity at the current owner and Canvas card position.
+ * @consequence Pointer and keyboard ordering must survive an actual reopen.
+ * @version 1.0.0
+ */
 import { getE2eApiCalls } from '../e2eApiStub';
 
-import { toggleColumns, reloadFieldSelection } from './fieldSelection';
+import { openModelOutputs, reloadFieldSelection } from './fieldSelection';
 import { savedOutputs } from './savedOutputs';
 
 export function proveCardOutputControls(sourceCount: number): void {
   const card = '.react-flow__node[data-id="join-transform"]';
+  const inspector = '[data-slot="canvas-model-output-inspector"]';
+  const rows = `${inspector} [data-slot="relation-output-field"]`;
+  const selected = `${inspector} [data-slot="relation-output-toggle"][data-included="true"]`;
   const field = (name: string): string =>
-    `${card} [data-slot="graph-node-column-piece"][data-column-name="${name}"]`;
-  const toggle = `${field('order_id')} [data-slot="graph-node-column-output-state"]`;
+    `${rows}:has([data-slot="relation-output-toggle"][data-field-name="${name}"])`;
+  const toggle = `${field('order_id')} [data-slot="relation-output-toggle"]`;
   let position: string;
   let originalRows: HTMLElement[];
   let originalToggle: HTMLElement;
@@ -29,24 +38,28 @@ export function proveCardOutputControls(sourceCount: number): void {
     });
   };
 
-  toggleColumns('join-transform');
   cy.get(card).then(($card) => {
     position = $card[0]!.style.transform;
+  });
+  openModelOutputs();
+  cy.get(inspector).then(($panel) => {
     originalRows = [
-      ...$card[0]!.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-row"]'),
+      ...$panel[0]!.querySelectorAll<HTMLElement>('[data-slot="relation-output-field"]'),
     ];
-    originalToggle = $card[0]!.querySelector<HTMLElement>(
-      '[data-column-name="order_id"] [data-slot="graph-node-column-output-state"]'
+    originalToggle = $panel[0]!.querySelector<HTMLElement>(
+      '[data-slot="relation-output-toggle"][data-field-name="order_id"]'
     )!;
   });
   cy.get(toggle)
-    .should('have.attr', 'aria-disabled', 'false')
-    .and('have.attr', 'aria-pressed', 'true')
+    .should('be.enabled')
+    .and('not.have.attr', 'aria-disabled', 'true')
+    .and('have.attr', 'data-included', 'true')
+    .focus()
     .click();
-  cy.get(toggle).should('have.attr', 'aria-pressed', 'false');
+  cy.get(toggle).should('have.attr', 'data-included', 'false');
   cy.get(toggle).should(($toggle) => {
-    expect($toggle[0], 'same checkbox after exclusion').to.equal(originalToggle);
-    expect($toggle[0]!.ownerDocument.activeElement, 'checkbox focus retained').to.equal(
+    expect($toggle[0], 'same inclusion control after exclusion').to.equal(originalToggle);
+    expect($toggle[0]!.ownerDocument.activeElement, 'inclusion control focus retained').to.equal(
       originalToggle
     );
   });
@@ -59,26 +72,26 @@ export function proveCardOutputControls(sourceCount: number): void {
     ).not.to.include('order_id');
     baseline = result;
   });
-  cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));
-  cy.get(`${card} [data-slot="graph-node-column-row"]`).should(($rows) => {
+  cy.get(rows).should(($rows) => {
     expect($rows.length).to.equal(originalRows.length);
     [...$rows].forEach((row, index) =>
       expect(row, 'unchanged row after save').to.equal(originalRows[index])
     );
   });
-  cy.get(toggle).should('have.attr', 'aria-disabled', 'false').click();
-  cy.get(toggle).should('have.attr', 'aria-pressed', 'true');
+  cy.get(toggle).should('not.have.attr', 'aria-disabled', 'true').click();
+  cy.get(toggle).should('have.attr', 'data-included', 'true').and('be.focused');
   cy.get(toggle).should(($toggle) =>
-    expect($toggle[0], 'same checkbox after inclusion').to.equal(originalToggle)
+    expect($toggle[0], 'same inclusion control after inclusion').to.equal(originalToggle)
   );
   expectSavedOrder(['customer_id', 'name', 'order_id'], 'reinclude');
 
-  cy.get(`${card} [data-slot="graph-node-column-piece"][data-output="true"]`).should(($fields) => {
+  cy.get(selected).should(($fields) => {
     const outputs = savedOutputs().outputs;
     for (const field of $fields) {
-      expect(field.dataset.fieldId, `command identity of ${field.dataset.columnName}`).to.equal(
-        outputs.find((output) => output.displayName === field.dataset.columnName)?.fieldId
-      );
+      expect(
+        field.closest<HTMLElement>('[data-slot="relation-output-field"]')?.dataset.fieldId,
+        `command identity of ${field.dataset.fieldName}`
+      ).to.equal(outputs.find((output) => output.displayName === field.dataset.fieldName)?.fieldId);
     }
   });
 
@@ -87,31 +100,35 @@ export function proveCardOutputControls(sourceCount: number): void {
     cy.get(field('order_id'))
       .should('have.attr', 'draggable', 'true')
       .trigger('dragstart', { dataTransfer });
-    cy.get(`${field('customer_id')}[data-output="true"]`)
+    cy.get(field('customer_id'))
       .should('have.length', 1)
-      .closest('[data-slot="graph-node-column-row"]')
       .trigger('dragover', 'topLeft', { dataTransfer })
       .should('have.attr', 'data-drop-placement', 'before')
       .trigger('drop', 'topLeft', { dataTransfer });
     cy.get(field('order_id')).trigger('dragend');
   });
-  cy.get(`${card} [data-slot="graph-node-column-piece"][data-output="true"]`).should(($fields) =>
+  cy.get(selected).should(($fields) =>
     expect(
-      [...$fields].slice(0, 3).map((element) => element.dataset.columnName),
+      [...$fields].slice(0, 3).map((element) => element.dataset.fieldName),
       'displayed pointer order'
     ).to.deep.equal(['order_id', 'customer_id', 'name'])
   );
   expectSavedOrder(['order_id', 'customer_id', 'name'], 'persisted pointer order');
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.get('[data-slot="canvas-model-tab-close"]').click();
   cy.get(card).should(($card) => expect($card[0]!.style.transform).to.equal(position));
   reloadFieldSelection();
-  cy.get(`${card} [data-slot="graph-node-column-piece"][data-output="true"]`).should(($fields) => {
-    expect([...$fields].slice(0, 3).map((element) => element.dataset.columnName)).to.deep.equal([
+  cy.get(selected).should(($fields) => {
+    expect([...$fields].slice(0, 3).map((element) => element.dataset.fieldName)).to.deep.equal([
       'order_id',
       'customer_id',
       'name',
     ]);
   });
-  cy.get(toggle).should('have.attr', 'aria-pressed', 'true');
-  cy.get(field('order_id')).focus().trigger('keydown', { key: 'ArrowDown', altKey: true });
+  cy.get(toggle).should('have.attr', 'data-included', 'true');
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.get(field('order_id')).focus().should('be.focused').type('{alt}{downarrow}');
   expectSavedOrder(['customer_id', 'order_id', 'name'], 'persisted keyboard order');
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+  cy.get(field('order_id')).should('be.focused');
 }

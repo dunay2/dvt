@@ -1,4 +1,10 @@
-/** Owned concern: prove Canvas authoring field budgets in a visible browser. */
+/**
+ * Owned concern: prove Canvas authoring field budgets through current Properties controls.
+ * @baseline GH-3578: invalid drafts remain visible and cannot reach persistence.
+ * @decision Retain IME, locale, name and PostgreSQL identifier negatives on the real UI.
+ * @consequence Corrected values must survive the stateful save and reopen boundary.
+ * @version 1.0.0
+ */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
@@ -50,6 +56,12 @@ function visitReadyCanvas(): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
+function openProperties(nodeId: string): void {
+  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
+  cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
+}
+
 describe('Canvas authoring field budgets', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
@@ -63,10 +75,7 @@ describe('Canvas authoring field budgets', () => {
 
     visitReadyCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    openProperties('dvt-transform-1');
 
     const composed = 'Órdenes 😀';
     cy.get('input[name="node-name"]')
@@ -153,14 +162,11 @@ describe('Canvas authoring field budgets', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitReadyCanvas();
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    openProperties('dvt-transform-1');
     cy.get('input[name="node-name"]').should('have.value', 'Orders 2026');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
-    cy.get('.react-flow__node[data-id=source-1] [data-slot=canvas-node-shell]').dblclick();
+    openProperties('source-1');
     cy.get('input[name=dvt-source-alias]')
       .clear()
       .type(' orders_source ')
@@ -182,7 +188,7 @@ describe('Canvas authoring field budgets', () => {
     });
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
-    cy.get('.react-flow__node[data-id=sink-1] [data-slot=canvas-node-shell]').dblclick();
+    openProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
     cy.get('input[name=dvt-sink-schema]')
       .clear()
@@ -206,10 +212,10 @@ describe('Canvas authoring field budgets', () => {
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
     visitReadyCanvas();
-    cy.get('.react-flow__node[data-id=source-1] [data-slot=canvas-node-shell]').dblclick();
+    openProperties('source-1');
     cy.get('input[name=dvt-source-alias]').should('have.value', 'orders_source_v2');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
-    cy.get('.react-flow__node[data-id=sink-1] [data-slot=canvas-node-shell]').dblclick();
+    openProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
     cy.get('input[name=dvt-sink-schema]').should('have.value', 'marts_v2');
   });

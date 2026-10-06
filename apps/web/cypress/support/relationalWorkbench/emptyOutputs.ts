@@ -1,15 +1,21 @@
-/** Empty projections remain editable independently of connected Canvas edges. */
+/**
+ * Owned concern: prove empty projections remain editable without physical Canvas edges.
+ * @baseline GH-3578: disconnection must not rewrite canonical operands or predicates.
+ * @decision Use real edge context actions and the current Model Output inspector.
+ * @consequence Empty publication and re-inclusion must persist and survive reopen.
+ * @version 1.0.0
+ */
 import { dragCanvasNodeByViewportDelta } from '../canvasGraphAuthoring';
 import { getE2eApiCalls } from '../e2eApiStub';
 
-import { toggleColumns, reloadFieldSelection } from './fieldSelection';
+import { openModelOutputs, reloadFieldSelection } from './fieldSelection';
 import { savedOutputs } from './savedOutputs';
 
 type CanvasDraftSaveRequestBody = { draft: { edges?: { targetId: string }[] } };
 
 export function proveEmptyJoinOutput(sourceCount: number): void {
-  const card = '.react-flow__node[data-id="join-transform"]';
-  const controls = `${card} [data-slot="graph-node-column-output-state"]`;
+  const controls =
+    '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-toggle"]';
   const stageEdges = '.react-flow__edge:not(.react-flow__edge-columnLineage)';
   let baseline: ReturnType<typeof savedOutputs>;
   const assertSaved = (outputCount?: number): void => {
@@ -57,9 +63,8 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
         const { path, point } = exposed!;
         // Cypress checks actionability at the exposed segment, not the empty
         // bounding-box centre of this curved SVG path.
-        const canvas = path.closest<HTMLElement>('.react-flow')!;
-        const bounds = canvas.getBoundingClientRect();
-        cy.wrap(canvas).rightclick(point.x - bounds.left, point.y - bounds.top, {
+        const bounds = path.getBoundingClientRect();
+        cy.wrap(path).rightclick(point.x - bounds.left, point.y - bounds.top, {
           scrollBehavior: false,
         });
       });
@@ -68,28 +73,25 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
     }
   });
   assertSaved();
-  toggleColumns('join-transform');
-  cy.get(`${controls}[aria-pressed="true"]`).should(($selected) => {
+  openModelOutputs();
+  cy.get(`${controls}[data-included="true"]`).should(($selected) => {
     expect(baseline != null && baseline.outputs.length).to.equal($selected.length);
   });
-  cy.get(`${controls}[aria-pressed="true"]`).then(($selected) => {
-    const names = [...$selected].map(
-      (element) => element.closest<HTMLElement>('[data-column-name]')!.dataset.columnName!
-    );
-    names.forEach((name, index) => {
-      const selector = `${card} [data-column-name="${name}"] [data-slot="graph-node-column-output-state"]`;
-      cy.get(selector).should('have.attr', 'aria-pressed', 'true').click();
-      cy.get(selector).should('have.attr', 'aria-pressed', 'false');
-      assertSaved(names.length - index - 1);
+  cy.get(`${controls}[data-included="true"]`).then(($selected) => {
+    [...$selected].forEach((control, index) => {
+      const $control = Cypress.$(control);
+      cy.wrap($control).should('be.enabled').and('have.attr', 'data-included', 'true').click();
+      cy.wrap($control).should('have.attr', 'data-included', 'false');
+      assertSaved($selected.length - index - 1);
     });
   });
-  cy.get(controls).should('have.attr', 'aria-pressed', 'false');
-  cy.get(`${controls}[aria-pressed="true"]`).should('not.exist');
+  cy.get(controls).should('have.attr', 'data-included', 'false');
+  cy.get(`${controls}[data-included="true"]`).should('not.exist');
   reloadFieldSelection();
-  cy.get(controls).should('have.attr', 'aria-pressed', 'false');
-  cy.get(`${controls}[aria-pressed="true"]`).should('not.exist');
+  cy.get(controls).should('have.attr', 'data-included', 'false');
+  cy.get(`${controls}[data-included="true"]`).should('not.exist');
   cy.screenshot(`empty-${sourceCount}-input-join`, { capture: 'viewport' });
-  cy.get(controls).first().click();
+  cy.get(controls).first().should('be.enabled').click();
   assertSaved(1);
-  cy.get(`${controls}[aria-pressed="true"]`).should('have.length', 1);
+  cy.get(`${controls}[data-included="true"]`).should('have.length', 1);
 }
