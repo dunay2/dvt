@@ -1,4 +1,10 @@
-/** Owns the single fixed right-hand inspector for the applied relational tree. */
+/**
+ * Owned concern: compose the single inspector for the applied relational tree.
+ * @baseline GH-3596: only retained final JOIN Output selection survives disconnection.
+ * @decision Read the narrow permission from the existing canonical session.
+ * @consequence General editor and Source controls keep their existing authoring guards.
+ * @version 1.1.0
+ */
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
@@ -33,13 +39,20 @@ export function CanvasRelationalTreeSideInspector({
   modelOutput: CanvasModelOutputInspectorState;
 }>): JSX.Element | null {
   if (model.projection == null) return null;
+  const analysis = model.session.analysis;
+  const retainedOutputEditable =
+    authoring?.canEditNode === true &&
+    !model.session.restorationUnavailable &&
+    analysis?.document != null &&
+    analysis.error == null &&
+    analysis.session.canEditRetainedJoinOutput(model.projection.root.relationId ?? '');
   if (modelOutput.open)
     return (
       <CanvasModelOutputInspector
         modelName={transformNode.name}
         root={model.projection.root}
         copy={copy}
-        editable={model.authoringAvailable && !model.session.active}
+        editable={(model.authoringAvailable || retainedOutputEditable) && !model.session.active}
         onOutputChange={model.session.applyOutputOrder}
         onPendingOutputChange={modelOutput.setPending}
         onClose={() => modelOutput.setOpen(false)}

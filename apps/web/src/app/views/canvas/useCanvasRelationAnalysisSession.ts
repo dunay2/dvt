@@ -1,4 +1,10 @@
-/** React owns lifetime only; canonical analysis and revision changes stay outside presentation. */
+/**
+ * Owned concern: bind React lifetime to the existing canonical analysis session.
+ * @baseline GH-3596: graph-derived publication and retained-output facts share one revision owner.
+ * @decision Forward eligibility facts without introducing presentation-owned permission state.
+ * @consequence A graph change refreshes consumers while canonical revision checks stay intact.
+ * @version 1.1.0
+ */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { ConnectionRef } from '@dvt/contracts';
@@ -8,7 +14,8 @@ export function useCanvasRelationAnalysisSession(
   document: SubstraitDocument | null,
   scope: string,
   connection?: ConnectionRef,
-  deniedInputs?: ReadonlySet<string>
+  deniedInputs?: ReadonlySet<string>,
+  disconnectedInputs?: ReadonlySet<string>
 ) {
   const provider = connection?.provider;
   const connectionId = connection?.connectionId;
@@ -31,13 +38,13 @@ export function useCanvasRelationAnalysisSession(
   useEffect(() => () => session.dispose(), [session]);
   useEffect(() => {
     try {
-      session.receive(document, deniedInputs);
+      session.receive(document, deniedInputs, disconnectedInputs);
       setReady({ document, session, revision: session.revision, error: null });
     } catch (error) {
       session.dispose();
       setReady({ document, session, revision: session.revision, error });
     }
-  }, [document, session, deniedInputs]);
+  }, [document, session, deniedInputs, disconnectedInputs]);
   const refresh = useCallback(() => {
     setReady((current) => (current == null ? null : { ...current, revision: session.revision }));
   }, [session]);

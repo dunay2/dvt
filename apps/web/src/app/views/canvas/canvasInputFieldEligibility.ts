@@ -1,20 +1,27 @@
-/** One provenance policy for menus and semantic commands; raw schemas stay complete. */
+/**
+ * Owned concern: distinguish retained-document editing from Input publication eligibility.
+ * @baseline GH-3180: disconnected final JOIN selection remains an authoring operation.
+ * @decision Derive disconnected provenance beside the unchanged publication denial.
+ * @consequence Connected exclusions and new expressions never inherit the retained-output permission.
+ * @version 1.1.0
+ */
 import { jcsCanonicalize } from '@dvt/crypto';
 import type { SchemaField, SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 import { resolveCanvasPhysicalInputBindings } from './canvasInputComposition';
 
-export function resolveUnmappedCanvasReadFields(
+export function resolveCanvasReadFieldEligibility(
   args: Readonly<{
     document: SubstraitDocument | null;
     nodeId: string;
     nodes: readonly CanonicalNode[];
     edges: readonly CanvasInputBindingEdge[];
   }>
-): ReadonlySet<string> {
+): Readonly<{ denied: ReadonlySet<string>; disconnected: ReadonlySet<string> }> {
   const denied = new Set<string>();
-  if (args.document == null) return denied;
+  const disconnected = new Set<string>();
+  if (args.document == null) return { denied, disconnected };
   const edges = args.edges.filter((edge) => edge.targetId === args.nodeId);
   for (const relation of args.document.sidecar.relations) {
     if (relation.sourceRef == null && relation.producerRef == null) continue;
@@ -49,9 +56,16 @@ export function resolveUnmappedCanvasReadFields(
           : relation.producerRef.fields.find((entry) => entry.fieldId === field.fieldId)
               ?.producerFieldId;
       if (publishedId == null || !allowed.has(publishedId)) denied.add(field.fieldId);
+      if (edge == null && publishedId != null) disconnected.add(field.fieldId);
     }
   }
-  return denied;
+  return { denied, disconnected };
+}
+
+export function resolveUnmappedCanvasReadFields(
+  args: Parameters<typeof resolveCanvasReadFieldEligibility>[0]
+): ReadonlySet<string> {
+  return resolveCanvasReadFieldEligibility(args).denied;
 }
 
 export function canvasInputSchemaIsEligible(
@@ -61,5 +75,19 @@ export function canvasInputSchemaIsEligible(
   return (
     field.sourceFieldIds.every((id) => !denied.has(id)) &&
     (field.children?.every((child) => canvasInputSchemaIsEligible(child, denied)) ?? true)
+  );
+}
+
+export function canvasRetainedOutputSchemaIsEligible(
+  field: SchemaField,
+  denied: ReadonlySet<string>,
+  disconnected: ReadonlySet<string>
+): boolean {
+  return (
+    field.sourceFieldIds.every((id) => !denied.has(id) || disconnected.has(id)) &&
+    (field.children?.every((child) =>
+      canvasRetainedOutputSchemaIsEligible(child, denied, disconnected)
+    ) ??
+      true)
   );
 }

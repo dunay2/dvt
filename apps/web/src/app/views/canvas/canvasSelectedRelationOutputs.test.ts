@@ -1,5 +1,18 @@
+/**
+ * Owned concern: prove canonical output edits and their retained-document boundary.
+ * @baseline GH-3596: final JOIN emit editing survives disconnection without publication.
+ * @decision Exercise real analysis, command, serialization and publication with exact-delta negatives.
+ * @consequence Root identity and unavailable dependency guards remain observable.
+ * @version 1.1.0
+ */
 import { describe, expect, it } from 'vitest';
-import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+import { clone } from '@bufbuild/protobuf';
+import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  cloneLocalRelation,
+  deriveSubstraitSchemas,
+  readRelationStructure,
+} from '@dvt/substrait-analysis';
 import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { relationOutputSlots, type RelationOutputSlot } from './canvasRelationOutputSchema';
@@ -12,6 +25,11 @@ import { withWindowOutput } from './canvasRelationalExpressionStage.test-support
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { validateRelationChanges } from './canvasRelationChangeValidation';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
@@ -31,6 +49,139 @@ async function slots(
 }
 
 describe('canonical relation output editing', () => {
+  it('clears, reopens and restores a retained final JOIN without publishing disconnected data', async () => {
+    const graph = occurrenceGraph();
+    const denied = resolveUnmappedCanvasReadFields({
+      document: graph.draft,
+      nodeId: graph.targetNode.id,
+      nodes: graph.nodes,
+      edges: [],
+    });
+    const session = new CanvasRelationAnalysisSession('retained-join');
+    session.receive(graph.draft, denied, denied);
+    const original = session.locate(session.rootId, session.revision);
+    const empty = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: [],
+    });
+    expect((await session.query(null)).fields).toEqual([]);
+    await expect(projectSubstraitToPostgresSql(empty)).rejects.toThrow();
+    const emptyRevision = session.revision;
+    await expect(
+      applySelectedRelationDerivedOutput(session, {
+        relationId: session.rootId,
+        expectedRevision: emptyRevision,
+        intent: 'insert',
+        alias: 'new_literal',
+        formula: "'unavailable'",
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(emptyRevision);
+    expect((await session.query(null)).fields).toEqual([]);
+    const reopened = new CanvasRelationAnalysisSession('retained-join-reopened');
+    reopened.receive(
+      decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(empty)),
+      denied,
+      denied
+    );
+    const natural = await slots(reopened);
+    expect(natural).toHaveLength(4);
+    expect(natural.every((slot) => slot.output == null)).toBe(true);
+    const selected = await changeSelectedRelationOutputs(reopened, {
+      relationId: reopened.rootId,
+      expectedRevision: reopened.revision,
+      outputs: [{ slot: natural[0]!.slot }],
+    });
+    const restored = reopened.locate(reopened.rootId, reopened.revision);
+    expect(restored.binding).toEqual(original.binding);
+    expect(restored.inputs).toEqual(original.inputs);
+    expect(restored.relation.relType.case).toBe('join');
+    if (restored.relation.relType.case !== 'join' || original.relation.relType.case !== 'join')
+      throw new Error('Expected JOIN.');
+    expect(restored.relation.relType.value.left).toEqual(original.relation.relType.value.left);
+    expect(restored.relation.relType.value.right).toEqual(original.relation.relType.value.right);
+    expect(restored.relation.relType.value.expression).toEqual(
+      original.relation.relType.value.expression
+    );
+    expect((await reopened.query(null)).bindings).toHaveLength(1);
+    expect(reopened.allowsInputSchema((await reopened.query(null)).fields[0]!)).toBe(false);
+    const node = applyDvtSubstraitSemanticDocument(
+      graph.targetNode,
+      encodeDvtSubstraitSemanticDocument(selected)
+    );
+    const tree = projectCanvasRelationalTree({ node, nodes: [graph.source, node], edges: [] });
+    expect(tree.ok).toBe(true);
+    if (!tree.ok) throw new Error('Expected retained JOIN inspection.');
+    expect(tree.projection.root.output.fields).toEqual([]);
+    expect(tree.projection.root.unavailableFields).toHaveLength(1);
+    await expect(
+      changeSelectedRelationOutputs(reopened, {
+        relationId: reopened.rootId,
+        expectedRevision: 0,
+        outputs: [],
+      })
+    ).rejects.toThrow();
+    session.dispose();
+    reopened.dispose();
+  });
+
+  it.each(
+    [false, true].flatMap((empty) =>
+      (['predicate', 'binding', 'input', 'extensions', 'extra-upsert'] as const).map(
+        (mutation) => ({ empty, mutation })
+      )
+    )
+  )(
+    'rejects disconnected JOIN mutation $mutation (initially empty: $empty)',
+    async ({ empty, mutation }) => {
+      const graph = occurrenceGraph();
+      const denied = resolveUnmappedCanvasReadFields({
+        document: graph.draft,
+        nodeId: graph.targetNode.id,
+        nodes: graph.nodes,
+        edges: [],
+      });
+      const session = new CanvasRelationAnalysisSession('retained-negative');
+      session.receive(graph.draft, denied, denied);
+      if (empty)
+        await changeSelectedRelationOutputs(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          outputs: [],
+        });
+      const target = session.locate(session.rootId, session.revision);
+      const snapshot = await session.query(null);
+      const relation = cloneLocalRelation(
+        target.relation,
+        readRelationStructure(target.relation).inputs
+      );
+      if (relation.relType.case !== 'join') throw new Error('Expected JOIN.');
+      if (mutation === 'predicate') relation.relType.value.expression = undefined;
+      if (mutation === 'input')
+        relation.relType.value.left = clone(RelSchema, relation.relType.value.left!);
+      const binding =
+        mutation === 'binding' ? { ...target.binding, displayName: 'changed' } : target.binding;
+      const change = {
+        expectedRevision: session.revision,
+        rootId: session.rootId,
+        removed: [],
+        upserts: [
+          { relation, binding, fields: target.fields },
+          ...(mutation === 'extra-upsert'
+            ? [session.locate(target.inputs[0]!, session.revision)]
+            : []),
+        ],
+        ...(mutation === 'extensions' ? { extensions: graph.draft.plan } : {}),
+      };
+      await expect(validateRelationChanges(session, change, new Map())).rejects.toThrow(
+        /mapped Input/
+      );
+      expect(session.revision).toBe(change.expectedRevision);
+      expect(await session.query(null)).toEqual(snapshot);
+      session.dispose();
+    }
+  );
   it.each([
     ['TRIM(first_name)', 'TRIM(first_name)'],
     ['UPPER(TRIM(first_name))', 'UPPER(TRIM(first_name))'],

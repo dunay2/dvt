@@ -1,3 +1,10 @@
+/**
+ * Owned concern: prove mapped Input eligibility for composition and subsequent edits.
+ * @baseline GH-3596: missing edges differ from connected excluded or invalid mappings.
+ * @decision Exercise the shared policy and real commands for both disconnected and mapped Inputs.
+ * @consequence Retained JOIN output permission cannot reopen raw Source or formula authority.
+ * @version 1.1.0
+ */
 import { describe, expect, it } from 'vitest';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import {
@@ -10,11 +17,15 @@ import { createSourceJoin } from './canvasSourceJoin';
 import { createSourceSet } from './canvasSourceSet';
 import { toSourceRelationInput } from './canvasSourceRelation';
 import type { CanonicalNode } from '../../types/canonical';
-import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import {
+  resolveCanvasReadFieldEligibility,
+  resolveUnmappedCanvasReadFields,
+} from './canvasInputFieldEligibility';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { setDvtSourceOutputIncluded } from './canvasDvtSourceSemanticAuthoring';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
 
 const producer: CanonicalNode = {
   id: 'producer',
@@ -61,6 +72,24 @@ function input(
 }
 
 describe('explicit Transform over mapped Input', () => {
+  it('distinguishes a missing edge from connected excluded and malformed mappings', () => {
+    const graph = occurrenceGraph();
+    const args = { document: graph.draft, nodeId: graph.targetNode.id, nodes: graph.nodes };
+    const disconnected = resolveCanvasReadFieldEligibility({ ...args, edges: [] });
+    expect(disconnected.denied.size).toBe(4);
+    expect(disconnected.disconnected).toEqual(disconnected.denied);
+    for (const inputBindings of [
+      { version: 'v1', fields: [{ inputId: 'id-only', producerFieldId: 'id' }] },
+      { version: 'invalid', fields: [] },
+    ]) {
+      const mapped = resolveCanvasReadFieldEligibility({
+        ...args,
+        edges: [{ ...graph.edges[0]!, metadata: { inputBindings } }],
+      });
+      expect(mapped.denied.size).toBeGreaterThan(0);
+      expect(mapped.disconnected.size).toBe(0);
+    }
+  });
   it('a whole dependency exposes published physical fields, not excluded raw fields', () => {
     const mutation = setDvtSourceOutputIncluded(producer, 'id', false);
     if (mutation.outcome !== 'applied') throw new Error('Expected source publication.');
@@ -89,42 +118,45 @@ describe('explicit Transform over mapped Input', () => {
     )!;
     expect(denied.has(raw.fields.find((field) => field.displayName === 'id')!.fieldId)).toBe(true);
   });
-  it('blocks later output and expression commands from reincorporating unmapped raw fields', async () => {
-    const document = createCanvasRelationalTreeProjectionDraft({
-      input: input(),
-      targetNodeId: 'consumer',
-    });
-    const denied = resolveUnmappedCanvasReadFields({
-      document,
-      nodeId: 'consumer',
-      nodes: [producer],
-      edges: [
-        { sourceId: producer.id, targetId: 'consumer', inputBindings: input().inputBindings },
-      ],
-    });
-    const session = new CanvasRelationAnalysisSession('consumer');
-    session.receive(document, denied);
-    const index = deriveSubstraitSchemas(document).index;
-    const raw = [...index.relations.values()].find(
-      (entry) => entry.relation.relType.case === 'read'
-    )!;
-    const excluded = raw.fields.find((field) => field.displayName === 'id')!;
-    expect(denied.has(excluded.fieldId)).toBe(true);
-    const request = { relationId: session.rootId, expectedRevision: session.revision };
-    await expect(
-      applySelectedRelationDerivedOutput(session, {
-        ...request,
-        intent: 'edit',
-        alias: 'forged',
-        expression: { kind: 'field-ref', inputFieldId: excluded.fieldId },
-      })
-    ).rejects.toThrow();
-    await expect(
-      changeSelectedRelationOutputs(session, { ...request, outputs: [{ slot: 0 }] })
-    ).rejects.toThrow(/mapped Input/);
-    expect(session.revision).toBe(request.expectedRevision);
-    session.dispose();
-  });
+  it.each([false, true])(
+    'blocks raw output and expression reinclusion (disconnected: %s)',
+    async (disconnected) => {
+      const document = createCanvasRelationalTreeProjectionDraft({
+        input: input(),
+        targetNodeId: 'consumer',
+      });
+      const eligibility = resolveCanvasReadFieldEligibility({
+        document,
+        nodeId: 'consumer',
+        nodes: [producer],
+        edges: disconnected
+          ? []
+          : [{ sourceId: producer.id, targetId: 'consumer', inputBindings: input().inputBindings }],
+      });
+      const session = new CanvasRelationAnalysisSession('consumer');
+      session.receive(document, eligibility.denied, eligibility.disconnected);
+      const index = deriveSubstraitSchemas(document).index;
+      const raw = [...index.relations.values()].find(
+        (entry) => entry.relation.relType.case === 'read'
+      )!;
+      const excluded = raw.fields.find((field) => field.displayName === 'id')!;
+      expect(eligibility.denied.has(excluded.fieldId)).toBe(true);
+      const request = { relationId: session.rootId, expectedRevision: session.revision };
+      await expect(
+        applySelectedRelationDerivedOutput(session, {
+          ...request,
+          intent: 'edit',
+          alias: 'forged',
+          expression: { kind: 'field-ref', inputFieldId: excluded.fieldId },
+        })
+      ).rejects.toThrow();
+      await expect(
+        changeSelectedRelationOutputs(session, { ...request, outputs: [{ slot: 0 }] })
+      ).rejects.toThrow(/mapped Input/);
+      expect(session.revision).toBe(request.expectedRevision);
+      session.dispose();
+    }
+  );
   it('projects only the mapped producer fields while preserving the physical Read schema', () => {
     const source = input();
     expect(source.fields.map((field) => field.name)).toEqual(['id', 'country']);
