@@ -3,6 +3,7 @@
  * diagnostics, and timeline read model.
  */
 import { ArrowLeft, ListChecks } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
 import { Badge } from '../../components/ui/badge';
@@ -33,6 +34,7 @@ type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
   onRetryEventFeed?: () => void;
   runControls?: RunControlCommandController;
+  publicationRows?: ReactNode;
 };
 
 type ProvenanceArtifact = {
@@ -388,6 +390,7 @@ export function RunWorkspaceStateView({
   workspace,
   onRetryEventFeed,
   runControls,
+  publicationRows,
 }: RunWorkspaceStateProps) {
   const { copy, language } = useRunStatesCopy();
   const locale = language === 'es' ? 'es-ES' : 'en-US';
@@ -533,6 +536,7 @@ export function RunWorkspaceStateView({
           {snapshot.publication ? (
             <RunDvtPostgresPublicationCard evidence={snapshot.publication} locale={locale} />
           ) : null}
+          {snapshot.publication ? publicationRows : null}
           {showResultSection && (materializationEvidence || !snapshot.publication) ? (
             <Card
               data-slot="run-materialization-card"

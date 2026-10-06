@@ -25,6 +25,7 @@ import {
 } from './runs/runsRouteBootstrap';
 import { buildRunsWorkbenchState } from './runs/runWorkbenchStateModel';
 import { useRunControlCommands } from './runs/useRunControlCommands';
+import { RunPublicationSample } from './runs/RunPublicationSample';
 
 type RunsWorkbenchSurfaceProps = Readonly<{
   resolveRouteBootstrapId: (runId: string | undefined) => string;
@@ -216,6 +217,7 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
         <RunWorkspaceState
           workspace={state.workspace}
           runControls={runControls}
+          publicationRows={<RunPublicationSample snapshot={state.workspace.snapshot} />}
           onRetryEventFeed={canRetryEventFeed ? retryEventFeed : undefined}
         />
       );
