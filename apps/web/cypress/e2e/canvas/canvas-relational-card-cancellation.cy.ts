@@ -30,10 +30,10 @@ describe('Relational card drag cancellation', () => {
       let pointerId = -1;
       let outputX = 0;
       cy.get(output).then(($output) => {
-        outputX = position($output[0])[0]!;
+        outputX = position($output[0]!)[0]!;
       });
       cy.get(join).then(($card) => {
-        const element = $card[0];
+        const element = $card[0]!;
         const before = position(element.parentElement!);
         const writes = semanticWrites('join-transform').length;
         const queryPattern = /\/(data-sample|preview|runs|execute)(\/|$)/;
@@ -66,7 +66,7 @@ describe('Relational card drag cancellation', () => {
         });
         cy.get(join).should(($held) => {
           expect($held[0]).to.equal(element);
-          expect(position($held[0].parentElement!)).to.deep.equal(before);
+          expect(position($held[0]!.parentElement!)).to.deep.equal(before);
           expect(element.dataset.dragging).to.equal(undefined);
         });
         cy.then(() => {
@@ -87,11 +87,21 @@ describe('Relational card drag cancellation', () => {
         '[data-slot="canvas-relational-output-input-port"]',
         null
       );
+      let writesBeforeApply = 0;
+      cy.then(() => {
+        writesBeforeApply = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+      });
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
       cy.get('[data-pending-operation="true"]').should('not.exist');
       cy.get('[data-operator="filter"]').should('have.length', 1);
+      cy.wrap(null).should(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
+          writesBeforeApply + 1
+        );
+      });
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.get(output).should(($output) =>
-        expect(position($output[0])[0]).to.be.greaterThan(outputX)
+        expect(position($output[0]!)[0]).to.be.greaterThan(outputX)
       );
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.screenshot(`cancel-${reason}-then-reflow`, { capture: 'viewport', scale: true });

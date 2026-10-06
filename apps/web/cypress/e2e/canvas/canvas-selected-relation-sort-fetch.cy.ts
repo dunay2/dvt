@@ -1,4 +1,10 @@
-/** The same controls compose and edit either input; Apply owns persistence. */
+/**
+ * Owned concern: prove Sort/Fetch composition and editing on either retained JOIN input.
+ * @baseline GH-3369: canonical relation identities survive wrapper insertion and edits.
+ * @decision Enter one edit session, then select its forms; Apply owns persistence.
+ * @consequence Reopen, removal and zero implicit queries remain observable invariants.
+ * @version 1.0.0
+ */
 import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { DvtTransformAuthoringAuthorityV1Schema } from '@dvt/contracts';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
@@ -98,7 +104,6 @@ describe('Selected input Sort/Fetch (controlled API boundary)', () => {
       cy.get(`${form} select`).eq(1).select(String(SortField_SortDirection.DESC_NULLS_FIRST));
       cy.get(`${form} button[type="submit"]`).click();
       cy.get('[data-operator="fetch"]').click();
-      cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.contains(`${form} label`, /^LIMIT$/)
         .find('input')
         .should('have.value', '9')
