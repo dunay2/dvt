@@ -6,7 +6,11 @@ import type { editor } from 'monaco-editor';
 import type { MonacoCodeDiagnostic, MonacoCodeEditorMount } from './MonacoCodeEditor';
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
 import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
-import { createMonacoCodeOptions, monacoTheme } from './monacoVisualTokens';
+import {
+  configureMonacoVisualTheme,
+  createMonacoCodeOptions,
+  monacoTheme,
+} from './monacoVisualTokens';
 
 export type MonacoCodeSurfaceProps = Readonly<{
   ariaLabel: string;
@@ -83,6 +87,7 @@ export default function MonacoCodeSurface({
       data-testid={isReadOnly ? 'monaco-code-viewer' : 'monaco-code-editor'}
     >
       <Editor
+        beforeMount={configureMonacoVisualTheme}
         onMount={isReadOnly ? undefined : onMount}
         height="100%"
         language={language}
