@@ -179,14 +179,15 @@ describe('governed browser evidence routing', () => {
     }
   });
 
-  it.each([savedSampleHelper, revisitHelper])(
-    'retains all real runtime groups for shared helper %s',
-    (path) => {
-      expect(
-        resolveWebVitestChangedSuitePlan([path]).browserCommands.map(({ capability }) => capability)
-      ).toEqual(['controlled', 'available']);
-    }
-  );
+  it.each([
+    savedSampleHelper,
+    revisitHelper,
+    'apps/web/cypress/support/relationalWorkbench/columns.ts',
+  ])('retains all real runtime groups for shared helper %s', (path) => {
+    expect(
+      resolveWebVitestChangedSuitePlan([path]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['controlled', 'available']);
+  });
 
   it('runs only changed controlled specs but retains the complete set for their shared fixture', () => {
     const path = WEB_CYPRESS_SPECS.controlled[0];

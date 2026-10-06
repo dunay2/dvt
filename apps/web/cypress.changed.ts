@@ -120,6 +120,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/persistence.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/relationalWorkbench/columns.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/cardOutputControls.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/emptyOutputs.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/fieldSelection.ts': ['controlled'],
