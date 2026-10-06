@@ -1,4 +1,10 @@
-/** Input/output navigation reuses one column template; only the selected view is local state. */
+/**
+ * Owned concern: present Input and Output through one template with independent list identity.
+ * @baseline GH-3578: local Input order must not override published Output order.
+ * @decision Scope section state by view; retain caller-owned disclosure and canonical columns.
+ * @consequence Switching tabs cannot reconcile unrelated input slots and output FieldIds.
+ * @version 1.0.0
+ */
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -58,6 +64,7 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
           </div>
         ) : (
           <GraphNodeColumnSection
+            key={view}
             {...props}
             columns={columns}
             inputColumns={undefined}
