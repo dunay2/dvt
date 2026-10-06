@@ -1,9 +1,9 @@
 /** Owned concern: prove card-owned Source and Transform exploration against the live draft. */
 import { getVisibleCanvasNode } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';

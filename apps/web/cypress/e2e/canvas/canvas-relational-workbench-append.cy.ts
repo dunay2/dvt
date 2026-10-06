@@ -1,5 +1,5 @@
 /** Owned concern: append a pending source without changing the published canonical draft before Apply. */
-import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
+import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
 import { verifyWheelZoom } from '../../support/relationalWorkbench/geometry';
 import { joinWorkbenchProducers } from '../../support/relationalWorkbench/joinChain';
 import {

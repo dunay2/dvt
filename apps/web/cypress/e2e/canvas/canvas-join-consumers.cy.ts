@@ -1,5 +1,8 @@
 import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
-import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import {
+  connectWorkbenchProducer,
+  stageWorkbenchUnary,
+} from '../../support/relationalWorkbench/navigation';
 import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
 
 describe('join-consumers', () => {
@@ -14,18 +17,13 @@ describe('join-consumers', () => {
     cy.get('[data-slot="canvas-relational-expression-node"]').should('have.length.at.least', 3);
     cy.get('[data-slot="semantic-workbench-join-condition-editor"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-edit"]').click();
-    workbenchOperation('aggregate').click();
-    cy.get(
-      '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
-    )
-      .find('button[type="submit"]')
-      .click();
-    workbenchOperation('window').click();
-    cy.get(
-      '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
-    )
-      .find('button[type="submit"]')
-      .click();
+    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    cy.get(form).find('button[type="submit"]').click();
+    stageWorkbenchUnary('window', '[data-operator="aggregate"]');
+    cy.get(form).find('button[type="submit"]').click();
+    cy.get('[data-presentation="window"]').closest('li').as('window');
+    connectWorkbenchProducer('@window', '[data-slot="canvas-relational-output-input-port"]', null);
+    cy.get('[data-operator="join"]').click();
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();
     cy.get('[data-slot="canvas-relational-expression-node"][data-kind="field"]:visible')
       .first()

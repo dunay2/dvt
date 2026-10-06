@@ -7,9 +7,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../workspaceSession';
 
-import { workbenchOperation } from './operationMenu';
 export const form = '[data-slot="canvas-relational-operator-form"]';
-export const modalForm = '[role="dialog"][data-slot="canvas-relational-operator-form"]';
 export function openEditor(union = false, readOnly = false, nInput = false): void {
   stubShellBootstrapApis({
     scopes: readOnly
@@ -70,13 +68,4 @@ export function activateMenu(slot: string): void {
   });
   cy.get(selector).click();
   cy.get('[data-slot="context-menu-content"][data-state="open"]').should('not.exist');
-}
-
-export function addWrapper(id: string): void {
-  workbenchOperation(id).click();
-  cy.get(
-    '[role="dialog"] ' + form + ', [role="dialog"][data-slot="canvas-relational-operator-form"]'
-  )
-    .find('button[type="submit"]')
-    .click();
 }

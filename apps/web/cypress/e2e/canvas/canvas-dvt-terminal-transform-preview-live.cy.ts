@@ -23,6 +23,13 @@ import './canvas-transform-stage.cy';
 import './canvas-dvt-join-preview-live.cy';
 import './canvas-semantic-persistence-run-live.cy';
 import './canvas-sql-progressive-live.cy';
+import './canvas-dbt-author-code-run-live.cy';
+import './canvas-dvt-start-run-boundaries-live.cy';
+import './canvas-formula-lineage-live.cy';
+import './canvas-selected-filter-live.cy';
+import './canvas-semantic-unsupported-live.cy';
+import './canvas-transform-data-sample-live.cy';
+import '../runs/run-controls-live.cy';
 
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
@@ -32,11 +39,11 @@ import {
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';

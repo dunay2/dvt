@@ -9,13 +9,13 @@ import {
   clickPreviewExecutionPlanFromOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import { replaceLiveWorkspaceFile } from '../../support/dbtProjectLive';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
   readLiveRunEvents,
   readLiveRunSnapshot,
   readLiveWorkspaceFile,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 

@@ -5,10 +5,8 @@ import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
-import {
-  hasLiveProtectedRuntimeEnv,
-  seedLiveSelectedClosureDraft,
-} from '../../support/liveProtectedRuntime';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
+import { hasLiveProtectedRuntimeEnv } from '../../support/liveProtectedRuntime';
 import { exteriorOutputColumns } from '../../support/relationalWorkbench/columns';
 import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';

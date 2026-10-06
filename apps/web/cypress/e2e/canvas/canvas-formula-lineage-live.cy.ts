@@ -4,10 +4,8 @@ import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 import { encodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { createCanvasRelationalTreeProjectionDraft } from '../../../src/app/views/canvas/canvasRelationalTreeProjectionAuthoring';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
-import {
-  hasLiveProtectedRuntimeEnv,
-  seedLiveSelectedClosureDraft,
-} from '../../support/liveProtectedRuntime';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
+import { hasLiveProtectedRuntimeEnv } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 import {
   authorLineageFormula,
