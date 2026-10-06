@@ -1,43 +1,85 @@
 #!/usr/bin/env node
-/** Owns native Cypress execution and evidence validation, never runtime provisioning. */
+/**
+ * Owned concern: validate exact native Cypress evidence, never provision its runtime.
+ * @baseline GH-3578: exit zero is not proof of complete spec execution.
+ * @decision Share structured result validation between literal LIVE and controlled batch consumers.
+ * @consequence Missing, duplicate, skipped or inconsistent results reject without leaking configuration.
+ * @version 1.0.0
+ */
 const path = require('node:path');
 
-function validateCypressProofResult(result, expectedSpec) {
-  const counters = ['totalTests', 'totalPassed', 'totalFailed', 'totalPending', 'totalSkipped'];
+function validateCypressProofSpecs(specs) {
+  if (
+    !Array.isArray(specs) ||
+    specs.length === 0 ||
+    new Set(specs).size !== specs.length ||
+    Array.from(specs).some(
+      (spec) =>
+        typeof spec !== 'string' ||
+        !/^cypress\/e2e\/[A-Za-z0-9._/-]+\.cy\.ts$/u.test(spec) ||
+        spec.split('/').some((part) => !part || part === '.' || part === '..')
+    )
+  ) {
+    throw new Error('Cypress proof requires a nonempty unique list of literal Cypress specs.');
+  }
+  return specs;
+}
+
+function hasPassingCypressStats(stats) {
+  return (
+    Number.isSafeInteger(stats?.tests) &&
+    stats.tests > 0 &&
+    stats.passes === stats.tests &&
+    stats.failures === 0 &&
+    stats.pending === 0 &&
+    stats.skipped === 0
+  );
+}
+
+function validateCypressProofRun(run, remaining) {
+  if (
+    typeof run?.spec?.relative !== 'string' ||
+    !remaining.delete(run.spec.relative.replaceAll('\\', '/')) ||
+    run.error !== null ||
+    !hasPassingCypressStats(run.stats) ||
+    !Array.isArray(run.tests) ||
+    run.tests.length !== run.stats.tests ||
+    Array.from(run.tests).some((item) => item?.state !== 'passed')
+  ) {
+    throw new Error('Cypress proof must contain each requested fully passed spec exactly once.');
+  }
+  return run.stats.tests;
+}
+
+function validateCypressProofResult(result, expectedSpecs) {
+  const specs = validateCypressProofSpecs(expectedSpecs);
+  const totals = {
+    tests: result?.totalTests,
+    passes: result?.totalPassed,
+    failures: result?.totalFailed,
+    pending: result?.totalPending,
+    skipped: result?.totalSkipped,
+  };
   if (
     !result ||
     result.status === 'failed' ||
     Object.hasOwn(result, 'failures') ||
-    counters.some((key) => !Number.isSafeInteger(result[key]) || result[key] < 0) ||
-    result.totalTests === 0 ||
-    result.totalPassed !== result.totalTests ||
-    result.totalFailed !== 0 ||
-    result.totalPending !== 0 ||
-    result.totalSkipped !== 0 ||
-    !Array.isArray(result.runs) ||
-    result.runs.length !== 1
+    !hasPassingCypressStats(totals) ||
+    !Array.isArray(result.runs)
   ) {
     throw new Error(
       'Cypress proof requires executed tests with no failures, pending or skipped tests.'
     );
   }
-  const run = result.runs[0];
-  if (
-    typeof run?.spec?.relative !== 'string' ||
-    run.spec.relative.replaceAll('\\', '/') !== expectedSpec ||
-    run.error !== null ||
-    run.stats?.tests !== result.totalTests ||
-    run.stats?.passes !== result.totalPassed ||
-    run.stats?.failures !== 0 ||
-    run.stats?.pending !== 0 ||
-    run.stats?.skipped !== 0 ||
-    !Array.isArray(run.tests) ||
-    run.tests.length !== result.totalTests ||
-    run.tests.some((item) => item?.state !== 'passed')
-  ) {
-    throw new Error('Cypress proof must contain exactly the requested fully passed spec.');
+  const remaining = new Set(specs);
+  const executed = result.runs.reduce(
+    (count, run) => count + validateCypressProofRun(run, remaining),
+    0
+  );
+  if (remaining.size !== 0 || executed !== totals.tests) {
+    throw new Error('Cypress proof counters must match every requested spec.');
   }
-  return { spec: expectedSpec, tests: result.totalTests, passed: result.totalPassed };
+  return { specs: [...specs], tests: totals.tests, passed: totals.passes };
 }
 
 async function main(argv = process.argv.slice(2), deps = {}) {
@@ -45,13 +87,11 @@ async function main(argv = process.argv.slice(2), deps = {}) {
   if (
     (argv.length !== 2 && argv.length !== 3) ||
     argv[0] !== '--spec' ||
-    (argv.length === 3 && argv[2] !== '--headed') ||
-    typeof spec !== 'string' ||
-    !/^cypress\/e2e\/[A-Za-z0-9._/-]+\.cy\.ts$/u.test(spec) ||
-    spec.split('/').some((part) => !part || part === '.' || part === '..')
+    (argv.length === 3 && argv[2] !== '--headed')
   ) {
     throw new Error('Native proof requires one literal Cypress spec and optional --headed.');
   }
+  validateCypressProofSpecs([spec]);
   const project = path.resolve(__dirname, '../apps/web');
   const evidenceRoot = path.resolve(__dirname, '../.dvt/evidence/selected-closure');
   const run =
@@ -75,14 +115,14 @@ async function main(argv = process.argv.slice(2), deps = {}) {
     // Cypress configuration includes credentials; never dump its result or exception payload.
     throw new Error('Cypress native execution failed');
   }
-  const evidence = validateCypressProofResult(result, spec);
+  const evidence = validateCypressProofResult(result, [spec]);
   (deps.log ?? console.log)(
     `[selected-closure-live] Cypress proof: ${evidence.passed} passed (${spec})`
   );
   return evidence;
 }
 
-module.exports = { validateCypressProofResult, main };
+module.exports = { validateCypressProofSpecs, validateCypressProofResult, main };
 
 if (require.main === module) {
   main().catch((error) => {

@@ -166,6 +166,16 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
   const args = parseChangedSuiteArgs(argv);
   const changedFiles = args.files.length > 0 ? args.files : readChangedFiles(repoRoot);
   const plan = resolveWebVitestChangedSuitePlan(changedFiles, { full: args.full });
+  for (const path of plan.browserFiles) {
+    if (!existsSync(resolve(repoRoot, path))) {
+      throw new Error(`Browser evidence requires an existing consumer or helper: ${path}`);
+    }
+  }
+  for (const path of plan.retiredBrowserFiles) {
+    if (existsSync(resolve(repoRoot, path))) {
+      throw new Error(`Retired browser evidence must remain absent: ${path}`);
+    }
+  }
 
   if (args.plan) {
     process.stdout.write(`${JSON.stringify(plan)}\n`);
@@ -198,10 +208,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       runVitestFilesCommand(entry.config, entry.filePaths, webRoot);
     }
   }
-  for (const command of args.phase === 'vitest' ? [] : plan.browserCommands) {
-    runCommand(command, webRoot, {
+  for (const entry of args.phase === 'vitest' ? [] : plan.browserCommands) {
+    runCommand(entry.command, webRoot, {
       ...process.env,
-      DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native',
+      ...entry.env,
     });
   }
 }

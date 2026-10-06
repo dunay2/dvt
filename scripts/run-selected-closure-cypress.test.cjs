@@ -1,32 +1,87 @@
+/**
+ * Owned concern: prove exact Cypress execution evidence independently of runtime provisioning.
+ * @baseline GH-3578: process exit zero does not prove complete browser coverage.
+ * @decision Exercise one shared result validator with exact spec lists and malformed receipts.
+ * @consequence LIVE keeps one literal spec while controlled batches cannot omit or duplicate evidence.
+ * @version 1.0.0
+ */
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { validateCypressProofResult, main } = require('./run-selected-closure-cypress.cjs');
+const {
+  validateCypressProofSpecs,
+  validateCypressProofResult,
+  main,
+} = require('./run-selected-closure-cypress.cjs');
 
 const spec = 'cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
-const successful = () => ({
-  totalTests: 3,
-  totalPassed: 3,
+const successful = (specs = [spec]) => ({
+  totalTests: 3 * specs.length,
+  totalPassed: 3 * specs.length,
   totalFailed: 0,
   totalPending: 0,
   totalSkipped: 0,
-  runs: [
-    {
-      spec: { relative: spec },
-      error: null,
-      stats: { tests: 3, passes: 3, failures: 0, pending: 0, skipped: 0 },
-      tests: [{ state: 'passed' }, { state: 'passed' }, { state: 'passed' }],
-    },
-  ],
+  runs: specs.map((relative) => ({
+    spec: { relative },
+    error: null,
+    stats: { tests: 3, passes: 3, failures: 0, pending: 0, skipped: 0 },
+    tests: [{ state: 'passed' }, { state: 'passed' }, { state: 'passed' }],
+  })),
   config: { env: { apiBearerToken: 'must-not-escape' } },
 });
 
 test('only one exact fully executed spec yields bounded evidence without Cypress configuration', () => {
-  assert.deepEqual(validateCypressProofResult(successful(), spec), { spec, tests: 3, passed: 3 });
+  assert.deepEqual(validateCypressProofResult(successful(), [spec]), {
+    specs: [spec],
+    tests: 3,
+    passed: 3,
+  });
   const result = successful();
   result.runs[0].spec.relative = spec.replaceAll('/', '\\');
-  assert.deepEqual(validateCypressProofResult(result, spec), { spec, tests: 3, passed: 3 });
+  assert.deepEqual(validateCypressProofResult(result, [spec]), {
+    specs: [spec],
+    tests: 3,
+    passed: 3,
+  });
+});
+
+test('an exact batch accepts execution order changes but not missing or duplicate specs', () => {
+  const specs = [spec, 'cypress/e2e/canvas/canvas-model-session.cy.ts'];
+  const result = successful(specs);
+  result.runs.reverse();
+  assert.deepEqual(validateCypressProofResult(result, specs), { specs, tests: 6, passed: 6 });
+  for (const runs of [
+    [result.runs[0]],
+    [result.runs[0], result.runs[0]],
+    [...result.runs, result.runs[0]],
+  ]) {
+    assert.throws(() => validateCypressProofResult({ ...result, runs }, specs), /Cypress proof/);
+  }
+  assert.throws(() => validateCypressProofResult(successful(), specs), /Cypress proof/);
+});
+
+test('expected proof specs must be a nonempty unique list of literal Cypress files', () => {
+  assert.deepEqual(validateCypressProofSpecs([spec]), [spec]);
+  for (const specs of [
+    undefined,
+    spec,
+    [],
+    [spec, spec],
+    [undefined],
+    new Array(1),
+    [3],
+    [''],
+    ['cypress/e2e/**/*.cy.ts'],
+    ['cypress/e2e/../bad.cy.ts'],
+    ['cypress/e2e//bad.cy.ts'],
+    ['cypress/e2e/./bad.cy.ts'],
+    ['../bad.cy.ts'],
+    [`${spec},other.cy.ts`],
+  ]) {
+    assert.throws(() => validateCypressProofSpecs(specs), /literal Cypress spec/);
+    assert.throws(() => validateCypressProofResult(successful(), specs), /literal Cypress spec/);
+  }
 });
 
 test('empty, skipped, pending, failed, malformed and wrong-spec results reject', () => {
@@ -66,10 +121,34 @@ test('empty, skipped, pending, failed, malformed and wrong-spec results reject',
       r.runs[0].stats.pending = 1;
     },
     (r) => {
+      r.runs[0].stats.tests = 0;
+      r.runs[0].stats.passes = 0;
+      r.runs[0].tests = [];
+    },
+    (r) => {
+      r.runs[0].stats.passes = '3';
+    },
+    (r) => {
+      r.runs[0].stats.tests = Number.NaN;
+    },
+    (r) => {
+      r.runs[0].stats.skipped = 1;
+    },
+    (r) => {
+      r.runs[0].stats.failures = 1;
+    },
+    (r) => {
+      r.totalTests = 4;
+      r.totalPassed = 4;
+    },
+    (r) => {
       r.runs[0].tests[0].state = 'pending';
     },
     (r) => {
       r.runs[0].tests = [];
+    },
+    (r) => {
+      r.runs[0].tests = new Array(3);
     },
     (r) => {
       r.failures = 0;
@@ -82,10 +161,10 @@ test('empty, skipped, pending, failed, malformed and wrong-spec results reject',
   for (const mutate of mutations) {
     const result = successful();
     mutate(result);
-    assert.throws(() => validateCypressProofResult(result, spec), /Cypress proof/);
+    assert.throws(() => validateCypressProofResult(result, [spec]), /Cypress proof/);
   }
   for (const result of [null, {}, { status: 'failed', failures: 1, message: 'secret' }]) {
-    assert.throws(() => validateCypressProofResult(result, spec), /Cypress proof/);
+    assert.throws(() => validateCypressProofResult(result, [spec]), /Cypress proof/);
   }
 });
 
@@ -130,7 +209,7 @@ test('native adapter awaits the module API and exports only validated evidence',
     'authored browser fixtures must remain governed source inputs'
   );
   assert.equal(Object.hasOwn(options, 'env'), false);
-  assert.deepEqual(result, { spec, tests: 3, passed: 3 });
+  assert.deepEqual(result, { specs: [spec], tests: 3, passed: 3 });
   assert.doesNotMatch(JSON.stringify(messages), /must-not-escape|apiBearerToken/);
   await assert.rejects(
     main(['--spec', spec], {

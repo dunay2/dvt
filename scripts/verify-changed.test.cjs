@@ -93,6 +93,7 @@ test('live browser runtime inputs select the existing Web router without broad A
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
+    'tools/ci/run-web-cypress-native.mjs',
   ];
   for (const changed of [...files.map((file) => [file]), files]) {
     assert.equal(labelsFor(changed).filter((label) => label === 'pnpm test:web:changed').length, 1);

@@ -157,6 +157,7 @@ test('admitted browser runtime changes require Web evidence without unrelated pa
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
+    'tools/ci/run-web-cypress-native.mjs',
   ]) {
     const scope = computeWorkflowModeScopeOutputs('test', [file]);
     assert.equal(scope.web, true, file);

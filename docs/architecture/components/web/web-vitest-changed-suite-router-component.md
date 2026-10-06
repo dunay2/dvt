@@ -299,3 +299,39 @@ Exact diff -> one governed plan -> Vitest phase  -> required matrix result
 
 The matrix changes elapsed scheduling, not total evidence or CPU guarantees.
 Actual complete CI timings are required before claiming a speed improvement.
+
+### Fixture Consumer Evidence — GH-3578
+
+The [reviewed consumer matrix](https://github.com/dunay2/dvt/issues/3578#issuecomment-5998586830)
+extends the existing browser admission, not the product's commands or test
+framework. Pure draft builders remain separate from stateful HTTP adapters.
+Their real runtime import closure determines affected consumers; a builder name
+alone cannot narrow a shared dispatcher's consumers. Unknown and deleted browser
+paths still reject before phase filtering or process startup.
+
+The existing command plan represents three distinct runtime obligations:
+
+- Controlled API consumers execute once through the native browser runner.
+- Available LIVE consumers share the existing terminal entry and one protected
+  runtime bootstrap. Its 21 source families are one executed Cypress entry, not
+  21 independent runtime launches.
+- Unavailable LIVE evidence uses its existing spec and invocation-local
+  environment; that environment cannot leak into another obligation.
+
+The same structured result validator must reject missing, unexpected or duplicate
+specs, zero tests, malformed counters, failures, pending tests and skips. The
+protected LIVE CLI remains restricted to one literal spec. The terminal entry's
+transitive source closure is also checked; successful execution of its filename
+alone does not establish the consumer inventory.
+
+Removing old cases requires preserving their unique semantic assertions in the
+remaining owners first. In particular, UNION retains complete derived-type
+equality and the measure scenarios retain standalone and chained forms,
+grouping, partition/order, output identity and reload. Captured Workbench seed
+normalization reuses production mappers on that same fixture instance; it does
+not introduce a generic GET recorder or global fixture repair.
+
+Admission requires measuring the complete browser critical path, including setup,
+builds, all selected runtimes, result validation and cleanup, against the existing
+25-minute phase budget. Individual test durations do not establish that bound.
+No wider workflow scope, timeout increase or evidence waiver is admitted here.

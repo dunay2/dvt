@@ -11,6 +11,7 @@ import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
 import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 
@@ -19,7 +20,13 @@ vi.mock('node:child_process', async (importOriginal) => ({
   spawnSync: vi.fn(),
 }));
 
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return { ...actual, existsSync: vi.fn(actual.existsSync) };
+});
+
 beforeEach(() => {
+  vi.mocked(existsSync).mockReset();
   vi.mocked(spawnSync).mockReset().mockReturnValue({
     status: 0,
     signal: null,
@@ -66,14 +73,239 @@ const savedSampleConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-sort-fetch-data-navigation.cy.ts',
 ];
 const retired = 'apps/web/cypress/e2e/canvas/canvas-node-data-actions.cy.ts';
+const fixture = 'apps/web/cypress/support/canvasDraftAuthoring.ts';
+const unavailable = 'apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts';
+const liveCommand = {
+  capability: 'available',
+  command: 'pnpm run test:e2e:selected-closure:live',
+  specPaths: [spec],
+  env: {
+    DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native',
+    DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'available',
+  },
+};
+
+function readBrowserModules(): Map<string, ts.SourceFile> {
+  return new Map(
+    readdirSync(resolve('cypress'), { recursive: true, withFileTypes: true })
+      .filter((file) => file.isFile() && file.name.endsWith('.ts'))
+      .map((file) => {
+        const path = resolve(file.parentPath, file.name);
+        return [
+          path,
+          ts.createSourceFile(path, readFileSync(path, 'utf8'), ts.ScriptTarget.Latest, true),
+        ];
+      })
+  );
+}
+
+const browserModules = readBrowserModules();
+
+function runtimeImports(path: string, ast: ts.SourceFile): string[] {
+  return ast.statements.flatMap((statement) => {
+    if (
+      !ts.isImportDeclaration(statement) ||
+      !ts.isStringLiteral(statement.moduleSpecifier) ||
+      !statement.moduleSpecifier.text.startsWith('.') ||
+      statement.importClause?.isTypeOnly
+    )
+      return [];
+    const clause = statement.importClause;
+    const bindings = clause?.namedBindings;
+    if (
+      !clause?.name &&
+      bindings &&
+      ts.isNamedImports(bindings) &&
+      bindings.elements.every((binding) => binding.isTypeOnly)
+    )
+      return [];
+    const target = resolve(dirname(path), statement.moduleSpecifier.text);
+    return [target.endsWith('.ts') ? target : `${target}.ts`];
+  });
+}
+
+function reachesModule(
+  graph: ReadonlyMap<string, readonly string[]>,
+  source: string,
+  target: string,
+  seen = new Set<string>()
+): boolean {
+  if (source === target) return true;
+  if (seen.has(source)) return false;
+  seen.add(source);
+  return (graph.get(source) ?? []).some((dependency) =>
+    reachesModule(graph, dependency, target, seen)
+  );
+}
 
 describe('governed browser evidence routing', () => {
+  it('reconciles exact runtime imports with retained fixture consumers and one available entry', () => {
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const specs = [...browserModules.keys()].filter((path) => path.endsWith('.cy.ts'));
+    const target = resolve('cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts');
+    const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
+    const registered = Object.values(WEB_CYPRESS_SPECS).flat();
+    const fileAuthorityConsumer = 'apps/web/cypress/e2e/runs/run-controls-live.cy.ts';
+    expect(fixtureConsumers.sort()).toEqual(
+      registered
+        .filter((path) => path !== fileAuthorityConsumer)
+        .map((path) => resolve(path.slice('apps/web/'.length)))
+        .sort()
+    );
+    const entry = resolve(spec.slice('apps/web/'.length));
+    expect(specs.filter((path) => reachesModule(graph, entry, path)).sort()).toEqual(
+      WEB_CYPRESS_SPECS.available.map((path) => resolve(path.slice('apps/web/'.length))).sort()
+    );
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(22);
+    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(48);
+    expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
+
+    const runtime = resolve('cypress/support/liveProtectedRuntime.ts');
+    const unadmittedTransport = specs.filter(
+      (path) =>
+        reachesModule(graph, path, runtime) &&
+        !fixtureConsumers.includes(path) &&
+        path !== resolve(fileAuthorityConsumer.slice('apps/web/'.length))
+    );
+    expect(unadmittedTransport).toHaveLength(12);
+    for (const path of unadmittedTransport) {
+      expect(() =>
+        resolveWebVitestChangedSuitePlan([
+          `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`,
+        ])
+      ).toThrow();
+    }
+  });
+
+  it.each([savedSampleHelper, revisitHelper])(
+    'retains all real runtime groups for shared helper %s',
+    (path) => {
+      expect(
+        resolveWebVitestChangedSuitePlan([path]).browserCommands.map(({ capability }) => capability)
+      ).toEqual(['controlled', 'available']);
+    }
+  );
+
+  it('runs only changed controlled specs but retains the complete set for their shared fixture', () => {
+    const path = WEB_CYPRESS_SPECS.controlled[0];
+    const isolated = resolveWebVitestChangedSuitePlan([path, path]);
+    expect(isolated.browserCommands).toHaveLength(1);
+    expect(isolated.browserCommands[0]!.specPaths).toEqual([path]);
+    expect(resolveWebVitestChangedSuitePlan([path, fixture]).browserCommands[0]!.specPaths).toEqual(
+      WEB_CYPRESS_SPECS.controlled
+    );
+  });
+
+  it('admits explicit measure retirement only with its retained controlled replacement', () => {
+    const path = 'apps/web/cypress/e2e/canvas/canvas-selected-measures.cy.ts';
+    const plan = resolveWebVitestChangedSuitePlan([path]);
+    expect(plan.suites).toEqual(['architecture']);
+    expect(plan.browserCommands).toHaveLength(1);
+    expect(plan.browserCommands[0]!.specPaths).toContain(
+      'apps/web/cypress/e2e/canvas/canvas-measure-pipeline.cy.ts'
+    );
+    expect(plan.browserFiles).not.toContain(path);
+    expect(existsSync(resolve(path.slice('apps/web/'.length)))).toBe(false);
+  });
+
+  it('rejects a reintroduced retired path before planning or phase selection', async () => {
+    const { existsSync: originalExists } =
+      await vi.importActual<typeof import('node:fs')>('node:fs');
+    vi.mocked(existsSync).mockImplementation(
+      (path) =>
+        resolve(String(path)) === resolve(retired.slice('apps/web/'.length)) || originalExists(path)
+    );
+    for (const flags of [['--plan'], ['--phase=browser'], ['--phase=vitest']]) {
+      expect(() => main([...flags, '--files', retired])).toThrow(retired);
+      expect(spawnSync).not.toHaveBeenCalled();
+    }
+  });
+
+  it('routes shared fixtures once per real runtime with explicit invocation-local environment', () => {
+    const plan = resolveWebVitestChangedSuitePlan([fixture, fixture]);
+    expect(plan.commandPlan).toEqual(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/views/canvas/canvasDraftScenarioFixtures.test.ts',
+        'apps/web/src/app/views/canvas/canvasDraftScenarioFixtures.architecture.test.ts',
+      ]).commandPlan
+    );
+    expect(plan.browserCommands).toMatchObject([
+      {
+        capability: 'controlled',
+        command: expect.stringContaining('pnpm run test:e2e:native --browser chrome --spec '),
+      },
+      {
+        capability: 'available',
+        command: 'pnpm run test:e2e:selected-closure:live',
+        env: { DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'available' },
+        specPaths: [spec],
+      },
+      {
+        capability: 'unavailable',
+        command: `pnpm run test:e2e:selected-closure:live --spec ${unavailable}`,
+        env: { DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: 'unavailable' },
+        specPaths: [unavailable],
+      },
+    ]);
+    expect(plan.browserCommands).toHaveLength(3);
+    expect(plan.browserFiles).toContain(fixture);
+  });
+
+  it('runs the available families through one terminal entry and keeps unavailable separate', () => {
+    const live = resolveWebVitestChangedSuitePlan([
+      spec,
+      'apps/web/cypress/e2e/canvas/canvas-formula-lineage-live.cy.ts',
+      'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
+    ]);
+    expect(live.browserCommands).toHaveLength(1);
+    expect(live.browserCommands[0]).toMatchObject({ capability: 'available', specPaths: [spec] });
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(22);
+    expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
+      { capability: 'unavailable', specPaths: [unavailable] },
+    ]);
+  });
+
+  it('applies each browser environment without contaminating another command or the process', () => {
+    vi.stubEnv('DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME', 'unavailable');
+    const plan = resolveWebVitestChangedSuitePlan([fixture]);
+    main(['--phase=browser', '--files', fixture]);
+    expect(vi.mocked(spawnSync).mock.calls).toEqual(
+      plan.browserCommands.map((entry) => [
+        entry.command,
+        expect.objectContaining({ env: { ...process.env, ...entry.env } }),
+      ])
+    );
+    expect(vi.mocked(spawnSync).mock.calls[0]?.[1]).toMatchObject({
+      env: { DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: undefined },
+    });
+    expect(process.env.DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME).toBe('unavailable');
+  });
+
+  it.each(['all', 'vitest', 'browser', 'plan'])(
+    'rejects a deleted admitted spec or helper before %s can start',
+    async (phase) => {
+      const { existsSync: originalExists } =
+        await vi.importActual<typeof import('node:fs')>('node:fs');
+      for (const missing of [spec, helper]) {
+        vi.mocked(existsSync).mockImplementation(
+          (path) =>
+            resolve(String(path)) !== resolve(missing.slice('apps/web/'.length)) &&
+            originalExists(path)
+        );
+        const flags = phase === 'plan' ? ['--plan'] : phase === 'all' ? [] : [`--phase=${phase}`];
+        expect(() => main([...flags, '--files', missing])).toThrow(missing);
+        expect(spawnSync).not.toHaveBeenCalled();
+        vi.mocked(existsSync).mockReset();
+      }
+    }
+  );
+
   it.each([
     spec,
     helper,
     dataHelper,
-    savedSampleHelper,
-    revisitHelper,
     modelChain,
     inputMapping,
     semanticExecution,
@@ -90,7 +322,7 @@ describe('governed browser evidence routing', () => {
       suites: [],
       commandPlan: [],
       requiresDependencies: false,
-      browserCommands: ['pnpm run test:e2e:selected-closure:live'],
+      browserCommands: [liveCommand],
     });
   });
 
@@ -104,7 +336,7 @@ describe('governed browser evidence routing', () => {
           'apps/web/src/testing/vitestSuites.browserRouting.architecture.test.ts',
         ]).commandPlan
       );
-      expect(plan.browserCommands).toEqual(['pnpm run test:e2e:selected-closure:live']);
+      expect(plan.browserCommands).toEqual([liveCommand]);
       expect(existsSync(resolve(retired.slice('apps/web/'.length)))).toBe(false);
     }
   );
@@ -124,14 +356,14 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(mixed.commandPlan).toEqual(resolveWebVitestChangedSuitePlan([source]).commandPlan);
     expect(mixed.suites).toEqual(['unit', 'architecture']);
-    expect(mixed.browserCommands).toEqual(['pnpm run test:e2e:selected-closure:live']);
+    expect(mixed.browserCommands).toEqual([liveCommand]);
     expect(resolveWebVitestChangedSuitePlan([source]).browserCommands).toEqual([]);
   });
 
   it.each([
     'apps/web/cypress/e2e/new.cy.ts',
     'apps/web/cypress/support/e2e.ts',
-    'apps/web/cypress/support/liveProtectedRuntime.ts',
+    'apps/web/cypress/support/unregisteredRuntime.ts',
     'apps/web/cypress/fixtures/new.json',
     'apps/web/cypress.config.ts',
     'apps/web/cypress.live.config.ts',
@@ -152,15 +384,17 @@ describe('governed browser evidence routing', () => {
     'apps/api/vitest.integration.config.ts',
     'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
   ])('requires the live baseline for changes to its execution boundary: %s', (file) => {
-    expect(resolveWebVitestChangedSuitePlan([file]).browserCommands).toEqual([
-      'pnpm run test:e2e:selected-closure:live',
-    ]);
+    expect(
+      resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['controlled', 'available', 'unavailable']);
   });
 
   it('adds the admitted baseline in full mode without fabricating changed paths', () => {
-    expect(resolveWebVitestChangedSuitePlan([], { full: true }).browserCommands).toEqual([
-      'pnpm run test:e2e:selected-closure:live',
-    ]);
+    expect(
+      resolveWebVitestChangedSuitePlan([], { full: true }).browserCommands.map(
+        ({ capability }) => capability
+      )
+    ).toEqual(['controlled', 'available', 'unavailable']);
     expect(resolveWebVitestChangedSuitePlan([]).browserCommands).toEqual([]);
   });
 
@@ -170,19 +404,10 @@ describe('governed browser evidence routing', () => {
     [formulaJourney, 'exerciseTransformFormulaAuthoring', transformStage],
     [treeJourney, 'exerciseTransformTreeSelection', transformStage],
   ])('guards exclusive ownership and registration of %s', (helperPath, registerName, owner) => {
-    const cypressRoot = resolve('cypress');
     const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = new Set<string>();
     let registrations = 0;
-    for (const file of readdirSync(cypressRoot, { recursive: true, withFileTypes: true })) {
-      if (!file.isFile() || !file.name.endsWith('.ts')) continue;
-      const path = resolve(file.parentPath, file.name);
-      const ast = ts.createSourceFile(
-        path,
-        readFileSync(path, 'utf8'),
-        ts.ScriptTarget.Latest,
-        true
-      );
+    for (const [path, ast] of browserModules) {
       const visit = (node: ts.Node): void => {
         if (
           path === resolve(owner.slice('apps/web/'.length)) &&
@@ -249,13 +474,13 @@ describe('governed browser evidence routing', () => {
     expect([...vitest, ...browser]).toEqual(combined);
     expect(vitest).toHaveLength(plan.commandPlan.length + 1);
     expect(vitest[0]?.[0]).toBe('pnpm run test:deps');
-    expect(vitest.map(([command]) => command)).not.toContain(plan.browserCommands[0]);
+    expect(vitest.map(([command]) => command)).not.toContain(plan.browserCommands[0]!.command);
     expect(browser).toEqual([
       [
-        plan.browserCommands[0],
+        plan.browserCommands[0]!.command,
         expect.objectContaining({
           shell: true,
-          env: { ...process.env, DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native' },
+          env: { ...process.env, ...liveCommand.env },
         }),
       ],
     ]);
@@ -278,8 +503,12 @@ describe('governed browser evidence routing', () => {
       expect(spawnSync).not.toHaveBeenCalled();
     }
     main(['--full', '--phase=browser', '--files', 'README.md']);
-    expect(spawnSync).toHaveBeenCalledOnce();
-    expect(vi.mocked(spawnSync).mock.calls[0]?.[0]).toBe('pnpm run test:e2e:selected-closure:live');
+    expect(spawnSync).toHaveBeenCalledTimes(3);
+    expect(vi.mocked(spawnSync).mock.calls.map(([command]) => command)).toEqual(
+      resolveWebVitestChangedSuitePlan([], { full: true }).browserCommands.map(
+        ({ command }) => command
+      )
+    );
   });
 
   it('registers every admitted consumer once in the shared terminal runtime', () => {
@@ -289,15 +518,7 @@ describe('governed browser evidence routing', () => {
     const target = resolve(savedSampleHelper.slice('apps/web/'.length));
     const revisitTarget = resolve(revisitHelper.slice('apps/web/'.length));
     const entry = resolve(spec.slice('apps/web/'.length));
-    for (const file of readdirSync(resolve('cypress'), { recursive: true, withFileTypes: true })) {
-      if (!file.isFile() || !file.name.endsWith('.ts')) continue;
-      const path = resolve(file.parentPath, file.name);
-      const ast = ts.createSourceFile(
-        path,
-        readFileSync(path, 'utf8'),
-        ts.ScriptTarget.Latest,
-        true
-      );
+    for (const [path, ast] of browserModules) {
       for (const statement of ast.statements) {
         if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
           continue;
@@ -343,8 +564,20 @@ describe('governed browser evidence routing', () => {
         resolve(transformStage.slice('apps/web/'.length)),
         resolve(treeJourney.slice('apps/web/'.length)),
         resolve(formulaJourney.slice('apps/web/'.length)),
+        resolve('cypress/e2e/canvas/canvas-measure-pipeline.cy.ts'),
+        resolve('cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts'),
+        resolve('cypress/e2e/canvas/canvas-set-persistence.cy.ts'),
+        resolve('cypress/e2e/canvas/canvas-unary-lifecycle.cy.ts'),
       ].sort()
     );
+    const admitted = new Set(
+      Object.values(WEB_CYPRESS_SPECS)
+        .flat()
+        .map((path) => resolve(path.slice('apps/web/'.length)))
+    );
+    const graph = new Map([...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)]));
+    for (const consumer of revisitConsumers)
+      expect([...admitted].some((owner) => reachesModule(graph, owner, consumer)), consumer).toBe(true);
     for (const consumer of [
       ...expected,
       ...inputConsumers,
