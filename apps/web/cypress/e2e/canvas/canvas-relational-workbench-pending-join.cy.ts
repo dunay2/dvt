@@ -99,6 +99,9 @@ describe('Workbench pending binary operations', () => {
       expect(getE2eApiCalls(/data-sample/, 'GET')).to.have.length(0);
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
     });
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-pending-operation="true"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').should('not.exist');
   });
 
   for (const operation of ['inner_join', 'cross_join', 'union_all']) {
