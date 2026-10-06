@@ -1,8 +1,20 @@
-/** Prove repeated LIVE reads observe provider changes in the terminal runner's disposable lease. */
+/**
+ * Owned concern: prove provider reads and publication identity in the disposable LIVE lease.
+ * @baseline ADR-0066: stable-table rows and publication markers commit atomically.
+ * @decision Exercise the real publisher and sample probe across a deterministic read barrier.
+ * @consequence An in-flight old sample stays consistent; a later old-token request fails closed.
+ * @version 1.0.0
+ */
 import { randomUUID } from 'node:crypto';
+import { clearTimeout, setTimeout } from 'node:timers';
 import { URL } from 'node:url';
 
-import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import { PostgresDvtPublicationCapability } from '@dvt/adapter-postgres';
+import {
+  buildRelationalSourceObjectId,
+  ConnectedSourceRefSchema,
+  createDvtPostgresOutputSchemaDigestV1,
+} from '@dvt/contracts';
 import { Client } from 'pg';
 import { afterAll, beforeAll, expect, it, vi } from 'vitest';
 
@@ -10,6 +22,7 @@ import {
   AUTHORIZATION_ACTION,
   buildEnvironmentAccessScope,
 } from '../../src/application/ports/accessDecision.js';
+import { WarehouseSourcePublicationChangedError } from '../../src/application/ports/warehouseSourceImport.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import { PreviewWarehouseSourceObjectRowsUseCase } from '../../src/application/services/previewWarehouseSourceObjectRowsUseCase.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../src/domain/auth/types.js';
@@ -253,4 +266,141 @@ it('returns new LIVE rows after a provider change and preserves facts for empty 
   expect(empty.provenance.mode).toBe('live');
   expect(catalog.getConnection).toHaveBeenCalledTimes(3);
   expect(catalog.getConnection).toHaveBeenLastCalledWith(input.scope, input.connectionId);
+});
+
+it('keeps marker and rows in one snapshot while a real publisher replaces A with B', async () => {
+  const relation = 'publication_race';
+  const tokenA = 'a'.repeat(64);
+  const tokenB = 'b'.repeat(64);
+  const publisher = new PostgresDvtPublicationCapability({
+    connectionString: databaseUrl,
+    statementTimeoutMs: 2_000,
+    queryTimeoutMs: 3_000,
+  });
+  const publication = {
+    target: {
+      schemaVersion: 'dvt-transform-result-target.v1' as const,
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1' as const,
+        connectionId: 'proof-publication',
+        provider: 'postgres' as const,
+      },
+      schema,
+      relation,
+    },
+    expectedSchemaDigestSha256: createDvtPostgresOutputSchemaDigestV1({
+      schemaVersion: 'dvt-postgres-output-schema.v1',
+      columns: [
+        {
+          ordinal: 0,
+          name: 'customer',
+          postgresType: 'text',
+          nullable: true,
+          defaultExpression: null,
+          generatedExpression: null,
+          collation: null,
+        },
+      ],
+      constraints: [],
+      indexes: [],
+    }),
+  };
+  const probe = new WorkspaceWarehouseConnectionProbe({
+    credentialResolver: { resolveCredential: async () => databaseUrl },
+    now: () => new Date(),
+  });
+  const input = {
+    type: 'postgres' as const,
+    database,
+    credentialRef: 'postgres:source-live-proof',
+    objectId: buildRelationalSourceObjectId({
+      kind: 'relation',
+      relationType: 'table',
+      catalog: database,
+      schema,
+      name: relation,
+    }),
+    limit: 20,
+  };
+  let markerRead!: () => void;
+  const observedMarker = new Promise<void>((resolve) => {
+    markerRead = resolve;
+  });
+  let resumeSample!: () => void;
+  const sampleBarrier = new Promise<void>((resolve) => {
+    resumeSample = resolve;
+  });
+  let readingA: ReturnType<typeof probe.previewSourceObjectRows> | undefined;
+  let markerTimeout: ReturnType<typeof setTimeout> | undefined;
+  const originalQuery = Client.prototype.query;
+  const querySpy = vi.spyOn(Client.prototype, 'query');
+  querySpy.mockImplementation(function (this: Client, ...args: unknown[]): unknown {
+    const result: unknown = Reflect.apply(originalQuery, this, args);
+    const [text, parameters] = args;
+    if (
+      typeof text === 'string' &&
+      text.includes('obj_description') &&
+      Array.isArray(parameters) &&
+      parameters.length === 3 &&
+      parameters[0] === database &&
+      parameters[1] === schema &&
+      parameters[2] === relation &&
+      result instanceof Promise
+    ) {
+      return result.then(async (rows: unknown) => {
+        markerRead();
+        await sampleBarrier;
+        return rows;
+      });
+    }
+    return result;
+  } as typeof originalQuery);
+
+  try {
+    await publisher.publish({
+      ...publication,
+      sql: "SELECT 'A'::text AS customer",
+      publicationToken: tokenA,
+      expectedPredecessorToken: null,
+    });
+    readingA = probe.previewSourceObjectRows({ ...input, expectedPublicationToken: tokenA });
+    await Promise.race([
+      observedMarker,
+      readingA.then(() => {
+        throw new Error('Sample completed without observing its marker.');
+      }),
+      new Promise<never>((_, reject) => {
+        markerTimeout = setTimeout(
+          () => reject(new Error('Publication marker was not observed.')),
+          2_000
+        );
+      }),
+    ]);
+    clearTimeout(markerTimeout);
+    await expect(
+      publisher.publish({
+        ...publication,
+        sql: "SELECT 'B'::text AS customer",
+        publicationToken: tokenB,
+        expectedPredecessorToken: tokenA,
+      })
+    ).resolves.toMatchObject({ publicationOutcome: 'replaced', predecessorToken: tokenA });
+    resumeSample();
+    expect((await readingA).rows).toEqual([{ values: ['A'] }]);
+    await expect(
+      probe.previewSourceObjectRows({ ...input, expectedPublicationToken: tokenA })
+    ).rejects.toBeInstanceOf(WarehouseSourcePublicationChangedError);
+    expect(
+      (await probe.previewSourceObjectRows({ ...input, expectedPublicationToken: tokenB })).rows
+    ).toEqual([{ values: ['B'] }]);
+  } finally {
+    resumeSample();
+    clearTimeout(markerTimeout);
+    try {
+      await readingA;
+    } finally {
+      querySpy.mockRestore();
+      await publisher.close();
+    }
+  }
 });
