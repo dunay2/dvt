@@ -2,9 +2,14 @@
  * Owned concern: prove DVT PostgreSQL connection authoring, persistence, and inheritance.
  * @baseline GH-3578: the current inspector owns provider-neutral translated labels.
  * @decision Bind an ordinary manual source; imported source authority is independently guarded.
- * @consequence EN/ES, accessibility, inheritance and persisted bindings remain covered.
+ * @consequence The persisted Source→Model→Sink chain proves inheritance at the current Sink UI.
  * @version 1.0.0
  */
+import {
+  CONNECTION_REF_SCHEMA_VERSION,
+  WorkspaceGraphDraftSaveRequestSchema,
+} from '@dvt/contracts';
+
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
@@ -121,20 +126,23 @@ describe('DVT PostgreSQL connection authority', () => {
       .click();
 
     cy.wrap(null).should(() => {
-      const savedSource = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as { draft: { nodes: Array<Record<string, unknown>> } })
-        .flatMap((body) => body.draft.nodes)
-        .find((node) => {
-          const metadata = node.metadata as Record<string, unknown> | undefined;
-          const connectionRef = metadata?.connectionRef as
-            { connectionId?: string; provider?: string } | undefined;
-          return node.id === 'src_orders' && connectionRef?.connectionId === CONNECTION_ID;
-        });
-
-      expect(savedSource).to.not.be.undefined;
-      const latestDraft = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
-        { draft: { nodes: Array<Record<string, unknown>> } } | undefined;
-      for (const node of latestDraft?.draft.nodes ?? []) {
+      const { draft } = WorkspaceGraphDraftSaveRequestSchema.parse(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body
+      );
+      expect(
+        draft.nodes.find((node) => node.id === 'src_orders')?.metadata?.connectionRef
+      ).to.deep.equal({
+        schemaVersion: CONNECTION_REF_SCHEMA_VERSION,
+        provider: 'postgres',
+        connectionId: CONNECTION_ID,
+      });
+      expect(
+        draft.edges.map(({ sourceId, targetId, relation }) => [sourceId, targetId, relation])
+      ).to.have.deep.members([
+        ['src_orders', 'model_orders', 'lineage'],
+        ['model_orders', 'orders_dashboard', 'lineage'],
+      ]);
+      for (const node of draft.nodes) {
         if (node.id !== 'src_orders') {
           expect(node.metadata).not.to.have.property('connectionRef');
         }
@@ -147,11 +155,6 @@ describe('DVT PostgreSQL connection authority', () => {
     openNode('src_orders');
     cy.get('select[name="dvt-source-connection"]').should('have.value', CONNECTION_ID);
     assertNoSeriousAccessibilityViolations();
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    openNode('model_orders');
-    cy.contains(english.inspectorDvtInheritedConnectionLabel).scrollIntoView().should('be.visible');
-    cy.contains('code', CONNECTION_ID).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     openNode('orders_dashboard');

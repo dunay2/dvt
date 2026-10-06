@@ -565,6 +565,7 @@ describe('governed browser evidence routing', () => {
         resolve(treeJourney.slice('apps/web/'.length)),
         resolve(formulaJourney.slice('apps/web/'.length)),
         resolve('cypress/e2e/canvas/canvas-measure-pipeline.cy.ts'),
+        resolve('cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-formula-lineage.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-geometry-performance.cy.ts'),

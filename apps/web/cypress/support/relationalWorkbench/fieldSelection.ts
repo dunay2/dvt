@@ -82,6 +82,7 @@ export function prepareFieldSelection(sourceCount: 2 | 3): void {
     };
     cy.get(opener)
       .should('have.attr', 'tabindex', '0')
+      .and('be.visible')
       .focus()
       .should(assertOpenerFocused)
       .and('be.focused')
