@@ -1,7 +1,17 @@
-/** Owned concern: project one canonical Substrait relation subtree into the Canvas tree read model. */
+/**
+ * Owned concern: project canonical relation subtrees into visible Canvas cards.
+ * @baseline ADR-0064: only explicit identity bindings define an authoring group.
+ * @decision Hide owned internal stages in presentation, not in the canonical document.
+ * @consequence Adjacent independent transforms retain separate cards and external input boundaries.
+ * @version 1.0.0
+ */
 import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { sortDirectionLabel } from './semanticWorkbenchRelationMetadata';
-import type { SubstraitRelationIndex, RelationPublication } from '@dvt/substrait-analysis';
+import {
+  readSubstraitAuthoringGroup,
+  type SubstraitRelationIndex,
+  type RelationPublication,
+} from '@dvt/substrait-analysis';
 import { dvtSubstraitExpressionReader } from '@dvt/postgres-projection';
 
 import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
@@ -116,28 +126,40 @@ export function buildCanvasRelationalTreeRelation(
   }>
 ): CanvasRelationalTreeNode {
   const { index, digest } = args;
+  const entries = index.postorder
+    .map((id) => index.relations.get(id)!)
+    .filter((entry) => entry.binding.authoringOwnerRelationId == null);
+  const visibleInputs = new Map(
+    entries.map((entry) => {
+      const group = readSubstraitAuthoringGroup(index, entry.binding.relationId);
+      return [entry.binding.relationId, group == null ? entry.inputs : [group.inputId]];
+    })
+  );
   const paths = new Map([[index.rootId, 'root']]);
   const children = new Map<string, ReturnType<typeof childInputs>>();
-  for (let ordinal = index.postorder.length - 1; ordinal >= 0; ordinal -= 1) {
-    const id = index.postorder[ordinal]!;
-    const entry = index.relations.get(id)!;
+  for (let ordinal = entries.length - 1; ordinal >= 0; ordinal -= 1) {
+    const entry = entries[ordinal]!;
+    const id = entry.binding.relationId;
     const inputs = childInputs(entry.relation);
     children.set(id, inputs);
     inputs.forEach((input, position) =>
-      paths.set(entry.inputs[position]!, `${paths.get(id)}/${input.role}:${input.ordinal}`)
+      paths.set(
+        visibleInputs.get(id)![position]!,
+        `${paths.get(id)}/${input.role}:${input.ordinal}`
+      )
     );
   }
   const nodes = new Map<string, CanvasRelationalTreeNode>();
-  for (const id of index.postorder) {
-    const entry = index.relations.get(id)!;
+  for (const entry of entries) {
+    const id = entry.binding.relationId;
     const rel = entry.relation;
+    const group = readSubstraitAuthoringGroup(index, id);
     const validity = args.publication?.get(id);
     const unavailable = new Set(validity?.unavailableFieldIds);
     const fields = fieldsForRelation(index, id);
     const projectStage = projectCanvasRelationalProjectStage(
-      rel,
+      entry,
       index,
-      entry.inputs,
       new Set(
         fields
           .filter((field) => !unavailable.has(field.fieldId))
@@ -156,13 +178,21 @@ export function buildCanvasRelationalTreeRelation(
       output: { fields: fields.filter((field) => !unavailable.has(field.fieldId)) },
       unavailableFields: fields.filter((field) => unavailable.has(field.fieldId)),
       rowUnavailable: validity?.rowUnavailable ?? false,
-      expressionRefs: relationExpressionRefs(rel),
+      expressionRefs:
+        group == null
+          ? relationExpressionRefs(rel)
+          : group.members.flatMap((member) =>
+              relationExpressionRefs(member.relation).map((reference) => ({
+                ...reference,
+                relationId: member.binding.relationId,
+              }))
+            ),
       ...(projectStage == null ? {} : { projectionSummary: projectStage.summary }),
       decorations: windows === 0 ? [] : [{ kind: 'window', count: windows }],
       children: children.get(id)!.map((input, position) => ({
         role: input.role,
         ordinal: input.ordinal,
-        node: nodes.get(entry.inputs[position]!)!,
+        node: nodes.get(visibleInputs.get(id)![position]!)!,
       })),
     });
   }

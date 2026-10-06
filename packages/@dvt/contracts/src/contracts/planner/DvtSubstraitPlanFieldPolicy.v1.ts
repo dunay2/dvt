@@ -1,11 +1,12 @@
 /**
- * Apply the semantic name and literal budgets to decoded canonical Plan values.
+ * Owned concern: apply semantic field budgets during one decoded Plan traversal.
  *
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
  * @decision Validate canonical Plan values independently of provider identifier limits.
  * @consequence SQL target constraints do not restrict otherwise valid semantic names.
  * @version 1.0.0
  */
+import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { z } from 'zod';
 
 import {
@@ -15,7 +16,8 @@ import {
 
 export function addDvtSubstraitPlanFieldPolicyIssues(
   plan: unknown,
-  context: z.RefinementCtx
+  context: z.RefinementCtx,
+  onRelation?: (relation: Rel) => void
 ): void {
   const visited = new Set<object>();
   const visit = (value: unknown): void => {
@@ -26,6 +28,7 @@ export function addDvtSubstraitPlanFieldPolicyIssues(
       return;
     }
     const record = value as Record<string, unknown>;
+    if (record['$typeName'] === 'substrait.Rel') onRelation?.(value as Rel);
     const relType = record['relType'];
     if (relType !== null && typeof relType === 'object') {
       const relation = relType as Record<string, unknown>;

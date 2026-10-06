@@ -11,6 +11,7 @@ import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { withWindowOutput } from './canvasRelationalExpressionStage.test-support';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
@@ -22,16 +23,19 @@ async function slots(
   const target = session.locate(session.rootId, session.revision);
   return relationOutputSlots(
     target,
-    await Promise.all(target.inputs.map((id) => session.query(id)))
+    await Promise.all(target.inputs.map((id) => session.query(id))),
+    target.relation.relType.case === 'project'
+      ? readCanvasTransformDependencyModel(target, (id) => session.locate(id, session.revision))
+      : undefined
   );
 }
 
 describe('canonical relation output editing', () => {
   it.each([
-    ['TRIM(first_name)', 'trim(first_name)'],
-    ['UPPER(TRIM(first_name))', 'upper(trim(first_name))'],
-    ['2 * 3', '2 * 3'],
-    ['2 * (3 + 4)', '2 * (3 + 4)'],
+    ['TRIM(first_name)', 'TRIM(first_name)'],
+    ['UPPER(TRIM(first_name))', 'UPPER(TRIM(first_name))'],
+    ['2 * 3', '(2 * 3)'],
+    ['2 * (3 + 4)', '(2 * (3 + 4))'],
     ["''", "''"],
     ['NULL', 'NULL'],
   ])(

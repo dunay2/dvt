@@ -1,18 +1,11 @@
 /** Resolve reusable operands and build scalar chains for the canonical Transform command. */
-import { clone } from '@bufbuild/protobuf';
-import {
-  ExpressionSchema,
-  type Expression,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   Type_Nullability,
   type Type,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { SubstraitAnalysisError } from '@dvt/substrait-analysis';
-import type { prepareSelectedRelationUnary } from './canvasSelectedRelationUnary';
-import { relationOutputMapping } from './canvasRelationOutputBindings';
-import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 export type DvtSubstraitOutputExpressionCandidate =
   | Readonly<{ kind: 'field-ref'; inputFieldId: string }>
@@ -61,28 +54,6 @@ export function rootFields<T extends Readonly<{ parentFieldId?: string; outputOr
     .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
 }
 
-export function resolveOperandExpression(
-  prepared: Awaited<ReturnType<typeof prepareSelectedRelationUnary>>,
-  fieldId: string
-): Expression | null {
-  const inputs = rootFields(prepared.schema.bindings);
-  const inputOrdinal = inputs.findIndex((field) => field.fieldId === fieldId);
-  if (inputOrdinal >= 0) return dvtSubstraitExpression.field(inputOrdinal);
-  if (prepared.request.intent !== 'edit' || prepared.target.relation.relType.case !== 'project')
-    return null;
-  const output = rootFields(prepared.target.fields).find((field) => field.fieldId === fieldId);
-  if (output == null) return null;
-  const project = prepared.target.relation.relType.value;
-  const mapping = relationOutputMapping(
-    prepared.target.relation,
-    inputs.length + project.expressions.length
-  )[output.outputOrdinal];
-  if (mapping == null) return null;
-  if (mapping < inputs.length) return dvtSubstraitExpression.field(mapping);
-  const expression = project.expressions[mapping - inputs.length];
-  return expression == null ? null : clone(ExpressionSchema, expression);
-}
-
 export function reject(message: string, relationId: string): never {
   throw new SubstraitAnalysisError('invalid_binding', message, relationId);
 }
@@ -116,21 +87,4 @@ export function buildScalarChain(
     operands = [expression];
   }
   return expression;
-}
-
-export function referencedInputField(
-  expression: Expression,
-  fields: readonly Readonly<{ fieldId: string; parentFieldId?: string; outputOrdinal: number }>[]
-): string | undefined {
-  let operand = expression;
-  while (
-    operand.rexType.case === 'scalarFunction' &&
-    operand.rexType.value.arguments.length === 1
-  ) {
-    const argument = operand.rexType.value.arguments[0]!.argType;
-    if (argument.case !== 'value') return undefined;
-    operand = argument.value;
-  }
-  const ordinal = dvtSubstraitExpression.fieldOrdinal(operand);
-  return ordinal == null ? undefined : rootFields(fields)[ordinal]?.fieldId;
 }

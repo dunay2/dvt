@@ -1,5 +1,16 @@
-import { clone } from '@bufbuild/protobuf';
+/**
+ * Owned concern: construct real canonical Transform fixtures for card projection proofs.
+ * @baseline ADR-0064: explicit ownership distinguishes grouped stages from adjacent transforms.
+ * @decision Reuse production authoring commands and vary only declared fixture identities.
+ * @consequence Card tests inspect complete canonical documents rather than a parallel graph model.
+ * @version 1.0.0
+ */
+import { clone, create } from '@bufbuild/protobuf';
+import { RelCommon_EmitSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
+import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import {
@@ -112,13 +123,45 @@ export function withoutLastOutput(draft: DvtSubstraitProjectionDraft): DvtSubstr
   const root = plan.relations[0]?.relType;
   const project = root?.case === 'root' ? root.value.input?.relType : null;
   const emit = project?.case === 'project' ? project.value.common?.emitKind : null;
-  if (root?.case !== 'root' || emit?.case !== 'emit')
+  if (root?.case !== 'root' || project?.case !== 'project' || project.value.common == null)
     throw new Error('Expected emitted ProjectRel.');
-  emit.value.outputMapping.pop();
+  const mapping =
+    emit?.case === 'emit'
+      ? emit.value.outputMapping
+      : Array.from({ length: root.value.names.length }, (_, ordinal) => ordinal);
+  project.value.common.emitKind = {
+    case: 'emit',
+    value: create(RelCommon_EmitSchema, { outputMapping: mapping.slice(0, -1) }),
+  };
   root.value.names.pop();
   return {
     plan,
     sidecar: { ...draft.sidecar, fields: draft.sidecar.fields.slice(0, -1) },
+  };
+}
+
+export async function withPublicExpressionStage(
+  draft: DvtSubstraitProjectionDraft,
+  grouped: boolean
+): Promise<DvtSubstraitProjectionDraft> {
+  const indexed = indexSubstraitRelations(draft);
+  if (!indexed.ok) throw indexed.error;
+  const configured = await configureCanvasStagedTransform(
+    { id: 'public-transform', operation: 'field_transform', inputs: [indexed.index.rootId] },
+    draft
+  );
+  const document = decodeCanvasStagedOperation(configured);
+  if (document == null) throw new Error('Expected configured public Transform.');
+  return {
+    ...document,
+    sidecar: {
+      ...document.sidecar,
+      relations: document.sidecar.relations.map((binding) =>
+        grouped && binding.relationId === indexed.index.rootId
+          ? { ...binding, authoringOwnerRelationId: configured.id }
+          : binding
+      ),
+    },
   };
 }
 

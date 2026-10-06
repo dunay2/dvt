@@ -6,6 +6,7 @@ export {
   type RelationIndexResult,
 } from './relationIndex.js';
 export { readRelationStructure } from './relationStructure.js';
+export { readSubstraitAuthoringGroup, type SubstraitAuthoringGroup } from './authoringGroup.js';
 export { selectDvtSubstraitRelation } from './relationSelection.js';
 export {
   deriveRelationSchema,

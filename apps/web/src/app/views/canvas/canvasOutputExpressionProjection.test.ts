@@ -4,8 +4,71 @@ import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutp
 import { resolveDvtSubstraitColumnFunctions } from './canvasDvtSubstraitProjection';
 import { fixture, node, scalar } from './canvasOutputExpression.test.fixtures';
 import { projectCanvasOutputExpression } from './canvasOutputExpressionProjection';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('canonical output expression inspection', () => {
+  it('inspects grouped dependencies by public identity without expanding copied formulas', async () => {
+    const session = new CanvasRelationAnalysisSession('grouped-output-inspection');
+    session.receive(fixture());
+    const relationId = session.rootId;
+    await applySelectedRelationDerivedOutput(session, {
+      relationId,
+      expectedRevision: session.revision,
+      intent: 'edit',
+      alias: 'clean',
+      formula: 'TRIM(customer)',
+    });
+    await applySelectedRelationDerivedOutput(session, {
+      relationId,
+      expectedRevision: session.revision,
+      intent: 'edit',
+      alias: 'present',
+      formula: 'IS_NOT_NULL(clean)',
+    });
+    const document = await changeSelectedRelationOutputs(session, {
+      relationId,
+      expectedRevision: session.revision,
+      outputs: [{ slot: 0 }, { slot: 1 }, { slot: 3 }],
+    });
+    const published = document.sidecar.fields.find(
+      (field) => field.relationId === relationId && field.displayName === 'present'
+    )!;
+    const hidden = document.sidecar.fields.find((field) => field.displayName === 'clean')!;
+    const transform = applyDvtSubstraitSemanticDocument(
+      node(fixture()),
+      encodeDvtSubstraitSemanticDocument(document)
+    );
+    const before = JSON.stringify(transform);
+    const result = projectCanvasOutputExpression(transform, published.fieldId);
+    expect(result).toMatchObject({
+      status: 'available',
+      fieldId: published.fieldId,
+      alias: 'present',
+      dataType: 'boolean',
+    });
+    if (result.status !== 'available') throw new Error(result.reason);
+    expect(result.graph.nodes.map((entry) => entry.data.label)).toEqual([
+      'IS_NOT_NULL\nIS NOT NULL',
+      'FIELD\nclean',
+    ]);
+    expect(result.graph.nodes[1]?.data.fieldReference).toMatchObject({
+      fieldId: hidden.fieldId,
+      relationId: hidden.relationId,
+    });
+    expect(projectCanvasOutputExpression(transform, 'output:customer')).toMatchObject({
+      status: 'available',
+      alias: 'customer',
+    });
+    expect(projectCanvasOutputExpression(transform, hidden.fieldId).status).toBe('unavailable');
+    expect(projectCanvasOutputExpression(JSON.parse(before), published.fieldId)).toEqual(result);
+    expect(JSON.stringify(transform)).toBe(before);
+    session.dispose();
+  });
+
   it('resolves a direct mapping by FieldId as one leaf without persisting an expression', () => {
     const transform = node(fixture());
     const before = JSON.stringify(transform);

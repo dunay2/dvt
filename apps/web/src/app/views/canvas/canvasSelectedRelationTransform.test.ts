@@ -4,6 +4,7 @@ import { insertSelectedRelationTransform } from './canvasSelectedRelationTransfo
 import { querySelectedJoin } from './canvasSelectedJoin';
 import { resolveDvtSubstraitColumnFunctions } from '@dvt/postgres-projection';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 describe('dataset Transform insertion', () => {
   it.each([0, 1])('preserves the dataset and reconnects JOIN operand %i', async (side) => {
@@ -66,13 +67,17 @@ describe('dataset Transform insertion', () => {
       operandFieldIds: [field.fieldId, field.fieldId],
     });
     expect(field.sourceFieldId).toBeDefined();
+    const model = readCanvasTransformDependencyModel(
+      session.locate(relationId, session.revision),
+      (id) => session.locate(id, session.revision)
+    );
+    const definition = model.definitions[0]!;
     expect((await session.query(relationId)).bindings.at(-1)).toMatchObject({
       displayName: 'normalized',
-      sourceFieldId: field.sourceFieldId,
+      sourceFieldId: definition.binding.fieldId,
     });
-    const project = session.locate(relationId, session.revision).relation.relType;
-    if (project.case !== 'project') throw new Error('Expected Transform.');
-    const expression = project.value.expressions[0]!.rexType;
+    expect(definition.binding.sourceFieldId).toBe(field.sourceFieldId);
+    const expression = definition.expression.rexType;
     if (expression.case !== 'scalarFunction') throw new Error('Expected scalar.');
     expect(expression.value.arguments).toHaveLength(2);
     expect(expression.value.arguments[0]).toEqual(expression.value.arguments[1]);

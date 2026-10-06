@@ -4,12 +4,13 @@ import {
   DvtTransformAuthoringAuthorityV1Schema,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
-import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { indexSubstraitRelations, readSubstraitAuthoringGroup } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
 import { getE2eApiCalls } from '../e2eApiStub';
 
-import { openWorkbenchModel, visitWorkbenchCanvas } from './navigation';
+import { openWorkbenchModel, revisitWorkbenchCanvas } from './navigation';
 import { dragWorkbenchField } from './pointer';
 
 const inspector = '[data-slot="canvas-transform-inspector"]';
@@ -29,12 +30,14 @@ function expectSavedExpressionCount(count: number): void {
       decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
     );
     if (!indexed.ok) throw indexed.error;
-    const project = [...indexed.index.relations.values()].find(
-      (entry) => entry.relation.relType.case === 'project'
-    )!.relation.relType;
-    expect(project.case).to.equal('project');
-    if (project.case === 'project')
-      expect(project.value.expressions, 'saved expression definitions').to.have.length(count);
+    const group = readSubstraitAuthoringGroup(indexed.index, indexed.index.rootId);
+    expect(group, 'explicit Transform ownership').not.to.equal(null);
+    const model = readCanvasTransformDependencyModel(group!.root, (id) =>
+      indexed.index.relations.get(id)!
+    );
+    expect(model.definitions, 'saved expression definitions in this Transform').to.have.length(
+      count
+    );
   });
 }
 
@@ -145,7 +148,7 @@ export function exerciseTransformTreeSelection(): void {
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
   cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
   expectSavedExpressionCount(3);
-  visitWorkbenchCanvas();
+  revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).click();
   cy.get(inspector)
@@ -176,16 +179,20 @@ export function exerciseTransformTreeSelection(): void {
   // An excluded calculated result must remain recognizable, not just expression_N.
   cy.get(inspector)
     .find('[data-slot="relation-output-toggle"][data-included="false"]')
-    .filter('[aria-label*="trim("]')
+    .filter('[data-field-name="CAMPO_PRUEBA"]')
     .as('calculatedOutput', { type: 'static' })
     .closest('[data-slot="relation-output-field"]')
     .find('input')
-    .should(($input) => expect($input.val()).to.match(/^trim\(.+\)$/));
+    .should('have.value', 'CAMPO_PRUEBA');
+  cy.get('@calculatedOutput')
+    .closest('[data-slot="relation-output-field"]')
+    .find('[data-slot="relation-output-expression"]')
+    .should(($expression) => expect($expression.text()).to.match(/^TRIM\(.+\)$/));
   cy.get('@calculatedOutput').click().should('have.attr', 'data-included', 'true');
   cy.get('@calculatedOutput')
     .closest('[data-slot="relation-output-field"]')
     .find('[data-slot="relation-output-expression"]')
-    .should('contain.text', 'trim(');
+    .should(($expression) => expect($expression.text()).to.match(/^TRIM\(.+\)$/));
   cy.screenshot('transform-recognizable-calculated-output');
   cy.get('@calculatedOutput').click().should('have.attr', 'data-included', 'false');
   const tree = '[data-operator="project"]';
@@ -228,7 +235,7 @@ export function exerciseTransformTreeSelection(): void {
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
   cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
   expectSavedExpressionCount(2);
-  visitWorkbenchCanvas();
+  revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).click();
   cy.get(inspector)

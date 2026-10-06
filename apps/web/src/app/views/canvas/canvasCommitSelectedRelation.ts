@@ -22,6 +22,7 @@ export async function commitSelectedRelation(
     signal?: AbortSignal;
     replacement: RelationChangeSet['upserts'][number];
     dependencies?: RelationChangeSet['upserts'];
+    removed?: RelationChangeSet['removed'];
     createdInputs?: ReadonlyMap<string, readonly string[]>;
     extensions?: RelationChangeSet['extensions'];
   }>
@@ -58,7 +59,7 @@ export async function commitSelectedRelation(
   }
   const change: RelationChangeSet = {
     expectedRevision: args.expectedRevision,
-    removed: [],
+    removed: args.removed ?? [],
     ...reconnected,
     upserts: rebindSelectedFieldReferences(
       session,

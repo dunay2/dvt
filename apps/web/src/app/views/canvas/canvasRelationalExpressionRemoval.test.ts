@@ -5,6 +5,8 @@ import { removeCanvasRelationalExpression } from './canvasRelationalFieldSelecti
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { relationOutputMapping } from './canvasRelationOutputBindings';
 import { projectSemanticWorkbenchRelations } from './semanticWorkbenchRelations';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import type { DvtSubstraitFieldBindingV1 } from '@dvt/contracts';
 import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
@@ -14,6 +16,17 @@ function scenario(): CanvasRelationAnalysisSession {
   const session = new CanvasRelationAnalysisSession('expression-removal');
   session.receive(withWindowOutput(withScalarOutput()));
   return session;
+}
+
+function publicIdentity({
+  sourceFieldId: _source,
+  operandFieldIds: _operands,
+  ...field
+}: DvtSubstraitFieldBindingV1): Omit<
+  DvtSubstraitFieldBindingV1,
+  'sourceFieldId' | 'operandFieldIds'
+> {
+  return field;
 }
 
 describe('complete Project expression removal', () => {
@@ -39,14 +52,21 @@ describe('complete Project expression removal', () => {
         decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(next))
       );
       const after = reopened.locate(reopened.rootId, reopened.revision);
-      expect(after.inputs).toEqual(before.inputs);
-      expect(after.fields).toEqual(
+      const model = readCanvasTransformDependencyModel(after, (id) =>
+        reopened.locate(id, reopened.revision)
+      );
+      expect([model.input.binding.relationId]).toEqual(before.inputs);
+      expect(after.fields.map(publicIdentity)).toEqual(
         before.fields
           .filter((field) => field.displayName !== 'customer_code_norm')
-          .map((field, outputOrdinal) => ({ ...field, outputOrdinal }))
+          .map((field, outputOrdinal) => ({ ...publicIdentity(field), outputOrdinal }))
       );
       if (after.relation.relType.case !== 'project') throw new Error('Expected Project');
-      expect(after.relation.relType.value.expressions).toEqual([expressions[1]]);
+      expect(model.definitions.map((definition) => definition.expression)).toEqual([
+        expressions[1],
+      ]);
+      expect(model.definitions[0]!.output?.fieldId).toBe(after.fields[0]!.fieldId);
+      expect(after.relation.relType.value.expressions).toEqual([]);
       expect(relationOutputMapping(after.relation, 3)).toEqual([2, 1, 0]);
       const graph = projectSemanticWorkbenchRelations(next, after.relation, 'model');
       expect(graph.nodes.some((node) => node.data.label.startsWith('UPPER'))).toBe(false);
@@ -74,7 +94,11 @@ describe('complete Project expression removal', () => {
     expect(after.fields.map((field) => field.fieldId)).toEqual(
       before.fields.slice(0, -1).map((field) => field.fieldId)
     );
-    expect(after.inputs).toEqual(before.inputs);
+    const model = readCanvasTransformDependencyModel(after, (id) =>
+      session.locate(id, session.revision)
+    );
+    expect([model.input.binding.relationId]).toEqual(before.inputs);
+    expect(model.definitions).toHaveLength(1);
     const graph = projectSemanticWorkbenchRelations(next, after.relation, 'model');
     expect(graph.nodes.some((node) => node.data.label.startsWith('WINDOW'))).toBe(false);
     expect(

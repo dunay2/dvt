@@ -8,6 +8,7 @@ export type DerivedOutputField = Readonly<{
   fieldId: string;
   name: string;
   dataType: string;
+  origin?: 'input' | 'calculated';
 }>;
 
 export type FormulaSuggestion = Readonly<{
@@ -16,6 +17,7 @@ export type FormulaSuggestion = Readonly<{
   detail: string;
   kind: 'field' | 'function' | 'literal';
   fieldId?: string;
+  origin?: DerivedOutputField['origin'];
   argumentCount?: number;
   template?: string;
 }>;
@@ -44,6 +46,7 @@ export function formulaSuggestions(
       text: `"${field.name.replaceAll('"', '""')}"`,
       detail: field.dataType,
       fieldId: field.fieldId,
+      origin: field.origin ?? 'input',
     })),
     ...functions
       .filter((fn, index) => functions.findIndex((other) => other.name === fn.name) === index)

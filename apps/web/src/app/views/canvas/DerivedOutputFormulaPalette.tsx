@@ -27,6 +27,14 @@ export function DerivedOutputFormulaPalette({
     (item) =>
       item.kind === group && item.label.toLocaleLowerCase().includes(search.toLocaleLowerCase())
   );
+  const groups =
+    group === 'field'
+      ? (['input', 'calculated'] as const).map((origin) => ({
+          origin,
+          label: origin === 'input' ? copy.inputFields : copy.calculatedFields,
+          items: visible.filter((item) => (item.origin ?? 'input') === origin),
+        }))
+      : [{ origin: 'function', label: copy.functions, items: visible }];
   return (
     <section className="formula-palette" aria-label={copy.availableFields}>
       <div className="formula-palette-tabs">
@@ -48,45 +56,61 @@ export function DerivedOutputFormulaPalette({
         placeholder={copy.search}
         onChange={(event) => setSearch(event.target.value)}
       />
-      <ul className="formula-palette-items">
-        {visible.map((item) => (
-          <li key={`${item.kind}/${item.label}`}>
-            <button
-              type="button"
-              disabled={disabled}
-              className="formula-palette-item"
-              data-slot="formula-operand"
-              data-kind={item.kind}
-              title={item.detail}
-              draggable={!disabled && item.kind === 'field'}
-              onDragStart={(event) => {
-                event.stopPropagation();
-                const reference = dragScope.references.find(
-                  (field) => field.fieldId === item.fieldId
-                );
-                if (disabled || reference == null) {
-                  event.preventDefault();
-                  return;
-                }
-                writeCanvasRelationalFieldDrag(event.dataTransfer, {
-                  ...reference,
-                  rootId: dragScope.rootId,
-                  revision: dragScope.revision,
-                });
-              }}
-              onClick={() => onInsert(item)}
+      <div className="formula-palette-groups">
+        {groups
+          .filter((section) => section.items.length > 0)
+          .map((section) => (
+            <section
+              key={section.origin}
+              data-slot={`formula-${section.origin}-fields`}
+              aria-label={section.label}
             >
-              {item.kind === 'field' ? (
-                <GripVertical size={12} aria-hidden="true" />
-              ) : (
-                <span aria-hidden="true">ƒ</span>
-              )}
-              <span>{item.label}</span>
-              <small>{item.detail}</small>
-            </button>
-          </li>
-        ))}
-      </ul>
+              {group === 'field' ? (
+                <h4 className="formula-palette-group-heading">{section.label}</h4>
+              ) : null}
+              <ul className="formula-palette-items">
+                {section.items.map((item) => (
+                  <li key={`${item.kind}/${item.fieldId ?? item.label}`}>
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      className="formula-palette-item"
+                      data-slot="formula-operand"
+                      data-kind={item.kind}
+                      data-origin={item.origin}
+                      title={item.detail}
+                      draggable={!disabled && item.kind === 'field'}
+                      onDragStart={(event) => {
+                        event.stopPropagation();
+                        const reference = dragScope.references.find(
+                          (field) => field.fieldId === item.fieldId
+                        );
+                        if (disabled || reference == null) {
+                          event.preventDefault();
+                          return;
+                        }
+                        writeCanvasRelationalFieldDrag(event.dataTransfer, {
+                          ...reference,
+                          rootId: dragScope.rootId,
+                          revision: dragScope.revision,
+                        });
+                      }}
+                      onClick={() => onInsert(item)}
+                    >
+                      {item.kind === 'field' ? (
+                        <GripVertical size={12} aria-hidden="true" />
+                      ) : (
+                        <span aria-hidden="true">ƒ</span>
+                      )}
+                      <span>{item.label}</span>
+                      <small>{item.detail}</small>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+      </div>
       {visible.length === 0 ? <p className="formula-muted">{copy.noMatches}</p> : null}
     </section>
   );

@@ -32,6 +32,7 @@ export type CanvasRelationalTreeField = Readonly<{
 }>;
 
 export type CanvasRelationalTreeExpressionRef = Readonly<{
+  relationId?: string;
   slot:
     | 'filter-condition'
     | 'join-condition'

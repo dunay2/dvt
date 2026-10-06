@@ -1,10 +1,10 @@
 /** Owned concern: resolve an output FieldId into a read-only canonical expression graph. */
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { derivedOutputDataType, rootFields } from './canvasDerivedOutputExpression';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { createSemanticExpressionProjector } from './semanticExpressionGraphProjection';
@@ -49,28 +49,34 @@ export function projectCanvasOutputExpression(
     if (node.kind !== 'dvt:transform') return { status: 'unavailable', reason: 'invalid-output' };
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) return { status: 'unavailable', reason: 'invalid-output' };
-    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    const inspection = inspectDvtSubstraitProjectionDraft(draft);
-    if (!inspection.ok) return { status: 'unavailable', reason: 'unsupported-expression' };
-    const output = inspection.projection.outputs.find((candidate) => candidate.fieldId === fieldId);
-    const root = draft.plan.relations[0]?.relType;
-    const project = root?.case === 'root' ? root.value.input?.relType : undefined;
-    if (
-      output == null ||
-      project?.case !== 'project' ||
-      project.value.common?.emitKind.case !== 'emit'
-    ) {
+    const draft = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+    const { index, schemas } = deriveSubstraitSchemas(draft);
+    const root = index.relations.get(index.rootId)!;
+    const output = rootFields(root.fields).find((candidate) => candidate.fieldId === fieldId);
+    if (output == null || root.relation.relType.case !== 'project')
       return { status: 'unavailable', reason: 'invalid-output' };
-    }
-    const mapping = project.value.common.emitKind.value.outputMapping[output.outputOrdinal];
-    const inputs = inspection.projection.inputFields;
-    if (mapping == null) return { status: 'unavailable', reason: 'invalid-output' };
-    // Direct mappings become a transient leaf; the Plan is never modified or re-encoded.
+    const model = readCanvasTransformDependencyModel(root, (id) => index.relations.get(id)!);
+    const symbol = model.outputIds[output.outputOrdinal];
+    const definition = model.definitions.find((candidate) => candidate.id === symbol);
+    const base = rootFields(model.input.fields);
+    const inputs = definition?.inputIds ?? base.map((field) => field.fieldId);
+    const fields = new Map([
+      ...base.map((field) => [field.fieldId, field] as const),
+      ...model.definitions.map((item) => [item.id, item.output ?? item.binding] as const),
+    ]);
+    const bindings = inputs.map((id) => fields.get(id));
+    // A forwarded output is a transient leaf; a definition remains its canonical expression.
+    const ordinal = symbol == null ? -1 : inputs.indexOf(symbol);
     const expression =
-      mapping < inputs.length
-        ? dvtSubstraitExpression.field(mapping)
-        : project.value.expressions[mapping - inputs.length];
-    if (expression == null || !supportsExpression(expression, inputs.length)) {
+      definition?.expression ?? (ordinal < 0 ? null : dvtSubstraitExpression.field(ordinal));
+    const type = schemas.get(index.rootId)?.[output.outputOrdinal]?.type;
+    const dataType = type == null ? null : derivedOutputDataType(type);
+    if (
+      expression == null ||
+      dataType == null ||
+      bindings.some((field) => field == null) ||
+      !supportsExpression(expression, inputs.length)
+    ) {
       return { status: 'unavailable', reason: 'unsupported-expression' };
     }
     const graph: SemanticWorkbenchGraph = {
@@ -78,7 +84,7 @@ export function projectCanvasOutputExpression(
       edges: [],
       relationCount: 0,
       expressionCount: 0,
-      relationId: inspection.projection.targetRelationId,
+      relationId: index.rootId,
     };
     let sequence = 0;
     const projector = createSemanticExpressionProjector({
@@ -86,27 +92,21 @@ export function projectCanvasOutputExpression(
       nodes: graph.nodes,
       edges: graph.edges,
       showArgumentOrder: true,
-      inputFields: inputs.map((field) => {
-        const sourceFieldId = draft.sidecar.fields.find(
-          (entry) => entry.fieldId === field.fieldId
-        )?.sourceFieldId;
-        return {
-          fieldId: field.fieldId,
-          relationId: inspection.projection.inputRelationId,
-          ...(sourceFieldId == null ? {} : { sourceFieldId }),
-        };
-      }),
+      inputFields: bindings.map((field) => ({
+        fieldId: field!.fieldId,
+        relationId: field!.relationId,
+      })),
       nextId: (prefix) => `${prefix}-${sequence++}`,
     });
     projector.addExpression(
       expression,
-      inputs.map((field) => field.name)
+      bindings.map((field) => field!.displayName ?? '')
     );
     return {
       status: 'available',
       fieldId: output.fieldId,
-      alias: output.name,
-      dataType: output.dataType,
+      alias: output.displayName ?? '',
+      dataType: dataType === 'timestamptz' ? 'timestamp with time zone' : dataType,
       semanticDigest: authority.semanticDocument.semanticPlan.sha256,
       graph: layoutSemanticExpressionGraph({ ...graph, expressionCount: projector.count }),
     };

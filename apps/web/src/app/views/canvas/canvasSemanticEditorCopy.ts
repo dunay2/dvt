@@ -1,4 +1,10 @@
 /** Owned concern: provide concise localized copy for the Model editor, not semantic policy. */
+import { SubstraitAnalysisError } from '@dvt/substrait-analysis';
+import {
+  TRANSFORM_DEPENDENCY_REJECTION,
+  TransformDependencyError,
+} from './TransformDependencyError';
+
 const en = {
   back: 'Back to Canvas',
   editor: 'Semantic editor',
@@ -100,6 +106,8 @@ const en = {
     'Changing the operation replaces this local composition. Cancel restores the applied version.',
   derivedOutput: {
     availableFields: 'Available fields',
+    inputFields: 'Input fields',
+    calculatedFields: 'Calculated fields',
     functions: 'Functions',
     search: 'Search fields or functions…',
     noMatches: 'No matching items.',
@@ -132,6 +140,20 @@ const en = {
     cancel: 'Cancel',
     save: 'Add field',
     failed: 'The field could not be saved. Check the formula, field names and compatible types.',
+    thisField: 'this field',
+    stale: 'The model changed. Reopen the field before retrying. Your formula has been kept.',
+    rejections: {
+      [TRANSFORM_DEPENDENCY_REJECTION.cycle]:
+        'This formula creates a dependency cycle involving {fields}. Remove the circular reference.',
+      [TRANSFORM_DEPENDENCY_REJECTION.typeConflict]:
+        'This change makes {fields} incompatible. Adjust the dependent formulas or keep a compatible type.',
+      [TRANSFORM_DEPENDENCY_REJECTION.referenced]:
+        'The calculated fields {fields} still depend on this definition. Remove those references before deleting it.',
+      [TRANSFORM_DEPENDENCY_REJECTION.unavailable]:
+        'The field {fields} is unavailable. Restore it or choose an available field.',
+      [TRANSFORM_DEPENDENCY_REJECTION.ambiguous]:
+        'The name {fields} matches more than one field. Rename the conflicting fields.',
+    },
   },
 };
 const es: typeof en = {
@@ -239,6 +261,8 @@ const es: typeof en = {
     'Cambiar la operación reemplaza esta composición local. Cancelar recupera la versión aplicada.',
   derivedOutput: {
     availableFields: 'Campos disponibles',
+    inputFields: 'Campos de entrada',
+    calculatedFields: 'Campos calculados',
     functions: 'Funciones',
     search: 'Buscar campos o funciones…',
     noMatches: 'Sin coincidencias.',
@@ -272,9 +296,38 @@ const es: typeof en = {
     save: 'Añadir campo',
     failed:
       'No se ha podido guardar el campo. Comprueba la fórmula, los nombres y la compatibilidad de tipos.',
+    thisField: 'este campo',
+    stale:
+      'El modelo ha cambiado. Reabre el campo antes de reintentar. Se ha conservado tu fórmula.',
+    rejections: {
+      [TRANSFORM_DEPENDENCY_REJECTION.cycle]:
+        'Esta fórmula crea un ciclo de dependencias entre {fields}. Retira la referencia circular.',
+      [TRANSFORM_DEPENDENCY_REJECTION.typeConflict]:
+        'Este cambio hace incompatibles los campos {fields}. Ajusta las fórmulas dependientes o conserva un tipo compatible.',
+      [TRANSFORM_DEPENDENCY_REJECTION.referenced]:
+        'Los campos calculados {fields} aún dependen de esta definición. Retira esas referencias antes de eliminarla.',
+      [TRANSFORM_DEPENDENCY_REJECTION.unavailable]:
+        'El campo {fields} no está disponible. Restáuralo o elige un campo disponible.',
+      [TRANSFORM_DEPENDENCY_REJECTION.ambiguous]:
+        'El nombre {fields} coincide con varios campos. Cambia los nombres en conflicto.',
+    },
   },
 };
 export type CanvasSemanticEditorCopy = typeof en;
 export function resolveCanvasSemanticEditorCopy(language: string): CanvasSemanticEditorCopy {
   return language === 'es' ? es : en;
+}
+
+export function formatCanvasTransformDependencyError(
+  error: unknown,
+  copy: Pick<CanvasSemanticEditorCopy, 'derivedOutput'>
+): string | null {
+  if (error instanceof TransformDependencyError)
+    return copy.derivedOutput.rejections[error.code].replace(
+      '{fields}',
+      error.fields.join(', ') || copy.derivedOutput.thisField
+    );
+  if (error instanceof SubstraitAnalysisError && error.code === 'stale_document')
+    return copy.derivedOutput.stale;
+  return null;
 }

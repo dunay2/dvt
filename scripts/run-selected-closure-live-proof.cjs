@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
+ * @baseline GH-3594: outbox admission stays enforced against the disposable proof database.
+ * @decision Compose the existing worker, local logging sink and owned process lifecycle.
+ * @consequence Real delivery clears backlog; startup or readiness failure rejects the proof.
+ * @version 1.0.0
  */
 const { spawnSync } = require('node:child_process');
 const { existsSync, readdirSync } = require('node:fs');
@@ -38,7 +42,9 @@ const DEFAULT_API_PORT = 3300;
 const DEFAULT_WEB_PORT = 4174;
 const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
+const READINESS_RECEIPT_TIMEOUT_MS = 5_000;
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-local-postgres.cjs');
+const WORKSPACE_RUNTIME_BUILD_SCRIPT = path.resolve(__dirname, 'build-workspace-runtime-deps.cjs');
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
 const DEFAULT_SPEC_RELATIVE_PATH =
   'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
@@ -494,6 +500,7 @@ function buildLiveProofApiEnv({
     HOST: API_BIND_HOST,
     PORT: String(DEFAULT_API_PORT),
     DATABASE_URL: databaseUrl,
+    DVT_OUTBOX_SHARD_COUNT: '1',
     DVT_POSTGRES_CREDENTIAL_BINDINGS: resolvePostgresCredentialBindings(databaseUrl, sourceEnv),
     DVT_PG_SCHEMA: liveProofSchema,
     DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
@@ -504,6 +511,72 @@ function buildLiveProofApiEnv({
     ...artifactEnv,
     ...oidcEnv,
   };
+}
+
+function buildLiveProofOutboxWorkerEnv(apiEnv, adminPort) {
+  return {
+    ...apiEnv,
+    SERVICE_NAME: 'dvt-outbox-worker-live-proof',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+    DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'false',
+    DVT_OUTBOX_SHARD_COUNT: '1',
+    DVT_OUTBOX_OWNED_SHARD_IDS: '0',
+    DVT_OUTBOX_ADMIN_HOST: LOCAL_AUTH_HOST,
+    DVT_OUTBOX_ADMIN_PORT: String(adminPort),
+    DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: path.join(
+      SELECTED_CLOSURE_LIVE_PROOF_ROOT,
+      apiEnv.DVT_PG_SCHEMA,
+      'outbox-archive'
+    ),
+  };
+}
+
+function prepareLiveProofOutboxWorkerDependencies({ spawnCommand = spawnSync } = {}) {
+  console.log('[selected-closure-live] Building outbox worker runtime workspace dependencies');
+  const result = spawnCommand(
+    process.execPath,
+    [WORKSPACE_RUNTIME_BUILD_SCRIPT, 'dvt-outbox-worker'],
+    { stdio: 'inherit', env: process.env, windowsHide: true }
+  );
+  if (result.error) throw result.error;
+  if (result.status !== 0 || result.signal != null) {
+    throw new Error(
+      `Outbox worker runtime dependency build failed: exit ${result.status}, signal ${result.signal}`
+    );
+  }
+}
+
+async function startLiveProofOutboxWorker(apiEnv, processHandles, deps = {}) {
+  const port = await (deps.allocateFreePort ?? allocateFreePort)(LOCAL_AUTH_HOST);
+  const env = buildLiveProofOutboxWorkerEnv(apiEnv, port);
+  const handle = (deps.spawnProcess ?? spawnProcess)(
+    'outbox-live-proof',
+    ['--filter', 'dvt-outbox-worker', 'dev'],
+    env
+  );
+  processHandles.push(handle);
+  const readyzUrl = `http://${LOCAL_AUTH_HOST}:${port}/readyz`;
+  await (deps.waitForUrlOrProcessExit ?? waitForUrlOrProcessExit)(
+    readyzUrl,
+    (response) => response.statusCode === 200,
+    DEFAULT_READY_TIMEOUT_MS,
+    DEFAULT_POLL_INTERVAL_MS,
+    'Outbox worker readyz',
+    handle
+  );
+  const response = await (deps.fetch ?? fetch)(readyzUrl, {
+    signal: AbortSignal.timeout(READINESS_RECEIPT_TIMEOUT_MS),
+  });
+  const readiness = response.status === 200 ? await response.json() : null;
+  if (
+    readiness?.ready !== true ||
+    readiness?.owner !== true ||
+    readiness?.tickFresh !== true ||
+    readiness?.service !== env.SERVICE_NAME
+  ) {
+    throw new Error('Outbox worker did not report active, fresh readiness.');
+  }
 }
 
 function buildLiveProofTemporalWorkerEnv(apiEnv, sourceEnv = process.env) {
@@ -649,6 +722,7 @@ async function main() {
     }
     await seedSelectedClosureLocalWarehouseProof(apiEnv);
 
+    prepareLiveProofOutboxWorkerDependencies();
     if (temporalWorkerRuntime === 'available') {
       prepareTemporalWorkerRuntimeDependencies(apiEnv);
     }
@@ -672,6 +746,7 @@ async function main() {
       'API db/ready',
       apiHandle
     );
+    await startLiveProofOutboxWorker(apiEnv, processHandles);
     await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/readyz`,
       (response) => response.statusCode === 200,
@@ -832,9 +907,11 @@ module.exports = {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
+  prepareLiveProofOutboxWorkerDependencies,
   resolveLiveProofDbtExecutable,
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
@@ -842,6 +919,7 @@ module.exports = {
   resolveLiveProofSpecPath,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
+  startLiveProofOutboxWorker,
   runCypress,
 };
 

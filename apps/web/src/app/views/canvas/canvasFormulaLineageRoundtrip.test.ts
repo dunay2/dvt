@@ -1,5 +1,12 @@
-/** Authoring -> wire document -> reopen -> inspection uses one canonical expression authority. */
+/**
+ * Owned concern: prove formula references survive authoring, wire roundtrip and inspection.
+ * @baseline ADR-0064: canonical expressions and producer identities own dependencies.
+ * @decision Inspect current groups directly; exercise legacy lineage validation with valid legacy fixtures.
+ * @consequence Reopen cannot freeze a dependency snapshot or hide vacuous metadata rejections.
+ * @version 1.0.0
+ */
 import { describe, expect, it } from 'vitest';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -12,11 +19,18 @@ import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
-import { node } from './canvasOutputExpression.test.fixtures';
+import { node, scalar } from './canvasOutputExpression.test.fixtures';
 import { projectCanvasOutputExpression } from './canvasOutputExpressionProjection';
 import { compileDerivedOutputFormula } from './canvasDerivedOutputFormula';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { projectionOperandLineageMatches } from './canvasProjectionOperandLineage';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  readCanvasTransformDependencyModel,
+  type TransformDependencyModel,
+} from './canvasTransformDependencyModel';
+import { transformExpressionDependencies } from './canvasTransformExpressionReferences';
+import { describeCanvasTransformDefinitions } from './canvasTransformDefinitionPresentation';
 
 async function author(formula: string): Promise<DvtSubstraitProjectionDraft> {
   const session = new CanvasRelationAnalysisSession('formula-lineage');
@@ -40,6 +54,26 @@ function reopen(document: DvtSubstraitProjectionDraft): DvtSubstraitProjectionDr
   );
 }
 
+function dependencyModel(document: DvtSubstraitProjectionDraft): TransformDependencyModel {
+  const { index } = deriveSubstraitSchemas(document);
+  return readCanvasTransformDependencyModel(index.relations.get(index.rootId)!, (id) =>
+    index.relations.get(id)!
+  );
+}
+
+function inspectOutput(
+  document: DvtSubstraitProjectionDraft,
+  fieldId: string
+): ReturnType<typeof projectCanvasOutputExpression> {
+  return projectCanvasOutputExpression(
+    applyDvtSubstraitSemanticDocument(
+      node(connectedNamesProjectionDraft()),
+      encodeDvtSubstraitSemanticDocument(document)
+    ),
+    fieldId
+  );
+}
+
 describe('nested formula lineage roundtrip', () => {
   it.each([
     ['COALESCE(TRIM(first_name), last_name)', 'coalesce(trim(first_name), last_name)'],
@@ -53,12 +87,25 @@ describe('nested formula lineage roundtrip', () => {
     ],
   ])('preserves inspection, identities and SQL for %s', async (formula, expression) => {
     const authored = await author(formula);
-    const field = authored.sidecar.fields.find((entry) => entry.displayName === 'preferred_name')!;
-    expect(field.operandFieldIds).toEqual(['output:first_name', 'output:last_name']);
+    const model = dependencyModel(authored);
+    const definition = model.definitions[0]!;
+    const field = definition.output!;
+    expect(model.root.fields.slice(0, 2).map((entry) => entry.fieldId)).toEqual([
+      'output:first_name',
+      'output:last_name',
+    ]);
+    expect(
+      new Set(transformExpressionDependencies(definition.expression, definition.inputIds))
+    ).toEqual(new Set(model.input.fields.map((entry) => entry.fieldId)));
     const document = reopen(authored);
     expect(document.sidecar).toEqual(authored.sidecar);
-    expect(inspectDvtSubstraitProjectionDraft(document).ok).toBe(true);
-    const inspected = projectCanvasOutputExpression(node(document), field.fieldId);
+    expect(dependencyModel(document).definitions).toEqual(model.definitions);
+    expect(
+      describeCanvasTransformDefinitions(document.plan, dependencyModel(document)).get(
+        definition.id
+      )?.formula
+    ).toBe(formula);
+    const inspected = inspectOutput(document, field.fieldId);
     expect(inspected.status).toBe('available');
     if (inspected.status !== 'available') throw new Error(inspected.reason);
     expect(inspected.graph.nodes[0]?.data.expression).toBe(expression);
@@ -76,7 +123,7 @@ describe('nested formula lineage roundtrip', () => {
     }
   });
 
-  it('matches a referenced derived output as a complete nested subexpression', async () => {
+  it('updates the referenced producer without freezing a nested formula snapshot', async () => {
     const session = new CanvasRelationAnalysisSession('derived-lineage');
     session.receive(connectedNamesProjectionDraft());
     try {
@@ -87,9 +134,8 @@ describe('nested formula lineage roundtrip', () => {
         alias: 'trimmed',
         formula: 'TRIM(first_name)',
       });
-      const trimmedId = trimmed.sidecar.fields.find(
-        (field) => field.displayName === 'trimmed'
-      )!.fieldId;
+      const trimmedDefinition = dependencyModel(trimmed).definitions[0]!;
+      const trimmedId = trimmedDefinition.output!.fieldId;
       const combined = await applySelectedRelationDerivedOutput(session, {
         intent: 'edit',
         relationId: session.rootId,
@@ -97,10 +143,19 @@ describe('nested formula lineage roundtrip', () => {
         alias: 'combined',
         formula: 'COALESCE(UPPER(trimmed), last_name, trimmed)',
       });
-      const field = combined.sidecar.fields.find((entry) => entry.displayName === 'combined')!;
-      expect(field.operandFieldIds).toEqual([trimmedId, 'output:last_name']);
+      const model = dependencyModel(combined);
+      const definition = model.definitions.find(
+        (entry) => entry.output?.displayName === 'combined'
+      )!;
+      const field = definition.output!;
+      const lastNameId = model.input.fields.find(
+        (entry) => entry.displayName === 'last_name'
+      )!.fieldId;
+      expect(
+        new Set(transformExpressionDependencies(definition.expression, definition.inputIds))
+      ).toEqual(new Set([trimmedDefinition.id, lastNameId]));
       const document = reopen(combined);
-      expect(projectCanvasOutputExpression(node(document), field.fieldId).status).toBe('available');
+      expect(inspectOutput(document, field.fieldId).status).toBe('available');
       expect(document.sidecar).toEqual(combined.sidecar);
       const changed = await applySelectedRelationDerivedOutput(session, {
         intent: 'edit',
@@ -110,7 +165,29 @@ describe('nested formula lineage roundtrip', () => {
         outputFieldId: trimmedId,
         formula: 'LOWER(first_name)',
       });
-      expect(inspectDvtSubstraitProjectionDraft(changed)).toEqual({ ok: false });
+      const reopened = reopen(changed);
+      const after = dependencyModel(reopened);
+      expect(after.root.fields.map((entry) => entry.fieldId)).toEqual(
+        model.root.fields.map((entry) => entry.fieldId)
+      );
+      expect(after.definitions.map((entry) => entry.id)).toEqual(
+        model.definitions.map((entry) => entry.id)
+      );
+      expect(after.definitions.find((entry) => entry.id === definition.id)?.expression).toEqual(
+        definition.expression
+      );
+      const descriptions = describeCanvasTransformDefinitions(reopened.plan, after);
+      expect(descriptions.get(trimmedDefinition.id)?.formula).toBe('LOWER(first_name)');
+      expect(descriptions.get(definition.id)?.formula).toBe(
+        'COALESCE(UPPER(trimmed), last_name, trimmed)'
+      );
+      const beforeSql = await projectSubstraitToPostgresSql(document);
+      const afterSql = await projectSubstraitToPostgresSql(reopened);
+      expect(afterSql.sql).not.toBe(beforeSql.sql);
+      expect(afterSql.sql).toMatch(/\blower\s*\(/i);
+      expect(afterSql.sql).not.toMatch(/\b(?:btrim|trim)\s*\(/i);
+      expect(afterSql.projection).toEqual(beforeSql.projection);
+      expect(inspectOutput(reopened, field.fieldId).status).toBe('available');
     } finally {
       session.dispose();
     }
@@ -118,13 +195,28 @@ describe('nested formula lineage roundtrip', () => {
 
   it.each(['unknown', 'self', 'missing', 'duplicate', 'reordered', 'extra'])(
     'rejects %s dependency metadata without rewriting the saved document',
-    async (kind) => {
-      const document = reopen(await author('COALESCE(TRIM(first_name), last_name)'));
+    (kind) => {
+      const trimmed = scalar(
+        connectedNamesProjectionDraft(),
+        'trim',
+        ['output:first_name'],
+        'trimmed'
+      );
+      const document = reopen(
+        scalar(
+          trimmed.draft,
+          'coalesce',
+          [trimmed.createdFieldId, 'output:last_name'],
+          'preferred_name'
+        ).draft
+      );
+      expect(inspectDvtSubstraitProjectionDraft(document).ok).toBe(true);
       const field = document.sidecar.fields.find(
         (entry) => entry.displayName === 'preferred_name'
       )!;
-      const first = 'output:first_name';
+      const first = trimmed.createdFieldId;
       const last = 'output:last_name';
+      expect(field.operandFieldIds).toEqual([first, last]);
       const invalid: Record<string, string[]> = {
         unknown: [first, 'missing'],
         self: [first, field.fieldId],
@@ -151,9 +243,7 @@ describe('nested formula lineage roundtrip', () => {
         alias: 'first_copy',
         formula: 'first_name',
       });
-      const copiedId = copied.sidecar.fields.find(
-        (field) => field.displayName === 'first_copy'
-      )!.fieldId;
+      const copiedDefinition = dependencyModel(copied).definitions[0]!;
       const combined = await applySelectedRelationDerivedOutput(session, {
         intent: 'edit',
         relationId: session.rootId,
@@ -161,12 +251,23 @@ describe('nested formula lineage roundtrip', () => {
         alias: 'combined',
         formula: 'COALESCE(TRIM(first_name), first_copy, last_name, first_name)',
       });
-      const field = combined.sidecar.fields.find((entry) => entry.displayName === 'combined')!;
-      expect(field.operandFieldIds).toEqual(['output:first_name', copiedId, 'output:last_name']);
+      const model = dependencyModel(combined);
+      const definition = model.definitions.find(
+        (entry) => entry.output?.displayName === 'combined'
+      )!;
+      const field = definition.output!;
+      const inputIds = model.input.fields.map((entry) => entry.fieldId);
+      expect(inputIds).not.toContain(copiedDefinition.id);
+      expect(
+        new Set(transformExpressionDependencies(definition.expression, definition.inputIds))
+      ).toEqual(new Set([...inputIds, copiedDefinition.id]));
       const document = reopen(combined);
-      expect(inspectDvtSubstraitProjectionDraft(document).ok).toBe(true);
-      expect(projectCanvasOutputExpression(node(document), field.fieldId).status).toBe('available');
+      expect(dependencyModel(document).definitions).toEqual(model.definitions);
+      expect(inspectOutput(document, field.fieldId).status).toBe('available');
       expect(document.sidecar).toEqual(combined.sidecar);
+      expect(await projectSubstraitToPostgresSql(document)).toEqual(
+        await projectSubstraitToPostgresSql(combined)
+      );
     } finally {
       session.dispose();
     }

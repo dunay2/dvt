@@ -47,6 +47,7 @@ Evidence documents that justify or validate relevant changes.
 - [DHM-WS3 Start-Run Admission Seam Injection](ed-20260518-dhm-ws3-admission-seam.md)
 - [DHM-WS4 Runtime Path Decomposition](ed-20260512-dhm-ws4-runtime-path-decomposition.md)
 - [DHM-WS6 Semantic Closure](ed-20260512-dhm-ws6-semantic-closure.md)
+- [Durable calculated-field dependencies inside one Transform](ED-20261005-transform-alias-dependencies.md)
 - [DVT PostgreSQL operational runtime](ED-20260915-dvt-postgres-operational-runtime.md)
 - [EA-20260429-01 plan schema-version admission evidence](ed-20260513-ea-20260429-01-plan-schema-version-admission.md)
 - [EA-20260429-06 Semantic Architecture Fitness](ed-20260514-ea-20260429-06-semantic-architecture-fitness.md)

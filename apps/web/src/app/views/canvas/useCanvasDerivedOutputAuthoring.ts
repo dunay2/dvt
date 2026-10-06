@@ -1,100 +1,141 @@
-/** Project selected-relation fields and execution identity for scalar output authoring. */
-import { useContext } from 'react';
+/**
+ * Owned concern: query formula identity and types for the selected Transform authoring scope.
+ * @baseline ADR-0064: canonical Projects and schema analysis remain the only semantic authority.
+ * @decision Share definition descriptions with Output and query types through the existing session.
+ * @consequence Visible and hidden producers stay editable without a second formula graph.
+ * @version 1.0.0
+ */
+import { useContext, useEffect, useMemo, useState } from 'react';
+import type { RelationAnalysisResult } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
-import { derivedOutputDataType } from './canvasDerivedOutputExpression';
+import { derivedOutputDataType, rootFields } from './canvasDerivedOutputExpression';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
 import type { DerivedOutputField } from './canvasFormulaAssist';
-import { useSelectedRelation } from './useSelectedRelation';
-import { describeDerivedOutputFormula } from './canvasDerivedOutputFormula';
-import { relationOutputMapping } from './canvasRelationOutputBindings';
+import { describeCanvasTransformDefinitions } from './canvasTransformDefinitionPresentation';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 export function useCanvasDerivedOutputAuthoring(relationId: string) {
   const analysis = useContext(CanvasRelationAnalysisContext);
+  const document = analysis?.document;
+  const session = analysis?.session;
+  const revision = analysis?.revision;
+  const error = analysis?.error;
+  const model = useMemo(() => {
+    if (document == null || session == null || revision == null || error != null) return null;
+    try {
+      const target = session.locate(relationId, revision);
+      return {
+        target,
+        dependencies:
+          target.relation.relType.case === 'project'
+            ? readCanvasTransformDependencyModel(target, (id) => session.locate(id, revision))
+            : null,
+      };
+    } catch {
+      return null;
+    }
+  }, [document, error, session, revision, relationId]);
   const schema = useCanvasRelationFields(relationId);
-  const selected = useSelectedRelation(relationId);
-  const input = useCanvasRelationFields(selected?.inputs[0] ?? relationId);
+  const input = useCanvasRelationFields(
+    model?.dependencies?.input.binding.relationId ?? relationId
+  );
+  const [settled, setSettled] = useState<{
+    model: typeof model;
+    schemas: ReadonlyMap<string, RelationAnalysisResult> | null;
+  } | null>(null);
+  useEffect(() => {
+    if (document == null || session == null || model == null) return;
+    const cancellation = new AbortController();
+    const owners = [
+      ...new Set(
+        model.dependencies?.definitions.map((definition) => definition.owner.binding.relationId) ??
+          []
+      ),
+    ].filter((id) => id !== relationId);
+    void Promise.all(
+      owners.map(async (id) => [id, await session.query(id, cancellation.signal)] as const)
+    ).then(
+      (schemas) => {
+        if (!cancellation.signal.aborted) setSettled({ model, schemas: new Map(schemas) });
+      },
+      () => {
+        if (!cancellation.signal.aborted) setSettled({ model, schemas: null });
+      }
+    );
+    return () => cancellation.abort();
+  }, [document, session, model, relationId]);
   if (
     analysis?.document == null ||
+    model == null ||
     schema.result == null ||
     schema.error != null ||
-    input.result == null
+    input.result == null ||
+    input.error != null ||
+    settled?.model !== model ||
+    settled.schemas == null
   )
     return null;
   try {
-    const target = analysis.session.locate(relationId, analysis.revision);
-    const fields = schema.result.bindings
-      .filter(
-        (field) =>
-          field.parentFieldId == null &&
-          analysis.session.allowsInputSchema(schema.result!.fields[field.outputOrdinal]!)
-      )
-      .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
-      .flatMap((field): DerivedOutputField[] => {
-        const dataType = derivedOutputDataType(schema.result!.fields[field.outputOrdinal]!.type);
-        return dataType == null
-          ? []
-          : [{ fieldId: field.fieldId, name: field.displayName ?? '', dataType }];
-      });
-    const available = [schema.result, input.result].flatMap((result) =>
-      result.bindings
-        .filter(
-          (field) =>
-            field.parentFieldId == null &&
-            analysis.session.allowsInputSchema(result.fields[field.outputOrdinal]!)
-        )
-        .flatMap((field) => {
-          const dataType = derivedOutputDataType(result.fields[field.outputOrdinal]!.type);
-          return dataType == null || field.displayName == null
-            ? []
-            : [
-                {
-                  fieldId: field.fieldId,
-                  relationId: field.relationId,
-                  sourceFieldId: field.sourceFieldId,
-                  name: field.displayName,
-                  dataType,
-                },
-              ];
-        })
-    );
-    const inputNames = input.result.bindings
-      .filter((field) => field.parentFieldId == null)
-      .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
-      .map((field) => field.displayName ?? '');
-    const project = target.relation.relType;
-    const mapping =
-      project.case === 'project'
-        ? relationOutputMapping(
-            target.relation,
-            inputNames.length + project.value.expressions.length
-          )
-        : [];
-    const outputs = fields.flatMap((field) => {
-      const binding = schema.result!.bindings.find((item) => item.fieldId === field.fieldId)!;
-      const slot = mapping[binding.outputOrdinal];
-      if (project.case !== 'project' || slot == null || slot < inputNames.length) return [];
-      const expression = project.value.expressions[slot - inputNames.length];
-      return expression == null
+    const inputs = rootFields(input.result.bindings).flatMap((field) => {
+      const value = input.result!.fields[field.outputOrdinal];
+      const dataType = value == null ? null : derivedOutputDataType(value.type);
+      return value == null ||
+        dataType == null ||
+        field.displayName == null ||
+        !analysis.session.allowsInputSchema(value)
         ? []
         : [
             {
-              ...field,
-              formula: describeDerivedOutputFormula(target.plan, expression, inputNames),
+              fieldId: field.fieldId,
+              relationId: field.relationId,
+              name: field.displayName,
+              dataType,
+              origin: 'input' as const,
             },
           ];
     });
-    const operands = available.filter(
-      (field, index) => available.findIndex((item) => item.name === field.name) === index
-    );
-    const references = available.filter((field) => {
-      const operand = operands.find((item) => item.name === field.name)!;
-      return operand.fieldId === field.fieldId || operand.sourceFieldId === field.fieldId;
+    const definitions = model.dependencies?.definitions ?? [];
+    const descriptions =
+      model.dependencies == null
+        ? null
+        : describeCanvasTransformDefinitions(model.target.plan, model.dependencies);
+    const outputs = definitions.flatMap((definition) => {
+      const binding = definition.output ?? definition.binding;
+      const result =
+        definition.output != null || definition.owner.binding.relationId === relationId
+          ? schema.result!
+          : settled.schemas!.get(definition.owner.binding.relationId);
+      const value = result?.fields[binding.outputOrdinal];
+      const dataType = value == null ? null : derivedOutputDataType(value.type);
+      if (
+        value == null ||
+        dataType == null ||
+        binding.displayName == null ||
+        !analysis.session.allowsInputSchema(value)
+      )
+        return [];
+      return [
+        {
+          fieldId: binding.fieldId,
+          relationId: binding.relationId,
+          name: binding.displayName,
+          dataType,
+          origin: 'calculated' as const,
+          formula: descriptions!.get(definition.id)!.formula,
+        },
+      ];
     });
+    const fields: readonly DerivedOutputField[] = [...inputs, ...outputs];
     return {
-      fields: operands,
-      dragScope: { rootId: analysis.session.rootId, revision: analysis.revision, references },
+      fields,
+      dragScope: {
+        rootId: analysis.session.rootId,
+        revision: analysis.revision,
+        references: [...inputs, ...outputs],
+      },
       outputs,
-      intent: target.relation.relType.case === 'project' ? ('edit' as const) : ('insert' as const),
+      intent:
+        model.target.relation.relType.case === 'project' ? ('edit' as const) : ('insert' as const),
       provider: analysis.session.executionProvider(analysis.revision),
     };
   } catch {

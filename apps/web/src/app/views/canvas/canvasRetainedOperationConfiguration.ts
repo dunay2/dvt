@@ -1,5 +1,15 @@
-/** Retain non-executable configuration and restore only against exact original Inputs. */
-import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
+/**
+ * Owned concern: retain non-executable configuration and restore only against exact original inputs.
+ * @baseline ADR-0064: explicit authoring groups retain every canonical relation.
+ * @decision Compare external group inputs without stripping internal stages from configuration.
+ * @consequence Reconnection restores the exact document or remains pending atomically.
+ * @version 1.0.0
+ */
+import {
+  indexSubstraitRelations,
+  readSubstraitAuthoringGroup,
+  type SubstraitDocument,
+} from '@dvt/substrait-analysis';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { projectCanvasStagedDocument } from './canvasStagedOperationDocument';
@@ -46,7 +56,9 @@ export function restoreCanvasOperationConfiguration(
   const document = decodeDvtSubstraitSemanticDocument(operation.configurationDocument);
   const indexed = indexSubstraitRelations(document);
   if (!indexed.ok || indexed.index.rootId !== operation.id) return operation;
-  const previous = indexed.index.relations.get(operation.id)!.inputs;
+  const group = readSubstraitAuthoringGroup(indexed.index, operation.id);
+  const previous =
+    group == null ? indexed.index.relations.get(operation.id)!.inputs : [group.inputId];
   if (
     previous.length !== producers.length ||
     previous.some((id, port) => id !== operation.inputs[port])

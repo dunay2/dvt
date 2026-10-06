@@ -13,6 +13,13 @@ import { createSourceSet, sourceSetOperations } from './canvasSourceSet';
 import { source } from './canvasRelationalOperator.test-support';
 import { applySelectedRelationAggregate } from './canvasSelectedRelationAggregate';
 import type { CanonicalNode } from '../../types/canonical';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
+import {
+  withPublicExpressionStage,
+  withScalarOutput,
+  withWindowOutput,
+} from './canvasRelationalExpressionStage.test-support';
 
 function project(
   node: CanonicalNode,
@@ -34,6 +41,51 @@ function flatten(root: CanvasRelationalTreeNode): readonly CanvasRelationalTreeN
 }
 
 describe('canonical relation tree projection', () => {
+  it.each([withScalarOutput, withWindowOutput])(
+    'projects an explicit authoring group as one card without flattening canonical semantics',
+    async (build) => {
+      const document = await withPublicExpressionStage(build(), true);
+      const indexed = indexSubstraitRelations(document);
+      if (!indexed.ok) throw indexed.error;
+      const before = structuredClone(document);
+      const root = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'group' });
+      expect(flatten(root).map((node) => node.operator)).toEqual(['project', 'read']);
+      expect(root.relationId).toBe(indexed.index.rootId);
+      expect(root.expressionRefs).toEqual([
+        {
+          relationId: document.sidecar.relations.find(
+            (binding) => binding.authoringOwnerRelationId === indexed.index.rootId
+          )!.relationId,
+          slot: 'project-expression',
+          ordinal: 0,
+        },
+      ]);
+      expect(root.output.fields.map((field) => field.fieldId)).toEqual(
+        indexed.index.relations.get(indexed.index.rootId)!.fields.map((field) => field.fieldId)
+      );
+      expect(root.projectionSummary).toEqual({
+        passthroughFieldCount: 2,
+        scalarFieldCount: build === withScalarOutput ? 1 : 0,
+        windowFieldCount: build === withWindowOutput ? 1 : 0,
+      });
+      expect(indexed.index.relations.size).toBe(3);
+      expect(document).toEqual(before);
+    }
+  );
+
+  it('keeps adjacent independent Transform cards separate', async () => {
+    const document = await withPublicExpressionStage(withScalarOutput(), false);
+    const indexed = indexSubstraitRelations(document);
+    if (!indexed.ok) throw indexed.error;
+    const root = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'separate' });
+    expect(flatten(root).map((node) => node.operator)).toEqual(['project', 'project', 'read']);
+    expect(root.projectionSummary).toEqual({
+      passthroughFieldCount: 3,
+      scalarFieldCount: 0,
+      windowFieldCount: 0,
+    });
+  });
+
   it('preserves recursive port order and stable identities across reopening', async () => {
     const { session, sources } = graphJoin();
     const document = await appendGraphSource(session, 'third');

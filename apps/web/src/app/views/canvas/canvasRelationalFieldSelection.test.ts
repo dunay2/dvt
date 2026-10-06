@@ -12,6 +12,10 @@ import type { CanvasRelationalFieldReference } from './canvasRelationalTreeDrag'
 import { querySelectedJoin } from './canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import { removeCanvasRelationalExpression } from './canvasRelationalFieldSelection';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { relationOutputSlots } from './canvasRelationOutputSchema';
+import { readTransformFormulaScope } from './canvasTransformFormulaScope';
 
 function scenario(): {
   session: CanvasRelationAnalysisSession;
@@ -39,7 +43,150 @@ function scenario(): {
   return { session, reference, document };
 }
 
+async function dependentScenario(): Promise<
+  ReturnType<typeof scenario> & {
+    model: () => ReturnType<typeof readCanvasTransformDependencyModel>;
+  }
+> {
+  const setup = scenario();
+  let document = setup.document;
+  for (const [alias, formula] of [
+    ['clean_name', 'TRIM("first_name")'],
+    ['upper_name', 'UPPER("clean_name")'],
+  ]) {
+    document = await applySelectedRelationDerivedOutput(setup.session, {
+      relationId: setup.session.rootId,
+      expectedRevision: setup.session.revision,
+      intent: 'edit',
+      alias: alias!,
+      formula: formula!,
+    });
+  }
+  const model = (): ReturnType<typeof readCanvasTransformDependencyModel> =>
+    readCanvasTransformDependencyModel(
+      setup.session.locate(setup.session.rootId, setup.session.revision),
+      (id) => setup.session.locate(id, setup.session.revision)
+    );
+  return { ...setup, document, model };
+}
+
 describe('scoped tree field selection', () => {
+  it.each(['public', 'physical'])(
+    'rejects deleting a consumed definition through its %s identity atomically',
+    async (identity) => {
+      const { session, reference, document, model } = await dependentScenario();
+      const producer = model().definitions.find(
+        (definition) => definition.output?.displayName === 'clean_name'
+      )!;
+      const revision = session.revision;
+      const request =
+        identity === 'public'
+          ? selectCanvasRelationalField(
+              session,
+              reference(session.rootId, producer.output!.fieldId, true),
+              { kind: 'remove' }
+            )
+          : removeCanvasRelationalExpression(session, {
+              relationId: producer.owner.binding.relationId,
+              expectedRevision: revision,
+              expressionOrdinal: producer.ordinal,
+            });
+      await expect(request).rejects.toMatchObject({
+        code: 'transform_definition_referenced',
+        fields: ['upper_name'],
+      });
+      expect(session.revision).toBe(revision);
+      expect(session.hasDocument(document)).toBe(true);
+      session.dispose();
+    }
+  );
+
+  it.each(['public', 'physical'])(
+    'removes a leaf definition through its %s identity and prunes only unused stages',
+    async (identity) => {
+      const { session, reference, model } = await dependentScenario();
+      const before = model();
+      const leaf = before.definitions.find(
+        (definition) => definition.output?.displayName === 'upper_name'
+      )!;
+      const keptFields = before.root.fields.filter(
+        (field) => field.fieldId !== leaf.output!.fieldId
+      );
+      const changed =
+        identity === 'public'
+          ? await selectCanvasRelationalField(
+              session,
+              reference(session.rootId, leaf.output!.fieldId, true),
+              { kind: 'remove' }
+            )
+          : await removeCanvasRelationalExpression(session, {
+              relationId: leaf.owner.binding.relationId,
+              expectedRevision: session.revision,
+              expressionOrdinal: leaf.ordinal,
+            });
+      expect(model().definitions.map((definition) => definition.output?.displayName)).toEqual([
+        'clean_name',
+      ]);
+      const after = (await session.query(session.rootId)).bindings;
+      expect(after.map((field) => [field.fieldId, field.displayName, field.outputOrdinal])).toEqual(
+        keptFields.map((field) => [field.fieldId, field.displayName, field.outputOrdinal])
+      );
+      expect(changed!.sidecar.relations).toHaveLength(3);
+      const reopened = new CanvasRelationAnalysisSession('leaf-reopened');
+      reopened.receive(changed!);
+      expect((await reopened.query(reopened.rootId)).bindings).toEqual(after);
+      reopened.dispose();
+      const last = model().definitions[0]!;
+      const empty = await selectCanvasRelationalField(
+        session,
+        reference(session.rootId, last.output!.fieldId, true),
+        { kind: 'remove' }
+      );
+      expect(model().definitions).toEqual([]);
+      expect(empty!.sidecar.relations).toHaveLength(2);
+      expect(
+        empty!.sidecar.relations.some((binding) => binding.authoringOwnerRelationId != null)
+      ).toBe(false);
+      session.dispose();
+    }
+  );
+
+  it('hides a consumed output without deleting its definition or consumer', async () => {
+    const { session, model } = await dependentScenario();
+    const before = model();
+    const producer = before.definitions.find(
+      (definition) => definition.output?.displayName === 'clean_name'
+    )!;
+    const target = session.locate(session.rootId, session.revision);
+    const inputs = await Promise.all(target.inputs.map((id) => session.query(id)));
+    const outputs = relationOutputSlots(target, inputs)
+      .filter((slot) => slot.output != null && slot.output.fieldId !== producer.output!.fieldId)
+      .sort((left, right) => left.output!.outputOrdinal - right.output!.outputOrdinal)
+      .map((slot) => ({ slot: slot.slot, alias: slot.name }));
+    const hidden = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs,
+    });
+    const after = model();
+    expect(after.definitions.map((definition) => definition.id)).toEqual(
+      before.definitions.map((definition) => definition.id)
+    );
+    expect(
+      after.definitions.find((definition) => definition.id === producer.id)?.output
+    ).toBeUndefined();
+    expect(
+      (await session.query(session.rootId)).bindings.map((field) => field.displayName)
+    ).toEqual(['first_name', 'last_name', 'upper_name']);
+    expect(
+      (await readTransformFormulaScope(session, after)).fields.some(
+        (field) => field.name === 'clean_name'
+      )
+    ).toBe(true);
+    expect((await projectSubstraitToPostgresSql(hidden)).sql).toMatch(/\b(?:trim|btrim)\s*\(/i);
+    session.dispose();
+  });
+
   it('treats a drop within the same Output as a no-op and rejects an aborted gesture', async () => {
     const { session, reference } = scenario();
     const field = (await session.query(session.rootId)).bindings[0]!;
@@ -54,40 +201,74 @@ describe('scoped tree field selection', () => {
     ).rejects.toThrow();
     expect(session.revision).toBe(ref.revision);
   });
-  it('removes one field and adds only the dragged input, retaining neighbors and ignoring repeats', async () => {
-    const { session, reference } = scenario();
-    const rootId = session.rootId;
-    const original = await session.query(rootId);
-    await selectCanvasRelationalField(
-      session,
-      reference(rootId, original.bindings[1]!.fieldId, true),
-      { kind: 'remove' }
-    );
-    expect((await session.query(rootId)).bindings.map((f) => f.fieldId)).toEqual([
-      original.bindings[0]!.fieldId,
-    ]);
-    const sourceId = session.locate(rootId, session.revision).inputs[0]!;
-    const input = (await session.query(sourceId)).bindings[1]!;
-    const result = await selectCanvasRelationalField(session, reference(sourceId, input.fieldId), {
-      kind: 'add',
-      relationId: rootId,
-    });
-    expect(result).not.toBeNull();
-    const after = (await session.query(rootId)).bindings;
-    expect(after.map((f) => f.displayName)).toEqual(['first_name', 'last_name']);
-    expect(after[0]!.fieldId).toBe(original.bindings[0]!.fieldId);
-    const revision = session.revision;
-    expect(
-      await selectCanvasRelationalField(session, reference(sourceId, input.fieldId), {
-        kind: 'add',
-        relationId: rootId,
-      })
-    ).toBeNull();
-    expect(session.revision).toBe(revision);
-    const reopened = new CanvasRelationAnalysisSession('reopened');
-    reopened.receive(result!);
-    expect((await reopened.query(rootId)).bindings).toEqual(after);
-  });
+  it.each(['plain', 'grouped-base', 'grouped-calculated-input'])(
+    'removes one field and adds only the dragged input, retaining neighbors and ignoring repeats (%s)',
+    async (shape) => {
+      const { session, reference } = scenario();
+      if (shape !== 'plain')
+        await applySelectedRelationDerivedOutput(session, {
+          intent: 'edit',
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          alias: 'clean_name',
+          formula: 'TRIM("first_name")',
+        });
+      if (shape === 'grouped-calculated-input')
+        await applySelectedRelationDerivedOutput(session, {
+          intent: 'insert',
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          alias: 'lower_name',
+          formula: 'LOWER("last_name")',
+        });
+      const rootId = session.rootId;
+      const fieldName = shape === 'grouped-calculated-input' ? 'clean_name' : 'last_name';
+      const original = await session.query(rootId);
+      const removed = original.bindings.find((field) => field.displayName === fieldName)!;
+      await selectCanvasRelationalField(session, reference(rootId, removed.fieldId, true), {
+        kind: 'remove',
+      });
+      const retained = original.bindings.filter((field) => field !== removed);
+      expect((await session.query(rootId)).bindings.map((f) => f.fieldId)).toEqual(
+        retained.map((field) => field.fieldId)
+      );
+      const sourceId = readCanvasTransformDependencyModel(
+        session.locate(rootId, session.revision),
+        (id) => session.locate(id, session.revision)
+      ).input.binding.relationId;
+      const input = (await session.query(sourceId)).bindings.find(
+        (field) => field.displayName === fieldName
+      )!;
+      const result = await selectCanvasRelationalField(
+        session,
+        reference(sourceId, input.fieldId),
+        {
+          kind: 'add',
+          relationId: rootId,
+        }
+      );
+      expect(result).not.toBeNull();
+      const after = (await session.query(rootId)).bindings;
+      expect(after.map((f) => f.displayName)).toEqual([
+        ...retained.map((field) => field.displayName),
+        fieldName,
+      ]);
+      expect(after.slice(0, -1).map((field) => field.fieldId)).toEqual(
+        retained.map((field) => field.fieldId)
+      );
+      const revision = session.revision;
+      expect(
+        await selectCanvasRelationalField(session, reference(sourceId, input.fieldId), {
+          kind: 'add',
+          relationId: rootId,
+        })
+      ).toBeNull();
+      expect(session.revision).toBe(revision);
+      const reopened = new CanvasRelationAnalysisSession('reopened');
+      reopened.receive(result!);
+      expect((await reopened.query(rootId)).bindings).toEqual(after);
+    }
+  );
 
   it.each([
     "CONCAT(UPPER(first_name), ' hola')",

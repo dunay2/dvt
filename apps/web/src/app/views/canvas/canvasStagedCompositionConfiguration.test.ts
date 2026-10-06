@@ -20,6 +20,7 @@ import {
   resolveFunctionReference,
 } from '@dvt/postgres-projection';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import {
   connectCanvasStagedOperation,
@@ -311,9 +312,12 @@ describe('staged composition configuration', () => {
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) throw indexed.error;
     for (const producer of producers) {
-      const project = indexed.index.relations.get(producer.id)!.relation.relType;
-      if (project.case !== 'project') throw new Error('Expected a preserved ProjectRel.');
-      const expression = project.value.expressions.at(-1)!.rexType;
+      const groupRoot = indexed.index.relations.get(producer.id)!;
+      const model = readCanvasTransformDependencyModel(groupRoot, (id) =>
+        indexed.index.relations.get(id)!
+      );
+      expect(model.definitions).toHaveLength(1);
+      const expression = model.definitions[0]!.expression.rexType;
       if (expression.case !== 'scalarFunction')
         throw new Error('Expected preserved scalar expression.');
       const identity = resolveFunctionReference(document.plan, expression.value.functionReference);

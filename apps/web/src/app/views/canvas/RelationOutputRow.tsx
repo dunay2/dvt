@@ -1,4 +1,10 @@
-/** Controlled output presentation; mutations belong to the relation command owner. */
+/**
+ * Owned concern: present output inclusion, alias and expression without owning mutations.
+ * @baseline ADR-0064: hiding an output does not remove its canonical definition.
+ * @decision Keep alias and formula distinct for both included and hidden calculations.
+ * @consequence Users can identify a result before publishing it through the existing command.
+ * @version 1.0.0
+ */
 import { useId } from 'react';
 import { GripVertical, Plus, X } from 'lucide-react';
 import type { DragEventHandler, KeyboardEventHandler } from 'react';
@@ -54,11 +60,7 @@ export function RelationOutputRow({
   orderingOnly?: boolean;
 }>) {
   const errorId = useId();
-  const displayName = field.output == null ? (field.expression ?? name) : name;
-  const inclusionName =
-    field.output != null && field.expression != null
-      ? `${name}: ${field.expression}`
-      : (field.expression ?? field.name);
+  const inclusionName = field.expression == null ? name : `${name}: ${field.expression}`;
   return (
     <div
       data-slot="relation-output-field"
@@ -118,15 +120,15 @@ export function RelationOutputRow({
             </button>
             <div className="min-w-0 flex-1">
               <Input
-                aria-label={displayName}
-                value={displayName}
+                aria-label={name}
+                value={name}
                 disabled={disabled || field.output == null}
                 aria-invalid={error == null ? undefined : true}
                 aria-describedby={error == null ? undefined : errorId}
                 onChange={(event) => onNameChange(event.currentTarget.value)}
                 onBlur={(event) => onRename(event.currentTarget.value)}
               />
-              {field.expression != null && field.output != null ? (
+              {field.expression != null ? (
                 <code
                   data-slot="relation-output-expression"
                   className="block break-words text-xs text-(--text-muted)"

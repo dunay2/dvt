@@ -1,7 +1,14 @@
-/** Query only the selected operator and its cached input schemas. */
+/**
+ * Owned concern: query selected output slots and canonical calculated descriptions.
+ * @baseline ADR-0064: expression identity is read from the same canonical relation revision.
+ * @decision Enrich natural slots through the shared Transform dependency read model.
+ * @consequence Hidden formulas remain inspectable without a second expression model.
+ * @version 1.0.0
+ */
 import { useContext, useEffect, useState } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { relationOutputSlots } from './canvasRelationOutputSchema';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 export function useRelationOutputs(relationId: string) {
   const analysis = useContext(CanvasRelationAnalysisContext);
@@ -21,10 +28,16 @@ export function useRelationOutputs(relationId: string) {
       );
       cancellation.signal.throwIfAborted();
       analysis.session.locate(relationId, analysis.revision);
+      const dependencies =
+        target.relation.relType.case === 'project'
+          ? readCanvasTransformDependencyModel(target, (id) =>
+              analysis.session.locate(id, analysis.revision)
+            )
+          : undefined;
       setSettled({
         analysis,
         relationId,
-        slots: relationOutputSlots(target, inputs).filter((slot) =>
+        slots: relationOutputSlots(target, inputs, dependencies).filter((slot) =>
           analysis.session.allowsInputSchema(slot.schema)
         ),
         physical: target.relation.relType.case === 'read',

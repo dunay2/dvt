@@ -16,6 +16,7 @@ import {
   semanticWrites,
   stubSavedWorkbenchSample,
 } from '../../support/relationalWorkbench/persistence';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Sort/Fetch data navigation (controlled API boundary)', () => {
@@ -163,6 +164,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         'data-operator',
         'sort'
       );
+      hoverWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="sort"]');
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="sort"]')
         .parent()
         .find('[data-slot="canvas-node-execute"]')
@@ -184,6 +186,7 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         '[data-slot="canvas-relational-tree-inline-editor"]:visible select[aria-label="Direction and nulls 1"]'
       ).should(($select) => expect($select.val()).to.equal(selectedDirection));
       cy.get('[data-operator="fetch"]').should('contain.text', 'LIMIT 100');
+      hoverWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="sort"]');
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="sort"]')
         .parent()
         .find('[data-slot="canvas-node-execute"]')

@@ -2,7 +2,7 @@
 import React, { act, useState } from 'react';
 import { fireEvent } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
@@ -15,6 +15,7 @@ import { CanvasRelationalScalarTree } from './CanvasRelationalScalarTree';
 import { projectSemanticWorkbenchRelations } from './semanticWorkbenchRelations';
 import { relationalExpressionSlices } from './canvasRelationalExpressionSlice';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
 
 describe('remove a complete expression from its tree root', () => {
   setupWorkbenchTest();
@@ -56,9 +57,12 @@ describe('remove a complete expression from its tree root', () => {
       const rows = [...container.querySelectorAll('[data-slot="relation-output-field"]')];
       expect(rows).toHaveLength(3);
       const calculated = rows[2]!;
-      expect(calculated.querySelector('input')?.value).toBe('trim(first_name)');
+      expect(calculated.querySelector('input')?.value).toBe('trimmed_name');
+      expect(
+        calculated.querySelector('[data-slot="relation-output-expression"]')?.textContent
+      ).toBe('TRIM(first_name)');
       const add = calculated.querySelector<HTMLButtonElement>('button')!;
-      expect(add.getAttribute('aria-label')).toContain('trim(first_name)');
+      expect(add.getAttribute('aria-label')).toContain('trimmed_name: TRIM(first_name)');
       expect(add.disabled).toBe(disabled);
       await act(async () => add.click());
       expect(writes).toHaveBeenCalledTimes(disabled ? 0 : 1);
@@ -68,7 +72,7 @@ describe('remove a complete expression from its tree root', () => {
       expect(container.querySelectorAll('[data-included="true"]')).toHaveLength(1);
       expect(
         calculated.querySelector('[data-slot="relation-output-expression"]')?.textContent
-      ).toBe('trim(first_name)');
+      ).toBe('TRIM(first_name)');
     }
   );
   it.each([
@@ -97,6 +101,9 @@ describe('remove a complete expression from its tree root', () => {
           outputs: [{ slot: 0 }, { slot: 1 }],
         });
       const before = session.locate(session.rootId, session.revision);
+      const inputId = readCanvasTransformDependencyModel(before, (id) =>
+        session.locate(id, session.revision)
+      ).input.binding.relationId;
       const writes = vi.fn();
       const cardClick = vi.fn();
       function Host(): React.JSX.Element {
@@ -106,7 +113,13 @@ describe('remove a complete expression from its tree root', () => {
         if (planRoot.case !== 'root' || planRoot.value.input == null)
           throw new Error('Expected root');
         const graph = projectSemanticWorkbenchRelations(document, planRoot.value.input, 'model');
-        const slice = relationalExpressionSlices(graph, new Set())(graph.relationId);
+        const indexed = indexSubstraitRelations(document);
+        if (!indexed.ok) throw indexed.error;
+        const model = readCanvasTransformDependencyModel(
+          indexed.index.relations.get(indexed.index.rootId)!,
+          (id) => indexed.index.relations.get(id)!
+        );
+        const slice = relationalExpressionSlices(graph, new Set())(graph.relationId, model);
         return (
           <CanvasRelationAnalysisContext.Provider value={analysis}>
             <CanvasRelationalFieldSelectionProvider
@@ -147,7 +160,7 @@ describe('remove a complete expression from its tree root', () => {
       expect(container.textContent).not.toContain('TRIM');
       session.receive(writes.mock.calls[0]![0]);
       const after = session.locate(session.rootId, session.revision);
-      expect(after.inputs).toEqual(before.inputs);
+      expect(after.inputs).toEqual([inputId]);
       expect(after.fields.map((field) => field.fieldId)).toEqual(
         before.fields.slice(0, 2).map((field) => field.fieldId)
       );

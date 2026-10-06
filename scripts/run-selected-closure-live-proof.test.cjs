@@ -1,3 +1,10 @@
+/**
+ * Owned concern: prove the real LIVE composition stays scoped, owned and fail-closed.
+ * @baseline GH-3594: admission requires the existing outbox consumer, not a higher lag limit.
+ * @decision Exercise configuration and startup boundaries without another runtime or runner.
+ * @consequence Failed preparation or readiness keeps the proof red and its handles owned.
+ * @version 1.0.0
+ */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { mkdtemp, readFile, rm } = require('node:fs/promises');
@@ -11,9 +18,11 @@ const {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
+  prepareLiveProofOutboxWorkerDependencies,
   resolveLiveProofDbtExecutable,
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
@@ -21,6 +30,7 @@ const {
   resolveLiveProofSpecPath,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
+  startLiveProofOutboxWorker,
   runCypress,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
@@ -61,6 +71,171 @@ test('selected closure explicitly prepares an available worker before starting t
     ),
     'Available workers must be prepared before API startup, without swallowing preparation failures'
   );
+  const prepareOutbox = source.indexOf('prepareLiveProofOutboxWorkerDependencies();');
+  assert.ok(
+    prepareOutbox > 0 &&
+      prepareOutbox < source.indexOf("const apiHandle = spawnProcess('api-live-proof'")
+  );
+  const startOutbox = source.indexOf('await startLiveProofOutboxWorker(apiEnv, processHandles);');
+  assert.ok(startOutbox > source.indexOf("'API db/ready'"));
+  assert.ok(startOutbox < source.indexOf('const webHandle = spawnProcess('));
+});
+
+test('outbox composition uses only the proof database, topology, archive and real local sink', () => {
+  const apiEnv = Object.freeze(
+    buildLiveProofApiEnv({
+      databaseUrl: 'postgresql://proof:secret@127.0.0.1/proof',
+      liveProofSchema: 'dvt_live_selected_closure_outbox',
+      temporalAddress: '127.0.0.1:7233',
+      temporalNamespace: 'default',
+      sourceEnv: {
+        DVT_OUTBOX_SHARD_COUNT: '8',
+        DVT_OUTBOX_OWNED_SHARD_IDS: '7',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'passive',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'http',
+        DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'true',
+        DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: 'C:\\unrelated-archive',
+        DVT_START_RUN_MAX_OUTBOX_LAG_MS: '300000',
+      },
+    })
+  );
+  const workerEnv = buildLiveProofOutboxWorkerEnv(apiEnv, 19465);
+  assert.equal(workerEnv.DATABASE_URL, apiEnv.DATABASE_URL);
+  assert.equal(workerEnv.DVT_PG_SCHEMA, apiEnv.DVT_PG_SCHEMA);
+  assert.equal(apiEnv.DVT_OUTBOX_SHARD_COUNT, '1');
+  assert.equal(workerEnv.DVT_OUTBOX_SHARD_COUNT, apiEnv.DVT_OUTBOX_SHARD_COUNT);
+  assert.equal(workerEnv.DVT_OUTBOX_OWNED_SHARD_IDS, '0');
+  assert.equal(workerEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'active');
+  assert.equal(workerEnv.DVT_OUTBOX_EVENT_BUS_MODE, 'log');
+  assert.equal(workerEnv.DVT_OUTBOX_WORKER_RUN_MIGRATIONS, 'false');
+  assert.equal(workerEnv.DVT_OUTBOX_ADMIN_HOST, '127.0.0.1');
+  assert.equal(workerEnv.DVT_OUTBOX_ADMIN_PORT, '19465');
+  assert.equal(workerEnv.SERVICE_NAME, 'dvt-outbox-worker-live-proof');
+  assert.equal(workerEnv.DVT_START_RUN_BACKPRESSURE_MODE, 'enforce');
+  assert.equal(workerEnv.DVT_START_RUN_MAX_OUTBOX_LAG_MS, '300000');
+  assert.equal(workerEnv.DVT_PURGE_ENABLED, undefined);
+  assert.equal(workerEnv.DVT_RUN_EVENT_RETENTION_ENABLED, undefined);
+  assert.equal(
+    workerEnv.DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY,
+    path.resolve(
+      __dirname,
+      '../.dvt/live-proofs/selected-closure',
+      apiEnv.DVT_PG_SCHEMA,
+      'outbox-archive'
+    )
+  );
+  assert.equal(apiEnv.DVT_OUTBOX_OWNERSHIP_MODE, 'passive');
+  assert.equal(apiEnv.DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY, 'C:\\unrelated-archive');
+});
+
+test('outbox dependency preparation reuses the canonical builder and rejects spawn, exit and signal failures', () => {
+  const calls = [];
+  prepareLiveProofOutboxWorkerDependencies({
+    spawnCommand: (...args) => {
+      calls.push(args);
+      return { status: 0, signal: null };
+    },
+  });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], process.execPath);
+  assert.deepEqual(calls[0][1], [
+    path.resolve(__dirname, 'build-workspace-runtime-deps.cjs'),
+    'dvt-outbox-worker',
+  ]);
+  assert.equal(calls[0][2].stdio, 'inherit');
+  assert.equal(calls[0][2].windowsHide, true);
+  const spawnError = new Error('build spawn failed');
+  for (const result of [
+    { error: spawnError },
+    { status: 1 },
+    { status: null, signal: 'SIGTERM' },
+    { status: 0, signal: 'SIGTERM' },
+  ]) {
+    assert.throws(
+      () => prepareLiveProofOutboxWorkerDependencies({ spawnCommand: () => result }),
+      result.error ?? /Outbox worker runtime dependency build failed/
+    );
+  }
+});
+
+test('outbox startup owns its process before waiting and requires a fresh active service receipt', async () => {
+  const apiEnv = {
+    DATABASE_URL: 'postgresql://proof:secret@127.0.0.1/proof',
+    DVT_PG_SCHEMA: 'proof',
+  };
+  const valid = {
+    ready: true,
+    owner: true,
+    tickFresh: true,
+    service: 'dvt-outbox-worker-live-proof',
+  };
+  for (const readiness of [
+    valid,
+    null,
+    {},
+    { ...valid, ready: false },
+    { ...valid, owner: false },
+    { ...valid, tickFresh: false },
+    { ...valid, service: 'another-service' },
+    'malformed',
+    'http-201',
+    'http-503',
+    'exited',
+  ]) {
+    const handle = {};
+    const handles = [];
+    const calls = [];
+    const start = startLiveProofOutboxWorker(apiEnv, handles, {
+      allocateFreePort: async (host) => {
+        assert.equal(host, '127.0.0.1');
+        return 19465;
+      },
+      spawnProcess: (name, argv, env) => {
+        calls.push('spawn');
+        assert.equal(name, 'outbox-live-proof');
+        assert.deepEqual(argv, ['--filter', 'dvt-outbox-worker', 'dev']);
+        assert.doesNotMatch(JSON.stringify(argv), /secret/);
+        assert.equal(env.DATABASE_URL, apiEnv.DATABASE_URL);
+        return handle;
+      },
+      waitForUrlOrProcessExit: async (url, validator, timeout, interval, label, owned) => {
+        calls.push('ready');
+        assert.deepEqual(handles, [handle]);
+        assert.equal(owned, handle);
+        assert.equal(url, 'http://127.0.0.1:19465/readyz');
+        assert.equal(timeout, 240_000);
+        assert.equal(interval, 500);
+        assert.equal(label, 'Outbox worker readyz');
+        assert.equal(validator({ statusCode: 200 }), true);
+        assert.equal(validator({ statusCode: 503 }), false);
+        if (readiness === 'exited') throw new Error('worker exited before readiness');
+      },
+      fetch: async (url, options) => {
+        calls.push('receipt');
+        assert.equal(url, 'http://127.0.0.1:19465/readyz');
+        assert.ok(options.signal instanceof AbortSignal);
+        return {
+          status:
+            typeof readiness === 'string' && readiness.startsWith('http-')
+              ? Number(readiness.slice(5))
+              : 200,
+          json: async () => {
+            if (readiness === 'malformed') throw new SyntaxError('invalid readiness JSON');
+            return typeof readiness === 'string' && readiness.startsWith('http-')
+              ? valid
+              : readiness;
+          },
+        };
+      },
+    });
+    if (readiness === valid) await start;
+    else await assert.rejects(start);
+    assert.deepEqual(handles, [handle], 'failures retain the process for existing shutdown');
+    assert.deepEqual(
+      calls,
+      readiness === 'exited' ? ['spawn', 'ready'] : ['spawn', 'ready', 'receipt']
+    );
+  }
 });
 
 test('resolveLiveProofSpecPath keeps the selected-closure proof as the default', () => {

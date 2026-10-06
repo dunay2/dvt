@@ -18,6 +18,7 @@ import {
   connectWorkbenchProducer,
   stageWorkbenchUnary,
 } from '../../support/relationalWorkbench/navigation';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   expectCanonicalOrdering,
   readPersistedDocument,
@@ -128,6 +129,7 @@ describe('Persisted semantic editing through protected Preview and Run', () => {
     cy.then(() => {
       expect(sampleRequests).to.equal(0);
     });
+    hoverWorkbenchCard('[data-operator="sort"]');
     cy.get('[data-operator="sort"]')
       .parent()
       .find('[data-slot="canvas-node-execute"]')

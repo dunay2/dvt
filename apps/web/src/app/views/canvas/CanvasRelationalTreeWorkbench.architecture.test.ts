@@ -266,7 +266,9 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DetailSource).toContain('projectSemanticWorkbenchGraph');
     expect(DetailSource).toContain("view: 'relation-expressions'");
     expect(DetailSource).not.toContain('GitMerge');
-    expect(CardDetailSource).toContain('projectSemanticWorkbenchGraph');
+    expect(CardDetailSource).toContain('projectSemanticWorkbenchRelations');
+    expect(CardDetailSource).not.toContain('applyCanvasInspectorNodeDraft');
+    expect(CardDetailSource).not.toContain('createCanvasRelationalTreeNodeDraft');
     expect(GraphNodeSource).toContain('CanvasRelationalTreeCardDetail');
     expect(GraphCardDetailSource).toContain('CanvasRelationalScalarTree');
     expect(DetailSource).toContain('CanvasRelationalScalarTree');

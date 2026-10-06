@@ -8,6 +8,9 @@ import {
   type DvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
 import { setDvtSubstraitFieldDescription } from './canvasDvtSubstraitFieldDocumentation';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 const trimCapabilityId = resolveDvtSubstraitColumnFunctions({
   dataType: 'text',
@@ -43,6 +46,54 @@ function projectionDraft(): DvtSubstraitProjectionDraft {
 }
 
 describe('Substrait projection function aliases', () => {
+  it('updates and clears grouped output documentation without changing semantic identity', async () => {
+    const session = new CanvasRelationAnalysisSession('grouped-field-description');
+    session.receive(projectionDraft());
+    const document = await applySelectedRelationDerivedOutput(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      intent: 'edit',
+      alias: 'clean',
+      formula: 'TRIM(customer)',
+    });
+    const field = document.sidecar.fields.find(
+      (item) => item.relationId === session.rootId && item.displayName === 'clean'
+    )!;
+    const metadata = {
+      kind: 'transform' as const,
+      mode: 'substrait' as const,
+      shape: 'projection' as const,
+      materialized: 'view',
+      ...document,
+    };
+    const documented = setDvtSubstraitFieldDescription({
+      metadata,
+      fieldId: field.fieldId,
+      description: '  Prepared name  ',
+    });
+    expect(documented).not.toBe(metadata);
+    expect(documented.plan).toBe(metadata.plan);
+    expect(documented.sidecar.relations).toEqual(metadata.sidecar.relations);
+    expect(documented.sidecar.fields.find((item) => item.fieldId === field.fieldId)).toEqual({
+      ...field,
+      description: 'Prepared name',
+    });
+    expect(documented.sidecar.fields.filter((item) => item.fieldId !== field.fieldId)).toEqual(
+      metadata.sidecar.fields.filter((item) => item.fieldId !== field.fieldId)
+    );
+    expect(indexSubstraitRelations(documented).ok).toBe(true);
+    const cleared = setDvtSubstraitFieldDescription({
+      metadata: documented,
+      fieldId: field.fieldId,
+      description: ' ',
+    });
+    expect(cleared.sidecar).toEqual(metadata.sidecar);
+    expect(
+      setDvtSubstraitFieldDescription({ metadata, fieldId: 'missing', description: 'Name' })
+    ).toBe(metadata);
+    session.dispose();
+  });
+
   it('records the function and output alias atomically without losing source lineage', () => {
     const draft = projectionDraft();
     const nextDraft = applyDvtSubstraitProjectionFunction(draft, {

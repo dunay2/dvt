@@ -3,15 +3,21 @@
 import type { Node } from '@xyflow/react';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { deriveSubstraitSchemas, type SubstraitDocument } from '@dvt/substrait-analysis';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import { createCanvasColumnHandleId } from './canvasColumnHandleIdentity';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
+  readCanvasTransformDependencyModel,
+  type TransformDependencyModel,
+} from './canvasTransformDependencyModel';
+import { describeCanvasTransformDefinitions } from './canvasTransformDefinitionPresentation';
+import { rootFields } from './canvasDerivedOutputExpression';
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import {
   buildDraftSession,
   buildCanonicalNode,
@@ -106,6 +112,20 @@ function buildConnectedPostgresSource(
       },
     },
   };
+}
+
+function inspectTransform(node: CanonicalNode): {
+  document: SubstraitDocument;
+  model: TransformDependencyModel;
+} {
+  const authority = readDvtTransformAuthoringAuthority(node);
+  if (authority == null) throw new Error('Expected Substrait authority.');
+  const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);
+  const { index } = deriveSubstraitSchemas(document);
+  const model = readCanvasTransformDependencyModel(index.relations.get(index.rootId)!, (id) =>
+    index.relations.get(id)!
+  );
+  return { document, model };
 }
 
 describe('useCanvasGraphHandlers edge authoring', () => {
@@ -712,9 +732,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     >('./canvasDvtTransformAuthoringAuthority');
     const {
       createDvtSubstraitProjectionDraft,
-      decodeDvtSubstraitProjectionDocument,
       encodeDvtSubstraitProjectionDocument,
-      inspectDvtSubstraitProjectionDraft,
       resolveDvtSubstraitColumnFunctions,
     } = await vi.importActual<typeof import('./canvasDvtSubstraitProjection')>(
       './canvasDvtSubstraitProjection'
@@ -814,28 +832,19 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const nextSession = applyFunction(draftSession);
     const nextNode = nextSession.localNodeCatalog?.[transform.id];
     if (nextNode == null) throw new Error('Expected updated transform.');
-    const authority = readDvtTransformAuthoringAuthority(nextNode)!;
-    if (authority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-
-    expect(inspection.ok).toBe(true);
-    expect(inspection.ok ? inspection.projection.outputs.slice(0, 3) : []).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ fieldId: 'output:order_id', name: 'order_id' }),
-        expect.objectContaining({ fieldId: 'output:customer', name: 'customer' }),
-        expect.objectContaining({ fieldId: 'output:amount', name: 'amount' }),
-      ])
-    );
+    const inspection = inspectTransform(nextNode);
+    expect(rootFields(inspection.model.root.fields).slice(0, 3)).toMatchObject([
+      { fieldId: 'output:order_id', displayName: 'order_id' },
+      { fieldId: 'output:customer', displayName: 'customer' },
+      { fieldId: 'output:amount', displayName: 'amount' },
+    ]);
+    const calculation = inspection.model.definitions[0]!;
+    expect(calculation.output?.displayName).toBe('order_customer');
     expect(
-      inspection.ok
-        ? inspection.projection.outputs.find((output) => output.name === 'order_customer')
-        : null
-    ).toMatchObject({
-      sourceFieldName: 'customer',
-      operations: ['upper'],
-    });
+      describeCanvasTransformDefinitions(inspection.document.plan, inspection.model).get(
+        calculation.id
+      )?.formula
+    ).toBe('UPPER(customer)');
 
     let calculatedSession = nextSession;
     if (withLiteral) {
@@ -856,15 +865,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     }
     const calculatedNode = calculatedSession.localNodeCatalog?.[transform.id];
     if (calculatedNode == null) throw new Error('Expected calculated output.');
-    const calculatedAuthority = readDvtTransformAuthoringAuthority(calculatedNode)!;
-    if (calculatedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const calculatedInspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(calculatedAuthority.semanticDocument)
-    );
-    const calculatedOutputs = calculatedInspection.ok
-      ? calculatedInspection.projection.outputs
-      : [];
-    expect(calculatedOutputs.map((output) => output.name)).toEqual([
+    const calculatedInspection = inspectTransform(calculatedNode);
+    const calculatedOutputs = rootFields(calculatedInspection.model.root.fields);
+    expect(calculatedOutputs.map((output) => output.displayName)).toEqual([
       'order_id',
       'customer',
       'amount',
@@ -872,12 +875,16 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       ...(withLiteral ? ['channel'] : []),
     ]);
     const derivedFieldIds = calculatedOutputs.slice(3).map((output) => output.fieldId);
+    const definitions = calculatedInspection.model.definitions.map(
+      ({ id, expression, inputIds }) => [id, expression, inputIds]
+    );
     if (withLiteral) {
-      expect(
-        calculatedInspection.ok ? calculatedInspection.projection.outputs.at(-1) : null
-      ).toMatchObject({
-        name: 'channel',
-        calculation: { kind: 'string-literal', value: 'web' },
+      const literal = calculatedInspection.model.definitions.find(
+        (definition) => definition.output?.displayName === 'channel'
+      )!;
+      expect(dvtSubstraitExpression.literalValue(literal.expression)).toEqual({
+        dataType: 'string',
+        value: 'web',
       });
     }
     setDraftSession.mockClear();
@@ -896,16 +903,17 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const toggledSession = toggleUpdate(calculatedSession);
     const toggledNode = toggledSession.localNodeCatalog?.[transform.id];
     if (toggledNode == null) throw new Error('Expected updated transform output selection.');
-    const toggledAuthority = readDvtTransformAuthoringAuthority(toggledNode)!;
-    if (toggledAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const toggledInspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(toggledAuthority.semanticDocument)
+    const toggledInspection = inspectTransform(toggledNode);
+    expect(rootFields(toggledInspection.model.root.fields).map((output) => output.fieldId)).toEqual(
+      ['output:order_id', 'output:amount', ...derivedFieldIds]
     );
     expect(
-      toggledInspection.ok
-        ? toggledInspection.projection.outputs.map((output) => output.fieldId)
-        : []
-    ).toEqual(['output:order_id', 'output:amount', ...derivedFieldIds]);
+      toggledInspection.model.definitions.map(({ id, expression, inputIds }) => [
+        id,
+        expression,
+        inputIds,
+      ])
+    ).toEqual(definitions);
 
     setDraftSession.mockClear();
     await act(async () => {
@@ -923,16 +931,25 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     const reorderedSession = reorderUpdate(toggledSession);
     const reorderedNode = reorderedSession.localNodeCatalog?.[transform.id];
     if (reorderedNode == null) throw new Error('Expected reordered transform outputs.');
-    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode)!;
-    if (reorderedAuthority.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const reorderedInspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(reorderedAuthority.semanticDocument)
-    );
+    const reorderedInspection = inspectTransform(reorderedNode);
     expect(
-      reorderedInspection.ok
-        ? reorderedInspection.projection.outputs.map((output) => output.fieldId)
-        : []
+      rootFields(reorderedInspection.model.root.fields).map((output) => output.fieldId)
     ).toEqual(['output:amount', 'output:order_id', ...derivedFieldIds]);
+    expect(
+      reorderedInspection.model.definitions.map(({ id, expression, inputIds }) => [
+        id,
+        expression,
+        inputIds,
+      ])
+    ).toEqual(definitions);
+    const sql = await projectSubstraitToPostgresSql(reorderedInspection.document);
+    expect(sql.sql).toMatch(/\bupper\s*\(/i);
+    expect(sql.projection.outputs.map((output) => output.name)).toEqual([
+      'amount',
+      'order_id',
+      'order_customer',
+      ...(withLiteral ? ['channel'] : []),
+    ]);
 
     harness.cleanup();
   });

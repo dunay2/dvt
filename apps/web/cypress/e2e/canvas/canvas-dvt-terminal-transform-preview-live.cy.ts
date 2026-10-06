@@ -2,7 +2,7 @@
  * Owned concern: prove one protected terminal DVT Transform from persisted
  * Canvas revision through PreviewPlan, StartRun, Temporal and PostgreSQL.
  * @baseline ADR-0044: Structural rejection causes are stable; Web owns translated copy.
- * @decision Verify the current V1 response and localized refusal through the native UI.
+ * @decision Verify V1 responses and register admitted authoring consumers once in this runtime.
  * @consequence Unsupported output dispositions cannot expose Run or create an execution.
  * @version 1.0.0
  */
@@ -19,6 +19,7 @@ import './canvas-relational-workbench-viewport.cy';
 import './canvas-sort-fetch-data-navigation.cy';
 import './canvas-model-chain-fields.cy';
 import './canvas-column-lineage-mapping.cy';
+import './canvas-transform-stage.cy';
 import './canvas-dvt-join-preview-live.cy';
 import './canvas-semantic-persistence-run-live.cy';
 import './canvas-sql-progressive-live.cy';
@@ -39,6 +40,7 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 
 import { registerCanvasNodeDataActionsProof } from './canvasNodeDataActions.proof';
 import {
@@ -137,6 +139,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     getVisibleCanvasNode('source-1').should('be.visible');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
     cy.intercept('GET', '**/source-data-sample?*').as('sourceLivePreview');
+    hoverWorkbenchCard('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]');
     getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').focus().click();
     cy.wait('@sourceLivePreview').then(({ response }) => {
       expect(response?.statusCode).to.equal(200);
@@ -153,6 +156,9 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-slot="data-sample-refresh"]').click();
     cy.wait('@sourceLivePreview').its('response.statusCode').should('equal', 200);
     cy.intercept('GET', '**/transforms/dvt-transform-1/data-sample?*').as('transformLivePreview');
+    hoverWorkbenchCard(
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
+    );
     getVisibleCanvasNode('dvt-transform-1')
       .find('[data-slot="canvas-node-execute"]')
       .focus()
@@ -194,7 +200,11 @@ describe('DVT terminal Transform Preview and Run live', () => {
       .should('be.visible')
       .and('contain.text', KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD);
     const assertEventFeedRecovery = interruptLiveRunEventFeed();
+    cy.intercept('POST', '**/runs/start').as('terminalRunStart');
     cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
+    cy.wait('@terminalRunStart').then(({ response }) => {
+      expect(response?.statusCode, response?.body?.error?.reason).to.equal(202);
+    });
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
     assertEventFeedRecovery();

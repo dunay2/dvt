@@ -40,6 +40,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Bounded set composition could drift from admitted Substrait semantics](R-20260831-SUBSTRAIT-UNION-ALL-DRIFT.yaml)
 - [Bounded window authoring could drift from admitted Substrait semantics](R-20260831-SUBSTRAIT-WINDOW-DRIFT.yaml)
 - [Calculated Canvas fields could drift from their canonical Substrait expression](R-20260902-CALCULATED-COLUMN-SEMANTIC-DRIFT.yaml)
+- [Calculated-field dependencies must survive edits without snapshot semantics](R-20261005-TRANSFORM-DEPENDENCIES.yaml)
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)
 - [Cancel lifecycle ownership can regress to mixed engine/runtime emission](R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT.yaml)
 - [Canvas and dbt files can expose conflicting authoring authority](R-20260731-CANVAS-DBT-AUTHORING-AUTHORITY.yaml)
