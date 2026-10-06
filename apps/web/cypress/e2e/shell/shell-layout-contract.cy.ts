@@ -63,6 +63,10 @@ function stubShellApis(): void {
 function visitShellRouteWithUiLayout(path: string, partialState?: Record<string, unknown>): void {
   visitWithE2eWorkspaceSession(path, {
     onBeforeLoad(window) {
+      window.localStorage.setItem(
+        'dvt-web-application-language',
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
       if (partialState) {
         window.localStorage.setItem(
           'dvt-web-ui-layout',
