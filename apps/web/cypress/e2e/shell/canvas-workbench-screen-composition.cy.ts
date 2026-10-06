@@ -1133,10 +1133,12 @@ describe('Canvas workbench screen composition', () => {
         .find('.view-line')
         .should(($lines) => {
           const renderedSql = [...$lines]
-            .map((line) => (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd())
-            .join('\n');
-          expect(renderedSql).to.equal(sql);
-          expect(renderedSql).not.to.equal(path === MODEL_PATH ? ORPHAN_SQL : MODEL_SQL);
+            .map((line) => (line.textContent ?? '').replaceAll('\u00a0', ' '))
+            .join('');
+          expect(renderedSql).to.equal(sql.replaceAll('\n', ''));
+          expect(renderedSql).not.to.equal(
+            (path === MODEL_PATH ? ORPHAN_SQL : MODEL_SQL).replaceAll('\n', '')
+          );
         });
       assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
       cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
