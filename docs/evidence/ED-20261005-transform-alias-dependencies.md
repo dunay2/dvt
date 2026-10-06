@@ -61,6 +61,17 @@ cycles, ambiguous names and incompatible dependent type changes fail atomically.
 Typed errors carry codes and field context; the existing EN/ES presentation owns
 the translated explanation and retains the rejected formula for correction.
 
+The #3578 formula-lineage review clarified a canonical passthrough case before
+its corrective TDD. A direct selection of an input, published with that same
+input name, represents one textual formula candidate: the original input.
+The shared name-scope projection must prove the direct selection, referenced
+input identity and equal display name; provenance alone or equal expression
+text is insufficient. It must not merge persisted definitions, public FieldIds
+or explicit-ID references. Differently named aliases keep their dependency
+identity, and genuinely calculated homonyms remain ambiguous. UI feedback and
+command compilation must apply that same projection. The correction and its
+fresh validation evidence belong to #3578; prior receipts below do not prove it.
+
 ## Integration and removed paths
 
 Read models group only explicitly owned contiguous layers; unrelated adjacent
