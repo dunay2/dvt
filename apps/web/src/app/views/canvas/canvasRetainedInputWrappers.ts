@@ -1,16 +1,17 @@
 /**
  * Owned concern: restore a retained JOIN by replaying admitted input wrappers atomically.
  * @baseline ADR-0064: canonical selected-relation transactions own semantic rebinding.
- * @decision Keep exact-input restoration intact and reuse its document in a disposable session.
+ * @decision Rebind admitted predicate functions into the current disposable session plan.
  * @consequence No replacement JOIN, partial publication or parallel composition kernel is created.
- * @version 1.0.0
+ * @version 1.1.0
  */
+import { clone } from '@bufbuild/protobuf';
+import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   cloneLocalRelation,
   indexSubstraitRelations,
   readRelationStructure,
   SubstraitAnalysisError,
-  type IndexedRelation,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
@@ -20,13 +21,30 @@ import {
 } from './canvasDvtSubstraitSemanticDocument';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { commitSelectedRelation } from './canvasCommitSelectedRelation';
-import { admitCanvasRetainedInputWrappers } from './canvasRetainedInputWrapperAdmission';
+import {
+  admitCanvasRetainedInputWrappers,
+  type RetainedInputWrapper,
+} from './canvasRetainedInputWrapperAdmission';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
+import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 
-async function replayWrapper(session: CanvasRelationAnalysisSession, wrapper: IndexedRelation) {
+async function replayWrapper(
+  session: CanvasRelationAnalysisSession,
+  { entry: wrapper, filterFunction }: RetainedInputWrapper
+) {
   const input = session.locate(wrapper.inputs[0]!, session.revision);
   const relation = cloneLocalRelation(wrapper.relation, [input.relation]);
   readRelationStructure(relation).common!.relAnchor = input.nextAnchor;
+  const predicate =
+    relation.relType.case === 'filter' ? relation.relType.value.condition?.rexType : undefined;
+  let extensions: Plan | undefined;
+  if (filterFunction != null && predicate?.case === 'scalarFunction') {
+    extensions = clone(PlanSchema, input.plan);
+    predicate.value.functionReference = dvtSubstraitExpression.ensureScalarFunction(
+      extensions,
+      filterFunction
+    ).functionAnchor;
+  }
   return commitSelectedRelation(session, {
     relationId: input.binding.relationId,
     expectedRevision: session.revision,
@@ -37,6 +55,7 @@ async function replayWrapper(session: CanvasRelationAnalysisSession, wrapper: In
       fields: wrapper.fields,
     },
     createdInputs: new Map([[wrapper.binding.relationId, wrapper.inputs]]),
+    extensions,
   });
 }
 

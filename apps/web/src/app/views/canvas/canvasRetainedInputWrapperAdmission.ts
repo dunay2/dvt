@@ -1,23 +1,49 @@
 /**
  * Owned concern: admit transparent unary chains anchored to an exact retained producer.
  * @baseline ADR-0064: FieldId and provenance, never display names alone, establish identity.
- * @decision Validate canonical schemas and one-to-one lineage at each Sort/Fetch hop.
+ * @decision Validate each Filter/Sort/Fetch hop and resolve admitted predicate function identity.
  * @consequence Different producers and changed output contracts remain non-executable.
- * @version 1.0.0
+ * @version 1.1.0
  */
 import { equals } from '@bufbuild/protobuf';
 import { TypeSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { comparisonFunctionIdentity } from '@dvt/postgres-projection';
 import {
   deriveSubstraitSchemas,
   indexSubstraitRelations,
   readRelationStructure,
   type IndexedRelation,
+  type SchemaField,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import { canvasCanonicalProducerIdentity } from './canvasCanonicalProducerIdentity';
 import { projectCanvasStagedDocument } from './canvasStagedOperationDocument';
 import { selectedSortDirections } from './canvasSelectedRelationSortFetch';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { dvtSubstraitTextComparison } from './canvasDvtSubstraitTextComparison';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+
+export type RetainedInputWrapper = Readonly<{
+  entry: IndexedRelation;
+  filterFunction?: ReturnType<typeof comparisonFunctionIdentity>;
+}>;
+
+function filterFunctionIdentity(
+  wrapper: IndexedRelation,
+  plan: SubstraitDocument['plan'],
+  schema: readonly SchemaField[]
+): ReturnType<typeof comparisonFunctionIdentity> | null {
+  const variant = wrapper.relation.relType;
+  if (variant.case !== 'filter') return null;
+  const predicate = dvtSubstraitTextComparison.inspect(plan, variant.value.condition);
+  if (predicate == null) return null;
+  const capabilities = resolveDvtSubstraitFilterCapabilities({
+    dataType: schema[predicate.sourceOrdinal]?.type.kind.case ?? '',
+  });
+  return capabilities.some((capability) => capability.capabilityId === predicate.capabilityId)
+    ? comparisonFunctionIdentity(predicate.operator)
+    : null;
+}
 
 function hasAdmittedParameters(wrapper: IndexedRelation, width: number): boolean {
   const variant = wrapper.relation.relType;
@@ -68,7 +94,8 @@ function preservesBindings(input: IndexedRelation, wrapper: IndexedRelation): bo
 
 function isTransparent(wrapper: IndexedRelation, input: IndexedRelation): boolean {
   const variant = wrapper.relation.relType;
-  if (variant.case !== 'sort' && variant.case !== 'fetch') return false;
+  if (variant.case !== 'sort' && variant.case !== 'fetch' && variant.case !== 'filter')
+    return false;
   const common = readRelationStructure(wrapper.relation).common;
   if (
     common?.hint != null ||
@@ -84,7 +111,10 @@ function isTransparent(wrapper: IndexedRelation, input: IndexedRelation): boolea
       emit.value.outputMapping.some((ordinal, index) => ordinal !== index))
   )
     return false;
-  return hasAdmittedParameters(wrapper, width) && preservesBindings(input, wrapper);
+  return (
+    (variant.case === 'filter' || hasAdmittedParameters(wrapper, width)) &&
+    preservesBindings(input, wrapper)
+  );
 }
 
 export function admitCanvasRetainedInputWrappers(
@@ -92,7 +122,7 @@ export function admitCanvasRetainedInputWrappers(
   originalId: string,
   producer: SubstraitDocument,
   producerId: string
-): readonly IndexedRelation[] | null {
+): readonly RetainedInputWrapper[] | null {
   const original = projectCanvasStagedDocument(saved, originalId);
   const retained = projectCanvasStagedDocument(producer, originalId);
   const identity = original == null ? null : canvasCanonicalProducerIdentity(original);
@@ -106,7 +136,7 @@ export function admitCanvasRetainedInputWrappers(
   if (!previous.ok) return null;
   const { index, schemas } = deriveSubstraitSchemas(producer);
   if (index.rootId !== producerId) return null;
-  const chain: IndexedRelation[] = [];
+  const chain: RetainedInputWrapper[] = [];
   let id = producerId;
   while (id !== originalId) {
     const wrapper = index.relations.get(id)!;
@@ -120,7 +150,12 @@ export function admitCanvasRetainedInputWrappers(
       before.some((field, ordinal) => !equals(TypeSchema, field.type, after[ordinal]!.type))
     )
       return null;
-    chain.unshift(wrapper);
+    const filterFunction =
+      wrapper.relation.relType.case === 'filter'
+        ? filterFunctionIdentity(wrapper, producer.plan, before)
+        : undefined;
+    if (filterFunction === null) return null;
+    chain.unshift({ entry: wrapper, filterFunction });
     id = input.binding.relationId;
   }
   return chain;
