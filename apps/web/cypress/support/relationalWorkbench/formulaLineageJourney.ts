@@ -1,4 +1,10 @@
-/** Shared UI gestures; no semantic writes or transport-specific fixture logic. */
+/**
+ * Owned concern: share formula authoring and lineage inspection gestures across transports.
+ * @baseline GH-3578: Monaco's presence alone does not prove its mounted editable model.
+ * @decision Wait for enabled editor tools, focus its surface and verify rendered input.
+ * @consequence Controlled and LIVE proofs exercise the same formula without semantic injection.
+ * @version 1.0.0
+ */
 import { openWorkbenchModel } from './navigation';
 
 export function authorLineageFormula(nodeId: string, formula: string): void {
@@ -9,8 +15,13 @@ export function authorLineageFormula(nodeId: string, formula: string): void {
   ).click();
   cy.get('[data-slot="canvas-derived-output-form"]').within(() => {
     cy.get('input[name="alias"]').type('preferred_name');
+    cy.get('.formula-tools button').first().should('be.enabled');
+    cy.get('[data-slot="formula-editor"] .view-lines').scrollIntoView().click();
     // Monaco's keyboard target is covered by its rendered code layer.
     cy.get('[data-slot="formula-editor"] .monaco-editor textarea').type(formula, { force: true });
+    cy.get('[data-slot="formula-editor"] .view-lines').should(($lines) => {
+      expect($lines.text().replace(/\u00a0/g, ' '), 'authored formula').to.equal(formula);
+    });
     cy.get('.formula-result').should('contain.text', 'COALESCE').and('contain.text', 'TRIM');
     cy.get('button[type="submit"]').should('be.enabled').click();
   });

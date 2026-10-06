@@ -1,10 +1,19 @@
-/** Real formula authoring and read-only output inspection across the stateful save transport. */
+/**
+ * Owned concern: prove formula persistence and read-only output lineage through the real UI.
+ * @baseline GH-3578: a reopen must consume this navigation's persisted draft.
+ * @decision Reuse the fresh-read boundary and shared controlled/LIVE formula gestures.
+ * @consequence Inspection retains exact saved content and zero additional writes.
+ * @version 1.0.0
+ */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   authorLineageFormula,
   inspectLineageOutput,
 } from '../../support/relationalWorkbench/formulaLineageJourney';
-import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import {
+  revisitWorkbenchCanvas,
+  visitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Nested formula persistence', () => {
@@ -18,7 +27,7 @@ describe('Nested formula persistence', () => {
       saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body;
       expect(JSON.stringify(saved)).to.include('preferred_name');
     });
-    visitWorkbenchCanvas();
+    revisitWorkbenchCanvas();
     let writes: number;
     cy.then(() => {
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
