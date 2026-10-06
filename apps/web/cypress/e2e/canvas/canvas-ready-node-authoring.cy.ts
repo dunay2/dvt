@@ -347,11 +347,13 @@ describe('Canvas ready node authoring', () => {
       expect(model.types, 'source nullability and types retained').to.deep.equal(inputTypes);
       restoredIds = model.fields.map((field) => field.fieldId);
     });
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get(`${toggle}[data-field-name="total"]`)
       .closest('[data-slot="relation-output-field"]')
       .should('have.attr', 'draggable', 'true')
       .focus()
-      .trigger('keydown', { key: 'ArrowUp', altKey: true });
+      .should('be.focused')
+      .type('{alt}{uparrow}');
     cy.wrap(null).should(() => {
       const model = readModel();
       expect(model.fields.map((field) => field.displayName)).to.deep.equal(['total', 'order_id']);
