@@ -5,11 +5,14 @@ import {
 } from '@dvt/contracts';
 
 import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
 import {
   buildDraftReadOkResponse,
   buildDraftReadNotFoundResponse,
   buildDraftSaveSavedResponse,
 } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
 import {
   openCanvasContextMenuAt,
@@ -317,15 +320,18 @@ describe('Canvas workbench screen composition', () => {
       authoringGenerated: true,
       title: 'Alternate staging canvas',
     });
-    alternateDraft = {
+    const { canonicalNodes } =
+      projectWorkspaceGraphAuthoringDraftSemanticGraph(alternateDraftFixture);
+    alternateDraft = normalizeProjectCanvasDraft({
       ...alternateDraftFixture,
+      nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
       nodePositions: {
         ...alternateDraftFixture.nodePositions,
         'source-1': { x: 40, y: 140 },
         'dvt-transform-1': { x: 420, y: 140 },
         'sink-1': { x: 800, y: 140 },
       },
-    };
+    });
 
     stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
       const requestedProjectId = url.searchParams.get('projectId');
@@ -384,8 +390,9 @@ describe('Canvas workbench screen composition', () => {
       });
       if (expectedRevision === WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION) {
         expect(saveRequest.draft.canvas).to.deep.include({
+          id: 'canvas',
           kind: 'transformation',
-          title: 'Canvas de transformación',
+          title: 'Canvas',
         });
         expect(saveRequest.draft.nodeIds).to.deep.equal([]);
         expect(saveRequest.draft.nodes).to.deep.equal([]);
@@ -445,7 +452,10 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="app-shell-left-navigation"]').should('not.exist');
     cy.get('[data-slot="shell-top-bar"]').as('topBar');
-    cy.get('@topBar').should('contain.text', 'Raven');
+    cy.get('@topBar')
+      .find('[data-slot="shell-app-menu-trigger"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Raven');
     cy.get('@topBar').should('contain.text', 'Vista');
     cy.get('@topBar').should('contain.text', 'Proyecto: E2E Project');
     cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
@@ -464,10 +474,13 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-playground-empty-state"] h2')
       .contains('Canvas')
       .should('be.visible');
-    cy.contains('Canvas dbt').should('be.visible');
-    cy.contains('Canvas de transformación').should('be.visible');
-    cy.contains('button', 'Canvas de transformación').should('not.be.disabled');
-    cy.contains('Flow-based transformation canvas').should('not.be.visible');
+    cy.get('[data-slot="canvas-playground-template-choice"]')
+      .should('have.length', 1)
+      .and('have.text', 'Empezar Canvas')
+      .and('be.visible')
+      .and('be.enabled');
+    cy.contains('Canvas dbt').should('not.exist');
+    cy.contains('Flow-based transformation canvas').should('not.exist');
     cy.get('[data-slot="canvas-toolbar-plan-command"]').should('not.exist');
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
 
@@ -502,13 +515,13 @@ describe('Canvas workbench screen composition', () => {
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
 
-    cy.contains('button', 'Canvas de transformación').click();
+    cy.get('[data-slot="canvas-playground-template-choice"]').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     cy.get('@topBar')
       .find('[data-slot="shell-active-canvas-identity"]')
-      .should('contain.text', 'Canvas de transformación')
+      .should('contain.text', 'Canvas')
       .and('have.attr', 'data-kind', 'transformation')
-      .and('have.attr', 'data-canvas-id', 'canvas-de-transformacion');
+      .and('have.attr', 'data-canvas-id', 'canvas');
     cy.get('[data-slot="canvas-active-canvas-identity"]').should('not.exist');
     cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.contains('Borrador sincronizado').should('not.exist');
@@ -530,7 +543,7 @@ describe('Canvas workbench screen composition', () => {
       .click();
     cy.get('[data-slot="canvas-project-explorer-dialog"]')
       .should('be.visible')
-      .and('contain.text', 'Canvas de transformación')
+      .and('contain.text', 'Canvas')
       .and('contain.text', 'Canvas actual');
     cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
@@ -579,6 +592,7 @@ describe('Canvas workbench screen composition', () => {
       .should('contain.text', 'Alternate staging canvas')
       .and('have.attr', 'data-canvas-id', 'main-canvas');
     cy.get('.react-flow__node[data-id="source-1"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     cy.get('[data-slot="shell-run-status-indicator"]')
       .invoke('attr', 'aria-label')
@@ -586,19 +600,34 @@ describe('Canvas workbench screen composition', () => {
     cy.get('.react-flow__node[data-id="source-1"] [data-slot="graph-node-card-play"]').should(
       'not.exist'
     );
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]')
+      .should('be.visible')
+      .focus()
+      .should('be.focused');
     openCanvasNodeOperations('source-1');
     cy.contains(
       '[data-slot="canvas-node-context-menu-item"]',
       'Seleccionar para ejecución'
     ).click();
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'source-1');
     openCanvasNodeOperations('source-1');
     cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
       'be.visible'
     );
-    cy.get('body').type('{esc}');
+    cy.focused().type('{esc}');
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'source-1');
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
+      'have.attr',
+      'aria-expanded',
+      'true'
+    );
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').should('be.visible').click();
     cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${ALTERNATE_MODEL_PATH}"]`)
       .should('be.visible')
       .click();
@@ -614,6 +643,12 @@ describe('Canvas workbench screen composition', () => {
         );
         expect(renderedLines.join('\n')).to.equal(ALTERNATE_MODEL_SQL);
       });
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+    cy.then(() => {
+      for (const { body } of getE2eApiCalls('/workspace/graph/draft', 'PUT')) {
+        expect(body).to.have.property('scope').that.deep.equals(E2E_WORKSPACE_SESSION);
+      }
+    });
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
@@ -637,8 +672,8 @@ describe('Canvas workbench screen composition', () => {
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="shell-active-canvas-identity"]')
-      .should('contain.text', 'Canvas de transformación')
-      .and('have.attr', 'data-canvas-id', 'canvas-de-transformacion');
+      .should('contain.text', 'Canvas')
+      .and('have.attr', 'data-canvas-id', 'canvas');
     cy.get('.react-flow__node[data-id="source-1"]').should('not.exist');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     cy.get('[data-slot="shell-run-status-indicator"]')
@@ -697,7 +732,10 @@ describe('Canvas workbench screen composition', () => {
         expect(label.scrollWidth).to.be.at.most(label.clientWidth);
         expect(getComputedStyle(label).textOverflow).not.to.equal('ellipsis');
       });
-    cy.contains('button', 'Canvas de transformación').click();
+    cy.get('[data-slot="canvas-playground-template-choice"]')
+      .should('have.text', 'Empezar Canvas')
+      .and('be.enabled')
+      .click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     cy.contains('button', /^Añadir componente$/).should('not.exist');
 
@@ -723,11 +761,11 @@ describe('Canvas workbench screen composition', () => {
       .should('be.greaterThan', 1);
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .then(($groups) => [...$groups].map((group) => group.getAttribute('data-catalog-category')))
-      .should('deep.equal', ['source', 'transformation', 'output']);
-    cy.get('@addComponentDialog').find('input[type="search"]').type('transformación');
+      .should('deep.equal', ['source', 'model', 'output']);
+    cy.get('@addComponentDialog').find('input[type="search"]').type('modelo');
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .should('have.length', 1)
-      .and('have.attr', 'data-catalog-category', 'transformation');
+      .and('have.attr', 'data-catalog-category', 'model');
     cy.get('@addComponentDialog').should(($dialog) => {
       const rect = $dialog.get(0).getBoundingClientRect();
       expect(rect.left).to.be.at.least(0);
@@ -740,7 +778,7 @@ describe('Canvas workbench screen composition', () => {
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-add-node-catalog"]').click();
-    cy.get('[role="dialog"] input[type="search"]').type('transformación');
+    cy.get('[role="dialog"] input[type="search"]').type('modelo');
     cy.get('[data-slot="canvas-context-menu-add-catalog-item"]')
       .first()
       .should('be.visible')
@@ -846,6 +884,9 @@ describe('Canvas workbench screen composition', () => {
       .type('#223344')
       .should('have.value', '#223344');
     cy.get('[data-slot="workbench-properties-apply"]').click();
+    cy.get('[data-slot="canvas-settings-dialog"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('[data-slot="canvas-viewport-context-surface"]').should('be.focused');
     cy.get('.react-flow').should('have.css', 'background-color', 'rgb(34, 51, 68)');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
 
@@ -931,30 +972,12 @@ describe('Canvas workbench screen composition', () => {
     assertViewportHasNoGlobalHorizontalOverflow(320);
   });
 
-  it('shows directional graph semantics and opens complete node code in a movable workbench', () => {
+  it('keeps directional focus, node inspection and complete project files independent', () => {
     const graphDraft = buildCanvasAuthoringDraft({ includeLooseNode: true });
     persistedDraft = {
       revision: 'rev-e2e-graph-ready',
       draft: {
         ...graphDraft,
-        nodes: graphDraft.nodes.map((node) => {
-          const sql =
-            node.id === 'model_orders'
-              ? MODEL_SQL
-              : node.id === 'orphan_metrics'
-                ? ORPHAN_SQL
-                : null;
-          return sql == null
-            ? node
-            : {
-                ...node,
-                metadata: {
-                  ...node.metadata,
-                  sql,
-                  config: { ...node.metadata?.config, sql },
-                },
-              };
-        }),
         nodePositions: {
           ...graphDraft.nodePositions,
           src_orders: { x: 40, y: 140 },
@@ -986,8 +1009,12 @@ describe('Canvas workbench screen composition', () => {
       .should('have.attr', 'data-state', 'unchecked')
       .click();
     cy.get('[data-slot="workbench-properties-apply"]').click();
+    cy.get('[data-slot="canvas-settings-dialog"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('[data-slot="canvas-viewport-context-surface"]').should('be.focused');
 
     cy.get('@modelNode').click();
+    cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'model_orders');
     cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
     cy.get('@orphanNode')
       .find('[data-slot="graph-node-card"]')
@@ -997,28 +1024,38 @@ describe('Canvas workbench screen composition', () => {
     cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
     cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '0.3');
 
-    cy.get('.react-flow__pane').click('topLeft', { force: true });
+    cy.get('.react-flow__pane').click('topLeft');
     cy.get('@modelNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
     cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
 
     cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').should('not.exist');
+    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').focus().should('be.focused');
     openCanvasNodeOperations('model_orders');
     cy.contains(
       '[data-slot="canvas-node-context-menu-item"]',
       'Seleccionar para ejecución'
     ).click();
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'model_orders');
     openCanvasNodeOperations('model_orders');
     cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
       'be.visible'
     );
-    cy.get('body').type('{esc}');
-    cy.get('.react-flow__pane').click('topLeft', { force: true });
+    cy.focused().type('{esc}');
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'model_orders');
+    cy.get('.react-flow__pane').click('topLeft');
     cy.get('@orphanNode').find('[data-slot="graph-node-card"]').should('have.css', 'opacity', '1');
+    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').focus().should('be.focused');
     openCanvasNodeOperations('model_orders');
     cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Quitar de la ejecución').should(
       'be.visible'
     );
-    cy.get('body').type('{esc}');
+    cy.focused().type('{esc}');
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'model_orders');
     cy.get('@modelNode').find('[data-slot="graph-node-card-play"]').should('not.exist');
     assertDependencyDirectionCues();
 
@@ -1028,19 +1065,12 @@ describe('Canvas workbench screen composition', () => {
     assertDependencyDirectionCues();
     cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
-    cy.get('@modelNode').find('[data-slot="canvas-node-shell"]').dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+    openCanvasNodeOperations('model_orders');
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Propiedades$/).click();
+    cy.get('[data-slot="canvas-node-workbench-panel"] h2')
       .should('be.visible')
-      .and('have.attr', 'aria-selected', 'true');
+      .and('have.text', 'model_orders');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
-    cy.get('[data-testid="monaco-code-editor"]')
-      .find('.view-line')
-      .should(($lines) => {
-        const renderedLines = [...$lines].map((line) =>
-          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
-        );
-        expect(renderedLines.join('\n')).to.equal(MODEL_SQL);
-      });
 
     cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should(($panel) => {
@@ -1054,27 +1084,65 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');
 
-    cy.get('.react-flow__node[data-id="orphan_metrics"]')
+    cy.get('@orphanNode')
       .find('[data-slot="canvas-node-shell"]')
-      .dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
-      .and('have.attr', 'aria-selected', 'true');
-    cy.get('[data-testid="monaco-code-editor"]')
-      .find('.view-line')
-      .should(($lines) => {
-        const renderedLines = [...$lines].map((line) =>
-          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
-        );
-        expect(renderedLines.join('\n')).to.equal(ORPHAN_SQL);
-        expect(renderedLines.join('\n')).not.to.equal(MODEL_SQL);
-      });
+      .focus()
+      .should('be.focused');
+    openCanvasNodeOperations('orphan_metrics');
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Propiedades$/).click();
+    cy.get('[data-slot="canvas-node-workbench-panel"] h2')
+      .should('be.visible')
+      .and('have.text', 'orphan_metrics');
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('@orphanNode').find('[data-slot="canvas-node-shell"]').should('be.focused');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('@orphanNode').should('be.focused');
 
-    cy.get('.react-flow__node[data-id="src_orders"]')
-      .find('[data-slot="canvas-node-shell"]')
-      .dblclick();
+    cy.get('.react-flow__controls-fitview').should('be.visible').click();
+    cy.get('.react-flow__node[data-id="src_orders"] [data-slot="canvas-node-shell"]')
+      .should('be.visible')
+      .focus()
+      .should('be.focused');
+    openCanvasNodeOperations('src_orders');
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Propiedades$/).click();
+    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('.react-flow__node[data-id="src_orders"] [data-slot="canvas-node-shell"]').should(
+      'be.focused'
+    );
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get('.react-flow__node[data-id="src_orders"]').should('be.focused');
+
+    for (const [path, sql] of [
+      [MODEL_PATH, MODEL_SQL],
+      [ORPHAN_PATH, ORPHAN_SQL],
+      [MODEL_PATH, MODEL_SQL],
+    ] as const) {
+      cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
+      cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`)
+        .should('be.visible')
+        .click();
+      waitForE2eApiCall(`/workspace/files/${encodeURIComponent(path)}`, 'GET');
+      cy.get('[data-slot="canvas-contextual-workbench"] [data-testid="monaco-code-editor"]')
+        .find('.view-line')
+        .should(($lines) => {
+          const renderedSql = [...$lines]
+            .map((line) => (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd())
+            .join('\n');
+          expect(renderedSql).to.equal(sql);
+          expect(renderedSql).not.to.equal(path === MODEL_PATH ? ORPHAN_SQL : MODEL_SQL);
+        });
+      assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
+      cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+      cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
+      cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+    }
 
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
     emulateAccessibilityMedia();
