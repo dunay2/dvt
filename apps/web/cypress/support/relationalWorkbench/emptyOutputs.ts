@@ -1,17 +1,35 @@
 /**
  * Owned concern: prove empty projections remain editable without physical Canvas edges.
  * @baseline GH-3578: disconnection must not rewrite canonical operands or predicates.
- * @decision Use real edge context actions and the current Model Output inspector.
+ * @decision Wait for each canonical save ACK before measuring the next real edge gesture.
  * @consequence Empty publication and re-inclusion must persist and survive reopen.
  * @version 1.0.0
  */
+import { WorkspaceGraphDraftSaveRequestSchema } from '@dvt/contracts';
+
 import { dragCanvasNodeByViewportDelta } from '../canvasGraphAuthoring';
 import { getE2eApiCalls } from '../e2eApiStub';
 
 import { openModelOutputs, reloadFieldSelection } from './fieldSelection';
 import { savedOutputs } from './savedOutputs';
 
-type CanvasDraftSaveRequestBody = { draft: { edges?: { targetId: string }[] } };
+function waitForSavedEdges($edges: JQuery<HTMLElement>): void {
+  const ids = [...$edges].map((edge) => edge.getAttribute('data-id'));
+  expect(ids).not.to.include(null);
+  expect(new Set(ids).size).to.equal(ids.length);
+  cy.wrap(null).should(() => {
+    const calls = getE2eApiCalls('/workspace/graph/draft');
+    const put = calls.filter((call) => call.method === 'PUT').at(-1);
+    expect(put, 'latest canonical save').not.to.equal(undefined);
+    const saved = WorkspaceGraphDraftSaveRequestSchema.parse(put!.body);
+    expect(saved.draft.edges.map((edge) => edge.id)).to.have.members(ids);
+    expect(
+      calls.slice(calls.indexOf(put!) + 1).some((call) => call.method === 'GET'),
+      'fresh draft query after this save'
+    ).to.equal(true);
+  });
+  cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+}
 
 export function proveEmptyJoinOutput(sourceCount: number): void {
   const controls =
@@ -21,9 +39,10 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
   const assertSaved = (outputCount?: number): void => {
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/workspace/graph/draft').at(-1)?.method).to.equal('GET');
-      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
-        ?.body as CanvasDraftSaveRequestBody;
-      expect(saved.draft.edges?.filter((edge) => edge.targetId === 'join-transform')).to.deep.equal(
+      const saved = WorkspaceGraphDraftSaveRequestSchema.parse(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body
+      );
+      expect(saved.draft.edges.filter((edge) => edge.targetId === 'join-transform')).to.deep.equal(
         []
       );
       const inspected = savedOutputs();
@@ -69,7 +88,9 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
         });
       });
       cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
-      cy.get(stageEdges).should('have.length', $edges.length - index - 1);
+      cy.get(stageEdges)
+        .should('have.length', $edges.length - index - 1)
+        .then(waitForSavedEdges);
     }
   });
   assertSaved();
