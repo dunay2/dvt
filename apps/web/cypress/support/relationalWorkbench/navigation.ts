@@ -39,6 +39,8 @@ export function openWorkbenchProperties(nodeId: string): void {
     .find('[data-slot="canvas-node-shell"]')
     .focus()
     .should('be.focused')
+    // Body controls can take focus before the menu captures its opener.
+    .find('[data-slot="graph-node-card-icon"]')
     .rightclick();
   cy.document().then((document) => {
     cy.contains(
