@@ -2,7 +2,7 @@
  * Owned concern: assign exact browser consumers to their real runtime evidence.
  * @baseline GH-3578/GH-3593: fixture consumers retain their admitted runtime and owned journeys.
  * @decision Reuse three existing runtime commands with explicit paths and invocation-local environment.
- * @consequence Unknown ownership rejects; one available entry retains all its source families.
+ * @consequence Unknown ownership rejects; one available invocation executes each owned spec independently.
  * @version 1.0.0
  */
 export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
@@ -178,16 +178,11 @@ function buildBrowserCommand(
   capability: WebCypressCapability,
   controlledSpecs: readonly string[]
 ): WebCypressCommand {
-  const specPaths =
-    capability === 'available'
-      ? [WEB_CYPRESS_SPECS.available[0]]
-      : capability === 'controlled'
-        ? controlledSpecs
-        : WEB_CYPRESS_SPECS.unavailable;
+  const specPaths = capability === 'controlled' ? controlledSpecs : WEB_CYPRESS_SPECS[capability];
   const command =
     capability === 'controlled'
       ? `pnpm run test:e2e:native --browser chrome --spec ${specPaths.map((path) => path.slice('apps/web/'.length)).join(',')}`
-      : `pnpm run test:e2e:selected-closure:live${capability === 'unavailable' ? ` --spec ${specPaths[0]}` : ''}`;
+      : `pnpm run test:e2e:selected-closure:live --spec ${specPaths.join(',')}`;
   return {
     capability,
     command,
