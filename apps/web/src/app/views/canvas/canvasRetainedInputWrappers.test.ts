@@ -25,8 +25,12 @@ import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetc
 import {
   projectCanvasStagedDocument,
   decodeCanvasStagedOperation,
+  resolveCanvasStagedProducerDocument,
 } from './canvasStagedOperationDocument';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 import { restoreCanvasRetainedInputWrappers } from './canvasRetainedInputWrappers';
 import { applySelectedRelationFilter } from './canvasSelectedRelationFilter';
 import {
@@ -35,6 +39,9 @@ import {
 } from './canvasDvtSubstraitTextComparison';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import { resolveFunctionReference } from '@dvt/postgres-projection';
+import { projectCanvasCanonicalGraphEditing } from './canvasCanonicalGraphEditing';
+import { canvasCanonicalProducerIdentity } from './canvasCanonicalProducerIdentity';
+import documents from '../../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
 
 type WrapperOperation = 'sort' | 'fetch' | DvtSubstraitTextComparisonOperator;
 
@@ -124,6 +131,53 @@ async function scenario(
 }
 
 describe('retained input wrapper restoration', () => {
+  it('ignores only emitter metadata when comparing unchanged producer semantics', () => {
+    const document = decodeDvtSubstraitSemanticDocument(documents.two);
+    const original = structuredClone(document);
+    const candidate = structuredClone(document);
+    candidate.plan.version!.producer = 'dvt-canvas';
+    const before = structuredClone(candidate);
+    const identity = canvasCanonicalProducerIdentity(document);
+    expect(identity).not.toBeNull();
+    expect(canvasCanonicalProducerIdentity(candidate)).toBe(identity);
+    expect(candidate).toEqual(before);
+    candidate.plan.version!.gitHash = 'a'.repeat(40);
+    expect(canvasCanonicalProducerIdentity(candidate)).not.toBe(identity);
+    expect(document).toEqual(original);
+  });
+
+  it('restores imported JOIN inputs rebuilt through the pending-source resolver', async () => {
+    const document = decodeDvtSubstraitSemanticDocument(documents.two);
+    const original = index(document);
+    const root = original.relations.get(original.rootId)!;
+    const graph = projectCanvasCanonicalGraphEditing(document, ['orders', 'client'])!;
+    const producers = await Promise.all(
+      root.inputs.map((id) =>
+        wrap(resolveCanvasStagedProducerDocument({ ...graph, relationId: id, canonical: null })!, [
+          'equal',
+          'sort',
+          'fetch',
+        ])
+      )
+    );
+    const operation: CanvasStagedOperation = {
+      id: root.binding.relationId,
+      operation: 'inner_join',
+      inputs: producers.map((producer) => index(producer).rootId),
+      configurationDocument: encodeDvtSubstraitSemanticDocument(document),
+    };
+    const before = structuredClone({ document, operation, producers });
+    const restored = decodeCanvasStagedOperation(
+      await restoreCanvasRetainedInputWrappers(operation, producers)
+    );
+    expect(restored).not.toBeNull();
+    const result = index(restored!);
+    expect(result.rootId).toBe(root.binding.relationId);
+    expect(result.relations.get(result.rootId)!.inputs).toEqual(operation.inputs);
+    expect(restored!.plan.version).toEqual(document.plan.version);
+    expect({ document, operation, producers }).toEqual(before);
+  });
+
   it.each(
     [0, 1].flatMap((port) =>
       ([['sort'], ['sort', 'fetch'], ['not_equal'], ['not_equal', 'sort', 'fetch']] as const).map(

@@ -1,7 +1,7 @@
 /**
  * Owned concern: prove composed input operations against real PostgreSQL rows.
  * @baseline GH-3578: placement, connection, configuration and execution are explicit gestures.
- * @decision Reuse current Workbench commands while retaining the original LEFT JOIN.
+ * @decision Await canonical JOIN restoration and durable save through current Workbench commands.
  * @consequence No sample is requested before Preview; its exact persisted SHA owns the rows.
  * @version 1.0.0
  */
@@ -115,7 +115,12 @@ describe('Selected input transformations through real PostgreSQL', () => {
       connectWorkbenchProducer(`@fetch-${port}`, '@join', port);
     }
     cy.get('[data-operator="filter"]').should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
+      'not.have.attr',
+      'data-pending'
+    );
     cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => readPersistedDocument(initial.semanticPlan.sha256)).then((document) => {
       persisted = document;
       const indexed = indexSubstraitRelations(decodeDvtSubstraitSemanticDocument(document));
