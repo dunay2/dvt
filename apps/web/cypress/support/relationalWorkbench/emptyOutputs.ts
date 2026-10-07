@@ -98,13 +98,18 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
   cy.get(`${controls}[data-included="true"]`).should(($selected) => {
     expect(baseline != null && baseline.outputs.length).to.equal($selected.length);
   });
-  cy.get(`${controls}[data-included="true"]`).then(($selected) => {
-    [...$selected].forEach((control, index) => {
-      const $control = Cypress.$(control);
-      cy.wrap($control).should('be.enabled').and('have.attr', 'data-included', 'true').click();
-      cy.wrap($control).should('have.attr', 'data-included', 'false');
-      assertSaved($selected.length - index - 1);
-    });
+  cy.get(`${controls}[data-included="true"]`).then(({ length }) => {
+    for (let index = 0; index < length; index += 1) {
+      const remaining = length - index - 1;
+      cy.get(`${controls}[data-included="true"]`)
+        .first()
+        .should('be.enabled')
+        .and('not.have.attr', 'aria-disabled', 'true')
+        .click();
+      cy.get(`${controls}[data-included="true"]`).should('have.length', remaining);
+      assertSaved(remaining);
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    }
   });
   cy.get(controls).should('have.attr', 'data-included', 'false');
   cy.get(`${controls}[data-included="true"]`).should('not.exist');
@@ -112,7 +117,12 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
   cy.get(controls).should('have.attr', 'data-included', 'false');
   cy.get(`${controls}[data-included="true"]`).should('not.exist');
   cy.screenshot(`empty-${sourceCount}-input-join`, { capture: 'viewport' });
-  cy.get(controls).first().should('be.enabled').click();
+  cy.get(controls)
+    .first()
+    .should('be.enabled')
+    .and('not.have.attr', 'aria-disabled', 'true')
+    .click();
   assertSaved(1);
+  cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
   cy.get(`${controls}[data-included="true"]`).should('have.length', 1);
 }
