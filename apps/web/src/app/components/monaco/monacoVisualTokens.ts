@@ -1,7 +1,7 @@
 /**
  * Owned concern: own Monaco visual tokens, theme, and editor option presets.
- * @baseline GH-3578: SQL literals must retain AA contrast in the shared dark surfaces.
- * @decision Inherit Monaco's palette and reuse its generic string color for SQL strings.
+ * @baseline GH-3578: SQL tokens must remain readable during occurrence highlighting.
+ * @decision Reuse string color and mark occurrences with a dark fill and visible border.
  * @consequence Code and Diff register one theme before mounting; lazy loading stays intact.
  * @version 1.0.0
  */
@@ -31,7 +31,10 @@ export function configureMonacoVisualTheme(
     base: 'vs-dark',
     inherit: true,
     rules: [{ token: 'string.sql', foreground: 'CE9178' }],
-    colors: {},
+    colors: {
+      'editor.wordHighlightBackground': '#00000040',
+      'editor.wordHighlightBorder': '#707070',
+    },
   });
 }
 

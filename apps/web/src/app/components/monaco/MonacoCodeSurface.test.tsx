@@ -75,7 +75,10 @@ describe('shared Monaco edit boundary', () => {
           base: 'vs-dark',
           inherit: true,
           rules: [{ token: 'string.sql', foreground: 'CE9178' }],
-          colors: {},
+          colors: {
+            'editor.wordHighlightBackground': '#00000040',
+            'editor.wordHighlightBorder': '#707070',
+          },
         });
       }
     } finally {

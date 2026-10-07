@@ -100,6 +100,11 @@ function readProjectCode(): Cypress.Chainable<string> {
           .get(editor)
           .find('.selected-text')
           .should('not.exist')
+          .get(`${editor} .wordHighlightText`)
+          .should('be.visible')
+          .and('have.css', 'background-color', 'rgba(0, 0, 0, 0.25)')
+          .and('have.css', 'border-color', 'rgb(112, 112, 112)')
+          .and('have.css', 'border-top-width', '1px')
           .then(() => clipboardData.getData('text/plain'));
       });
   });
@@ -126,7 +131,7 @@ function assertNoSeriousAccessibilityViolations(context: string): void {
           .map(
             (violation) =>
               `${violation.id}: ${violation.help} -> ${violation.nodes
-                .map((node) => node.target.join(' '))
+                .map((node) => `${node.target.join(' ')}: ${node.failureSummary}`)
                 .join(', ')}`
           )
           .join('\n')
