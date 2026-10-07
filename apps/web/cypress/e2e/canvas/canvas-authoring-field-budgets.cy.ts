@@ -55,6 +55,7 @@ function visitReadyCanvas(): void {
   waitForE2eApiCall('/healthz', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  cy.get('.react-flow__controls-fitview').click();
 }
 
 describe('Canvas authoring field budgets', () => {
