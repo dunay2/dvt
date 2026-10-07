@@ -7,6 +7,7 @@
  */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -56,12 +57,6 @@ function visitReadyCanvas(): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
-function openProperties(nodeId: string): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
-  cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
-  cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
-}
-
 describe('Canvas authoring field budgets', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
@@ -75,7 +70,7 @@ describe('Canvas authoring field budgets', () => {
 
     visitReadyCanvas();
 
-    openProperties('dvt-transform-1');
+    openWorkbenchProperties('dvt-transform-1');
 
     const composed = 'Órdenes 😀';
     cy.get('input[name="node-name"]')
@@ -162,19 +157,21 @@ describe('Canvas authoring field budgets', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitReadyCanvas();
-    openProperties('dvt-transform-1');
+    openWorkbenchProperties('dvt-transform-1');
     cy.get('input[name="node-name"]').should('have.value', 'Orders 2026');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
-    openProperties('source-1');
+    openWorkbenchProperties('source-1');
+    cy.get('input[name=dvt-source-alias]').clear();
     cy.get('input[name=dvt-source-alias]')
-      .clear()
+      .should('have.value', '')
       .type(' orders_source ')
       .should('have.value', ' orders_source ')
       .and('have.attr', 'aria-invalid', 'true');
     cy.contains('PostgreSQL identifiers cannot start or end with whitespace.').should('be.visible');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).should('be.disabled');
-    cy.get('input[name=dvt-source-alias]').clear().type('orders_source_v2');
+    cy.get('input[name=dvt-source-alias]').clear();
+    cy.get('input[name=dvt-source-alias]').should('have.value', '').type('orders_source_v2');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -188,16 +185,18 @@ describe('Canvas authoring field budgets', () => {
     });
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
-    openProperties('sink-1');
+    openWorkbenchProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
+    cy.get('input[name=dvt-sink-schema]').clear();
     cy.get('input[name=dvt-sink-schema]')
-      .clear()
+      .should('have.value', '')
       .type(' marts ')
       .should('have.value', ' marts ')
       .and('have.attr', 'aria-invalid', 'true');
     cy.contains('PostgreSQL identifiers cannot start or end with whitespace.').should('be.visible');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).should('be.disabled');
-    cy.get('input[name=dvt-sink-schema]').clear().type('marts_v2');
+    cy.get('input[name=dvt-sink-schema]').clear();
+    cy.get('input[name=dvt-sink-schema]').should('have.value', '').type('marts_v2');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -212,10 +211,10 @@ describe('Canvas authoring field budgets', () => {
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
     visitReadyCanvas();
-    openProperties('source-1');
+    openWorkbenchProperties('source-1');
     cy.get('input[name=dvt-source-alias]').should('have.value', 'orders_source_v2');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
-    openProperties('sink-1');
+    openWorkbenchProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
     cy.get('input[name=dvt-sink-schema]').should('have.value', 'marts_v2');
   });
