@@ -20,7 +20,6 @@ import {
   readLiveRunEvents,
   readLiveRunSnapshot,
   visitWithLiveWorkspaceSession,
-  waitForLiveWorkspaceFileContent,
 } from '../../support/liveProtectedRuntime';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
@@ -75,11 +74,27 @@ function authorLongRunningModel(): void {
     MODEL_PATH
   );
   cy.get('[data-testid="monaco-code-editor"]', { timeout: 20_000 }).find('.view-lines').click();
+  cy.intercept({
+    method: 'GET',
+    pathname: '/workspace/dbt/graph',
+    query: { canvasId: CANVAS_ID, projectRoot: PROJECT_ROOT },
+  }).as('reconciledRunProject');
+  cy.intercept('GET', `**/workspace/files/${encodeURIComponent(MODEL_PATH)}?*`).as(
+    'reconciledRunFile'
+  );
   cy.focused()
     .should(($editor) => expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true))
     .type('{ctrl+a}{backspace}', { delay: 0 });
   cy.focused().type(LONG_RUNNING_SQL, { parseSpecialCharSequences: false, delay: 0 });
-  waitForLiveWorkspaceFileContent(MODEL_PATH, LONG_RUNNING_SQL);
+  cy.wait('@reconciledRunProject').then(({ response }) => {
+    expect(response?.statusCode).to.equal(200);
+    expect(response?.body.freshness).to.equal('fresh');
+  });
+  cy.wait('@reconciledRunFile').then(({ response }) => {
+    expect(response?.statusCode).to.equal(200);
+    expect(response?.body.path).to.equal(MODEL_PATH);
+    expect(response?.body.content).to.equal(LONG_RUNNING_SQL);
+  });
   cy.get('[data-slot="code-working-tree-status"]').should(
     'have.attr',
     'data-phase',
