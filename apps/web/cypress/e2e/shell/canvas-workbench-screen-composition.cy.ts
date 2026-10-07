@@ -25,6 +25,7 @@ import {
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
@@ -1065,8 +1066,7 @@ describe('Canvas workbench screen composition', () => {
     assertDependencyDirectionCues();
     cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
-    openCanvasNodeOperations('model_orders');
-    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Propiedades$/).click();
+    openWorkbenchProperties('model_orders');
     cy.get('[data-slot="canvas-node-workbench-panel"] h2')
       .should('be.visible')
       .and('have.text', 'model_orders');
@@ -1084,35 +1084,16 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');
 
-    cy.get('@orphanNode')
-      .find('[data-slot="canvas-node-shell"]')
-      .should('be.visible')
-      .focus()
-      .should('be.focused');
-    openCanvasNodeOperations('orphan_metrics');
-    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Propiedades$/).click();
+    openWorkbenchProperties('orphan_metrics');
     cy.get('[data-slot="canvas-node-workbench-panel"] h2')
       .should('be.visible')
       .and('have.text', 'orphan_metrics');
-    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
-    cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('@orphanNode').find('[data-slot="canvas-node-shell"]').should('be.focused');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('@orphanNode').should('be.focused');
 
     cy.get('.react-flow__controls-fitview').should('be.visible').click();
-    cy.get('.react-flow__node[data-id="src_orders"] [data-slot="canvas-node-shell"]')
-      .should('be.visible')
-      .focus()
-      .should('be.focused');
-    openCanvasNodeOperations('src_orders');
-    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Propiedades$/).click();
-    cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
-    cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('.react-flow__node[data-id="src_orders"] [data-slot="canvas-node-shell"]').should(
-      'be.focused'
-    );
+    openWorkbenchProperties('src_orders');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('.react-flow__node[data-id="src_orders"]').should('be.focused');
