@@ -978,6 +978,9 @@ describe('Canvas workbench screen composition', () => {
       .and('have.attr', 'aria-invalid', 'false');
     cy.get('[data-slot="canvas-properties-grid-visible"]').click();
     cy.get('[data-slot="workbench-properties-apply"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-settings-dialog"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('[data-slot="canvas-viewport-context-surface"]').should('be.focused');
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-canvas-settings"]').click();
