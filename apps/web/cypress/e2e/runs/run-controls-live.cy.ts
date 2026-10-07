@@ -5,6 +5,8 @@
  * @consequence Original and descendant runs retain the same persisted plan identity.
  * @version 1.0.0
  */
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
+
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   selectCanvasClosure,
@@ -164,9 +166,28 @@ describe('Run controls live protected runtime', () => {
     seedLiveWorkspaceFiles(PROJECT_FILES).then(() =>
       adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID)
     );
+    cy.intercept({
+      method: 'GET',
+      pathname: '/workspace/dbt/graph',
+      query: { canvasId: CANVAS_ID, projectRoot: PROJECT_ROOT },
+    }).as('initialRunProject');
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`
     );
+    cy.wait<unknown, DbtProjectGraphProjection>('@initialRunProject', {
+      requestTimeout: 20_000,
+    }).then(({ response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(response?.body.freshness).to.equal('fresh');
+      expect(response?.body.authorityBinding.canvasId).to.equal(CANVAS_ID);
+      expect(response?.body.authorityBinding.authority).to.deep.include({
+        kind: 'dbt-project-files',
+        projectRoot: PROJECT_ROOT,
+      });
+      expect(response?.body.nodes.find((node) => node.uniqueId === MODEL_ID)).to.include({
+        resourceType: 'model',
+      });
+    });
     authorLongRunningModel();
     selectCanvasClosure([MODEL_ID]);
     cy.intercept('POST', '**/plans/preview').as('runControlsPreview');
