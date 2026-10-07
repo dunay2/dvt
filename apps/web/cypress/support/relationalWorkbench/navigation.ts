@@ -25,9 +25,9 @@ export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
 }
 
 export function openWorkbenchModel(nodeId = 'join-transform'): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`)
+  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`)
     .should('be.visible')
-    .dblclick(40, 18);
+    .dblclick();
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
 }
 

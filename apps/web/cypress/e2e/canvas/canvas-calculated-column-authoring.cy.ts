@@ -202,6 +202,7 @@ describe('Canvas calculated-column authoring', () => {
     cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
     cy.get('input[name="node-name"]').should('have.value', 'Orders model');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     composeProjection('model-orders', 'Orders source');
     renameOutput('customer', 'customer_alias');
     let fieldId = '';
