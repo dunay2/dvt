@@ -958,6 +958,9 @@ describe('Canvas workbench screen composition', () => {
     emulateBrowserZoom(2, { width: 1920, height: 1080 });
     assertCanvasPropertiesFitsViewport(960, 540);
     cy.get('[data-slot="workbench-properties-cancel"]').click();
+    cy.get('[data-slot="canvas-settings-dialog"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('[data-slot="canvas-viewport-context-surface"]').should('be.focused');
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-add-node-catalog"]').click();
