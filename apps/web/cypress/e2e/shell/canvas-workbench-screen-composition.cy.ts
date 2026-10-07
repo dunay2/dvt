@@ -59,6 +59,51 @@ where metric_date >= current_date
 const ALTERNATE_MODEL_PATH = 'models/staging/alternate_orders.sql';
 const ALTERNATE_MODEL_SQL = `select order_id, status
 from staging.alternate_orders`;
+const CLIPBOARD_EOL = Cypress.platform === 'win32' ? '\r\n' : '\n';
+
+/** Copy through the focused editor; rendered lines contain visual wrapping indentation. */
+function readProjectCode(): Cypress.Chainable<string> {
+  const editor = '[data-slot="canvas-contextual-workbench"] .monaco-editor';
+  const selectAll = {
+    key: 'a',
+    code: 'KeyA',
+    keyCode: 65,
+    ctrlKey: Cypress.platform !== 'darwin',
+    metaKey: Cypress.platform === 'darwin',
+    bubbles: true,
+    cancelable: true,
+  };
+  cy.get(editor).find('.view-line').first().click();
+  return cy.window().then((window) => {
+    const clipboardData = new window.DataTransfer();
+    return cy
+      .get(editor)
+      .find('textarea.inputarea')
+      .should('be.focused')
+      .then(($input) => {
+        $input[0]!.dispatchEvent(new window.KeyboardEvent('keydown', selectAll));
+        $input[0]!.dispatchEvent(new window.KeyboardEvent('keyup', selectAll));
+        expect(window.document.activeElement).to.equal($input[0]);
+        $input[0]!.dispatchEvent(
+          new window.ClipboardEvent('copy', { clipboardData, bubbles: true, cancelable: true })
+        );
+        const collapseSelection = {
+          key: 'ArrowLeft',
+          code: 'ArrowLeft',
+          keyCode: 37,
+          bubbles: true,
+          cancelable: true,
+        };
+        $input[0]!.dispatchEvent(new window.KeyboardEvent('keydown', collapseSelection));
+        $input[0]!.dispatchEvent(new window.KeyboardEvent('keyup', collapseSelection));
+        return cy
+          .get(editor)
+          .find('.selected-text')
+          .should('not.exist')
+          .then(() => clipboardData.getData('text/plain'));
+      });
+  });
+}
 
 function assertNoSeriousAccessibilityViolations(context: string): void {
   cy.get(context).should('be.visible');
@@ -568,15 +613,7 @@ describe('Canvas workbench screen composition', () => {
     }
     cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`).click();
     waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
-    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
-      .find('.view-line')
-      .should('have.length.at.least', 4)
-      .then(($lines) => {
-        const renderedLines = [...$lines].map((line) =>
-          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
-        );
-        expect(renderedLines.join('\n')).to.equal(MODEL_SQL);
-      });
+    readProjectCode().should('equal', MODEL_SQL.replaceAll('\n', CLIPBOARD_EOL));
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
 
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
@@ -636,14 +673,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`).should(
       'not.exist'
     );
-    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
-      .find('.view-line')
-      .should(($lines) => {
-        const renderedLines = [...$lines].map((line) =>
-          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
-        );
-        expect(renderedLines.join('\n')).to.equal(ALTERNATE_MODEL_SQL);
-      });
+    readProjectCode().should('equal', ALTERNATE_MODEL_SQL.replaceAll('\n', CLIPBOARD_EOL));
     cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.then(() => {
       for (const { body } of getE2eApiCalls('/workspace/graph/draft', 'PUT')) {
@@ -1113,17 +1143,15 @@ describe('Canvas workbench screen composition', () => {
         .should('be.visible')
         .click();
       waitForE2eApiCall(`/workspace/files/${encodeURIComponent(path)}`, 'GET');
-      cy.get('[data-slot="canvas-contextual-workbench"] [data-testid="monaco-code-viewer"]')
-        .find('.view-line')
-        .should(($lines) => {
-          const renderedSql = [...$lines]
-            .map((line) => (line.textContent ?? '').replaceAll('\u00a0', ' '))
-            .join('');
-          expect(renderedSql).to.equal(sql.replaceAll('\n', ''));
-          expect(renderedSql).not.to.equal(
-            (path === MODEL_PATH ? ORPHAN_SQL : MODEL_SQL).replaceAll('\n', '')
-          );
-        });
+      cy.get('[data-slot="canvas-contextual-workbench"] [data-testid="monaco-code-viewer"]').should(
+        'be.visible'
+      );
+      readProjectCode()
+        .should('equal', sql.replaceAll('\n', CLIPBOARD_EOL))
+        .and(
+          'not.equal',
+          (path === MODEL_PATH ? ORPHAN_SQL : MODEL_SQL).replaceAll('\n', CLIPBOARD_EOL)
+        );
       assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
       cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
       cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
