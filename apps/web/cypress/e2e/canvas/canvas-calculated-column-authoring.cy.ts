@@ -19,6 +19,7 @@ import {
 } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
+  openWorkbenchProperties,
   revisitWorkbenchCanvas,
   dragWorkbenchSource,
   connectWorkbenchProducer,
@@ -198,11 +199,11 @@ describe('Canvas calculated-column authoring', () => {
     cy.get('[data-slot="canvas-model-main-tab"]').should('have.attr', 'aria-selected', 'true');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(node).find('[data-slot="canvas-node-shell"]').rightclick();
-    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
+    openWorkbenchProperties('model-orders');
     cy.get('input[name="node-name"]').should('have.value', 'Orders model');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    cy.get(node).should('be.focused');
     composeProjection('model-orders', 'Orders source');
     renameOutput('customer', 'customer_alias');
     let fieldId = '';
