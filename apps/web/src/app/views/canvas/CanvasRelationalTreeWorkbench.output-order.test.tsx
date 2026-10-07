@@ -176,6 +176,7 @@ describe('direct output ordering', () => {
         await move();
       }
       expect(ids()).toEqual([before[1], before[0], ...before.slice(2)]);
+      expect(container.querySelector('[role="alert"]')).toBeNull();
       expect(handle.current!.hasUnappliedChanges).toBe(false);
       expect(
         container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
