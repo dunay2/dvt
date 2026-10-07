@@ -32,6 +32,7 @@ describe('selected unary removal lifetime', () => {
         document: draft,
         session,
         revision: session.revision,
+        permissionIdentity: '[[],[]]',
         error: null,
         refresh: vi.fn(),
       };
