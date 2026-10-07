@@ -1,9 +1,9 @@
 /**
  * Owned concern: bridge document boundaries and commands to one revisioned analysis session.
- * @baseline GH-3596: retained JOIN output editing does not grant Input publication.
- * @decision Carry graph-derived disconnected provenance beside normal denial in the same session.
- * @consequence Only final JOIN output queries and validated emit edits consume that permission.
- * @version 1.1.0
+ * @baseline GH-3596 / GH-3578: retained edits use canonical snapshots, not acknowledgement objects.
+ * @decision Update eligibility facts but preserve the accepted snapshot for equivalent documents.
+ * @consequence In-flight operand identities survive ACKs without weakening retained-output guards.
+ * @version 1.2.0
  */
 import {
   RelationAnalysisSession,
@@ -48,10 +48,7 @@ export class CanvasRelationAnalysisSession {
     this.disconnectedInputs = disconnectedInputs;
     // Full-document acknowledgements can allocate new objects without changing authority.
     // Local edits retain the identity fast path and the existing incremental change rail.
-    if (this.hasDocument(document)) {
-      this.accepted = document;
-      return;
-    }
+    if (this.hasDocument(document)) return;
     if (document == null) this.dispose();
     else if (this.analysis == null)
       this.analysis = new RelationAnalysisSession({ document, scope: this.scope });

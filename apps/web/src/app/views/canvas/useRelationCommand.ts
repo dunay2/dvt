@@ -1,4 +1,10 @@
-/** Execute one local revision-bound command; discard completions after selection or document changes. */
+/**
+ * Owned concern: bind one pending relation command to its accepted semantic authority.
+ * @baseline GH-3578: equivalent save acknowledgements must not discard an in-flight intent.
+ * @decision Cancel by session, revision, relation and eligibility rather than React wrapper identity.
+ * @consequence Busy survives equivalent refreshes; authority changes and unmount still abort.
+ * @version 1.0.0
+ */
 import { useContext, useEffect, useRef, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
@@ -25,15 +31,16 @@ export function useRelationCommand(
   const analysis = owner === undefined ? context : owner;
   const pending = useRef<AbortController | null>(null);
   const [state, setState] = useState<'idle' | 'busy' | 'error'>('idle');
+  const session = analysis?.error == null ? analysis?.session : undefined;
+  const revision = analysis?.revision;
+  const permissionIdentity = analysis?.permissionIdentity;
   useEffect(() => {
     setState('idle');
-  }, [analysis?.document, relationId]);
-  useEffect(() => {
     return () => {
       pending.current?.abort();
       pending.current = null;
     };
-  }, [analysis, relationId]);
+  }, [session, revision, relationId, permissionIdentity]);
   const executeAtDetailed = async (
     targetRelationId: string,
     command: Command

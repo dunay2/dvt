@@ -1,9 +1,9 @@
 /**
- * Owned concern: bind React lifetime to the existing canonical analysis session.
- * @baseline GH-3596: graph-derived publication and retained-output facts share one revision owner.
- * @decision Forward eligibility facts without introducing presentation-owned permission state.
- * @consequence A graph change refreshes consumers while canonical revision checks stay intact.
- * @version 1.1.0
+ * Owned concern: expose the canonical session and its accepted graph-derived eligibility.
+ * @baseline GH-3596 / GH-3578: equivalent acknowledgements do not change command authority.
+ * @decision Identify both eligibility sets by content alongside the accepted revision.
+ * @consequence React wrapper refreshes remain distinct from semantic or permission changes.
+ * @version 1.2.0
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
@@ -33,16 +33,22 @@ export function useCanvasRelationAnalysisSession(
     document: SubstraitDocument | null;
     session: CanvasRelationAnalysisSession;
     revision: number;
+    permissionIdentity: string;
     error: unknown;
   } | null>(null);
   useEffect(() => () => session.dispose(), [session]);
   useEffect(() => {
+    const permissionIdentity = JSON.stringify(
+      [deniedInputs, disconnectedInputs].map((fields) =>
+        [...(fields ?? [])].sort((left, right) => (left < right ? -1 : left > right ? 1 : 0))
+      )
+    );
     try {
       session.receive(document, deniedInputs, disconnectedInputs);
-      setReady({ document, session, revision: session.revision, error: null });
+      setReady({ document, session, revision: session.revision, permissionIdentity, error: null });
     } catch (error) {
       session.dispose();
-      setReady({ document, session, revision: session.revision, error });
+      setReady({ document, session, revision: session.revision, permissionIdentity, error });
     }
   }, [document, session, deniedInputs, disconnectedInputs]);
   const refresh = useCallback(() => {
