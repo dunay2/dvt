@@ -101,6 +101,9 @@ function authorLongRunningModel(): void {
   );
   cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+  cy.get(`.react-flow__node[data-id="${MODEL_ID}"]`)
+    .find('[data-slot="graph-node-metric-row"][data-placement="header"]')
+    .should('contain.text', 'table');
 }
 
 function cancelRun(runId: string, planId: string): Cypress.Chainable<void> {

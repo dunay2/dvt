@@ -125,6 +125,31 @@ describe('buildGraphNodeCardReadModel', () => {
     });
   });
 
+  it.each([
+    { materialized: 'table', expected: 'table' },
+    { materialized: 'incremental', expected: 'incremental' },
+    { materialized: undefined, expected: 'Not configured' },
+  ])(
+    'uses file authority materialization $materialized without draft defaults',
+    ({ materialized, expected }) => {
+      const model = buildGraphNodeCardReadModel(
+        buildNode({
+          kind: 'dvt:transform',
+          role: 'transform',
+          metadata: {
+            authority: 'dbt-project-files',
+            materialized,
+            config: { materialized: 'view' },
+          },
+        }),
+        {},
+        CARD_STRATEGIES
+      );
+
+      expect(model.metrics[0]?.value).toBe(expected);
+    }
+  );
+
   it('does not default materialization for another plugin', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({ kind: 'dvt:transform', pluginId: 'custom', role: 'transform' }),
@@ -856,9 +881,7 @@ describe('buildGraphNodeCardReadModel', () => {
           authority: 'dbt-project-files',
           package: 'analytics',
           dependencies: ['source.raw.orders', 'ref.stg_customers'],
-          config: {
-            materialized: 'incremental',
-          },
+          materialized: 'incremental',
           columns: [{ name: 'order_id', type: 'integer' }],
         },
       }),
