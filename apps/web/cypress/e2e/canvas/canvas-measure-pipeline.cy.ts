@@ -28,7 +28,6 @@ import {
   semanticWrites,
 } from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
-import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 function inspectSavedWindow(relationId: string, language: 'en' | 'es'): void {
   cy.get(`[data-operator="project"][data-relation-id="${relationId}"]`).rightclick();
@@ -122,9 +121,8 @@ describe('measure-pipeline', () => {
       cy.then(() =>
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(savedWriteCount)
       );
-      revisitWorkbenchCanvas(() => visitWithE2eWorkspaceSession('/canvas'));
+      revisitWorkbenchCanvas(() => visitWorkbenchCanvas('es'));
       openWorkbenchModel(union ? 'union-transform' : 'join-transform');
-      // The workspace-session fixture restores the default Spanish locale on reload.
       cy.then(() => inspectSavedWindow(savedRootId, 'es'));
       cy.then(() =>
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(savedWriteCount)
