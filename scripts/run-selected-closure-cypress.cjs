@@ -2,7 +2,7 @@
 /**
  * Owned concern: validate exact native Cypress evidence, never provision its runtime.
  * @baseline GH-3578: exit zero is not proof of complete spec execution.
- * @decision Share structured result validation between literal LIVE and controlled batch consumers.
+ * @decision Run each literal request list once and share strict validation with controlled batches.
  * @consequence Missing, duplicate, skipped or inconsistent results reject without leaking configuration.
  * @version 1.0.0
  */
@@ -83,15 +83,15 @@ function validateCypressProofResult(result, expectedSpecs) {
 }
 
 async function main(argv = process.argv.slice(2), deps = {}) {
-  const spec = argv[1];
   if (
     (argv.length !== 2 && argv.length !== 3) ||
     argv[0] !== '--spec' ||
+    typeof argv[1] !== 'string' ||
     (argv.length === 3 && argv[2] !== '--headed')
   ) {
-    throw new Error('Native proof requires one literal Cypress spec and optional --headed.');
+    throw new Error('Native proof requires literal Cypress specs and optional --headed.');
   }
-  validateCypressProofSpecs([spec]);
+  const specs = validateCypressProofSpecs(argv[1].replaceAll('\\', '/').split(','));
   const project = path.resolve(__dirname, '../apps/web');
   const evidenceRoot = path.resolve(__dirname, '../.dvt/evidence/selected-closure');
   const run =
@@ -107,7 +107,7 @@ async function main(argv = process.argv.slice(2), deps = {}) {
         downloadsFolder: path.join(evidenceRoot, 'downloads'),
         videosFolder: path.join(evidenceRoot, 'videos'),
       },
-      spec: path.resolve(project, spec),
+      spec: specs.map((spec) => path.resolve(project, spec)).join(','),
       browser: 'chrome',
       headed: argv.includes('--headed'),
     });
@@ -115,9 +115,9 @@ async function main(argv = process.argv.slice(2), deps = {}) {
     // Cypress configuration includes credentials; never dump its result or exception payload.
     throw new Error('Cypress native execution failed');
   }
-  const evidence = validateCypressProofResult(result, [spec]);
+  const evidence = validateCypressProofResult(result, specs);
   (deps.log ?? console.log)(
-    `[selected-closure-live] Cypress proof: ${evidence.passed} passed (${spec})`
+    `[selected-closure-live] Cypress proof: ${evidence.passed} passed (${specs.join(',')})`
   );
   return evidence;
 }

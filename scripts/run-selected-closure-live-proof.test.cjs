@@ -27,7 +27,7 @@ const {
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
-  resolveLiveProofSpecPath,
+  resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
   startLiveProofOutboxWorker,
@@ -238,11 +238,10 @@ test('outbox startup owns its process before waiting and requires a fresh active
   }
 });
 
-test('resolveLiveProofSpecPath keeps the selected-closure proof as the default', () => {
-  assert.equal(
-    resolveLiveProofSpecPath([]),
-    '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts'
-  );
+test('resolveLiveProofSpecPaths keeps the selected-closure proof as the default', () => {
+  assert.deepEqual(resolveLiveProofSpecPaths([]), [
+    '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+  ]);
 });
 
 test('uses the configured Temporal test server binary for the live proof', () => {
@@ -261,13 +260,21 @@ test('uses the configured Temporal test server binary for the live proof', () =>
   );
 });
 
-test('resolveLiveProofSpecPath maps a governed repository Cypress spec into the proof container', () => {
-  assert.equal(
-    resolveLiveProofSpecPath([
+test('resolveLiveProofSpecPaths maps literal repository specs into one proof container', () => {
+  assert.deepEqual(
+    resolveLiveProofSpecPaths([
       '--spec',
       'apps\\web\\cypress\\e2e\\canvas\\canvas-dbt-author-code-run-live.cy.ts',
     ]),
-    '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts'
+    ['/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts']
+  );
+  const specs = [
+    'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts',
+  ];
+  assert.deepEqual(
+    resolveLiveProofSpecPaths(['--spec', specs.join(',')]),
+    specs.map((spec) => `/repo/${spec}`)
   );
 });
 
@@ -279,7 +286,7 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
         webPort: 4174,
         apiBearerToken: 'proof-token',
         restrictedApiBearerToken: 'restricted-proof-token',
-        specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+        specPaths: ['/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts'],
         workspaceScope: {
           tenantId: 'tenant',
           projectId: 'project',
@@ -337,7 +344,7 @@ test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets rea
       webPort: 4174,
       apiBearerToken: 'proof-token',
       restrictedApiBearerToken: 'restricted-proof-token',
-      specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+      specPaths: ['/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts'],
       workspaceScope: {
         tenantId: 'tenant',
         projectId: 'project',
@@ -369,7 +376,7 @@ test('buildLiveProofCypressNativeInvocation targets the already running host sta
       webPort: 4174,
       apiBearerToken: 'proof-token',
       restrictedApiBearerToken: 'restricted-proof-token',
-      specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+      specPaths: ['/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts'],
       workspaceScope: {
         tenantId: 'tenant',
         projectId: 'project',
@@ -405,7 +412,9 @@ test('buildLiveProofCypressNativeInvocation opens Chrome only when headed is exp
     apiPort: 3300,
     webPort: 4174,
     apiBearerToken: 'proof-token',
-    specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+    specPaths: [
+      '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+    ],
     workspaceScope: {
       tenantId: 'tenant',
       projectId: 'project',
@@ -426,11 +435,15 @@ test('native and manual Docker browser children are registered before awaiting a
     apiPort: 3300,
     webPort: 4174,
     apiBearerToken: 'secret-token',
-    specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+    specPaths: [
+      '/repo/apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+      '/repo/apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts',
+    ],
     workspaceScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' },
   };
   for (const runtime of ['native', 'docker']) {
     const handles = [];
+    let spawns = 0;
     let complete;
     const handle = {
       completion: new Promise((resolve) => {
@@ -439,15 +452,25 @@ test('native and manual Docker browser children are registered before awaiting a
     };
     const proof = runCypress(args, runtime, handles, {
       spawnLiveProofProcess: (_name, _command, argv, options) => {
+        spawns += 1;
+        const requestedSpecs = argv[argv.indexOf('--spec') + 1];
+        assert.equal(
+          requestedSpecs,
+          args.specPaths
+            .map((spec) => (runtime === 'native' ? spec.slice('/repo/apps/web/'.length) : spec))
+            .join(',')
+        );
         assert.doesNotMatch(JSON.stringify(argv), /secret-token/);
         assert.equal(options.env.CYPRESS_apiBearerToken, 'secret-token');
         assert.equal(options.shell, false);
         return handle;
       },
     });
-    assert.deepEqual(handles, [handle]);
+    const registeredBeforeCompletion = [...handles];
     complete({ code: 0, signal: null });
     await proof;
+    assert.deepEqual(registeredBeforeCompletion, [handle]);
+    assert.equal(spawns, 1, 'all specs share one browser child and the existing runtime');
   }
   for (const outcome of [
     { code: 1, signal: null },
@@ -518,14 +541,14 @@ test('live proof reuses an explicit database and otherwise keeps local bootstrap
   });
 });
 
-test('resolveLiveProofSpecPath rejects paths outside the governed Cypress E2E surface', () => {
+test('resolveLiveProofSpecPaths rejects paths outside the governed Cypress E2E surface', () => {
   assert.throws(
-    () => resolveLiveProofSpecPath(['--spec', '../canvas-dbt-author-code-run-live.cy.ts']),
+    () => resolveLiveProofSpecPaths(['--spec', '../canvas-dbt-author-code-run-live.cy.ts']),
     /inside apps\/web\/cypress\/e2e/
   );
   assert.throws(
     () =>
-      resolveLiveProofSpecPath([
+      resolveLiveProofSpecPaths([
         '--spec',
         'apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx',
       ]),
@@ -533,26 +556,44 @@ test('resolveLiveProofSpecPath rejects paths outside the governed Cypress E2E su
   );
   assert.throws(
     () =>
-      resolveLiveProofSpecPath([
+      resolveLiveProofSpecPaths([
         '--spec',
         'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.ts',
       ]),
-    /must end in \.cy\.ts/
+    /literal Cypress spec/
   );
 });
 
-test('resolveLiveProofSpecPath rejects spec lists and glob patterns', () => {
-  assert.throws(
-    () =>
-      resolveLiveProofSpecPath([
-        '--spec',
-        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts,apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
-      ]),
-    /exactly one literal Cypress spec path/
+test('resolveLiveProofSpecPaths rejects malformed, duplicate and broad lists before bootstrap', async () => {
+  const spec = 'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts';
+  for (const selection of [
+    'apps/web/cypress/e2e/**/*.cy.ts',
+    `${spec},${spec}`,
+    `${spec},${spec.replaceAll('/', '\\')}`,
+    `${spec},`,
+    `,${spec}`,
+    `${spec},apps/web/cypress/e2e/../bad.cy.ts`,
+    `${spec},apps/web/cypress/e2e//bad.cy.ts`,
+    `${spec},apps/web/cypress/e2e/./bad.cy.ts`,
+    `${spec},apps/web/cypress/e2e/canvas/bad.cy.ts;echo`,
+  ]) {
+    assert.throws(
+      () => resolveLiveProofSpecPaths(['--spec', selection]),
+      /Cypress spec|inside apps/
+    );
+  }
+  const source = await readFile(
+    path.join(__dirname, 'run-selected-closure-live-proof.cjs'),
+    'utf8'
   );
-  assert.throws(
-    () => resolveLiveProofSpecPath(['--spec', 'apps/web/cypress/e2e/**/*.cy.ts']),
-    /exactly one literal Cypress spec path/
+  const main = source.slice(source.indexOf('async function main()'));
+  assert.ok(main.indexOf('resolveLiveProofSpecPaths()') > 0);
+  assert.ok(
+    main.indexOf('resolveLiveProofSpecPaths()') < main.indexOf('resolveLiveProofDbtExecutable()')
+  );
+  assert.ok(
+    main.indexOf('resolveLiveProofSpecPaths()') <
+      main.indexOf('allocateDisposablePostgresDatabase(')
   );
 });
 

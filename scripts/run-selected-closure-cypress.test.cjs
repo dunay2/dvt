@@ -2,7 +2,7 @@
  * Owned concern: prove exact Cypress execution evidence independently of runtime provisioning.
  * @baseline GH-3578: process exit zero does not prove complete browser coverage.
  * @decision Exercise one shared result validator with exact spec lists and malformed receipts.
- * @consequence LIVE keeps one literal spec while controlled batches cannot omit or duplicate evidence.
+ * @consequence Single and batched LIVE requests cannot omit or duplicate executed evidence.
  * @version 1.0.0
  */
 const assert = require('node:assert/strict');
@@ -46,11 +46,25 @@ test('only one exact fully executed spec yields bounded evidence without Cypress
   });
 });
 
-test('an exact batch accepts execution order changes but not missing or duplicate specs', () => {
+test('an exact batch runs once and accepts execution order changes but not incomplete evidence', async () => {
   const specs = [spec, 'cypress/e2e/canvas/canvas-model-session.cy.ts'];
   const result = successful(specs);
   result.runs.reverse();
   assert.deepEqual(validateCypressProofResult(result, specs), { specs, tests: 6, passed: 6 });
+  const invocations = [];
+  const evidence = await main(['--spec', specs.join(',')], {
+    run: async (options) => {
+      invocations.push(options);
+      return result;
+    },
+    log: () => undefined,
+  });
+  assert.equal(invocations.length, 1);
+  assert.equal(
+    invocations[0].spec,
+    specs.map((value) => path.resolve(__dirname, '../apps/web', value)).join(',')
+  );
+  assert.deepEqual(evidence, { specs, tests: 6, passed: 6 });
   for (const runs of [
     [result.runs[0]],
     [result.runs[0], result.runs[0]],
@@ -231,6 +245,11 @@ test('native adapter rejects broad or malformed inputs before browser execution'
     ['--spec', '../bad.cy.ts'],
     ['--spec', 'cypress/e2e/**/*.cy.ts'],
     ['--spec', `${spec},other.cy.ts`],
+    ['--spec', `${spec},${spec}`],
+    ['--spec', `${spec},${spec.replaceAll('/', '\\')}`],
+    ['--spec', `${spec},`],
+    ['--spec', `,${spec}`],
+    ['--spec', `${spec},cypress/e2e/../bad.cy.ts`],
     ['--spec', spec, '--headed', 'false'],
   ]) {
     await assert.rejects(
