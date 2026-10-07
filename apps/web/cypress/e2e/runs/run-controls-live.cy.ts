@@ -6,7 +6,6 @@
  * @version 1.0.0
  */
 import {
-  clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
@@ -167,9 +166,11 @@ describe('Run controls live protected runtime', () => {
     );
     authorLongRunningModel();
     selectCanvasClosure([MODEL_ID]);
+    cy.intercept('POST', '**/plans/preview').as('runControlsPreview');
     clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.contains('Execution Preview', { timeout: 20_000 }).should('be.visible');
-    clickButtonNatively('Start Run');
+    cy.wait('@runControlsPreview').its('response.statusCode').should('equal', 200);
+    cy.get('[data-testid="plan-preview-modal"]').should('be.visible');
+    cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
 
     cy.location('pathname', { timeout: 20_000 })
       .should('match', /^\/runs\/[^/]+$/)
