@@ -1,9 +1,9 @@
 /**
  * Owned concern: bridge document boundaries and commands to one revisioned analysis session.
  * @baseline GH-3596 / GH-3578: retained edits use canonical snapshots, not acknowledgement objects.
- * @decision Update eligibility facts but preserve the accepted snapshot for equivalent documents.
- * @consequence In-flight operand identities survive ACKs without weakening retained-output guards.
- * @version 1.2.0
+ * @decision Receive updates eligibility; restoring a rejected document preserves the current facts.
+ * @consequence Equivalent ACKs preserve operand identity and rollback cannot relax output guards.
+ * @version 1.3.0
  */
 import {
   RelationAnalysisSession,
@@ -55,6 +55,10 @@ export class CanvasRelationAnalysisSession {
     else this.analysis.replace(document, this.analysis.revision);
     this.accepted = document;
     this.reindexSources(document);
+  }
+
+  restoreDocument(document: SubstraitDocument): void {
+    this.receive(document, this.deniedInputs, this.disconnectedInputs);
   }
 
   hasDocument(document: SubstraitDocument | null): boolean {

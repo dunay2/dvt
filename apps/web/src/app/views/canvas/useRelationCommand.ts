@@ -79,7 +79,7 @@ export function useRelationCommand(
       });
       controller.signal.throwIfAborted();
       if (onChange(document) === false) {
-        analysis.session.receive(analysis.document);
+        analysis.session.restoreDocument(analysis.document);
         analysis.refresh();
         setState({ ...authority, revision: analysis.session.revision, value: 'error' });
         return { ok: false };

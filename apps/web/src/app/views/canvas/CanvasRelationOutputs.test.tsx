@@ -2,9 +2,9 @@
 /**
  * Owned concern: prove output edits retain their canonical command authority across React refreshes.
  * @baseline GH-3578: an equivalent save acknowledgement must not cancel an accepted output intent.
- * @decision Exercise the real session and output command with one deferred call-through query.
- * @consequence Authority changes cancel publication; wrapper and equal-permission refreshes do not.
- * @version 1.0.0
+ * @decision Exercise rejected publication and one deferred call-through query on the real session.
+ * @consequence Rollback retains eligibility and feedback; changed authority cancels obsolete intents.
+ * @version 1.1.0
  */
 import { fireEvent } from '@testing-library/dom';
 import { act, useState, type ReactElement } from 'react';
@@ -122,6 +122,68 @@ describe.each(Object.entries(documents))(
 
 describe('output command authority during acknowledgement', () => {
   setupWorkbenchTest();
+
+  it('preserves eligibility and rejection feedback through rollback without reviving stale errors', async () => {
+    const initial = documents.join();
+    const input = initial.sidecar.relations.find((entry) => entry.sourceRef != null)!;
+    const denied = new Set(
+      initial.sidecar.fields
+        .filter((field) => field.relationId === input.relationId)
+        .map((field) => field.fieldId)
+    );
+    const disconnected = new Set(denied);
+    let draft = initial;
+    let selected: string | undefined;
+    let analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
+    const reject = vi.fn(() => false);
+    function Host(): ReactElement {
+      analysis = useCanvasRelationAnalysisSession(
+        draft,
+        'rejected-output',
+        undefined,
+        denied,
+        disconnected
+      );
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          {analysis?.document != null && analysis.error == null ? (
+            <CanvasRelationOutputs
+              relationId={selected ?? analysis.session.rootId}
+              disabled={false}
+              onChange={reject}
+            />
+          ) : null}
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    await act(async () => root.render(<Host />));
+    const session = analysis!.session;
+    const field = (await session.query(input.relationId)).fields[0]!;
+    expect(session.allowsInputSchema(field)).toBe(false);
+    expect(session.canEditRetainedJoinOutput(session.rootId)).toBe(true);
+    const toggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="relation-output-toggle"][data-field-name="customer_id"]'
+    )!;
+    await act(async () => fireEvent.click(toggle));
+    expect(reject).toHaveBeenCalledOnce();
+    expect(session.hasDocument(initial)).toBe(true);
+    expect(toggle.getAttribute('data-included')).toBe('true');
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    expect({
+      inputAllowed: session.allowsInputSchema(field),
+      retainedEditable: session.canEditRetainedJoinOutput(session.rootId),
+    }).toEqual({ inputAllowed: false, retainedEditable: true });
+    draft = { plan: clone(PlanSchema, initial.plan), sidecar: { ...initial.sidecar } };
+    await act(async () => root.render(<Host />));
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    selected = input.relationId;
+    await act(async () => root.render(<Host />));
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    selected = undefined;
+    await act(async () => root.render(<Host />));
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+    expect(reject).toHaveBeenCalledOnce();
+  });
 
   it.each([
     'equivalent acknowledgement',
