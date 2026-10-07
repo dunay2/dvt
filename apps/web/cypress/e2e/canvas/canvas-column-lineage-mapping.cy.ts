@@ -1,4 +1,12 @@
-/** Input bindings persist through the real UI; Output never authors a model. */
+/**
+ * Owned concern: prove Input bindings persist while Output stays passive.
+ * @baseline GH-3572: a visible count alone cannot distinguish a write from stale presentation.
+ * @decision Check selected Output and saved field identities at the same negative boundary.
+ * @consequence A failure reports the view, visible tabs and submitted bindings together.
+ * @version 1.0.0
+ */
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import {
@@ -95,6 +103,32 @@ function removeInput(name: string): void {
     force: true,
   });
   cy.get(`button[aria-label="Remove mapping ${name} to ${name}"]`).click({ force: true });
+}
+function assertPassiveOutput(): void {
+  node('model-orders').should(($model) => {
+    const writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').map((call) => {
+      const { draft } = call.body as { draft: WorkspaceGraphAuthoringDraft };
+      return draft.edges.find(
+        (edge) => edge.sourceId === 'source-orders' && edge.targetId === 'model-orders'
+      )?.metadata?.inputBindings;
+    });
+    const tabs = $model
+      .find('[role="tab"]')
+      .toArray()
+      .map((tab) => tab.textContent);
+    const evidence = JSON.stringify({ tabs, writes });
+    expect(tabs, evidence).to.deep.equal(['Input (5)', 'Output (Not configured)']);
+    expect($model.find('[role="tab"][aria-selected="true"]').text(), evidence).to.equal(
+      'Output (Not configured)'
+    );
+    expect(writes.at(-1), evidence).to.deep.equal({
+      version: 'v1',
+      fields: ['order_id', 'amount', 'status', 'created_at', 'region'].map((producerFieldId) => ({
+        inputId: `input:source-orders:${producerFieldId}`,
+        producerFieldId,
+      })),
+    });
+  });
 }
 function dropPublishedField(producerId: string, name: string, view = 'Input'): void {
   const transfer = new DataTransfer();
@@ -248,6 +282,7 @@ describe('Producer fields enter Input; Output is passive', () => {
     node('model-orders').contains('[role="tab"]', 'Input (5)').should('be.visible');
     assertNoOutputAuthoring();
     dropPublishedField('source-orders', 'customer', 'Output');
+    assertPassiveOutput();
     node('model-orders').contains('[role="tab"]', 'Input (5)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Output (Not configured)').should('be.visible');
     node('model-orders').contains('[role="tab"]', 'Input (5)').click();
