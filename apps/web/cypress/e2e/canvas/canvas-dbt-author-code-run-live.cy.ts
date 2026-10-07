@@ -2,11 +2,11 @@
  * Owned concern: prove the dbt authoring, generated Code, and Start Run path
  * against the live protected runtime without API stubs.
  * @baseline GH-3578: Model double-click opens its semantic editor, not Properties.
- * @decision Enter Properties through its contextual query and observe menu dismissal.
+ * @decision Reuse the shared Properties gesture and observe menu dismissal.
  * @consequence General and Code share one settled inspector entry without changing evidence.
  * @version 1.0.0
  */
-import { canvasViewCopy, resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
+import { canvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { resolveCodeViewCopy } from '../../../src/app/views/code/codeViewCopy';
 import {
   clickButtonNatively,
@@ -22,29 +22,14 @@ import {
   readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
 const GENERATED_ORDER_ID_PROJECTION = 'origin."order_id" as "order_id"';
 const GENERATED_AMOUNT_PROJECTION = 'origin."amount" as "amount"';
 const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_project_code\n';
 
 function openNodeWorkbench(nodeId: string): void {
-  const node = `.react-flow__node[data-id="${nodeId}"]`;
-  cy.get(node, { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
-    .focus()
-    .should('be.focused')
-    .rightclick();
-  cy.document().then((document) => {
-    cy.contains(
-      '[data-slot="canvas-node-context-menu-item"]',
-      resolveCanvasViewCopy(document.documentElement.lang).canvasNodeContextPropertiesLabel
-    ).click();
-  });
-  cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
-  cy.get('body').should('not.have.css', 'pointer-events', 'none');
-  cy.get(node).find('[data-slot="canvas-node-shell"]').should('be.focused');
-  cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+  openWorkbenchProperties(nodeId);
   cy.get('[data-slot="canvas-node-workbench-tab-general"]').should('be.visible').click();
 }
 

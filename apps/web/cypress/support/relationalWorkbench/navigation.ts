@@ -1,10 +1,11 @@
 /**
- * Owned concern: navigate and connect the semantic editor through supported user gestures.
+ * Owned concern: navigate Canvas Properties and connect the semantic editor through user gestures.
  * @baseline GH-2524-LIVE-V1-CONSUMERS: prove current authoring before protected execution.
- * @decision Share gestures, while each caller owns semantic and provider assertions.
+ * @decision Share gestures, while each caller owns section, semantic and provider assertions.
  * @consequence No alternate editor, persistence or drag semantics live in a proof.
  * @version 1.0.0
  */
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
@@ -28,6 +29,27 @@ export function openWorkbenchModel(nodeId = 'join-transform'): void {
     .should('be.visible')
     .dblclick(40, 18);
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
+}
+
+/** Properties is a contextual action; Model double-click belongs to the semantic editor. */
+export function openWorkbenchProperties(nodeId: string): void {
+  const node = `.react-flow__node[data-id="${nodeId}"]`;
+  cy.get(node, { timeout: 20_000 })
+    .should('be.visible')
+    .find('[data-slot="canvas-node-shell"]')
+    .focus()
+    .should('be.focused')
+    .rightclick();
+  cy.document().then((document) => {
+    cy.contains(
+      '[data-slot="canvas-node-context-menu-item"]',
+      resolveCanvasViewCopy(document.documentElement.lang).canvasNodeContextPropertiesLabel
+    ).click();
+  });
+  cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
+  cy.get('body').should('not.have.css', 'pointer-events', 'none');
+  cy.get(node).find('[data-slot="canvas-node-shell"]').should('be.focused');
+  cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
 }
 
 /** Reopening must observe this navigation's draft, not a previous recorded GET. */

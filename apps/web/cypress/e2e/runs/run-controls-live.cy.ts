@@ -1,7 +1,7 @@
 /**
  * Owned concern: prove cancellation and recovery against backend-owned run truth.
  * @baseline GH-3578: executable SQL belongs to governed project files, not node metadata.
- * @decision Author a bounded-duration dbt model through Code and reuse the real runtime.
+ * @decision Enter through shared Properties, author Code, and reuse the real runtime.
  * @consequence Original and descendant runs retain the same persisted plan identity.
  * @version 1.0.0
  */
@@ -22,6 +22,7 @@ import {
   visitWithLiveWorkspaceSession,
   waitForLiveWorkspaceFileContent,
 } from '../../support/liveProtectedRuntime';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
 const PROJECT_ROOT = 'run-controls';
 const CANVAS_ID = 'run-controls-files';
@@ -63,13 +64,11 @@ function waitForRunStatus(
 }
 
 function authorLongRunningModel(): void {
-  cy.get(`.react-flow__node[data-id="${MODEL_ID}"]`, { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
-    .dblclick();
+  openWorkbenchProperties(MODEL_ID);
   cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .should('be.visible')
-    .and('have.attr', 'aria-selected', 'true');
+    .click()
+    .should('have.attr', 'aria-selected', 'true');
   cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 20_000 }).should(
     'have.attr',
     'data-file-path',
