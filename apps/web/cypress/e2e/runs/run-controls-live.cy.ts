@@ -29,7 +29,7 @@ const CANVAS_ID = 'run-controls-files';
 const MODEL_ID = 'model.run_controls.controlled';
 const MODEL_PATH = `${PROJECT_ROOT}/models/controlled.sql`;
 // Only the disposable test workload waits; production clocks and timeouts stay unchanged.
-const LONG_RUNNING_SQL = "{{ config(materialized='table') }}\nselect 1 as value from pg_sleep(20)";
+const LONG_RUNNING_SQL = "{{ config(materialized='table') }} select 1 as value from pg_sleep(20)";
 const PROJECT_FILES = {
   [`${PROJECT_ROOT}/dbt_project.yml`]: `name: run_controls
 version: '0.1.0'
