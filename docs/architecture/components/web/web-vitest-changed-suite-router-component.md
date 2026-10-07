@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-05
+last_reviewed: 2026-10-07
 planning_type: architecture
 ---
 
@@ -142,9 +142,9 @@ stateDiagram-v2
 - Local frontend developers use `pnpm --filter @dvt/web test:changed`.
 - Reviewers use `pnpm test:web:changed -- --files <paths>` to validate a patch
   without running the full web suite.
-- The `Web Frontend Tests` GitHub job uses the same changed plan in fixed
-  `vitest` and `browser` phases for ordinary web pull requests after building
-  dependencies. Local execution without a phase still runs both obligations.
+- The `Web Frontend Tests` GitHub matrix uses the same changed plan for Vitest
+  and the three independent browser capabilities. Local execution without a
+  phase still runs every selected obligation.
 - Architecture tests use the router API to prevent command drift.
 - Documentation uses this component to explain local feedback-loop sizing.
 
@@ -219,7 +219,7 @@ flowchart LR
 - GH-3271 also admits `canvas-relational-tree-workbench.cy.ts`,
   `canvas-relational-workbench-union.cy.ts`,
   `canvas-relational-workbench-removal.cy.ts` and
-  `canvas-relational-workbench-viewport.cy.ts` through the same terminal entry.
+  `canvas-relational-workbench-viewport.cy.ts` through the same protected runtime.
   They retain their existing UI fixtures; the shared protected-runtime proof
   remains a separate real-provider obligation within that single execution.
 - The browser policy is a small pure module (`apps/web/cypress.changed.ts`),
@@ -234,22 +234,29 @@ flowchart LR
 - Ordinary changed routing executes both independent obligations. A browser
   change does not require unrelated Vitest unit tests; a mixed diff retains
   the Vitest plan for its genuine Web sources.
-- CI resolves the plan before provisioning the browser runtime. PostgreSQL,
-  dbt and Cypress preparation is conditional on a browser obligation. Use an
+- CI resolves and validates the complete plan before selecting a capability or
+  provisioning its runtime. Cypress preparation requires selected browser work;
+  PostgreSQL and dbt require an available or unavailable provider obligation.
+  The controlled capability does not provision providers. Use an
   explicit disposable CI PostgreSQL URL and generated local proof identity;
   no tenant credential, repository secret or development database is required.
-- GH-3583 separates the existing job into a fixed `vitest` / `browser` matrix
-  with `fail-fast: false`, a 25-minute limit per phase and a distinct existing
-  Turbo-cache variant per producer. This removes the shared serial deadline;
+- GH-3583 separates Vitest from browser execution. GH-3578 further partitions
+  the browser phase by its existing `controlled`, `available` and `unavailable`
+  capabilities, retaining `fail-fast: false`, a 25-minute limit per job and a
+  distinct existing Turbo-cache variant per producer. This removes shared serial deadlines;
   it does not alter suite selection, workers, assertions or browser admission.
   `--phase=vitest` and `--phase=browser` select disjoint obligations from the
   same complete plan. Planning still rejects unknown browser paths in either
-  phase. The old `--browser-only` flag is removed, not retained as an alias.
-  Provider setup, cleanup and sanitized failure/cancellation screenshots belong
-  only to the browser phase. The existing required aggregate requires the
+  phase. `--browser-capability=<capability>` is valid only with `--phase=browser`;
+  omitting it still executes every selected browser obligation. Invalid,
+  repeated or out-of-phase selectors reject. The old `--browser-only` flag stays
+  removed. Provider setup and cleanup belong to the provider capabilities;
+  sanitized failure/cancellation screenshots have capability-specific names.
+  The existing required aggregate requires the
   complete matrix result; cancelled, failed or absent evidence still rejects.
 - `main`, manual and root-sensitive runs retain `test:web:ci` and execute the
-  admitted browser baseline with `--full --phase=browser`. `--full` only adds
+  admitted browser baseline with `--full --phase=browser`, partitioned by the
+  same capability selector in CI. `--full` only adds
   browser baseline obligations to the router: executing it with the Vitest
   phase is invalid, and cannot replace `test:web:ci`. Required check
   names and the Test Suite aggregate stay unchanged.
@@ -258,7 +265,7 @@ flowchart LR
   teardown must stop child process groups and wait before disposing its lease.
   Native browser execution uses a small `run-selected-closure-cypress.cjs`
   child adapter over the installed Cypress module API; it validates the real
-  result counters and the one expected spec. Credentials stay in environment
+  result counters and every expected spec exactly once. Credentials stay in environment
   variables, never CLI arguments. Process lifecycle belongs to
   `live-proof-process.cjs`, shared only by this live runner and its browser child;
   this keeps teardown out of selection policy and result validation.
@@ -288,13 +295,17 @@ comparison limits in the issue. Fewer Vitest launches alone do not establish
 the repository-wide 50% time target. No isolation, coverage, worker or
 authorization rule is relaxed by this boundary.
 
-The [GH-3583 paired rationale and conformity matrix](https://github.com/dunay2/dvt/issues/3583)
-govern the independent execution lifecycles. Previously the same 25-minute
-deadline covered Vitest followed by browser execution. The new boundary is:
+The [GH-3583 rationale](https://github.com/dunay2/dvt/issues/3583) and
+[GH-3578 reviewed partition and conformity matrix](https://github.com/dunay2/dvt/issues/3578#issuecomment-6035954803)
+govern the independent execution lifecycles. Previously the browser job put all
+three capabilities and their preparation under one 25-minute deadline. The
+bounded partition is:
 
 ```text
-Exact diff -> one governed plan -> Vitest phase  -> required matrix result
-                              -> browser phase -> required matrix result
+Exact diff -> one validated plan -> Vitest              -> required matrix result
+                                -> browser controlled  -> required matrix result
+                                -> browser available   -> required matrix result
+                                -> browser unavailable -> required matrix result
 ```
 
 The matrix changes elapsed scheduling, not total evidence or CPU guarantees.
@@ -312,17 +323,22 @@ paths still reject before phase filtering or process startup.
 The existing command plan represents three distinct runtime obligations:
 
 - Controlled API consumers execute once through the native browser runner.
-- Available LIVE consumers share the existing terminal entry and one protected
-  runtime bootstrap. All admitted source families run through one Cypress entry,
-  not independent runtime launches.
+- Available LIVE consumers execute the exact admitted spec list in one Cypress
+  invocation and one protected runtime bootstrap. Each spec owns its suite and
+  preparation; no spec imports another spec to register its cases. The terminal
+  retains its own cases and exclusive helpers. This restores spec isolation
+  without repeating PostgreSQL, API, Temporal or outbox startup for every file.
 - Unavailable LIVE evidence uses its existing spec and invocation-local
   environment; that environment cannot leak into another obligation.
 
 The same structured result validator must reject missing, unexpected or duplicate
 specs, zero tests, malformed counters, failures, pending tests and skips. The
-protected LIVE CLI remains restricted to one literal spec. The terminal entry's
-transitive source closure is also checked; successful execution of its filename
-alone does not establish the consumer inventory.
+protected LIVE CLI accepts a comma-separated list of unique literal spec paths,
+validated before any lease, build or service allocation. Empty entries, globs,
+duplicates and traversal reject. Its default is the terminal spec; governed
+AVAILABLE execution passes the complete catalog explicitly. Shared helper
+consumers must each appear exactly once in that plan. Successful execution of
+the terminal filename alone does not establish the consumer inventory.
 
 Removing old cases requires preserving their unique semantic assertions in the
 remaining owners first. In particular, UNION retains complete derived-type
@@ -331,7 +347,10 @@ grouping, partition/order, output identity and reload. Captured Workbench seed
 normalization reuses production mappers on that same fixture instance; it does
 not introduce a generic GET recorder or global fixture repair.
 
-Admission requires measuring the complete browser critical path, including setup,
-builds, all selected runtimes, result validation and cleanup, against the existing
-25-minute phase budget. Individual test durations do not establish that bound.
-No wider workflow scope, timeout increase or evidence waiver is admitted here.
+Admission requires measuring each complete job critical path, including setup,
+builds, selected runtime, result validation and cleanup, against its unchanged
+25-minute budget. All four matrix jobs must satisfy the existing required
+aggregate. The partition preserves the 119 controlled, 53 available and one
+unavailable cases; it does not prove that a stalled case is fixed. Individual
+test durations or results from the previous serial layout cannot establish the
+new bound. No new workflow, timeout increase or evidence waiver is admitted.
