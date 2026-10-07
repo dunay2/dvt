@@ -78,11 +78,7 @@ function authorLongRunningModel(): void {
   cy.focused()
     .should(($editor) => expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true))
     .type('{ctrl+a}{backspace}', { delay: 0 });
-  cy.window().then((window) => {
-    const clipboardData = new window.DataTransfer();
-    clipboardData.setData('text/plain', LONG_RUNNING_SQL);
-    cy.focused().trigger('paste', { clipboardData });
-  });
+  cy.focused().type(LONG_RUNNING_SQL, { parseSpecialCharSequences: false, delay: 0 });
   waitForLiveWorkspaceFileContent(MODEL_PATH, LONG_RUNNING_SQL);
   cy.get('[data-slot="code-working-tree-status"]').should(
     'have.attr',
