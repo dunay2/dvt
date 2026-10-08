@@ -184,11 +184,17 @@ describe('web Vitest suite catalog', () => {
     expect(executionSteps.some((step) => step.run === 'pnpm test:web:ci')).toBe(true);
     expect(
       executionSteps.some(
-        (step) => step.run === 'pnpm test:web:changed --phase=${{ matrix.phase }}'
+        (step) =>
+          step.run?.trim() ===
+          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }}"
       )
     ).toBe(true);
     expect(
-      executionSteps.some((step) => step.run === 'pnpm test:web:changed --full --phase=browser')
+      executionSteps.some(
+        (step) =>
+          step.run?.trim() ===
+          'pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}'
+      )
     ).toBe(true);
     for (const step of executionSteps) {
       expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);

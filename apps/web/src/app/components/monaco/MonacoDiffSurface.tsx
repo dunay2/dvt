@@ -3,7 +3,11 @@ import { DiffEditor } from '@monaco-editor/react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
 import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
-import { createMonacoDiffOptions, monacoTheme } from './monacoVisualTokens';
+import {
+  configureMonacoVisualTheme,
+  createMonacoDiffOptions,
+  monacoTheme,
+} from './monacoVisualTokens';
 
 type MonacoDiffSurfaceProps = Readonly<{
   ariaLabel: string;
@@ -25,6 +29,7 @@ export default function MonacoDiffSurface({
   return (
     <div className={containerClassName} data-testid="monaco-diff-viewer">
       <DiffEditor
+        beforeMount={configureMonacoVisualTheme}
         height="100%"
         language={language}
         modified={modified}

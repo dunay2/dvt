@@ -139,6 +139,7 @@ describe('canonical graph disconnection', () => {
           document,
           session,
           revision,
+          permissionIdentity: '[[],[]]',
           error: condition === 'failed' ? new Error('analysis failed') : null,
           refresh: vi.fn(),
         },

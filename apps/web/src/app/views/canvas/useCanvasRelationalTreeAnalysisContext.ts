@@ -1,8 +1,14 @@
-/** Derive the revision-bound analysis inputs consumed by authoring commands. */
+/**
+ * Owned concern: derive graph-bound eligibility consumed by the canonical authoring session.
+ * @baseline GH-3596: absent dependencies are not connected-but-excluded Input mappings.
+ * @decision Read both facts together from the existing eligibility owner.
+ * @consequence Model Output can edit retained selection without changing publication authority.
+ * @version 1.1.0
+ */
 import { useMemo } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { resolveCanvasReadFieldEligibility } from './canvasInputFieldEligibility';
 import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { useCanvasRelationFields } from './useCanvasRelationFields';
@@ -26,9 +32,9 @@ export function useCanvasRelationalTreeAnalysisContext(
       return undefined;
     }
   }, [args.transformNode, args.nodes, args.edges]);
-  const deniedInputs = useMemo(
+  const eligibility = useMemo(
     () =>
-      resolveUnmappedCanvasReadFields({
+      resolveCanvasReadFieldEligibility({
         document: args.document,
         nodeId: args.transformNode.id,
         nodes: args.nodes,
@@ -40,7 +46,8 @@ export function useCanvasRelationalTreeAnalysisContext(
     args.document,
     args.transformNode.id,
     connection,
-    deniedInputs
+    eligibility.denied,
+    eligibility.disconnected
   );
   return { analysis, output: useCanvasRelationFields(null, analysis).result } as const;
 }

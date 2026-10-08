@@ -21,7 +21,7 @@ import documents from '../../../../../packages/@dvt/postgres-projection/test/fix
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { exportProjectSnapshot } from '../../../src/app/views/canvas/canvasProjectSnapshot';
 import { runPublicationSampleCopy } from '../../../src/app/views/runs/runPublicationSampleCopy';
-import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
+import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   clickCanvasAddCatalogAction,
@@ -32,13 +32,13 @@ import {
 } from '../../support/canvasExecutionSelection';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
   readLiveRunEvents,
   readLiveRunSnapshot,
   resolveLiveWorkspaceSession,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';

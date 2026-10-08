@@ -1,7 +1,14 @@
-/** Real staged-to-staged field drag and persisted Transform chain. */
+/**
+ * Owned concern: prove staged Transform chaining through durable save and fresh reads.
+ * @baseline GH-3578: sending a draft is not a persistence acknowledgement.
+ * @decision Reuse the save-status and fresh-navigation boundaries before reopening.
+ * @consequence The restored chain is checked against its acknowledged draft.
+ * @version 1.0.0
+ */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
+  revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
@@ -32,7 +39,9 @@ describe('Staged Transform field chain', () => {
       expect(JSON.stringify(saves.at(-1)?.body)).to.include('pending-operation:');
       expect(JSON.stringify(saves.at(-1)?.body)).to.include('normalized_customer_id');
     });
-    visitWorkbenchCanvas();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    revisitWorkbenchCanvas();
     openWorkbenchModel();
     cy.get(card).should('have.length', 2);
     cy.get(card).first().closest('li').find('[data-slot="canvas-relational-node-expand"]').click();

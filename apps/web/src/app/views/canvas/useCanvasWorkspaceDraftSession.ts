@@ -1,4 +1,10 @@
-/** Owned concern: bind the local Canvas draft aggregate to one workspace identity at a time. */
+/**
+ * Owned concern: bind the local Canvas draft aggregate to one workspace identity at a time.
+ * @baseline GH-3572: an interrupted render can predate the latest command snapshot.
+ * @decision Only commands advance the snapshot; a workspace change resets its scope.
+ * @consequence Older renders cannot discard pending save markers or local edits.
+ * @version 1.0.0
+ */
 import { useCallback, useRef, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
@@ -29,7 +35,6 @@ export function useCanvasWorkspaceDraftSession(
   CanvasDraftSessionCommandRunner,
 ] {
   const activeWorkspaceLayoutKeyRef = useRef(workspaceLayoutKey);
-  activeWorkspaceLayoutKeyRef.current = workspaceLayoutKey;
 
   const [scopedSession, setScopedSession] = useState<ScopedDraftSession>(() => ({
     workspaceLayoutKey,
@@ -40,7 +45,10 @@ export function useCanvasWorkspaceDraftSession(
       ? scopedSession.session
       : canvasDraftSession.machine.createBootstrapping();
   const currentSessionRef = useRef(draftSession);
-  currentSessionRef.current = draftSession;
+  if (activeWorkspaceLayoutKeyRef.current !== workspaceLayoutKey) {
+    activeWorkspaceLayoutKeyRef.current = workspaceLayoutKey;
+    currentSessionRef.current = draftSession;
+  }
 
   const commitDraftSession = useCallback(
     (nextSession: CanvasDraftSession) => {

@@ -1,6 +1,10 @@
 /**
  * Owned concern: prove the dbt authoring, generated Code, and Start Run path
  * against the live protected runtime without API stubs.
+ * @baseline GH-3578: Model double-click opens its semantic editor, not Properties.
+ * @decision Reuse the shared Properties gesture and observe menu dismissal.
+ * @consequence General and Code share one settled inspector entry without changing evidence.
+ * @version 1.0.0
  */
 import { canvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { resolveCodeViewCopy } from '../../../src/app/views/code/codeViewCopy';
@@ -9,35 +13,28 @@ import {
   clickPreviewExecutionPlanFromOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import { replaceLiveWorkspaceFile } from '../../support/dbtProjectLive';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
   readLiveRunEvents,
   readLiveRunSnapshot,
   readLiveWorkspaceFile,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
 const GENERATED_ORDER_ID_PROJECTION = 'origin."order_id" as "order_id"';
 const GENERATED_AMOUNT_PROJECTION = 'origin."amount" as "amount"';
 const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_project_code\n';
 
 function openNodeWorkbench(nodeId: string): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"]`, { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
-    .dblclick();
-  cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+  openWorkbenchProperties(nodeId);
   cy.get('[data-slot="canvas-node-workbench-tab-general"]').should('be.visible').click();
 }
 
 function openNodeCodeWorkbench(nodeId: string): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"]`, { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
-    .dblclick();
-  cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+  openNodeWorkbench(nodeId);
   cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible').click();
   cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
   cy.get('[data-testid="monaco-code-editor"]').should('not.exist');

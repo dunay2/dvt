@@ -1,4 +1,10 @@
-/** The same field controls work for a binary relation and a composed result. */
+/**
+ * Owned concern: preserve field lifecycle evidence for binary and composed Model outputs.
+ * @baseline GH-3578: current controls retain selection, focus, order and disconnection coverage.
+ * @decision Reuse one inspector journey for two and three canonical source operands.
+ * @consequence Reload must preserve outputs without rewriting operands or predicates.
+ * @version 1.0.0
+ */
 import { proveCardOutputControls } from '../../support/relationalWorkbench/cardOutputControls';
 import { proveEmptyJoinOutput } from '../../support/relationalWorkbench/emptyOutputs';
 import { prepareFieldSelection } from '../../support/relationalWorkbench/fieldSelection';

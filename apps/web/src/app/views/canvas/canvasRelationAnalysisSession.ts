@@ -1,4 +1,10 @@
-/** Bridges existing document boundaries and local command deltas to one owned analysis session. */
+/**
+ * Owned concern: bridge document boundaries and commands to one revisioned analysis session.
+ * @baseline GH-3596 / GH-3578: retained edits use canonical snapshots, not acknowledgement objects.
+ * @decision Receive updates eligibility; restoring a rejected document preserves the current facts.
+ * @consequence Equivalent ACKs preserve operand identity and rollback cannot relax output guards.
+ * @version 1.3.0
+ */
 import {
   RelationAnalysisSession,
   SubstraitAnalysisError,
@@ -14,13 +20,17 @@ import { equals } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { sourceOccurrenceAliases } from './relational-source-occurrence/sourceOccurrenceAlias';
 import { CanvasRelationSources } from './canvasRelationSources';
-import { canvasInputSchemaIsEligible } from './canvasInputFieldEligibility';
+import {
+  canvasInputSchemaIsEligible,
+  canvasRetainedOutputSchemaIsEligible,
+} from './canvasInputFieldEligibility';
 
 export class CanvasRelationAnalysisSession {
   private analysis: RelationAnalysisSession | null = null;
   private accepted: SubstraitDocument | null = null;
   private readonly sources: CanvasRelationSources;
   private deniedInputs: ReadonlySet<string> = new Set();
+  private disconnectedInputs: ReadonlySet<string> = new Set();
 
   constructor(
     private readonly scope: string,
@@ -29,20 +39,26 @@ export class CanvasRelationAnalysisSession {
     this.sources = new CanvasRelationSources(connection);
   }
 
-  receive(document: SubstraitDocument | null, deniedInputs: ReadonlySet<string> = new Set()): void {
+  receive(
+    document: SubstraitDocument | null,
+    deniedInputs: ReadonlySet<string> = new Set(),
+    disconnectedInputs: ReadonlySet<string> = new Set()
+  ): void {
     this.deniedInputs = deniedInputs;
+    this.disconnectedInputs = disconnectedInputs;
     // Full-document acknowledgements can allocate new objects without changing authority.
     // Local edits retain the identity fast path and the existing incremental change rail.
-    if (this.hasDocument(document)) {
-      this.accepted = document;
-      return;
-    }
+    if (this.hasDocument(document)) return;
     if (document == null) this.dispose();
     else if (this.analysis == null)
       this.analysis = new RelationAnalysisSession({ document, scope: this.scope });
     else this.analysis.replace(document, this.analysis.revision);
     this.accepted = document;
     this.reindexSources(document);
+  }
+
+  restoreDocument(document: SubstraitDocument): void {
+    this.receive(document, this.deniedInputs, this.disconnectedInputs);
   }
 
   hasDocument(document: SubstraitDocument | null): boolean {
@@ -96,6 +112,18 @@ export class CanvasRelationAnalysisSession {
   allowsInputSchema(field: SchemaField): boolean {
     return canvasInputSchemaIsEligible(field, this.deniedInputs);
   }
+  canEditRetainedJoinOutput(relationId: string): boolean {
+    return (
+      this.disconnectedInputs.size > 0 &&
+      relationId === this.rootId &&
+      this.locate(relationId, this.revision).relation.relType.case === 'join'
+    );
+  }
+  allowsOutputSchema(relationId: string, field: SchemaField): boolean {
+    return this.canEditRetainedJoinOutput(relationId)
+      ? canvasRetainedOutputSchemaIsEligible(field, this.deniedInputs, this.disconnectedInputs)
+      : this.allowsInputSchema(field);
+  }
   get work(): RelationAnalysisSession['work'] {
     return this.current().work;
   }
@@ -147,7 +175,7 @@ export class CanvasRelationAnalysisSession {
     signal?.throwIfAborted();
     this.locate(this.rootId, expectedRevision);
     const staged = new CanvasRelationAnalysisSession(`${this.scope}:staged`, this.connection);
-    staged.receive(this.current().document(), this.deniedInputs);
+    staged.receive(this.current().document(), this.deniedInputs, this.disconnectedInputs);
     try {
       await work(staged);
       signal?.throwIfAborted();

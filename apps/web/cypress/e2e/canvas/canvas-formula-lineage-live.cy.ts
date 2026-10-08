@@ -1,13 +1,23 @@
-/** Formula authoring -> protected persistence -> reopened inspection -> real PostgreSQL rows. */
+/**
+ * Owned concern: prove persisted formula dependencies, reopened identity and real PostgreSQL rows.
+ * @baseline GH-3593: public outputs forward producer identities instead of owning operand metadata.
+ * @decision Resolve canonical expression references against the persisted Transform input scope.
+ * @consequence Two-field lineage is proven by exact identities, independently of sidecar ordering.
+ * @version 1.0.0
+ */
 import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
-import { encodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { createCanvasRelationalTreeProjectionDraft } from '../../../src/app/views/canvas/canvasRelationalTreeProjectionAuthoring';
-import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import {
-  hasLiveProtectedRuntimeEnv,
-  seedLiveSelectedClosureDraft,
-} from '../../support/liveProtectedRuntime';
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { createCanvasRelationalTreeProjectionDraft } from '../../../src/app/views/canvas/canvasRelationalTreeProjectionAuthoring';
+import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
+import { transformExpressionDependencies } from '../../../src/app/views/canvas/canvasTransformExpressionReferences';
+import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
+import { hasLiveProtectedRuntimeEnv } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
 import {
   authorLineageFormula,
@@ -74,8 +84,26 @@ describe('Live nested formula lineage', () => {
     let persisted: DvtSubstraitSemanticDocumentV1;
     readPersistedDocument(initial.semanticPlan.sha256).then((document) => {
       persisted = document;
-      const field = document.sidecar.fields.find((entry) => entry.displayName === 'preferred_name');
-      expect(field?.operandFieldIds).to.have.length(2);
+      const indexed = indexSubstraitRelations(decodeDvtSubstraitSemanticDocument(document));
+      if (!indexed.ok) throw indexed.error;
+      const dependencies = readCanvasTransformDependencyModel(
+        indexed.index.relations.get(indexed.index.rootId)!,
+        (id) => indexed.index.relations.get(id)!
+      );
+      const definition = dependencies.definitions.find(
+        (entry) => entry.output?.displayName === 'preferred_name'
+      );
+      if (definition?.output == null)
+        throw new Error('Expected published preferred_name definition');
+      const inputIds = ['client_id', 'country'].map((name) => {
+        const field = dependencies.input.fields.find((entry) => entry.displayName === name);
+        if (field == null) throw new Error(`Expected persisted input ${name}`);
+        return field.fieldId;
+      });
+      expect(definition.output.relationId).to.equal(indexed.index.rootId);
+      expect(
+        transformExpressionDependencies(definition.expression, definition.inputIds)
+      ).to.have.members(inputIds);
       expect(samples, 'Authoring does not query data').to.equal(0);
     });
     visitSemanticCanvas();

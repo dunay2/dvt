@@ -1,9 +1,13 @@
 import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
+  connectWorkbenchProducer,
+  stageWorkbenchUnary,
+} from '../../support/relationalWorkbench/navigation';
+import {
   workbenchOperation,
   closeWorkbenchOperations,
 } from '../../support/relationalWorkbench/operationMenu';
-import { openEditor, addWrapper } from '../../support/relationalWorkbench/operatorEditor';
+import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
 
 describe('model-session', () => {
   it('keeps editing or applies local composition changes before closing the Model', () => {
@@ -13,7 +17,14 @@ describe('model-session', () => {
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    addWrapper('aggregate');
+    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    cy.get(form).find('button[type="submit"]').click();
+    cy.get('[data-operator="aggregate"]').closest('li').as('aggregate');
+    connectWorkbenchProducer(
+      '@aggregate',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();
@@ -37,7 +48,14 @@ describe('model-session', () => {
     cy.then(() => {
       initialWrites = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    addWrapper('aggregate');
+    stageWorkbenchUnary('aggregate', '[data-operator="join"]', true);
+    cy.get(form).find('button[type="submit"]').click();
+    cy.get('[data-operator="aggregate"]').closest('li').as('aggregate');
+    connectWorkbenchProducer(
+      '@aggregate',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
     cy.get('[data-operator="aggregate"]').should('have.length', 1);
 
     cy.get('[data-slot="canvas-model-tab-close"]').click();

@@ -1,4 +1,10 @@
-/** Owned concern: graphNodeAuthorityMetrics. */
+/**
+ * Owned concern: project card metrics from the node's active authoring authority.
+ * @baseline ADR-0060: file-backed analysis and graph-draft configuration are distinct authorities.
+ * @decision Read analyzed materialization without applying graph-draft defaults to files.
+ * @consequence Missing file metadata stays unknown; native draft defaults remain unchanged.
+ * @version 1.0.0
+ */
 
 import type { CanonicalNode } from '../../types/canonical';
 import { hasDbtCompatibilityMetadata } from '../../views/canvas/canvasDbtAuthoringModel';
@@ -19,6 +25,7 @@ function resolveMaterialization(
   node: CanonicalNode,
   metadata: Record<string, unknown>
 ): string | null {
+  if (metadata.authority === 'dbt-project-files') return stringValue(metadata.materialized);
   const dbt = metadata.dbt;
   const dbtRecord =
     typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt)

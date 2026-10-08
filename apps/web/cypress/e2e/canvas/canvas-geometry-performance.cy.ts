@@ -1,4 +1,11 @@
 /// <reference types="cypress" />
+/**
+ * Owned concern: prove rich-node interaction and local geometry at three bounded graph sizes.
+ * @baseline GH-3578: input geometry and published Output nullability have separate proofs.
+ * @decision Inspect actual Input fields and wait on save state and persisted positions, not sleeps.
+ * @consequence Drag frames, release and reopen must not issue semantic draft writes.
+ * @version 1.0.0
+ */
 
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
@@ -6,7 +13,13 @@ import {
   dragCanvasNodeOntoNode,
   openNodeWorkbenchSection,
 } from '../../support/canvasGraphAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -108,13 +121,16 @@ describe('Canvas geometry performance', () => {
         expandColumns('model-orders');
         canvasNode('model-orders')
           .contains('[data-slot="graph-node-column-row"]', 'customer')
-          .should('contain.text', 'NN')
+          .find('[data-slot="graph-node-column-piece"]')
+          .should('exist');
+        canvasNode('model-orders')
           .find('[data-slot="graph-node-column-output-state"]')
-          .should('have.attr', 'aria-pressed');
+          .should('not.exist');
 
-        cy.wait(800);
+        cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
         let savesBeforeDragFrames = 0;
         let positionBeforeDrag: { x: number; y: number } | undefined;
+        let positionAfterDrag: { x: number; y: number } | undefined;
         cy.window().then((window) => {
           savesBeforeDragFrames = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
           positionBeforeDrag = readPersistedNodePosition(window, 'model-orders');
@@ -127,7 +143,7 @@ describe('Canvas geometry performance', () => {
           {
             nodeId: 'model-orders',
             onFramesComplete() {
-              cy.wait(700);
+              canvasNode('model-orders').should('have.class', 'selected');
               cy.then(() => {
                 expect(
                   getE2eApiCalls('/workspace/graph/draft', 'PUT').length,
@@ -138,20 +154,24 @@ describe('Canvas geometry performance', () => {
           }
         );
 
-        cy.window().should((window) => {
-          expect(
-            readPersistedNodePosition(window, 'model-orders'),
-            'settled layout position'
-          ).not.to.deep.equal(positionBeforeDrag);
-          expect(
-            getE2eApiCalls('/workspace/graph/draft', 'PUT').length,
-            'layout-only draft writes after pointer release'
-          ).to.equal(savesBeforeDragFrames);
-        });
+        cy.window()
+          .should((window) => {
+            expect(
+              readPersistedNodePosition(window, 'model-orders'),
+              'settled layout position'
+            ).not.to.deep.equal(positionBeforeDrag);
+            expect(
+              getE2eApiCalls('/workspace/graph/draft', 'PUT').length,
+              'layout-only draft writes after pointer release'
+            ).to.equal(savesBeforeDragFrames);
+          })
+          .then((window) => {
+            positionAfterDrag = readPersistedNodePosition(window, 'model-orders');
+          });
         canvasNode('model-orders').should('have.class', 'selected');
         canvasNode('model-orders')
           .contains('[data-slot="graph-node-column-row"]', 'customer')
-          .should('contain.text', 'NN');
+          .should('be.visible');
 
         canvasNode('model-orders')
           .find('[data-slot="canvas-node-shell"]')
@@ -164,6 +184,20 @@ describe('Canvas geometry performance', () => {
           'true'
         );
         cy.get('[data-slot="canvas-node-workbench-close"]').click();
+        cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+        revisitWorkbenchCanvas(() => {
+          cy.visit('/canvas', { onBeforeLoad: installE2eApiFetchStub });
+        });
+        cy.get('.react-flow__node').should('have.length', nodeCount);
+        cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+        cy.window().should((window) => {
+          expect(readPersistedNodePosition(window, 'model-orders')).to.deep.equal(
+            positionAfterDrag
+          );
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
+            savesBeforeDragFrames
+          );
+        });
       }
     );
   });
@@ -175,7 +209,7 @@ describe('Canvas geometry performance', () => {
       stubPerformanceCanvas(10);
       visitPerformanceCanvas();
       cy.get('.react-flow__node').should('have.length', 10);
-      cy.wait(800);
+      cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
 
       let savesBeforeDrop = 0;
       cy.then(() => {

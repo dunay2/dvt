@@ -1,9 +1,9 @@
 /**
  * Owned concern: query selected output slots and canonical calculated descriptions.
  * @baseline ADR-0064: expression identity is read from the same canonical relation revision.
- * @decision Enrich natural slots through the shared Transform dependency read model.
- * @consequence Hidden formulas remain inspectable without a second expression model.
- * @version 1.0.0
+ * @decision Enrich natural slots through the shared dependency model and output eligibility policy.
+ * @consequence Retained JOIN slots stay editable without admitting unavailable fields elsewhere.
+ * @version 1.1.0
  */
 import { useContext, useEffect, useState } from 'react';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
@@ -38,7 +38,7 @@ export function useRelationOutputs(relationId: string) {
         analysis,
         relationId,
         slots: relationOutputSlots(target, inputs, dependencies).filter((slot) =>
-          analysis.session.allowsInputSchema(slot.schema)
+          analysis.session.allowsOutputSchema(relationId, slot.schema)
         ),
         physical: target.relation.relType.case === 'read',
       });

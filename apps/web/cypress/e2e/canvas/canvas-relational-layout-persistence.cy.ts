@@ -3,7 +3,7 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { verifyCompleteTreeFit } from '../../support/relationalWorkbench/geometry';
 import {
   connectWorkbenchProducer,
@@ -25,17 +25,13 @@ describe('Completed relational layout persistence', () => {
     visitWorkbenchCanvas();
     openWorkbenchModel();
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
-    // Settle the fixture's initial workspace save before measuring gesture writes.
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     const join = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
     let relationId = '';
     let moved = { x: 0, y: 0 };
     let persistedPosition: unknown;
     let rootId = '';
-    let baselineWrites = 0;
-    cy.then(() => {
-      baselineWrites = semanticWrites('join-transform').length;
-    });
     moveWorkbenchCard(join, 40, 48);
     cy.get(join).then(($card) => {
       relationId = $card.attr('data-relation-id')!;
@@ -44,7 +40,7 @@ describe('Completed relational layout persistence', () => {
         y: parseFloat($card[0].parentElement!.style.top),
       };
     });
-    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(baselineWrites));
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
 
     for (const iteration of [1, 2]) {
       // Each new root must supersede the previous root; retained layout has no terminal authority.
@@ -70,7 +66,8 @@ describe('Completed relational layout persistence', () => {
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
       cy.wrap(null).should(() => {
         const writes = semanticWrites('join-transform');
-        expect(writes).to.have.length(baselineWrites + iteration);
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(iteration);
+        expect(writes).to.have.length(iteration);
         const { draft } = writes.at(-1)!.body as { draft: WorkspaceGraphAuthoringDraft };
         const retained = draft.nodes.find((node) => node.id === 'join-transform')?.metadata
           ?.relationalAuthoringDraft;
@@ -118,7 +115,7 @@ describe('Completed relational layout persistence', () => {
         );
       });
       cy.then(() => {
-        expect(semanticWrites('join-transform')).to.have.length(baselineWrites + iteration);
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(iteration);
         expect(getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/)).to.have.length(0);
       });
     }

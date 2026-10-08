@@ -3,6 +3,7 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -33,6 +34,8 @@ function visitCanvas(): void {
   // Selection raises overlapping cards, just as it does for a user; no forced interactions.
   cy.get('.react-flow__controls-fitview').click();
   cy.get('.react-flow__node[data-id="transform-customers"]').click('topLeft').as('modelNode');
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+  cy.get('.react-flow__controls-fitview').click();
 }
 
 describe('Model card materialization', () => {
@@ -114,7 +117,7 @@ describe('Model card materialization', () => {
       .find('[data-slot="graph-node-materialization"] [data-icon="table"]')
       .should('be.visible');
     cy.screenshot('model-materialization-saved');
-    visitCanvas();
+    revisitWorkbenchCanvas(visitCanvas);
     cy.get('@modelNode')
       .find('[data-slot="graph-node-materialization"]')
       .should('have.text', 'table');

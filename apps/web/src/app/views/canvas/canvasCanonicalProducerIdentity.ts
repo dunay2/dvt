@@ -1,4 +1,10 @@
-/** Compare producer contents independently of consumer-local protobuf anchor numbering. */
+/**
+ * Owned concern: compare producer semantics independently of local anchors and emitter labels.
+ * @baseline ADR-0064: canonical relations, bindings and used functions own semantic identity.
+ * @decision Normalize only Version.producer metadata in the disposable comparison plan.
+ * @consequence Persisted plans, specification versions and semantic rejection checks stay intact.
+ * @version 1.0.0
+ */
 import { reflect, isReflectMessage } from '@bufbuild/protobuf/reflect';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
@@ -60,6 +66,8 @@ export function canvasCanonicalProducerIdentity(document: SubstraitDocument): st
     const operand = normalized.operands[0]!;
     const plan = {
       ...document.plan,
+      version:
+        document.plan.version == null ? undefined : { ...document.plan.version, producer: '' },
       extensions: normalized.plan.extensions,
       extensionUrns: normalized.plan.extensionUrns,
     };

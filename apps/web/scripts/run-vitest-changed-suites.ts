@@ -1,8 +1,8 @@
 /**
  * Owned concern: adapt changed files into governed Web evidence execution.
  * @baseline GH-3540: one router owns both independent evidence obligations.
- * @decision GH-3583: select an execution phase only after resolving the complete plan.
- * @consequence Local execution remains complete; CI phases cannot hide invalid paths.
+ * @decision GH-3578: select phase and browser capability after validating the complete plan.
+ * @consequence Local execution remains complete; CI partitions cannot hide invalid paths.
  * @version 1.0.0
  */
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -10,6 +10,7 @@ import { appendFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import type { WebCypressCapability } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
 type GitOutputRunner = (args: readonly string[], cwd: string) => string[];
@@ -19,12 +20,18 @@ type ChangedSuiteArgs = Readonly<{
   plan: boolean;
   full: boolean;
   phase: WebEvidencePhase;
+  browserCapability?: WebCypressCapability;
   files: readonly string[];
 }>;
 
 const WEB_EVIDENCE_PHASES: ReadonlyMap<string, WebEvidencePhase> = new Map([
   ['--phase=vitest', 'vitest'],
   ['--phase=browser', 'browser'],
+]);
+const WEB_BROWSER_CAPABILITIES: ReadonlyMap<string, WebCypressCapability> = new Map([
+  ['--browser-capability=controlled', 'controlled'],
+  ['--browser-capability=available', 'available'],
+  ['--browser-capability=unavailable', 'unavailable'],
 ]);
 
 type ReadChangedFilesOptions = Readonly<{
@@ -36,6 +43,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
   const flags = new Set<string>();
   const files: string[] = [];
   let phase: WebEvidencePhase = 'all';
+  let browserCapability: WebCypressCapability | undefined;
   for (const arg of argv) {
     if (arg === '--') continue;
     if (!arg.startsWith('--')) {
@@ -43,24 +51,37 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
       continue;
     }
     const selectedPhase = WEB_EVIDENCE_PHASES.get(arg);
-    const flag = selectedPhase === undefined ? arg : '--phase';
+    const selectedCapability = WEB_BROWSER_CAPABILITIES.get(arg);
+    const flag = arg.split('=', 1)[0]!;
     if (
-      (selectedPhase === undefined && !['--plan', '--full', '--files'].includes(arg)) ||
+      (selectedPhase === undefined &&
+        selectedCapability === undefined &&
+        !['--plan', '--full', '--files'].includes(arg)) ||
       flags.has(flag)
     ) {
       throw new Error(`Invalid or repeated changed-suite argument: ${arg}`);
     }
     flags.add(flag);
     phase = selectedPhase ?? phase;
+    browserCapability = selectedCapability ?? browserCapability;
   }
   const plan = flags.has('--plan');
   const full = flags.has('--full');
+  if (browserCapability !== undefined && phase !== 'browser') {
+    throw new Error('--browser-capability requires --phase=browser.');
+  }
   if ((full && !plan && phase !== 'browser') || (flags.has('--files') && files.length === 0)) {
     throw new Error(
       'Use --phase=browser with --full alongside the full Vitest gate; --files requires paths.'
     );
   }
-  return { plan, full, phase, files };
+  return {
+    plan,
+    full,
+    phase,
+    files,
+    ...(browserCapability === undefined ? {} : { browserCapability }),
+  };
 }
 
 function gitOutput(args: readonly string[], cwd: string): string[] {
@@ -166,13 +187,29 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
   const args = parseChangedSuiteArgs(argv);
   const changedFiles = args.files.length > 0 ? args.files : readChangedFiles(repoRoot);
   const plan = resolveWebVitestChangedSuitePlan(changedFiles, { full: args.full });
+  for (const path of plan.browserFiles) {
+    if (!existsSync(resolve(repoRoot, path))) {
+      throw new Error(`Browser evidence requires an existing consumer or helper: ${path}`);
+    }
+  }
+  for (const path of plan.retiredBrowserFiles) {
+    if (existsSync(resolve(repoRoot, path))) {
+      throw new Error(`Retired browser evidence must remain absent: ${path}`);
+    }
+  }
+  const browserCommands = plan.browserCommands.filter(
+    (entry) =>
+      args.phase !== 'vitest' &&
+      (args.browserCapability === undefined || entry.capability === args.browserCapability)
+  );
 
   if (args.plan) {
-    process.stdout.write(`${JSON.stringify(plan)}\n`);
+    process.stdout.write(`${JSON.stringify({ ...plan, browserCommands })}\n`);
     if (process.env.GITHUB_OUTPUT) {
       appendFileSync(
         process.env.GITHUB_OUTPUT,
-        `browser_required=${plan.browserCommands.length > 0}\n`
+        `browser_required=${browserCommands.length > 0}\n` +
+          `provider_required=${browserCommands.some((entry) => entry.capability !== 'controlled')}\n`
       );
     }
     return;
@@ -198,10 +235,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       runVitestFilesCommand(entry.config, entry.filePaths, webRoot);
     }
   }
-  for (const command of args.phase === 'vitest' ? [] : plan.browserCommands) {
-    runCommand(command, webRoot, {
+  for (const entry of browserCommands) {
+    runCommand(entry.command, webRoot, {
       ...process.env,
-      DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: 'native',
+      ...entry.env,
     });
   }
 }

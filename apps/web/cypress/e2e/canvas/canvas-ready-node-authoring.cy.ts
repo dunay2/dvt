@@ -1,9 +1,9 @@
 /** Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser. */
-import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-  type DvtSubstraitProjectionSemantics,
-} from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
+import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   stubFailingCanvasDraftSave,
@@ -15,7 +15,16 @@ import {
   clickCanvasContextMenuItem,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
+import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  connectWorkbenchProducer,
+  dragWorkbenchSource,
+  openWorkbenchModel,
+  revisitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
+import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { semanticDocumentFromWrite } from '../../support/relationalWorkbench/persistence';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -112,14 +121,16 @@ function assertNoSeriousAccessibilityViolations(context: string): void {
 }
 
 function visitReadyCanvas(path = '/canvas'): void {
-  visitWithE2eWorkspaceSession(path, {
-    onBeforeLoad(window) {
-      window.localStorage.setItem(
-        'dvt-web-application-language',
-        JSON.stringify({ state: { language: 'en' }, version: 0 })
-      );
-    },
-  });
+  revisitWorkbenchCanvas(() =>
+    visitWithE2eWorkspaceSession(path, {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    })
+  );
   waitForE2eApiCall('/healthz', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
@@ -177,11 +188,14 @@ function addSqlTransformNode(): void {
 }
 
 function removeCanvasNode(nodeId: string): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"]`)
-    .find('[data-slot="graph-node-card-actions"]')
-    .should('be.visible')
-    .click();
+  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Delete').click();
+}
+
+function openNodeProperties(nodeId: string): void {
+  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
+  cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
+  cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
 }
 
 describe('Canvas ready node authoring', () => {
@@ -197,9 +211,7 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
+    openNodeProperties('dvt-transform-1');
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-tags"]').should('have.value', '').type('finance');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
@@ -230,9 +242,7 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
+    openNodeProperties('dvt-transform-1');
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
     cy.get('input[name="node-tags"]').should('have.value', 'finance');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
@@ -247,182 +257,146 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('connects, edits, saves, and reloads a native Model chain', () => {
-    const modelChainEdge =
-      '.react-flow__edge[data-id="draft_edge_dvt-transform-1_orphan-transform-1"]';
-    const downstreamNode = '.react-flow__node[data-id="orphan-transform-1"]';
-    const totalColumn = `${downstreamNode} [data-slot="graph-node-column-piece"][data-column-name="total"]`;
-    const readLatestDownstreamProjection = (): DvtSubstraitProjectionSemantics | null => {
-      const savedNodes = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
-        CanvasDraftSaveRequestBody | undefined;
-      const matchingNodes =
-        savedNodes?.draft.nodes.filter((node) => node.id === 'orphan-transform-1') ?? [];
-      expect(matchingNodes, 'one persisted downstream node').to.have.length(1);
-      const savedNode = matchingNodes[0];
-      const authority = savedNode?.metadata?.transformAuthoring as
-        { semanticDocument?: unknown } | undefined;
-      if (authority?.semanticDocument == null) return null;
-      const inspection = inspectDvtSubstraitProjectionDraft(
-        decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    const edge = '.react-flow__edge[data-id="draft_edge_dvt-transform-1_orphan-transform-1"]';
+    const node = '.react-flow__node[data-id="orphan-transform-1"]';
+    const toggle =
+      '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-toggle"]';
+    const readModel = (): {
+      root: IndexedRelation;
+      input: IndexedRelation;
+      fields: IndexedRelation['fields'];
+      types: readonly Type[];
+    } => {
+      const write = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)!;
+      const document = decodeDvtSubstraitSemanticDocument(
+        semanticDocumentFromWrite(write, 'orphan-transform-1')
       );
-      return inspection.ok ? inspection.projection : null;
+      const { index, schemas } = deriveSubstraitSchemas(document);
+      const root = index.relations.get(index.rootId)!;
+      const model = readCanvasTransformDependencyModel(root, (id) => index.relations.get(id)!);
+      return {
+        root,
+        input: model.input,
+        fields: root.fields,
+        types: schemas.get(index.rootId)!.map((field) => field.type),
+      };
     };
     stubStatefulCanvasDraftAuthoring({ authoringGenerated: true, includeLooseNode: true });
-
+    cy.viewport(1700, 1000);
     visitReadyCanvas();
-
-    cy.get(modelChainEdge).should('not.exist');
-    const sourceHandle =
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-port-handle"][data-port="source"]';
-    const targetHandle = `${downstreamNode} [data-slot="canvas-node-port-handle"][data-port="target"]`;
-    cy.get(sourceHandle).then(($sourceHandle) => {
-      const sourceRect = $sourceHandle[0]!.getBoundingClientRect();
-      cy.get(targetHandle).then(($targetHandle) => {
-        const targetRect = $targetHandle[0]!.getBoundingClientRect();
-        cy.wrap($sourceHandle).trigger('mousedown', {
-          button: 0,
-          buttons: 1,
-          clientX: sourceRect.left + sourceRect.width / 2,
-          clientY: sourceRect.top + sourceRect.height / 2,
-          force: true,
-        });
-        cy.get('body')
-          .trigger('mousemove', {
-            buttons: 1,
-            clientX: targetRect.left + targetRect.width / 2,
-            clientY: targetRect.top + targetRect.height / 2,
-            force: true,
-          })
-          .trigger('mouseup', {
-            button: 0,
-            buttons: 0,
-            clientX: targetRect.left + targetRect.width / 2,
-            clientY: targetRect.top + targetRect.height / 2,
-            force: true,
-          });
-      });
+    cy.get('.react-flow__controls-fitview').click();
+    cy.get(edge).should('not.exist');
+    connectCanvasNodes('Transform 1', 'Orphan Transform');
+    cy.get(edge).should('be.visible');
+    cy.wrap(null).should(() => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+        ?.body as CanvasDraftSaveRequestBody;
+      expect(
+        saved.draft.edges.some(
+          (item) => item.sourceId === 'dvt-transform-1' && item.targetId === 'orphan-transform-1'
+        )
+      ).to.equal(true);
+      expect(
+        saved.draft.nodes.find((entry) => entry.id === 'orphan-transform-1')?.metadata ?? {}
+      ).not.to.have.property('transformAuthoring');
     });
 
-    let targetRelationId = '';
-    let restoredFieldIds: string[] = [];
-    cy.wrap(null).should(() => {
-      const projection = readLatestDownstreamProjection();
-      expect(projection, 'persisted downstream projection').not.to.be.null;
-      if (projection == null) return;
-      expect(projection.outputs.map((output) => output.name)).to.deep.equal(['order_id', 'total']);
-      expect(projection.outputs.map((output) => output.sourceFieldId)).to.deep.equal(
-        projection.inputFields.map((field) => field.fieldId)
+    openWorkbenchModel('orphan-transform-1');
+    dragWorkbenchSource('Transform 1');
+    cy.get('[data-pending="true"][data-operator="read"]').closest('li').as('producer');
+    workbenchOperation('field_transform').click();
+    cy.get('[data-pending-operation="true"]').last().as('projection');
+    connectWorkbenchProducer('@producer', '@projection');
+    connectWorkbenchProducer(
+      '@projection',
+      '[data-slot="canvas-relational-output-input-port"]',
+      null
+    );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    let rootId = '';
+    let restoredIds: string[] = [];
+    let inputTypes: unknown;
+    cy.then(() => {
+      const model = readModel();
+      rootId = model.root.binding.relationId;
+      expect(model.fields.map((field) => field.displayName)).to.deep.equal(['order_id', 'total']);
+      expect(model.fields.map((field) => field.sourceFieldId)).to.deep.equal(
+        model.input.fields.map((field) => field.fieldId)
       );
-      targetRelationId = projection.targetRelationId;
+      inputTypes = model.types;
     });
-
-    cy.get(downstreamNode).contains('button', 'Columns (2)').click();
-    cy.get(totalColumn)
-      .should('contain.text', 'NN')
-      .find('[data-slot="graph-node-column-output-state"]')
-      .should('have.attr', 'aria-pressed', 'true')
-      .click({ force: true });
+    cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
+    cy.get(
+      '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'
+    ).click();
+    cy.get(`${toggle}[data-field-name="total"]`)
+      .should('have.attr', 'data-included', 'true')
+      .click();
+    cy.wrap(null).should(() =>
+      expect(readModel().fields.map((field) => field.displayName)).to.deep.equal(['order_id'])
+    );
+    cy.get(`${toggle}[data-field-name="total"]`)
+      .should('have.attr', 'data-included', 'false')
+      .and('not.have.attr', 'aria-disabled', 'true')
+      .click();
     cy.wrap(null).should(() => {
-      expect(readLatestDownstreamProjection()?.outputs.map((output) => output.name)).to.deep.equal([
+      const model = readModel();
+      expect(model.fields.map((field) => field.displayName)).to.deep.equal(['order_id', 'total']);
+      expect(model.root.binding.relationId).to.equal(rootId);
+      expect(model.types, 'source nullability and types retained').to.deep.equal(inputTypes);
+      restoredIds = model.fields.map((field) => field.fieldId);
+    });
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.get(`${toggle}[data-field-name="total"]`)
+      .closest('[data-slot="relation-output-field"]')
+      .should('have.attr', 'draggable', 'true')
+      .focus()
+      .should('be.focused')
+      .type('{alt}{uparrow}');
+    cy.wrap(null).should(() => {
+      const model = readModel();
+      expect(model.fields.map((field) => field.displayName)).to.deep.equal(['total', 'order_id']);
+      expect(model.fields.map((field) => field.fieldId)).to.deep.equal([
+        restoredIds[1],
+        restoredIds[0],
+      ]);
+      expect(model.root.binding.relationId).to.equal(rootId);
+    });
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    visitReadyCanvas('/canvas?reload=model-chain');
+    cy.get(edge).should('be.visible');
+    cy.get(node)
+      .contains('[role="tab"]', /^Output/)
+      .click();
+    cy.get(node).contains('button[aria-expanded]', 'Columns').click();
+    cy.get(`${node} [data-slot="graph-node-column-piece"]`).should(($fields) => {
+      expect([...$fields].map((field) => field.dataset.columnName)).to.deep.equal([
+        'total',
         'order_id',
       ]);
+      expect([...$fields].map((field) => field.dataset.fieldId)).to.deep.equal([
+        restoredIds[1],
+        restoredIds[0],
+      ]);
     });
-    cy.get(totalColumn)
-      .should('contain.text', 'NN')
-      .find('[data-slot="graph-node-column-output-state"]')
-      .should('have.attr', 'aria-pressed', 'false')
-      .click({ force: true });
-    cy.wrap(null).should(() => {
-      const projection = readLatestDownstreamProjection();
-      expect(projection?.outputs.map((output) => output.name)).to.deep.equal(['order_id', 'total']);
-      expect(projection?.targetRelationId).to.equal(targetRelationId);
-      restoredFieldIds = projection?.outputs.map((output) => output.fieldId) ?? [];
-    });
-
-    cy.get(totalColumn)
-      .should('contain.text', 'NN')
-      .find('[data-slot="graph-node-column-output-state"]')
-      .should('have.attr', 'aria-pressed', 'true');
-    cy.get(totalColumn)
+    cy.get(`${node} [data-slot="graph-node-column-piece"][data-column-name="total"]`)
+      .should('have.attr', 'data-output', 'true')
+      .and('have.attr', 'draggable', 'true')
       .closest('[data-slot="graph-node-column-row"]')
       .find('[data-slot="canvas-node-port-handle"][data-port="source"]')
-      .should(($handle) => {
+      .should(($handle) =>
         expect($handle.attr('data-handleid')).to.equal(
           'column:source:' +
             encodeURIComponent('orphan-transform-1') +
             ':' +
-            encodeURIComponent(restoredFieldIds[1] ?? '')
-        );
-      });
-    cy.get(totalColumn)
-      .should('have.attr', 'draggable', 'true')
-      .focus()
-      .trigger('keydown', { key: 'ArrowUp', altKey: true });
-    cy.get(downstreamNode)
-      .find('[data-slot="graph-node-column-piece"]')
-      .should(($pieces) => {
-        expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal([
-          'total',
-          'order_id',
-        ]);
-      });
-    cy.get('[data-sonner-toast]').should('not.exist');
-    cy.wrap(null).should(() => {
-      const projection = readLatestDownstreamProjection();
-      expect(projection?.outputs.map((output) => output.name)).to.deep.equal(['total', 'order_id']);
-      expect(projection?.outputs.map((output) => output.fieldId)).to.deep.equal([
-        restoredFieldIds[1],
-        restoredFieldIds[0],
-      ]);
-      expect(projection?.targetRelationId).to.equal(targetRelationId);
-    });
-
-    visitReadyCanvas('/canvas?reload=model-chain');
-
-    cy.get(modelChainEdge).should('be.visible');
-    cy.get(downstreamNode).contains('button', 'Columns (2)').click();
-    cy.get(downstreamNode)
-      .find('[data-slot="graph-node-column-piece"]')
-      .then(($pieces) => {
-        expect([...$pieces].map((piece) => piece.getAttribute('data-column-name'))).to.deep.equal([
-          'total',
-          'order_id',
-        ]);
-      });
-    cy.get(totalColumn)
-      .should('contain.text', 'NN')
-      .find('[data-slot="graph-node-column-output-state"]')
-      .should('have.attr', 'aria-pressed', 'true');
-  });
-
-  it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {
-    stubStatefulCanvasDraftAuthoring();
-
-    visitReadyCanvas();
-
-    cy.contains('Sales canvas').should('be.visible');
-    assertNoManualSaveCommand();
-    assertNoDraftSaveStatus();
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    addSqlTransformNode();
-
-    cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
-    waitForDraftSaveContainingNode('dvt-transform-1');
-    cy.then(() => {
-      const saveBody = findDraftSaveContainingNode('dvt-transform-1');
-      const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-transform-1');
-      const createdPosition = saveBody?.draft.nodePositions['dvt-transform-1'];
-
-      expect(saveBody?.draft.nodeIds).to.include('dvt-transform-1');
-      expect(createdPosition?.x).to.be.a('number');
-      expect(createdPosition?.y).to.be.a('number');
-      expect(createdNode).to.deep.include({
-        id: 'dvt-transform-1',
-        name: 'Model 1',
-        kind: 'transform',
-        pluginId: 'dvt',
-      });
-    });
-    assertNoManualSaveCommand();
+            encodeURIComponent(restoredIds[1]!)
+        )
+      );
+    openWorkbenchModel('orphan-transform-1');
+    cy.then(() =>
+      cy.get(`[data-operator="project"][data-relation-id="${rootId}"]`).should('have.length', 1)
+    );
   });
 
   it('keeps the canvas context menu visible after a real browser right-click gesture', () => {
@@ -469,32 +443,25 @@ describe('Canvas ready node authoring', () => {
     cy.get('@ordersNode').find('[data-slot="graph-node-status-chip"]').should('not.exist');
   });
 
-  it('opens node Properties from double-click while ellipsis remains operations-only', () => {
+  it('opens node Properties from its contextual action without obsolete card controls', () => {
     stubCanvasDraftRead();
     stubCanvasDraftSave();
 
     visitReadyCanvas();
 
-    cy.contains('.react-flow__node', 'Model Orders').as('ordersNode').should('be.visible').click();
+    cy.contains('.react-flow__node', 'Model Orders').as('ordersNode').should('be.visible');
     cy.get('@ordersNode')
       .should('have.attr', 'aria-label')
       .and('match', /Draft$/);
-    cy.get('@ordersNode')
-      .find(
-        '[data-slot="graph-node-metric-hotspot"][aria-label*="models/analytics/model_orders.sql"]'
-      )
-      .should('be.visible');
+    cy.get('@ordersNode').find('[data-slot="graph-node-card-actions"]').should('not.exist');
     cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 
-    cy.get('@ordersNode').find('[data-slot="graph-node-card-actions"]').click();
+    cy.get('@ordersNode').find('[data-slot="canvas-node-shell"]').rightclick();
     cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
-    cy.get('[data-slot="canvas-node-context-menu"] [data-menu-action="inspect-node"]').should(
-      'not.exist'
-    );
-    cy.get('body').type('{esc}', { force: true });
-
-    cy.get('@ordersNode').find('[data-slot="canvas-node-shell"]').dblclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/)
+      .should('be.visible')
+      .click();
 
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('contain.text', 'model_orders');
@@ -505,16 +472,46 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
+    cy.contains('Sales canvas').should('be.visible');
+    assertNoManualSaveCommand();
+    assertNoDraftSaveStatus();
+    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     addSqlTransformNode();
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
-    waitForDraftSaveCount(1);
+    waitForDraftSaveContainingNode('dvt-transform-1');
+    cy.then(() => {
+      const saveBody = findDraftSaveContainingNode('dvt-transform-1');
+      const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-transform-1');
+      const createdPosition = saveBody?.draft.nodePositions['dvt-transform-1'];
+      expect(saveBody?.draft.nodeIds).to.include('dvt-transform-1');
+      expect(createdPosition?.x).to.be.a('number');
+      expect(createdPosition?.y).to.be.a('number');
+      expect(createdNode).to.deep.include({
+        id: 'dvt-transform-1',
+        name: 'Model 1',
+        kind: 'transform',
+        pluginId: 'dvt',
+      });
+    });
+    assertNoManualSaveCommand();
+    assertNoDraftSaveStatus();
 
     visitReadyCanvas();
 
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
+    let savesBeforeDelete = 0;
+    cy.then(() => {
+      savesBeforeDelete = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
     removeCanvasNode('dvt-transform-1');
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
-    waitForDraftSaveCount(2);
+    cy.then(() => waitForDraftSaveCount(savesBeforeDelete + 1));
+    cy.wrap(null).should(() => {
+      const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)
+        ?.body as CanvasDraftSaveRequestBody;
+      expect(saved.draft.nodeIds).not.to.include('dvt-transform-1');
+    });
+    assertNoDraftSaveStatus();
 
     visitReadyCanvas();
 
@@ -533,9 +530,7 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('.react-flow__node[data-id="orders_model"] [data-slot="canvas-node-shell"]')
-      .should('be.visible')
-      .dblclick();
+    openNodeProperties('orders_model');
 
     cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]')
       .should('be.visible')
@@ -596,7 +591,7 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.get('.react-flow__node[data-id="raw_orders"]')
-      .should('contain.text', 'Source')
+      .should('contain.text', 'source')
       .and('not.contain.text', 'dbt:source')
       .find('[data-slot="graph-node-operational-rail"]')
       .should('contain.text', 'Rows')
@@ -605,10 +600,11 @@ describe('Canvas ready node authoring', () => {
       .and('contain.text', '3.9 MB');
 
     cy.get('.react-flow__node[data-id="orders_model"]').as('ordersModel').should('be.visible');
-    cy.get('@ordersModel').find('[data-slot="canvas-node-shell"]').dblclick();
+    openNodeProperties('orders_model');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]')
       .should('be.visible')
+      .click()
       .and('have.attr', 'aria-selected', 'true');
     cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
     cy.get('textarea[name="dbt-model-sql"]').should('not.exist');
@@ -622,10 +618,17 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('roundtrips Source and Sink properties while Model semantics stay canonical', () => {
-    stubStatefulCanvasDraftAuthoring({
+    const draft = stubStatefulCanvasDraftAuthoring({
       authoringGenerated: true,
       title: 'DVT properties roundtrip',
     });
+    const sourceMetadata = draft.nodes.find((node) => node.id === 'source-1')!.metadata!;
+    delete sourceMetadata.connectedSourceRef;
+    sourceMetadata.connectionRef = {
+      schemaVersion: 'connection-ref.v1',
+      provider: 'postgres',
+      connectionId: 'warehouse-a',
+    };
 
     visitReadyCanvas();
 
@@ -694,9 +697,8 @@ describe('Canvas ready node authoring', () => {
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
+    openNodeProperties('dvt-transform-1');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
       'have.attr',
       'aria-selected',
@@ -750,12 +752,15 @@ describe('Canvas ready node authoring', () => {
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
     cy.get('.react-flow__pane').should('be.visible').rightclick(620, 340, { force: true });
-    cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-add-node-catalog"]').should(
+      'not.exist'
+    );
     cy.contains('[role="menuitem"]', /^(Add|Anadir)\.\.\.$/).should('not.exist');
     cy.contains('[role="menuitem"]', 'Add model').should('not.exist');
     cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
     cy.then(() => {
       const calls = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+      expect(calls, 'read-only Canvas cannot save').to.have.length(0);
       const createdNode = calls
         .map((call) => call.body as CanvasDraftSaveRequestBody)
         .flatMap((body) => body.draft.nodes)
@@ -776,17 +781,13 @@ describe('Canvas ready node authoring', () => {
       cy.get('.react-flow__node[data-id="large-node-00-00"]')
         .should('exist')
         .click({ force: true });
-      cy.get('.react-flow__node[data-id="large-node-00-00"]')
-        .find('[data-slot="graph-node-card-actions"]')
-        .should('be.visible');
+      cy.get('.react-flow__node[data-id="large-node-00-00"]').should('have.class', 'selected');
       cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
 
       cy.get('.react-flow__node[data-id="large-node-01-00"]')
         .should('exist')
         .click({ force: true });
-      cy.get('.react-flow__node[data-id="large-node-01-00"]')
-        .find('[data-slot="graph-node-card-actions"]')
-        .should('be.visible');
+      cy.get('.react-flow__node[data-id="large-node-01-00"]').should('have.class', 'selected');
       cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
 
       cy.get('.react-flow__viewport')
@@ -830,13 +831,11 @@ describe('Canvas ready node authoring', () => {
           });
         });
 
-      cy.get('.react-flow__node[data-id="large-node-01-00"]')
-        .find('[data-slot="canvas-node-shell"]')
-        .dblclick({ force: true });
+      openNodeProperties('large-node-01-00');
       cy.get('[data-slot="canvas-node-workbench-panel"]')
         .should('be.visible')
         .and('contain.text', 'large-node-01-00');
-      cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Close|Cerrar)$/).click();
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
       cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
     }
   );

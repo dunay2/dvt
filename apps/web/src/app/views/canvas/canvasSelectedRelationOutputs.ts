@@ -1,4 +1,10 @@
-/** One output command; explicit Project-expression removal never rewrites its input subtree. */
+/**
+ * Owned concern: apply canonical output selection without rewriting the input subtree.
+ * @baseline GH-3596: retained final JOIN emits remain editable after disconnection.
+ * @decision Reuse session output eligibility and the shared exact-delta commit validator.
+ * @consequence This command does not grant formula, Source or publication permissions.
+ * @version 1.1.0
+ */
 import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 import {
   cloneLocalRelation,
@@ -37,7 +43,7 @@ export async function changeSelectedRelationOutputs(
         'invalid_binding',
         'Output slot is outside the selected relation.'
       );
-    if (!session.allowsInputSchema(available.schema))
+    if (!session.allowsOutputSchema(request.relationId, available.schema))
       throw new SubstraitAnalysisError(
         'invalid_binding',
         'Output references a field outside mapped Input.'

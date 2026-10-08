@@ -251,15 +251,9 @@ describe('DBT runtime contributions', () => {
             name: 'fct_orders',
             metadata: {
               authority: 'dbt-project-files',
-              dbt: {
-                packageName: 'analytics',
-                materialized: 'incremental',
-              },
+              materialized: 'incremental',
               package: 'analytics',
               dependencies: ['source.raw.orders', 'ref.stg_customers'],
-              config: {
-                materialized: 'incremental',
-              },
               columns: [{ name: 'order_id', type: 'integer' }],
             },
           })}

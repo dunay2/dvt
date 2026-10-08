@@ -1,4 +1,10 @@
-/** Owned concern: present authoritative Source identity in the node workbench header. */
+/**
+ * Owned concern: present authoritative Source identity in the node workbench header.
+ * @baseline GH-3578: adjacent provider text already conveys the decorative glyph's meaning.
+ * @decision Keep the glyph hidden from assistive technology, without a redundant ARIA label.
+ * @consequence Provider and connection facts remain accessible once, with no invented fallback.
+ * @version 1.0.0
+ */
 import { ConnectedSourceRefSchema } from '@dvt/contracts';
 import { Database } from 'lucide-react';
 
@@ -74,8 +80,8 @@ export function SourceNodeWorkbenchHeaderIdentity({
     >
       <div
         data-slot="canvas-source-provider-icon"
+        aria-hidden="true"
         className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-(--border-default) bg-(--surface-elevated) text-(--focus-ring)"
-        aria-label={providerPresentation?.label ?? provider ?? 'Source provider'}
       >
         <ProviderIcon presentation={providerPresentation} />
       </div>

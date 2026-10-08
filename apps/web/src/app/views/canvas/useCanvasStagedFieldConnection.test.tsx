@@ -58,7 +58,14 @@ describe('field connection lifetime', () => {
           setSelectedId: vi.fn(),
           producerIds: [session.rootId],
         },
-        { session, document, error: null, revision: session.revision, refresh: vi.fn() }
+        {
+          session,
+          document,
+          error: null,
+          revision: session.revision,
+          permissionIdentity: '[[],[]]',
+          refresh: vi.fn(),
+        }
       );
       return null;
     }
@@ -144,7 +151,14 @@ describe('field connection lifetime', () => {
           producerIds: [session.rootId, first.id],
           consumedProducerIds: [],
         },
-        { session, document, error: null, revision: session.revision, refresh: vi.fn() }
+        {
+          session,
+          document,
+          error: null,
+          revision: session.revision,
+          permissionIdentity: '[[],[]]',
+          refresh: vi.fn(),
+        }
       );
       return null;
     }

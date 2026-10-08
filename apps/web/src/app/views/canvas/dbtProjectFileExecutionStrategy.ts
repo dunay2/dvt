@@ -1,4 +1,10 @@
-/** Owned concern: derive file-authoritative dbt execution input from its projection. */
+/**
+ * Owned concern: derive file-authoritative dbt execution input from its projection.
+ * @baseline ADR-0060: dbt files own execution semantics; Canvas renders their projection.
+ * @decision Keep provider execution metadata separate from shared Canvas presentation kinds.
+ * @consequence The planner graph matches server authority without reviving legacy Model cards.
+ * @version 1.0.0
+ */
 import type {
   DbtProjectFilesProvenance,
   DbtProjectGraphProjection,
@@ -21,7 +27,7 @@ export type DbtProjectFileExecutionStrategy = Extract<
 >;
 
 const EXECUTABLE_RESOURCE = {
-  model: { stepKind: 'DBT_MODEL', kind: 'dvt:transform', role: 'transform' },
+  model: { stepKind: 'DBT_MODEL', kind: 'dbt:model', role: 'transform' },
   snapshot: { stepKind: 'DBT_SNAPSHOT', kind: 'dbt:snapshot', role: 'transform' },
   test: { stepKind: 'DBT_TEST', kind: 'dbt:test', role: 'check' },
 } as const;
@@ -57,7 +63,7 @@ function buildPlannerGraphSource(projection: DbtProjectGraphProjection): Generic
         displayName: resource.name,
         tags: {
           kind: presentation.kind,
-          pluginId: resource.resourceType === 'model' ? 'dvt' : 'dbt',
+          pluginId: 'dbt',
           role: presentation.role,
         },
       },

@@ -13,7 +13,7 @@ import {
   DvtTransformAuthoringAuthorityV1Schema,
   WorkspaceGraphDraftSaveRequestSchema,
 } from '@dvt/contracts';
-import { indexSubstraitRelations, type IndexedRelation } from '@dvt/substrait-analysis';
+import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
@@ -47,16 +47,22 @@ function savedUnion(): SavedUnion {
   const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
     metadata?.[DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]
   );
-  const indexed = indexSubstraitRelations(
+  const { index, schemas } = deriveSubstraitSchemas(
     decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
   );
-  if (!indexed.ok) throw indexed.error;
-  const root = indexed.index.relations.get(indexed.index.rootId)!;
+  const root = index.relations.get(index.rootId)!;
+  const rootSchema = schemas.get(index.rootId);
+  const firstInputSchema = schemas.get(root.inputs[0]!);
+  expect(rootSchema, 'UNION output schema').not.to.equal(undefined);
+  expect(firstInputSchema, 'first operand schema').not.to.equal(undefined);
+  expect(rootSchema!.map((field) => field.type)).to.deep.equal(
+    firstInputSchema!.map((field) => field.type)
+  );
   return {
     draft,
     root,
-    reads: root.inputs.map((id) => indexed.index.relations.get(id)!),
-    relationCount: indexed.index.relations.size,
+    reads: root.inputs.map((id) => index.relations.get(id)!),
+    relationCount: index.relations.size,
     pending: metadata?.[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY],
   };
 }

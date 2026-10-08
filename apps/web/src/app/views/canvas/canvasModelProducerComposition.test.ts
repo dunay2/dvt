@@ -7,7 +7,12 @@ import {
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { relationOutputSlots } from './canvasRelationOutputSchema';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
 import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
@@ -100,6 +105,69 @@ function fixture(
 }
 
 describe('explicit composition consumes producer references', () => {
+  it('excludes, reopens and reorders model outputs without changing their producer', async () => {
+    const graph = fixture(1);
+    const producers = structuredClone(graph.nodes);
+    const input = graph.inputs.find((candidate) => candidate.producer != null)!;
+    const initial = createCanvasRelationalTreeProjectionDraft({
+      input,
+      targetNodeId: graph.targetNodeId,
+    });
+    const session = new CanvasRelationAnalysisSession('consumer', input.producer!.connection);
+    const reopened = new CanvasRelationAnalysisSession('reopened', input.producer!.connection);
+    try {
+      session.receive(initial);
+      const root = session.locate(session.rootId, session.revision);
+      const readId = root.inputs[0]!;
+      const read = await session.query(readId);
+      const binding = session.locate(readId, session.revision).binding;
+      const outputs = relationOutputSlots(root, [read])
+        .filter((slot) => slot.output != null)
+        .map(({ slot, name }) => ({ slot, alias: name }));
+      expect(outputs).toHaveLength(2);
+      const subset = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [outputs[0]!],
+      });
+      expect((await session.query(null)).bindings.map((field) => field.fieldId)).toEqual([
+        root.fields[0]!.fieldId,
+      ]);
+      reopened.receive(
+        decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(subset))
+      );
+      await changeSelectedRelationOutputs(reopened, {
+        relationId: reopened.rootId,
+        expectedRevision: reopened.revision,
+        outputs: [...outputs].reverse(),
+      });
+      const restored = await reopened.query(null);
+      expect(restored.bindings.map((field) => field.displayName)).toEqual(['value', 'id']);
+      expect(restored.bindings[1]!.fieldId).toBe(root.fields[0]!.fieldId);
+      const reordered = await changeSelectedRelationOutputs(reopened, {
+        relationId: reopened.rootId,
+        expectedRevision: reopened.revision,
+        outputs,
+      });
+      const result = await reopened.query(null);
+      expect(result.bindings.map((field) => field.fieldId)).toEqual(
+        [...restored.bindings].reverse().map((field) => field.fieldId)
+      );
+      expect(result.fields).toEqual(
+        deriveSubstraitSchemas(reordered).schemas.get(root.binding.relationId)
+      );
+      expect(result.fields.map((field) => field.type)).toEqual(
+        read.fields.map((field) => field.type)
+      );
+      expect((await reopened.query(readId)).bindings).toEqual(read.bindings);
+      expect(reopened.locate(readId, reopened.revision).binding).toEqual(binding);
+      expect(reopened.locate(reopened.rootId, reopened.revision).inputs).toEqual(root.inputs);
+      expect(graph.nodes).toEqual(producers);
+    } finally {
+      session.dispose();
+      reopened.dispose();
+    }
+  });
   it('keeps independent aliases for repeated model inputs without copying their operations', async () => {
     const graph = fixture(2);
     const input = graph.inputs[0]!;

@@ -352,6 +352,7 @@ function hasWebChange(changedFiles) {
         'scripts/run-selected-closure-live-proof.cjs',
         'scripts/run-selected-closure-cypress.cjs',
         'scripts/live-proof-process.cjs',
+        'tools/ci/run-web-cypress-native.mjs',
       ].includes(filePath)
   );
 }

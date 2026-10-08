@@ -1,4 +1,11 @@
 // @vitest-environment jsdom
+/**
+ * Owned concern: prove formula feedback and explicit submission use canonical field authority.
+ * @baseline ADR-0064: direct selections and natural passthroughs retain the same input meaning.
+ * @decision Exercise both production projection forms through the existing editor and command.
+ * @consequence UI validation cannot introduce duplicate names or bypass real ambiguity guards.
+ * @version 1.0.0
+ */
 import React, { act } from 'react';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
@@ -6,6 +13,7 @@ import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { CanvasDerivedOutputSection } from './CanvasDerivedOutputSection';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -265,79 +273,97 @@ describe('selected relation derived-output section', () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
-  it('stays read-only until requested and commits one revision-bound document', async () => {
-    const document = connectedNamesProjectionDraft();
-    const lookup = new CanvasRelationAnalysisSession('derived-output-test-identity');
-    lookup.receive(document);
-    const relationId = lookup.rootId;
-    const onChange = vi.fn();
-    const onPendingChange = vi.fn();
+  it.each(['natural', 'selection'] as const)(
+    'stays read-only and commits one revision-bound %s projection',
+    async (projection) => {
+      const document =
+        projection === 'natural'
+          ? connectedNamesProjectionDraft()
+          : projectionScenario({
+              sourceNodeId: 'customers',
+              targetNodeId: 'names',
+              fields: ['first_name', 'last_name'],
+            });
+      const lookup = new CanvasRelationAnalysisSession('derived-output-test-identity');
+      lookup.receive(document);
+      const relationId = lookup.rootId;
+      const onChange = vi.fn();
+      const onPendingChange = vi.fn();
 
-    function Host({ snapshot = document }: { snapshot?: typeof document }): React.JSX.Element {
-      const analysis = useCanvasRelationAnalysisSession(snapshot, 'derived-output-section');
-      return (
-        <CanvasRelationAnalysisContext.Provider value={analysis}>
-          <CanvasDerivedOutputSection
-            relationId={relationId}
-            onChange={onChange}
-            onPendingChange={onPendingChange}
-          />
-        </CanvasRelationAnalysisContext.Provider>
+      function Host({ snapshot = document }: { snapshot?: typeof document }): React.JSX.Element {
+        const analysis = useCanvasRelationAnalysisSession(snapshot, 'derived-output-section');
+        return (
+          <CanvasRelationAnalysisContext.Provider value={analysis}>
+            <CanvasDerivedOutputSection
+              relationId={relationId}
+              onChange={onChange}
+              onPendingChange={onPendingChange}
+            />
+          </CanvasRelationAnalysisContext.Provider>
+        );
+      }
+
+      await act(async () => root.render(<Host />));
+      await waitFor(() =>
+        expect(
+          container.querySelector('[data-slot="canvas-derived-output-trigger"]')
+        ).not.toBeNull()
       );
+      expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).toBeNull();
+
+      await act(async () =>
+        fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+      );
+      expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).not.toBeNull();
+      expect(onChange).not.toHaveBeenCalled();
+      expect(onPendingChange).toHaveBeenLastCalledWith(true);
+
+      await act(async () =>
+        fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-cancel"]')!)
+      );
+      expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).toBeNull();
+      expect(onChange).not.toHaveBeenCalled();
+      expect(onPendingChange).toHaveBeenLastCalledWith(false);
+
+      await act(async () =>
+        fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
+      );
+      const formula = container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!;
+      expect(formula).not.toBeNull();
+      expect(formula.value).toBe('');
+      expect(
+        container.querySelectorAll('[data-slot="formula-operand"][data-kind="field"]').length
+      ).toBeGreaterThan(0);
+      await act(async () => fireEvent.change(formula, { target: { value: 'UPPER(first_name)' } }));
+      expect(container.querySelector('.formula-result')?.textContent).toContain('first_name');
+      expect(
+        [...container.querySelectorAll('[data-slot="formula-operand"][data-kind="field"]')].filter(
+          (element) => element.textContent?.includes('first_name')
+        )
+      ).toHaveLength(1);
+      await act(async () =>
+        fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
+          target: { value: 'normalized_name' },
+        })
+      );
+      await act(async () => root.render(<Host snapshot={structuredClone(document)} />));
+      expect(container.querySelector<HTMLInputElement>('input[name="alias"]')?.value).toBe(
+        'normalized_name'
+      );
+      await act(async () => fireEvent.submit(container.querySelector('form')!));
+
+      await waitFor(() => expect(onChange).toHaveBeenCalledOnce());
+      const indexed = indexSubstraitRelations(onChange.mock.calls[0]![0]);
+      if (!indexed.ok) throw indexed.error;
+      const project = indexed.index.relations.get(relationId);
+      expect(project?.relation.relType.case).toBe('project');
+      expect(
+        onChange.mock.calls[0]![0].sidecar.fields.some(
+          (field: { displayName?: string }) => field.displayName === 'normalized_name'
+        )
+      ).toBe(true);
     }
-
-    await act(async () => root.render(<Host />));
-    await waitFor(() =>
-      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).not.toBeNull()
-    );
-    expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).toBeNull();
-
-    await act(async () =>
-      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
-    );
-    expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).not.toBeNull();
-    expect(onChange).not.toHaveBeenCalled();
-    expect(onPendingChange).toHaveBeenLastCalledWith(true);
-
-    await act(async () =>
-      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-cancel"]')!)
-    );
-    expect(container.querySelector('[data-slot="canvas-derived-output-form"]')).toBeNull();
-    expect(onChange).not.toHaveBeenCalled();
-    expect(onPendingChange).toHaveBeenLastCalledWith(false);
-
-    await act(async () =>
-      fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
-    );
-    const formula = container.querySelector<HTMLTextAreaElement>('textarea[name="formula"]')!;
-    expect(formula).not.toBeNull();
-    expect(formula.value).toBe('');
-    expect(
-      container.querySelectorAll('[data-slot="formula-operand"][data-kind="field"]').length
-    ).toBeGreaterThan(0);
-    await act(async () => fireEvent.change(formula, { target: { value: 'UPPER(first_name)' } }));
-    await act(async () =>
-      fireEvent.change(container.querySelector<HTMLInputElement>('input[name="alias"]')!, {
-        target: { value: 'normalized_name' },
-      })
-    );
-    await act(async () => root.render(<Host snapshot={structuredClone(document)} />));
-    expect(container.querySelector<HTMLInputElement>('input[name="alias"]')?.value).toBe(
-      'normalized_name'
-    );
-    await act(async () => fireEvent.submit(container.querySelector('form')!));
-
-    await waitFor(() => expect(onChange).toHaveBeenCalledOnce());
-    const indexed = indexSubstraitRelations(onChange.mock.calls[0]![0]);
-    if (!indexed.ok) throw indexed.error;
-    const project = indexed.index.relations.get(relationId);
-    expect(project?.relation.relType.case).toBe('project');
-    expect(
-      onChange.mock.calls[0]![0].sidecar.fields.some(
-        (field: { displayName?: string }) => field.displayName === 'normalized_name'
-      )
-    ).toBe(true);
-  });
+  );
 
   it('does not offer the edited output as its own formula operand', async () => {
     const session = new CanvasRelationAnalysisSession('derived-output-self-reference-identity');

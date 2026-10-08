@@ -3,11 +3,8 @@ import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
 
 import { getVisibleCanvasNode } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
-import {
-  hasLiveProtectedRuntimeEnv,
-  readLiveRunIds,
-  seedLiveSelectedClosureDraft,
-} from '../../support/liveProtectedRuntime';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
+import { hasLiveProtectedRuntimeEnv, readLiveRunIds } from '../../support/liveProtectedRuntime';
 import {
   openWorkbenchModel,
   previewWorkbenchModel,

@@ -13,6 +13,7 @@ import { useCanvasRelationFields } from './useCanvasRelationFields';
 import type { DerivedOutputField } from './canvasFormulaAssist';
 import { describeCanvasTransformDefinitions } from './canvasTransformDefinitionPresentation';
 import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { projectTransformFormulaNameFields } from './canvasTransformFormulaScope';
 
 export function useCanvasDerivedOutputAuthoring(relationId: string) {
   const analysis = useContext(CanvasRelationAnalysisContext);
@@ -127,7 +128,10 @@ export function useCanvasDerivedOutputAuthoring(relationId: string) {
     });
     const fields: readonly DerivedOutputField[] = [...inputs, ...outputs];
     return {
-      fields,
+      fields:
+        model.dependencies == null
+          ? fields
+          : projectTransformFormulaNameFields(model.dependencies, fields),
       dragScope: {
         rootId: analysis.session.rootId,
         revision: analysis.revision,
