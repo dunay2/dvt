@@ -31,6 +31,7 @@ export interface ICanvasTransformDataSampleProbe {
 export type CanvasTransformDataSampleFailureReason =
   | 'selection_unavailable'
   | 'canvas_changed'
+  | 'relation_outside_output_plan'
   | 'connection_mismatch'
   | 'projection_unsupported'
   | 'query_failed';

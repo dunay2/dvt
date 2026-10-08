@@ -53,6 +53,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   sourceRunNotTerminal: 'source_run_not_terminal',
   tenantAccessDenied: 'tenant_access_denied',
   transformDataSampleFailed: 'transform_data_sample_failed',
+  transformDataSampleOutsideOutputPlan: 'transform_data_sample_relation_outside_output_plan',
   transformDataSampleStale: 'transform_data_sample_stale',
   unsupportedWarehouseAdapter: 'unsupported_warehouse_adapter',
   unsupportedPlanVersion: 'unsupported_plan_version',

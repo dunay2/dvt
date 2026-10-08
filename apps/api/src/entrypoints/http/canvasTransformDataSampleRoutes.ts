@@ -100,7 +100,10 @@ export function registerCanvasTransformDataSampleRoutes(
           reply.code(422).send({
             error: {
               type: 'unprocessable_entity',
-              reason: HTTP_ERROR_REASON.transformDataSampleFailed,
+              reason:
+                error.reason === 'relation_outside_output_plan'
+                  ? HTTP_ERROR_REASON.transformDataSampleOutsideOutputPlan
+                  : HTTP_ERROR_REASON.transformDataSampleFailed,
             },
           });
           return;

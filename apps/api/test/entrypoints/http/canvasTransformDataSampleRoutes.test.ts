@@ -2,6 +2,7 @@ import { asIsoUtcString } from '@dvt/contracts';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import { CanvasTransformDataSampleUnavailableError } from '../../../src/application/ports/canvasTransformDataSample.js';
 import { registerCanvasTransformDataSampleRoutes } from '../../../src/entrypoints/http/canvasTransformDataSampleRoutes.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
@@ -76,6 +77,27 @@ function buildApp(): Readonly<{
 }
 
 describe('canvasTransformDataSampleRoutes', () => {
+  it('preserves the outside-plan reason without exposing diagnostic prose', async () => {
+    const { app, execute } = buildApp();
+    execute.mockRejectedValue(
+      new CanvasTransformDataSampleUnavailableError('relation_outside_output_plan')
+    );
+    try {
+      const response = await app.inject({
+        method: 'GET',
+        url: `/workspace/graph/canvases/canvas-orders/transforms/transform-orders/data-sample?${SCOPE_QUERY}&relationId=detached&semanticPlanSha256=${'a'.repeat(64)}`,
+      });
+      expect(response.statusCode).toBe(422);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'unprocessable_entity',
+          reason: 'transform_data_sample_relation_outside_output_plan',
+        },
+      });
+    } finally {
+      await app.close();
+    }
+  });
   it('passes selected relation and expected semantic version through the protected query', async () => {
     const { app, execute, authorize } = buildApp();
     const sha = 'a'.repeat(64);
