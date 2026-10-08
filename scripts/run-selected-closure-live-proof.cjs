@@ -2,6 +2,7 @@
 /**
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
  * @baseline GH-3594: outbox admission stays enforced against the disposable proof database.
+ * @baseline GH-3021: PCV1 external inputs are prepared explicitly inside that claimed lease.
  * @decision Validate the literal spec list before allocation and execute it in one owned runtime.
  * @consequence Outbox delivery, readiness and cleanup stay real; incomplete evidence rejects.
  * @version 1.0.0
@@ -37,6 +38,7 @@ const {
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
 const { allocateFreePort, buildTemporalApiEnv } = require('./run-dev-stack.temporal.cjs');
+const { seedPcv1PostgresProofData } = require('./run-dev-stack.postgres-seed.cjs');
 
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const DEFAULT_API_PORT = 3300;
@@ -591,6 +593,7 @@ async function seedSelectedClosureLocalWarehouseProof(
   apiEnv,
   deps = {
     seedLocalPostgresProofData,
+    seedPcv1PostgresProofData,
     log: console.log,
   }
 ) {
@@ -602,6 +605,7 @@ async function seedSelectedClosureLocalWarehouseProof(
 
   deps.log('[selected-closure-live] Seeding local Postgres proof source data');
   await deps.seedLocalPostgresProofData(databaseUrl);
+  await deps.seedPcv1PostgresProofData(databaseUrl);
 }
 
 async function runCypress(args, runtime, processHandles, deps = {}) {

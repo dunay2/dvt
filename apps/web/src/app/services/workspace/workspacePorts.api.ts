@@ -376,7 +376,7 @@ export function createApiWarehouseSourceDataSampleQueryPort(
             case 'warehouse_source_data_sample_failed':
               throw new WarehouseSourceDataSampleQueryError('unavailable');
             case 'warehouse_source_publication_changed':
-              throw new WarehouseSourceDataSampleQueryError('unavailable');
+              throw new WarehouseSourceDataSampleQueryError('publication_changed');
           }
         }
         throw error;

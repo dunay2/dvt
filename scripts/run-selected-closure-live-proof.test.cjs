@@ -770,7 +770,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_DBT_BIN, apiEnv.DVT_DBT_BIN);
 });
 
-test('seedSelectedClosureLocalWarehouseProof seeds source data before the API command creates the catalog', async () => {
+test('seedSelectedClosureLocalWarehouseProof explicitly seeds both external fixtures in the same lease', async () => {
   const calls = [];
 
   await seedSelectedClosureLocalWarehouseProof(
@@ -782,6 +782,9 @@ test('seedSelectedClosureLocalWarehouseProof seeds source data before the API co
       seedLocalPostgresProofData: async (databaseUrl) => {
         calls.push(['postgres', databaseUrl]);
       },
+      seedPcv1PostgresProofData: async (databaseUrl) => {
+        calls.push(['pcv1', databaseUrl]);
+      },
       log: (message) => {
         calls.push(['log', message]);
       },
@@ -791,5 +794,23 @@ test('seedSelectedClosureLocalWarehouseProof seeds source data before the API co
   assert.deepEqual(calls, [
     ['log', '[selected-closure-live] Seeding local Postgres proof source data'],
     ['postgres', 'postgresql://user:pass@localhost:5432/dvt'],
+    ['pcv1', 'postgresql://user:pass@localhost:5432/dvt'],
   ]);
+});
+
+test('PCV1 source preparation failure rejects the LIVE bootstrap without a fallback', async () => {
+  const failure = new Error('External source preparation failed');
+  await assert.rejects(
+    seedSelectedClosureLocalWarehouseProof(
+      { DATABASE_URL: 'postgresql://proof@127.0.0.1/claimed-lease' },
+      {
+        seedLocalPostgresProofData: async () => {},
+        seedPcv1PostgresProofData: async () => {
+          throw failure;
+        },
+        log: () => {},
+      }
+    ),
+    (error) => error === failure
+  );
 });

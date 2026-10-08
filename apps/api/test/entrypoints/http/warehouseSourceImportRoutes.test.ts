@@ -1,4 +1,12 @@
+/**
+ * Owned concern: verify protected warehouse commands and queries at their HTTP boundary.
+ * @baseline ADR-0066: a replaced publication cannot satisfy an older Run's sample.
+ * @decision Preserve typed conflicts and authorization through the existing source query.
+ * @consequence Consumers can distinguish changed publication from unavailable data.
+ * @version 1.0.0
+ */
 import { createHash } from 'node:crypto';
+import { URLSearchParams } from 'node:url';
 
 import {
   buildRelationalSourceObjectId,
@@ -20,6 +28,7 @@ import type { CanvasAuthoringAuthorityKey } from '../../../src/application/ports
 import {
   DuplicateWarehouseConnectionError,
   WarehouseConnectionNotFoundError,
+  WarehouseSourcePublicationChangedError,
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import type {
   CreateWarehouseConnectionCatalogInput,
@@ -700,6 +709,39 @@ describe('warehouseSourceImportRoutes', () => {
       expect.any(String)
     );
     expect(previewRows).toHaveBeenCalledWith(expect.objectContaining({ expectedPublicationToken }));
+  });
+
+  it('preserves a replaced publication as a conflict without returning its rows', async () => {
+    const { app, authorize, probe } = buildApp();
+    const previewRows = vi
+      .spyOn(probe, 'previewSourceObjectRows')
+      .mockRejectedValue(new WarehouseSourcePublicationChangedError());
+    const expectedPublicationToken = 'a'.repeat(64);
+    const query = new URLSearchParams({
+      objectId: 'relation/analytics/erp/orders',
+      limit: '20',
+      expectedPublicationToken,
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/warehouse/connections/warehouse-prod/source-data-sample?${SCOPE_QUERY}&${query}`,
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: { type: 'conflict', reason: 'warehouse_source_publication_changed' },
+    });
+    expect(previewRows).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ expectedPublicationToken })
+    );
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'query', name: 'workspace:source-import:view' },
+      }),
+      expect.any(String)
+    );
   });
 
   it('rejects missing object identity and limits above the governed source sample bound', async () => {

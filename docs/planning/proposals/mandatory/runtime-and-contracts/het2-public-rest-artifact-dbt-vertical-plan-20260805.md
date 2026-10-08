@@ -2,7 +2,7 @@
 title: HET2 public REST artifact DBT vertical plan
 status: Active
 date: 2026-08-05
-last_reviewed: 2026-08-05
+last_reviewed: 2026-10-08
 owners:
   - Contracts
   - Artifacts
@@ -16,6 +16,31 @@ task_ids:
 ---
 
 # HET2 Public REST Artifact DBT Vertical
+
+## Current runtime scope and retired browser history
+
+[GH-3021](https://github.com/dunay2/dvt/issues/3021) retires the superseded
+HET1/HET2 Canvas stories, not their provider/runtime invariants. The initial dbt
+choice, acquisition-node catalog and Model-local SQL editing assumed by those
+stories are no longer the current UI. The original
+[HET2 proof](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts),
+[runner](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/scripts/run-het2-public-vertical-live-proof.cjs)
+and [pre-retirement plan](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/docs/planning/proposals/mandatory/runtime-and-contracts/het2-public-rest-artifact-dbt-vertical-plan-20260805.md)
+remain exact historical evidence. `RunHet2PublicVerticalLiveProof` retains its
+catalog identity with retired status; it is not an executable completion gate.
+
+The provider contracts, plugins, HTTPS adapter, immutable artifact store,
+planner/plan-verifier tests, MinIO infrastructure and real object-file service
+integration remain in scope. The
+[testing guide](../../../../guides/testing-and-ci-capabilities.md#retired-het-browser-histories-and-retained-runtime-coverage)
+maps those retained proof boundaries. The current JOIN and Run-controls browser
+stories below cover generic Preview/Run/status/events/Cancel/Recover only: they
+are not equivalent HET-chain evidence and do not prove acquisition recovery to
+completion. Both HET risks remain open.
+
+The analysis, diagrams and pre-implementation review below describe the original
+design baseline. Runtime security and receipt-only invariants remain binding;
+historical UI claims are not a reason to restore the removed catalog.
 
 ## Think-First Analysis
 
@@ -138,7 +163,7 @@ the externally observable intent is still previewing and starting a stored plan.
 | Preview the four-step plan                 | `PreviewExecutionPlan` command                 | Canvas preview/readiness    | existing planner/API/Web rail             | existing protected workspace scope      | unavailable HTTP capability fails closed                                 |
 | Execute acquisition, load, model, and test | `StartRun` / `WorkflowEngine.startRun` command | run execution aggregate     | existing engine port and Temporal adapter | stored plan ownership and runtime scope | malformed config, missing capability, endpoint denial, artifact conflict |
 | Observe receipt-only progress              | `GetRunStatus`, `GetRunEvents` queries         | run operational read models | existing state-store/API/Web rails        | tenant/project/environment scope        | response bytes and credentials absent                                    |
-| Execute the governed live proof            | `RunHet2PublicVerticalLiveProof` command       | delivery runtime proofs     | repository proof runner                   | local controlled stack only             | no preseed, security refusal, tamper, dbt failure, cancel/recover        |
+| Historical proof (retired)                 | `RunHet2PublicVerticalLiveProof` command       | delivery runtime proofs     | historical Git revision                   | no active command                       | historical no-preseed, security, tamper, dbt failure, cancel/recover     |
 
 ## Fowler Opportunity Matrix
 
@@ -190,9 +215,11 @@ blockers that must be corrected before the combined HET1/HET2 branch can merge:
 The accepted correction keeps the same command/query rails and implementation
 surfaces. It strengthens the existing worker policy and proof fixture; it does
 not add a connector, route, artifact model, loader, or orchestration mechanism.
-The combined PR must also run the retained HET1 live proof because that is the
-service-backed evidence that the downstream loader rejects a tampered artifact
-before PostgreSQL mutation.
+The original combined PR also required the then-current HET1 live proof as
+service-backed evidence that the downstream loader rejected a tampered artifact
+before PostgreSQL mutation. That historical requirement is not an instruction to
+execute the retired wrapper on the current UI; retained runtime proof boundaries
+and the remaining E2E limitation are stated above.
 
 ```feature-mechanization
 version: 1
@@ -244,16 +271,7 @@ allowedImplementationSurfaces:
   - apps/api/test/plugins/observability.test.ts
   - apps/web/src/app/plugins/**
   - apps/web/src/app/views/canvas/**
-  - apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
-  - apps/web/cypress/fixtures/het2-fixture-cert.pem
-  - apps/web/cypress/fixtures/het2-fixture-key.pem
-  - apps/web/cypress/fixtures/het2-http-json-orders.jsonl
-  - apps/web/cypress/fixtures/het2-http-json-orders.manifest.json
   - apps/web/cypress/support/canvasExecutionSelection.ts
-  - apps/web/cypress/support/het1PublicFailureRecoveryProof.ts
-  - apps/web/cypress/support/het2PublicVertical.ts
-  - scripts/run-het2-public-vertical-live-proof.cjs
-  - scripts/run-het2-public-vertical-live-proof.test.cjs
   - package.json
   - pnpm-lock.yaml
   - docs/planning/proposals/mandatory/runtime-and-contracts/het2-public-rest-artifact-dbt-vertical-plan-20260805.md
@@ -283,6 +301,7 @@ commandQueryRails:
   - name: RunHet2PublicVerticalLiveProof
     type: command
     dddOwner: DeliveryRuntimeProofs
+    status: retired
 domainObjects:
   - name: HttpJsonArtifactAcquisitionConfig
     type: value object
@@ -306,7 +325,8 @@ architectureGuards:
   - packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasPlanAction.dbtProjectFiles.test.ts
 cypressFlows:
-  - apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts
+  - apps/web/cypress/e2e/runs/run-controls-live.cy.ts
 completionGate:
   - pnpm --filter @dvt/contracts test
   - pnpm --filter @dvt/artifacts test
@@ -316,9 +336,7 @@ completionGate:
   - pnpm --filter @dvt/plan-verifier test
   - pnpm --filter dvt-api test
   - pnpm --filter @dvt/web test
-  - pnpm test:web:e2e:het1-public:live
-  - pnpm test:web:e2e:het2-public:live
-  - pnpm docs:feature-mechanization:implementation -- --base 2eb393a4a --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805
+  - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
 redGreenCycles:
   - id: http-json-contract-admission
@@ -361,17 +379,6 @@ redGreenCycles:
       - apps/web/src/app/plugins/**
       - apps/web/src/app/views/canvas/**
     greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/httpJsonArtifactAuthoringModel.test.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts
-  - id: het2-live-proof
-    redTest: pnpm test:web:e2e:het2-public:live
-    expectedFailure: No controlled HTTPS fixture proves the public four-step route without pre-seeding the artifact.
-    patchSurfaces:
-      - apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
-      - apps/web/cypress/fixtures/het2-http-json-orders.manifest.json
-      - apps/web/cypress/support/het2PublicVertical.ts
-      - scripts/run-het2-public-vertical-live-proof.cjs
-      - scripts/run-het2-public-vertical-live-proof.test.cjs
-      - package.json
-    greenTest: pnpm test:web:e2e:het2-public:live
   - id: review-http-network-negative-coverage
     redTest: pnpm --filter dvt-temporal-worker test -- test/runtime/nodeHttpsJsonClient.test.ts
     expectedFailure: IPv4-compatible IPv6 and required per-hop, timeout, encoding, status, media, payload, optional-auth, and redaction cases are not all proven.
@@ -379,14 +386,6 @@ redGreenCycles:
       - apps/temporal-worker/src/runtime/nodeHttpsJsonClient.ts
       - apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts
     greenTest: pnpm --filter dvt-temporal-worker test -- test/runtime/nodeHttpsJsonClient.test.ts
-  - id: review-live-acquisition-failure-and-cancellation
-    redTest: pnpm test:web:e2e:het2-public:live
-    expectedFailure: The live proof does not exercise real HTTP status failure, response integrity mismatch, or cancellation requested while acquisition is active.
-    patchSurfaces:
-      - apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
-      - scripts/run-het2-public-vertical-live-proof.cjs
-      - scripts/run-het2-public-vertical-live-proof.test.cjs
-    greenTest: pnpm test:web:e2e:het2-public:live
 symbols:
   - name: HttpJsonArtifactStepTypeConfigSchema
     path: packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts
@@ -394,7 +393,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Primitive obsession]
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
     unitTests: [packages/@dvt/contracts/test/http-json-artifact-step.contract.test.ts]
   - name: S3ContentAddressedArtifactStore
     path: packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts
@@ -402,7 +401,7 @@ symbols:
     cqRails: [StartRun]
     fowlerSignals: [Hidden authority]
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
     unitTests: [packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts]
   - name: HttpJsonArtifactPluginRunner
     path: packages/@dvt/temporal-http-json-plugin/src/HttpJsonArtifactPluginRunner.ts
@@ -410,7 +409,7 @@ symbols:
     cqRails: [WorkflowEngine.startRun]
     fowlerSignals: [Boundary drift]
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
     unitTests: [packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts]
   - name: createTemporalWorkerHttpJsonProfile
     path: apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts
@@ -418,7 +417,7 @@ symbols:
     cqRails: [WorkflowEngine.startRun]
     fowlerSignals: [Responsibility overload]
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
     unitTests: [apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts]
   - name: buildDbtPlannerGraphSource
     path: apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts
@@ -426,14 +425,6 @@ symbols:
     cqRails: [PreviewExecutionPlan]
     fowlerSignals: [Hidden authority]
     architectureGuard: apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
     unitTests: [apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts]
-  - name: main
-    path: scripts/run-het2-public-vertical-live-proof.cjs
-    dddOwner: DeliveryRuntimeProofs
-    cqRails: [RunHet2PublicVerticalLiveProof]
-    fowlerSignals: [Test-only confidence]
-    architectureGuard: scripts/run-het2-public-vertical-live-proof.test.cjs
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
-    unitTests: [scripts/run-het2-public-vertical-live-proof.test.cjs]
 ```

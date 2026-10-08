@@ -1,3 +1,10 @@
+/**
+ * Owned concern: verify local stack boundaries and explicitly requested external fixtures.
+ * @baseline GH-3021: product acceptance fixtures belong only to the claimed LIVE lease.
+ * @decision Keep the default source seed independent from the PCV1 fixture entrypoint.
+ * @consequence Development sources stay unchanged and fixture failures remain observable.
+ * @version 1.0.0
+ */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { EventEmitter } = require('node:events');
@@ -26,6 +33,7 @@ const {
   startLocalTemporalService,
 } = require('./run-dev-stack.temporal.cjs');
 const { defaultPgUrl, defaultWarehousePgUrl } = require('./run-local-postgres.cjs');
+const { seedPcv1PostgresProofData } = require('./run-dev-stack.postgres-seed.cjs');
 
 test('parseArgs enables skip-postgres explicitly', () => {
   const options = parseArgs(['--host', '0.0.0.0', '--skip-postgres', '--test-only']);
@@ -508,7 +516,48 @@ test('buildLocalPostgresProofSeedSql creates real default source tables for Canv
   assert.match(sql, /ANALYZE raw\.orders/);
   assert.match(sql, /ANALYZE raw\.client/);
   assert.match(sql, /ANALYZE raw\.order_details/);
+  assert.doesNotMatch(sql, /pcv1/);
 });
+
+for (const queryFails of [false, true]) {
+  test(`PCV1 explicitly seeds only external input rows and closes its client (failure: ${queryFails})`, async () => {
+    const calls = [];
+    const failure = new Error('Provider refused fixture preparation');
+    const databaseUrl = 'postgresql://proof@127.0.0.1/claimed-lease';
+    class Client {
+      constructor(options) {
+        calls.push(['client', options]);
+      }
+      async connect() {
+        calls.push(['connect']);
+      }
+      async query(sql) {
+        calls.push(['query', sql]);
+        if (queryFails) throw failure;
+      }
+      async end() {
+        calls.push(['end']);
+      }
+    }
+    const seeding = seedPcv1PostgresProofData(databaseUrl, { Client });
+    if (queryFails) await assert.rejects(seeding, (error) => error === failure);
+    else await seeding;
+    assert.deepEqual(calls[0], ['client', { connectionString: databaseUrl }]);
+    assert.deepEqual(
+      calls.map(([operation]) => operation),
+      ['client', 'connect', 'query', 'end']
+    );
+    const sql = calls[2][1];
+    assert.match(sql, /CREATE TABLE pcv1\.customers/);
+    assert.match(sql, /\(10, ' Ana '\),\s*\(20, ' Luis '\),\s*\(30, NULL\)/);
+    assert.match(sql, /CREATE TABLE pcv1\.orders/);
+    assert.match(sql, /\(1, 10, 100\),\s*\(2, 20, 200\),\s*\(3, 30, 300\),\s*\(4, 99, 400\)/);
+    assert.doesNotMatch(
+      sql,
+      /(?:public\.|raw\.|graph_drafts|run_snapshots|publication|current_database)/i
+    );
+  });
+}
 
 test('warehouse seed fails when its database is unavailable', async () => {
   await assert.rejects(

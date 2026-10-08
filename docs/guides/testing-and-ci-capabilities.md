@@ -536,7 +536,7 @@ Planning-generated pages that are intentionally untracked:
 
 ## GitHub Workflow Coverage
 
-The object-store fixture used by PR Quality Gate and the HET1/HET2 live proofs
+The object-store fixture used by PR Quality Gate's retained object-file integration
 is built from `infra/minio-test/Dockerfile`. It pins the official MinIO source
 commit and Go builder digest; the community release no longer supplies a usable
 prebuilt image. Each caller runs the returned local image ID, not a mutable tag.
@@ -544,6 +544,32 @@ Docker reuses unchanged build layers. Build failure stops the proof; there is no
 fallback provider or skipped integration. This image is an isolated test fixture,
 not a production deployment. The upstream release and build instructions are
 [RELEASE.2025-10-15T17-29-55Z](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z).
+
+### Retired HET browser histories and retained runtime coverage
+
+The HET1/HET2 browser stories and their exclusive wrappers, helpers and Cypress
+assets were retired under [#3021](https://github.com/dunay2/dvt/issues/3021).
+They required the superseded initial dbt choice, acquisition-node catalog and
+Model-local SQL editor. Their historical evidence remains at
+[HET1](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts)
+and [HET2](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts).
+Those revisions are not executable current-UI acceptance commands.
+
+The retirement preserves these existing proof boundaries:
+
+| Boundary                             | Retained evidence                                                                                                                                                                                                    | Limit                                                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Object-file load                     | `apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts`, its PR Quality Gate job and `infra/minio-test`                                                                                      | Real MinIO, Temporal and PostgreSQL; not the retired Canvas-to-dbt story                   |
+| Admission, integrity and atomic load | `packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts`, `packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts`                                               | Plugin-port negatives and PostgreSQL integration retain their own execution prerequisites  |
+| HTTPS policy and immutable artifact  | `apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts`, `packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts`, `packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts` | Adapter/port tests do not prove a real HTTPS-to-S3-to-PostgreSQL-to-dbt run                |
+| Generic public execution lifecycle   | `apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts`, `apps/web/cypress/e2e/runs/run-controls-live.cy.ts`                                                                                                | Preview, Run, status/events and Cancel/Recover; not HET acquisition recovery to completion |
+
+Contract, planner, plan-verifier, dbt-plugin and Temporal lifecycle tests also
+remain unchanged. No current equivalent full HET E2E is claimed. The HET1/HET2
+risk records remain open; historical success is not evidence of current browser
+coverage, nor does removing the obsolete UI story remove a runtime invariant.
+
+### Workflow owners
 
 - `CI - Code Quality`: ordinary pull requests run changed-slice verification
   through `pnpm verify:changed` and affected build/lint/type-check preflight

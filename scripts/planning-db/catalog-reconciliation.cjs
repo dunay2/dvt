@@ -64,6 +64,7 @@ function parseCatalogReconciliation(value) {
         'reference',
         'evidenceRetirement',
         'sourceContent',
+        'railRetirement',
       ],
       'change'
     );
@@ -75,10 +76,29 @@ function parseCatalogReconciliation(value) {
     const key = `${change.origin}:${change.railId}`;
     if (targets.has(key)) throw new Error('CATALOG-REQUEST: Duplicate target.');
     targets.add(key);
-    if (!change.source && !change.reference && !change.evidenceRetirement && !change.sourceContent)
+    if (
+      !change.source &&
+      !change.reference &&
+      !change.evidenceRetirement &&
+      !change.sourceContent &&
+      !change.railRetirement
+    )
       throw new Error(
-        'CATALOG-REQUEST: Explicit source, reference, evidence retirement or current content patch required.'
+        'CATALOG-REQUEST: Explicit source, reference, evidence retirement, rail retirement or current content patch required.'
       );
+    if (Object.hasOwn(change, 'railRetirement')) {
+      if (
+        change.origin !== 'imported' ||
+        ['source', 'reference', 'evidenceRetirement', 'sourceContent'].some((key) =>
+          Object.hasOwn(change, key)
+        )
+      )
+        throw new Error(
+          'CATALOG-RETIREMENT: Rail retirement requires an exclusive imported-row patch.'
+        );
+      object(change.railRetirement, ['reason'], 'rail retirement');
+      text(change.railRetirement.reason, 'rail retirement reason');
+    }
     if (
       Object.hasOwn(change, 'sourceContent') &&
       (change.origin !== 'local' ||
@@ -170,20 +190,36 @@ function planCatalogReconciliation(request, storedRows, sourceProofs) {
       }
       after.source_content_sha256 = proof.contentSha256;
     }
-    if (change.reference) {
-      const matches = after.raw_manifest.commandQueryRails?.filter(
-        (rail) =>
-          rail.type === before.rail_type &&
-          String(rail.name).trim().toLowerCase() === before.normalized_rail_name
-      );
+    if (change.reference || change.railRetirement) {
+      const rails = after.raw_manifest?.commandQueryRails;
+      const matches = Array.isArray(rails)
+        ? rails.filter(
+            (rail) =>
+              rail?.type === before.rail_type &&
+              String(rail.name).trim().toLowerCase() === before.normalized_rail_name
+          )
+        : [];
       if (matches?.length !== 1)
         throw new Error(
           `CATALOG-MANIFEST: ${change.railId} needs exactly one matching rail entry.`
         );
-      const patch = { referenceOnly: true, authorityRef: change.reference.authorityRef };
+      if (
+        change.railRetirement &&
+        (!before.normalized_rail_name ||
+          !String(before.raw_rail?.name ?? '').trim() ||
+          before.raw_rail?.type !== before.rail_type ||
+          String(before.raw_rail?.name).trim().toLowerCase() !== before.normalized_rail_name ||
+          [before.rail_status, before.raw_rail?.status, matches[0].status].some((status) =>
+            ['retired', 'deprecated'].includes(String(status).trim().toLowerCase())
+          ))
+      )
+        throw new Error('CATALOG-RETIREMENT: Expected the matching, nonterminal imported rail.');
+      const patch = change.railRetirement
+        ? { status: 'retired' }
+        : { referenceOnly: true, authorityRef: change.reference.authorityRef };
       after.raw_rail = { ...after.raw_rail, ...patch };
       Object.assign(matches[0], patch);
-      after.rail_status = 'referenced';
+      after.rail_status = change.railRetirement ? 'retired' : 'referenced';
     }
     if (change.origin === 'local') after.revision += 1;
     return { origin: change.origin, before, after, proof, beforeText: snapshot.snapshot_text };

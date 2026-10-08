@@ -284,21 +284,29 @@ async function applyCatalogReconciliation(input, options = {}) {
         changedColumns.push('source_content_sha256');
       }
       const reference = request.changes[index].reference;
-      if (reference) {
-        const patch = `${bind(JSON.stringify({ referenceOnly: true, authorityRef: reference.authorityRef }))}::jsonb`;
+      const railRetirement = request.changes[index].railRetirement;
+      if (reference || railRetirement) {
+        const patch = `${bind(
+          JSON.stringify(
+            railRetirement
+              ? { status: 'retired' }
+              : { referenceOnly: true, authorityRef: reference.authorityRef }
+          )
+        )}::jsonb`;
+        const status = railRetirement ? 'retired' : 'referenced';
         const railIndex = before.raw_manifest.commandQueryRails.findIndex(
           (rail) =>
-            rail.type === before.rail_type &&
+            rail?.type === before.rail_type &&
             String(rail.name).trim().toLowerCase() === before.normalized_rail_name
         );
         const manifestPath = `${bind(['commandQueryRails', String(railIndex)])}::text[]`;
         assignments.push(
-          `rail_status = 'referenced'`,
+          `rail_status = '${status}'`,
           `raw_rail = raw_rail || ${patch}`,
           `raw_manifest = jsonb_set(raw_manifest, ${manifestPath}, (raw_manifest #> ${manifestPath}) || ${patch}, false)`
         );
         preserved.push(
-          `rail_status = 'referenced'`,
+          `rail_status = '${status}'`,
           `raw_rail = (${beforeSnapshot}->'raw_rail') || ${patch}`,
           `raw_manifest = jsonb_set(${beforeSnapshot}->'raw_manifest', ${manifestPath}, (${beforeSnapshot}->'raw_manifest' #> ${manifestPath}) || ${patch}, false)`
         );
@@ -329,7 +337,11 @@ async function applyCatalogReconciliation(input, options = {}) {
       );
     }
     const affectedPaths = planned
-      .filter((entry) => entry.proof && entry.before.source_path !== entry.after.source_path)
+      .filter(
+        (entry, index) =>
+          request.changes[index].railRetirement ||
+          (entry.proof && entry.before.source_path !== entry.after.source_path)
+      )
       .map((entry) => entry.before.source_path);
     const references = await client.query(
       `with affected_references as (

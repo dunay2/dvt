@@ -19,17 +19,16 @@ code_refs:
   - apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts
   - apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts
   - packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts
-  - apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts
-  - scripts/run-het1-public-vertical-live-proof.cjs
+  - apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts
+  - packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts
+  - packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts
 evidence:
   tests:
-    - node --test scripts/run-het1-public-vertical-live-proof.test.cjs
     - pnpm --filter @dvt/contracts test
     - pnpm --filter dvt-api test
     - pnpm --filter @dvt/temporal-dbt-plugin test
     - pnpm --filter @dvt/temporal-worker test
     - pnpm --filter @dvt/web test
-    - pnpm test:web:e2e:het1-public:live
     - pnpm docs:feature-mechanization:implementation
     - pnpm planning:db:integrity:check
     - pnpm verify:prepush
@@ -37,20 +36,30 @@ evidence:
 
 # Summary
 
-HET1 proves that a user can author and execute one heterogeneous Canvas graph
+This ARC record preserves historical evidence, not current browser acceptance.
+Under [#3021](https://github.com/dunay2/dvt/issues/3021), the obsolete HET1 UI
+story and its exclusive wrapper/assets were retired after the Canvas hard cut.
+The exact [browser proof](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts)
+and [wrapper](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/scripts/run-het1-public-vertical-live-proof.cjs)
+remain available in Git. The retained runtime/provider coverage and its limits
+are listed in the [testing guide](../guides/testing-and-ci-capabilities.md#retired-het-browser-histories-and-retained-runtime-coverage).
+No equivalent current HET E2E is claimed; the associated risk remains open.
+The commands above identify retained validation surfaces, not a new PASS receipt.
+
+HET1 historically proved that a user could author and execute one heterogeneous Canvas graph
 through public product rails:
 
 `LOAD_OBJECT_FILE_TO_POSTGRES -> DBT_MODEL -> DBT_TEST`.
 
-The live proof uses a content-addressed CSV in a pinned MinIO container, the
+The historical live proof used a content-addressed CSV in a pinned MinIO container, the
 protected API, PostgreSQL, Temporal, the production worker composition, dbt and
-the Web application. It does not intercept graph or plan routes, construct a
+the Web application. It did not intercept graph or plan routes, construct a
 plan, seed run state, or insert staging rows outside the run.
 
 # Design evidence
 
 The design and responsibility split were recorded on GitHub issue 2180 before
-the implementation slice. The relevant current and target states are preserved
+the implementation slice. The original current and target states are preserved
 here as ARC evidence.
 
 ```mermaid
@@ -99,7 +108,7 @@ flowchart LR
 
 # Executable outcomes
 
-The public browser proof establishes:
+The historical public browser proof established:
 
 - the exact three-step Preview and persisted `planId` used by StartRun;
 - successful load evidence for two rows, matching source SHA-256 and byte size,
@@ -115,7 +124,7 @@ The public browser proof establishes:
 - absence of credentials and source payload bytes from plan-visible run
   evidence.
 
-The `RecordFeatureMechanizationRail` Planning DB command records
-`RunHet1PublicVerticalLiveProof` and its reuse of the existing product
-command/query rails in the exported canonical state; it creates no parallel
-orchestration path or mutable-state SQL migration.
+`RunHet1PublicVerticalLiveProof` is a historical delivery identity preserved in
+the linked Git revision, not an active execution command. This record does not
+assert a corresponding Planning DB retirement row. Existing product rails,
+worker profiles, provider tests and their runtime invariants remain in place.

@@ -203,9 +203,12 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
     expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).toContain('dragCanvasNodeByViewportDelta');
-    expect(cypressSpecSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
+    expect(cypressSpecSource).toContain('hasLiveProtectedRuntimeEnv');
     expect(cypressSpecSource).not.toContain('this.skip()');
-    expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
+    expect(cypressSpecSource).toContain('createLiveProjectThroughUi');
+    expect(cypressSpecSource).toContain('WorkspaceGraphDraftReadResponseSchema.parse');
+    expect(cypressSpecSource).toContain('dvt-web-canvas-interaction');
+    expect(cypressSpecSource).not.toContain('resolveLiveFirstAuthoringWorkspaceSession');
     expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
     expect(cypressSpecSource).toContain('/model 1/i');
     expect(cypressSpecSource).not.toContain("id: 'dbt'");
