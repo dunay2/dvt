@@ -45,6 +45,7 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
+import { joinWorkbenchProducers } from '../../support/relationalWorkbench/joinChain';
 import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
@@ -122,18 +123,14 @@ function composePublicationModel(modelId: string): void {
   dragWorkbenchSource('customers');
   cy.contains('[data-operator="read"]', 'customers').closest('li').as('customerProducer');
   workbenchOperation('field_transform').click();
-  cy.get('[data-pending-operation="true"]').last().as('customerTransform');
+  cy.get('[data-pending-operation="true"]').last().as('customerTransform', { type: 'static' });
   connectWorkbenchProducer('@customerProducer', '@customerTransform');
   cy.get(transformInspector).find('[data-slot="canvas-derived-output-trigger"]').click();
   cy.get(derivedForm).find('input[name="alias"]').type('customer_clean');
   writePublicationFormula('TRIM("customer_name")');
   dragWorkbenchSource('orders');
   cy.contains('[data-operator="read"]', 'orders').closest('li').as('orderProducer');
-  workbenchOperation('inner_join').click();
-  cy.get('[data-pending-operation="true"]').last().as('publicationJoin');
-  connectWorkbenchProducer('@customerTransform', '@publicationJoin', 0);
-  connectWorkbenchProducer('@orderProducer', '@publicationJoin', 1);
-  cy.get('[data-slot="canvas-staged-operation-inspector"]').should('contain.text', 'customer_id');
+  joinWorkbenchProducers('@customerTransform', '@orderProducer', 'publicationJoin');
   connectWorkbenchProducer(
     '@publicationJoin',
     '[data-slot="canvas-relational-output-input-port"]',
