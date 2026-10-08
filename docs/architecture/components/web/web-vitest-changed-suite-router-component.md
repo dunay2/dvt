@@ -340,6 +340,14 @@ AVAILABLE execution passes the complete catalog explicitly. Shared helper
 consumers must each appear exactly once in that plan. Successful execution of
 the terminal filename alone does not establish the consumer inventory.
 
+First authoring is an AVAILABLE consumer without a semantic draft fixture. It
+creates its isolated project through the real CreateProject UI and uses the
+complete workspace identity returned by that command. The JOIN publication
+journey reuses the same gesture. First authoring must still prove the initial
+draft is absent, the first node is acknowledged, dragging changes the scoped
+layout, and reloading restores it. Observing the real project response must not
+stub a successful project, graph, plan or run response.
+
 Removing old cases requires preserving their unique semantic assertions in the
 remaining owners first. In particular, UNION retains complete derived-type
 equality and the measure scenarios retain standalone and chained forms,
@@ -350,7 +358,8 @@ not introduce a generic GET recorder or global fixture repair.
 Admission requires measuring each complete job critical path, including setup,
 builds, selected runtime, result validation and cleanup, against its unchanged
 25-minute budget. All four matrix jobs must satisfy the existing required
-aggregate. The partition preserves the 119 controlled, 53 available and one
-unavailable cases; it does not prove that a stalled case is fixed. Individual
+aggregate. The partition preserves the 119 controlled, 53 existing available
+and one unavailable cases; first authoring adds one available case. This does
+not prove that a stalled case is fixed. Individual
 test durations or results from the previous serial layout cannot establish the
 new bound. No new workflow, timeout increase or evidence waiver is admitted.

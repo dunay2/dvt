@@ -6,7 +6,6 @@
  * @version 1.0.0
  */
 import {
-  CreateProjectResponseSchema,
   DVT_POSTGRES_JOIN_PROFILE_ID,
   DvtPostgresPublicationEvidenceSchema,
   KNOWN_STEP_KINDS,
@@ -36,6 +35,7 @@ import {
 } from '../../support/canvasGraphAuthoring';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
+import { createLiveProjectThroughUi } from '../../support/liveProjectAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
@@ -170,7 +170,7 @@ function runPublicationModel(
     const runId = pathname.split('/').pop()!;
     return cy
       .request({
-        url: `${String(Cypress.env('apiBaseUrl'))}/runs/${runId}?${new URLSearchParams(scope)}`,
+        url: `${String(Cypress.env('apiBaseUrl'))}/runs/${runId}?${new URLSearchParams({ ...scope })}`,
         auth: { bearer: String(Cypress.env('apiBearerToken')) },
       })
       .then(({ status, body }) => {
@@ -237,25 +237,12 @@ describe('N-input DVT Run live', () => {
     });
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     cy.get('html').should('have.attr', 'lang', 'en');
-    cy.intercept('POST', '**/projects').as('publicationProject');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-    cy.get('[data-slot="shell-new-project-command"]').click();
-    cy.get('[data-slot="project-creation-dialog"]').within(() => {
-      cy.get('input[name="projectName"]').type(projectName);
-      cy.contains('button', 'Create project').click();
+    createLiveProjectThroughUi(projectName).then((createdScope) => {
+      scope = createdScope;
+      return readLiveGraphDraft(scope, { failOnStatusCode: false })
+        .its('status')
+        .should('equal', 404);
     });
-    cy.wait('@publicationProject', { timeout: 30_000 }).then(({ response }) => {
-      expect(response?.statusCode).to.equal(201);
-      const { defaultWorkspace } = CreateProjectResponseSchema.parse(response!.body);
-      scope = {
-        tenantId: defaultWorkspace.tenantId,
-        projectId: defaultWorkspace.projectId,
-        environmentId: defaultWorkspace.environmentId,
-      };
-      readLiveGraphDraft(scope, { failOnStatusCode: false }).its('status').should('equal', 404);
-    });
-    cy.get('[data-slot="project-creation-dialog"]').should('not.exist');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('contain.text', projectName);
     cy.get('[data-slot="canvas-playground-template-choice"]').should('be.enabled').click();
     cy.get('[data-testid="canvas-viewport"]').should('be.visible');
     createPublicationSources().then((id) => {
@@ -415,11 +402,14 @@ describe('N-input DVT Run live', () => {
     const targetSchema = targetSchemaValue.trim();
     const targetRelation = 'joined_orders';
     let previewSha = '';
-    const waitForCompletedRun = (runId: string, attempt = 0): Cypress.Chainable<void> =>
+    const waitForCompletedRun = (
+      runId: string,
+      attempt = 0
+    ): Cypress.Chainable<Cypress.Response<unknown>> =>
       readLiveRunSnapshot(runId).then((response) => {
         expect(response.status).to.equal(200);
         const status = String((response.body as { status?: unknown }).status ?? '').toLowerCase();
-        if (status === 'completed') return;
+        if (status === 'completed') return cy.wrap(response, { log: false });
         if (status === 'failed') throw new Error(`N-input DVT run ${runId} failed.`);
         if (attempt >= 60) throw new Error(`N-input DVT run ${runId} did not complete.`);
         return cy.wait(500).then(() => waitForCompletedRun(runId, attempt + 1));
@@ -431,7 +421,9 @@ describe('N-input DVT Run live', () => {
     });
     const semanticDocument = documents.three;
     const sourceConnectionRef = semanticDocument.sidecar.relations.flatMap((relation) =>
-      'sourceRef' in relation ? [relation.sourceRef.connectionRef] : []
+      'sourceRef' in relation && relation.sourceRef !== undefined
+        ? [relation.sourceRef.connectionRef]
+        : []
     )[0];
     if (sourceConnectionRef === undefined) {
       throw new Error('The N-input fixture requires one governed PostgreSQL connection.');

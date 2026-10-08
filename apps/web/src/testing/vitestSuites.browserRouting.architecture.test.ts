@@ -141,6 +141,33 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('admits the two real project-authoring consumers in the available runtime', () => {
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const target = resolve('cypress/support/liveProjectAuthoring.ts');
+    const consumers = [...browserModules.keys()]
+      .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .sort();
+    const expected = ['canvas-dvt-join-preview-live', 'canvas-first-authoring-live'];
+    expect(consumers).toEqual(
+      expected.map((name) => resolve(`cypress/e2e/canvas/${name}.cy.ts`)).sort()
+    );
+    for (const name of expected) {
+      const path = `apps/web/cypress/e2e/canvas/${name}.cy.ts`;
+      const plan = resolveWebVitestChangedSuitePlan([path]);
+      expect(
+        plan.browserCommands.map((command) => command.capability),
+        path
+      ).toEqual(['available']);
+    }
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/cypress/support/liveProjectAuthoring.ts',
+      ]).browserCommands.map((command) => command.capability)
+    ).toEqual(['available']);
+  });
+
   it('reconciles exact fixture consumers with disjoint, independently registered browser specs', () => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
@@ -149,10 +176,13 @@ describe('governed browser evidence routing', () => {
     const target = resolve('cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts');
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
     const registered = Object.values(WEB_CYPRESS_SPECS).flat();
-    const fileAuthorityConsumer = 'apps/web/cypress/e2e/runs/run-controls-live.cy.ts';
+    const uiOnlyConsumers = [
+      'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
+    ];
     expect(fixtureConsumers.sort()).toEqual(
       registered
-        .filter((path) => path !== fileAuthorityConsumer)
+        .filter((path) => !uiOnlyConsumers.includes(path))
         .map((path) => resolve(path.slice('apps/web/'.length)))
         .sort()
     );
@@ -164,7 +194,7 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(22);
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(23);
     expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(48);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
@@ -174,9 +204,9 @@ describe('governed browser evidence routing', () => {
       (path) =>
         reachesModule(graph, path, runtime) &&
         !fixtureConsumers.includes(path) &&
-        path !== resolve(fileAuthorityConsumer.slice('apps/web/'.length))
+        !uiOnlyConsumers.some((consumer) => path === resolve(consumer.slice('apps/web/'.length)))
     );
-    expect(unadmittedTransport).toHaveLength(12);
+    expect(unadmittedTransport).toHaveLength(11);
     for (const path of unadmittedTransport) {
       expect(() =>
         resolveWebVitestChangedSuitePlan([
@@ -269,7 +299,7 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(22);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(23);
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);
