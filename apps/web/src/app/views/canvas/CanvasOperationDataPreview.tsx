@@ -1,4 +1,5 @@
 /** Owned concern: bind the selected operation panel to the existing protected data query. */
+import './canvasSemanticEditor.css';
 import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
@@ -126,7 +127,7 @@ export function CanvasOperationPreviewProvider({
             <aside
               data-slot="canvas-operation-data-preview"
               data-relation-id={requested.relationId}
-              className="h-full min-h-0 min-w-0 overflow-hidden"
+              className="canvas-operation-data-preview"
             >
               <CanvasModelDataPanel
                 data={{

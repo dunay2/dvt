@@ -71,6 +71,13 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.canvas-operation-data-preview {
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
 [data-slot='canvas-operation-data-host']:has([data-slot='canvas-operation-data-preview']) > p {
   display: none;
 }
