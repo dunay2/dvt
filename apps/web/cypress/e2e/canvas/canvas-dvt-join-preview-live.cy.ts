@@ -307,7 +307,7 @@ describe('N-input DVT Run live', () => {
         materialized: 'table',
         resultTarget: {
           schemaVersion: 'dvt-transform-result-target.v1',
-          connectionRef: { connectionId, provider: 'postgres' },
+          connectionRef: { schemaVersion: 'connection-ref.v1', connectionId, provider: 'postgres' },
           schema: targetSchema,
           relation: targetRelation,
         },
