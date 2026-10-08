@@ -45,7 +45,9 @@ export function getVisibleCanvasNodeByCardTitle(
   nodeName: string
 ): Cypress.Chainable<JQuery<HTMLElement>> {
   return cy
-    .get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+    .get('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]', {
+      timeout: 20_000,
+    })
     .filter((_, element) => {
       const text = element.textContent ?? '';
       const rect = element.getBoundingClientRect();

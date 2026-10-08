@@ -46,6 +46,7 @@ import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
   openWorkbenchModel,
+  openWorkbenchProperties,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 
@@ -255,18 +256,14 @@ describe('N-input DVT Run live', () => {
     });
     cy.get('[data-slot="project-creation-dialog"]').should('not.exist');
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should('contain.text', projectName);
-    cy.intercept('PUT', '**/workspace/graph/draft').as('publicationDraft');
     cy.get('[data-slot="canvas-playground-template-choice"]').should('be.enabled').click();
-    cy.wait('@publicationDraft').then(({ request, response }) => {
-      expect(response?.statusCode).to.equal(200);
-      expect(request.body.scope).to.deep.equal(scope);
-    });
     cy.get('[data-testid="canvas-viewport"]').should('be.visible');
     createPublicationSources().then((id) => {
       connectionId = id;
     });
     cy.then(() => readLiveGraphDraft(scope)).then(({ status, body }) => {
       expect(status).to.equal(200);
+      expect((body as { record: { scope: unknown } }).record.scope).to.deep.include(scope);
       const draft = WorkspaceGraphAuthoringDraftSchema.parse(
         (body as { record: { draft: unknown } }).record.draft
       );
@@ -286,8 +283,7 @@ describe('N-input DVT Run live', () => {
     connectCanvasNodes('orders', 'Model 1');
     cy.then(() => composePublicationModel(modelId));
     cy.then(() => {
-      getVisibleCanvasNode(modelId).find('[data-slot="canvas-node-shell"]').rightclick('center');
-      cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Properties').click();
+      openWorkbenchProperties(modelId);
       cy.get('select[name="dvt-transform-materialization"]').select('table');
       cy.get('select[name="dvt-transform-result-connection"]').select(connectionId);
       cy.get('input[name="dvt-transform-result-schema"]').clear().type(targetSchema);
@@ -295,9 +291,24 @@ describe('N-input DVT Run live', () => {
       cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
     });
-    cy.intercept('GET', '**/workspace/graph/draft?*').as('publicationReload');
+    cy.then(() => openWorkbenchModel(modelId));
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.then(() => readLiveGraphDraft(scope)).then(({ status, body }) => {
+      expect(status).to.equal(200);
+      const draft = WorkspaceGraphAuthoringDraftSchema.parse(
+        (body as { record: { draft: unknown } }).record.draft
+      );
+      expect(draft.nodes.find((node) => node.id === modelId)?.metadata?.config).to.deep.include({
+        materialized: 'table',
+        resultTarget: {
+          schemaVersion: 'dvt-transform-result-target.v1',
+          connectionRef: { connectionId, provider: 'postgres' },
+          schema: targetSchema,
+          relation: targetRelation,
+        },
+      });
+    });
     cy.reload();
-    cy.wait('@publicationReload').its('response.statusCode').should('equal', 200);
     cy.then(() => openWorkbenchModel(modelId));
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get('[data-operator="project"]').should('have.length', 1).click();
@@ -319,9 +330,7 @@ describe('N-input DVT Run live', () => {
       expect(samples, 'Opening a Run does not acquire rows').to.equal(0);
       loadPublicationRows(run.evidence.publication.token, publicationRows);
     });
-    cy.intercept('GET', '**/workspace/graph/draft?*').as('publicationEdit');
     cy.visit('/canvas');
-    cy.wait('@publicationEdit').its('response.statusCode').should('equal', 200);
     cy.then(() => openWorkbenchModel(modelId));
     cy.get('[data-operator="project"]').should('have.length', 1).click();
     cy.contains(`${transformInspector} [data-slot="canvas-derived-output"]`, 'customer_clean')
