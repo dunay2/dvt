@@ -30,7 +30,10 @@ import {
   openCanvasContextMenuAt,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
-import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
+import {
+  connectCanvasNodes,
+  getVisibleCanvasNodeByCardTitle,
+} from '../../support/canvasGraphAuthoring';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
@@ -274,13 +277,18 @@ describe('N-input DVT Run live', () => {
     openCanvasContextMenuAt(1050, 400);
     clickCanvasContextMenuAction('open-add-node-catalog');
     clickCanvasAddCatalogAction('create-node', 'dvt:transform');
-    getVisibleCanvasNode('Model 1')
+    getVisibleCanvasNodeByCardTitle('Model 1')
       .invoke('attr', 'data-id')
       .then((id) => {
         modelId = id!;
       });
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     connectCanvasNodes('customers', 'Model 1');
+    cy.get('.react-flow__edge').should('have.length', 1);
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     connectCanvasNodes('orders', 'Model 1');
+    cy.get('.react-flow__edge').should('have.length', 2);
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.then(() => composePublicationModel(modelId));
     cy.then(() => {
       openWorkbenchProperties(modelId);
