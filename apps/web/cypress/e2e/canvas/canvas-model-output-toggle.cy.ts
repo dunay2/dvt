@@ -1,10 +1,21 @@
-// Owned concern: prove Model output authoring and column-menu lifecycle through save and reload.
+/** Owned concern: prove Model output authoring and column-menu lifecycle through save and reload. */
+import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
+
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
+import { projectCanonicalNodeToAuthoringNode } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import { createDvtSubstraitProjectionDraft } from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
 import {
-  decodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-} from '../../../src/app/views/canvas/canvasDvtSubstraitProjection';
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { openModelOutputs } from '../../support/relationalWorkbench/fieldSelection';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -24,11 +35,53 @@ function stubConnectedModel(): void {
     minFrontendVersion: '0.0.1',
     plugins: { dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({
+  const draft = stubStatefulCanvasDraftAuthoring({
     canvasKind: 'transformation',
     columnMapping: true,
     columnMappingNotNullCustomer: true,
   });
+  const source = draft.nodes.find((node) => node.id === 'source-orders')!;
+  const model = draft.nodes.find((node) => node.id === 'model-orders')!;
+  const columns = source.metadata!.columns as { name: string; type: string; nullable?: boolean }[];
+  const document = createDvtSubstraitProjectionDraft({
+    source: {
+      nodeId: source.id,
+      schema: 'raw',
+      table: 'orders',
+      sourceRef: ConnectedSourceRefSchema.parse(source.metadata!.connectedSourceRef),
+      fields: columns.map((column) => ({ name: column.name, dataType: column.type })),
+    },
+    targetNodeId: model.id,
+    outputs: [],
+  });
+  const root = document.plan.relations[0]!.relType;
+  if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+    throw new Error('Expected Project root');
+  const read = root.value.input.relType.value.input!.relType;
+  if (read.case !== 'read') throw new Error('Expected physical Read');
+  read.value.baseSchema!.struct!.types.forEach((type, ordinal) => {
+    if (columns[ordinal]!.nullable !== false) return;
+    if (type.kind.value == null || !('nullability' in type.kind.value))
+      throw new Error('Expected nullable physical type');
+    type.kind.value.nullability = Type_Nullability.REQUIRED;
+  });
+  model.metadata = {
+    ...model.metadata,
+    transformAuthoring: {
+      version: 'v1',
+      mode: 'substrait',
+      semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+    },
+  };
+  const { canonicalNodes } = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
+  const normalized = normalizeProjectCanvasDraft({
+    ...draft,
+    nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
+  });
+  expect(normalized.nodes.find((node) => node.id === model.id)!.metadata).to.deep.equal(
+    model.metadata
+  );
+  Object.assign(draft, normalized);
 }
 
 function visitCanvas(): void {
@@ -75,12 +128,24 @@ function savedOutputNames(index: number): string[] {
   )?.draft?.nodes?.find((node) => node.id === 'model-orders');
   const authority = savedModel?.metadata?.transformAuthoring as
     { semanticDocument?: unknown } | undefined;
-  const inspection = inspectDvtSubstraitProjectionDraft(
-    decodeDvtSubstraitProjectionDocument(authority?.semanticDocument)
+  const document = decodeDvtSubstraitSemanticDocument(authority?.semanticDocument);
+  const { index: relations, schemas } = deriveSubstraitSchemas(document);
+  const read = [...relations.relations.values()].find(
+    (entry) => entry.relation.relType.case === 'read'
+  )!;
+  const customerBinding = read.fields.find((field) => field.displayName === 'customer')!;
+  const customer = schemas.get(read.binding.relationId)![customerBinding.outputOrdinal]!;
+  const customerType = customer.type.kind.value;
+  if (customerType == null || !('nullability' in customerType))
+    throw new Error('Expected customer nullability');
+  expect(customerType.nullability, 'source NN survives inclusion and exclusion').to.equal(
+    Type_Nullability.REQUIRED
   );
-  expect(inspection.ok).to.equal(true);
-  if (!inspection.ok) throw new Error('Expected a valid saved projection.');
-  return inspection.projection.outputs.map((output) => output.name);
+  return relations.relations
+    .get(relations.rootId)!
+    .fields.filter((field) => field.parentFieldId == null)
+    .toSorted((left, right) => left.outputOrdinal - right.outputOrdinal)
+    .map((field) => field.displayName!);
 }
 
 function modelCard(): Cypress.Chainable<JQuery<HTMLElement>> {
@@ -92,10 +157,11 @@ function modelColumnRow(name: string): Cypress.Chainable<JQuery<HTMLElement>> {
 }
 
 function expectOutput(name: string, output: boolean): void {
-  modelColumnRow(name)
-    .find('[data-slot="graph-node-column-output-state"]')
+  cy.get(
+    `[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-toggle"][data-field-name="${name}"]`
+  )
     .should('not.be.disabled')
-    .and('have.attr', 'aria-pressed', String(output));
+    .and('have.attr', 'data-included', String(output));
 }
 
 function openModelColumns(): void {
@@ -103,24 +169,9 @@ function openModelColumns(): void {
 }
 
 function showCustomerType(): void {
-  modelColumnRow('customer')
-    .find('[data-slot="graph-node-column-piece"]')
-    .should('be.visible')
-    .then(($piece) => {
-      const piece = $piece[0]!;
-      const bounds = piece.getBoundingClientRect();
-      cy.window().then((window) => {
-        const pointer = {
-          bubbles: true,
-          pointerType: 'mouse',
-          clientX: bounds.x + bounds.width / 2,
-          clientY: bounds.y + bounds.height / 2,
-        };
-        piece.dispatchEvent(new window.PointerEvent('pointerleave', pointer));
-        piece.dispatchEvent(new window.PointerEvent('pointerover', pointer));
-        piece.dispatchEvent(new window.PointerEvent('pointermove', pointer));
-      });
-    });
+  hoverWorkbenchCard(
+    '.react-flow__node[data-id="model-orders"] [data-slot="graph-node-column-piece"][data-column-name="customer"]'
+  );
   cy.get('[role="tooltip"]').should('have.text', 'text');
 }
 
@@ -152,34 +203,35 @@ describe('Canvas Model output toggle lifecycle', () => {
       .invoke('outerWidth')
       .should('be.lessThan', 160);
     cy.screenshot('column-type-only', { capture: 'viewport' });
-    modelColumnRow('customer')
-      .should('contain.text', 'NN')
-      .find('[data-slot="graph-node-column-output-state"]')
-      .should('not.be.disabled')
-      .and('have.attr', 'aria-pressed', 'false')
-      .click();
+    openModelOutputs('model-orders');
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    expectOutput('customer', false);
+    cy.get('[data-slot="relation-output-toggle"][data-field-name="customer"]').click();
 
     cy.wrap(null).should(() => {
       expect(getModelSemanticSaves()).to.have.length(1);
       expect(savedOutputNames(0)).to.deep.equal(['customer']);
     });
-    modelColumnRow('customer').should('contain.text', 'NN');
     expectOutput('customer', true);
     expectOutput('order_id', false);
     expectOutput('amount', false);
-    showCustomerType();
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
 
-    visitCanvas();
+    revisitWorkbenchCanvas(visitCanvas);
+    modelCard()
+      .contains('[role="tab"]', /^Output/)
+      .click();
     openModelColumns();
     modelColumnRow('customer').should('contain.text', 'NN');
-    expectOutput('customer', true);
-    expectOutput('order_id', false);
-    expectOutput('amount', false);
+    modelColumnRow('customer')
+      .find('[data-slot="graph-node-column-piece"]')
+      .should('have.attr', 'data-output', 'true');
+    showCustomerType();
     assertColumnMenuStaysOpenAndReopens();
 
-    visitCanvas();
+    revisitWorkbenchCanvas(visitCanvas);
     openModelColumns();
-    expectOutput('customer', true);
 
     modelCard()
       .find('[data-slot="graph-node-column-piece"][data-column-name="amount"]')
@@ -190,23 +242,25 @@ describe('Canvas Model output toggle lifecycle', () => {
       .find('[data-slot="graph-node-column-piece"]')
       .then(($columns) => {
         expect([...$columns].map((column) => column.dataset.columnName).slice(0, 3)).to.deep.equal([
-          'amount',
           'order_id',
           'customer',
+          'amount',
         ]);
       });
+    cy.then(() => expect(getModelSemanticSaves()).to.have.length(1));
 
-    modelColumnRow('customer').find('[data-slot="graph-node-column-output-state"]').click();
+    openModelOutputs('model-orders');
+    expectOutput('customer', true);
+    cy.get('[data-slot="relation-output-toggle"][data-field-name="customer"]').click();
     cy.wrap(null).should(() => {
       expect(getModelSemanticSaves()).to.have.length(2);
       expect(savedOutputNames(1)).to.deep.equal([]);
     });
-    modelColumnRow('customer').should('contain.text', 'NN');
     expectOutput('customer', false);
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
 
-    visitCanvas();
-    openModelColumns();
-    modelColumnRow('customer').should('contain.text', 'NN');
+    revisitWorkbenchCanvas(visitCanvas);
+    openModelOutputs('model-orders');
     expectOutput('customer', false);
     expectOutput('order_id', false);
     expectOutput('amount', false);

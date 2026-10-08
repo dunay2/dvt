@@ -1,6 +1,6 @@
 /** Own the real card gesture boundary: Properties on click, data only on explicit Play. */
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
   visitWorkbenchCanvas,
@@ -27,8 +27,8 @@ describe('Internal operation card execution', () => {
       cy.viewport(1440, 900);
       visitWorkbenchCanvas();
       openWorkbenchModel();
-      waitForE2eApiCall('/workspace/graph/draft', 'PUT');
       cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+      cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
       if (wrapped) {
         cy.get(card).closest('li').as('joinInput');
         workbenchOperation('fetch').click();

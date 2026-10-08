@@ -1,5 +1,14 @@
+/**
+ * Owned concern: preserve shell geometry and selected semantics across local layout changes.
+ * @baseline GH-3578: operation expressions live in the Model inspector, not a retired dock tab.
+ * @decision Resize the existing operational drawer while retaining the selected JOIN expression.
+ * @consequence Pointer and keyboard layout gestures never remount semantics or save the graph.
+ * @version 1.0.0
+ */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import { revealOperationalDrawer } from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, stubE2eJsonApi } from '../../support/e2eApiStub';
+import { openWorkbenchModel } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
@@ -54,6 +63,10 @@ function stubShellApis(): void {
 function visitShellRouteWithUiLayout(path: string, partialState?: Record<string, unknown>): void {
   visitWithE2eWorkspaceSession(path, {
     onBeforeLoad(window) {
+      window.localStorage.setItem(
+        'dvt-web-application-language',
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
       if (partialState) {
         window.localStorage.setItem(
           'dvt-web-ui-layout',
@@ -139,15 +152,19 @@ describe('Shell layout contract', () => {
       .should('be.visible');
   });
 
-  it('expands and shrinks Semantics without losing the selected expression or saving a draft', () => {
+  it('resizes the operational drawer without losing the selected expression or saving a draft', () => {
     stubStatefulCanvasDraftAuthoring({ canvasKind: 'transformation', substraitInnerJoin: true });
     visitShellRouteWithUiLayout('/canvas', { bottomDrawerVisible: false });
-    cy.get(
-      '.react-flow__node[data-id="join-transform"] [data-slot="graph-node-card-title"]'
-    ).click();
-    cy.contains('[data-slot="semantic-workbench-relation-node"]', 'JOIN').click();
-    const expressionToggle = '[data-slot="semantic-workbench-expand-expression"]';
-    cy.get(expressionToggle).click().should('have.attr', 'aria-pressed', 'true');
+    openWorkbenchModel();
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
+    const expressionTab = '[data-slot="canvas-operation-tree-tab"]';
+    cy.get(expressionTab).click().should('have.attr', 'aria-selected', 'true');
+    const expression =
+      '[data-slot="canvas-relational-tree-inline-editor"] [data-slot="canvas-relational-expression-tree"]';
+    cy.get(expression).find('[data-slot="canvas-relational-expression-node"]').first().click();
+    revealOperationalDrawer();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
 
     const handle = '#app-shell-bottom-drawer-resize-handle';
     const drawer = '#app-shell-bottom-drawer-panel';
@@ -191,30 +208,37 @@ describe('Shell layout contract', () => {
       });
     };
 
-    cy.get('[data-slot="semantic-transform-focus"]').then(($semantic) => {
+    cy.get(expression).then(($semantic) => {
       const semanticElement = $semantic[0];
-      const expressionText = $semantic.find('.react-flow__nodes').text();
+      const expressionText = $semantic.text();
+      const selectedExpression = $semantic
+        .find('[aria-pressed="true"]')
+        .attr('data-semantic-node-id');
+      expect(selectedExpression, 'selected expression identity').to.be.a('string');
       const saveCount = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       dragDrawerTo(95);
       cy.get(drawer).should('have.attr', 'data-panel-size', '90.0');
       cy.get(handle).find('svg').should('be.visible');
-      cy.get(expressionToggle).should('have.attr', 'aria-pressed', 'true');
+      cy.get(expressionTab).should('have.attr', 'aria-selected', 'true');
       dragDrawerTo(35);
       cy.get(drawer).should(($drawer) => {
         expect(Number($drawer.attr('data-panel-size'))).to.be.closeTo(35, 1);
       });
 
-      cy.get(handle).focus().trigger('keydown', { key: 'Home' });
+      cy.get(handle).focus().should('be.focused').trigger('keydown', { key: 'Home' });
       cy.get(drawer).should('have.attr', 'data-panel-size', '90.0');
       cy.get(handle).trigger('keydown', { key: 'End' });
       cy.get(drawer).should('have.attr', 'data-panel-size', '12.0');
-      cy.get('[data-slot="semantic-transform-focus"]').should(($current) => {
+      cy.get(expression).should(($current) => {
         expect($current[0]).to.equal(semanticElement);
-        expect($current.find('.react-flow__nodes').text()).to.equal(expressionText);
+        expect($current.text()).to.equal(expressionText);
+        expect($current.find('[aria-pressed="true"]').attr('data-semantic-node-id')).to.equal(
+          selectedExpression
+        );
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.equal(saveCount);
       });
-      cy.get(expressionToggle).should('have.attr', 'aria-pressed', 'true');
-      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="semantic"]').should(
+      cy.get(expressionTab).should('have.attr', 'aria-selected', 'true');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').should(
         'have.attr',
         'aria-selected',
         'true'

@@ -1,5 +1,5 @@
 /** Owned concern: keyboard Model entry and workspace navigation, without authoring scenarios. */
-import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
@@ -10,8 +10,6 @@ describe('Workbench navigation', () => {
   it('opens a fixed source inspector on click without replacing the Canvas or requesting rows', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
-    // The saved fixture is reconciled once on startup; inspection must add no writes.
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     // Wait for the fixture's initial fit (capped at 82%), not an arbitrary delay.
     cy.get('.react-flow__viewport')
       .should(($viewport) => {
@@ -20,7 +18,7 @@ describe('Workbench navigation', () => {
       .then(($viewport) => {
         const viewport = $viewport[0]!;
         const transform = viewport.getAttribute('style');
-        const writesBeforeInspection = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
         cy.get('.react-flow__node [data-slot="canvas-node-shell"]').first().click(40, 18);
         cy.get('[data-slot="canvas-node-workbench-overlay"]')
           .should('be.visible')
@@ -46,9 +44,7 @@ describe('Workbench navigation', () => {
           expect($current[0]).to.equal(viewport)
         );
         cy.then(() => {
-          expect(
-            getE2eApiCalls('/workspace/graph/draft', 'PUT').map((call) => call.body)
-          ).to.deep.equal(writesBeforeInspection.map((call) => call.body));
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
         });
       });
     cy.then(() => {

@@ -117,7 +117,7 @@ jobs:
           DVT_CI: '1'
 
   web-frontend-tests:
-    name: Web Frontend Tests (${{ matrix.phase }})
+    name: Web Frontend Tests (${{ matrix.capability || matrix.phase }})
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: [detect_test_matrix]
@@ -128,7 +128,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        phase: [vitest, browser]
+        include:
+          - phase: vitest
+            capability: ''
+          - phase: browser
+            capability: controlled
+          - phase: browser
+            capability: available
+          - phase: browser
+            capability: unavailable
     env:
       DVT_CI: '1'
       NODE_OPTIONS: --max-old-space-size=4096
@@ -138,7 +146,8 @@ jobs:
         ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
         github.event_name == 'push' && github.event.before || github.sha }}
       GIT_HEAD: ${{ github.sha }}
-      PROOF_OWNER: ${{ github.run_id }}-${{ github.run_attempt }}
+      PROOF_OWNER:
+        ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -159,34 +168,41 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-          turbo-cache-variant: ${{ matrix.phase }}
+          turbo-cache-variant: ${{ matrix.capability || matrix.phase }}
         env:
           CYPRESS_INSTALL_BINARY: '0'
 
       - name: Resolve governed Web evidence plan
         id: web_plan
         run: >-
-          pnpm test:web:changed --plan ${{ (github.event_name != 'pull_request' ||
-          needs.detect_test_matrix.outputs.root_build_sensitive == 'true') && '--full' || '' }}
+          pnpm test:web:changed --plan --phase=${{ matrix.phase }} ${{ matrix.capability &&
+          format('--browser-capability={0}', matrix.capability) || '' }} ${{ (github.event_name !=
+          'pull_request' || needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
+          '--full' || '' }}
 
       - name: Setup browser proof Python
         id: browser_python
-        if: matrix.phase == 'browser' && steps.web_plan.outputs.browser_required == 'true'
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12.10'
+
+      - name: Install browser proof provider dependencies
+        id: browser_provider
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        run:
+          python -m pip install --disable-pip-version-check dbt-postgres==1.10.0 dbt-core==1.11.11
 
       - name: Install native browser proof dependencies
         id: browser_dependencies
         if: matrix.phase == 'browser' && steps.web_plan.outputs.browser_required == 'true'
         run: |
-          python -m pip install --disable-pip-version-check dbt-postgres==1.10.0 dbt-core==1.11.11
           pnpm --filter @dvt/web exec cypress install
           pnpm --filter @dvt/web exec cypress verify
 
       - name: Allocate browser proof PostgreSQL
         id: browser_postgres
-        if: matrix.phase == 'browser' && steps.web_plan.outputs.browser_required == 'true'
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
         run: |
           proof_container=$(docker create --name "dvt-web-proof-$PROOF_OWNER" \
             --label "dvt.ci.proof=$PROOF_OWNER" --publish 127.0.0.1::5432 \
@@ -212,7 +228,9 @@ jobs:
         if:
           github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
           needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
-        run: pnpm test:web:changed --phase=${{ matrix.phase }}
+        run: >-
+          pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability &&
+          format('--browser-capability={0}', matrix.capability) || '' }}
 
       - name: Run governed web Vitest primary suites
         if:
@@ -224,7 +242,8 @@ jobs:
         if:
           matrix.phase == 'browser' && (github.event_name != 'pull_request' ||
           needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
-        run: pnpm test:web:changed --full --phase=browser
+        run:
+          pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}
 
       - name: Upload browser failure screenshots
         if: >-
@@ -232,7 +251,7 @@ jobs:
           steps.web_plan.outputs.browser_required == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: web-live-proof-screenshots
+          name: web-live-proof-screenshots-${{ matrix.capability }}
           path: .dvt/evidence/selected-closure/screenshots
           include-hidden-files: true
           if-no-files-found: ignore

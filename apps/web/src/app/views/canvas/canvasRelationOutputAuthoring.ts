@@ -1,4 +1,10 @@
-/** Apply explicit Transform output intent through the canonical relation command. */
+/**
+ * Owned concern: adapt explicit Transform output intent to the canonical selection command.
+ * @baseline GH-3596: all output adapters share the same graph-derived eligibility.
+ * @decision Forward publication denial and disconnected provenance to the existing session.
+ * @consequence Source reinclusion retains its connection guard; no parallel output mutation exists.
+ * @version 1.1.0
+ */
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
@@ -13,7 +19,7 @@ import { relationOutputSlots } from './canvasRelationOutputSchema';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { insertSelectedRelationTransform } from './canvasSelectedRelationTransform';
 import { relationOutputIntent, type RelationOutputIntent } from './canvasRelationOutputIntent';
-import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { resolveCanvasReadFieldEligibility } from './canvasInputFieldEligibility';
 
 export async function applyCanvasRelationOutput(
   args: Readonly<{
@@ -45,15 +51,13 @@ export async function applyCanvasRelationOutput(
     const catalog = new Map(nodes);
     for (const local of Object.values(current.localNodeCatalog ?? {})) catalog.set(local.id, local);
     const document = resolveCanvasProducerDocument(node, [...catalog.values()]) ?? null;
-    session.receive(
+    const eligibility = resolveCanvasReadFieldEligibility({
       document,
-      resolveUnmappedCanvasReadFields({
-        document,
-        nodeId: node.id,
-        nodes: [...catalog.values()],
-        edges: current.workingSet.visibleEdges,
-      })
-    );
+      nodeId: node.id,
+      nodes: [...catalog.values()],
+      edges: current.workingSet.visibleEdges,
+    });
+    session.receive(document, eligibility.denied, eligibility.disconnected);
     const target = session.locate(session.rootId, session.revision);
     const inputs = await Promise.all(target.inputs.map((id) => session.query(id, signal)));
     const outputs = relationOutputIntent(relationOutputSlots(target, inputs), intent);

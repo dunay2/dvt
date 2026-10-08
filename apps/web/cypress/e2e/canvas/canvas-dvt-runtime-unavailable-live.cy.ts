@@ -9,10 +9,10 @@ import {
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunIds,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 

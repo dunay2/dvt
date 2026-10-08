@@ -4,7 +4,7 @@
  */
 import type { UserConfig } from 'vitest/config';
 
-import { resolveWebCypressChangedPlan } from './cypress.changed';
+import { resolveWebCypressChangedPlan, type WebCypressCommand } from './cypress.changed';
 
 export const WEB_VITEST_PRIMARY_SUITE_NAMES = ['unit', 'presentation', 'architecture'] as const;
 
@@ -363,7 +363,9 @@ export function resolveWebVitestChangedSuitePlan(
   commands: string[];
   commandPlan: WebVitestChangedCommandPlanEntry[];
   requiresDependencies: boolean;
-  browserCommands: string[];
+  browserCommands: WebCypressCommand[];
+  browserFiles: string[];
+  retiredBrowserFiles: string[];
 } {
   const browser = resolveWebCypressChangedPlan(filePaths, options.full);
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
@@ -463,6 +465,8 @@ export function resolveWebVitestChangedSuitePlan(
   return {
     suites,
     browserCommands: browser.commands,
+    browserFiles: browser.requiredFiles,
+    retiredBrowserFiles: browser.retiredFiles,
     commands: commandPlan.map((entry) =>
       entry.kind === 'shell'
         ? entry.command

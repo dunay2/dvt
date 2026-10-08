@@ -12,7 +12,7 @@ import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/can
 import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from '../../../src/app/views/canvas/canvasSelectedJoinPredicate';
 import { changeSelectedJoinType } from '../../../src/app/views/canvas/canvasSelectedJoinType';
-import { buildCanvasAuthoringDraft } from '../canvasDraftAuthoring';
+import { buildCanvasAuthoringDraft } from '../canvasDrafts/buildCanvasAuthoringDraft';
 import { getVisibleCanvasNode } from '../canvasExecutionSelection';
 import {
   resolveLiveWorkspaceSession,

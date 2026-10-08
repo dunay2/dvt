@@ -2,27 +2,11 @@
  * Owned concern: prove one protected terminal DVT Transform from persisted
  * Canvas revision through PreviewPlan, StartRun, Temporal and PostgreSQL.
  * @baseline ADR-0044: Structural rejection causes are stable; Web owns translated copy.
- * @decision Verify V1 responses and register admitted authoring consumers once in this runtime.
+ * @decision Verify V1 responses and retain this spec's exclusive data-action and recovery proofs.
  * @consequence Unsupported output dispositions cannot expose Run or create an execution.
  * @version 1.0.0
  */
 import { DVT_REJECTIONS, KNOWN_STEP_KINDS } from '@dvt/contracts';
-
-// Existing saved-preview consumers share this runtime instead of bootstrapping another one.
-import './canvas-relational-operation-execution.cy';
-import './canvas-relational-workbench-chain-persistence.cy';
-import './canvas-relational-workbench-cross.cy';
-import './canvas-relational-tree-workbench.cy';
-import './canvas-relational-workbench-union.cy';
-import './canvas-relational-workbench-removal.cy';
-import './canvas-relational-workbench-viewport.cy';
-import './canvas-sort-fetch-data-navigation.cy';
-import './canvas-model-chain-fields.cy';
-import './canvas-column-lineage-mapping.cy';
-import './canvas-transform-stage.cy';
-import './canvas-dvt-join-preview-live.cy';
-import './canvas-semantic-persistence-run-live.cy';
-import './canvas-sql-progressive-live.cy';
 
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
@@ -32,11 +16,11 @@ import {
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';

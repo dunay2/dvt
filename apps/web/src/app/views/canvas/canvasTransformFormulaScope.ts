@@ -1,7 +1,7 @@
 /**
  * Owned concern: bind formula names to stable symbols in the selected Transform.
  * @baseline ADR-0064: input ordinals are canonical; labels are presentation, never identity.
- * @decision Read calculated types from analysis and retain ambiguous names for rejection.
+ * @decision Share direct-passthrough name projection; retain genuine homonyms for rejection.
  * @consequence Aliases resolve to references rather than copied producer expressions.
  * @version 1.0.0
  */
@@ -11,6 +11,31 @@ import type { TransformDependencyModel } from './canvasTransformDependencyModel'
 import { rootFields, derivedOutputDataType } from './canvasDerivedOutputExpression';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 import type { FormulaField } from './canvasDerivedOutputFormula';
+
+export function projectTransformFormulaNameFields<T extends Pick<FormulaField, 'fieldId' | 'name'>>(
+  model: TransformDependencyModel,
+  fields: readonly T[]
+): readonly T[] {
+  const inputs = new Map(rootFields(model.input.fields).map((field) => [field.fieldId, field]));
+  const forwarded = new Map<string, (typeof model.input.fields)[number]>();
+  for (const definition of model.definitions) {
+    const ordinal = dvtSubstraitExpression.fieldOrdinal(definition.expression);
+    const input = ordinal == null ? undefined : inputs.get(definition.inputIds[ordinal]!);
+    if (input == null) continue;
+    forwarded.set(definition.id, input);
+    if (definition.output != null) forwarded.set(definition.output.fieldId, input);
+  }
+  return fields.filter((field) => {
+    const input = forwarded.get(field.fieldId);
+    return (
+      input == null ||
+      input.displayName !== field.name ||
+      !fields.some(
+        (candidate) => candidate.fieldId === input.fieldId && candidate.name === field.name
+      )
+    );
+  });
+}
 
 export async function readTransformFormulaScope(
   session: CanvasRelationAnalysisSession,
@@ -66,5 +91,12 @@ export async function readTransformFormulaScope(
       expression: dvtSubstraitExpression.field(symbols.indexOf(symbol)),
     });
   }
-  return { input, symbols, schemas, aliases, fields };
+  return {
+    input,
+    symbols,
+    schemas,
+    aliases,
+    fields,
+    formulaFields: projectTransformFormulaNameFields(model, fields),
+  };
 }

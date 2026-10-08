@@ -26,7 +26,7 @@ export function compileTransformCommandExpression(
   if ('formula' in request)
     return compileDerivedOutputFormula({
       formula: request.formula,
-      fields: scope.fields,
+      fields: scope.formulaFields,
       plan,
       provider,
     }).expression;

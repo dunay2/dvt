@@ -84,6 +84,43 @@ describe('card Input / Output boundary', () => {
     drop();
     expect(mutation).not.toHaveBeenCalled();
   });
+  it('keeps each view in its canonical order without borrowing the other view identities', () => {
+    const published = [...inputs].reverse().map(({ name, type }) => ({
+      id: `published-${name}`,
+      name,
+      type,
+      output: true,
+    }));
+    const disclosure = vi.fn();
+    const mutation = render(undefined, { columns: published, onDisclosureChange: disclosure });
+    for (const view of ['Output', 'Input', 'Output']) {
+      const tab = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
+        (item) => item.textContent === `${view} (2)`
+      )!;
+      act(() => {
+        tab.focus();
+        fireEvent.keyDown(tab, { key: 'Enter' });
+      });
+      const expected = view === 'Output' ? published : inputs;
+      const fields = [
+        ...container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]'),
+      ];
+      expect(fields.map((field) => field.dataset.columnName)).toEqual(
+        expected.map((field) => field.name)
+      );
+      expect(fields.map((field) => field.dataset.fieldId)).toEqual(
+        expected.map((field) => field.id)
+      );
+      expect(document.activeElement).toBe(tab);
+      expect(
+        container
+          .querySelector('[data-slot="graph-node-column-toggle"]')
+          ?.getAttribute('aria-expanded')
+      ).toBe('true');
+    }
+    expect(disclosure).not.toHaveBeenCalled();
+    expect(mutation).not.toHaveBeenCalled();
+  });
   it('delegates a second producer field to Input admission, never to Output', () => {
     const map = vi.fn();
     const mutation = render(map);

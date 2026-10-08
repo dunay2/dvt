@@ -4,6 +4,8 @@ import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import {
+  connectWorkbenchProducer,
+  revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
   openWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
@@ -30,6 +32,14 @@ describe('JOIN output policies', () => {
       visitWorkbenchCanvas();
       openPendingRelationalOperationChooser();
       cy.get(`[data-slot="dvt-select-operation-${policy.operation}"]`).click();
+      cy.get('[data-pending-operation="true"]').last().as('join');
+      for (const [port, name] of ['customers', 'orders'].entries()) {
+        cy.contains('[data-slot="canvas-relational-tree-node"][data-operator="read"]', name)
+          .closest('li')
+          .as('source');
+        connectWorkbenchProducer('@source', '@join', port);
+      }
+      connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       let id = '';
       cy.wrap(null, { timeout: 20_000 }).should(() => {
@@ -56,12 +66,16 @@ describe('JOIN output policies', () => {
               field.sourceFieldIds.some((id) => ids.has(id))
             );
             expect(extended).to.have.length(input.length);
-            for (const field of extended)
-              expect(field.type.kind.value?.nullability).to.equal(Type_Nullability.NULLABLE);
+            for (const field of extended) {
+              const type = field.type.kind.value;
+              if (type == null || !('nullability' in type))
+                throw new Error('Expected nullable field type');
+              expect(type.nullability).to.equal(Type_Nullability.NULLABLE);
+            }
           }
         }
       });
-      visitWorkbenchCanvas();
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
       cy.then(() =>
         cy.get(`[data-operator="join"][data-relation-id="${id}"]`).should('have.length', 1)

@@ -3,7 +3,7 @@ import { ConnectedSourceRefSchema } from '@dvt/contracts';
 
 import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import { buildDraftReadOkResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
-import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
+import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,

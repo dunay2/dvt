@@ -94,7 +94,7 @@ describe('Monaco bundle isolation architecture', () => {
     expect(diffSurface).toContain('configureMonacoLocalWorkers();');
     expect(localWorkers).toContain('loader.config({ monaco })');
     expect(localWorkers).toContain('MonacoEnvironment');
-    expect(localWorkers).toContain('monaco-editor/esm/vs/editor/editor.worker?worker');
+    expect(localWorkers).toContain('monaco-editor/editor/editor.worker.js?worker');
     expect(localWorkers).not.toContain('cdn.jsdelivr.net');
   });
 });

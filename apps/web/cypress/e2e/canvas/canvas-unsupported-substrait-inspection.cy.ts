@@ -103,7 +103,11 @@ describe('Canvas unsupported Substrait inspection', () => {
       );
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('.react-flow__node[data-id="source-customers"]').should('be.visible').click();
+    cy.get('.react-flow__controls-fitview').click();
+    cy.get('.react-flow__node[data-id="source-customers"]')
+      .should('be.visible')
+      .click()
+      .should('have.class', 'selected');
     cy.get('[data-testid="canvas-viewport"]').should('be.visible');
   });
 });

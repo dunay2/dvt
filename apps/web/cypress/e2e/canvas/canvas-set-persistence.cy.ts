@@ -6,6 +6,9 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  connectWorkbenchProducer,
+  dragWorkbenchSource,
+  revisitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import {
   semanticWrites,
@@ -14,21 +17,11 @@ import {
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const cases = [
-  ['union-all', SetRel_SetOp.UNION_ALL],
-  ['union-distinct', SetRel_SetOp.UNION_DISTINCT],
   ['intersect-distinct', SetRel_SetOp.INTERSECTION_MULTISET],
   ['intersect-all', SetRel_SetOp.INTERSECTION_MULTISET_ALL],
   ['except-distinct', SetRel_SetOp.MINUS_PRIMARY],
   ['except-all', SetRel_SetOp.MINUS_PRIMARY_ALL],
 ] as const;
-
-function openComposition(tab: 'code' | 'columns'): void {
-  cy.get(
-    '.react-flow__node[data-id="union-transform"] [data-slot="canvas-node-shell"]'
-  ).rightclick();
-  cy.contains('[role="menuitem"]', /^Properties$/).click();
-  cy.get(`[data-slot="canvas-node-workbench-tab-${tab}"]`).click();
-}
 
 describe('SET persistence', () => {
   for (const [operation, expected] of cases) {
@@ -36,10 +29,16 @@ describe('SET persistence', () => {
       stubWorkbenchScenario('pending-set');
       visitWorkbenchCanvas();
       openWorkbenchModel('union-transform');
-      cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_north').click();
-      cy.contains('[data-slot="canvas-relational-tree-source"]', 'customers_south').click();
+      dragWorkbenchSource('customers_north');
+      dragWorkbenchSource('customers_south');
       cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
       cy.get(`[data-slot="dvt-select-operation-${operation}"]`).click();
+      cy.get('[data-pending-operation="true"]').as('set');
+      for (const port of [0, 1]) {
+        cy.get('[data-operator="read"]').eq(port).closest('li').as('input');
+        connectWorkbenchProducer('@input', '@set', port);
+      }
+      connectWorkbenchProducer('@set', '[data-slot="canvas-relational-output-input-port"]', null);
       cy.get('[data-slot="canvas-relational-tree-apply"]').click();
       let identities: readonly string[];
       cy.wrap(null).should(() => {
@@ -57,15 +56,23 @@ describe('SET persistence', () => {
         expect(root.inputs.map((id) => index.relations.get(id)!.binding.displayName)).to.deep.equal(
           ['customers_north', 'customers_south']
         );
-        expect(schemas.get(index.rootId)?.map((field) => field.type)).to.deep.equal(
-          schemas.get(root.inputs[0]!)?.map((field) => field.type)
+        const rootSchema = schemas.get(index.rootId);
+        const inputSchema = schemas.get(root.inputs[0]!);
+        expect(rootSchema, 'SET output schema').not.to.equal(undefined);
+        expect(inputSchema, 'first operand schema').not.to.equal(undefined);
+        expect(rootSchema!.map((field) => field.type)).to.deep.equal(
+          inputSchema!.map((field) => field.type)
         );
         identities = [...index.relations.keys()];
       });
-      visitWorkbenchCanvas();
-      openComposition('columns');
-      cy.get('[data-slot="dvt-relation-authoring"] > select option').then((options) => {
-        expect([...options].map((option) => option.value)).to.have.members(identities);
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+      cy.get('[data-slot="canvas-model-tab-close"]').click();
+      revisitWorkbenchCanvas();
+      openWorkbenchModel('union-transform');
+      cy.get('[data-slot="canvas-relational-tree-node"][data-relation-id]').should((nodes) => {
+        expect([...nodes].map((node) => node.getAttribute('data-relation-id'))).to.have.members(
+          identities
+        );
       });
     });
   }

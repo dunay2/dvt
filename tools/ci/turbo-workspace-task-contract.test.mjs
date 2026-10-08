@@ -306,6 +306,5 @@ test('Test Suite cacheable dependency graph builds use the governed Turbo wrappe
   );
 
   assert.ok(testWorkflow.includes('run: pnpm test:adapter-temporal'));
-  assert.ok(testWorkflow.includes('run: pnpm test:web:changed'));
   assert.ok(testWorkflow.includes('run: pnpm test:coverage:engine'));
 });

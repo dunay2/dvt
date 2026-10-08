@@ -1,4 +1,10 @@
-/** Retained authoring is inspectable, but withdrawn dependencies are never published or previewed. */
+/**
+ * Owned concern: inspect withdrawn dependencies without publishing or previewing them.
+ * @baseline GH-3578: graph identifiers do not define field selection roles.
+ * @decision Assert Input and Output through their existing semantic role attributes.
+ * @consequence Retained diagnostics stay red and non-draggable, outside published fields.
+ * @version 1.0.0
+ */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
@@ -17,11 +23,12 @@ describe('Withdrawn Transform inputs', () => {
     cy.get('@transform').find('[data-slot="canvas-relational-node-expand"]').click();
     cy.get('@transform').should('contain.text', 'Derived: 1');
     cy.get('@transform')
-      .find('[data-semantic-node-id*="/output/"]')
+      .find('[data-kind="field"][data-field-selection="output"]')
       .should('have.length', 1)
-      .and('contain.text', 'country');
+      .and('contain.text', 'country')
+      .and('not.have.attr', 'data-unavailable');
     cy.get('@transform')
-      .find('[data-semantic-node-id*="/input/"][data-kind="field"]')
+      .find('[data-kind="field"][data-field-selection="input"]')
       .should('have.length', 1)
       .and('contain.text', 'country');
     cy.get('@transform')

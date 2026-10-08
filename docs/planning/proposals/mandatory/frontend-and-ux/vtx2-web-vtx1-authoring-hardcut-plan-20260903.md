@@ -155,6 +155,26 @@ unchanged. Prove clearing and restoring binary/N-input outputs, detached edges,
 save/reload, preserved identities and SQL rejection with focused unit and browser
 regressions. Issue #3180 owns the implementation journal and evidence.
 
+The #3596 reconciliation keeps that contract on the current Model Output rail.
+Missing Canvas dependencies and connected-but-excluded or invalid Input mappings
+are distinct eligibility facts. Only the existing final JOIN output-selection
+command may edit retained slots after disconnection. Its existing validator must
+prove one root JOIN upsert with unchanged binding, operands, predicates and
+relation structure except `common.emit`, with no removals or extension changes;
+output bindings and root names still come from canonical selection. It must not
+grant a general authoring permission or a caller-supplied validation bypass.
+
+```text
+Retained JOIN + disconnected provenance -> Model Output -> exact emit-only delta -> save
+Denied provenance -> unchanged publication, formula, Source and execution rejection
+```
+
+Read-only and stale revisions, unmapped connected fields, non-root/non-JOIN
+edits and disconnected physical Source reinclusion remain rejected. Re-including
+a retained JOIN field does not publish unavailable input data or make Preview/Run
+ready. The analysis session derives these facts from the same document and
+Canvas graph; no persisted selection flag, alternate schema or new cache is added.
+
 ## Physical field reinclusion correction (#3144)
 
 A validated projection from a physical Source distinguishes a selected input

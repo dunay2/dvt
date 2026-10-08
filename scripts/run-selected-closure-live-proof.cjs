@@ -2,8 +2,8 @@
 /**
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
  * @baseline GH-3594: outbox admission stays enforced against the disposable proof database.
- * @decision Compose the existing worker, local logging sink and owned process lifecycle.
- * @consequence Real delivery clears backlog; startup or readiness failure rejects the proof.
+ * @decision Validate the literal spec list before allocation and execute it in one owned runtime.
+ * @consequence Outbox delivery, readiness and cleanup stay real; incomplete evidence rejects.
  * @version 1.0.0
  */
 const { spawnSync } = require('node:child_process');
@@ -14,6 +14,7 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
 const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
+const { validateCypressProofSpecs } = require('./run-selected-closure-cypress.cjs');
 const {
   allocateDisposablePostgresDatabase,
   installDisposablePostgresInterruptCleanup,
@@ -214,40 +215,23 @@ function resolveLiveProofDbtExecutable(
   return executable;
 }
 
-function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
+function resolveLiveProofSpecPaths(argv = process.argv.slice(2)) {
   if (argv.length === 0) {
-    return `/repo/${DEFAULT_SPEC_RELATIVE_PATH}`;
+    return [`/repo/${DEFAULT_SPEC_RELATIVE_PATH}`];
   }
 
   if (argv.length !== 2 || argv[0] !== '--spec' || readNonEmptyEnv(argv[1]) === undefined) {
     throw new Error(
-      'Usage: run-selected-closure-live-proof.cjs [--spec apps/web/cypress/e2e/<path>.cy.ts]'
+      'Usage: run-selected-closure-live-proof.cjs [--spec apps/web/cypress/e2e/<path>.cy.ts,...]'
     );
   }
 
-  const relativeSpecPath = argv[1].trim().replaceAll('\\', '/');
-  const pathSegments = relativeSpecPath.split('/');
-
-  if (
-    !relativeSpecPath.startsWith('apps/web/cypress/e2e/') ||
-    pathSegments.includes('..') ||
-    pathSegments.includes('.')
-  ) {
+  const relativeSpecPaths = argv[1].trim().replaceAll('\\', '/').split(',');
+  if (relativeSpecPaths.some((spec) => !spec.startsWith('apps/web/cypress/e2e/'))) {
     throw new Error('Live proof spec must stay inside apps/web/cypress/e2e.');
   }
-
-  if (!relativeSpecPath.endsWith('.cy.ts')) {
-    throw new Error('Live proof spec must end in .cy.ts.');
-  }
-
-  if (
-    pathSegments.some((segment) => segment.length === 0) ||
-    !/^[A-Za-z0-9._/-]+$/.test(relativeSpecPath)
-  ) {
-    throw new Error('Live proof requires exactly one literal Cypress spec path.');
-  }
-
-  return `/repo/${relativeSpecPath}`;
+  validateCypressProofSpecs(relativeSpecPaths.map((spec) => spec.slice('apps/web/'.length)));
+  return relativeSpecPaths.map((spec) => `/repo/${spec}`);
 }
 
 function buildLiveProofCypressJunctionMirror(repoRoot, deps = {}) {
@@ -309,22 +293,28 @@ function buildLiveProofCypressDockerInvocation(
     '--browser',
     'chrome',
     '--spec',
-    args.specPath,
+    args.specPaths.join(','),
   ];
 }
 
 function buildLiveProofCypressNativeInvocation(args) {
   const specPrefix = '/repo/apps/web/';
-  if (!args.specPath.startsWith(specPrefix)) {
+  if (
+    !Array.isArray(args.specPaths) ||
+    args.specPaths.some((spec) => typeof spec !== 'string' || !spec.startsWith(specPrefix))
+  ) {
     throw new Error('Native Cypress live proof requires a governed web spec path.');
   }
+  const specs = validateCypressProofSpecs(
+    args.specPaths.map((spec) => spec.slice(specPrefix.length))
+  );
 
   return {
     command: process.execPath,
     args: [
       path.join(__dirname, 'run-selected-closure-cypress.cjs'),
       '--spec',
-      args.specPath.slice(specPrefix.length),
+      specs.join(','),
       ...(args.headed ? ['--headed'] : []),
     ],
     env: {
@@ -646,7 +636,7 @@ async function runCypress(args, runtime, processHandles, deps = {}) {
 }
 
 async function main() {
-  const specPath = resolveLiveProofSpecPath();
+  const specPaths = resolveLiveProofSpecPaths();
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
   const cypressHeaded = resolveLiveProofCypressHeaded();
@@ -883,7 +873,7 @@ async function main() {
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
         postgresTargetSchema: liveProofSchema,
         postgresDatabaseName: lease.name,
-        specPath,
+        specPaths,
         headed: cypressHeaded,
       },
       cypressRuntime,
@@ -916,7 +906,7 @@ module.exports = {
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
-  resolveLiveProofSpecPath,
+  resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
   startLiveProofOutboxWorker,

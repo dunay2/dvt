@@ -8,6 +8,12 @@ import yaml from 'js-yaml';
 
 const workflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
 const aggregate = workflow.jobs['test-suite-required'];
+const webMatrix = [
+  { phase: 'vitest', capability: '' },
+  { phase: 'browser', capability: 'controlled' },
+  { phase: 'browser', capability: 'available' },
+  { phase: 'browser', capability: 'unavailable' },
+];
 const lanes = [
   'package-tests',
   'adapter-temporal',
@@ -108,17 +114,21 @@ test('PostgreSQL integration files run once in the full suite with the real data
   }
 });
 
-test('Web keeps two independent bounded phases with isolated cache producers', () => {
+test('Web keeps four independent bounded obligations with isolated cache producers', () => {
   const web = workflow.jobs['web-frontend-tests'];
-  assert.equal(web.name, 'Web Frontend Tests (${{ matrix.phase }})');
+  assert.equal(web.name, 'Web Frontend Tests (${{ matrix.capability || matrix.phase }})');
   assert.deepEqual(web.strategy, {
     'fail-fast': false,
-    matrix: { phase: ['vitest', 'browser'] },
+    matrix: { include: webMatrix },
   });
   assert.equal(web['timeout-minutes'], 25);
   assert.notEqual(web['continue-on-error'], true);
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
-  assert.equal(install.with['turbo-cache-variant'], '${{ matrix.phase }}');
+  assert.equal(install.with['turbo-cache-variant'], '${{ matrix.capability || matrix.phase }}');
+  assert.equal(
+    web.env.PROOF_OWNER,
+    '${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}'
+  );
 });
 
 test('Web phases resolve one plan and execute disjoint changed or full obligations', () => {
@@ -128,10 +138,14 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
   assert.equal(web.services, undefined, 'Ordinary Web-only changes must not allocate PostgreSQL');
   const primary = web.steps.find((step) => step.run === 'pnpm test:web:ci');
   const changed = web.steps.find(
-    (step) => step.run === 'pnpm test:web:changed --phase=${{ matrix.phase }}'
+    (step) =>
+      step.run ===
+      "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }}"
   );
   const browser = web.steps.find(
-    (step) => step.run === 'pnpm test:web:changed --full --phase=browser'
+    (step) =>
+      step.run ===
+      'pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}'
   );
   assert.ok(primary && changed && browser);
   const executions = web.steps.filter(
@@ -144,9 +158,11 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
     ['push', false, true],
     ['workflow_dispatch', false, true],
   ]) {
-    for (const phase of ['vitest', 'browser']) {
+    for (const matrix of webMatrix) {
+      const { phase, capability } = matrix;
       const context = {
-        matrix: { phase },
+        matrix,
+        format: (template, value) => template.replace('{0}', value),
         github: { event_name: event },
         needs: {
           detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } },
@@ -155,29 +171,52 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
       const planned = plan.run.replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
         String(runInNewContext(expression, context))
       );
-      assert.equal(planned.trim(), `pnpm test:web:changed --plan${full ? ' --full' : ''}`);
+      assert.equal(
+        planned.trim().replace(/ +/gu, ' '),
+        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${full ? ' --full' : ''}`
+      );
       const expected = full ? (phase === 'vitest' ? primary : browser) : changed;
       assert.deepEqual(
         executions.filter((step) => runInNewContext(step.if, context)),
         [expected],
-        `${event}: root=${root}, phase=${phase}`
+        `${event}: root=${root}, phase=${phase}, capability=${capability}`
       );
       assert.notEqual(expected['continue-on-error'], true);
     }
   }
-  for (const id of ['browser_python', 'browser_dependencies', 'browser_postgres']) {
+});
+
+test('Web provisions only the selected browser capability infrastructure', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const plan = web.steps.find((step) => step.id === 'web_plan');
+  for (const id of [
+    'browser_python',
+    'browser_provider',
+    'browser_dependencies',
+    'browser_postgres',
+  ]) {
     const step = web.steps.find((entry) => entry.id === id);
     assert.ok(step, id);
     assert.ok(web.steps.indexOf(plan) < web.steps.indexOf(step));
-    for (const phase of ['vitest', 'browser']) {
+    for (const { phase, capability } of webMatrix) {
       for (const required of ['true', 'false', '', undefined]) {
+        const providerRequired = capability === 'available' || capability === 'unavailable';
         assert.equal(
           runInNewContext(step.if, {
             matrix: { phase },
-            steps: { web_plan: { outputs: { browser_required: required } } },
+            steps: {
+              web_plan: {
+                outputs: {
+                  browser_required: required,
+                  provider_required: providerRequired ? required : 'false',
+                },
+              },
+            },
           }),
-          phase === 'browser' && required === 'true',
-          `${id}: ${phase}, ${required}`
+          phase === 'browser' &&
+            required === 'true' &&
+            (id === 'browser_dependencies' || providerRequired),
+          `${id}: ${phase}, ${capability}, ${required}`
         );
       }
     }
@@ -188,8 +227,10 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
   assert.equal(install.env.CYPRESS_INSTALL_BINARY, '0');
   const browserDependencies = web.steps.find((step) => step.id === 'browser_dependencies');
-  assert.match(browserDependencies.run, /dbt-postgres==\d+\.\d+\.\d+/u);
-  assert.match(browserDependencies.run, /dbt-core==\d+\.\d+\.\d+/u);
+  const browserProvider = web.steps.find((step) => step.id === 'browser_provider');
+  assert.match(browserProvider.run, /dbt-postgres==\d+\.\d+\.\d+/u);
+  assert.match(browserProvider.run, /dbt-core==\d+\.\d+\.\d+/u);
+  assert.doesNotMatch(browserDependencies.run, /dbt|pip|python/u);
   assert.match(browserDependencies.run, /cypress install/u);
   assert.match(browserDependencies.run, /cypress verify/u);
   assert.equal(browserDependencies.env?.CYPRESS_INSTALL_BINARY, undefined);
@@ -225,6 +266,7 @@ test('Web proof allocation and cleanup are bounded to the container created by t
   const artifacts = web.steps.filter((step) => step.uses?.startsWith('actions/upload-artifact@'));
   assert.equal(artifacts.length, 1);
   const artifact = artifacts[0];
+  assert.equal(artifact.with.name, 'web-live-proof-screenshots-${{ matrix.capability }}');
   assert.equal(artifact.with.path, '.dvt/evidence/selected-closure/screenshots');
   assert.equal(artifact.with['include-hidden-files'], true);
   for (const [phase, required, outcome, expected] of [

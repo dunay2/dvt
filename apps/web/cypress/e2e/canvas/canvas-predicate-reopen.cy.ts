@@ -7,7 +7,7 @@ import {
 } from '../../support/relationalWorkbench/fieldSelection';
 import {
   openWorkbenchModel,
-  visitWorkbenchCanvas,
+  revisitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
 import { savedOutputs } from '../../support/relationalWorkbench/savedOutputs';
@@ -26,6 +26,8 @@ describe('Canonical relation inspection', () => {
     let identities: unknown;
     for (const operator of ['gt', 'lt'] as const) {
       cy.get('[data-operator="join"]').click();
+      cy.get('[data-slot="canvas-relational-edit"]').click();
+      cy.get('[aria-label="Editar condición"]').click();
       cy.get('[aria-label="Comparador de la condición"]:visible').select(operator);
       cy.contains('button', 'Guardar condición').click();
       let writesBefore = 0;
@@ -55,7 +57,8 @@ describe('Canonical relation inspection', () => {
           session.dispose();
         }
       });
-      visitWorkbenchCanvas();
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+      revisitWorkbenchCanvas();
       openWorkbenchModel();
     }
   });

@@ -2,7 +2,7 @@
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
-import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
@@ -29,7 +29,6 @@ describe('Workbench removal', () => {
     stubWorkbenchScenario('saved-join');
   });
   it('removes cards through their context menu, cancels without writes and persists canonical Substrait on Apply', () => {
-    let baseline = 0;
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     openWorkbenchModel('join-transform');
@@ -41,10 +40,8 @@ describe('Workbench removal', () => {
       .first()
       .should('have.css', 'font-family')
       .and('contain', 'Segoe UI');
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
-    cy.then(() => {
-      baseline = semanticWrites('join-transform').length;
-    });
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('not.exist');
     cy.get('[data-slot="canvas-operation-menu-trigger"]').click();
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('be.visible');
@@ -56,6 +53,8 @@ describe('Workbench removal', () => {
     cy.get('[data-slot="dvt-select-operation-inner-join"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
     cy.get('[role="combobox"]').type('{esc}');
+    cy.get('[role="listbox"]').should('not.exist');
+    cy.get('[data-slot="canvas-operation-menu-trigger"]').should('be.focused');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').rightclick();
     cy.get('[data-slot="canvas-relational-remove-left"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-remove-left"]')
@@ -72,13 +71,13 @@ describe('Workbench removal', () => {
       'have.length',
       1
     );
-    cy.then(() => expect(semanticWrites('join-transform').length).to.equal(baseline));
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should(
       'have.length',
       2
     );
-    cy.then(() => expect(semanticWrites('join-transform').length).to.equal(baseline));
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.contains(
       '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
       'orders'
@@ -90,7 +89,7 @@ describe('Workbench removal', () => {
       1
     );
     cy.wrap(null).should(() =>
-      expect(semanticWrites('join-transform').length).to.be.greaterThan(baseline)
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1)
     );
     cy.then(() => {
       const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
@@ -120,15 +119,12 @@ describe('Workbench removal', () => {
   it('removes an operand with the keyboard, cancels, applies and returns to its opener', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
     const opener = '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]';
     const source = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
     cy.get(opener).should('be.visible').focus().type('{enter}');
     cy.get('[data-slot="canvas-model-editor"]').should('be.focused');
-    let initialWrites = 0;
-    cy.then(() => {
-      initialWrites = semanticWrites('join-transform').length;
-    });
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     for (const action of ['cancel', 'apply'] as const) {
       tabTo(source);
       cy.focused()
@@ -146,8 +142,8 @@ describe('Workbench removal', () => {
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('not.exist');
       cy.focused().should('not.have.prop', 'tagName', 'BODY');
       cy.wrap(null).should(() =>
-        expect(semanticWrites('join-transform')).to.have.length(
-          initialWrites + (action === 'apply' ? 1 : 0)
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
+          action === 'apply' ? 1 : 0
         )
       );
       cy.get(source).should('have.length', action === 'cancel' ? 2 : 1);
@@ -160,7 +156,7 @@ describe('Workbench removal', () => {
     cy.get(source).should('have.length', 1);
     cy.then(() => {
       expect(getE2eApiCalls(/sample|preview/)).to.have.length(0);
-      expect(semanticWrites('join-transform')).to.have.length(initialWrites + 1);
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1);
     });
   });
 });

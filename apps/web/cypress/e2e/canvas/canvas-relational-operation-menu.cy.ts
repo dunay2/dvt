@@ -80,5 +80,8 @@ describe('Compact semantic operation menu', () => {
     cy.get('[data-slot="canvas-relational-tree-source"]').first().click();
     cy.get('[role="listbox"]').should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(0));
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]').should('not.exist');
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').should('not.exist');
   });
 });

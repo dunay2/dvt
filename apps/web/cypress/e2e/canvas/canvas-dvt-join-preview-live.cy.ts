@@ -10,19 +10,19 @@ import { DVT_POSTGRES_JOIN_PROFILE_ID, KNOWN_STEP_KINDS } from '@dvt/contracts';
 import documents from '../../../../../packages/@dvt/postgres-projection/test/fixtures/inner-join-documents.json';
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { exportProjectSnapshot } from '../../../src/app/views/canvas/canvasProjectSnapshot';
-import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
+import { buildCanvasAuthoringDraft } from '../../support/canvasDrafts/buildCanvasAuthoringDraft';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   getVisibleCanvasNode,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
   resolveLiveWorkspaceSession,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';

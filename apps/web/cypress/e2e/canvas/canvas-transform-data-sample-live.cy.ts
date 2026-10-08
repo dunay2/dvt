@@ -1,9 +1,9 @@
 /** Owned concern: prove card-owned Source and Transform exploration against the live draft. */
 import { getVisibleCanvasNode } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
@@ -50,11 +50,14 @@ describe('Canvas live data exploration', () => {
         );
       },
     });
+    getVisibleCanvasNode('dvt-transform-1')
+      .find('[data-slot="canvas-node-execute"]')
+      .should('be.enabled');
     cy.press(Cypress.Keyboard.Keys.TAB);
     getVisibleCanvasNode('dvt-transform-1')
       .find('[data-slot="canvas-node-execute"]')
       .focus()
-      .should('be.enabled')
+      .should('have.focus')
       .and('have.css', 'opacity', '1');
     cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="data:dvt-transform-1"]').should(
@@ -76,11 +79,12 @@ describe('Canvas live data exploration', () => {
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
 
+    getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').should('be.enabled');
     cy.press(Cypress.Keyboard.Keys.TAB);
     getVisibleCanvasNode('source-1')
       .find('[data-slot="canvas-node-execute"]')
       .focus()
-      .should('be.enabled')
+      .should('have.focus')
       .and('have.css', 'opacity', '1');
     cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.wait('@sourceRows', { timeout: 30_000 }).then(({ response }) => {
@@ -106,13 +110,18 @@ describe('Canvas live data exploration', () => {
     cy.get('[data-slot="bottom-operational-data-table"] tbody tr').should('have.length', 3);
     cy.screenshot('source-published-preview');
     openWorkbenchModel('dvt-transform-1');
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
+      .parent()
+      .find('[data-slot="canvas-node-execute"]')
+      .should('be.enabled');
     cy.press(Cypress.Keyboard.Keys.TAB);
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="read"]')
       .parent()
       .find('[data-slot="canvas-node-execute"]')
       .should('contain.text', 'Vista previa')
       .focus()
-      .should('have.css', 'opacity', '1');
+      .should('have.focus')
+      .and('have.css', 'opacity', '1');
     cy.press(Cypress.Keyboard.Keys.SPACE);
     cy.wait('@sourceRows', { timeout: 30_000 }).then(({ request, response }) => {
       expect(response?.statusCode).to.equal(200);

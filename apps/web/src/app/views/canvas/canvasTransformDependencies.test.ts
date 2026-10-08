@@ -17,6 +17,8 @@ import {
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { relationOutputSlots } from './canvasRelationOutputSchema';
 import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
+import { transformExpressionDependencies } from './canvasTransformExpressionReferences';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 
 type Apply = (alias: string, formula: string, outputFieldId?: string) => Promise<SubstraitDocument>;
@@ -47,6 +49,111 @@ async function dependentNames(): Promise<{
 }
 
 describe('Transform calculated-field dependencies', () => {
+  it('resolves canonical passthrough names without merging explicit aliases or their dependents', async () => {
+    const session = new CanvasRelationAnalysisSession('projected-names');
+    session.receive(projectionScenario({ sourceNodeId: 'customers', targetNodeId: 'names' }));
+    const model = (): ReturnType<typeof readCanvasTransformDependencyModel> =>
+      readCanvasTransformDependencyModel(session.locate(session.rootId, session.revision), (id) =>
+        session.locate(id, session.revision)
+      );
+    const original = model();
+    const name = original.definitions.find((entry) => entry.output?.displayName === 'name')!;
+    const apply: Apply = (alias, formula, outputFieldId) =>
+      applySelectedRelationDerivedOutput(session, {
+        intent: 'edit',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        alias,
+        formula,
+        ...(outputFieldId == null ? {} : { outputFieldId }),
+      });
+    try {
+      await apply('preferred', 'COALESCE(TRIM(name), country)');
+      const preferred = model().definitions.find(
+        (entry) => entry.output?.displayName === 'preferred'
+      )!;
+      expect(
+        new Set(transformExpressionDependencies(preferred.expression, preferred.inputIds))
+      ).toEqual(
+        new Set(
+          original.input.fields
+            .filter((field) => ['name', 'country'].includes(field.displayName!))
+            .map((field) => field.fieldId)
+        )
+      );
+      const forwarded = model().definitions.find(
+        (entry) => entry.output?.fieldId === name.output!.fieldId
+      )!;
+      await applySelectedRelationDerivedOutput(session, {
+        intent: 'edit',
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        alias: 'selected_name',
+        expression: { kind: 'field-ref', inputFieldId: name.output!.fieldId },
+      });
+      const selected = model().definitions.find(
+        (entry) => entry.output?.displayName === 'selected_name'
+      )!;
+      expect(transformExpressionDependencies(selected.expression, selected.inputIds)).toEqual([
+        forwarded.id,
+      ]);
+      await apply('upper_name', 'UPPER(selected_name)');
+      const document = await apply('selected_name', 'LOWER(name)', selected.output!.fieldId);
+      session.receive(
+        decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(document))
+      );
+      const reopened = model();
+      expect(reopened.root.fields.slice(0, 3).map((field) => field.fieldId)).toEqual(
+        original.root.fields.map((field) => field.fieldId)
+      );
+      expect(reopened.definitions.find((entry) => entry.id === selected.id)?.output?.fieldId).toBe(
+        selected.output!.fieldId
+      );
+      const upper = reopened.definitions.find(
+        (entry) => entry.output?.displayName === 'upper_name'
+      )!;
+      expect(transformExpressionDependencies(upper.expression, upper.inputIds)).toEqual([
+        selected.id,
+      ]);
+      expect((await projectSubstraitToPostgresSql(document)).sql).toMatch(/\blower\s*\(/i);
+    } finally {
+      session.dispose();
+    }
+  });
+
+  it('rejects a genuinely calculated input homonym without changing the document', async () => {
+    const session = new CanvasRelationAnalysisSession('calculated-homonym');
+    session.receive(projectionScenario({ sourceNodeId: 'customers', targetNodeId: 'names' }));
+    const target = session.locate(session.rootId, session.revision);
+    const before = await applySelectedRelationDerivedOutput(session, {
+      intent: 'edit',
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      alias: 'name',
+      outputFieldId: target.fields[0]!.fieldId,
+      formula: "'different'",
+    });
+    const revision = session.revision;
+    try {
+      await expect(
+        applySelectedRelationDerivedOutput(session, {
+          intent: 'edit',
+          relationId: session.rootId,
+          expectedRevision: revision,
+          alias: 'rejected',
+          formula: 'UPPER(name)',
+        })
+      ).rejects.toMatchObject({ code: 'transform_dependency_ambiguous' });
+      expect(session.revision).toBe(revision);
+      expect(session.locate(session.rootId, revision).plan).toEqual(before.plan);
+      expect(session.locate(session.rootId, revision).fields).toEqual(
+        before.sidecar.fields.filter((field) => field.relationId === session.rootId)
+      );
+    } finally {
+      session.dispose();
+    }
+  });
+
   it('preserves producer identity across rename, output order and persisted reload', async () => {
     const { session, apply, id } = await dependentNames();
     await apply('renamed', 'LOWER("first_name")', id);

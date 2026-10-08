@@ -1,4 +1,10 @@
-/** Validate the touched field neighbourhood using the existing contract invariant. */
+/**
+ * Owned concern: validate local field changes with complete referenced producer bindings.
+ * @baseline ADR-0064: stable identities remain governed by the canonical sidecar contract.
+ * @decision Complete producer context from actual staged fields without enlarging the delta.
+ * @consequence Subset edits retain strict mapping validation and localized publication.
+ * @version 1.1.0
+ */
 import {
   DvtSubstraitAuthoringSidecarV1Schema,
   type DvtSubstraitFieldBindingV1,
@@ -41,6 +47,16 @@ export function prepareFieldChanges(
     ...proposed.keys(),
     ...old.flatMap((field) => [...(snapshot.fieldConsumers.get(field.fieldId) ?? [])]),
   ];
+  const relations = new Map<string, IndexedRelation>();
+  const includeRelation = (id: string): void => {
+    if (relations.has(id)) return;
+    const entry = entries.get(id) ?? snapshot.get(id);
+    relations.set(id, entry);
+    if (entry.binding.producerRef != null)
+      pending.push(...entry.fields.map((field) => field.fieldId));
+  };
+  includeRelation(rootId);
+  for (const id of touched) if (entries.has(id)) includeRelation(id);
   const included = new Map<string, DvtSubstraitFieldBindingV1>();
   while (pending.length > 0) {
     const id = pending.pop()!;
@@ -51,12 +67,12 @@ export function prepareFieldChanges(
       throw new SubstraitAnalysisError('invalid_binding', 'Field dependency is absent.');
     }
     included.set(id, field);
+    includeRelation(field.relationId);
     pending.push(...fieldDependencies(field));
   }
-  const relationIds = new Set([rootId, ...[...included.values()].map((field) => field.relationId)]);
   const validated = DvtSubstraitAuthoringSidecarV1Schema.safeParse({
     ...snapshot.authority.sidecar,
-    relations: [...relationIds].map((id) => (entries.get(id) ?? snapshot.get(id)).binding),
+    relations: [...relations.values()].map((entry) => entry.binding),
     fields: [...included.values()],
   });
   if (!validated.success)

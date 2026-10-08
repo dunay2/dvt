@@ -202,6 +202,15 @@ describe('Relational card movement', () => {
       'not.have.attr',
       'data-connected'
     );
+    // Finish this edit through the UI before the next case navigates away.
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get('[data-slot="canvas-relational-output-edge"]').should('exist');
+    cy.get('[data-slot="canvas-relational-output-input-port"]').should(
+      'have.attr',
+      'data-connected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').should('not.exist');
   });
 
   for (const axis of ['horizontal', 'vertical'] as const) {

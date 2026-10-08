@@ -1,4 +1,11 @@
 // @vitest-environment jsdom
+/**
+ * Owned concern: prove Model Output edits through the real Workbench and canonical command.
+ * @baseline GH-3596: disconnected final JOIN selection remains visible but permission guarded.
+ * @decision Keep the existing gesture harness and prove edit, read-only and rejection boundaries.
+ * @consequence Retained selection does not enable general composition or calculation controls.
+ * @version 1.1.0
+ */
 import React, { act, createRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import {
@@ -19,6 +26,57 @@ import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types'
 
 describe('direct output ordering', () => {
   setupWorkbenchTest();
+  it.each([true, false])(
+    'retains final JOIN output controls after disconnection without enabling general edits (%s)',
+    async (canEditNode) => {
+      const graph = occurrenceGraph();
+      const applied = vi.fn();
+      function Host(): React.JSX.Element {
+        const [node, setNode] = useState(graph.targetNode);
+        return (
+          <CanvasRelationalTreeWorkbench
+            transformNode={node}
+            nodes={[graph.source, node]}
+            edges={[]}
+            copy={COPY}
+            authoring={{
+              canEditNode,
+              onApplyNodeDraft: (_id, draft) => {
+                applied(draft);
+                setNode(applyCanvasInspectorNodeDraft(node, draft));
+                return { outcome: 'no_changes' };
+              },
+            }}
+          />
+        );
+      }
+      await act(async () => root.render(<Host />));
+      await act(async () =>
+        container
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
+          .click()
+      );
+      const toggles = (): HTMLButtonElement[] => [
+        ...container.querySelectorAll<HTMLButtonElement>(
+          '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-toggle"]'
+        ),
+      ];
+      expect(toggles()).toHaveLength(4);
+      expect(toggles().every((toggle) => toggle.disabled === !canEditNode)).toBe(true);
+      expect(container.querySelector('[data-slot="canvas-relational-edit"]')).toBeNull();
+      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).toBeNull();
+      if (canEditNode) {
+        for (const toggle of toggles()) await act(async () => toggle.click());
+        expect(toggles().every((toggle) => toggle.dataset.included === 'false')).toBe(true);
+        await act(async () => toggles()[0]!.click());
+        expect(toggles().filter((toggle) => toggle.dataset.included === 'true')).toHaveLength(1);
+        expect(applied).toHaveBeenCalledTimes(5);
+      } else {
+        await act(async () => toggles()[0]!.click());
+        expect(applied).not.toHaveBeenCalled();
+      }
+    }
+  );
   it.each([false, true])(
     'orders applied fields without editing conditions (initial rejection: %s)',
     async (rejectFirst) => {
@@ -118,6 +176,7 @@ describe('direct output ordering', () => {
         await move();
       }
       expect(ids()).toEqual([before[1], before[0], ...before.slice(2)]);
+      expect(container.querySelector('[role="alert"]')).toBeNull();
       expect(handle.current!.hasUnappliedChanges).toBe(false);
       expect(
         container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
