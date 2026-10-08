@@ -116,6 +116,179 @@ test('integration tests never run against the authoritative Planning DB', () => 
   assert.notEqual(dbUrl(), authoritativeDbUrl());
 });
 
+test('catalog rail retirement preserves native shared metadata with atomic audited rejection', async () => {
+  const { applyCatalogReconciliation } = require('./planning-db/catalog-reconciliation-write.cjs');
+  const client = new Client({ connectionString: dbUrl() });
+  await client.connect();
+  try {
+    await client.query(`insert into architecture.design
+      (design_id, work_item_id, title, owner, status, rationale, rail_ref)
+      values ('catalog-retirement', 'GH-3021', 'Exact imported retirement', 'Catalog', 'review',
+        'Preserve provider evidence while retiring one proof command', 'RecordFeatureMechanizationRail')`);
+    await client.query(`insert into architecture.design_scope
+      (design_id, subject_kind, subject_id, scope_kind)
+      select 'catalog-retirement', 'relation', 'planning_query_store.' || name, 'may_update'
+      from unnest(array['command_query_rails', 'feature_mechanization_local_operations']) as name`);
+    await client.query(`with rails as (
+      select ordinal, jsonb_build_object('name', 'CatalogProof' || ordinal, 'type', 'command',
+        'status', 'implemented', 'dddOwner', 'Owner' || ordinal,
+        'precision', '{"integer":9007199254740993,"decimal":0.123456789012345678901}'::jsonb) as rail
+      from generate_series(0, 5) as ordinal
+    ), manifest as (
+      select jsonb_build_object('mechanizationStatus', 'implemented',
+        'commandQueryRails', jsonb_agg(rail order by ordinal),
+        'symbols', '[{"name":"provider","path":"provider.ts","limit":9007199254740993}]'::jsonb,
+        'redGreenCycles', '[{"id":"provider-proof"}]'::jsonb,
+        'custom', '{"decimal":0.123456789012345678901}'::jsonb) as value from rails
+    ) insert into planning_query_store.command_query_rails
+      (rail_id, feature_id, mechanization_status, rail_name, normalized_rail_name, rail_type,
+       ddd_owner, rail_status, source_path, source_content_sha256, raw_rail, raw_manifest,
+       implementation_refs, imported_at)
+      select 'catalog-retire-' || ordinal, 'CATALOG-RETIRE', 'implemented', rail->>'name',
+        lower(rail->>'name'), 'command', rail->>'dddOwner', 'implemented', 'catalog-proof.md',
+        repeat('a',64), rail, manifest.value, '["provider.ts#provider"]',
+        '2026-01-01T00:00:00.123456Z'::timestamptz from rails cross join manifest`);
+    const snapshots = async () =>
+      (
+        await client.query(`select rail_id, to_jsonb(rail)::text as snapshot,
+      planning_query_store.sha256_text(planning_query_store.stable_jsonb_text(to_jsonb(rail))) as hash
+      from planning_query_store.command_query_rails rail where rail_id like 'catalog-retire-%'
+      order by rail_id`)
+      ).rows;
+    const auditCount = async () =>
+      (
+        await client.query(`select count(*)::int as count
+      from planning_query_store.feature_mechanization_local_operations
+      where payload->>'designId' = 'catalog-retirement'`)
+      ).rows[0].count;
+    const before = await snapshots();
+    const command = {
+      designId: 'catalog-retirement',
+      actor: 'test',
+      idempotencyKey: 'catalog-retirement-native',
+      changes: [
+        {
+          origin: 'imported',
+          railId: before[0].rail_id,
+          expectedRowSha256: before[0].hash,
+          railRetirement: {
+            reason: 'Retire only the exclusive proof, not its five product siblings',
+          },
+        },
+      ],
+    };
+    const rejectUnchanged = async (input, pattern, connection = client) => {
+      const original = await snapshots();
+      const audits = await auditCount();
+      await assert.rejects(applyCatalogReconciliation(input, { client: connection }), pattern);
+      assert.deepEqual(await snapshots(), original);
+      assert.equal(await auditCount(), audits);
+    };
+    await rejectUnchanged(
+      {
+        ...command,
+        changes: [
+          command.changes[0],
+          {
+            ...command.changes[0],
+            railId: before[1].rail_id,
+            expectedRowSha256: '0'.repeat(64),
+          },
+        ],
+      },
+      /CATALOG-STALE/
+    );
+    await client.query(`delete from architecture.design_scope where design_id = 'catalog-retirement'
+      and subject_id = 'planning_query_store.command_query_rails'`);
+    await rejectUnchanged(command, /CATALOG-DESIGN-SCOPE/);
+    await client.query(`insert into architecture.design_scope values
+      ('catalog-retirement', 'relation', 'planning_query_store.command_query_rails', 'may_update', true, now())`);
+    // An unchanged consumer must prevent retiring its live authority, not just changed references.
+    await client.query(`insert into planning_query_store.command_query_rails
+      (rail_id, feature_id, mechanization_status, rail_name, normalized_rail_name, rail_type,
+       ddd_owner, rail_status, source_path, source_content_sha256, raw_rail, raw_manifest, implementation_refs)
+      select 'catalog-retire-reference', 'CATALOG-CONSUMER', mechanization_status,
+        rail_name, normalized_rail_name, rail_type, ddd_owner, 'referenced', 'consumer.md',
+        source_content_sha256, raw_rail || '{"referenceOnly":true,"authorityRef":"catalog-proof.md"}',
+        raw_manifest, implementation_refs from planning_query_store.command_query_rails
+      where rail_id = 'catalog-retire-0'`);
+    await rejectUnchanged(command, /CATALOG-REFERENCE/);
+    await client.query(`delete from planning_query_store.command_query_rails
+      where rail_id = 'catalog-retire-reference'`);
+    await client.query(`insert into planning_query_store.command_query_rails
+      (rail_id, feature_id, mechanization_status, rail_name, normalized_rail_name, rail_type,
+       ddd_owner, rail_status, source_path, source_content_sha256, raw_rail, raw_manifest,
+       implementation_refs, imported_at)
+      select 'catalog-retire-fallback', 'CATALOG-FALLBACK', mechanization_status, rail_name,
+        normalized_rail_name, rail_type, ddd_owner, rail_status, source_path, source_content_sha256,
+        raw_rail, raw_manifest, implementation_refs, imported_at - interval '1 day'
+      from planning_query_store.command_query_rails where rail_id = 'catalog-retire-0'`);
+    await rejectUnchanged(command, /CATALOG-WINNER/);
+    await client.query(`delete from planning_query_store.command_query_rails
+      where rail_id = 'catalog-retire-fallback'`);
+    await rejectUnchanged(command, /audit boundary failure/, {
+      query(sql, values) {
+        if (
+          sql
+            .trimStart()
+            .startsWith('insert into planning_query_store.feature_mechanization_local_operations')
+        )
+          throw new Error('audit boundary failure');
+        return client.query(sql, values);
+      },
+    });
+    const result = await applyCatalogReconciliation(command, { client });
+    assert.deepEqual(result, {
+      idempotent: false,
+      changed: 1,
+      catalogReconciliation: { changed: 1 },
+    });
+    const after = await snapshots();
+    assert.deepEqual(after.slice(1), before.slice(1));
+    const expected = (
+      await client.query(
+        `select jsonb_set(jsonb_set(jsonb_set($1::jsonb,
+      '{rail_status}', '"retired"'), '{raw_rail,status}', '"retired"'),
+      '{raw_manifest,commandQueryRails,0,status}', '"retired"')::text as snapshot`,
+        [before[0].snapshot]
+      )
+    ).rows[0].snapshot;
+    assert.equal(after[0].snapshot, expected);
+    const audit = (
+      await client.query(
+        `select payload->'before' = $1::jsonb as exact_before,
+      payload->'after' = $2::jsonb as exact_after,
+      payload #>> '{after,raw_manifest,symbols,0,limit}' as integer,
+      payload #>> '{after,raw_manifest,custom,decimal}' as decimal,
+      payload #>> '{change,railRetirement,reason}' as reason
+      from planning_query_store.feature_mechanization_local_operations
+      where idempotency_key = 'catalog-retirement-native:catalog:0'`,
+        [before[0].snapshot, after[0].snapshot]
+      )
+    ).rows[0];
+    assert.deepEqual(audit, {
+      exact_before: true,
+      exact_after: true,
+      integer: '9007199254740993',
+      decimal: '0.123456789012345678901',
+      reason: command.changes[0].railRetirement.reason,
+    });
+    assert.equal((await applyCatalogReconciliation(command, { client })).idempotent, true);
+    assert.equal(await auditCount(), 1);
+    await rejectUnchanged({ ...command, actor: 'other' }, /CATALOG-IDEMPOTENCY/);
+    await rejectUnchanged(
+      {
+        ...command,
+        idempotencyKey: 'catalog-retirement-terminal',
+        changes: [{ ...command.changes[0], expectedRowSha256: after[0].hash }],
+      },
+      /CATALOG-RETIREMENT/
+    );
+  } finally {
+    await client.end();
+  }
+});
+
 test('successful import preserves DB-owned architecture, mechanization, overlays, and audit', async () => {
   await importContent({ databaseUrl: dbUrl(), silent: true });
 

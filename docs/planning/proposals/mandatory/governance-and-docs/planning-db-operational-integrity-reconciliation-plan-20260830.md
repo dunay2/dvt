@@ -215,6 +215,39 @@ Replaying ordinary record commands was rejected because they rebuild symbol
 metadata. Deleting rows, raising integrity tolerances or importing the database
 was rejected because each can hide or replace the authority being preserved.
 
+### Exact imported rail retirement
+
+The approved #3021 closeout exposes a narrower lifecycle case: one imported
+proof command is obsolete, but its manifest also describes five live product
+rails. Ordinary closed-record replacement clears all symbols and invalidates
+those siblings. Evidence retirement alone does not retire the command.
+
+```mermaid
+flowchart LR
+  Shared[Imported manifest with six rails] --> Selected[Exact obsolete proof rail]
+  Selected --> CAS[Existing reconciliation: full-row CAS and audit]
+  CAS --> Retired[Selected rail status retired]
+  CAS --> Preserved[Sibling rails and provider evidence unchanged]
+```
+
+`RecordFeatureMechanizationRail --catalog-reconciliation` may therefore accept
+an explicit, exclusive `railRetirement` change for one imported row. It requires
+a reason, exact row identity and native snapshot hash. The selected row and
+its uniquely matching manifest rail become `retired`; the shared manifest's
+mechanization status, sibling rails, symbols, cycles, gates, ownership,
+provenance and ranking timestamps remain unchanged. Deleting exclusive
+implementation evidence remains a separate exact evidence-retirement operation.
+An empty or ambiguous rail, an already terminal rail, a local-origin target,
+mixed patch modes or stale snapshot must reject. Existing transaction, scope,
+canonical-winner, dependency, idempotency and audit checks remain mandatory.
+
+The implementation uses native JSONB patches, not a JavaScript replacement of
+the complete manifest. Required evidence includes an imported fixture with five
+active siblings, unchanged unselected metadata including large numeric values,
+atomic rollback on rejection, idempotent replay and actual PostgreSQL execution.
+No schema, new command, product contract or general imported-state editor is
+introduced. Historical UI proof is not claimed to be current provider E2E proof.
+
 ## Feature mechanization
 
 ```feature-mechanization

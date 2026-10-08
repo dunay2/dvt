@@ -66,6 +66,93 @@ test('catalog parser admits only explicit metadata patches with unique exact tar
     assert.throws(() => parseCatalogReconciliation(invalid), /CATALOG/);
 });
 
+test('catalog rail retirement admits only an exclusive imported target and explicit reason', () => {
+  const change = { ...request.changes[0], railRetirement: { reason: 'Exclusive proof retired' } };
+  delete change.reference;
+  const command = { ...request, changes: [change] };
+  assert.deepEqual(parseCatalogReconciliation(command).catalogReconciliation, command);
+  for (const invalid of [
+    { ...change, origin: 'local' },
+    { ...change, railRetirement: {} },
+    { ...change, railRetirement: { reason: '' } },
+    { ...change, railRetirement: { reason: ' reason ' } },
+    { ...change, railRetirement: { reason: 'Retired', status: 'implemented' } },
+    ...['source', 'sourceContent', 'reference', 'evidenceRetirement'].map((key) => ({
+      ...change,
+      [key]: {},
+    })),
+  ])
+    assert.throws(() => parseCatalogReconciliation({ ...command, changes: [invalid] }), /CATALOG/);
+});
+
+test('catalog rail retirement preserves shared evidence and rejects ambiguous or terminal identities', () => {
+  const before = structuredClone(row);
+  const siblings = Array.from({ length: 5 }, (_, index) => ({
+    name: `ProductRail${index}`,
+    type: 'query',
+    status: 'implemented',
+    owner: `Owner${index}`,
+  }));
+  before.raw_manifest.commandQueryRails.push(...siblings);
+  before.raw_manifest.mechanizationStatus = 'implemented';
+  const change = {
+    origin: 'imported',
+    railId: before.rail_id,
+    expectedRowSha256: '0'.repeat(64),
+    railRetirement: { reason: 'Obsolete proof only; product rails remain active' },
+  };
+  const project = (input) =>
+    planCatalogReconciliation(
+      { ...request, changes: [change] },
+      [{ origin: 'imported', row: input, snapshot_hash: change.expectedRowSha256 }],
+      new Map()
+    )[0];
+  const original = structuredClone(before);
+  const { after } = project(before);
+  assert.deepEqual(before, original);
+  assert.deepEqual(after, {
+    ...before,
+    rail_status: 'retired',
+    raw_rail: { ...before.raw_rail, status: 'retired' },
+    raw_manifest: {
+      ...before.raw_manifest,
+      commandQueryRails: [{ ...before.raw_rail, status: 'retired' }, ...siblings],
+    },
+  });
+  for (const mutate of [
+    (item) => {
+      item.rail_status = 'retired';
+    },
+    (item) => {
+      item.raw_rail.status = 'deprecated';
+    },
+    (item) => {
+      item.raw_manifest.commandQueryRails[0].status = 'retired';
+    },
+    (item) => {
+      item.raw_rail.name = 'OtherRail';
+    },
+    (item) => {
+      item.normalized_rail_name = '';
+      item.raw_rail.name = '';
+      item.raw_manifest.commandQueryRails[0].name = '';
+    },
+    (item) => {
+      item.raw_manifest.commandQueryRails = siblings;
+    },
+    (item) => {
+      item.raw_manifest.commandQueryRails.push(item.raw_rail);
+    },
+    (item) => {
+      delete item.raw_manifest.commandQueryRails;
+    },
+  ]) {
+    const invalid = structuredClone(before);
+    mutate(invalid);
+    assert.throws(() => project(invalid), /CATALOG/);
+  }
+});
+
 test('request fingerprint is key-order independent and snapshot CAS requires the native SQL digest', () => {
   assert.equal(catalogRowHash({ a: 1, b: { c: 2 } }), catalogRowHash({ b: { c: 2 }, a: 1 }));
   assert.notEqual(
