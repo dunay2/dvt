@@ -40,6 +40,13 @@ export function useCanvasRelationalTreeWorkbenchModel(
   const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
   const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
   const projection = result.ok ? result.projection : null;
+  const outputPlanRelationIds = useMemo(
+    () =>
+      new Set(
+        analysis.semantic?.document.sidecar.relations.map(({ relationId }) => relationId) ?? []
+      ),
+    [analysis.semantic]
+  );
   const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
   const { inputs } = analysis;
   const pendingAuthoring =
@@ -130,6 +137,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
       inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
     ),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
+    outputPlanRelationIds,
     authoringAvailable,
     catalogue,
     inputs,

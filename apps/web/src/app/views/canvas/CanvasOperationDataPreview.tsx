@@ -30,6 +30,7 @@ export const CanvasOperationPreviewContext = createContext<
       Readonly<{
         nodeId: string;
         semanticDigest: string | null;
+        outputPlanRelationIds: ReadonlySet<string>;
         canEditModel: boolean;
         unapplied: boolean;
         execute: (relationId: string, label: string) => void;
@@ -50,6 +51,7 @@ export function CanvasOperationPreviewProvider({
   >;
   nodeId: string;
   semanticDigest: string | null;
+  outputPlanRelationIds: ReadonlySet<string>;
   canEditModel: boolean;
   unapplied: boolean;
   children: ReactNode;
@@ -67,6 +69,8 @@ export function CanvasOperationPreviewProvider({
     previewEmpty: copy.operationPreviewEmpty,
     failed: copy.operationPreviewFailed,
   };
+  const requestedOutsideOutputPlan =
+    requested != null && !state.outputPlanRelationIds.has(requested.relationId);
   const data = useCanvasModelDataQuery({
     ...state,
     canvasId: ports?.canvasId ?? '',
@@ -76,10 +80,16 @@ export function CanvasOperationPreviewProvider({
     copy: previewCopy,
     blocked:
       state.unapplied ||
+      requestedOutsideOutputPlan ||
       (requested != null && ports?.unavailableRelationIds?.has(requested.relationId) === true),
     inputRevision: ports?.inputRevision,
   });
   const { reset } = data;
+  useEffect(() => {
+    if (!requestedOutsideOutputPlan) return;
+    setRequested(null);
+    reset();
+  }, [requestedOutsideOutputPlan, reset]);
   useEffect(() => {
     setRequested(null);
     reset();
@@ -92,7 +102,12 @@ export function CanvasOperationPreviewProvider({
     reset,
   ]);
   const execute = (relationId: string, label: string): void => {
-    if (!data.available || ports?.unavailableRelationIds?.has(relationId)) return;
+    if (
+      !data.available ||
+      !state.outputPlanRelationIds.has(relationId) ||
+      ports?.unavailableRelationIds?.has(relationId)
+    )
+      return;
     ports?.onOpenData?.();
     setRequested({
       nodeId: state.nodeId,

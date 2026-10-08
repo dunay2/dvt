@@ -14,6 +14,15 @@ export class CanvasTransformDataSampleQueryError extends Error {
   }
 }
 
+/** Expected admission rejection; the view owns localized copy, never raw API prose. */
+export class CanvasTransformDataSampleOutsideOutputPlanError extends CanvasTransformDataSampleQueryError {
+  static readonly reason = 'transform_data_sample_relation_outside_output_plan';
+  constructor() {
+    super();
+    this.name = 'CanvasTransformDataSampleOutsideOutputPlanError';
+  }
+}
+
 export interface ICanvasTransformDataSampleQueryPort {
   previewTransformRows(input: TransformDataSampleRequest): Promise<TransformDataSampleResponse>;
 }

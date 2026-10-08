@@ -4,14 +4,18 @@ import { TransformDataSampleResponseSchema } from '@dvt/contracts';
 import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import {
   CanvasTransformDataSampleQueryError,
+  CanvasTransformDataSampleOutsideOutputPlanError,
   type ICanvasTransformDataSampleQueryPort,
 } from '../../ports/canvasDataSample';
-import type { ApiClient } from '../api/createApiClient';
+import { ApiError, type ApiClient } from '../api/createApiClient';
 import {
   createContractFailureEvent,
   recordFrontendOperabilityEvent,
 } from '../operability/frontendOperabilityRecorder';
-import { readWorkspaceGraphDraftScope } from '../workspace/workspaceGraphDraftHttp';
+import {
+  isWorkspaceHttpErrorEnvelope,
+  readWorkspaceGraphDraftScope,
+} from '../workspace/workspaceGraphDraftHttp';
 
 export function createApiCanvasTransformDataSampleQueryPort(
   apiClient: ApiClient,
@@ -43,6 +47,13 @@ export function createApiCanvasTransformDataSampleQueryPort(
         return parsed.data;
       } catch (error) {
         if (error instanceof CanvasTransformDataSampleQueryError) throw error;
+        if (
+          error instanceof ApiError &&
+          error.statusCode === 422 &&
+          isWorkspaceHttpErrorEnvelope(error.responseBody) &&
+          error.responseBody.error.reason === CanvasTransformDataSampleOutsideOutputPlanError.reason
+        )
+          throw new CanvasTransformDataSampleOutsideOutputPlanError();
         throw new CanvasTransformDataSampleQueryError();
       }
     },
