@@ -314,7 +314,10 @@ describe('N-input DVT Run live', () => {
       });
     });
     cy.reload();
-    cy.then(() => openWorkbenchModel(modelId));
+    cy.then(() => {
+      getVisibleCanvasNodeByCardTitle('Model 1').should('have.attr', 'data-id', modelId);
+      openWorkbenchModel(modelId);
+    });
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get('[data-operator="project"]').should('have.length', 1).click();
     cy.get(transformInspector).should('contain.text', 'customer_clean').and('contain.text', 'TRIM');
@@ -336,7 +339,10 @@ describe('N-input DVT Run live', () => {
       loadPublicationRows(run.evidence.publication.token, publicationRows);
     });
     cy.visit('/canvas');
-    cy.then(() => openWorkbenchModel(modelId));
+    cy.then(() => {
+      getVisibleCanvasNodeByCardTitle('Model 1').should('have.attr', 'data-id', modelId);
+      openWorkbenchModel(modelId);
+    });
     cy.get('[data-operator="project"]').should('have.length', 1).click();
     cy.contains(`${transformInspector} [data-slot="canvas-derived-output"]`, 'customer_clean')
       .find('button')
