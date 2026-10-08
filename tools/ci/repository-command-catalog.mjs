@@ -168,7 +168,7 @@ const SCRIPT_FILE_RULES = [
     'dev-local',
   ],
   [
-    /^scripts\/run-(canvas-first-authoring|canvas-source-import|het[12]-public-vertical|selected-closure)-live-proof\.cjs$/u,
+    /^scripts\/run-(canvas-first-authoring|canvas-source-import|selected-closure)-live-proof\.cjs$/u,
     'dev-local',
   ],
   [

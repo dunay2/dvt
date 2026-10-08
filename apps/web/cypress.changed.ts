@@ -93,6 +93,7 @@ export const WEB_CYPRESS_SPECS = {
 } as const;
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+  'apps/web/cypress/support/canvasGraphAuthoring.ts': ['controlled', 'available'],
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',
     'available',
@@ -159,6 +160,18 @@ const EXECUTION_BOUNDARIES = [
 const RETIRED_SPEC_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
   'apps/web/cypress/e2e/canvas/canvas-node-data-actions.cy.ts': ['available'],
   'apps/web/cypress/e2e/canvas/canvas-selected-measures.cy.ts': ['controlled'],
+  'apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts': ['available'],
+  'apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts': ['available'],
+  'apps/web/cypress/support/het1PublicVertical.ts': ['available'],
+  'apps/web/cypress/support/het1PublicRunProof.ts': ['available'],
+  'apps/web/cypress/support/het1PublicFailureRecoveryProof.ts': ['available'],
+  'apps/web/cypress/support/het2PublicVertical.ts': ['available'],
+  'apps/web/cypress/fixtures/het1-object-file-orders.csv': ['available'],
+  'apps/web/cypress/fixtures/het1-object-file-orders.manifest.json': ['available'],
+  'apps/web/cypress/fixtures/het2-http-json-orders.jsonl': ['available'],
+  'apps/web/cypress/fixtures/het2-http-json-orders.manifest.json': ['available'],
+  'apps/web/cypress/fixtures/het2-fixture-cert.pem': ['available'],
+  'apps/web/cypress/fixtures/het2-fixture-key.pem': ['available'],
 };
 
 const CAPABILITIES = ['controlled', 'available', 'unavailable'] as const;

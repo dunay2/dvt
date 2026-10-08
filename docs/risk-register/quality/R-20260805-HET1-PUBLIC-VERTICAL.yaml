@@ -12,8 +12,9 @@ owners:
 severity: High
 probability: Low
 context: >
-  HET1 projects a bounded object-file load, a dbt model, and a dbt test from one Canvas draft into
-  one persisted execution plan dispatched through two retained production worker profiles.
+  The retained runtime supports bounded object-file loading and dbt through independent worker
+  profiles. The historical HET1 Canvas story was retired under GH-3021 after the UI hard cut; its
+  removal does not retire runtime integrity, atomicity or lifecycle guarantees.
 risk: >
   A regression in authoring metadata, bridge projection, artifact publication, dependency closure,
   runtime composition, or lifecycle observation could execute a relation other than the one the user
@@ -29,15 +30,17 @@ mitigations:
     load-to-model edge as an execution dependency.'
   - 'Keep runtime selection in the existing worker plugin registries and guard the engine,
     RunPlanWorkflow, and dispatcher against step-family conditionals.'
-  - 'Run the protected browser vertical against pinned MinIO, PostgreSQL, Temporal, the production
-    worker, dbt, API, and Web without route interception, direct plan construction, run-state
-    seeding, or staging-row seeding.'
-  - 'Cover success, integrity rejection, dbt-test failure, cooperative cancellation, recovery,
-    repeated replace/idempotency behavior, and secret/payload non-disclosure in one executable
-    proof.'
+  - 'Retain apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts and its PR
+    Quality Gate job using real MinIO, Temporal and PostgreSQL, plus the object-file plugin,
+    PostgreSQL adapter, contracts, planner, dbt-plugin and lifecycle tests.'
+  - 'Preserve historical browser evidence at
+    https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts.
+    Current JOIN and Run-controls stories prove their own generic public execution rails, not an
+    equivalent acquisition-to-dbt chain or HET recovery to completion.'
 residual_risk: >
-  The MVP freezes one bounded CSV fixture and one PostgreSQL/dbt project. Additional object formats,
-  mapping breadth, scale, and remote object-store implementations remain outside this HET1 proof and
-  require their own contract and live evidence before being claimed.
+  No current equivalent complete HET1 browser E2E is claimed after the obsolete UI story retirement.
+  Retained provider tests do not by themselves prove Canvas-to-dbt composition or recovery of that
+  full chain to completion. Mapping breadth, scale and remote object-store implementations also
+  require their own contract and live evidence. This risk remains open.
 review_after: 2026-09-05
 ---

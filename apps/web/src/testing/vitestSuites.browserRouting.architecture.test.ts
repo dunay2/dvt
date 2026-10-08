@@ -141,6 +141,50 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('admits the complete graph-authoring helper closure with exact runtime ownership', () => {
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const target = resolve('cypress/support/canvasGraphAuthoring.ts');
+    const consumers = [...browserModules.keys()]
+      .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .sort();
+    const expected = {
+      controlled: [
+        'canvas-calculated-column-authoring',
+        'canvas-card-field-lifecycle',
+        'canvas-geometry-performance',
+        'canvas-happy-path-draggable',
+        'canvas-ready-node-authoring',
+      ],
+      available: [
+        'canvas-column-lineage-mapping',
+        'canvas-dvt-join-preview-live',
+        'canvas-first-authoring-live',
+      ],
+    };
+    expect(consumers).toEqual(
+      Object.values(expected)
+        .flat()
+        .map((name) => resolve(`cypress/e2e/canvas/${name}.cy.ts`))
+        .sort()
+    );
+    for (const [capability, names] of Object.entries(expected)) {
+      for (const name of names) {
+        const path = `apps/web/cypress/e2e/canvas/${name}.cy.ts`;
+        expect(
+          resolveWebVitestChangedSuitePlan([path]).browserCommands.map((entry) => entry.capability),
+          path
+        ).toEqual([capability]);
+      }
+    }
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/cypress/support/canvasGraphAuthoring.ts',
+      ]).browserCommands.map((entry) => entry.capability)
+    ).toEqual(['controlled', 'available']);
+  });
+
   it('admits the two real project-authoring consumers in the available runtime', () => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
@@ -206,7 +250,7 @@ describe('governed browser evidence routing', () => {
         !fixtureConsumers.includes(path) &&
         !uiOnlyConsumers.some((consumer) => path === resolve(consumer.slice('apps/web/'.length)))
     );
-    expect(unadmittedTransport).toHaveLength(11);
+    expect(unadmittedTransport).toHaveLength(9);
     for (const path of unadmittedTransport) {
       expect(() =>
         resolveWebVitestChangedSuitePlan([

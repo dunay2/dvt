@@ -211,14 +211,6 @@ test('classifies current command file paths without broad script-directory assum
   ]) {
     assert.equal(classifyScriptFilePath(`scripts/${helper}.cjs`).domain, 'dev-local');
   }
-  assert.equal(
-    classifyScriptFilePath('scripts/run-het1-public-vertical-live-proof.cjs').domain,
-    'dev-local'
-  );
-  assert.equal(
-    classifyScriptFilePath('scripts/run-het2-public-vertical-live-proof.cjs').domain,
-    'dev-local'
-  );
 });
 
 test('detects repository command files and excludes non-command metadata', () => {
