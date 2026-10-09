@@ -2,8 +2,6 @@
 import { ChevronDown } from 'lucide-react';
 import { useContext, useId } from 'react';
 import { CanvasCardRemovalContext } from './CanvasCardRemovalContext';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasNodeDataAction } from '../../components/canvas/CanvasNodeDataAction';
 import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';
 import { CanvasRelationalTreeCardMenu } from './CanvasRelationalTreeCardMenu';
@@ -51,7 +49,6 @@ export function CanvasRelationalTreeGraphNode({
 }>): JSX.Element {
   const detailId = useId();
   const removal = useContext(CanvasCardRemovalContext);
-  const language = useApplicationLanguageStore((state) => state.language);
   const detailed = expanded && semanticGraph != null;
   const execution = useCanvasRelationalOperationExecution(placed.node);
   return (
@@ -81,11 +78,7 @@ export function CanvasRelationalTreeGraphNode({
           detailed={detailed}
           movable={movable}
           pending={pending}
-          pendingReason={
-            stagedOperation?.inputs.includes(null)
-              ? resolveCanvasSemanticEditorCopy(language).cardRemoval.missingInput
-              : undefined
-          }
+          missingInput={stagedOperation?.inputs.includes(null)}
           hideDetail={stagedOperation != null && !pending}
         />
         {onSelectConnectionSource == null || onConnectOperation == null ? null : (

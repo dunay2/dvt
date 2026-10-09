@@ -1,5 +1,7 @@
 /** Owned concern: readable card content and accessible semantic input roles. */
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { CanvasRelationalTreePlacedNode } from './canvasRelationalTreeGeometry';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import styles from './CanvasRelationalTreeCard.module.css';
@@ -11,7 +13,7 @@ export function CanvasRelationalTreeNodeButton({
   detailed,
   movable,
   pending = false,
-  pendingReason,
+  missingInput = false,
   hideDetail = false,
   onSelect,
   onExpand,
@@ -23,13 +25,17 @@ export function CanvasRelationalTreeNodeButton({
   detailed: boolean;
   movable: boolean;
   pending?: boolean;
-  pendingReason?: string;
+  missingInput?: boolean;
   hideDetail?: boolean;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
   onDelete?: () => void;
 }>): JSX.Element {
   const { node, role } = placed;
+  const language = useApplicationLanguageStore((state) => state.language);
+  const pendingLabel = missingInput
+    ? resolveCanvasSemanticEditorCopy(language).cardRemoval.missingInput
+    : copy.relationalTreePendingLabel;
   const roleLabel =
     role == null
       ? null
@@ -90,7 +96,7 @@ export function CanvasRelationalTreeNodeButton({
         </span>
       </span>
       {pending ? (
-        <span className={styles.pending}>{pendingReason ?? copy.relationalTreePendingLabel}</span>
+        <span className={styles.pending}>{pendingLabel}</span>
       ) : isSource || hideDetail ? null : (
         <span title={detail} className={styles.detail}>
           {detail}
