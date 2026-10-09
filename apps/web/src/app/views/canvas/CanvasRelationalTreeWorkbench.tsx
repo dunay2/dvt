@@ -3,7 +3,7 @@ import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSes
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import type { CanvasRelationalTreeWorkbenchProps } from './canvasRelationalTreeWorkbench.types';
 import { CanvasRelationalTreeSessionActions } from './CanvasRelationalTreeSessionActions';
-import { CanvasRelationalRemovalConfirmation } from './CanvasRelationalRemovalConfirmation';
+import { CanvasCardRemovalContext } from './CanvasCardRemovalContext';
 import { CanvasRelationalTreeContent } from './CanvasRelationalTreeContent';
 import { CanvasRelationalTreeSourceCatalogue } from './CanvasRelationalTreeSourceCatalogue';
 import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
@@ -84,13 +84,6 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             host={actionsHost}
             navigation={navigation}
           />
-          <CanvasRelationalRemovalConfirmation
-            operations={model.session.removal.pending?.result.operations ?? null}
-            onConfirm={model.session.removal.confirm}
-            onCancel={model.session.removal.cancel}
-            error={model.session.removal.error}
-            clearError={model.session.removal.clearError}
-          />
           <CanvasRelationalTreeSourceCatalogue
             items={model.catalogue}
             collapsed={sourcesCollapsed}
@@ -100,26 +93,28 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             onSelect={model.selectCatalogueItem}
             occurrences={model.authoringAvailable ? model.session.occurrences : undefined}
           />
-          <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-            <CanvasRelationalTreeContent
-              model={model}
-              authoring={authoring}
-              transformNode={transformNode}
-              nodes={nodes}
-              edges={edges}
-              copy={copy}
-              expanded={expanded}
-              onExpandedChange={setExpanded}
-              onPendingConditionChange={setPendingCondition}
-              pendingCondition={pendingCondition || pendingCompositionOutput}
-              onSelectRelation={navigation.select}
-              modelOutput={{
-                open: modelOutputOpen,
-                setOpen: setModelOutputOpen,
-                setPending: setPendingCompositionOutput,
-              }}
-            />
-          </CanvasRelationAnalysisContext.Provider>
+          <CanvasCardRemovalContext.Provider value={model.session.removal}>
+            <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
+              <CanvasRelationalTreeContent
+                model={model}
+                authoring={authoring}
+                transformNode={transformNode}
+                nodes={nodes}
+                edges={edges}
+                copy={copy}
+                expanded={expanded}
+                onExpandedChange={setExpanded}
+                onPendingConditionChange={setPendingCondition}
+                pendingCondition={pendingCondition || pendingCompositionOutput}
+                onSelectRelation={navigation.select}
+                modelOutput={{
+                  open: modelOutputOpen,
+                  setOpen: setModelOutputOpen,
+                  setPending: setPendingCompositionOutput,
+                }}
+              />
+            </CanvasRelationAnalysisContext.Provider>
+          </CanvasCardRemovalContext.Provider>
         </div>
       </RelationalLayoutSession>
     </CanvasOperationPreviewProvider>

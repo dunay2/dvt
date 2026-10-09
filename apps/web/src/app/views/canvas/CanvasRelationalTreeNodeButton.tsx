@@ -11,6 +11,7 @@ export function CanvasRelationalTreeNodeButton({
   detailed,
   movable,
   pending = false,
+  pendingReason,
   hideDetail = false,
   onSelect,
   onExpand,
@@ -22,6 +23,7 @@ export function CanvasRelationalTreeNodeButton({
   detailed: boolean;
   movable: boolean;
   pending?: boolean;
+  pendingReason?: string;
   hideDetail?: boolean;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
@@ -88,7 +90,7 @@ export function CanvasRelationalTreeNodeButton({
         </span>
       </span>
       {pending ? (
-        <span className={styles.pending}>{copy.relationalTreePendingLabel}</span>
+        <span className={styles.pending}>{pendingReason ?? copy.relationalTreePendingLabel}</span>
       ) : isSource || hideDetail ? null : (
         <span title={detail} className={styles.detail}>
           {detail}

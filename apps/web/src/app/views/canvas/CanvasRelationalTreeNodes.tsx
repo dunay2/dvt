@@ -37,7 +37,7 @@ export function CanvasRelationalTreeNodes({
   actions: Readonly<{
     select: (locator: string) => void;
     expand?: (locator: string) => void;
-    remove?: (relationId: string, keep?: 'left' | 'right') => void;
+    remove?: (relationId: string) => void;
     selectStaged?: (id: string) => void;
     removeStaged?: (id: string) => void;
     selectConnectionSource?: (relationId: string) => void;

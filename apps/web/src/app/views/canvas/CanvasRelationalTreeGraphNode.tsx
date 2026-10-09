@@ -1,6 +1,9 @@
 /** Owned concern: compose one relational card, contextual actions and semantic detail. */
 import { ChevronDown } from 'lucide-react';
-import { useId } from 'react';
+import { useContext, useId } from 'react';
+import { CanvasCardRemovalContext } from './CanvasCardRemovalContext';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasNodeDataAction } from '../../components/canvas/CanvasNodeDataAction';
 import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';
 import { CanvasRelationalTreeCardMenu } from './CanvasRelationalTreeCardMenu';
@@ -35,7 +38,7 @@ export function CanvasRelationalTreeGraphNode({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
-  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
+  onRemove?: (relationId: string) => void;
   semanticGraph?: SemanticWorkbenchGraph;
   expanded: boolean;
   onToggleDetail?: () => void;
@@ -47,19 +50,19 @@ export function CanvasRelationalTreeGraphNode({
   onConnectOperation?: (operationId: string, port: number, relationId: string) => void;
 }>): JSX.Element {
   const detailId = useId();
+  const removal = useContext(CanvasCardRemovalContext);
+  const language = useApplicationLanguageStore((state) => state.language);
   const detailed = expanded && semanticGraph != null;
   const execution = useCanvasRelationalOperationExecution(placed.node);
   return (
-    <CanvasRelationalTreeCardMenu
-      node={placed.node}
-      pending={pending}
-      onRemove={onRemove}
-      onExpand={onExpand}
-    >
+    <CanvasRelationalTreeCardMenu node={placed.node} onRemove={onRemove} onExpand={onExpand}>
       <li
         role="none"
         data-slot="canvas-relational-card"
         className={styles.card}
+        data-removal-impact={
+          removal?.pending?.affectedIds.includes(placed.node.relationId ?? '') || undefined
+        }
         style={{ left: placed.x, top: placed.y, width: placed.width, height: placed.height }}
         data-parent-locator={placed.parentLocator ?? undefined}
         data-pending-operation={stagedOperation == null ? undefined : true}
@@ -78,6 +81,11 @@ export function CanvasRelationalTreeGraphNode({
           detailed={detailed}
           movable={movable}
           pending={pending}
+          pendingReason={
+            stagedOperation?.inputs.includes(null)
+              ? resolveCanvasSemanticEditorCopy(language).cardRemoval.missingInput
+              : undefined
+          }
           hideDetail={stagedOperation != null && !pending}
         />
         {onSelectConnectionSource == null || onConnectOperation == null ? null : (

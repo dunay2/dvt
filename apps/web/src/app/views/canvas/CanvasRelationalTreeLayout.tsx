@@ -55,7 +55,7 @@ export function CanvasRelationalTreeLayout({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
-  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
+  onRemove?: (relationId: string) => void;
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
   panMode?: boolean;

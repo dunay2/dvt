@@ -9,6 +9,12 @@ import {
   resolveCanvasRelationalStagedOperationChoices,
 } from './canvasRelationalOperationChoices';
 import type { CanvasStagedOperationActions } from './canvasStagedOperationActions';
+import { useContext } from 'react';
+import { CanvasCardRemovalContext } from './CanvasCardRemovalContext';
+import { CanvasCardRemovalBar } from './CanvasCardRemovalBar';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
+import type { CanvasRemovalCard } from './canvasCardRemoval';
 
 export function CanvasRelationalTreeOperationShelf({
   copy,
@@ -20,6 +26,8 @@ export function CanvasRelationalTreeOperationShelf({
   onStageOperation?: CanvasStagedOperationActions['stage'];
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
+  const removal = useContext(CanvasCardRemovalContext);
+  const removalCopy = resolveCanvasSemanticEditorCopy(language).cardRemoval;
   const menuCopy = resolveCanvasOperationMenuCopy(language);
   const choices = [
     resolveCanvasRelationalProjectionChoice(!editable),
@@ -30,6 +38,37 @@ export function CanvasRelationalTreeOperationShelf({
     editable,
     copy,
   });
+  const name = (card: CanvasRemovalCard) =>
+    card.displayName ?? copy[resolveCanvasRelationalOperationPresentation(card.operation).labelKey];
+  if (removal?.pending != null) {
+    const { target, dependents, disconnectsOutput } = removal.pending;
+    const description =
+      dependents.length > 0
+        ? removalCopy.dependents.replace('{cards}', dependents.map(name).join(' · '))
+        : disconnectsOutput
+          ? removalCopy.output
+          : removalCopy.preserve;
+    return (
+      <CanvasCardRemovalBar
+        targetId={target.id}
+        title={removalCopy.title.replace('{name}', name(target))}
+        description={description}
+        cancelLabel={removalCopy.cancel}
+        confirmLabel={removalCopy.confirm}
+        onCancel={removal.cancel}
+        onConfirm={removal.confirm}
+      />
+    );
+  }
+  if (removal?.error != null)
+    return (
+      <CanvasCardRemovalBar
+        title={removalCopy.errors[removal.error]}
+        cancelLabel={removalCopy.dismiss}
+        confirmLabel={removalCopy.confirm}
+        onCancel={removal.clearError}
+      />
+    );
   return (
     <section
       data-slot="canvas-relational-tree-operation-shelf"

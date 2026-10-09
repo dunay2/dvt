@@ -39,7 +39,7 @@ function TreeView({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onSelect: (locator: string) => void;
   onExpand?: (locator: string) => void;
-  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
+  onRemove?: (relationId: string) => void;
   transformNode?: CanonicalNode;
   onDropSource?: (nodeId: string) => string | null | void;
   onDropOperation?: (operation: CanvasStagedOperationKind) => string | null;

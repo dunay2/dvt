@@ -116,7 +116,7 @@ describe('CanvasRelationalTreeCardMenu', () => {
     expect(onExpand).toHaveBeenCalledExactlyOnceWith(node.locator);
   });
 
-  it('offers one direct remove-from-tree action for a pending binary operation', async () => {
+  it('offers one delete-card action for a binary operation, never an implicit splice', async () => {
     const onRemove = vi.fn();
     act(() => {
       root.render(
@@ -129,7 +129,6 @@ describe('CanvasRelationalTreeCardMenu', () => {
             operation: 'inner_join',
             expressionRefs: [],
           }}
-          pending
           onRemove={onRemove}
         >
           <button type="button">INNER JOIN</button>
@@ -143,7 +142,7 @@ describe('CanvasRelationalTreeCardMenu', () => {
     const remove = document.body.querySelector<HTMLElement>(
       '[data-slot="canvas-relational-remove-source"]'
     );
-    expect(remove?.textContent).toContain('Remove from tree');
+    expect(remove?.textContent).toContain('Delete card');
     await act(async () => fireEvent.click(remove!));
     expect(onRemove).toHaveBeenCalledExactlyOnceWith('pending-operation:join');
   });

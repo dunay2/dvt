@@ -1,3 +1,8 @@
+.card[data-removal-impact] {
+  outline: 2px solid #f59e0b;
+  outline-offset: 3px;
+}
+
 .card {
   position: absolute;
   pointer-events: auto;
