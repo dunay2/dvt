@@ -27,7 +27,7 @@ describe('card removal consent', () => {
       const ids = ['left', 'right'];
       let removal!: ReturnType<typeof useCanvasRelationalTreeRemoval>;
       let state!: ReturnType<typeof useCanvasRelationalTreeDraftState>;
-      function Host({ enabled }: Readonly<{ enabled: boolean }>) {
+      function Host({ enabled }: Readonly<{ enabled: boolean }>): null {
         state = useCanvasRelationalTreeDraftState();
         removal = useCanvasRelationalTreeRemoval({
           enabled,

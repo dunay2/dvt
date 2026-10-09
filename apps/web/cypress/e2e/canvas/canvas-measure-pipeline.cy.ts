@@ -112,6 +112,7 @@ describe('measure-pipeline', () => {
         cy.get(`[data-operator="project"][data-relation-id="${savedRootId}"]`).rightclick()
       );
       activateMenu('canvas-relational-remove-source');
+      cy.get('[data-slot="canvas-card-removal-confirm"]').click();
       cy.then(() => cy.get(`[data-relation-id="${savedRootId}"]`).should('not.exist'));
       cy.then(() =>
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(savedWriteCount)

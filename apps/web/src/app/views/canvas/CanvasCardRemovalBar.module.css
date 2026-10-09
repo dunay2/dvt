@@ -41,7 +41,7 @@
   border-color: #be123c;
 }
 .cancel:hover {
-  background: var(--surface-hover);
+  background: var(--surface-hover, var(--surface-selected));
 }
 .confirm:hover {
   background: #9f1239;

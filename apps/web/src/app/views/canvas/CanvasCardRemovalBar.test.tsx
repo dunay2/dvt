@@ -16,7 +16,7 @@ describe('Canvas card removal toolbar', () => {
       const copy = resolveCanvasSemanticEditorCopy(language).cardRemoval;
       const confirm = vi.fn();
       const cancel = vi.fn();
-      function Host({ pending }: Readonly<{ pending: boolean }>) {
+      function Host({ pending }: Readonly<{ pending: boolean }>): JSX.Element {
         return (
           <div data-slot="canvas-relational-tree-workbench" tabIndex={-1}>
             <button data-slot="canvas-relational-tree-node" data-relation-id="source">
