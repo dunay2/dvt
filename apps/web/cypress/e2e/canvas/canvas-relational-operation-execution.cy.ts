@@ -3,8 +3,11 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
+  revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
   connectWorkbenchProducer,
+  dragWorkbenchSource,
+  stageWorkbenchUnary,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -20,6 +23,48 @@ const properties = '[data-slot="canvas-relational-tree-inline-editor"]:visible';
 const data = '[data-slot="canvas-operation-data-preview"]';
 
 describe('Internal operation card execution', () => {
+  it('explains why a saved detached operation cannot preview without changing the output', () => {
+    stubWorkbenchScenario('saved-join');
+    cy.viewport(1440, 900);
+    visitWorkbenchCanvas();
+    openWorkbenchModel();
+    dragWorkbenchSource('customers');
+    stageWorkbenchUnary('fetch', '[data-pending="true"][data-operator="read"]');
+    cy.get('[data-slot="canvas-staged-operation-inspector"] button[type="submit"]').click();
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+    cy.wrap(null).should(() => expect(semanticWrites('join-transform')).not.to.have.length(0));
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    revisitWorkbenchCanvas();
+    openWorkbenchModel();
+    const detached = '[data-slot="canvas-relational-tree-node"][data-operator="fetch"]';
+    hoverWorkbenchCard(detached);
+    cy.get(detached)
+      .closest('li')
+      .within(() => {
+        cy.get('[data-slot="canvas-node-execute"]').should('be.disabled');
+        cy.get('[data-slot="canvas-operation-preview-reason"]')
+          .should('be.visible')
+          .and('contain.text', 'not part of the model’s output plan');
+      });
+    cy.get(detached).rightclick();
+    cy.get('[data-slot="canvas-relational-execute-operation"]').should(
+      'have.attr',
+      'data-disabled'
+    );
+    cy.get('body').type('{esc}');
+    cy.get(card).closest('li').find('[data-slot="canvas-node-execute"]').should('be.enabled');
+    cy.get(detached)
+      .invoke('attr', 'data-relation-id')
+      .then((relationId) => {
+        const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
+        expect(
+          document.sidecar.relations.some((relation) => relation.relationId === relationId)
+        ).to.equal(false);
+        expect(getE2eApiCalls(/\/data-sample/, 'GET')).to.have.length(0);
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+      });
+  });
   for (const wrapped of [false, true]) {
     it(`opens JOIN properties and explicitly retrieves its own rows (wrapped: ${wrapped})`, () => {
       stubWorkbenchScenario('saved-join');
@@ -118,6 +163,10 @@ describe('Internal operation card execution', () => {
         .should('be.visible')
         .click();
       cy.get(`${data} table`).should('contain.text', 'C-001');
+      cy.get(data)
+        .should('have.css', 'min-height', '0px')
+        .and('have.css', 'min-width', '0px')
+        .and('have.css', 'overflow', 'hidden');
       cy.get(data).should(
         'not.have.descendants',
         '[data-slot="canvas-relational-tree-inline-editor"]'

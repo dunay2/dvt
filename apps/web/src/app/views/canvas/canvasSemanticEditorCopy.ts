@@ -40,6 +40,8 @@ const en = {
   operationPreviewEmpty: 'Preview the output of this operation.',
   operationPreviewUnapplied:
     'Save the condition and apply the composition to preview this revision.',
+  operationPreviewOutsideOutputPlan:
+    'This operation is not part of the model’s output plan. Only operations included in that plan can currently be previewed.',
   operationPreviewFailed:
     'Preview unavailable for this operation. Check its inputs and the supported PostgreSQL profile.',
   empty: 'The query returned no rows.',
@@ -191,6 +193,8 @@ const es: typeof en = {
   operationPreviewEmpty: 'Previsualiza la salida de esta operación.',
   operationPreviewUnapplied:
     'Guarda la condición y aplica la composición para previsualizar esta revisión.',
+  operationPreviewOutsideOutputPlan:
+    'Esta operación no forma parte del plan de salida del modelo. Actualmente solo pueden previsualizarse las operaciones incluidas en ese plan.',
   operationPreviewFailed:
     'Vista previa no disponible para esta operación. Comprueba sus entradas y el perfil PostgreSQL admitido.',
   empty: 'La consulta no ha devuelto filas.',

@@ -12,6 +12,7 @@ import {
   CanvasOperationPreviewProvider,
 } from './CanvasOperationDataPreview';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { CanvasTransformDataSampleOutsideOutputPlanError } from '../../ports/canvasDataSample';
 
 function Execute({ relationId }: Readonly<{ relationId: string }>): JSX.Element {
   const context = useContext(CanvasOperationPreviewContext);
@@ -83,7 +84,8 @@ describe('selected operation data preview', () => {
     relationId: string,
     unapplied = false,
     inputRevision = '',
-    unavailableRelationIds?: ReadonlySet<string>
+    unavailableRelationIds?: ReadonlySet<string>,
+    outputPlanRelationIds: ReadonlySet<string> = new Set(['join-1', 'join-2'])
   ): void {
     act(() =>
       root.render(
@@ -97,6 +99,7 @@ describe('selected operation data preview', () => {
           }}
           nodeId="model"
           semanticDigest={digest}
+          outputPlanRelationIds={outputPlanRelationIds}
           canEditModel={false}
           unapplied={unapplied}
         >
@@ -110,6 +113,26 @@ describe('selected operation data preview', () => {
       controls.querySelector<HTMLButtonElement>('[data-slot="test-execute"]')!.click();
     });
   }
+  it('rejects a detached operation even when a caller invokes the context directly', async () => {
+    render('detached', false);
+    await preview();
+    expect(query.previewTransformRows).not.toHaveBeenCalled();
+    expect(container.childElementCount).toBe(0);
+  });
+  it.each([
+    ['en', 'This operation is not part of the model’s output plan.'],
+    ['es', 'Esta operación no forma parte del plan de salida del modelo.'],
+  ] as const)('localizes a server-side outside-plan rejection (%s)', async (language, message) => {
+    useApplicationLanguageStore.setState({ language });
+    query.previewTransformRows.mockRejectedValue(
+      new CanvasTransformDataSampleOutsideOutputPlanError()
+    );
+    render('join-1');
+    await preview();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain(message);
+    expect(container.textContent).not.toContain('PostgreSQL');
+    expect(container.querySelector('table')).toBeNull();
+  });
   it('clears old rows when admitted inputs change without changing the plan hash', async () => {
     query.previewTransformRows.mockResolvedValue(sample('join-1'));
     render('join-1', false, 'both');
@@ -132,6 +155,27 @@ describe('selected operation data preview', () => {
     render('join-1', false, 'country-only');
     await act(async () => resolve(sample('join-1')));
     expect(container.textContent).not.toContain('intermediate-result');
+  });
+  it('invalidates a removed relation without blocking another admitted operation at the same digest', async () => {
+    let resolve!: (result: TransformDataSampleResponse) => void;
+    query.previewTransformRows.mockReturnValueOnce(
+      new Promise((done) => {
+        resolve = done;
+      })
+    );
+    render('join-1');
+    await preview();
+    render('join-2', false, '', undefined, new Set(['join-2']));
+    expect(container.childElementCount).toBe(0);
+    query.previewTransformRows.mockResolvedValue(sample('join-2'));
+    await preview();
+    await act(async () =>
+      resolve({ ...sample('join-1'), rows: [{ values: ['removed-operation'] }] })
+    );
+    expect(query.previewTransformRows).toHaveBeenCalledTimes(2);
+    expect(container.querySelector('aside')?.dataset.relationId).toBe('join-2');
+    expect(container.querySelector('table')?.textContent).toContain('intermediate-result');
+    expect(container.textContent).not.toContain('removed-operation');
   });
   it.each([
     { language: 'es' as const, count: 3, limit: 20, truncated: false, expected: '3/20 registros' },

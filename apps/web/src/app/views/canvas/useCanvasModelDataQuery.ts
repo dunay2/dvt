@@ -7,6 +7,7 @@ import {
 } from '@dvt/contracts';
 import {
   CanvasTransformDataSampleQueryError,
+  CanvasTransformDataSampleOutsideOutputPlanError,
   type ICanvasTransformDataSampleQueryPort,
 } from '../../ports/canvasDataSample';
 import type { CanvasDraftLifecycle } from './canvasDraftLifecycle.types';
@@ -148,7 +149,9 @@ export function useCanvasModelDataQuery({
           setError(
             failure instanceof CanvasModelDataQueryError
               ? { 'save-failed': copy.saveFailed, stale: copy.staleHint }[failure.reason]
-              : copy.failed
+              : failure instanceof CanvasTransformDataSampleOutsideOutputPlanError
+                ? copy.operationPreviewOutsideOutputPlan
+                : copy.failed
           );
       } finally {
         if (requestId.current === id) {
@@ -169,6 +172,7 @@ export function useCanvasModelDataQuery({
       copy.saveFailed,
       copy.staleHint,
       copy.failed,
+      copy.operationPreviewOutsideOutputPlan,
     ]
   );
   return { sample, loading, error, available, load, reset };

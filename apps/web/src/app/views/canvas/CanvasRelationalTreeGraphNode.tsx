@@ -93,6 +93,11 @@ export function CanvasRelationalTreeGraphNode({
         {execution == null ? null : (
           <div className={styles.execution}>
             <CanvasNodeDataAction {...execution} />
+            {execution.disabledReason == null ? null : (
+              <p data-slot="canvas-operation-preview-reason" className={styles.previewReason}>
+                {execution.disabledReason}
+              </p>
+            )}
           </div>
         )}
         {!detailed ? null : (

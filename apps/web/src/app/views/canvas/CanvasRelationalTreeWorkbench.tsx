@@ -59,6 +59,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       }}
       nodeId={transformNode.id}
       semanticDigest={model.projection?.semanticDigest ?? null}
+      outputPlanRelationIds={model.outputPlanRelationIds}
       canEditModel={model.authoringAvailable}
       unapplied={sessionHandle.hasUnappliedChanges}
     >

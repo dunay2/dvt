@@ -69,7 +69,12 @@ it.each([false, true])(
       decorations: [],
       children: [],
     };
-    const render = (hidden = false, unapplied = false, semanticDigest = digest): void => {
+    const render = (
+      hidden = false,
+      unapplied = false,
+      semanticDigest = digest,
+      included = true
+    ): void => {
       act(() =>
         root.render(
           <Mode>
@@ -77,6 +82,7 @@ it.each([false, true])(
               ports={{ canvasId: 'canvas-test', query, dataHost, onOpenData }}
               nodeId="model"
               semanticDigest={semanticDigest}
+              outputPlanRelationIds={new Set(included ? ['join-1'] : [])}
               canEditModel={false}
               unapplied={unapplied}
             >
@@ -139,6 +145,22 @@ it.each([false, true])(
       render(true);
       expect(query.previewTransformRows).toHaveBeenCalledTimes(2);
       expect(dataHost.childElementCount).toBe(0);
+      render(true, false, digest, false);
+      const preview = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-node-execute"]'
+      )!;
+      expect(preview.disabled).toBe(true);
+      expect(preview.title).toContain('not part of the model');
+      expect(
+        container.querySelector('[data-slot="canvas-operation-preview-reason"]')?.textContent
+      ).toContain('not part of the model');
+      await execute();
+      expect(query.previewTransformRows).toHaveBeenCalledTimes(2);
+      render(true);
+      expect(
+        container.querySelector<HTMLButtonElement>('[data-slot="canvas-node-execute"]')!.disabled
+      ).toBe(false);
+      expect(container.querySelector('[data-slot="canvas-operation-preview-reason"]')).toBeNull();
     } finally {
       act(() => root.unmount());
       container.remove();

@@ -148,6 +148,13 @@ later operation; repeated occurrences of one physical source are listed once.
 All inputs retain the existing one-authorized-PostgreSQL-connection admission.
 The provider probe owns query time and navigation facts; the use case owns the
 source identities and requested limit. Neither SQL nor credentials are exposed.
+Selected-operation previews are limited to relations in the model's saved output
+semantic plan. A configured operation retained only in the authoring draft is
+not admitted. Its card and contextual preview action stay unavailable with an
+ES/EN explanation of this limit. The protected query independently rejects an
+outside-plan relation with a typed reason before querying the provider. Source
+cards retain their separate source query. Preview never connects a detached
+branch to the output, rewrites the model or executes an independent branch.
 `bounded-first-page` promises no stable cursor or continuation, even when the
 selected relation has an explicit sort. Empty results retain provenance and
 column headers.
