@@ -17,6 +17,7 @@ import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/Conf
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
+import { validateDuckDbLocalDataRoots } from '../infrastructure/duckdb/duckDbLocalDataPaths.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -53,6 +54,7 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
+  await validateDuckDbLocalDataRoots(env.localData);
   const pool = getPgPool(databaseUrl);
   const appLogger = app.log as unknown as Logger;
 
