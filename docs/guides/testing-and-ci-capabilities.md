@@ -88,6 +88,33 @@ Warm-build note:
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
   skips for the current TypeScript package inventory.
 
+## Immutable Provisioning Image Cache
+
+Planning DB preparation and the provider-backed browser lane share
+`.github/actions/prepare-cached-image`. The catalog in
+`tools/ci/container-images.json` pins PostgreSQL 16 and 15 to their respective
+Linux/amd64 manifests and config digests. Updating either image is a reviewed
+catalog change, not a mutable-tag refresh during a job.
+
+An exact cache hit loads the image archive and verifies its Docker identity and
+platform without registry access. A miss pulls the pinned manifest once, verifies
+it, then saves the image archive immediately. No prefix fallback, automatic
+retry, database data, credentials, containers or volumes are cached. Invalid
+identity or an unreadable archive fails preparation. Consumers use the verified
+runner-local reference with implicit pulls disabled. Database allocation,
+readiness, schema bootstrap, test selection and cleanup keep their existing owners.
+
+Actions cache branch isolation still applies: a PR-produced entry is not a
+repository-wide warm cache. Existing default-branch workflows populate entries
+that subsequent PRs can reuse. Cold or evicted entries still require registry
+availability. If a cache is corrupt, delete that exact Actions cache entry and
+rerun; never fall back to an unpinned image or bypass verification.
+
+This cache covers the two step-based provisioning paths, not GitHub service
+containers, which start before action steps. Their lifecycle remains unchanged.
+The executable cache contract is `node --test tools/ci/prepare-cached-image.test.mjs`;
+GitHub Actions cache transport is additionally checked in the actual workflow.
+
 ## Package Test Runner Groups
 
 `Test Suite` keeps package selection in `computeTestPackageMatrix`; the matrix
