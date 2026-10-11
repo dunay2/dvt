@@ -1,0 +1,197 @@
+/* Owned concern: compact source workspace layout and density, not import state. */
+.workspace {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--surface-panel);
+  color: var(--text-default);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.header {
+  flex-shrink: 0;
+  padding: 18px 48px 12px 20px;
+  gap: 4px;
+  text-align: left;
+}
+.header h2 {
+  font-size: 16px;
+  line-height: 1.5;
+}
+.header p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.close svg {
+  width: 16px;
+  height: 16px;
+}
+.close:hover {
+  background: var(--surface-shell);
+  color: var(--text-default);
+}
+.close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.sections {
+  flex-shrink: 0;
+  padding: 0 20px 12px;
+}
+.contentScroll {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 20px;
+}
+.contentScroll [data-slot='scroll-area-viewport'] > div {
+  display: block !important;
+}
+.content {
+  min-width: 0;
+  padding-bottom: 16px;
+}
+.footer {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border-top: 1px solid var(--border-subtle);
+}
+.footerActions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+}
+.selectionCount {
+  margin-right: auto;
+  color: var(--text-muted);
+}
+.footer button {
+  height: 30px;
+  font-size: 12px;
+}
+.primaryAction {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.primaryAction:disabled {
+  opacity: 0.5;
+}
+.spinner {
+  width: 14px;
+  height: 14px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
+.list {
+  display: flex;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.tabBase {
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+.tabBase:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tabActive {
+  border-color: var(--primary);
+  color: var(--text-default);
+}
+.tabInactive {
+  color: var(--text-muted);
+}
+.tabInactive:hover:not(:disabled) {
+  color: var(--text-default);
+}
+.root {
+  display: grid;
+  gap: 12px;
+}
+.title {
+  font-size: 13px;
+  font-weight: 500;
+}
+.description,
+.resultCount {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.error {
+  padding: 10px;
+  color: var(--destructive);
+  font-size: 12px;
+}
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: var(--text-muted);
+}
+.catalog {
+  padding-right: 14px;
+}
+.search {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.search input {
+  height: 30px;
+  font-size: 12px;
+}
+.searchLabel {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.detail {
+  padding-left: 14px;
+  min-width: 0;
+}
+.catalogScroll {
+  height: min(52vh, 480px);
+  min-width: 0;
+}
+.catalogScroll [data-slot='scroll-area-viewport'] > div {
+  display: block !important;
+}
+.loadMore {
+  padding: 3px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.resize {
+  background: var(--border-subtle);
+}

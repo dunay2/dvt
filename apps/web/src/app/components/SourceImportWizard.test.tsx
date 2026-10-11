@@ -45,7 +45,9 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Probar conexión');
     expect(document.body.textContent).toContain('Cancelar');
     expect(document.body.textContent).toContain('Adjuntar orígenes al canvas');
-    expect(harness.findButtonContaining('Cerrar importación de orígenes')).toBeDefined();
+    expect(
+      document.querySelector('button[aria-label="Cerrar importación de orígenes"]')
+    ).not.toBeNull();
     expect(document.body.textContent).not.toContain('Choose database connection');
 
     await harness.clickButtonContaining('Nueva conexión');
@@ -600,7 +602,7 @@ describe('SourceImportWizard', () => {
 
     await harness.clickTab('Seleccionados');
 
-    expect(document.body.textContent).toContain('Vista previa de adjuntos del canvas');
+    expect(document.body.textContent).toContain('Vista previa del registro de fuentes');
     expect(document.body.textContent).toContain('Conexión:');
 
     await harness.clickButtonContaining('Adjuntar orígenes al canvas');
@@ -622,8 +624,8 @@ describe('SourceImportWizard', () => {
       '[data-slot="source-import-connection-actions"]'
     );
 
-    expect(dialog?.className).toContain('sm:max-w-[min(64rem,calc(100vw-2rem))]');
-    expect(dialog?.className).not.toContain('sm:max-w-5xl');
+    expect(dialog?.getAttribute('data-slot')).toBe('source-import-workspace');
+    expect(dialog?.getAttribute('aria-modal')).not.toBe('true');
     expect(connectionSummary?.className).toContain('flex-col');
     expect(connectionSummary?.className).toContain('md:flex-row');
     expect(connectionActions?.className).toContain('grid');
@@ -640,8 +642,7 @@ describe('SourceImportWizard', () => {
     }
 
     const attachAction = harness.findButtonContaining('Attach sources to canvas');
-    expect(attachAction?.className).toContain('disabled:opacity-100');
-    expect(attachAction?.className).toContain('disabled:text-slate-300');
+    expect(attachAction?.disabled).toBe(true);
 
     await harness.clickButtonContaining('New connection');
 
@@ -970,7 +971,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
     expect(document.body.textContent).toContain(
-      'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes'
+      'Sources are registered in the left catalogue. Click a source to inspect its configuration; drag it onto the canvas to place a card.'
     );
     expect(document.body.textContent).not.toContain('Add imported sources to canvas');
 

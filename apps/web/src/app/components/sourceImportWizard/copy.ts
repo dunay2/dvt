@@ -10,6 +10,7 @@ const EN_COPY = {
   description:
     'Explore governed connections, inspect source objects, and register sources in the catalog.',
   closeAction: 'Close source import',
+  catalogDetailResize: 'Resize catalogue and object details',
   sections: {
     ariaLabel: 'Add source sections',
     connections: 'Connections',
@@ -21,7 +22,7 @@ const EN_COPY = {
     doneAction: 'Done',
     cancelAction: 'Cancel',
     attachingAction: 'Attaching...',
-    attachAction: 'Attach sources to canvas',
+    attachAction: 'Attach sources to canvas ({count})',
   },
   selectConnectionError: 'Please select a connection',
   selectAtLeastOneObjectError: 'Select at least one importable source object.',
@@ -222,6 +223,7 @@ const ES_COPY = {
   description:
     'Explora conexiones gobernadas, inspecciona objetos de origen y registra fuentes en el catálogo.',
   closeAction: 'Cerrar importación de orígenes',
+  catalogDetailResize: 'Redimensionar catálogo y detalles del objeto',
   sections: {
     ariaLabel: 'Secciones para añadir orígenes',
     connections: 'Conexiones',
@@ -233,7 +235,7 @@ const ES_COPY = {
     doneAction: 'Terminar',
     cancelAction: 'Cancelar',
     attachingAction: 'Adjuntando...',
-    attachAction: 'Adjuntar orígenes al canvas',
+    attachAction: 'Adjuntar orígenes al canvas ({count})',
   },
   selectConnectionError: 'Selecciona una conexión',
   selectAtLeastOneObjectError: 'Selecciona al menos un objeto de origen importable.',

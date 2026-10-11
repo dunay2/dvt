@@ -23,11 +23,13 @@ export function CanvasGraphExplorer({
   importedSourceIds = [],
   onImportFocusComplete,
   children,
+  workspaceTask,
 }: Readonly<{
   nodes: readonly Node[];
   onSelect: (id: string) => void;
   onImport?: () => void;
   children: ReactNode;
+  workspaceTask?: ReactNode;
   catalogue?: readonly CanonicalNode[];
   onInspectSource?: (id: string) => void;
   canPlaceSource?: boolean;
@@ -50,6 +52,7 @@ export function CanvasGraphExplorer({
   return (
     <CanvasExplorer
       rootRef={rootRef}
+      workspaceTask={workspaceTask}
       sources={
         <CanvasExplorerList
           items={sources.map((node) => ({ id: node.id, label: node.name, description: node.kind }))}

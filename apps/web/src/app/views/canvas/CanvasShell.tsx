@@ -241,23 +241,25 @@ export default function CanvasShell({
         onOpenCanvasSettings={openCanvasSettings}
         onOpenModelEditor={model.open}
         contextMenuPresenter={contextMenuPresenter}
+        workspaceTask={
+          panels.activeCanvasId == null || !sourceImportDialog.open ? null : (
+            <CanvasSourceImportDialogHost
+              open={sourceImportDialog.open}
+              canvasId={panels.activeCanvasId}
+              onClose={sourceImportDialog.close}
+              onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
+              onComplete={(result, placement) => {
+                graphCommands.onSourceImportComplete(result, placement);
+                if (sourceImportInitialSelection?.kind === 'dbt-source-binding')
+                  onSourceImportInitialSelectionConsumed?.();
+              }}
+              sourceImportOptions={sourceImportOptions}
+              initialSelection={sourceImportDialog.initialSelection}
+              placement={sourceImportDialog.placement}
+            />
+          )
+        }
       />
-      {panels.activeCanvasId == null ? null : (
-        <CanvasSourceImportDialogHost
-          open={sourceImportDialog.open}
-          canvasId={panels.activeCanvasId}
-          onClose={sourceImportDialog.close}
-          onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
-          onComplete={(result, placement) => {
-            graphCommands.onSourceImportComplete(result, placement);
-            if (sourceImportInitialSelection?.kind === 'dbt-source-binding')
-              onSourceImportInitialSelectionConsumed?.();
-          }}
-          sourceImportOptions={sourceImportOptions}
-          initialSelection={sourceImportDialog.initialSelection}
-          placement={sourceImportDialog.placement}
-        />
-      )}
       <CanvasProjectExplorerDialog
         open={projectExplorerOpen}
         activeCanvasId={panels.activeCanvasId}

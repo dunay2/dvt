@@ -224,3 +224,21 @@
   gap: 4px;
   margin-bottom: 4px;
 }
+.retainedSurface,
+.workspaceTask {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.retainedSurface[aria-hidden='true'] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.workspaceTask {
+  overflow: hidden;
+  background: var(--surface-panel);
+}

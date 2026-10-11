@@ -15,6 +15,7 @@ import {
   useReducer,
   useRef,
   type DragEventHandler,
+  type ReactNode,
 } from 'react';
 
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
@@ -83,6 +84,7 @@ type CanvasViewportProps = {
   readonly onOpenCanvasSettings?: () => void;
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
   readonly externalNodeSurfaceActive?: boolean;
+  readonly workspaceTask?: ReactNode;
 };
 
 type CanvasViewportWithPresenterProps = CanvasViewportProps &
@@ -449,6 +451,7 @@ function CanvasViewportWithPresenter({
 
   return (
     <CanvasGraphExplorer
+      workspaceTask={props.workspaceTask}
       nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
       onInspectSource={props.onInspectSource}

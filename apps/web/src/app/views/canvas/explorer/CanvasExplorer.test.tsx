@@ -34,6 +34,26 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('retains graph state while an inline task temporarily owns its surface', () => {
+    const view = (task: React.ReactNode): JSX.Element => (
+      <CanvasExplorer sources={<p>Catalogue</p>} elements={null} workspaceTask={task}>
+        <input aria-label="Retained graph state" defaultValue="zoom and selection" />
+      </CanvasExplorer>
+    );
+    render(view(null));
+    const graph = screen.getByLabelText('Retained graph state');
+    act(() => root.render(view(<p>Import workspace</p>)));
+    expect(screen.getByText('Catalogue')).not.toBeNull();
+    expect(graph.closest('[inert]')).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="canvas-explorer-retained-surface"]')
+        ?.getAttribute('aria-hidden')
+    ).toBe('true');
+    act(() => root.render(view(null)));
+    expect(screen.getByLabelText('Retained graph state')).toBe(graph);
+    expect(graph.closest('[inert]')).toBeNull();
+  });
   it('toggles once with Enter or Space and ignores held-key repeats', () => {
     render(
       <CanvasExplorer sources={null} elements={null}>

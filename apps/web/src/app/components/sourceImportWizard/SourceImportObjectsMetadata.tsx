@@ -18,30 +18,8 @@ type SourceImportObjectsMetadataProps = Readonly<{
   scope: 'active' | 'selected';
 }>;
 
-export const sourceImportSelectedMetadataClassNames = {
-  root: 'space-y-3',
-  heading: 'space-y-1',
-  title: 'text-lg font-medium',
-  description: 'text-sm text-slate-300',
-  sharedCatalog: 'flex items-center gap-2 text-xs text-slate-400',
-  list: 'space-y-2',
-  item: 'overflow-hidden rounded border border-slate-600 bg-slate-950/20',
-  trigger: 'px-4 py-3 hover:no-underline',
-  triggerContent: 'min-w-0 flex-1 space-y-1',
-  identity: 'flex min-w-0 flex-wrap items-center gap-2',
-  objectName: 'truncate font-mono text-sm text-slate-100',
-  metrics: 'flex flex-wrap items-center gap-2 text-xs font-normal text-slate-400',
-  content: 'border-t border-slate-700 px-4 pt-3',
-  columnList: 'space-y-2',
-  columnRow:
-    'grid grid-cols-[minmax(0,1fr)_minmax(0,45%)] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2',
-  columnIdentity: 'min-w-0',
-  columnName: 'truncate font-mono text-xs text-slate-100',
-  constraintList: 'mt-1 flex flex-wrap gap-1',
-  columnType: 'break-words text-right font-mono text-[11px] text-slate-300',
-  notice: 'rounded border border-slate-800 bg-slate-950/40 p-3 text-sm text-slate-300',
-  importability: 'rounded border border-amber-500/40 bg-amber-950/20 p-3 text-sm text-amber-200',
-} as const;
+import styles from './SourceImportMetadata.module.css';
+export const sourceImportSelectedMetadataClassNames = styles;
 
 export function SourceImportObjectsMetadata({
   sourceObjects,

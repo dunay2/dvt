@@ -407,9 +407,11 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.expandCollapsedSourceSchemas();
     await harness.flushPendingWork();
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
-    expect(document.querySelector('[data-source-import-catalog-scroll]')?.className).toContain(
-      '[&_[data-slot=scroll-area-viewport]>div]:!block'
-    );
+    expect(
+      document.querySelector(
+        '[data-source-import-catalog-scroll] [data-slot="scroll-area-viewport"]'
+      )
+    ).not.toBeNull();
 
     await act(async () => {
       if (search) {

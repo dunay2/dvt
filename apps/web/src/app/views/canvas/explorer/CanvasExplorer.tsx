@@ -23,11 +23,13 @@ export function CanvasExplorer({
   elements,
   children,
   rootRef,
+  workspaceTask,
 }: Readonly<{
   sources: ReactNode;
   elements: ReactNode;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
+  workspaceTask?: ReactNode;
 }>): JSX.Element {
   const [active, setActive] = useState<'sources' | 'elements' | null>('sources');
   const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
@@ -57,6 +59,7 @@ export function CanvasExplorer({
       visible={visible}
       copy={copy}
       rootRef={rootRef}
+      workspaceTask={workspaceTask}
       sources={sources}
       elements={elements}
       onToggle={toggle}

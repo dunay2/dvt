@@ -33,6 +33,7 @@ export function CanvasExplorerTemplate(
     sources: ReactNode;
     elements: ReactNode;
     children: ReactNode;
+    workspaceTask?: ReactNode;
     onToggle: (key: Panel) => void;
     onKeyToggle: (key: Panel, event: KeyboardEvent<HTMLButtonElement>) => void;
     onCollapse: () => void;
@@ -115,7 +116,19 @@ export function CanvasExplorerTemplate(
           minSize={40}
           className={styles.surface}
         >
-          {props.children}
+          <div
+            className={styles.retainedSurface}
+            data-slot="canvas-explorer-retained-surface"
+            aria-hidden={props.workspaceTask != null}
+            {...(props.workspaceTask == null ? {} : { inert: '' })}
+          >
+            {props.children}
+          </div>
+          {props.workspaceTask == null ? null : (
+            <div className={styles.workspaceTask} data-slot="canvas-explorer-workspace-task">
+              {props.workspaceTask}
+            </div>
+          )}
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
