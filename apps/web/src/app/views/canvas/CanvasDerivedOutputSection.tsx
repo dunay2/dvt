@@ -1,4 +1,10 @@
-/** Transform owns a stable edit draft; analysis refreshes cannot erase typed input. */
+/**
+ * Owned concern: retain a calculated SELECT draft and submit it through the existing projection command.
+ * @baseline ADR-0064: canonical ProjectRel owns calculated fields, independently of JOIN predicates.
+ * @decision Reuse one editor for insertion and editing; notify selection only after accepted writes.
+ * @consequence Analysis refreshes cannot erase typed input; cancelled or rejected edits do not move focus.
+ * @version 1.1.0
+ */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Pencil, Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -17,10 +23,12 @@ export function CanvasDerivedOutputSection({
   relationId,
   onChange,
   onPendingChange,
+  onSaved,
 }: Readonly<{
   relationId: string;
   onChange: (document: SubstraitDocument) => void | boolean;
   onPendingChange?: (pending: boolean) => void;
+  onSaved?: (relationId: string) => void;
 }>): JSX.Element | null {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
@@ -59,15 +67,23 @@ export function CanvasDerivedOutputSection({
             .map((field) => field.name)}
           onCancel={() => setEditing(null)}
           onSubmit={async (request) => {
-            const result = await command.executeDetailed((session, identity) =>
-              applySelectedRelationDerivedOutput(session, {
+            let savedRelationId = relationId;
+            const result = await command.executeDetailed(async (session, identity) => {
+              const document = await applySelectedRelationDerivedOutput(session, {
                 ...identity,
                 ...request,
                 expectedRevision: model.dragScope.revision,
                 outputFieldId: editing.outputFieldId,
                 intent: model.intent,
-              })
-            );
+              });
+              if (model.intent === 'insert') {
+                const consumerId = session.locate(relationId, session.revision).consumers[0]!;
+                const { binding } = session.locate(consumerId, session.revision);
+                savedRelationId = binding.authoringOwnerRelationId ?? binding.relationId;
+              }
+              return document;
+            });
+            if (result.ok) onSaved?.(savedRelationId);
             return result.ok
               ? null
               : (formatCanvasTransformDependencyError(result.error, copy) ??

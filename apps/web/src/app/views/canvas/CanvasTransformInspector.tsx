@@ -1,4 +1,10 @@
-/** The fixed inspector for dataset field transformations, scalar and Window alike. */
+/**
+ * Owned concern: present Transform properties and calculated SELECT outputs in their owning tabs.
+ * @baseline ADR-0064: one visible Transform may own multiple canonical projection layers.
+ * @decision Reuse the derived-output editor in Output; retain Window configuration in Properties.
+ * @consequence Formula authoring has one entry point and shares the existing pending-edit guard.
+ * @version 1.1.0
+ */
 import { useContext, useMemo, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
@@ -34,8 +40,8 @@ export function CanvasTransformInspector({
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const [editingWindow, setEditingWindow] = useState(false);
-  const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
-  const [setFormulaPending, setWindowPending] = usePendingRelationEdits(setPropertiesPending);
+  const [setWindowPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
+  const [setFormulaPending, setOutputListPending] = usePendingRelationEdits(setOutputsPending);
   const selected = useSelectedRelation(relationId);
   const analysis = useContext(CanvasRelationAnalysisContext);
   const hasExpression = useMemo(() => {
@@ -59,17 +65,26 @@ export function CanvasTransformInspector({
       relationId={relationId}
       onClose={onClose}
       dataSlot="canvas-transform-inspector"
+      initialTab="output"
       hasExpression={hasExpression}
       output={
         onChange == null ? (
           <CanvasRelationFields relationId={relationId} />
         ) : (
-          <CanvasRelationOutputs
-            relationId={relationId}
-            disabled={false}
-            onChange={onChange}
-            onPendingChange={setOutputsPending}
-          />
+          <>
+            <CanvasRelationOutputs
+              relationId={relationId}
+              disabled={false}
+              onChange={onChange}
+              onPendingChange={setOutputListPending}
+            />
+            <CanvasDerivedOutputSection
+              key={relationId}
+              relationId={relationId}
+              onChange={onChange}
+              onPendingChange={setFormulaPending}
+            />
+          </>
         )
       }
     >
@@ -80,14 +95,6 @@ export function CanvasTransformInspector({
           relationId={relationId}
         />
       ) : null}
-      {onChange == null ? null : (
-        <CanvasDerivedOutputSection
-          key={relationId}
-          relationId={relationId}
-          onChange={onChange}
-          onPendingChange={setFormulaPending}
-        />
-      )}
       {onChange == null || window?.tool.enabled !== true ? null : editingWindow ? (
         <CanvasRelationalTreeOperatorForm
           tool={window.tool}

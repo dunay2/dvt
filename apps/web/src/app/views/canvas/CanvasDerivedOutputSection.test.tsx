@@ -85,11 +85,16 @@ describe('selected relation derived-output section', () => {
     if (!indexed.ok) throw indexed.error;
     const relationId = indexed.index.rootId;
     const onChange = vi.fn();
+    const onSaved = vi.fn();
     function Host(): React.JSX.Element {
       const analysis = useCanvasRelationAnalysisSession(document, 'derived-rejection');
       return (
         <CanvasRelationAnalysisContext.Provider value={analysis}>
-          <CanvasDerivedOutputSection relationId={relationId} onChange={onChange} />
+          <CanvasDerivedOutputSection
+            relationId={relationId}
+            onChange={onChange}
+            onSaved={onSaved}
+          />
         </CanvasRelationAnalysisContext.Provider>
       );
     }
@@ -124,6 +129,7 @@ describe('selected relation derived-output section', () => {
       );
       expect(container.querySelector<HTMLInputElement>('input[name="alias"]')?.value).toBe('A');
       expect(onChange).not.toHaveBeenCalled();
+      expect(onSaved).not.toHaveBeenCalled();
     } finally {
       reject.mockRestore();
       await act(async () => useApplicationLanguageStore.setState({ language: 'en' }));

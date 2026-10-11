@@ -10,6 +10,8 @@ import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
 import InspectionModelSource from './relational-inspection/inspectionModel.ts?raw';
 import JoinFormulaSource from './canvasJoinPredicateFormula.ts?raw';
 import JoinFormulaEditorSource from './CanvasJoinPredicateFormulaController.tsx?raw';
+import DerivedOutputSource from './CanvasDerivedOutputSection.tsx?raw';
+import TransformInspectorSource from './CanvasTransformInspector.tsx?raw';
 import InspectionPanelSource from './relational-inspection/RelationalInspectionPanel.tsx?raw';
 import NodePresentationSource from './canvasRelationalNodePresentation.ts?raw';
 import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
@@ -73,6 +75,15 @@ import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('shares calculated SELECT authoring through the existing atomic projection command', () => {
+    for (const source of [InlineEditorSource, TransformInspectorSource]) {
+      expect(source.match(/<CanvasDerivedOutputSection\b/g)).toHaveLength(1);
+      expect(source).not.toMatch(/compileDerivedOutputFormula|applySelectedRelationDerivedOutput/);
+    }
+    expect(DerivedOutputSource).toContain('applySelectedRelationDerivedOutput');
+    expect(DerivedOutputSource).toContain('authoringOwnerRelationId');
+    expect(DerivedOutputSource).not.toMatch(/insertSelectedRelationTransform|session\.apply\(/);
+  });
   it('has no second scalar editor on passive Model cards', () => {
     expect(
       Object.keys(

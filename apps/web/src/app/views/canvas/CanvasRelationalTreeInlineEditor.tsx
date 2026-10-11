@@ -7,6 +7,7 @@ import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFra
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
+import { CanvasDerivedOutputSection } from './CanvasDerivedOutputSection';
 import {
   CanvasRelationalTreeOperationEditor,
   type CanvasRelationalTreeOperationEditorProps,
@@ -17,6 +18,7 @@ type InlineEditorProps = Omit<CanvasRelationalTreeOperationEditorProps, 'cross' 
   operation: CanvasRelationalOperation | null;
   expanded: boolean;
   onClose: () => void;
+  onSelectRelation?: (relationId: string) => void;
   reservedAliases?: readonly string[];
 };
 export function CanvasRelationalTreeInlineEditor(
@@ -27,6 +29,7 @@ export function CanvasRelationalTreeInlineEditor(
     props.onPendingConditionChange
   );
   const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(setCompositionPending);
+  const [setOutputListPending, setFormulaPending] = usePendingRelationEdits(setOutputsPending);
   const selected = useSelectedRelation(selectedRelationId)?.relation.relType;
   if (operation == null || joinDraft == null) return null;
   const selectedJoin = selected?.case === 'join' ? selected.value : null;
@@ -55,13 +58,24 @@ export function CanvasRelationalTreeInlineEditor(
         onClose={props.onClose}
         output={
           selectedRelationId == null ? null : (
-            <CanvasRelationOutputs
-              key={selectedRelationId}
-              relationId={selectedRelationId}
-              disabled={false}
-              onChange={props.onChangeJoinDraft}
-              onPendingChange={setOutputsPending}
-            />
+            <>
+              <CanvasRelationOutputs
+                key={selectedRelationId}
+                relationId={selectedRelationId}
+                disabled={false}
+                onChange={props.onChangeJoinDraft}
+                onPendingChange={setOutputListPending}
+              />
+              {selectedJoin == null ? null : (
+                <CanvasDerivedOutputSection
+                  key={`formula:${selectedRelationId}`}
+                  relationId={selectedRelationId}
+                  onChange={props.onChangeJoinDraft}
+                  onPendingChange={setFormulaPending}
+                  onSaved={props.onSelectRelation}
+                />
+              )}
+            </>
           )
         }
       >
