@@ -13,6 +13,7 @@ import {
 import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
 import { canvasColumnTruth } from './canvasPresentationColumns';
 import { buildGraphNodeVolumeMetricProjection } from '../../plugins/graph/graphNodeSourceMetricProjection';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
 const sample: SourceDataSample = {
   contractVersion: 1,
@@ -263,6 +264,14 @@ it('does not invalidate samples or query again for unchanged publication', async
   await render('ready');
   expect(dataState()?.status).toBe('ready');
   expect(query).toHaveBeenCalledOnce();
+});
+
+it('preserves the user-sized drawer when opening or refreshing a sample', async () => {
+  useUiLayoutStore.setState({ bottomDrawerVisible: true, bottomDrawerHeight: 450 });
+  await preview(await render('ready'));
+  expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(450);
+  await act(async () => refreshAction()?.());
+  expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(450);
 });
 
 it('refreshes the current publication explicitly, without marking old rows as fresh', async () => {

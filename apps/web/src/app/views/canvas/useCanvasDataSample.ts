@@ -77,7 +77,7 @@ export function useCanvasDataSample() {
       const alreadySelected = useOperationalDrawerContributionStore.getState().activeTab === tabId;
       if (layout.focusMode) layout.toggleFocusMode();
       selectTab(tabId);
-      showBottomDrawer(300);
+      if (!layout.bottomDrawerVisible) showBottomDrawer(300);
       const opener = document.activeElement;
       if (!alreadySelected)
         window.requestAnimationFrame(() => {
