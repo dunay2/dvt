@@ -22,16 +22,15 @@ export const CanvasOperationExpressionHost = createContext<Readonly<{
 }> | null>(null);
 
 type InspectorTab = Readonly<{ relationId: string; tab: string }>;
-const InspectorTabs = createContext<ReturnType<typeof useState<InspectorTab | null>> | null>(null);
+const InspectorTabs = createContext<
+  readonly [InspectorTab | null, (selection: InspectorTab) => void] | null
+>(null);
 
 export function CanvasOperationInspectorTabs({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   const [selection, setSelection] = useState<InspectorTab | null>(null);
-  const value = useMemo(
-    () => [selection, setSelection] as [typeof selection, typeof setSelection],
-    [selection]
-  );
+  const value = useMemo(() => [selection, setSelection] as const, [selection]);
   return <InspectorTabs.Provider value={value}>{children}</InspectorTabs.Provider>;
 }
 
