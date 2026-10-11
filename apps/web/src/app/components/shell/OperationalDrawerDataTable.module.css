@@ -26,10 +26,6 @@
 .samplePanel > :not(.grid) {
   flex-shrink: 0;
 }
-.samplePanel > [data-slot='data-sample-summary'] {
-  margin-bottom: 0;
-  padding-bottom: 4px;
-}
 .toolbar {
   display: flex;
   align-items: center;
@@ -99,7 +95,8 @@
   color: var(--text-strong);
   background: var(--surface-selected);
 }
-.actions button:disabled {
+.actions button:disabled,
+.actions button[aria-disabled='true'] {
   opacity: 0.4;
   cursor: default;
 }
@@ -253,6 +250,27 @@
   padding-top: 4px;
   font-size: 10px;
   color: var(--text-subtle);
+}
+.footerFacts,
+.sampleSummary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footerFacts {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+.help {
+  display: inline-flex;
+}
+.help svg {
+  width: 13px;
+  height: 13px;
+}
+.help:focus-visible {
+  outline: 2px solid var(--focus-ring);
 }
 .empty {
   padding: 16px;

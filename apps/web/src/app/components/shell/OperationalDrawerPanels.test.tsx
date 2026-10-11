@@ -161,9 +161,15 @@ describe('OperationalDrawerPanels', () => {
         />
       );
     });
-    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
-      'Sample from orders'
-    );
+    expect(
+      container.querySelector('[data-slot="data-sample-summary"]')?.closest('footer')
+    ).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="data-sample-refresh"]')
+        ?.closest('[data-slot="data-grid-toolbar"]')
+    ).not.toBeNull();
+    expect(container.querySelector('[data-slot="bottom-operational-drawer-data"] h3')).toBeNull();
     expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
       '2 rows'
     );
@@ -194,6 +200,8 @@ describe('OperationalDrawerPanels', () => {
     expect(table?.textContent).toContain('NULL');
     expect(container.textContent).toContain('Showing 20 rows.');
     const facts = container.querySelector('[data-slot="live-preview-facts"]');
+    expect(facts?.closest('footer')).not.toBeNull();
+    expect(facts?.textContent).toContain('orders');
     expect(facts?.textContent).toContain('LIVE');
     expect(facts?.textContent).toContain('PostgreSQL');
     expect(facts?.querySelector('details')?.open).toBe(false);
