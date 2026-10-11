@@ -2,9 +2,9 @@
 /**
  * Owned concern: prove rich-node interaction and local geometry at three bounded graph sizes.
  * @baseline GH-3578: input geometry and published Output nullability have separate proofs.
- * @decision Inspect actual Input fields and wait on save state and persisted positions, not sleeps.
+ * @decision Inspect actual Input fields, fit before composition and wait on persisted state.
  * @consequence Drag frames, release and reopen must not issue semantic draft writes.
- * @version 1.0.0
+ * @version 1.0.1
  */
 
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
@@ -212,6 +212,7 @@ describe('Canvas geometry performance', () => {
       cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
 
       let savesBeforeDrop = 0;
+      cy.get('.react-flow__controls-fitview').click();
       cy.then(() => {
         savesBeforeDrop = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
       });
