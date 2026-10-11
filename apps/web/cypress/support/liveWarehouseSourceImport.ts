@@ -1,5 +1,8 @@
 /** Owned concern: drive the real warehouse Source Import dialog in live browser proofs. */
+import type { WorkspaceGraphDraftScope, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
+
+import { readLiveGraphDraft } from './liveProtectedRuntime';
 
 function toStableYamlIdentifierPart(part: string): string {
   const normalized = part
@@ -138,6 +141,48 @@ export function importLivePostgresSource(
 
   cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
 
-  cy.contains('[role="dialog"]', 'governed draft authority refreshes').should('be.visible');
+  cy.contains('[role="dialog"]', 'Sources are registered in the left catalogue').should(
+    'be.visible'
+  );
   cy.contains('[role="dialog"] button', 'Done').click();
+}
+
+function waitForPlacedSource(
+  id: string,
+  scope: WorkspaceGraphDraftScope,
+  attempts = 40
+): Cypress.Chainable<void> {
+  return readLiveGraphDraft(scope).then(({ body }) => {
+    const draft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
+    if (draft.nodeIds.includes(id)) return;
+    if (attempts === 0)
+      throw new Error(`Source ${id} was not durably placed in ${scope.projectId}`);
+    return cy.wait(250).then(() => waitForPlacedSource(id, scope, attempts - 1));
+  });
+}
+
+export function placeRegisteredSource(
+  id: string,
+  scope: WorkspaceGraphDraftScope,
+  position = { x: 220, y: 160 }
+): void {
+  const dataTransfer = new DataTransfer();
+  cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`)
+    .should('have.attr', 'draggable', 'true')
+    .trigger('dragstart', { dataTransfer });
+  cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
+    const bounds = $pane[0]!.getBoundingClientRect();
+    cy.wrap($pane)
+      .trigger('dragover', { dataTransfer })
+      .trigger('drop', {
+        dataTransfer,
+        clientX: bounds.left + position.x,
+        clientY: bounds.top + position.y,
+      });
+  });
+  cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`).trigger(
+    'dragend',
+    { dataTransfer }
+  );
+  waitForPlacedSource(id, scope);
 }

@@ -14,6 +14,7 @@ import {
 import {
   importLivePostgresSource,
   livePostgresDatabaseName,
+  placeRegisteredSource,
 } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
@@ -61,12 +62,14 @@ describe('Shared Canvas imported Source identity', () => {
       expect(sources).to.have.length(2);
       persistedIds = sources.map((node) => node.id);
       expect(new Set(persistedIds).size).to.equal(2);
-      for (const node of sources) {
+      for (const [index, node] of sources.entries()) {
         expect(node.id).to.match(identityPattern);
         expect(node.metadata).to.have.nested.property(
           'connectedSourceRef.sourceObjectId',
           `relation/${livePostgresDatabaseName()}/public/source_1`
         );
+        cy.get('.react-flow__node[data-id="' + node.id + '"]').should('not.exist');
+        placeRegisteredSource(node.id, session, { x: 220 + index * 370, y: 160 });
         cy.get('.react-flow__node[data-id="' + node.id + '"]')
           .should('be.visible')
           .and('contain.text', 'Rows')
@@ -78,6 +81,7 @@ describe('Shared Canvas imported Source identity', () => {
       expect(new Set(bindings).size).to.equal(2);
     });
 
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.reload();
     cy.get('[data-testid="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
     readLiveGraphDraft(session).then((response) => {

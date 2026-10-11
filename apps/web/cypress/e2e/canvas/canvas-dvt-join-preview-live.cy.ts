@@ -44,7 +44,10 @@ import {
   resolveLiveWorkspaceSession,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
+import {
+  livePostgresDatabaseName,
+  placeRegisteredSource,
+} from '../../support/liveWarehouseSourceImport';
 import { joinWorkbenchProducers } from '../../support/relationalWorkbench/joinChain';
 import {
   connectWorkbenchProducer,
@@ -256,6 +259,9 @@ describe('N-input DVT Run live', () => {
       );
       expect(draft.nodes.map((node) => node.name).sort((a, b) => a.localeCompare(b))).to.deep.equal(
         ['customers', 'orders']
+      );
+      draft.nodes.forEach((node, index) =>
+        placeRegisteredSource(node.id, scope, { x: 220, y: 140 + index * 240 })
       );
     });
     openCanvasContextMenuAt(1050, 400);

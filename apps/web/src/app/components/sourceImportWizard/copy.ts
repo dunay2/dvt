@@ -8,7 +8,7 @@ import type { SourceImportFailure } from './types';
 const EN_COPY = {
   title: 'Add source',
   description:
-    'Explore governed connections, inspect source objects, and attach supported origins to the canvas.',
+    'Explore governed connections, inspect source objects, and register sources in the catalog.',
   closeAction: 'Close source import',
   sections: {
     ariaLabel: 'Add source sections',
@@ -81,7 +81,7 @@ const EN_COPY = {
   },
   selection: {
     title: 'Browse source objects',
-    descriptionPrefix: 'Choose supported objects to attach as source nodes. Selected:',
+    descriptionPrefix: 'Choose supported objects to register as sources. Selected:',
     loading: 'Loading source objects...',
     empty: 'No source objects are available for this connection.',
     searchLabel: 'Search source catalog',
@@ -128,8 +128,8 @@ const EN_COPY = {
   },
   review: {
     title: 'Selected sources',
-    description: 'Review the selected source objects before attaching them to the canvas.',
-    previewTitle: 'Canvas attachment preview',
+    description: 'Review the selected source objects before registering them.',
+    previewTitle: 'Source registration preview',
     connectionLabel: 'Connection:',
     sourceObjectsSelectedLabel: 'Source objects selected:',
     dataObjectGroupsLabel: 'Data object groups:',
@@ -203,7 +203,7 @@ const EN_COPY = {
     filesTitle: 'Source files updated',
     fileLabel: 'file',
     graphDraftWarning:
-      'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes.',
+      'Sources are registered in the left catalogue. Click a source to inspect its configuration; drag it onto the canvas to place a card.',
     dbtProjectFilesWarning:
       'The dbt project files were updated and the file-backed graph projection will refresh from project authority.',
   },
@@ -220,7 +220,7 @@ export type SourceImportWizardCopy = LocalizedCopyShape<typeof EN_COPY>;
 const ES_COPY = {
   title: 'Añadir origen',
   description:
-    'Explora conexiones gobernadas, inspecciona objetos de origen y adjunta al canvas los orígenes compatibles.',
+    'Explora conexiones gobernadas, inspecciona objetos de origen y registra fuentes en el catálogo.',
   closeAction: 'Cerrar importación de orígenes',
   sections: {
     ariaLabel: 'Secciones para añadir orígenes',
@@ -295,7 +295,8 @@ const ES_COPY = {
   },
   selection: {
     title: 'Explorar objetos de origen',
-    descriptionPrefix: 'Elige los objetos compatibles que se adjuntarán como nodos. Seleccionados:',
+    descriptionPrefix:
+      'Elige los objetos compatibles que se registrarán como fuentes. Seleccionados:',
     loading: 'Cargando objetos de origen...',
     empty: 'No hay objetos de origen disponibles para esta conexión.',
     searchLabel: 'Buscar en el catálogo de orígenes',
@@ -342,8 +343,8 @@ const ES_COPY = {
   },
   review: {
     title: 'Orígenes seleccionados',
-    description: 'Revisa los objetos de origen seleccionados antes de adjuntarlos al canvas.',
-    previewTitle: 'Vista previa de adjuntos del canvas',
+    description: 'Revisa los objetos de origen seleccionados antes de registrarlos.',
+    previewTitle: 'Vista previa del registro de fuentes',
     connectionLabel: 'Conexión:',
     sourceObjectsSelectedLabel: 'Objetos de origen seleccionados:',
     dataObjectGroupsLabel: 'Grupos de objetos de datos:',
@@ -417,7 +418,7 @@ const ES_COPY = {
     filesTitle: 'Archivos de origen actualizados',
     fileLabel: 'archivo',
     graphDraftWarning:
-      'Canvas ha puesto en cola los identificadores importados y los enfocará cuando se actualice la autoridad gobernada del borrador.',
+      'Los orígenes están registrados en el catálogo izquierdo. Haz clic para ver su configuración; arrástralos al lienzo para colocar una tarjeta.',
     dbtProjectFilesWarning:
       'Se actualizaron los archivos del proyecto dbt y la proyección del grafo se refrescará desde la autoridad del proyecto.',
   },

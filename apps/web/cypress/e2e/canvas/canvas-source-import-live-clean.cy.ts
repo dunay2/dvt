@@ -1,5 +1,5 @@
 /** Proves the active DVT Canvas imports a real PostgreSQL source into its governed draft. */
-import type { WorkspaceGraphAuthoringNode } from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import {
   clickCanvasAddCatalogAction,
@@ -12,6 +12,7 @@ import {
   expectedLivePostgresSourceName,
   importLivePostgresSource,
   livePostgresDatabaseName,
+  placeRegisteredSource,
 } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
@@ -54,16 +55,29 @@ describe('Canvas Source Import live', () => {
 
     readLiveGraphDraft(session).then((response) => {
       expect(response.status).to.equal(200);
-      const nodes = (
-        response.body as { record: { draft: { nodes: WorkspaceGraphAuthoringNode[] } } }
-      ).record.draft.nodes;
-      const sources = nodes.filter((node) => node.kind === 'dvt:source');
+      const draft = (response.body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record
+        .draft;
+      expect(draft.nodeIds).to.deep.equal([]);
+      expect(draft.nodePositions).to.deep.equal({});
+      const sources = draft.nodes.filter((node) => node.kind === 'dvt:source');
       expect(sources).to.have.length(1);
       expect(sources[0]?.metadata).to.have.nested.property(
         'connectedSourceRef.sourceObjectId',
         `relation/${livePostgresDatabaseName()}/public/source_1`
       );
-      cy.get(`.react-flow__node[data-id="${sources[0]!.id}"]`).should('be.visible');
+      const id = sources[0]!.id;
+      cy.get('.react-flow__node').should('not.exist');
+      cy.get(`[data-element-id="${id}"]:visible`).click();
+      cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
+      cy.get('.react-flow__node').should('not.exist');
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.reload();
+      cy.get(`[data-element-id="${id}"]:visible`, { timeout: 20_000 }).should('be.visible');
+      cy.get('.react-flow__node').should('not.exist');
+      placeRegisteredSource(id, session);
+      cy.get(`.react-flow__node[data-id="${id}"]`).should('be.visible');
+      cy.reload();
+      cy.get(`.react-flow__node[data-id="${id}"]`, { timeout: 20_000 }).should('be.visible');
     });
 
     readLiveWorkspaceFile('models/sources/src_public.yml', session).then((response) => {

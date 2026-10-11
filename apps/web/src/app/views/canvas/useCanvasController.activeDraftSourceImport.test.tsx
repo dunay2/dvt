@@ -91,7 +91,7 @@ describe('useCanvasController active draft source import', () => {
     registeredRecord.draft.edges = [];
     registeredRecord.draft.canvases = [
       {
-        canvas: registeredRecord.draft.canvas,
+        canvas: registeredRecord.draft.canvases![0]!.canvas,
         nodes: registeredRecord.draft.nodes,
         nodeIds: registeredRecord.draft.nodeIds,
         nodePositions: registeredRecord.draft.nodePositions,
