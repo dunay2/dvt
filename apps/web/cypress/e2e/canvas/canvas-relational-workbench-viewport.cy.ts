@@ -68,9 +68,8 @@ describe('Workbench viewport', () => {
     cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
     cy.get(
       '[data-slot="canvas-relational-tree-workbench"] [role="separator"][aria-label="Resize explorer"]'
-    )
-      .focus()
-      .type('{rightarrow}');
+    ).focus();
+    cy.press(Cypress.Keyboard.Keys.RIGHT);
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
       .invoke('text')
       .then((zoom) => {
@@ -90,12 +89,13 @@ describe('Workbench viewport', () => {
     cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.screenshot('semantic-editor-sources-collapsed');
+    const sourcesToggle =
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]';
+    cy.get(sourcesToggle).focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
     cy.get(
       '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
-    )
-      .focus()
-      .type('{enter}')
-      .should('have.attr', 'aria-expanded', 'true');
+    ).should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-slot="canvas-relational-tree-sources"] input')
       .should('have.value', 'customers')
       .clear();
