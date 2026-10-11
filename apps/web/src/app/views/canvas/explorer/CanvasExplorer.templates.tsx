@@ -175,7 +175,7 @@ export function CanvasExplorerListTemplate({
         />
       </label>
       {onImport == null ? null : (
-        <button type="button" className={styles.importAction} onClick={onImport}>
+        <button type="button" className={styles.importAction} onClick={() => onImport()}>
           <Plus aria-hidden="true" />
           {copy.importSources}
         </button>

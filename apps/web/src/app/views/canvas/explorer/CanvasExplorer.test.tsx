@@ -3,7 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent, screen } from '@testing-library/dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import { DropdownMenu, DropdownMenuContent } from '../../../components/ui/dropdown-menu';
@@ -32,6 +32,14 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('dispatches import without passing a DOM event as graph coordinates', () => {
+    const onImport = vi.fn();
+    render(<CanvasExplorerList items={[]} onSelect={() => {}} onImport={onImport} />);
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Import sources' }));
+    });
+    expect(onImport.mock.calls).toEqual([[]]);
+  });
   it('shows newly imported input nodes when the graph updates without recreating the explorer', () => {
     const nodes = [
       { id: 'imported', position: { x: 0, y: 0 }, data: { name: 'Orders', role: 'input' } },
