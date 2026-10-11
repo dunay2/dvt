@@ -10,6 +10,7 @@ import {
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import CanvasViewport from './CanvasViewport';
+import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type {
@@ -105,54 +106,61 @@ function CanvasShellViewport({
   });
 
   return (
-    <CanvasViewport
-      canEditEdges={panels.userPermissions.canEditEdges}
-      canMoveNodes={layout.canMoveNodes}
-      canSelectNodes={layout.canSelectNodes}
-      nodesWithImpact={graph.nodesWithImpact}
-      edges={graph.edges}
-      nodeTypes={graph.nodeTypes}
-      gridSize={graph.gridSize}
-      canvasPalette={graph.canvasPalette}
-      canvasGridVisible={graph.canvasGridVisible}
-      canvasGridColor={graph.canvasGridColor}
-      canvasSnapToGrid={graph.canvasSnapToGrid}
-      viewport={graph.viewport}
-      frozenNodeIds={graph.frozenNodeIds}
-      onToggleFrozenNode={graphCommands.onToggleFrozenNode}
+    <CanvasGraphExplorer
+      nodes={graph.nodesWithImpact}
       onNodesChange={graphCommands.onNodesChange}
-      onNodeDrag={graphCommands.onNodeDrag}
-      onNodeDragStop={graphCommands.onNodeDragStop}
-      onEdgesChange={graphCommands.onEdgesChange}
-      onConnect={graphCommands.onConnect}
-      onReconnect={graphCommands.onReconnect}
-      onViewportChange={graphCommands.onViewportChange}
-      onDrop={graphCommands.onDrop}
-      onDragOver={graphCommands.onDragOver}
-      authoringNodeKinds={panels.authoringNodeKinds}
-      onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
-      importedNodeFocusIds={panels.importedNodeFocusIds}
-      onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
-      onImpactFocusNodeChange={graphCommands.onImpactFocusNodeChange}
-      canOpenSourceImport={typeof onOpenSourceImport === 'function'}
-      onOpenSourceImport={
-        onOpenSourceImport == null
-          ? undefined
-          : (flowPosition) =>
-              onOpenSourceImport(
-                undefined,
-                flowPosition == null ? undefined : { canvasPosition: flowPosition }
-              )
-      }
-      canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
-      onOpenCanvasSettings={onOpenCanvasSettings}
-      contextMenuPresenter={contextMenuPresenter}
-      externalNodeSurfaceActive={
-        nodeWorkbenchVisible ||
-        layout.contextualWorkbench != null ||
-        layout.centerSurfaceVisible === true
-      }
-    />
+      canSelect={layout.canSelectNodes !== false}
+      onImport={onOpenSourceImport == null ? undefined : () => onOpenSourceImport()}
+    >
+      <CanvasViewport
+        canEditEdges={panels.userPermissions.canEditEdges}
+        canMoveNodes={layout.canMoveNodes}
+        canSelectNodes={layout.canSelectNodes}
+        nodesWithImpact={graph.nodesWithImpact}
+        edges={graph.edges}
+        nodeTypes={graph.nodeTypes}
+        gridSize={graph.gridSize}
+        canvasPalette={graph.canvasPalette}
+        canvasGridVisible={graph.canvasGridVisible}
+        canvasGridColor={graph.canvasGridColor}
+        canvasSnapToGrid={graph.canvasSnapToGrid}
+        viewport={graph.viewport}
+        frozenNodeIds={graph.frozenNodeIds}
+        onToggleFrozenNode={graphCommands.onToggleFrozenNode}
+        onNodesChange={graphCommands.onNodesChange}
+        onNodeDrag={graphCommands.onNodeDrag}
+        onNodeDragStop={graphCommands.onNodeDragStop}
+        onEdgesChange={graphCommands.onEdgesChange}
+        onConnect={graphCommands.onConnect}
+        onReconnect={graphCommands.onReconnect}
+        onViewportChange={graphCommands.onViewportChange}
+        onDrop={graphCommands.onDrop}
+        onDragOver={graphCommands.onDragOver}
+        authoringNodeKinds={panels.authoringNodeKinds}
+        onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
+        importedNodeFocusIds={panels.importedNodeFocusIds}
+        onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
+        onImpactFocusNodeChange={graphCommands.onImpactFocusNodeChange}
+        canOpenSourceImport={typeof onOpenSourceImport === 'function'}
+        onOpenSourceImport={
+          onOpenSourceImport == null
+            ? undefined
+            : (flowPosition) =>
+                onOpenSourceImport(
+                  undefined,
+                  flowPosition == null ? undefined : { canvasPosition: flowPosition }
+                )
+        }
+        canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
+        onOpenCanvasSettings={onOpenCanvasSettings}
+        contextMenuPresenter={contextMenuPresenter}
+        externalNodeSurfaceActive={
+          nodeWorkbenchVisible ||
+          layout.contextualWorkbench != null ||
+          layout.centerSurfaceVisible === true
+        }
+      />
+    </CanvasGraphExplorer>
   );
 }
 

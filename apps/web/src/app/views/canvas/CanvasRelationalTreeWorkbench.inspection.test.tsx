@@ -72,7 +72,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
     const toggle = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-relational-tree-sources-toggle"]'
+      '[data-slot="canvas-explorer-sources-toggle"]'
     );
     expect(toggle).not.toBeNull();
     await act(async () => {
@@ -82,13 +82,12 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(
       container
         .querySelector('[data-slot="canvas-relational-tree-source-list"]')
+        ?.closest('section')
         ?.hasAttribute('hidden')
     ).toBe(true);
     expect(container.querySelector('[data-slot="canvas-relational-tree"]')).toBe(tree);
     await act(async () => {
-      toggle!.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
-      );
+      toggle!.click();
     });
     expect(toggle?.getAttribute('aria-expanded')).toBe('true');
     await act(async () => {
@@ -105,6 +104,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(
       container
         .querySelector('[data-slot="canvas-relational-tree-source-list"]')
+        ?.closest('section')
         ?.hasAttribute('hidden')
     ).toBe(false);
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
