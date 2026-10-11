@@ -535,6 +535,13 @@ replaying a historical root or invoking Preview/Run.
 Movement alone retains its existing discardable-session behavior; this does not
 add an autosave or change navigation/cancellation ownership.
 
+Inspector visibility is presentation state, not the lifetime of that transaction.
+Applying an operation preserves its open Properties panel and reconciles the
+selection to the accepted canonical relation. Staged and applied inspectors use
+the same visibility intent. Explicit Close remains closed; Cancel retains its
+existing discard semantics, and rejected Apply does not discard the edit.
+Keeping a panel open must not keep an obsolete draft active or issue another save.
+
 ```mermaid
 flowchart LR
   A[Source instance A] -->|one consumer| J[JOIN Input L]

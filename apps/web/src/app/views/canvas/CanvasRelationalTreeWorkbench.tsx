@@ -1,3 +1,10 @@
+/**
+ * Owned concern: compose Model editing and retain inspector visibility across accepted saves.
+ * @baseline ADR-0064: the accepted relation keeps its authoring identity.
+ * @decision Transfer staged inspector selection on Apply without prolonging the draft transaction.
+ * @consequence Properties stay open; explicit Close, Cancel and rejected writes keep their intent.
+ * @version 1.1.0
+ */
 import { forwardRef, useEffect, useState } from 'react';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
@@ -38,10 +45,16 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     if (model.session.active) setModelOutputOpen(false);
     else setPendingCondition(false);
   }, [model.session.active]);
-  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(ref, model, pendingCondition, {
-    pending: pendingCompositionOutput,
-    discard: () => setModelOutputOpen(false),
-  });
+  const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(
+    ref,
+    model,
+    pendingCondition,
+    { pending: pendingCompositionOutput, discard: () => setModelOutputOpen(false) },
+    (relationId) => {
+      model.retainAppliedSelection(relationId);
+      setExpanded(true);
+    }
+  );
   const navigation = useCanvasRelationEditNavigation({
     editing: model.session.active,
     selectedRelationId: model.selectedRelationId,

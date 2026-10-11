@@ -83,6 +83,9 @@ describe('join-consumers', () => {
       });
     cy.get(formulaForm).find('button[type="submit"]').should('be.enabled').click();
     cy.get(formulaForm).should('not.exist');
+    cy.get('[data-canvas-inspector="true"]:visible')
+      .invoke('attr', 'data-relation-id')
+      .as('editedJoinId');
     let writesBeforeApply = 0;
     cy.then(() => {
       writesBeforeApply = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
@@ -91,6 +94,13 @@ describe('join-consumers', () => {
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(
         writesBeforeApply
+      );
+    });
+    cy.get('@editedJoinId').then((relationId) => {
+      cy.get('[data-canvas-inspector="true"]:visible').should(
+        'have.attr',
+        'data-relation-id',
+        relationId
       );
     });
     cy.on('window:before:load', installE2eApiFetchStub);

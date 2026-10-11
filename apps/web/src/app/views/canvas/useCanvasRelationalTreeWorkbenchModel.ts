@@ -1,4 +1,10 @@
-/** Owned concern: compose relational-tree query and guided-session state for presentation. */
+/**
+ * Owned concern: compose relational queries, stable selection and discardable authoring state.
+ * @baseline ADR-0064: accepted relation identities survive draft persistence.
+ * @decision Distinguish navigation from retaining selection across Apply acknowledgements.
+ * @consequence Saving cannot clear the still-visible pending editor or lose its applied selection.
+ * @version 1.1.0
+ */
 import { useMemo } from 'react';
 import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
@@ -145,6 +151,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     projection,
     sourceOutputFieldsByRelationId,
     ...selection,
+    retainAppliedSelection: selection.selectRelation,
     selectedRelationId: session.occurrences.selectedId ?? selection.selectedRelationId,
     selectRelation: (id: string | null) => {
       session.staged.clearSelection();

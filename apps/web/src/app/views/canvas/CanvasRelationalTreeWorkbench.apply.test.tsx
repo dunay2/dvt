@@ -21,9 +21,14 @@ import type { CanvasRelationalTreeWorkbenchHandle } from './CanvasRelationalTree
 
 describe('Canvas relational-tree Workbench apply', () => {
   setupWorkbenchTest();
-  it.each(['cancel', 'apply'] as const)(
-    'authors centrally and persists only on %s',
-    async (action) => {
+  it.each([
+    { action: 'cancel', closeInspector: false, rejected: false },
+    { action: 'apply', closeInspector: false, rejected: false },
+    { action: 'apply', closeInspector: true, rejected: false },
+    { action: 'apply', closeInspector: false, rejected: true },
+  ] as const)(
+    'authors centrally on $action (closed: $closeInspector, rejected: $rejected)',
+    async ({ action, closeInspector, rejected }) => {
       const customers = sourceNode('customers', 'customers');
       const orders = sourceNode('orders', 'orders');
       const transform = transformNode();
@@ -42,6 +47,7 @@ describe('Canvas relational-tree Workbench apply', () => {
               canEditNode: true,
               onApplyNodeDraft: (_nodeId, draft) => {
                 applied.push(draft);
+                if (rejected) return { outcome: 'rejected', reason: 'node_unavailable' };
                 return { outcome: 'no_changes' };
               },
             }}
@@ -139,6 +145,12 @@ describe('Canvas relational-tree Workbench apply', () => {
         )
       ).toBe(true);
 
+      if (closeInspector)
+        await act(async () =>
+          container
+            .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-collapse"]')!
+            .click()
+        );
       const actionButton = container.querySelector<HTMLButtonElement>(
         `[data-slot="canvas-relational-tree-${action}"]`
       )!;
@@ -157,6 +169,14 @@ describe('Canvas relational-tree Workbench apply', () => {
       }
 
       expect(applied).toHaveLength(1);
+      if (rejected) {
+        expect(workbench.current!.hasUnappliedChanges).toBe(true);
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-join-type"]')
+        ).not.toBeNull();
+        expect(container.querySelector('[role="alert"]')).not.toBeNull();
+        return;
+      }
       const saved = applied[0]?.relationalAuthoringDraft;
       expect(saved).toEqual({
         version: 'v1',
@@ -188,6 +208,13 @@ describe('Canvas relational-tree Workbench apply', () => {
       ).not.toBeNull();
       expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
       expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
+      const inspector = container.querySelector<HTMLElement>('[data-canvas-inspector="true"]');
+      if (closeInspector) expect(inspector).toBeNull();
+      else {
+        expect(inspector).not.toBeNull();
+        expect(inspector!.hidden).toBe(false);
+        expect(inspector!.dataset.relationId).toBe(joinCard.dataset.relationId);
+      }
       expect(
         Array.from(
           container.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-tree-source"]')
