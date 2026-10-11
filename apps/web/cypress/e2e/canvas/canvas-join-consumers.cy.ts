@@ -16,6 +16,9 @@ describe('join-consumers', () => {
     cy.get('[data-slot="canvas-relational-edit"]').click();
     cy.get('[data-slot="canvas-operation-output-tab"]:visible').click();
     cy.get('[data-slot="canvas-derived-output-trigger"]:visible').click();
+    cy.get('[data-canvas-inspector="true"]:visible [data-slot="canvas-relation-outputs"]').should(
+      'not.be.visible'
+    );
     const formulaForm = '[data-slot="canvas-derived-output-form"]';
     cy.get(formulaForm).find('input[name="alias"]').type('combined');
     cy.get(formulaForm)
@@ -50,8 +53,14 @@ describe('join-consumers', () => {
     cy.get('[data-operator="project"][data-presentation="field_transform"]').click();
     cy.get('[data-slot="canvas-derived-output"]:visible').should('contain.text', 'combined');
     cy.get('[aria-label="Edit combined"]').click();
+    cy.get('[data-canvas-inspector="true"]:visible [data-slot="canvas-relation-outputs"]').should(
+      'not.be.visible'
+    );
     cy.get(formulaForm).find('.view-lines').should('contain.text', 'CONCAT');
     cy.get('[data-slot="canvas-derived-output-cancel"]').click();
+    cy.get('[data-canvas-inspector="true"]:visible [data-slot="canvas-relation-outputs"]').should(
+      'be.visible'
+    );
   });
 
   it('saves and reopens a mixed-input scalar predicate using the shared formula editor', () => {

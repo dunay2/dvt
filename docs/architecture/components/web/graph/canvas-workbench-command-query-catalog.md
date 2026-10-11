@@ -257,6 +257,12 @@ Unlike `ON`, a SELECT expression may return any scalar type admitted by the
 existing provider. `CanvasDerivedOutputSection` and
 `applySelectedRelationDerivedOutput` remain the only formula authoring path;
 move the Transform entry point, do not render two independently owned forms.
+While adding or editing a calculated field, the shared section displays only its
+alias, operand palette, formula and actions. It owns the output-list presentation
+slot and hides that list for the lifetime of the form, retaining local selection
+state. Cancel or accepted submission restores the list; rejected submission keeps
+the form and typed input visible. No second editing-state flag is introduced in
+the inspector composition.
 
 ```text
 JOIN Output -> shared formula + alias -> existing atomic derived-field command

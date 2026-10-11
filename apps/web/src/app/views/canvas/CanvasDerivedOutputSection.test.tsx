@@ -7,11 +7,12 @@
  * @version 1.0.0
  */
 import React, { act } from 'react';
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent, isInaccessible, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { CanvasDerivedOutputSection } from './CanvasDerivedOutputSection';
+import { CanvasCalculatedRelationOutputs } from './CanvasCalculatedRelationOutputs';
 import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
 import { projectionScenario } from './canvasProjectionScenario.test-support';
 import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkbench.test-support';
@@ -90,7 +91,7 @@ describe('selected relation derived-output section', () => {
       const analysis = useCanvasRelationAnalysisSession(document, 'derived-rejection');
       return (
         <CanvasRelationAnalysisContext.Provider value={analysis}>
-          <CanvasDerivedOutputSection
+          <CanvasCalculatedRelationOutputs
             relationId={relationId}
             onChange={onChange}
             onSaved={onSaved}
@@ -130,6 +131,11 @@ describe('selected relation derived-output section', () => {
       expect(container.querySelector<HTMLInputElement>('input[name="alias"]')?.value).toBe('A');
       expect(onChange).not.toHaveBeenCalled();
       expect(onSaved).not.toHaveBeenCalled();
+      expect(
+        isInaccessible(
+          container.querySelector<HTMLElement>('[data-slot="canvas-relation-outputs"]')!
+        )
+      ).toBe(true);
     } finally {
       reject.mockRestore();
       await act(async () => useApplicationLanguageStore.setState({ language: 'en' }));

@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 import React, { act, useState } from 'react';
-import { fireEvent, waitFor } from '@testing-library/dom';
+import { fireEvent, isInaccessible, waitFor } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
@@ -50,6 +50,10 @@ describe('calculated SELECT Output', () => {
       let saved = document;
       let focused = joinId;
       const writes = vi.fn();
+      const outputList = () =>
+        container.querySelector<HTMLElement>(
+          '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-relation-outputs"]'
+        )!;
       function Host(): React.JSX.Element {
         const [draft, setDraft] = useState(document);
         const [selected, select] = useState(joinId);
@@ -85,6 +89,7 @@ describe('calculated SELECT Output', () => {
         await act(async () =>
           fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
         );
+        expect(isInaccessible(outputList())).toBe(true);
         await act(async () => {
           fireEvent.change(container.querySelector('input[name="alias"]')!, {
             target: { value: 'combined' },
@@ -105,12 +110,19 @@ describe('calculated SELECT Output', () => {
           )
         ).not.toBeNull()
       );
+      await act(async () =>
+        fireEvent.mouseDown(container.querySelector('[data-slot="canvas-operation-output-tab"]')!, {
+          button: 0,
+        })
+      );
+      expect(isInaccessible(outputList())).toBe(false);
       await edit();
       await act(async () =>
         fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-cancel"]')!)
       );
       expect(writes).not.toHaveBeenCalled();
       expect(focused).toBe(joinId);
+      expect(isInaccessible(outputList())).toBe(false);
       await edit();
       await act(async () =>
         fireEvent.submit(container.querySelector('[data-slot="canvas-derived-output-form"]')!)
@@ -142,6 +154,19 @@ describe('calculated SELECT Output', () => {
           )?.textContent
         ).toContain('combined')
       );
+      expect(isInaccessible(outputList())).toBe(false);
+      await act(async () =>
+        fireEvent.click(container.querySelector('[data-slot="canvas-derived-output"] button')!)
+      );
+      expect(isInaccessible(outputList())).toBe(true);
+      expect(container.querySelector<HTMLInputElement>('input[name="alias"]')!.value).toBe(
+        'combined'
+      );
+      await act(async () =>
+        fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-cancel"]')!)
+      );
+      expect(isInaccessible(outputList())).toBe(false);
+      expect(writes).toHaveBeenCalledOnce();
       await act(async () =>
         root.render(
           <RelationAnalysisTestHost document={saved}>
