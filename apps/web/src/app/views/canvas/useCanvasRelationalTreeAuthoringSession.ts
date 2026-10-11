@@ -89,17 +89,17 @@ export function useCanvasRelationalTreeAuthoringSession(
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
     enabled: enabled && editable,
-    active: state.active,
-    selectedInputIds: state.slots.selectedInputIds,
-    seed,
-    hydrate: hydrateExisting,
-    clear: state.clear,
-    accept: state.hydrate,
+    sourceNodeIds: !state.active && seed != null ? seed.inputIds : state.slots.selectedInputIds,
+    outputRelationId: effectiveOutputRelationId,
+    state,
+    start,
   });
   return {
     restorationUnavailable,
     analysis,
     ...graph,
+    occurrences: { ...graph.occurrences, remove: removal.remove },
+    staged: { ...graph.staged, remove: removal.remove },
     removal,
     cleared: prepared.cleared,
     applyRejection: state.applyRejection,

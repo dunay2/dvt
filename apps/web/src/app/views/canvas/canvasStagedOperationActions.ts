@@ -18,6 +18,7 @@ import {
   invalidateCanvasOperationConfiguration,
   invalidateCanvasOperationConsumers,
 } from './canvasRetainedOperationConfiguration';
+import { removeCanvasStagedProducer } from './canvasCardRemoval';
 
 export function createCanvasStagedOperationActions(
   args: Readonly<{
@@ -36,18 +37,7 @@ export function createCanvasStagedOperationActions(
 ) {
   const remove = (id: string) => {
     if (!args.editable) return;
-    args.setOperations((current) => {
-      return invalidateCanvasOperationConsumers(current, new Set([id]))
-        .filter((operation) => operation.id !== id)
-        .map((operation) =>
-          operation.inputs.includes(id)
-            ? invalidateCanvasOperationConfiguration({
-                ...operation,
-                inputs: operation.inputs.map((input) => (input === id ? null : input)),
-              })
-            : operation
-        );
-    });
+    args.setOperations((current) => removeCanvasStagedProducer(current, id));
     if (args.selectedId === id) args.setSelectedId(null);
   };
   return {

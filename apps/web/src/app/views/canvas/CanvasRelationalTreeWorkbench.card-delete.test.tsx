@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** Card deletion removes its owned connections without deleting adjacent operations. */
+/** Owned concern: keyboard deletion requires consent before removing connected cards. */
 import React, { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
@@ -21,7 +21,7 @@ import {
 describe('Canvas relational-tree card deletion', () => {
   setupWorkbenchTest();
 
-  it('removes a focused card and its connections with Delete', async () => {
+  it('confirms keyboard deletion before removing the card and its connections', async () => {
     const source = sourceNode('customers', 'customers');
     const target = transformNode();
     await act(async () =>
@@ -52,6 +52,15 @@ describe('Canvas relational-tree card deletion', () => {
         new KeyboardEvent('keydown', { key: 'Delete', bubbles: true, cancelable: true })
       );
     });
+    expect(container.querySelector('[data-pending="true"][data-operator="read"]')).toBe(sourceCard);
+    expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
+      1
+    );
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-card-removal-confirm"]')!
+        .click()
+    );
     expect(container.querySelector('[data-pending="true"][data-operator="read"]')).toBeNull();
     expect(container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')).toHaveLength(
       0

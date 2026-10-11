@@ -16,14 +16,12 @@ import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection'
 export function CanvasRelationalTreeCardMenu({
   node,
   children,
-  pending = false,
   onRemove,
   onExpand,
 }: Readonly<{
   node: CanvasRelationalTreeNode;
   children: ReactElement;
-  pending?: boolean;
-  onRemove?: (relationId: string, keep?: 'left' | 'right') => void;
+  onRemove?: (relationId: string) => void;
   onExpand?: (locator: string) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -63,31 +61,14 @@ export function CanvasRelationalTreeCardMenu({
             <ContextMenuSeparator />
           </>
         )}
-        {!pending && (node.operator === 'join' || node.operator === 'cross') ? (
-          (['left', 'right'] as const).map((keep) => (
-            <ContextMenuItem
-              key={keep}
-              data-slot={`canvas-relational-remove-${keep}`}
-              disabled={onRemove == null}
-              onSelect={() => onRemove?.(node.relationId!, keep)}
-            >
-              <Trash2 aria-hidden="true" className="size-4" />
-              {keep === 'left' ? copy.removeKeepLeft : copy.removeKeepRight}
-              <span className="max-w-48 truncate text-xs text-(--text-muted)">
-                {node.children[keep === 'left' ? 0 : 1]?.node.displayName}
-              </span>
-            </ContextMenuItem>
-          ))
-        ) : (
-          <ContextMenuItem
-            data-slot="canvas-relational-remove-source"
-            disabled={onRemove == null}
-            onSelect={() => onRemove?.(node.relationId!)}
-          >
-            <Trash2 aria-hidden="true" className="size-4" />
-            {copy.removeCard}
-          </ContextMenuItem>
-        )}
+        <ContextMenuItem
+          data-slot="canvas-relational-remove-source"
+          disabled={onRemove == null}
+          onSelect={() => onRemove?.(node.relationId!)}
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+          {copy.removeCard}
+        </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   );

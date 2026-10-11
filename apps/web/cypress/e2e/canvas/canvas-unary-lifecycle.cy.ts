@@ -33,7 +33,10 @@ describe('unary-lifecycle', () => {
   it('edits FILTER and a source ROW_NUMBER through the same canonical projection', () => {
     openEditor();
     cy.get('[data-operator="join"]').rightclick();
-    cy.get('[data-slot="canvas-relational-remove-left"]').click();
+    cy.get('[data-slot="canvas-relational-remove-source"]').click();
+    cy.get('[data-slot="canvas-card-removal-confirm"]').click();
+    cy.contains('[data-operator="read"]', 'customers').rightclick();
+    cy.get('[data-slot="canvas-relational-remove-source"]').click();
     stageWorkbenchUnary('filter', '[data-operator="read"]', true);
     cy.get(form).find('input').type('C-001');
     cy.get(form).find('button[type="submit"]').click();
@@ -167,6 +170,7 @@ describe('unary-lifecycle', () => {
       cy.get(`[data-operator="sort"][data-relation-id="${relationId}"]`).rightclick();
     });
     activateMenu('canvas-relational-remove-source');
+    cy.get('[data-slot="canvas-card-removal-confirm"]').click();
     cy.get('[data-operator="sort"]').should('not.exist');
     cy.get<string>('@fetchRelationId').then((relationId) => {
       cy.get(`[data-operator="fetch"][data-relation-id="${relationId}"]`).should('exist');

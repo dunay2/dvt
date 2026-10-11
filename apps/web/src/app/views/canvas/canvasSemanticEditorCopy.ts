@@ -89,13 +89,28 @@ const en = {
   operations: 'Operations',
   crossJoinWarning:
     'CROSS combines every row on L with every row on R. Cardinality remains unknown until preview.',
-  removeCard: 'Remove from tree',
+  removeCard: 'Delete card',
+  cardRemoval: {
+    missingInput: 'Missing input',
+    title: 'Delete “{name}”?',
+    dependents:
+      '{cards} will lose an input. Other cards and their configuration will be preserved.',
+    output:
+      'The model output will be disconnected. Other cards and their configuration will be preserved.',
+    preserve: 'Other cards and their configuration will be preserved.',
+    cancel: 'Cancel',
+    confirm: 'Delete',
+    dismiss: 'Close',
+    errors: {
+      card_unavailable: 'This card is no longer available. The graph has not changed.',
+      card_removal_stale: 'The graph changed. Select the card again to review its removal.',
+      card_removal_read_only: 'Editing is no longer available. The graph has not changed.',
+    },
+  },
   removeDependents: 'Also remove dependent operations?',
   removeDependentsHint: 'These operations cannot remain valid after this removal:',
   closeEditor: 'Close semantic editor',
   workspaceTabs: 'Workspace navigation',
-  removeKeepLeft: 'Remove JOIN · keep L',
-  removeKeepRight: 'Remove JOIN · keep R',
   removalDependency:
     'Another operation depends on this card. Review its conditions, grouping or window before removing it.',
   removalUnavailable: 'This card cannot be removed from the current composition.',
@@ -246,13 +261,29 @@ const es: typeof en = {
   operations: 'Operaciones',
   crossJoinWarning:
     'CROSS combina cada fila de L con cada fila de R. La cardinalidad no se conoce hasta previsualizar.',
-  removeCard: 'Retirar del árbol',
+  removeCard: 'Eliminar tarjeta',
+  cardRemoval: {
+    missingInput: 'Falta una entrada',
+    title: '¿Eliminar «{name}»?',
+    dependents:
+      '{cards} perderá una entrada. Las demás tarjetas y su configuración se conservarán.',
+    output:
+      'La salida del modelo quedará desconectada. Las demás tarjetas y su configuración se conservarán.',
+    preserve: 'Las demás tarjetas y su configuración se conservarán.',
+    cancel: 'Cancelar',
+    confirm: 'Eliminar',
+    dismiss: 'Cerrar',
+    errors: {
+      card_unavailable: 'Esta tarjeta ya no está disponible. El grafo no se ha modificado.',
+      card_removal_stale:
+        'El grafo ha cambiado. Selecciona de nuevo la tarjeta para revisar su retirada.',
+      card_removal_read_only: 'La edición ya no está disponible. El grafo no se ha modificado.',
+    },
+  },
   removeDependents: '¿Retirar también las operaciones dependientes?',
   removeDependentsHint: 'Estas operaciones no pueden seguir siendo válidas tras la retirada:',
   closeEditor: 'Cerrar editor semántico',
   workspaceTabs: 'Navegación del espacio de trabajo',
-  removeKeepLeft: 'Retirar JOIN · conservar L',
-  removeKeepRight: 'Retirar JOIN · conservar R',
   removalDependency:
     'Otra operación depende de esta tarjeta. Revisa sus condiciones, agrupación o ventana antes de retirarla.',
   removalUnavailable: 'No se puede retirar esta tarjeta de la composición actual.',
