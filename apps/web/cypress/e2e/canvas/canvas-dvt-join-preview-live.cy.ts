@@ -260,9 +260,9 @@ describe('N-input DVT Run live', () => {
       expect(draft.nodes.map((node) => node.name).sort((a, b) => a.localeCompare(b))).to.deep.equal(
         ['customers', 'orders']
       );
-      draft.nodes.forEach((node, index) =>
-        placeRegisteredSource(node.id, scope, { x: 220, y: 140 + index * 240 })
-      );
+      draft.nodes.forEach((node, index) => {
+        placeRegisteredSource(node.id, scope, { x: 220, y: 140 + index * 240 });
+      });
     });
     openCanvasContextMenuAt(1050, 400);
     clickCanvasContextMenuAction('open-add-node-catalog');

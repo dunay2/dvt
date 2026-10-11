@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '../src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 import { resolveWorkspaceSourceInstances } from '../src/contracts/planner/WorkspaceSourceInstance.v1.js';
@@ -22,7 +23,7 @@ const instance: WorkspaceGraphAuthoringNode = {
   sourceDefinitionId: source.id,
   metadata: undefined,
 };
-const draft = (nodes: WorkspaceGraphAuthoringNode[]) => ({
+const draft = (nodes: WorkspaceGraphAuthoringNode[]): WorkspaceGraphAuthoringDraft => ({
   canvas: { kind: 'dvt', title: 'Canvas' },
   nodeIds: ['instance'],
   nodePositions: { instance: { x: 0, y: 0 } },
