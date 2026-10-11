@@ -195,22 +195,38 @@ flowchart LR
 
 ## JOIN Operand Authoring Boundary
 
-Under `ConfigureCanvasDvtNode`, JOIN comparisons accept only fields already
-produced by their inputs and typed literals. Scalar calculations belong to the
-upstream Transform; the JOIN condition editor must not offer function chains or
-compile them through another mutation path. Comparison operators, NULL tests and
-AND/OR condition groups remain predicate semantics, not field transformations.
+Under `ConfigureCanvasDvtNode`, the simple JOIN form compares produced fields and
+typed literals. Issue #3612 extends the same selected-JOIN command with a scalar
+formula input: one function may reference fields from both input rows. Such a
+calculation cannot generally move into a single upstream Transform, nor may it
+move into a filter after an outer JOIN.
 
-The selected JOIN command rejects function-bearing operands atomically. The
-existing query may show an imported canonical expression, but exposes no editable
-condition projection for that unsupported shape. It must not unwrap functions,
-rewrite the plan or migrate computations upstream. The original expression tree
-remains inspectable with an explicit unavailable-form notice. Revision, field
-scope, writable-draft and persistence checks remain unchanged.
+```text
+Selected JoinRel + exact left/right field scope
+  -> shared Transform formula editor and compiler
+  -> boolean canonical expression
+  -> existing selected-JOIN command, revision and provenance validation
+  -> JoinRel.expression -> existing persistence and target SQL projection
+```
 
-Proof covers both ports, nested/grouped/null predicates, literal validation,
-computed upstream fields, save/reopen identity and no mutation on rejection.
-This implements the #3416 / #3422 boundary without reviving #3420.
+Reuse the existing scalar compiler, capability catalogue and expression renderer;
+do not revive the retired JOIN function-chain compiler or introduce a second
+mutation path. Input names distinguish ports, including self-JOINs. The compiler
+uses actual input ordinals, not the position of a filtered suggestion list.
+Only canonical Substrait persists: reopening derives text from that expression.
+Unknown imported expressions remain inspectable and must not be silently cleared
+or rewritten when a form cannot represent them.
+
+The result must be boolean and every function/type must be admitted for the
+execution provider. Foreign, unmapped, ambiguous and stale references reject
+atomically. Aggregates, windows, correlated subqueries, arbitrary SQL and new
+provider capabilities are outside this slice. Read-only, revision, authorization,
+input identities, JOIN type, output selection and pending-edit guards remain.
+
+Proof covers both ports, nested arithmetic/boolean expressions, identical input
+names, NULL behavior, nonboolean/unsupported rejection, cancel, save/reopen and
+target SQL retaining the predicate in `ON`. This revises the field-only product
+restriction from #3416 / #3422 without restoring its duplicate compiler (#3420).
 
 ## Column Menu Lifecycle
 
