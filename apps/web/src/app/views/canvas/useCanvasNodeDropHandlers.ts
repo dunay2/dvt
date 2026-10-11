@@ -13,6 +13,7 @@ import {
 } from './canvasNodeDropPayload';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
+import { createCanvasSourceInstance } from './canvasSourceInstance';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
@@ -59,7 +60,10 @@ export function useCanvasNodeDropHandlers({
         ? event.dataTransfer.getData(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
         : '';
       const registeredSource = sourceId ? canonicalNodesById.get(sourceId) : null;
-      if (sourceId && registeredSource?.role !== 'input') {
+      if (
+        sourceId &&
+        (registeredSource?.role !== 'input' || registeredSource.sourceDefinitionId != null)
+      ) {
         toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
         return;
       }
@@ -87,8 +91,15 @@ export function useCanvasNodeDropHandlers({
         y: event.clientY - reactFlowBounds.top - 40,
       };
 
-      runAdmissionCommand({
-        canonicalNode,
+      const admittedNode =
+        registeredSource == null
+          ? canonicalNode
+          : createCanvasSourceInstance(
+              registeredSource,
+              new Set(latestNodesRef.current.map((node) => node.data.name))
+            );
+      const transaction = runAdmissionCommand({
+        canonicalNode: admittedNode,
         position,
         onNoop: (reason) => {
           toast.info(reason);
@@ -97,6 +108,7 @@ export function useCanvasNodeDropHandlers({
           toast.success(formatCanvasNodeAddedMessage(addedNode.name));
         },
       });
+      if (transaction.outcome === 'added') latestNodesRef.current = transaction.nodes;
     },
     [canEditEdges, canonicalNodesById, graphStrategy, runAdmissionCommand]
   );
@@ -121,7 +133,10 @@ export function useCanvasNodeDropHandlers({
       }
 
       const normalizedSchemaName = schemaName.trim();
-      const targetNode = canonicalNodesById.get(nodeId);
+      const selectedNode = canonicalNodesById.get(nodeId);
+      const definitionId = selectedNode?.sourceDefinitionId ?? nodeId;
+      const targetNode =
+        draftSession.localNodeCatalog?.[definitionId] ?? canonicalNodesById.get(definitionId);
       if (targetNode == null) {
         toast.error(canvasViewCopy.nodeNotFoundInGraphMessage);
         return;
@@ -157,7 +172,7 @@ export function useCanvasNodeDropHandlers({
         metadata: nextMetadata,
       };
       const nextNodes = latestNodesRef.current.map((node) =>
-        node.id === nodeId
+        (canonicalNodesById.get(node.id)?.sourceDefinitionId ?? node.id) === definitionId
           ? {
               ...node,
               data: {
@@ -169,7 +184,7 @@ export function useCanvasNodeDropHandlers({
       );
 
       setNodes(nextNodes);
-      setDraftSession(canvasDraftSessionWorkingSet.upsertNode(draftSession, nextNode));
+      setDraftSession(canvasDraftSessionWorkingSet.updateNodeDefinition(draftSession, nextNode));
       toast.success(`Schema ${normalizedSchemaName} assigned to ${targetNode.name}.`);
     },
     [canEditEdges, canonicalNodesById, draftSession, setDraftSession, setNodes]

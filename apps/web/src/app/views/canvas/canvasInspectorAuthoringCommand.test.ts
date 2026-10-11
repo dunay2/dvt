@@ -4,8 +4,60 @@ import type { CanonicalNode } from '../../types/canonical';
 import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthoringCommand';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { canvasDraftSession } from './canvasDraftSession';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 
 describe('applyCanvasInspectorNodeDraftToSession', () => {
+  it('edits shared source configuration through an instance while retaining its own alias', () => {
+    const source: CanonicalNode = {
+      id: 'source',
+      name: 'Orders',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          sourceName: 'raw',
+          schemaName: 'raw',
+          tableName: 'orders',
+        },
+      },
+    };
+    const first = { ...source, id: 'first', sourceDefinitionId: source.id };
+    const second = { ...first, id: 'second', name: 'Orders 2' };
+    const nodes = new Map([source, first, second].map((node) => [node.id, node]));
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: ['first', 'second'],
+      canonicalEdges: [],
+    });
+    const original = createCanvasInspectorNodeDraft(first);
+    const result = applyCanvasInspectorNodeDraftToSession({
+      draftSession: session,
+      canonicalNodesById: nodes,
+      node: first,
+      draft: { ...original, name: 'First instance', dbt: { ...original.dbt!, schemaName: 'mart' } },
+      workspaceScope: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'environment-1',
+        targetAdapter: 'temporal',
+      },
+    });
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') throw new Error('Expected the source configuration to apply');
+    const projected = resolveCanvasDraftNodes(result.draftSession, nodes);
+    expect(projected.map((node) => node.name)).toEqual(['First instance', 'Orders 2']);
+    expect(projected.map((node) => createCanvasInspectorNodeDraft(node).dbt?.schemaName)).toEqual([
+      'mart',
+      'mart',
+    ]);
+    expect(result.draftSession.localNodeCatalog?.source?.name).toBe('Orders');
+    expect(result.draftSession.workingSet.visibleNodeIds).toEqual(['first', 'second']);
+  });
+
   it('validates a connected model against baseline nodes when the local catalog is empty', () => {
     const source: CanonicalNode = {
       id: 'source-orders',

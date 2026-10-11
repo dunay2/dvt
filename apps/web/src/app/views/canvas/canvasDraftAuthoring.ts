@@ -45,6 +45,7 @@ export function projectCanonicalNodeToAuthoringNode(
 ): WorkspaceGraphAuthoringNode {
   const authoringNode: WorkspaceGraphAuthoringNode = {
     id: node.id,
+    ...(node.sourceDefinitionId == null ? {} : { sourceDefinitionId: node.sourceDefinitionId }),
     name: node.name,
     pluginId: node.pluginId,
     kind: toWorkspaceGraphAuthoringNodeKind(node),
@@ -53,7 +54,7 @@ export function projectCanonicalNodeToAuthoringNode(
     tags: [...node.tags],
   };
 
-  if (node.path != null) {
+  if (node.path != null && node.sourceDefinitionId == null) {
     authoringNode.path = node.path;
   }
   if (node.description != null) {
@@ -66,7 +67,7 @@ export function projectCanonicalNodeToAuthoringNode(
     authoringNode.lastCost = node.lastCost;
   }
   const metadata = toCanvasAuthoringMetadata(node.metadata);
-  if (metadata != null) {
+  if (metadata != null && node.sourceDefinitionId == null) {
     authoringNode.metadata = metadata;
   }
 
@@ -185,7 +186,9 @@ export function buildCanvasAuthoringDraft(
   const semanticNodeIds = [
     ...new Set([
       ...input.nodeIds,
-      ...input.canonicalNodes.filter((node) => node.role === 'input').map((node) => node.id),
+      ...input.canonicalNodes
+        .filter((node) => node.role === 'input' && node.sourceDefinitionId == null)
+        .map((node) => node.id),
     ]),
   ];
 

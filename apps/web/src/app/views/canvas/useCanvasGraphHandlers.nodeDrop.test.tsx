@@ -19,6 +19,35 @@ import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.
 import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 describe('useCanvasGraphHandlers node drop', () => {
+  it('creates distinct instances for consecutive drops without re-registering the source', async () => {
+    const source = buildCanonicalNode('registered', 'input');
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      canonicalNodes: [source],
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+    const event = buildCanonicalDropEvent(source);
+    Object.assign(event.dataTransfer, {
+      types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
+      getData: (type: string) => (type === CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE ? source.id : ''),
+    });
+    act(() => {
+      harness.latest()?.handleDrop(event);
+      harness.latest()?.handleDrop(event);
+    });
+    const placed = setNodes.mock.calls[1]?.[0] as Node[];
+    expect(placed).toHaveLength(2);
+    expect(new Set(placed.map((n) => n.id)).size).toBe(2);
+    expect(placed.every((n) => n.id !== source.id)).toBe(true);
+    expect(placed.map((n) => n.data.name)).toEqual(['registered', 'registered 2']);
+    expect(setDraftSession).toHaveBeenCalledTimes(2);
+    harness.cleanup();
+  });
   it.each([true, false])(
     'resolves dropped catalogue identity only within the current graph (known=%s)',
     async (known) => {

@@ -36,11 +36,22 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
   if (Object.keys(errors).length > 0)
     return { outcome: 'rejected', reason: 'invalid_draft', errors };
 
+  const updated = applyCanvasInspectorNodeDraft(node, draft, workspaceScope);
+  const definition =
+    node.sourceDefinitionId == null
+      ? null
+      : (draftSession.localNodeCatalog?.[node.sourceDefinitionId] ??
+        canonicalNodesById.get(node.sourceDefinitionId));
+  const nextSession =
+    definition == null
+      ? draftSession
+      : canvasDraftSession.workingSet.updateNodeDefinition(draftSession, {
+          ...definition,
+          metadata: updated.metadata,
+          path: updated.path,
+        });
   return {
     outcome: 'applied',
-    draftSession: canvasDraftSession.workingSet.updateNodeDefinition(
-      draftSession,
-      applyCanvasInspectorNodeDraft(node, draft, workspaceScope)
-    ),
+    draftSession: canvasDraftSession.workingSet.updateNodeDefinition(nextSession, updated),
   };
 }

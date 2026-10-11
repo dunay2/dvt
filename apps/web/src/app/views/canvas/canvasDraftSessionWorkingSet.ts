@@ -72,7 +72,12 @@ function reconcileSnapshot(
     ...reconciledSession.workingSet.visibleNodeIds,
     ...reconciledSession.workingSet.pendingExplicitNodeIds,
     ...Object.values(currentLocalNodeCatalog)
-      .filter((node) => node.role === 'input' && snapshot.canonicalNodeIds.includes(node.id))
+      .filter(
+        (node) =>
+          node.role === 'input' &&
+          node.sourceDefinitionId == null &&
+          snapshot.canonicalNodeIds.includes(node.id)
+      )
       .map((node) => node.id),
   ]);
   const nextLocalNodeCatalog = Object.fromEntries(
@@ -141,7 +146,7 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
     ),
   });
   const { [nodeId]: _removedNode, ...nextLocalNodeCatalog } = readLocalNodeCatalog(nextSession);
-  if (_removedNode?.role === 'input') return nextSession;
+  if (_removedNode?.role === 'input' && _removedNode.sourceDefinitionId == null) return nextSession;
   return withLocalNodeCatalog(nextSession, nextLocalNodeCatalog);
 }
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {

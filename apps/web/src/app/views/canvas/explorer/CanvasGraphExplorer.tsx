@@ -38,7 +38,9 @@ export function CanvasGraphExplorer({
 }>): JSX.Element {
   const items = projectCanvasExplorerNodes(nodes);
   const rootRef = useRef<HTMLDivElement>(null);
-  const sources = catalogue.filter((node) => node.role === 'input');
+  const sources = catalogue.filter(
+    (node) => node.role === 'input' && node.sourceDefinitionId == null
+  );
   useEffect(() => {
     if (importedSourceIds.length === 0) return;
     const registered = catalogue.some((node) => importedSourceIds.includes(node.id));

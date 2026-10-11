@@ -1,5 +1,6 @@
 /** Owned concern: resolve the visible node catalog from canonical and local draft truth. */
 import type { CanonicalNode } from '../../types/canonical';
+import { resolveWorkspaceSourceInstances } from '@dvt/contracts';
 import type { CanvasDraftSession } from './canvasDraftSession';
 
 export function resolveCanvasDraftNodes(
@@ -10,6 +11,8 @@ export function resolveCanvasDraftNodes(
   for (const node of Object.values(draftSession.localNodeCatalog ?? {})) {
     nodesById.set(node.id, node);
   }
+  for (const node of resolveWorkspaceSourceInstances([...nodesById.values()]))
+    nodesById.set(node.id, node);
   return draftSession.workingSet.visibleNodeIds.flatMap((nodeId) => {
     const node = nodesById.get(nodeId);
     return node == null ? [] : [node];
