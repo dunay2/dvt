@@ -150,14 +150,21 @@ export function importLivePostgresSource(
 function waitForPlacedSource(
   id: string,
   scope: WorkspaceGraphDraftScope,
+  previousIds: readonly string[],
   attempts = 40
-): Cypress.Chainable<void> {
+): Cypress.Chainable<string> {
   return readLiveGraphDraft(scope).then(({ body }) => {
     const draft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
-    if (draft.nodeIds.includes(id)) return;
+    const placed = draft.nodes.find(
+      (node) =>
+        node.sourceDefinitionId === id &&
+        draft.nodeIds.includes(node.id) &&
+        !previousIds.includes(node.id)
+    );
+    if (placed != null) return cy.wrap(placed.id, { log: false });
     if (attempts === 0)
       throw new Error(`Source ${id} was not durably placed in ${scope.projectId}`);
-    return cy.wait(250).then(() => waitForPlacedSource(id, scope, attempts - 1));
+    return cy.wait(250).then(() => waitForPlacedSource(id, scope, previousIds, attempts - 1));
   });
 }
 
@@ -165,7 +172,13 @@ export function placeRegisteredSource(
   id: string,
   scope: WorkspaceGraphDraftScope,
   position = { x: 220, y: 160 }
-): void {
+): Cypress.Chainable<string> {
+  let previousIds: string[] = [];
+  cy.get('body').then((body) => {
+    previousIds = Array.from(body[0]!.querySelectorAll('.react-flow__node')).map((node) =>
+      node.getAttribute('data-id')!
+    );
+  });
   const dataTransfer = new DataTransfer();
   cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`)
     .should('have.attr', 'draggable', 'true')
@@ -184,5 +197,5 @@ export function placeRegisteredSource(
     'dragend',
     { dataTransfer }
   );
-  waitForPlacedSource(id, scope);
+  return cy.then(() => waitForPlacedSource(id, scope, previousIds));
 }

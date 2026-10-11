@@ -70,8 +70,8 @@ describe('SourceImportCatalogView', () => {
     const headerContent = container.querySelector('[data-source-import-database="dvt"] > div');
     const metrics = container.querySelector('[data-slot="source-import-database-metrics"]');
 
-    expect(headerContent?.classList.contains(catalogStyles.groupHeaderContent)).toBe(true);
-    expect(metrics?.classList.contains(catalogStyles.groupMetrics)).toBe(true);
+    expect(Array.from(headerContent?.classList ?? [])).toContain(catalogStyles.groupHeaderContent);
+    expect(Array.from(metrics?.classList ?? [])).toContain(catalogStyles.groupMetrics);
     expect(metrics?.textContent).toContain('11 schemas');
     expect(metrics?.textContent).toContain('234 objects');
   });

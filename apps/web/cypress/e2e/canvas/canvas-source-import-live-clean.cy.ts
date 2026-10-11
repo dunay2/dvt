@@ -31,6 +31,10 @@ describe('Canvas Source Import live', () => {
     cy.visit('/canvas', {
       onBeforeLoad(window) {
         window.localStorage.clear();
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
         Object.defineProperty(window.navigator, 'language', {
           configurable: true,
           value: 'en-US',
@@ -75,10 +79,22 @@ describe('Canvas Source Import live', () => {
       cy.reload();
       cy.get(`[data-element-id="${id}"]:visible`, { timeout: 20_000 }).should('be.visible');
       cy.get('.react-flow__node').should('not.exist');
-      placeRegisteredSource(id, session);
-      cy.get(`.react-flow__node[data-id="${id}"]`).should('be.visible');
-      cy.reload();
-      cy.get(`.react-flow__node[data-id="${id}"]`, { timeout: 20_000 }).should('be.visible');
+      placeRegisteredSource(id, session).then((instanceId) => {
+        cy.get(`.react-flow__node[data-id="${instanceId}"]`).should('be.visible');
+        placeRegisteredSource(id, session, { x: 400, y: 260 }).then((secondId) => {
+          expect(secondId).not.to.equal(instanceId);
+          cy.get(`.react-flow__node[data-id="${secondId}"]`).should('be.visible');
+        });
+        cy.reload();
+        cy.get(`.react-flow__node[data-id="${instanceId}"]`, { timeout: 20_000 }).should(
+          'be.visible'
+        );
+        cy.get('.react-flow__node').should('have.length', 2);
+        cy.get(`[data-slot="canvas-explorer"] [data-element-id="${id}"]:visible`).should(
+          'have.length',
+          1
+        );
+      });
     });
 
     cy.then(() => readLiveWorkspaceFile('models/sources/src_public.yml', session)).then(
