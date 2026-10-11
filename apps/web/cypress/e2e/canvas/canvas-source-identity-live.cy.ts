@@ -7,6 +7,7 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
+import { createLiveProjectThroughUi } from '../../support/liveProjectAuthoring';
 import {
   readLiveGraphDraft,
   resolveLiveWorkspaceSession,
@@ -23,13 +24,12 @@ describe('Shared Canvas imported Source identity', () => {
     skipWhenFirstAuthoringLiveEnvIsMissing(this);
   });
   it('persists opaque IDs across reload and separates identical objects on two connections', () => {
-    const session = resolveLiveWorkspaceSession();
+    let session = resolveLiveWorkspaceSession();
     Cypress.env('firstAuthoringRunId', 'source-identity-' + Date.now());
     const identityPattern =
       /^dvt_src_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
     let persistedIds: string[] = [];
 
-    readLiveGraphDraft(session, { failOnStatusCode: false }).its('status').should('eq', 404);
     cy.visit('/canvas', {
       onBeforeLoad(window) {
         window.localStorage.clear();
@@ -39,6 +39,11 @@ describe('Shared Canvas imported Source identity', () => {
         });
         seedE2eWorkspaceSession(window, session);
       },
+    });
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    createLiveProjectThroughUi(`Source identities ${Date.now()}`).then((scope) => {
+      session = scope;
+      return readLiveGraphDraft(scope, { failOnStatusCode: false }).its('status').should('eq', 404);
     });
     cy.get('[data-slot="canvas-playground-template-choice"]', { timeout: 20_000 })
       .should('have.length', 1)
@@ -53,7 +58,7 @@ describe('Shared Canvas imported Source identity', () => {
       importLivePostgresSource({ kind: 'graph-draft' }, suffix);
     }
 
-    readLiveGraphDraft(session).then((response) => {
+    cy.then(() => readLiveGraphDraft(session)).then((response) => {
       expect(response.status).to.equal(200);
       const nodes = (
         response.body as { record: { draft: { nodes: WorkspaceGraphAuthoringNode[] } } }
@@ -84,7 +89,7 @@ describe('Shared Canvas imported Source identity', () => {
     cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.reload();
     cy.get('[data-testid="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
-    readLiveGraphDraft(session).then((response) => {
+    cy.then(() => readLiveGraphDraft(session)).then((response) => {
       expect(response.status).to.equal(200);
       const nodes = (
         response.body as { record: { draft: { nodes: WorkspaceGraphAuthoringNode[] } } }

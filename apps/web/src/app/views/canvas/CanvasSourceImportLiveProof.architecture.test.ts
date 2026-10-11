@@ -70,8 +70,9 @@ describe('Canvas source import live proof architecture', () => {
     expect(liveRunnerSource).toContain('new CanvasSourceImportLiveProofRunner().run()');
     expect(liveRunnerSource).toContain("DVT_TEMPORAL_DBT_ENABLED: 'true'");
 
-    expect(cypressSpecSource).toContain('readLiveGraphDraft(session, { failOnStatusCode: false })');
-    expect(cypressSpecSource).toContain('secondaryWorkspaceProjectId');
+    expect(cypressSpecSource).toContain('createLiveProjectThroughUi');
+    expect(cypressSpecSource).toContain('readLiveGraphDraft(scope, { failOnStatusCode: false })');
+    expect(cypressSpecSource).not.toContain('secondaryWorkspaceProjectId');
     expect(cypressSpecSource).toContain('canvas-playground-template-choice');
     expect(cypressSpecSource).toContain('readLiveGraphDraft(');
     expect(cypressSpecSource).toContain('openCanvasContextMenuAt');

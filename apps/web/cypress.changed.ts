@@ -65,6 +65,9 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
   ],
   available: [
+    'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
+    'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
@@ -136,6 +139,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/liveCanvasDraftAuthoring.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProjectAuthoring.ts': ['available'],
+  'apps/web/cypress/support/liveWarehouseSourceImport.ts': ['available'],
   'apps/web/cypress/support/liveProtectedRuntime.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProtectedRequest.ts': ['available', 'unavailable'],
   'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts': ['available'],

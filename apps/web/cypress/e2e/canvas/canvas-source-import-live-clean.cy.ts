@@ -1,5 +1,5 @@
 /** Proves the active DVT Canvas imports a real PostgreSQL source into its governed draft. */
-import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftScope } from '@dvt/contracts';
 
 import {
   clickCanvasAddCatalogAction,
@@ -7,7 +7,12 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
-import { readLiveGraphDraft, readLiveWorkspaceFile } from '../../support/liveProtectedRuntime';
+import { createLiveProjectThroughUi } from '../../support/liveProjectAuthoring';
+import {
+  readLiveGraphDraft,
+  readLiveWorkspaceFile,
+  resolveLiveWorkspaceSession,
+} from '../../support/liveProtectedRuntime';
 import {
   expectedLivePostgresSourceName,
   importLivePostgresSource,
@@ -22,16 +27,7 @@ describe('Canvas Source Import live', () => {
   });
 
   it('imports catalog metadata into a fresh, scoped DVT Canvas and generates source YAML', () => {
-    const session = {
-      tenantId: String(Cypress.env('secondaryWorkspaceTenantId')),
-      projectId: String(Cypress.env('secondaryWorkspaceProjectId')),
-      environmentId: String(Cypress.env('secondaryWorkspaceEnvironmentId')),
-    };
-    for (const [key, value] of Object.entries(session)) {
-      expect(value, `secondary workspace ${key}`).not.to.be.oneOf(['', 'undefined']);
-    }
-
-    readLiveGraphDraft(session, { failOnStatusCode: false }).its('status').should('eq', 404);
+    let session: WorkspaceGraphDraftScope;
     cy.visit('/canvas', {
       onBeforeLoad(window) {
         window.localStorage.clear();
@@ -39,8 +35,13 @@ describe('Canvas Source Import live', () => {
           configurable: true,
           value: 'en-US',
         });
-        seedE2eWorkspaceSession(window, session);
+        seedE2eWorkspaceSession(window, resolveLiveWorkspaceSession());
       },
+    });
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    createLiveProjectThroughUi(`Source registration ${Date.now()}`).then((scope) => {
+      session = scope;
+      return readLiveGraphDraft(scope, { failOnStatusCode: false }).its('status').should('eq', 404);
     });
     cy.get('[data-slot="canvas-playground-template-choice"]', { timeout: 20_000 })
       .should('have.length', 1)
@@ -53,7 +54,7 @@ describe('Canvas Source Import live', () => {
     clickCanvasAddCatalogAction('open-source-import', 'dvt:source');
     importLivePostgresSource();
 
-    readLiveGraphDraft(session).then((response) => {
+    cy.then(() => readLiveGraphDraft(session)).then((response) => {
       expect(response.status).to.equal(200);
       const draft = (response.body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record
         .draft;
@@ -80,16 +81,18 @@ describe('Canvas Source Import live', () => {
       cy.get(`.react-flow__node[data-id="${id}"]`, { timeout: 20_000 }).should('be.visible');
     });
 
-    readLiveWorkspaceFile('models/sources/src_public.yml', session).then((response) => {
-      expect(response.status).to.equal(200);
-      const content = (response.body as { content: string }).content;
-      expect(content).to.contain(`name: ${expectedLivePostgresSourceName()}`);
-      expect(content).to.contain('schema: public');
-      expect(content).to.contain('name: source_1');
-      expect(content).to.contain('order_id');
-      expect(content).to.contain('customer');
-      expect(content).to.contain('amount');
-    });
+    cy.then(() => readLiveWorkspaceFile('models/sources/src_public.yml', session)).then(
+      (response) => {
+        expect(response.status).to.equal(200);
+        const content = (response.body as { content: string }).content;
+        expect(content).to.contain(`name: ${expectedLivePostgresSourceName()}`);
+        expect(content).to.contain('schema: public');
+        expect(content).to.contain('name: source_1');
+        expect(content).to.contain('order_id');
+        expect(content).to.contain('customer');
+        expect(content).to.contain('amount');
+      }
+    );
     cy.contains('Stale version').should('not.exist');
   });
 });
