@@ -43,6 +43,12 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
 ## Invariants
 
 - Canvas edge projection reads edge colors from `graphFlowPalette`.
+- Outer Canvas dependencies follow the analyzer's curved cyan 1.5px convention.
+  React Flow's Bezier geometry respects source and target handle orientation;
+  an SVG marker follows the path without duplicating direction calculations.
+  Selection increases stroke width. Closed execution gates keep their dashed
+  line and valve cue. Existing edge selection, context menu and deletion rails
+  remain unchanged; these are not nested relational operation controls.
 - Node-kind catalogs do not own hex minimap literals.
 - Generic graph renderers and plugin-owned dbt node renderer chrome do not own
   `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
