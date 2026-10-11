@@ -31,6 +31,8 @@ export function OperationalDrawerDataSamplePanel({
   onRefresh?: () => void;
 }>): JSX.Element {
   let content: ReactNode;
+  const busy =
+    state.status === 'loading' || (state.status === 'ready' && state.refreshing === true);
   const refresh =
     onRefresh == null ? null : (
       <button
@@ -38,11 +40,19 @@ export function OperationalDrawerDataSamplePanel({
         data-slot="data-sample-refresh"
         aria-label={contribution.copy.dataRefreshAction}
         title={contribution.copy.dataRefreshAction}
-        aria-disabled={state.status === 'loading'}
-        aria-busy={state.status === 'loading'}
-        onClick={state.status === 'loading' ? undefined : onRefresh}
+        aria-disabled={busy}
+        aria-busy={busy}
+        onClick={busy ? undefined : onRefresh}
       >
         <RefreshCw aria-hidden="true" />
+        {state.status === 'ready' && busy ? (
+          <span role="status" className={styles.srOnly}>
+            {formatDataSampleTemplate(contribution.copy.dataLoadingTemplate, {
+              nodeName: state.nodeName,
+              limit: '',
+            })}
+          </span>
+        ) : null}
       </button>
     );
 

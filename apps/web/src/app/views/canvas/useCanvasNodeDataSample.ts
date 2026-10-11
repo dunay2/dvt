@@ -72,7 +72,8 @@ export function useCanvasNodeDataSample({
       const sourceMetricAvailability =
         !isNativeTransform &&
         sample != null &&
-        (sample.status !== 'ready' || sample.sample.rows.length === 0)
+        (sample.status === 'error' ||
+          (sample.status === 'ready' && sample.sample.rows.length === 0))
           ? ('unavailable' as const)
           : undefined;
       return { canOpen: onOpen != null, onOpen, sourceMetricAvailability };

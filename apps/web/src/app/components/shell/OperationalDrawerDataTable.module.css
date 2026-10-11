@@ -100,6 +100,22 @@
   opacity: 0.4;
   cursor: default;
 }
+
+.actions button[aria-busy='true'] svg {
+  animation: data-sample-refresh 1s linear infinite;
+}
+
+@keyframes data-sample-refresh {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actions button[aria-busy='true'] svg {
+    animation: none;
+  }
+}
 .grid button:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: -2px;

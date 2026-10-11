@@ -213,6 +213,39 @@ describe('OperationalDrawerPanels', () => {
       container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')?.click()
     );
     expect(onRefresh).toHaveBeenCalledOnce();
+    const ready = contribution.tabs.find((tab) => tab.id === 'data:orders')?.dataSample;
+    if (ready?.status !== 'ready') throw new Error('Expected a ready sample fixture');
+    await act(async () =>
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          contribution={{
+            ...contribution,
+            tabs: [
+              {
+                id: 'data:orders',
+                label: 'orders',
+                count: null,
+                onRefresh,
+                dataSample: { ...ready, refreshing: true },
+              },
+            ],
+          }}
+          logBody={null}
+        />
+      )
+    );
+    expect(container.querySelector('[data-slot="bottom-operational-data-table"]')).toBe(table);
+    expect(
+      container.querySelector('[data-slot="data-sample-refresh"]')?.getAttribute('aria-busy')
+    ).toBe('true');
+    expect(
+      container.querySelector('[data-slot="live-preview-facts"] time')?.getAttribute('datetime')
+    ).toBe('2026-08-17T10:00:00.000Z');
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')?.click()
+    );
+    expect(onRefresh).toHaveBeenCalledOnce();
   });
 
   it('keeps loading, ready, and failure states isolated per card tab', async () => {

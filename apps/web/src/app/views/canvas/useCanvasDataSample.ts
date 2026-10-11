@@ -55,8 +55,15 @@ export function useCanvasDataSample() {
       requestIdsRef.current.set(tabId, requestId);
       const replaceTab = (dataSample: OperationalDrawerDataSample) =>
         setDataSampleTabs((current) => {
-          const next = { id: tabId, dataSample } as const;
           const index = current.findIndex((tab) => tab.id === tabId);
+          const previous = current[index]?.dataSample;
+          const next = {
+            id: tabId,
+            dataSample:
+              dataSample.status === 'loading' && previous?.status === 'ready'
+                ? { ...previous, nodeName, refreshing: true as const }
+                : dataSample,
+          } as const;
           return index < 0
             ? [...current, next]
             : current.map((tab, tabIndex) => (tabIndex === index ? next : tab));
