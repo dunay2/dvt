@@ -25,6 +25,32 @@ describe('Workbench viewport', () => {
     let writesBeforeZoom = 0;
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
+    const main = '[data-slot="canvas-workspace-surface"]';
+    cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
+    cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
+    cy.get(`${main} [data-slot="canvas-explorer-sources-toggle"]`).should('be.visible').click();
+    cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
+    cy.get(`${main} [data-slot="canvas-explorer-sources-toggle"]`).should('not.be.visible');
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-explorer-view-command"]')
+      .should('have.attr', 'aria-checked', 'false')
+      .click();
+    cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
+    cy.get(
+      '[data-slot="canvas-workspace-surface"] [data-slot="canvas-explorer-elements-toggle"]'
+    ).click();
+    cy.get('[data-slot="canvas-workspace-surface"] [data-element-id]:visible')
+      .first()
+      .then(($item) => {
+        const id = $item.attr('data-element-id');
+        cy.get('.react-flow__node')
+          .its('length')
+          .then((count) => {
+            cy.wrap($item).click();
+            cy.get(`.react-flow__node[data-id="${id}"]`).should('have.class', 'selected');
+            cy.get('.react-flow__node').should('have.length', count);
+          });
+      });
     openWorkbenchModel();
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => {
@@ -40,12 +66,19 @@ describe('Workbench viewport', () => {
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);
     cy.get('[data-slot="canvas-relational-tree-sources"] input').type('customers');
+    cy.get(
+      '[data-slot="canvas-relational-tree-workbench"] [role="separator"][aria-label="Resize explorer"]'
+    )
+      .focus()
+      .type('{rightarrow}');
     cy.get('[data-slot="canvas-relational-tree-zoom"]')
       .invoke('text')
       .then((zoom) => {
         cy.get('[data-slot="canvas-relational-tree-viewport"]').then(($viewport) => {
           const width = $viewport[0].clientWidth;
-          cy.get('[data-slot="canvas-relational-tree-sources-toggle"]')
+          cy.get(
+            '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+          )
             .click()
             .should('have.attr', 'aria-expanded', 'false');
           cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($next) => {
@@ -57,13 +90,25 @@ describe('Workbench viewport', () => {
     cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.screenshot('semantic-editor-sources-collapsed');
-    cy.get('[data-slot="canvas-relational-tree-sources-toggle"]')
+    cy.get(
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+    )
       .focus()
       .type('{enter}')
       .should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-slot="canvas-relational-tree-sources"] input')
       .should('have.value', 'customers')
       .clear();
+    cy.get(
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
+    ).click();
+    cy.get('[data-slot="canvas-relational-tree-workbench"] [data-element-id]:visible').should(
+      'have.length',
+      3
+    );
+    cy.get(
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+    ).click();
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,
     // independently of the graph's own zoom control.

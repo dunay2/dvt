@@ -12,6 +12,7 @@ describe('useUiLayoutStore', () => {
     localStorage.clear();
     useUiLayoutStore.setState({
       leftNavCollapsed: false,
+      canvasExplorerVisible: true,
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
       bottomDrawerHeight: 0,
@@ -23,6 +24,23 @@ describe('useUiLayoutStore', () => {
       canvasGridColor: '#94a3b8',
       canvasSnapToGrid: false,
     });
+  });
+
+  it('keeps the explorer closed across hydration until explicitly reopened', async () => {
+    useUiLayoutStore.getState().hideCanvasExplorer();
+    await useUiLayoutStore.persist.rehydrate();
+    expect(useUiLayoutStore.getState().canvasExplorerVisible).toBe(false);
+    useUiLayoutStore.getState().showCanvasExplorer();
+    expect(useUiLayoutStore.getState().canvasExplorerVisible).toBe(true);
+  });
+
+  it('ignores malformed persisted explorer visibility', async () => {
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({ state: { canvasExplorerVisible: 'false' } })
+    );
+    await useUiLayoutStore.persist.rehydrate();
+    expect(useUiLayoutStore.getState().canvasExplorerVisible).toBe(true);
   });
 
   it('falls back to the canonical palette when the setter receives a named alias', () => {

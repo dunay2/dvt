@@ -47,6 +47,7 @@
   content: '';
 }
 .activity:focus-visible,
+.headerAction:focus-visible,
 .item:focus-visible,
 .importAction:focus-visible {
   outline: 2px solid var(--focus-ring);
@@ -63,18 +64,48 @@
   overflow: hidden;
 }
 .panel[hidden],
+.rail[hidden],
 .hidden {
   display: none;
 }
+.header {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+}
 .heading {
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   margin: 0;
-  padding: 14px 12px 10px;
+  padding: 4px;
   color: var(--text-muted);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+.headerAction {
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.headerAction:hover {
+  background: var(--surface-subtle);
+  color: var(--text-strong);
+}
+.headerAction svg {
+  width: 14px;
+  height: 14px;
 }
 .resize {
   background: var(--border-subtle);

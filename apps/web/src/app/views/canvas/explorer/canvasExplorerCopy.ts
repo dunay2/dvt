@@ -14,6 +14,8 @@ const en = {
   noMatches: 'No matching elements.',
   importSources: 'Import sources',
   resize: 'Resize explorer',
+  collapse: 'Collapse explorer',
+  close: 'Close explorer',
 };
 const es: typeof en = {
   navigation: 'Explorador del Canvas',
@@ -24,6 +26,8 @@ const es: typeof en = {
   noMatches: 'No hay coincidencias.',
   importSources: 'Importar fuentes',
   resize: 'Ajustar ancho del explorador',
+  collapse: 'Plegar explorador',
+  close: 'Cerrar explorador',
 };
 export function resolveCanvasExplorerCopy(language: string): typeof en {
   return language === 'es' ? es : en;

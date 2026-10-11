@@ -5,8 +5,9 @@
  * @consequence Switching a panel cannot recreate the graph or lose a search input.
  * @version 1.0.0
  */
-import { Database, Workflow, Search, Plus } from 'lucide-react';
+import { Database, Workflow, Search, Plus, ChevronLeft, X } from 'lucide-react';
 import type { ReactNode, RefObject } from 'react';
+import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -26,17 +27,20 @@ export function CanvasExplorerTemplate(
   props: Readonly<{
     id: string;
     active: Panel | null;
+    visible: boolean;
     copy: Copy;
     rootRef?: RefObject<HTMLDivElement>;
     sources: ReactNode;
     elements: ReactNode;
     children: ReactNode;
     onToggle: (key: Panel) => void;
+    onCollapse: () => void;
+    onClose: () => void;
   }>
 ): JSX.Element {
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
-      <nav className={styles.rail} aria-label={props.copy.navigation}>
+      <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
         {panels.map(({ key, Icon }) => (
           <button
             key={key}
@@ -71,7 +75,27 @@ export function CanvasExplorerTemplate(
               hidden={props.active !== key}
               className={styles.panel}
             >
-              <h3 className={styles.heading}>{props.copy[key]}</h3>
+              <header className={styles.header}>
+                <h3 className={styles.heading}>{props.copy[key]}</h3>
+                <button
+                  type="button"
+                  className={styles.headerAction}
+                  aria-label={props.copy.collapse}
+                  title={props.copy.collapse}
+                  onClick={props.onCollapse}
+                >
+                  <ChevronLeft aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className={styles.headerAction}
+                  aria-label={props.copy.close}
+                  title={props.copy.close}
+                  onClick={props.onClose}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              </header>
               {props[key]}
             </section>
           ))}
@@ -93,6 +117,26 @@ export function CanvasExplorerTemplate(
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
+  );
+}
+
+export function CanvasExplorerMenuTemplate({
+  visible,
+  copy,
+  onVisibleChange,
+}: Readonly<{
+  visible: boolean;
+  copy: Copy;
+  onVisibleChange: (visible: boolean) => void;
+}>): JSX.Element {
+  return (
+    <DropdownMenuCheckboxItem
+      data-slot="canvas-explorer-view-command"
+      checked={visible}
+      onCheckedChange={onVisibleChange}
+    >
+      {copy.navigation}
+    </DropdownMenuCheckboxItem>
   );
 }
 

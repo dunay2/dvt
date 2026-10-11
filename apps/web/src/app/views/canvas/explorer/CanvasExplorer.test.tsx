@@ -3,13 +3,22 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent, screen } from '@testing-library/dom';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { MemoryRouter } from 'react-router';
+import { ReactFlowProvider } from '@xyflow/react';
+import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
+import { DropdownMenu, DropdownMenuContent } from '../../../components/ui/dropdown-menu';
+import { CanvasExplorerViewMenu } from './CanvasExplorerViewMenu';
+import { CanvasGraphExplorer } from './CanvasGraphExplorer';
 import { CanvasExplorer } from './CanvasExplorer';
 import { CanvasExplorerList } from './CanvasExplorerList';
 
 let root: Root;
 let container: HTMLDivElement;
-function render(element: React.ReactNode) {
+beforeEach(() => {
+  useUiLayoutStore.setState({ canvasExplorerVisible: true });
+});
+function render(element: React.ReactNode): void {
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -24,6 +33,78 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('shows newly imported input nodes when the graph updates without recreating the explorer', () => {
+    const nodes = [
+      { id: 'imported', position: { x: 0, y: 0 }, data: { name: 'Orders', role: 'input' } },
+    ];
+    const view = (ready: boolean): JSX.Element => (
+      <ReactFlowProvider>
+        <CanvasGraphExplorer nodes={ready ? nodes : []} onNodesChange={() => {}} canSelect>
+          <input aria-label="Graph state" />
+        </CanvasGraphExplorer>
+      </ReactFlowProvider>
+    );
+    render(view(false));
+    const graph = screen.getByLabelText('Graph state');
+    expect(screen.queryByRole('button', { name: 'Orders imported' })).toBeNull();
+    act(() => root.render(view(true)));
+    expect(screen.getByRole('button', { name: 'Orders imported' })).toBeTruthy();
+    expect(screen.getByLabelText('Graph state')).toBe(graph);
+  });
+
+  it('collapses to the rail, closes completely and reopens through View with retained search', () => {
+    render(
+      <MemoryRouter initialEntries={['/canvas']}>
+        <DropdownMenu open modal={false}>
+          <DropdownMenuContent>
+            <CanvasExplorerViewMenu />
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <CanvasExplorer
+          sources={<CanvasExplorerList items={[]} onSelect={() => {}} />}
+          elements={null}
+        >
+          <input aria-label="Graph state" />
+        </CanvasExplorer>
+      </MemoryRouter>
+    );
+    const graph = screen.getByLabelText('Graph state');
+    const search = screen.getByRole('searchbox');
+    act(() => {
+      fireEvent.change(search, { target: { value: 'ord' } });
+    });
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse explorer' }));
+    });
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(screen.getByRole('navigation', { name: 'Canvas explorer' })).toBeTruthy();
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Sources' }));
+    });
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Close explorer' }));
+    });
+    expect(screen.queryByRole('navigation', { name: 'Canvas explorer' })).toBeNull();
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    const menu = screen.getByRole('menuitemcheckbox', { name: 'Canvas explorer' });
+    expect(menu.getAttribute('aria-checked')).toBe('false');
+    act(() => {
+      fireEvent.click(menu);
+    });
+    expect(screen.getByRole('searchbox')).toBe(search);
+    expect((search as HTMLInputElement).value).toBe('ord');
+    expect(screen.getByLabelText('Graph state')).toBe(graph);
+  });
+
+  it('does not offer the Canvas explorer on other workspace routes', () => {
+    render(
+      <MemoryRouter initialEntries={['/runs']}>
+        <CanvasExplorerViewMenu />
+      </MemoryRouter>
+    );
+    expect(screen.queryByText('Canvas explorer')).toBeNull();
+  });
+
   it('switches and collapses retained panels without remounting the graph or losing search', () => {
     render(
       <CanvasExplorer
@@ -59,7 +140,7 @@ describe('Canvas explorer', () => {
     expect(screen.getByLabelText('Graph state')).toBe(graph);
   });
 
-  it('filters names but selects by identity, keeping duplicate labels and denying disabled actions', () => {
+  it('filters names but selects by identity, keeping duplicate labels', () => {
     const selected: string[] = [];
     render(
       <CanvasExplorerList
@@ -79,5 +160,20 @@ describe('Canvas explorer', () => {
     });
     expect(screen.queryAllByRole('button')).toHaveLength(0);
     expect(screen.getByText('No matching elements.')).toBeTruthy();
+  });
+
+  it('does not dispatch selection while navigation is disabled by pending edits', () => {
+    const selected: string[] = [];
+    render(
+      <CanvasExplorerList
+        items={[{ id: 'a', label: 'Orders' }]}
+        disabled
+        onSelect={(id) => selected.push(id)}
+      />
+    );
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Orders' }));
+    });
+    expect(selected).toEqual([]);
   });
 });
