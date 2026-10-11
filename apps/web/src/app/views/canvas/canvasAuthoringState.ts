@@ -82,7 +82,8 @@ function deriveCanvasUiScope(
   draftSession: CanvasDraftSession,
   visibleScope: VisibleCanvasScope,
   selectedNodeIds: string[],
-  inspectorNodeId: string | null
+  inspectorNodeId: string | null,
+  canonicalNodes: readonly CanonicalNode[]
 ): CanvasUiScope {
   if (draftSession.syncState === 'bootstrapping') {
     return {
@@ -96,6 +97,9 @@ function deriveCanvasUiScope(
     pendingExplicitNodeIds: draftSession.workingSet.pendingExplicitNodeIds,
     selectedNodeIds,
     inspectorNodeId,
+    inspectableNodeIds: canonicalNodes
+      .filter((node) => node.role === 'input')
+      .map((node) => node.id),
   });
 }
 
@@ -184,7 +188,8 @@ export function deriveCanvasAuthoringState({
     draftSession,
     visibleScope,
     selectionIntent.nodeIds,
-    inspectorNodeId
+    inspectorNodeId,
+    canonicalNodes
   );
   const draftRecoveryState = deriveCanvasDraftRecoveryState({
     draftSession,

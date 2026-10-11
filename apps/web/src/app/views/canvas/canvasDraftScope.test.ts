@@ -25,6 +25,38 @@ const draftSession: CanvasDraftSession = {
 };
 
 describe('canvasDraftScope', () => {
+  it('allows catalogue inspection without granting execution selection or graph visibility', () => {
+    const visibleScope = deriveVisibleScope({
+      draftSession: {
+        ...draftSession,
+        workingSet: { visibleNodeIds: [], visibleEdges: [], pendingExplicitNodeIds: [] },
+      },
+      canonicalNodes: [],
+      canonicalEdges: [],
+    });
+    expect(
+      reconcileUiScope({
+        visibleScope,
+        pendingExplicitNodeIds: [],
+        selectedNodeIds: ['catalogued'],
+        inspectorNodeId: 'catalogued',
+        inspectableNodeIds: ['catalogued'],
+      })
+    ).toEqual({
+      selectedNodeIds: [],
+      inspectorNodeId: 'catalogued',
+    });
+    expect(
+      reconcileUiScope({
+        visibleScope,
+        pendingExplicitNodeIds: [],
+        selectedNodeIds: [],
+        inspectorNodeId: 'foreign-source',
+        inspectableNodeIds: ['catalogued'],
+      }).inspectorNodeId
+    ).toBeNull();
+  });
+
   it('derives visible scope from the draft working set instead of the full snapshot', () => {
     const visibleScope = deriveVisibleScope({
       draftSession,

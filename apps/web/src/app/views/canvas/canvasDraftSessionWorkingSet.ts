@@ -70,6 +70,9 @@ function reconcileSnapshot(
   const retainedLocalNodeIds = new Set([
     ...reconciledSession.workingSet.visibleNodeIds,
     ...reconciledSession.workingSet.pendingExplicitNodeIds,
+    ...Object.values(currentLocalNodeCatalog)
+      .filter((node) => node.role === 'input' && snapshot.canonicalNodeIds.includes(node.id))
+      .map((node) => node.id),
   ]);
   const nextLocalNodeCatalog = Object.fromEntries(
     Object.entries(currentLocalNodeCatalog).filter(([nodeId]) => retainedLocalNodeIds.has(nodeId))
@@ -118,10 +121,14 @@ function upsertNode(session: CanvasDraftSession, canonicalNode: CanonicalNode): 
     pendingExplicitNodeIds: nextPendingNodeIds,
   });
 
-  return withLocalNodeCatalog(nextSession, {
-    ...readLocalNodeCatalog(nextSession),
-    [nodeId]: canonicalNode,
-  });
+  return updateNodeDefinition(nextSession, canonicalNode);
+}
+
+function updateNodeDefinition(
+  session: CanvasDraftSession,
+  node: CanonicalNode
+): CanvasDraftSession {
+  return withLocalNodeCatalog(session, { ...readLocalNodeCatalog(session), [node.id]: node });
 }
 
 function explicitNodeAlreadyTracked(
@@ -149,6 +156,7 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
     ),
   });
   const { [nodeId]: _removedNode, ...nextLocalNodeCatalog } = readLocalNodeCatalog(nextSession);
+  if (_removedNode?.role === 'input') return nextSession;
   return withLocalNodeCatalog(nextSession, nextLocalNodeCatalog);
 }
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {
@@ -181,6 +189,7 @@ export const canvasDraftSessionWorkingSet = {
   queueExplicitNodeIds,
   addExplicitNode,
   upsertNode,
+  updateNodeDefinition,
   removeNode,
   replaceEdges,
   setEdgeExecutionGate,

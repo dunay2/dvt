@@ -38,7 +38,7 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
 
   return {
     outcome: 'applied',
-    draftSession: canvasDraftSession.workingSet.upsertNode(
+    draftSession: canvasDraftSession.workingSet.updateNodeDefinition(
       draftSession,
       applyCanvasInspectorNodeDraft(node, draft, workspaceScope)
     ),

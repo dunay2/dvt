@@ -217,6 +217,31 @@ describe('canvasDraftSession', () => {
     ]);
   });
 
+  it('retains unplaced source configuration across reconciliation without revealing the source', () => {
+    const node: CanonicalNode = {
+      id: 'registered',
+      name: 'Configured',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    };
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: [],
+      canonicalEdges: [],
+    });
+    const updated = canvasDraftSession.workingSet.updateNodeDefinition(session, node);
+    const reconciled = canvasDraftSession.workingSet.reconcileSnapshot(updated, {
+      canonicalNodeIds: [node.id],
+      canonicalEdges: [],
+    });
+    expect(reconciled.workingSet.visibleNodeIds).toEqual([]);
+    expect(reconciled.workingSet.pendingExplicitNodeIds).toEqual([]);
+    expect(reconciled.localNodeCatalog?.[node.id]).toBe(node);
+  });
+
   it('stores local overrides for visible persisted nodes without changing the working set', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
