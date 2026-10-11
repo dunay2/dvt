@@ -37,6 +37,7 @@ export function inspectLineageOutput(nodeId: string, expression: string): void {
     .then(($toggle) => {
       if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
     });
+  cy.get('.react-flow__controls-fitview').click();
   cy.get(
     `${card} [data-slot="graph-node-column-piece"][data-column-name="preferred_name"]`
   ).click();
