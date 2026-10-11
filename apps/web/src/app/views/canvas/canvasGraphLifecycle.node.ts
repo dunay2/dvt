@@ -99,14 +99,9 @@ function admitExplicit(
   return canvasDraftSession.workingSet.addExplicitNode(draftSession, canonicalNode);
 }
 
-function queueImported(draftSession: CanvasDraftSession, nodeIds: string[]): CanvasDraftSession {
-  return canvasDraftSession.workingSet.queueExplicitNodeIds(draftSession, nodeIds);
-}
-
 export const canvasGraphLifecycleNode: CanvasGraphLifecycleNodeApi = {
   applyLocalChanges,
   applyChanges,
   remove,
   admitExplicit,
-  queueImported,
 };
