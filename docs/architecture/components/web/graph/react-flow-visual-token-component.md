@@ -46,6 +46,9 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
 - Outer Canvas dependencies follow the analyzer's curved cyan 1.5px convention.
   React Flow's Bezier geometry respects source and target handle orientation;
   an SVG marker follows the path without duplicating direction calculations.
+  Search highlighting addresses the marker's path, not just its parent, so the
+  glyph and dependency line retain the same computed color. Forced-colors uses
+  the same child-glyph boundary.
   Selection increases stroke width. Closed execution gates keep their dashed
   line and valve cue. Existing edge selection, context menu and deletion rails
   remain unchanged; these are not nested relational operation controls.

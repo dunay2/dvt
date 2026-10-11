@@ -96,7 +96,7 @@ describe('projectCanvasGraphSearchPresentation', () => {
     expect(globalStyles).toContain('opacity: var(--canvas-search-dimmed-opacity)');
     expect(globalStyles).toContain('stroke-width: var(--canvas-search-relevant-edge-width)');
     expect(globalStyles).toContain(
-      "[data-slot='canvas-dependency-direction-cue'] {\n  fill: var(--canvas-search-relevant-edge) !important;"
+      "[data-slot='canvas-dependency-direction-cue'] path {\n  fill: var(--canvas-search-relevant-edge) !important;"
     );
     expect(globalStyles).toContain(
       "[data-slot='canvas-dependency-direction-cue'] {\n    fill: CanvasText !important;"
