@@ -225,16 +225,16 @@ export function SourceImportSchemaHeader({
           className={sourceImportCatalogClassNames.schemaDisclosure}
         >
           {expanded ? (
-            <ChevronDown className="size-4 shrink-0" aria-hidden="true" />
+            <ChevronDown className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
           ) : (
-            <ChevronRight className="size-4 shrink-0" aria-hidden="true" />
+            <ChevronRight className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
           )}
           <h4 className={sourceImportCatalogClassNames.schemaTitle} title={canonicalName}>
             {schema}
           </h4>
         </button>
       </CollapsibleTrigger>
-      <Badge variant="secondary" className="text-xs">
+      <Badge variant="secondary" className={sourceImportCatalogClassNames.countBadge}>
         {objectCountLabel}
       </Badge>
     </div>
@@ -269,7 +269,7 @@ export function SourceImportSchemaObjects({
       <SourceImportObjectList>
         {loadingLabel ? (
           <div className={sourceImportCatalogClassNames.loadingState} role="status">
-            <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+            <Loader2 className={sourceImportCatalogClassNames.spinner} aria-hidden="true" />
             {loadingLabel}
           </div>
         ) : null}

@@ -613,7 +613,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain('Sources imported');
   });
 
-  it('declares a wide responsive dialog and wrapping connection and form actions', async () => {
+  it('uses an inline workspace and retains wrapping connection and form actions', async () => {
     await harness.renderWizard();
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');

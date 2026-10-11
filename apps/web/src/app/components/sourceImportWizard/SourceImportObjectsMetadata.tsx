@@ -137,7 +137,7 @@ function SourceObjectMetadataBody({
 
   if (viewModel.columns.length === 0) {
     return (
-      <div className="space-y-3">
+      <div className={sourceImportSelectedMetadataClassNames.root}>
         {importability}
         <div className={sourceImportSelectedMetadataClassNames.notice}>
           {copy.metadata.columnsUnavailable}
@@ -147,7 +147,7 @@ function SourceObjectMetadataBody({
   }
 
   return (
-    <div className="space-y-3">
+    <div className={sourceImportSelectedMetadataClassNames.root}>
       {importability}
       <ScrollArea className={styles.columnScroll}>
         <div className={sourceImportSelectedMetadataClassNames.columnList}>
