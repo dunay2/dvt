@@ -219,9 +219,31 @@ or rewritten when a form cannot represent them.
 
 The result must be boolean and every function/type must be admitted for the
 execution provider. Foreign, unmapped, ambiguous and stale references reject
-atomically. Aggregates, windows, correlated subqueries, arbitrary SQL and new
-provider capabilities are outside this slice. Read-only, revision, authorization,
+atomically. Read-only, revision, authorization,
 input identities, JOIN type, output selection and pending-edit guards remain.
+
+The expanded #3612 request covers composable aggregate/window inputs and
+existence predicates through the existing relational operators, not SQL text
+embedded in the formula. An AggregateRel or window ProjectRel computes the
+value upstream; the JOIN references its published field by input ordinal.
+Neither form may be moved across the JOIN automatically: that would change
+the rows counted or the window partition. Existing semi/anti JOINs implement
+correlated existence/nonexistence and retain only their declared input side;
+their mixed-input predicates use the same compiler.
+
+```text
+Source -> Aggregate / Window -> published L.field --+
+Source ----------------------> published R.field --+-> JOIN scalar predicate
+                                                       | ordinary JOIN: ON
+                                                       | semi/anti: EXISTS / NOT EXISTS
+```
+
+General scalar subqueries, arbitrary correlated subqueries and new function
+capabilities remain explicit open design work in #3612, not completed support.
+They require cardinality, correlation scope, types and provider execution
+evidence before admission. The current formula rejects SQL subqueries and
+inline aggregate/window calls without mutation. No regex translation, raw SQL
+escape hatch, inferred grouping or silent post-JOIN filter is permitted.
 
 Proof covers both ports, nested arithmetic/boolean expressions, identical input
 names, NULL behavior, nonboolean/unsupported rejection, cancel, save/reopen and

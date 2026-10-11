@@ -15,16 +15,23 @@ import { createCustomerOrdersJoin } from './canvasJoin.test-support';
 import { source } from './canvasRelationalOperator.test-support';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { createSourceJoin } from './canvasSourceJoin';
+import { compositionGraphHarness } from './canvasCompositionSequence.test-support';
+import { configureCompositionStep } from './canvasCompositionConfiguration.test-support';
+import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 
 describe('selected JOIN predicate', () => {
   it.each([
-    JoinRel_JoinType.INNER,
-    JoinRel_JoinType.LEFT,
-    JoinRel_JoinType.RIGHT,
-    JoinRel_JoinType.OUTER,
+    { joinType: JoinRel_JoinType.INNER, clause: /ON .* = 'match'/ },
+    { joinType: JoinRel_JoinType.LEFT, clause: /ON .* = 'match'/ },
+    { joinType: JoinRel_JoinType.RIGHT, clause: /ON .* = 'match'/ },
+    { joinType: JoinRel_JoinType.OUTER, clause: /ON .* = 'match'/ },
+    { joinType: JoinRel_JoinType.LEFT_SEMI, clause: /WHERE\s+EXISTS/ },
+    { joinType: JoinRel_JoinType.RIGHT_SEMI, clause: /WHERE\s+EXISTS/ },
+    { joinType: JoinRel_JoinType.LEFT_ANTI, clause: /WHERE\s+NOT \(?EXISTS/ },
+    { joinType: JoinRel_JoinType.RIGHT_ANTI, clause: /WHERE\s+NOT \(?EXISTS/ },
   ])(
     'compiles a mixed-input scalar in JOIN %s without changing its shape or outputs',
-    async (joinType) => {
+    async ({ joinType, clause }) => {
       const session = new CanvasRelationAnalysisSession('model');
       session.receive(
         createCustomerOrdersJoin({
@@ -69,8 +76,48 @@ describe('selected JOIN predicate', () => {
       const reopened = await querySelectedJoin(session, session.rootId, session.revision);
       expect(reopened.target.relation).toEqual(after.target.relation);
       const projected = await projectSubstraitToPostgresSql(saved);
-      expect(projected.sql).toContain("ON (i0.c0 || i1.c0) = 'match'");
-      expect(projected.sql).not.toMatch(/WHERE/i);
+      expect(projected.sql).toContain("(i0.c0 || i1.c0) = 'match'");
+      expect(projected.sql).toMatch(clause);
+      session.dispose();
+    }
+  );
+
+  it.each(['aggregate', 'window'] as const)(
+    'uses the published %s result as a JOIN operand without moving the calculation',
+    async (kind) => {
+      const harness = compositionGraphHarness();
+      const sources = harness.state.sources.map((entry) => entry.read.binding.relationId);
+      const producers = await Promise.all(
+        sources.slice(0, 2).map((id) => configureCompositionStep(harness, kind, [id]))
+      );
+      const relationId = await configureCompositionStep(harness, 'inner_join', producers);
+      const document = resolveCanvasStagedProducerDocument({
+        relationId,
+        canonical: null,
+        ...harness.state,
+      })!;
+      const session = new CanvasRelationAnalysisSession(relationId);
+      session.receive(document);
+      const selected = await querySelectedJoin(session, relationId, session.revision);
+      const metrics = joinPredicateFormulaScope(selected).fields.filter((field) =>
+        field.name.endsWith('.metric')
+      );
+      expect(metrics).toHaveLength(2);
+      const originalInputs = selected.target.inputs.map(
+        (id) => session.locate(id, session.revision).relation
+      );
+      const saved = await replaceSelectedJoinConditions(session, {
+        relationId,
+        expectedRevision: session.revision,
+        formula: `("${metrics[0]!.name}" + "${metrics[1]!.name}") > 1`,
+      });
+      const reopened = await querySelectedJoin(session, relationId, session.revision);
+      expect(
+        reopened.target.inputs.map((id) => session.locate(id, session.revision).relation)
+      ).toEqual(originalInputs);
+      expect((await projectSubstraitToPostgresSql(saved)).sql).toMatch(
+        /ON\s+\(CAST\(i0\.c\d+ AS bigint\) \+ CAST\(i1\.c\d+ AS bigint\)\) > CAST\(1 AS bigint\)/
+      );
       session.dispose();
     }
   );
@@ -134,23 +181,27 @@ describe('selected JOIN predicate', () => {
     session.dispose();
   });
 
-  it.each(['1 + 2', 'UNKNOWN_FUNCTION(1) = 1', '"foreign" = 1', 'SUM(1) = 1'])(
-    'rejects invalid JOIN formula %s atomically',
-    async (formula) => {
-      const { session, document } = selectedUnaryScenario();
-      const revision = session.revision;
-      await expect(
-        replaceSelectedJoinConditions(session, {
-          relationId: session.rootId,
-          expectedRevision: revision,
-          formula,
-        })
-      ).rejects.toThrow();
-      expect(session.revision).toBe(revision);
-      expect(session.hasDocument(document)).toBe(true);
-      session.dispose();
-    }
-  );
+  it.each([
+    '1 + 2',
+    'UNKNOWN_FUNCTION(1) = 1',
+    '"foreign" = 1',
+    'SUM(1) = 1',
+    'ROW_NUMBER() OVER () = 1',
+    'EXISTS (SELECT 1)',
+  ])('rejects invalid JOIN formula %s atomically', async (formula) => {
+    const { session, document } = selectedUnaryScenario();
+    const revision = session.revision;
+    await expect(
+      replaceSelectedJoinConditions(session, {
+        relationId: session.rootId,
+        expectedRevision: revision,
+        formula,
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(revision);
+    expect(session.hasDocument(document)).toBe(true);
+    session.dispose();
+  });
 
   it.each(['left', 'right', 'group', 'null'] as const)(
     'rejects nested scalar operands in %s without changing the document or revision',
