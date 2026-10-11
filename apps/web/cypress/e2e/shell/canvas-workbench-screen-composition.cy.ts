@@ -1121,6 +1121,7 @@ describe('Canvas workbench screen composition', () => {
     assertDependencyDirectionCues();
     cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
+    cy.get('.react-flow__controls-fitview').click();
     openWorkbenchProperties('model_orders');
     cy.get('[data-slot="canvas-node-workbench-panel"] h2')
       .should('be.visible')
