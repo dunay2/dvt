@@ -8,6 +8,7 @@ export const DVT_AUTHORING_NODE_KINDS: NodeKindRegistration[] = [
   {
     kind: 'dvt:source',
     pluginId: 'dvt',
+    importedBy: ['dvt.warehouse-source'],
     label: 'Source',
     role: 'input',
     icon: Database,
