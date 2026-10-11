@@ -50,7 +50,7 @@ describe('calculated SELECT Output', () => {
       let saved = document;
       let focused = joinId;
       const writes = vi.fn();
-      const outputList = () =>
+      const outputList = (): HTMLElement =>
         container.querySelector<HTMLElement>(
           '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-relation-outputs"]'
         )!;
