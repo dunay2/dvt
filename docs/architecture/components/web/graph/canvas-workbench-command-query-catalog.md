@@ -250,6 +250,29 @@ names, NULL behavior, nonboolean/unsupported rejection, cancel, save/reopen and
 target SQL retaining the predicate in `ON`. This revises the field-only product
 restriction from #3416 / #3422 without restoring its duplicate compiler (#3420).
 
+### Calculated SELECT Fields
+
+Issue #3613 exposes the existing calculated-field editor in editable `Output`.
+Unlike `ON`, a SELECT expression may return any scalar type admitted by the
+existing provider. `CanvasDerivedOutputSection` and
+`applySelectedRelationDerivedOutput` remain the only formula authoring path;
+move the Transform entry point, do not render two independently owned forms.
+
+```text
+JOIN Output -> shared formula + alias -> existing atomic derived-field command
+  -> ProjectRel over the unchanged JOIN -> focus the new visible Transform
+Transform Output -> same editor/command -> edit the existing projection
+```
+
+JOIN calculations consume published JOIN fields. They do not change its
+predicate, inputs or selected output slots. A successful first calculation
+creates an explicit downstream Transform; its selection changes only after the
+document is accepted. Subsequent edits target that projection. No hidden JOIN
+formula metadata, automatic provider extension or second compiler is permitted.
+Cancel, stale input, duplicate alias and failed admission create no projection
+and do not move selection. Read-only inspection never exposes authoring, and
+pending formula/alias edits retain the existing outer Apply/navigation guards.
+
 ## Column Menu Lifecycle
 
 The contextual menu primitive owns content presence, modality and focus cleanup.
