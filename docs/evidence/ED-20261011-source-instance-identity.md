@@ -1,6 +1,6 @@
 ---
 title: Shared source configuration and independent Canvas placements
-status: Review
+status: pending
 date: 2026-10-11
 owners:
   - dvt-web
@@ -80,6 +80,13 @@ real `client` source sample. At a 1280x720 viewport its content measured 185px:
 present once; source, LIVE, provider and query-time details occupy the footer.
 The full pre-push gate remains required; this document does not claim integration
 or a green gate.
+
+Follow-up preview stability tests: 28 passed, covering metrics during pending
+queries, retained table identity/provenance on refresh, failed and empty sources,
+publication invalidation and late-result fencing. Outer dependency rendering and
+mapper/context tests: 18 passed. The existing native
+`canvas-connection-valve.cy.ts` browser proof passed its persisted close/reopen
+round trip after replacing custom arrow calculations with Bezier/SVG primitives.
 
 ## No-debt posture
 
