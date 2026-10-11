@@ -11,9 +11,8 @@ import type { CanonicalNode } from '../../types/canonical';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalExpressionTree } from './CanvasRelationalExpressionTree';
-import { CanvasRelationOutputs } from './CanvasRelationOutputs';
+import { CanvasCalculatedRelationOutputs } from './CanvasCalculatedRelationOutputs';
 import { CanvasRelationFields } from './CanvasRelationFields';
-import { CanvasDerivedOutputSection } from './CanvasDerivedOutputSection';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -41,7 +40,6 @@ export function CanvasTransformInspector({
 }>): JSX.Element {
   const [editingWindow, setEditingWindow] = useState(false);
   const [setWindowPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
-  const [setFormulaPending, setOutputListPending] = usePendingRelationEdits(setOutputsPending);
   const selected = useSelectedRelation(relationId);
   const analysis = useContext(CanvasRelationAnalysisContext);
   const hasExpression = useMemo(() => {
@@ -71,20 +69,12 @@ export function CanvasTransformInspector({
         onChange == null ? (
           <CanvasRelationFields relationId={relationId} />
         ) : (
-          <>
-            <CanvasRelationOutputs
-              relationId={relationId}
-              disabled={false}
-              onChange={onChange}
-              onPendingChange={setOutputListPending}
-            />
-            <CanvasDerivedOutputSection
-              key={relationId}
-              relationId={relationId}
-              onChange={onChange}
-              onPendingChange={setFormulaPending}
-            />
-          </>
+          <CanvasCalculatedRelationOutputs
+            key={relationId}
+            relationId={relationId}
+            onChange={onChange}
+            onPendingChange={setOutputsPending}
+          />
         )
       }
     >

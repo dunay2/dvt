@@ -10,6 +10,50 @@ import {
 import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
 
 describe('join-consumers', () => {
+  it('creates and reopens a calculated SELECT field from JOIN Output without requiring a predicate', () => {
+    openEditor();
+    cy.get('[data-operator="join"]').click();
+    cy.get('[data-slot="canvas-relational-edit"]').click();
+    cy.get('[data-slot="canvas-operation-output-tab"]:visible').click();
+    cy.get('[data-slot="canvas-derived-output-trigger"]:visible').click();
+    const formulaForm = '[data-slot="canvas-derived-output-form"]';
+    cy.get(formulaForm).find('input[name="alias"]').type('combined');
+    cy.get(formulaForm)
+      .find('[data-slot="formula-operand"][data-kind="field"] > span')
+      .then(($labels) => {
+        const formula = `CONCAT("${$labels.first().text()}", "${$labels.last().text()}")`;
+        cy.get(formulaForm).find('.monaco-editor').click();
+        cy.get(formulaForm)
+          .find('.inputarea')
+          .type(formula, { parseSpecialCharSequences: false, delay: 0 });
+      });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
+    cy.get(formulaForm).find('button[type="submit"]').should('be.enabled').click();
+    cy.get('[data-slot="canvas-transform-inspector"] [data-slot="canvas-derived-output"]:visible')
+      .should('contain.text', 'combined')
+      .and('contain.text', 'CONCAT');
+    let writesBeforeApply = 0;
+    cy.then(() => {
+      writesBeforeApply = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
+    cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(
+        writesBeforeApply
+      );
+    });
+    cy.on('window:before:load', installE2eApiFetchStub);
+    cy.reload();
+    cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
+      .first()
+      .dblclick(40, 18);
+    cy.get('[data-operator="project"][data-presentation="field_transform"]').click();
+    cy.get('[data-slot="canvas-derived-output"]:visible').should('contain.text', 'combined');
+    cy.get('[aria-label="Edit combined"]').click();
+    cy.get(formulaForm).find('.view-lines').should('contain.text', 'CONCAT');
+    cy.get('[data-slot="canvas-derived-output-cancel"]').click();
+  });
+
   it('saves and reopens a mixed-input scalar predicate using the shared formula editor', () => {
     openEditor();
     cy.get('[data-operator="join"]').click();

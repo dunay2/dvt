@@ -50,7 +50,7 @@ describe('calculated SELECT Output', () => {
       let saved = document;
       let focused = joinId;
       const writes = vi.fn();
-      function Host() {
+      function Host(): React.JSX.Element {
         const [draft, setDraft] = useState(document);
         const [selected, select] = useState(joinId);
         const [pending, setPending] = useState(false);
@@ -81,7 +81,7 @@ describe('calculated SELECT Output', () => {
           </RelationAnalysisTestHost>
         );
       }
-      const edit = async () => {
+      const edit = async (): Promise<void> => {
         await act(async () =>
           fireEvent.click(container.querySelector('[data-slot="canvas-derived-output-trigger"]')!)
         );

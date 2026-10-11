@@ -6,8 +6,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
-import { CanvasRelationOutputs } from './CanvasRelationOutputs';
-import { CanvasDerivedOutputSection } from './CanvasDerivedOutputSection';
+import { CanvasCalculatedRelationOutputs } from './CanvasCalculatedRelationOutputs';
 import {
   CanvasRelationalTreeOperationEditor,
   type CanvasRelationalTreeOperationEditorProps,
@@ -29,13 +28,10 @@ export function CanvasRelationalTreeInlineEditor(
     props.onPendingConditionChange
   );
   const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(setCompositionPending);
-  const [setOutputListPending, setFormulaPending] = usePendingRelationEdits(setOutputsPending);
   const selected = useSelectedRelation(selectedRelationId)?.relation.relType;
   if (operation == null || joinDraft == null) return null;
   const selectedJoin = selected?.case === 'join' ? selected.value : null;
-  const selectedCross = selected?.case === 'cross';
-  const selectedSet = selected?.case === 'set';
-  const selectedUnary = !selectedJoin && !selectedCross && !selectedSet;
+  const selectedUnary = !selectedJoin && selected?.case !== 'cross' && selected?.case !== 'set';
   return (
     <>
       {selectedUnary && props.expanded ? (
@@ -58,31 +54,21 @@ export function CanvasRelationalTreeInlineEditor(
         onClose={props.onClose}
         output={
           selectedRelationId == null ? null : (
-            <>
-              <CanvasRelationOutputs
-                key={selectedRelationId}
-                relationId={selectedRelationId}
-                disabled={false}
-                onChange={props.onChangeJoinDraft}
-                onPendingChange={setOutputListPending}
-              />
-              {selectedJoin == null ? null : (
-                <CanvasDerivedOutputSection
-                  key={`formula:${selectedRelationId}`}
-                  relationId={selectedRelationId}
-                  onChange={props.onChangeJoinDraft}
-                  onPendingChange={setFormulaPending}
-                  onSaved={props.onSelectRelation}
-                />
-              )}
-            </>
+            <CanvasCalculatedRelationOutputs
+              key={selectedRelationId}
+              relationId={selectedRelationId}
+              onChange={props.onChangeJoinDraft}
+              onPendingChange={setOutputsPending}
+              onSaved={props.onSelectRelation}
+              allowCalculatedFields={selectedJoin != null}
+            />
           )
         }
       >
         <CanvasRelationalTreeOperationEditor
           {...props}
-          cross={selectedCross}
-          set={selectedSet}
+          cross={selected?.case === 'cross'}
+          set={selected?.case === 'set'}
           draft={joinDraft}
           onPendingConditionChange={setPropertiesPending}
         />
