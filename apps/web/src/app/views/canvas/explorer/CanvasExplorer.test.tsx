@@ -11,6 +11,8 @@ import { CanvasExplorerViewMenu } from './CanvasExplorerViewMenu';
 import { CanvasGraphExplorer } from './CanvasGraphExplorer';
 import { CanvasExplorer } from './CanvasExplorer';
 import { CanvasExplorerList } from './CanvasExplorerList';
+import type { CanonicalNode } from '../../../types/canonical';
+import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 
 let root: Root;
 let container: HTMLDivElement;
@@ -60,20 +62,52 @@ describe('Canvas explorer', () => {
     });
     expect(onImport.mock.calls).toEqual([[]]);
   });
-  it('shows newly imported input nodes when the graph updates without recreating the explorer', () => {
-    const nodes = [
-      { id: 'imported', position: { x: 0, y: 0 }, data: { name: 'Orders', role: 'input' } },
+  it('shows registered sources without graph cards; click inspects and drag carries only their identity', () => {
+    const catalogue: CanonicalNode[] = [
+      {
+        id: 'imported',
+        name: 'Orders',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+      },
     ];
+    const onInspectSource = vi.fn();
+    const onSelect = vi.fn();
     const view = (ready: boolean): JSX.Element => (
-      <CanvasGraphExplorer nodes={ready ? nodes : []} onSelect={() => {}}>
+      <CanvasGraphExplorer
+        nodes={[]}
+        catalogue={ready ? catalogue : []}
+        onSelect={onSelect}
+        onInspectSource={onInspectSource}
+        canPlaceSource
+      >
         <input aria-label="Graph state" />
       </CanvasGraphExplorer>
     );
     render(view(false));
     const graph = screen.getByLabelText('Graph state');
-    expect(screen.queryByRole('button', { name: 'Orders imported' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Orders dvt:source' })).toBeNull();
     act(() => root.render(view(true)));
-    expect(screen.getByRole('button', { name: 'Orders imported' })).toBeTruthy();
+    const source = screen.getByRole('button', { name: 'Orders dvt:source' });
+    act(() => {
+      fireEvent.click(source);
+    });
+    expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('imported');
+    expect(onSelect).not.toHaveBeenCalled();
+    const transfer = { setData: vi.fn(), effectAllowed: '' };
+    act(() => {
+      fireEvent.dragStart(source, { dataTransfer: transfer });
+    });
+    expect(transfer.setData).toHaveBeenCalledExactlyOnceWith(
+      CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE,
+      'imported'
+    );
+    expect(transfer.effectAllowed).toBe('copy');
+    expect(onInspectSource).toHaveBeenCalledTimes(1);
+    expect(onSelect).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Graph state')).toBe(graph);
   });
 

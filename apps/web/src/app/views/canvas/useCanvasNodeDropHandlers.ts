@@ -7,7 +7,10 @@ import { CANONICAL_NODE_DRAG_MIME_TYPE, type CanonicalNode } from '../../types/c
 import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
 import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
-import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
+import {
+  CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE,
+  parseCanonicalNodeDragPayload,
+} from './canvasNodeDropPayload';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 
@@ -52,9 +55,17 @@ export function useCanvasNodeDropHandlers({
         return;
       }
 
-      const canonicalDragNode = parseCanonicalNodeDragPayload(
-        event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
-      );
+      const sourceId = event.dataTransfer.types?.includes(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
+        ? event.dataTransfer.getData(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
+        : '';
+      const registeredSource = sourceId ? canonicalNodesById.get(sourceId) : null;
+      if (sourceId && registeredSource?.role !== 'input') {
+        toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+        return;
+      }
+      const canonicalDragNode =
+        registeredSource ??
+        parseCanonicalNodeDragPayload(event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE));
       let pluginDragNode: CanonicalNode | null = null;
       if (canonicalDragNode == null && graphStrategy != null) {
         try {
@@ -87,13 +98,20 @@ export function useCanvasNodeDropHandlers({
         },
       });
     },
-    [canEditEdges, graphStrategy, runAdmissionCommand]
+    [canEditEdges, canonicalNodesById, graphStrategy, runAdmissionCommand]
   );
 
-  const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
-  }, []);
+  const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>(
+    (event) => {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = !canEditEdges
+        ? 'none'
+        : event.dataTransfer.types?.includes(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
+          ? 'copy'
+          : 'move';
+    },
+    [canEditEdges]
+  );
 
   const handleAttachSchemaToNode = useCallback(
     (nodeId: string, schemaName: string) => {

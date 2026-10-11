@@ -43,12 +43,15 @@ import { useCanvasGraphSearchController } from './useCanvasGraphSearchController
 import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
+import type { CanonicalNode } from '../../types/canonical';
 
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
   readonly canMoveNodes?: boolean;
   readonly canSelectNodes?: boolean;
   readonly nodesWithImpact: Node[];
+  readonly sourceCatalogue?: readonly CanonicalNode[];
+  readonly onInspectSource?: (nodeId: string) => void;
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
@@ -441,15 +444,17 @@ function CanvasViewportWithPresenter({
     viewportRef,
     canvasStyle,
     viewport: props.viewport,
-    importedNodeFocusIds: props.importedNodeFocusIds,
-    nodesWithImpact: props.nodesWithImpact,
-    onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
     reactFlow,
   });
 
   return (
     <CanvasGraphExplorer
       nodes={props.nodesWithImpact}
+      catalogue={props.sourceCatalogue}
+      onInspectSource={props.onInspectSource}
+      canPlaceSource={props.canEditEdges}
+      importedSourceIds={props.importedNodeFocusIds}
+      onImportFocusComplete={props.onImportedNodeFocusComplete}
       onSelect={(nodeId) =>
         focusCanvasViewportNode({
           nodeId,

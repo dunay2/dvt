@@ -110,6 +110,8 @@ function CanvasShellViewport({
       canMoveNodes={layout.canMoveNodes}
       canSelectNodes={layout.canSelectNodes}
       nodesWithImpact={graph.nodesWithImpact}
+      sourceCatalogue={panels.inspectorGraphNodes}
+      onInspectSource={graphCommands.onInspectSource}
       edges={graph.edges}
       nodeTypes={graph.nodeTypes}
       gridSize={graph.gridSize}

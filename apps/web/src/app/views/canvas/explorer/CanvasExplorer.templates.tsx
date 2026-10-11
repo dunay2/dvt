@@ -150,6 +150,7 @@ export function CanvasExplorerListTemplate({
   onQuery,
   onSelect,
   onImport,
+  onDragStart,
 }: Readonly<{
   items: readonly Readonly<{
     id: string;
@@ -163,6 +164,7 @@ export function CanvasExplorerListTemplate({
   onQuery: (value: string) => void;
   onSelect: (id: string) => void;
   onImport?: () => void;
+  onDragStart?: (id: string, event: React.DragEvent<HTMLButtonElement>) => void;
 }>): JSX.Element {
   return (
     <div className={styles.listPanel}>
@@ -193,6 +195,8 @@ export function CanvasExplorerListTemplate({
               data-element-id={item.id}
               disabled={disabled}
               onClick={() => onSelect(item.id)}
+              draggable={!disabled && onDragStart != null}
+              onDragStart={onDragStart == null ? undefined : (event) => onDragStart(item.id, event)}
             >
               <span className={styles.name}>{item.label}</span>{' '}
               {item.description == null ? null : (

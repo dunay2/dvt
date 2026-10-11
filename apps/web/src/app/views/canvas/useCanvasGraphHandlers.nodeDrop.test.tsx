@@ -16,8 +16,47 @@ import {
   toastState,
 } from './useCanvasGraphHandlers.test.support';
 import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
+import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 describe('useCanvasGraphHandlers node drop', () => {
+  it.each([true, false])(
+    'resolves dropped catalogue identity only within the current graph (known=%s)',
+    async (known) => {
+      const source = {
+        ...buildCanonicalNode('registered', 'input'),
+        name: 'Current configuration',
+      };
+      const setNodes = vi.fn();
+      const setDraftSession = vi.fn();
+      const harness = renderGraphHandlersHook({
+        canEditEdges: true,
+        nodes: [],
+        canonicalNodes: known ? [source] : [],
+        setNodes,
+        setDraftSession,
+      });
+      await harness.render();
+      const event = buildCanonicalDropEvent(source);
+      Object.assign(event.dataTransfer, {
+        types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
+        getData: (type: string) => (type === CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE ? source.id : ''),
+      });
+      act(() => {
+        harness.latest()?.handleDrop(event);
+      });
+      if (known) {
+        expect(setNodes).toHaveBeenCalledTimes(1);
+        expect(setNodes.mock.calls[0]?.[0][0]?.data.name).toBe('Current configuration');
+        expect(setDraftSession).toHaveBeenCalledTimes(1);
+      } else {
+        expect(setNodes).not.toHaveBeenCalled();
+        expect(setDraftSession).not.toHaveBeenCalled();
+        expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.nodeDropPayloadInvalidMessage);
+      }
+      harness.cleanup();
+    }
+  );
+
   beforeEach(() => {
     resetGraphHandlersTestDoubles();
   });
@@ -268,24 +307,32 @@ describe('useCanvasGraphHandlers node drop', () => {
     harness.cleanup();
   });
 
-  it('marks drag-over events as movable drop targets', async () => {
-    const harness = renderGraphHandlersHook({ canEditEdges: true });
-    await harness.render();
+  it.each([
+    { canEditEdges: true, types: [], effect: 'move' },
+    { canEditEdges: true, types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE], effect: 'copy' },
+    { canEditEdges: false, types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE], effect: 'none' },
+  ])(
+    'marks drag-over as $effect for the admitted payload',
+    async ({ canEditEdges, types, effect }) => {
+      const harness = renderGraphHandlersHook({ canEditEdges });
+      await harness.render();
 
-    const dragEvent = {
-      preventDefault: vi.fn(),
-      dataTransfer: {
-        dropEffect: 'copy',
-      },
-    } as unknown as React.DragEvent<HTMLDivElement>;
+      const dragEvent = {
+        preventDefault: vi.fn(),
+        dataTransfer: {
+          types,
+          dropEffect: 'copy',
+        },
+      } as unknown as React.DragEvent<HTMLDivElement>;
 
-    act(() => {
-      harness.latest()?.handleDragOver(dragEvent);
-    });
+      act(() => {
+        harness.latest()?.handleDragOver(dragEvent);
+      });
 
-    expect(dragEvent.preventDefault).toHaveBeenCalled();
-    expect(dragEvent.dataTransfer.dropEffect).toBe('move');
+      expect(dragEvent.preventDefault).toHaveBeenCalled();
+      expect(dragEvent.dataTransfer.dropEffect).toBe(effect);
 
-    harness.cleanup();
-  });
+      harness.cleanup();
+    }
+  );
 });
