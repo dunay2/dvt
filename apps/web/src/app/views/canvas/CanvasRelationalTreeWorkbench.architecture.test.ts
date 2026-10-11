@@ -8,6 +8,8 @@ import NodeButtonSource from './CanvasRelationalTreeNodeButton.tsx?raw';
 import CardMenuSource from './CanvasRelationalTreeCardMenu.tsx?raw';
 import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
 import InspectionModelSource from './relational-inspection/inspectionModel.ts?raw';
+import JoinFormulaSource from './canvasJoinPredicateFormula.ts?raw';
+import JoinFormulaEditorSource from './CanvasJoinPredicateFormulaController.tsx?raw';
 import InspectionPanelSource from './relational-inspection/RelationalInspectionPanel.tsx?raw';
 import NodePresentationSource from './canvasRelationalNodePresentation.ts?raw';
 import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
@@ -84,7 +86,14 @@ describe('Canvas relational-tree Workbench architecture', () => {
       )
     ).toEqual([]);
   });
-  it('retires JOIN scalar creation without moving its compiler into presentation', () => {
+  it('reuses the shared formula compiler without reviving JOIN scalar-chain creation', () => {
+    expect(JoinFormulaSource).toContain('compileDerivedOutputFormula');
+    expect(JoinFormulaSource).toContain('describeDerivedOutputFormula');
+    expect(JoinFormulaEditorSource).toContain('DerivedOutputFormulaEditor');
+    expect(JoinFormulaEditorSource).toContain('replaceSelectedJoinConditions');
+    expect(JoinFormulaEditorSource).not.toMatch(
+      /\.scalarFunction\(|ensureScalarFunction|session\.apply\(/
+    );
     expect(Object.keys(import.meta.glob('./join-condition/JoinOperandFunctionChain.tsx'))).toEqual(
       []
     );

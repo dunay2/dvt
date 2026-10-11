@@ -18,43 +18,52 @@ import {
   encodeDvtSubstraitSemanticDocument,
   decodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 describe('exact JOIN predicate selection', () => {
   setupWorkbenchTest();
-  it.each([0, 1] as const)(
-    'inspects imported function operands on port %s without an editable form or mutation',
-    async (port) => {
-      const document = functionBearingJoinFixture(port);
-      const before = encodeDvtSubstraitSemanticDocument(document);
-      const session = new CanvasRelationAnalysisSession('inspection');
-      session.receive(document);
-      const selected = await querySelectedJoin(session, session.rootId, session.revision);
-      expect(selected.conditions).toBeNull();
-      let writes = 0;
-      await act(async () =>
-        root.render(
-          <RelationAnalysisTestHost document={document}>
-            <CanvasRelationalTreeJoinEditor
-              copy={COPY}
-              selectedRelationId={session.rootId}
-              onChange={() => {
-                writes++;
-              }}
-            />
-          </RelationAnalysisTestHost>
-        )
-      );
-      expect(container.textContent).toContain('TRIM');
-      expect(container.textContent).toContain('Transform previo');
-      expect(
-        container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
-      ).toBeNull();
-      expect(container.querySelector('[aria-label="Editar condición"]')).toBeNull();
-      expect(writes).toBe(0);
-      expect(encodeDvtSubstraitSemanticDocument(document)).toEqual(before);
-      session.dispose();
-    }
-  );
+  it.each([
+    { port: 0, disabled: false },
+    { port: 1, disabled: false },
+    { port: 0, disabled: true },
+  ] as const)('offers shared formula editing without mutation: %j', async ({ port, disabled }) => {
+    const document = functionBearingJoinFixture(port);
+    const before = encodeDvtSubstraitSemanticDocument(document);
+    const session = new CanvasRelationAnalysisSession('inspection');
+    session.receive(document);
+    const selected = await querySelectedJoin(session, session.rootId, session.revision);
+    expect(selected.conditions).toBeNull();
+    let writes = 0;
+    await act(async () =>
+      root.render(
+        <RelationAnalysisTestHost document={document}>
+          <CanvasRelationalTreeJoinEditor
+            copy={COPY}
+            selectedRelationId={session.rootId}
+            disabled={disabled}
+            onChange={() => {
+              writes++;
+            }}
+          />
+        </RelationAnalysisTestHost>
+      )
+    );
+    expect(container.textContent).toContain('TRIM');
+    const copy = resolveCanvasSemanticEditorCopy(useApplicationLanguageStore.getState().language);
+    expect(container.textContent).toContain(copy.joinFormula.advanced);
+    const edit = container.querySelector<HTMLButtonElement>(
+      '[data-slot="join-predicate-formula-open"]'
+    );
+    expect(edit?.disabled).toBe(disabled);
+    expect(
+      container.querySelector('[data-slot="dvt-substrait-join-predicate-editors"]')
+    ).toBeNull();
+    expect(container.querySelector('[aria-label="Editar condición"]')).toBeNull();
+    expect(writes).toBe(0);
+    expect(encodeDvtSubstraitSemanticDocument(document)).toEqual(before);
+    session.dispose();
+  });
   it.each(['inner', 'outer'] as const)(
     'edits only the selected %s JOIN and retains the other predicate',
     async (selection) => {
