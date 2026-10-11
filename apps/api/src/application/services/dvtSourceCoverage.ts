@@ -21,6 +21,17 @@ export function sameConnectedSource(left: ConnectedSourceRef, right: ConnectedSo
   );
 }
 
+/** Multiple placements share one configuration owner; unrelated definitions stay distinct. */
+export function distinctDvtSourceDefinitions<T extends { node: WorkspaceGraphAuthoringNode }>(
+  sources: readonly T[]
+): T[] {
+  return [
+    ...new Map(
+      sources.map((source) => [source.node.sourceDefinitionId ?? source.node.id, source])
+    ).values(),
+  ];
+}
+
 export function hasExactDvtSourceCoverage(
   occurrences: readonly ConnectedSourceRef[],
   sources: readonly ConnectedSourceRef[],
@@ -44,7 +55,7 @@ export function requireDvtProjectedSourceCoverage(
   if (
     !hasExactDvtSourceCoverage(
       inputs.map((input) => input.sourceRef),
-      sources.map((source) => source.ref),
+      distinctDvtSourceDefinitions(sources).map((source) => source.ref),
       requireAllSources
     ) ||
     inputs.some(

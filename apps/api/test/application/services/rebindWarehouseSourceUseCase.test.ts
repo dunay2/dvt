@@ -276,6 +276,37 @@ const REQUEST = {
 };
 
 describe('RebindWarehouseSourceUseCase', () => {
+  it('rebinds the shared definition when requested through an instance', async () => {
+    const initial = draft();
+    const instance = {
+      ...initial.nodes[0]!,
+      id: 'source-instance',
+      sourceDefinitionId: SOURCE_ID,
+      metadata: undefined,
+      path: undefined,
+    };
+    initial.nodes.push(instance);
+    initial.nodeIds.push(instance.id);
+    initial.nodePositions[instance.id] = { x: 0, y: 100 };
+    initial.canvases = [
+      {
+        canvas: { ...initial.canvas, id: initial.canvas.id! },
+        nodes: initial.nodes,
+        nodeIds: initial.nodeIds,
+        nodePositions: initial.nodePositions,
+        edges: initial.edges,
+      },
+    ];
+    const { service, draftStore } = useCase({ initialDraft: initial });
+    await service.execute({ ...REQUEST, nodeId: instance.id });
+    const saved = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft;
+    expect(saved?.nodes.find((node) => node.id === SOURCE_ID)?.metadata?.schema).toBe('recovery');
+    expect(saved?.nodes.find((node) => node.id === instance.id)).toMatchObject({
+      sourceDefinitionId: SOURCE_ID,
+      metadata: undefined,
+    });
+  });
+
   it('preserves logical node identity, edges and column order while rebinding compatible physical coordinates', async () => {
     const { service, draftStore, batch } = useCase({});
 

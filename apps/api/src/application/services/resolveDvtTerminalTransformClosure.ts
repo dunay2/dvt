@@ -23,7 +23,11 @@ import {
   type DvtTransformSelection,
 } from './dvtProtectedTransformSelection.js';
 import { containsJoinRelation, containsSetRelation } from './dvtRelationFamily.js';
-import { hasExactDvtSourceCoverage, sameConnection } from './dvtSourceCoverage.js';
+import {
+  distinctDvtSourceDefinitions,
+  hasExactDvtSourceCoverage,
+  sameConnection,
+} from './dvtSourceCoverage.js';
 
 export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
@@ -74,7 +78,7 @@ export function resolveDvtTerminalTransformClosure(
     sources.some(({ ref }) => !sameConnection(ref.connectionRef, connectionRef)) ||
     !hasExactDvtSourceCoverage(
       semanticSources,
-      sources.map(({ ref }) => ref),
+      distinctDvtSourceDefinitions(sources).map(({ ref }) => ref),
       input.previewTargetId == null
     )
   ) {
