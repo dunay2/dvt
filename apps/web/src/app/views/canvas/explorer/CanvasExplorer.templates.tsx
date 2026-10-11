@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 import { Database, Workflow, Search, Plus, ChevronLeft, X } from 'lucide-react';
-import type { ReactNode, RefObject } from 'react';
+import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
   ResizablePanelGroup,
@@ -34,6 +34,7 @@ export function CanvasExplorerTemplate(
     elements: ReactNode;
     children: ReactNode;
     onToggle: (key: Panel) => void;
+    onKeyToggle: (key: Panel, event: KeyboardEvent<HTMLButtonElement>) => void;
     onCollapse: () => void;
     onClose: () => void;
   }>
@@ -53,6 +54,7 @@ export function CanvasExplorerTemplate(
             aria-expanded={props.active === key}
             aria-controls={`${props.id}-${key}`}
             onClick={() => props.onToggle(key)}
+            onKeyDown={(event) => props.onKeyToggle(key, event)}
           >
             <Icon aria-hidden="true" />
           </button>

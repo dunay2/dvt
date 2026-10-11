@@ -32,6 +32,26 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('toggles once with Enter or Space and ignores held-key repeats', () => {
+    render(
+      <CanvasExplorer sources={null} elements={null}>
+        <p>Graph</p>
+      </CanvasExplorer>
+    );
+    const button = screen.getByRole('button', { name: 'Sources' });
+    act(() => {
+      expect(fireEvent.keyDown(button, { key: 'Enter' })).toBe(false);
+    });
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    act(() => {
+      fireEvent.keyDown(button, { key: 'Enter', repeat: true });
+    });
+    expect(button.getAttribute('aria-expanded')).toBe('false');
+    act(() => {
+      expect(fireEvent.keyDown(button, { key: ' ' })).toBe(false);
+    });
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+  });
   it('dispatches import without passing a DOM event as graph coordinates', () => {
     const onImport = vi.fn();
     render(<CanvasExplorerList items={[]} onSelect={() => {}} onImport={onImport} />);

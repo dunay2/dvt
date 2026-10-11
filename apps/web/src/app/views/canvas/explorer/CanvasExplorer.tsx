@@ -5,7 +5,14 @@
  * @consequence Main and semantic views share interaction without sharing domain commands.
  * @version 1.0.0
  */
-import { useEffect, useId, useState, type ReactNode, type RefObject } from 'react';
+import {
+  useEffect,
+  useId,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import { CanvasExplorerTemplate } from './CanvasExplorer.templates';
@@ -31,6 +38,18 @@ export function CanvasExplorer({
   }, [visible]);
   const id = useId();
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
+  const toggle = (key: 'sources' | 'elements'): void => {
+    setActive((current) => (current === key ? null : key));
+  };
+  const onKeyToggle = (
+    key: 'sources' | 'elements',
+    event: KeyboardEvent<HTMLButtonElement>
+  ): void => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (!event.repeat) toggle(key);
+  };
   return (
     <CanvasExplorerTemplate
       id={id}
@@ -40,7 +59,8 @@ export function CanvasExplorer({
       rootRef={rootRef}
       sources={sources}
       elements={elements}
-      onToggle={(key) => setActive((current) => (current === key ? null : key))}
+      onToggle={toggle}
+      onKeyToggle={onKeyToggle}
       onCollapse={() => {
         setActive(null);
         document.getElementById(`${id}-${active}-button`)?.focus();
