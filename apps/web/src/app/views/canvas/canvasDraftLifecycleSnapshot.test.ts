@@ -21,6 +21,31 @@ function buildNode(overrides: Partial<CanonicalNode> & Pick<CanonicalNode, 'id'>
 }
 
 describe('canvas draft lifecycle snapshot', () => {
+  it('persists an unplaced source and its configuration without admitting it to the graph', () => {
+    const source = buildNode({ id: 'registered', kind: 'dvt:source', role: 'input' });
+    const draftSession: CanvasDraftSession = {
+      syncState: 'editing',
+      baseline: { record: null },
+      draftRevision: 'rev-1',
+      workingSet: { visibleNodeIds: [], visibleEdges: [], pendingExplicitNodeIds: [] },
+      localNodeCatalog: { [source.id]: { ...source, name: 'Configured source' } },
+    };
+    const payload = buildCurrentDraftPayload(
+      {},
+      draftSession,
+      { kind: 'transformation', title: 'Canvas' },
+      null,
+      [source],
+      []
+    );
+    expect(payload.nodeIds).toEqual([]);
+    expect(payload.nodePositions).toEqual({});
+    expect(payload.nodes).toEqual([
+      expect.objectContaining({ id: source.id, name: 'Configured source' }),
+    ]);
+    expect(isCurrentDraftProjectable(payload, draftSession)).toBe(true);
+  });
+
   it('projects locally authored catalog nodes into the persisted graph draft payload', () => {
     const sourceNode = buildNode({
       id: 'warehouse-source',

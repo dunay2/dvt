@@ -182,6 +182,12 @@ export function buildCanvasAuthoringDraft(
 ): WorkspaceGraphAuthoringDraft {
   const canonicalNodesById = new Map(input.canonicalNodes.map((node) => [node.id, node]));
   const canonicalEdgeLookup = buildCanonicalEdgeLookup(input.canonicalEdges);
+  const semanticNodeIds = [
+    ...new Set([
+      ...input.nodeIds,
+      ...input.canonicalNodes.filter((node) => node.role === 'input').map((node) => node.id),
+    ]),
+  ];
 
   return {
     canvas: {
@@ -195,7 +201,7 @@ export function buildCanvasAuthoringDraft(
     },
     nodeIds: [...input.nodeIds],
     nodePositions: { ...input.nodePositions },
-    nodes: input.nodeIds.map((nodeId) => {
+    nodes: semanticNodeIds.map((nodeId) => {
       const node = canonicalNodesById.get(nodeId);
       if (node == null) {
         throw new Error(`Workspace graph draft references unknown node ${nodeId}.`);

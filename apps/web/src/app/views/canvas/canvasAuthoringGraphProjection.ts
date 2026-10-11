@@ -147,13 +147,23 @@ export function buildCanvasAuthoringGraphProjection({
   draftSemanticGraph,
   localCanonicalNodes,
 }: BuildCanvasAuthoringGraphProjectionArgs): CanvasAuthoringGraphProjection {
-  const scopedNodeIds = [...new Set(visibleNodeIds)];
+  const scopedNodeIds = [
+    ...new Set([
+      ...visibleNodeIds,
+      ...(draftSemanticGraph?.canonicalNodes ?? [])
+        .filter((node) => node.role === 'input')
+        .map((node) => node.id),
+      ...localCanonicalNodes.filter((node) => node.role === 'input').map((node) => node.id),
+    ]),
+  ];
   const canonicalNodes = mergeDraftSemanticNodes({
     draftSemanticGraph,
     localCanonicalNodes,
     scopedNodeIds,
   });
-  const knownNodeIds = new Set(canonicalNodes.map((node) => node.id));
+  const knownNodeIds = new Set(
+    canonicalNodes.filter((node) => visibleNodeIds.includes(node.id)).map((node) => node.id)
+  );
   const canonicalEdges = mergeDraftSemanticEdges({
     draftSemanticGraph,
     visibleEdges,
