@@ -43,6 +43,9 @@ describe('CanvasShell source import lifecycle', () => {
       importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
       onImportedNodeFocusComplete: props.graphCommands.onImportedNodeFocusComplete,
     });
+    await act(async () => {
+      (shellState.canvasViewportProps?.onOpenSourceImport as () => void)();
+    });
     expect(shellState.sourceImportWizardProps).toMatchObject({
       canvasId: props.panels.activeCanvasId,
       onComplete: expect.any(Function),
@@ -116,8 +119,6 @@ describe('CanvasShell source import lifecycle', () => {
     );
 
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
-    expect(shellState.sourceImportWizardProps).toMatchObject({
-      open: false,
-    });
+    expect(shellState.sourceImportWizardProps).toBeNull();
   });
 });

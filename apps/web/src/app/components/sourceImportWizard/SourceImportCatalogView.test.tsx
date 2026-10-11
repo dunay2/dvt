@@ -20,6 +20,7 @@ import {
   buildSourceImportTestStreamObject,
 } from './sourceImportWizard.testFixtures';
 import type { SelectableSourceObject } from './types';
+import catalogStyles from './SourceImportCatalog.module.css';
 
 describe('SourceImportCatalogView', () => {
   let container: HTMLDivElement;
@@ -69,9 +70,8 @@ describe('SourceImportCatalogView', () => {
     const headerContent = container.querySelector('[data-source-import-database="dvt"] > div');
     const metrics = container.querySelector('[data-slot="source-import-database-metrics"]');
 
-    expect(headerContent?.className).toContain('min-w-0');
-    expect(metrics?.className).toContain('min-w-0');
-    expect(metrics?.className).toContain('flex-wrap');
+    expect(headerContent?.classList.contains(catalogStyles.groupHeaderContent)).toBe(true);
+    expect(metrics?.classList.contains(catalogStyles.groupMetrics)).toBe(true);
     expect(metrics?.textContent).toContain('11 schemas');
     expect(metrics?.textContent).toContain('234 objects');
   });
