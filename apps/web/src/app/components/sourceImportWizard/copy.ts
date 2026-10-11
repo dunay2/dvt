@@ -11,6 +11,20 @@ const EN_COPY = {
     'Explore governed connections, inspect source objects, and register sources in the catalog.',
   closeAction: 'Close source import',
   catalogDetailResize: 'Resize catalogue and object details',
+  sample: {
+    title: 'Source sample',
+    action: 'View sample',
+    loading: 'Loading sample…',
+    notice:
+      'Up to 20 rows, first page only, without guaranteed order. Reading a sample does not select or import the source.',
+    failures: {
+      connection_not_found: 'The connection is no longer available.',
+      source_object_not_found: 'The source object is no longer available. Refresh the catalogue.',
+      publication_changed: 'The source changed. Request a new sample.',
+      unavailable: 'A row sample is not available for this source.',
+      unknown: 'The sample could not be loaded. Try again.',
+    },
+  },
   sections: {
     ariaLabel: 'Add source sections',
     connections: 'Connections',
@@ -19,10 +33,11 @@ const EN_COPY = {
     selected: 'Selected',
   },
   footer: {
+    selectionCount: 'Selected: {count}',
     doneAction: 'Done',
     cancelAction: 'Cancel',
     attachingAction: 'Attaching...',
-    attachAction: 'Attach sources to canvas ({count})',
+    attachAction: 'Add sources ({count})',
   },
   selectConnectionError: 'Please select a connection',
   selectAtLeastOneObjectError: 'Select at least one importable source object.',
@@ -224,6 +239,20 @@ const ES_COPY = {
     'Explora conexiones gobernadas, inspecciona objetos de origen y registra fuentes en el catálogo.',
   closeAction: 'Cerrar importación de orígenes',
   catalogDetailResize: 'Redimensionar catálogo y detalles del objeto',
+  sample: {
+    title: 'Muestra del origen',
+    action: 'Ver muestra',
+    loading: 'Cargando muestra…',
+    notice:
+      'Hasta 20 filas, solo la primera página y sin orden garantizado. Consultar la muestra no selecciona ni importa la fuente.',
+    failures: {
+      connection_not_found: 'La conexión ya no está disponible.',
+      source_object_not_found: 'El objeto de origen ya no está disponible. Actualiza el catálogo.',
+      publication_changed: 'El origen ha cambiado. Solicita una nueva muestra.',
+      unavailable: 'No hay una muestra de filas disponible para este origen.',
+      unknown: 'No se ha podido cargar la muestra. Vuelve a intentarlo.',
+    },
+  },
   sections: {
     ariaLabel: 'Secciones para añadir orígenes',
     connections: 'Conexiones',
@@ -235,7 +264,8 @@ const ES_COPY = {
     doneAction: 'Terminar',
     cancelAction: 'Cancelar',
     attachingAction: 'Adjuntando...',
-    attachAction: 'Adjuntar orígenes al canvas ({count})',
+    attachAction: 'Añadir fuentes ({count})',
+    selectionCount: 'Seleccionados: {count}',
   },
   selectConnectionError: 'Selecciona una conexión',
   selectAtLeastOneObjectError: 'Selecciona al menos un objeto de origen importable.',

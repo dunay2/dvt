@@ -87,7 +87,7 @@ describe('Canvas source import live proof architecture', () => {
     expect(cypressSpecSource).toContain("readLiveWorkspaceFile('models/sources/src_public.yml'");
     expect(cypressSpecSource).toContain("cy.contains('Stale version').should('not.exist')");
     expect(liveInteractionSource).toContain("cy.contains('[role=\"dialog\"]', 'Add source'");
-    expect(liveInteractionSource).toContain('Attach sources to canvas');
+    expect(liveInteractionSource).toContain('Add sources');
     expect(cypressSpecSource).toContain('.react-flow__node');
 
     expect(liveInteractionSource).not.toContain('cy.intercept(');

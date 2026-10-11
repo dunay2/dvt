@@ -402,7 +402,7 @@ describe('dbt source connection binding', () => {
       .and('contain.text', '5.3 KB');
     cy.contains('[role="dialog"]', 'Selected: 3').should('be.visible');
     assertSeriousAccessibility();
-    cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+    cy.contains('button', 'Add sources').should('be.enabled').click();
 
     waitForE2eApiCall('/workspace/sources/import', 'POST');
     cy.contains('[role="dialog"]', 'Sources imported', { timeout: 20_000 }).should('be.visible');
@@ -466,7 +466,7 @@ describe('dbt source connection binding', () => {
     cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 }).should('be.visible');
     cy.contains('[data-slot="source-import-connection-option"]', 'Governed warehouse').click();
     cy.contains('[role="dialog"]', 'Seleccionados: 3', { timeout: 20_000 }).should('be.visible');
-    cy.contains('button', 'Adjuntar orígenes al canvas').should('be.enabled');
+    cy.contains('button', 'Añadir fuentes').should('be.enabled');
     assertSeriousAccessibility();
   });
 });

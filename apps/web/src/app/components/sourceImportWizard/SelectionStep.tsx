@@ -1,16 +1,18 @@
-import { Loader2 } from 'lucide-react';
+import { Database, Loader2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import type { SourceObjectCatalogSchemaSummary } from '@dvt/contracts';
 
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 import { useSourceImportLocalization } from './copy';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
+import { SourceImportSample } from './SourceImportSample';
 import {
   buildSourceImportCatalogViewModel,
   buildSourceObjectIdentityKey,
@@ -25,6 +27,9 @@ import type {
 } from './types';
 
 interface SelectionStepProps {
+  connectionId?: string;
+  connectionName?: string;
+  onChangeConnection?: () => void;
   sourceObjects: SelectableSourceObject[];
   sourceObjectSchemas: readonly SourceObjectCatalogSchemaSummary[];
   sourceObjectSchemaListPage: SourceImportCatalogPageState;
@@ -51,6 +56,9 @@ import styles from './SourceImportWorkspace.module.css';
 export const sourceImportSelectionStepClassNames = styles;
 
 export function SelectionStep({
+  connectionId,
+  connectionName,
+  onChangeConnection,
   sourceObjects,
   sourceObjectSchemas,
   sourceObjectSchemaListPage,
@@ -100,11 +108,17 @@ export function SelectionStep({
 
   return (
     <div className={sourceImportSelectionStepClassNames.root}>
-      <div>
+      <div className={styles.catalogToolbar}>
         <h3 className={sourceImportSelectionStepClassNames.title}>{copy.selection.title}</h3>
-        <p className={sourceImportSelectionStepClassNames.description}>
-          {copy.selection.descriptionPrefix} {selectedCount}
-        </p>
+        {connectionName == null ? null : (
+          <Button variant="outline" onClick={onChangeConnection}>
+            <Database aria-hidden="true" />
+            {connectionName}
+          </Button>
+        )}
+        <span className={styles.description}>
+          {copy.footer.selectionCount.replace('{count}', String(selectedCount))}
+        </span>
       </div>
 
       {loadError ? (
@@ -191,6 +205,16 @@ export function SelectionStep({
               activeSourceObjectKey={catalogViewModel.activeSourceObject?.identityKey ?? null}
               scope="active"
             />
+            {connectionId == null || activeBrowseSourceObject == null ? null : (
+              <SourceImportSample
+                connectionId={connectionId}
+                objectId={activeBrowseSourceObject.objectId}
+                name={
+                  catalogViewModel.activeSourceObject?.canonicalName ??
+                  activeBrowseSourceObject.objectId
+                }
+              />
+            )}
             <SourceImportSelectionBasket
               selectedSourceObjects={catalogViewModel.selectedSourceObjects}
               onRemoveSourceObject={onToggleSourceObject}

@@ -74,6 +74,9 @@
 }
 .columnIdentity {
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 .columnName {
   overflow: hidden;
@@ -90,7 +93,11 @@
   color: var(--text-muted);
 }
 .constraintList {
-  margin-top: 4px;
+  flex-shrink: 0;
+}
+.columnScroll,
+.columnScroll [data-slot='scroll-area-viewport'] {
+  max-height: 224px;
 }
 .notice,
 .importability {

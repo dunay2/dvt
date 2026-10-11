@@ -195,3 +195,30 @@
 .resize {
   background: var(--border-subtle);
 }
+.sample {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  min-width: 0;
+}
+.sample > button {
+  justify-self: start;
+  height: 28px;
+  color: var(--primary);
+  font-size: 12px;
+}
+.catalogToolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.catalogToolbar button {
+  height: 30px;
+  font-size: 12px;
+}
+.catalogToolbar button svg {
+  width: 16px;
+  height: 16px;
+  color: var(--primary);
+}

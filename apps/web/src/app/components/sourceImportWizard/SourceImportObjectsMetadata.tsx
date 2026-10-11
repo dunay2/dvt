@@ -149,7 +149,7 @@ function SourceObjectMetadataBody({
   return (
     <div className="space-y-3">
       {importability}
-      <ScrollArea className="h-64">
+      <ScrollArea className={styles.columnScroll}>
         <div className={sourceImportSelectedMetadataClassNames.columnList}>
           {viewModel.columns.map((column) => (
             <div

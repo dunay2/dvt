@@ -47,7 +47,7 @@ export function SourceImportWizardFooter({
   return (
     <div className={styles.footerActions}>
       <span className={styles.selectionCount}>
-        {copy.selection.descriptionPrefix} {selectedCount}
+        {copy.footer.selectionCount.replace('{count}', String(selectedCount))}
       </span>
       <Button variant="outline" onClick={onClose}>
         {copy.footer.cancelAction}

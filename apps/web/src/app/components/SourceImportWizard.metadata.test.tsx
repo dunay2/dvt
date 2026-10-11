@@ -155,9 +155,9 @@ describe('SourceImportWizard metadata exploration', () => {
 
     expect(document.body.textContent).toContain('Browse source objects');
     expect(document.body.textContent).toContain('Selected: 2');
-    expect(harness.findButtonContaining('Attach sources to canvas')?.disabled).toBe(false);
+    expect(harness.findButtonContaining('Add sources')?.disabled).toBe(false);
 
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
 
     expect(importSources).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -491,7 +491,7 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Browse');
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
 
     expect(importSources).toHaveBeenCalledWith({
       schemaVersion: 'source-import-request.v2',

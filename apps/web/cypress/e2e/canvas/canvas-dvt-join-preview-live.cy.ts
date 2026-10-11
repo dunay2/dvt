@@ -113,7 +113,7 @@ function createPublicationSources(): Cypress.Chainable<string> {
     );
   }
   cy.contains('[role="dialog"]', 'Selected: 2').should('be.visible');
-  cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+  cy.contains('button', 'Add sources').should('be.enabled').click();
   cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
   cy.contains('[role="dialog"] button', 'Done').click();
   return cy
