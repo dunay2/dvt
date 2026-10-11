@@ -5,46 +5,34 @@
  * @consequence Navigation does not mutate topology or reinterpret plugin kinds.
  * @version 1.0.0
  */
-import { useReactFlow, type Node, type NodeChange } from '@xyflow/react';
+import type { Node } from '@xyflow/react';
 import type { ReactNode } from 'react';
-import { focusCanvasViewportNode } from '../canvasViewportNodeFocus';
 import { CanvasExplorer } from './CanvasExplorer';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerNodes } from './canvasExplorerItems';
 
 export function CanvasGraphExplorer({
   nodes,
-  onNodesChange,
-  canSelect,
+  onSelect,
   onImport,
   children,
 }: Readonly<{
   nodes: readonly Node[];
-  onNodesChange: (changes: NodeChange[]) => void;
-  canSelect: boolean;
+  onSelect: (id: string) => void;
   onImport?: () => void;
   children: ReactNode;
 }>): JSX.Element {
-  const { fitView } = useReactFlow();
   const items = projectCanvasExplorerNodes(nodes);
-  const select = (nodeId: string) => {
-    focusCanvasViewportNode({
-      nodeId,
-      nodes,
-      selectNode: canSelect,
-      port: { fitView, onNodesChange },
-    });
-  };
   return (
     <CanvasExplorer
       sources={
         <CanvasExplorerList
           items={items.filter((item) => item.source)}
-          onSelect={select}
+          onSelect={onSelect}
           onImport={onImport}
         />
       }
-      elements={<CanvasExplorerList items={items} onSelect={select} />}
+      elements={<CanvasExplorerList items={items} onSelect={onSelect} />}
     >
       {children}
     </CanvasExplorer>

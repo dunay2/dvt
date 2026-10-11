@@ -30,6 +30,7 @@ import {
   reduceCanvasNodeContextSurface,
 } from './canvasNodeContextSurfaceModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
+import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
@@ -447,39 +448,52 @@ function CanvasViewportWithPresenter({
   });
 
   return (
-    <CanvasViewportSurfaceView
-      viewportRef={viewportRef}
-      resolvedCanvasPalette={resolvedCanvasPalette}
-      canEditEdges={props.canEditEdges}
-      canDeleteWithKeyboard={props.canEditEdges && !(props.externalNodeSurfaceActive ?? false)}
-      canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
-      canSelectNodes={canSelectNodes}
-      nodesWithImpact={renderedNodes}
-      edges={graphSearchPresentation.edges}
-      nodeTypes={props.nodeTypes}
-      gridSize={props.gridSize}
-      canvasSnapToGrid={props.canvasSnapToGrid}
-      viewport={props.viewport}
-      onNodesChange={props.onNodesChange}
-      onEdgesChange={props.onEdgesChange}
-      {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
-      {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
-      onViewportChange={props.onViewportChange}
-      onNodeDrag={props.onNodeDrag}
-      onNodeDragStop={props.onNodeDragStop}
-      onDrop={props.onDrop}
-      onDragOver={props.onDragOver}
-      contextMenuPresenter={contextMenuPresenter}
-      contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
-      contextMenuLabel={copy.canvasContextMenuLabel}
-      nodeHealthPopoverModel={nodeHealthPopoverModel}
-      onCloseNodeHealthPopover={closeNodeHealthPopover}
-      onImpactFocusNodeChange={props.onImpactFocusNodeChange}
-      onMiniMapNodeClick={handleMiniMapNodeClick}
-      graphSearchController={graphSearchController}
-      graphFilterController={graphFilterController}
-      copy={copy}
-    />
+    <CanvasGraphExplorer
+      nodes={props.nodesWithImpact}
+      onSelect={(nodeId) =>
+        focusCanvasViewportNode({
+          nodeId,
+          nodes: props.nodesWithImpact,
+          selectNode: canSelectNodes,
+          port: graphSearchActivationPort,
+        })
+      }
+      onImport={props.canOpenSourceImport ? props.onOpenSourceImport : undefined}
+    >
+      <CanvasViewportSurfaceView
+        viewportRef={viewportRef}
+        resolvedCanvasPalette={resolvedCanvasPalette}
+        canEditEdges={props.canEditEdges}
+        canDeleteWithKeyboard={props.canEditEdges && !(props.externalNodeSurfaceActive ?? false)}
+        canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
+        canSelectNodes={canSelectNodes}
+        nodesWithImpact={renderedNodes}
+        edges={graphSearchPresentation.edges}
+        nodeTypes={props.nodeTypes}
+        gridSize={props.gridSize}
+        canvasSnapToGrid={props.canvasSnapToGrid}
+        viewport={props.viewport}
+        onNodesChange={props.onNodesChange}
+        onEdgesChange={props.onEdgesChange}
+        {...(props.onConnect == null ? {} : { onConnect: props.onConnect })}
+        {...(props.onReconnect == null ? {} : { onReconnect: props.onReconnect })}
+        onViewportChange={props.onViewportChange}
+        onNodeDrag={props.onNodeDrag}
+        onNodeDragStop={props.onNodeDragStop}
+        onDrop={props.onDrop}
+        onDragOver={props.onDragOver}
+        contextMenuPresenter={contextMenuPresenter}
+        contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
+        contextMenuLabel={copy.canvasContextMenuLabel}
+        nodeHealthPopoverModel={nodeHealthPopoverModel}
+        onCloseNodeHealthPopover={closeNodeHealthPopover}
+        onImpactFocusNodeChange={props.onImpactFocusNodeChange}
+        onMiniMapNodeClick={handleMiniMapNodeClick}
+        graphSearchController={graphSearchController}
+        graphFilterController={graphFilterController}
+        copy={copy}
+      />
+    </CanvasGraphExplorer>
   );
 }
 

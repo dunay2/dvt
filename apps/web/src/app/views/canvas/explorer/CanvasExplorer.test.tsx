@@ -5,7 +5,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { fireEvent, screen } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
-import { ReactFlowProvider } from '@xyflow/react';
 import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import { DropdownMenu, DropdownMenuContent } from '../../../components/ui/dropdown-menu';
 import { CanvasExplorerViewMenu } from './CanvasExplorerViewMenu';
@@ -38,11 +37,9 @@ describe('Canvas explorer', () => {
       { id: 'imported', position: { x: 0, y: 0 }, data: { name: 'Orders', role: 'input' } },
     ];
     const view = (ready: boolean): JSX.Element => (
-      <ReactFlowProvider>
-        <CanvasGraphExplorer nodes={ready ? nodes : []} onNodesChange={() => {}} canSelect>
-          <input aria-label="Graph state" />
-        </CanvasGraphExplorer>
-      </ReactFlowProvider>
+      <CanvasGraphExplorer nodes={ready ? nodes : []} onSelect={() => {}}>
+        <input aria-label="Graph state" />
+      </CanvasGraphExplorer>
     );
     render(view(false));
     const graph = screen.getByLabelText('Graph state');
