@@ -88,7 +88,7 @@
 }
 .primaryAction {
   background: var(--primary);
-  color: var(--primary-foreground);
+  color: var(--text-inverse);
 }
 .primaryAction:disabled {
   opacity: 0.5;

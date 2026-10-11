@@ -1,5 +1,12 @@
+/**
+ * Owned concern: compose accessible catalogue inspection and selection in the source workspace.
+ * @baseline GH-3610: catalogue/detail resizing retains the import controller and permissions.
+ * @decision Supply the same unique panel identity to the DOM and keyboard separator.
+ * @consequence Assistive technology can address the mounted catalogue panel.
+ * @version 1.0.0
+ */
 import { Database, Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 
 import type { SourceObjectCatalogSchemaSummary } from '@dvt/contracts';
 
@@ -81,6 +88,7 @@ export function SelectionStep({
   onToggleSourceObject,
 }: SelectionStepProps) {
   const { copy, numberFormatter } = useSourceImportLocalization();
+  const cataloguePanelId = useId();
   const [catalogFilterId, setCatalogFilterId] = useState<SourceImportCatalogFilterId>('all');
   const normalizedSearch = sourceObjectSearchQuery.trim();
   const visibleObjectIds = useMemo(
@@ -133,6 +141,7 @@ export function SelectionStep({
       ) : (
         <ResizablePanelGroup direction="horizontal" autoSaveId="source-import-catalog-detail">
           <ResizablePanel
+            id={cataloguePanelId}
             defaultSize={55}
             minSize={30}
             className={sourceImportSelectionStepClassNames.catalog}

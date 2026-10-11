@@ -28,6 +28,18 @@ describe('SourceImportWizard', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
+  it('makes the catalogue panel identity addressable for keyboard resizing', async () => {
+    await harness.renderWizard();
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Browse');
+    const separator = document.querySelector('[data-slot="resizable-handle"]')!;
+    const catalogue = document.querySelector('[data-slot="resizable-panel"]')!;
+    const panelId = catalogue.getAttribute('data-panel-id');
+    expect(catalogue.id).toBe(panelId);
+    expect(document.getElementById(panelId!)).toBe(catalogue);
+    expect(separator.getAttribute('tabindex')).toBe('0');
+  });
+
   it('renders the complete connection entry in Spanish and reacts to language changes', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 
