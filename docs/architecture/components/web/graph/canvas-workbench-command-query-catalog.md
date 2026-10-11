@@ -536,6 +536,12 @@ Movement alone retains its existing discardable-session behavior; this does not
 add an autosave or change navigation/cancellation ownership.
 
 Inspector visibility is presentation state, not the lifetime of that transaction.
+The active inspector tab is also Model-local presentation state, keyed by relation
+identity. Entering Edit, applying or cancelling a draft must not reset the selected
+tab when the same relation remains selected. Inspection and authoring frames share
+that state; selecting a different relation retains its appropriate default, and
+explicit expression navigation may still open Properties. No tab state is written
+into the semantic document or kept alive through an obsolete edit transaction.
 Applying an operation preserves its open Properties panel and reconciles the
 selection to the accepted canonical relation. Staged and applied inspectors use
 the same visibility intent. Explicit Close remains closed; Cancel retains its

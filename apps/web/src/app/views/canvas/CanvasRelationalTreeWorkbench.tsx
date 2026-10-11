@@ -17,6 +17,7 @@ import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigati
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { useCanvasWorkbenchFocusRecovery } from './useCanvasWorkbenchFocus';
 import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
+import { CanvasOperationInspectorTabs } from './CanvasRelationalTreeEditorFrame';
 import {
   useCanvasRelationalTreeWorkbenchHandle,
   type CanvasRelationalTreeWorkbenchHandle,
@@ -103,24 +104,26 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           >
             <CanvasCardRemovalContext.Provider value={model.session.removal}>
               <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-                <CanvasRelationalTreeContent
-                  model={model}
-                  authoring={authoring}
-                  transformNode={transformNode}
-                  nodes={nodes}
-                  edges={edges}
-                  copy={copy}
-                  expanded={expanded}
-                  onExpandedChange={setExpanded}
-                  onPendingConditionChange={setPendingCondition}
-                  pendingCondition={pendingCondition || pendingCompositionOutput}
-                  onSelectRelation={navigation.select}
-                  modelOutput={{
-                    open: modelOutputOpen,
-                    setOpen: setModelOutputOpen,
-                    setPending: setPendingCompositionOutput,
-                  }}
-                />
+                <CanvasOperationInspectorTabs>
+                  <CanvasRelationalTreeContent
+                    model={model}
+                    authoring={authoring}
+                    transformNode={transformNode}
+                    nodes={nodes}
+                    edges={edges}
+                    copy={copy}
+                    expanded={expanded}
+                    onExpandedChange={setExpanded}
+                    onPendingConditionChange={setPendingCondition}
+                    pendingCondition={pendingCondition || pendingCompositionOutput}
+                    onSelectRelation={navigation.select}
+                    modelOutput={{
+                      open: modelOutputOpen,
+                      setOpen: setModelOutputOpen,
+                      setPending: setPendingCompositionOutput,
+                    }}
+                  />
+                </CanvasOperationInspectorTabs>
               </CanvasRelationAnalysisContext.Provider>
             </CanvasCardRemovalContext.Provider>
           </CanvasRelationalExplorer>

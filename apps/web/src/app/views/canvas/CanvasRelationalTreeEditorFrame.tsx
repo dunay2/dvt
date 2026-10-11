@@ -1,11 +1,17 @@
-/** Owned concern: separate selected-operation inspection tabs from the bottom data dock. */
+/**
+ * Owned concern: retain selected-operation tabs across inspection and editing frames.
+ * @baseline ADR-0064: relation identity survives an accepted authoring change.
+ * @decision Scope tab selection to the Model, independently of the edit transaction.
+ * @consequence Edit, Apply and Cancel retain the tab without persisting presentation state.
+ * @version 1.1.0
+ */
 import { Pencil, X } from 'lucide-react';
 import {
   resolveCanvasRelationalOperationPresentation,
   type CanvasPresentationOperation,
 } from './canvasRelationalOperationPresentation';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { createContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -14,6 +20,41 @@ export const CanvasOperationExpressionHost = createContext<Readonly<{
   host: HTMLDivElement | null;
   openProperties: () => void;
 }> | null>(null);
+
+type InspectorTab = Readonly<{ relationId: string; tab: string }>;
+const InspectorTabs = createContext<ReturnType<typeof useState<InspectorTab | null>> | null>(null);
+
+export function CanvasOperationInspectorTabs({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  const [selection, setSelection] = useState<InspectorTab | null>(null);
+  const value = useMemo(
+    () => [selection, setSelection] as [typeof selection, typeof setSelection],
+    [selection]
+  );
+  return <InspectorTabs.Provider value={value}>{children}</InspectorTabs.Provider>;
+}
+
+function useInspectorTab(relationId: string | null | undefined, initialTab: string) {
+  const shared = useContext(InspectorTabs);
+  const [localTab, setLocalTab] = useState(initialTab);
+  const selection = shared?.[0];
+  const select = shared?.[1];
+  const tab =
+    select == null || relationId == null
+      ? localTab
+      : selection?.relationId === relationId
+        ? selection.tab
+        : initialTab;
+  const setTab = useCallback(
+    (next: string) => {
+      if (select != null && relationId != null) select({ relationId, tab: next });
+      else setLocalTab(next);
+    },
+    [select, relationId]
+  );
+  return [tab, setTab] as const;
+}
 
 export function CanvasRelationalTreeEditorFrame({
   operation,
@@ -47,7 +88,7 @@ export function CanvasRelationalTreeEditorFrame({
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
-  const [tab, setTab] = useState<string>(initialTab);
+  const [tab, setTab] = useInspectorTab(relationId, initialTab);
   const activeTab =
     (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
@@ -56,7 +97,7 @@ export function CanvasRelationalTreeEditorFrame({
       host: expressionHost,
       openProperties: () => setTab('properties'),
     }),
-    [expressionHost]
+    [expressionHost, setTab]
   );
   return (
     <section

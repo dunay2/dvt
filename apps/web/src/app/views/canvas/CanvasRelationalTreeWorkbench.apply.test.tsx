@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench apply behavior. */
 import React, { act, createRef } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { describe, expect, it } from 'vitest';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
@@ -145,6 +146,14 @@ describe('Canvas relational-tree Workbench apply', () => {
         )
       ).toBe(true);
 
+      await act(async () =>
+        fireEvent.mouseDown(
+          container.querySelector(
+            '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-operation-output-tab"]'
+          )!,
+          { button: 0 }
+        )
+      );
       if (closeInspector)
         await act(async () =>
           container
@@ -214,6 +223,11 @@ describe('Canvas relational-tree Workbench apply', () => {
         expect(inspector).not.toBeNull();
         expect(inspector!.hidden).toBe(false);
         expect(inspector!.dataset.relationId).toBe(joinCard.dataset.relationId);
+        expect(
+          inspector!
+            .querySelector('[data-slot="canvas-operation-output-tab"]')
+            ?.getAttribute('aria-selected')
+        ).toBe('true');
       }
       expect(
         Array.from(

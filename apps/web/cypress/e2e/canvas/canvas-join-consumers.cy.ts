@@ -57,7 +57,14 @@ describe('join-consumers', () => {
   it('saves and reopens a mixed-input scalar predicate using the shared formula editor', () => {
     openEditor();
     cy.get('[data-operator="join"]').click();
+    cy.get('[data-slot="canvas-operation-output-tab"]:visible').click();
     cy.get('[data-slot="canvas-relational-edit"]').click();
+    cy.get('[data-slot="canvas-operation-output-tab"]:visible').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
     cy.get('[data-slot="join-predicate-formula-open"]').click();
     const formulaForm = '[data-slot="join-predicate-formula"]';
     const write = (formula: string): void => {
@@ -83,6 +90,7 @@ describe('join-consumers', () => {
       });
     cy.get(formulaForm).find('button[type="submit"]').should('be.enabled').click();
     cy.get(formulaForm).should('not.exist');
+    cy.get('[data-slot="canvas-operation-output-tab"]:visible').click();
     cy.get('[data-canvas-inspector="true"]:visible')
       .invoke('attr', 'data-relation-id')
       .as('editedJoinId');
@@ -103,6 +111,11 @@ describe('join-consumers', () => {
         relationId
       );
     });
+    cy.get('[data-slot="canvas-operation-output-tab"]:visible').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
     cy.on('window:before:load', installE2eApiFetchStub);
     cy.reload();
     cy.get('.react-flow__node[data-id$="-transform"] [data-slot="canvas-node-shell"]')
