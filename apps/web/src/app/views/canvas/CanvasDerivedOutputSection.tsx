@@ -1,9 +1,9 @@
 /**
  * Owned concern: retain a calculated SELECT draft and submit it through the existing projection command.
  * @baseline ADR-0064: canonical ProjectRel owns calculated fields, independently of JOIN predicates.
- * @decision Reuse one editor and hide its output-list slot while that editor is active.
+ * @decision Keep the output-list slot mounted across schema queries and hide it during formula editing.
  * @consequence Formula editing fills Output; closing it restores the retained list and drafts.
- * @version 1.2.0
+ * @version 1.2.1
  */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Pencil, Plus } from 'lucide-react';
@@ -31,7 +31,7 @@ export function CanvasDerivedOutputSection({
   onPendingChange?: (pending: boolean) => void;
   onSaved?: (relationId: string) => void;
   children?: ReactNode;
-}>): JSX.Element | null {
+}>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const current = useCanvasDerivedOutputAuthoring(relationId);
@@ -49,11 +49,10 @@ export function CanvasDerivedOutputSection({
     pendingCallback.current?.(pending);
     return () => pendingCallback.current?.(false);
   }, [pending]);
-  if (model == null) return <>{children}</>;
   return (
     <section className="space-y-3">
       {children == null ? null : <div hidden={pending}>{children}</div>}
-      {editing != null ? (
+      {model == null ? null : editing != null ? (
         <DerivedOutputFormulaForm
           initial={editing.initial}
           fields={model.fields.filter((field) => field.fieldId !== editing.outputFieldId)}

@@ -262,7 +262,9 @@ alias, operand palette, formula and actions. It owns the output-list presentatio
 slot and hides that list for the lifetime of the form, retaining local selection
 state. Cancel or accepted submission restores the list; rejected submission keeps
 the form and typed input visible. No second editing-state flag is introduced in
-the inspector composition.
+the inspector composition. Schema-query readiness changes only the formula
+affordances, never the list container: output commands must retain its DOM identity,
+keyboard focus and local alias drafts while the schema is refreshed.
 
 ```text
 JOIN Output -> shared formula + alias -> existing atomic derived-field command
