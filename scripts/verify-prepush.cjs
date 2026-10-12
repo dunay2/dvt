@@ -1,5 +1,11 @@
 #!/usr/bin/env node
-/** Owned concern: run the local pre-push validation command plan. */
+/**
+ * Owned concern: run the local pre-push validation command plan.
+ * @baseline ADR-0053: validation evidence must retain complete input identity.
+ * @decision Match the existing bounded 32 MiB feature-mechanization Git reader.
+ * @consequence Large diffs remain complete; unavailable or over-budget Git fails closed.
+ * @version 1.0.0
+ */
 {
   const fs = require('node:fs');
   const path = require('node:path');
@@ -45,6 +51,7 @@
     return execFileSync('git', args, {
       cwd: options.repoRootPath || repoRoot,
       encoding: 'utf8',
+      maxBuffer: 32 * 1024 * 1024,
       stdio: ['ignore', 'pipe', 'ignore'],
     });
   }

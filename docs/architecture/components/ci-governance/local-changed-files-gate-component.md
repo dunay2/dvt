@@ -233,6 +233,35 @@ or the Prettier gate disappear.
 
 ## Test Coverage
 
+### Complete prepush Git evidence
+
+The existing `RunChangedSliceVerification` command retains its exact successful
+validation fingerprint: committed, staged, unstaged, untracked and upstream
+evidence, resolved commit identities and validation mode. Its Git adapter reads
+the complete output within a bounded 32 MiB buffer, matching the existing
+feature-mechanization Git evidence reader. The implicit Node 1 MiB default is
+insufficient for genuine large documentation-retirement diffs.
+
+This changes acquisition capacity, not identity or admission. No deletion is
+filtered out; no patch is truncated; no stamp format or hash algorithm changes.
+Unavailable Git evidence or output beyond the bounded budget still fails closed
+before a successful stamp can be written.
+
+```mermaid
+flowchart LR
+  Git[Complete committed/staged/unstaged Git evidence] --> Budget[Bounded 32 MiB adapter]
+  Budget --> Hash[Unchanged validation fingerprint]
+  Hash --> Gate[Existing changed-slice checks]
+  Gate --> Stamp[Success stamp only after validation]
+  Budget -->|unavailable or over budget| Reject[Reject without success evidence]
+```
+
+`scripts/verify-prepush.test.cjs` exercises a real Git deletion patch exceeding
+1 MiB, complete-byte fingerprint parity and a tail-byte mutation beyond the old
+limit. Existing tests retain invalid-reference, Git-failure, mode, upstream and
+worktree invalidation coverage. The bounded design and acceptance obligations
+are governed by issue #3004; this correction does not close its global scope.
+
 - `scripts/git-local-changes.test.cjs` proves local changed-file query semantics
   and this component guide.
 - `scripts/check-changed.test.cjs` proves whole-inventory ESLint execution,
