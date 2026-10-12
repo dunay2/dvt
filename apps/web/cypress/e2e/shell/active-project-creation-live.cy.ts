@@ -1,19 +1,22 @@
 /**
  * Owned concern: prove active-session project creation and workspace isolation
  * through the real protected runtime without request stubs.
+ * @baseline GH-3622: retained menu evidence requires the granted protected-runtime session.
+ * @decision Reuse the live session owner and reject absent runtime instead of a manual enable flag.
+ * @consequence The complete available plan executes the original isolation and single-POST proof.
+ * @version 1.0.0
  */
+import {
+  hasLiveProtectedRuntimeEnv,
+  visitWithLiveWorkspaceSession,
+} from '../../support/liveProtectedRuntime';
 
 type ProjectCreationWindow = Window & {
   __dvtProjectCreationPostCount?: number;
 };
 
-function liveProjectCreationEnabled(): boolean {
-  const value = Cypress.env('liveProjectCreation');
-  return value === true || value === 1 || value === '1';
-}
-
 function visitCanvasWithProjectCreationObservation(): void {
-  cy.visit('/canvas', {
+  visitWithLiveWorkspaceSession('/canvas', {
     onBeforeLoad(window) {
       const observedWindow = window as ProjectCreationWindow;
       const originalFetch = window.fetch.bind(window);
@@ -32,10 +35,8 @@ function visitCanvasWithProjectCreationObservation(): void {
 }
 
 describe('Active project creation live vertical', () => {
-  before(function () {
-    if (!liveProjectCreationEnabled()) {
-      this.skip();
-    }
+  before(() => {
+    expect(hasLiveProtectedRuntimeEnv(), 'protected project-creation runtime').to.equal(true);
   });
 
   it('creates B from A, proves B is empty, switches A → B, and survives reload', () => {
@@ -80,8 +81,8 @@ describe('Active project creation live vertical', () => {
         cy.get('.react-flow__node').should('not.exist');
 
         cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-        cy.get('[data-slot="shell-workspace-scope-selector"] button[aria-pressed="false"]')
-          .first()
+        cy.get('[data-slot="shell-workspace-scope-selector"]')
+          .contains('button', initialProjectTriggerText.replace(/^.*?:\s*/, '').trim())
           .click();
         cy.get('[data-slot="shell-workspace-menu-trigger"]')
           .should('contain.text', initialProjectTriggerText.replace(/^.*?:\s*/, '').trim())

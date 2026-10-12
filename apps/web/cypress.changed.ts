@@ -1,6 +1,6 @@
 /**
  * Owned concern: assign exact browser consumers to their real runtime evidence.
- * @baseline GH-3578/GH-3593/GH-3610: fixture and selection consumers retain their real runtime and owned journeys.
+ * @baseline GH-3578/GH-3593/GH-3610/GH-3622: retained consumers keep their real runtime and owned journeys.
  * @decision Reuse three existing runtime commands with explicit paths and invocation-local environment.
  * @consequence Unknown ownership rejects; one available invocation executes each owned spec independently.
  * @version 1.0.1
@@ -63,6 +63,7 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
     'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
     'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+    'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
   ],
   available: [
     'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
@@ -96,6 +97,7 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts',
     'apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
     'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
+    'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
   ],
   unavailable: ['apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts'],
 } as const;

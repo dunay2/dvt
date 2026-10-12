@@ -482,3 +482,38 @@ scope returned by creation, retain absent-draft and unchanged-revision proofs
 in that scope, and leave other consumers' drafts intact. This reuses the
 existing `liveProjectAuthoring.ts` owner; no random scope, cleanup of another
 spec's graph or separate project-creation implementation is admitted.
+
+### Retained Shell Menu Consumers — GH-3622
+
+Menu responsibility changes retain two previously unadmitted browser consumers.
+Their runtime is determined by their actual preparation, not by the route name:
+
+| Consumer                                   | Runtime    | Existing evidence owner                                                |
+| ------------------------------------------ | ---------- | ---------------------------------------------------------------------- |
+| `templates/templates-workbench.cy.ts`      | Controlled | Native browser runner; explicitly controlled bootstrap responses       |
+| `shell/active-project-creation-live.cy.ts` | Available  | Protected provider runner; granted live session and real CreateProject |
+
+```mermaid
+flowchart LR
+  Diff[Retained menu consumers] --> Catalog[Exact existing browser admission]
+  Catalog --> Templates[Templates: controlled bootstrap]
+  Catalog --> Project[Project creation: granted live session]
+  Templates --> Native[Existing native browser command]
+  Project --> Live[Existing available provider command]
+  Native --> Result[Strict complete-result validation]
+  Live --> Result
+```
+
+The project-creation consumer reuses `visitWithLiveWorkspaceSession` to initialize
+the existing granted scope and requires the existing protected-runtime identity.
+It must not rely on a separate manual enable flag. Its original single POST,
+empty created workspace, A-to-B scope switching and reload assertions remain
+intact. Templates retains its existing controlled responses and both selection
+and parameter-validation cases.
+
+Add only these two literal paths. Unknown consumers remain rejected; runtime
+policy changes retain all three existing capability obligations. No new runner,
+deadline, stubbed project response, product behavior or skipped-result waiver is
+introduced. The available inventory becomes 32 specs; the controlled inventory
+gains the single Templates consumer. Delivery evidence belongs to
+[issue 3622](https://github.com/dunay2/dvt/issues/3622).

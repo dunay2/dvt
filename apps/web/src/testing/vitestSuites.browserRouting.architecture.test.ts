@@ -349,6 +349,21 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('admits retained shell menu consumers in their actual independent runtimes', () => {
+    const controlled = 'apps/web/cypress/e2e/templates/templates-workbench.cy.ts';
+    const available = 'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts';
+    const controlledPlan = resolveWebVitestChangedSuitePlan([controlled]);
+    expect(controlledPlan.browserCommands).toMatchObject([
+      { capability: 'controlled', specPaths: [controlled] },
+    ]);
+    expect(resolveWebVitestChangedSuitePlan([available]).browserCommands).toEqual([liveCommand]);
+    const body = browserModules.get(resolve(available.slice('apps/web/'.length)))!.getText();
+    expect(body).toContain('visitWithLiveWorkspaceSession');
+    expect(body).toContain('hasLiveProtectedRuntimeEnv');
+    expect(body).not.toContain('liveProjectCreation');
+    expect(body).not.toContain('this.skip');
+  });
+
   it('admits every exact selection-helper consumer in its real runtime', () => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
@@ -527,6 +542,8 @@ describe('governed browser evidence routing', () => {
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
     const registered = Object.values(WEB_CYPRESS_SPECS).flat();
     const uiOnlyConsumers = [
+      'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
+      'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
       'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
@@ -552,8 +569,8 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(31);
-    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(48);
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(32);
+    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(49);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
 
@@ -657,7 +674,7 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(31);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(32);
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);
