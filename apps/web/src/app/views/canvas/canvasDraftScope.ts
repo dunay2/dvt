@@ -40,6 +40,7 @@ type ReconcileUiScopeArgs = {
   pendingExplicitNodeIds: string[];
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
+  inspectableNodeIds?: readonly string[];
 };
 
 function edgeSignature(edge: CanvasDraftEdge | CanonicalEdge): string {
@@ -145,12 +146,16 @@ export function reconcileUiScope({
   pendingExplicitNodeIds,
   selectedNodeIds,
   inspectorNodeId,
+  inspectableNodeIds = [],
 }: ReconcileUiScopeArgs): CanvasUiScope {
   const allowedNodeIds = new Set([...visibleScope.visibleNodeIds, ...pendingExplicitNodeIds]);
 
   return {
     selectedNodeIds: filterNodeIds(selectedNodeIds, allowedNodeIds),
     inspectorNodeId:
-      inspectorNodeId != null && allowedNodeIds.has(inspectorNodeId) ? inspectorNodeId : null,
+      inspectorNodeId != null &&
+      (allowedNodeIds.has(inspectorNodeId) || inspectableNodeIds.includes(inspectorNodeId))
+        ? inspectorNodeId
+        : null,
   };
 }

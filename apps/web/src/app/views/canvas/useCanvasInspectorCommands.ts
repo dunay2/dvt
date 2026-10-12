@@ -31,10 +31,12 @@ export function useCanvasInspectorCommands({
   const applyNodeDraft = useCallback(
     (nodeId: string, draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraftApplyResult =>
       runDraftSessionCommand((currentSession) => {
-        const node = resolveCanvasDraftNodes(currentSession, canonicalNodesById).find(
-          (candidate) => candidate.id === nodeId
-        );
-        if (node == null) return { outcome: 'rejected', reason: 'node_unavailable' } as const;
+        const node = currentSession.localNodeCatalog?.[nodeId] ?? canonicalNodesById.get(nodeId);
+        if (
+          node == null ||
+          (node.role !== 'input' && !currentSession.workingSet.visibleNodeIds.includes(nodeId))
+        )
+          return { outcome: 'rejected', reason: 'node_unavailable' } as const;
         return applyCanvasInspectorNodeDraftToSession({
           canonicalNodesById,
           draftSession: currentSession,

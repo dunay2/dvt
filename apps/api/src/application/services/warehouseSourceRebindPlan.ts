@@ -123,7 +123,7 @@ export async function prepareWarehouseSourceRebind(input: {
 
 function locateLogicalSource(draft: WorkspaceGraphAuthoringDraft, nodeId: string): LocatedSource {
   const matches = (draft.canvases ?? []).flatMap((canvas) => {
-    const node = canvas.nodes.find((candidate) => candidate.id === nodeId);
+    const node = locateSourceDefinition(canvas.nodes, nodeId);
     return node == null ? [] : [{ canvasId: canvas.canvas.id, canvas, node }];
   });
   if (matches.length > 1) {
@@ -134,7 +134,7 @@ function locateLogicalSource(draft: WorkspaceGraphAuthoringDraft, nodeId: string
   const match = matches[0];
   if (match != null) return assertImportedSource(match);
 
-  const node = draft.nodes.find((candidate) => candidate.id === nodeId);
+  const node = locateSourceDefinition(draft.nodes, nodeId);
   const canvasId = draft.canvas.id;
   if (node == null || canvasId == null) throw new WarehouseSourceRebindNodeNotFoundError(nodeId);
   return assertImportedSource({
@@ -148,6 +148,16 @@ function locateLogicalSource(draft: WorkspaceGraphAuthoringDraft, nodeId: string
     },
     node,
   });
+}
+
+function locateSourceDefinition(
+  nodes: readonly WorkspaceGraphAuthoringNode[],
+  nodeId: string
+): WorkspaceGraphAuthoringNode | undefined {
+  const node = nodes.find((candidate) => candidate.id === nodeId);
+  return node?.sourceDefinitionId == null
+    ? node
+    : nodes.find((candidate) => candidate.id === node.sourceDefinitionId);
 }
 
 function assertImportedSource(located: LocatedSource): LocatedSource {
@@ -375,7 +385,12 @@ function collectReachableNodeIds(
   canvas: WorkspaceGraphAuthoringCanvasWorkspace,
   sourceNodeId: string
 ): ReadonlySet<string> {
-  const reachable = new Set<string>([sourceNodeId]);
+  const reachable = new Set<string>([
+    sourceNodeId,
+    ...canvas.nodes
+      .filter((node) => node.sourceDefinitionId === sourceNodeId)
+      .map((node) => node.id),
+  ]);
   let changed = true;
   while (changed) {
     changed = false;

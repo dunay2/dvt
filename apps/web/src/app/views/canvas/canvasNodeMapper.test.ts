@@ -154,7 +154,7 @@ describe('canvasNodeMapper', () => {
     expect(edge.markerStart).toBeUndefined();
     expect(edge.markerEnd).toBeUndefined();
     expect(edge.interactionWidth).toBe(18);
-    expect(edge.style).toMatchObject({ strokeWidth: 2.5 });
+    expect(edge.style).toMatchObject({ stroke: 'var(--status-info)', strokeWidth: 1.5 });
     expect(edge.sourceHandle).toBe('source');
     expect(edge.targetHandle).toBe('target');
   });

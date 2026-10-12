@@ -38,7 +38,6 @@ export type CanvasGraphLifecycleNodeApi = {
     draftSession: CanvasDraftSession,
     canonicalNode: CanonicalNode
   ) => CanvasDraftSession;
-  queueImported: (draftSession: CanvasDraftSession, nodeIds: string[]) => CanvasDraftSession;
 };
 
 export type CanvasGraphLifecycleEdgeApi = {

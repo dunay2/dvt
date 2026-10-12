@@ -7,6 +7,10 @@ import { CanvasJoinTypeProperties } from './CanvasJoinTypeProperties';
 import { useEffect, useRef, useState } from 'react';
 import type { ConditionDraft } from './join-condition/conditionDraft';
 import { hasPendingConditionDraft } from './SemanticWorkbenchJoinConditionEditor';
+import {
+  CanvasJoinPredicateFormula,
+  type JoinPredicateFormulaDraft,
+} from './CanvasJoinPredicateFormulaController';
 
 export function CanvasRelationalTreeJoinEditor({
   copy,
@@ -23,7 +27,8 @@ export function CanvasRelationalTreeJoinEditor({
 }>): JSX.Element | null {
   const selected = useSelectedJoin(selectedRelationId);
   const [drafts, setDrafts] = useState<Readonly<Record<string, ConditionDraft | null>>>({});
-  const pending = Object.values(drafts).some(hasPendingConditionDraft);
+  const [formulaDraft, setFormulaDraft] = useState<JoinPredicateFormulaDraft | null>(null);
+  const pending = formulaDraft != null || Object.values(drafts).some(hasPendingConditionDraft);
   const callback = useRef(onPendingConditionChange);
   callback.current = onPendingConditionChange;
   useEffect(() => {
@@ -37,21 +42,31 @@ export function CanvasRelationalTreeJoinEditor({
         selected={selected}
         copy={copy}
         onChange={onChange}
-        disabled={disabled}
+        disabled={disabled || formulaDraft != null}
       />
-      <DvtSubstraitJoinPredicateEditors
+      <CanvasJoinPredicateFormula
         selected={selected}
-        disabled={disabled}
+        draft={formulaDraft?.relationId === selected.relationId ? formulaDraft : null}
+        onDraftChange={setFormulaDraft}
         onChange={onChange}
-        draft={drafts[selected.relationId] ?? null}
-        onDraftChange={(update) =>
-          setDrafts((current) => ({
-            ...current,
-            [selected.relationId]:
-              typeof update === 'function' ? update(current[selected.relationId] ?? null) : update,
-          }))
-        }
-      />
+        disabled={disabled || Object.values(drafts).some(hasPendingConditionDraft)}
+      >
+        <DvtSubstraitJoinPredicateEditors
+          selected={selected}
+          disabled={disabled}
+          onChange={onChange}
+          draft={drafts[selected.relationId] ?? null}
+          onDraftChange={(update) =>
+            setDrafts((current) => ({
+              ...current,
+              [selected.relationId]:
+                typeof update === 'function'
+                  ? update(current[selected.relationId] ?? null)
+                  : update,
+            }))
+          }
+        />
+      </CanvasJoinPredicateFormula>
     </div>
   );
 }

@@ -79,7 +79,7 @@ describe('CanvasViewport architecture', () => {
       'export function useCanvasViewportLifecycle'
     );
     expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).toContain('reactFlow.setViewport');
-    expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).toContain('.fitView({');
+    expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).not.toContain('.fitView({');
   });
 
   it('routes minimap and graph-search node focus through one viewport command policy', () => {

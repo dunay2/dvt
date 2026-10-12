@@ -82,7 +82,7 @@ describe('useCanvasController source import contract', () => {
     harness.cleanup();
   });
 
-  it('invalidates the protected draft query and prepares focus without changing selection', async () => {
+  it('refreshes the catalogue without opening properties or changing graph selection', async () => {
     const storeState = harness.state.store as Record<string, unknown>;
     storeState.inspectorPanelVisible = false;
     await harness.renderProbe();
@@ -106,7 +106,7 @@ describe('useCanvasController source import contract', () => {
 
     expect(harness.state.store.setCurrentPlan).toHaveBeenCalledWith(null);
     expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalled();
-    expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith('src_erp_orders');
+    expect(harness.state.store.setInspectorNode).not.toHaveBeenCalled();
     expect(harness.state.store.showInspectorPanel).not.toHaveBeenCalled();
     expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['workspace', 'graph-draft', 'tenant-a::project-a::dev'],
@@ -128,7 +128,7 @@ describe('useCanvasController source import contract', () => {
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([]);
   });
 
-  it('persists imported source nodes near the canvas context-menu anchor', async () => {
+  it('does not place registered sources at the old canvas context-menu anchor', async () => {
     await harness.renderProbe();
     harness.state.store.setCanvasNodePositions.mockClear();
     const saveGraphDraft = harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft;
@@ -157,15 +157,7 @@ describe('useCanvasController source import contract', () => {
       );
     });
 
-    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
-      'tenant-a::project-a::dev',
-      expect.objectContaining({
-        node_1: { x: 0, y: 0 },
-        node_2: { x: 100, y: 0 },
-        src_erp_orders: { x: 420, y: 260 },
-        src_erp_customers: { x: 660, y: 260 },
-      })
-    );
+    expect(harness.state.store.setCanvasNodePositions).not.toHaveBeenCalled();
     expect(saveGraphDraft).not.toHaveBeenCalled();
 
     await waitForAutosaveDebounce();

@@ -92,6 +92,57 @@ describe('Canvas card projection without shell or DOM', () => {
     expect(openModel).toHaveBeenCalledExactlyOnceWith('model');
   });
 
+  it.each([
+    [undefined, 'code'],
+    [false, 'general'],
+  ] as const)('preserves file-model authority with Code permission %s', (permission, section) => {
+    const inspect = vi.fn();
+    const openModel = vi.fn();
+    const original = node('file-model', {
+      pluginKind: 'dvt:transform',
+      role: 'transform',
+      canOpenNodeCode: permission,
+      onInspectNode: inspect,
+      presentationTruth: {
+        columns: canvasColumnTruth([], []),
+        code: { kind: 'workspace-file', path: 'models/model.sql', language: 'sql' },
+      },
+    });
+    const data = projectCanvasShellNodes([original], {
+      ...projection,
+      modelIds: new Set(['file-model']),
+      openModel,
+    })[0]!.data as DbtNodeData;
+    data.onOpenNode?.('file-model');
+    expect(inspect).toHaveBeenCalledExactlyOnceWith('file-model', section);
+    expect(openModel).not.toHaveBeenCalled();
+    expect(data.canOpenNodeCode).toBe(permission !== false);
+    expect(original.data.onOpenNode).toBeUndefined();
+  });
+
+  it('does not fabricate a semantic editor when a file model has no inspector', () => {
+    const openModel = vi.fn();
+    const data = projectCanvasShellNodes(
+      [
+        node('file-model', {
+          pluginKind: 'dvt:transform',
+          presentationTruth: {
+            columns: canvasColumnTruth([], []),
+            code: { kind: 'workspace-file', path: 'models/model.sql', language: 'sql' },
+          },
+        }),
+      ],
+      {
+        ...projection,
+        modelIds: new Set(['file-model']),
+        openModel,
+      }
+    )[0]!.data as DbtNodeData;
+    expect(data.canOpenNodeCode).toBe(false);
+    expect(data.onOpenNode).toBeUndefined();
+    expect(openModel).not.toHaveBeenCalled();
+  });
+
   it('projects current run evidence only onto participating nodes without mutating the source', () => {
     const participant = node('in-run', { runStatusByNodeId: new Map([['in-run', 'completed']]) });
     const outside = node('outside');

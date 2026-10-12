@@ -40,6 +40,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenCanvasSettings?: () => void;
   onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
+  workspaceTask?: ReactNode;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
@@ -87,6 +88,7 @@ function CanvasShellViewport({
   onOpenSourceImport,
   onOpenCanvasSettings,
   contextMenuPresenter,
+  workspaceTask,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -96,6 +98,7 @@ function CanvasShellViewport({
   | 'onOpenSourceImport'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
+  | 'workspaceTask'
 >): JSX.Element {
   const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
     focusMode: layout.focusMode,
@@ -106,10 +109,13 @@ function CanvasShellViewport({
 
   return (
     <CanvasViewport
+      workspaceTask={workspaceTask}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
       canSelectNodes={layout.canSelectNodes}
       nodesWithImpact={graph.nodesWithImpact}
+      sourceCatalogue={panels.inspectorGraphNodes}
+      onInspectSource={graphCommands.onInspectSource}
       edges={graph.edges}
       nodeTypes={graph.nodeTypes}
       gridSize={graph.gridSize}
@@ -148,6 +154,7 @@ function CanvasShellViewport({
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
       externalNodeSurfaceActive={
+        workspaceTask != null ||
         nodeWorkbenchVisible ||
         layout.contextualWorkbench != null ||
         layout.centerSurfaceVisible === true
@@ -165,6 +172,7 @@ function CanvasShellMainSurface({
   onOpenCanvasSettings,
   contextMenuPresenter,
   inspector,
+  workspaceTask,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -174,9 +182,11 @@ function CanvasShellMainSurface({
   | 'onOpenSourceImport'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
+  | 'workspaceTask'
 > & { inspector: ReactNode }): JSX.Element {
   const viewport = (
     <CanvasShellViewport
+      workspaceTask={workspaceTask}
       layout={layout}
       panels={panels}
       graph={graph}
@@ -190,9 +200,11 @@ function CanvasShellMainSurface({
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const baseSurface = (
     <CanvasShellWorkspaceSurfaces
-      viewport={modelWorkspaceOpen ? viewport : (layout.centerSurface ?? viewport)}
+      viewport={
+        modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
+      }
       editor={modelWorkspaceOpen ? layout.centerSurface : null}
-      editorVisible={layout.centerSurfaceVisible === true}
+      editorVisible={workspaceTask == null && layout.centerSurfaceVisible === true}
       hasWorkspaceTabs={panels.activeCanvas != null}
     />
   );
@@ -200,8 +212,8 @@ function CanvasShellMainSurface({
   return (
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
-      workbench={layout.contextualWorkbench}
-      inspector={inspector}
+      workbench={workspaceTask == null ? layout.contextualWorkbench : undefined}
+      inspector={workspaceTask == null ? inspector : null}
     />
   );
 }
@@ -239,9 +251,11 @@ export function CanvasShellMainPanel({
   onOpenCanvasSettings,
   onOpenModelEditor,
   contextMenuPresenter,
+  workspaceTask,
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
-    layout.centerSurface == null || layout.centerSurfaceVisible === false;
+    workspaceTask == null &&
+    (layout.centerSurface == null || layout.centerSurfaceVisible === false);
 
   return (
     <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
@@ -257,6 +271,7 @@ export function CanvasShellMainPanel({
         <CanvasShellReadOnlyBannerSlot>{layout.readOnlyBanner}</CanvasShellReadOnlyBannerSlot>
       ) : null}
       <CanvasShellMainSurface
+        workspaceTask={workspaceTask}
         layout={layout}
         panels={panels}
         graph={graph}

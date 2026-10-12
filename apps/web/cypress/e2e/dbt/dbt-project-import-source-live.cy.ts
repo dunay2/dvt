@@ -2,6 +2,7 @@
  * Owned concern: prove project import and file-backed Source Import through the
  * real protected browser, API, workspace-file, dbt analyzer, and Postgres rails.
  */
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
 import {
   readLiveGraphDraft,
@@ -94,8 +95,13 @@ function visitCanvas(session: E2eWorkspaceSession): void {
     onBeforeLoad(window) {
       window.localStorage.clear();
       seedE2eWorkspaceSession(window, session);
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
     },
   });
+  cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
 }
 
 describe('dbt project import and file-backed Source Import live vertical', () => {
@@ -123,13 +129,12 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       .should('be.enabled')
       .click();
     cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]')
+      .scrollIntoView()
       .should('be.visible')
       .should(($command) => {
         expect($command).not.to.have.attr('data-disabled');
       })
-      .then(($command) => {
-        $command[0]?.click();
-      });
+      .click();
 
     cy.get('[data-slot="dbt-project-import-dialog"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="dbt-project-import-root"]')
@@ -170,7 +175,7 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       timeout: 60_000,
     })
       .should('be.visible')
-      .and('contain.text', 'Source 1')
+      .and('contain.text', 'source_1')
       .and('contain.text', 'Columns')
       .and('contain.text', '3');
 

@@ -5,7 +5,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CanvasDependencyEdge, resolveCanvasDependencyArrowPoints } from './CanvasDependencyEdge';
+import { CanvasDependencyEdge } from './CanvasDependencyEdge';
 import { buildCanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
 
 type MockBaseEdgeProps = {
@@ -27,7 +27,6 @@ vi.mock('@xyflow/react', async (importOriginal) => {
     },
     EdgeLabelRenderer: ({ children }: { children: React.ReactNode }) =>
       React.createElement('foreignObject', null, children),
-    getSmoothStepPath: () => ['M 0 0 L 100 40', 50, 20, 0, 0],
   };
 });
 
@@ -48,15 +47,6 @@ describe('CanvasDependencyEdge', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
-  });
-
-  it.each([
-    [Position.Left, '98,50 86,45 86,55'],
-    [Position.Right, '102,50 114,55 114,45'],
-    [Position.Top, '100,48 105,36 95,36'],
-    [Position.Bottom, '100,52 95,64 105,64'],
-  ])('keeps the direction cue clear of a %s target handle', (targetPosition, expected) => {
-    expect(resolveCanvasDependencyArrowPoints(100, 50, targetPosition)).toBe(expected);
   });
 
   it('keeps the semantic edge attached while rendering one non-interactive direction cue', () => {
@@ -85,15 +75,17 @@ describe('CanvasDependencyEdge', () => {
     });
 
     const cue = container.querySelector('[data-slot="canvas-dependency-direction-cue"]');
-    expect(cue?.getAttribute('points')).toBe('98,40 86,35 86,45');
+    expect(cue?.tagName).toBe('marker');
+    expect(cue?.getAttribute('orient')).toBe('auto');
+    expect(Number(cue?.getAttribute('refX'))).toBeGreaterThan(8);
     expect(cue?.getAttribute('aria-hidden')).toBe('true');
     expect(cue?.getAttribute('pointer-events')).toBe('none');
     expect(mockedEdge.props).toMatchObject({
-      path: 'M 0 0 L 100 40',
       interactionWidth: 18,
       style: { stroke: '#cbd5e1', strokeWidth: 2.5 },
     });
-    expect(mockedEdge.props.markerEnd).toBeUndefined();
+    expect(mockedEdge.props.path).toMatch(/^M.*C/);
+    expect(mockedEdge.props.markerEnd).toBe(`url(#${cue?.id})`);
     expect(container.querySelector('[data-slot="canvas-dependency-closed-gate"]')).toBeNull();
   });
 
@@ -144,7 +136,7 @@ describe('CanvasDependencyEdge', () => {
     });
     const selectedStyle = mockedEdge.props.style as React.CSSProperties;
 
-    expect(selectedStyle.stroke).not.toBe(idleStyle.stroke);
+    expect(selectedStyle.strokeWidth).toBeGreaterThan(idleStyle.strokeWidth as number);
   });
 
   it('uses a non-color valve cue while retaining the directed dependency', () => {

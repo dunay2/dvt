@@ -1,4 +1,10 @@
-/** Owned concern: drive public Canvas graph authoring through visible node controls. */
+/**
+ * Owned concern: drive public Canvas graph authoring through visible node controls.
+ * @baseline GH-3610: the two-column composition grid does not admit its central gutter.
+ * @decision Align the dragged center to a column midpoint, then prove one active choice.
+ * @consequence A release must still persist the admitted composition through the existing command.
+ * @version 1.0.1
+ */
 type DragPoint = Readonly<{ x: number; y: number }>;
 type DragCanvasNodeOptions = Readonly<{
   nodeId?: string;
@@ -39,6 +45,11 @@ function readHandleCenter(handle: HTMLElement): DragPoint {
     x: rect.left + rect.width / 2,
     y: rect.top + rect.height / 2,
   };
+}
+
+function readAlgebraicLandingPoint(node: HTMLElement): DragPoint {
+  const rect = node.getBoundingClientRect();
+  return { x: rect.left + (rect.width * 3) / 4, y: rect.top + rect.height / 2 };
 }
 
 export function getVisibleCanvasNodeByCardTitle(
@@ -153,11 +164,7 @@ export function dragCanvasNodeByViewportDelta(
   });
 }
 
-export function dragCanvasNodeOntoNode(
-  sourceNodeId: string,
-  targetNodeId: string,
-  onHover?: () => void
-): void {
+export function dragCanvasNodeOntoNode(sourceNodeId: string, targetNodeId: string): void {
   cy.get(`.react-flow__node[data-id="${sourceNodeId}"]`)
     .should('be.visible')
     .then(($sourceNode) => {
@@ -165,7 +172,7 @@ export function dragCanvasNodeOntoNode(
         .should('be.visible')
         .then(($targetNode) => {
           const sourcePoint = readHandleCenter($sourceNode[0]!);
-          const targetPoint = readHandleCenter($targetNode[0]!);
+          const targetPoint = readAlgebraicLandingPoint($targetNode[0]!);
           let releasePoint = targetPoint;
 
           cy.window().then((window) => {
@@ -195,7 +202,7 @@ export function dragCanvasNodeOntoNode(
             cy.get(`.react-flow__node[data-id="${sourceNodeId}"]`).then(($movedSource) => {
               cy.get(`.react-flow__node[data-id="${targetNodeId}"]`).then(($currentTarget) => {
                 const movedCenter = readHandleCenter($movedSource[0]!);
-                const currentTargetCenter = readHandleCenter($currentTarget[0]!);
+                const currentTargetCenter = readAlgebraicLandingPoint($currentTarget[0]!);
                 const correction = {
                   x: currentTargetCenter.x - movedCenter.x,
                   y: currentTargetCenter.y - movedCenter.y,
@@ -217,8 +224,10 @@ export function dragCanvasNodeOntoNode(
 
           cy.get(`.react-flow__node[data-id="${targetNodeId}"]`)
             .find('[data-slot="graph-node-algebraic-drop"]')
-            .should('be.visible');
-          onHover?.();
+            .should('be.visible')
+            .find('[data-operation][data-active="true"]')
+            .should('have.length', 1)
+            .and('be.visible');
 
           cy.window().then((window) => {
             dispatchMouseDragEvent(window, window, 'mouseup', releasePoint, 0);

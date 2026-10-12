@@ -1,7 +1,12 @@
 /**
  * Owned concern: prove file-authoritative dbt Preview and Run through the real
  * browser, protected API, persisted plan, Temporal worker, and dbt CLI.
+ * @baseline GH-3610: canonical source labels and actual graph readiness govern public gestures.
+ * @decision Target the model title for inspection and retain exact file/plan/run evidence.
+ * @consequence Expanded field rows and startup timing cannot substitute for admitted selection.
+ * @version 1.0.1
  */
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
@@ -127,7 +132,7 @@ function visitProjectWithRequestObservations(observedRequests: ObservedRequest[]
     {
       onBeforeLoad(window) {
         window.localStorage.setItem(
-          'dvt-web-application-language',
+          APPLICATION_LANGUAGE_STORAGE_KEY,
           JSON.stringify({ state: { language: 'en' }, version: 0 })
         );
         const originalFetch = window.fetch.bind(window);
@@ -212,12 +217,12 @@ describe('dbt project file Preview and Run live vertical', () => {
       timeout: 60_000,
     })
       .should('be.visible')
-      .and('contain.text', 'Orders');
+      .and('contain.text', 'orders');
     cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
       .and('contain.text', 'Orders');
     cy.get(
-      `.react-flow__node[data-id="${MODEL_UNIQUE_ID}"] [data-slot="canvas-node-shell"]`
+      `.react-flow__node[data-id="${MODEL_UNIQUE_ID}"] [data-slot="graph-node-card-title"]`
     ).dblclick();
     cy.get('[data-slot="canvas-node-workbench-tab-general"]', { timeout: 20_000 })
       .should('be.visible')
@@ -237,7 +242,7 @@ describe('dbt project file Preview and Run live vertical', () => {
     cy.get('body').type('{esc}');
     cy.get(`.react-flow__node[data-id="${SUMMARY_MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
-      .and('contain.text', 'Order Summary Model');
+      .and('contain.text', 'Order Summary');
     selectCanvasClosure([SUMMARY_MODEL_UNIQUE_ID]);
 
     clickPreviewExecutionPlanFromOperationalDrawer();
@@ -333,6 +338,10 @@ describe('dbt project file Preview and Run live vertical', () => {
   it('does not present a DBT source as an executable selection root', () => {
     const observedRequests: ObservedRequest[] = [];
     visitProjectWithRequestObservations(observedRequests);
+
+    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`, { timeout: 60_000 }).should(
+      'be.visible'
+    );
 
     openCanvasNodeOperations(SOURCE_UNIQUE_ID);
     cy.get('[data-slot="canvas-node-context-menu"]')

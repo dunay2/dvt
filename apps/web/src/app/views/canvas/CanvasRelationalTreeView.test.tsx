@@ -110,6 +110,32 @@ describe('Canvas relational-tree branching view', () => {
     );
   });
 
+  it.each(['en', 'es'])('omits the stale JOIN subtitle and its empty row in %s', (locale) => {
+    const node: CanvasRelationalTreeNode = {
+      ...relation('selected-join', 'join'),
+      operation: 'inner_join',
+      displayName: 'left_join',
+    };
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeView
+          outputName="Model"
+          root={node}
+          selectedLocator={node.locator}
+          copy={resolveCanvasViewCopy(locale)}
+          onSelect={() => undefined}
+        />
+      )
+    );
+    const card = container.querySelector('[data-relation-id="selected-join"]')!;
+    expect(card.querySelector('[data-slot="canvas-relational-node-title"]')?.textContent).toBe(
+      'INNER JOIN'
+    );
+    expect(card.querySelectorAll('span[title]')).toHaveLength(1);
+    expect(card.textContent).not.toContain('left_join');
+    expect(node.displayName).toBe('left_join');
+  });
+
   it('lays out every N-ary branch horizontally with explicit roles', () => {
     const tree = relation('set', 'set', [
       { role: 'primary', ordinal: 0, node: relation('north', 'read') },

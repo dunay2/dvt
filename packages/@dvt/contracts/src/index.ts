@@ -111,6 +111,11 @@ export type {
   WorkspaceGraphAuthoringNodeStatus,
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 export * from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
+export {
+  resolveWorkspaceSourceInstances,
+  WorkspaceSourceInstanceError,
+  WORKSPACE_SOURCE_INSTANCE_ERROR,
+} from './contracts/planner/WorkspaceSourceInstance.v1.js';
 export * from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
 export * from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
 export * from './contracts/planner/DvtRelationalOperationInputs.js';

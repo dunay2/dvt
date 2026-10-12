@@ -22,7 +22,7 @@ export type OperationalDrawerTabId = OperationalDrawerBuiltInTabId | Operational
 export type OperationalDrawerDataSample =
   | Readonly<{ status: 'idle' }>
   | Readonly<{ status: 'loading'; nodeName: string }>
-  | Readonly<{ status: 'ready'; nodeName: string; sample: CanvasDataSample }>
+  | Readonly<{ status: 'ready'; nodeName: string; sample: CanvasDataSample; refreshing?: true }>
   | Readonly<{
       status: 'error';
       nodeName: string;

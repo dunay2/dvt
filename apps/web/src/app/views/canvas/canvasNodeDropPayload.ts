@@ -1,12 +1,13 @@
-import type {
-  CanonicalNode,
-} from '../../types/canonical';
+/** Owned concern: decode Canvas drag identities and canonical node payloads. */
+import type { CanonicalNode } from '../../types/canonical';
 import {
   isCanonicalNodeStatus,
   isCoreNodeRole,
   isPluginNodeKind,
   isRecord,
 } from '../../types/canonicalGuards';
+
+export const CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE = 'application/x-dvt-source-catalog-id';
 
 type ParsedCanonicalDropPayload = {
   id: string;

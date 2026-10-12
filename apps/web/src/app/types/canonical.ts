@@ -79,6 +79,8 @@ export type CanonicalEdgeRelation = (typeof CANONICAL_EDGE_RELATIONS)[number];
 
 export interface CanonicalNode {
   id: string;
+  /** Independent placement referencing a registered source configuration. */
+  sourceDefinitionId?: string;
   name: string;
   pluginId: string;
   kind: PluginNodeKind;

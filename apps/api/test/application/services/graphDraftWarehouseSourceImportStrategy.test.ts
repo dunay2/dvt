@@ -61,7 +61,7 @@ const SOURCE_OBJECT: SourceObject = {
 };
 
 describe('GraphDraftWarehouseSourceImportStrategy', () => {
-  it('publishes YAML and appends a metadata-rich source with opaque logical identity', async () => {
+  it('registers a metadata-rich source without placing a Canvas card', async () => {
     const draftStore = createDraftStore(createDraft('orders-canvas'));
     const batchMutation = createBatchMutation();
     const strategy = createStrategy(draftStore, batchMutation);
@@ -90,6 +90,8 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
         canvasIds: ['orders-canvas'],
         draft: expect.objectContaining({
           activeCanvasId: 'orders-canvas',
+          nodeIds: [],
+          nodePositions: {},
           nodes: [
             expect.objectContaining({
               metadata: expect.objectContaining({
@@ -188,7 +190,8 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
       }),
     ]);
     const savedPositions = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodePositions ?? {};
-    expect(new Set(savedNodes.map((node) => JSON.stringify(savedPositions[node.id]))).size).toBe(2);
+    expect(Object.keys(savedPositions)).toEqual([existingNodeId]);
+    expect(savedPositions[savedNodes[1]!.id]).toBeUndefined();
   });
 
   it('keeps graph bindings aligned with collision-resistant YAML identities', async () => {

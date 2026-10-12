@@ -2,6 +2,7 @@
 import {
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   WorkspaceGraphAuthoringDraftSchema,
+  resolveWorkspaceSourceInstances,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -24,7 +25,11 @@ export function selectProtectedDvtTransforms(
   input: DvtTransformSelection
 ): ProtectedTransformSelection {
   const draft = WorkspaceGraphAuthoringDraftSchema.parse(input.draft);
-  const nodes = selectExact(draft.nodes, input.selectedNodeIds, 'node');
+  const nodes = selectExact(
+    resolveWorkspaceSourceInstances(draft.nodes),
+    input.selectedNodeIds,
+    'node'
+  );
   const edges = selectExact(draft.edges, input.selectedEdgeIds, 'edge');
   const sources = nodes.filter(
     (node) =>
