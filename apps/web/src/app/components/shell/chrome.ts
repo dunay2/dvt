@@ -1,5 +1,9 @@
 /** Owned concern: publish shell chrome class contracts without route or session authority. */
 export const topAppBarClasses = {
+  appMenuButton:
+    'flex h-8 shrink-0 items-center gap-2 rounded-md px-1.5 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:mr-1',
+  applicationMenuContent: 'w-56 max-w-[calc(100vw-1rem)] text-xs',
+  menuItemIcon: 'mr-2 size-4 shrink-0',
   shellBar:
     'flex min-h-10 min-w-0 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 py-1 text-[var(--text-default)] sm:h-10 sm:flex-nowrap sm:gap-2 sm:px-3 sm:py-0',
   readOnlyScopeField:

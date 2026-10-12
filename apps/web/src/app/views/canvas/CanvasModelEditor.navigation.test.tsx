@@ -5,10 +5,15 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { createMemoryRouter, RouterProvider, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, waitFor } from '@testing-library/dom';
 
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { ShellAppMenu } from '../../components/shell/ShellAppMenu';
+import { resolveShellTopBarCopy } from '../../components/shell/copy';
+import { buildShellNavigationModel } from '../../shell/shellNavigationModel';
+import { flushRouterUpdate } from '../../routerFlushSync';
 import { CanvasModelEditor } from './CanvasModelEditor';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
@@ -280,7 +285,9 @@ describe('CanvasModelEditor navigation', () => {
       ],
       { initialEntries: ['/'] }
     );
-    await act(async () => root.render(<RouterProvider router={router} />));
+    await act(async () =>
+      root.render(<RouterProvider router={router} flushSync={flushRouterUpdate} />)
+    );
 
     await act(async () => {
       container.querySelector<HTMLButtonElement>('[data-slot="leave-route"]')!.click();
@@ -307,6 +314,62 @@ describe('CanvasModelEditor navigation', () => {
     });
     expect(preparePreview).toHaveBeenCalledTimes(2);
     expect(container.textContent).toContain('Next route');
+  });
+
+  it('keeps unapplied work when Raven navigation is cancelled and discards only on an explicit decision', async () => {
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/canvas',
+          element: (
+            <>
+              <ShellAppMenu
+                copy={resolveShellTopBarCopy('en')}
+                navigationModel={buildShellNavigationModel([])}
+                showNavigation
+              />
+              <Editor authoring={{ canEditNode: true, onApplyNodeDraft }} />
+            </>
+          ),
+        },
+        { path: '/plugins', element: <div>Plugins route</div> },
+      ],
+      { initialEntries: ['/canvas'] }
+    );
+    await act(async () =>
+      root.render(<RouterProvider router={router} flushSync={flushRouterUpdate} />)
+    );
+    await beginProjection(container);
+
+    for (const decision of ['Keep editing', 'Discard changes']) {
+      await act(async () => {
+        fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
+      });
+      const destination = await waitFor(() => {
+        const link = document.querySelector<HTMLElement>(
+          '[data-slot="shell-menu-navigation-link"][href="/plugins"]'
+        );
+        expect(link).not.toBeNull();
+        return link!;
+      });
+      await act(async () => destination.click());
+
+      expect(router.state.location.pathname).toBe('/canvas');
+      expect(document.querySelector('[role="menu"]')).toBeNull();
+      expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
+      await act(async () => findButton(decision).click());
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      if (decision === 'Keep editing') {
+        expect(router.state.location.pathname).toBe('/canvas');
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-apply"]')
+        ).not.toBeNull();
+      }
+    }
+
+    expect(router.state.location.pathname).toBe('/plugins');
+    expect(container.textContent).toContain('Plugins route');
   });
 
   it('guards hard exits while the existing persistence lifecycle is not durable', async () => {

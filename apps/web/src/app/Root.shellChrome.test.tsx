@@ -47,7 +47,7 @@ describe('RootShell chrome', () => {
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
       await act(async () => {
         fireEvent.pointerDown(
-          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+          mounted.container.querySelector('[data-slot="shell-app-menu-trigger"]')!
         );
       });
 
@@ -79,7 +79,7 @@ describe('RootShell chrome', () => {
     }
   });
 
-  it('navigates from the Canvas workspace menu to Runs', async () => {
+  it('navigates from the Raven application menu to Runs', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
     );
@@ -88,7 +88,7 @@ describe('RootShell chrome', () => {
       await waitForHealthyShellChrome(mounted);
       await act(async () => {
         fireEvent.pointerDown(
-          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+          mounted.container.querySelector('[data-slot="shell-app-menu-trigger"]')!
         );
       });
 

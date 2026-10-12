@@ -187,9 +187,7 @@ describe('ShellTopBar workspace context', () => {
 
       await act(async () => {
         fireEvent.keyDown(document, { key: 'Escape' });
-        fireEvent.pointerDown(
-          container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
-        );
+        fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
       });
 
       await waitFor(() => {
@@ -200,6 +198,23 @@ describe('ShellTopBar workspace context', () => {
         ];
 
         expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
+        expect(
+          document.body.querySelector('[data-slot="shell-menu-workspace-context"]')
+        ).toBeNull();
+        expect(document.body.querySelector('[data-slot="shell-new-project-command"]')).toBeNull();
+      });
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: 'Escape' });
+        fireEvent.pointerDown(
+          container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+        );
+      });
+
+      await waitFor(() => {
+        expect(
+          document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
+        ).toHaveLength(0);
         expect(document.body.textContent).toContain('Workspace context');
         expect(document.body.textContent).toContain('dbt-analytics');
         expect(document.body.textContent).toContain('dev');
@@ -390,7 +405,7 @@ describe('ShellTopBar workspace context', () => {
     expect(onStartRun).toHaveBeenCalledTimes(1);
   });
 
-  it('exposes workspace navigation when focus mode hides the global route rail', async () => {
+  it('exposes Raven navigation when focus mode hides the global route rail', async () => {
     useUiLayoutStore.setState({ focusMode: true });
 
     await act(async () => {
@@ -404,7 +419,7 @@ describe('ShellTopBar workspace context', () => {
     expect(workspaceMenuTrigger).not.toBeNull();
 
     await act(async () => {
-      fireEvent.pointerDown(workspaceMenuTrigger!);
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
     });
 
     await waitFor(() => {
@@ -615,6 +630,7 @@ describe('ShellTopBar workspace context', () => {
 
     await waitFor(() => {
       expect(document.body.querySelector('[data-slot="shell-about-dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(appMenu);
     });
   });
 });

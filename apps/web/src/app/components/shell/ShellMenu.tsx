@@ -8,7 +8,6 @@ import {
   Minimize2,
   SlidersHorizontal,
 } from 'lucide-react';
-import { NavLink, useNavigate } from 'react-router';
 import { useRef, useState } from 'react';
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
@@ -54,7 +53,6 @@ export function ShellMenu({
   viewControls,
   bottomDrawerVisible,
   focusMode,
-  navigationModel,
   projectIdentityBadge,
   gitBranch,
   gitSha,
@@ -66,7 +64,6 @@ export function ShellMenu({
   const [projectCreationDialogOpen, setProjectCreationDialogOpen] = useState(false);
   const preventWorkspaceFocusRestoreRef = useRef(false);
   const workspaceMenuTriggerRef = useRef<HTMLButtonElement>(null);
-  const navigate = useNavigate();
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const configureApplicationLanguage = useApplicationLanguageStore(
     (state) => state.configureApplicationLanguage
@@ -115,27 +112,6 @@ export function ShellMenu({
         >
           {isWorkspaceMenu ? (
             <>
-              <DropdownMenuLabel>{copy.globalNavigation}</DropdownMenuLabel>
-              {[...navigationModel.primaryItems, ...navigationModel.footerItems].map((item) => {
-                const Icon = item.icon;
-                return (
-                  <DropdownMenuItem key={item.to} asChild>
-                    <NavLink
-                      data-slot="shell-menu-navigation-link"
-                      to={item.to}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setOpen(false);
-                        void navigate(item.to, { flushSync: true });
-                      }}
-                    >
-                      <Icon className="mr-2 size-4" />
-                      {item.label}
-                    </NavLink>
-                  </DropdownMenuItem>
-                );
-              })}
-              <DropdownMenuSeparator />
               <DropdownMenuLabel>{copy.workspaceContext}</DropdownMenuLabel>
               <div data-slot="shell-menu-workspace-context" className="px-2 py-1.5">
                 <ShellWorkspaceContextDetails badge={projectIdentityBadge} copy={copy} />

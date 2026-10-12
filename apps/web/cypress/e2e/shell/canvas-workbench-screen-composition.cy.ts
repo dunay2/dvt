@@ -559,6 +559,12 @@ describe('Canvas workbench screen composition', () => {
     cy.get('body').type('{esc}');
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
+    cy.contains('Contexto del proyecto').should('be.visible');
+    cy.contains('Contexto Git').should('be.visible');
+    cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
+    cy.get('body').type('{esc}');
+
+    cy.get('[data-slot="shell-app-menu-trigger"]').focus().type('{enter}');
     cy.get('[data-slot="shell-menu-navigation-link"]').then(($links) => {
       expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
         '/canvas',
@@ -570,13 +576,13 @@ describe('Canvas workbench screen composition', () => {
     });
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Plugins').should('be.visible');
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Administración').should('be.visible');
-    cy.contains('Contexto del proyecto').should('be.visible');
-    cy.contains('Contexto Git').should('be.visible');
+    cy.contains('Contexto del proyecto').should('not.exist');
+    cy.contains('Contexto Git').should('not.exist');
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
     cy.location('pathname').should('eq', '/runs');
     waitForE2eApiCall('/runs', 'GET');
     cy.get('[data-slot="run-operational-table"]').should('contain.text', 'run_primary_project');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-app-menu-trigger"]').click();
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
@@ -702,7 +708,7 @@ describe('Canvas workbench screen composition', () => {
     });
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-app-menu-trigger"]').click();
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
     cy.location('pathname').should('eq', '/runs');
     waitForE2eApiCall('/runs', 'GET');
@@ -719,7 +725,7 @@ describe('Canvas workbench screen composition', () => {
       .should('contain.text', 'run_primary_project')
       .and('not.contain.text', 'run_alternate_project');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-app-menu-trigger"]').click();
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="shell-active-canvas-identity"]')

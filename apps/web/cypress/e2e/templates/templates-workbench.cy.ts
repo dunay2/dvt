@@ -34,7 +34,7 @@ describe('Templates workbench', () => {
     visitWithE2eWorkspaceSession('/plugins');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-app-menu-trigger"]').click();
     cy.get('[data-slot="shell-menu-navigation-link"][href="/templates"]').click();
 
     cy.location('pathname').should('eq', '/templates');

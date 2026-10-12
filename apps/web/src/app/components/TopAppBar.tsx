@@ -76,7 +76,11 @@ export function ShellTopBar({
           data-slot="shell-top-bar-context-cluster"
           className="flex w-full min-w-0 items-center gap-1 sm:w-auto sm:flex-1 sm:gap-2"
         >
-          <ShellAppMenu copy={copy} />
+          <ShellAppMenu
+            copy={copy}
+            navigationModel={navigationModel}
+            showNavigation={exposeWorkspaceNavigationMenu}
+          />
 
           {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
 
