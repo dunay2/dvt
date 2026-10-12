@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '..');
 const REPO_ROOT = path.resolve(APP_ROOT, '../../../..');
+const OWNED_CONCERN_DOCBLOCK = /^\/\*\*\s+(?:\*\s+)?Owned concern:/u;
 
 function readAppSource(relativePathFromApp: string): string {
   return readFileSync(path.join(APP_ROOT, relativePathFromApp), 'utf8');
@@ -16,6 +17,20 @@ function readRepoSource(relativePathFromRepo: string): string {
 }
 
 describe('ShellTopBar workspace context architecture', () => {
+  it.each([
+    ['/** Owned concern: read context. */', true],
+    ['/**\n * Owned concern: read context.\n */', true],
+    ['/**\r\n * Owned concern: read context.\r\n */', true],
+    ['/**\nOwned concern: read context.\n */', true],
+    ['import "context";\n/** Owned concern: read context. */', false],
+    ['/* Owned concern: read context. */', false],
+    ['/** Other prose before Owned concern: read context. */', false],
+    ['/** owned concern: read context. */', false],
+    ['', false],
+  ] as const)('checks concern ownership independently of wrapping: %j', (source, accepted) => {
+    expect(OWNED_CONCERN_DOCBLOCK.test(source.trimStart())).toBe(accepted);
+  });
+
   it('encapsulates workspace identity as a read-only presentation model', () => {
     const topAppBarSource = readAppSource('components/TopAppBar.tsx');
     const identityModelSource = readAppSource('shell/projectIdentityBadge.ts');
@@ -36,7 +51,7 @@ describe('ShellTopBar workspace context architecture', () => {
       ['shell chrome class contract', chromeSource],
       ['Root shell chrome test support', rootShellTestSupportSource],
     ] as const) {
-      expect(source.trimStart().startsWith('/** Owned concern:'), label).toBe(true);
+      expect(source.trimStart(), label).toMatch(OWNED_CONCERN_DOCBLOCK);
     }
 
     expect(topAppBarSource).toContain('buildProjectIdentityBadge');
