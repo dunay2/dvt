@@ -20,5 +20,8 @@ mitigations:
   - Prove repeated drag, save, reload, sibling retention and configuration propagation before
     integration.
   - Deploy updated contract readers before the Web begins writing instance references.
+  - Allocate placement identities through the existing secure UUID primitive and reject absent
+    entropy; prove both the non-secure browser origin and injected-ID roundtrip without weak
+    fallbacks.
 evidence:
   - docs/evidence/ED-20261011-source-instance-identity.md

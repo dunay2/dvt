@@ -88,6 +88,54 @@ mapper/context tests: 18 passed. The existing native
 `canvas-connection-valve.cy.ts` browser proof passed its persisted close/reopen
 round trip after replacing custom arrow calculations with Bezier/SVG primitives.
 
+### Bounded closeout on 2026-10-12
+
+Calculated Output editing reuses the existing section's pending-editor authority:
+its list remains mounted but hidden while the formula form is active. Focus and
+alias drafts survive schema refresh. Focused component tests: 22 passed;
+architecture guards: 10 passed; the three JOIN consumer browser cases passed.
+
+Source placement now calls the shared `@dvt/crypto` UUID primitive. Five focused
+tests pass, including a browser without `randomUUID`, absent secure entropy and
+the existing injected-ID roundtrip. Both source identity/import scenarios passed
+separately on the Docker HTTP origin: two specs, two tests, no omissions, 1m36s.
+There is no weaker identity fallback or second crypto implementation.
+
+At `e9edd355f`, the full gate passed 5,028 local tests and all 121 controlled
+native browser cases, then stopped because the real dbt executable was not
+configured. The existing executable was selected explicitly; no installation,
+runtime downgrade or skipped live phase was used. An additional Docker inventory
+was aborted when Chrome stopped responding during trusted dragging, including
+to a read-only debugger diagnostic. Only that proof's container was stopped.
+
+The CI-equivalent native inventory executed all 26 requested live specs:
+55 passed and four failed, with no pending or skipped tests. Failure screenshots
+identified stale gesture preconditions: scrollable menu commands outside the
+viewport, a forced offscreen context click, and Preview covered by the minimap.
+Bounded consumers now reveal commands, use public Fit, restore opener focus and
+retain normal actionability checks. Three static precondition guards and the
+complete 81-test browser-routing suite pass after enabled pre-commit formatting.
+
+The affected real repetitions then passed: two JOIN publication cases (including
+A/B publication identity and old-token rejection), persisted LEFT JOIN/Sort/Fetch,
+and generated dbt code/Run. The remaining dbt import consumer explicitly owns its
+presentation language and awaits connection creation before visiting Connections.
+Its final real proof passed in 1m19s, verifying the original source ID, three
+columns, YAML identity/fields and no graph-draft creation. No import, publication,
+authorization or semantic assertion was removed.
+
+Web lint, typecheck and production build passed; the build retains its existing
+large-Monaco-chunk warning. API unit validation passed 1,293 tests. Its 27 existing
+PostgreSQL-conditioned omissions were subsequently executed on a separate
+disposable database: all four suites passed 33 tests, including six repeated unit
+cases, with no omissions. That database was removed after the proof. Contract
+validation passed 820 tests and its typecheck.
+
+The final complete pre-push and exact-head CI remain mandatory before integration.
+Passing repetitions do not convert an earlier failed full gate into a green
+receipt. GitHub #3610, #3613 and #3614 carry the concrete candidate/gate evidence;
+#3612 remains open for unadmitted SQL-function scope.
+
 ## No-debt posture
 
 No fake adapter, replacement query, new cache, placeholder, hidden fallback,
