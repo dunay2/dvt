@@ -135,6 +135,8 @@ describe('public Canvas gesture preconditions', () => {
     const body = ast.getText();
     expect(body).toContain('APPLICATION_LANGUAGE_STORAGE_KEY');
     expect(body).toContain('canvas-playground-template-choice');
+    expect(body).toContain('[data-testid="canvas-viewport"]');
+    expect(body).not.toContain('[data-slot="canvas-viewport"]');
     expect(body).not.toContain("cy.contains('Create canvas'");
     expect(body).not.toContain(".contains('button', 'dbt canvas')");
   });

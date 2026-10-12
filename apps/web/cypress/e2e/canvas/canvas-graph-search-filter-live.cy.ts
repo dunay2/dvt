@@ -111,7 +111,7 @@ describe('Canvas graph search and filtering live protected runtime', () => {
       .should('have.length', 1)
       .should('be.enabled')
       .click();
-    cy.get('[data-slot="canvas-viewport"]').should('be.visible');
+    cy.get('[data-testid="canvas-viewport"]').should('be.visible');
     cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
 
     addDbtNode('dvt:transform', 320, 250);
