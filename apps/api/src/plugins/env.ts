@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { readLocalDataConfiguration, type LocalDataConfiguration } from './localDataEnv.js';
+
 const strictTrueBoolean = z.preprocess((value) => {
   if (value === undefined) return undefined;
   if (typeof value === 'boolean') return value;
@@ -93,7 +95,7 @@ const EnvSchema = z.object({
   DVT_ADMIN_ROUTES_ENABLED: strictTrueBoolean.default(false),
 });
 
-export type Env = z.infer<typeof EnvSchema>;
+export type Env = z.infer<typeof EnvSchema> & Readonly<{ localData: LocalDataConfiguration }>;
 
 export function loadEnv(input: NodeJS.ProcessEnv): Env {
   const parsed = EnvSchema.safeParse(input);
@@ -101,5 +103,5 @@ export function loadEnv(input: NodeJS.ProcessEnv): Env {
     const msg = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
     throw new Error(`Invalid environment: ${msg}`);
   }
-  return parsed.data;
+  return { ...parsed.data, localData: readLocalDataConfiguration(input) };
 }
