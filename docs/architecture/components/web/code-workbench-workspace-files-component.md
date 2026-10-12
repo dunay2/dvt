@@ -348,7 +348,10 @@ flowchart LR
 Previously an empty invalid-analysis projection cleared the inspector and destroyed
 the editor session. The correction retains a transient inspector snapshot only for
 a previously admitted file, matched by full layout/authority key and node identity.
-Closing the inspector or fresh confirmed removal discards it. A different authority,
+Closing the inspector or fresh confirmed removal discards it. Close hides the
+inspector without clearing its stored node ID: visibility is therefore an explicit
+snapshot fence. Reopening that same ID while analysis remains unavailable must
+not resurrect the closed snapshot. A different authority,
 different node or native node without a file never uses the snapshot. Graph nodes,
 execution membership, capabilities and reconciliation status still consume the
 actual query; the snapshot is not a graph fallback or execution admission. Valid

@@ -147,9 +147,17 @@ three retired consumer expectations and one actual invalid-analysis continuity
 defect: unavailable graph analysis clears the editor needed to repair saved SQL.
 The bounded inspector correction retains only the same previously admitted file
 context in its exact authority and node identity, never graph/Run admission.
-Six presentation cases pass for valid repair, cross-authority/node refusal,
-explicit close, confirmed fresh removal and absent file authority. Real repair,
-complete prepush and exact-head CI acceptance remain required.
+Six initial presentation cases pass for valid repair, cross-authority/node refusal,
+cleared identity, confirmed fresh removal and absent file authority. Independent
+review identified that actual Close hides the inspector without clearing its ID;
+the additional negative case failed before adding the visibility fence. Reopening
+that same ID during unconfirmed analysis must not resurrect the closed snapshot.
+At `0a8f08e9c`, four of six real cases pass, including both project Preview/Run
+cases. The YAML/SQL case now proves invalid-to-valid repair in the same Code editor
+but subsequently fails on retired selection buttons; recovery fails on an internal
+strategy word rather than the current translated receipt. These two consumers
+retain all their unique assertions through the existing current UI surfaces.
+The final real repetition, complete prepush and exact-head CI remain required.
 
 The final complete pre-push and exact-head CI remain mandatory before integration.
 Passing repetitions do not convert an earlier failed full gate into a green

@@ -25,6 +25,7 @@ const FILE_NODE: CanonicalNode = {
 const OPTIONS = {
   authorityKey: 'workspace/project/canvas/files',
   inspectorNodeId: FILE_NODE.id as string | null,
+  inspectorVisible: true,
   analysisFresh: true,
   nodesById: new Map([[FILE_NODE.id, FILE_NODE]]) as ReadonlyMap<string, CanonicalNode>,
 };
@@ -77,6 +78,13 @@ describe('scoped file inspector continuity', () => {
   it('discards a fresh confirmed removal and cannot resurrect it on later failure', () => {
     render(OPTIONS);
     render({ ...OPTIONS, nodesById: new Map() });
+    expect(latest).toBeNull();
+    render({ ...OPTIONS, analysisFresh: false, nodesById: new Map() });
+    expect(latest).toBeNull();
+  });
+  it('discards the snapshot on real Close even when the node ID is retained', () => {
+    render(OPTIONS);
+    render({ ...OPTIONS, inspectorVisible: false, analysisFresh: false, nodesById: new Map() });
     expect(latest).toBeNull();
     render({ ...OPTIONS, analysisFresh: false, nodesById: new Map() });
     expect(latest).toBeNull();

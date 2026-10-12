@@ -166,6 +166,7 @@ export function useDbtProjectFilesAuthorityController(
   const inspectorNode = useDbtProjectFileInspector({
     authorityKey: layoutKey,
     inspectorNodeId,
+    inspectorVisible: inspectorPanelVisible,
     analysisFresh,
     nodesById: canonicalNodesById,
   });
