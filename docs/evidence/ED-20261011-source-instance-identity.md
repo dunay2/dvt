@@ -131,6 +131,16 @@ disposable database: all four suites passed 33 tests, including six repeated uni
 cases, with no omissions. That database was removed after the proof. Contract
 validation passed 820 tests and its typecheck.
 
+The exact selection-helper import closure now admits all 25 consumers individually:
+five controlled, 19 available and one unavailable. Five previously omitted live
+specs join the available inventory (31 total); unknown consumers still reject.
+At `01acd8ce7`, their six real cases produced two passes and four failures, without
+omissions. One failure is a stale viewport attribute. Three expose a product
+regression: file-authoritative models sharing `dvt:transform` enter the native
+semantic editor instead of their existing Properties/Code authority. The bounded
+correction uses the existing Code capability, respects explicit denial, and keeps
+native models unchanged; its unit and live acceptance remain required.
+
 The final complete pre-push and exact-head CI remain mandatory before integration.
 Passing repetitions do not convert an earlier failed full gate into a green
 receipt. GitHub #3610, #3613 and #3614 carry the concrete candidate/gate evidence;

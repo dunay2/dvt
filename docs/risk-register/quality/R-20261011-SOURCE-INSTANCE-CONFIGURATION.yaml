@@ -24,4 +24,5 @@ mitigations:
     entropy; prove both the non-secure browser origin and injected-ID roundtrip without weak
     fallbacks.
 evidence:
+  - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/evidence/ED-20261011-source-instance-identity.md

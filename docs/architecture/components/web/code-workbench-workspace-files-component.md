@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-08-16
+last_reviewed: 2026-10-12
 planning_type: architecture
 ---
 
@@ -326,6 +326,29 @@ Add a semantic architecture test that checks:
 This guard must validate semantics, not only barrel thinness.
 
 ## Implementation Boundary
+
+### File-backed model entry — issue 3610
+
+The existing `InspectCanvasNode` command owns file-backed model entry. A model's
+`dvt:transform` presentation kind does not establish a canonical semantic-document
+authority. Its existing `workspace-file` Code capability takes precedence over
+the native-model editor action; no dbt/provider-name dispatch is introduced.
+
+```mermaid
+flowchart LR
+  A[Model double-click or Enter] --> B{Existing Code authority}
+  B -->|workspace-file and permitted| C[Properties Code: authoritative file]
+  B -->|workspace-file and explicitly denied| D[Properties General]
+  B -->|native canonical model| E[Existing semantic model editor]
+```
+
+Before this correction, the shared presentation kind and model identity caused
+file-authoritative models to enter a semantic editor with no canonical tree.
+Code capability and its explicit denial must select the existing inspector action
+before native-model routing. A missing inspector callback must not fabricate an
+editor. Source/operation entry, Preview, scope, file CAS and native-model authoring
+remain unchanged. Unit tests cover each dispatch and denial; real file-authority
+browser proofs retain Code writes, selection recovery, YAML preservation and Run.
 
 Allowed surfaces:
 

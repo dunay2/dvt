@@ -1,4 +1,10 @@
-/** Pure projection of Canvas card actions and observed execution evidence. */
+/**
+Owned concern: project Canvas card actions and observed execution evidence without acquiring data.
+@baseline InspectCanvasNode: file-backed models enter their existing Properties Code authority.
+@decision Resolve workspace-file capability before shared native-model presentation kinds.
+@consequence File models cannot enter an absent canonical tree; explicit Code denial remains effective.
+@version 1.0.1
+ */
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasShellGraph, CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasSinkRunEvidence } from './canvasSinkRunEvidence';
@@ -17,8 +23,15 @@ type CanvasShellNodeProjection = Readonly<{
 function resolveNodeOpenAction(
   nodeId: string,
   data: DbtNodeData,
-  projection: CanvasShellNodeProjection
+  projection: CanvasShellNodeProjection,
+  canOpenNodeCode: boolean
 ): DbtNodeData['onOpenNode'] {
+  if (data.presentationTruth?.code.kind === 'workspace-file' && projection.modelIds.has(nodeId)) {
+    const inspect = data.onInspectNode;
+    return inspect == null
+      ? undefined
+      : () => inspect(nodeId, canOpenNodeCode ? 'code' : 'general');
+  }
   if (data.pluginKind === 'dvt:transform' && projection.modelIds.has(nodeId)) {
     return () => projection.openModel(nodeId);
   }
@@ -43,6 +56,7 @@ export function projectCanvasShellNodes(
         codeKind === 'inline' ||
         codeKind === 'generated' ||
         codeKind === 'canonical');
+    const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectCode;
     const sample = projection.projectSample(node.id, data);
     const sinkEvidence = resolveCanvasSinkRunEvidence(data, runSnapshot);
     const activeRunAt =
@@ -51,10 +65,10 @@ export function projectCanvasShellNodes(
       ...data,
       sourceMetricAvailability: sample.sourceMetricAvailability,
       dataActionLabel: sample.canOpen ? projection.previewLabel : undefined,
-      canOpenNodeCode: data.canOpenNodeCode !== false && canInspectCode,
+      canOpenNodeCode,
       onOpenSourceDataSample: sample.onOpen,
       onInspectCanvasColumn: isNativeTransform ? projection.inspectOutput : undefined,
-      onOpenNode: resolveNodeOpenAction(node.id, data, projection),
+      onOpenNode: resolveNodeOpenAction(node.id, data, projection, canOpenNodeCode),
     };
     if (data.runStatusByNodeId?.has(node.id) === true) {
       if (activeRunAt != null) projectedData.lastRunAt = activeRunAt;
