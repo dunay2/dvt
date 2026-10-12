@@ -104,6 +104,24 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 const browserModules = readBrowserModules();
 
 describe('public Canvas gesture preconditions', () => {
+  it('requeries direction cues until all original marker and edge invariants hold', () => {
+    const body = browserModules
+      .get(resolve('cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'))!
+      .statements.find(
+        (statement) =>
+          ts.isFunctionDeclaration(statement) &&
+          statement.name?.text === 'assertDependencyDirectionCues'
+      )!
+      .getText()
+      .replace(/\s+/gu, ' ');
+    expect(body).toContain('.should(($cues) => {');
+    expect(body).toContain('for (const cue of $cues.toArray()) {');
+    expect(body).toContain(
+      'expect(getComputedStyle(glyph).fill).to.equal(getComputedStyle(edgePath!).stroke)'
+    );
+    expect(body).not.toMatch(/\.each\(|cy\.wait\(|timeout:/u);
+  });
+
   it('awaits actual toast removal before the normal source-import receipt close', () => {
     const body = browserModules
       .get(resolve('cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts'))!

@@ -155,6 +155,22 @@ flowchart LR
 
 ## Drift Guard
 
+The controlled screen-composition proof compares each direction glyph with its
+own edge after normal rendering, search highlighting, and accessibility-media
+emulation. Media acknowledgement is not a final computed-style receipt. Keep
+the complete marker, geometry, edge-reference, accessibility, and computed-color
+assertions inside a retryable Cypress assertion against the queried DOM. Use
+the existing assertion deadline; do not add sleeps, enlarge timeouts, relax
+color equality, or change production CSS to accommodate an intermediate sample.
+
+```mermaid
+flowchart LR
+    Media["Accessibility media acknowledged"] --> Query["Query actual direction cues"]
+    Query --> Compare["Assert every marker and its edge"]
+    Compare -->|"Not yet equal; existing deadline"| Query
+    Compare -->|"All invariants hold"| Proof["Browser evidence"]
+```
+
 `graphVisualTokenConvergence.architecture.test.ts` rejects reintroduced local
 color-family or hex ownership in the graph renderer, fallback renderer, dbt
 node renderer, graph-node card presentation components, node-kind catalogs, and
