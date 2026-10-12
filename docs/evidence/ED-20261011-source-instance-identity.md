@@ -141,6 +141,16 @@ semantic editor instead of their existing Properties/Code authority. The bounded
 correction uses the existing Code capability, respects explicit denial, and keeps
 native models unchanged; its unit and live acceptance remain required.
 
+The next real repetition at `36bb4b1a0` proves that authoritative Code now opens
+and writes correctly, including lossless YAML apply/revert. It still fails on
+three retired consumer expectations and one actual invalid-analysis continuity
+defect: unavailable graph analysis clears the editor needed to repair saved SQL.
+The bounded inspector correction retains only the same previously admitted file
+context in its exact authority and node identity, never graph/Run admission.
+Six presentation cases pass for valid repair, cross-authority/node refusal,
+explicit close, confirmed fresh removal and absent file authority. Real repair,
+complete prepush and exact-head CI acceptance remain required.
+
 The final complete pre-push and exact-head CI remain mandatory before integration.
 Passing repetitions do not convert an earlier failed full gate into a green
 receipt. GitHub #3610, #3613 and #3614 carry the concrete candidate/gate evidence;

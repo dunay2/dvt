@@ -1,4 +1,10 @@
-/** Owned concern: orchestrate the read-only external dbt project-file authority read model. */
+/**
+Owned concern: orchestrate the read-only external dbt project-file authority read model.
+@baseline InspectCanvasNode: only fresh analysis may confirm removal of the active file inspector.
+@decision Delegate scoped file-editor continuity without retaining graph or execution membership.
+@consequence Invalid SQL stays repairable in Code while Preview and Run consume actual analysis.
+@version 1.0.1
+ */
 import type { Node, NodeTypes } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -35,6 +41,7 @@ import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelecti
 import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliation';
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
+import { useDbtProjectFileInspector } from './useDbtProjectFileInspector';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -155,6 +162,13 @@ export function useDbtProjectFilesAuthorityController(
     [initialNodePositions, persistedNodePositions]
   );
   const canonicalNodesById = useMemo(() => buildCanonicalNodeMap(canonicalNodes), [canonicalNodes]);
+  const analysisFresh = query.isSuccess && query.data.freshness === 'fresh';
+  const inspectorNode = useDbtProjectFileInspector({
+    authorityKey: layoutKey,
+    inspectorNodeId,
+    analysisFresh,
+    nodesById: canonicalNodesById,
+  });
   const canonicalEdgeIdBySignature = useMemo(
     () => buildCanonicalEdgeIdMap(canonicalEdges),
     [canonicalEdges]
@@ -376,11 +390,11 @@ export function useDbtProjectFilesAuthorityController(
   );
 
   useEffect(() => {
-    if (inspectorNodeId != null && !canonicalNodesById.has(inspectorNodeId)) {
+    if (analysisFresh && inspectorNodeId != null && inspectorNode == null) {
       setInspectorNode(null);
       hideInspectorPanel();
     }
-  }, [canonicalNodesById, hideInspectorPanel, inspectorNodeId, setInspectorNode]);
+  }, [analysisFresh, hideInspectorPanel, inspectorNode, inspectorNodeId, setInspectorNode]);
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
     event.dataTransfer.dropEffect = 'none';
@@ -404,8 +418,6 @@ export function useDbtProjectFilesAuthorityController(
     },
     [authorityBinding, query]
   );
-  const inspectorNode =
-    inspectorNodeId == null ? null : (canonicalNodesById.get(inspectorNodeId) ?? null);
   const transformationValidation = useMemo(
     () =>
       validateTransformationGraph({

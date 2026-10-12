@@ -327,6 +327,34 @@ This guard must validate semantics, not only barrel thinness.
 
 ## Implementation Boundary
 
+### Invalid-analysis repair continuity — issue 3614
+
+Saving invalid file content is not evidence that its file has been deleted. The
+existing `SaveWorkspaceFileContent` reconciliation may report invalid or unavailable
+analysis; that blocks Preview/Run but must not unmount the authoritative file editor
+needed to repair the saved SQL. `InspectCanvasNode` retains only the already-open
+file's inspector identity while analysis cannot confirm graph membership.
+
+```mermaid
+flowchart LR
+  A[Known file open in Properties Code] --> B[Revision-guarded save]
+  B --> C{Analysis confirms membership?}
+  C -->|invalid or unavailable| D[Retain same scoped file editor for repair]
+  D --> B
+  C -->|fresh and present| E[Use current inspector projection]
+  C -->|fresh and absent| F[Dismiss removed node inspector]
+```
+
+Previously an empty invalid-analysis projection cleared the inspector and destroyed
+the editor session. The correction retains a transient inspector snapshot only for
+a previously admitted file, matched by full layout/authority key and node identity.
+Closing the inspector or fresh confirmed removal discards it. A different authority,
+different node or native node without a file never uses the snapshot. Graph nodes,
+execution membership, capabilities and reconciliation status still consume the
+actual query; the snapshot is not a graph fallback or execution admission. Valid
+repair must return the same editor to synchronized state, with real API content,
+fresh graph analysis and the original Run/YAML assertions intact.
+
 ### File-backed model entry — issue 3610
 
 The existing `InspectCanvasNode` command owns file-backed model entry. A model's
@@ -367,6 +395,9 @@ Allowed surfaces:
 - `apps/web/src/app/views/code/CodeWorkingTreeStatus.tsx`
 - `apps/web/src/app/views/canvas/dbtWorkspaceFileCodeContribution.tsx`
 - `apps/web/src/app/views/canvas/graphDraftWorkspaceFileCodeContribution.tsx`
+- `apps/web/src/app/views/canvas/useDbtProjectFilesAuthorityController.ts`
+- `apps/web/src/app/views/canvas/useDbtProjectFileInspector.ts`
+- `apps/web/src/app/views/canvas/useDbtProjectFileInspector.test.tsx`
 - `apps/web/cypress/e2e/code/**` or existing Cypress workbench path
 - this component doc and associated generated governance docs
 
