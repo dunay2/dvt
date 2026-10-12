@@ -6,7 +6,8 @@
  * @version 1.0.0
  */
 import assert from 'node:assert/strict';
-import { readFile, readdir } from 'node:fs/promises';
+import { readFileSync, readdirSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 
@@ -15,25 +16,17 @@ import { it } from 'vitest';
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
 
-async function sourceFiles(directory: string): Promise<string[]> {
-  const entries = await readdir(directory, { withFileTypes: true });
-  return (
-    await Promise.all(
-      entries.map(async (entry) => {
-        const filename = path.join(directory, entry.name);
-        return entry.isDirectory()
-          ? sourceFiles(filename)
-          : filename.endsWith('.ts')
-            ? [filename]
-            : [];
-      })
-    )
-  ).flat();
+function sourceFiles(directory: string): string[] {
+  // This finite architecture inventory does not need hundreds of serialized async reads
+  // competing with the whole package's Vitest worker filesystem queues.
+  return readdirSync(directory, { recursive: true })
+    .filter((entry): entry is string => typeof entry === 'string' && entry.endsWith('.ts'))
+    .map((entry) => path.join(directory, entry));
 }
 
 it('confines native package imports and native callbacks to API infrastructure', async () => {
-  for (const filename of await sourceFiles(path.join(root, 'apps/api/src'))) {
-    const content = await readFile(filename, 'utf8');
+  for (const filename of sourceFiles(path.join(root, 'apps/api/src'))) {
+    const content = readFileSync(filename, 'utf8');
     if (!content.includes('@duckdb/') && !content.includes('withSession')) continue;
     assert.ok(filename.includes(`${path.sep}infrastructure${path.sep}duckdb${path.sep}`), filename);
     const source = ts.createSourceFile(filename, content, ts.ScriptTarget.Latest, true);
