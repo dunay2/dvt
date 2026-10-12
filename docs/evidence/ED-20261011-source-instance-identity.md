@@ -134,7 +134,7 @@ validation passed 820 tests and its typecheck.
 The final complete pre-push and exact-head CI remain mandatory before integration.
 Passing repetitions do not convert an earlier failed full gate into a green
 receipt. GitHub #3610, #3613 and #3614 carry the concrete candidate/gate evidence;
-#3612 remains open for unadmitted SQL-function scope.
+Issue #3612 remains open for unadmitted SQL-function scope.
 
 ## No-debt posture
 
