@@ -164,6 +164,37 @@ Passing repetitions do not convert an earlier failed full gate into a green
 receipt. GitHub #3610, #3613 and #3614 carry the concrete candidate/gate evidence;
 Issue #3612 remains open for unadmitted SQL-function scope.
 
+## JOIN type-code presentation correction
+
+Issue #3615 reports an already saved INNER JOIN card repeating `left_join` as
+secondary text. The canonical type/title is correct; the shared presentation
+mapper unconditionally exposed a preserved sidecar name as another type label.
+Planning DB design `GH-3615-JOIN-CODE-SUBTITLE` admits the exact nine existing
+surfaces before TDD. The existing `ProjectCanvasRelationalTree` query remains
+the owner; no command, naming contract or migration is introduced.
+
+The agreed correction suppresses only exact JOIN operation codes through the
+existing catalog, in shared card/Model-summary copy. Both consumers omit the
+empty secondary row. It does not rewrite the binding, semantic plan or graph.
+An intentional alias identical to a JOIN code remains persisted, although that
+code is not repeated as a JOIN subtitle; free names and Source names retain
+their presentation. Version 1 does not provide naming provenance, so silently
+renaming the alias would be unsafe.
+
+The red phase reproduced eight canonical-name cases (51 other unit cases passed),
+two card rows (19 other presentation cases passed), two Model-summary cases
+(four others passed), and one architecture guard (ten others passed). Initial
+green validation passes all 59 unit, 27 presentation and 11 architecture cases.
+It covers both languages, all eight exact codes, free/generic/null names,
+Source names and byte-preserving document/identity behavior. The initial native
+JOIN consumer spec passes all four cases, no failures/pending/skips, in 1m17s:
+the new persisted-name case performs real LEFT/Apply then INNER/Apply and
+reopens with unchanged relation and field bindings and consistent Model summary.
+The original three calculated-output, scalar-predicate and wrapper cases remain.
+Web lint and typecheck pass. Post-hook gates and exact-head CI remain required;
+the issue records their actual results, not inferred completion. The earlier
+HEAD49d retry was cancelled after the user's new report and is not a green gate.
+
 ## No-debt posture
 
 No fake adapter, replacement query, new cache, placeholder, hidden fallback,

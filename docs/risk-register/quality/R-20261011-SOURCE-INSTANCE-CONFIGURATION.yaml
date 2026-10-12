@@ -23,6 +23,8 @@ mitigations:
   - Allocate placement identities through the existing secure UUID primitive and reject absent
     entropy; prove both the non-secure browser origin and injected-ID roundtrip without weak
     fallbacks.
+  - Keep canonical JOIN type labels separate from sidecar names in shared presentation; omit exact
+    operation-code subtitles without rewriting aliases or introducing naming provenance.
 evidence:
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/evidence/ED-20261011-source-instance-identity.md

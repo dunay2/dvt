@@ -15,6 +15,7 @@ import CalculatedOutputsSource from './CanvasCalculatedRelationOutputs.tsx?raw';
 import TransformInspectorSource from './CanvasTransformInspector.tsx?raw';
 import InspectionPanelSource from './relational-inspection/RelationalInspectionPanel.tsx?raw';
 import NodePresentationSource from './canvasRelationalNodePresentation.ts?raw';
+import ModelOutputInspectorSource from './CanvasModelOutputInspector.tsx?raw';
 import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
 import CardDetailSource from './canvasRelationalTreeDetails.ts?raw';
 import ScalarTreeSource from './CanvasRelationalScalarTree.tsx?raw';
@@ -76,6 +77,14 @@ import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps JOIN type-code suppression in the shared read-only presentation mapper', () => {
+    expect(NodePresentationSource).toContain('isCanvasJoinOperation(node.displayName)');
+    expect(NodePresentationSource).not.toMatch(/displayName\s*=|session\.apply|useEffect/);
+    for (const source of [NodeButtonSource, ModelOutputInspectorSource]) {
+      expect(source).toContain('resolveCanvasRelationalNodeCopy');
+      expect(source).not.toContain('isCanvasJoinOperation');
+    }
+  });
   it('shares calculated SELECT authoring through the existing atomic projection command', () => {
     for (const source of [InlineEditorSource, TransformInspectorSource]) {
       expect(source.match(/<CanvasCalculatedRelationOutputs\b/g)).toHaveLength(1);

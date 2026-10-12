@@ -1,4 +1,10 @@
-/** Owned concern: resolve a projected node's visual identity without overriding admission. */
+/**
+ * Owned concern: resolve a projected node's visual identity without overriding admission.
+ * @baseline ADR-0064: canonical relations own type; sidecar names are not semantic authority.
+ * @decision Omit exact JOIN operation codes from secondary text through the existing catalog.
+ * @consequence Saved names remain intact; cards and Model summaries cannot imply a second JOIN type.
+ * @version 1.0.0
+ */
 import {
   resolveCanvasRelationalOperationPresentation,
   type CanvasPresentationOperation,
@@ -8,6 +14,7 @@ import type {
   CanvasRelationalTreeOperator,
 } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import { isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 
 const fallbackOperations = {
   read: 'read',
@@ -31,12 +38,17 @@ export function resolveCanvasRelationalNodePresentation(node: CanvasRelationalTr
   return { operation, presentation: resolveCanvasRelationalOperationPresentation(operation) };
 }
 
+function relationNameDetail(node: CanvasRelationalTreeNode): string {
+  if (node.operator === 'join' && isCanvasJoinOperation(node.displayName)) return '';
+  return node.displayName ?? node.substraitKind;
+}
+
 export function resolveCanvasRelationalNodeCopy(
   node: CanvasRelationalTreeNode,
   copy: CanvasRelationalTreeWorkbenchCopy
 ) {
   const resolved = resolveCanvasRelationalNodePresentation(node);
-  const subtitle = node.displayName ?? node.substraitKind;
+  const subtitle = relationNameDetail(node);
   const title = node.operator === 'read' ? subtitle : copy[resolved.presentation.labelKey];
   const summary = node.projectionSummary;
   const template =

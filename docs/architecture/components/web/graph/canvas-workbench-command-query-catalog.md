@@ -250,6 +250,28 @@ names, NULL behavior, nonboolean/unsupported rejection, cancel, save/reopen and
 target SQL retaining the predicate in `ON`. This revises the field-only product
 restriction from #3416 / #3422 without restoring its duplicate compiler (#3420).
 
+### JOIN Type Presentation
+
+Under `ProjectCanvasRelationalTree`, the card title derives from the canonical
+JOIN type, never from the sidecar name. Issue #3615 removes misleading secondary
+type codes from the shared card/Model-summary presentation:
+
+```text
+JoinRel.type -> existing operation catalog -> localized title
+JOIN displayName exactly recognized by isCanvasJoinOperation -> no secondary row
+other name/operator -> existing name presentation
+```
+
+The query does not rename, migrate or repair persisted bindings. Version 1 does
+not distinguish a generated operation code from an intentional identical alias;
+either remains unchanged in the document, but is not repeated as a JOIN card
+subtitle. Names outside the exact existing catalog, generic `join`, null fallback
+and Source names retain their existing behavior. Unknown semantic types remain
+unsupported. No duplicated operation dictionary, fuzzy matching, effect-based
+normalization or second semantic authority is introduced. Proof covers already
+saved INNER/`left_join`, all eight codes, both locales, free names, unchanged
+canonical data and actual type-change/Apply/reopen consumers.
+
 ### Calculated SELECT Fields
 
 Issue #3613 exposes the existing calculated-field editor in editable `Output`.
