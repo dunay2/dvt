@@ -1,9 +1,9 @@
 /**
  * Owned concern: drive the real warehouse Source Import dialog in live browser proofs.
- * @baseline GH-3610: compact connection creation opens Browse, not Connections.
- * @decision Use the existing Connections tab before selection and connection-test assertions.
+ * @baseline GH-3610: file-backed creation returns to Browse after its asynchronous response.
+ * @decision Await the creation form closing, then visit Connections before its assertions.
  * @consequence Proofs retain exact connection identity and real import/file authority checks.
- * @version 1.0.1
+ * @version 1.0.2
  */
 import type { WorkspaceGraphDraftScope, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
@@ -52,6 +52,7 @@ function createLivePostgresConnection(connectionNameSuffix = ''): void {
     .clear()
     .type('postgres:local-postgres-proof');
   cy.contains('[role="dialog"] button', 'Create connection').should('be.enabled').click();
+  cy.get('[data-slot="source-import-create-connection-name"]').should('not.exist');
   cy.contains('[role="tab"]', 'Connections').click();
   cy.contains('[data-slot="source-import-connection-option"]', connectionName, {
     timeout: 30_000,

@@ -113,6 +113,10 @@ describe('public Canvas gesture preconditions', () => {
     );
     expect(declaration).toBeDefined();
     const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain(
+      "cy.get('[data-slot=\"source-import-create-connection-name\"]').should('not.exist')"
+    );
+    expect(body.indexOf("'not.exist'")).toBeLessThan(body.indexOf("'Connections'"));
     expect(body).toContain("cy.contains('[role=\"tab\"]', 'Connections').click()");
     expect(body.indexOf("'Connections'")).toBeLessThan(
       body.indexOf('source-import-connection-option')
