@@ -103,6 +103,37 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 
 const browserModules = readBrowserModules();
 
+describe('public Canvas gesture preconditions', () => {
+  it('fits and focuses a visible node before an unforced context selection gesture', () => {
+    const ast = browserModules.get(resolve('cypress/support/canvasExecutionSelection.ts'))!;
+    const declaration = ast.statements.find(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) && statement.name?.text === 'openCanvasNodeOperations'
+    );
+    expect(declaration).toBeDefined();
+    const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain("cy.get('.react-flow__controls-fitview').click()");
+    expect(body.indexOf('controls-fitview')).toBeLessThan(body.indexOf('getVisibleCanvasNode'));
+    expect(body).toContain(".should('be.visible')");
+    expect(body).toContain(".should('be.focused')");
+    expect(body).toContain(".rightclick('center')");
+    expect(body).not.toContain('force: true');
+  });
+
+  it('fits the outer Canvas before hovering and requesting a Model Preview', () => {
+    const ast = browserModules.get(resolve('cypress/support/relationalWorkbench/navigation.ts'))!;
+    const declaration = ast.statements.find(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) && statement.name?.text === 'previewWorkbenchModel'
+    );
+    expect(declaration).toBeDefined();
+    const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain("cy.get('.react-flow__controls-fitview').click()");
+    expect(body.indexOf('controls-fitview')).toBeLessThan(body.indexOf('hoverWorkbenchCard'));
+    expect(body).not.toContain('force: true');
+  });
+});
+
 function runtimeImports(path: string, ast: ts.SourceFile): string[] {
   return ast.statements.flatMap((statement) => {
     if (
