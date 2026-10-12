@@ -175,7 +175,7 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       timeout: 60_000,
     })
       .should('be.visible')
-      .and('contain.text', 'Source 1')
+      .and('contain.text', 'source_1')
       .and('contain.text', 'Columns')
       .and('contain.text', '3');
 
