@@ -415,6 +415,22 @@ on [issue 3610](https://github.com/dunay2/dvt/issues/3610).
 
 #### Retained Live Consumer Preconditions
 
+The controlled source-binding consumer also waits for the existing bottom-right
+success notification to leave the DOM before its normal `Done` click. A toast
+marked `data-removed=true` is still present during its exit animation and can
+intercept hit-testing. Await actual absence within the existing 20-second
+UI-transition budget; do not filter out exiting nodes, force the click, dismiss
+or remove the notification artificially, add a fixed wait, or change product
+CSS/duration and the global CI budget. Connection, source identities, metadata,
+keyboard, accessibility, i18n and exact import-command assertions remain intact.
+
+```mermaid
+flowchart LR
+  R[Successful import receipt] --> A[Observe success toast absent from DOM]
+  A --> C[Normal Done click]
+  C --> P[Original binding and graph assertions]
+```
+
 The first six-case execution of those five newly admitted specs passes minimap
 focus and exposes five failures in the remaining four specs. Keep their unique
 assertions; repair only the obsolete preparation and adapter gestures:

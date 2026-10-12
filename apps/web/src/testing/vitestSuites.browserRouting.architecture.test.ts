@@ -104,6 +104,25 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 const browserModules = readBrowserModules();
 
 describe('public Canvas gesture preconditions', () => {
+  it('awaits actual toast removal before the normal source-import receipt close', () => {
+    const body = browserModules
+      .get(resolve('cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts'))!
+      .getText()
+      .replace(/\s+/gu, ' ');
+    const toast = body.indexOf(
+      '[data-sonner-toast][data-type="success"][data-y-position="bottom"][data-x-position="right"]'
+    );
+    const close = body.indexOf("cy.contains('[role=\"dialog\"] button', 'Done').click()");
+    expect(toast).toBeGreaterThanOrEqual(0);
+    expect(close).toBeGreaterThan(toast);
+    expect(body.slice(toast, close)).toContain(".should('not.exist')");
+    expect(body.slice(toast, close)).toContain('timeout: 20_000');
+    expect(body).not.toContain('data-removed="false"');
+    expect(body).not.toContain('toast.dismiss');
+    expect(body).not.toContain('.remove()');
+    expect(body).not.toContain('cy.wait(');
+    expect(body).not.toContain('force: true');
+  });
   it.each(['canvas-graph-search-filter-live', 'canvas-minimap-focus-live'])(
     'owns an acknowledged independent project for read-only evidence in %s',
     (name) => {

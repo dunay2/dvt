@@ -2,9 +2,10 @@
  * Owned concern: prove that importing dbt source declarations continues through
  * one governed connection binding and projects one Canvas node per table.
  * @baseline GH-3578: catalog order does not select the object this proof inspects.
- * @decision Activate the governed object through its existing catalog controls.
+ * @baseline GH-3610: an exiting notification is still hit-tested until DOM removal.
+ * @decision Use the existing catalog controls and await toast absence before normal receipt close.
  * @consequence Selection, metadata, keyboard and import assertions remain independent.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import type { RelationalSourceObject, SourceObjectMetricEvidence } from '@dvt/contracts';
 
@@ -406,6 +407,10 @@ describe('dbt source connection binding', () => {
 
     waitForE2eApiCall('/workspace/sources/import', 'POST');
     cy.contains('[role="dialog"]', 'Sources imported', { timeout: 20_000 }).should('be.visible');
+    cy.get(
+      '[data-sonner-toast][data-type="success"][data-y-position="bottom"][data-x-position="right"]',
+      { timeout: 20_000 }
+    ).should('not.exist');
     cy.contains('[role="dialog"] button', 'Done').click();
 
     cy.wrap(null).should(() => {
