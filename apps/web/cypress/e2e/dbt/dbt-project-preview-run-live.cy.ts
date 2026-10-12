@@ -242,7 +242,7 @@ describe('dbt project file Preview and Run live vertical', () => {
     cy.get('body').type('{esc}');
     cy.get(`.react-flow__node[data-id="${SUMMARY_MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
-      .and('contain.text', 'Order Summary Model');
+      .and('contain.text', 'Order Summary');
     selectCanvasClosure([SUMMARY_MODEL_UNIQUE_ID]);
 
     clickPreviewExecutionPlanFromOperationalDrawer();

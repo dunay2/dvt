@@ -425,13 +425,21 @@ assertions; repair only the obsolete preparation and adapter gestures:
   existing Monaco working-tree synchronization rail, and prove that refreshed
   analysis removes it without silently widening execution scope. Only the
   explicit workspace-scope recovery action may admit the surviving model.
+  Recovery labels come from the existing owned English copy catalog, not retired
+  `Unavailable roots` / `Admitted scope` / `Use workspace scope` labels. Expose
+  the real scrollable recovery action before its normal click.
 - Graph search/filter starts the single current Canvas template and owns its
   English presentation precondition. It retains three real authored nodes,
   search navigation, filter/clear counts and unchanged protected draft revision.
+  The third, non-transform node comes from the actual unified catalog (`dvt:sink`),
+  not the retired `dbt:seed` creation surface. The two Model search matches and
+  transform-role filter still admit exactly two of three authored nodes.
 - Project Preview/Run uses the fixture's canonical source label and waits for
   its actual graph before selection. Model inspection targets the card title,
   not an expanded field row at the centre of the card. Exact project/analysis
   revisions, no regeneration, dependency scope and real Run events remain.
+  Card titles use the actual projected model name (`Order Summary`); exact model
+  IDs continue to govern selection, dependencies and completed Run step assertions.
 - YAML description editing retains its lossless proposal/apply/revert and
   reopened file/analysis/Run assertions. Node Code is the known-file editor in
   Properties; project Code is the separate project-tree workbench. Do not revive

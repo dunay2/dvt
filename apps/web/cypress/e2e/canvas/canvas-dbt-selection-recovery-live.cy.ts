@@ -6,6 +6,7 @@
  * @version 1.0.1
  */
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
+import { canvasViewExecutionCopyByKey } from '../../../src/app/views/canvas/canvasCopyCatalog.execution';
 import {
   revealOperationalDrawer,
   selectCanvasClosure,
@@ -103,14 +104,19 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
       .should('match', /blocked|bloqueada/i);
-    cy.contains(/^(Unavailable roots|Raíces no disponibles)$/)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryUnavailableRootsLabel.fallback)
       .parent()
       .should('contain.text', SELECTED_MODEL_ID);
-    cy.contains(/^(Admitted scope|Alcance admitido)$/)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
       .parent()
       .invoke('text')
       .should('match', /None|Ninguno/i);
-    cy.contains('button', /^(Use workspace scope|Usar alcance del workspace)$/)
+    cy.contains(
+      'button',
+      canvasViewExecutionCopyByKey.selectionRecoveryUseWorkspaceScopeAction.fallback
+    )
+      .scrollIntoView()
+      .should('be.visible')
       .should('be.enabled')
       .click();
 
@@ -120,7 +126,7 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
     cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]')
       .should('contain.text', SELECTED_MODEL_ID)
       .and('contain.text', 'workspace');
-    cy.contains(/^(Admitted scope|Alcance admitido)$/)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
       .parent()
       .should('contain.text', SURVIVING_MODEL_ID);
     cy.get('[data-slot="bottom-operational-preview-action"]').should('be.enabled');

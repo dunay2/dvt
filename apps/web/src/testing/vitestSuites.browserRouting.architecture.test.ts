@@ -123,6 +123,10 @@ describe('public Canvas gesture preconditions', () => {
     expect(body).toContain('waitForLiveWorkspaceFileContent');
     expect(body).toContain('monaco-code-editor');
     expect(body).toContain('enabled=false');
+    expect(body).toContain('canvasViewExecutionCopyByKey');
+    expect(body).not.toContain('Unavailable roots');
+    expect(body).not.toContain('Admitted scope');
+    expect(body).not.toContain('Use workspace scope');
     expect(body).not.toContain('resolveLiveFirstAuthoringWorkspaceSession');
     expect(body).not.toContain('replaceLiveWorkspaceFile');
     expect(body).not.toContain('readLiveGraphDraft');
@@ -137,6 +141,8 @@ describe('public Canvas gesture preconditions', () => {
     expect(body).toContain('canvas-playground-template-choice');
     expect(body).toContain('[data-testid="canvas-viewport"]');
     expect(body).not.toContain('[data-slot="canvas-viewport"]');
+    expect(body).toContain("addCanvasNode('dvt:sink'");
+    expect(body).not.toContain('dbt:seed');
     expect(body).not.toContain("cy.contains('Create canvas'");
     expect(body).not.toContain(".contains('button', 'dbt canvas')");
   });
@@ -152,6 +158,9 @@ describe('public Canvas gesture preconditions', () => {
     );
     expect(declaration).toBeDefined();
     expect(ast.getText()).not.toMatch(/canvas-node-shell[^;]*\.dblclick\(\)/u);
+    if (name === 'dbt-project-preview-run-live') {
+      expect(ast.getText()).not.toContain('Order Summary Model');
+    }
   });
 
   it('opens Connections after creation before checking the selected connection option', () => {

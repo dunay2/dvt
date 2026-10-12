@@ -26,7 +26,7 @@ type DraftSnapshot = Readonly<{
   nodeIds: readonly string[];
 }>;
 
-function addDbtNode(registrationKind: 'dvt:transform' | 'dbt:seed', x: number, y: number): void {
+function addCanvasNode(registrationKind: 'dvt:transform' | 'dvt:sink', x: number, y: number): void {
   openCanvasContextMenuAt(x, y);
   clickCanvasContextMenuAction('open-add-node-catalog');
   clickCanvasAddCatalogAction('create-node', registrationKind);
@@ -114,14 +114,14 @@ describe('Canvas graph search and filtering live protected runtime', () => {
     cy.get('[data-testid="canvas-viewport"]').should('be.visible');
     cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
 
-    addDbtNode('dvt:transform', 320, 250);
+    addCanvasNode('dvt:transform', 320, 250);
     cy.contains('[data-slot="graph-node-card-title"]', 'Model 1')
       .should('be.visible')
       .and('have.text', 'Model 1');
-    addDbtNode('dvt:transform', 620, 250);
+    addCanvasNode('dvt:transform', 620, 250);
     cy.contains('[data-slot="graph-node-card-title"]', 'Model 2').should('be.visible');
-    addDbtNode('dbt:seed', 900, 250);
-    cy.contains('[data-slot="graph-node-card-title"]', 'Seed 1').should('be.visible');
+    addCanvasNode('dvt:sink', 900, 250);
+    cy.contains('[data-slot="graph-node-card-title"]', 'Sink 1').should('be.visible');
 
     cy.then(() => waitForDraftNodeCount(3, scope)).as('draftBeforeReadOnlyQueries');
 
