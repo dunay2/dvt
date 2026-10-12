@@ -412,3 +412,44 @@ wildcard, another runner, altered assertions, a larger deadline or a result
 waiver. Readiness requires executing the complete selected plan and recording
 the unchanged CI budget, exact base/head admission and strict result counters
 on [issue 3610](https://github.com/dunay2/dvt/issues/3610).
+
+#### Retained Live Consumer Preconditions
+
+The first six-case execution of those five newly admitted specs passes minimap
+focus and exposes five failures in the remaining four specs. Keep their unique
+assertions; repair only the obsolete preparation and adapter gestures:
+
+- Selection recovery must not invent an ungranted project or recreate the
+  retired graph-owned dbt model path. Use an acknowledged file-authoritative dbt
+  project with two executable models. Select one root, disable it through the
+  existing Monaco working-tree synchronization rail, and prove that refreshed
+  analysis removes it without silently widening execution scope. Only the
+  explicit workspace-scope recovery action may admit the surviving model.
+- Graph search/filter starts the single current Canvas template and owns its
+  English presentation precondition. It retains three real authored nodes,
+  search navigation, filter/clear counts and unchanged protected draft revision.
+- Project Preview/Run uses the fixture's canonical source label and waits for
+  its actual graph before selection. Model inspection targets the card title,
+  not an expanded field row at the centre of the card. Exact project/analysis
+  revisions, no regeneration, dependency scope and real Run events remain.
+- YAML description editing retains its lossless proposal/apply/revert and
+  reopened file/analysis/Run assertions. Node Code is the known-file editor in
+  Properties; project Code is the separate project-tree workbench. Do not revive
+  the removed contextual node-code workbench to satisfy an old test. The real
+  card title opens inspection, and the scrollable project command must be
+  exposed before its normal click.
+
+The existing rails remain `InspectCanvasNode`, `SaveWorkspaceFileContent`,
+`RouteChangedWebVitestSuites` and `RunWebCypressNative`. SQL and YAML edits must
+use their real UI commands and revision-guarded writes, not intercepted success,
+direct replacement of the edited file or invented authorization. No product
+runtime, contract, executor, acceptance assertion or deadline changes.
+
+Graph search and minimap must also own independently granted projects through
+the existing `CreateProject` UI gesture. The complete available plan runs after
+other specs have persisted the default workspace draft; an initial `404` in
+that shared workspace is not an isolation contract. Read the exact workspace
+scope returned by creation, retain absent-draft and unchanged-revision proofs
+in that scope, and leave other consumers' drafts intact. This reuses the
+existing `liveProjectAuthoring.ts` owner; no random scope, cleanup of another
+spec's graph or separate project-creation implementation is admitted.
