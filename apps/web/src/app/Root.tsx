@@ -292,6 +292,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   return (
     <AppShellFrame
       bottomDrawer={<BottomOperationalDrawer />}
+      bottomDrawerHeight={bottomDrawerHeight}
       focusMode={focusMode}
       healthBanner={
         <ShellHealthBanner

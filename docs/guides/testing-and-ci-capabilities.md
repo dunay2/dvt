@@ -88,7 +88,63 @@ Warm-build note:
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
   skips for the current TypeScript package inventory.
 
+## Immutable Provisioning Image Cache
+
+Planning DB preparation and the provider-backed browser lane share
+`.github/actions/prepare-cached-image`. The catalog in
+`tools/ci/container-images.json` pins PostgreSQL 16 and 15 to their respective
+Linux/amd64 manifests and config digests. Updating either image is a reviewed
+catalog change, not a mutable-tag refresh during a job.
+
+An exact cache hit loads the image archive and verifies its Docker identity and
+platform without registry access. A miss pulls the pinned manifest once, verifies
+it, then saves the image archive immediately. No prefix fallback, automatic
+retry, database data, credentials, containers or volumes are cached. Invalid
+identity or an unreadable archive fails preparation. Consumers use the verified
+runner-local reference with implicit pulls disabled. Database allocation,
+readiness, schema bootstrap, test selection and cleanup keep their existing owners.
+
+Actions cache branch isolation still applies: a PR-produced entry is not a
+repository-wide warm cache. Existing default-branch workflows populate entries
+that subsequent PRs can reuse. Cold or evicted entries still require registry
+availability. If a cache is corrupt, delete that exact Actions cache entry and
+rerun; never fall back to an unpinned image or bypass verification.
+
+This cache covers the two step-based provisioning paths, not GitHub service
+containers, which start before action steps. Their lifecycle remains unchanged.
+The executable cache contract is `node --test tools/ci/prepare-cached-image.test.mjs`;
+GitHub Actions cache transport is additionally checked in the actual workflow.
+
+## Package Test Runner Groups
+
+`Test Suite` keeps package selection in `computeTestPackageMatrix`; the matrix
+emitter only groups that selected set for execution. API retains its own
+`test:ci` row. Other selected packages use at most two runner groups, partitioned
+by even/odd positions in the complete non-API package catalog before intersecting
+with the selection. Narrow or reordered diffs therefore keep the same group
+ownership. Each group shares one Turbo build of its dependency graphs, followed
+by its existing `test` scripts in separate processes. Web, engine coverage,
+PostgreSQL and Temporal retain dedicated lanes.
+
+Each shared package row uses pnpm's recursive execution with one package at a
+time, topological ordering and `--no-bail`. It executes `pnpm run test` in
+each selected package rather than recursive `run test`, which can silently omit
+a package without that script. A missing script or failed package rejects the
+row after the remaining selected packages finish. Serial package execution
+avoids new cross-package races for shared ports or files. Empty selections produce no
+row. The existing required aggregate and scope rules are unchanged.
+
+`run-turbo-workspace-task.cjs` accepts repeated `--filter` arguments for the
+single union build; its no-filter affected-workspace default is unchanged.
+Each runner group has a stable Turbo-cache producer identity. Dependency build
+cache hits do not replace the package test execution.
+
 ## Operational Preflight Helpers
+
+CI scope workflows consume the semantic outputs of `tools/ci/emit-scope.mjs`.
+The unused YAML path-filter generator is retired. The existing PostgreSQL policy
+smoke retains real policy validation and its TypeScript-config canary; scope
+matching and workflow wiring stay covered by their current contract tests.
 
 | Capability                  | Command                                                                                                                | Source                                             |
 | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
@@ -100,15 +156,16 @@ Warm-build note:
 
 ## Package Validation Commands
 
-The Web CI primary suites run with one isolated fork at a time. Unit and
-architecture suites default to Node; browser-dependent unit tests explicitly
-declare `@vitest-environment jsdom`, including tests of persisted session state
-and browser-derived language. The persisted workspace-scope test harness requires
-that declaration and has an architecture guard for it.
-Presentation and focus suites retain jsdom. Each test file gets a fresh fork so
-completed processes release module and DOM memory while
-the governed suite coverage remains unchanged. Do not enable `singleFork`: it
-disables this isolation and can exhaust the 4 GB worker limit.
+The Web CI suites run with one isolated fork at a time. Unit and architecture
+primary suites, and their `canvas-unit` and `canvas-architecture` focus suites,
+default to Node. Browser-dependent tests explicitly declare
+`@vitest-environment jsdom`, including tests of persisted session state and
+browser-derived language. The persisted workspace-scope test harness requires
+that declaration and has an architecture guard for it. Presentation, mixed
+Canvas, and other focus suites retain jsdom. Each test file gets a fresh fork
+so completed processes release module and DOM memory while the governed suite
+coverage remains unchanged. Do not enable `singleFork`: it disables this
+isolation and can exhaust the 4 GB worker limit.
 
 A hosted full-route baseline captured on 2026-09-04 took about 845 seconds:
 roughly 35 seconds for setup and dependency build, 320 seconds for 273 unit
@@ -158,7 +215,45 @@ retains all primary files, assertions, isolated workers and existing commands.
 | Temporal time-skipping integration | `pnpm test:adapter-temporal:integration`                                   | Temporal worker/workflow integration                 | [`package.json`](../../package.json)                                                                   |
 | Coverage run                       | `pnpm test:coverage`                                                       | Recursive workspace coverage                         | [`package.json`](../../package.json)                                                                   |
 
+## Persisted Semantic Editing Live Proof
+
+Use the existing protected-runtime runner with an isolated PostgreSQL database
+named `dvt`, supplied through `DATABASE_URL`. The runner recreates its source
+fixtures in `raw` and `public`; never point this proof at an application or
+Planning DB database. It owns a separate publication schema and starts real auth,
+API, Temporal worker and Web processes. Windows can select native Chrome with
+`DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native`.
+
+```bash
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts
+pnpm --filter @dvt/web test:e2e:selected-closure:live --spec apps/web/cypress/e2e/canvas/canvas-semantic-unsupported-live.cy.ts
+```
+
+The positive story edits Sort/Fetch over LEFT JOIN, applies and reopens the saved
+Substrait, queries selected and model rows, then starts the accepted Preview plan
+and verifies its PostgreSQL publication. An unmatched row distinguishes LEFT
+from INNER; exact query order and row membership distinguish ordering and limit
+errors. Published tables are compared without assuming physical row order.
+The selected intermediate Sort must return three rows while the final Fetch
+returns two, so ignoring the selected relation cannot pass as model data.
+
+The negative story preserves a canonical but unsupported Sort selector, requires
+explicit query rejection, and verifies that no Run was created. Generic Cypress
+discovery follows the existing live-only skip convention when no runtime is
+configured. Such skips are not proof: closeout requires both explicit live runs
+with zero pending or skipped tests. Partial runtime configuration fails.
+
 ## Determinism and Replay
+
+Engine coverage runs through `pnpm test:coverage:engine`, which preserves the
+package dependency-preparation lifecycle and forwards `--coverage` directly.
+The package config consumes the single `engineCoveragePolicy` from root
+`vitest.config.ts`: 65% statements/lines/functions and 55% branches, including
+unexecuted source. Test Suite requires the fresh `coverage-final.json` artifact;
+missing reports fail the job. Executable positive/negative coverage contracts
+live in `tools/ci/engine-coverage.test.mjs`. Coverage routing and this evidence
+contract are described in the
+[Engine Coverage Scope Gate Component](../architecture/components/ci-governance/engine-coverage-scope-gate-component.md).
 
 | Capability                           | Command                 | Source                                                                                                         |
 | ------------------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -235,7 +330,7 @@ Local docs PR preflight usage:
 - `pnpm docs:pr:fast`
 - `pnpm docs:pr:full`
 - `pnpm docs:pr:full -- --title "docs(docs): Your PR title"`
-- `pnpm docs:pr:create -- --title "docs(docs): Subject" --body-file .github/PR_BODY.md --dry-run`
+- `pnpm docs:pr:create -- --title "docs(docs): Subject" --body-file /tmp/dvt-pr-body.md --dry-run`
 
 Command semantics:
 
@@ -269,10 +364,17 @@ Command semantics:
   `scripts/verify-changed.test.cjs`, `scripts/verify-prepush.*` runs
   `scripts/verify-prepush.test.cjs`, and the shared
   `scripts/local-validation-plan.cjs` contract still runs both suites.
+- Changes to `run-selected-closure-live-proof` or `run-dev-stack` source/tests
+  select the matching contract once through this same focused catalog for
+  pre-push and PR Quality, retaining test-process Git-environment isolation.
 - CI tooling edits under `tools/ci/*.mjs` and changed `tools/ci/*.test.mjs`
   route to direct adjacent `node --test` suites when that test file exists.
   The full `pnpm test:ci-tools` contract remains a broader merge/CI-tooling
   audit, not the default local proof for a one-file AI iteration.
+- Executable CI contract identities come from `EXECUTABLE_CI_TOOL_TESTS` in
+  `tools/ci/ci-tool-test-suite.mjs`. The scope API consumes that catalog directly;
+  `workflow-scope.json` names additional invalidating inputs, not another copy
+  of the executable test list.
 - Governance coverage/remediation report generator edits are routed to their
   exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
   AI iteration on report rendering and DB-source normalization under the
@@ -355,7 +457,7 @@ Command semantics:
   ahead of `origin/main`. The component-level API, invariants, transitions,
   consumers, and user stories are documented in
   [Local Changed Files Gate Component](../architecture/components/ci-governance/local-changed-files-gate-component.md).
-- `pnpm verify:prepush` uses `node scripts/docs-workboard-check-changed.cjs`, so workboard drift is enforced when lane YAML changed, not for every module-only commit.
+- `pnpm verify:prepush` routes validation through the current changed-file gates; GitHub Issues owns task status.
 - `pnpm verify:prepush` is mechanical by default. It runs changed-file docs, markdown, formatting, ARC evidence, QA artifact, feature mechanization implementation, and forbidden-file checks without root type-check, architecture dependency checks, global governance maps, or verifier self-tests.
 - `.husky/pre-push` routes through `pnpm verify:prepush -- --hook` by default
   and `pnpm verify:prepush -- --full --hook` when `DVT_PREPUSH_STRICT=1`.
@@ -364,6 +466,14 @@ Command semantics:
   the hook skips only when that exact state already passed an equivalent or
   stronger gate. If any file content, staged state, untracked file, base ref,
   or `HEAD` changes, the hook runs normally.
+  The single receipt is replaced only after success: failure on different inputs
+  does not erase evidence for the previously validated state. Restoring those
+  exact inputs can reuse that receipt; changed inputs cannot.
+  The selected-closure native Cypress adapter writes generated screenshots,
+  downloads and optional videos under `.dvt/evidence/selected-closure/`, outside
+  the source inventory. CI uploads only its `screenshots` subdirectory on failure,
+  never the surrounding runtime profiles or credentials. Authored Cypress
+  fixtures remain source inputs; no broad browser-source ignore is added.
 - `pnpm verify:prepush` is routed through
   [`scripts/verify-prepush.cjs`](../../scripts/verify-prepush.cjs). The router
   gets repository path semantics from
@@ -453,14 +563,49 @@ Planning-generated pages that are intentionally untracked:
 
 ## GitHub Workflow Coverage
 
+The object-store fixture used by PR Quality Gate's retained object-file integration
+is built from `infra/minio-test/Dockerfile`. It pins the official MinIO source
+commit and Go builder digest; the community release no longer supplies a usable
+prebuilt image. Each caller runs the returned local image ID, not a mutable tag.
+Docker reuses unchanged build layers. Build failure stops the proof; there is no
+fallback provider or skipped integration. This image is an isolated test fixture,
+not a production deployment. The upstream release and build instructions are
+[RELEASE.2025-10-15T17-29-55Z](https://github.com/minio/minio/releases/tag/RELEASE.2025-10-15T17-29-55Z).
+
+### Retired HET browser histories and retained runtime coverage
+
+The HET1/HET2 browser stories and their exclusive wrappers, helpers and Cypress
+assets were retired under [#3021](https://github.com/dunay2/dvt/issues/3021).
+They required the superseded initial dbt choice, acquisition-node catalog and
+Model-local SQL editor. Their historical evidence remains at
+[HET1](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts)
+and [HET2](https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts).
+Those revisions are not executable current-UI acceptance commands.
+
+The retirement preserves these existing proof boundaries:
+
+| Boundary                             | Retained evidence                                                                                                                                                                                                    | Limit                                                                                      |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Object-file load                     | `apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts`, its PR Quality Gate job and `infra/minio-test`                                                                                      | Real MinIO, Temporal and PostgreSQL; not the retired Canvas-to-dbt story                   |
+| Admission, integrity and atomic load | `packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts`, `packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts`                                               | Plugin-port negatives and PostgreSQL integration retain their own execution prerequisites  |
+| HTTPS policy and immutable artifact  | `apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts`, `packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts`, `packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts` | Adapter/port tests do not prove a real HTTPS-to-S3-to-PostgreSQL-to-dbt run                |
+| Generic public execution lifecycle   | `apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts`, `apps/web/cypress/e2e/runs/run-controls-live.cy.ts`                                                                                                | Preview, Run, status/events and Cancel/Recover; not HET acquisition recovery to completion |
+
+Contract, planner, plan-verifier, dbt-plugin and Temporal lifecycle tests also
+remain unchanged. No current equivalent full HET E2E is claimed. The HET1/HET2
+risk records remain open; historical success is not evidence of current browser
+coverage, nor does removing the obsolete UI story remove a runtime invariant.
+
+### Workflow owners
+
 - `CI - Code Quality`: ordinary pull requests run changed-slice verification
   through `pnpm verify:changed` and affected build/lint/type-check preflight
   through `pnpm preflight:affected:ci`; pushes to `main` and manual runs use
   `pnpm ci:full`. CI tool contract tests remain separate. It does not own
   ADR-0000 traceability or package test execution.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
-- `Test Suite`: package tests, affected test routing, Turbo-backed root build
-  coverage for full-root lanes, coverage, determinism/replay tests. On pull
+- `Test Suite`: package tests, affected test routing, dependency graph builds,
+  and one complete engine suite with coverage, determinism and replay. On pull
   requests, the heavy dedicated lanes consume one detector job and are skipped
   at job level when their semantic scope is false.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
@@ -530,6 +675,22 @@ contracts, determinism, golden, and coverage lanes closed, while
 active. Dependency, lifecycle, unknown, and runtime-capability script changes
 remain fail-closed and root-build sensitive.
 
+Root and cataloged workspace manifests share one base/head Git reader and a
+path-keyed classification context. Display metadata, including supported
+repository/bugs objects and keyword lists, does not widen runtime scope. The
+allowed fields and shapes are owned by
+[`scope-config.mjs`](../../tools/ci/scope-config.mjs); unknown fields, malformed
+values, missing refs, and unreadable blobs retain the existing path-based scope.
+Only metadata-only workspace changes are narrowed: workspace scripts and
+`lint-staged` do not inherit the root command-alias exemptions. Fixture and
+uncataloged manifests cannot use these exemptions either.
+
+Changed-file validation and release checks remain active; accompanying source
+or lockfile changes retain their own scope. Current internal dependencies use
+`workspace:*`; product code does not consume internal package versions. A new
+executable version consumer must be reflected in scope policy before relying on
+this exemption. Pushes to `main` and manual full validation remain unchanged.
+
 - `pnpm test:web:changed` is the web changed-file router. It reads changed
   files or explicit `--files` arguments, runs `@dvt/web` dependency
   preparation once, and delegates to the routed Vitest suite command from the
@@ -548,8 +709,28 @@ remain fail-closed and root-build sensitive.
 The repository centralizes workflow scope detection in:
 
 - [`tools/ci/scope-config.mjs`](../../tools/ci/scope-config.mjs)
-- [`tools/ci/emit-workspace-matrix.mjs`](../../tools/ci/emit-workspace-matrix.mjs)
 - [`tools/ci/emit-scope.mjs`](../../tools/ci/emit-scope.mjs)
+- [`tools/ci/ci-scope-outputs.mjs`](../../tools/ci/ci-scope-outputs.mjs)
+
+Each consuming workflow calls `node tools/ci/emit-scope.mjs` once. The adapter
+acquires the committed diff and manifest context once, then publishes the four
+JSON projections `workflow_scope`, `test_scope`, `contracts_scope`, and
+`pr_quality_scope`, together with `workspace_matrix`, `test_matrix`,
+`any_changed`, and `any_tests`. Projection flags are JSON booleans: consumers use
+`fromJSON` and boolean comparisons; job outputs remain GitHub output strings.
+Same-named flags in different projections are not merged: their evidence owners
+can have different widening rules. Package-test grouping stays pure in
+[`package-test-matrix.mjs`](../../tools/ci/package-test-matrix.mjs).
+
+The matrix-only CLIs and mode argument are retired, without compatibility
+aliases. The five workflows still acquire scope independently; shared acquisition
+across the whole PR DAG remains owned by #2926/#2928. This cut removes three of
+the previous eight invocations, not the remaining five workflow checkouts.
+This current CLI contract supersedes the matrix commands and `--mode` examples
+in earlier CI implementation proposals; those proposals retain their historical
+evidence and are not executable instructions for the current workflows.
+PR Quality retains PR-only automatic integrations and existing manual opt-ins;
+non-PR full validation and required status names are unchanged.
 
 These files are the canonical source of truth for:
 
@@ -570,7 +751,8 @@ The engine coverage scope is documented as the
 For pull requests, `coverage_relevant` is true for the governed engine
 workspace scope, including package-level configuration such as
 `packages/@dvt/engine/vitest.config.ts`. It also remains true for contracts,
-root test configuration, and lockfiles. Workflow YAML changes stay on the CI
+root test configuration, lockfiles, determinism-sensitive commands and every
+root-build-sensitive classification, including unknown inputs. Workflow YAML changes stay on the CI
 contract and changed-file validation rail instead of opening coverage by
 themselves. Unrelated docs-only changes can keep the coverage job closed.
 
@@ -595,9 +777,9 @@ Current workflow consumers:
   shallow checkout plus `fetch-scope-base` instead of fetching full PR history
   before routing.
 - [`.github/workflows/test.yml`](../../.github/workflows/test.yml) uses
-  `emit-scope --mode test` once in `detect_test_matrix` for PR test routing
+  `emit-scope` once in `detect_test_matrix` for PR test routing
   across the web app, workers, and library workspaces. Dedicated web,
-  adapter-temporal, adapter-postgres, determinism/replay, and engine coverage
+  adapter-temporal, adapter-postgres, and engine coverage
   jobs consume that detector's outputs at job level, so irrelevant PRs do not
   spend a runner on checkout, dependency setup, or repeated scope detection.
   Draft PRs keep those heavy lanes closed, and the workflow listens for
@@ -605,13 +787,11 @@ Current workflow consumers:
   restores affected package test coverage. It also listens for
   `converted_to_draft` so ready-to-draft transitions cancel in-flight test
   runs and return the workflow to the skipped draft posture.
-  Its push/manual full-suite lane and PR `root_build_sensitive` fast-path both
-  run `pnpm build`, so the merge gate exercises the same Turbo-backed root
-  build path that local root builds now use. Non-root PR affected dependency
-  builds use `node scripts/run-turbo-workspace-task.cjs build` with the PR base
-  filter, avoiding a manually maintained package-to-build map. Cacheable
+  Push/manual and root-build-sensitive PRs select the full package matrix and
+  dedicated lanes. Each selected package builds its dependency graph through
+  `node scripts/run-turbo-workspace-task.cjs build`. Cacheable
   dependency graph preparation for the dedicated web, adapter-temporal,
-  adapter-postgres, determinism/replay, and engine coverage lanes also uses the
+  adapter-postgres, and engine coverage lanes also uses the
   same wrapper with the existing package filters; the test, coverage, and
   integration commands remain explicit package commands. The API package matrix command uses
   `pnpm --filter dvt-api test:ci` after this Turbo build step, so CI avoids
@@ -622,17 +802,29 @@ Current workflow consumers:
   orchestration helper cannot skip `Test Suite`. Test workflow YAML changes are
   treated as CI policy changes: they stay covered by static/executable CI tool
   contracts and changed-file checks without forcing package tests, web frontend
-  tests, determinism/replay, coverage, or adapter-postgres integration by
-  filename alone. Adapter-postgres integration,
-  determinism/replay, and engine coverage also consume the shared
-  `emit-scope --mode test` read model instead of local `dorny/paths-filter`
+  tests, coverage, or adapter-postgres integration by
+  filename alone. Adapter-postgres integration and engine coverage consume the shared
+  `emit-scope` read model instead of local `dorny/paths-filter`
   package-root rules. Engine
   coverage uses the same governed `packages/@dvt/engine/**` package boundary as
-  engine package test routing, so engine Vitest config changes cannot bypass
-  threshold enforcement. For ordinary web PRs, the web lane runs
-  `pnpm test:web:changed` with `GIT_BASE` pointing at the pull-request base ref.
-  The same lane runs `pnpm test:web:ci` for pushes to `main`, manual workflow
-  runs, and root-build-sensitive pull requests. `test:web:ci` expands to
+  engine package scope, so engine Vitest config changes cannot bypass
+  threshold enforcement. Engine is excluded from the generic package matrix:
+  coverage runs all its tests once, including determinism and replay; local
+  focused commands remain available. `Test Suite Required for Merge` requires
+  success for each selected lane and accepts skipped only for justified scope
+  or draft posture. Missing scope/results and cancelled/failed jobs reject.
+  The web job uses fixed `vitest` and `browser` matrix phases, each with the
+  unchanged 25-minute deadline and an isolated existing Turbo-cache variant.
+  For ordinary web PRs, both execute the same `pnpm test:web:changed` plan with
+  their `--phase=vitest` / `--phase=browser` selector and `GIT_BASE` pointing at
+  the pull-request base ref. Local default execution still runs both. Browser
+  dependencies and disposable PostgreSQL are provisioned only in the browser
+  phase when the complete plan requires them. Cancellation or failure of either
+  phase rejects the existing required aggregate; fail-fast is disabled so the
+  sibling can finish. Pushes to `main`, manual runs and root-sensitive PRs keep
+  `pnpm test:web:ci` in the Vitest phase and run
+  `pnpm test:web:changed --full --phase=browser` in the browser phase. The router's
+  `--full` is not a full-Vitest selector. `test:web:ci` expands to
   `@dvt/web` `test:deps` followed by the unit, presentation, and architecture
   Vitest delegates. `pnpm test:web` and `pnpm --filter @dvt/web test` use the
   same primary-suite delegate sequence through the package `pretest` lifecycle,
@@ -643,11 +835,18 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   Vitest old-space value through `NODE_OPTIONS`, so the Vitest parent process
   and forked workers inherit the limit in GitHub Actions. Public web suite
   commands also run `test:deps` before their raw `*:run` delegates so split-suite
-  execution preserves the package dependency-build contract. The web
-  architecture suite checks that these package scripts, Vitest config delegates,
+  execution preserves the package dependency-build contract. Local `test:deps`
+  reuses `scripts/build-workspace-runtime-deps.cjs` with the explicit planner
+  test dependency. That helper selects the production closure through pnpm and
+  runs its exact package set in one Turbo build, including the consumer when
+  `--build-self` is requested. Turbo orders the selected tasks and reuses valid
+  outputs; missing or invalidated cache entries compile normally. It does not
+  expand the runtime closure to unrelated development dependencies. Temporal
+  integration keeps its explicit prepare-then-test sequence under ADR-0001.
+  The web architecture suite checks that these package scripts, Vitest config delegates,
   and workflow commands stay aligned with `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
-  `emit-scope --mode contracts` for contract, determinism, and golden routing.
+  `emit-scope` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those
   lanes. Its detector uses shallow checkout plus `fetch-scope-base`; contract
   hash execution no longer requests full PR history.
@@ -657,7 +856,7 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   merge-blocking governance subset from `pnpm verify:prepush` on PRs and
   pushes: changed-doc filename/frontmatter checks when docs changed, governance
   unit coverage, document-unit map, file fingerprints, ADR-0000 traceability,
-  feature-mechanization manifests, implementation mechanization, and QA
+  repository feature-mechanization manifests and QA
   artifact validation. On PRs those expensive groups are conditional:
   governance maps require `governance_global_relevant`,
   `governance_tooling_changed`, or `root_build_sensitive`; ADR-0000 requires
@@ -667,9 +866,47 @@ Frontend Tests` lane and the main/manual `Full CI` baseline both set the same we
   Workflow YAML edits are CI-policy changes for this scope as well: they keep
   PR metadata, changed-file validation, and CI contract coverage, but no longer
   imply Temporal or adapter-postgres runtime integration by themselves. Pushes
-  and manual full gates keep the full remote posture. The scope detector uses
+  and manual full gates keep the full remote posture for those checks. The scope detector uses
   shallow checkout plus `fetch-scope-base`; Temporal integration jobs keep
   shallow checkout because they do not compute changed-file diffs.
+
+DB-authoritative implementation mechanization runs locally before merge, not
+against the imported CI database. The exact base/head SHAs, command and result
+are recorded on the PR under the approved
+[single-team validation boundary](../planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md#single-team-validation-boundary).
+GitHub does not independently enforce this local control. Repository manifest
+validation is DB-free and does not alone trigger CI database preparation; other
+DB-backed governance checks retain their existing preparation.
+
+## Runtime Dependency Preparation Rail
+
+`PrepareWorkspaceRuntimeDependencies` names the existing operational command,
+not another CLI or a second dependency graph. Its owner is the CI tooling
+`WorkspaceRuntimeBuildPolicy`; its application port and adapter are
+`scripts/build-workspace-runtime-deps.cjs` (Node CLI invoking pnpm and Turbo).
+Inputs are a workspace package, optional included packages, and `--build-self`.
+The command returns a successful process exit only after the selected builds
+succeed, or an explicit failure. It writes disposable build/cache outputs only.
+
+The scope is the caller's checked-out repository with host execution authority;
+it does not access tenant data or grant additional permissions. pnpm owns the
+production dependency closure and Turbo owns ordering and content-addressed
+reuse. Included closures are additive, including a consumer required transitively
+by an explicitly included package. Self-build requires an actual build script.
+No package wildcard, implicit global build, persistent database, or test-result
+cache is introduced. Independent selected tasks retain the existing concurrency
+bound of four.
+
+`tools/ci/workspace-runtime-preparation.test.mjs` checks the command boundary:
+invalid arguments and package names, absent packages/scripts, malformed discovery,
+out-of-repository paths, empty closures, and failed or signalled child processes
+must not report successful preparation. Clean-output and cache-restoration
+execution evidence is recorded in [#2877](https://github.com/dunay2/dvt/issues/2877).
+
+The selected-closure live-proof runner reuses the dev stack's explicit worker
+preparation before starting the API or worker. It skips that preparation only
+when the proof explicitly requires an unavailable worker. Preparation failure
+aborts startup; a previous local build is not a runtime prerequisite.
 
 ## Notes
 

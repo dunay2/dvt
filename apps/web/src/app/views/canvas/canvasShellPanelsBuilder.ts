@@ -58,6 +58,10 @@ export function buildCanvasShellPanels({
       workspaceScope: routePresentation.workspaceScope,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
     },
+    relationalTreeAuthoring: {
+      canEditNode: panelState.canEditInspectorNode,
+      onApplyNodeDraft: panelState.applyNodeDraft,
+    },
     inspectorWorkbenchContributions: [],
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,

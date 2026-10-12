@@ -36,10 +36,7 @@ import {
 } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
 import {
   NamedStructSchema,
-  TypeSchema,
-  Type_I64Schema,
   Type_Nullability,
-  Type_StringSchema,
   Type_StructSchema,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
@@ -47,7 +44,7 @@ import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
   DVT_SUBSTRAIT_PROFILE_REF_V1,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
   allocateDvtFieldId,
   allocateDvtRelationId,
   type ConnectedSourceRef,
@@ -58,6 +55,7 @@ import {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { buildDvtSubstraitScalarFunction } from './canvasDvtSubstraitScalarFunction';
 import {
   inspectDvtSubstraitCalculatedExpression,
   type DvtSubstraitCalculatedExpression,
@@ -75,6 +73,7 @@ import {
   sortedRelationFields,
 } from './canvasDvtSubstraitProjectionStructure';
 import { inspectChainedDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjectionChainInspection';
+import { projectionOperandLineageMatches } from './canvasProjectionOperandLineage';
 export { canonicalizeDvtSubstraitProjectionDataType } from './canvasDvtSubstraitProjectionStructure';
 
 const ZERO_SHA256 = '0'.repeat(64);
@@ -895,15 +894,6 @@ export function inspectDvtSubstraitProjectionDraft(
     if (mapping < sourceFields.length) return dvtSubstraitExpression.field(mapping);
     return project.expressions[mapping - sourceFields.length] ?? null;
   };
-  const expressionsMatch = (left: Expression, right: Expression): boolean => {
-    const leftScalar = inspectScalar(left);
-    const rightScalar = inspectScalar(right);
-    return (
-      leftScalar != null &&
-      rightScalar != null &&
-      JSON.stringify(publicScalar(leftScalar)) === JSON.stringify(publicScalar(rightScalar))
-    );
-  };
   const outputs = mappings.value.outputMapping.map((mapping, outputOrdinal) => {
     const expressionOrdinal = mapping - sourceFields.length;
     const resolvedExpression =
@@ -930,24 +920,18 @@ export function inspectDvtSubstraitProjectionDraft(
     const targetField = targetFields[outputOrdinal];
     const persistedOperandFieldIds = targetField?.operandFieldIds;
     const rawExpression = mappedExpression(outputOrdinal);
-    const rawScalarArguments =
-      rawExpression?.rexType.case === 'scalarFunction'
-        ? rawExpression.rexType.value.arguments.flatMap((argument) =>
-            argument.argType.case === 'value' ? [argument.argType.value] : []
-          )
-        : [];
     const persistedOperandsMatch =
       persistedOperandFieldIds != null &&
-      persistedOperandFieldIds.length === rawScalarArguments.length &&
-      persistedOperandFieldIds.every((fieldId, index) => {
+      rawExpression != null &&
+      projectionOperandLineageMatches(rawExpression, persistedOperandFieldIds, (fieldId) => {
+        if (fieldId === targetField?.fieldId) return null;
         const operandField = targetFields.find((field) => field.fieldId === fieldId);
-        const operandExpression =
-          operandField == null ? null : mappedExpression(operandField.outputOrdinal);
-        return (
-          fieldId !== targetField?.fieldId &&
-          operandExpression != null &&
-          expressionsMatch(operandExpression, rawScalarArguments[index]!)
-        );
+        const inputField = sourceFields.find((field) => field.fieldId === fieldId);
+        return operandField != null
+          ? mappedExpression(operandField.outputOrdinal)
+          : inputField == null
+            ? null
+            : dvtSubstraitExpression.field(inputField.outputOrdinal);
       });
     if (
       resolvedExpression == null ||
@@ -1100,7 +1084,7 @@ export function applyDvtSubstraitProjectionFunction(
     args.provider !== inspection.projection.source.sourceRef.connectionRef.provider ||
     capability == null ||
     !admitsCompleteArgumentCount(capability, operandFieldIds.length) ||
-    !PostgresIdentifierV1Schema.safeParse(alias).success ||
+    !DvtSemanticFieldNameV1Schema.safeParse(alias).success ||
     output == null ||
     operands.some((operand) => operand == null) ||
     new Set(operandFieldIds).size !== operandFieldIds.length ||
@@ -1143,53 +1127,14 @@ export function applyDvtSubstraitProjectionFunction(
     (expression): expression is Expression => expression != null
   );
 
-  const functionEntry = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
-    (entry) => entry.entryId === capability.capabilityId
-  );
-  if (
-    functionEntry == null ||
-    functionEntry.kind !== 'standard' ||
-    functionEntry.category !== 'scalar-function' ||
-    functionEntry.profileStatus !== 'supported-profile' ||
-    functionEntry.identity.sourceKind !== 'simple-extension'
-  ) {
-    return draft;
-  }
-  const functionIdentity = functionEntry.identity;
-  const signature = functionEntry.invocation?.signature ?? `${functionIdentity.name}:str`;
-  const temporalExtract =
-    functionIdentity.urn === 'extension:io.substrait:functions_datetime' &&
-    functionIdentity.name === 'extract' &&
-    signature === 'extract:req_ptstz_str';
-  const extensionFunction = dvtSubstraitExpression.ensureScalarFunction(plan, {
-    urn: functionIdentity.urn,
-    name: signature,
+  const nextExpression = buildDvtSubstraitScalarFunction({
+    plan,
+    capabilityId: capability.capabilityId,
+    dataTypes: operands.map((operand) => operand!.dataType),
+    operands: definedOperandExpressions,
+    provider: args.provider,
   });
-
-  const nextExpression = dvtSubstraitExpression.scalarFunction({
-    functionReference: extensionFunction.functionAnchor,
-    arguments: temporalExtract
-      ? [
-          definedOperandExpressions[0]!,
-          dvtSubstraitExpression.literal({ dataType: 'string', value: 'UTC' }),
-        ]
-      : definedOperandExpressions,
-    leadingEnumArguments: temporalExtract ? ['YEAR'] : undefined,
-    options: functionEntry.invocation?.options,
-    outputType: temporalExtract
-      ? create(TypeSchema, {
-          kind: {
-            case: 'i64',
-            value: create(Type_I64Schema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        })
-      : create(TypeSchema, {
-          kind: {
-            case: 'string',
-            value: create(Type_StringSchema, { nullability: Type_Nullability.NULLABLE }),
-          },
-        }),
-  });
+  if (nextExpression == null) return draft;
   const targetExpressionOrdinal = targetMapping - sourceFieldCount;
   const referenceCount = outputMapping.filter((mapping) => mapping === targetMapping).length;
   if (targetMapping < sourceFieldCount || referenceCount > 1) {
@@ -1315,8 +1260,7 @@ function resolveDvtSubstraitProjectionEntryInternal(
       const sourceInspection = inspectDvtSubstraitProjectionDraft(sourceDraft);
       if (
         !sourceInspection.ok ||
-        sourceInspection.projection.targetRelationId !== inspection.projection.inputRelationId ||
-        sourceInspection.projection.outputs.length !== inspection.projection.inputFields.length
+        sourceInspection.projection.targetRelationId !== inspection.projection.inputRelationId
       ) {
         return [];
       }
@@ -1324,22 +1268,33 @@ function resolveDvtSubstraitProjectionEntryInternal(
         { ...args, targetNode: sourceNode, draft: sourceDraft },
         nextVisitedNodeIds
       );
+      if (resolvedUpstream == null) {
+        return [];
+      }
+      const sourceOutputByFieldId = new Map(
+        sourceInspection.projection.outputs.map((output) => [output.fieldId, output] as const)
+      );
+      const resolvedOutputByFieldId = new Map(
+        resolvedUpstream.outputs.map((output) => [output.fieldId, output] as const)
+      );
+      const resolvedInputFields = inspection.projection.inputFields.map((input) => ({
+        sourceOutput: sourceOutputByFieldId.get(input.fieldId),
+        resolvedOutput: resolvedOutputByFieldId.get(input.fieldId),
+      }));
       if (
-        resolvedUpstream == null ||
-        sourceInspection.projection.outputs.some((output, ordinal) => {
-          const input = inspection.projection.inputFields[ordinal];
-          const resolvedInput = resolvedUpstream.outputs[ordinal];
-          return (
-            input == null ||
-            resolvedInput == null ||
-            output.fieldId !== input.fieldId ||
-            resolvedInput.fieldId !== input.fieldId
-          );
-        })
+        resolvedInputFields.some(
+          ({ sourceOutput, resolvedOutput }) => sourceOutput == null || resolvedOutput == null
+        )
       ) {
         return [];
       }
-      return [{ sourceNode, sourceInspection, resolvedUpstream }] as const;
+      return [
+        {
+          sourceNode,
+          resolvedUpstream,
+          resolvedInputFields: resolvedInputFields.map(({ resolvedOutput }) => resolvedOutput!),
+        },
+      ] as const;
     } catch {
       return [];
     }
@@ -1354,7 +1309,7 @@ function resolveDvtSubstraitProjectionEntryInternal(
     schema: match.resolvedUpstream.source.schema,
     table: match.resolvedUpstream.source.table,
     sourceRef: match.resolvedUpstream.source.sourceRef,
-    fields: match.resolvedUpstream.outputs.map((output) => ({
+    fields: match.resolvedInputFields.map((output) => ({
       name: output.name,
       dataType: output.dataType,
     })),

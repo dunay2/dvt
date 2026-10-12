@@ -2,7 +2,7 @@
 title: AI Work Protocol
 status: Active
 owner: docs
-last_reviewed: 2026-09-09
+last_reviewed: 2026-09-17
 ---
 
 # AI Work Protocol
@@ -133,6 +133,10 @@ it is not a substitute for GitHub issue lifecycle.
 Validate the smallest affected scope first, then the repository gates required by
 the changed surfaces.
 
+Select ARC artifacts through the single [ARC-0 Fast Path](../../AGENTS.md#arc-0-fast-path)
+and [ARC Artifacts When Required](../../AGENTS.md#arc-artifacts-when-required)
+procedure in `AGENTS.md`. Do not duplicate the trigger catalog here.
+
 Minimum closeout expectations for an implementation slice:
 
 - affected tests, lint, typecheck, and build checks are green as applicable;
@@ -160,7 +164,8 @@ be treated as a routine Planning DB import/rebuild or task-status projection.
 
 ## Historical Material
 
-Archived proposals, reviews, closeouts, and historical evidence may describe
-retired workflows. Preserve them when they truthfully record their baseline, but
-do not route active work through them and do not treat their obsolete links or
-terminology as current governance.
+Apply the [Historical Material Rule](../planning/status/governance-document-rule-inventory.md#historical-material-rule)
+from the governance inventory. Do not route active work through historical
+reviews. Retire obsolete documents after reconciling their consumers and current
+obligations; retain required provenance through exact Git revisions, not archive
+copies or preservation summaries.

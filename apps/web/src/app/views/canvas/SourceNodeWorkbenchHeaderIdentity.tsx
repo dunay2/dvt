@@ -1,4 +1,10 @@
-/** Owned concern: present authoritative Source identity in the node workbench header. */
+/**
+ * Owned concern: present authoritative Source identity in the node workbench header.
+ * @baseline GH-3578: adjacent provider text already conveys the decorative glyph's meaning.
+ * @decision Keep the glyph hidden from assistive technology, without a redundant ARIA label.
+ * @consequence Provider and connection facts remain accessible once, with no invented fallback.
+ * @version 1.0.0
+ */
 import { ConnectedSourceRefSchema } from '@dvt/contracts';
 import { Database } from 'lucide-react';
 
@@ -22,7 +28,9 @@ const SOURCE_PROVIDER_PRESENTATION = Object.freeze({
 
 function resolveProviderPresentation(provider: string | null): SourceProviderPresentation | null {
   if (provider == null) return null;
-  return SOURCE_PROVIDER_PRESENTATION[provider as keyof typeof SOURCE_PROVIDER_PRESENTATION] ?? null;
+  return (
+    SOURCE_PROVIDER_PRESENTATION[provider as keyof typeof SOURCE_PROVIDER_PRESENTATION] ?? null
+  );
 }
 
 /**
@@ -68,50 +76,47 @@ export function SourceNodeWorkbenchHeaderIdentity({
   return (
     <div
       data-slot="canvas-source-workbench-header-identity"
-      className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)] items-start gap-x-3 gap-y-1"
+      className="flex min-w-0 items-start gap-3"
     >
       <div
         data-slot="canvas-source-provider-icon"
-        className="row-span-2 flex size-10 items-center justify-center rounded-lg border border-(--border-default) bg-(--surface-elevated) text-(--focus-ring)"
-        aria-label={providerPresentation?.label ?? provider ?? 'Source provider'}
+        aria-hidden="true"
+        className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-(--border-default) bg-(--surface-elevated) text-(--focus-ring)"
       >
         <ProviderIcon presentation={providerPresentation} />
       </div>
 
       <div className="min-w-0">
-        <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>{node.name}</h2>
-        <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>{node.kind}</p>
-      </div>
-
-      <div className="min-w-0 text-right">
+        <h2
+          className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}
+          title={compactRelation || node.name}
+        >
+          {node.name}
+        </h2>
+        <p className={cn('truncate', inspectorVisualClasses.contextPanelSubtitle)}>
+          {node.kind}
+          {providerPresentation != null ? (
+            <>
+              {' '}
+              · <span data-slot="canvas-source-provider-label">{providerPresentation.label}</span>
+            </>
+          ) : null}
+        </p>
         {compactRelation ? (
-          <p
-            data-slot="canvas-source-qualified-resource"
-            className={cn('truncate font-mono', inspectorVisualClasses.contextPanelSubtitle)}
-            title={compactRelation}
-          >
+          <p data-slot="canvas-source-qualified-resource" className="sr-only">
             {compactRelation}
           </p>
         ) : null}
         {connectionId ? (
           <p
             data-slot="canvas-source-connection-ref"
-            className={cn('truncate font-mono', inspectorVisualClasses.contextPanelSubtitle)}
+            className={cn('truncate', inspectorVisualClasses.contextPanelSubtitle)}
             title={connectionId}
           >
             {connectionId}
           </p>
         ) : null}
       </div>
-
-      {providerPresentation != null ? (
-        <p
-          data-slot="canvas-source-provider-label"
-          className={cn('col-start-2 col-span-2 truncate', inspectorVisualClasses.contextPanelSubtitle)}
-        >
-          {providerPresentation.label}
-        </p>
-      ) : null}
     </div>
   );
 }

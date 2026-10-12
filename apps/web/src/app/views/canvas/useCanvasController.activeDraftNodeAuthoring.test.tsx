@@ -199,4 +199,57 @@ describe('useCanvasController active draft node authoring', () => {
       })
     );
   });
+
+  it('authors an explicitly identified node without requiring an open inspector', async () => {
+    await replaceHarnessWithTransformationDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1'],
+        nodePositions: { node_1: { x: 0, y: 0 } },
+        edges: [],
+      }),
+      ['node_1']
+    );
+    harness.state.store.inspectorNodeId = null;
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(async () =>
+      buildDraftSaveSavedResponse(
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        { revision: 'rev-explicit-node' }
+      )
+    );
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.inspectorNode).toBeNull();
+
+    await act(async () => {
+      harness.getLatestResult()?.applyNodeDraft('node_1', {
+        name: 'orders_from_relational_tree',
+        description: 'Edited through the relational tree',
+        tags: ['relational-tree'],
+      });
+    });
+    await harness.renderProbe();
+    await waitForAutosaveDebounce();
+    await harness.renderProbe();
+
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedRevision: 'rev-1',
+        draft: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'node_1',
+              name: 'orders_from_relational_tree',
+              description: 'Edited through the relational tree',
+            }),
+          ]),
+        }),
+      })
+    );
+  });
 });

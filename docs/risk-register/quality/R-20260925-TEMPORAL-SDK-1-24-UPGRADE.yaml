@@ -1,0 +1,23 @@
+---
+id: R-20260925-TEMPORAL-SDK-1-24-UPGRADE
+title: Temporal SDK 1.24 could change worker or replay behavior
+status: Open
+date: 2026-09-25
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: High
+probability: Low
+context: >
+  PR #3345 upgrades all Temporal TypeScript SDK packages used by the adapter and worker from 1.23.0
+  to 1.24.0 without changing DVT workflow or activity contracts. DVT does not consume the upstream
+  OpenAI Agents or experimental external-storage surfaces with declared breaking changes.
+risk: >
+  An upstream worker, core bridge, protocol, or replay change could pass compilation while changing
+  execution, cancellation, time-skipping, transformation dispatch, or integration behavior.
+mitigations:
+  - Keep every Temporal package on the same exact SDK version across adapter and worker manifests.
+  - Require frozen dependency resolution plus adapter and worker behavior and typecheck suites.
+  - Require Temporal integration, dependency-review, and deterministic-workflow merge gates.
+review_after: 2026-10-25
+---

@@ -1,0 +1,235 @@
+import { ExpressionSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  TypeSchema,
+  Type_Nullability,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { create } from '@bufbuild/protobuf';
+import { encodeDvtSubstraitPlanV1 } from '@dvt/contracts';
+import { describe, expect, it } from 'vitest';
+
+import { pgFp64Literal, pgI64Literal } from '../src/postgresPredicateAst.js';
+import { projectSubstraitToPostgresSql } from '../src/relationalSql/project.js';
+import { resolveDvtSubstraitColumnFunctions } from '../src/substraitColumnFunctionCatalog.js';
+
+import { scalarFixture } from './relationalScalarFixture.js';
+
+function arithmetic(name: string, type: 'i64' | 'fp64'): ReturnType<typeof scalarFixture> {
+  const { document, fn } = scalarFixture(true);
+  document.plan.extensionUrns.find((entry) => entry.extensionUrnAnchor === 3)!.urn =
+    'extension:io.substrait:functions_arithmetic';
+  const declaration = document.plan.extensions.find(
+    (entry) =>
+      entry.mappingType.case === 'extensionFunction' && entry.mappingType.value.functionAnchor === 5
+  )!.mappingType;
+  if (declaration.case !== 'extensionFunction') throw new Error('Expected function.');
+  declaration.value.name = `${name}:${type}_${type}`;
+  fn.arguments = [2, 3].map((number) => ({
+    $typeName: 'substrait.FunctionArgument' as const,
+    argType: {
+      case: 'value' as const,
+      value: create(ExpressionSchema, {
+        rexType: {
+          case: 'literal',
+          value: {
+            literalType:
+              type === 'i64'
+                ? { case: 'i64', value: BigInt(number) }
+                : { case: 'fp64', value: number },
+          },
+        },
+      }),
+    },
+  }));
+  fn.outputType = create(TypeSchema, {
+    kind:
+      type === 'i64'
+        ? { case: 'i64', value: { nullability: Type_Nullability.NULLABLE } }
+        : { case: 'fp64', value: { nullability: Type_Nullability.NULLABLE } },
+  });
+  fn.options =
+    name === 'divide'
+      ? [
+          {
+            $typeName: 'substrait.FunctionOption',
+            name: 'overflow',
+            preference: ['ERROR'],
+          },
+          {
+            $typeName: 'substrait.FunctionOption',
+            name: 'on_domain_error',
+            preference: ['ERROR'],
+          },
+          {
+            $typeName: 'substrait.FunctionOption',
+            name: 'on_division_by_zero',
+            preference: ['ERROR'],
+          },
+        ]
+      : [
+          {
+            $typeName: 'substrait.FunctionOption',
+            name: type === 'i64' ? 'overflow' : 'rounding',
+            preference: [type === 'i64' ? 'ERROR' : 'TIE_TO_EVEN'],
+          },
+        ];
+  document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+  return { document, fn };
+}
+
+describe('arithmetic PostgreSQL projection', () => {
+  it.each(['string', 'i64', 'fp64', 'bool'] as const)(
+    'renders a typed %s NULL without changing the declared result',
+    async (kind) => {
+      const { document } = scalarFixture(true);
+      const root = document.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+        throw new Error('Expected Project');
+      root.value.input.relType.value.expressions = [
+        create(ExpressionSchema, {
+          rexType: {
+            case: 'literal',
+            value: {
+              literalType: {
+                case: 'null',
+                value: { kind: { case: kind, value: { nullability: Type_Nullability.NULLABLE } } },
+              },
+            },
+          },
+        }),
+      ];
+      document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+      const result = await projectSubstraitToPostgresSql(document);
+      expect(result.sql).toMatch(/NULL::|CAST\(NULL AS/);
+      expect(result.sql).toContain(
+        { string: 'text', i64: 'bigint', fp64: 'float8', bool: 'boolean' }[kind]
+      );
+      expect(result.projection.outputs).toMatchObject([{ dataType: kind }]);
+    }
+  );
+
+  it.each(['required', 'variation', 'unbound'] as const)(
+    'rejects %s NULL without emitting SQL',
+    async (fault) => {
+      const { document } = scalarFixture(true);
+      const root = document.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+        throw new Error('Expected Project');
+      root.value.input.relType.value.expressions = [
+        create(ExpressionSchema, {
+          rexType: {
+            case: 'literal',
+            value: {
+              literalType: {
+                case: 'null',
+                value: {
+                  kind:
+                    fault === 'unbound'
+                      ? { case: 'unbound', value: {} }
+                      : {
+                          case: 'string',
+                          value: {
+                            nullability:
+                              fault === 'required'
+                                ? Type_Nullability.REQUIRED
+                                : Type_Nullability.NULLABLE,
+                            typeVariationReference: fault === 'variation' ? 1 : 0,
+                          },
+                        },
+                },
+              },
+            },
+          },
+        }),
+      ];
+      document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+      await expect(projectSubstraitToPostgresSql(document)).rejects.toThrow();
+    }
+  );
+
+  it('retains the declared type and negative zero for standalone numeric constants', () => {
+    expect(pgI64Literal(2n)).toMatchObject({
+      TypeCast: { typeName: { names: [{ String: { sval: 'bigint' } }] } },
+    });
+    expect(pgFp64Literal(2.5)).toMatchObject({
+      TypeCast: { typeName: { names: [{ String: { sval: 'float8' } }] } },
+    });
+    expect(pgFp64Literal(-0)).toMatchObject({
+      TypeCast: { arg: { A_Const: { sval: { sval: '-0' } } } },
+    });
+  });
+  for (const type of ['i64', 'fp64'] as const) {
+    it.each([
+      ['add', '+'],
+      ['subtract', '-'],
+      ['multiply', '*'],
+    ])(`projects exact ${type} overloads for %s`, async (name, operator) => {
+      const { document } = arithmetic(name!, type);
+      const before = globalThis.structuredClone(document);
+      const result = await projectSubstraitToPostgresSql(document);
+      expect(result.sql).toContain(operator);
+      expect(result.projection.outputs).toMatchObject([{ dataType: type }]);
+      expect(document).toEqual(before);
+    });
+  }
+
+  it('projects DIVIDE capability only for homogeneous bigint operands', () => {
+    expect(
+      resolveDvtSubstraitColumnFunctions({
+        dataTypes: ['bigint', 'bigint'],
+        provider: 'postgres',
+        resolution: 'complete',
+      }).some((candidate) => candidate.name === 'divide')
+    ).toBe(true);
+    expect(
+      resolveDvtSubstraitColumnFunctions({
+        dataTypes: ['double precision', 'double precision'],
+        provider: 'postgres',
+        resolution: 'complete',
+      }).some((candidate) => candidate.name === 'divide')
+    ).toBe(false);
+  });
+
+  it('projects exact i64 divide with PostgreSQL error semantics', async () => {
+    const { document, fn } = arithmetic('divide', 'i64');
+    const result = await projectSubstraitToPostgresSql(document);
+    expect(result.sql).toContain('/');
+    expect(result.projection.outputs).toMatchObject([{ dataType: 'i64' }]);
+    expect(fn.options).toEqual([
+      expect.objectContaining({ name: 'overflow', preference: ['ERROR'] }),
+      expect.objectContaining({ name: 'on_domain_error', preference: ['ERROR'] }),
+      expect.objectContaining({ name: 'on_division_by_zero', preference: ['ERROR'] }),
+    ]);
+  });
+
+  it('rejects forged divide error policy', async () => {
+    const { document, fn } = arithmetic('divide', 'i64');
+    fn.options[2]!.preference = ['NULL'];
+    document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+    await expect(projectSubstraitToPostgresSql(document)).rejects.toMatchObject({
+      code: 'unsupported_shape',
+    });
+  });
+  it.each(['arity', 'type', 'option', 'output'] as const)(
+    'rejects invalid %s without emitting SQL',
+    async (fault) => {
+      const { document, fn } = arithmetic('multiply', 'i64');
+      if (fault === 'arity') fn.arguments.pop();
+      if (fault === 'type')
+        fn.arguments[0]!.argType = {
+          case: 'value',
+          value: create(ExpressionSchema, {
+            rexType: { case: 'literal', value: { literalType: { case: 'string', value: '2' } } },
+          }),
+        };
+      if (fault === 'option') fn.options[0]!.preference = ['SILENT'];
+      if (fault === 'output')
+        fn.outputType = create(TypeSchema, {
+          kind: { case: 'fp64', value: { nullability: Type_Nullability.NULLABLE } },
+        });
+      document.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(document.plan).sha256;
+      await expect(projectSubstraitToPostgresSql(document)).rejects.toMatchObject({
+        code: 'unsupported_shape',
+      });
+    }
+  );
+});

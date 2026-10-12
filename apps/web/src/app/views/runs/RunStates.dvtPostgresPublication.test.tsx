@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 
 import React from 'react';
-import { DvtPostgresPublicationEvidenceSchema } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { RunWorkspaceState } from './RunStates';
+import { createRunPublicationSnapshot } from './test/runPublicationFixture';
 import {
   buildWorkspace,
   createRunStatesHarness,
@@ -31,45 +31,7 @@ describe('RunStates DVT PostgreSQL publication evidence', () => {
     await harness.render(
       <RunWorkspaceState
         workspace={buildWorkspace({
-          snapshot: {
-            runId: 'run-123',
-            status: 'completed',
-            publication: DvtPostgresPublicationEvidenceSchema.parse({
-              evidenceType: 'dvt-postgres-publication',
-              environmentId: 'env-1',
-              plan: { planId: 'plan-1', planVersion: '1.0', sha256: planSha },
-              workloadSha256: 'b'.repeat(64),
-              semanticPlanSha256: 'c'.repeat(64),
-              projection: {
-                profileId: 'dvt.vtx2.postgres.project-rel.v1',
-                toolIdentity: 'pgsql-deparser@16.1.1',
-                schemaDigestSha256: 'd'.repeat(64),
-                sqlArtifact: {
-                  storageUri: 'cas://sha256/' + 'e'.repeat(64),
-                  sha256: 'e'.repeat(64),
-                  sizeBytes: 128,
-                },
-              },
-              target: {
-                connectionRef: {
-                  schemaVersion: 'connection-ref.v1',
-                  connectionId: 'postgresql-local',
-                  provider: 'postgres',
-                },
-                schema: 'dvt',
-                relation: 'orders_result',
-              },
-              publication: {
-                token: publicationToken,
-                predecessorToken: null,
-                outcome: 'created',
-              },
-              rowsWritten: 3,
-              startedAt: '2026-09-15T10:00:01.000Z',
-              completedAt: '2026-09-15T10:00:02.000Z',
-              durationMs: 1000,
-            }),
-          },
+          snapshot: createRunPublicationSnapshot(),
         })}
       />
     );
@@ -85,5 +47,22 @@ describe('RunStates DVT PostgreSQL publication evidence', () => {
     expect(harness.container.textContent).toContain(planSha);
     expect(harness.container.textContent).toContain(publicationToken);
     expect(harness.container.textContent).not.toContain('Result evidence is not available yet');
+  });
+
+  it('places the optional row reader beside immutable evidence without requiring services', async () => {
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace({ snapshot: createRunPublicationSnapshot() })}
+        publicationRows={
+          <section aria-label="Publication row reader">Explicit row request</section>
+        }
+      />
+    );
+
+    await selectRunDetailTab(harness.container, 'Result');
+
+    expect(harness.container.querySelector('[aria-label="Publication row reader"]')).not.toBeNull();
+    expect(harness.container.textContent).toContain('dvt.orders_result');
+    expect(harness.container.textContent).toContain('f'.repeat(64));
   });
 });

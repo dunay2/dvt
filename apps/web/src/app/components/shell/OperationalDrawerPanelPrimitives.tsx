@@ -35,19 +35,21 @@ export function OperationalDrawerPanelSurface({
   children,
   dataSlot,
   textSm = false,
+  className = '',
 }: Readonly<{
   ariaLabel: string;
   children: ReactNode;
   dataSlot: string;
   textSm?: boolean;
+  className?: string;
 }>): JSX.Element {
   return (
     <section
       data-slot={dataSlot}
       className={
         textSm
-          ? `${operationalDrawerPanelClassNames.panelSurface} text-sm`
-          : operationalDrawerPanelClassNames.panelSurface
+          ? `${operationalDrawerPanelClassNames.panelSurface} text-sm ${className}`
+          : `${operationalDrawerPanelClassNames.panelSurface} ${className}`
       }
       aria-label={ariaLabel}
       tabIndex={0}

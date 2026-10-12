@@ -9,12 +9,9 @@ import {
   reconnectConnection,
   type CanvasConnectionRejection,
 } from './canvasConnectionAggregate';
-import { automapCanvasColumns } from './canvasColumnAutomap';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
-import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { reconcileDbtModelConnectedOrigin } from './canvasDbtAuthoringModel';
-import { rebaseStaleTransformProjection } from './canvasTransformSourceReplacement';
 
 type CanvasEdgeAdmissionTransactionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -60,43 +57,6 @@ function buildAcceptedEdgeTransaction(args: {
   };
 }
 
-function applyCreatedConnectionColumnMappings(args: {
-  transaction: AcceptedCanvasEdgeAdmissionTransaction;
-  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
-  targetNodeId: string;
-}): AcceptedCanvasEdgeAdmissionTransaction {
-  const rebasedDraftSession = rebaseStaleTransformProjection({
-    draftSession: args.transaction.draftSession,
-    canonicalNodesById: args.canonicalNodesById,
-    targetNodeId: args.targetNodeId,
-  });
-  if (rebasedDraftSession !== args.transaction.draftSession) {
-    return { ...args.transaction, draftSession: rebasedDraftSession };
-  }
-  const nodes = resolveCanvasDraftNodes(rebasedDraftSession, args.canonicalNodesById);
-  const targetNode = nodes.find((node) => node.id === args.targetNodeId);
-  if (targetNode?.pluginId !== 'dvt' || targetNode.kind !== 'dvt:transform') {
-    return args.transaction;
-  }
-  const targetColumns = projectCanvasNodePresentationTruth({
-    node: targetNode,
-    nodes,
-    edges: args.transaction.draftSession.workingSet.visibleEdges,
-  }).columns.visible.flatMap((column) =>
-    column.provenance === 'declared' ? [] : [{ name: column.name, type: column.type }]
-  );
-  const mappingResult = automapCanvasColumns({
-    draftSession: args.transaction.draftSession,
-    canonicalNodesById: args.canonicalNodesById,
-    targetNodeId: targetNode.id,
-    targetColumns,
-  });
-
-  return mappingResult.outcome === 'applied'
-    ? { ...args.transaction, draftSession: mappingResult.draftSession }
-    : args.transaction;
-}
-
 function applyConnectedDbtModelOrigin(args: {
   transaction: AcceptedCanvasEdgeAdmissionTransaction;
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -122,13 +82,13 @@ function applyConnectedDbtModelOrigin(args: {
   };
 }
 
-export function resolveCanvasEdgeCreationTransaction({
+export async function resolveCanvasEdgeCreationTransaction({
   canonicalNodesById,
   connection,
   draftSession,
   edges,
   pluginPortMap,
-}: ResolveCanvasEdgeCreationTransactionArgs): CanvasEdgeAdmissionTransaction {
+}: ResolveCanvasEdgeCreationTransactionArgs): Promise<CanvasEdgeAdmissionTransaction> {
   const result = createConnection({
     connection,
     canonicalNodesById,
@@ -151,13 +111,8 @@ export function resolveCanvasEdgeCreationTransaction({
   if (transaction.outcome !== 'created' || connection.target == null) {
     return transaction;
   }
-  const mappedTransaction = applyCreatedConnectionColumnMappings({
-    transaction,
-    canonicalNodesById,
-    targetNodeId: connection.target,
-  });
   return applyConnectedDbtModelOrigin({
-    transaction: mappedTransaction,
+    transaction,
     canonicalNodesById,
     targetNodeId: connection.target,
   });

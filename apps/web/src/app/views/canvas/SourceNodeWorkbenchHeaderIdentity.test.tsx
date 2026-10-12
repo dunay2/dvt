@@ -1,4 +1,11 @@
 // @vitest-environment jsdom
+/**
+ * Owned concern: prove Source identity remains authoritative and accessible without duplicate labels.
+ * @baseline GH-3578: provider text conveys identity; its adjacent glyph is decorative.
+ * @decision Cover known and absent provider facts in the existing header tests.
+ * @consequence Hiding the glyph never hides provider text or invents connection context.
+ * @version 1.0.0
+ */
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -61,10 +68,18 @@ describe('SourceNodeWorkbenchHeaderIdentity', () => {
     expect(
       container.querySelector('[data-slot="canvas-source-qualified-resource"]')?.textContent
     ).toBe('dvt.auth_audit_events');
-    expect(
-      container.querySelector('[data-slot="canvas-source-connection-ref"]')?.textContent
-    ).toBe('local-postgres-proof');
+    expect(container.querySelector('[data-slot="canvas-source-connection-ref"]')?.textContent).toBe(
+      'local-postgres-proof'
+    );
     expect(container.querySelector('[data-slot="canvas-source-provider-icon"] svg')).not.toBeNull();
+    const icon = container.querySelector('[data-slot="canvas-source-provider-icon"]');
+    expect(icon?.getAttribute('aria-hidden')).toBe('true');
+    expect(icon?.hasAttribute('aria-label')).toBe(false);
+    expect(
+      container
+        .querySelector('[data-slot="canvas-source-provider-label"]')
+        ?.closest('[aria-hidden="true"]')
+    ).toBeNull();
   });
 
   it('does not invent provider labels or connection context without canonical facts', () => {
@@ -73,6 +88,9 @@ describe('SourceNodeWorkbenchHeaderIdentity', () => {
     act(() => root.render(<SourceNodeWorkbenchHeaderIdentity node={node} />));
 
     expect(container.querySelector('[data-slot="canvas-source-provider-label"]')).toBeNull();
+    const icon = container.querySelector('[data-slot="canvas-source-provider-icon"]');
+    expect(icon?.getAttribute('aria-hidden')).toBe('true');
+    expect(icon?.hasAttribute('aria-label')).toBe(false);
     expect(container.querySelector('[data-slot="canvas-source-connection-ref"]')).toBeNull();
     expect(
       container.querySelector('[data-slot="canvas-source-qualified-resource"]')?.textContent

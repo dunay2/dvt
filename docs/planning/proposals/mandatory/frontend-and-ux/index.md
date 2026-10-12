@@ -1,88 +1,61 @@
 ---
-title: Frontend And UX Mandatory Proposal Classification
+title: Frontend And UX Mandatory Proposal Navigation
 status: Active
 owner: Web / Product / Architecture
-last_reviewed: 2026-09-10
+last_reviewed: 2026-09-30
 planning_type: status
-lane: E
 task_id: E-PROP-DISP-1
 ---
 
-# Frontend And UX Mandatory Proposal Classification
+# Frontend And UX Mandatory Proposal Navigation
 
 ## Purpose
 
-This page is the human navigation surface for the mandatory frontend proposal
-pile. It classifies proposal files by current operational state so implemented
-plans do not compete with real pending work.
+This page is the current navigation boundary for frontend proposal material.
 
-The original proposal files remain in this directory for now. Many active
-feature-mechanization manifests, closeouts, component docs, and tests reference
-their exact paths. The state folders below are classification views; physical
-movement into archive or superseded paths must be done as a separate
-link-migration slice.
+Historical, implemented, closed and superseded proposal documents are not kept
+as a parallel architecture or delivery history. Git preserves that history.
+Current implementation truth lives in code, contracts, tests and CI; task
+lifecycle lives in GitHub Issues; governed architecture and mechanization
+authority must be read from the current repository and Planning DB when the
+operated read rail is available.
 
-## Governing Sources
+The 2026-09-30 retirement removes the old implemented-capability,
+implemented-technical and stale pending-work catalogues. Those catalogues were
+useful during migration, but retaining them permanently made historical plans
+look operational.
 
-- [Governance document and rule inventory](../../../status/governance-document-rule-inventory.md)
-- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
-- [Proposal portfolio map](../../portfolio-map-20260403.md)
-- [Frontend mature-system gap status](../../../status/frontend-mature-system-gap-status-20260602.md)
-- [Command and query rail governance](../../../../architecture/command-query-rail-governance.md)
-- [Fowler opportunity planning governance](../../../../architecture/fowler-opportunity-planning-governance.md)
+## Retention Rule
 
-## State Folders
+Keep a proposal file only while it is a current input to unresolved accepted
+work or an explicitly current design decision.
 
-| Folder                                                          | Meaning                                                                                                                                         | Count |
-| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
-| [Implemented capabilities](./implemented-capabilities/index.md) | Product-facing capabilities, features, route surfaces, visual-system work, and workflow affordances that have implementation evidence.          |    50 |
-| [Implemented technical](./implemented-technical/index.md)       | Boundary, test-governance, port, API-mode, query, documentation, and mechanical-truth implementation work that is already complete or accepted. |    17 |
-| [Pending work](./pending-work/index.md)                         | Frontend work not yet delivered; executable lifecycle and priority live in GitHub Issues.                                                       |    13 |
-| [Superseded](./superseded/index.md)                             | Plans closed, replaced, or reduced to rationale by later accepted work.                                                                         |    20 |
-| [Archive candidates](./archive-candidates/index.md)             | Drafts or historical story packs that should move to archive only after active references are migrated.                                         |     9 |
+Retire the physical proposal when its work is implemented, closed, superseded,
+absorbed or otherwise historical, after reconciling live consumers. Do not move
+retired material into another history folder. Use Git history for provenance.
 
-## Classification Rule
+A filename, old priority, old roadmap statement or historical feature-
+mechanization block is never sufficient current authority by itself.
 
-Use this order when classifying a proposal:
+## Current Navigation
 
-1. If it has `mechanizationStatus: implemented` or `status: Implemented`, put
-   it in implemented capability or implemented technical.
-2. If it has `mechanizationStatus: closed`, a closeout, or a successor plan
-   that owns the behavior, put it in superseded.
-3. If it describes missing product behavior that is still not implemented,
-   create or update the governing GitHub issue and list it in pending work.
-4. If it is a draft story pack or historical design input with active
-   references, keep it as an archive candidate until those references move to
-   canonical component, feature, closeout, or issue-backed docs.
-5. Do not infer implementation from a proposal title. Use status, feature
-   mechanization, closeout evidence, code/test references, GitHub Issues for task
-   lifecycle, and Planning DB for architecture/mechanization evidence.
+- Recent active proposal inputs remain in their domain folders.
+- GitHub Issues own execution status, blockers and acceptance.
+- Architecture docs and ADRs own durable architectural decisions.
+- Evidence documents own accepted delivery evidence.
+- Risk records own surviving risk posture.
+- Planning DB remains the governed read model for registered architecture and
+  mechanization when the operated read rail is available.
 
-## Immediate Frontend Priority
+## Retirement Safety
 
-The next real work is not another proposal archaeology pass. The highest-value
-frontend sequence is:
+Before deleting any future proposal:
 
-1. `E-MS-GAP-010-SCOPE-1`: make active tenant/project/environment scope explicit.
-2. `E-MS-GAP-002-WAREHOUSE-CONNECTION-1`: create and test user-owned warehouse connections.
-3. `E-MS-GAP-003-GRAPH-CODE-AUTHORITY-1`: close graph/code save and projection authority.
-4. `E-MS-GAP-004-READINESS-1`: expose execution readiness before preview or run.
-5. `E-MS-GAP-011-STRICT-BROWSER-PROOF-1`: prove the mature first-user path without mocked success.
-6. `E-MS-GAP-005-RUN-CONTROL-1`: expose cancel and recover commands in the frontend.
-7. `E-MS-GAP-006-NODE-EVIDENCE-1`: provide a node-scoped execution-evidence read model.
-8. `E-MS-GAP-007-RUN-SOURCE-NAV-1`: navigate from a run back to its source canvas, code, and artifacts.
-9. `E-MS-GAP-001-WORKFLOW-ASSET-CATALOG-1`: add unified workflow and asset discovery.
-10. `E-MS-GAP-008-LINEAGE-SEMANTICS-1`: define authoritative lineage and column semantics.
-11. `E-MS-GAP-009-RUN-EVIDENCE-EXPORT-1`: expose retention and evidence export.
-12. `E-DBT-PROJECT-ROUNDTRIP-DISP-1`: decompose dbt project roundtrip into concrete rails.
-13. `E-MAND-FRONTEND-PROPOSAL-LINK-MIGRATION-1`: physically move or archive proposals after exact references are updated.
+1. verify that it is not the current owner of unresolved work;
+2. migrate or remove exact live links and required-path guards;
+3. keep only commit-pinned Git provenance where historical evidence is needed;
+4. do not recreate a local backlog or history catalogue;
+5. run the repository documentation, governance, architecture and pre-push
+   gates on the exact candidate.
 
-## Movement Policy
-
-Do not move original proposal files just because this index classifies them.
-Move files only when:
-
-- all exact links have been migrated;
-- feature-mechanization manifests no longer name the old path;
-- tests do not read the old path as canonical proof;
-- `docs:sync`, `governance:refresh`, and `verify:prepush` pass after the move.
+History belongs in Git, not in the active proposal tree.

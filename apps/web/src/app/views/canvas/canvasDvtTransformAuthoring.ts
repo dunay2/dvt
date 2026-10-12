@@ -1,33 +1,17 @@
-/** Owns decoding and persistence of canonical DVT Transform shapes. */
-import { DVT_TRANSFORM_AUTHORING_MODE, DvtTransformResultTargetV1Schema } from '@dvt/contracts';
-
+/** Own canonical Transform persistence; presentation hints never determine admissible tree shapes. */
+import {
+  DVT_TRANSFORM_AUTHORING_MODE,
+  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
+  DvtTransformResultTargetV1Schema,
+} from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   DvtNodeAuthoringMetadataErrors,
   DvtSubstraitTransformAuthoringMetadata,
   DvtUninitializedTransformAuthoringMetadata,
 } from './canvasDvtAuthoringTypes';
-import { inspectDvtSubstraitPilotAggregationDraft } from './canvasDvtSubstraitAggregation';
-import { inspectDvtSubstraitPilotAggregateWindowDraft } from './canvasDvtSubstraitAggregateWindow';
-import {
-  decodeDvtSubstraitInnerJoinDocument,
-  encodeDvtSubstraitInnerJoinDocument,
-  inspectDvtSubstraitInnerJoinAcceptedDraft,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  decodeDvtSubstraitPilotDocument,
-  encodeDvtSubstraitPilotDocument,
-  inspectDvtSubstraitPilotDraft,
-} from './canvasDvtSubstraitPilot';
-import {
-  decodeDvtSubstraitProjectionDocument,
-  encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-} from './canvasDvtSubstraitProjection';
-import {
-  decodeDvtSubstraitUnionAllDocument,
-  encodeDvtSubstraitUnionAllDocument,
-} from './canvasDvtSubstraitSetComposition';
+import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 import {
   normalizeDvtIdentifier,
   readDvtNodeConfig,
@@ -38,17 +22,16 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
-import { inspectDvtSubstraitPilotWindowDraft } from './canvasDvtSubstraitWindow';
-import {
-  encodeDvtSubstraitFilterDocument,
-  inspectDvtSubstraitFilter,
-} from './canvasDvtSubstraitFilter';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { isCanvasCompositionOperation } from './canvasRelationalOperationChoices';
+import { canvasPresentationOperationForRel } from './canvasRelationalOperationPresentation';
+import { DVT_TRANSFORM_MATERIALIZATIONS } from './canvasDvtMaterializationPolicy';
 
 type TransformMetadata =
   DvtUninitializedTransformAuthoringMetadata | DvtSubstraitTransformAuthoringMetadata;
 
 const DEFAULT_MATERIALIZATION = 'view';
-const VALID_MATERIALIZATIONS = new Set(['table', 'view']);
+const VALID_MATERIALIZATIONS = new Set<string>(DVT_TRANSFORM_MATERIALIZATIONS);
 
 function normalizeMaterialized(value: string | undefined): string {
   const normalized = normalizeDvtIdentifier(value, DEFAULT_MATERIALIZATION);
@@ -59,7 +42,11 @@ function readMaterialized(node: CanonicalNode): string {
   return normalizeMaterialized(readDvtString(readDvtNodeConfig(node).materialized));
 }
 
-export function createDvtTransformAuthoringMetadata(node: CanonicalNode): TransformMetadata {
+export function resolveDvtTransformAuthoringMetadata(
+  node: CanonicalNode
+):
+  | Readonly<{ outcome: 'resolved'; metadata: TransformMetadata }>
+  | Readonly<{ outcome: 'rejected'; reason: 'invalid_document' | 'unsupported_shape' }> {
   const config = readDvtNodeConfig(node);
   const disposition = {
     materialized: readMaterialized(node),
@@ -67,30 +54,49 @@ export function createDvtTransformAuthoringMetadata(node: CanonicalNode): Transf
       ? { resultTarget: DvtTransformResultTargetV1Schema.parse(config.resultTarget) }
       : {}),
   };
-  const authority = readDvtTransformAuthoringAuthority(node);
-  if (authority == null) return { kind: 'transform', mode: 'uninitialized', ...disposition };
-  const projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-  if (
-    inspectDvtSubstraitProjectionDraft(projection).ok ||
-    inspectDvtSubstraitFilter(projection) != null
-  ) {
-    return fromDraft(authority.mode, disposition, 'projection', projection);
+  let authority: ReturnType<typeof readDvtTransformAuthoringAuthority>;
+  try {
+    authority = readDvtTransformAuthoringAuthority(node);
+  } catch {
+    return { outcome: 'rejected', reason: 'invalid_document' };
   }
-  const pilot = decodeDvtSubstraitPilotDocument(authority.semanticDocument);
-  if (
-    inspectDvtSubstraitPilotDraft(pilot).ok ||
-    inspectDvtSubstraitPilotAggregateWindowDraft(pilot).ok ||
-    inspectDvtSubstraitPilotAggregationDraft(pilot).ok ||
-    inspectDvtSubstraitPilotWindowDraft(pilot).ok
-  ) {
-    return fromDraft(authority.mode, disposition, 'pilot', pilot);
+  if (authority == null) {
+    return {
+      outcome: 'resolved',
+      metadata: { kind: 'transform', mode: 'uninitialized', ...disposition },
+    };
   }
-  const join = decodeDvtSubstraitInnerJoinDocument(authority.semanticDocument);
-  if (inspectDvtSubstraitInnerJoinAcceptedDraft(join).ok) {
-    return fromDraft(authority.mode, disposition, 'inner_join', join);
+  let projection: ReturnType<typeof decodeDvtSubstraitProjectionDocument>;
+  try {
+    projection = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
+  } catch {
+    return { outcome: 'rejected', reason: 'invalid_document' };
   }
-  const unionAll = decodeDvtSubstraitUnionAllDocument(authority.semanticDocument);
-  return fromDraft(authority.mode, disposition, 'union_all', unionAll);
+  const indexed = indexSubstraitRelations(projection);
+  if (!indexed.ok) return { outcome: 'rejected', reason: 'unsupported_shape' };
+  let entry = indexed.index.relations.get(indexed.index.rootId)!;
+  let shape: DvtSubstraitTransformAuthoringMetadata['shape'] = 'projection';
+  while (entry.inputs.length === 1) {
+    if (entry.relation.relType.case === 'aggregate') shape = 'pilot';
+    entry = indexed.index.relations.get(entry.inputs[0]!)!;
+  }
+  const operation = canvasPresentationOperationForRel(entry.relation);
+  if (isCanvasCompositionOperation(operation)) shape = operation;
+  if (entry.relation.relType.case === 'read' && entry.binding.sourceRef == null) shape = 'pilot';
+  return {
+    outcome: 'resolved',
+    metadata: fromDraft(authority.mode, disposition, shape, projection),
+  };
+}
+
+export function createDvtTransformAuthoringMetadata(node: CanonicalNode): TransformMetadata {
+  const resolution = resolveDvtTransformAuthoringMetadata(node);
+  if (resolution.outcome === 'resolved') return resolution.metadata;
+  throw new Error(
+    resolution.reason === 'invalid_document'
+      ? 'Invalid canonical Substrait document.'
+      : 'Unsupported canonical Substrait relation shape.'
+  );
 }
 
 function fromDraft(
@@ -142,17 +148,15 @@ export function applyDvtTransformAuthoringMetadata(
     else if (metadata.resultTarget !== undefined) config.resultTarget = metadata.resultTarget;
     return withDvtConfig(updatedNode, config);
   };
-  if (metadata.mode === 'uninitialized') return withMaterialization(node);
+  if (metadata.mode === 'uninitialized') {
+    const { [DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY]: _authority, ...retained } =
+      node.metadata ?? {};
+    return withMaterialization({ ...node, metadata: retained });
+  }
   const draft = { plan: metadata.plan, sidecar: metadata.sidecar };
-  const document =
-    metadata.shape === 'projection'
-      ? inspectDvtSubstraitFilter(draft) == null
-        ? encodeDvtSubstraitProjectionDocument(draft)
-        : encodeDvtSubstraitFilterDocument(draft)
-      : metadata.shape === 'inner_join'
-        ? encodeDvtSubstraitInnerJoinDocument(draft)
-        : metadata.shape === 'union_all'
-          ? encodeDvtSubstraitUnionAllDocument(draft)
-          : encodeDvtSubstraitPilotDocument(draft);
-  return withMaterialization(applyDvtSubstraitSemanticDocument(node, document));
+  const indexed = indexSubstraitRelations(draft);
+  if (!indexed.ok) throw indexed.error;
+  return withMaterialization(
+    applyDvtSubstraitSemanticDocument(node, encodeDvtSubstraitSemanticDocument(draft))
+  );
 }

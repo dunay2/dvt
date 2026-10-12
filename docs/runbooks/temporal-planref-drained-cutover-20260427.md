@@ -24,7 +24,6 @@ cutover unless a separate versioned workflow line is introduced.
 - `docs/adr/ADR-0003-execution-model.md`
 - `docs/adr/ADR-0012-plan-integrity-ownership.md`
 - `docs/adr/ADR-0014-run-driven-adapter-model.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/ar-d-plan-pointer-workflow-input-hardening-plan-20260420.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
 - `docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md`
 

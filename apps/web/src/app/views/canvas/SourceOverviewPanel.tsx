@@ -9,7 +9,7 @@ import { inspectorVisualClasses } from '../../components/inspector/inspectorVisu
 import type {
   NodePropertiesReadModel,
   NodePropertyRowId,
-} from '../../components/inspector/nodePropertiesReadModel';
+} from '../../components/inspector/nodePropertiesContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
@@ -77,16 +77,12 @@ function readRowValue(
   rowId: NodePropertyRowId
 ): string | null {
   return (
-    model.sections
-      .find((section) => section.id === sectionId)
-      ?.rows.find((row) => row.id === rowId)?.value ?? null
+    model.sections.find((section) => section.id === sectionId)?.rows.find((row) => row.id === rowId)
+      ?.value ?? null
   );
 }
 
-function ExternalFact({
-  label,
-  value,
-}: Readonly<{ label: string; value: string }>): JSX.Element {
+function ExternalFact({ label, value }: Readonly<{ label: string; value: string }>): JSX.Element {
   return (
     <div className="contents">
       <dt className={inspectorVisualClasses.inspectorLabel}>{label}</dt>
@@ -218,7 +214,12 @@ export function SourceOverviewPanel({
           <div className="flex items-center justify-between gap-3">
             <span className={inspectorVisualClasses.inspectorLabel}>{copy.name}</span>
             {authoring.canEditNode && editingField !== 'name' ? (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setEditingField('name')}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingField('name')}
+              >
                 {copy.edit}
               </Button>
             ) : null}
@@ -247,7 +248,12 @@ export function SourceOverviewPanel({
           <div className="flex items-center justify-between gap-3">
             <span className={inspectorVisualClasses.inspectorLabel}>{copy.tags}</span>
             {authoring.canEditNode && editingField !== 'tags' ? (
-              <Button type="button" variant="ghost" size="sm" onClick={() => setEditingField('tags')}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingField('tags')}
+              >
                 {copy.addTag}
               </Button>
             ) : null}
@@ -311,7 +317,9 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className={inspectorVisualClasses.inspectorBody}>{draft.description || copy.empty}</p>
+            <p className={inspectorVisualClasses.inspectorBody}>
+              {draft.description || copy.empty}
+            </p>
           )}
         </div>
 

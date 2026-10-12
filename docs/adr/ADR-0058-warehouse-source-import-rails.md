@@ -172,6 +172,20 @@ database/schema/identifier/connection metadata changes.
 
 ## Connector boundary
 
+The declared connection database and the database resolved by server credentials must be
+identical. PostgreSQL inspection, connection test, lazy discovery and Preview verify
+`current_database()` before reading catalog objects or rows. A mismatch is an explicit
+`invalid_credentials` failure, not permission to discover another database, relabel its
+objects or rewrite a physical Source binding.
+
+Imported row/size evidence is a timestamped snapshot, not proof of current availability.
+The current Source Preview lifecycle withdraws card volume metrics while a sample is
+unavailable, empty or being refreshed; a successful nonempty sample restores the snapshot presentation
+without changing its observation time or deriving a total count from bounded sample rows.
+Historical evidence remains in canonical metadata. A stale local connection catalog is
+reconciled explicitly through its owning scoped metadata repository with revision CAS, never
+by a database migration or automatic physical Source rewrite.
+
 The connector adapter boundary is server-side. Postgres is the current supported relation
 adapter. File, endpoint, stream and unsupported providers are rejected before graph or
 workspace-file side effects; future adapters may implement the provider-neutral discovery

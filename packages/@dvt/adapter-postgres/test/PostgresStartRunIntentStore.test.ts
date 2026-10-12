@@ -1,184 +1,119 @@
-import { Client } from 'pg';
-import { afterAll, describe, expect, test } from 'vitest';
+import { randomUUID } from 'node:crypto';
 
-import {
-  IntentActiveConflictError,
-  IntentDispatchConflictError,
-  IntentNotFoundError,
-  PostgresStartRunIntentStore,
-} from '../src/index.js';
+import type { CreateIntentInput, StartRunIntentClaimResult } from '@dvt/engine';
+import { Client } from 'pg';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+
+import { IntentActiveConflictError, PostgresStartRunIntentStore } from '../src/index.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
-const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
-const describeIfPg = runIntegration ? describe : describe.skip;
-const FIXED_NOW = '2026-03-04T00:00:00.000Z';
-
-const dispatchTestData = {
+const connectionString = process.env.DVT_PG_URL;
+const ref = {
   provider: 'temporal' as const,
   tenantId: 't1',
-  workflowId: 'wf-2',
-  runId: 'r2',
+  workflowId: 'workflow',
+  runId: 'run',
   namespace: 'default',
 };
 
-describeIfPg('PostgresStartRunIntentStore integration', () => {
-  const schema = `dvt_intents_it_${Date.now()}`;
-
-  afterAll(async () => {
-    const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
-    if (!connectionString) return;
-    const client = new Client({ connectionString });
-    await client.connect();
-    try {
-      await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
-    } finally {
-      await client.end();
-    }
-  });
-
-  async function withStore(
-    fn: (store: PostgresStartRunIntentStore) => Promise<void>
-  ): Promise<void> {
-    const store = new PostgresStartRunIntentStore({
-      schema,
-      now: () => FIXED_NOW,
+describe.runIf(process.env.DVT_PG_INTEGRATION === '1' && connectionString !== undefined)(
+  'PostgresStartRunIntentStore integration',
+  () => {
+    const schema = `dvt_intents_it_${randomUUID().replaceAll('-', '')}`;
+    const store = new PostgresStartRunIntentStore({ connectionString, schema });
+    const admin = new Client({ connectionString });
+    const input = (intentId: string): CreateIntentInput => ({
+      intentId,
+      tenantId: 't1',
+      runId: intentId,
+      provider: 'temporal' as const,
+      createdAt: new Date().toISOString(),
     });
-    try {
+    async function claim(
+      intentId: string
+    ): Promise<Extract<StartRunIntentClaimResult, { kind: 'acquired' }>> {
+      const result = await store.claimIntent(input(intentId));
+      if (result.kind !== 'acquired') throw new Error('Expected exclusive acquisition');
+      return result;
+    }
+    beforeAll(async () => {
+      await admin.connect();
       await store.migrate();
-      await fn(store);
-    } finally {
+    });
+    afterAll(async () => {
       await store.close();
-    }
+      await admin.query(`DROP SCHEMA ${quoteIdentifier(schema)} CASCADE`);
+      await admin.end();
+    });
+
+    test('initialization is idempotent but duplicate claims do not return a receipt', async () => {
+      await store.migrate();
+      const owner = await claim('idempotent');
+      expect(await store.claimIntent(input('idempotent'))).toEqual({
+        kind: 'existing',
+        intent: owner.intent,
+      });
+    });
+
+    test('dispatch returns missing for a nonexistent intent', async () => {
+      const owner = await claim('missing-owner');
+      expect(await store.markDispatched({ ...owner.receipt, intentId: 'absent' }, ref)).toBe(
+        'missing'
+      );
+    });
+
+    test('repeating the same observed provider reference does not reopen a resolved intent', async () => {
+      const owner = await claim('same-ref');
+      await store.authorizeDispatch(owner.receipt);
+      expect(await store.markDispatched(owner.receipt, ref)).toBe('applied');
+      await store.markResolved(owner.receipt);
+      const before = await store.getIntent(owner.receipt);
+      expect(await store.markDispatched(owner.receipt, ref)).toBe('already_applied');
+      expect(await store.getIntent(owner.receipt)).toEqual(before);
+      expect(before?.status).toBe('RESOLVED');
+    });
+
+    test('conflicting provider references leave the intent unchanged', async () => {
+      const owner = await claim('conflicting-ref');
+      await store.authorizeDispatch(owner.receipt);
+      await store.markDispatched(owner.receipt, ref);
+      const before = await store.getIntent(owner.receipt);
+      expect(await store.markDispatched(owner.receipt, { ...ref, workflowId: 'different' })).toBe(
+        'conflict'
+      );
+      expect(await store.getIntent(owner.receipt)).toEqual(before);
+    });
+
+    test('lists only aged, active and due intents using persisted store timestamps', async () => {
+      await claim('old-pending');
+      const dispatched = await claim('old-dispatched');
+      await store.authorizeDispatch(dispatched.receipt);
+      await store.markDispatched(dispatched.receipt, ref);
+      await claim('young');
+      // Age only these isolated fixture rows; caller-controlled createdAt is not lease authority.
+      await admin.query(
+        `UPDATE ${quoteIdentifier(schema)}.start_run_intents SET updated_at = clock_timestamp() - INTERVAL '10 minutes' WHERE intent_id = ANY($1::text[])`,
+        [['old-pending', 'old-dispatched']]
+      );
+      const ids = (await store.listOrphaned(300_000, Date.now(), 20)).map(
+        (intent) => intent.intentId
+      );
+      expect(ids.sort()).toEqual(['old-dispatched', 'old-pending']);
+      expect(await store.listOrphaned(300_000, Date.now(), 1)).toHaveLength(1);
+      await store.recordReconciliation(dispatched.receipt, {
+        kind: 'defer',
+        reason: 'provider_missing',
+      });
+      expect(
+        (await store.listOrphaned(0, Date.now())).map((intent) => intent.intentId)
+      ).not.toContain('old-dispatched');
+    });
+
+    test('active uniqueness prevents another intent from acquiring the same tenant and run', async () => {
+      await claim('unique');
+      await expect(
+        store.claimIntent({ ...input('another'), runId: 'unique' })
+      ).rejects.toBeInstanceOf(IntentActiveConflictError);
+    });
   }
-
-  test('migrate is idempotent and createIntent is idempotent by intent_id', () =>
-    withStore(testMigrateAndCreateIntent));
-
-  test('markDispatched rejects missing intent', () => withStore(testMarkDispatchedMissingIntent));
-
-  test('markDispatched is idempotent for same engineRunRef', () =>
-    withStore(testMarkDispatchedIdempotency));
-
-  test('markDispatched throws IntentDispatchConflictError for different engineRunRef', () =>
-    withStore(testMarkDispatchedConflict));
-
-  test('listOrphaned returns only pending/dispatched older than threshold', () =>
-    withStore(testListOrphaned));
-
-  test('active unique index rejects two active intents for same tenant+run', () =>
-    withStore(testActiveUniqueIndex));
-});
-
-async function testMigrateAndCreateIntent(store: PostgresStartRunIntentStore): Promise<void> {
-  await store.migrate();
-
-  const intent = {
-    intentId: 'intent-1',
-    tenantId: 't1',
-    runId: 'r1',
-    provider: 'temporal' as const,
-    createdAt: '2026-03-04T00:00:00.000Z',
-  };
-  const first = await store.createIntent(intent);
-  const second = await store.createIntent(intent);
-
-  expect(first.intentId).toBe('intent-1');
-  expect(second.intentId).toBe('intent-1');
-  expect(second.status).toBe('PENDING');
-}
-
-async function testMarkDispatchedMissingIntent(store: PostgresStartRunIntentStore): Promise<void> {
-  await expect(
-    store.markDispatched({ tenantId: 't1', intentId: 'missing' }, dispatchTestData)
-  ).rejects.toBeInstanceOf(IntentNotFoundError);
-}
-
-async function testMarkDispatchedIdempotency(store: PostgresStartRunIntentStore): Promise<void> {
-  await store.createIntent({
-    intentId: 'intent-idem',
-    tenantId: 't1',
-    runId: 'r-idem',
-    provider: 'temporal',
-    createdAt: '2026-03-04T00:00:00.000Z',
-  });
-  await store.markDispatched({ tenantId: 't1', intentId: 'intent-idem' }, dispatchTestData);
-  await store.markResolved({ tenantId: 't1', intentId: 'intent-idem' });
-
-  await expect(
-    store.markDispatched({ tenantId: 't1', intentId: 'intent-idem' }, dispatchTestData)
-  ).resolves.toBeUndefined();
-  await expect(store.getIntent({ tenantId: 't1', intentId: 'intent-idem' })).resolves.toMatchObject(
-    { status: 'RESOLVED' }
-  );
-}
-
-async function testMarkDispatchedConflict(store: PostgresStartRunIntentStore): Promise<void> {
-  await store.createIntent({
-    intentId: 'intent-conflict',
-    tenantId: 't1',
-    runId: 'r-conflict',
-    provider: 'temporal',
-    createdAt: '2026-03-04T00:00:00.000Z',
-  });
-  await store.markDispatched({ tenantId: 't1', intentId: 'intent-conflict' }, dispatchTestData);
-
-  const differentRef = { ...dispatchTestData, workflowId: 'wf-different' };
-  await expect(
-    store.markDispatched({ tenantId: 't1', intentId: 'intent-conflict' }, differentRef)
-  ).rejects.toBeInstanceOf(IntentDispatchConflictError);
-}
-
-async function testListOrphaned(store: PostgresStartRunIntentStore): Promise<void> {
-  const oldIntent = {
-    tenantId: 't1',
-    provider: 'temporal' as const,
-    createdAt: '2026-03-04T00:00:00.000Z',
-  };
-  await store.createIntent({ ...oldIntent, intentId: 'intent-old-pending', runId: 'r-old-p' });
-
-  await store.createIntent({ ...oldIntent, intentId: 'intent-old-dispatched', runId: 'r-old-d' });
-  await store.markDispatched(
-    { tenantId: 't1', intentId: 'intent-old-dispatched' },
-    {
-      provider: 'temporal',
-      tenantId: 't1',
-      workflowId: 'wf-old-d',
-      runId: 'r-old-d',
-      namespace: 'default',
-    }
-  );
-
-  await store.createIntent({
-    intentId: 'intent-young',
-    tenantId: 't1',
-    runId: 'r-young',
-    provider: 'temporal',
-    createdAt: '2026-03-04T00:10:00.000Z',
-  });
-
-  const orphaned = await store.listOrphaned(5 * 60_000, Date.parse('2026-03-04T00:10:00.000Z'), 20);
-  const ids = orphaned.map((i) => i.intentId);
-  expect(ids).toContain('intent-old-pending');
-  expect(ids).toContain('intent-old-dispatched');
-  expect(ids).not.toContain('intent-young');
-}
-
-async function testActiveUniqueIndex(store: PostgresStartRunIntentStore): Promise<void> {
-  await store.createIntent({
-    intentId: 'intent-uniq-1',
-    tenantId: 't1',
-    runId: 'r-uniq',
-    provider: 'temporal',
-    createdAt: '2026-03-04T00:00:00.000Z',
-  });
-
-  await expect(
-    store.createIntent({
-      intentId: 'intent-uniq-2',
-      tenantId: 't1',
-      runId: 'r-uniq',
-      provider: 'temporal',
-      createdAt: '2026-03-04T00:00:01.000Z',
-    })
-  ).rejects.toBeInstanceOf(IntentActiveConflictError);
-}
+);

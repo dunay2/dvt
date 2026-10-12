@@ -202,7 +202,7 @@ reconciliation, outbox), and package dependency graphs see
 ## 7. Current delivery posture
 
 This C4 view is structural. For delivery sequencing, use
-[Engine Roadmap](../roadmap/engine-phases.md) and the active Lane A/Lane C tasks.
+[Engine Roadmap](../roadmap/engine-phases.md) and the governing GitHub issues.
 
 ```mermaid
 flowchart LR

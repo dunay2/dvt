@@ -1,20 +1,13 @@
-import { z } from 'zod';
-
+/**
+ * Owned concern: define DBT step configuration using the common execution options.
+ * @baseline ADR-0018: shared artifact identity is independent of executor configuration.
+ * @decision Reuse common step options without owning artifact-reference validation.
+ * @consequence Non-DBT consumers import artifact contracts from their neutral owner.
+ * @version 1.0.0
+ */
 import { CommonStepTypeConfigSchema } from './CommonStepTypeConfig.js';
 
 export { CommonStepTypeConfigSchema } from './CommonStepTypeConfig.js';
-
-const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
-
-export const StepArtifactRefSchema = z
-  .object({
-    artifactKind: z.string().min(1),
-    sha256: HexSha256Schema,
-    storageUri: z.string().min(1),
-    sizeBytes: z.number().int().nonnegative(),
-    encoding: z.literal('utf-8').optional(),
-  })
-  .strict();
 
 export interface DbtStepTypeConfig extends Record<string, unknown> {
   stepTimeoutMs?: number;

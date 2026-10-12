@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import type {
   NodePropertyRowId,
   NodePropertySectionId,
-} from '../../components/inspector/nodePropertiesReadModel';
+} from '../../components/inspector/nodePropertiesContracts';
 
 export type CanvasNodeWorkbenchContribution = Readonly<{
   id: string;

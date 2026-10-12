@@ -27,7 +27,7 @@ command/query rail catalog:
 - [Internal alpha product route plan](../../proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md)
 - [Internal alpha architecture view review](./20260505-internal-alpha-architecture-view-review.md)
 - [Code workbench workspace files query rail plan](../../proposals/mandatory/frontend-and-ux/code-workbench-workspace-files-query-rail-plan-20260504.md)
-- [Deep architectural review](./20260504-dvt-deep-architectural-review.md)
+- [Deep architectural review](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/reviews/architecture-and-governance/20260504-dvt-deep-architectural-review.md)
 - [Command/query rail governance](../../../architecture/command-query-rail-governance.md)
 
 This document records route intent, route gates, child slices, evidence gaps,

@@ -1,6 +1,7 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
 import { useUpdateNodeInternals, type Node, type NodeProps } from '@xyflow/react';
 import { memo, useCallback, type DragEvent } from 'react';
+import { CanvasNodeDataAction } from './CanvasNodeDataAction';
 
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
 import { FallbackNodeRenderer } from '../../plugins/FallbackNodeRenderer';
@@ -19,6 +20,7 @@ import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.co
 import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
 import type {
   GraphNodeColumn,
+  GraphNodeInputMapping,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnPortDirection,
   GraphNodeColumnPortIdentity,
@@ -26,6 +28,7 @@ import type {
 } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanvasNodeContextMenuCopy } from './canvasNodeContextMenuModel';
 import { projectCanvasNodeFlowAdapter } from './canvasNodeFlowAdapterProjection';
+import { graphColumnTransferTarget } from '../../plugins/graph/graphColumnTransfer';
 
 // ---------------------------------------------------------------------------
 // Canvas node data
@@ -65,12 +68,13 @@ export interface DbtNodeData extends Record<string, unknown> {
   selectedForExecution?: boolean;
   onInspectNode?: (
     nodeId: string,
-    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+    preferredTabId?: 'general' | 'columns' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
   onOpenNode?: (nodeId: string) => void;
   onSelectNode?: (nodeId: string) => void;
   onOpenSourceDataSample?: (nodeId: string) => void;
-  sourceDataSampleInteractionLabel?: string;
+  dataActionLabel?: string;
+  sourceMetricAvailability?: 'unavailable';
   canOpenNodeCode?: boolean;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
@@ -89,6 +93,8 @@ export interface DbtNodeData extends Record<string, unknown> {
   columnDisclosureExpanded?: boolean;
   activeColumnHandleId?: string | null;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
+  onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
+  onRemoveCanvasInput?: (identity: GraphNodeInputMapping) => void;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onColumnLayoutChange?: () => void;
@@ -146,6 +152,10 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const Renderer = projection.Renderer;
+  const fieldTransfer = graphColumnTransferTarget({
+    nodeId: id,
+    onInputMapping: projection.onInputMapping,
+  });
 
   return (
     <CanvasNodeShell
@@ -161,14 +171,18 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       onContextMenuAction={projection.runAction}
       onSelectNode={projection.selectNode}
       onOpenNode={
-        typeof data.onOpenNode === 'function' ||
-        typeof data.onOpenSourceDataSample === 'function' ||
-        typeof data.onInspectNode === 'function'
+        typeof data.onOpenNode === 'function' || typeof data.onInspectNode === 'function'
           ? projection.openNode
           : undefined
       }
-      onDragOver={handleSchemaResourceDragOver}
-      onDrop={handleSchemaResourceDrop}
+      onDragOver={(event) => {
+        fieldTransfer.onDragOver(event);
+        if (!event.defaultPrevented) handleSchemaResourceDragOver(event);
+      }}
+      onDrop={(event) => {
+        fieldTransfer.onDrop(event);
+        if (!event.defaultPrevented) handleSchemaResourceDrop(event);
+      }}
     >
       <PluginContributionBoundary
         resetKey={`${id}:renderer:${projection.canonicalNode.pluginId}:${projection.canonicalNode.kind}`}
@@ -176,6 +190,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       >
         <Renderer {...projection.rendererProps} />
       </PluginContributionBoundary>
+      {data.dataActionLabel == null || data.onOpenSourceDataSample == null ? null : (
+        <CanvasNodeDataAction
+          label={data.dataActionLabel}
+          onExecute={() => data.onOpenSourceDataSample?.(id)}
+        />
+      )}
       {projection.badges.map((badge, index) => (
         <PluginContributionBoundary
           key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}

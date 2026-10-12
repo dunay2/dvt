@@ -1,11 +1,7 @@
 /** Owned concern: prove the persisted Canvas connection valve browser round trip. */
-import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
-import {
-  E2E_PROJECT_WORKSPACE,
-  stubShellBootstrapApis,
-  visitWithE2eWorkspaceSession,
-} from '../../support/workspaceSession';
+import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
+import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
 
 describe('Canvas connection valve', () => {
   it('closes and reopens an edge through the canonical persisted command', () => {
@@ -37,19 +33,10 @@ describe('Canvas connection valve', () => {
       });
     };
 
-    stubShellBootstrapApis();
-    stubE2eJsonApi('GET', '/workspace/context', {
-      defaultWorkspace: E2E_PROJECT_WORKSPACE,
-      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-    });
-    stubE2eJsonApi('GET', '/capabilities', {
-      apiVersion: '1.0.0',
-      minFrontendVersion: '0.0.1',
-      plugins: { dvt: { available: true } },
-    });
-    stubStatefulCanvasDraftAuthoring({ authoringGenerated: true });
+    stubWorkbenchScenario('generated');
 
     visitCanvas(1);
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get(closedGate).should('not.exist');
     toggleGate();
     cy.get(closedGate).should('exist');

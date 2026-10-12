@@ -3,6 +3,7 @@
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import {
+  boundPostgresSourceName,
   toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
 } from './warehouseSourceYamlDescriptor.js';
@@ -16,11 +17,13 @@ export function sourceObjectIdentity(sourceObject: ConnectedRelationalSourceObje
 }
 
 export function buildCanonicalSourceName(sourceObject: ConnectedRelationalSourceObject): string {
-  return [
-    toStableYamlIdentifierPart(sourceObject.connectionId),
-    toStableYamlIdentifierPart(sourceObject.locator.catalog),
-    toStableYamlIdentifierPart(sourceObject.locator.schema),
-  ].join('_');
+  return boundPostgresSourceName(
+    [
+      toStableYamlIdentifierPart(sourceObject.connectionId),
+      toStableYamlIdentifierPart(sourceObject.locator.catalog),
+      toStableYamlIdentifierPart(sourceObject.locator.schema),
+    ].join('_')
+  );
 }
 
 export function buildCanonicalTableName(sourceObject: ConnectedRelationalSourceObject): string {
@@ -30,11 +33,13 @@ export function buildCanonicalTableName(sourceObject: ConnectedRelationalSourceO
 export function buildCollisionResistantSourceName(
   sourceObject: ConnectedRelationalSourceObject
 ): string {
-  return [
-    toCollisionResistantYamlIdentifierPart(sourceObject.connectionId),
-    toCollisionResistantYamlIdentifierPart(sourceObject.locator.catalog),
-    toCollisionResistantYamlIdentifierPart(sourceObject.locator.schema),
-  ].join('_');
+  return boundPostgresSourceName(
+    [
+      toCollisionResistantYamlIdentifierPart(sourceObject.connectionId),
+      toCollisionResistantYamlIdentifierPart(sourceObject.locator.catalog),
+      toCollisionResistantYamlIdentifierPart(sourceObject.locator.schema),
+    ].join('_')
+  );
 }
 
 export function buildCollisionResistantTableName(

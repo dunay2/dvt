@@ -1,0 +1,26 @@
+---
+id: R-20261001-RELATIONAL-LAYOUT-AUTHORITY
+title: Retained relational layout must not become terminal or automatic-position authority
+status: Open
+date: 2026-10-01
+owners:
+  - '@dvt/contracts'
+  - '@dvt/web'
+severity: Medium
+probability: Low
+description: >
+  Completed authoring retains manual layout in the existing v1 DTO. Confusing absent terminal intent
+  with disconnection could reopen stale graph wiring. Publishing a provisional visible map as manual
+  positions could pin automatic Output before a later root insertion. Older clients do not
+  understand the layout-only omission.
+mitigation:
+  - The schema permits absent terminal intent only with no pending sources or operations.
+  - Completion removes terminal authority; restoration uses the current canonical root.
+  - Layout-only hydration stays in inspection mode and does not open an edit session.
+  - Pointer and keyboard acceptance retain only explicit manual identities; cancellation restores
+    the prior map and automatic cards reflow from the current graph.
+  - Contract, authoring, mounted and native Apply/reload/root-insertion tests guard the boundary,
+    including no implicit Preview or Run and Output non-overlap.
+  - Deploy the current API and web contract together; no mixed-client compatibility, migration,
+    alias or historical-position rewrite is introduced.
+---

@@ -4,8 +4,10 @@
  *
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
  * @decision Bind exact pinned Plan bytes to one identity-only DVT sidecar.
+ * @consequence Explicit card groups are checked against the same canonical Plan.
  * @version 1.0.0
  */
+import type { Rel } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { base64Bytes, jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { z } from 'zod';
 
@@ -17,11 +19,16 @@ import {
 import {
   CanvasDescriptionV1Schema,
   CanvasHumanNameV1Schema,
-  DvtStringLiteralV1Schema,
-  PostgresIdentifierV1Schema,
+  DvtSemanticFieldNameV1Schema,
 } from './CanvasAuthoringFieldPolicy.v1.js';
+import { validateDvtSubstraitAuthoringGroupsV1 } from './DvtSubstraitAuthoringGroup.v1.js';
 import { validateDvtSubstraitFieldHierarchyV1 } from './DvtSubstraitFieldBindingHierarchy.v1.js';
 import { decodeDvtSubstraitPlanV1 } from './DvtSubstraitPlanBinary.v1.js';
+import { addDvtSubstraitPlanFieldPolicyIssues } from './DvtSubstraitPlanFieldPolicy.v1.js';
+import {
+  DvtSubstraitProducerReferenceV1Schema,
+  validateDvtProducerInputFields,
+} from './DvtSubstraitProducerReference.v1.js';
 import {
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_PLAN_ENCODING,
@@ -66,7 +73,9 @@ export const DvtSubstraitRelationBindingV1Schema = z
     relationId: NonBlankStringSchema,
     relAnchor: z.number().int().positive().max(0xffffffff),
     sourceRef: ConnectedSourceRefSchema.optional(),
+    producerRef: DvtSubstraitProducerReferenceV1Schema.optional(),
     displayName: CanvasHumanNameV1Schema.optional(),
+    authoringOwnerRelationId: NonBlankStringSchema.optional(),
   })
   .strict();
 
@@ -78,7 +87,7 @@ export const DvtSubstraitFieldBindingV1Schema = z
     sourceFieldId: NonBlankStringSchema.optional(),
     operandFieldIds: z.array(NonBlankStringSchema).min(2).optional(),
     outputOrdinal: z.number().int().nonnegative(),
-    displayName: PostgresIdentifierV1Schema.optional(),
+    displayName: DvtSemanticFieldNameV1Schema.optional(),
     description: CanvasDescriptionV1Schema.optional(),
   })
   .strict();
@@ -92,6 +101,7 @@ export const DvtSubstraitAuthoringSidecarV1Schema = z
   })
   .strict()
   .superRefine((sidecar, context) => {
+    validateDvtProducerInputFields(sidecar.relations, sidecar.fields, context);
     const relationIds = new Set<string>();
     const relAnchors = new Set<number>();
     sidecar.relations.forEach((relation, index) => {
@@ -122,60 +132,6 @@ export const DvtSubstraitAuthoringSidecarV1Schema = z
     });
   });
 
-function addDvtSubstraitPlanFieldPolicyIssues(plan: unknown, context: z.RefinementCtx): void {
-  const visited = new Set<object>();
-  const visit = (value: unknown): void => {
-    if (value === null || typeof value !== 'object' || visited.has(value)) return;
-    visited.add(value);
-    if (Array.isArray(value)) {
-      value.forEach(visit);
-      return;
-    }
-    const record = value as Record<string, unknown>;
-    const relType = record['relType'];
-    if (relType !== null && typeof relType === 'object') {
-      const relation = relType as Record<string, unknown>;
-      const root = relation['case'] === 'root' ? relation['value'] : undefined;
-      if (root !== null && typeof root === 'object') {
-        const names = (root as Record<string, unknown>)['names'];
-        if (Array.isArray(names)) {
-          names.forEach((name, index) => {
-            if (!PostgresIdentifierV1Schema.safeParse(name).success) {
-              context.addIssue({
-                code: 'custom',
-                message: 'Substrait root output name violates the PostgreSQL identifier policy.',
-                path: ['semanticPlan', 'bytesBase64', 'rootNames', index],
-              });
-            }
-          });
-        }
-      }
-    }
-    const rexType = record['rexType'];
-    if (rexType !== null && typeof rexType === 'object') {
-      const expression = rexType as Record<string, unknown>;
-      const literal = expression['case'] === 'literal' ? expression['value'] : undefined;
-      if (literal !== null && typeof literal === 'object') {
-        const literalType = (literal as Record<string, unknown>)['literalType'];
-        if (literalType !== null && typeof literalType === 'object') {
-          const candidate = literalType as Record<string, unknown>;
-          if (
-            candidate['case'] === 'string' &&
-            !DvtStringLiteralV1Schema.safeParse(candidate['value']).success
-          ) {
-            context.addIssue({
-              code: 'custom',
-              message: 'Substrait string literal violates the DVT literal policy.',
-              path: ['semanticPlan', 'bytesBase64', 'stringLiteral'],
-            });
-          }
-        }
-      }
-    }
-    Object.values(record).forEach(visit);
-  };
-  visit(plan);
-}
 export const DvtSubstraitSemanticDocumentV1Schema = z
   .object({
     schemaVersion: z.literal(DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION),
@@ -193,7 +149,28 @@ export const DvtSubstraitSemanticDocumentV1Schema = z
       });
     }
     try {
-      addDvtSubstraitPlanFieldPolicyIssues(decodeDvtSubstraitPlanV1(document), context);
+      const relations = new Map<number, Rel | undefined>();
+      addDvtSubstraitPlanFieldPolicyIssues(
+        decodeDvtSubstraitPlanV1(document),
+        context,
+        (relation) => {
+          const variant = relation.relType;
+          const anchor =
+            variant.case != null && 'common' in variant.value
+              ? variant.value.common?.relAnchor
+              : undefined;
+          if (anchor != null) relations.set(anchor, relations.has(anchor) ? undefined : relation);
+        }
+      );
+      const issue = validateDvtSubstraitAuthoringGroupsV1(document.sidecar.relations, (anchor) =>
+        relations.get(anchor)
+      );
+      if (issue != null)
+        context.addIssue({
+          code: 'custom',
+          message: issue.message,
+          path: ['sidecar', 'relations'],
+        });
     } catch {
       context.addIssue({
         code: 'custom',

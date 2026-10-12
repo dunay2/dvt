@@ -31,7 +31,7 @@ full-system review and it is not a normative contract.
 - `docs/architecture/reference-architecture.md`
 - `docs/planning/status/canonical-doc-code-matrix.md`
 - `docs/planning/reviews/review-naming-policy.md`
-- `docs/planning/reviews/review-status-board.md`
+- [Historical planning source](https://github.com/dunay2/dvt/blob/d8c3e3b9479139a35d6e269f6a6ef42dde2080f6/docs/planning/reviews/review-status-board.md)
 - ADR-0003: execution model sovereignty
 - ADR-0004: event sourcing strategy
 - ADR-0005: contract formalization tooling
@@ -476,7 +476,7 @@ tasks rather than leaving the review as open intake:
 
 Closeout evidence:
 
-- [EA-20260429 Engine Audit Disposition Closeout](../../closeouts/20260513-ea-20260429-engine-audit-disposition-closeout.md)
+- [EA-20260429 Engine Audit Disposition Closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260513-ea-20260429-engine-audit-disposition-closeout.md)
 
 ## Documentation Drift To Fix When Stories Start
 

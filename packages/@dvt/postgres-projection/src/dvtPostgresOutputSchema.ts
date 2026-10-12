@@ -11,6 +11,7 @@ type ProjectedOutput = Readonly<{
   name: string;
   dataType: string;
   outputOrdinal: number;
+  nullable?: boolean;
 }>;
 
 const POSTGRES_TYPE_BY_SEMANTIC_TYPE: Readonly<Record<string, DvtPostgresOutputTypeV1>> = {
@@ -42,6 +43,7 @@ export function projectDvtPostgresOutputSchemaV1(
     ordinal: output.outputOrdinal,
     name: output.name,
     postgresType: POSTGRES_TYPE_BY_SEMANTIC_TYPE[normalizeProjectionDataType(output.dataType)],
+    // CREATE TABLE AS preserves values and types, not logical NOT NULL guarantees.
     nullable: true,
     defaultExpression: null,
     generatedExpression: null,

@@ -694,9 +694,9 @@ plan-record storage indexing, not start-run execution identity ownership.
 
 2026-04-23 architecture hardening update: the Fowler follow-up analysis is
 stored in
-`buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md`.
+[20260423 codex fowler tenant run identity analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-tenant-run-identity-analysis-and-remediation.md).
 The UUIDv7 collision and API-not-engine follow-up is stored in
-`buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md`.
+[20260423 codex fowler run id uuidv7 migration analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-run-id-uuidv7-migration-analysis-and-remediation.md).
 The implementation now has local component guides for both sides of the
 boundary:
 `apps/api/docs/start-run-http-entrypoint-component.md` and
@@ -713,7 +713,7 @@ Semantic architecture tests now guard identity ownership in
 The grouped local guide is
 `apps/api/docs/start-run-control-boundary-component.md`, and the integrated
 Fowler follow-up is stored in
-`buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md`.
+[20260423 codex fowler branch start run control boundary analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-branch-start-run-control-boundary-analysis-and-remediation.md).
 This is closer to mature control planes that keep caller-owned intent,
 platform-owned resource identity, and executor-admission semantics in separate
 owned layers.

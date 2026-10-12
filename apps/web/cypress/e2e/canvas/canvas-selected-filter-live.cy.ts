@@ -1,0 +1,165 @@
+/**
+ * Owned concern: prove composed input operations against real PostgreSQL rows.
+ * @baseline GH-3578: placement, connection, configuration and execution are explicit gestures.
+ * @decision Await canonical JOIN restoration and durable save through current Workbench commands.
+ * @consequence No sample is requested before Preview; its exact persisted SHA owns the rows.
+ * @version 1.0.0
+ */
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
+import { hasLiveProtectedRuntimeEnv } from '../../support/liveProtectedRuntime';
+import { exteriorOutputColumns } from '../../support/relationalWorkbench/columns';
+import {
+  connectWorkbenchProducer,
+  openWorkbenchModel,
+} from '../../support/relationalWorkbench/navigation';
+import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { readPersistedDocument } from '../../support/semanticLive/canonicalAssertions';
+import {
+  expectedColumns,
+  importSemanticModel,
+  leftJoinDocument,
+  modelId,
+  visitSemanticCanvas,
+} from '../../support/semanticLive/fixture';
+
+describe('Selected input transformations through real PostgreSQL', () => {
+  let initial: DvtSubstraitSemanticDocumentV1;
+  beforeEach(function () {
+    if (Cypress.env('apiBaseUrl') == null && Cypress.env('apiBearerToken') == null) this.skip();
+    expect(hasLiveProtectedRuntimeEnv(), 'Requires the protected live runner').to.equal(true);
+    resetE2eApiStubs();
+    cy.viewport(1440, 1000);
+    seedLiveSelectedClosureDraft({ emptyCanvas: true });
+    visitSemanticCanvas();
+    cy.then(leftJoinDocument).then((document) => {
+      initial = document;
+    });
+  });
+  it('filters, sorts and limits both operands while preserving LEFT JOIN unmatched rows', () => {
+    let persisted: DvtSubstraitSemanticDocumentV1;
+    let samples = 0;
+    let joinId = '';
+    cy.intercept('GET', `**/transforms/${modelId}/data-sample?*`, (request) => {
+      samples += 1;
+      request.continue();
+    }).as('rows');
+    cy.then(() => importSemanticModel(initial));
+    exteriorOutputColumns(modelId).should('deep.equal', expectedColumns);
+    openWorkbenchModel(modelId);
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+      .then(($join) => {
+        joinId = $join.attr('data-relation-id')!;
+      })
+      .click();
+    cy.get('[data-slot="canvas-relational-edit"]').click();
+    const form = '[data-slot="canvas-relational-operator-form"]';
+    for (const [port, [source, field, value]] of [
+      ['orders', 'client_id', 'C-001'],
+      ['client', 'country', 'US'],
+    ].entries()) {
+      const edgeAction =
+        port === 0 ? 'canvas-relational-edge-action' : 'canvas-relational-pending-edge-action';
+      cy.get(`[data-slot="${edgeAction}"][data-port="${port}"]`)
+        .should('have.length', 1)
+        .focus()
+        .type('{del}');
+      cy.then(() => {
+        const id = initial.sidecar.relations.find(
+          (relation) => relation.sourceRef != null && relation.displayName === source
+        )!.relationId;
+        cy.get(`[data-operator="read"][data-relation-id="${id}"]`)
+          .closest('li')
+          .as(`input-${port}`);
+      });
+      for (const [operation, producer] of [
+        ['filter', 'input'],
+        ['sort', 'filter'],
+        ['fetch', 'sort'],
+      ]) {
+        workbenchOperation(operation!).click();
+        cy.get(`[data-operator="${operation}"][aria-selected="true"]`)
+          .should('have.length', 1)
+          .invoke('attr', 'data-relation-id')
+          .then((id) => {
+            cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${id}"]`)
+              .closest('li')
+              .as(`${operation}-${port}`);
+            connectWorkbenchProducer(`@${producer}-${port}`, `@${operation}-${port}`);
+          });
+        if (operation === 'filter') {
+          cy.get(`${form} select`).first().select(field!);
+          cy.get(`${form} input`).type(value!);
+        } else if (operation === 'sort') {
+          cy.get(`${form} select`)
+            .first()
+            .select(source === 'orders' ? 'order_id' : 'client_id');
+          cy.get(`${form} select`).eq(1).select(String(SortField_SortDirection.DESC_NULLS_LAST));
+        } else {
+          cy.contains(`${form} label`, /^LIMIT$/)
+            .find('input')
+            .clear()
+            .type('1');
+        }
+        cy.get(`${form} button[type="submit"]`).click();
+      }
+      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+        .closest('li')
+        .as('join');
+      connectWorkbenchProducer(`@fetch-${port}`, '@join', port);
+    }
+    cy.get('[data-operator="filter"]').should('have.length', 2);
+    cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').should(
+      'not.have.attr',
+      'data-pending'
+    );
+    cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+    cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
+    cy.then(() => readPersistedDocument(initial.semanticPlan.sha256)).then((document) => {
+      persisted = document;
+      const indexed = indexSubstraitRelations(decodeDvtSubstraitSemanticDocument(document));
+      if (!indexed.ok) throw indexed.error;
+      const join = [...indexed.index.relations.values()].find(
+        (entry) => entry.relation.relType.case === 'join'
+      )!;
+      expect(join.binding.relationId, 'original LEFT JOIN identity').to.equal(joinId);
+      for (const input of join.inputs) {
+        let relation = indexed.index.relations.get(input)!;
+        for (const operator of ['fetch', 'sort', 'filter', 'read']) {
+          expect(relation.relation.relType.case).to.equal(operator);
+          if (relation.inputs.length > 0)
+            relation = indexed.index.relations.get(relation.inputs[0]!)!;
+        }
+      }
+    });
+    cy.then(() => expect(samples).to.equal(0));
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    visitSemanticCanvas();
+    exteriorOutputColumns(modelId).should('deep.equal', expectedColumns);
+    openWorkbenchModel(modelId);
+    cy.get('[data-operator="filter"]').should('have.length', 2);
+    const joinCard = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
+    hoverWorkbenchCard(joinCard);
+    cy.get(joinCard).closest('li').find('[data-slot="canvas-node-execute"]').focus().click();
+    cy.wait('@rows', { timeout: 30_000 }).then(({ request, response }) => {
+      expect(response?.statusCode).to.equal(200);
+      const query = new URL(request.url).searchParams;
+      expect(query.get('relationId')).to.equal(joinId);
+      expect(query.get('semanticPlanSha256')).to.equal(persisted.semanticPlan.sha256);
+      expect(response!.body.semanticPlanSha256).to.equal(persisted.semanticPlan.sha256);
+      expect(response!.body.columns.map((column: { name: string }) => column.name)).to.deep.equal(
+        expectedColumns
+      );
+      expect(
+        response!.body.rows.map((row: { values: unknown[] }) => row.values).sort()
+      ).to.deep.equal([['3', 'C-001', null, null]]);
+    });
+    cy.get('[data-slot="canvas-operation-data-preview"] table').should('contain.text', 'C-001');
+  });
+});

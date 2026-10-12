@@ -88,15 +88,13 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
     PR_QUALITY_SCOPE_PATTERNS
   );
   assert.equal(fromObjectFilePlugin.temporal_postgres_changed, true);
+});
 
-  const fromHetLiveProofChanges = computeWorkflowModeScopeOutputs('pr-quality', [
-    '.github/workflows/pr-quality-gate.yml',
-    'scripts/run-het1-public-vertical-live-proof.cjs',
-    'scripts/run-het1-public-vertical-live-proof.test.cjs',
-    'scripts/run-het2-public-vertical-live-proof.cjs',
-    'scripts/run-het2-public-vertical-live-proof.test.cjs',
-  ]);
-  assert.equal(fromHetLiveProofChanges.temporal_postgres_changed, true);
+test('MinIO build changes run the object-store integration without unrelated Temporal lanes', () => {
+  const scope = computeWorkflowModeScopeOutputs('pr-quality', ['infra/minio-test/Dockerfile']);
+  assert.equal(scope.temporal_postgres_changed, true);
+  assert.equal(scope.temporal_changed, false);
+  assert.equal(scope.temporal_transformation_changed, false);
 });
 
 test('computeBooleanScope isolates transformation-specific integration changes', () => {

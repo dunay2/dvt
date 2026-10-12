@@ -36,7 +36,12 @@ import {
   WarehouseSourceDiscoveryFailedError,
   WarehouseSourcePublicationChangedError,
 } from '../../application/ports/warehouseSourceImport.js';
+import {
+  postgresTypeNameFromDataTypeId,
+  serializePostgresSampleCell,
+} from '../postgres/postgresDataSampleSerialization.js';
 
+import { assertPostgresWarehouseDatabase } from './assertPostgresWarehouseDatabase.js';
 import {
   buildPostgresSourceObjectMetricEvidence,
   type PostgresRowCountEvidence,
@@ -120,7 +125,7 @@ export class WorkspaceWarehouseConnectionProbe
     }
 
     const observedAt = this.checkedAt();
-    const sourceObjects = await this.loadPostgresSourceObjects(input.credentialRef, observedAt);
+    const sourceObjects = await this.loadPostgresSourceObjects(input, observedAt);
     if (!sourceObjects.ok) {
       return this.failedInspection(sourceObjects.reason, sourceObjects.message);
     }
@@ -153,6 +158,7 @@ export class WorkspaceWarehouseConnectionProbe
     const client = new Client({ connectionString });
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, input.database);
       if (request.kind === 'schema-list') {
         return await loadPostgresSchemaCatalogPage(client, request, cursorAuthority);
       }
@@ -191,7 +197,7 @@ export class WorkspaceWarehouseConnectionProbe
       return this.failed(input.id, 'invalid_credentials', 'Credential reference is missing.');
     }
 
-    const connection = await this.testPostgresConnection(input.credentialRef);
+    const connection = await this.testPostgresConnection(input.credentialRef, input.database);
     if (!connection.ok) {
       return this.failed(input.id, connection.reason, connection.message);
     }
@@ -227,6 +233,7 @@ export class WorkspaceWarehouseConnectionProbe
     let transactionStarted = false;
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, input.database);
       await client.query('begin transaction isolation level repeatable read read only');
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${SOURCE_DATA_SAMPLE_TIMEOUT_MS}ms'`);
@@ -275,7 +282,8 @@ export class WorkspaceWarehouseConnectionProbe
         })),
         rows,
         truncated,
-        sampledAt: this.checkedAt(),
+        queriedAt: this.checkedAt(),
+        navigation: 'bounded-first-page',
       };
     } catch (error) {
       if (transactionStarted) {
@@ -296,7 +304,7 @@ export class WorkspaceWarehouseConnectionProbe
   }
 
   private async loadPostgresSourceObjects(
-    credentialRef: string,
+    input: WarehouseConnectionProbeTarget,
     observedAt: string
   ): Promise<
     | {
@@ -310,7 +318,9 @@ export class WorkspaceWarehouseConnectionProbe
         readonly message: string;
       }
   > {
-    const connectionString = await this.options.credentialResolver.resolveCredential(credentialRef);
+    const connectionString = await this.options.credentialResolver.resolveCredential(
+      input.credentialRef
+    );
     if (connectionString === null || connectionString.trim().length === 0) {
       return {
         ok: false,
@@ -321,6 +331,7 @@ export class WorkspaceWarehouseConnectionProbe
     const client = new Client({ connectionString });
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, input.database);
       const result = await client.query<PostgresTableDiscoveryRow>(
         [
           'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
@@ -361,14 +372,20 @@ export class WorkspaceWarehouseConnectionProbe
       return {
         ok: false,
         reason: classifyPostgresProbeFailure(error),
-        message: 'Warehouse connection test failed.',
+        message:
+          error instanceof WarehouseSourceDiscoveryFailedError
+            ? error.message
+            : 'Warehouse connection test failed.',
       };
     } finally {
       await client.end().catch(() => undefined);
     }
   }
 
-  private async testPostgresConnection(credentialRef: string): Promise<
+  private async testPostgresConnection(
+    credentialRef: string,
+    database: string
+  ): Promise<
     | { readonly ok: true; readonly objectCount: number }
     | {
         readonly ok: false;
@@ -387,6 +404,7 @@ export class WorkspaceWarehouseConnectionProbe
     const client = new Client({ connectionString });
     try {
       await client.connect();
+      await assertPostgresWarehouseDatabase(client, database);
       const result = await client.query<PostgresObjectCountRow>(
         [
           'select count(*)::bigint as object_count',
@@ -406,7 +424,10 @@ export class WorkspaceWarehouseConnectionProbe
       return {
         ok: false,
         reason: classifyPostgresProbeFailure(error),
-        message: 'Warehouse connection test failed.',
+        message:
+          error instanceof WarehouseSourceDiscoveryFailedError
+            ? error.message
+            : 'Warehouse connection test failed.',
       };
     } finally {
       await client.end().catch(() => undefined);
@@ -921,63 +942,6 @@ function parseRelationalSourceObjectId(objectId: string): RelationalSourceObject
   }
 }
 
-function serializePostgresSampleCell(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
-  if (value instanceof Date) return value.toISOString();
-  if (Buffer.isBuffer(value)) return `\\x${value.toString('hex')}`;
-  if (typeof value === 'object') {
-    return JSON.stringify(value, (_key, nested) =>
-      typeof nested === 'bigint' ? nested.toString() : nested
-    );
-  }
-  return String(value);
-}
-
-function postgresTypeNameFromDataTypeId(dataTypeId: number | undefined): string {
-  switch (dataTypeId) {
-    case 16:
-      return 'boolean';
-    case 17:
-      return 'bytea';
-    case 20:
-      return 'bigint';
-    case 21:
-      return 'smallint';
-    case 23:
-      return 'integer';
-    case 25:
-      return 'text';
-    case 700:
-      return 'real';
-    case 701:
-      return 'double precision';
-    case 1042:
-      return 'character';
-    case 1043:
-      return 'character varying';
-    case 1082:
-      return 'date';
-    case 1083:
-      return 'time';
-    case 1114:
-      return 'timestamp';
-    case 114:
-      return 'json';
-    case 1184:
-      return 'timestamp with time zone';
-    case 1266:
-      return 'time with time zone';
-    case 1700:
-      return 'numeric';
-    case 2950:
-      return 'uuid';
-    case 3802:
-      return 'jsonb';
-    default:
-      return 'unknown';
-  }
-}
-
 function groupPostgresColumnsByTable(
   rows: readonly PostgresColumnDiscoveryRow[]
 ): ReadonlyMap<string, readonly SourceObjectColumn[]> {
@@ -1071,7 +1035,10 @@ function parseOptionalNonNegativeInteger(value: unknown): number | undefined {
 }
 
 function classifyPostgresProbeFailure(error: unknown): 'invalid_credentials' | 'connection_failed' {
-  return isPgAuthError(error) ? 'invalid_credentials' : 'connection_failed';
+  return isPgAuthError(error) ||
+    (error instanceof WarehouseSourceDiscoveryFailedError && error.reason === 'invalid_credentials')
+    ? 'invalid_credentials'
+    : 'connection_failed';
 }
 
 function isPgAuthError(error: unknown): boolean {

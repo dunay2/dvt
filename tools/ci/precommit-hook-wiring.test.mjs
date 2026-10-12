@@ -124,6 +124,19 @@ test('pre-commit lint stays untyped while the canonical ESLint gate stays type-a
 test('web workspace lint is fast while strict lint remains available', () => {
   const webPackageJson = readWebPackageJson();
 
+  for (const command of [webPackageJson.scripts.lint, webPackageJson.scripts['lint:strict']]) {
+    for (const files of [
+      'src/**/*.{ts,tsx}',
+      'cypress/**/*.{ts,tsx}',
+      '*.config.ts',
+      '*.config.mjs',
+      'scripts/**/*.{ts,mjs,js,cjs}',
+    ]) {
+      assert.ok(command.includes(files), `Lint must cover ${files}`);
+    }
+    assert.match(command, /--max-warnings 0(?:\s|$)/u);
+  }
+
   assert.match(webPackageJson.scripts.lint, /pnpm --dir \.\.\/\.\. exec node/u);
   assert.match(webPackageJson.scripts.lint, /--config tools\/ci\/eslint-precommit\.config\.cjs/u);
   assert.match(

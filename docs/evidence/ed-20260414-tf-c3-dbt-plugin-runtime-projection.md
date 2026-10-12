@@ -30,7 +30,7 @@ code_refs:
   - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
   - packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts
   - packages/@dvt/adapter-temporal/vitest.config.ts
-  - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
 evidence:
   tests:
     - pnpm exec eslint --max-warnings 0 packages/@dvt/adapter-temporal/src/activities/*.ts packages/@dvt/adapter-temporal/src/index.ts packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts packages/@dvt/adapter-temporal/test/helpers/integration/*.ts packages/@dvt/adapter-temporal/test/helpers/testExecutors.ts packages/@dvt/adapter-temporal/test/activities.test.ts packages/@dvt/adapter-temporal/test/dbtRuntimeFixtures.test.ts packages/@dvt/adapter-temporal/test/integration.time-skipping.shared.ts packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts packages/@dvt/adapter-temporal/test/integration.transformation.time-skipping.test.ts packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts

@@ -272,6 +272,22 @@ Rejected alternatives:
 - **Out of scope:** visible behavior, persistence, copy, column ordering/functions
   and the transitional `DbtNodeData` rename.
 
+## Canonical card Output state — #3558
+
+`ProjectGraphNodeCardReadModel` forwards the existing column-query state without
+executing data or authoring operations. For native models, Input comes from
+producer bindings; Output is the canonical resulting schema, including retained
+and calculated fields, in canonical order with stable identities. The physical
+catalogue (`visible`) is not an Output fallback: it may contain excluded fields.
+
+The existing column truth distinguishes `ready`, transient `pending`, failed
+`unavailable`, and `unconfigured` (no canonical model document). Only `ready`
+publishes Output fields and a count; a valid empty projection can show zero.
+Other states show localized status without stale fields or output ports. An
+unconfigured Output does not prevent mapping available producer fields to Input.
+Switching tabs neither queries rows nor writes the draft. Output stays passive;
+schema authoring remains in the semantic workbench.
+
 ## Strategy Copy Catalog Increment
 
 - **Problem:** the dbt and DVT card strategies retain literal English fallbacks for
@@ -658,7 +674,7 @@ symbols:
     cqRails: [SelectCanvasExecutionNode]
     fowlerSignals: [Duplicate semantics, Test-only confidence]
     architectureGuard: pnpm --filter @dvt/web test:canvas
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/266453dfd3194886927bfccc03e5a839f2d2f8d9/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
     unitTests: [pnpm --filter @dvt/web typecheck]
   - path: apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts
     name: openModelCodeEditor

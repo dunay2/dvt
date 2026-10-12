@@ -40,7 +40,12 @@ function buildContribution(
       dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
       dataTruncatedTemplate: 'Showing {limit} rows.',
       dataCaptionTemplate: 'Sample from {nodeName}',
+      dataRowsLabel: 'rows',
+      dataColumnsLabel: 'columns',
       dataNullValue: 'NULL',
+      dataRefreshAction: 'Refresh',
+      dataQueriedAtLabel: 'Queried at',
+      dataBoundedLiveTemplate: 'Up to {limit} rows · First page only · No guaranteed row order.',
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
@@ -81,7 +86,6 @@ function buildContribution(
       onPreviewExecutionPlan: vi.fn(),
       selectionRecovery: null,
     },
-    dataSample: { status: 'idle' },
     ...overrides,
   };
 }

@@ -30,7 +30,7 @@ Result: the S08 hard-QA findings are closed for the scoped architecture:
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`
 - `docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md`
-- `docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md`
+- [PostgresPlanStore SRP remediation target architecture](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/reviews/architecture-and-governance/20260403-postgres-plan-store-srp-remediation-target.md)
 
 ## Reviewed scope
 

@@ -15,7 +15,7 @@ author: AI (Codex)
 - `AGENTS.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/command-query-rail-governance.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md`
+- [UX v0.4 design input (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md)
 - `docs/architecture/components/web/graph/canvas-shell-component.md`
 - `docs/architecture/components/web/graph/canvas-route-presentation-component.md`
 - Planning task `E F-15`
@@ -37,23 +37,23 @@ behavior.
 
 ## Changes Made
 
-| File                                                                        | Change                                                                                                             |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `buzon/20260516-codex-fowler-f15-canvas-view-menu-architecture-analysis.md` | Added Fowler architecture analysis, anti-patterns, drift, opportunities, and solution rationale.                   |
-| `docs/architecture/components/web/graph/canvas-view-menu-component.md`      | Added local component guide with public API, invariants, transitions, consumers, and diagrams.                     |
-| `docs/architecture/components/web/graph/canvas-view-menu-user-stories.md`   | Added user stories for the View-menu migration and architecture fitness.                                           |
-| `docs/architecture/components/web/graph/index.md`                           | Linked the new component guide and story document.                                                                 |
-| `apps/web/src/app/views/canvas/canvasViewMenuContributionStore.ts`          | Added owned state boundary for Canvas route contribution to the shell View menu.                                   |
-| `apps/web/src/app/views/canvas/CanvasViewMenuControls.tsx`                  | Added View-menu rendering for Canvas visual controls with an owned-concern docblock.                               |
-| `apps/web/src/app/components/shell/ShellMenu.tsx`                           | Mounted Canvas-specific View controls in the shell `View` menu.                                                    |
-| `apps/web/src/app/views/canvas/CanvasToolbar.tsx`                           | Registered the Canvas View-menu contribution and removed visual projection props from primary toolbar controls.    |
-| `apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx`            | Kept the toolbar focused on workflow/status actions.                                                               |
-| `apps/web/src/app/views/canvas/CanvasToolbar.test.tsx`                      | Added TDD coverage proving visual controls are no longer primary toolbar actions and View commands are registered. |
-| `apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx`         | Added semantic architecture tests for ownership, shell contribution, docs, and diagrams.                           |
-| `apps/web/src/app/views/Canvas.routeStates.test.tsx`                        | Updated blocked-state assertions to verify primary actions and View contribution semantics.                        |
-| `apps/web/src/app/views/Canvas.readOnlyStates.test.tsx`                     | Updated read-only assertions to verify primary actions and View contribution semantics.                            |
-| `apps/web/src/app/views/Canvas.draftRecovery.test.tsx`                      | Updated recovery assertions to verify primary actions and View contribution semantics.                             |
-| `docs/planning/closeouts/20260516-f15-canvas-view-menu-closeout.md`         | Recorded closeout evidence for this slice.                                                                         |
+| File                                                                                                                                                                       | Change                                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260516-codex-fowler-f15-canvas-view-menu-architecture-analysis.md) | Added Fowler architecture analysis, anti-patterns, drift, opportunities, and solution rationale.                   |
+| `docs/architecture/components/web/graph/canvas-view-menu-component.md`                                                                                                     | Added local component guide with public API, invariants, transitions, consumers, and diagrams.                     |
+| `docs/architecture/components/web/graph/canvas-view-menu-user-stories.md`                                                                                                  | Added user stories for the View-menu migration and architecture fitness.                                           |
+| `docs/architecture/components/web/graph/index.md`                                                                                                                          | Linked the new component guide and story document.                                                                 |
+| `apps/web/src/app/views/canvas/canvasViewMenuContributionStore.ts`                                                                                                         | Added owned state boundary for Canvas route contribution to the shell View menu.                                   |
+| `apps/web/src/app/views/canvas/CanvasViewMenuControls.tsx`                                                                                                                 | Added View-menu rendering for Canvas visual controls with an owned-concern docblock.                               |
+| `apps/web/src/app/components/shell/ShellMenu.tsx`                                                                                                                          | Mounted Canvas-specific View controls in the shell `View` menu.                                                    |
+| `apps/web/src/app/views/canvas/CanvasToolbar.tsx`                                                                                                                          | Registered the Canvas View-menu contribution and removed visual projection props from primary toolbar controls.    |
+| `apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx`                                                                                                           | Kept the toolbar focused on workflow/status actions.                                                               |
+| `apps/web/src/app/views/canvas/CanvasToolbar.test.tsx`                                                                                                                     | Added TDD coverage proving visual controls are no longer primary toolbar actions and View commands are registered. |
+| `apps/web/src/app/views/canvas/CanvasToolbar.architecture.test.tsx`                                                                                                        | Added semantic architecture tests for ownership, shell contribution, docs, and diagrams.                           |
+| `apps/web/src/app/views/Canvas.routeStates.test.tsx`                                                                                                                       | Updated blocked-state assertions to verify primary actions and View contribution semantics.                        |
+| `apps/web/src/app/views/Canvas.readOnlyStates.test.tsx`                                                                                                                    | Updated read-only assertions to verify primary actions and View contribution semantics.                            |
+| `apps/web/src/app/views/Canvas.draftRecovery.test.tsx`                                                                                                                     | Updated recovery assertions to verify primary actions and View contribution semantics.                             |
+| `docs/planning/closeouts/20260516-f15-canvas-view-menu-closeout.md`                                                                                                        | Recorded closeout evidence for this slice.                                                                         |
 
 ## Test Evidence
 
@@ -93,7 +93,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/command-query-rail-governance.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/shell/ShellMenu.tsx
   - apps/web/src/app/views/Canvas.draftRecovery.test.tsx

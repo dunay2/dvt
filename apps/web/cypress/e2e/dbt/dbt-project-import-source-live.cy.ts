@@ -8,7 +8,10 @@ import {
   readLiveWorkspaceFile,
   resolveLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-import { importLivePostgresSource } from '../../support/liveWarehouseSourceImport';
+import {
+  importLivePostgresSource,
+  livePostgresDatabaseName,
+} from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession, type E2eWorkspaceSession } from '../../support/workspaceSession';
 
 const PROJECT_ROOT = 'analytics';
@@ -27,7 +30,7 @@ clean-targets: ['target', 'dbt_packages']
 version: 2
 sources:
   - name: raw
-    database: dvt
+    database: ${livePostgresDatabaseName()}
     schema: public
     tables:
       - name: source_1

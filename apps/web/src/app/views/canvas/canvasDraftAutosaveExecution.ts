@@ -120,7 +120,7 @@ export function performCanvasDraftAutosave({
   refreshWorkspaceFilesAfterSave,
 }: PerformCanvasDraftAutosaveArgs) {
   const saveAttempt = startNextSaveAttempt(refs);
-  markDraftSaving(setDraftSession);
+  markDraftSaving(setDraftSession, draftSession);
   setDraftSaveStatus('saving');
 
   draftRepository

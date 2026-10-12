@@ -1,3 +1,10 @@
+/**
+ * Owned concern: verify first project admission through the controlled API boundary.
+ * @baseline GH-3578: project creation must not inject fixture graph nodes.
+ * @decision Observe the existing viewport contract after the scoped creation request.
+ * @consequence The typed Canvas is visible and genuinely empty after onboarding.
+ * @version 1.0.0
+ */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   installE2eApiFetchStub,
@@ -124,7 +131,8 @@ describe('Project onboarding first-use flow', () => {
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
 
     cy.location('pathname').should('eq', '/canvas');
-    cy.get('[data-slot="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-testid="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('.react-flow__node').should('not.exist');
     cy.get('[data-slot="canvas-empty-state"]').should('not.exist');
     cy.contains('src_orders').should('not.exist');
     cy.contains('model_orders').should('not.exist');

@@ -67,6 +67,7 @@ function buildCanvasShellPanelsArgs({
       inspectorGraphEdges: controller.inspectorGraphEdges,
       canEditInspectorNode:
         controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges,
+      applyNodeDraft: controller.applyNodeDraft,
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
@@ -190,6 +191,7 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
     runControls: args.runControls,
+    prepareModelPreview: args.controller.flushDraftForExecution,
     canvasCommands: {
       onSelectCanvas: (canvasId) => {
         void args.controller.handleSelectCanvasDocument(canvasId);

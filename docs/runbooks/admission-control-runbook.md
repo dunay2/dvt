@@ -216,4 +216,3 @@ Fallback file location: `{tmpdir}/dvt/{SERVICE_NAME}-start-run-backpressure-fall
 ## See Also
 
 - Emergency cleanup: [admission-control-emergency-cleanup.sql](./admission-control-emergency-cleanup.sql)
-- Proposal: `docs/planning/proposals/superseded/runtime-and-contracts/gap4-backpressure-admission-pr4-plan-20260326.md`

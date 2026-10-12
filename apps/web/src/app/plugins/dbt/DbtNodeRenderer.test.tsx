@@ -251,15 +251,9 @@ describe('DBT runtime contributions', () => {
             name: 'fct_orders',
             metadata: {
               authority: 'dbt-project-files',
-              dbt: {
-                packageName: 'analytics',
-                materialized: 'incremental',
-              },
+              materialized: 'incremental',
               package: 'analytics',
               dependencies: ['source.raw.orders', 'ref.stg_customers'],
-              config: {
-                materialized: 'incremental',
-              },
               columns: [{ name: 'order_id', type: 'integer' }],
             },
           })}
@@ -297,10 +291,10 @@ describe('DBT runtime contributions', () => {
     expect(
       document.querySelector('[data-slot="graph-node-metric-row"][data-placement="header"]')
         ?.textContent
-    ).toBe('Mat.incrementalLast runNot calculated');
+    ).toBe('Mat.incremental');
     expect(
       document.querySelector('[data-slot="graph-node-summary-icon"][data-icon="clock"]')
-    ).not.toBeNull();
+    ).toBeNull();
     expect(
       document.querySelector('[data-slot="graph-node-metric-row"][data-placement="body"]')
         ?.textContent

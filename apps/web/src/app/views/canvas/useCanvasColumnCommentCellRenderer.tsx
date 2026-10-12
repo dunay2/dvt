@@ -1,7 +1,7 @@
 /** Owned concern: bind inline column comments to the canonical Inspector mutation rail. */
 import { useCallback, type ReactNode } from 'react';
 
-import type { NodePropertyTableCellRenderContext } from '../../components/inspector/NodePropertySectionView';
+import type { NodePropertyTableCellRenderContext } from '../../components/inspector/NodePropertyTable';
 import type { CanvasViewCopy } from './copy';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import { CanvasColumnCommentEditor } from './CanvasColumnCommentEditor';

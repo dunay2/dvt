@@ -18,8 +18,8 @@ import type {
 } from './transformationGraphValidation.types';
 import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
-import { resolveDvtSubstraitInnerJoinEntry } from './canvasDvtSubstraitJoinComposition';
-import { resolveDvtSubstraitUnionAllEntry } from './canvasDvtSubstraitSetComposition';
+import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
+import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
 
 export type {
   TransformationGraphValidationResult,
@@ -81,7 +81,7 @@ export function validateTransformationGraph({
     const sinkNode = context.scopedNodes.find((node) => node.role === 'output');
     const sourceNodes = context.scopedNodes.filter((node) => node.role === 'input');
     const joinEntry = transformNode
-      ? resolveDvtSubstraitInnerJoinEntry({
+      ? resolveDvtSubstraitJoinEntry({
           targetNode: transformNode,
           nodes: context.scopedNodes,
           edges: context.scopedEdges,
@@ -90,7 +90,7 @@ export function validateTransformationGraph({
       : null;
     const unionAllEntry =
       transformNode && joinEntry == null
-        ? resolveDvtSubstraitUnionAllEntry({
+        ? resolveConnectedSetEntry({
             targetNode: transformNode,
             nodes: context.scopedNodes,
             edges: context.scopedEdges,

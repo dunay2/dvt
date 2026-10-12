@@ -7,6 +7,7 @@
     "tsconfig.node-runtime.base.json",
     "tsconfig.package-bundler.base.json",
     "scripts/skip-prebuild-if-orchestrated.cjs",
+    "scripts/build-workspace-runtime-deps.cjs",
     "scripts/skip-pretest-if-ci.cjs"
   ],
   "tasks": {

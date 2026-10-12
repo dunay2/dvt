@@ -120,11 +120,3 @@ contracts, tests, CI, and System Delivery Status before planning replacement wor
   evidence paths.
 - `Is this already true in code?` -> code/contracts/tests/CI plus
   [System Delivery Status](../../architecture/system-delivery-status.md).
-
-## Historical Snapshot
-
-The original dated snapshot is preserved for history only:
-
-- [Strategic Product Roadmap 2026-03-24](../archive/proposals/strategic-product-roadmap-20260324.md)
-
-That dated file is not an active decision surface.

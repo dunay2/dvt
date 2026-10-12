@@ -38,6 +38,7 @@ export type ProposedConnectionResult =
     };
 
 export type CanvasConnectionRejection =
+  | { code: 'graph_changed' }
   | { code: 'connection_incomplete' }
   | { code: 'node_not_found_in_graph' }
   | {

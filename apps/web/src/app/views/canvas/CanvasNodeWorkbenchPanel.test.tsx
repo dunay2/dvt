@@ -2,12 +2,20 @@
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
 import React, { act } from 'react';
+import {
+  ExtensionLeafRelSchema,
+  RelCommonSchema,
+  RelSchema,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { create } from '@bufbuild/protobuf';
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from './copy';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
@@ -17,6 +25,8 @@ import {
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import * as outputProjection from './canvasDvtSubstraitOutputProjection';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import {
@@ -191,6 +201,30 @@ const DVT_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
   );
 })();
 
+const DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE: CanonicalNode = (() => {
+  const source = resolveDvtSubstraitProjectionSource(SOURCE_NODE);
+  if (source == null) throw new Error('Expected a connected PostgreSQL source fixture.');
+  const semanticDraft = createDvtSubstraitProjectionDraft({
+    source,
+    targetNodeId: DVT_TRANSFORM_NODE.id,
+    outputs: [{ fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' }],
+  });
+  const root = semanticDraft.plan.relations[0]?.relType;
+  if (root?.case !== 'root') throw new Error('Expected a canonical relation root.');
+  root.value.input = create(RelSchema, {
+    relType: {
+      case: 'extensionLeaf',
+      value: create(ExtensionLeafRelSchema, {
+        common: create(RelCommonSchema, { relAnchor: 1 }),
+      }),
+    },
+  });
+  return applyDvtSubstraitSemanticDocument(
+    DVT_TRANSFORM_NODE,
+    encodeDvtSubstraitSemanticDocument(semanticDraft)
+  );
+})();
+
 const DVT_SINK_NODE: CanonicalNode = {
   id: 'sink.orders',
   name: 'Orders Sink',
@@ -220,11 +254,11 @@ const EDGES: readonly CanonicalEdge[] = [
   },
 ];
 
-function renderPanel(root: Root, preferredTabId: string | null = null): void {
-  renderNodePanel(root, SOURCE_NODE, preferredTabId);
+async function renderPanel(root: Root, preferredTabId: string | null = null): Promise<void> {
+  await renderNodePanel(root, SOURCE_NODE, preferredTabId);
 }
 
-function renderNodePanel(
+async function renderNodePanel(
   root: Root,
   node: CanonicalNode,
   preferredTabId: string | null = null,
@@ -237,9 +271,10 @@ function renderNodePanel(
   graph?: Readonly<{
     nodes?: readonly CanonicalNode[];
     edges?: readonly CanonicalEdge[];
+    onOpenSemanticEditor?: () => void;
   }>
-): void {
-  act(() => {
+): Promise<void> {
+  await act(async () => {
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
@@ -276,27 +311,9 @@ function renderNodePanel(
         primarySectionIds={primarySectionIds}
         authoring={authoring}
         onClose={vi.fn()}
-      />
-    );
-  });
-}
-
-function renderMovablePanel(root: Root): void {
-  act(() => {
-    root.render(
-      <CanvasNodeWorkbenchPanel
-        node={SOURCE_NODE}
-        nodes={[SOURCE_NODE]}
-        edges={[]}
-        activeRunId={null}
-        authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
-        dragHandleProps={{
-          'aria-label': 'Move node workbench',
-          'data-slot': 'canvas-node-workbench-drag-handle',
-          role: 'button',
-          tabIndex: 0,
-        }}
-        onClose={vi.fn()}
+        {...(graph?.onOpenSemanticEditor == null
+          ? {}
+          : { onOpenSemanticEditor: graph.onOpenSemanticEditor })}
       />
     );
   });
@@ -317,8 +334,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  afterEach(() => {
-    act(() => {
+  afterEach(async () => {
+    await act(async () => {
       root.unmount();
     });
     container.remove();
@@ -327,13 +344,46 @@ describe('CanvasNodeWorkbenchPanel', () => {
   });
 
   it('composes the shared node properties presentation component instead of duplicating it', () => {
-    expect(CanvasNodeWorkbenchPanelSource).toContain('NodePropertiesTabs');
+    expect(CanvasNodeWorkbenchPanelSource).toContain('CanvasNodeWorkbenchSections');
+    for (const dependency of [
+      'reconcileDbtModelConnectedOrigin',
+      'readDvtTransformAuthoringAuthority',
+      'buildNodePropertiesReadModel',
+      'resolveCanvasNodeWorkbenchSectionModel',
+      'getInspectorPanels',
+      'useEffect',
+      'useState',
+    ])
+      expect(CanvasNodeWorkbenchPanelSource).not.toContain(dependency);
     expect(CanvasNodeWorkbenchPanelSource).not.toContain('function renderSectionBody');
     expect(CanvasNodeWorkbenchPanelSource).not.toContain('PRIMARY_NODE_WORKBENCH_SECTION_IDS');
   });
 
-  it('renders the approved Source tabs without an overflow bucket', () => {
-    renderPanel(root);
+  it('preserves a chosen tab until a new explicit request or node selection', async () => {
+    await renderNodePanel(root, SOURCE_NODE, 'columns');
+    const overview = container.querySelector('[data-slot="canvas-node-workbench-tab-general"]')!;
+    await act(async () => {
+      fireEvent.mouseDown(overview, { button: 0, ctrlKey: false });
+    });
+    expect(overview.getAttribute('aria-selected')).toBe('true');
+    await renderNodePanel(root, SOURCE_NODE, 'columns');
+    expect(overview.getAttribute('aria-selected')).toBe('true');
+    await renderNodePanel(root, SOURCE_NODE, 'columns', undefined, 2);
+    expect(
+      container
+        .querySelector('[data-slot="canvas-node-workbench-tab-columns"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    await renderNodePanel(root, MODEL_NODE, 'code');
+    expect(
+      container
+        .querySelector('[data-slot="canvas-node-workbench-tab-code"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+  });
+
+  it('renders the approved Source tabs without an overflow bucket', async () => {
+    await renderPanel(root);
 
     const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
     expect(tabsList).not.toBeNull();
@@ -349,8 +399,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="canvas-source-provider-icon"] svg')).not.toBeNull();
   });
 
-  it('does not mistake the read-model empty-columns description for a source capability', () => {
-    renderNodePanel(
+  it('does not mistake the read-model empty-columns description for a source capability', async () => {
+    await renderNodePanel(
       root,
       {
         ...SOURCE_NODE,
@@ -371,15 +421,15 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(tabsList?.textContent).not.toContain('Columns');
   });
 
-  it('keeps the Source columns tab factual without Transform filter authoring', () => {
-    renderPanel(root, 'columns');
+  it('keeps the Source columns tab factual without Transform filter authoring', async () => {
+    await renderPanel(root, 'columns');
 
     expect(container.querySelector('[data-slot="dvt-filter-authoring"]')).toBeNull();
     expect(container.textContent).toContain('order_id');
   });
 
-  it('does not repeat an external code action when the node already supports an inline projection', () => {
-    act(() => {
+  it('does not repeat an external code action when the node already supports an inline projection', async () => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={MODEL_NODE}
@@ -399,7 +449,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeTab).not.toBeNull();
     expect(codeTab?.getAttribute('aria-selected')).toBe('false');
 
-    act(() => {
+    await act(async () => {
       fireEvent.pointerDown(codeTab!, { button: 0, ctrlKey: false, pointerType: 'mouse' });
       fireEvent.mouseDown(codeTab!, { button: 0, ctrlKey: false });
       fireEvent.click(codeTab!);
@@ -409,8 +459,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
-  it('does not synthesize a duplicate code action for a file-backed node', () => {
-    act(() => {
+  it('does not synthesize a duplicate code action for a file-backed node', async () => {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={MODEL_NODE}
@@ -427,8 +477,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
-  it('keeps the accessible movement handle separate from the close command', () => {
-    renderMovablePanel(root);
+  it('retains a close command without the retired node movement handle', async () => {
+    await renderPanel(root);
 
     const panel = container.querySelector<HTMLElement>('[data-slot="canvas-node-workbench-panel"]');
     const dragHandle = container.querySelector<HTMLElement>(
@@ -440,14 +490,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
 
     expect(panel?.className).toContain('min-w-0');
     expect(panel?.className).toContain('w-full');
-    expect(dragHandle?.getAttribute('role')).toBe('button');
-    expect(dragHandle?.tabIndex).toBe(0);
+    expect(dragHandle).toBeNull();
     expect(closeButton?.textContent).toBe('Close');
-    expect(dragHandle?.contains(closeButton!)).toBe(false);
   });
 
-  it('connects writable Source lists to workspace-scoped layout persistence', () => {
-    renderNodePanel(root, SOURCE_NODE, 'columns', {
+  it('connects writable Source lists to workspace-scoped layout persistence', async () => {
+    await renderNodePanel(root, SOURCE_NODE, 'columns', {
       canEditNode: true,
       workspaceScope: {
         tenantId: 'tenant-a',
@@ -461,7 +509,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const discountCode = container.querySelector<HTMLButtonElement>(
       '[data-column-name="discount_code"]'
     )!;
-    act(() => {
+    await act(async () => {
       discountCode.focus();
       fireEvent.keyDown(discountCode, { key: 'ArrowUp', altKey: true });
     });
@@ -475,21 +523,25 @@ describe('CanvasNodeWorkbenchPanel', () => {
     });
   });
 
-  it('shows Source column metadata and Canvas graph IO from the node read model', () => {
-    renderPanel(root, 'columns');
+  it('shows Source column metadata and Canvas graph IO from the node read model', async () => {
+    await renderPanel(root, 'columns');
 
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('integer');
     expect(container.textContent).toContain('Not null');
+    expect(container.querySelector('[data-slot="source-column-detail"]')).toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-column-name="order_id"]')!.click()
+    );
     expect(container.textContent).toContain('Primary key');
 
-    renderPanel(root, 'inputs-outputs');
+    await renderPanel(root, 'inputs-outputs');
     expect(container.textContent).toContain('Output');
     expect(container.textContent).toContain('Orders Model');
     expect(container.textContent).not.toContain('not_null_orders_order_id');
   });
 
-  it('keeps long Model relationships complete in stacked records', () => {
+  it('keeps long Model relationships complete in stacked records', async () => {
     const source = {
       ...SOURCE_NODE,
       id: 'src_postgresql_local_2333_dvt_public_source_1',
@@ -497,7 +549,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     };
     const authoring = { canEditNode: true, onApplyNodeDraft: vi.fn() };
 
-    renderNodePanel(root, MODEL_NODE, 'inputs-outputs', authoring, 1, undefined, {
+    await renderNodePanel(root, MODEL_NODE, 'inputs-outputs', authoring, 1, undefined, {
       nodes: [source, MODEL_NODE],
       edges: [
         {
@@ -520,8 +572,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(record?.textContent).toContain('lineage');
   });
 
-  it('shows dbt test meaning, execution selection, readiness impact and run history', () => {
-    renderNodePanel(root, MODEL_NODE, 'tests');
+  it('shows dbt test meaning, execution selection, readiness impact and run history', async () => {
+    await renderNodePanel(root, MODEL_NODE, 'tests');
 
     expect(container.textContent).toContain('not_null(order_id)');
     expect(container.textContent).toContain('Value is present');
@@ -530,8 +582,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('passed in 1.2s');
   });
 
-  it('shows connected downstream dbt test nodes when inspecting a model', () => {
-    renderNodePanel(
+  it('shows connected downstream dbt test nodes when inspecting a model', async () => {
+    await renderNodePanel(
       root,
       { ...MODEL_NODE, metadata: { columns: { order_id: { data_type: 'integer' } } } },
       'tests'
@@ -544,8 +596,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('failed in 1.7s');
   });
 
-  it('renders the warehouse Source Overview without permanent CRUD controls', () => {
-    renderPanel(root, 'general');
+  it('renders the warehouse Source Overview without permanent CRUD controls', async () => {
+    await renderPanel(root, 'general');
 
     const generalSection = container.querySelector(
       '[data-slot="canvas-node-workbench-general-section"]'
@@ -564,10 +616,40 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).not.toContain('Autosaved');
   });
 
-  it('projects saved business tags to the card only after Apply', () => {
+  it('resolves metadata labels in the current language after rerender', async () => {
+    const language = useApplicationLanguageStore.getState().language;
+    try {
+      for (const nextLanguage of ['en', 'es'] as const) {
+        await act(async () => {
+          useApplicationLanguageStore.getState().configureApplicationLanguage(nextLanguage);
+        });
+        await renderNodePanel(root, DVT_TRANSFORM_NODE, 'general');
+        const copy = resolveCanvasViewCopy(nextLanguage);
+        expect(
+          container.querySelector(`label[for="inspector-node-name-${DVT_TRANSFORM_NODE.id}"]`)
+            ?.textContent
+        ).toBe(copy.inspectorNodeNameLabel);
+        expect(
+          container.querySelector(`label[for="inspector-node-tags-${DVT_TRANSFORM_NODE.id}"]`)
+            ?.textContent
+        ).toBe(copy.inspectorNodeTagsLabel);
+        expect(
+          container.querySelector(
+            `label[for="inspector-node-description-${DVT_TRANSFORM_NODE.id}"]`
+          )?.textContent
+        ).toBe(copy.inspectorNodeDescriptionLabel);
+      }
+    } finally {
+      await act(async () => {
+        useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+      });
+    }
+  });
+
+  it('projects saved business tags to the card only after Apply', async () => {
     const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
     const onApplyNodeDraft = vi.fn();
-    renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
+    await renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
 
     const tagsInput = container.querySelector<HTMLInputElement>('input[name="node-tags"]');
     expect(tagsInput).not.toBeNull();
@@ -580,7 +662,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       }).data.displayTags
     ).toEqual([{ value: 'authoring', label: 'En edición' }]);
 
-    act(() => {
+    await act(async () => {
       fireEvent.input(tagsInput!, { target: { value: 'finance, critical' } });
     });
 
@@ -591,7 +673,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
     expect(applyButton).toBeDefined();
 
-    act(() => {
+    await act(async () => {
       fireEvent.click(applyButton!);
     });
 
@@ -612,14 +694,60 @@ describe('CanvasNodeWorkbenchPanel', () => {
     ]);
   });
 
-  it('keeps an invalid business tag visible and blocks Apply with an accessible error', () => {
+  it('keeps unsupported canonical semantics local while common Inspector fields remain editable', async () => {
+    const onApplyNodeDraft = vi.fn();
+    await renderNodePanel(
+      root,
+      DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE,
+      'general',
+      { canEditNode: true, onApplyNodeDraft },
+      1,
+      undefined,
+      { nodes: [SOURCE_NODE, DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE], edges: [] }
+    );
+
+    const issue = container.querySelector(
+      '[data-slot="canvas-inspector-semantic-authoring-issue"]'
+    );
+    expect(issue?.getAttribute('role')).toBe('status');
+    expect(issue?.textContent).toContain('Semantic operation unavailable');
+    expect(issue?.textContent).toContain('stored semantics were left unchanged');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-panel"]')).not.toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+
+    const nameInput = container.querySelector<HTMLInputElement>('input[name="node-name"]');
+    expect(nameInput).not.toBeNull();
+    await act(async () => {
+      fireEvent.input(nameInput!, { target: { value: 'Recovered orders' } });
+    });
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton?.disabled).toBe(false);
+    await act(async () => {
+      fireEvent.click(applyButton!);
+    });
+
+    const submittedDraft = onApplyNodeDraft.mock.calls[0]?.[0];
+    expect(submittedDraft).toMatchObject({
+      name: 'Recovered orders',
+      semanticAuthoringIssue: 'unsupported_shape',
+    });
+    expect(submittedDraft).not.toHaveProperty('dvt');
+    expect(
+      applyCanvasInspectorNodeDraft(DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE, submittedDraft)
+        .metadata?.transformAuthoring
+    ).toEqual(DVT_UNSUPPORTED_SUBSTRAIT_TRANSFORM_NODE.metadata?.transformAuthoring);
+  });
+
+  it('keeps an invalid business tag visible and blocks Apply with an accessible error', async () => {
     const node = { ...DVT_TRANSFORM_NODE, tags: ['authoring'] };
     const onApplyNodeDraft = vi.fn();
-    renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
+    await renderNodePanel(root, node, 'general', { canEditNode: true, onApplyNodeDraft });
     const tagsInput = container.querySelector<HTMLInputElement>('input[name="node-tags"]')!;
     const invalidTag = '😀'.repeat(33);
 
-    act(() => {
+    await act(async () => {
       fireEvent.input(tagsInput, { target: { value: invalidTag } });
     });
 
@@ -631,8 +759,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(applyButton?.disabled).toBe(true);
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
-  it('keeps the read-only Source Overview factual without disabled authoring controls', () => {
-    renderNodePanel(root, SOURCE_NODE, 'general', {
+  it('keeps the read-only Source Overview factual without disabled authoring controls', async () => {
+    await renderNodePanel(root, SOURCE_NODE, 'general', {
       canEditNode: false,
       onApplyNodeDraft: vi.fn(),
     });
@@ -652,8 +780,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(generalSection?.textContent).toContain('read-only');
   });
 
-  it('separates external Source authority from DVT-owned metadata without a Summary overflow', () => {
-    renderPanel(root, 'general');
+  it('separates external Source authority from DVT-owned metadata without a Summary overflow', async () => {
+    await renderPanel(root, 'general');
 
     const generalSection = container.querySelector(
       '[data-slot="canvas-node-workbench-general-section"]'
@@ -674,15 +802,15 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(external?.textContent).not.toContain('Plugin');
     expect(container.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')).toBeNull();
 
-    renderPanel(root, 'summary');
+    await renderPanel(root, 'summary');
     expect(
       container.querySelector('[data-slot="canvas-node-workbench-summary-section"]')
     ).toBeNull();
     expect(container.querySelector('[data-slot="canvas-source-overview"]')).not.toBeNull();
   });
 
-  it('renders DVT transform upstream columns as read-only facts inside the Columns tab', () => {
-    renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns');
+  it('does not present incoming fields as Output before the native model defines any', async () => {
+    await renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns');
 
     const columnsSection = container.querySelector(
       '[data-slot="canvas-node-workbench-columns-section"]'
@@ -691,11 +819,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
       '[data-slot="node-property-column-record"]'
     );
     expect(columnsSection).not.toBeNull();
-    expect(columnRecords).toHaveLength(2);
-    expect(columnRecords?.[0]?.textContent).toContain('Orders Source');
-    expect(columnRecords?.[0]?.textContent).toContain('order_id');
+    expect(columnRecords).toHaveLength(0);
     expect(columnsSection?.querySelector('table')).toBeNull();
-    expect(columnsSection?.textContent).toContain('integer');
     expect(columnsSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
     expect(
       columnsSection?.querySelector('[data-slot="canvas-node-workbench-authoring"]')
@@ -704,7 +829,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
   });
 
   it('shows Substrait first and derives PostgreSQL SQL only after explicit output selection', async () => {
-    renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
+    const project = vi.spyOn(outputProjection, 'projectDvtSubstraitTransformOutputToPostgresSql');
+    await renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const outputSelector = codeSection?.querySelector<HTMLSelectElement>(
@@ -715,6 +841,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     expect(outputSelector?.value).toBe('substrait');
+    expect(project).not.toHaveBeenCalled();
     expect(canonicalViewer?.dataset.language).toBe('json');
     expect(canonicalViewer?.textContent).toContain('dvt-substrait-semantic-document.v1');
     expect(codeSection?.textContent).not.toContain('Convert to SQL');
@@ -729,15 +856,119 @@ describe('CanvasNodeWorkbenchPanel', () => {
         '[data-testid="monaco-code-viewer"]'
       );
       expect(sqlViewer?.dataset.language).toBe('sql');
-      expect(sqlViewer?.textContent?.replaceAll(/\s+/g, ' ').toLowerCase()).toContain(
-        'select order_id from raw.orders'
-      );
+      expect(sqlViewer?.textContent?.trim().length).toBeGreaterThan(0);
     });
+    expect(project).toHaveBeenCalledOnce();
+    expect(project.mock.calls[0]![0].transformNode.id).toBe(DVT_SUBSTRAIT_TRANSFORM_NODE.id);
+    expect(codeSection?.querySelector('[data-testid="monaco-code-viewer"]')?.textContent).toBe(
+      await project.mock.results[0]!.value
+    );
+    project.mockRestore();
     expect(outputSelector?.value).toBe('postgres-sql');
   });
 
-  it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', () => {
-    renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
+  it.each([
+    { canonical: false, inputCount: 1, canEditNode: true },
+    { canonical: false, inputCount: 2, canEditNode: true },
+    { canonical: true, inputCount: 1, canEditNode: true },
+    { canonical: true, inputCount: 2, canEditNode: true },
+    { canonical: true, inputCount: 2, canEditNode: false },
+  ])(
+    'routes Model editing through one entry ($canonical, $inputCount inputs, editable: $canEditNode)',
+    async ({ canonical, inputCount, canEditNode }) => {
+      const onOpenSemanticEditor = vi.fn();
+      const onApplyNodeDraft = vi.fn();
+      const pendingTransform: CanonicalNode = {
+        ...DVT_SUBSTRAIT_TRANSFORM_NODE,
+        metadata: {
+          ...DVT_SUBSTRAIT_TRANSFORM_NODE.metadata,
+          transformAuthoring: canonical
+            ? DVT_SUBSTRAIT_TRANSFORM_NODE.metadata?.transformAuthoring
+            : undefined,
+        },
+      };
+      const clients: CanonicalNode = {
+        ...SOURCE_NODE,
+        id: 'source.clients',
+        name: 'Clients Source',
+        metadata: {
+          ...SOURCE_NODE.metadata,
+          connectedSourceRef: {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: 'warehouse-prod',
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/raw/clients',
+          },
+          tableName: 'clients',
+          columns: [{ name: 'client_id', type: 'integer', nullable: false }],
+        },
+      };
+      const graph = {
+        nodes: [SOURCE_NODE, clients, pendingTransform],
+        edges: [SOURCE_NODE, clients].slice(0, inputCount).map((source) => ({
+          id: `edge-${source.id}-transform`,
+          sourceId: source.id,
+          targetId: pendingTransform.id,
+          relation: 'lineage' as const,
+        })),
+        onOpenSemanticEditor,
+      };
+      const renderSection = (section: string, request: number): Promise<void> =>
+        renderNodePanel(
+          root,
+          pendingTransform,
+          section,
+          { canEditNode, onApplyNodeDraft },
+          request,
+          undefined,
+          graph
+        );
+      await renderSection('columns', 1);
+
+      const panel = container.querySelector('[data-slot="canvas-node-workbench-panel"]');
+      const header = container.querySelector(
+        '[data-slot="canvas-node-workbench-header-actions"]'
+      )?.parentElement;
+      expect(panel?.querySelector('[data-slot="dvt-relational-operation-chooser"]')).toBeNull();
+      expect(panel?.querySelector('[data-slot="dvt-start-substrait-projection"]')).toBeNull();
+      expect(panel?.querySelector('[data-slot="dvt-relation-authoring"]')).toBeNull();
+      expect(panel?.querySelector('[data-slot="canvas-relation-outputs"]')).toBeNull();
+      if (canonical) expect(panel?.textContent).toContain('order_id');
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      if (!canEditNode) return;
+      await renderSection('code', 2);
+      const openEditor = panel?.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-open-semantic-editor"]'
+      );
+      expect(openEditor).not.toBeNull();
+      await act(async () => openEditor!.click());
+      expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
+      expect(
+        panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')
+      ).not.toBeNull();
+      expect(panel?.querySelector('[data-slot="canvas-node-workbench-status"]')).not.toBeNull();
+      expect(panel?.querySelector('[data-slot="canvas-node-workbench-kind"]')?.textContent).toBe(
+        'Model'
+      );
+      const tabsList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+      const tabList = panel?.querySelector('[data-slot="canvas-node-workbench-tabs-list-tablist"]');
+      const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
+      expect(tabList?.parentElement).toBe(tabsList);
+      expect(moreTrigger?.parentElement).toBe(tabsList);
+      expect(tabList?.className).toContain('flex-1');
+      expect(tabList?.className).not.toContain('w-full');
+      expect(header?.textContent).toContain('Clean Orders');
+      expect(header?.querySelector('p')).toBeNull();
+    }
+  );
+
+  it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', async () => {
+    await renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');
 
     expect(
       container.querySelector('[data-slot="canvas-node-workbench-contained-body"]')
@@ -745,7 +976,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="scroll-area"]')).toBeNull();
     expect(container.querySelector('[data-testid="monaco-code-viewer"]')).not.toBeNull();
 
-    renderNodePanel(
+    await renderNodePanel(
       root,
       DVT_SUBSTRAIT_TRANSFORM_NODE,
       'general',
@@ -759,8 +990,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="scroll-area"]')).not.toBeNull();
   });
 
-  it('renders one read-only DBT SQL projection in Code', () => {
-    renderNodePanel(root, MODEL_NODE, 'code');
+  it('renders one read-only DBT SQL projection in Code', async () => {
+    await renderNodePanel(root, MODEL_NODE, 'code');
 
     const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
     const sqlViewer = codeSection?.querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]');
@@ -779,7 +1010,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
   });
 
-  it('persists DBT model selections immediately without Apply or Cancel controls', () => {
+  it('persists DBT model selections immediately without Apply or Cancel controls', async () => {
     const alternateSource: CanonicalNode = {
       ...SOURCE_NODE,
       id: 'source.customers',
@@ -791,7 +1022,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     };
     const onApplyNodeDraft = vi.fn();
 
-    renderNodePanel(
+    await renderNodePanel(
       root,
       MODEL_NODE,
       'general',
@@ -817,7 +1048,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     ) as HTMLSelectElement;
     const originSelect = container.querySelector('select[name="dbt-origin"]') as HTMLSelectElement;
 
-    act(() => {
+    await act(async () => {
       fireEvent.change(materializedSelect, { target: { value: 'incremental' } });
     });
 
@@ -828,7 +1059,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       })
     );
 
-    act(() => {
+    await act(async () => {
       fireEvent.change(originSelect, { target: { value: alternateSource.id } });
     });
 
@@ -843,7 +1074,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
 
     const packageInput = container.querySelector('input[name="dbt-package"]') as HTMLInputElement;
-    act(() => {
+    await act(async () => {
       fireEvent.focus(packageInput);
       fireEvent.input(packageInput, { target: { value: 'finance' } });
     });
@@ -853,7 +1084,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       )
     ).toBe(false);
 
-    act(() => {
+    await act(async () => {
       fireEvent.focusOut(packageInput);
     });
     expect(onApplyNodeDraft).toHaveBeenCalledTimes(3);
@@ -868,7 +1099,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
   });
 
-  it('shows the connected origin schema consistently in the DBT model inspector', () => {
+  it('shows the connected origin schema consistently in the DBT model inspector', async () => {
     const source: CanonicalNode = {
       ...SOURCE_NODE,
       metadata: {
@@ -885,7 +1116,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       },
     };
 
-    renderNodePanel(
+    await renderNodePanel(
       root,
       model,
       'general',
@@ -908,8 +1139,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(generalSection?.textContent).not.toContain('Select a connected origin');
   });
 
-  it('renders DVT sink target editing in a dedicated Sink tab without duplicating it in General', () => {
-    renderNodePanel(
+  it('renders DVT sink target editing in a dedicated Sink tab without duplicating it in General', async () => {
+    await renderNodePanel(
       root,
       DVT_SINK_NODE,
       'general',
@@ -926,7 +1157,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     );
     expect(generalSection?.querySelector('input[name="dvt-sink-table"]')).toBeNull();
 
-    renderNodePanel(
+    await renderNodePanel(
       root,
       DVT_SINK_NODE,
       'sink',

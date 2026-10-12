@@ -42,6 +42,7 @@ export { buildRunRecoveryService } from './application/RecoverRunApplicationServ
 export { buildRunControlService } from './core/WorkflowEngineCoreService.js';
 export * from './workers/IntentReconcilerWorker.js';
 export * from './domain/startRunIntentPolicy.js';
+export * from './domain/startRunWritePolicy.js';
 
 export * from './outbox/TokenBucketRateLimiter.js';
 

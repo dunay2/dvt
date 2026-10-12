@@ -147,3 +147,5 @@ export type CanvasDraftLifecycle = {
   handleExportProjectSnapshot: () => void;
   handleImportProjectSnapshotFile: (file: File) => Promise<void>;
 };
+
+export type CanvasModelPreviewPreparation = CanvasDraftLifecycle['flushDraftForExecution'];

@@ -6,7 +6,6 @@ last_reviewed: 2026-08-06
 owners:
   - apps/web
 planning_type: proposal
-lane: E
 github_epics:
   - 2228
   - 2236

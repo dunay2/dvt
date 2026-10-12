@@ -82,6 +82,33 @@ describe('CanvasNodeShell', () => {
     expect(openNode).toHaveBeenCalledOnce();
   });
 
+  it('opens from Enter on the card without intercepting controls or repeated keys', () => {
+    const openNode = vi.fn();
+    act(() => {
+      root.render(
+        <CanvasNodeShell
+          contextMenuModel={CONTEXT_MENU_MODEL}
+          shouldShowSourceHandle={false}
+          shouldShowTargetHandle={false}
+          onContextMenuAction={vi.fn()}
+          onOpenNode={openNode}
+        >
+          <button type="button" {...canvasNodeEmbeddedControlProps}>
+            View data
+          </button>
+        </CanvasNodeShell>
+      );
+    });
+    const shell = container.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]')!;
+    expect(shell.tabIndex).toBe(0);
+    act(() => {
+      fireEvent.keyDown(shell, { key: 'Enter' });
+      fireEvent.keyDown(shell, { key: 'Enter', repeat: true });
+      fireEvent.keyDown(container.querySelector('button')!, { key: 'Enter' });
+    });
+    expect(openNode).toHaveBeenCalledOnce();
+  });
+
   it('activates the node on a body click without activating embedded controls', () => {
     const selectNode = vi.fn();
 

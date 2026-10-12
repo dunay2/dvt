@@ -12,8 +12,8 @@ export const dbtCanvasSurfaceStrategy: CanvasSurfaceStrategy = {
     openedFrom: ['canvas-context-menu', 'command-palette'],
   },
   nodeWorkbench: {
-    placement: 'contextual-overlay',
-    openedFrom: ['double-click'],
+    placement: 'right-inspector',
+    openedFrom: ['click', 'double-click'],
     sections: ['properties', 'columns', 'tests', 'lineage', 'preview', 'runs'],
   },
   operationalDrawer: contextualCanvasOperationalDrawerPolicy,

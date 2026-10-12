@@ -1,0 +1,25 @@
+---
+id: R-20260915-TRANSFORM-ROW-PREVIEW
+title: Transform exploration can load an expensive warehouse projection
+status: Open
+date: 2026-09-15
+owners:
+  - dvt-api
+severity: Medium
+probability: Low
+---
+description: >-
+  A semantically valid Transform can still project an expensive upstream query while a user is
+  exploring rows from Canvas. A selected-operation sample can also be misattributed if relation
+  identity or semantic revision changes while a query is in flight.
+mitigations:
+  - Resolve SQL only from the protected current Canvas draft and semantic closure
+  - Execute inside a read-only transaction with a three-second statement timeout
+  - Enforce a default limit of 20 and a maximum limit of 50 at the contract and API boundary
+  - Return stable failures without exposing SQL, credentials or connection authority to the client
+  - Cover timeout, rollback, bounds and live PostgreSQL exploration with automated tests
+  - Require the full semantic digest with selected RelationId and resolve both against the protected
+    draft
+  - Echo selected identity and clear stale or late samples instead of presenting final-Model rows
+  - Block unapplied local conditions and reject unsupported selected subtrees before the database
+    probe

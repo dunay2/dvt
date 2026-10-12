@@ -135,6 +135,44 @@ wire contracts and are not re-exported from `@dvt/contracts`.
    and log pointers. Views must not derive `runId`, `planSha`, attempt, adapter,
    error code, or duration from timeline rows when the snapshot omits them.
 
+## Publication-Bound Result Sample
+
+The #3021 slice reuses `GetRunSnapshot`, `ListWarehouseConnections`, and
+`PreviewWarehouseSourceObjectRows`; it does not restore the retired
+`PreviewRunMaterializationRows` rail. The planning rationale, current-state
+diagram, Fowler matrix, negative tests, and acceptance boundary are recorded in
+[the governing issue](https://github.com/dunay2/dvt/issues/3021#issuecomment-6015596921).
+
+The immutable publication evidence belongs to the selected Run. The mutable
+warehouse table is not historical storage. Result sampling is an explicit,
+bounded read using the evidence's exact connection, schema, relation and expected
+publication token. The existing authorized connection catalog supplies the
+database; the current Canvas graph supplies none of this identity.
+
+The application checks that the Run and active tenant/project/environment agree.
+The backend retains authorization and checks the token and rows within its
+existing consistent-read transaction. A replaced publication is a typed
+`publication_changed` failure, not a request to show the newer rows. The evidence
+remains visible when the sample is replaced, inaccessible or unavailable.
+
+The presentation lifecycle is ephemeral: loading clears any prior rows, navigation
+or scope changes invalidate pending responses, and reopening requires a new read.
+No historical row cache, result store, contract version, SQL endpoint or automatic
+retry is introduced. The existing compact grid renders successful samples with
+their query time and bounded-first-page limitations. Messages are localized in
+English and Spanish.
+
+```mermaid
+flowchart LR
+  Snapshot[GetRunSnapshot A] --> Evidence[Immutable evidence A]
+  Evidence --> Request[Explicit sample with token A]
+  Catalog[ListWarehouseConnections] --> Request
+  Request --> Read[PreviewWarehouseSourceObjectRows]
+  Read --> Verified[Matching token and rows: shared grid]
+  Read --> Unavailable[Changed or denied: no rows]
+  Unavailable --> Evidence
+```
+
 ## State Transitions
 
 The Runs domain has no durable frontend-owned run state. Route state is derived

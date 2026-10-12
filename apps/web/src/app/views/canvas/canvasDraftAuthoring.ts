@@ -129,7 +129,7 @@ function projectDraftEdgeToAuthoringEdge(
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>
 ): WorkspaceGraphAuthoringEdge {
   const canonicalEdge = canonicalEdgeLookup.get(`${edge.sourceId}::${edge.targetId}`);
-  const metadata = withWorkspaceGraphAuthoringEdgeExecutionGate(
+  const gateMetadata = withWorkspaceGraphAuthoringEdgeExecutionGate(
     resolveAuthoringEdgeMetadata({
       canonicalEdge,
       sourceNode: canonicalNodesById.get(edge.sourceId),
@@ -137,6 +137,10 @@ function projectDraftEdgeToAuthoringEdge(
     }),
     edge.executionGate ?? 'open'
   );
+  const metadata =
+    edge.inputBindings == null
+      ? gateMetadata
+      : { ...gateMetadata, inputBindings: edge.inputBindings };
 
   return {
     id: canonicalEdge?.id ?? createAuthoringEdgeId(edge.sourceId, edge.targetId),

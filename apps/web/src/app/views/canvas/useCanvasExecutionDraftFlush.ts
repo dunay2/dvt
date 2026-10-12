@@ -28,8 +28,7 @@ type UseCanvasExecutionDraftFlushArgs = {
   draftRepository: CanvasDraftRepository;
   draftQueryCache: CanvasDraftQueryCache;
   graphDraftState: CanvasAuthoringDraftReadModel | undefined;
-  draftRevision: string | null;
-  draftSyncState: CanvasDraftSession['syncState'];
+  draftSession: CanvasDraftSession;
   currentDraftPayload: WorkspaceGraphAuthoringDraft;
   currentDraftPayloadSignature: string;
   canPersistGraphDraft: boolean;
@@ -58,11 +57,11 @@ function projectFlushGraph(draftState: CanvasAuthoringDraftReadModel) {
 }
 
 async function waitForDraftSaveToSettle(latestFlushInputRef: {
-  current: { draftSyncState: CanvasDraftSession['syncState'] };
+  current: { draftSession: CanvasDraftSession };
 }): Promise<boolean> {
   const startedAt = Date.now();
 
-  while (latestFlushInputRef.current.draftSyncState === 'saving') {
+  while (latestFlushInputRef.current.draftSession.syncState === 'saving') {
     if (Date.now() - startedAt >= DRAFT_SAVE_SETTLE_TIMEOUT_MS) {
       return false;
     }
@@ -79,8 +78,7 @@ export function useCanvasExecutionDraftFlush({
   draftRepository,
   draftQueryCache,
   graphDraftState,
-  draftRevision,
-  draftSyncState,
+  draftSession,
   currentDraftPayload,
   currentDraftPayloadSignature,
   canPersistGraphDraft,
@@ -96,8 +94,7 @@ export function useCanvasExecutionDraftFlush({
     canPersistCurrentDraft,
     currentDraftPayload,
     currentDraftPayloadSignature,
-    draftRevision,
-    draftSyncState,
+    draftSession,
     graphDraftState,
   });
   latestFlushInputRef.current = {
@@ -105,8 +102,7 @@ export function useCanvasExecutionDraftFlush({
     canPersistCurrentDraft,
     currentDraftPayload,
     currentDraftPayloadSignature,
-    draftRevision,
-    draftSyncState,
+    draftSession,
     graphDraftState,
   };
 
@@ -120,7 +116,7 @@ export function useCanvasExecutionDraftFlush({
       };
     }
 
-    if (latest.draftSyncState === 'saving') {
+    if (latest.draftSession.syncState === 'saving') {
       const draftSaveSettled = await waitForDraftSaveToSettle(latestFlushInputRef);
       latest = latestFlushInputRef.current;
       if (!draftSaveSettled) {
@@ -152,17 +148,17 @@ export function useCanvasExecutionDraftFlush({
 
     clearSaveDebounce(refs);
     invalidateInFlightSaveAttempt();
-    markDraftSaving(setDraftSession);
+    markDraftSaving(setDraftSession, latest.draftSession);
     setDraftSaveStatus('saving');
 
     try {
-      if (latest.draftRevision == null) {
+      if (latest.draftSession.draftRevision == null) {
         throw new Error('Cannot flush a draft without a persisted revision.');
       }
 
       const result = await draftRepository.saveGraphDraft({
         draft: latest.currentDraftPayload,
-        expectedRevision: latest.draftRevision,
+        expectedRevision: latest.draftSession.draftRevision,
         idempotencyKey: createDraftIdempotencyKey(),
       });
 

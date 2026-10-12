@@ -15,7 +15,7 @@ code_refs:
   - scripts/run-temporal-postgres-proof.cjs
   - docs/runbooks/temporal-postgres-proof-environment.md
   - docs/planning/state/agent-lane-c.yaml
-  - docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md
 evidence:
   tests:
     - pnpm exec eslint --max-warnings 0 packages/@dvt/adapter-temporal/vitest.config.ts scripts/run-temporal-postgres-proof.cjs

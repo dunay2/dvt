@@ -12,7 +12,6 @@ import {
 } from '@dvt/contracts';
 
 import type { CanonicalEdge } from '../../types/canonical';
-
 export type CanvasDependencyEdgeData = Readonly<{
   kind: 'dependency';
   sourceId: string;

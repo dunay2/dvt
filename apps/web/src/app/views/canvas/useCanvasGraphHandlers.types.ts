@@ -1,12 +1,12 @@
 import type { Edge, Node, ReactFlowProps } from '@xyflow/react';
 import type {
   GraphNodeCalculatedColumnIdentity,
-  GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeInputMapping,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnPortIdentity,
   GraphNodeStructuredFieldIdentity,
 } from '../../plugins/graph/graphNodeColumnContracts';
-import type { CanvasColumnLineageEdgeData } from './canvasColumnLineageProjection';
+import { type CanvasColumnLineageEdgeData } from './canvasColumnLineageEdgeModel';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import type {
@@ -42,15 +42,14 @@ export type UseCanvasGraphHandlersResult = {
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
   activeColumnHandleId: string | null;
   handleColumnPortActivate: (identity: GraphNodeColumnPortIdentity) => void;
-  handleApplyCanvasColumnFunction: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  handleMapCanvasInput: (identity: GraphNodeInputMapping) => void;
+  handleRemoveCanvasInput: (identity: GraphNodeInputMapping) => void;
   handleApplyCanvasStructuredField: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   handleAddCanvasCalculatedColumn: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   handleToggleCanvasColumnOutput: (identity: {
     nodeId: string;
     columnId: string;
@@ -65,10 +64,7 @@ export type UseCanvasGraphHandlersResult = {
     parentColumnId?: string;
   }) => void;
   handleColumnDisclosureChange: (nodeId: string, expanded: boolean) => void;
-  handleAutomapCanvasColumns: (
-    nodeId: string,
-    columns: readonly Readonly<{ name: string; type: string }>[]
-  ) => void;
+  handleColumnViewChange: (nodeId: string, view: 'input' | 'output') => void;
   handleRemoveColumnMapping: (mapping: CanvasColumnLineageEdgeData) => void;
   resolveCanvasAlgebraicCompositionOperations: (
     identity: CanvasAlgebraicCompositionIdentity

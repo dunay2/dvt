@@ -16,24 +16,6 @@ test('source import live proof starts the API without the package predev lifecyc
   ]);
 });
 
-test('source import live proof starts with tenant project-creation authority and no phantom projects', () => {
-  const runner = new CanvasSourceImportLiveProofRunner({});
-
-  assert.deepEqual(runner.buildInitialTenantAccess('tenant-a', ['project:create']), [
-    {
-      tenantId: 'tenant-a',
-      allowedActions: ['project:create'],
-      projectAccess: [],
-    },
-  ]);
-});
-
-test('source import live proof rejects an empty tenant id for its initial grant', () => {
-  const runner = new CanvasSourceImportLiveProofRunner({});
-
-  assert.throws(() => runner.buildInitialTenantAccess('', ['project:create']), /tenant id/);
-});
-
 test('source import live proof exposes each workspace option once', () => {
   const runner = new CanvasSourceImportLiveProofRunner({});
 
@@ -73,6 +55,7 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
         environmentId: 'test',
       },
       sourceImportRunId: 'run-1',
+      postgresDatabaseName: 'dvt_proof_source_import_1234',
     },
     'win32'
   );
@@ -88,6 +71,7 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceProjectId, 'proof-project-b');
   assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceEnvironmentId, 'test');
   assert.equal(invocation.options.env.CYPRESS_apiBearerToken, 'test-token');
+  assert.equal(invocation.options.env.CYPRESS_postgresDatabaseName, 'dvt_proof_source_import_1234');
   assert.equal(invocation.options.env.CYPRESS_requireLiveProtectedRuntime, '1');
   assert.match(
     invocation.args[invocation.args.indexOf('--spec') + 1],
@@ -115,6 +99,7 @@ test('source import live proof retains the isolated Docker Cypress lane on POSIX
         environmentId: 'test',
       },
       sourceImportRunId: 'run-1',
+      postgresDatabaseName: 'dvt_proof_source_import_1234',
     },
     'linux'
   );
@@ -126,8 +111,13 @@ test('source import live proof retains the isolated Docker Cypress lane on POSIX
   assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceTenantId=tenant-a'));
   assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceProjectId=proof-project-b'));
   assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceEnvironmentId=test'));
+  assert.ok(invocation.args.includes('CYPRESS_postgresDatabaseName=dvt_proof_source_import_1234'));
   assert.ok(invocation.args.includes(runner.cypressImage));
   assert.ok(invocation.args.includes(runner.specPath));
+  assert.deepEqual(
+    runner.specPath.split(',').map((specPath) => specPath.split('/').pop()),
+    ['canvas-source-identity-live.cy.ts', 'canvas-source-import-live-clean.cy.ts']
+  );
 });
 
 test('source import live proof uses an explicit local Temporal test server binary', async () => {

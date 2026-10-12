@@ -33,7 +33,7 @@ mitigations:
     component public API, invariants, lifecycle transitions, consumers, and extension rules so the
     semantic boundary is not only encoded in source layout.
   - >
-    docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
+    https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
     records the Fowler-style review, mature-system comparison, detected anti-patterns, drift fixes,
     and future lessons for similar owner-package migrations.
   - >

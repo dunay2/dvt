@@ -18,7 +18,7 @@ code_refs:
   - apps/web/src/app/ports/plans.ts
   - apps/web/src/app/services/plans/plansService.api.ts
   - apps/web/src/app/views/canvas/previewGraphSource.ts
-  - docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md
 evidence:
   tests:
     - pnpm --filter @dvt/contracts build

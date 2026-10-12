@@ -26,8 +26,6 @@ later active document explicitly promotes one of them.
 - [DVT Dependency Risk Map](./dvt-dependency-risk-map.md)
 - [DVT System Map - God Diagram](./dvt-system-map-god-diagram.md)
 - [DVT Execution Model](./dvt-execution-model.md)
-- [Execution State](./execution-state.md)
-- [Handbook State](./handbook-state.md)
 
 ## Consolidated References
 

@@ -1,6 +1,13 @@
-/** Owned concern: prove Canvas authoring field budgets in a visible browser. */
+/**
+ * Owned concern: prove Canvas authoring field budgets through current Properties controls.
+ * @baseline GH-3578: invalid drafts remain visible and cannot reach persistence.
+ * @decision Retain IME, locale, name and PostgreSQL identifier negatives on the real UI.
+ * @consequence Corrected values must survive the stateful save and reopen boundary.
+ * @version 1.0.0
+ */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -48,6 +55,7 @@ function visitReadyCanvas(): void {
   waitForE2eApiCall('/healthz', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  cy.get('.react-flow__controls-fitview').click();
 }
 
 describe('Canvas authoring field budgets', () => {
@@ -63,10 +71,7 @@ describe('Canvas authoring field budgets', () => {
 
     visitReadyCanvas();
 
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    openWorkbenchProperties('dvt-transform-1');
 
     const composed = 'Órdenes 😀';
     cy.get('input[name="node-name"]')
@@ -153,22 +158,21 @@ describe('Canvas authoring field budgets', () => {
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     visitReadyCanvas();
-    cy.get(
-      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
-    ).dblclick();
-    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    openWorkbenchProperties('dvt-transform-1');
     cy.get('input[name="node-name"]').should('have.value', 'Orders 2026');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
-    cy.get('.react-flow__node[data-id=source-1] [data-slot=canvas-node-shell]').dblclick();
+    openWorkbenchProperties('source-1');
+    cy.get('input[name=dvt-source-alias]').clear();
     cy.get('input[name=dvt-source-alias]')
-      .clear()
+      .should('have.value', '')
       .type(' orders_source ')
       .should('have.value', ' orders_source ')
       .and('have.attr', 'aria-invalid', 'true');
     cy.contains('PostgreSQL identifiers cannot start or end with whitespace.').should('be.visible');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).should('be.disabled');
-    cy.get('input[name=dvt-source-alias]').clear().type('orders_source_v2');
+    cy.get('input[name=dvt-source-alias]').clear();
+    cy.get('input[name=dvt-source-alias]').should('have.value', '').type('orders_source_v2');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -182,16 +186,18 @@ describe('Canvas authoring field budgets', () => {
     });
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
-    cy.get('.react-flow__node[data-id=sink-1] [data-slot=canvas-node-shell]').dblclick();
+    openWorkbenchProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
+    cy.get('input[name=dvt-sink-schema]').clear();
     cy.get('input[name=dvt-sink-schema]')
-      .clear()
+      .should('have.value', '')
       .type(' marts ')
       .should('have.value', ' marts ')
       .and('have.attr', 'aria-invalid', 'true');
     cy.contains('PostgreSQL identifiers cannot start or end with whitespace.').should('be.visible');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).should('be.disabled');
-    cy.get('input[name=dvt-sink-schema]').clear().type('marts_v2');
+    cy.get('input[name=dvt-sink-schema]').clear();
+    cy.get('input[name=dvt-sink-schema]').should('have.value', '').type('marts_v2');
     cy.contains('[data-slot=canvas-node-workbench-panel] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
       const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT')
@@ -206,10 +212,10 @@ describe('Canvas authoring field budgets', () => {
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
     visitReadyCanvas();
-    cy.get('.react-flow__node[data-id=source-1] [data-slot=canvas-node-shell]').dblclick();
+    openWorkbenchProperties('source-1');
     cy.get('input[name=dvt-source-alias]').should('have.value', 'orders_source_v2');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
-    cy.get('.react-flow__node[data-id=sink-1] [data-slot=canvas-node-shell]').dblclick();
+    openWorkbenchProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
     cy.get('input[name=dvt-sink-schema]').should('have.value', 'marts_v2');
   });

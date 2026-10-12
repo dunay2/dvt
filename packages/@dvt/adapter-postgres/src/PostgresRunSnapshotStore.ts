@@ -418,6 +418,26 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
     }
   }
 
+  /** The run lock is held through the caller's canonical commit, including a lagging snapshot's tail. */
+  async readCanonicalStatusWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId
+  ): Promise<WorkflowSnapshot['status'] | null> {
+    await this.acquireRunLock(client, runId);
+    const metadata = await client.query<{ present: boolean }>(
+      `SELECT EXISTS (SELECT 1 FROM ${quoteIdentifier(this.schema)}.run_metadata WHERE tenant_id = $1 AND run_id = $2) AS present`,
+      [tenantId, runId]
+    );
+    if (metadata.rows[0]?.present !== true) return null;
+    const head = await client.query<MaxSeqRow>(
+      `SELECT COALESCE(MAX(run_seq), 0) AS max_seq FROM ${quoteIdentifier(this.schema)}.run_events WHERE tenant_id = $1 AND run_id = $2`,
+      [tenantId, runId]
+    );
+    const sequence = parsePersistedRunSequence(head.rows[0]?.max_seq ?? 0, runId);
+    return (await this.buildValidationSnapshotWithClient(client, tenantId, runId, sequence)).status;
+  }
+
   async persistWithClient(
     client: PoolClient,
     tenantId: string,

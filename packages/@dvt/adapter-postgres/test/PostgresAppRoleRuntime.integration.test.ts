@@ -64,12 +64,10 @@ describeIfPg('Postgres app-role adapter runtime', () => {
     const adminIntentStore = new PostgresStartRunIntentStore({
       connectionString: harness.connections.adminConnectionString,
       schema,
-      now: () => POSTGRES_RLS_PROOF_NOW,
     });
     const appIntentStore = new PostgresStartRunIntentStore({
       connectionString: harness.connections.appConnectionString,
       schema,
-      now: () => POSTGRES_RLS_PROOF_NOW,
       assumeSchemaReady: true,
     });
 
@@ -79,25 +77,24 @@ describeIfPg('Postgres app-role adapter runtime', () => {
       await expectAppRoleTablePrivilege(harness, schema, 'start_run_intents', 'DELETE', false);
       await expectSchemaMigrationsInsertDenied(harness, schema);
 
-      const created = await appIntentStore.createIntent({
+      const created = await appIntentStore.claimIntent({
         intentId: 'intent-app-role-a',
         tenantId: 'tenant-a',
         runId: 'run-intent-app-role-a',
         provider: 'temporal',
         createdAt: POSTGRES_RLS_PROOF_NOW,
       });
-      expect(created.status).toBe('PENDING');
+      if (created.kind !== 'acquired') throw new Error('Expected exclusive claim');
+      expect(created.intent.status).toBe('PENDING');
+      await appIntentStore.authorizeDispatch(created.receipt);
 
-      await appIntentStore.markDispatched(
-        { tenantId: 'tenant-a', intentId: 'intent-app-role-a' },
-        {
-          provider: 'temporal',
-          tenantId: 'tenant-a',
-          workflowId: 'wf-app-role-a',
-          runId: 'run-intent-app-role-a',
-          namespace: 'default',
-        }
-      );
+      await appIntentStore.markDispatched(created.receipt, {
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        workflowId: 'wf-app-role-a',
+        runId: 'run-intent-app-role-a',
+        namespace: 'default',
+      });
 
       await expect(
         appIntentStore.getIntent({ tenantId: 'tenant-b', intentId: 'intent-app-role-a' })
@@ -148,3 +145,32 @@ async function expectAppRoleTablePrivilege(
     expect(result.rows[0]?.has_privilege).toBe(expected);
   });
 }
+
+describeIfPg('PostgreSQL bigint DIVIDE semantics', () => {
+  const harness = usePostgresRlsProofHarness('dvt_divide_semantics_it');
+
+  it('truncates integer division toward zero', async () => {
+    await harness.withAppClient(async (client) => {
+      const result = await client.query<{ quotient: string }>(
+        `SELECT ('-5'::bigint / '2'::bigint) AS quotient`
+      );
+      expect(result.rows[0]?.quotient).toBe('-2');
+    });
+  });
+
+  it('raises division_by_zero for a zero bigint divisor', async () => {
+    await harness.withAppClient(async (client) => {
+      await expect(client.query(`SELECT '1'::bigint / '0'::bigint`)).rejects.toMatchObject({
+        code: '22012',
+      });
+    });
+  });
+
+  it('raises numeric_value_out_of_range for INT64_MIN divided by -1', async () => {
+    await harness.withAppClient(async (client) => {
+      await expect(
+        client.query(`SELECT '-9223372036854775808'::bigint / '-1'::bigint`)
+      ).rejects.toMatchObject({ code: '22003' });
+    });
+  });
+});

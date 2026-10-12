@@ -1,16 +1,48 @@
-/** Owned concern: shared local validation plan definitions and execution helpers. */
+/**
+ * Owned concern: shared local validation plan definitions and execution helpers.
+ * @baseline Local Changed Files Gate: keep every affected check and its execution semantics.
+ * @decision Reject static defects after governance admission and before expensive tests.
+ * @consequence Fail earlier without changing test selection, isolation or success receipts.
+ * @version 1.0.0
+ */
 const path = require('node:path');
 const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
+const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
 const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/lib/git-repository-environment.cjs': 'scripts/lib/git-repository-environment.test.cjs',
+  'scripts/lib/git-repository-environment.test.cjs':
+    'scripts/lib/git-repository-environment.test.cjs',
+  'scripts/check-feature-mechanization.cjs': 'scripts/check-feature-mechanization.test.cjs',
+  'scripts/check-feature-mechanization.test.cjs': 'scripts/check-feature-mechanization.test.cjs',
+  'scripts/lib/feature-mechanization-manifest.cjs': 'scripts/check-feature-mechanization.test.cjs',
+  'scripts/lib/feature-mechanization-db-reader.cjs':
+    'scripts/lib/feature-mechanization-db-reader.test.cjs',
+  'scripts/lib/feature-mechanization-db-reader.test.cjs':
+    'scripts/lib/feature-mechanization-db-reader.test.cjs',
+  'scripts/lib/feature-mechanization-git-diff.cjs':
+    'scripts/lib/feature-mechanization-git-diff.test.cjs',
+  'scripts/lib/feature-mechanization-git-diff.test.cjs':
+    'scripts/lib/feature-mechanization-git-diff.test.cjs',
+  'scripts/feature-mechanization-test-routing.test.cjs':
+    'scripts/feature-mechanization-test-routing.test.cjs',
   'scripts/ai-preflight.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/ai-preflight.test.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/closeout-changed.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/closeout-changed.test.cjs': 'scripts/closeout-changed.test.cjs',
+  'scripts/run-selected-closure-live-proof.cjs': 'scripts/run-selected-closure-live-proof.test.cjs',
+  'scripts/run-selected-closure-live-proof.test.cjs':
+    'scripts/run-selected-closure-live-proof.test.cjs',
+  'scripts/run-selected-closure-cypress.cjs': 'scripts/run-selected-closure-cypress.test.cjs',
+  'scripts/run-selected-closure-cypress.test.cjs': 'scripts/run-selected-closure-cypress.test.cjs',
+  'scripts/live-proof-process.cjs': 'scripts/live-proof-process.test.cjs',
+  'scripts/live-proof-process.test.cjs': 'scripts/live-proof-process.test.cjs',
+  'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
+  'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
   'scripts/check-governance-unit-coverage.test.cjs':
     'scripts/check-governance-unit-coverage.test.cjs',
@@ -67,6 +99,14 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/catalog-reconciliation.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/catalog-reconciliation-write.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/catalog-reconciliation.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/feature-mechanization-evidence-retirement.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/feature-mechanization-retirement.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-parse.test.cjs':
     'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-plan.test.cjs':
@@ -91,9 +131,12 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-query-tests/fowler-analysis.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/governance-refresh.test.cjs':
     'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/source-drift.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/helpers.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/component-integrity-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/rail-vocabulary-query.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db/queries/source-drift-query.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db/queries/code-symbol-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-run.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-run.test.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-surface-inventory-check.cjs':
@@ -107,6 +150,10 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
 
 function step(id, command, ...args) {
   return Object.freeze({ id, command, args });
+}
+
+function testStep(id, command, ...args) {
+  return Object.freeze({ ...step(id, command, ...args), kind: 'test' });
 }
 
 const MECHANICAL_PREPUSH_STEPS = Object.freeze([step('verify-changed', 'pnpm', 'verify:changed')]);
@@ -124,24 +171,24 @@ const VERIFY_CHANGED_PRE_TEST_STEPS = Object.freeze([
   step('qa-artifact-check', 'pnpm', 'qa:artifact:check'),
   step('lint-md-changed', 'pnpm', 'lint:md:changed'),
   step('feature-mechanization-implementation', 'pnpm', 'docs:feature-mechanization:implementation'),
+  step('check-changed', 'node', 'scripts/check-changed.cjs'),
 ]);
 
 const VERIFY_CHANGED_POST_TEST_STEPS = Object.freeze([
-  step('check-changed', 'node', 'scripts/check-changed.cjs'),
   step('forbidden-tracked-files', 'node', 'scripts/check-forbidden-tracked-files.cjs'),
 ]);
 
 const PREPUSH_GROUPS = Object.freeze({
   fullOnly: Object.freeze([
-    step('test-closeout-changed', 'pnpm', 'test:closeout-changed'),
-    step('test-verify-prepush', 'pnpm', 'test:verify-prepush'),
-    step(
+    testStep('test-closeout-changed', 'pnpm', 'test:closeout-changed'),
+    testStep('test-verify-prepush', 'pnpm', 'test:verify-prepush'),
+    testStep(
       'test-generated-docs-policy',
       'node',
       '--test',
       'scripts/check-generated-docs-policy.test.cjs'
     ),
-    step('test-pr-closeout', 'pnpm', 'test:pr-closeout'),
+    testStep('test-pr-closeout', 'pnpm', 'test:pr-closeout'),
   ]),
   planningDb: Object.freeze([
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
@@ -188,16 +235,16 @@ const PREPUSH_GROUPS = Object.freeze({
 });
 
 const VERIFY_CHANGED_GROUPS = Object.freeze({
-  web: Object.freeze([step('test-web-changed', 'pnpm', 'test:web:changed')]),
+  web: Object.freeze([testStep('test-web-changed', 'pnpm', 'test:web:changed')]),
   planningDb: Object.freeze([
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
     step('planning-db-integrity-check', 'pnpm', 'planning:db:integrity:check'),
-    step('test-planning-db-current-schema', 'pnpm', 'test:planning:db:current-schema'),
-    step('test-planning-db', 'pnpm', 'test:planning:db'),
+    testStep('test-planning-db-current-schema', 'pnpm', 'test:planning:db:current-schema'),
+    testStep('test-planning-db', 'pnpm', 'test:planning:db'),
   ]),
   developerWorkflowSelfTest: Object.freeze([
-    step('test-verify-changed', 'node', '--test', 'scripts/verify-changed.test.cjs'),
-    step('test-verify-prepush', 'node', '--test', 'scripts/verify-prepush.test.cjs'),
+    testStep('test-verify-changed', 'node', '--test', 'scripts/verify-changed.test.cjs'),
+    testStep('test-verify-prepush', 'node', '--test', 'scripts/verify-prepush.test.cjs'),
   ]),
 });
 
@@ -245,7 +292,7 @@ function planningWorkflowTestSteps(changedFiles) {
     .filter((filePath) => Object.hasOwn(PLANNING_WORKFLOW_SCRIPT_TESTS, filePath))
     .map((filePath) => {
       const testPath = PLANNING_WORKFLOW_SCRIPT_TESTS[filePath];
-      return step(`test-${path.basename(testPath, '.test.cjs')}`, 'node', '--test', testPath);
+      return testStep(`test-${path.basename(testPath, '.test.cjs')}`, 'node', '--test', testPath);
     });
 }
 
@@ -270,7 +317,7 @@ function ciToolingTestSteps(changedFiles) {
     .map(ciToolingTestPathFor)
     .filter((testPath) => testPath !== null)
     .map((testPath) =>
-      step(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
+      testStep(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
     );
 }
 
@@ -283,7 +330,7 @@ function documentationPublicationTestSteps(changedFiles) {
   );
   return relevant
     ? [
-        step(
+        testStep(
           'test-documentation-publication',
           'node',
           '--test',
@@ -294,7 +341,20 @@ function documentationPublicationTestSteps(changedFiles) {
 }
 
 function hasWebChange(changedFiles) {
-  return changedFiles.some((filePath) => filePath.startsWith('apps/web/'));
+  return changedFiles.some(
+    (filePath) =>
+      filePath.startsWith('apps/web/') ||
+      [
+        'apps/api/package.json',
+        'apps/api/vitest.integration.config.ts',
+        'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
+        '.github/workflows/test.yml',
+        'scripts/run-selected-closure-live-proof.cjs',
+        'scripts/run-selected-closure-cypress.cjs',
+        'scripts/live-proof-process.cjs',
+        'tools/ci/run-web-cypress-native.mjs',
+      ].includes(filePath)
+  );
 }
 
 function hasDeveloperWorkflowVerifierChange(changedFiles) {
@@ -392,6 +452,15 @@ function buildVerifyChangedPlan(files) {
 function buildFocusedChangedTestPlan(files) {
   const changedFiles = normalizeChangedFiles(files);
   const plan = [];
+  if (
+    changedFiles.includes('scripts/check-changed.cjs') ||
+    changedFiles.includes('scripts/check-changed.test.cjs')
+  ) {
+    pushStepOnce(
+      plan,
+      testStep('test-check-changed', 'node', '--test', 'scripts/check-changed.test.cjs')
+    );
+  }
   const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));
@@ -442,6 +511,7 @@ function executeCommandPlan(plan, options = {}) {
       cwd: options.repoRootPath || repoRoot,
       shell: options.shell ?? true,
       stdio: 'inherit',
+      ...(nextStep.kind === 'test' ? { env: createGitRepositoryEnvironment() } : {}),
     });
 
     if (result.error) {

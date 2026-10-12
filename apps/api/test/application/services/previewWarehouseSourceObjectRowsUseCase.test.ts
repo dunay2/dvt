@@ -44,7 +44,8 @@ describe('PreviewWarehouseSourceObjectRowsUseCase', () => {
         ],
         rows: [{ values: ['1', 'Ada'] }],
         truncated: false,
-        sampledAt: '2026-08-17T10:00:00.000Z',
+        queriedAt: '2026-08-17T10:00:00.000Z',
+        navigation: 'bounded-first-page' as const,
       })),
     };
     const useCase = new PreviewWarehouseSourceObjectRowsUseCase(catalog(), probe);
@@ -76,7 +77,23 @@ describe('PreviewWarehouseSourceObjectRowsUseCase', () => {
       rows: [{ values: ['1', 'Ada'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      provenance: {
+        mode: 'live',
+        sourceRefs: [
+          {
+            schemaVersion: 'connected-source-ref.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              connectionId: connection.id,
+              provider: 'postgres',
+            },
+            sourceObjectId: 'relation/dvt/public/orders',
+          },
+        ],
+        queriedAt: '2026-08-17T10:00:00.000Z',
+        limit: 20,
+        navigation: 'bounded-first-page',
+      },
     });
     expect(result).not.toHaveProperty('credentialRef');
   });

@@ -1,6 +1,6 @@
 /** Owned concern: adapt one editable file-backed dbt node to the generic node workbench port. */
 import { DbtYamlDescriptionEditor } from '../../components/dbtYamlDescriptionEditor/DbtYamlDescriptionEditor';
-import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
+import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesContracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';

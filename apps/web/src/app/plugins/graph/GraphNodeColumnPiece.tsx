@@ -1,4 +1,4 @@
-/** Owned concern: render one graph-node column piece and its factual metadata tooltip. */
+/** Owned concern: render one graph-node column piece and its compact type tooltip. */
 import { ArrowRight, Check } from 'lucide-react';
 import {
   forwardRef,
@@ -12,8 +12,10 @@ import { TooltipContent } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
+import { useGraphColumnOutputFocus } from './useGraphColumnOutputFocus';
+import { writeGraphColumnTransfer } from './graphColumnTransfer';
 
 export type GraphNodeColumnCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
 
@@ -23,6 +25,8 @@ type GraphNodeColumnPieceProps = Readonly<
     isOutput: boolean;
     canReorder: boolean;
     outputToggleDisabled: boolean;
+    showSourceName?: boolean;
+    view?: 'input' | 'output';
     copy: GraphNodeColumnCopy;
     onDragStart: DragEventHandler<HTMLDivElement>;
     onDragEnd: () => void;
@@ -40,6 +44,8 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       copy,
       canReorder,
       outputToggleDisabled,
+      showSourceName,
+      view,
       onDragStart,
       onDragEnd,
       onOutputToggle,
@@ -47,9 +53,16 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       onNestedColumnReorder,
       ...elementProps
     } = props;
+    const displayedName =
+      showSourceName === true && column.sourceNodeName != null
+        ? `${column.sourceNodeName}.${column.name}`
+        : column.name;
     const accessibleLabel = (
-      isOutput ? copy.columnOutputAriaLabelTemplate : copy.columnAvailableInputAriaLabelTemplate
-    ).replace('{column}', column.name);
+      view !== 'input' && isOutput
+        ? copy.columnOutputAriaLabelTemplate
+        : copy.columnAvailableInputAriaLabelTemplate
+    ).replace('{column}', displayedName);
+    const outputFocus = useGraphColumnOutputFocus();
 
     return (
       <div
@@ -58,17 +71,31 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         ref={ref}
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
-        data-output={String(isOutput)}
+        data-field-id={column.id}
+        data-output={view === 'input' ? undefined : String(isOutput)}
         tabIndex={0}
         aria-label={accessibleLabel}
-        draggable={canReorder}
-        onDragStart={onDragStart}
+        draggable={
+          canReorder ||
+          (view !== 'input' && isOutput && nodeId != null && column.sourceHandleId != null)
+        }
+        onDragStart={(event) => {
+          if (view !== 'input' && isOutput && nodeId != null) {
+            event.stopPropagation();
+            writeGraphColumnTransfer(event, nodeId, column);
+          }
+          onDragStart(event);
+        }}
         onDragEnd={onDragEnd}
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (
           <span data-slot="graph-node-column-alias" className="flex min-w-0 items-center gap-1.5">
-            <span className={graphNodeColumnClasses.sourceName}>{column.sourceFieldName}</span>
+            <span className={graphNodeColumnClasses.sourceName}>
+              {showSourceName === true && column.sourceNodeName != null
+                ? `${column.sourceNodeName}.${column.sourceFieldName}`
+                : column.sourceFieldName}
+            </span>
             <ArrowRight
               aria-hidden="true"
               className={graphNodeColumnClasses.aliasArrow}
@@ -77,7 +104,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
             <span className={graphNodeColumnClasses.name}>{column.name}</span>
           </span>
         ) : (
-          <span className={graphNodeColumnClasses.name}>{column.name}</span>
+          <span className={graphNodeColumnClasses.name}>{displayedName}</span>
         )}
         <span className={graphNodeColumnClasses.metadata}>
           <span className={graphNodeColumnClasses.type}>{column.type}</span>
@@ -87,27 +114,34 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
           {column.nullable === false ? (
             <span className={graphNodeColumnClasses.constraint}>NN</span>
           ) : null}
-          <button
-            type="button"
-            data-slot="graph-node-column-output-state"
-            {...canvasNodeEmbeddedControlProps}
-            aria-label={accessibleLabel}
-            aria-pressed={isOutput}
-            disabled={outputToggleDisabled}
-            className={graphNodeColumnClasses.outputState}
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOutputToggle();
-            }}
-          >
-            {isOutput ? (
-              <Check
-                data-slot="graph-node-column-output-check"
-                className={graphNodeColumnClasses.outputCheck}
-              />
-            ) : null}
-          </button>
+          {view != null ? null : (
+            <button
+              type="button"
+              data-slot="graph-node-column-output-state"
+              {...canvasNodeEmbeddedControlProps}
+              aria-label={accessibleLabel}
+              aria-pressed={isOutput}
+              aria-disabled={outputToggleDisabled}
+              className={graphNodeColumnClasses.outputState}
+              onPointerDown={(event) => {
+                outputFocus.capturePointerFocus(event.currentTarget);
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (outputToggleDisabled) return;
+                onOutputToggle();
+                outputFocus.retainFocus(event.currentTarget);
+              }}
+            >
+              {isOutput ? (
+                <Check
+                  data-slot="graph-node-column-output-check"
+                  className={graphNodeColumnClasses.outputCheck}
+                />
+              ) : null}
+            </button>
+          )}
         </span>
         {column.children == null ? null : (
           <GraphNodeColumnChildren
@@ -122,64 +156,10 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
   }
 );
 
-export function GraphNodeColumnTooltip(props: {
-  column: GraphNodeColumn;
-  isOutput: boolean;
-  copy: GraphNodeColumnCopy;
-}): ReactElement {
-  const { column, copy } = props;
-  const lineage = resolveColumnLineage(column);
-  const rows = [
-    { label: copy.columnTypeLabel, value: column.type },
-    ...(column.nullable == null
-      ? []
-      : [
-          {
-            label: copy.columnNullabilityLabel,
-            value: column.nullable ? copy.columnNullableValue : copy.columnNotNullValue,
-          },
-        ]),
-    ...(column.sourceNodeName == null
-      ? []
-      : [{ label: copy.columnOriginLabel, value: column.sourceNodeName }]),
-    ...(column.reference == null
-      ? []
-      : [{ label: copy.columnReferenceLabel, value: column.reference }]),
-    ...(lineage == null ? [] : [{ label: copy.columnLineageLabel, value: lineage }]),
-    ...(column.description == null
-      ? []
-      : [{ label: copy.columnCommentLabel, value: column.description }]),
-    {
-      label: copy.columnsLabel,
-      value: props.isOutput ? copy.columnOutputValue : copy.columnAvailableInputValue,
-    },
-  ];
-
+export function GraphNodeColumnTooltip(props: { type: GraphNodeColumn['type'] }): ReactElement {
   return (
     <TooltipContent side="right" sideOffset={8} className={graphNodeColumnClasses.tooltip}>
-      <dl className={graphNodeColumnClasses.tooltipRows}>
-        {rows.map((row) => (
-          <div key={row.label} className={graphNodeColumnClasses.tooltipRow}>
-            <dt className={graphNodeColumnClasses.tooltipLabel}>{row.label}</dt>
-            <dd className={graphNodeColumnClasses.tooltipValue}>{row.value}</dd>
-          </div>
-        ))}
-      </dl>
+      {props.type}
     </TooltipContent>
   );
-}
-
-function resolveColumnLineage(column: GraphNodeColumn): string | null {
-  if (column.sourceFieldName == null) return null;
-  const operations = column.operations ?? [];
-  if (operations.length === 0 && column.sourceFieldName === column.name) return null;
-
-  let expression = column.sourceFieldName;
-  const lineage = [expression];
-  operations.forEach((operation) => {
-    expression = `${operation.toUpperCase()}(${expression})`;
-    lineage.push(expression);
-  });
-  lineage.push(column.name);
-  return lineage.join(' → ');
 }

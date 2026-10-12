@@ -8,7 +8,7 @@ last_reviewed: 2026-04-04
 # API Control-Plane Technical Manual
 
 This manual defines the target technical posture for API runtime safety,
-admission, RBAC, and observability under Lane C (`AR-C1`, `AR-C2`, `AR-C3`,
+admission, RBAC, and observability for the existing tasks (`AR-C1`, `AR-C2`, `AR-C3`,
 `AR-C4`).
 
 ## Architectural Intent
@@ -136,7 +136,7 @@ Instrumentation-negative review scenarios (documentation gate):
 
 ## Delivery Gate
 
-A Lane C change is not complete unless:
+A runtime change is not complete unless:
 
 - invariants above are reflected in tests
 - at least one negative case per changed boundary exists

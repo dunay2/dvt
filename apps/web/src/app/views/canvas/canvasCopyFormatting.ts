@@ -122,6 +122,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtAliasRequired;
     case 'dvt_alias_duplicate':
       return copy.inspectorErrorDvtAliasDuplicate;
+    case 'dvt_semantic_field_invalid':
+      return copy.inspectorErrorDvtSemanticFieldInvalid;
     case 'dvt_identifier_invalid':
       return copy.inspectorErrorDvtIdentifierInvalid;
     case 'dvt_identifier_too_long':
@@ -136,6 +138,8 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtMaterializationInvalid;
     case 'dvt_write_mode_invalid':
       return copy.inspectorErrorDvtWriteModeInvalid;
+    case 'dvt_relational_authoring_draft_invalid':
+      return copy.inspectorErrorDvtVisualRecipeInvalid;
     case 'object_file_storage_uri_invalid':
       return copy.inspectorErrorObjectFileStorageUriInvalid;
     case 'object_file_sha256_invalid':
@@ -220,6 +224,8 @@ export function formatCanvasConnectionRejection(
   const copy = resolveCanvasViewCopy(locale);
 
   switch (rejection.code) {
+    case 'graph_changed':
+      return copy.connectionGraphChangedMessage;
     case 'connection_incomplete':
       return copy.connectionIncompleteMessage;
     case 'node_not_found_in_graph':

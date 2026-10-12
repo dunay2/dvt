@@ -20,6 +20,38 @@ function buildCanonicalNode(
 }
 
 describe('buildCanvasAuthoringGraphProjection', () => {
+  it('overlays local Input bindings on persisted and new dependencies without changing their identity', () => {
+    const nodes = [
+      buildCanonicalNode('producer', 'dvt:source', 'input'),
+      buildCanonicalNode('consumer', 'dvt:transform', 'transform'),
+    ];
+    const edge = {
+      id: 'persisted',
+      sourceId: 'producer',
+      targetId: 'consumer',
+      relation: 'lineage' as const,
+      metadata: { retained: true, inputBindings: { version: 'v1', fields: [] } },
+    };
+    const inputBindings = {
+      version: 'v1' as const,
+      fields: [{ inputId: 'slot', producerFieldId: 'country' }],
+    };
+    const args = {
+      visibleNodeIds: nodes.map((node) => node.id),
+      visibleEdges: [{ ...edge, inputBindings }],
+      localCanonicalNodes: nodes,
+    };
+    expect(
+      buildCanvasAuthoringGraphProjection({
+        ...args,
+        draftSemanticGraph: { canonicalNodes: nodes, canonicalEdges: [edge] },
+      }).canonicalEdges[0]
+    ).toEqual({ ...edge, metadata: { retained: true, inputBindings } });
+    expect(
+      buildCanvasAuthoringGraphProjection({ ...args, draftSemanticGraph: null }).canonicalEdges[0]
+        ?.metadata?.inputBindings
+    ).toEqual(inputBindings);
+  });
   it('overlays route-local node overrides onto protected draft semantics when node ids match', () => {
     const protectedSemanticGraph = {
       canonicalNodes: [

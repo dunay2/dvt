@@ -22,7 +22,7 @@ mitigation:
     - docs/evidence/ED-20260908-algebraic-derived-output.md
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
     - apps/web/src/app/views/canvas/canvasColumnFunctionAuthoring.test.ts
-    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - apps/web/src/app/views/canvas/canvasProjectionFunctionComposition.test.ts
     - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   follow_up:
     - Further arities or functions require their own governed capability admission and target proof.

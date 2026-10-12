@@ -121,6 +121,7 @@ const PACKAGE_PREFIX_DOMAINS = [
 ];
 
 const SCRIPT_FILE_RULES = [
+  [/^scripts\/(run-selected-closure-cypress|live-proof-process)\.cjs$/u, 'test-tooling'],
   [/^scripts\/build-workspace-runtime-deps\.cjs$/u, 'runtime-root'],
   [/^scripts\/run-turbo-workspace-task\.cjs$/u, 'runtime-root'],
   [/^scripts\/skip-pre(build|test)-if-.+\.cjs$/u, 'runtime-root'],
@@ -150,10 +151,11 @@ const SCRIPT_FILE_RULES = [
     /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|(docs|documentation)-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(ai-efficiency-adoption|feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
     'docs-governance',
   ],
-  [/^scripts\/lib\/feature-mechanization-(db-reader|manifest)\.cjs$/u, 'docs-governance'],
+  [/^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest)\.cjs$/u, 'docs-governance'],
+  [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
-    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
+    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|lib\/git-repository-environment|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
     'developer-workflow',
   ],
   [
@@ -162,7 +164,11 @@ const SCRIPT_FILE_RULES = [
   ],
   [/^scripts\/run-dev-stack(\.[\w-]+)?(\.test)?\.cjs$/u, 'dev-local'],
   [
-    /^scripts\/run-(canvas-first-authoring|canvas-source-import|het[12]-public-vertical|selected-closure)-live-proof\.cjs$/u,
+    /^scripts\/(disposable-postgres-database|live-cypress-invocation|live-governed-project)\.cjs$/u,
+    'dev-local',
+  ],
+  [
+    /^scripts\/run-(canvas-first-authoring|canvas-source-import|selected-closure)-live-proof\.cjs$/u,
     'dev-local',
   ],
   [

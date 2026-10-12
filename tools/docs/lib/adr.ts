@@ -23,10 +23,10 @@ const ADR_FILENAME_RE = /^ADR-(\d{4})([a-z]?)[-_]/i;
  * Returns `null` if the filename does not start with a valid ADR prefix.
  */
 export function parseAdrFilename(filename: string): AdrFilenameInfo | null {
-  const match = new RegExp(ADR_FILENAME_RE).exec(filename);
-  if (!match) return null;
-  const numStr = match[1];
-  const suffix = match[2].toLowerCase();
+  const match = ADR_FILENAME_RE.exec(filename);
+  const numStr = match?.[1];
+  const suffix = match?.[2]?.toLowerCase();
+  if (numStr == null || suffix == null) return null;
   return {
     num: parseInt(numStr, 10),
     numStr,
@@ -58,10 +58,12 @@ export function parseAdrIndex(content: string): AdrIndexEntry[] {
   const rowRe = /^\|\s*(ADR-\d{4}[a-z]?)\s*\|([^|]+)\|([^|]+)\|([^|]+)\|([^|]+)\|/gim;
   let match: RegExpExecArray | null;
   while ((match = rowRe.exec(content)) !== null) {
-    const [, num, title, status, date, fileCell] = match as RegExpExecArray & string[];
+    // All five captures are mandatory in rowRe.
+    const [, num, title, status, date, fileCell] = match as RegExpExecArray &
+      [string, string, string, string, string, string];
     // Extract filename from a markdown link `[label](file.md)` in the file cell
-    const linkMatch = new RegExp(/\[([^\]]+)\]\(([^)]+)\)/).exec(fileCell);
-    const filename = linkMatch ? linkMatch[2].trim() : fileCell.trim();
+    const linkMatch = /\[([^\]]+)\]\(([^)]+)\)/.exec(fileCell);
+    const filename = (linkMatch?.[2] ?? fileCell).trim();
     records.push({
       num: num.trim(),
       title: title.trim(),

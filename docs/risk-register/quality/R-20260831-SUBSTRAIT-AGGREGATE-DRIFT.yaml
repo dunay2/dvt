@@ -24,7 +24,7 @@ mitigation:
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitAggregation.ts
     - apps/web/src/app/views/canvas/canvasDvtSubstraitAggregation.test.ts
-    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - packages/@dvt/postgres-projection/test/relationalGroupedComposition.test.ts
     - apps/web/cypress/e2e/canvas/canvas-substrait-grouping.cy.ts
   follow_up:
     - Issue #2642 owns any later aggregate capability projection into Canvas.

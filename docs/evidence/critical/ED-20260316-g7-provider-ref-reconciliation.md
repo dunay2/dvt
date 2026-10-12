@@ -46,7 +46,7 @@ without converting the run into a lifecycle failure.
 - [ADR-0015 - getRunStatus read-model separation](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
 - [ADR-0030 - pre-dispatch intent log](../../adr/ADR-0030-pre-dispatch-intent-log.md)
 - [ADR-0031 - adapter tenant isolation](../../adr/ADR-0031-adapter-tenant-isolation.md)
-- [G7 - AI Execution Tracker](../../planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md)
+- [G7 - AI Execution Tracker (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G7-AI-EXECUTION-TRACKER.md)
 
 ## Changes
 

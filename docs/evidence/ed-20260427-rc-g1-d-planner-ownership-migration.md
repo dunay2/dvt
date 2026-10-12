@@ -28,7 +28,7 @@ code_refs:
   - apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts
   - eslint.config.cjs
   - docs/architecture/components/planner/planner-private-behavior-ports-component.md
-  - docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260427-rc-g1-d-fowler-architecture-review.md
   - docs/risk-register/quality/R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml
 evidence:
   tests:

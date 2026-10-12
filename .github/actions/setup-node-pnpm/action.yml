@@ -11,6 +11,10 @@ inputs:
     description: Arguments passed to pnpm install
     required: false
     default: '--frozen-lockfile --prefer-offline'
+  turbo-cache-variant:
+    description: Stable identity for parallel variants of the same producing job
+    required: false
+    default: 'default'
 
 runs:
   using: composite
@@ -40,12 +44,13 @@ runs:
       uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
         path: .turbo
-        key:
-          turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json',
+        key: >-
+          turbo-v2-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{
+          inputs.turbo-cache-variant }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json',
           'pnpm-workspace.yaml', 'tsconfig.node-runtime.base.json',
-          'tsconfig.package-bundler.base.json') }}
+          'tsconfig.package-bundler.base.json') }}-${{ github.run_id }}-${{ github.run_attempt }}
         restore-keys: |
-          turbo-${{ runner.os }}-
+          turbo-v2-${{ runner.os }}-${{ github.workflow }}-${{ github.job }}-${{ inputs.turbo-cache-variant }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json', 'pnpm-workspace.yaml', 'tsconfig.node-runtime.base.json', 'tsconfig.package-bundler.base.json') }}-
 
     - name: Install dependencies
       shell: bash

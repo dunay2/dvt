@@ -11,9 +11,8 @@ planning_type: reference
 This section is only for currently open tactical gap registers.
 
 It is a planning reference surface, not a task board. Use GitHub Issues for
-current task identity, ownership, blockers, acceptance, and closure. Historical
-gap snapshots belong under `docs/planning/archive/gaps/` and are not active work
-queues.
+current task identity, ownership, blockers, acceptance, and closure. Obsolete gap
+snapshots are deleted; their history remains in Git, not in local work queues.
 
 The legacy `G1` through `G10` execution-gap program is retired and is not part
 of the active planning route. Closed legacy material should not be used as a
@@ -44,5 +43,5 @@ already owned by the issue lifecycle.
   evidence paths.
 - Route current implementation truth through code, contracts, tests, CI, and
   System Delivery Status.
-- Treat archived gap documents as historical evidence, not backlog.
+- Consult Git for historical provenance, not for a parallel backlog.
 - Do not create a parallel planning hub from gap documents.

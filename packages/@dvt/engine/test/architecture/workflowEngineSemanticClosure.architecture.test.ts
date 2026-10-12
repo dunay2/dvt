@@ -133,9 +133,8 @@ describe('WorkflowEngine semantic closure architecture', () => {
     for (const path of [
       engineArchitectureDocPath('workflow-engine-semantic-closure-component.md'),
       engineArchitectureDocPath('workflow-engine-semantic-closure-user-stories.md'),
-      repoPath('buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md'),
+
       repoPath('buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md'),
-      repoPath('docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md'),
     ]) {
       expectFileExists(path);
     }

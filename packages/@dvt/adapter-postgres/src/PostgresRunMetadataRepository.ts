@@ -276,39 +276,49 @@ export class PostgresRunMetadataRepository {
     runId: RunId,
     providerRef: RunMetadata['providerRef']
   ): Promise<RunMetadata> {
+    validateInputProviderRef(providerRef, runId);
+    return this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return this.saveProviderRefWithClient(client, tenantId, runId, providerRef);
+    });
+  }
+
+  async saveProviderRefWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata> {
     const validatedProviderRef = validateInputProviderRef(providerRef, runId);
     if (validatedProviderRef.tenantId !== tenantId) {
       throw new TenantAccessDeniedError(tenantId);
     }
 
-    return this.withClient(async (client) => {
-      await PostgresSchemaManager.setTenantContext(client, tenantId);
-
-      const existing = await client.query<RunMetadataRow>(
-        `
+    const existing = await client.query<RunMetadataRow>(
+      `
           SELECT ${RUN_METADATA_COLUMNS}
           FROM ${quoteIdentifier(this.schema)}.run_metadata
           WHERE tenant_id = $1 AND run_id = $2
           LIMIT 1
           FOR UPDATE
         `,
-        [tenantId, runId]
+      [tenantId, runId]
+    );
+
+    const current = existing.rows[0];
+    if (!current) {
+      throw new RunNotFoundError(runId);
+    }
+    if (current.provider !== validatedProviderRef.provider) {
+      throw new ProviderRefProviderMismatchError(
+        runId,
+        current.provider,
+        validatedProviderRef.provider
       );
+    }
 
-      const current = existing.rows[0];
-      if (!current) {
-        throw new RunNotFoundError(runId);
-      }
-      if (current.provider !== validatedProviderRef.provider) {
-        throw new ProviderRefProviderMismatchError(
-          runId,
-          current.provider,
-          validatedProviderRef.provider
-        );
-      }
-
-      const updated = await client.query<RunMetadataRow>(
-        `
+    const updated = await client.query<RunMetadataRow>(
+      `
           UPDATE ${quoteIdentifier(this.schema)}.run_metadata
           SET provider_workflow_id = $1,
               provider_run_id = $2,
@@ -317,18 +327,17 @@ export class PostgresRunMetadataRepository {
           WHERE tenant_id = $5 AND run_id = $6
           RETURNING ${RUN_METADATA_COLUMNS}
         `,
-        [
-          validatedProviderRef.workflowId,
-          validatedProviderRef.runId,
-          validatedProviderRef.namespace,
-          validatedProviderRef.taskQueue ?? null,
-          tenantId,
-          runId,
-        ]
-      );
+      [
+        validatedProviderRef.workflowId,
+        validatedProviderRef.runId,
+        validatedProviderRef.namespace,
+        validatedProviderRef.taskQueue ?? null,
+        tenantId,
+        runId,
+      ]
+    );
 
-      return toRunMetadata(updated.rows[0] as RunMetadataRow);
-    });
+    return toRunMetadata(updated.rows[0] as RunMetadataRow);
   }
 
   async resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {

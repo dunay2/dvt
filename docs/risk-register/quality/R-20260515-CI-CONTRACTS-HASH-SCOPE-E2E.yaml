@@ -10,8 +10,8 @@ severity: Medium
 probability: Medium
 ---
 summary: >
-  The contracts workflow now gates snapshot hash comparison through centralized `emit-scope --mode
-  contracts` output (`hash_compare_relevant`) instead of an inline PR `git diff` detector. Unit and
+  The contracts workflow gates snapshot hash comparison through centralized `emit-scope.mjs` output
+  (`contracts_scope.hash_compare_relevant`) instead of an inline PR `git diff` detector. Unit and
   parity tests passed, but no PR-runtime end-to-end execution evidence has been captured yet in
   GitHub Actions.
 

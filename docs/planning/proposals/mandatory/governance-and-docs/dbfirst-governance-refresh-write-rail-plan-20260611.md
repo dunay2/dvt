@@ -4,7 +4,6 @@ status: Accepted
 owner: Governance Automation
 last_reviewed: 2026-08-08
 planning_type: mandatory-proposal
-archived_record: docs/planning/archive/proposals/dbfirst-governance-refresh-write-rail-plan-20260611.md
 ---
 
 # DB-first governance refresh
@@ -19,5 +18,3 @@ Implementation is `scripts/governance-refresh.cjs`; DDL is owned by
 and is read through governed queries. Validation is
 `node --test scripts/governance-refresh.test.cjs scripts/pr-closeout.test.cjs`
 and `pnpm verify:prepush`.
-
-The detailed delivery record is historical and remains at `archived_record`.

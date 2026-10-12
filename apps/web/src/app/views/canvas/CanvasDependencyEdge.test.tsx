@@ -25,6 +25,8 @@ vi.mock('@xyflow/react', async (importOriginal) => {
       mockedEdge.props = props;
       return React.createElement('path', { 'data-slot': 'base-edge' });
     },
+    EdgeLabelRenderer: ({ children }: { children: React.ReactNode }) =>
+      React.createElement('foreignObject', null, children),
     getSmoothStepPath: () => ['M 0 0 L 100 40', 50, 20, 0, 0],
   };
 });
@@ -180,4 +182,44 @@ describe('CanvasDependencyEdge', () => {
     expect(gate?.querySelectorAll('line')).toHaveLength(2);
     expect(container.querySelector('[data-slot="canvas-dependency-direction-cue"]')).not.toBeNull();
   });
+
+  it.each(['open', 'closed'] as const)(
+    'never renders internal operation controls on a %s dependency',
+    (gate) => {
+      act(() => {
+        root.render(
+          <svg>
+            <CanvasDependencyEdge
+              id="source-model"
+              source="orders"
+              target="model"
+              sourceX={0}
+              sourceY={40}
+              targetX={100}
+              targetY={40}
+              sourcePosition={Position.Right}
+              targetPosition={Position.Left}
+              selected={false}
+              data={buildCanvasDependencyEdgeData({
+                sourceId: 'orders',
+                targetId: 'model',
+                executionGate: gate === 'closed' ? 'closed' : undefined,
+              })}
+            />
+          </svg>
+        );
+      });
+      expect(container.querySelectorAll('[data-slot="base-edge"]')).toHaveLength(1);
+      expect(container.querySelector('[data-slot="canvas-relational-composition"]')).toBeNull();
+      expect(
+        container.querySelector('[data-slot="canvas-relational-composition-badge"]')
+      ).toBeNull();
+      expect(
+        container.querySelectorAll('[data-slot="canvas-dependency-direction-cue"]')
+      ).toHaveLength(1);
+      expect(container.querySelector('[data-slot="canvas-dependency-closed-gate"]') != null).toBe(
+        gate === 'closed'
+      );
+    }
+  );
 });

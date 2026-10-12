@@ -1522,6 +1522,63 @@ test('dependency-cruiser boundary rules allow governed package entrypoints', () 
   assert.equal(violations.includes('no-cross-package-deep-imports'), false);
 });
 
+test('domain boundaries reject filesystem subpaths and retain HTTP root restrictions', () => {
+  const imports = [
+    'fs',
+    'node:fs',
+    'fs/promises',
+    'node:fs/promises',
+    'http',
+    'node:http',
+    'https',
+    'node:https',
+  ];
+  const violations = collectDependencyViolations(
+    Object.fromEntries(
+      imports.map((specifier, index) => [
+        `apps/web/src/capability/domain/builtin${index}.ts`,
+        `import * as runtime from '${specifier}'; export default runtime;\n`,
+      ])
+    )
+  );
+
+  // Each independent source has exactly one dependency. Every edge must fail.
+  assert.deepEqual(
+    violations,
+    imports.map(() => 'no-domain-to-framework-or-infrastructure')
+  );
+});
+
+test('domain boundaries reject local infrastructure in apps and packages', () => {
+  const violations = collectDependencyViolations({
+    'apps/web/src/capability/domain/model.ts':
+      "import repository from '../infrastructure/repository.js'; export default repository;\n",
+    'apps/web/src/capability/infrastructure/repository.ts': 'export default 1;\n',
+    'packages/@dvt/engine/src/domain/model.ts':
+      "import repository from '../infrastructure/repository.js'; export default repository;\n",
+    'packages/@dvt/engine/src/infrastructure/repository.ts': 'export default 1;\n',
+  });
+
+  assert.deepEqual(violations, [
+    'no-domain-to-framework-or-infrastructure',
+    'no-domain-to-framework-or-infrastructure',
+  ]);
+});
+
+test('domain boundaries allow pure values and governed public ports', () => {
+  const violations = collectDependencyViolations({
+    'apps/web/src/capability/domain/model.ts':
+      "import value from './value.js'; import type { Port } from '../../../../../packages/@dvt/contracts/src/index.js'; export const model: Port = { value };\n",
+    'apps/web/src/capability/domain/value.ts': 'export default 1;\n',
+    'packages/@dvt/contracts/src/index.ts': 'export interface Port { readonly value: number }\n',
+    'packages/@dvt/engine/src/domain/model.ts':
+      "import value from './value.js'; export default value;\n",
+    'packages/@dvt/engine/src/domain/value.ts': 'export default 2;\n',
+  });
+
+  assert.deepEqual(violations, []);
+});
+
 test('contracts can import the runtime-neutral crypto authority', () => {
   const violations = collectDependencyViolations({
     'packages/@dvt/contracts/src/index.ts':

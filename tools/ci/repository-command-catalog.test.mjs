@@ -14,6 +14,18 @@ import {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
+test('admitted browser child and process lifecycle remain test tooling, without widening unknown admission', () => {
+  for (const file of [
+    'scripts/run-selected-closure-cypress.cjs',
+    'scripts/live-proof-process.cjs',
+  ]) {
+    const classification = classifyScriptFilePath(file);
+    assert.equal(classification.domain, 'test-tooling', file);
+    assert.equal(classification.runtimeFanout, false, file);
+  }
+  assert.equal(classifyScriptFilePath('scripts/unadmitted-proof-runner.cjs').domain, 'unknown');
+});
+
 test('classifies planning and governance database aliases as planning-db commands', () => {
   const planningQuery = classifyPackageScriptCommand(
     'planning:db:query',
@@ -192,14 +204,13 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/run-canvas-source-import-live-proof.cjs').domain,
     'dev-local'
   );
-  assert.equal(
-    classifyScriptFilePath('scripts/run-het1-public-vertical-live-proof.cjs').domain,
-    'dev-local'
-  );
-  assert.equal(
-    classifyScriptFilePath('scripts/run-het2-public-vertical-live-proof.cjs').domain,
-    'dev-local'
-  );
+  for (const helper of [
+    'disposable-postgres-database',
+    'live-cypress-invocation',
+    'live-governed-project',
+  ]) {
+    assert.equal(classifyScriptFilePath(`scripts/${helper}.cjs`).domain, 'dev-local');
+  }
 });
 
 test('detects repository command files and excludes non-command metadata', () => {
@@ -209,6 +220,35 @@ test('detects repository command files and excludes non-command metadata', () =>
   assert.equal(isRepositoryCommandFile('tools/ops/ar-c2-evidence-collector.mjs'), true);
   assert.equal(isRepositoryCommandFile('scripts/README.md'), false);
   assert.equal(isRepositoryCommandFile('tools/ci/jsconfig.json'), false);
+});
+
+test('keeps the isolated Git fixture in test validation without runtime fan-out', () => {
+  assert.deepEqual(classifyScriptFilePath('scripts/lib/feature-mechanization-git-fixture.cjs'), {
+    path: 'scripts/lib/feature-mechanization-git-fixture.cjs',
+    domain: 'test-tooling',
+    sensitivity: 'test-contract',
+    runtimeFanout: false,
+    changedFileValidationRelevant: true,
+  });
+  assert.equal(classifyScriptFilePath('scripts/lib/unclassified-fixture.cjs').domain, 'unknown');
+});
+
+test('classifies the test-process Git boundary without weakening unknown helper scope', () => {
+  assert.deepEqual(classifyScriptFilePath('scripts/lib/git-repository-environment.cjs'), {
+    path: 'scripts/lib/git-repository-environment.cjs',
+    domain: 'developer-workflow',
+    sensitivity: 'developer-workflow',
+    runtimeFanout: false,
+    changedFileValidationRelevant: true,
+  });
+  assert.equal(
+    classifyScriptFilePath('scripts/lib/git-repository-environment.test.cjs').domain,
+    'test-tooling'
+  );
+  const unknown = classifyScriptFilePath('scripts/lib/unclassified-environment.cjs');
+  assert.equal(unknown.domain, 'unknown');
+  assert.equal(unknown.runtimeFanout, true);
+  assert.equal(unknown.changedFileValidationRelevant, true);
 });
 
 test('discovers repository command files deterministically', () => {

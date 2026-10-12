@@ -1,0 +1,60 @@
+import { SortField_SortDirection } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { encodeDvtSubstraitPlanV1 } from '@dvt/contracts';
+import { describe, expect, it } from 'vitest';
+
+import { projectSubstraitToPostgresSql, type DvtSubstraitJoinDraft } from '../src/index.js';
+
+import { wrapperFixture } from './relationalWrapperFixtures.js';
+
+function invalidateGrouping(draft: DvtSubstraitJoinDraft): void {
+  const root = draft.plan.relations[0]?.relType;
+  if (root?.case !== 'root') throw new Error('Expected canonical root');
+  const relation = root.value.input?.relType;
+  const aggregate = relation?.case === 'project' ? relation.value.input?.relType : relation;
+  if (aggregate?.case !== 'aggregate') throw new Error('Expected canonical aggregate');
+  aggregate.value.groupings[0]!.expressionReferences = [1];
+  draft.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(draft.plan).sha256;
+}
+
+describe.each(['join', 'set'] as const)('shared %s wrapper admission', (base) => {
+  const project = projectSubstraitToPostgresSql;
+
+  it.each(['aggregate', 'window'] as const)(
+    'projects %s without mutating canonical identity',
+    async (wrapper) => {
+      const draft = wrapperFixture(base, wrapper);
+      const before = globalThis.structuredClone(draft);
+      const result = await project(draft);
+      expect(result.sql).toContain('count(*)');
+      expect(result.projection.outputs).toHaveLength(wrapper === 'window' ? 3 : 2);
+      expect(draft).toEqual(before);
+    }
+  );
+
+  it.each(['aggregate', 'window'] as const)(
+    'rejects invalid %s grouping with a current hash',
+    async (wrapper) => {
+      const draft = wrapperFixture(base, wrapper);
+      invalidateGrouping(draft);
+      await expect(project(draft)).rejects.toMatchObject({ code: 'invalid_structure' });
+    }
+  );
+
+  it('accepts window directions without a shape-specific restriction', async () => {
+    const draft = wrapperFixture(base, 'window');
+    const root = draft.plan.relations[0]?.relType;
+    const relation = root?.case === 'root' ? root.value.input?.relType : undefined;
+    const expression =
+      relation?.case === 'project' ? relation.value.expressions[0]?.rexType : undefined;
+    if (expression?.case !== 'windowFunction') throw new Error('Expected canonical window');
+    expression.value.sorts[0]!.sortKind = {
+      case: 'direction',
+      value: SortField_SortDirection.ASC_NULLS_FIRST,
+    };
+    draft.sidecar.semanticPlanSha256 = encodeDvtSubstraitPlanV1(draft.plan).sha256;
+    const before = globalThis.structuredClone(draft);
+    const result = await project(draft);
+    expect(result.projection.outputs).toHaveLength(3);
+    expect(draft).toEqual(before);
+  });
+});

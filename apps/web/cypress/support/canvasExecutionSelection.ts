@@ -109,7 +109,7 @@ export function revealOperationalDrawer(): void {
       .should('be.visible')
       .then(($item) => {
         if ($item.attr('aria-checked') !== 'true') {
-          cy.wrap($item).click();
+          ($item.get(0) as HTMLElement).click();
           return;
         }
 

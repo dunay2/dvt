@@ -28,8 +28,9 @@ mitigations:
   - 'Keep engine start-run tests proving unsupported pairs fail before adapter dispatch.'
   - 'Keep @dvt/plan-verifier consuming `EXECUTION_PLAN_ADMISSION_MATRIX` from @dvt/contracts with no
     package-local runtime matrix, supportedMajor, or strictSameMinor parameters.'
-  - 'Keep plan-admission-matrix.architecture.test.ts guarding docs, stories, mailbox analysis, and
-    naming drift.'
+  - 'Keep plan-admission-matrix.architecture.test.ts guarding the current component guide, user
+    stories, owned-concern docblocks, active admission surfaces, development plan-version examples,
+    retired naming, and the single engine admission-policy boundary.'
   - 'Update ADR-0017 or ADR-0036 if admission semantics change beyond replacing the current pair.'
 review_after: 2026-06-30
 ---

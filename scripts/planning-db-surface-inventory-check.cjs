@@ -31,7 +31,6 @@ const requiredSurfaces = [
   { surfaceName: 'Knowledge intake literature', authorityMode: 'hybrid-indexed' },
   { surfaceName: 'Documentation lifecycle catalog', authorityMode: 'hybrid-indexed' },
   { surfaceName: 'AI project context', authorityMode: 'hybrid-indexed' },
-  { surfaceName: 'Docs task disposition inventory', authorityMode: 'git-indexed' },
   {
     surfaceName: 'Docs resolution overlays',
     authorityMode: 'database',

@@ -57,20 +57,33 @@ function appendStringLiteral(plan: Plan, value: string): void {
 }
 
 describe('DVT Substrait editable field policy', () => {
-  it('enforces root output names at the PostgreSQL UTF-8 byte boundary', () => {
+  it('preserves semantic names independently of the PostgreSQL byte budget', () => {
     const document = buildDvtSubstraitSemanticDocumentFixture();
     const acceptedPlan = decodeDvtSubstraitPlanV1(document);
-    setFirstRootName(acceptedPlan, 'a'.repeat(59) + '😀');
+    setFirstRootName(acceptedPlan, '😀'.repeat(256));
     expect(
       DvtSubstraitSemanticDocumentV1Schema.safeParse(withPlan(document, acceptedPlan)).success
     ).toBe(true);
 
     const rejectedPlan = decodeDvtSubstraitPlanV1(document);
-    setFirstRootName(rejectedPlan, 'a'.repeat(60) + '😀');
+    setFirstRootName(rejectedPlan, '😀'.repeat(257));
     expect(
       DvtSubstraitSemanticDocumentV1Schema.safeParse(withPlan(document, rejectedPlan)).success
     ).toBe(false);
   });
+
+  it.each(['', ' name', 'name ', 'bad\u0000name'])(
+    'rejects invalid names without rewriting the document',
+    (name) => {
+      const document = buildDvtSubstraitSemanticDocumentFixture();
+      const plan = decodeDvtSubstraitPlanV1(document);
+      setFirstRootName(plan, name);
+      const changed = withPlan(document, plan);
+      const before = globalThis.structuredClone(changed);
+      expect(DvtSubstraitSemanticDocumentV1Schema.safeParse(changed).success).toBe(false);
+      expect(changed).toEqual(before);
+    }
+  );
 
   it('enforces string literals at the UTF-8 byte boundary', () => {
     const document = buildDvtSubstraitSemanticDocumentFixture();

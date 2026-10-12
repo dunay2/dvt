@@ -55,9 +55,7 @@ function repoFileExists(relativePath: string): boolean {
 }
 
 describe('web store domain ownership architecture', () => {
-  it('keeps branch Fowler analysis, component API, user stories, and local guide discoverable', () => {
-    const implementationPlanPath =
-      'docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md';
+  it('keeps component API, user stories, and local guide discoverable', () => {
     const componentGuidePath =
       'docs/architecture/components/web/web-store-domain-ownership-component.md';
     const localGuidePath =
@@ -65,25 +63,13 @@ describe('web store domain ownership architecture', () => {
     const userStoriesPath =
       'docs/architecture/components/web/web-store-domain-ownership-user-stories.md';
 
-    expect(repoFileExists(implementationPlanPath)).toBe(true);
     expect(repoFileExists(localGuidePath)).toBe(true);
     expect(repoFileExists(userStoriesPath)).toBe(true);
     expect(repoFileExists('apps/web/src/app/stores/authorizationStore.ts')).toBe(true);
 
-    const implementationPlan = readRepoFile(implementationPlanPath);
     const componentGuide = readRepoFile(componentGuidePath);
     const localGuide = readRepoFile(localGuidePath);
     const userStories = readRepoFile(userStoriesPath);
-
-    for (const requiredPlanSignal of [
-      'featureId: F05-STORE-DOMAIN-OWNERSHIP',
-      '## Drift Register',
-      'fowlerSignals:',
-      'Documentation drift',
-      'webStoreDomainOwnership.architecture.test.ts',
-    ]) {
-      expect(implementationPlan).toContain(requiredPlanSignal);
-    }
 
     for (const componentSection of [
       '## Local Guide Boundary',
@@ -134,9 +120,6 @@ describe('web store domain ownership architecture', () => {
     expect(localGuide).toContain('connectionStatus is not layout state');
     expect(localGuide).toContain('Authorization capability display');
 
-    expect(implementationPlan).toContain('Closed in this slice');
-    expect(implementationPlan).toContain('`authorizationStore.ts`');
-    expect(implementationPlan).toContain('Target owner for `Authorization capability display`');
     expect(componentGuide).not.toContain(
       'authorization split is a future F-05 implementation task'
     );

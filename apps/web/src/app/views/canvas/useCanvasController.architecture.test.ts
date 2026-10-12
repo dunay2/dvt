@@ -6,12 +6,22 @@ const CONTROLLER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasController.ts'
 );
+const RUNTIME_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasControllerRuntime.ts'
+);
+const PRESENTATION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasControllerPresentation.ts'
+);
 
 describe('useCanvasController architecture', () => {
   it('stays a composition facade over environment, runtime, read-model, and adapter seams', () => {
     expect(CONTROLLER_SOURCE).toContain('useCanvasControllerEnvironment');
-    expect(CONTROLLER_SOURCE).toContain('useCanvasAuthoringRuntime');
-    expect(CONTROLLER_SOURCE).toContain('useCanvasControllerReadModel');
+    expect(CONTROLLER_SOURCE).toContain('useCanvasControllerRuntime');
+    expect(CONTROLLER_SOURCE).toContain('useCanvasControllerPresentation');
+    expect(RUNTIME_SOURCE).toContain('useCanvasAuthoringRuntime');
+    expect(PRESENTATION_SOURCE).toContain('useCanvasControllerReadModel');
     expect(CONTROLLER_SOURCE).toContain('buildCanvasControllerViewModel');
     expect(CONTROLLER_SOURCE).not.toContain('queryKeys.workspace.graphDraft');
     expect(CONTROLLER_SOURCE).not.toContain('useQuery(');
@@ -21,6 +31,6 @@ describe('useCanvasController architecture', () => {
   });
 
   it('routes read-model edge changes through the semantic graph lifecycle', () => {
-    expect(CONTROLLER_SOURCE).toContain('onEdgesChange: mutationHandlers.handleEdgesChange');
+    expect(PRESENTATION_SOURCE).toContain('onEdgesChange: mutationHandlers.handleEdgesChange');
   });
 });

@@ -14,7 +14,7 @@ code_refs:
   - packages/@dvt/engine/test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts
   - packages/@dvt/engine/test/state/InMemoryTxStore.rebuildSnapshot.test.ts
   - packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts
-  - docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md
+  - https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md
 evidence:
   tests:
     - pnpm exec eslint "packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts" "packages/@dvt/adapter-postgres/test/PostgresRunSnapshotStore.test.ts" "packages/@dvt/engine/src/state/InMemoryRunStateStore.ts" "packages/@dvt/engine/src/state/InMemoryTxStore.ts" "packages/@dvt/engine/test/state/InMemoryRunStateStore.rebuildSnapshot.test.ts" "packages/@dvt/engine/test/state/InMemoryTxStore.rebuildSnapshot.test.ts" --max-warnings 0

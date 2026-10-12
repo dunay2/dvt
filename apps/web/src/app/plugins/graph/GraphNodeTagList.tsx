@@ -4,7 +4,7 @@ import { useState, type ReactElement } from 'react';
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { cn } from '../../components/ui/utils';
 import type { GraphNodeCardAccentTone } from './graphNodeCardStrategyContracts';
-import { graphNodeTagListClasses } from './graphVisualTokens';
+import { graphNodeTagListClasses } from './graphCardVisualTokens';
 
 export type GraphNodeTagListProps = Readonly<{
   tags: readonly Readonly<{ value: string; label: string }>[];

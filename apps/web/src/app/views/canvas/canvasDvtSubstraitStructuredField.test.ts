@@ -88,7 +88,7 @@ describe('canonical Substrait structured Transform fields', () => {
     });
   });
 
-  it('projects original roots and the persisted struct into the Canvas card truth', () => {
+  it('projects original roots and the persisted struct into the Canvas card truth', async () => {
     const document = encodeDvtSubstraitStructuredFieldDocument(composeIdentity());
     const sourceNode: CanonicalNode = {
       id: SOURCE.nodeId,
@@ -119,7 +119,7 @@ describe('canonical Substrait structured Transform fields', () => {
       document
     );
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transformNode,
       nodes: [sourceNode, transformNode],
       edges: [{ sourceId: sourceNode.id, targetId: transformNode.id }],

@@ -9,6 +9,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
 import { registerWorkspaceGraphDraftRoutes } from '../../../src/entrypoints/http/workspaceGraphDraftRoutes.js';
+import { buildPendingReadDraftFixture } from '../../fixtures/pendingReadDraftFixture.js';
 import { buildWorkspaceGraphDraftSaveRequest } from '../../fixtures/workspaceGraphDraftFixture.js';
 
 interface TestAppContext {
@@ -146,6 +147,27 @@ function createApp(options?: {
 }
 
 describe('workspaceGraphDraftRoutes', () => {
+  it('denies an incomplete pending Read before authorization or persistence', async () => {
+    const context = createApp();
+    const { draft, pending } = buildPendingReadDraftFixture();
+    pending.sources[0]!.semanticDocument.sidecar.fields.pop();
+    try {
+      const response = await context.app.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        payload: buildWorkspaceGraphDraftSaveRequest({ draft }),
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+      });
+      expect(context.capabilityService.authorize).not.toHaveBeenCalled();
+      expect(context.saveUseCase.execute).not.toHaveBeenCalled();
+    } finally {
+      await context.app.close();
+    }
+  });
+
   it.each(['transform', 'dvt:transform'])(
     'rejects unsupported %s disposition before authorization or persistence',
     async (kind) => {

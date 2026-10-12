@@ -33,10 +33,13 @@ function source(
 }
 
 describe('Canvas DVT composition input catalog', () => {
-  it('projects every connected source and marks fields admitted by the string join profile', () => {
+  it('projects every connected source with its admitted canonical JOIN type', () => {
     const orders = source('orders', [
       { name: 'order_id', type: 'integer' },
       { name: 'customer', type: 'text' },
+      { name: 'active', type: 'boolean' },
+      { name: 'sequence', type: 'bigint' },
+      { name: 'amount', type: 'double precision' },
     ]);
     const audits = source('auth_audit_events', [
       { name: 'event_id', type: 'varchar' },
@@ -56,15 +59,18 @@ describe('Canvas DVT composition input catalog', () => {
       {
         nodeId: orders.id,
         fields: [
-          { name: 'order_id', stringCompatible: false },
-          { name: 'customer', stringCompatible: true },
+          { name: 'order_id', joinDataType: null },
+          { name: 'customer', joinDataType: 'string' },
+          { name: 'active', joinDataType: 'bool' },
+          { name: 'sequence', joinDataType: 'i64' },
+          { name: 'amount', joinDataType: 'fp64' },
         ],
       },
       {
         nodeId: audits.id,
         fields: [
-          { name: 'event_id', stringCompatible: true },
-          { name: 'occurred_at', stringCompatible: false },
+          { name: 'event_id', joinDataType: 'string' },
+          { name: 'occurred_at', joinDataType: 'precisionTimestampTz' },
         ],
       },
     ]);

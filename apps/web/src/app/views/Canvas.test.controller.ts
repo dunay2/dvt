@@ -87,6 +87,7 @@ export function buildController(overrides?: Partial<CanvasController>): CanvasCo
   const controller: CanvasController = {
     ...buildDefaultCanvasControllerState(),
     ...buildDefaultCanvasControllerCallbacks(),
+    flushDraftForExecution: async () => ({ ok: false, message: 'No persisted test draft.' }),
     ...overrides,
   };
   const normalizedController: CanvasController = {

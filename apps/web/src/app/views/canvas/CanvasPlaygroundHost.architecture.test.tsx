@@ -17,7 +17,7 @@ const HOST_CYCLE_SOURCE = readArchitectureSiblingSource(
 );
 const CONTROLLER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  'useCanvasController.ts'
+  'useCanvasControllerRuntime.ts'
 );
 const RUNTIME_CONTRACT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,

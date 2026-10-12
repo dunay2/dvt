@@ -1,23 +1,25 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { filterProjectionInputFixture } from './canvasFilterProjection.test-support';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
+import { selectGraphNodeCardColumns } from './canvasGraphNodeColumnProjection';
+import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,
-  createDvtSubstraitProjectionDraftFromTransform,
   encodeDvtSubstraitProjectionDocument,
   resolveDvtSubstraitColumnFunctions,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import {
-  applyDvtSubstraitFilter,
-  encodeDvtSubstraitFilterDocument,
-  resolveDvtSubstraitFilterCapabilities,
-} from './canvasDvtSubstraitFilter';
+import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
+
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { createProducerInput } from '@dvt/substrait-analysis';
+import { createSourceDocument } from './canvasSourceDocument';
 
 const SOURCE_REF: ConnectedSourceRef = {
   schemaVersion: 'connected-source-ref.v1',
@@ -94,14 +96,39 @@ function buildCanonicalTransform(): CanonicalNode {
 }
 
 describe('projectCanvasNodePresentationTruth', () => {
-  it('exposes canonical filter code while preserving the Source column presentation', () => {
+  it('publishes an imported Source default selection as explicitly ready', async () => {
+    const truth = await projectCanvasNodePresentationTruth({
+      node: SOURCE,
+      nodes: [SOURCE],
+      edges: [],
+    });
+    expect(truth.columns.state).toBe('ready');
+    expect(truth.columns.visible.map((column) => column.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
+    ]);
+  });
+
+  it('does not fall back to imported physical columns for malformed Source authority', async () => {
+    const source = {
+      ...SOURCE,
+      metadata: { ...SOURCE.metadata, transformAuthoring: { broken: true } },
+    };
+    const truth = await projectCanvasNodePresentationTruth({
+      node: source,
+      nodes: [source],
+      edges: [],
+    });
+    expect(truth.columns.state).toBe('unavailable');
+    expect(truth.columns.visible).toEqual([]);
+  });
+
+  it('exposes canonical filter code while preserving the Source column presentation', async () => {
     const source = resolveDvtSubstraitProjectionSource(SOURCE);
-    const capability = resolveDvtSubstraitFilterCapabilities({
-      dataType: 'text',
-      provider: 'postgres',
-    })[0];
+    const capability = resolveDvtSubstraitFilterCapabilities({ dataType: 'text' })[0];
     if (source == null || capability == null) throw new Error('Expected admitted fixtures.');
-    const filtered = applyDvtSubstraitFilter(
+    const filtered = await filterProjectionInputFixture(
       createDvtSubstraitProjectionDraft({
         source,
         targetNodeId: SOURCE.id,
@@ -120,10 +147,10 @@ describe('projectCanvasNodePresentationTruth', () => {
     );
     const filteredSource = applyDvtSubstraitSemanticDocument(
       SOURCE,
-      encodeDvtSubstraitFilterDocument(filtered)
+      encodeDvtSubstraitSemanticDocument(filtered)
     );
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: filteredSource,
       nodes: [filteredSource],
       edges: [],
@@ -137,9 +164,9 @@ describe('projectCanvasNodePresentationTruth', () => {
     ]);
   });
 
-  it('projects canonical code and transformed columns from Substrait authority', () => {
+  it('projects canonical code and transformed columns from Substrait authority', async () => {
     const transform = buildCanonicalTransform();
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [SOURCE, transform],
       edges: [{ sourceId: SOURCE.id, targetId: transform.id }],
@@ -159,7 +186,7 @@ describe('projectCanvasNodePresentationTruth', () => {
     ]);
   });
 
-  it('scopes chained FieldId matches to the immediate upstream Model', () => {
+  it('scopes chained FieldId matches to the immediate upstream Model', async () => {
     const buildSource = (id: string, nullable: boolean): CanonicalNode => ({
       ...SOURCE,
       id,
@@ -215,24 +242,16 @@ describe('projectCanvasNodePresentationTruth', () => {
       'upstream-b',
       encodeDvtSubstraitProjectionDocument(upstreamDraftB)
     );
+    const input = createProducerInput(
+      { nodeId: upstreamB.id, name: upstreamB.name, document: upstreamDraftB },
+      1
+    );
     const downstream = buildTransform(
       'downstream',
-      encodeDvtSubstraitProjectionDocument(
-        createDvtSubstraitProjectionDraftFromTransform({
-          source: upstreamDraftB,
-          targetNodeId: 'downstream',
-          outputs: [
-            {
-              fieldId: 'downstream:customer',
-              name: 'customer',
-              sourceFieldId: 'shared:customer',
-            },
-          ],
-        })
-      )
+      encodeDvtSubstraitSemanticDocument(createSourceDocument([input], input))
     );
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: downstream,
       nodes: [sourceA, sourceB, upstreamA, upstreamB, downstream],
       edges: [
@@ -243,73 +262,85 @@ describe('projectCanvasNodePresentationTruth', () => {
       ],
     });
 
-    expect(truth.columns.declared).toEqual([
+    expect(selectGraphNodeCardColumns(truth)).toEqual([
       expect.objectContaining({
-        reference: 'downstream:customer',
+        reference: input.fields[0]!.fieldId,
         sourceNodeId: upstreamB.id,
         sourceNodeName: upstreamB.name,
         nullable: true,
       }),
     ]);
   });
-  it('keeps row-number non-null when its ordering column is nullable', () => {
-    const nullableSource: CanonicalNode = {
-      ...SOURCE,
-      metadata: {
-        ...SOURCE.metadata,
-        columns: [
-          { name: 'order_id', type: 'integer' },
-          { name: 'customer', type: 'text', nullable: false },
-          { name: 'amount', type: 'numeric', nullable: true },
-        ],
-      },
-    };
-    const draft = createDvtSubstraitProjectionDraft({
-      source: {
-        nodeId: nullableSource.id,
-        schema: 'raw',
-        table: 'orders',
-        sourceRef: SOURCE_REF,
-        fields: [
-          { name: 'order_id', dataType: 'integer' },
-          { name: 'customer', dataType: 'text' },
-          { name: 'amount', dataType: 'numeric' },
-        ],
-      },
-      targetNodeId: 'transform-row-number',
-      outputs: [{ fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' }],
-    });
-    const created = createDvtSubstraitProjectionOutput(draft, {
-      alias: 'row_id',
-      expression: { kind: 'row-number', orderFieldId: 'output:amount' },
-    });
-    if (created.outcome !== 'applied') throw new Error('Expected row-number output.');
-    const transform = applyDvtSubstraitSemanticDocument(
-      {
-        id: 'transform-row-number',
-        name: 'Transform row number',
-        pluginId: 'dvt',
-        kind: 'dvt:transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-        metadata: {},
-      },
-      encodeDvtSubstraitProjectionDocument(created.draft)
-    );
+  it.each([Type_Nullability.REQUIRED, Type_Nullability.NULLABLE])(
+    'preserves the canonical window result nullability %s independently of its ordering column',
+    async (nullability) => {
+      const nullableSource: CanonicalNode = {
+        ...SOURCE,
+        metadata: {
+          ...SOURCE.metadata,
+          columns: [
+            { name: 'order_id', type: 'integer' },
+            { name: 'customer', type: 'text', nullable: false },
+            { name: 'amount', type: 'numeric', nullable: true },
+          ],
+        },
+      };
+      const draft = createDvtSubstraitProjectionDraft({
+        source: {
+          nodeId: nullableSource.id,
+          schema: 'raw',
+          table: 'orders',
+          sourceRef: SOURCE_REF,
+          fields: [
+            { name: 'order_id', dataType: 'integer' },
+            { name: 'customer', dataType: 'text' },
+            { name: 'amount', dataType: 'numeric' },
+          ],
+        },
+        targetNodeId: 'transform-row-number',
+        outputs: [{ fieldId: 'output:amount', name: 'amount', sourceFieldName: 'amount' }],
+      });
+      const created = createDvtSubstraitProjectionOutput(draft, {
+        alias: 'row_id',
+        expression: { kind: 'row-number', orderFieldId: 'output:amount' },
+      });
+      if (created.outcome !== 'applied') throw new Error('Expected row-number output.');
+      const root = created.draft.plan.relations[0]!.relType;
+      if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
+        throw new Error('Expected Project.');
+      const window = root.value.input.relType.value.expressions.find(
+        (expression) => expression.rexType.case === 'windowFunction'
+      )?.rexType;
+      if (window?.case !== 'windowFunction' || window.value.outputType?.kind.case !== 'i64')
+        throw new Error('Expected window result.');
+      window.value.outputType.kind.value.nullability = nullability;
+      const transform = applyDvtSubstraitSemanticDocument(
+        {
+          id: 'transform-row-number',
+          name: 'Transform row number',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+          metadata: {},
+        },
+        encodeDvtSubstraitSemanticDocument(created.draft)
+      );
 
-    const truth = projectCanvasNodePresentationTruth({
-      node: transform,
-      nodes: [nullableSource, transform],
-      edges: [{ sourceId: nullableSource.id, targetId: transform.id }],
-    });
+      const truth = await projectCanvasNodePresentationTruth({
+        node: transform,
+        nodes: [nullableSource, transform],
+        edges: [{ sourceId: nullableSource.id, targetId: transform.id }],
+      });
 
-    expect(truth.columns.declared.find((column) => column.name === 'row_id')).toMatchObject({
-      operations: ['ROW_NUMBER'],
-      nullable: false,
-    });
-  });
-  it('preserves mapped outputs when an unrelated second Source is connected', () => {
+      expect(truth.columns.declared.find((column) => column.name === 'row_id')).toMatchObject({
+        operations: ['ROW_NUMBER'],
+        nullable: nullability === Type_Nullability.NULLABLE,
+      });
+    }
+  );
+  it('preserves canonical outputs and nullability despite unrelated inputs and physical metadata', async () => {
     const transform = buildCanonicalTransform();
     const secondSource: CanonicalNode = {
       ...SOURCE,
@@ -329,7 +360,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       },
     };
 
-    const truth = projectCanvasNodePresentationTruth({
+    const truth = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [SOURCE, secondSource, transform],
       edges: [
@@ -344,11 +375,16 @@ describe('projectCanvasNodePresentationTruth', () => {
         sourceNodeId: SOURCE.id,
         sourceFieldName: 'customer',
         operations: ['trim'],
-        nullable: false,
+        nullable: true,
       }),
     ]);
+    expect(truth.relationalComposition).toMatchObject({
+      state: 'pending',
+      connectedInputCount: 2,
+      pendingInputCount: 1,
+    });
   });
-  it('projects only a direct upstream schema and keeps declared outputs authoritative', () => {
+  it('does not invent outputs through an unauthored consumer and keeps sink declarations authoritative', async () => {
     const transform: CanonicalNode = {
       ...buildCanonicalTransform(),
       metadata: {},
@@ -379,24 +415,38 @@ describe('projectCanvasNodePresentationTruth', () => {
     ];
 
     expect(
-      projectCanvasNodePresentationTruth({ node: sink, nodes: [SOURCE, transform, sink], edges })
-        .columns.visible
-    ).toEqual([
-      expect.objectContaining({ name: 'order_id', type: 'integer' }),
-      expect.objectContaining({ name: 'customer', type: 'text', nullable: false }),
-      expect.objectContaining({ name: 'amount', type: 'numeric' }),
+      (
+        await projectCanvasNodePresentationTruth({
+          node: sink,
+          nodes: [SOURCE, transform, sink],
+          edges,
+        })
+      ).columns.visible
+    ).toEqual([]);
+    const consumerTruth = await projectCanvasNodePresentationTruth({
+      node: transform,
+      nodes: [SOURCE, transform, sink],
+      edges,
+    });
+    expect(consumerTruth.inputBindings?.map((input) => input.name)).toEqual([
+      'order_id',
+      'customer',
+      'amount',
     ]);
+    expect(consumerTruth.columns.visible).toEqual([]);
 
     const declaredSink = {
       ...sink,
       metadata: { columns: [{ name: 'declared_id', type: 'uuid' }] },
     };
     expect(
-      projectCanvasNodePresentationTruth({
-        node: declaredSink,
-        nodes: [SOURCE, transform, declaredSink],
-        edges,
-      }).columns.visible
+      (
+        await projectCanvasNodePresentationTruth({
+          node: declaredSink,
+          nodes: [SOURCE, transform, declaredSink],
+          edges,
+        })
+      ).columns.visible
     ).toEqual([expect.objectContaining({ name: 'declared_id', provenance: 'declared' })]);
   });
 });

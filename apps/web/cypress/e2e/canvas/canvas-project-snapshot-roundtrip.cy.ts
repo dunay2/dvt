@@ -85,7 +85,7 @@ describe('Canvas project snapshot round trip', () => {
   }
 
   it('exports a saved project snapshot and imports it into a clean workspace draft', () => {
-    const downloadPath = 'cypress/downloads/sales-canvas-project-snapshot.json';
+    const downloadPath = `${Cypress.config('downloadsFolder')}/sales-canvas-project-snapshot.json`;
 
     stubRuntimeCapabilities();
     stubStatefulCanvasDraftAuthoring();
@@ -111,8 +111,8 @@ describe('Canvas project snapshot round trip', () => {
       expect(snapshot.project).to.deep.include(E2E_WORKSPACE_SESSION);
       expect(snapshot.draft.nodeIds).to.include('dvt-transform-1');
       expect(snapshot.draft.nodePositions['dvt-transform-1']).to.include.keys(['x', 'y']);
-      expect(snapshot.draft.nodePositions['dvt-transform-1'].x).to.be.a('number');
-      expect(snapshot.draft.nodePositions['dvt-transform-1'].y).to.be.a('number');
+      expect(snapshot.draft.nodePositions['dvt-transform-1']?.x).to.be.a('number');
+      expect(snapshot.draft.nodePositions['dvt-transform-1']?.y).to.be.a('number');
     });
 
     stubRuntimeCapabilities();

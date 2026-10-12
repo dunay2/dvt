@@ -1,11 +1,14 @@
-/** Owned concern: expose code-symbol duplicate and governed-source drift findings. */
+/** Owned concern: expose code-symbol diagnostics and compose the governance problem dashboard. */
 const { appendFilter } = require('../query-filter.cjs');
 const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
+const { createGovernedSourceDriftReadModelComponent } = require('./source-drift-query.cjs');
 
 function createCodeSymbolReadModelComponent(deps = {}) {
   const { schemaName } = deps.schema || require('../../planning-db-schema.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
+  const { readGitSourceInventory, sourceDriftSelect } =
+    createGovernedSourceDriftReadModelComponent(deps);
 
   function buildCodeSymbolRows(rows) {
     return rows.map((row) => [
@@ -31,17 +34,6 @@ function createCodeSymbolReadModelComponent(deps = {}) {
       textValue(row.source_path ?? row.sourcePath),
       row.start_line ?? row.startLine ?? 0,
       row.duplicate_count ?? row.duplicateCount ?? 0,
-      textValue(row.action_hint ?? row.actionHint),
-    ]);
-  }
-
-  function buildSourceDriftRows(rows) {
-    return rows.map((row) => [
-      textValue(row.finding_kind ?? row.findingKind),
-      textValue(row.severity),
-      textValue(row.source_path ?? row.sourcePath),
-      textValue(row.source_table ?? row.sourceTable),
-      row.reference_count ?? row.referenceCount ?? 0,
       textValue(row.action_hint ?? row.actionHint),
     ]);
   }
@@ -98,19 +90,6 @@ function createCodeSymbolReadModelComponent(deps = {}) {
       from ${activeSchemaName}.code_symbol_problem_query`;
   }
 
-  function sourceDriftSelect(activeSchemaName = defaultSchemaName) {
-    return `
-      select
-        finding_kind,
-        severity,
-        source_path,
-        source_table,
-        reference_count,
-        action_hint,
-        metadata
-      from ${activeSchemaName}.governed_source_drift_query`;
-  }
-
   function governanceProblemSelect(activeSchemaName = defaultSchemaName) {
     return `
       select
@@ -123,7 +102,20 @@ function createCodeSymbolReadModelComponent(deps = {}) {
         evidence_count,
         action_hint,
         metadata
-      from ${activeSchemaName}.governance_problem_dashboard_query`;
+      from ${activeSchemaName}.governance_problem_dashboard_query
+      where problem_surface <> 'source-drift'
+      union all
+      select
+        'source-drift'::text as problem_surface,
+        finding_kind,
+        severity,
+        source_path as subject_id,
+        null::text as component_id,
+        source_path as path,
+        reference_count as evidence_count,
+        action_hint,
+        metadata
+      from (${sourceDriftSelect(activeSchemaName)}) source_drift`;
   }
 
   async function readCodeSymbolRows(client, filters = {}) {
@@ -175,31 +167,8 @@ function createCodeSymbolReadModelComponent(deps = {}) {
     return result.rows;
   }
 
-  async function readSourceDriftRows(client, filters = {}) {
-    const params = [];
-    const predicates = ["source_path !~* '^https?://'"];
-    appendFilter(predicates, params, 'source_path', filters.path);
-    appendFilter(predicates, params, 'severity', filters.severity);
-
-    const limit = parseLimit(filters.limit, 50);
-    params.push(limit);
-
-    const result = await client.query(
-      `${sourceDriftSelect()}
-       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-       order by
-         case severity when 'error' then 1 when 'warning' then 2 else 3 end,
-         source_path,
-         source_table
-       limit $${params.length}`,
-      params
-    );
-
-    return result.rows;
-  }
-
   async function readGovernanceProblemRows(client, filters = {}) {
-    const params = [];
+    const params = [readGitSourceInventory()];
     const predicates = [];
     appendFilter(predicates, params, 'finding_kind', filters.kind);
     appendFilter(predicates, params, 'severity', filters.severity);
@@ -210,7 +179,7 @@ function createCodeSymbolReadModelComponent(deps = {}) {
     params.push(limit);
 
     const result = await client.query(
-      `${governanceProblemSelect()}
+      `select * from (${governanceProblemSelect()}) governance_problems
        ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
        order by
          case severity when 'blocker' then 1 when 'error' then 2 when 'warning' then 3 else 4 end,
@@ -228,15 +197,12 @@ function createCodeSymbolReadModelComponent(deps = {}) {
     buildCodeSymbolDuplicateRows,
     buildCodeSymbolRows,
     buildGovernanceProblemRows,
-    buildSourceDriftRows,
     codeSymbolProblemSelect,
     codeSymbolSelect,
     governanceProblemSelect,
     readCodeSymbolDuplicateRows,
     readCodeSymbolRows,
     readGovernanceProblemRows,
-    readSourceDriftRows,
-    sourceDriftSelect,
   };
 }
 

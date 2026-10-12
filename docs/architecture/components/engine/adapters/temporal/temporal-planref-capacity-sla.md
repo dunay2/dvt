@@ -98,7 +98,7 @@ rollover as mature scale posture.
   covers positive and negative SLA paths.
 - `packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts`
   prevents this document from drifting away from the workflow boundary stories.
-- Lane D `AR-D2` uses this profile as the governed capacity threshold evidence.
+- `AR-D2` uses this profile as the governed capacity threshold evidence.
 
 ## Diagram
 

@@ -24,7 +24,6 @@ taxonomy, or the detailed draft-state-machine spec.
 
 ## Governing Sources
 
-- [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
 - [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)

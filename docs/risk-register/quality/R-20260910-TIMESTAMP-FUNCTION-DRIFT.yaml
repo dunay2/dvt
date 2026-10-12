@@ -19,7 +19,7 @@ mitigation:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260910-timestamp-column-function.md
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
-    - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.test.ts
+    - packages/@dvt/postgres-projection/test/relationalTemporalScalar.test.ts
     - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
   follow_up:
     - Every additional temporal component or timezone requires its own governed invocation proof.

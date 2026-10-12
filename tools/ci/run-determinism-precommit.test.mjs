@@ -20,7 +20,7 @@ test('normalizeGitPath makes Windows-style git paths comparable', () => {
 test('shouldRunDeterminismPrecommit skips unrelated staged files', () => {
   assert.equal(
     shouldRunDeterminismPrecommit([
-      'docs/planning/reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md',
+      'docs/planning/reviews/ci-and-delivery/20260422-example-configuration-review.md',
       'apps/web/src/app/views/canvas/CanvasViewport.tsx',
     ]),
     false

@@ -1,5 +1,5 @@
-import { DispatchedIntentReconciliationPolicy } from './DispatchedIntentReconciliationPolicy.js';
-import { PendingIntentReconciliationPolicy } from './PendingIntentReconciliationPolicy.js';
+import { StartRunIntentMutationRejectedError } from '../../domain/startRunIntentPolicy.js';
+
 import { buildMaintenanceContext } from './RunMaintenanceContracts.js';
 import {
   RUN_MAINTENANCE_CONTEXT,
@@ -10,6 +10,7 @@ import {
   RUN_MAINTENANCE_OPERATION,
 } from './RunMaintenanceDomainConstants.js';
 import { RunMaintenanceObservabilityFacade } from './RunMaintenanceObservabilityFacade.js';
+import { StartRunIntentReconciliationPolicy } from './StartRunIntentReconciliationPolicy.js';
 type ReconcileOrphanedIntentsOptions =
   import('../../ports/IRunMaintenanceService.js').ReconcileOrphanedIntentsOptions;
 type ReconcileOrphanedIntentsResult =
@@ -26,23 +27,15 @@ type RunMaintenanceTraceContext = import('./RunMaintenanceContracts.js').RunMain
 
 export class RunMaintenanceOrphanedIntentService {
   private readonly observability: RunMaintenanceObservabilityFacade;
-  private readonly pendingPolicy: PendingIntentReconciliationPolicy;
-  private readonly dispatchedPolicy: DispatchedIntentReconciliationPolicy;
+  private readonly policy: StartRunIntentReconciliationPolicy;
 
   constructor(private readonly deps: RunMaintenanceServiceDeps) {
     this.observability = new RunMaintenanceObservabilityFacade(this.deps.observability);
-    this.pendingPolicy = new PendingIntentReconciliationPolicy({
+    this.policy = new StartRunIntentReconciliationPolicy({
       adapters: this.deps.adapters,
       intentStore: this.deps.intentStore,
       stateStoreRead: this.deps.stateStoreRead,
       stateStoreWrite: this.deps.stateStoreWrite,
-      observability: this.observability,
-    });
-    this.dispatchedPolicy = new DispatchedIntentReconciliationPolicy({
-      adapters: this.deps.adapters,
-      intentStore: this.deps.intentStore,
-      stateStoreRead: this.deps.stateStoreRead,
-      observability: this.observability,
     });
   }
 
@@ -64,6 +57,7 @@ export class RunMaintenanceOrphanedIntentService {
     const cancelled: string[] = [];
     const cancelFailed: string[] = [];
     const deferred: string[] = [];
+    const escalated: string[] = [];
 
     for (const intent of orphaned) {
       if (dryRun) {
@@ -72,16 +66,24 @@ export class RunMaintenanceOrphanedIntentService {
         deferred.push(intent.intentId);
         continue;
       }
-      const outcome = await this.reconcileIntent(intent, traceContext);
+      const outcome = await this.reconcileIntent(intent, traceContext, thresholdMs);
       if (outcome.expired !== undefined) expired.push(outcome.expired);
       if (outcome.resolved !== undefined) resolved.push(outcome.resolved);
       if (outcome.cancelled !== undefined) cancelled.push(outcome.cancelled);
       if (outcome.cancelFailed !== undefined) cancelFailed.push(outcome.cancelFailed);
       if (outcome.deferred !== undefined) deferred.push(outcome.deferred);
-      if (outcome.readyToDispatch !== undefined) deferred.push(outcome.readyToDispatch);
+      if (outcome.escalated !== undefined) escalated.push(outcome.escalated);
     }
 
-    return { inspected: orphaned.length, expired, resolved, cancelled, cancelFailed, deferred };
+    return {
+      inspected: orphaned.length,
+      expired,
+      resolved,
+      cancelled,
+      cancelFailed,
+      deferred,
+      escalated,
+    };
   }
 
   async reconcileStartRunIntent(
@@ -90,24 +92,82 @@ export class RunMaintenanceOrphanedIntentService {
     await this.deps.authorizer.assertTenantAccess(options.tenantId);
     const intent = await this.deps.intentStore.getIntent(options);
     if (intent === null) return { kind: 'missing' };
-    if (intent.status === 'RESOLVED') return { kind: 'confirmed' };
+    if (intent.reconciliation.kind === 'escalated') return { kind: 'escalated' };
+    if (intent.status === 'RESOLVED')
+      return {
+        kind:
+          intent.compensation.kind === 'not_required' && intent.providerOutcome.kind === 'started'
+            ? 'confirmed'
+            : 'blocked',
+      };
     if (intent.status === 'EXPIRED') return { kind: 'blocked' };
 
-    const outcome = await this.reconcileIntent(intent, buildMaintenanceContext(options.tenantId));
+    const outcome = await this.reconcileIntent(
+      intent,
+      buildMaintenanceContext(options.tenantId),
+      options.minimumAgeMs ?? RUN_MAINTENANCE_NUMERIC.defaultIntentReclaimAgeMs
+    );
     if (outcome.resolved !== undefined) return { kind: 'confirmed' };
-    if (outcome.readyToDispatch !== undefined) return { kind: 'ready_to_dispatch' };
+    if (outcome.escalated !== undefined) return { kind: 'escalated' };
     return { kind: 'blocked' };
   }
 
-  private reconcileIntent(
+  private async reconcileIntent(
     intent: OrphanedIntent,
-    traceContext: RunMaintenanceTraceContext
+    traceContext: RunMaintenanceTraceContext,
+    minimumAgeMs: number
   ): Promise<ReconcileOrphanedIntentOutcome> {
-    if (intent.status === RUN_MAINTENANCE_INTENT_STATUS.pending) {
-      return this.pendingPolicy.reconcile(intent, traceContext);
-    }
-    if (intent.status === RUN_MAINTENANCE_INTENT_STATUS.dispatched) {
-      return this.dispatchedPolicy.reconcile(intent, traceContext);
+    try {
+      if (
+        intent.status === RUN_MAINTENANCE_INTENT_STATUS.pending ||
+        intent.status === RUN_MAINTENANCE_INTENT_STATUS.dispatched
+      ) {
+        const claim = await this.deps.intentStore.reclaimIntent({
+          tenantId: intent.tenantId,
+          intentId: intent.intentId,
+          expectedRevision: intent.revision,
+          minimumAgeMs,
+        });
+        if (claim.kind !== 'acquired') return { deferred: intent.intentId };
+        const outcome = await this.policy.reconcile(claim.intent, claim.receipt);
+        const disposition = outcome.escalated
+          ? 'escalated'
+          : outcome.cancelFailed
+            ? 'cancel_failed'
+            : outcome.cancelled
+              ? 'cancelled'
+              : outcome.resolved
+                ? 'resolved'
+                : outcome.expired
+                  ? 'expired'
+                  : 'deferred';
+        this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentReconciliationTotal, {
+          provider: intent.provider,
+          outcome: disposition,
+          reasonCode: outcome.reasonCode ?? 'none',
+        });
+        if (outcome.resolved)
+          this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentResolvedTotal, {
+            provider: intent.provider,
+          });
+        const entry = {
+          msg: RUN_MAINTENANCE_MESSAGE.intentReconciliationObserved,
+          context: { ...traceContext, tenantId: intent.tenantId, runId: intent.runId },
+          attributes: {
+            intentId: intent.intentId,
+            outcome: disposition,
+            reasonCode: outcome.reasonCode ?? 'none',
+          },
+        };
+        if (outcome.escalated || outcome.cancelFailed || outcome.deferred)
+          this.observability.warn(entry);
+        else this.observability.info(entry);
+        return outcome;
+      }
+    } catch (error) {
+      if (error instanceof StartRunIntentMutationRejectedError)
+        return { deferred: intent.intentId };
+      throw error;
     }
     this.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentUnexpectedStatusTotal, {
       operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,

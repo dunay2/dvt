@@ -27,38 +27,40 @@ function parseArgs(argv, env = {}) {
     );
   }
 
-  let filter = resolveDefaultFilter(env);
+  const defaultFilter = resolveDefaultFilter(env);
+  const filters = [];
 
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
 
     if (arg === '--filter') {
       const next = rest[index + 1];
-      if (!next) {
+      if (!next || next.startsWith('--')) {
         throw new Error('Missing value for --filter');
       }
 
-      filter = next;
+      filters.push(next);
       index += 1;
       continue;
     }
 
     if (arg.startsWith('--filter=')) {
-      filter = arg.slice('--filter='.length);
+      const filter = arg.slice('--filter='.length);
       if (!filter) {
         throw new Error('Missing value for --filter');
       }
+      filters.push(filter);
       continue;
     }
 
     throw new Error(`Unsupported argument "${arg}"`);
   }
 
-  return { task, filter };
+  return { task, filters: filters.length > 0 ? filters : [defaultFilter] };
 }
 
-function buildTurboArgs(task, filter) {
-  return ['exec', 'turbo', 'run', task, `--filter=${filter}`];
+function buildTurboArgs(task, filters) {
+  return ['exec', 'turbo', 'run', task, ...filters.map((filter) => `--filter=${filter}`)];
 }
 
 function main(argv = process.argv.slice(2), env = process.env) {
@@ -71,7 +73,7 @@ function main(argv = process.argv.slice(2), env = process.env) {
     return 1;
   }
 
-  const result = spawnSync('pnpm', buildTurboArgs(parsed.task, parsed.filter), {
+  const result = spawnSync('pnpm', buildTurboArgs(parsed.task, parsed.filters), {
     shell: true,
     stdio: 'inherit',
     env,

@@ -7,17 +7,17 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  createLookupRunRef,
+  createObservedRunRef,
   makeAdapter,
   makeWorkflowHandleMock,
-} from './helpers/lookupRunRefHarness.js';
+} from './helpers/observeStartRunHarness.js';
 
 describe('TemporalAdapter.getProviderStatusView', () => {
   it('returns Temporal-native runtime status from handle.describe()', async () => {
     const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'RUNNING', code: 1 } }));
     const { adapter, workflowClient } = makeAdapter(() => handle);
 
-    const status = await adapter.getProviderStatusView(createLookupRunRef('run-abc', 'tenant1'));
+    const status = await adapter.getProviderStatusView(createObservedRunRef('run-abc', 'tenant1'));
 
     expect(workflowClient.getHandle).toHaveBeenCalledWith('run-abc');
     expect(handle.describe).toHaveBeenCalledOnce();
@@ -33,7 +33,7 @@ describe('TemporalAdapter.getProviderStatusView', () => {
     }));
     const { adapter } = makeAdapter(() => handle);
 
-    const status = await adapter.getProviderStatusView(createLookupRunRef('run-abc', 'tenant1'));
+    const status = await adapter.getProviderStatusView(createObservedRunRef('run-abc', 'tenant1'));
 
     expect(status).toEqual({
       provider: 'temporal',
@@ -47,7 +47,7 @@ describe('TemporalAdapter.getProviderStatusView', () => {
     }));
     const { adapter } = makeAdapter(() => handle);
 
-    const status = await adapter.getProviderStatusView(createLookupRunRef('run-abc', 'tenant1'));
+    const status = await adapter.getProviderStatusView(createObservedRunRef('run-abc', 'tenant1'));
 
     expect(status).toEqual({
       provider: 'temporal',
@@ -60,7 +60,7 @@ describe('TemporalAdapter.getProviderStatusView', () => {
     const { adapter } = makeAdapter(() => handle);
 
     await expect(
-      adapter.getProviderStatusView(createLookupRunRef('run-abc', 'tenant1'))
+      adapter.getProviderStatusView(createObservedRunRef('run-abc', 'tenant1'))
     ).rejects.toThrow('TEMPORAL_DESCRIBE_MISSING_STATUS');
   });
 });

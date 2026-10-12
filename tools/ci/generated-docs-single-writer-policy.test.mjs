@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
@@ -85,43 +86,39 @@ test('generated-doc policy checker accepts the repository policy', () => {
   assert.match(output, /\[generated-docs-policy\] OK/);
 });
 
-test('generated-doc policy checker fails closed on missing source ownership', () => {
-  const policyPath = '.tmp/generated-docs-policy.invalid.json';
+test('generated-doc policy checker fails closed on missing source ownership', (t) => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), 'dvt-generated-docs-policy-'));
+  const policyPath = join(fixtureRoot, 'invalid.json');
+  t.after(() => rmSync(fixtureRoot, { recursive: true, force: true }));
 
-  try {
-    mkdirSync(dirname(policyPath), { recursive: true });
-    writeFileSync(
-      policyPath,
-      JSON.stringify(
-        {
-          version: 1,
-          artifactClasses: [
-            {
-              id: 'invalid-generated-doc-class',
-              artifacts: ['docs/.manifest.json'],
-              sourcePaths: ['docs/missing-generated-source.md'],
-              generatorCommand: 'pnpm missing:generated-docs',
-              tracking: 'tracked',
-              manualEditPolicy: 'generator-owned',
-            },
-          ],
-        },
-        null,
-        2
-      ),
-      'utf8'
-    );
+  writeFileSync(
+    policyPath,
+    JSON.stringify(
+      {
+        version: 1,
+        artifactClasses: [
+          {
+            id: 'invalid-generated-doc-class',
+            artifacts: ['docs/.manifest.json'],
+            sourcePaths: ['docs/missing-generated-source.md'],
+            generatorCommand: 'pnpm missing:generated-docs',
+            tracking: 'tracked',
+            manualEditPolicy: 'generator-owned',
+          },
+        ],
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
 
-    const result = runNode(['scripts/check-generated-docs-policy.cjs'], {
-      GENERATED_DOCS_POLICY_PATH: policyPath,
-    });
-    const output = `${result.stdout}\n${result.stderr}`;
+  const result = runNode(['scripts/check-generated-docs-policy.cjs'], {
+    GENERATED_DOCS_POLICY_PATH: policyPath,
+  });
+  const output = `${result.stdout}\n${result.stderr}`;
 
-    assert.notEqual(result.status, 0, output);
-    assert.match(output, /source path does not exist/);
-    assert.match(output, /generator command is not available/);
-  } finally {
-    rmSync(policyPath, { force: true });
-    rmSync('.tmp', { recursive: true, force: true });
-  }
+  assert.notEqual(result.status, 0, output);
+  assert.match(output, /source path does not exist/);
+  assert.match(output, /generator command is not available/);
 });

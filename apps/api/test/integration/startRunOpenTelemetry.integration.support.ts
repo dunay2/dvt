@@ -136,7 +136,9 @@ export async function createStartRunOpenTelemetryProof(
     ['temporal', temporalAdapter],
   ]);
   const clock = new SequenceClock(asIsoUtcString('2026-08-03T00:00:00.000Z'));
-  const stateStore = new InMemoryTxStore();
+  const stateStore = new InMemoryTxStore({
+    startRunIntents: new InMemoryStartRunIntentStore(clock),
+  });
   const engineRuntime = buildWorkflowEngine({
     security: {
       authorizer: new AllowAllAuthorizer(),
@@ -145,7 +147,7 @@ export async function createStartRunOpenTelemetryProof(
     persistence: {
       stateStoreRead: stateStore,
       stateStoreWrite: stateStore,
-      intentStore: new InMemoryStartRunIntentStore(clock),
+      intentStore: stateStore.startRunIntents,
       planFetcher: planStore,
     },
     runtime: { adapters },
@@ -164,42 +166,10 @@ export async function createStartRunOpenTelemetryProof(
     }),
     delegate: new RunExecutionContextBindingUseCase({
       delegate: new EngineStartRunUseCase(engineRuntime.engine),
-      bundleBuilder: {
-        async build() {
-          throw new Error('Unexpected DBT bundle build for an empty plan');
-        },
-      },
+      preparers: [],
       contextWriter: {
         async write() {
-          throw new Error('Unexpected DBT context write for an empty plan');
-        },
-      },
-      executionTargetResolver: {
-        resolve() {
-          throw new Error('Unexpected DBT target resolution for an empty plan');
-        },
-      },
-      executionConnectionBindingVerifier: {
-        async verify() {
-          throw new Error('Unexpected DBT connection verification for an empty plan');
-        },
-      },
-      stepTypeRegistry,
-      warehouseConnectionCatalog: {
-        async listConnections() {
-          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
-        },
-        async listSourceObjects() {
-          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
-        },
-        async getConnection() {
-          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
-        },
-        async createConnection() {
-          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
-        },
-        async renameConnection() {
-          throw new Error('Unexpected PostgreSQL catalog access for an empty plan');
+          throw new Error('Unexpected context write for an empty plan');
         },
       },
     }),

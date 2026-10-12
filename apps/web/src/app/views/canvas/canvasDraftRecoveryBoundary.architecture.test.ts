@@ -8,9 +8,6 @@ import {
 
 describe('canvas draft recovery boundary architecture', () => {
   it('documents and guards protected-runtime token refresh and layout persistence semantics', () => {
-    const operabilityBacklog = readRepoFile(
-      'docs/planning/proposals/web-frontend-operability-backlog-20260430.md'
-    );
     const authGuide = readRepoFile('docs/architecture/components/web/api-client-auth-component.md');
     const layoutGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
@@ -18,11 +15,6 @@ describe('canvas draft recovery boundary architecture', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
-
-    expect(operabilityBacklog).toContain('## User Stories');
-    expect(operabilityBacklog).toContain('## Scenario Coverage Matrix');
-    expect(operabilityBacklog).toContain('protected API call');
-    expect(operabilityBacklog).toContain('drag');
 
     for (const guide of [authGuide, layoutGuide]) {
       expect(guide).toContain('## Public API');

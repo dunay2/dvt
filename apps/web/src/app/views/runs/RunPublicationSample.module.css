@@ -1,0 +1,37 @@
+/** Owned concern: publication sample layout without altering shared grid behavior. */
+.panel {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--surface-shell);
+  color: var(--text-default);
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.heading h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+.panel p {
+  margin-top: 12px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.note {
+  color: var(--text-subtle);
+}
+.error {
+  color: var(--text-error, var(--text-default));
+}
+.table {
+  min-width: 0;
+  max-height: 480px;
+  overflow: auto;
+  margin-top: 12px;
+}

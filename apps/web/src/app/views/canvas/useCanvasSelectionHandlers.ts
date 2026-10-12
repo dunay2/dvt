@@ -1,6 +1,7 @@
 /** Owned concern: translate explicit inspect and execution-selection intents into local adapter-side effects. */
 
 import { useCallback } from 'react';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
 import type { CanvasSelectionContracts } from './canvasGraphHandlerContracts';
 
@@ -25,7 +26,9 @@ export function useCanvasSelectionHandlers({
       } else {
         setInspectorNode(nodeId, preferredTabId);
       }
-      if (!focusMode && !inspectorPanelVisible) {
+      const layout = useUiLayoutStore.getState();
+      if (focusMode && layout.focusMode) layout.toggleFocusMode();
+      if (!inspectorPanelVisible) {
         toggleInspectorPanel();
       }
     },

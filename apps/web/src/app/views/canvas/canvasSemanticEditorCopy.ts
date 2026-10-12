@@ -1,0 +1,368 @@
+/** Owned concern: provide concise localized copy for the Model editor, not semantic policy. */
+import { SubstraitAnalysisError } from '@dvt/substrait-analysis';
+import {
+  TRANSFORM_DEPENDENCY_REJECTION,
+  TransformDependencyError,
+} from './TransformDependencyError';
+
+const en = {
+  back: 'Back to Canvas',
+  editor: 'Semantic editor',
+  sql: 'SQL',
+  data: 'Data',
+  expressionTree: 'Tree',
+  properties: 'Properties',
+  output: 'Output',
+  addOutputField: 'Add field',
+  removeOutputField: 'Remove field',
+  fieldSelectionRejected: 'Cannot change this selection. Check the field and its dependencies.',
+  fieldSelectionDependencies: 'Affected fields or operations',
+  reorderOutput: 'Reorder output field',
+  reorderOutputHint: 'Drag or press Alt+Up/Down to reorder output fields.',
+  inspectionOnly: 'Read-only inspection.',
+  operationData: 'Data · operation',
+  selectOperation: 'Open an operation to preview its output.',
+  viewData: 'View data',
+  previewAction: 'Preview',
+  openEditor: 'Double-click to open the semantic editor',
+  openEditorAction: 'Open semantic editor',
+  model: 'Relational transformation',
+  applied: 'Applied version',
+  draft: 'Unapplied changes',
+  preview: 'Preview data',
+  refresh: 'Refresh preview',
+  dataQueriedAtLabel: 'Queried at',
+  dataBoundedLiveTemplate:
+    'Up to {limit} rows · First page only · No guaranteed row order. The source may have changed since this query.',
+  previewHint: 'Explore the applied model without publishing a result.',
+  previewEmpty: 'Run a preview to explore this model’s rows.',
+  operationPreviewRecords: '{count}/{limit} records',
+  operationPreviewEmpty: 'Preview the output of this operation.',
+  operationPreviewUnapplied:
+    'Save the condition and apply the composition to preview this revision.',
+  operationPreviewOutsideOutputPlan:
+    'This operation is not part of the model’s output plan. Only operations included in that plan can currently be previewed.',
+  operationPreviewFailed:
+    'Preview unavailable for this operation. Check its inputs and the supported PostgreSQL profile.',
+  empty: 'The query returned no rows.',
+  loading: 'Loading preview…',
+  unavailable: 'Data preview is not available in this workspace.',
+  failed: 'The preview could not be loaded. Check the model inputs and try again.',
+  saveFailed: 'The applied changes could not be saved. Preview has not run.',
+  applyRejected: 'The model rejected these changes. Review the operation and try again.',
+  applyNodeUnavailable: 'This model is no longer available. Your local changes were preserved.',
+  stale: 'Out of date',
+  staleHint: 'The model has changed. Refresh to see the applied version.',
+  revision: 'Revision',
+  rows: 'rows',
+  sqlHint: 'Read-only SQL generated from the applied model.',
+  sqlError: 'SQL is not available for this composition. Check its inputs and supported operations.',
+  noModel: 'Connect a source and compose an operation to start.',
+  leaveTitle: 'Keep your changes?',
+  leaveDescription:
+    'This operation has unapplied changes. Apply them to the model or discard them before leaving.',
+  apply: 'Apply and continue',
+  discard: 'Discard changes',
+  stay: 'Keep editing',
+  resources: 'Resources',
+  showSources: 'Show sources',
+  hideSources: 'Collapse sources',
+  search: 'Search sources…',
+  noMatches: 'No matching sources.',
+  noCompatibleJoinFields: 'No compatible fields for this selection.',
+  edit: 'Edit',
+  editConditions: 'Edit conditions',
+  expand: 'Details',
+  collapse: 'Hide details',
+  focus: 'Focus',
+  exitFocus: 'Back to tree',
+  conditions: 'conditions',
+  columns: 'columns',
+  pending: 'Sources available to add',
+  queryInProgress: 'Preparing a preview of the applied version…',
+  pendingPreview: 'Connected sources are still outside this model’s relational tree:',
+  pendingPreviewHint:
+    'Include them in a composition and apply it, or remove their Canvas connections if they are not needed.',
+  missingPreview: 'The relational tree references disconnected sources:',
+  missingPreviewHint: 'Reconnect these sources or update the composition before requesting data.',
+  reviewInputs: 'Review inputs',
+  operations: 'Operations',
+  crossJoinWarning:
+    'CROSS combines every row on L with every row on R. Cardinality remains unknown until preview.',
+  removeCard: 'Delete card',
+  cardRemoval: {
+    missingInput: 'Missing input',
+    title: 'Delete “{name}”?',
+    dependents:
+      '{cards} will lose an input. Other cards and their configuration will be preserved.',
+    output:
+      'The model output will be disconnected. Other cards and their configuration will be preserved.',
+    preserve: 'Other cards and their configuration will be preserved.',
+    cancel: 'Cancel',
+    confirm: 'Delete',
+    dismiss: 'Close',
+    errors: {
+      card_unavailable: 'This card is no longer available. The graph has not changed.',
+      card_removal_stale: 'The graph changed. Select the card again to review its removal.',
+      card_removal_read_only: 'Editing is no longer available. The graph has not changed.',
+    },
+  },
+  removeDependents: 'Also remove dependent operations?',
+  removeDependentsHint: 'These operations cannot remain valid after this removal:',
+  closeEditor: 'Close semantic editor',
+  workspaceTabs: 'Workspace navigation',
+  removalDependency:
+    'Another operation depends on this card. Review its conditions, grouping or window before removing it.',
+  removalUnavailable: 'This card cannot be removed from the current composition.',
+  removalUnsupportedType:
+    'The current single-source projection cannot preserve this input’s field types. The tree has not changed.',
+  replaceOperation: 'Replace the current composition?',
+  replaceProjectionHint:
+    'The current profile cannot use a filtered projection as a JOIN or UNION input. Replacing it rebuilds the composition from the selected sources and removes its projection, filters and windows. Cancel keeps the current tree unchanged.',
+  replaceOperationHint:
+    'Changing the operation replaces this local composition. Cancel restores the applied version.',
+  derivedOutput: {
+    availableFields: 'Available fields',
+    inputFields: 'Input fields',
+    calculatedFields: 'Calculated fields',
+    functions: 'Functions',
+    search: 'Search fields or functions…',
+    noMatches: 'No matching items.',
+    loadingEditor: 'Loading formula editor…',
+    completionHint: 'Ctrl+Space · suggestions',
+    constantsAndOperators: 'Constants and operators',
+    emptyText: 'Empty text',
+    resultType: 'Result type',
+    dependencies: 'Uses',
+    noDependencies: 'Constant · no field dependencies',
+    localValidation: 'Expression validated locally. Preview checks the data separately.',
+    add: 'Add derived field',
+    formulaLabel: 'Formula',
+    formulaHint:
+      'Insert or drag fields, wrap a selection in a function, or write a formula. Use Output for passthrough fields.',
+    formulaInvalid: 'Complete a compatible formula before saving.',
+    update: 'Save changes',
+    functionLabel: 'Function',
+    operandsLabel: 'Arguments',
+    addOperand: 'Add argument',
+    removeOperand: 'Remove argument {index}',
+    moveOperandUp: 'Move argument {index} up',
+    moveOperandDown: 'Move argument {index} down',
+    previewLabel: 'Expression',
+    aliasLabel: 'Output name',
+    aliasRequired: 'Enter an output name to add the field.',
+    applyHint: 'Save this field first, then apply the model changes.',
+    aliasInvalid: 'Use a valid semantic field name.',
+    aliasConflict: 'That output name already exists.',
+    cancel: 'Cancel',
+    save: 'Add field',
+    failed: 'The field could not be saved. Check the formula, field names and compatible types.',
+    thisField: 'this field',
+    stale: 'The model changed. Reopen the field before retrying. Your formula has been kept.',
+    rejections: {
+      [TRANSFORM_DEPENDENCY_REJECTION.cycle]:
+        'This formula creates a dependency cycle involving {fields}. Remove the circular reference.',
+      [TRANSFORM_DEPENDENCY_REJECTION.typeConflict]:
+        'This change makes {fields} incompatible. Adjust the dependent formulas or keep a compatible type.',
+      [TRANSFORM_DEPENDENCY_REJECTION.referenced]:
+        'The calculated fields {fields} still depend on this definition. Remove those references before deleting it.',
+      [TRANSFORM_DEPENDENCY_REJECTION.unavailable]:
+        'The field {fields} is unavailable. Restore it or choose an available field.',
+      [TRANSFORM_DEPENDENCY_REJECTION.ambiguous]:
+        'The name {fields} matches more than one field. Rename the conflicting fields.',
+    },
+  },
+};
+const es: typeof en = {
+  back: 'Volver al Canvas',
+  editor: 'Editor semántico',
+  sql: 'SQL',
+  data: 'Datos',
+  expressionTree: 'Árbol',
+  properties: 'Propiedades',
+  output: 'Output',
+  addOutputField: 'Añadir campo',
+  removeOutputField: 'Quitar campo',
+  fieldSelectionRejected: 'No se puede cambiar la selección. Revisa el campo y sus dependencias.',
+  fieldSelectionDependencies: 'Campos u operaciones afectados',
+  reorderOutput: 'Reordenar campo de salida',
+  reorderOutputHint: 'Arrastra o pulsa Alt+Arriba/Abajo para reordenar los campos de salida.',
+  inspectionOnly: 'Inspección de solo lectura.',
+  operationData: 'Datos · operación',
+  selectOperation: 'Abre una operación para previsualizar su salida.',
+  viewData: 'Ver datos',
+  previewAction: 'Vista previa',
+  openEditor: 'Haz doble clic para abrir el editor semántico',
+  openEditorAction: 'Abrir editor semántico',
+  model: 'Transformación relacional',
+  applied: 'Versión aplicada',
+  draft: 'Cambios sin aplicar',
+  preview: 'Vista previa de datos',
+  refresh: 'Actualizar vista previa',
+  dataQueriedAtLabel: 'Consultado a las',
+  dataBoundedLiveTemplate:
+    'Hasta {limit} filas · Solo primera página · Sin orden garantizado. El origen puede haber cambiado desde esta consulta.',
+  previewHint: 'Explora el modelo aplicado sin publicar un resultado.',
+  previewEmpty: 'Ejecuta una vista previa para explorar las filas del modelo.',
+  operationPreviewRecords: '{count}/{limit} registros',
+  operationPreviewEmpty: 'Previsualiza la salida de esta operación.',
+  operationPreviewUnapplied:
+    'Guarda la condición y aplica la composición para previsualizar esta revisión.',
+  operationPreviewOutsideOutputPlan:
+    'Esta operación no forma parte del plan de salida del modelo. Actualmente solo pueden previsualizarse las operaciones incluidas en ese plan.',
+  operationPreviewFailed:
+    'Vista previa no disponible para esta operación. Comprueba sus entradas y el perfil PostgreSQL admitido.',
+  empty: 'La consulta no ha devuelto filas.',
+  loading: 'Cargando vista previa…',
+  unavailable: 'La vista previa de datos no está disponible en este espacio.',
+  failed:
+    'No se ha podido cargar la vista previa. Comprueba las entradas del modelo y vuelve a intentarlo.',
+  saveFailed:
+    'No se han podido guardar los cambios aplicados. No se ha consultado la vista previa.',
+  applyRejected: 'El modelo ha rechazado estos cambios. Revisa la operación e inténtalo de nuevo.',
+  applyNodeUnavailable: 'Este modelo ya no está disponible. Se han conservado tus cambios locales.',
+  stale: 'Obsoleto',
+  staleHint: 'El modelo ha cambiado. Actualiza para ver la versión aplicada.',
+  revision: 'Revisión',
+  rows: 'filas',
+  sqlHint: 'SQL de solo lectura generado a partir del modelo aplicado.',
+  sqlError:
+    'El SQL no está disponible para esta composición. Comprueba sus entradas y operaciones admitidas.',
+  noModel: 'Conecta una fuente y compón una operación para empezar.',
+  leaveTitle: '¿Qué hacemos con tus cambios?',
+  leaveDescription:
+    'Esta operación tiene cambios sin aplicar. Aplícalos al modelo o descártalos antes de salir.',
+  apply: 'Aplicar y continuar',
+  discard: 'Descartar cambios',
+  stay: 'Seguir editando',
+  resources: 'Recursos',
+  showSources: 'Mostrar fuentes',
+  hideSources: 'Plegar fuentes',
+  search: 'Buscar fuentes…',
+  noMatches: 'No hay fuentes que coincidan.',
+  noCompatibleJoinFields: 'No hay campos compatibles con esta selección.',
+  edit: 'Editar',
+  editConditions: 'Editar condiciones',
+  expand: 'Detalles',
+  collapse: 'Ocultar detalles',
+  focus: 'Focus',
+  exitFocus: 'Volver al árbol',
+  conditions: 'condiciones',
+  columns: 'columnas',
+  pending: 'Fuentes disponibles para añadir',
+  queryInProgress: 'Preparando la vista previa de la versión aplicada…',
+  pendingPreview: 'Hay fuentes conectadas que aún no forman parte del árbol relacional:',
+  pendingPreviewHint:
+    'Inclúyelas en una composición y aplícala, o retira sus conexiones del Canvas si no las necesitas.',
+  missingPreview: 'El árbol relacional hace referencia a fuentes desconectadas:',
+  missingPreviewHint:
+    'Reconecta estas fuentes o actualiza la composición antes de consultar datos.',
+  reviewInputs: 'Revisar entradas',
+  operations: 'Operaciones',
+  crossJoinWarning:
+    'CROSS combina cada fila de L con cada fila de R. La cardinalidad no se conoce hasta previsualizar.',
+  removeCard: 'Eliminar tarjeta',
+  cardRemoval: {
+    missingInput: 'Falta una entrada',
+    title: '¿Eliminar «{name}»?',
+    dependents:
+      '{cards} perderá una entrada. Las demás tarjetas y su configuración se conservarán.',
+    output:
+      'La salida del modelo quedará desconectada. Las demás tarjetas y su configuración se conservarán.',
+    preserve: 'Las demás tarjetas y su configuración se conservarán.',
+    cancel: 'Cancelar',
+    confirm: 'Eliminar',
+    dismiss: 'Cerrar',
+    errors: {
+      card_unavailable: 'Esta tarjeta ya no está disponible. El grafo no se ha modificado.',
+      card_removal_stale:
+        'El grafo ha cambiado. Selecciona de nuevo la tarjeta para revisar su retirada.',
+      card_removal_read_only: 'La edición ya no está disponible. El grafo no se ha modificado.',
+    },
+  },
+  removeDependents: '¿Retirar también las operaciones dependientes?',
+  removeDependentsHint: 'Estas operaciones no pueden seguir siendo válidas tras la retirada:',
+  closeEditor: 'Cerrar editor semántico',
+  workspaceTabs: 'Navegación del espacio de trabajo',
+  removalDependency:
+    'Otra operación depende de esta tarjeta. Revisa sus condiciones, agrupación o ventana antes de retirarla.',
+  removalUnavailable: 'No se puede retirar esta tarjeta de la composición actual.',
+  removalUnsupportedType:
+    'La proyección actual de una sola fuente no puede conservar los tipos de esta entrada. El árbol no se ha modificado.',
+  replaceOperation: '¿Reemplazar la composición actual?',
+  replaceProjectionHint:
+    'El perfil actual no admite una proyección filtrada como entrada de JOIN o UNION. Al sustituirla se reconstruye la composición con las fuentes seleccionadas y se retiran su proyección, filtros y ventanas. Cancelar mantiene el árbol actual intacto.',
+  replaceOperationHint:
+    'Cambiar la operación reemplaza esta composición local. Cancelar recupera la versión aplicada.',
+  derivedOutput: {
+    availableFields: 'Campos disponibles',
+    inputFields: 'Campos de entrada',
+    calculatedFields: 'Campos calculados',
+    functions: 'Funciones',
+    search: 'Buscar campos o funciones…',
+    noMatches: 'Sin coincidencias.',
+    loadingEditor: 'Cargando editor de fórmulas…',
+    completionHint: 'Ctrl+Espacio · sugerencias',
+    constantsAndOperators: 'Constantes y operadores',
+    emptyText: 'Texto vacío',
+    resultType: 'Tipo de resultado',
+    dependencies: 'Utiliza',
+    noDependencies: 'Constante · sin dependencias de campos',
+    localValidation: 'Expresión validada localmente. Preview comprueba los datos por separado.',
+    add: 'Añadir campo derivado',
+    formulaLabel: 'Fórmula',
+    formulaHint:
+      'Inserta o arrastra campos, aplica una función a la selección o escribe una fórmula. Usa Output para pasar campos sin calcular.',
+    formulaInvalid: 'Completa una fórmula compatible antes de guardar.',
+    update: 'Guardar cambios',
+    functionLabel: 'Función',
+    operandsLabel: 'Argumentos',
+    addOperand: 'Añadir argumento',
+    removeOperand: 'Retirar argumento {index}',
+    moveOperandUp: 'Subir argumento {index}',
+    moveOperandDown: 'Bajar argumento {index}',
+    previewLabel: 'Expresión',
+    aliasLabel: 'Nombre de salida',
+    aliasRequired: 'Escribe un nombre de salida para añadir el campo.',
+    applyHint: 'Guarda este campo y después aplica los cambios del modelo.',
+    aliasInvalid: 'Usa un nombre de campo semántico válido.',
+    aliasConflict: 'Ese nombre de salida ya existe.',
+    cancel: 'Cancelar',
+    save: 'Añadir campo',
+    failed:
+      'No se ha podido guardar el campo. Comprueba la fórmula, los nombres y la compatibilidad de tipos.',
+    thisField: 'este campo',
+    stale:
+      'El modelo ha cambiado. Reabre el campo antes de reintentar. Se ha conservado tu fórmula.',
+    rejections: {
+      [TRANSFORM_DEPENDENCY_REJECTION.cycle]:
+        'Esta fórmula crea un ciclo de dependencias entre {fields}. Retira la referencia circular.',
+      [TRANSFORM_DEPENDENCY_REJECTION.typeConflict]:
+        'Este cambio hace incompatibles los campos {fields}. Ajusta las fórmulas dependientes o conserva un tipo compatible.',
+      [TRANSFORM_DEPENDENCY_REJECTION.referenced]:
+        'Los campos calculados {fields} aún dependen de esta definición. Retira esas referencias antes de eliminarla.',
+      [TRANSFORM_DEPENDENCY_REJECTION.unavailable]:
+        'El campo {fields} no está disponible. Restáuralo o elige un campo disponible.',
+      [TRANSFORM_DEPENDENCY_REJECTION.ambiguous]:
+        'El nombre {fields} coincide con varios campos. Cambia los nombres en conflicto.',
+    },
+  },
+};
+export type CanvasSemanticEditorCopy = typeof en;
+export function resolveCanvasSemanticEditorCopy(language: string): CanvasSemanticEditorCopy {
+  return language === 'es' ? es : en;
+}
+
+export function formatCanvasTransformDependencyError(
+  error: unknown,
+  copy: Pick<CanvasSemanticEditorCopy, 'derivedOutput'>
+): string | null {
+  if (error instanceof TransformDependencyError)
+    return copy.derivedOutput.rejections[error.code].replace(
+      '{fields}',
+      error.fields.join(', ') || copy.derivedOutput.thisField
+    );
+  if (error instanceof SubstraitAnalysisError && error.code === 'stale_document')
+    return copy.derivedOutput.stale;
+  return null;
+}

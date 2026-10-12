@@ -182,22 +182,3 @@ For the current Postgres implementation, the relevant physical tables include:
 
 Renames for conceptual neatness are not documentation changes. They are schema
 migration work and should be justified as such.
-
-## Operational Backlog Worth Keeping
-
-These themes remain valid backlog candidates even though older inbox packs are
-not canonical:
-
-- snapshot rebuild tooling;
-- replay certification tests;
-- retention and archival policy;
-- index and partitioning review;
-- outbox lag metrics;
-- operational dashboards;
-- recovery runbooks.
-
-## Related Working Material
-
-Non-canonical but useful curation material:
-
-- [`docs/archive/working-notes/state-store-extraction.md`](../../../../../archive/working-notes/state-store-extraction.md)

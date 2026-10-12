@@ -1,5 +1,4 @@
 import type { Connection, Edge } from '@xyflow/react';
-import { DVT_TRANSFORM_AUTHORING_MODE } from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
@@ -10,25 +9,10 @@ import { buildCanvasAuthoringGraphProjection } from './canvasAuthoringGraphProje
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
 import {
-  applyDvtSubstraitSemanticDocument,
-  readDvtTransformAuthoringAuthority,
-} from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitProjectionDraft,
-  decodeDvtSubstraitProjectionDocument,
-  encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
-  resolveDvtSubstraitProjectionSource,
-} from './canvasDvtSubstraitProjection';
-import {
   resolveCanvasEdgeCreationTransaction,
   resolveCanvasEdgeReconnectTransaction,
 } from './canvasEdgeAdmissionTransaction';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
-import {
-  reorderCanvasColumnOutput,
-  setCanvasColumnOutputIncluded,
-} from './canvasColumnOutputAuthoring';
 
 function buildCanonicalNode(
   id: string,
@@ -87,15 +71,13 @@ function buildDraftSession(
 }
 
 const pluginPortMap = getPluginPortMap();
-const OPAQUE_FIELD_ID =
-  /^dvt_fld_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 describe('canvasEdgeAdmissionTransaction', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('creates an edge with the next viewport edges and draft visible edges together', () => {
+  it('creates an edge with the next viewport edges and draft visible edges together', async () => {
     vi.spyOn(Date, 'now').mockReturnValue(123);
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
@@ -108,7 +90,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       targetHandle: null,
     };
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection,
       draftSession: buildDraftSession(),
@@ -132,7 +114,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('binds a newly connected DBT model to the real origin schema in the same transaction', () => {
+  it('binds a newly connected DBT model to the real origin schema in the same transaction', async () => {
     const source = {
       ...buildConnectedSourceNode('source-node', []),
       pluginId: 'dvt.warehouse-source',
@@ -150,7 +132,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       },
     };
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById: new Map([
         [source.id, source],
         [model.id, model],
@@ -176,295 +158,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('creates canonical column mappings with opaque output identities in the stage transaction', () => {
-    const source = buildConnectedSourceNode('source-node', [
-      { name: 'order_id', type: 'integer' },
-      { name: 'customer', type: 'text' },
-    ]);
-    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
-    const canonicalNodesById = new Map<string, CanonicalNode>([
-      [source.id, source],
-      [transform.id, transform],
-    ]);
-
-    const transaction = resolveCanvasEdgeCreationTransaction({
-      canonicalNodesById,
-      connection: {
-        source: source.id,
-        sourceHandle: null,
-        target: transform.id,
-        targetHandle: null,
-      },
-      draftSession: buildDraftSession(),
-      edges: [],
-      pluginPortMap,
-    });
-
-    expect(transaction.outcome).toBe('created');
-    if (transaction.outcome !== 'created') {
-      throw new Error('Expected a created edge transaction');
-    }
-    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
-      { sourceId: source.id, targetId: transform.id },
-    ]);
-    const mappedTransform = transaction.draftSession.localNodeCatalog?.[transform.id];
-    if (mappedTransform == null) {
-      throw new Error('Expected the created transaction to update the transform recipe');
-    }
-    const authority = readDvtTransformAuthoringAuthority(mappedTransform)!;
-    expect(authority.mode).toBe(DVT_TRANSFORM_AUTHORING_MODE.substrait);
-    if (authority.mode !== DVT_TRANSFORM_AUTHORING_MODE.substrait) return;
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    expect(inspection.ok).toBe(true);
-    if (!inspection.ok) return;
-    expect(inspection.projection.source.sourceRef.sourceObjectId).toBe(`raw.${source.id}`);
-    expect(inspection.projection.outputs).toMatchObject([
-      { name: 'order_id', sourceFieldName: 'order_id' },
-      { name: 'customer', sourceFieldName: 'customer' },
-    ]);
-    const outputIds = inspection.projection.outputs.map((output) => output.fieldId);
-    expect(outputIds).toHaveLength(2);
-    outputIds.forEach((fieldId) => expect(fieldId).toMatch(OPAQUE_FIELD_ID));
-    expect(new Set(outputIds).size).toBe(2);
-    expect(outputIds[0]).not.toContain('order_id');
-    expect(outputIds[1]).not.toContain('customer');
-  });
-
-  it('creates editable downstream Model outputs when connecting Model to Model', () => {
-    const source = buildConnectedSourceNode('source-node', [
-      { name: 'order_id', type: 'integer' },
-      { name: 'customer', type: 'text' },
-    ]);
-    const upstreamBase = buildCanonicalNode('upstream-model', 'transform', 'dvt:transform');
-    const physicalSource = resolveDvtSubstraitProjectionSource(source);
-    if (physicalSource == null) throw new Error('Expected valid physical source.');
-    const upstream = applyDvtSubstraitSemanticDocument(
-      upstreamBase,
-      encodeDvtSubstraitProjectionDocument(
-        createDvtSubstraitProjectionDraft({
-          source: physicalSource,
-          targetNodeId: upstreamBase.id,
-          outputs: [
-            { fieldId: 'upstream:order_id', name: 'order_id', sourceFieldName: 'order_id' },
-            { fieldId: 'upstream:customer', name: 'customer', sourceFieldName: 'customer' },
-          ],
-        })
-      )
-    );
-    const downstream = buildCanonicalNode('downstream-model', 'transform', 'dvt:transform');
-    const draftSession: CanvasDraftSession = {
-      ...buildDraftSession([{ sourceId: source.id, targetId: upstream.id }]),
-      workingSet: {
-        visibleNodeIds: [source.id, upstream.id, downstream.id],
-        visibleEdges: [{ sourceId: source.id, targetId: upstream.id }],
-        pendingExplicitNodeIds: [],
-      },
-      localNodeCatalog: {
-        [source.id]: source,
-        [upstream.id]: upstream,
-        [downstream.id]: downstream,
-      },
-    };
-    const transaction = resolveCanvasEdgeCreationTransaction({
-      canonicalNodesById: new Map([
-        [source.id, source],
-        [upstream.id, upstream],
-        [downstream.id, downstream],
-      ]),
-      connection: {
-        source: upstream.id,
-        sourceHandle: null,
-        target: downstream.id,
-        targetHandle: null,
-      },
-      draftSession,
-      edges: [{ id: 'source-upstream', source: source.id, target: upstream.id }],
-      pluginPortMap,
-    });
-
-    expect(transaction.outcome).toBe('created');
-    if (transaction.outcome !== 'created') throw new Error('Expected Model chain connection.');
-    const mappedDownstream = transaction.draftSession.localNodeCatalog?.[downstream.id];
-    if (mappedDownstream == null) throw new Error('Expected downstream semantic authority.');
-    const authority = readDvtTransformAuthoringAuthority(mappedDownstream);
-    if (authority == null) throw new Error('Expected downstream transform authority.');
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
-    );
-    expect(inspection.ok).toBe(true);
-    if (!inspection.ok) return;
-    expect(inspection.projection.outputs).toMatchObject([
-      { name: 'order_id', sourceFieldId: 'upstream:order_id' },
-      { name: 'customer', sourceFieldId: 'upstream:customer' },
-    ]);
-    expect(inspection.projection.outputs.map((output) => output.fieldId)).not.toEqual([
-      'upstream:order_id',
-      'upstream:customer',
-    ]);
-
-    const customerOutputId = inspection.projection.outputs[1]!.fieldId;
-    const removed = setCanvasColumnOutputIncluded({
-      draftSession: transaction.draftSession,
-      canonicalNodesById: new Map([
-        [source.id, source],
-        [upstream.id, upstream],
-        [downstream.id, downstream],
-      ]),
-      targetNodeId: downstream.id,
-      columnId: customerOutputId,
-      columnType: 'text',
-      output: false,
-    });
-    expect(removed.outcome).toBe('applied');
-    if (removed.outcome !== 'applied') return;
-    const removedNode = removed.draftSession.localNodeCatalog?.[downstream.id];
-    if (removedNode == null) throw new Error('Expected downstream output selection.');
-    expect(
-      projectCanvasNodePresentationTruth({
-        node: removedNode,
-        nodes: [source, upstream, removedNode],
-        edges: removed.draftSession.workingSet.visibleEdges,
-      }).columns.visible.find((column) => column.name === 'customer')
-    ).toMatchObject({
-      provenance: 'inherited',
-      reference: 'upstream:customer',
-      sourceNodeId: upstream.id,
-    });
-    const restored = setCanvasColumnOutputIncluded({
-      draftSession: removed.draftSession,
-      canonicalNodesById: new Map([
-        [source.id, source],
-        [upstream.id, upstream],
-        [downstream.id, downstream],
-      ]),
-      targetNodeId: downstream.id,
-      columnId: 'upstream:customer',
-      columnType: 'text',
-      output: true,
-    });
-    expect(restored.outcome).toBe('applied');
-    if (restored.outcome !== 'applied') return;
-    const restoredNode = restored.draftSession.localNodeCatalog?.[downstream.id];
-    if (restoredNode == null) throw new Error('Expected restored downstream output.');
-    const restoredAuthority = readDvtTransformAuthoringAuthority(restoredNode);
-    if (restoredAuthority == null) throw new Error('Expected restored downstream authority.');
-    const restoredInspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(restoredAuthority.semanticDocument)
-    );
-    if (!restoredInspection.ok) throw new Error('Expected restored downstream projection.');
-    const restoredOrder = restoredInspection.projection.outputs.find(
-      (output) => output.sourceFieldId === 'upstream:order_id'
-    );
-    const restoredCustomer = restoredInspection.projection.outputs.find(
-      (output) => output.sourceFieldId === 'upstream:customer'
-    );
-    if (restoredOrder == null || restoredCustomer == null) {
-      throw new Error('Expected both downstream outputs.');
-    }
-    const reordered = reorderCanvasColumnOutput({
-      draftSession: restored.draftSession,
-      canonicalNodesById: new Map([
-        [source.id, source],
-        [upstream.id, upstream],
-        [downstream.id, downstream],
-      ]),
-      targetNodeId: downstream.id,
-      columnId: restoredCustomer.fieldId,
-      targetColumnId: restoredOrder.fieldId,
-      placement: 'before',
-    });
-    expect(reordered.outcome).toBe('applied');
-    if (reordered.outcome !== 'applied') return;
-    const reorderedNode = reordered.draftSession.localNodeCatalog?.[downstream.id];
-    if (reorderedNode == null) throw new Error('Expected reordered downstream node.');
-    const reorderedAuthority = readDvtTransformAuthoringAuthority(reorderedNode);
-    if (reorderedAuthority == null) throw new Error('Expected reordered downstream authority.');
-    const reorderedInspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(reorderedAuthority.semanticDocument)
-    );
-    expect(reorderedInspection.ok).toBe(true);
-    if (!reorderedInspection.ok) return;
-    expect(reorderedInspection.projection.targetRelationId).toBe(
-      inspection.projection.targetRelationId
-    );
-    expect(
-      reorderedInspection.projection.outputs.map((output) => ({
-        fieldId: output.fieldId,
-        sourceFieldId: output.sourceFieldId,
-      }))
-    ).toEqual([
-      {
-        fieldId: restoredCustomer.fieldId,
-        sourceFieldId: 'upstream:customer',
-      },
-      {
-        fieldId: restoredOrder.fieldId,
-        sourceFieldId: 'upstream:order_id',
-      },
-    ]);
-  });
-
-  it('creates a second source edge without inventing a multi-source projection', () => {
-    const firstSource = buildConnectedSourceNode('source-node', [
-      { name: 'shared_id', type: 'integer' },
-      { name: 'first_only', type: 'text' },
-    ]);
-    const secondSource = buildConnectedSourceNode('second-source', [
-      { name: 'shared_id', type: 'integer' },
-      { name: 'second_only', type: 'numeric' },
-    ]);
-    const transform = buildCanonicalNode('transform-node', 'transform', 'dvt:transform');
-    const canonicalNodesById = new Map([
-      [firstSource.id, firstSource],
-      [secondSource.id, secondSource],
-      [transform.id, transform],
-    ]);
-    const firstEdge: Edge = {
-      id: 'first-source-to-transform',
-      source: firstSource.id,
-      target: transform.id,
-    };
-    const draftSession = {
-      ...buildDraftSession([{ sourceId: firstSource.id, targetId: transform.id }]),
-      workingSet: {
-        visibleNodeIds: [firstSource.id, secondSource.id, transform.id],
-        visibleEdges: [{ sourceId: firstSource.id, targetId: transform.id }],
-        pendingExplicitNodeIds: [],
-      },
-    };
-
-    const transaction = resolveCanvasEdgeCreationTransaction({
-      canonicalNodesById,
-      connection: {
-        source: secondSource.id,
-        sourceHandle: null,
-        target: transform.id,
-        targetHandle: null,
-      },
-      draftSession,
-      edges: [firstEdge],
-      pluginPortMap,
-    });
-
-    expect(transaction.outcome).toBe('created');
-    if (transaction.outcome !== 'created') {
-      throw new Error('Expected a created edge transaction');
-    }
-    expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
-      { sourceId: firstSource.id, targetId: transform.id },
-      { sourceId: secondSource.id, targetId: transform.id },
-    ]);
-    expect(transaction.draftSession.localNodeCatalog?.[transform.id]).toBeUndefined();
-  });
-
-  it('rejects creation when an endpoint is missing from the canonical graph', () => {
+  it('rejects creation when an endpoint is missing from the canonical graph', async () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'source-node',
@@ -483,12 +182,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects self-loop creation before graph effects are produced', () => {
+  it('rejects self-loop creation before graph effects are produced', async () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'source-node',
@@ -507,14 +206,14 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('rejects reverse transformation direction in constrained transformation graphs', () => {
+  it('rejects reverse transformation direction in constrained transformation graphs', async () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
       ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:transform')],
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: 'sink-node',
@@ -533,7 +232,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     });
   });
 
-  it('keeps a rejected stage edge out of persistence and Inputs/Outputs', () => {
+  it('keeps a rejected stage edge out of persistence and Inputs/Outputs', async () => {
     const source = buildCanonicalNode('source-node', 'input', 'dvt:source');
     const sink = buildCanonicalNode('sink-node', 'output', 'dvt:sink');
     const canonicalNodes = [source, sink];
@@ -548,7 +247,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     };
     const viewportEdges: Edge[] = [];
 
-    const transaction = resolveCanvasEdgeCreationTransaction({
+    const transaction = await resolveCanvasEdgeCreationTransaction({
       canonicalNodesById,
       connection: {
         source: source.id,
@@ -649,7 +348,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
     ]);
   });
 
-  it('reprojects available transform columns from the replacement upstream source', () => {
+  it('reprojects available transform columns from the replacement upstream source', async () => {
     const firstSource = {
       ...buildCanonicalNode('source-node', 'input', 'dvt:source'),
       metadata: { columns: [{ name: 'legacy_id', type: 'integer' }] },
@@ -700,7 +399,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
       { sourceId: replacementSource.id, targetId: transform.id },
     ]);
 
-    const presentation = projectCanvasNodePresentationTruth({
+    const presentation = await projectCanvasNodePresentationTruth({
       node: transform,
       nodes: [firstSource, replacementSource, transform],
       edges: transaction.draftSession.workingSet.visibleEdges,

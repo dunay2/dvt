@@ -16,12 +16,29 @@ import type {
   RecoveryRunBootstrapFactory,
   RecoveryRunBootstrapResult,
   RunBootstrapInput,
+  StartRunWrite,
+  StartRunWriteResult,
 } from '../ports/IRunStateStore.js';
+import type { StartRunIntentClaimReceipt } from '../ports/IStartRunIntentStore.js';
 
 import { InMemoryRunStateCore } from './InMemoryRunStateCore.js';
+import { InMemoryStartRunIntentStore } from './InMemoryStartRunIntentStore.js';
 
 export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalenessQuery {
-  private readonly runState = new InMemoryRunStateCore();
+  private readonly runState: InMemoryRunStateCore;
+  readonly startRunIntents: InMemoryStartRunIntentStore;
+
+  constructor(startRunIntents = new InMemoryStartRunIntentStore()) {
+    this.startRunIntents = startRunIntents;
+    this.runState = new InMemoryRunStateCore({ startRunIntents });
+  }
+
+  applyStartRunWrite(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult> {
+    return this.runState.applyStartRunWrite(receipt, write);
+  }
 
   getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     return this.runState.getRunMetadataByRunId(tenantId, runId);

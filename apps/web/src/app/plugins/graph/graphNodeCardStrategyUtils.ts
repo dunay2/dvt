@@ -1,4 +1,5 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
+import { formatCompactNumber } from '../../components/canvas/formatCompactNumber';
 import type { CanonicalNode } from '../../types/canonical';
 import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
@@ -69,16 +70,6 @@ export function buildGraphNodeSourceIdentity(
 
 export function arrayCount(value: unknown): number | null {
   return Array.isArray(value) ? value.length : null;
-}
-
-export function formatCompactNumber(value: number): string {
-  if (Math.abs(value) >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-  }
-  if (Math.abs(value) >= 1_000) {
-    return `${(value / 1_000).toFixed(1).replace(/\.0$/, '')}k`;
-  }
-  return String(value);
 }
 
 export function formatBytes(value: number, locale?: string): string {

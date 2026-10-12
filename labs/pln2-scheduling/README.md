@@ -23,15 +23,15 @@ Each output directory must be new. Outputs: `corpus.json`, `summary.json`,
 outcomes, environment, protocol/source/corpus hashes. CSV is for comparison;
 traces preserve dependencies, start/end times and resource observations.
 
-| Strategy | Implementation in this branch | Information supplied |
-| --- | --- | --- |
-| lexical | Baseline reproduction, not production DVT | DAG and IDs |
-| downstream | Local implementation of Airflow's unit-weight formula | DAG |
-| bottom-level | Structural longest-remaining-path policy | DAG |
-| duration-level | Informed diagnostic, not a structural default | DAG + known durations |
-| explicit-priority | Separate user priority, applied among ready/feasible tasks | DAG + priorities |
-| dask-real | Optional genuine pinned `dask.order` subprocess | DAG |
-| highs-native | Optional genuine HiGHS via SciPy | Durations + precedences + capacities |
+| Strategy          | Implementation in this branch                              | Information supplied                 |
+| ----------------- | ---------------------------------------------------------- | ------------------------------------ |
+| lexical           | Baseline reproduction, not production DVT                  | DAG and IDs                          |
+| downstream        | Local implementation of Airflow's unit-weight formula      | DAG                                  |
+| bottom-level      | Structural longest-remaining-path policy                   | DAG                                  |
+| duration-level    | Informed diagnostic, not a structural default              | DAG + known durations                |
+| explicit-priority | Separate user priority, applied among ready/feasible tasks | DAG + priorities                     |
+| dask-real         | Optional genuine pinned `dask.order` subprocess            | DAG                                  |
+| highs-native      | Optional genuine HiGHS via SciPy                           | Durations + precedences + capacities |
 
 The ready-queue and layer-barrier controls share the same capacities. Neither
 is the production Temporal runtime. A numerical score is not a SQL estimate.
@@ -76,8 +76,10 @@ solver build/solve time, objective/bound/gap, input-permutation behavior,
 coverage and hard-constraint validation. Process-wide RSS is not a per-policy
 memory benchmark. Known durations are laboratory truth, not estimated seconds.
 
-[Measured evidence](evidence/verification.json) records the local run performed
-for this branch. Full runs are regenerated under ignored `.runs/`; historical
+[Historical measured evidence](evidence/verification.json) records the original
+connector-hosted run, not the current integration gates. Current integration
+receipts and exact base/head admission are recorded in [#3205](https://github.com/dunay2/dvt/issues/3205)
+and its implementation PR. Full runs are regenerated under ignored `.runs/`; historical
 outputs are not overwritten. No SQL speedup or product acceptance is claimed.
 
 ## Next experiments, not adapters hidden behind stubs
@@ -87,7 +89,8 @@ Timefold is deferred. Their repository references are in `sources.json`.
 They are NOT implemented or executed by the runners above. There is no fake
 adapter, second workflow engine or change to production `ExecutionPlan`.
 
-Before any production adoption: resolve Planning DB architecture consultation,
-run the repository's commit helper/hooks, lint/typecheck and `verify:prepush`,
-and complete C0 review. This connector-hosted lab was not published through
-local repository hooks (pnpm/full checkout unavailable); it is not merge-ready.
+Lab-only integration uses the operated `RunPlannerSchedulingLaboratory` rail
+and design `GH-3205-LAB-ONLY-INTEGRATION`, enabled commit-helper hooks, local
+validation and exact-head CI. This does not approve any policy for production.
+Before production adoption, complete the separate C0 comparison and ownership
+review in #3205/#3204. Missing optional software is not passing upstream evidence.

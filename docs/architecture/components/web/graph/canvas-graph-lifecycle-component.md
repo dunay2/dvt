@@ -27,7 +27,6 @@ architecture pack. It explains:
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-- [TF-E2 production node authoring and persistence plan](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md)
 
 ## Component Reading Rule
 

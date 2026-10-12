@@ -5,13 +5,13 @@ import {
   type ExecutionSelection,
   ConnectedSourceRefSchema,
 } from '@dvt/contracts';
-import { inspectDvtSubstraitNInputJoinDraft, hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
+import { hasConnectedRelationSources } from './canvasConnectedRelationInputs';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { canvasViewCopy } from './copy';
 
@@ -76,28 +76,15 @@ function resolveTerminalProjectionClosure(
     const authority = readDvtTransformAuthoringAuthority(transform);
     if (authority === null) return null;
     const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    if (sources.length > 1) {
-      const inspection = inspectDvtSubstraitNInputJoinDraft(draft);
-      if (!inspection.ok || inspection.projection.inputs.length !== sources.length) return null;
-      const refs = sources.map((source) =>
-        ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef)
-      );
-      if (
-        inspection.projection.inputs.some(
-          (input) =>
-            refs.filter(
-              (ref) =>
-                ref.sourceObjectId === input.sourceRef.sourceObjectId &&
-                hasSameConnectionRef(ref.connectionRef, input.sourceRef.connectionRef)
-            ).length !== 1
-        )
+    if (
+      !hasConnectedRelationSources(
+        draft,
+        sources.map((source) => ({
+          sourceRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef),
+        }))
       )
-        return null;
-    } else if (
-      draft.sidecar.relations.filter((relation) => relation.sourceRef !== undefined).length !== 1
-    ) {
+    )
       return null;
-    }
   } catch {
     return null;
   }

@@ -14,7 +14,7 @@ import {
 } from './canonization-guard.mjs';
 
 const requiredFiles = [
-  'docs/planning/reviews/review-status-board.md',
+  'docs/planning/state/github-mvp-issue-workflow.md',
   'docs/planning/domains/event-lifecycle-and-retention.md',
   'docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md',
   'docs/architecture/components/ci-governance/ci-retention-review-canon-component.md',
@@ -27,14 +27,10 @@ test('CI, delivery, and retention review canonization has semantic ownership', (
     'docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md'
   );
 
+  assertContains('docs/planning/state/github-mvp-issue-workflow.md', 'is the only task backlog');
   assertContains(
-    'docs/planning/reviews/review-status-board.md',
-    '2026-05-23 CI Delivery Retention Review Canonical Disposition'
-  );
-  assertContains('docs/planning/reviews/review-status-board.md', 'D-REV-CI-RETENTION-CANON');
-  assertContains(
-    'docs/planning/reviews/review-status-board.md',
-    'No CI, delivery, or retention review remains an orphan execution queue'
+    'docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md',
+    'featureId: D-REV-CI-RETENTION-CANON'
   );
 
   const componentGuide = readRepoFile(

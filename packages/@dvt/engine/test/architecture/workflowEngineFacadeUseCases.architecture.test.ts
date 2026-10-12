@@ -18,14 +18,6 @@ const FACADE_USER_STORIES = join(
   REPO_ROOT,
   'docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md'
 );
-const FACADE_FOWLER_MAILBOX = join(
-  REPO_ROOT,
-  'buzon/20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md'
-);
-const WE_HX_2_CLOSEOUT = join(
-  REPO_ROOT,
-  'docs/planning/closeouts/20260430-we-hx-2-facade-use-cases-closeout.md'
-);
 
 describe('WorkflowEngine facade use-case architecture', () => {
   it('keeps WorkflowEngine as a normalization-and-delegation facade', () => {
@@ -96,11 +88,9 @@ describe('WorkflowEngine facade use-case architecture', () => {
     expect(existsSync(join(ENGINE_ROOT, 'application/WorkflowEngineUseCases.ts'))).toBe(false);
   });
 
-  it('documents the facade use-case component with API, invariants, transitions, consumers, stories, mailbox review, and diagrams', () => {
+  it('documents the facade use-case component with API, invariants, transitions, consumers, stories and diagrams', () => {
     expect(existsSync(FACADE_COMPONENT_GUIDE)).toBe(true);
     expect(existsSync(FACADE_USER_STORIES)).toBe(true);
-    expect(existsSync(FACADE_FOWLER_MAILBOX)).toBe(true);
-    expect(existsSync(WE_HX_2_CLOSEOUT)).toBe(true);
 
     const guide = readFileSync(FACADE_COMPONENT_GUIDE, 'utf8');
     for (const heading of [
@@ -117,9 +107,6 @@ describe('WorkflowEngine facade use-case architecture', () => {
     expect(guide).toContain('WorkflowStartRunUseCase');
     expect(guide).toContain('```mermaid');
     expect(guide).toContain('workflow-engine-facade-use-cases-user-stories.md');
-    expect(guide).toContain(
-      '20260430-codex-fowler-we-hx-2-facade-use-cases-analysis-and-remediation.md'
-    );
 
     const stories = readFileSync(FACADE_USER_STORIES, 'utf8');
     for (const expectedStory of [
@@ -133,11 +120,6 @@ describe('WorkflowEngine facade use-case architecture', () => {
     ]) {
       expect(stories).toContain(expectedStory);
     }
-
-    const closeout = readFileSync(WE_HX_2_CLOSEOUT, 'utf8');
-    expect(closeout).toContain('## Think-First Analysis');
-    expect(closeout).toContain('## Pre-Implementation Brief');
-    expect(closeout).toContain('## Normative Baseline');
   });
 });
 

@@ -1,0 +1,75 @@
+/** Owned concern: accessible contextual actions for one semantic card. */
+import type { ReactElement } from 'react';
+import { Pencil, Play, Trash2 } from 'lucide-react';
+import { useCanvasRelationalOperationExecution } from './useCanvasRelationalOperationExecution';
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+  ContextMenuSeparator,
+} from '../../components/ui/context-menu';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
+
+export function CanvasRelationalTreeCardMenu({
+  node,
+  children,
+  onRemove,
+  onExpand,
+}: Readonly<{
+  node: CanvasRelationalTreeNode;
+  children: ReactElement;
+  onRemove?: (relationId: string) => void;
+  onExpand?: (locator: string) => void;
+}>): JSX.Element {
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasSemanticEditorCopy(language);
+  const execution = useCanvasRelationalOperationExecution(node);
+  const canExpand =
+    node.expressionRefs.length > 0 ||
+    node.operator === 'cross' ||
+    node.operator === 'sort' ||
+    node.operator === 'fetch';
+  if (node.relationId == null || (onRemove == null && onExpand == null && execution == null))
+    return children;
+  return (
+    <ContextMenu modal={false}>
+      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuContent className="canvas-relational-card-menu min-w-56 text-sm">
+        {execution == null ? null : (
+          <ContextMenuItem
+            data-slot="canvas-relational-execute-operation"
+            disabled={execution.disabled}
+            onSelect={execution.onExecute}
+            title={execution.title}
+          >
+            <Play aria-hidden="true" className="size-4" />
+            {execution.label}
+          </ContextMenuItem>
+        )}
+        {!canExpand || onExpand == null ? null : (
+          <>
+            <ContextMenuItem
+              data-slot="canvas-relational-edit-operation"
+              onSelect={() => onExpand(node.locator)}
+            >
+              <Pencil aria-hidden="true" className="size-4" />
+              {copy.edit}
+            </ContextMenuItem>
+            <ContextMenuSeparator />
+          </>
+        )}
+        <ContextMenuItem
+          data-slot="canvas-relational-remove-source"
+          disabled={onRemove == null}
+          onSelect={() => onRemove?.(node.relationId!)}
+        >
+          <Trash2 aria-hidden="true" className="size-4" />
+          {copy.removeCard}
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  );
+}

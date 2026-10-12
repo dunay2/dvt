@@ -2,7 +2,7 @@
 title: Local Changed Files Gate Component
 status: Accepted
 owner: Engineering / CI Governance
-last_reviewed: 2026-05-03
+last_reviewed: 2026-10-05
 planning_type: architecture
 ---
 
@@ -98,6 +98,22 @@ The component does not own:
 - `verify:changed` is an iteration helper, not a replacement for the full
   `verify:prepush` closeout gate.
 - Any skipped full-scan behavior must remain covered by `verify:prepush`.
+- Governance and feature-mechanization admission precede the complete changed-file
+  lint/format check. That check runs once before every affected test step, including
+  provider and browser acceptance; the forbidden-tracked-file check remains last.
+- Reordering validation does not change the selected commands, their arguments,
+  test classification, environment isolation or receipt identity. Any failed step
+  preserves its failure status, stops all later steps and produces no success stamp.
+- The canonical plan marks test steps explicitly, including package-script
+  aliases. `executeCommandPlan` removes Git's repository-local environment
+  variables only from those child processes. Git itself supplies the variable
+  names through `git rev-parse --local-env-vars`; fixtures and their real Git
+  reads must not inherit the hook caller's repository, index or object store.
+- Isolation clones the environment without changing the parent. Comparison
+  inputs such as `GIT_BASE` and `GIT_HEAD` remain available. Ordinary docs,
+  lint, type-check and feature-validation steps retain their original Git
+  environment, including an explicitly selected index. Isolation does not
+  change test selection, hooks or production query behavior.
 
 ## Transitions
 
@@ -136,6 +152,49 @@ sequenceDiagram
 
 ## Consumers
 
+### Changed-slice execution order
+
+```mermaid
+flowchart LR
+  Admission[Governance and feature mechanization] --> Static[Typed lint and format]
+  Static --> Tests[Same affected tests and browser acceptance]
+  Tests --> Tracked[Forbidden tracked files]
+  Tracked --> Receipt[Success stamp]
+  Static -->|failure: original exit status| Reject[Stop; no later steps or stamp]
+```
+
+`BuildChangedSliceVerificationPlan` owns this ordering; neither the executor nor
+individual checks invent another plan. Failing static validation is detected
+before expensive tests, without reducing the successful run's coverage or changing
+the `--committed-tests` path. The existing integrated failure test exercises
+`main` through `executeVerifyChangedPlan`, not a synthetic successful executor.
+
+### Changed-file lint execution
+
+`ValidateChangedFiles` keeps one canonical changed-file inventory and the same
+strict ESLint config, warnings-as-errors policy, ignored-file behavior, and
+Prettier check. The lint adapter may reuse one ESLint process across that
+inventory; it must not replace the canonical type-aware rules with the faster
+pre-commit config. On Windows, passing every changed path through a command
+line is not a safe substitute for process reuse because command length is
+bounded. The adapter must report any lint warning or error and fail closed if
+ESLint cannot initialize or lint a file.
+
+```mermaid
+flowchart LR
+  Files[LocalChangedFileSet] --> Format[Prettier: all eligible files]
+  Files --> Old[Before: repeated ESLint CLI initialization per batch]
+  Files --> New[After: one ESLint instance, same file inventory and rules]
+  Old --> Cost[Repeated TypeScript project and import resolver startup]
+  New --> Result[Fail on any error or warning]
+  Format --> Result
+```
+
+The performance comparison uses the same changed-file set before and after.
+It records wall time, number of linted files, and a deliberate warning/error
+failure case. Faster execution alone is insufficient if any of those checks
+or the Prettier gate disappear.
+
 - `scripts/check-changed.cjs` consumes `ListLocalChangedFiles` for changed-only
   lint and format checks.
 - `scripts/verify-changed.cjs` consumes `ListLocalChangedFiles` to plan the
@@ -146,8 +205,6 @@ sequenceDiagram
 - `scripts/lint-markdown-changed.cjs` and
   `scripts/format-markdown-changed.cjs` consume `ListLocalChangedFiles` for
   changed Markdown checks.
-- `scripts/docs-workboard-check-changed.cjs` consumes `ListLocalChangedFiles`
-  so lane YAML changes regenerate planning views before pre-push.
 - `scripts/fix-changed.cjs` consumes `ListLocalChangedFiles` for the local
   autofix surface.
 - `scripts/qa-artifact-check.cjs` consumes `ListLocalChangedFiles` to keep QA
@@ -178,6 +235,8 @@ sequenceDiagram
 
 - `scripts/git-local-changes.test.cjs` proves local changed-file query semantics
   and this component guide.
+- `scripts/check-changed.test.cjs` proves whole-inventory ESLint execution,
+  warnings-as-errors, and failure when ESLint cannot run.
 - `scripts/check-governance-changed-files.test.cjs` proves name-status local
   change inclusion for governance fingerprints.
 - `scripts/check-feature-mechanization.test.cjs` proves implementation-surface,

@@ -40,6 +40,7 @@ function buildWorkbenchArgs(
         label: 'Draft synced',
         tone: 'neutral',
         showReloadAction: false,
+        persistence: 'durable',
       },
       routeReadiness: { status: 'complete', detail: 'ready' },
     },

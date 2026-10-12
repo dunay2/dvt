@@ -119,7 +119,7 @@ flowchart TD
 
 ## Requirements Linked
 
-- Lane D task: `run_events partitioning`
+- Governing task: `run_events partitioning`
 - `REQ-RUN-EVENTS-001`: preserve per-run event ordering.
 - `REQ-RUN-EVENTS-002`: preserve duplicate idempotency rejection by
   `(run_id, idempotency_key)`.

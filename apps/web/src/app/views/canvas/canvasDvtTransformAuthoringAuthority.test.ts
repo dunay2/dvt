@@ -1,3 +1,4 @@
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -8,10 +9,11 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import { projectionScenario } from './canvasProjectionScenario.test-support';
 import {
-  createDvtSubstraitPilotDraft,
-  encodeDvtSubstraitPilotDocument,
-} from './canvasDvtSubstraitPilot';
+  applyDvtTransformAuthoringMetadata,
+  createDvtTransformAuthoringMetadata,
+} from './canvasDvtTransformAuthoring';
 
 function buildTransformNode(metadata: CanonicalNode['metadata'] = {}): CanonicalNode {
   return {
@@ -43,9 +45,9 @@ function buildSourceNode(metadata: CanonicalNode['metadata'] = {}): CanonicalNod
   };
 }
 
-function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitPilotDocument> {
-  return encodeDvtSubstraitPilotDocument(
-    createDvtSubstraitPilotDraft({
+function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitSemanticDocument> {
+  return encodeDvtSubstraitSemanticDocument(
+    projectionScenario({
       sourceNodeId: 'source-orders',
       targetNodeId: 'transform-orders',
     })
@@ -53,6 +55,35 @@ function buildSemanticDocument(): ReturnType<typeof encodeDvtSubstraitPilotDocum
 }
 
 describe('DVT transform authoring authority', () => {
+  it('persists an explicitly cleared model without changing its identity or disposition', () => {
+    const node = applyDvtSubstraitSemanticDocument(
+      buildTransformNode({ config: { owner: 'finance', materialized: 'table' } }),
+      buildSemanticDocument()
+    );
+    const cleared = applyDvtTransformAuthoringMetadata(node, {
+      kind: 'transform',
+      mode: 'uninitialized',
+      materialized: 'table',
+    });
+    expect(readDvtTransformAuthoringAuthority(node)).not.toBeNull();
+    expect(readDvtTransformAuthoringAuthority(cleared)).toBeNull();
+    const draft = WorkspaceGraphAuthoringDraftSchema.parse({
+      canvas: { id: 'canvas-1', kind: 'transformation', title: 'Transformation' },
+      nodeIds: [cleared.id],
+      nodePositions: { [cleared.id]: { x: 40, y: 80 } },
+      nodes: [projectCanonicalNodeToAuthoringNode(cleared)],
+      edges: [],
+    });
+    const reopened = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft).canonicalNodes[0]!;
+    expect(reopened.id).toBe(node.id);
+    expect(reopened.name).toBe(node.name);
+    expect(reopened.metadata?.config).toEqual(node.metadata?.config);
+    expect(createDvtTransformAuthoringMetadata(reopened)).toEqual({
+      kind: 'transform',
+      mode: 'uninitialized',
+      materialized: 'table',
+    });
+  });
   it('represents a new Transform as uninitialized instead of inventing SQL authority', () => {
     expect(readDvtTransformAuthoringAuthority(buildTransformNode())).toBeNull();
   });

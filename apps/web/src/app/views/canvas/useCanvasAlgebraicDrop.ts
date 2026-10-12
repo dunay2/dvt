@@ -6,6 +6,7 @@ import type {
   CanvasAlgebraicCompositionIdentity,
   CanvasAlgebraicCompositionOperation,
 } from './canvasAlgebraicComposition';
+import { resolveCanvasAlgebraicDropIndex } from './canvasAlgebraicDropGeometry';
 
 type AlgebraicNodeData = Record<string, unknown> & {
   resolveAlgebraicCompositionOperations?: (
@@ -53,9 +54,14 @@ export function resolveCanvasAlgebraicDropHover(
   const identity = { sourceNodeId: draggedNode.id, targetNodeId: target.id };
   const operations = data.resolveAlgebraicCompositionOperations(identity);
   if (operations.length === 0) return null;
-  const targetWidth = dimension(target, 'width');
-  const activeIndex =
-    operations.length === 1 || center.x < target.position.x + targetWidth / 2 ? 0 : 1;
+  const activeIndex = resolveCanvasAlgebraicDropIndex({
+    operationCount: operations.length,
+    width: dimension(target, 'width'),
+    height: dimension(target, 'height'),
+    x: center.x - target.position.x,
+    y: center.y - target.position.y,
+  });
+  if (activeIndex == null) return null;
   return {
     targetNodeId: target.id,
     operations,

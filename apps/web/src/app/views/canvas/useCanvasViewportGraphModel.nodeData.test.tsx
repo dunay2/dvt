@@ -50,34 +50,47 @@ describe('useCanvasViewportGraphModel node data', () => {
     }
   });
 
-  it('preserves transient column disclosure across semantic node reprojection', async () => {
-    const args = buildViewportGraphModelArgs({
-      visibleNodeIds: ['source-node'],
-      visibleEdges: [],
-      draftSemanticGraph: {
-        canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
-        canonicalEdges: [],
-      },
-    });
-    const mounted = await renderViewportGraphModel(args);
-
-    try {
-      await act(async () => {
-        mounted.readState()?.setNodes((nodes) =>
-          nodes.map((node) => ({
-            ...node,
-            data: { ...node.data, columnDisclosureExpanded: true },
-          }))
-        );
+  it.each(['input', 'output'])(
+    'preserves transient column disclosure and %s view across semantic node reprojection',
+    async (columnView) => {
+      const args = buildViewportGraphModelArgs({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+          canonicalEdges: [],
+        },
       });
-      expect(mounted.readState()?.nodes[0]?.data.columnDisclosureExpanded).toBe(true);
+      const mounted = await renderViewportGraphModel(args);
 
-      await mounted.rerender(args);
-      expect(mounted.readState()?.nodes[0]?.data.columnDisclosureExpanded).toBe(true);
-    } finally {
-      await mounted.cleanup();
+      try {
+        await act(async () => {
+          mounted.readState()?.setNodes((nodes) =>
+            nodes.map((node) => ({
+              ...node,
+              data: { ...node.data, columnDisclosureExpanded: true, columnView },
+            }))
+          );
+        });
+        expect(mounted.readState()?.nodes[0]?.data.columnDisclosureExpanded).toBe(true);
+
+        await mounted.rerender({
+          ...args,
+          canonicalNodesById: new Map([
+            [
+              'source-node',
+              { ...args.canonicalNodesById.get('source-node')!, name: 'Renamed source' },
+            ],
+          ]),
+        });
+        expect(mounted.readState()?.nodes[0]?.data.columnDisclosureExpanded).toBe(true);
+        expect(mounted.readState()?.nodes[0]?.data.columnView).toBe(columnView);
+        expect(mounted.readState()?.nodes[0]?.data.name).toBe('Renamed source');
+      } finally {
+        await mounted.cleanup();
+      }
     }
-  });
+  );
 
   it('projects governed port compatibility into visible node data', async () => {
     const mounted = await renderViewportGraphModel(

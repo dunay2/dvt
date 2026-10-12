@@ -43,16 +43,103 @@ interface SupportedCapabilityGroup {
   readonly entryIds: readonly string[];
   readonly useCaseRefs: readonly string[];
   readonly proofRef: string;
-  readonly targetStatus?: 'unavailable' | 'mapped' | 'provider-accepted';
-  readonly visualExposure?: 'not-exposed' | 'exposed';
+  readonly targetConformance: readonly Pick<
+    DvtSubstraitStandardAdmissionEvidenceV1['targetConformance'][number],
+    'targetId' | 'status'
+  >[];
+  readonly visualExposure:
+    | { readonly status: 'exposed' }
+    | Extract<DvtSubstraitStandardAdmissionEvidenceV1['visualExposure'], { status: 'not-exposed' }>;
   readonly invocationByEntryId?: Readonly<Record<string, DvtSubstraitFunctionInvocationV1>>;
+  readonly overloadsByEntryId?: Readonly<
+    Record<string, readonly DvtSubstraitFunctionInvocationV1[]>
+  >;
 }
 
 const LOWER_ID = functionId('scalar-function', 'functions_string', 'lower');
 const CONCAT_ID = functionId('scalar-function', 'functions_string', 'concat');
+const CONCAT_WS_ID = functionId('scalar-function', 'functions_string', 'concat_ws');
 const COALESCE_ID = functionId('scalar-function', 'functions_comparison', 'coalesce');
 const EXTRACT_ID = functionId('scalar-function', 'functions_datetime', 'extract');
+const DIVIDE_ID = functionId('scalar-function', 'functions_arithmetic', 'divide');
+const SUM_ID = functionId('aggregate-function', 'functions_arithmetic', 'sum');
 const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
+  {
+    entryIds: [SUM_ID],
+    useCaseRefs: ['dvt:#3456'],
+    proofRef: 'apps/api/test/integration/dvtSumSql.integration.test.ts',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+    overloadsByEntryId: {
+      [SUM_ID]: ['i64', 'fp64'].map((type) => ({
+        signature: `sum:${type}`,
+        argumentTypes: [type],
+        minimumArgumentCount: 1,
+        maximumArgumentCount: 1,
+        outputType: type,
+        options: [{ name: 'overflow', preference: ['ERROR'] }],
+      })),
+    },
+  },
+  {
+    entryIds: [CONCAT_WS_ID],
+    useCaseRefs: ['dvt:#3456'],
+    proofRef: 'apps/api/test/integration/dvtScalarSql.integration.test.ts',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+    invocationByEntryId: {
+      [CONCAT_WS_ID]: {
+        signature: 'concat_ws:str_str',
+        argumentTypes: ['str', 'str'],
+        minimumArgumentCount: 2,
+        outputType: 'str',
+        options: [],
+      },
+    },
+  },
+  {
+    entryIds: [DIVIDE_ID],
+    useCaseRefs: ['dvt:#3434'],
+    proofRef: 'docs/evidence/ED-20260928-transform-bigint-divide.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+    invocationByEntryId: {
+      [DIVIDE_ID]: {
+        signature: 'divide:i64_i64',
+        argumentTypes: ['i64', 'i64'],
+        minimumArgumentCount: 2,
+        maximumArgumentCount: 2,
+        outputType: 'i64',
+        options: [
+          { name: 'overflow', preference: ['ERROR'] },
+          { name: 'on_domain_error', preference: ['ERROR'] },
+          { name: 'on_division_by_zero', preference: ['ERROR'] },
+        ],
+      },
+    },
+  },
+  ...['add', 'subtract', 'multiply'].map((name): SupportedCapabilityGroup => ({
+    entryIds: [functionId('scalar-function', 'functions_arithmetic', name)],
+    useCaseRefs: ['dvt:#3419'],
+    proofRef: 'packages/@dvt/postgres-projection/test/relationalArithmetic.test.ts',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+    overloadsByEntryId: {
+      [functionId('scalar-function', 'functions_arithmetic', name)]: ['i64', 'fp64'].map(
+        (type) => ({
+          signature: `${name}:${type}_${type}`,
+          argumentTypes: [type, type],
+          minimumArgumentCount: 2,
+          maximumArgumentCount: 2,
+          outputType: type,
+          options:
+            type === 'i64'
+              ? [{ name: 'overflow', preference: ['ERROR'] }]
+              : [{ name: 'rounding', preference: ['TIE_TO_EVEN'] }],
+        })
+      ),
+    },
+  })),
   {
     entryIds: [
       functionId('scalar-function', 'functions_comparison', 'is_null'),
@@ -60,6 +147,8 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#3135'],
     proofRef: 'docs/evidence/ED-20260913-join-null-predicates.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -74,16 +163,22 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2598'],
     proofRef: 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [LOWER_ID],
     useCaseRefs: ['dvt:#2598', 'dvt:#2827'],
     proofRef: 'docs/evidence/ED-20260902-transform-function-alias-authoring.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [CONCAT_ID],
     useCaseRefs: ['dvt:#2642', 'dvt:#2921'],
     proofRef: 'docs/evidence/ED-20260908-algebraic-derived-output.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
     invocationByEntryId: {
       [CONCAT_ID]: {
         signature: 'concat:str',
@@ -99,6 +194,8 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     entryIds: [COALESCE_ID],
     useCaseRefs: ['dvt:#2935'],
     proofRef: 'docs/evidence/ED-20260911-substrait-coalesce-variadic-admission.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
     invocationByEntryId: {
       [COALESCE_ID]: {
         signature: 'coalesce:any1',
@@ -117,6 +214,8 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2935', 'dvt:#3101'],
     proofRef: 'docs/evidence/ED-20260910-timestamp-column-function.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
     invocationByEntryId: {
       [EXTRACT_ID]: {
         signature: 'extract:req_ptstz_str',
@@ -132,6 +231,8 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     entryIds: [standardId('relation', 'substrait.FilterRel')],
     useCaseRefs: ['dvt:#2642', 'dvt:#2894'],
     proofRef: 'docs/evidence/ED-20260903-source-filter-capability-admission.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -144,7 +245,9 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
       functionId('scalar-function', 'functions_comparison', 'lte'),
     ],
     useCaseRefs: ['dvt:#3087'],
-    proofRef: 'apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.test.ts',
+    proofRef: 'apps/web/src/app/views/canvas/canvasSelectedJoinConditionPersistence.test.ts',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -154,6 +257,54 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2634'],
     proofRef: 'docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT')],
+    useCaseRefs: ['dvt:#3307'],
+    proofRef: 'docs/evidence/ED-20260919-left-join-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER'),
+    ],
+    useCaseRefs: ['dvt:#3308'],
+    proofRef: 'docs/evidence/ED-20260919-right-full-join-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_SEMI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI'),
+      standardId('relation', 'substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI'),
+    ],
+    useCaseRefs: ['dvt:#3320'],
+    proofRef: 'docs/evidence/ED-20260919-semi-anti-join-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [standardId('relation', 'substrait.CrossRel')],
+    useCaseRefs: ['dvt:#3322'],
+    proofRef: 'docs/evidence/ED-20260919-cross-join-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.SortRel'),
+      standardId('relation', 'substrait.FetchRel'),
+    ],
+    useCaseRefs: ['dvt:#3324'],
+    proofRef: 'docs/evidence/ED-20260920-sort-fetch-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -163,11 +314,15 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2641', 'dvt:#2642'],
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-grouping.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [standardId('type', 'substrait.Type', 'kind.fp64')],
     useCaseRefs: ['dvt:semantic-workbench-lab'],
     proofRef: 'apps/web/src/app/labs/semanticWorkbenchFixture.test.ts',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -176,6 +331,8 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2641', 'dvt:#2642'],
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-row-number-window.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -184,11 +341,42 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2833'],
     proofRef: 'docs/evidence/ED-20260902-canvas-calculated-column-authoring.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_ALL')],
     useCaseRefs: ['dvt:#2634'],
     proofRef: 'docs/evidence/ED-20260831-vtx2-substrait-union-all.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT')],
+    useCaseRefs: ['dvt:#3317'],
+    proofRef: 'docs/evidence/ED-20260919-union-distinct-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'),
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'),
+    ],
+    useCaseRefs: ['dvt:#3318'],
+    proofRef: 'docs/evidence/ED-20260920-intersect-except-distinct-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
+  },
+  {
+    entryIds: [
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL'),
+      standardId('relation', 'substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY_ALL'),
+    ],
+    useCaseRefs: ['dvt:#3319'],
+    proofRef: 'docs/evidence/ED-20260920-intersect-except-all-end-to-end.md',
+    targetConformance: [{ targetId: 'postgres', status: 'mapped' }],
+    visualExposure: { status: 'exposed' },
   },
   {
     entryIds: [
@@ -197,8 +385,11 @@ const SUPPORTED_CAPABILITY_GROUPS: readonly SupportedCapabilityGroup[] = [
     ],
     useCaseRefs: ['dvt:#2771'],
     proofRef: 'packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts',
-    targetStatus: 'unavailable',
-    visualExposure: 'not-exposed',
+    targetConformance: [{ targetId: 'postgres', status: 'unavailable' }],
+    visualExposure: {
+      status: 'not-exposed',
+      rationale: 'Structured projection is unavailable until the governed vertical slice.',
+    },
   },
 ];
 
@@ -219,20 +410,14 @@ function admissionFor(
       status: 'proved',
       evidenceRefs: ['docs/evidence/ED-20260903-vtx2-durable-semantic-document.md'],
     },
-    targetConformance: [
-      {
-        targetId: 'postgres',
-        status: group.targetStatus ?? 'mapped',
-        evidenceRefs: [group.proofRef],
-      },
-    ],
+    targetConformance: group.targetConformance.map((target) => ({
+      ...target,
+      evidenceRefs: [group.proofRef],
+    })),
     visualExposure:
-      group.visualExposure === 'not-exposed'
-        ? {
-            status: 'not-exposed',
-            rationale: 'Structured projection is unavailable until the governed vertical slice.',
-          }
-        : { status: 'exposed', evidenceRefs: [group.proofRef] },
+      group.visualExposure.status === 'exposed'
+        ? { status: 'exposed', evidenceRefs: [group.proofRef] }
+        : group.visualExposure,
   });
 }
 
@@ -250,6 +435,9 @@ export function admitDvtSubstraitStandardCandidatesV1(
           profileStatus: 'supported-profile',
           evidenceRefs: [...entry.evidenceRefs, ...group.useCaseRefs],
           admission: admissionFor(entry, group),
+          ...(group.overloadsByEntryId?.[entry.entryId] == null
+            ? {}
+            : { overloads: group.overloadsByEntryId[entry.entryId] }),
           ...(group.invocationByEntryId?.[entry.entryId] === undefined
             ? {}
             : { invocation: group.invocationByEntryId[entry.entryId] }),

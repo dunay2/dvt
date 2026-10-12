@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Prepare cached image
+description: Reuse a verified digest-pinned image without caching container or database state
+inputs:
+  image:
+    description: Approved name from tools/ci/container-images.json
+    required: true
+outputs:
+  image:
+    description: Verified runner-local image reference; consumers must disable implicit pulls
+    value: ${{ steps.identity.outputs.image }}
+runs:
+  using: composite
+  steps:
+    - name: Resolve immutable image cache
+      id: identity
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image }}
+      run: node tools/ci/prepare-cached-image.mjs resolve "$IMAGE_NAME"
+    - name: Restore exact image archive
+      id: restore
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: ${{ steps.identity.outputs.archive }}
+        key: ${{ steps.identity.outputs.key }}
+    - name: Load or pull and verify image
+      shell: bash
+      env:
+        IMAGE_NAME: ${{ inputs.image }}
+        CACHE_HIT: ${{ steps.restore.outputs.cache-hit }}
+      run: node tools/ci/prepare-cached-image.mjs prepare "$IMAGE_NAME"
+    - name: Save verified image archive
+      if: steps.restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
+      with:
+        path: ${{ steps.identity.outputs.archive }}
+        key: ${{ steps.identity.outputs.key }}

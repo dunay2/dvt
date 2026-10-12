@@ -5,6 +5,7 @@ const {
   analyzeAdoptionLog,
   calculateRcu,
   isQualifyingCycle,
+  loadAdoptionLog,
 } = require('./check-ai-efficiency-adoption.cjs');
 
 test('calculateRcu applies the RC-C2 cost model', () => {
@@ -14,7 +15,7 @@ test('calculateRcu applies the RC-C2 cost model', () => {
   );
 });
 
-test('isQualifyingCycle requires Lane C, preflight, prepush, clean push, and round reduction', () => {
+test('isQualifyingCycle requires PR evidence, preflight, prepush, clean push, and round reduction', () => {
   const baseline = {
     interactiveRounds: 22,
     toolCalls: 58,
@@ -24,7 +25,6 @@ test('isQualifyingCycle requires Lane C, preflight, prepush, clean push, and rou
   const targets = { minRoundReductionPct: 20 };
 
   const qualifying = {
-    lane: 'C',
     pr: { number: 1201, url: 'https://github.com/dunay2/dvt/pull/1201' },
     usedHygienePreflight: true,
     verifyPrepushBeforePush: true,
@@ -61,7 +61,6 @@ test('analyzeAdoptionLog only closes after the required consecutive qualifying w
     },
     cycles: [
       {
-        lane: 'C',
         pr: { number: 1201, url: 'https://github.com/dunay2/dvt/pull/1201' },
         used_hygiene_preflight: true,
         verify_prepush_before_push: true,
@@ -72,7 +71,6 @@ test('analyzeAdoptionLog only closes after the required consecutive qualifying w
         avoidable_validation_reruns: 1,
       },
       {
-        lane: 'C',
         pr: { number: 1202, url: 'https://github.com/dunay2/dvt/pull/1202' },
         used_hygiene_preflight: true,
         verify_prepush_before_push: true,
@@ -83,7 +81,6 @@ test('analyzeAdoptionLog only closes after the required consecutive qualifying w
         avoidable_validation_reruns: 1,
       },
       {
-        lane: 'C',
         pr: { number: 1203, url: 'https://github.com/dunay2/dvt/pull/1203' },
         used_hygiene_preflight: true,
         verify_prepush_before_push: true,
@@ -121,4 +118,45 @@ test('analyzeAdoptionLog reports open status when cycles are absent', () => {
   assert.equal(result.readyToClose, false);
   assert.equal(result.consecutiveQualifyingCycles, 0);
   assert.match(result.summary, /0\/3 qualifying consecutive cycles/);
+});
+
+test('adoption configuration no longer requires retired task grouping metadata', () => {
+  const log = loadAdoptionLog();
+  assert.equal(Object.hasOwn(log.qualification_rules, 'lane'), false);
+  assert.ok(log.qualification_rules.required_fields.includes('pr.number'));
+  assert.ok(log.qualification_rules.required_fields.includes('pr.url'));
+});
+
+test('retiring task labels preserves every evidence requirement', () => {
+  const baseline = { interactiveRounds: 22, toolCalls: 58, avoidableValidationReruns: 7 };
+  const targets = { minRoundReductionPct: 20 };
+  const cycle = {
+    pr: { number: 1201, url: 'https://github.com/dunay2/dvt/pull/1201' },
+    usedHygienePreflight: true,
+    verifyPrepushBeforePush: true,
+    ciFirstRedTriage: 'log_first',
+    noPushTimeFormatLintSurprises: true,
+    interactiveRounds: 16,
+    toolCalls: 34,
+    avoidableValidationReruns: 1,
+  };
+  assert.equal(isQualifyingCycle(cycle, baseline, targets).qualifies, true);
+  for (const [patch, reason] of [
+    [{ pr: undefined }, 'cycle is missing PR number or URL'],
+    [{ pr: { number: 1201 } }, 'cycle is missing PR number or URL'],
+    [{ pr: { url: cycle.pr.url } }, 'cycle is missing PR number or URL'],
+    [{ usedHygienePreflight: false }, 'hygiene preflight was not used'],
+    [{ verifyPrepushBeforePush: false }, 'verify:prepush did not run before push'],
+    [{ ciFirstRedTriage: 'watch_only' }, 'first-red CI triage is not log_first or not_applicable'],
+    [{ noPushTimeFormatLintSurprises: false }, 'push-time format/lint surprise was recorded'],
+    [{ interactiveRounds: 19 }, 'round reduction target was not met'],
+  ]) {
+    const result = isQualifyingCycle({ ...cycle, ...patch }, baseline, targets);
+    assert.equal(result.qualifies, false, reason);
+    assert.ok(result.reasons.includes(reason), reason);
+  }
+  assert.throws(
+    () => isQualifyingCycle({ ...cycle, toolCalls: 'missing' }, baseline, targets),
+    /Invalid numeric value/
+  );
 });

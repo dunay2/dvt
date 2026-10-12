@@ -161,6 +161,7 @@ describe('Canvas route backend and recovery priority', () => {
         label: 'Draft missing',
         tone: 'warning',
         showReloadAction: true,
+        persistence: 'blocked',
       },
     });
 
@@ -184,6 +185,7 @@ describe('Canvas route backend and recovery priority', () => {
         label: 'Draft missing',
         tone: 'warning',
         showReloadAction: true,
+        persistence: 'blocked',
       },
     });
 

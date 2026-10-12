@@ -54,17 +54,20 @@ describe('StartRun application decomposition', () => {
     });
     const context = makeResolvedContext();
 
-    const firstIntentId = await service.createIntent(context, 'temporal');
-    const secondIntentId = await service.createIntent(context, 'temporal');
+    const first = await service.claimIntent(context, 'temporal');
+    const second = await service.claimIntent(context, 'temporal');
     const intent = await intentStore.getIntent({
       tenantId: context.tenantId,
-      intentId: firstIntentId,
+      intentId: first.intent.intentId,
     });
 
-    expect(secondIntentId).toBe(firstIntentId);
+    expect(first.kind).toBe('acquired');
+    expect(second.kind).toBe('existing');
+    expect(second).not.toHaveProperty('receipt');
+    expect(second.intent.intentId).toBe(first.intent.intentId);
     expect(intent).toEqual(
       expect.objectContaining({
-        intentId: firstIntentId,
+        intentId: first.intent.intentId,
         tenantId: context.tenantId,
         runId: context.runId,
         provider: 'temporal',

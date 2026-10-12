@@ -33,11 +33,11 @@ The implementation route is intentionally split:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-c.yaml` (`AR-C3`)
+- Governing GitHub issue for `AR-C3`.
 - `docs/architecture/components/api/api-current-to-target-architecture.md`
 - `docs/guides/api-control-plane-technical-manual-20260404.md`
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md`
+- [DVT+ system architecture review](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/reviews/architecture-and-governance/20260420-dvt-plus-system-architecture-review.md)
 
 ## Problem statement
 
@@ -234,7 +234,7 @@ Definition of done:
 - rejection posture is observable and documented
 - operators can distinguish execution-capacity denial from existing outbox/event
   pressure denial
-- lane posture can move with evidence-backed justification
+- GitHub issue status can change with evidence-backed justification
 
 ## Invariants
 
@@ -260,7 +260,6 @@ Definition of done:
 - package-level tests for `apps/api`
 - targeted lint for touched API files
 - component-local architecture tests for the new seam
-- `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm verify:prepush`
 
@@ -276,7 +275,7 @@ Definition of done:
 - Root cause:
   The seam was introduced while the protected start-run composition was also
   being extracted into `buildProtectedStartRunRuntime.ts`. The code moved
-  faster than the lane registry, one closeout/code-reference path, and the
+  faster than the governing GitHub issues, one closeout/code-reference path, and the
   fitness rules that should have frozen the intended ordering and fail-closed
   posture.
 - Constraints and invariants:
@@ -313,12 +312,11 @@ Definition of done:
   lessons and anti-patterns, and harden the architecture test to validate
   semantic ordering and fail-closed behavior
 - Touched files or paths:
-  - `docs/planning/state/agent-lane-c.yaml`
   - `docs/architecture/components/api/api-current-to-target-architecture.md`
-  - `docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md`
+  - [API start-run execution capacity admission closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260422-api-start-run-execution-capacity-admission-closeout.md)
   - `apps/api/docs/start-run-execution-capacity-admission-component.md`
   - `apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts`
-  - `buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md`
+  - [20260423 codex fowler ar c3 execution capacity admission analysis and remediation](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260423-codex-fowler-ar-c3-execution-capacity-admission-analysis-and-remediation.md)
 - Expected outcome:
   AR-C3-A is represented consistently as an implemented abstract seam under
   review, the active docs point at the real composition owner, and the
@@ -339,7 +337,6 @@ Definition of done:
   - targeted `vitest` suites for the AR-C3 component
   - `pnpm --filter dvt-api typecheck`
   - markdown and formatting checks for touched docs
-  - `pnpm docs:workboard:generate`
   - `pnpm verify:prepush`
 - Test coverage plan:
   add semantic architecture assertions for:

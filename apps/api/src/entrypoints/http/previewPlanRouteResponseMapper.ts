@@ -1,5 +1,9 @@
 /**
  * Owned concern: map preview-plan application results to HTTP responses.
+ * @baseline ADR-0044: Diagnostic prose and internal message metadata are not the wire contract.
+ * @decision Project selection rejections onto the existing strict V1 envelope.
+ * @consequence Internal decision fields cannot prevent Web from rendering a typed rejection.
+ * @version 1.0.0
  */
 import {
   PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
@@ -83,10 +87,11 @@ function buildRejectedOutcome(
   parsedRequest: ParsedPreviewPlanRequest
 ): PlanPreviewRejectedOutcome {
   if (result.kind === 'selection-rejected') {
+    const { code, cause, reason } = result.rejection;
     return {
       contractVersion: PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
       kind: PLAN_PREVIEW_REJECTED_OUTCOME_KIND.selectionRejected,
-      rejection: result.rejection,
+      rejection: { code, ...(cause === undefined ? {} : { cause }), reason },
     };
   }
 

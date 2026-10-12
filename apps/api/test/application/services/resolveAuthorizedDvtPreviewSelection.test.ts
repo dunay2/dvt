@@ -185,7 +185,7 @@ describe('ResolveAuthorizedDvtPreviewSelectionService', () => {
     const deps = dependencies();
     deps.project.mockReturnValue({
       ok: false,
-      reason: 'Selection must contain exactly one DVT Source and one DVT Transform.',
+      cause: 'dvt_preview_workload_projection_failed',
     });
 
     await expect(

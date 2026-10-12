@@ -81,3 +81,18 @@ test('package scripts expose agent preflight as the AI-facing local command', ()
     'node --test scripts/ai-preflight.test.cjs'
   );
 });
+
+test('hygiene keeps canonical preflight and triage without retired task-group entrypoints', () => {
+  const script = fs.readFileSync(path.join(repoRoot, 'scripts/hygiene.ps1'), 'utf8');
+  assert.match(script, /\[switch\]\$Preflight/);
+  assert.match(script, /\[switch\]\$LogFirstTriage/);
+  assert.match(script, /if \(\$Preflight\) \{/);
+  assert.match(script, /if \(\$LogFirstTriage\) \{\s+Write-FirstRedTriage/u);
+  assert.match(script, /function Write-FirstRedTriage/u);
+  assert.match(script, /pnpm verify:prepush/u);
+  assert.doesNotMatch(
+    script,
+    /RunLaneCPreflight|Write-LaneCCiLogFirstTriage|PrintCiLogFirstTriage/u
+  );
+  assert.doesNotMatch(script, /PreflightEvidenceFile|Append-JsonLine/u);
+});

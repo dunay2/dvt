@@ -1,0 +1,36 @@
+/** Owned concern: compact, secondary presentation of authoritative LIVE sample provenance. */
+.facts {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-subtle);
+}
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.summary summary {
+  cursor: pointer;
+}
+.live {
+  padding: 1px 6px;
+  border: 1px solid var(--status-info);
+  border-radius: 3px;
+  color: var(--status-info);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.sources {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.connection {
+  opacity: 0.75;
+}
+.facts p {
+  margin-top: 4px;
+  font-size: 10px;
+}

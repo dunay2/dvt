@@ -1,6 +1,19 @@
-/** Owned concern: prove DVT PostgreSQL connection authoring, persistence, and inheritance. */
+/**
+ * Owned concern: prove DVT PostgreSQL connection authoring, persistence, and inheritance.
+ * @baseline GH-3578: the current inspector owns provider-neutral translated labels.
+ * @decision Bind an ordinary manual source; imported source authority is independently guarded.
+ * @consequence The persisted Source→Model→Sink chain proves inheritance at the current Sink UI.
+ * @version 1.0.0
+ */
+import {
+  CONNECTION_REF_SCHEMA_VERSION,
+  WorkspaceGraphDraftSaveRequestSchema,
+} from '@dvt/contracts';
+
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -52,7 +65,6 @@ function stubDvtConnectionAuthoring(): void {
     objectCount: 1,
   });
   stubStatefulCanvasDraftAuthoring({
-    authoringGenerated: true,
     title: 'DVT PostgreSQL binding',
   });
 }
@@ -72,7 +84,8 @@ function visitDvtCanvas(language: 'en' | 'es' = 'en'): void {
 function openNode(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`)
     .should('be.visible')
-    .dblclick();
+    .rightclick();
+  cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Properties|Propiedades)$/).click();
   cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
 }
 
@@ -94,14 +107,16 @@ function assertNoSeriousAccessibilityViolations(): void {
 }
 
 describe('DVT PostgreSQL connection authority', () => {
-  it('selects, tests, persists, reloads, and shows one inherited connection in EN and ES', () => {
+  it('binds a manual source, tests, persists, reloads, and shows inheritance in EN and ES', () => {
+    const english = resolveCanvasViewCopy('en');
+    const spanish = resolveCanvasViewCopy('es');
     stubDvtConnectionAuthoring();
     cy.viewport(1280, 720);
     visitDvtCanvas();
 
-    openNode('source-1');
+    openNode('src_orders');
     waitForE2eApiCall('/workspace/warehouse/connections', 'GET');
-    cy.contains('label', 'PostgreSQL connection').scrollIntoView().should('be.visible');
+    cy.contains('label', english.inspectorDvtConnectionLabel).scrollIntoView().should('be.visible');
     cy.get('select[name="dvt-source-connection"]').select(CONNECTION_ID);
     cy.contains('button', 'Test connection').click();
     waitForE2eApiCall(`/workspace/warehouse/connections/${CONNECTION_ID}/test`, 'POST');
@@ -111,52 +126,50 @@ describe('DVT PostgreSQL connection authority', () => {
       .click();
 
     cy.wrap(null).should(() => {
-      const savedSource = getE2eApiCalls('/workspace/graph/draft', 'PUT')
-        .map((call) => call.body as { draft: { nodes: Array<Record<string, unknown>> } })
-        .flatMap((body) => body.draft.nodes)
-        .find((node) => {
-          const metadata = node.metadata as Record<string, unknown> | undefined;
-          const connectionRef = metadata?.connectionRef as
-            { connectionId?: string; provider?: string } | undefined;
-          return node.id === 'source-1' && connectionRef?.connectionId === CONNECTION_ID;
-        });
-
-      expect(savedSource).to.not.be.undefined;
-      const latestDraft = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
-        { draft: { nodes: Array<Record<string, unknown>> } } | undefined;
-      for (const node of latestDraft?.draft.nodes ?? []) {
-        if (node.id !== 'source-1') {
+      const { draft } = WorkspaceGraphDraftSaveRequestSchema.parse(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body
+      );
+      expect(
+        draft.nodes.find((node) => node.id === 'src_orders')?.metadata?.connectionRef
+      ).to.deep.equal({
+        schemaVersion: CONNECTION_REF_SCHEMA_VERSION,
+        provider: 'postgres',
+        connectionId: CONNECTION_ID,
+      });
+      expect(
+        draft.edges.map(({ sourceId, targetId, relation }) => [sourceId, targetId, relation])
+      ).to.have.deep.members([
+        ['src_orders', 'model_orders', 'lineage'],
+        ['model_orders', 'orders_dashboard', 'lineage'],
+      ]);
+      for (const node of draft.nodes) {
+        if (node.id !== 'src_orders') {
           expect(node.metadata).not.to.have.property('connectionRef');
         }
       }
     });
 
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    visitDvtCanvas();
+    revisitWorkbenchCanvas(visitDvtCanvas);
 
-    openNode('source-1');
+    openNode('src_orders');
     cy.get('select[name="dvt-source-connection"]').should('have.value', CONNECTION_ID);
     assertNoSeriousAccessibilityViolations();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    openNode('dvt-transform-1');
-    cy.contains('Inherited PostgreSQL connection').scrollIntoView().should('be.visible');
-    cy.contains('code', CONNECTION_ID).should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    openNode('sink-1');
+    openNode('orders_dashboard');
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
-    cy.contains('Inherited PostgreSQL connection').scrollIntoView().should('be.visible');
+    cy.contains(english.inspectorDvtInheritedConnectionLabel).scrollIntoView().should('be.visible');
     cy.contains('code', CONNECTION_ID).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-language-option-es"]').click();
     cy.get('html').should('have.attr', 'lang', 'es');
-    openNode('source-1');
-    cy.contains('label', 'Conexión PostgreSQL').scrollIntoView().should('be.visible');
+    openNode('src_orders');
+    cy.contains('label', spanish.inspectorDvtConnectionLabel).scrollIntoView().should('be.visible');
     cy.get('select[name="dvt-source-connection"]').should('have.value', CONNECTION_ID);
-    cy.contains('button', 'Probar conexión').should('be.visible');
+    cy.contains('button', spanish.inspectorDvtConnectionTestLabel).should('be.visible');
     assertNoSeriousAccessibilityViolations();
   });
 });

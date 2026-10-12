@@ -40,15 +40,15 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
-  afterEach(() => {
-    act(() => root.unmount());
+  afterEach(async () => {
+    await act(async () => root.unmount());
     container.remove();
     localStorage.clear();
     vi.clearAllMocks();
   });
 
-  function renderPanel(onClose = vi.fn()): ReturnType<typeof vi.fn> {
-    act(() => {
+  async function renderPanel(onClose = vi.fn()): Promise<ReturnType<typeof vi.fn>> {
+    await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
           node={NODE}
@@ -56,12 +56,6 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
           edges={[]}
           activeRunId={null}
           authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
-          dragHandleProps={{
-            'aria-label': 'Move node workbench',
-            'data-slot': 'canvas-node-workbench-drag-handle',
-            role: 'button',
-            tabIndex: 0,
-          }}
           onClose={onClose}
         />
       );
@@ -69,8 +63,8 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     return onClose;
   }
 
-  it('keeps contextual help and close as right-side accessible actions outside the drag handle', () => {
-    const onClose = renderPanel();
+  it('keeps help and close as right-side accessible actions without a movement handle', async () => {
+    const onClose = await renderPanel();
     const actions = container.querySelector<HTMLElement>(
       '[data-slot="canvas-node-workbench-header-actions"]'
     );
@@ -86,23 +80,23 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
 
     expect(actions).not.toBeNull();
     expect(actions?.className).toContain('ml-auto');
-    expect(dragHandle?.contains(actions!)).toBe(false);
+    expect(dragHandle).toBeNull();
     expect(help?.getAttribute('aria-label')).toBe('Editable properties');
     expect(close?.getAttribute('aria-label')).toBe('Close');
     expect(help?.querySelector('svg')).not.toBeNull();
     expect(close?.querySelector('svg')).not.toBeNull();
     expect(help?.compareDocumentPosition(close!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
-    act(() => {
+    await act(async () => {
       fireEvent.click(close!);
     });
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the existing Canvas localization owner for Spanish help and close labels', () => {
+  it('uses the existing Canvas localization owner for Spanish help and close labels', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
-    renderPanel();
+    await renderPanel();
 
     expect(
       container

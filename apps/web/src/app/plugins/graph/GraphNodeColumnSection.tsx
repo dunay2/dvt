@@ -8,7 +8,7 @@ import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 import { resolveGraphNodeCardCopy } from './graphNodeCardCopyTokens';
 import { GraphNodeColumnRow } from './GraphNodeColumnRow';
 import { GraphNodeCalculatedColumnForm } from './GraphNodeCalculatedColumnForm';
-import { graphNodeColumnClasses } from './graphVisualTokens';
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { useGraphNodeColumnSectionState } from './useGraphNodeColumnSectionState';
 
 const compactRemainderClassName =
@@ -17,12 +17,11 @@ const compactRemainderClassName =
 export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): ReactElement {
   const {
     columns,
+    expressionInputs = columns,
     nodeId,
     portDirections = [],
     activeColumnHandleId,
     onColumnPortActivate,
-    onColumnFunctionApply,
-    resolveColumnCompositionFunctions,
     onStructuredFieldApply,
     onCalculatedColumnAdd,
     onColumnOutputToggle,
@@ -43,7 +42,6 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
     String(section.remainingColumnCount)
   );
   const compactCollapseLabel = copy.compactCollapseColumnsLabel;
-
   return (
     <div data-slot="graph-node-column-section" className={graphNodeColumnClasses.shell}>
       <button
@@ -75,14 +73,16 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
           >
             {section.visibleColumns.map((column) => (
               <GraphNodeColumnRow
-                key={column.id ?? column.name}
+                onColumnInspect={props.onColumnInspect}
+                key={section.columnReorder.rowKey(column)}
                 column={column}
                 nodeId={nodeId}
                 portDirections={portDirections}
                 activeColumnHandleId={activeColumnHandleId}
                 copy={copy}
+                view={props.view}
+                showSourceName={props.showSourceName ?? column.sourceNodeName != null}
                 reorder={section.columnReorder}
-                expressionOperandCandidates={section.columnReorder.orderedColumns}
                 unavailableAliases={section.columnReorder.orderedColumns
                   .filter(
                     (candidate) => (candidate.id ?? candidate.name) !== (column.id ?? column.name)
@@ -118,24 +118,22 @@ export function GraphNodeColumnSection(props: GraphNodeColumnSectionProps): Reac
                 onCreateAlias={
                   onCalculatedColumnAdd == null || column.output === false
                     ? undefined
-                    : () => setAliasFieldId(column.id ?? column.name)
+                    : () => setAliasFieldId(column.sourceReference ?? column.id ?? column.name)
                 }
                 onColumnPortActivate={onColumnPortActivate}
-                onColumnFunctionApply={onColumnFunctionApply}
-                resolveColumnCompositionFunctions={resolveColumnCompositionFunctions}
                 onStructuredFieldApply={onStructuredFieldApply}
                 onColumnOutputToggle={onColumnOutputToggle}
                 onColumnReorder={onColumnReorder}
               />
             ))}
           </div>
-          {nodeId != null && onCalculatedColumnAdd != null && columns.length > 0 ? (
+          {nodeId != null && onCalculatedColumnAdd != null && expressionInputs.length > 0 ? (
             <GraphNodeCalculatedColumnForm
               key={aliasFieldId ?? 'new-column'}
               nodeId={nodeId}
               initialInputFieldId={aliasFieldId ?? undefined}
               onClose={() => setAliasFieldId(null)}
-              columns={section.columnReorder.orderedColumns}
+              inputColumns={expressionInputs}
               onSubmit={onCalculatedColumnAdd}
               onApplied={section.revealCreatedColumn}
             />

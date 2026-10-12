@@ -18,7 +18,6 @@ last_reviewed: 2026-09-05
 7. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
 8. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
 9. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
-10. [MW-A2 GenericGraphSource plan](../../../planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md)
 
 ## Scope and location
 

@@ -1,232 +1,123 @@
+import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
   createDvtPostgresOutputSchemaDigestV1,
-  type ConnectionRef,
-  type ConnectedSourceRef,
-  type DvtSubstraitSemanticDocumentV1,
-  type WorkspaceGraphAuthoringDraft,
+  decodeDvtSubstraitPlanV1,
+  DvtTransformAuthoringAuthorityV1Schema,
+  encodeDvtSubstraitPlanV1,
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
-import {
-  projectDvtPostgresOutputSchemaV1,
-  type ProjectedDvtConnectedFieldSql,
-} from '@dvt/postgres-projection';
-import { describe, expect, it, vi } from 'vitest';
+import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
+import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import {
   DvtPostgresTargetProjectionPublisher,
   type DvtPostgresTargetProjectionPublishInput,
 } from '../../../src/application/services/dvtPostgresTargetProjectionPublisher.js';
-import { buildCanonicalSemanticDocument } from '../../fixtures/workspaceGraphDraftFixture.js';
+import { buildDvtTerminalTransformPreviewDraft } from '../../fixtures/workspaceGraphDraftFixture.js';
 
-const CONNECTION: ConnectionRef = {
-  schemaVersion: 'connection-ref.v1',
-  connectionId: 'warehouse-main',
-  provider: 'postgres',
-};
-const CONNECTED_SOURCE: ConnectedSourceRef = {
-  schemaVersion: 'connected-source-ref.v1',
-  connectionRef: CONNECTION,
-  sourceObjectId: 'raw.orders',
-};
-
-function semanticDocument(): DvtSubstraitSemanticDocumentV1 {
-  const base = buildCanonicalSemanticDocument();
+function input(typed: boolean): DvtPostgresTargetProjectionPublishInput {
+  const draft = buildDvtTerminalTransformPreviewDraft();
+  const transform = draft.nodes[1]!;
+  const authority = DvtTransformAuthoringAuthorityV1Schema.parse(
+    transform.metadata!.transformAuthoring
+  );
+  const document = authority.semanticDocument;
+  if (typed) {
+    const plan = decodeDvtSubstraitPlanV1(document);
+    const root = plan.relations[0]!.relType;
+    if (
+      root.case !== 'root' ||
+      root.value.input?.relType.case !== 'project' ||
+      root.value.input.relType.value.input?.relType.case !== 'read'
+    )
+      throw new Error('Expected connected-field fixture');
+    root.value.input.relType.value.input.relType.value.baseSchema!.struct!.types[0]!.kind = {
+      case: 'i64',
+      value: {
+        $typeName: 'substrait.Type.I64',
+        nullability: Type_Nullability.NULLABLE,
+        typeVariationReference: 0,
+      },
+    };
+    document.semanticPlan = encodeDvtSubstraitPlanV1(plan);
+    document.sidecar.semanticPlanSha256 = document.semanticPlan.sha256;
+  }
+  transform.metadata!.transformAuthoring = authority;
   return {
-    ...base,
-    sidecar: {
-      ...base.sidecar,
-      relations: [
-        {
-          relationId: 'relation:source-a',
-          relAnchor: 1,
-          sourceRef: CONNECTED_SOURCE,
-        },
-        {
-          relationId: 'relation:transform-a:project',
-          relAnchor: 2,
-        },
-      ],
-      fields: base.sidecar.fields.map((field) => ({
-        ...field,
-        relationId: 'relation:transform-a:project',
-      })),
-    },
+    scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'environment-a' },
+    draft,
+    selectedNodeIds: draft.nodeIds,
+    selectedEdgeIds: draft.edges.map((edge) => edge.id),
   };
 }
 
-function draft(edgeMetadata?: Readonly<Record<string, unknown>>): WorkspaceGraphAuthoringDraft {
-  return {
-    canvas: { id: 'canvas-a', kind: 'transformation', title: 'Canvas' },
-    nodeIds: ['source-a', 'transform-a'],
-    nodePositions: {
-      'source-a': { x: 0, y: 0 },
-      'transform-a': { x: 200, y: 0 },
-    },
-    nodes: [
-      {
-        id: 'source-a',
-        name: 'Orders',
-        pluginId: 'dvt.warehouse-source',
-        kind: 'dvt:source',
-        role: 'input',
-        status: 'idle',
-        tags: [],
-        metadata: { connectedSourceRef: CONNECTED_SOURCE },
-      },
-      {
-        id: 'transform-a',
-        name: 'Orders projection',
-        pluginId: 'dvt',
-        kind: 'transform',
-        role: 'transform',
-        status: 'idle',
-        tags: [],
-        metadata: {
-          transformAuthoring: {
-            version: 'v1',
-            mode: 'substrait',
-            semanticDocument: semanticDocument(),
-          },
-        },
-      },
-    ],
-    edges: [
-      {
-        id: 'source-transform',
-        sourceId: 'source-a',
-        targetId: 'transform-a',
-        relation: 'lineage',
-        ...(edgeMetadata === undefined ? {} : { metadata: edgeMetadata }),
-      },
-    ],
-  };
+function harness(): {
+  publisher: DvtPostgresTargetProjectionPublisher;
+  publish: Mock<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>;
+} {
+  const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
+    async (request) => ({ ...request, disposition: 'created' })
+  );
+  const publisher = new DvtPostgresTargetProjectionPublisher({
+    artifactStore: { publish },
+    locateArtifact: ({ sha256 }) => 's3://artifacts/tenants/tenant-a/' + sha256,
+  });
+  return { publisher, publish };
 }
 
-function projected(targetNodeId = 'transform-a'): ProjectedDvtConnectedFieldSql {
-  return {
-    sql: 'select order_id from raw.orders',
-    projection: {
-      targetNodeId,
-      source: {
-        nodeId: 'source-a',
-        schema: 'raw',
-        table: 'orders',
-        sourceRef: CONNECTED_SOURCE,
-        fields: [{ name: 'order_id', dataType: 'bigint' }],
-      },
-      outputs: [
-        {
-          fieldId: 'field:transform-a:order_id',
-          name: 'order_id',
-          sourceFieldId: 'field:source-a:order_id',
-          sourceFieldName: 'order_id',
-          dataType: 'bigint',
-          outputOrdinal: 0,
-        },
-      ],
-    },
-  };
-}
-
-function publishInput(
-  overrides: Partial<{ draft: WorkspaceGraphAuthoringDraft }> = {}
-): DvtPostgresTargetProjectionPublishInput {
-  return {
-    scope: {
+describe('DvtPostgresTargetProjectionPublisher with canonical documents', () => {
+  it('publishes exact projected bytes and fingerprints the semantic output schema', async () => {
+    const request = input(true);
+    const { publisher, publish } = harness();
+    const binding = await publisher.publish(request);
+    expect(publish).toHaveBeenCalledOnce();
+    const artifact = publish.mock.calls[0]![0];
+    const schema = projectDvtPostgresOutputSchemaV1([
+      { name: 'order_id', dataType: 'i64', outputOrdinal: 0, nullable: true },
+    ])!;
+    expect(artifact.bytes.byteLength).toBeGreaterThan(0);
+    expect(artifact).toMatchObject({
       tenantId: 'tenant-a',
-      projectId: 'project-a',
-      environmentId: 'environment-a',
-    },
-    draft: overrides.draft ?? draft(),
-    selectedNodeIds: ['source-a', 'transform-a'],
-    selectedEdgeIds: ['source-transform'],
-  };
-}
-
-describe('DvtPostgresTargetProjectionPublisher', () => {
-  it('publishes exact SQL bytes through CAS and returns a typed binding', async () => {
-    const sql = projected().sql;
-    const bytes = Buffer.from(sql, 'utf8');
-    const digest = sha256Hex(bytes);
-    const storageUri = `s3://artifacts/tenants/tenant-a/${digest}`;
-    const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
-      async (request) => ({ ...request, disposition: 'created' })
-    );
-    const publisher = new DvtPostgresTargetProjectionPublisher({
-      artifactStore: { publish },
-      locateArtifact: ({ sha256 }) => `s3://artifacts/tenants/tenant-a/${sha256}`,
-      projectSemanticDocument: async () => projected(),
-    });
-
-    const binding = await publisher.publish(publishInput());
-    const outputSchema = projectDvtPostgresOutputSchemaV1(projected().projection.outputs);
-    if (outputSchema == null) throw new Error('Expected canonical output schema.');
-
-    expect(publish).toHaveBeenCalledWith({
-      tenantId: 'tenant-a',
-      storageUri,
-      sha256: digest,
-      sizeBytes: bytes.byteLength,
+      sha256: sha256Hex(artifact.bytes),
+      sizeBytes: artifact.bytes.byteLength,
       mediaType: 'application/sql; charset=utf-8',
-      bytes,
     });
-    expect(binding).toEqual({
-      profileId: 'dvt.vtx2.postgres.project-rel.v1',
-      outputNodeId: 'transform-a',
-      semanticPlanSha256: semanticDocument().semanticPlan.sha256,
-      schemaDigestSha256: createDvtPostgresOutputSchemaDigestV1(outputSchema),
-      connectionRef: CONNECTION,
-      artifact: {
-        artifactKind: 'compiled-sql',
-        sha256: digest,
-        storageUri,
-        sizeBytes: bytes.byteLength,
-        encoding: 'utf-8',
-      },
+    expect(binding.outputNodeId).toBe(request.draft.nodes[1]!.id);
+    expect(binding.schemaDigestSha256).toBe(createDvtPostgresOutputSchemaDigestV1(schema));
+    expect(binding.artifact).toMatchObject({
+      sha256: artifact.sha256,
+      storageUri: artifact.storageUri,
+      sizeBytes: artifact.sizeBytes,
     });
   });
 
-  it.each([
-    ['another target node', () => projected('transform-b'), () => draft()],
-    ['a closed execution gate', () => projected(), () => draft({ executionGate: 'closed' })],
-  ])('rejects %s before CAS publication', async (_label, project, buildDraft) => {
-    const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>();
-    const publisher = new DvtPostgresTargetProjectionPublisher({
-      artifactStore: { publish },
-      locateArtifact: () => 's3://artifacts/tenants/tenant-a/invalid',
-      projectSemanticDocument: async () => project(),
-    });
-
-    await expect(publisher.publish(publishInput({ draft: buildDraft() }))).rejects.toThrow();
-    expect(publish).not.toHaveBeenCalled();
-  });
-
-  it('preserves Preview SQL publication when the output type cannot be fingerprinted', async () => {
-    const publish = vi.fn<Pick<IContentAddressedArtifactStore, 'publish'>['publish']>(
-      async (request) => ({ ...request, disposition: 'created' })
-    );
-    const publisher = new DvtPostgresTargetProjectionPublisher({
-      artifactStore: { publish },
-      locateArtifact: ({ sha256 }) => `s3://artifacts/tenants/tenant-a/${sha256}`,
-      projectSemanticDocument: async () => {
-        const value = projected();
-        return {
-          ...value,
-          projection: {
-            ...value.projection,
-            outputs: value.projection.outputs.map((output) => ({
-              ...output,
-              dataType: 'unknown',
-            })),
-          },
-        };
-      },
-    });
-
-    const binding = await publisher.publish(publishInput());
-
+  it('preserves SQL publication for an explicitly unbound semantic type without inventing a fingerprint', async () => {
+    const { publisher, publish } = harness();
+    const binding = await publisher.publish(input(false));
     expect(binding.schemaDigestSha256).toBeUndefined();
     expect(publish).toHaveBeenCalledOnce();
   });
+
+  it.each(['closed gate', 'foreign source'] as const)(
+    'rejects %s before artifact publication',
+    async (corruption) => {
+      const request = input(true);
+      if (corruption === 'closed gate')
+        request.draft.edges[0]!.metadata = { executionGate: 'closed' };
+      else
+        request.draft.nodes[0]!.metadata!.connectedSourceRef = {
+          schemaVersion: 'connected-source-ref.v1',
+          sourceObjectId: 'foreign',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'local-postgres-proof',
+            provider: 'postgres',
+          },
+        };
+      const { publisher, publish } = harness();
+      await expect(publisher.publish(request)).rejects.toThrow();
+      expect(publish).not.toHaveBeenCalled();
+    }
+  );
 });

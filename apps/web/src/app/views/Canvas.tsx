@@ -20,9 +20,8 @@ import {
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 import {
-  useRunsService,
+  useCanvasTransformDataSampleQueryPort,
   useWarehouseSourceDataSampleQueryPort,
-  useWarehouseSourceImportPort,
 } from '../services/AppServicesContext';
 import type { DbtProjectFilesAuthorityBinding } from '../ports/dbtProjectGraph';
 import type { CanvasShellProps } from './canvas/canvasShell.types';
@@ -57,9 +56,8 @@ function GraphDraftAuthorityContent({
   referencedRunId?: string;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
-  const warehouseSourceImport = useWarehouseSourceImportPort();
   const warehouseSourceDataSampleQuery = useWarehouseSourceDataSampleQueryPort();
-  const runsService = useRunsService();
+  const canvasTransformDataSampleQuery = useCanvasTransformDataSampleQueryPort();
   const controller = useCanvasController();
   const effectiveRunId = referencedRunId ?? controller.activeRunId ?? undefined;
   const runSnapshotQuery = useRunSnapshotQuery(controller.workspaceLayoutKey, effectiveRunId);
@@ -78,14 +76,9 @@ function GraphDraftAuthorityContent({
       routeViewState,
       runControls,
     }),
-    warehouseSourceImport,
     warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery,
     runSnapshot: runSnapshotQuery.data ?? null,
-    runOutputPreviewAuthority: {
-      currentPlan: controller.currentPlan,
-      isCurrentPlanStale: controller.isCurrentPlanStale,
-    },
-    runMaterializationSampleQuery: runsService.getRunMaterializationSample,
     canvasContextScreenToFlowPosition: (screenPosition) =>
       reactFlow.screenToFlowPosition(screenPosition),
     onDbtProjectImported,

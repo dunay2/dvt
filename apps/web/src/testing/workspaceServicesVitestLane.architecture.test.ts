@@ -48,9 +48,12 @@ describe('workspace services Vitest lane', () => {
         'apps/web/src/app/services/workspace/workspacePorts.api.ts',
       ])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services']],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services'],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['workspace-services'],
+      suites: ['workspace-services', 'architecture'],
     });
   });
 
@@ -72,9 +75,12 @@ describe('workspace services Vitest lane', () => {
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/services/runs/runsService.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.unit],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.unit,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['unit'],
+      suites: ['unit', 'architecture'],
     });
   });
 });

@@ -21,7 +21,10 @@ import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { projectDbtModelColumnStates } from './canvasDbtModelColumnAuthoring';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import type { CanvasDependencyEdgeData } from './canvasDependencyEdgeModel';
-import { projectGraphNodeColumn } from './canvasGraphNodeColumnProjection';
+import {
+  projectGraphNodeColumn,
+  selectGraphNodeCardColumns,
+} from './canvasGraphNodeColumnProjection';
 
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
@@ -126,9 +129,10 @@ export function mapCanonicalNodeToCanvasNode({
   const resolvedPresentationTruth =
     presentationTruth ??
     buildCanvasNodePresentationTruth({ node: canonicalNode, nodes: [canonicalNode], edges: [] });
+  const cardColumns = selectGraphNodeCardColumns(resolvedPresentationTruth);
   const presentedColumns = isDbtCompatibleModel(canonicalNode)
-    ? projectDbtModelColumnStates(canonicalNode, resolvedPresentationTruth.columns.visible)
-    : resolvedPresentationTruth.columns.visible.map((column) => ({
+    ? projectDbtModelColumnStates(canonicalNode, cardColumns)
+    : cardColumns.map((column) => ({
         column,
         output:
           column.selected ??

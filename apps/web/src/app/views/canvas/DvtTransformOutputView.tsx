@@ -15,6 +15,21 @@ type DerivedSqlState =
   | Readonly<{ status: 'ready'; sql: string }>
   | Readonly<{ status: 'error' }>;
 
+export function DvtTransformSqlOutputView({
+  value,
+  label,
+}: Readonly<{ value: string; label: string }>): JSX.Element {
+  return (
+    <MonacoCodeViewer
+      ariaLabel={label}
+      language="sql"
+      loadingLabel={label}
+      containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
+      value={value}
+    />
+  );
+}
+
 export type DvtTransformOutputViewProps = Readonly<{
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
@@ -97,11 +112,8 @@ export function DvtTransformOutputView({
           value={canonicalContent}
         />
       ) : derivedSql.status === 'ready' ? (
-        <MonacoCodeViewer
-          ariaLabel={copy.inspectorTransformOutputPostgresSqlLabel}
-          language="sql"
-          loadingLabel={copy.inspectorTransformOutputPostgresSqlLabel}
-          containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
+        <DvtTransformSqlOutputView
+          label={copy.inspectorTransformOutputPostgresSqlLabel}
           value={derivedSql.sql}
         />
       ) : (

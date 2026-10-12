@@ -28,9 +28,8 @@ const CAPABILITY_ROUTING_GUIDE = join(
 const ACTIVE_DBT_DOCS = [
   'docs/evidence/ed-20260414-tf-c3-dbt-plugin-runtime-projection.md',
   'docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md',
-  'docs/planning/reviews/architecture-and-governance/20260421-temporal-fowler-provider-truth-follow-up-review.md',
+
   'docs/planning/reviews/architecture-and-governance/20260423-dvt-plus-system-architecture-review.md',
-  'docs/planning/reviews/architecture-and-governance/20260424-dvt-plus-hard-architecture-review.md',
 ] as const;
 const RETIRED_DBT_ACTIVITY_PATH =
   'packages/@dvt/adapter-temporal/src/activities/dbtStepActivity.ts';

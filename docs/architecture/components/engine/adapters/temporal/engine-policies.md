@@ -32,7 +32,48 @@ Primary implementation references:
 - Returned run reference uses:
   - `namespace` from Temporal config
   - `workflowId` from Temporal start response
-  - `runId = firstExecutionRunId` when available, else fallback to `ctx.runId`.
+  - `runId = ctx.runId` (the canonical logical identity, not Temporal's execution ID).
+
+`TemporalAdapter.startRun` explicitly uses `REJECT_DUPLICATE` for a retained
+closed workflow ID and `FAIL` for an already running workflow ID. Duplicate
+requests propagate the provider error; they never terminate the winner, silently
+attach to it as a successful start, or create a replacement execution. Business
+recovery dispatches with a distinct child logical run ID.
+
+This provider protection is bounded by Temporal namespace retention and explicit
+history deletion. It is not exclusive Engine ownership, eternal deduplication, or
+permission to redispatch an unknown start. Claim/fencing and unknown-outcome
+reconciliation remain governed by #2678/#2679. The
+[Temporal WorkflowOptions contract](https://typescript.temporal.io/api/interfaces/client.WorkflowOptions)
+defines the provider policies; the service-backed identity test checks the
+installed SDK/server behavior for running, completed and terminated executions.
+
+#### Retransmission profile admission
+
+No automatic application redispatch profile is currently admitted. The existing
+client inherits the SDK's transport retries; one application invocation is not
+a promise of one RPC transmission. A new high-level start creates another request
+ID. These are separate retry layers, not interchangeable authorizations.
+
+The isolated `integration.start-retransmission.test.ts` pins CLI `v1.8.2`, verifies
+Server `1.31.2` and a local namespace with one-day retention, and uses the installed
+SDK from the lockfile. Real requests prove convergence for both controlled arrival
+orders while identity remains retained. Replaying the exact original request,
+including its request ID and payload, can create another execution after deletion
+of that execution's history. The test deletes only its own history in its own
+ephemeral server. It does not target an operator-supplied service.
+
+This is evidence about the tested development profile, not certification of a
+production deployment. Admission still requires immutable business-input binding,
+current fenced authorization, an unrenewable first-authorization horizon, and a
+proved upper bound on remote creation/deduplication of every old request before
+identity can disappear. SDK backoff or a caller timeout does not establish that
+bound. Retention reduction, history deletion, namespace recreation, restore and
+unproved failover invalidate the argument. Until these obligations are satisfied,
+ADR-0030's observation/backoff/escalation behavior remains unchanged.
+
+See the [profile evidence](../../../../../evidence/ED-20261001-temporal-redispatch-profile-admission.md)
+and [governing study](https://github.com/dunay2/dvt/issues/2679#issuecomment-5926921272).
 
 ### 1.2 Status source of truth
 

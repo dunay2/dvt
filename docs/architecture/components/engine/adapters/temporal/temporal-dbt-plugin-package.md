@@ -17,7 +17,7 @@ Use this guide with:
 - [Temporal DBT worker plugin profile](./temporal-dbt-worker-plugin-profile.md)
 - [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
 - [Temporal worker DBT plugin runtime runbook](../../../../../runbooks/temporal-worker-dbt-plugin-runtime-20260414.md)
-- `buzon/20260514-codex-fowler-ar-d-plan-pointer-dbt-package-extraction-analysis.md`
+- [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260514-codex-fowler-ar-d-plan-pointer-dbt-package-extraction-analysis.md)
 
 ## Owned Concern
 

@@ -65,7 +65,6 @@ test('planner contract authority has no obsolete satellite workspace', () => {
     'docs/architecture/diagrams/implementation-architecture-diagrams.md',
     'docs/architecture/domain-shared.md',
     'docs/architecture/typescript-package-classification.md',
-    'docs/architecture/atlas/engineering/engineering-playbook.md',
   ]) {
     const architectureSource = readFileSync(currentArchitecturePath, 'utf8');
     assert.doesNotMatch(architectureSource, /planner-contracts|plancontracts/u);

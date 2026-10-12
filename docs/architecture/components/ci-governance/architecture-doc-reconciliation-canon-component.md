@@ -107,4 +107,4 @@ flowchart TD
 
 - [Architecture Documentation Reconciliation Canon User Stories](./architecture-doc-reconciliation-canon-user-stories.md)
 - [Architecture Documentation Reconciliation Canon Plan 2026-05-23](../../../planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
-- [Architecture Documentation Reconciliation Mailbox Analysis](../../../../buzon/20260523-codex-fowler-architecture-doc-reconciliation-canon.md)
+- [Architecture Documentation Reconciliation Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260523-codex-fowler-architecture-doc-reconciliation-canon.md)

@@ -229,6 +229,41 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(savedNodes.every((node) => DVT_SOURCE_NODE_ID_PATTERN.test(node.id))).toBe(true);
   });
 
+  it('uses the same bounded source name in graph metadata and dbt YAML', async () => {
+    const longCatalog = `dvt_proof_source_import_${'a'.repeat(16)}`;
+    const context: WarehouseSourceImportCommandContext = {
+      ...CONTEXT,
+      connection: { ...CONTEXT.connection, id: 'live-postgres-proof-long-connection-id' },
+      sourceObjects: [
+        {
+          ...SOURCE_OBJECT,
+          connectionId: 'live-postgres-proof-long-connection-id',
+          objectId: `relation/${longCatalog}/erp/orders`,
+          locator: { ...SOURCE_OBJECT.locator, catalog: longCatalog } as Extract<
+            SourceObject['locator'],
+            { kind: 'relation' }
+          >,
+        },
+      ],
+    };
+    const draftStore = createDraftStore(createDraft('orders-canvas'));
+    const batchMutation = createBatchMutation();
+    const strategy = createStrategy(draftStore, batchMutation);
+
+    await strategy.execute(context, {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: 'orders-canvas',
+      authority: { kind: 'graph-draft' },
+    });
+
+    const graphSourceName = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodes[0]?.metadata
+      ?.sourceName;
+    const yamlContent = vi.mocked(batchMutation.apply).mock.calls[0]?.[1].writes[0]?.content;
+    expect(typeof graphSourceName).toBe('string');
+    expect(Buffer.byteLength(String(graphSourceName), 'utf8')).toBeLessThanOrEqual(63);
+    expect(yamlContent).toContain(`name: ${graphSourceName}`);
+  });
+
   it('fails closed when persisted nodes repeat one connected-source binding', async () => {
     const draftStore = createDraftStore(
       createDraftWithSourceNodes('orders-canvas', [

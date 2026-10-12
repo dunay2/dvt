@@ -8,7 +8,6 @@ owners:
   - packages/@dvt/contracts
   - packages/@dvt/adapter-temporal
 planning_type: proposal
-lane: C
 ---
 
 # DBT Step Capability Admission Plan

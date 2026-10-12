@@ -30,9 +30,11 @@ import type { IStartRunUseCase } from '../../application/ports/startRunUseCasePo
 import type { IWarehouseConnectionCatalog } from '../../application/ports/warehouseSourceImport.js';
 import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
 import { BackpressureAwareStartRunUseCase } from '../../application/services/BackpressureAwareStartRunUseCase.js';
+import { DbtRunExecutionContextPreparer } from '../../application/services/dbt/DbtRunExecutionContextPreparer.js';
 import { DEFAULT_START_RUN_EXECUTION_CAPACITY_PORT } from '../../application/services/defaultStartRunExecutionCapacityPort.js';
 import { EngineStartRunUseCase } from '../../application/services/engineStartRunUseCase.js';
 import { PlannerBackedStartRunUseCase } from '../../application/services/PlannerBackedStartRunUseCase.js';
+import { DvtPostgresRunExecutionContextPreparer } from '../../application/services/postgres/DvtPostgresRunExecutionContextPreparer.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { RunExecutionContextBindingUseCase } from '../../application/services/RunExecutionContextBindingUseCase.js';
 import type { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
@@ -96,23 +98,30 @@ export function buildProtectedStartRunRuntime(
   const engineStartRunUseCase = new EngineStartRunUseCase(deps.engine);
   const runExecutionContextBindingUseCase = new RunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
-    bundleBuilder: new DbtProjectBundleBuilder({
-      workspaceFilesRoot: deps.workspaceRoot,
-      bundleStore: deps.dbtBundleStore,
-      limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
-    }),
     contextWriter: new ArtifactBackedRunExecutionContextWriter(
       deps.runExecutionContextStore,
       undefined,
       deps.runExecutionContextReferenceStore
     ),
-    executionTargetResolver: deps.dbtExecutionTargetResolver,
-    executionConnectionBindingVerifier: deps.dbtExecutionConnectionBindingVerifier,
-    stepTypeRegistry: deps.stepTypeRegistry,
-    warehouseConnectionCatalog: deps.warehouseConnectionCatalog,
-    dvtPostgresPublicationPredecessorReader: new PostgresDvtPublicationPredecessorReader({
-      credentialResolver: deps.postgresCredentialResolver,
-    }),
+    preparers: [
+      new DvtPostgresRunExecutionContextPreparer({
+        catalog: deps.warehouseConnectionCatalog,
+        predecessorReader: new PostgresDvtPublicationPredecessorReader({
+          credentialResolver: deps.postgresCredentialResolver,
+        }),
+      }),
+      new DbtRunExecutionContextPreparer({
+        bundleBuilder: new DbtProjectBundleBuilder({
+          workspaceFilesRoot: deps.workspaceRoot,
+          bundleStore: deps.dbtBundleStore,
+          limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
+        }),
+        executionTargetResolver: deps.dbtExecutionTargetResolver,
+        executionConnectionBindingVerifier: deps.dbtExecutionConnectionBindingVerifier,
+        stepTypeRegistry: deps.stepTypeRegistry,
+        warehouseConnectionCatalog: deps.warehouseConnectionCatalog,
+      }),
+    ],
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner: planCompilePlanner,

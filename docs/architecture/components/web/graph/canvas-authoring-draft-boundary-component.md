@@ -72,7 +72,6 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
 - [Workspace graph draft persistence v1](../../../../contracts/planner/workspace-graph-draft-persistence-v1.md)
 - [Workspace authoring draft aggregate](../../planner/workspace-authoring-draft-aggregate.md)
 - [Canonical API architecture authority](../../api/index.md)
-- [Canvas target architecture execution plan](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 - [TF-E2-A authoring draft hard cut implementation plan](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md)
 
 ## Target Public API

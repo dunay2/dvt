@@ -77,7 +77,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       if (dispatchResolution === 'confirmed') {
         return acceptedRecovery(command);
       }
-      if (dispatchResolution === 'blocked') {
+      if (dispatchResolution !== 'missing') {
         throw new RunRecoveryUnavailableError(command.sourceRunId, 'recovery_dispatch_unconfirmed');
       }
     }
@@ -134,7 +134,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
   private async resolveRecoveryDispatch(
     recovery: RunMetadata,
     tenantId: string
-  ): Promise<'confirmed' | 'ready_to_dispatch' | 'missing' | 'blocked'> {
+  ): Promise<'confirmed' | 'missing' | 'blocked' | 'escalated'> {
     const intentId = this.dependencies.idempotency.startRunIntentId(
       tenantId,
       recovery.runId,
@@ -143,8 +143,13 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     );
     const intent = await this.dependencies.startRunIntentStore.getIntent({ tenantId, intentId });
     if (
-      intent?.engineRunRef !== undefined &&
-      (intent.status === 'DISPATCHED' || intent.status === 'RESOLVED')
+      intent?.providerOutcome.kind === 'started' &&
+      intent.status === 'RESOLVED' &&
+      intent.compensation.kind === 'not_required' &&
+      intent.reconciliation.kind !== 'escalated' &&
+      intent.tenantId === tenantId &&
+      intent.runId === recovery.runId &&
+      intent.provider === recovery.providerRef.provider
     ) {
       return 'confirmed';
     }

@@ -1,6 +1,7 @@
 /** Owned concern: keep the bounded edge execution gate through Canvas draft transitions. */
 import {
   readWorkspaceGraphAuthoringEdgeExecutionGate,
+  readDvtInputBindings,
   type WorkspaceGraphAuthoringEdge,
   type WorkspaceGraphAuthoringEdgeExecutionGateCommand,
 } from '@dvt/contracts';
@@ -18,9 +19,11 @@ function signature(edge: EdgeIdentity): string {
 }
 
 function fromAuthoringEdge(edge: WorkspaceGraphAuthoringEdge): CanvasDraftEdge {
+  const inputBindings = readDvtInputBindings(edge);
   return {
     sourceId: edge.sourceId,
     targetId: edge.targetId,
+    ...(inputBindings == null ? {} : { inputBindings }),
     ...(readWorkspaceGraphAuthoringEdgeExecutionGate(edge) === 'open'
       ? {}
       : { executionGate: 'closed' }),
@@ -31,15 +34,18 @@ function preserveOnReplacement(
   currentEdges: readonly CanvasDraftEdge[],
   replacementEdges: readonly CanvasDraftEdge[]
 ): CanvasDraftEdge[] {
-  const closedSignatures = new Set(
-    currentEdges.filter((edge) => edge.executionGate === 'closed').map(signature)
-  );
-  return replacementEdges.map((edge) => ({
-    ...edge,
-    ...(edge.executionGate === 'closed' || closedSignatures.has(signature(edge))
-      ? { executionGate: 'closed' as const }
-      : {}),
-  }));
+  const currentById = new Map(currentEdges.map((edge) => [signature(edge), edge]));
+  return replacementEdges.map((edge) => {
+    const current = currentById.get(signature(edge));
+    const inputBindings = edge.inputBindings ?? current?.inputBindings;
+    return {
+      ...edge,
+      ...(inputBindings == null ? {} : { inputBindings }),
+      ...(edge.executionGate === 'closed' || current?.executionGate === 'closed'
+        ? { executionGate: 'closed' as const }
+        : {}),
+    };
+  });
 }
 
 function applyCommand(
@@ -55,6 +61,7 @@ function applyCommand(
     return {
       sourceId: edge.sourceId,
       targetId: edge.targetId,
+      ...(edge.inputBindings == null ? {} : { inputBindings: edge.inputBindings }),
       ...(command.gate === 'closed' ? { executionGate: 'closed' as const } : {}),
     };
   });
@@ -66,8 +73,21 @@ function mergeRemote(
   baselineEdge: CanvasDraftEdge | undefined,
   remoteEdge: CanvasDraftEdge | undefined
 ): CanvasDraftEdge {
-  const localGateChanged = localEdge.executionGate !== baselineEdge?.executionGate;
-  return baselineEdge != null && remoteEdge != null && !localGateChanged ? remoteEdge : localEdge;
+  if (baselineEdge == null || remoteEdge == null) return localEdge;
+  const executionGate =
+    localEdge.executionGate !== baselineEdge.executionGate
+      ? localEdge.executionGate
+      : remoteEdge.executionGate;
+  const inputBindings =
+    JSON.stringify(localEdge.inputBindings) !== JSON.stringify(baselineEdge.inputBindings)
+      ? localEdge.inputBindings
+      : remoteEdge.inputBindings;
+  return {
+    sourceId: localEdge.sourceId,
+    targetId: localEdge.targetId,
+    ...(executionGate == null ? {} : { executionGate }),
+    ...(inputBindings == null ? {} : { inputBindings }),
+  };
 }
 
 export const canvasDraftEdgeExecutionGate = {

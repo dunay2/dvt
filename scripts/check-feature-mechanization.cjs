@@ -7,7 +7,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
+const { FeatureMechanizationGitDiffReader } = require('./lib/feature-mechanization-git-diff.cjs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
   extractFeatureMechanizationManifests,
@@ -385,154 +385,6 @@ class FeatureImplementationGuard {
       objectMethodBeforeUrlPattern.test(fileContent) ||
       objectUrlBeforeMethodPattern.test(fileContent)
     );
-  }
-}
-
-class FeatureMechanizationGitDiffReader {
-  constructor(options = {}) {
-    this.baseRef = options.baseRef || process.env.GIT_BASE || 'origin/main';
-    this.repoRootPath = options.repoRootPath || repoRoot;
-    this.lastUntrackedFiles = new Set();
-  }
-
-  read() {
-    const changedFiles = this.readChangedFiles();
-
-    return {
-      changedFiles,
-      currentFiles: this.readCurrentFiles(),
-      deletedFiles: this.readDeletedFiles(changedFiles),
-      addedLinesByPath: this.readAddedLinesByPath(changedFiles),
-      fileContentsByPath: this.readFileContentsByPath(changedFiles),
-    };
-  }
-
-  readDeletedFiles(changedFiles) {
-    return changedFiles.filter((filePath) => {
-      if (this.lastUntrackedFiles.has(filePath)) {
-        return false;
-      }
-
-      return !fs.existsSync(path.join(this.repoRootPath, filePath));
-    });
-  }
-
-  readCurrentFiles() {
-    return this.readGitLines(['ls-files', '--cached', '--others', '--exclude-standard'])
-      .filter((filePath) => fs.existsSync(path.join(this.repoRootPath, filePath)))
-      .sort();
-  }
-
-  readChangedFiles() {
-    const changedFiles = new Set();
-    const nameOnlyCommands = [
-      ['diff', '--name-only', '--diff-filter=ACMRD', `${this.baseRef}...HEAD`],
-      ['diff', '--cached', '--name-only', '--diff-filter=ACMRD'],
-      ['diff', '--name-only', '--diff-filter=ACMRD'],
-    ];
-
-    for (const command of nameOnlyCommands) {
-      for (const filePath of this.readGitLines(command)) {
-        changedFiles.add(toPosix(filePath));
-      }
-    }
-
-    const untrackedFiles = this.readGitLines(['ls-files', '--others', '--exclude-standard']).map(
-      toPosix
-    );
-    this.lastUntrackedFiles = new Set(untrackedFiles);
-    for (const filePath of untrackedFiles) {
-      changedFiles.add(filePath);
-    }
-
-    return Array.from(changedFiles).sort();
-  }
-
-  readAddedLinesByPath(changedFiles) {
-    const addedLinesByPath = {};
-    const diffCommands = [
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD', `${this.baseRef}...HEAD`],
-      ['diff', '--cached', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD'],
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD'],
-    ];
-
-    for (const command of diffCommands) {
-      this.mergeAddedLines(addedLinesByPath, this.parseAddedLines(this.runGit(command)));
-    }
-
-    for (const filePath of changedFiles) {
-      const absolutePath = path.join(this.repoRootPath, filePath);
-      if (this.lastUntrackedFiles.has(filePath) && fs.existsSync(absolutePath)) {
-        addedLinesByPath[filePath] = fs.readFileSync(absolutePath, 'utf8').split(/\r?\n/);
-        continue;
-      }
-
-      if (fs.existsSync(absolutePath) && !addedLinesByPath[filePath]) {
-        addedLinesByPath[filePath] = [];
-      }
-    }
-
-    return addedLinesByPath;
-  }
-
-  readFileContentsByPath(changedFiles) {
-    const fileContentsByPath = {};
-
-    for (const filePath of changedFiles) {
-      const absolutePath = path.join(this.repoRootPath, filePath);
-      if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isFile()) {
-        fileContentsByPath[filePath] = fs.readFileSync(absolutePath, 'utf8');
-      }
-    }
-
-    return fileContentsByPath;
-  }
-
-  readGitLines(args) {
-    return this.runGit(args)
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
-  }
-
-  runGit(args) {
-    try {
-      return execFileSync('git', args, {
-        cwd: this.repoRootPath,
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      });
-    } catch {
-      return '';
-    }
-  }
-
-  parseAddedLines(diffText) {
-    const addedLinesByPath = {};
-    let currentFilePath = null;
-
-    for (const line of diffText.split(/\r?\n/)) {
-      if (line.startsWith('+++ b/')) {
-        currentFilePath = toPosix(line.slice('+++ b/'.length));
-        addedLinesByPath[currentFilePath] ||= [];
-        continue;
-      }
-
-      if (!currentFilePath || !line.startsWith('+') || line.startsWith('+++')) {
-        continue;
-      }
-
-      addedLinesByPath[currentFilePath].push(line.slice(1));
-    }
-
-    return addedLinesByPath;
-  }
-
-  mergeAddedLines(target, source) {
-    for (const [filePath, addedLines] of Object.entries(source)) {
-      target[filePath] ||= [];
-      target[filePath].push(...addedLines);
-    }
   }
 }
 
@@ -917,6 +769,7 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
   }
 
   const bySourceAndFeature = new Map();
+  const byScope = new Map();
 
   for (const row of rows || []) {
     const sourcePath = toPosix(row.source_path || row.sourcePath || '');
@@ -926,7 +779,21 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
       continue;
     }
 
+    const scope = ['allowedImplementationSurfaces', 'forbiddenImplementationSurfaces'].map(
+      (field) =>
+        Array.isArray(manifest[field]) ? [...new Set(manifest[field])].sort() : manifest[field]
+    );
     const key = `${sourcePath}#${featureId}`;
+    const scopeKey = `${key}#${stableJsonStringify(scope)}`;
+    if (!byScope.has(scopeKey))
+      byScope.set(scopeKey, {
+        sourcePath,
+        featureKey: key,
+        scope: {
+          allowedImplementationSurfaces: manifest.allowedImplementationSurfaces,
+          forbiddenImplementationSurfaces: manifest.forbiddenImplementationSurfaces,
+        },
+      });
     if (bySourceAndFeature.has(key)) {
       const existingEntry = bySourceAndFeature.get(key);
       existingEntry.manifest = mergeFeatureMechanizationManifest(existingEntry.manifest, manifest);
@@ -939,7 +806,10 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
     });
   }
 
-  return Array.from(bySourceAndFeature.values()).sort((left, right) =>
+  return Array.from(byScope.values(), ({ sourcePath, featureKey, scope }) => ({
+    sourcePath,
+    manifest: { ...bySourceAndFeature.get(featureKey).manifest, ...scope },
+  })).sort((left, right) =>
     `${left.sourcePath}#${left.manifest.featureId}`.localeCompare(
       `${right.sourcePath}#${right.manifest.featureId}`
     )

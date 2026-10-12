@@ -21,10 +21,8 @@ import type {
 } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
-import type {
-  IWarehouseSourceDataSampleQueryPort,
-  IWarehouseSourceImportPort,
-} from '../../ports/workspace';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
+import type { IWarehouseSourceDataSampleQueryPort } from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
@@ -79,11 +77,10 @@ export type CanvasShellPropsOverrides = {
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
   workspaceCommands?: CanvasShellWorkspaceCommands;
-  warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
+  prepareModelPreview?: CanvasShellProps['prepareModelPreview'];
   runSnapshot?: CanvasShellProps['runSnapshot'];
-  runOutputPreviewAuthority?: CanvasShellProps['runOutputPreviewAuthority'];
-  runMaterializationSampleQuery?: CanvasShellProps['runMaterializationSampleQuery'];
   sourceImportInitialSelection?: CanvasShellProps['sourceImportInitialSelection'];
   onSourceImportInitialSelectionConsumed?: CanvasShellProps['onSourceImportInitialSelectionConsumed'];
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
@@ -111,6 +108,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
+    persistence: 'durable',
   };
 
   return {
@@ -240,11 +238,10 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     },
     runControls: overrides?.runControls ?? null,
     workspaceCommands: overrides?.workspaceCommands,
-    warehouseSourceImport: overrides?.warehouseSourceImport,
     warehouseSourceDataSampleQuery: overrides?.warehouseSourceDataSampleQuery,
+    canvasTransformDataSampleQuery: overrides?.canvasTransformDataSampleQuery,
+    prepareModelPreview: overrides?.prepareModelPreview,
     runSnapshot: overrides?.runSnapshot,
-    runOutputPreviewAuthority: overrides?.runOutputPreviewAuthority,
-    runMaterializationSampleQuery: overrides?.runMaterializationSampleQuery,
     sourceImportInitialSelection: overrides?.sourceImportInitialSelection,
     onSourceImportInitialSelectionConsumed: overrides?.onSourceImportInitialSelectionConsumed,
     onDbtProjectImported: overrides?.onDbtProjectImported,

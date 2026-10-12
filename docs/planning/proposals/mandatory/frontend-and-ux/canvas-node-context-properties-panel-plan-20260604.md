@@ -6,7 +6,6 @@ last_reviewed: 2026-06-05
 owners:
   - apps/web
 planning_type: mandatory-plan
-lane: E
 ---
 
 # Canvas Node Context Properties Panel Plan
@@ -221,7 +220,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md
+  - docs/architecture/components/web/screen-manuals-and-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md
   - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md

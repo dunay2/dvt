@@ -43,7 +43,6 @@ use
 - `docs/guides/ai-work-protocol.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/mw-d1-external-plan-definition-sdk-api-plan-20260417.md`
 - `docs/guides/how-to-add-step-kind-20260406.md`
 
 ## Target-state note
@@ -319,7 +318,7 @@ Required coverage:
 When the slice changes active planning posture:
 
 - update the relevant proposal or closeout
-- update the linked lane YAML task entry
+- record status and evidence in the governing GitHub issue
 - regenerate planning-derived views
 - sync docs indexes
 

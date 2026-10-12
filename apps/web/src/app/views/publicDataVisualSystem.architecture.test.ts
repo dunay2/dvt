@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 const REPO_ROOT = path.resolve(__dirname, '../../../../..');
 
 function readRepoFile(relativePath: string): string {
-  return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
+  return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8').replace(/\s+/gu, ' ');
 }
 
 function repoFileExists(relativePath: string): boolean {
@@ -14,6 +14,26 @@ function repoFileExists(relativePath: string): boolean {
 }
 
 describe('public data visual system architecture', () => {
+  const operatorBoundary =
+    /\bmust\s+not\s+be\s+applied\s+to\s+operator\s+(?:workbench\s+routes|surfaces)\b/u;
+
+  it.each([
+    'Marquez must not be applied to operator workbench routes.',
+    'It must not be applied to operator surfaces such as Canvas.',
+    'It must not be applied to operator\nworkbench\nroutes such as Canvas.',
+  ])('accepts equivalent operator-boundary prose: %s', (prose) => {
+    expect(prose).toMatch(operatorBoundary);
+  });
+
+  it.each([
+    'Marquez is a public-data visual system.',
+    'It must be applied to operator surfaces.',
+    'It may be applied to operator workbench routes.',
+    'It must not be applied to public-data surfaces.',
+  ])('rejects missing or reversed operator boundaries: %s', (prose) => {
+    expect(prose).not.toMatch(operatorBoundary);
+  });
+
   it('documents Marquez as a scoped public-data visual system', () => {
     const componentPath =
       'docs/architecture/components/web/public-data/marquez-visual-system-component.md';
@@ -46,7 +66,7 @@ describe('public data visual system architecture', () => {
 
     expect(uxGuide).toContain('Marquez visual system');
     expect(uxGuide).toContain('public-data surfaces');
-    expect(uxGuide).toContain('must not be applied to operator workbench routes');
+    expect(uxGuide).toMatch(operatorBoundary);
     expect(referenceStack).toContain('Marquez visual system');
     expect(referenceStack).toContain('not a dependency');
     expect(webIndex).toContain('Marquez public-data visual system');

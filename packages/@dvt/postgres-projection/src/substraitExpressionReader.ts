@@ -1,7 +1,12 @@
 /** Owns read-only inspection of canonical field, literal and scalar expressions. */
 import type { Expression } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import {
+  Type_Nullability,
+  type Type,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+
+import { resolveFunctionReference } from './substrait-profile/functionReference.js';
 
 export type DvtSubstraitLiteralValue =
   | Readonly<{ dataType: 'string'; value: string }>
@@ -12,21 +17,28 @@ export type DvtSubstraitLiteralValue =
 
 type ScalarFunctionIdentity = Readonly<{ urn: string; name: string }>;
 
-export function resolvedFunction(
-  plan: Plan,
-  functionAnchor: number
-): Readonly<{ urnAnchor: number; urn: string; name: string }> | null {
-  const declaration = plan.extensions.find(
-    (entry) =>
-      entry.mappingType.case === 'extensionFunction' &&
-      entry.mappingType.value.functionAnchor === functionAnchor
-  );
-  if (declaration?.mappingType.case !== 'extensionFunction') return null;
-  const urnAnchor = declaration.mappingType.value.extensionUrnReference;
-  const urn = plan.extensionUrns.find((entry) => entry.extensionUrnAnchor === urnAnchor)?.urn;
-  return urn == null ? null : { urnAnchor, urn, name: declaration.mappingType.value.name };
-}
 export const dvtSubstraitExpressionReader = {
+  nullType(expression: Expression | undefined): Type | null {
+    if (
+      expression?.rexType.case !== 'literal' ||
+      expression.rexType.value.typeVariationReference !== 0
+    )
+      return null;
+    const literal = expression.rexType.value.literalType;
+    if (literal.case !== 'null') return null;
+    const { kind } = literal.value;
+    if (
+      kind.case !== 'string' &&
+      kind.case !== 'i64' &&
+      kind.case !== 'fp64' &&
+      kind.case !== 'bool'
+    )
+      return null;
+    return kind.value.nullability === Type_Nullability.NULLABLE &&
+      kind.value.typeVariationReference === 0
+      ? literal.value
+      : null;
+  },
   fieldOrdinal(expression: Expression | undefined): number | null {
     if (expression?.rexType.case !== 'selection') return null;
     const reference = expression.rexType.value;
@@ -71,7 +83,9 @@ export const dvtSubstraitExpressionReader = {
   }> | null {
     if (expression?.rexType.case !== 'scalarFunction') return null;
     const scalar = expression.rexType.value;
-    const resolved = resolvedFunction(plan, scalar.functionReference);
+    const reference = resolveFunctionReference(plan, scalar.functionReference);
+    if (!reference.ok) return null;
+    const resolved = reference.value;
     if (
       resolved?.urn !== identity.urn ||
       resolved.name !== identity.name ||

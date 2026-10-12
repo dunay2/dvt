@@ -62,11 +62,20 @@ const CORE_RELATIONS: readonly [string, string?][] = [
   ['substrait.FilterRel'],
   ['substrait.JoinRel', 'JoinType.JOIN_TYPE_INNER'],
   ['substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_OUTER'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_SEMI'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_LEFT_ANTI'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_SEMI'],
+  ['substrait.JoinRel', 'JoinType.JOIN_TYPE_RIGHT_ANTI'],
+  ['substrait.CrossRel'],
   ['substrait.AggregateRel'],
   ['substrait.SetRel', 'SetOp.SET_OP_UNION_DISTINCT'],
   ['substrait.SetRel', 'SetOp.SET_OP_UNION_ALL'],
   ['substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET'],
   ['substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY'],
+  ['substrait.SetRel', 'SetOp.SET_OP_INTERSECTION_MULTISET_ALL'],
+  ['substrait.SetRel', 'SetOp.SET_OP_MINUS_PRIMARY_ALL'],
   ['substrait.SortRel'],
   ['substrait.FetchRel'],
 ];
@@ -104,6 +113,9 @@ export const DVT_SUBSTRAIT_STANDARD_CANDIDATES_V1: readonly DvtSubstraitStandard
     extensionCandidate('scalar-function', 'functions_string', name)
   ),
   extensionCandidate('scalar-function', 'functions_datetime', 'extract'),
+  ...['add', 'subtract', 'multiply', 'divide'].map((name) =>
+    extensionCandidate('scalar-function', 'functions_arithmetic', name)
+  ),
   ...['coalesce', 'equal', 'not_equal', 'gt', 'gte', 'lt', 'lte', 'is_null', 'is_not_null'].map(
     (name) => extensionCandidate('scalar-function', 'functions_comparison', name)
   ),

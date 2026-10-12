@@ -3,15 +3,13 @@ import { canvasViewCopy } from './copy';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
 export type CanvasDraftRecoveryReason =
-  | 'stale_conflict'
-  | 'missing_remote'
-  | 'projection_gap'
-  | null;
+  'stale_conflict' | 'missing_remote' | 'projection_gap' | null;
 
 export type CanvasDraftStatusState = {
   label: string;
   tone: 'neutral' | 'warning' | 'danger';
   showReloadAction: boolean;
+  persistence: 'durable' | 'pending' | 'failed' | 'blocked';
 };
 
 type CanvasDraftStatusStateArgs = {
@@ -80,24 +78,33 @@ export function deriveCanvasDraftStatusState({
         label: canvasViewCopy.staleVersionLabel,
         tone: 'danger',
         showReloadAction: true,
+        persistence: 'blocked',
       };
     case 'missing_remote':
       return {
         label: canvasViewCopy.draftMissingLabel,
         tone: 'warning',
         showReloadAction: true,
+        persistence: 'blocked',
       };
     case 'projection_gap':
       return {
         label: canvasViewCopy.projectionGapLabel,
         tone: 'warning',
         showReloadAction: true,
+        persistence: 'blocked',
       };
     default:
       return {
         label: resolveNeutralDraftStatusLabel(draftSaveStatus),
         tone: draftSaveStatus === 'failed' ? 'danger' : 'neutral',
         showReloadAction: false,
+        persistence:
+          draftSaveStatus === 'saving'
+            ? 'pending'
+            : draftSaveStatus === 'failed'
+              ? 'failed'
+              : 'durable',
       };
   }
 }

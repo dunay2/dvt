@@ -8,6 +8,7 @@
  * @version 1.0.0
  * @date 2026-04-19
  */
+import type { StartRunIntentClaimReceipt, StartRunWrite, StartRunWriteResult } from '@dvt/engine';
 import type { ArchivedTerminalSnapshot, TerminalSnapshotPinResult } from '@dvt/state-store';
 
 import { PostgresStateStoreAdminAdapter } from './PostgresStateStoreAdminAdapter.js';
@@ -38,6 +39,14 @@ export class PostgresRunStateStoreAdapter
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     this.ready();
     return this.bootstrapRunTxInternal(input);
+  }
+
+  applyStartRunWrite(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult> {
+    this.ready();
+    return this.applyStartRunWriteInternal(receipt, write);
   }
 
   async bootstrapRecoveryRunTx(

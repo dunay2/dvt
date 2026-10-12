@@ -96,9 +96,9 @@ function relPath(absPath: string): string {
   return absPath.replace(/\\/g, '/').replace(REPO_ROOT.replace(/\\/g, '/') + '/', '');
 }
 
-function str(val: string | string[] | undefined): string | null {
-  if (!val) return null;
-  return Array.isArray(val) ? val.join(', ') : val;
+function str(val: unknown): string | null {
+  if (val == null) return null;
+  return Array.isArray(val) ? val.join(', ') : String(val);
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────

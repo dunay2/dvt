@@ -1,3 +1,4 @@
+import { DvtOperationalPreviewWorkloadV1Schema } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -49,26 +50,49 @@ describe('DvtPostgresStepActivity', () => {
     );
   });
 
-  it('rejects Preview v1 before reading context or executing provider effects', async () => {
-    const resolve = vi.fn();
-    const execute = vi.fn();
-    const activity = new DvtPostgresStepActivity({
-      runExecutionContextReader: { resolve },
-      runner: { execute },
-    });
-    const preview = {
-      ...buildDvtWorkload(),
-      schemaVersion: 'dvt-operational-workload.v1',
-      executionIntent: 'preview',
-    };
+  it.each(['preview', 'retired-v2', 'retired-inner-profile'] as const)(
+    'rejects %s before context reads or provider effects',
+    async (invalid) => {
+      const resolve = vi.fn();
+      const execute = vi.fn();
+      const activity = new DvtPostgresStepActivity({
+        runExecutionContextReader: { resolve },
+        runner: { execute },
+      });
+      const run = buildDvtWorkload();
+      const { schemaDigestSha256: _digest, ...targetProjection } = run.targetProjection;
+      const preview = DvtOperationalPreviewWorkloadV1Schema.parse({
+        schemaVersion: run.schemaVersion,
+        executionIntent: 'preview',
+        scope: run.scope,
+        graph: run.graph,
+        semantics: run.semantics,
+        connectionRef: run.connectionRef,
+        targetProjection,
+        output: { kind: 'ephemeral-preview', nodeId: run.output.nodeId },
+      });
+      const rejected = {
+        preview,
+        'retired-v2': { ...run, schemaVersion: 'dvt-operational-workload.v2' },
+        'retired-inner-profile': {
+          ...run,
+          targetProjection: {
+            ...run.targetProjection,
+            profileId: 'dvt.vtx2.postgres.inner-join.v1',
+          },
+        },
+      };
 
-    await expect(activity.execute(buildStep(preview), buildStepContext())).rejects.toMatchObject({
-      nonRetryable: true,
-      message: 'DVT_WORKLOAD_V2_REQUIRED:transform-a',
-    });
-    expect(resolve).not.toHaveBeenCalled();
-    expect(execute).not.toHaveBeenCalled();
-  });
+      await expect(
+        activity.execute(buildStep(rejected[invalid]), buildStepContext())
+      ).rejects.toMatchObject({
+        nonRetryable: true,
+        message: 'DVT_RUN_WORKLOAD_V1_REQUIRED:transform-a',
+      });
+      expect(resolve).not.toHaveBeenCalled();
+      expect(execute).not.toHaveBeenCalled();
+    }
+  );
 
   it('rejects a missing server-owned context before provider effects', async () => {
     const resolve = vi.fn();

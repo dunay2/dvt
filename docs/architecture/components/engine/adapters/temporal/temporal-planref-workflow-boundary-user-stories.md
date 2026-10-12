@@ -169,5 +169,3 @@ flowchart TD
   `docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md`
 - Capacity SLA:
   `docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md`
-- Mailbox:
-  `buzon/20260430-codex-fowler-ar-d-continuation-safety-analysis-and-remediation.md`

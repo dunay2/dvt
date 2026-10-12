@@ -1,8 +1,9 @@
 import type { Node } from '@xyflow/react';
+import type { CanvasInspectorNodeDraftApplyResult } from './canvasInspectorAuthoring.types';
 import type {
   GraphNodeColumn,
+  GraphNodeInputMapping,
   GraphNodeCalculatedColumnIdentity,
-  GraphNodeColumnFunctionApplyIdentity,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortIdentity,
@@ -14,26 +15,33 @@ import type {
   CanvasAlgebraicCompositionOperation,
 } from './canvasAlgebraicComposition';
 
-type NodeActionHandlers = {
+export type CanvasCardActions = {
   onInspectNode: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
+  onSetNodeMaterialization?: (nodeId: string, value: string) => CanvasInspectorNodeDraftApplyResult;
+};
+
+export type CanvasColumnActions = {
+  onColumnViewChange?: (nodeId: string, view: 'input' | 'output') => void;
+  onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
+  onRemoveCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyCanvasColumnFunction?: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
   onApplyCanvasStructuredField?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onAddCanvasCalculatedColumn?: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;
   onAutomapColumns?: (nodeId: string, columns: readonly GraphNodeColumn[]) => void;
+};
+
+export type CanvasCompositionActions = {
   resolveAlgebraicCompositionOperations?: (
     identity: CanvasAlgebraicCompositionIdentity
   ) => CanvasAlgebraicCompositionOperation[];
@@ -49,7 +57,7 @@ type BuildCanvasNodeInteractionPresentationParams = {
   selectedNodeIds: string[];
   canMutateGraph: boolean;
   columnLevelLineageEnabled: boolean;
-  handlers: NodeActionHandlers;
+  handlers: CanvasCardActions & CanvasColumnActions & CanvasCompositionActions;
 };
 
 function shouldShowColumns(node: Node, columnLevelLineageEnabled: boolean): boolean {
@@ -78,12 +86,14 @@ export function buildCanvasNodeInteractionPresentation({
       onToggleNodeSelection: handlers.onToggleNodeSelection,
       onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       onColumnPortActivate: handlers.onColumnPortActivate,
-      onApplyCanvasColumnFunction: handlers.onApplyCanvasColumnFunction,
+      onMapCanvasInput: handlers.onMapCanvasInput,
+      onRemoveCanvasInput: handlers.onRemoveCanvasInput,
       onApplyCanvasStructuredField: handlers.onApplyCanvasStructuredField,
       onAddCanvasCalculatedColumn: handlers.onAddCanvasCalculatedColumn,
       onToggleCanvasColumnOutput: handlers.onToggleCanvasColumnOutput,
       onReorderCanvasColumnOutput: handlers.onReorderCanvasColumnOutput,
       onColumnDisclosureChange: handlers.onColumnDisclosureChange,
+      onColumnViewChange: handlers.onColumnViewChange,
       onAutomapColumns: handlers.onAutomapColumns,
       resolveAlgebraicCompositionOperations: handlers.resolveAlgebraicCompositionOperations,
       onComposeCanvasNodes: handlers.onComposeCanvasNodes,

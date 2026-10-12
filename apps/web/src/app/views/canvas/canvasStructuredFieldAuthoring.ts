@@ -1,5 +1,5 @@
 /** Owned concern: apply structured-field authoring through ConfigureCanvasDvtNode. */
-import { allocateDvtFieldId, PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { allocateDvtFieldId, DvtSemanticFieldNameV1Schema } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
@@ -107,7 +107,7 @@ export function applyCanvasStructuredField(args: {
 }): CanvasStructuredFieldCompositionResult {
   try {
     const parentName = args.request.parentName;
-    if (!PostgresIdentifierV1Schema.safeParse(parentName).success) {
+    if (!DvtSemanticFieldNameV1Schema.safeParse(parentName).success) {
       return { outcome: 'rejected', reason: 'invalid_alias' };
     }
     const nodes = nodeCatalog(args.draftSession, args.canonicalNodesById);

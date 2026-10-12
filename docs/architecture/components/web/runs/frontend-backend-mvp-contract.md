@@ -4,7 +4,6 @@ status: Review
 owner: Frontend / API / Architecture
 last_reviewed: 2026-04-23
 domain: frontend
-lane: E
 task_id: MVP-E1
 ---
 
@@ -19,9 +18,7 @@ This contract is route-truth only. It does not introduce new backend behavior.
 
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/github-mvp-issue-workflow.md`
-- `docs/planning/proposals/superseded/runtime-and-contracts/mvp-a1-backend-contractual-inventory-20260329.md`
 - `docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md`
 - `docs/architecture/components/web/runs/start-run-client-identity-boundary.md`
 - `docs/adr/adr-0050-platform-owned-start-run-identity.md`
@@ -312,8 +309,6 @@ Retry/backoff contract:
 
 ## Traceability
 
-- planning source:
-  `docs/planning/proposals/nice-to-have/frontend-and-ux/mvp-e1-f03-frontend-backend-contract-and-health-plan-20260404.md`
 - delivery tracking: governing GitHub MVP issue and linked pull request
 - runtime route source: `apps/api/src/entrypoints/http/runtimeRoutes.constants.ts`
 - shell health wiring source: `apps/web/src/app/Root.tsx`,

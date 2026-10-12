@@ -276,6 +276,7 @@ export function useDbtProjectFilesAuthoritySurface({
         label: 'File-authoritative dbt project',
         tone: 'neutral',
         showReloadAction: false,
+        persistence: 'durable',
       },
       canPlanGraph: controller.execution.canPlanGraph,
       canStartRun: controller.execution.canStartRun,

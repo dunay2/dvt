@@ -1,0 +1,361 @@
+/**
+ * Owned concern: prove canonical output edits and their retained-document boundary.
+ * @baseline GH-3596: final JOIN emit editing survives disconnection without publication.
+ * @decision Exercise real analysis, command, serialization and publication with exact-delta negatives.
+ * @consequence Root identity and unavailable dependency guards remain observable.
+ * @version 1.1.0
+ */
+import { describe, expect, it } from 'vitest';
+import { clone } from '@bufbuild/protobuf';
+import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import {
+  cloneLocalRelation,
+  deriveSubstraitSchemas,
+  readRelationStructure,
+} from '@dvt/substrait-analysis';
+import { selectedUnaryScenario } from './canvasSelectedUnary.test-support';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { relationOutputSlots, type RelationOutputSlot } from './canvasRelationOutputSchema';
+import { applySelectedRelationSortFetch } from './canvasSelectedRelationSortFetch';
+import { createSourceSet } from './canvasSourceSet';
+import { source } from './canvasRelationalOperator.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
+import { withWindowOutput } from './canvasRelationalExpressionStage.test-support';
+import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
+import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { validateRelationChanges } from './canvasRelationChangeValidation';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
+
+async function slots(
+  session: CanvasRelationAnalysisSession
+): Promise<readonly RelationOutputSlot[]> {
+  const target = session.locate(session.rootId, session.revision);
+  return relationOutputSlots(
+    target,
+    await Promise.all(target.inputs.map((id) => session.query(id))),
+    target.relation.relType.case === 'project'
+      ? readCanvasTransformDependencyModel(target, (id) => session.locate(id, session.revision))
+      : undefined
+  );
+}
+
+describe('canonical relation output editing', () => {
+  it('clears, reopens and restores a retained final JOIN without publishing disconnected data', async () => {
+    const graph = occurrenceGraph();
+    const denied = resolveUnmappedCanvasReadFields({
+      document: graph.draft,
+      nodeId: graph.targetNode.id,
+      nodes: graph.nodes,
+      edges: [],
+    });
+    const session = new CanvasRelationAnalysisSession('retained-join');
+    session.receive(graph.draft, denied, denied);
+    const original = session.locate(session.rootId, session.revision);
+    const empty = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: [],
+    });
+    expect((await session.query(null)).fields).toEqual([]);
+    await expect(projectSubstraitToPostgresSql(empty)).rejects.toThrow();
+    const emptyRevision = session.revision;
+    await expect(
+      applySelectedRelationDerivedOutput(session, {
+        relationId: session.rootId,
+        expectedRevision: emptyRevision,
+        intent: 'insert',
+        alias: 'new_literal',
+        formula: "'unavailable'",
+      })
+    ).rejects.toThrow();
+    expect(session.revision).toBe(emptyRevision);
+    expect((await session.query(null)).fields).toEqual([]);
+    const reopened = new CanvasRelationAnalysisSession('retained-join-reopened');
+    reopened.receive(
+      decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(empty)),
+      denied,
+      denied
+    );
+    const natural = await slots(reopened);
+    expect(natural).toHaveLength(4);
+    expect(natural.every((slot) => slot.output == null)).toBe(true);
+    const selected = await changeSelectedRelationOutputs(reopened, {
+      relationId: reopened.rootId,
+      expectedRevision: reopened.revision,
+      outputs: [{ slot: natural[0]!.slot }],
+    });
+    const restored = reopened.locate(reopened.rootId, reopened.revision);
+    expect(restored.binding).toEqual(original.binding);
+    expect(restored.inputs).toEqual(original.inputs);
+    expect(restored.relation.relType.case).toBe('join');
+    if (restored.relation.relType.case !== 'join' || original.relation.relType.case !== 'join')
+      throw new Error('Expected JOIN.');
+    expect(restored.relation.relType.value.left).toEqual(original.relation.relType.value.left);
+    expect(restored.relation.relType.value.right).toEqual(original.relation.relType.value.right);
+    expect(restored.relation.relType.value.expression).toEqual(
+      original.relation.relType.value.expression
+    );
+    expect((await reopened.query(null)).bindings).toHaveLength(1);
+    expect(reopened.allowsInputSchema((await reopened.query(null)).fields[0]!)).toBe(false);
+    const node = applyDvtSubstraitSemanticDocument(
+      graph.targetNode,
+      encodeDvtSubstraitSemanticDocument(selected)
+    );
+    const tree = projectCanvasRelationalTree({ node, nodes: [graph.source, node], edges: [] });
+    expect(tree.ok).toBe(true);
+    if (!tree.ok) throw new Error('Expected retained JOIN inspection.');
+    expect(tree.projection.root.output.fields).toEqual([]);
+    expect(tree.projection.root.unavailableFields).toHaveLength(1);
+    await expect(
+      changeSelectedRelationOutputs(reopened, {
+        relationId: reopened.rootId,
+        expectedRevision: 0,
+        outputs: [],
+      })
+    ).rejects.toThrow();
+    session.dispose();
+    reopened.dispose();
+  });
+
+  it.each(
+    [false, true].flatMap((empty) =>
+      (['predicate', 'binding', 'input', 'extensions', 'extra-upsert'] as const).map(
+        (mutation) => ({ empty, mutation })
+      )
+    )
+  )(
+    'rejects disconnected JOIN mutation $mutation (initially empty: $empty)',
+    async ({ empty, mutation }) => {
+      const graph = occurrenceGraph();
+      const denied = resolveUnmappedCanvasReadFields({
+        document: graph.draft,
+        nodeId: graph.targetNode.id,
+        nodes: graph.nodes,
+        edges: [],
+      });
+      const session = new CanvasRelationAnalysisSession('retained-negative');
+      session.receive(graph.draft, denied, denied);
+      if (empty)
+        await changeSelectedRelationOutputs(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          outputs: [],
+        });
+      const target = session.locate(session.rootId, session.revision);
+      const snapshot = await session.query(null);
+      const relation = cloneLocalRelation(
+        target.relation,
+        readRelationStructure(target.relation).inputs
+      );
+      if (relation.relType.case !== 'join') throw new Error('Expected JOIN.');
+      if (mutation === 'predicate') relation.relType.value.expression = undefined;
+      if (mutation === 'input')
+        relation.relType.value.left = clone(RelSchema, relation.relType.value.left!);
+      const binding =
+        mutation === 'binding' ? { ...target.binding, displayName: 'changed' } : target.binding;
+      const change = {
+        expectedRevision: session.revision,
+        rootId: session.rootId,
+        removed: [],
+        upserts: [
+          { relation, binding, fields: target.fields },
+          ...(mutation === 'extra-upsert'
+            ? [session.locate(target.inputs[0]!, session.revision)]
+            : []),
+        ],
+        ...(mutation === 'extensions' ? { extensions: graph.draft.plan } : {}),
+      };
+      await expect(validateRelationChanges(session, change, new Map())).rejects.toThrow(
+        /mapped Input/
+      );
+      expect(session.revision).toBe(change.expectedRevision);
+      expect(await session.query(null)).toEqual(snapshot);
+      session.dispose();
+    }
+  );
+  it.each([
+    ['TRIM(first_name)', 'TRIM(first_name)'],
+    ['UPPER(TRIM(first_name))', 'UPPER(TRIM(first_name))'],
+    ['2 * 3', '(2 * 3)'],
+    ['2 * (3 + 4)', '(2 * (3 + 4))'],
+    ["''", "''"],
+    ['NULL', 'NULL'],
+  ])(
+    'recognizes and republishes %s without publishing its inputs',
+    async (formula, description) => {
+      const session = new CanvasRelationAnalysisSession('output-expression');
+      session.receive(connectedNamesProjectionDraft());
+      await applySelectedRelationDerivedOutput(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        intent: 'edit',
+        alias: 'calculated',
+        formula,
+      });
+      const published = (await slots(session)).at(-1)!;
+      expect(published).toMatchObject({ name: 'calculated', expression: description });
+      await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [],
+      });
+      const excluded = (await slots(session)).at(-1)!;
+      expect(excluded).toMatchObject({ output: undefined, expression: description });
+      const selected = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [{ slot: excluded.slot, alias: 'result' }],
+      });
+      const reopened = new CanvasRelationAnalysisSession('reopened');
+      reopened.receive(
+        decodeDvtSubstraitSemanticDocument(encodeDvtSubstraitSemanticDocument(selected))
+      );
+      expect(
+        (await reopened.query(reopened.rootId)).bindings.map((field) => field.displayName)
+      ).toEqual(['result']);
+      expect((await slots(reopened)).filter((field) => field.output != null)).toMatchObject([
+        { name: 'result', expression: description },
+      ]);
+      const sql = await projectSubstraitToPostgresSql(selected);
+      expect(sql.projection.outputs.map((field) => field.name)).toEqual(['result']);
+    }
+  );
+
+  it('describes a Window output using its canonical function and ordering', async () => {
+    const session = new CanvasRelationAnalysisSession('window-output');
+    session.receive(withWindowOutput());
+    expect((await slots(session)).at(-1)).toMatchObject({
+      expression: 'row_number() OVER (ORDER BY customer_code ASC NULLS LAST)',
+      name: 'customer_position',
+    });
+  });
+  it('reorders, renames, clears and restores JOIN outputs over transformed operands', async () => {
+    const { session, root } = selectedUnaryScenario();
+    for (const relationId of root.inputs)
+      await applySelectedRelationSortFetch(session, {
+        relationId,
+        intent: 'insert',
+        expectedRevision: session.revision,
+        operation: 'fetch',
+        count: 20n,
+      });
+    const original = session.locate(session.rootId, session.revision);
+    const available = await slots(session);
+    const selection = available.filter((field) => field.output != null).reverse();
+    const edited = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: selection.map((field, index) => ({ slot: field.slot, alias: `output_${index}` })),
+    });
+    const output = await session.query(session.rootId);
+    expect(output.bindings.map((field) => field.fieldId)).toEqual(
+      selection.map((field) => field.output!.fieldId)
+    );
+    expect(output.fields.map((field) => field.sourceFieldIds)).toEqual(
+      selection.map((field) => field.schema.sourceFieldIds)
+    );
+    expect(session.locate(session.rootId, session.revision).inputs).toEqual(original.inputs);
+    expect(deriveSubstraitSchemas(edited).schemas.get(session.rootId)).toEqual(output.fields);
+    await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: [],
+    });
+    expect((await session.query(session.rootId)).fields).toEqual([]);
+    const hidden = await slots(session);
+    expect(hidden).toHaveLength(available.length);
+    const restored = await changeSelectedRelationOutputs(session, {
+      relationId: session.rootId,
+      expectedRevision: session.revision,
+      outputs: hidden.map((field, index) => ({ slot: field.slot, alias: `field_${index}` })),
+    });
+    expect((await session.query(session.rootId)).fields).toHaveLength(available.length);
+    expect(deriveSubstraitSchemas(restored).schemas.get(session.rootId)).toHaveLength(
+      available.length
+    );
+  });
+
+  it.each([
+    'union_all',
+    'union_distinct',
+    'intersect_all',
+    'intersect_distinct',
+    'except_all',
+    'except_distinct',
+  ] as const)(
+    'preserves %s semantics and operand lineage while selecting outputs',
+    async (operation) => {
+      const inputs = ['east', 'west'].map((name) => ({
+        ...source(name),
+        fields: [
+          { name: 'name', type: 'string' as const },
+          { name: 'total', type: 'i64' as const },
+        ],
+      }));
+      const session = new CanvasRelationAnalysisSession('set-output');
+      session.receive(createSourceSet({ targetNodeId: 'result', inputs, operation }));
+      const before = session.locate(session.rootId, session.revision);
+      const selected = before.fields.find((field) => field.outputOrdinal === 1)!;
+      const next = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: [{ slot: 1, alias: 'quantity' }],
+      });
+      const after = session.locate(session.rootId, session.revision);
+      expect(after.fields).toEqual([{ ...selected, outputOrdinal: 0, displayName: 'quantity' }]);
+      expect(after.inputs).toEqual(before.inputs);
+      expect(after.relation.relType.case === 'set' && after.relation.relType.value.op).toBe(
+        before.relation.relType.case === 'set' && before.relation.relType.value.op
+      );
+      expect(deriveSubstraitSchemas(next).schemas.get(session.rootId)?.[0]?.type.kind.case).toBe(
+        'i64'
+      );
+    }
+  );
+
+  it('rejects duplicate aliases, unknown slots and output loss required by a consumer', async () => {
+    const { session, root } = selectedUnaryScenario();
+    const snapshot = await session.query(session.rootId);
+    for (const outputs of [
+      [{ slot: 999 }],
+      [
+        { slot: 0, alias: 'same' },
+        { slot: 1, alias: 'same' },
+      ],
+    ])
+      await expect(
+        changeSelectedRelationOutputs(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          outputs,
+        })
+      ).rejects.toThrow();
+    await applySelectedRelationSortFetch(session, {
+      relationId: root.inputs[0]!,
+      expectedRevision: session.revision,
+      intent: 'insert',
+      operation: 'fetch',
+      count: 5n,
+    });
+    const before = await session.query(session.rootId);
+    const relationId = session.locate(session.rootId, session.revision).inputs[0]!;
+    await expect(
+      changeSelectedRelationOutputs(session, {
+        relationId,
+        expectedRevision: session.revision,
+        outputs: [],
+      })
+    ).rejects.toThrow();
+    expect(await session.query(session.rootId)).toEqual(before);
+    expect(before.fields).toEqual(snapshot.fields);
+  });
+});

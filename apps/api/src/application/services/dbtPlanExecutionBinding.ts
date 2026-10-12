@@ -1,5 +1,7 @@
 /** Owned concern: resolve the project revision and server target authorized by a DBT plan. */
 import {
+  RUN_REJECTIONS,
+  type RunExecutionRejection,
   PLAN_PREVIEW_PROVENANCE_KIND,
   PlanPreviewProvenanceSchema,
   type DbtExecutionTargetIdentity,
@@ -16,7 +18,7 @@ export type DbtPlanExecutionBinding =
       connectionRef: DbtExecutionTargetIdentity['connectionRef'];
       credentialRef: string;
     }>
-  | Readonly<{ ok: false; reason: string }>;
+  | (Readonly<{ ok: false }> & RunExecutionRejection);
 
 export function resolveDbtPlanExecutionBinding(input: {
   readonly plan: ExecutionPlan;
@@ -26,13 +28,13 @@ export function resolveDbtPlanExecutionBinding(input: {
   if (input.executionTarget === null) {
     return {
       ok: false,
-      reason: 'A server-owned DBT execution target is required before Run.',
+      ...RUN_REJECTIONS.dbtTargetRequired,
     };
   }
   if (input.executionTarget.provider !== input.targetAdapter) {
     return {
       ok: false,
-      reason: 'The selected runtime adapter does not match the server-owned DBT execution target.',
+      ...RUN_REJECTIONS.dbtAdapterMismatch,
     };
   }
 
@@ -49,18 +51,18 @@ export function resolveDbtPlanExecutionBinding(input: {
 
   const parsedProvenance = PlanPreviewProvenanceSchema.safeParse(rawProvenance);
   if (!parsedProvenance.success) {
-    return { ok: false, reason: 'The persisted plan provenance is invalid.' };
+    return { ok: false, ...RUN_REJECTIONS.dbtProvenanceInvalid };
   }
   if (parsedProvenance.data.kind !== PLAN_PREVIEW_PROVENANCE_KIND.dbtProjectFiles) {
     return {
       ok: false,
-      reason: 'The persisted plan provenance does not describe a DBT project.',
+      ...RUN_REJECTIONS.dbtProvenanceNotProject,
     };
   }
   if (!sameExecutionTarget(parsedProvenance.data.executionTarget, input.executionTarget)) {
     return {
       ok: false,
-      reason: 'The configured DBT execution target changed after Preview. Run Preview again.',
+      ...RUN_REJECTIONS.dbtTargetChanged,
     };
   }
 

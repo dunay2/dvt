@@ -1,5 +1,6 @@
 /** Owned concern: centralize localized GraphNodeCard copy consumed by card read-model strategies. */
 type GraphNodeCardCopy = Readonly<{
+  outputStateLabels: Readonly<Record<'pending' | 'unavailable' | 'unconfigured', string>>;
   columnsLabel: string;
   rowsLabel: string;
   sizeLabel: string;
@@ -27,6 +28,15 @@ type GraphNodeCardCopy = Readonly<{
   testsLabel: string;
   readyStatusLabel: string;
   draftStatusLabel: string;
+  relationalCompositionIncompleteLabel: string;
+  relationalCompositionJoinSummaryTemplate: string;
+  relationalCompositionCrossSummaryTemplate: string;
+  relationalCompositionUnionAllSummaryTemplate: string;
+  relationalCompositionUnionDistinctSummaryTemplate: string;
+  relationalCompositionIntersectDistinctSummaryTemplate: string;
+  relationalCompositionExceptDistinctSummaryTemplate: string;
+  relationalCompositionIntersectAllSummaryTemplate: string;
+  relationalCompositionExceptAllSummaryTemplate: string;
   filterLabel: string;
   testStatusLabels: Readonly<Record<string, string>>;
   healthTitleTemplate: string;
@@ -38,20 +48,13 @@ type GraphNodeCardCopy = Readonly<{
   automapColumnsLabel: string;
   sourceColumnPortLabelTemplate: string;
   targetColumnPortLabelTemplate: string;
-  columnTypeLabel: string;
-  columnNullabilityLabel: string;
-  columnNotNullValue: string;
-  columnNullableValue: string;
-  columnOriginLabel: string;
-  columnReferenceLabel: string;
-  columnLineageLabel: string;
-  columnCommentLabel: string;
-  columnOutputValue: string;
-  columnAvailableInputValue: string;
   columnOutputAriaLabelTemplate: string;
   columnAvailableInputAriaLabelTemplate: string;
   columnFunctionCategoryLabels: Readonly<
-    Record<'text' | 'numeric' | 'date-time' | 'conversion' | 'aggregate' | 'window', string>
+    Record<
+      'text' | 'numeric' | 'date-time' | 'boolean' | 'conversion' | 'aggregate' | 'window',
+      string
+    >
   >;
   noCompatibleColumnFunctionsLabel: string;
   noColumnActionsLabel: string;
@@ -100,6 +103,11 @@ type GraphNodeCardCopy = Readonly<{
 }>;
 
 const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
+  outputStateLabels: {
+    pending: 'Updating schema',
+    unavailable: 'Unavailable',
+    unconfigured: 'Not configured',
+  },
   columnsLabel: 'Columns',
   rowsLabel: 'Rows',
   sizeLabel: 'Size',
@@ -127,6 +135,23 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Tests',
   readyStatusLabel: 'Ready',
   draftStatusLabel: 'Draft',
+  relationalCompositionIncompleteLabel: 'RECONNECT INPUT',
+  relationalCompositionJoinSummaryTemplate:
+    '{operation}, inputs: {inputCount}, predicates: {predicateCount}',
+  relationalCompositionCrossSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, cartesian product',
+  relationalCompositionUnionAllSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, bag semantics',
+  relationalCompositionUnionDistinctSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+  relationalCompositionIntersectDistinctSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, set semantics',
+  relationalCompositionExceptDistinctSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, primary-input difference',
+  relationalCompositionIntersectAllSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, bag multiplicity',
+  relationalCompositionExceptAllSummaryTemplate:
+    '{operation}, inputs: {inputCount}, outputs: {outputCount}, primary-input bag difference',
   filterLabel: 'Filter',
   testStatusLabels: {
     pass: 'Passed',
@@ -151,22 +176,13 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Map compatible columns',
   sourceColumnPortLabelTemplate: 'Connect {column} output',
   targetColumnPortLabelTemplate: 'Map into {column}',
-  columnTypeLabel: 'Type',
-  columnNullabilityLabel: 'Nullability',
-  columnNotNullValue: 'Not null',
-  columnNullableValue: 'Nullable',
-  columnOriginLabel: 'Origin',
-  columnReferenceLabel: 'Reference',
-  columnLineageLabel: 'Transformation lineage',
-  columnCommentLabel: 'Comment',
-  columnOutputValue: 'Included in output',
-  columnAvailableInputValue: 'Available input',
   columnOutputAriaLabelTemplate: '{column}, included in output',
   columnAvailableInputAriaLabelTemplate: '{column}, available input',
   columnFunctionCategoryLabels: {
     text: 'Text functions',
     numeric: 'Numeric functions',
     'date-time': 'Date and time functions',
+    boolean: 'Boolean functions',
     conversion: 'Conversion functions',
     aggregate: 'Aggregate functions',
     window: 'Window functions',
@@ -181,7 +197,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasCancelLabel: 'Cancel',
   columnFunctionAliasConflictLabel: 'Another column already uses this output name.',
   columnFunctionAliasPolicyErrorLabel:
-    'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+    'Use a valid field name without outer whitespace and with at most 256 Unicode characters.',
   expressionComposerTitle: 'Create derived output',
   expressionComposerFunctionLabel: 'Function',
   expressionComposerOperandsLabel: 'Ordered operands',
@@ -202,7 +218,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnSubmitLabel: 'Create column',
   calculatedColumnCancelLabel: 'Cancel',
   calculatedColumnIdentifierPolicyError:
-    'Use a valid PostgreSQL identifier without outer whitespace and with at most 63 UTF-8 bytes.',
+    'Use a valid field name without outer whitespace and with at most 256 Unicode characters.',
   calculatedColumnLiteralPolicyError: 'Text values may contain at most 4096 UTF-8 bytes.',
   calculatedColumnTimestampPolicyError:
     'Use a canonical UTC timestamp such as 2026-09-08T12:00:00.000Z.',
@@ -223,6 +239,11 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
 };
 
 const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
+  outputStateLabels: {
+    pending: 'Calculando esquema',
+    unavailable: 'No disponible',
+    unconfigured: 'Sin configurar',
+  },
   columnsLabel: 'Columnas',
   rowsLabel: 'Filas',
   sizeLabel: 'Tamaño',
@@ -250,6 +271,23 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   testsLabel: 'Pruebas',
   readyStatusLabel: 'Listo',
   draftStatusLabel: 'Borrador',
+  relationalCompositionIncompleteLabel: 'RECONECTAR ENTRADA',
+  relationalCompositionJoinSummaryTemplate:
+    '{operation}, entradas: {inputCount}, predicados: {predicateCount}',
+  relationalCompositionCrossSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, producto cartesiano',
+  relationalCompositionUnionAllSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica bag',
+  relationalCompositionUnionDistinctSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+  relationalCompositionIntersectDistinctSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, semántica de conjunto',
+  relationalCompositionExceptDistinctSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, diferencia desde la entrada primaria',
+  relationalCompositionIntersectAllSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, multiplicidad de bolsa',
+  relationalCompositionExceptAllSummaryTemplate:
+    '{operation}, entradas: {inputCount}, salidas: {outputCount}, diferencia de bolsa desde la entrada primaria',
   filterLabel: 'Filtro',
   testStatusLabels: {
     pass: 'Aprobadas',
@@ -274,22 +312,13 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   automapColumnsLabel: 'Asignar columnas compatibles',
   sourceColumnPortLabelTemplate: 'Conectar salida de {column}',
   targetColumnPortLabelTemplate: 'Asignar a {column}',
-  columnTypeLabel: 'Tipo',
-  columnNullabilityLabel: 'Nulabilidad',
-  columnNotNullValue: 'No nulo',
-  columnNullableValue: 'Admite nulos',
-  columnOriginLabel: 'Origen',
-  columnReferenceLabel: 'Referencia',
-  columnLineageLabel: 'Linaje de transformación',
-  columnCommentLabel: 'Comentario',
-  columnOutputValue: 'Incluida en salida',
-  columnAvailableInputValue: 'Entrada disponible',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',
   columnAvailableInputAriaLabelTemplate: '{column}, entrada disponible',
   columnFunctionCategoryLabels: {
     text: 'Funciones de texto',
     numeric: 'Funciones numéricas',
     'date-time': 'Funciones de fecha y hora',
+    boolean: 'Funciones booleanas',
     conversion: 'Funciones de conversión',
     aggregate: 'Funciones de agregación',
     window: 'Funciones de ventana',
@@ -304,7 +333,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   columnFunctionAliasCancelLabel: 'Cancelar',
   columnFunctionAliasConflictLabel: 'Otra columna ya utiliza este nombre de salida.',
   columnFunctionAliasPolicyErrorLabel:
-    'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+    'Usa un nombre de campo válido, sin espacios exteriores y con 256 caracteres Unicode como máximo.',
   expressionComposerTitle: 'Crear salida derivada',
   expressionComposerFunctionLabel: 'Función',
   expressionComposerOperandsLabel: 'Operandos ordenados',
@@ -325,7 +354,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   calculatedColumnSubmitLabel: 'Crear columna',
   calculatedColumnCancelLabel: 'Cancelar',
   calculatedColumnIdentifierPolicyError:
-    'Usa un identificador PostgreSQL válido, sin espacios exteriores y con 63 bytes UTF-8 como máximo.',
+    'Usa un nombre de campo válido, sin espacios exteriores y con 256 caracteres Unicode como máximo.',
   calculatedColumnLiteralPolicyError: 'Los valores de texto admiten 4096 bytes UTF-8 como máximo.',
   calculatedColumnTimestampPolicyError: 'Usa una fecha UTC canónica como 2026-09-08T12:00:00.000Z.',
   columnAuthoringInvalidReferenceLabel:

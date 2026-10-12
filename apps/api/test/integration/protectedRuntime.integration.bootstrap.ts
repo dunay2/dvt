@@ -17,7 +17,10 @@ import {
   startJwksServer,
   type SigningKey,
 } from './protectedRuntime.integration.auth.js';
-import { quoteIdentifier, upsertPrincipalGrant } from './protectedRuntime.integration.persistence.js';
+import {
+  quoteIdentifier,
+  upsertPrincipalGrant,
+} from './protectedRuntime.integration.persistence.js';
 import {
   DATABASE_URL,
   ENVIRONMENT_ID,
@@ -65,6 +68,8 @@ export async function bootstrapProtectedRuntimeState(
     'TEMPORAL_NAMESPACE',
     'TEMPORAL_TASK_QUEUE',
     'TEMPORAL_IDENTITY',
+    'DVT_TEMPORAL_DBT_ENABLED',
+    'DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED',
   ]);
 
   process.env.NODE_ENV = 'test';
@@ -77,6 +82,9 @@ export async function bootstrapProtectedRuntimeState(
   process.env.OIDC_ALGORITHMS = 'RS256';
   process.env.DVT_ADMIN_ROUTES_ENABLED = 'true';
   process.env.TEMPORAL_ADDRESS = TEMPORAL_ADDRESS;
+  // Admit the fixture plans. These API tests queue workflows, not activity execution.
+  process.env.DVT_TEMPORAL_DBT_ENABLED = 'true';
+  process.env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED = 'true';
 
   const built = await buildApp();
   state.app = built.app;

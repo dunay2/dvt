@@ -175,4 +175,4 @@ This ADR governs the first two directly and constrains the fourth.
 - [ADR-0008_Signal_Idempotency.md](./ADR-0008_Signal_Idempotency.md)
 - [ADR-0031-adapter-tenant-isolation.md](./ADR-0031-adapter-tenant-isolation.md)
 - [ADR-0034-bounded-context-boundaries-and-communication-rules.md](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
-- [gap-5-event-lifecycle-and-archival-design-20260319.md](../planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)
+- [gap-5-event-lifecycle-and-archival-design-20260319.md (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/proposals/gap-5-event-lifecycle-and-archival-design-20260319.md)

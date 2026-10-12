@@ -8,6 +8,7 @@ require('./planning-db-query-tests/fowler-analysis.test.cjs');
 require('./planning-db-query-tests/governance-refresh.test.cjs');
 require('./planning-db-query-tests/canvas-component-registry-drift.test.cjs');
 require('./planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs');
+require('./planning-db-query-tests/source-drift.test.cjs');
 
 const {
   buildDocsDispositionRows,
@@ -506,14 +507,16 @@ test('rail vocabulary query behavior lives in a focused read-model component', (
 
 test('code symbol duplicate query behavior lives in a focused read-model component', () => {
   const codeSymbolComponent = require('./planning-db/queries/code-symbol-query.cjs');
+  const sourceDriftComponent = require('./planning-db/queries/source-drift-query.cjs');
 
   assert.equal(codeSymbolComponent.buildCodeSymbolRows, buildCodeSymbolRows);
   assert.equal(codeSymbolComponent.buildCodeSymbolDuplicateRows, buildCodeSymbolDuplicateRows);
-  assert.equal(codeSymbolComponent.buildSourceDriftRows, buildSourceDriftRows);
+  assert.equal(sourceDriftComponent.buildSourceDriftRows, buildSourceDriftRows);
   assert.equal(codeSymbolComponent.buildGovernanceProblemRows, buildGovernanceProblemRows);
   assert.equal(codeSymbolComponent.readCodeSymbolRows, readCodeSymbolRows);
   assert.equal(codeSymbolComponent.readCodeSymbolDuplicateRows, readCodeSymbolDuplicateRows);
-  assert.equal(codeSymbolComponent.readSourceDriftRows, readSourceDriftRows);
+  assert.equal(sourceDriftComponent.readSourceDriftRows, readSourceDriftRows);
+  assert.equal(codeSymbolComponent.readSourceDriftRows, undefined);
   assert.equal(codeSymbolComponent.readGovernanceProblemRows, readGovernanceProblemRows);
 });
 
@@ -4700,30 +4703,6 @@ test('readCodeSymbolDuplicateRows queries DB-owned duplicate symbol findings', a
     'SYS-CI-TOOLS-PLANNING-DB',
     5,
   ]);
-});
-
-test('readSourceDriftRows queries DB-owned governed source drift findings', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readSourceDriftRows(client, {
-    path: 'buzon/TAREA.TXT',
-    severity: 'error',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.governed_source_drift_query/);
-  assert.match(captured.sql, /source_path !~\* '\^https\?:\/\/'/);
-  assert.match(captured.sql, /source_path = \$1/);
-  assert.match(captured.sql, /severity = \$2/);
-  assert.match(captured.sql, /limit \$3/);
-  assert.deepEqual(captured.params, ['buzon/TAREA.TXT', 'error', 5]);
 });
 
 test('buildArchitectureObservabilityRows formats component observability evidence', () => {

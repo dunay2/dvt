@@ -1,3 +1,10 @@
+/**
+ * Owned concern: verify file-authoritative execution without conflating Canvas identity.
+ * @baseline ADR-0060: dbt files own execution semantics; Canvas renders their projection.
+ * @decision Assert shared presentation and provider execution identities from one projection.
+ * @consequence Visual hard cuts cannot silently change the server-verified planner graph.
+ * @version 1.0.0
+ */
 import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
@@ -8,6 +15,7 @@ import {
   buildDbtProjectFilePreviewProvenance,
   isDbtProjectFilePreviewProvenanceCurrent,
 } from './dbtProjectFileExecutionStrategy';
+import { projectDbtProjectGraphToCanonicalCanvas } from './dbtProjectFileProjection';
 
 function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGraphProjection {
   return DbtProjectGraphProjectionSchema.parse({
@@ -62,7 +70,11 @@ function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGra
 
 describe('dbt project file execution strategy', () => {
   it('binds planner preview to the analyzed revision and server-owned target', () => {
-    expect(buildDbtProjectFileExecutionStrategy(buildProjection())).toEqual({
+    const projection = buildProjection();
+    expect(projectDbtProjectGraphToCanonicalCanvas(projection).nodes).toMatchObject([
+      { id: 'model.analytics.orders', kind: 'dvt:transform', pluginId: 'dvt' },
+    ]);
+    expect(buildDbtProjectFileExecutionStrategy(projection)).toEqual({
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
       sourceFamily: 'dbt',
@@ -95,8 +107,8 @@ describe('dbt project file execution strategy', () => {
             metadata: {
               displayName: 'orders',
               tags: {
-                kind: 'dvt:transform',
-                pluginId: 'dvt',
+                kind: 'dbt:model',
+                pluginId: 'dbt',
                 role: 'transform',
               },
             },

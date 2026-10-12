@@ -1,9 +1,13 @@
 /**
- * @ownedConcern Validate web Vitest suite catalog ownership and CI command
- * wiring without mixing changed-file routing cases into the same file.
+ * Owned concern: validate Vitest catalog ownership and CI command wiring.
+ * @baseline GH-3540: the catalog owns suites, not browser execution.
+ * @decision GH-3583: preserve primary commands across separate evidence lifecycles.
+ * @consequence Phased CI keeps the same configuration and full Vitest route.
+ * @version 1.0.0
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { load } from 'js-yaml';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -17,14 +21,14 @@ import {
   WEB_VITEST_PRIMARY_SUITE_NAMES,
   WEB_VITEST_SUITES,
 } from '../../vitest.suites';
-import { listWebVitestFiles, webRoot } from './vitestSuites.architecture.support';
+import { listWebVitestFiles, suiteMatchesFile, webRoot } from './vitestSuites.architecture.support';
 
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
 describe('web Vitest suite catalog', () => {
-  it.each(['unit', 'architecture'] as const)(
+  it.each(['unit', 'architecture', 'canvas-unit', 'canvas-architecture'] as const)(
     'uses Node by default for the %s suite without changing its file ownership',
     (suiteName) => {
       expect(createWebVitestConfig(suiteName).test).toMatchObject({
@@ -35,12 +39,15 @@ describe('web Vitest suite catalog', () => {
     }
   );
 
-  it.each(['all', 'presentation', ...WEB_VITEST_FOCUS_SUITE_NAMES] as const)(
-    'retains the browser environment for the %s suite',
-    (suiteName) => {
-      expect(createWebVitestConfig(suiteName).test?.environment).toBe('jsdom');
-    }
-  );
+  it.each([
+    'all',
+    'presentation',
+    ...WEB_VITEST_FOCUS_SUITE_NAMES.filter(
+      (suiteName) => suiteName !== 'canvas-unit' && suiteName !== 'canvas-architecture'
+    ),
+  ] as const)('retains the browser environment for the %s suite', (suiteName) => {
+    expect(createWebVitestConfig(suiteName).test?.environment).toBe('jsdom');
+  });
 
   it('assigns every web Vitest file to exactly one primary suite', () => {
     for (const filePath of listWebVitestFiles()) {
@@ -127,7 +134,7 @@ describe('web Vitest suite catalog', () => {
 
     expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
     expect(packageJson.scripts['test:deps']).toBe(
-      'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "@dvt/web^..." build'
+      'node ../../scripts/skip-pretest-if-ci.cjs || node ../../scripts/build-workspace-runtime-deps.cjs @dvt/web --include-package @dvt/planner'
     );
     expect(packageJson.scripts.test).toBe(
       WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}:run`).join(
@@ -146,7 +153,8 @@ describe('web Vitest suite catalog', () => {
     expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
     expect(workflow).toContain('detect_test_matrix:');
-    expect(workflow).toContain('node tools/ci/emit-test-matrix.mjs');
+    expect(workflow).toContain('node tools/ci/emit-scope.mjs');
+    expect(workflow).toContain('matrix: ${{ steps.scope.outputs.test_matrix }}');
     expect(workflow).toContain(
       "if: github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.any_tests == 'true'"
     );
@@ -155,7 +163,42 @@ describe('web Vitest suite catalog', () => {
     expect(workflow).toContain('pnpm test:web:ci');
     expect(workflow).toContain('web-frontend-tests:');
     expect(workflow).toContain('name: Web Frontend Tests');
-    expect(workflow.split(ciNodeOptionsLine)).toHaveLength(3);
+    const webJob = (
+      load(workflow) as {
+        jobs: Record<
+          string,
+          {
+            env?: Record<string, string>;
+            steps: Array<{
+              run?: string;
+              env?: Record<string, string>;
+            }>;
+          }
+        >;
+      }
+    ).jobs['web-frontend-tests'];
+    if (!webJob) throw new Error('Missing governed Web test job');
+    const executionSteps = webJob.steps.filter(
+      (step) => step.run?.includes('pnpm test:web:') && !step.run.includes('--plan')
+    );
+    expect(executionSteps.some((step) => step.run === 'pnpm test:web:ci')).toBe(true);
+    expect(
+      executionSteps.some(
+        (step) =>
+          step.run?.trim() ===
+          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }}"
+      )
+    ).toBe(true);
+    expect(
+      executionSteps.some(
+        (step) =>
+          step.run?.trim() ===
+          'pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}'
+      )
+    ).toBe(true);
+    for (const step of executionSteps) {
+      expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    }
     expect(ciWorkflow).toContain(ciNodeOptionsLine);
 
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
@@ -186,6 +229,30 @@ describe('web Vitest suite catalog', () => {
       "createWebVitestConfig('all')"
     );
   });
+
+  it.each(WEB_VITEST_PRIMARY_SUITE_NAMES)(
+    'proves Canvas %s absorption preserves every file and execution setting',
+    (primary) => {
+      const focus = `canvas-${primary}` as const;
+      const files = listWebVitestFiles();
+      const primaryFiles = files.filter((filePath) => suiteMatchesFile(primary, filePath));
+      const focusFiles = files.filter((filePath) => suiteMatchesFile(focus, filePath));
+      expect(focusFiles.length).toBeGreaterThan(0);
+      expect(new Set([...primaryFiles, ...focusFiles])).toEqual(new Set(primaryFiles));
+      for (const ci of ['', '1']) {
+        vi.stubEnv('DVT_CI', ci);
+        vi.stubEnv('CI', '');
+        expect(createWebVitestConfig(focus)).toEqual({
+          ...createWebVitestConfig(primary),
+          test: {
+            ...createWebVitestConfig(primary).test,
+            include: WEB_VITEST_SUITES[focus].include,
+            exclude: WEB_VITEST_SUITES[focus].exclude,
+          },
+        });
+      }
+    }
+  );
 
   it('bounds CI Vitest workers without removing primary suite coverage', () => {
     vi.stubEnv('DVT_CI', '1');
@@ -219,9 +286,12 @@ describe('web Vitest suite catalog', () => {
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/code/useCodeEditableBuffer.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco,
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
       requiresDependencies: true,
-      suites: ['monaco'],
+      suites: ['monaco', 'architecture'],
     });
   });
 });

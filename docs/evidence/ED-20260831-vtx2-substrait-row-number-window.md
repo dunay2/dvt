@@ -13,7 +13,8 @@ code_refs:
   - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitWindow.ts
   - apps/web/src/app/views/canvas/DvtSubstraitPilotAuthoringSection.tsx
-  - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
+  - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
   - apps/web/cypress/e2e/canvas/canvas-substrait-window.cy.ts
 evidence:

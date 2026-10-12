@@ -18,12 +18,9 @@ function readViewSource(relativePathFromViews: string): string {
 }
 
 describe('Admin route architecture', () => {
-  it('documents the Fowler review and route-position component semantics for this branch', () => {
+  it('documents the route-position component semantics', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/admin-route-position-component.md'
-    );
-    const backlog = readRepoFile(
-      'docs/planning/proposals/web-frontend-operability-backlog-20260430.md'
     );
 
     expect(componentGuide).toContain('## Public API');
@@ -33,14 +30,6 @@ describe('Admin route architecture', () => {
     expect(componentGuide).toContain('## Semantic Encapsulation');
     expect(componentGuide).toContain('```mermaid');
     expect(componentGuide).toContain('?tab=audit');
-
-    expect(backlog).toContain('## User Stories');
-    expect(backlog).toContain('US-FRONT-OPERABILITY-001');
-    expect(backlog).toContain('US-FRONT-OPERABILITY-006');
-    expect(backlog).toContain('## Scenario Coverage Matrix');
-    expect(backlog).toContain('## TDD Traceability');
-    expect(backlog).toContain('Preserve Admin route position');
-    expect(backlog).toContain('Selecting Audit Log writes `/admin?tab=audit`');
   });
 
   it('keeps route-position semantics in AdminView and tests the browser refresh contract', () => {

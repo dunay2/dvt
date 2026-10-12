@@ -14,6 +14,7 @@ const composeFile = path.resolve(
 );
 const containerName = 'dvt-postgres';
 const defaultPgUrl = 'postgresql://dvt:dvt@localhost:5432/dvt';
+const defaultWarehousePgUrl = 'postgresql://dvt_demo:dvt_demo_local@localhost:5432/dvt_demo';
 const baselineSchemas = Object.freeze(['core', 'eventstore', 'public']);
 let composeCommandCache;
 
@@ -125,6 +126,44 @@ async function reset() {
   composeUp();
   waitForHealthy();
   await verifySeededBaseline();
+  await ensureLocalWarehouseDatabase();
+}
+
+async function ensureLocalWarehouseDatabase() {
+  const admin = new Client({ connectionString: defaultPgUrl });
+  await admin.connect();
+  try {
+    const role = await admin.query("SELECT rolcanlogin FROM pg_roles WHERE rolname = 'dvt_demo'");
+    if (role.rowCount === 0) {
+      await admin.query("CREATE ROLE dvt_demo LOGIN PASSWORD 'dvt_demo_local'");
+    } else if (role.rows[0].rolcanlogin !== true) {
+      throw new Error('Local warehouse role dvt_demo exists but cannot log in');
+    }
+
+    const database = await admin.query(
+      "SELECT pg_get_userbyid(datdba) AS owner FROM pg_database WHERE datname = 'dvt_demo'"
+    );
+    if (database.rowCount === 0) {
+      await admin.query('CREATE DATABASE dvt_demo OWNER dvt_demo');
+    } else if (database.rows[0].owner !== 'dvt_demo') {
+      throw new Error('Local warehouse database dvt_demo has an unexpected owner');
+    }
+  } finally {
+    await admin.end();
+  }
+
+  const warehouse = new Client({ connectionString: defaultWarehousePgUrl });
+  await warehouse.connect();
+  try {
+    const identity = await warehouse.query(
+      'SELECT current_database() AS database, current_user AS role'
+    );
+    if (identity.rows[0]?.database !== 'dvt_demo' || identity.rows[0]?.role !== 'dvt_demo') {
+      throw new Error('Local warehouse connection resolved to an unexpected database or role');
+    }
+  } finally {
+    await warehouse.end();
+  }
 }
 
 async function main() {
@@ -134,11 +173,13 @@ async function main() {
   if (action === 'stop') return run('docker', ['stop', containerName]);
   if (action === 'start') {
     run('docker', ['start', containerName]);
-    return waitForHealthy();
+    waitForHealthy();
+    return ensureLocalWarehouseDatabase();
   }
   if (action === 'up') {
     composeUp();
-    return waitForHealthy();
+    waitForHealthy();
+    return ensureLocalWarehouseDatabase();
   }
   throw new Error(`Unknown action: ${action}`);
 }
@@ -153,6 +194,8 @@ if (require.main === module) {
 module.exports = {
   composeDown,
   defaultPgUrl,
+  defaultWarehousePgUrl,
+  ensureLocalWarehouseDatabase,
   main,
   resetComposeCommandCache,
   resolveComposeCommand,

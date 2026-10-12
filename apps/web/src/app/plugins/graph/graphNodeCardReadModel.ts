@@ -3,13 +3,16 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import { defaultGraphNodeCardStrategy } from './defaultGraphNodeCardStrategy';
-import { resolveGraphNodeColumnInteractionProps } from './graphNodeColumnContracts';
+import type { GraphNodeColumn } from './graphNodeColumnContracts';
+import { resolveGraphNodeColumnInteractionProps } from './graphNodeColumnInteractionProps';
 import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
-import type { GraphNodeCardViewProps } from './GraphNodeCardView';
+import type { GraphNodeCardViewProps } from './graphNodeCardViewContracts';
 import { resolveGraphNodeTagActionProps } from './GraphNodeTagList';
+import { readGraphNodeMaterializationControl } from './graphNodeMaterializationControl';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 
 export type {
   GraphNodeCardMetric,
@@ -47,7 +50,12 @@ export function projectGraphNodeCardViewProps(
       : Array.isArray(node.metadata?.columns)
         ? node.metadata.columns
         : []
-  ) as GraphNodeCardViewProps['columns'];
+  ) as readonly GraphNodeColumn[];
+  const columnInteractionProps = resolveGraphNodeColumnInteractionProps({
+    nodeId: node.id,
+    nodeRole: node.role,
+    data,
+  });
   const tags = Array.isArray(data.displayTags)
     ? data.displayTags.filter(
         (tag): tag is Readonly<{ value: string; label: string }> =>
@@ -58,23 +66,42 @@ export function projectGraphNodeCardViewProps(
       )
     : node.tags.map((tag) => ({ value: tag, label: tag }));
   const inspectNode = data.onInspectNode;
-  const openSourceDataSample = data.onOpenSourceDataSample;
   const openOperationalDetails = data.onOpenOperationalDetails;
+  const {
+    columnPortDirections,
+    columnDisclosureExpanded,
+    onColumnDisclosureChange,
+    onAutomapColumns,
+    ...columnProps
+  } = columnInteractionProps;
+  const showColumns =
+    data.showColumns === true &&
+    (columns.length > 0 ||
+      columnProps.expressionInputs.length > 0 ||
+      columnProps.inputColumns != null) &&
+    (kindMeta.supportsColumns || node.role === 'input' || node.role === 'transform');
 
   return {
     cardModel: buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies),
-    typeLabel:
-      typeof data.typeLabel === 'string'
-        ? data.typeLabel
-        : typeof data.type === 'string'
-          ? data.type
-          : kindMeta.label,
+    materializationControl: readGraphNodeMaterializationControl(data.materializationControl),
     tags,
-    columns,
-    showColumns:
-      data.showColumns === true &&
-      columns.length > 0 &&
-      (kindMeta.supportsColumns || node.role === 'input' || node.role === 'transform'),
+    columnSection: showColumns
+      ? {
+          ...columnProps,
+          columns,
+          outputState: isCanvasNodePresentationTruth(data.presentationTruth)
+            ? data.presentationTruth.columns.state
+            : undefined,
+          portDirections: columnPortDirections,
+          expanded: columnDisclosureExpanded,
+          onDisclosureChange:
+            onColumnDisclosureChange == null
+              ? undefined
+              : (expanded) => onColumnDisclosureChange(node.id, expanded),
+          onAutomap:
+            onAutomapColumns == null ? undefined : () => onAutomapColumns(node.id, columns),
+        }
+      : null,
     icon: kindMeta.icon,
     borderClass: kindMeta.borderClass,
     selected,
@@ -82,16 +109,9 @@ export function projectGraphNodeCardViewProps(
     dimmed: overlayDecoration?.dimmed ?? false,
     ...(Object.keys(overlayStyle).length > 0 ? { overlayStyle } : {}),
     ...resolveGraphNodeTagActionProps(data),
-    ...resolveGraphNodeColumnInteractionProps({ nodeId: node.id, nodeRole: node.role, data }),
     onOpenCode:
       data.canOpenNodeCode !== false && typeof inspectNode === 'function'
         ? () => inspectNode(node.id, 'code')
-        : undefined,
-    onOpenDataSample:
-      typeof openSourceDataSample === 'function' ? () => openSourceDataSample(node.id) : undefined,
-    dataSampleInteractionLabel:
-      typeof data.sourceDataSampleInteractionLabel === 'string'
-        ? data.sourceDataSampleInteractionLabel
         : undefined,
     onOpenOperationalDetails:
       typeof openOperationalDetails === 'function'

@@ -47,9 +47,7 @@ describe('@dvt/plan-verifier plan-version admission architecture', () => {
     expect(doc).toContain('EXECUTION_PLAN_ADMISSION_MATRIX');
     expect(doc).toContain('verifyPlanAdmissionOrThrow');
     expect(doc).toContain('verifyPlanOrThrow');
-    expect(doc).toContain(
-      'buzon/20260514-codex-fowler-ea-20260429-02-plan-admission-matrix-analysis.md'
-    );
+
     expect(doc).toContain('```mermaid');
   });
 });

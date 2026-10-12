@@ -87,7 +87,46 @@ reject before mutation. Admission is pure validation of the existing read model.
 Red/green admission and duplicate guards; split catalog ownership; remove literal tests;
 then ARC-2 evidence, governance refresh, and pre-push.
 
-## Feature mechanization
+## Explicit-posture hard cut (#3485)
+
+The [bounded P0 plan](https://github.com/dunay2/dvt/issues/3485#issuecomment-5914256508)
+and Planning DB design `GH-3485-EXPLICIT-CAPABILITY-ADMISSION` govern this follow-up.
+It references `ConfigureCanvasDvtNode` and `ProjectCanvasRelationalTree`; it adds
+no command, provider matrix, persistence owner, catalog or version.
+
+The internal group must declare each target ID/status and a visual posture.
+The group's mandatory proof supplies evidence references, never an inferred
+status. An unexposed posture supplies its own rationale. Missing declarations
+fail typechecking; missing, empty or duplicate target evidence fails the existing
+admission schema. No default promotes a group to `mapped` or `exposed`.
+
+Web owns action names, interaction families and operand availability. It
+references published opaque capability IDs without rebuilding or parsing their
+Substrait identity. Semantic admission, explicit exposure and PostgreSQL mapping
+are separate necessary checks. Missing exposure denies the action; an absent or
+unavailable target reports `target-unavailable`. Mapping permits authoring only,
+not runtime execution or provider acceptance. Read-only remains dominant.
+
+This cut preserves the complete published catalog serialization, existing
+operation ordering and unavailable/unexposed structured capabilities. It does
+not reopen the original module-ownership split or add semantic capabilities.
+
+```mermaid
+flowchart LR
+  Group[Explicit target and exposure declarations] --> Schema[Existing strict admission schema]
+  Schema --> Catalog[One canonical catalog]
+  Actions[Web actions reference opaque capability IDs] --> Choice[Operation-choice projection]
+  Catalog --> Choice
+  Operands[Operand and read-only facts] --> Choice
+  Choice --> Decision[Available or explicit denial]
+```
+
+Regression evidence covers real compiler omission checks, schema rejection,
+catalog-byte preservation and denied Web choices for each missing posture.
+The existing operation-menu browser flow checks the authorized editing surface;
+it is fixture-backed UI evidence, not a PostgreSQL runtime proof.
+
+## Original admission mechanization
 
 ```feature-mechanization
 version: 1

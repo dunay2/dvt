@@ -1,8 +1,25 @@
 export {
   type DvtSubstraitLiteralValue,
   dvtSubstraitExpressionReader,
-  resolvedFunction,
 } from './substraitExpressionReader.js';
+export { resolveFunctionReference } from './substrait-profile/functionReference.js';
+export { sumOverload } from './substrait-profile/sum.js';
+export { createSumFunction } from './substraitSumFunction.js';
+export { inspectFunctionProfile } from './substrait-profile/functions.js';
+export {
+  createDvtSubstraitFetchDraft,
+  createDvtSubstraitSortDraft,
+  inspectDvtSubstraitSortFetchRoot,
+  removeDvtSubstraitSortFetchRelation,
+  type DvtSubstraitSortDirection,
+  type DvtSubstraitSortFetchRootInspection,
+  type DvtSubstraitSortKey,
+} from './substraitSortFetch.js';
+export {
+  buildDvtSortFetchPostgresAst,
+  postgresSortDirection,
+  type DvtPostgresOrderKey,
+} from './sortFetchPostgresProjection.js';
 export {
   STRING_DATA_TYPES,
   TIMESTAMPTZ_DATA_TYPES,
@@ -53,7 +70,8 @@ export {
 } from './substraitJoinConditionInspection.js';
 export {
   type DvtSubstraitJoinDataType,
-  type DvtSubstraitInnerJoinDraft,
+  type DvtSubstraitJoinType,
+  type DvtSubstraitJoinDraft,
   type DvtSubstraitNInputJoinProjection,
   type DvtSubstraitNInputJoinInspection,
   type DvtSubstraitJoinPredicate,
@@ -61,22 +79,24 @@ export {
   type InspectedJoinStage,
   type InspectedJoinStructure,
   type InspectedJoinPredicateOperand,
+  dvtSubstraitJoinNullExtendsLeft,
+  dvtSubstraitJoinNullExtendsRight,
+  dvtSubstraitJoinRetainedSide,
+  isDvtSubstraitSemiAntiJoin,
 } from './substraitJoinReadModel.js';
 export {
   ZERO_SHA256,
   hasSameConnectionRef,
   joinDataType,
+  joinFieldType,
   namedTableIdentity,
   hasPinnedPlanVersion,
-  hasUniqueInnerJoinSidecarIdentity,
-  hasCurrentInnerJoinSemanticHash,
+  hasUniqueJoinSidecarIdentity,
+  hasCurrentJoinSemanticHash,
   inspectNInputJoinNode,
   flattenNInputJoinTree,
 } from './substraitJoinInspectionGuards.js';
-export {
-  inspectNInputJoinStructure,
-  inspectDvtSubstraitNInputJoinDraft,
-} from './substraitJoinReader.js';
+export { inspectNInputJoinStructure, inspectDvtSubstraitJoinDraft } from './substraitJoinReader.js';
 export {
   type PostgresComparisonOperator,
   pgAnd,
@@ -91,7 +111,6 @@ export {
   nInputJoinAlias,
   POSTGRES_JOIN_COMPARISON,
   buildNInputJoinPostgresAst,
-  projectDvtInnerJoinDraftToPostgresSql,
 } from './joinPostgresProjection.js';
 export {
   buildConnectedFieldPostgresAst,
@@ -109,6 +128,7 @@ export {
   pgOrderedRowNumber,
   pgQualifiedColumnRef,
   pgRangeVar,
+  pgRangeSubselect,
   pgRowNumber,
   pgRowNumberOverCount,
   pgString,
@@ -118,10 +138,6 @@ export {
 } from './postgresAst.js';
 export { renderPostgresAst } from './renderPostgresAst.js';
 export { inspectDvtConnectedFieldProjection } from './substraitConnectedFieldReader.js';
-export {
-  projectDvtConnectedFieldDraftToPostgresSql,
-  type ProjectedDvtConnectedFieldSql,
-} from './substraitConnectedFieldProjection.js';
 export type {
   DvtCalculatedExpression,
   DvtConnectedFieldNodeBinding,
@@ -130,3 +146,31 @@ export type {
   DvtSubstraitProjectionDraft,
 } from './substraitProjectionReadModel.js';
 export { projectDvtPostgresOutputSchemaV1 } from './dvtPostgresOutputSchema.js';
+export type {
+  DvtSubstraitSetDraft,
+  DvtSubstraitSetInspection,
+  DvtSubstraitSetOperation,
+  DvtSubstraitSetProjection,
+} from './substraitSetReadModel.js';
+export { inspectDvtSubstraitSetDraft } from './substraitSetReader.js';
+export {
+  inspectDvtSubstraitSetComposition,
+  type DvtSubstraitSetComposition,
+} from './substraitSetCompositionReader.js';
+export type {
+  DvtSubstraitCrossDraft,
+  DvtSubstraitCrossInspection,
+  DvtSubstraitMixedCrossInspection,
+  DvtSubstraitMixedCrossProjection,
+  DvtSubstraitCrossProjection,
+} from './substraitCrossReadModel.js';
+export {
+  flattenDvtSubstraitCrossTree,
+  inspectDvtSubstraitCrossDraft,
+} from './substraitCrossReader.js';
+export {
+  inspectDvtSubstraitAcceptedCrossDraft,
+  inspectDvtSubstraitMixedCrossDraft,
+} from './substraitMixedCrossReader.js';
+export { projectSubstraitToPostgresSql } from './relationalSql/project.js';
+export { projectSubstraitProducerGraph } from './relationalSql/producerGraph.js';

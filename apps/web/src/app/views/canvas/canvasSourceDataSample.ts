@@ -3,11 +3,30 @@ import { ConnectedSourceRefSchema, type SourceDataSampleRequest } from '@dvt/con
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { OperationalDrawerDataSample } from '../../components/shell/operationalDrawerContributionStore';
-import type { RunSnapshot } from '../../ports/runs';
+import type { SourceDataSample } from '../../ports/workspace';
 import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
-import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 
 export const CANVAS_SOURCE_DATA_SAMPLE_LIMIT = 20 as const;
+
+/** Present the selected Source publication without changing the physical query result. */
+export function projectCanvasSourceDataSample(
+  sample: SourceDataSample,
+  selectedFieldNames: readonly string[]
+): SourceDataSample {
+  const columnIndexes = selectedFieldNames.map((name) =>
+    sample.columns.findIndex((column) => column.name === name)
+  );
+  if (columnIndexes.some((index) => index < 0)) {
+    throw new Error('Selected Source output is absent from the sample.');
+  }
+  return {
+    ...sample,
+    columns: columnIndexes.map((index) => sample.columns[index]!),
+    rows: sample.rows.map((row) => ({
+      values: columnIndexes.map((index) => row.values[index] ?? null),
+    })),
+  };
+}
 
 export type CanvasSourceDataSampleTarget = Readonly<{
   connectionId: string;
@@ -16,47 +35,35 @@ export type CanvasSourceDataSampleTarget = Readonly<{
   nodeName: string;
 }>;
 
-export type CanvasSinkDataSampleTarget = Readonly<{
-  runId: string;
-  nodeName: string;
-  rowsWritten: number;
-  completedAt: string;
-  durationMs: number;
-  status: 'completed';
-}>;
-
-function normalizeRelationPath(value: string): readonly string[] {
-  return value
-    .split('.')
-    .map((part) => {
-      const normalized = part.trim().toLowerCase();
-      const withoutOpening = ['"', '`', '['].includes(normalized[0] ?? '')
-        ? normalized.slice(1)
-        : normalized;
-      return ['"', '`', ']'].includes(withoutOpening.at(-1) ?? '')
-        ? withoutOpening.slice(0, -1)
-        : withoutOpening;
-    })
-    .filter(Boolean);
-}
-
-function relationsMatch(nodeRelation: string, materializedRelation: string): boolean {
-  const nodeParts = normalizeRelationPath(nodeRelation);
-  const materializedParts = normalizeRelationPath(materializedRelation);
-  if (nodeParts.length < 2 || materializedParts.length < 2) {
-    return false;
-  }
-
-  const shorterLength = Math.min(nodeParts.length, materializedParts.length);
-  return (
-    nodeParts.slice(-shorterLength).join('.') === materializedParts.slice(-shorterLength).join('.')
-  );
-}
-
 export function resolveCanvasSourceDataSampleTarget(
   data: DbtNodeData
 ): CanvasSourceDataSampleTarget | null {
-  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(data.metadata?.connectedSourceRef);
+  return resolveCanvasConnectedSourceDataSampleTarget(data.metadata?.connectedSourceRef, data.name);
+}
+
+/** Admit the Source card from published truth, never from its cached display columns. */
+export function resolveCanvasSourceSamplePublication(data: DbtNodeData) {
+  const target = resolveCanvasSourceDataSampleTarget(data);
+  if (target == null) return null;
+  if (data.pluginKind !== 'dvt:source') return { target, selectedFieldNames: undefined };
+  const truth = data.presentationTruth;
+  if (truth?.columns.state !== 'ready') return null;
+  const selectedFieldNames = truth.columns.visible
+    .filter((column) => column.selected !== false)
+    .map((column) => column.sourceFieldName ?? column.name);
+  if (selectedFieldNames.length === 0) return null;
+  return {
+    target,
+    selectedFieldNames,
+    semanticDigest: truth.code.kind === 'canonical' ? truth.code.digest : undefined,
+  };
+}
+
+export function resolveCanvasConnectedSourceDataSampleTarget(
+  sourceRef: unknown,
+  nodeName: string
+): CanvasSourceDataSampleTarget | null {
+  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(sourceRef);
   if (
     !connectedSourceRef.success ||
     !connectedSourceRef.data.sourceObjectId.startsWith('relation/')
@@ -67,53 +74,17 @@ export function resolveCanvasSourceDataSampleTarget(
   return {
     connectionId: connectedSourceRef.data.connectionRef.connectionId,
     objectId: connectedSourceRef.data.sourceObjectId,
-    nodeName: data.name,
+    nodeName,
   };
 }
-
-export function resolveCanvasSinkDataSampleTarget(
-  data: DbtNodeData,
-  snapshot: RunSnapshot | null | undefined
-): CanvasSinkDataSampleTarget | null {
-  const materialization = snapshot?.materialization ?? snapshot?.execution?.materialization;
-  const sinkMetadata = createDvtNodeAuthoringMetadata({
-    id: data.name,
-    name: data.name,
-    pluginId: 'dvt',
-    kind: 'dvt:sink',
-    role: 'output',
-    status: 'idle',
-    tags: ['authoring'],
-    metadata: data.metadata,
-  });
-  if (
-    data.role !== 'output' ||
-    data.pluginKind !== 'dvt:sink' ||
-    sinkMetadata?.kind !== 'sink' ||
-    snapshot?.status !== 'completed' ||
-    materialization == null ||
-    !relationsMatch(`${sinkMetadata.schema}.${sinkMetadata.table}`, materialization.sinkTable)
-  ) {
-    return null;
-  }
-
-  return {
-    runId: snapshot.runId,
-    nodeName: data.name,
-    rowsWritten: materialization.rowsWritten,
-    completedAt: materialization.completedAt,
-    durationMs: materialization.durationMs,
-    status: 'completed',
-  };
-}
-
 export function resolveCanvasSourceDataSampleError(
   error: unknown,
   nodeName: string
 ): OperationalDrawerDataSample {
+  const reason = error instanceof WarehouseSourceDataSampleQueryError ? error.reason : 'unknown';
   return {
     status: 'error',
     nodeName,
-    reason: error instanceof WarehouseSourceDataSampleQueryError ? error.reason : 'unknown',
+    reason: reason === 'publication_changed' ? 'unavailable' : reason,
   };
 }

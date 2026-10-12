@@ -4,7 +4,10 @@ import {
   type Rel,
 } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { PlanSchema, type Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import {
+  Type_Nullability,
+  type Type,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { toBinary } from '@bufbuild/protobuf';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
@@ -14,8 +17,9 @@ import {
   type InspectedJoinCondition,
 } from './substraitJoinConditionInspection.js';
 import type {
-  DvtSubstraitInnerJoinDraft,
+  DvtSubstraitJoinDraft,
   DvtSubstraitJoinDataType,
+  DvtSubstraitJoinType,
 } from './substraitJoinReadModel.js';
 
 export const ZERO_SHA256 = '0'.repeat(64);
@@ -41,6 +45,26 @@ export function joinDataType(type: Type): DvtSubstraitJoinDataType | null {
     : null;
 }
 
+export function joinFieldType(
+  type: Type
+): Readonly<{ dataType: DvtSubstraitJoinDataType; nullable: boolean }> | null {
+  const dataType = joinDataType(type);
+  if (dataType == null) return null;
+  switch (type.kind.case) {
+    case 'string':
+    case 'bool':
+    case 'i64':
+    case 'fp64':
+    case 'precisionTimestampTz':
+      return {
+        dataType,
+        nullable: type.kind.value.nullability !== Type_Nullability.REQUIRED,
+      };
+    default:
+      return null;
+  }
+}
+
 export function namedTableIdentity(rel: Rel): { schema: string; table: string } | null {
   if (rel.relType.case !== 'read') return null;
   const read = rel.relType.value;
@@ -64,7 +88,7 @@ export function hasPinnedPlanVersion(plan: Plan): boolean {
   );
 }
 
-export function hasUniqueInnerJoinSidecarIdentity(draft: DvtSubstraitInnerJoinDraft): boolean {
+export function hasUniqueJoinSidecarIdentity(draft: DvtSubstraitJoinDraft): boolean {
   return (
     new Set(draft.sidecar.relations.map((relation) => relation.relationId)).size ===
       draft.sidecar.relations.length &&
@@ -74,7 +98,7 @@ export function hasUniqueInnerJoinSidecarIdentity(draft: DvtSubstraitInnerJoinDr
   );
 }
 
-export function hasCurrentInnerJoinSemanticHash(draft: DvtSubstraitInnerJoinDraft): boolean {
+export function hasCurrentJoinSemanticHash(draft: DvtSubstraitJoinDraft): boolean {
   const planSha256 = sha256Hex(toBinary(PlanSchema, draft.plan));
   return (
     draft.sidecar.semanticPlanSha256 === ZERO_SHA256 ||
@@ -87,13 +111,21 @@ export function inspectNInputJoinNode(
   rel: Rel,
   relAnchor: number
 ): Readonly<{
+  joinType: DvtSubstraitJoinType;
   conditions: readonly InspectedJoinCondition[];
   outputMapping: readonly number[];
 }> | null {
   if (rel.relType.case !== 'join') return null;
   const join = rel.relType.value;
   if (
-    join.type !== JoinRel_JoinType.INNER ||
+    (join.type !== JoinRel_JoinType.INNER &&
+      join.type !== JoinRel_JoinType.LEFT &&
+      join.type !== JoinRel_JoinType.RIGHT &&
+      join.type !== JoinRel_JoinType.OUTER &&
+      join.type !== JoinRel_JoinType.LEFT_SEMI &&
+      join.type !== JoinRel_JoinType.LEFT_ANTI &&
+      join.type !== JoinRel_JoinType.RIGHT_SEMI &&
+      join.type !== JoinRel_JoinType.RIGHT_ANTI) ||
     join.postJoinFilter != null ||
     join.advancedExtension != null ||
     join.common?.hint != null ||
@@ -108,6 +140,7 @@ export function inspectNInputJoinNode(
   const conditions = inspectJoinConditionChain(plan, join.expression);
   if (conditions == null || conditions.length === 0) return null;
   return {
+    joinType: join.type,
     conditions,
     outputMapping: join.common.emitKind.value.outputMapping,
   };

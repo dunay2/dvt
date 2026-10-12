@@ -1,4 +1,3 @@
-import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   CanvasDraftEdge,
@@ -7,93 +6,18 @@ import type {
   CanonicalSnapshotArgs,
 } from './canvasDraftSession.types';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
+import { canvasDraftWorkingSetModel } from './canvasDraftWorkingSetModel';
+const { arraysEqual, dedupeNodeIds, buildVisibleEdges } = canvasDraftWorkingSetModel;
 export const EMPTY_WORKING_SET: CanvasDraftWorkingSet = {
   visibleNodeIds: [],
   visibleEdges: [],
   pendingExplicitNodeIds: [],
 };
-function arraysEqual(left: string[], right: string[]): boolean {
-  return left.length === right.length && left.every((value, index) => value === right[index]);
-}
-function draftEdgesEqual(left: CanvasDraftEdge[], right: CanvasDraftEdge[]): boolean {
-  return (
-    left.length === right.length &&
-    left.every(
-      (edge, index) =>
-        edge.sourceId === right[index]?.sourceId &&
-        edge.targetId === right[index]?.targetId &&
-        edge.executionGate === right[index]?.executionGate
-    )
-  );
-}
-function dedupeNodeIds(nodeIds: string[]): string[] {
-  return [...new Set(nodeIds)];
-}
-function dedupeEdges(edges: ReadonlyArray<CanvasDraftEdge>): CanvasDraftEdge[] {
-  const seen = new Set<string>();
-  const deduped: CanvasDraftEdge[] = [];
-  for (const edge of edges) {
-    const signature = `${edge.sourceId}::${edge.targetId}`;
-    if (seen.has(signature)) {
-      continue;
-    }
-    seen.add(signature);
-    deduped.push({
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-      ...(edge.executionGate == null ? {} : { executionGate: edge.executionGate }),
-    });
-  }
-  return deduped;
-}
-function buildVisibleEdges(
-  edges: ReadonlyArray<CanvasDraftEdge>,
-  visibleNodeIds: readonly string[]
-): CanvasDraftEdge[] {
-  const visibleNodeIdSet = new Set(visibleNodeIds);
-  return dedupeEdges(
-    edges.filter(
-      (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
-    )
-  );
-}
-function buildWorkingSet(
-  nodeIds: string[],
-  edges: ReadonlyArray<CanvasDraftEdge>
-): CanvasDraftWorkingSet {
-  const visibleNodeIds = dedupeNodeIds(nodeIds);
-  return {
-    visibleNodeIds,
-    visibleEdges: buildVisibleEdges(edges, visibleNodeIds),
-    pendingExplicitNodeIds: [],
-  };
-}
-function buildCanonical({
-  canonicalNodeIds,
-  canonicalEdges,
-}: CanonicalSnapshotArgs): CanvasDraftWorkingSet {
-  return buildWorkingSet(canonicalNodeIds, canonicalEdges);
-}
-function buildFromDraft(draft: WorkspaceGraphAuthoringDraft): CanvasDraftWorkingSet {
-  return buildWorkingSet(
-    draft.nodeIds,
-    draft.edges.map(canvasDraftEdgeExecutionGate.fromAuthoringEdge)
-  );
-}
-function workingSetsEqual(left: CanvasDraftWorkingSet, right: CanvasDraftWorkingSet): boolean {
-  if (!arraysEqual(left.visibleNodeIds, right.visibleNodeIds)) {
-    return false;
-  }
-  if (!draftEdgesEqual(left.visibleEdges, right.visibleEdges)) {
-    return false;
-  }
-  return arraysEqual(left.pendingExplicitNodeIds, right.pendingExplicitNodeIds);
-}
 function withWorkingSet(
   session: CanvasDraftSession,
   workingSet: CanvasDraftWorkingSet
 ): CanvasDraftSession {
-  if (workingSetsEqual(session.workingSet, workingSet)) {
+  if (canvasDraftWorkingSetModel.equals(session.workingSet, workingSet)) {
     return session;
   }
   return { ...session, workingSet };
@@ -136,44 +60,12 @@ function withLocalNodeCatalog(
 }
 function reconcileSnapshot(
   session: CanvasDraftSession,
-  { canonicalNodeIds, canonicalEdges }: CanonicalSnapshotArgs
+  snapshot: CanonicalSnapshotArgs
 ): CanvasDraftSession {
-  const knownNodeIds = new Set(dedupeNodeIds(canonicalNodeIds));
-  const nextVisibleNodeIds = dedupeNodeIds(session.workingSet.visibleNodeIds);
-  const pendingExplicitNodeIds = dedupeNodeIds(
-    session.workingSet.pendingExplicitNodeIds.filter(
-      (nodeId) => !nextVisibleNodeIds.includes(nodeId)
-    )
+  const reconciledSession = withWorkingSet(
+    session,
+    canvasDraftWorkingSetModel.reconcileSnapshot(session.workingSet, snapshot)
   );
-  const promotedExplicitNodeIds = pendingExplicitNodeIds.filter((nodeId) =>
-    knownNodeIds.has(nodeId)
-  );
-  const nextPendingExplicitNodeIds = pendingExplicitNodeIds.filter(
-    (nodeId) => !knownNodeIds.has(nodeId)
-  );
-  const mergedVisibleNodeIds = dedupeNodeIds([...nextVisibleNodeIds, ...promotedExplicitNodeIds]);
-  const visibleNodeIdSet = new Set(mergedVisibleNodeIds);
-  const promotedNodeIdSet = new Set(promotedExplicitNodeIds);
-  const promotedCanonicalEdges = dedupeEdges(
-    canonicalEdges.filter(
-      (edge) =>
-        visibleNodeIdSet.has(edge.sourceId) &&
-        visibleNodeIdSet.has(edge.targetId) &&
-        (promotedNodeIdSet.has(edge.sourceId) || promotedNodeIdSet.has(edge.targetId))
-    )
-  );
-  const nextVisibleEdges = dedupeEdges([
-    ...session.workingSet.visibleEdges.filter(
-      (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
-    ),
-    ...promotedCanonicalEdges,
-  ]);
-
-  const reconciledSession = withWorkingSet(session, {
-    visibleNodeIds: mergedVisibleNodeIds,
-    visibleEdges: nextVisibleEdges,
-    pendingExplicitNodeIds: nextPendingExplicitNodeIds,
-  });
   const currentLocalNodeCatalog = readLocalNodeCatalog(reconciledSession);
   const retainedLocalNodeIds = new Set([
     ...reconciledSession.workingSet.visibleNodeIds,
@@ -282,9 +174,9 @@ function setEdgeExecutionGate(
 }
 // Working-set policy owns aggregate mutation over visible scope and pending nodes.
 export const canvasDraftSessionWorkingSet = {
-  buildCanonical,
-  buildFromDraft,
-  equals: workingSetsEqual,
+  buildCanonical: canvasDraftWorkingSetModel.buildCanonical,
+  buildFromDraft: canvasDraftWorkingSetModel.buildFromDraft,
+  equals: canvasDraftWorkingSetModel.equals,
   reconcileSnapshot,
   queueExplicitNodeIds,
   addExplicitNode,

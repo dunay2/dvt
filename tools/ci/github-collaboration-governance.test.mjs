@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
 import yaml from 'js-yaml';
@@ -13,8 +14,7 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   const dependabotSource = readText('.github/dependabot.yml');
   const dependabot = yaml.load(dependabotSource);
   const pullRequestTemplate = readText('.github/pull_request_template.md');
-  const prBody = readText('.github/PR_BODY.md').trim();
-  const prInstructions = readText('.github/PR_INSTRUCTIONS.md');
+  const prInstructions = readText('AGENTS.md');
   const prQualityGate = readText('.github/workflows/pr-quality-gate.yml');
 
   for (const requiredPattern of [
@@ -47,15 +47,54 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   assert.match(pullRequestTemplate, /Declared ARC Level/u);
   assert.match(pullRequestTemplate, /docs\/evidence\/ED-YYYYMMDD-<slug>\.md/u);
 
-  assert.ok(prBody.length >= 50, 'default PR body must satisfy CI body length policy');
-  assert.match(prBody, /\.github\/CODEOWNERS/u);
+  assert.ok(
+    pullRequestTemplate.trim().length >= 50,
+    'active PR template must satisfy CI body length policy'
+  );
+  assert.match(
+    readText('docs/planning/status/governance-document-rule-inventory.md'),
+    /CODEOWNERS/u
+  );
   assert.match(prInstructions, /pnpm pr:validate-title/u);
   assert.match(prInstructions, /gh pr create/u);
-  assert.match(prInstructions, /--body-file \.github\/PR_BODY\.md/u);
+  assert.match(prInstructions, /--body/u);
 
-  assert.match(prQualityGate, /run: pnpm pr:validate-title "\$PR_TITLE"/u);
+  for (const [body, status] of [
+    ['x'.repeat(49), 1],
+    ['x'.repeat(50), 0],
+    [' '.repeat(50), 1],
+  ]) {
+    const result = spawnSync(process.execPath, ['tools/ci/check-pr-description.mjs'], {
+      env: { ...process.env, PR_BODY: body },
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, status, result.stdout + result.stderr);
+  }
+
+  assert.match(prQualityGate, /run: node scripts\/validate-pr-title\.cjs "\$PR_TITLE"/u);
   assert.match(prQualityGate, /PR_TITLE: \$\{\{ github\.event\.pull_request\.title \}\}/u);
   assert.doesNotMatch(prQualityGate, /amannn\/action-semantic-pull-request/u);
+});
+
+test('PR metadata rejects invalid submissions immediately after checkout and before dependency setup', () => {
+  const workflow = yaml.load(readText('.github/workflows/pr-quality-gate.yml'));
+  const steps = workflow.jobs['pr-checks'].steps;
+  assert.deepEqual(
+    steps.slice(0, 4).map((step) => step.name),
+    [
+      'Checkout',
+      'Check PR title follows Conventional Commits',
+      'Check PR size',
+      'Check if description is present',
+    ]
+  );
+  for (const step of steps.slice(1, 4)) {
+    assert.equal(step.if, "github.event_name == 'pull_request'");
+  }
+  assert.equal(steps[1].run, 'node scripts/validate-pr-title.cjs "$PR_TITLE"');
+  assert.equal(steps[2].run, 'node tools/ci/check-pr-size.mjs');
+  assert.equal(steps[3].run, 'node tools/ci/check-pr-description.mjs');
+  assert.ok(steps.findIndex((step) => step.uses === './.github/actions/setup-node-pnpm') > 3);
 });
 
 test('trusted PR metadata mutation is isolated from candidate-code validation', () => {

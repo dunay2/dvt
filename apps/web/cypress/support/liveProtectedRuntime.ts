@@ -1,23 +1,22 @@
 /**
- * Owned concern: boot and exercise the live protected-runtime HTTP seams for
- * selected-closure browser proof.
+ * Owned concern: boot and exercise live protected-runtime HTTP seams without constructing fixtures.
+ * @baseline GH-3578: fixture seeding and generic LIVE transport have separate consumers.
+ * @decision Share request helpers and keep fixture seeding in its dedicated consumer.
+ * @consequence Transport-only stories no longer transitively import canvas scenario builders.
+ * @version 1.0.0
  */
-import {
-  buildCanvasDraftSaveRequest,
-  type CanvasDraftSessionScope,
-  type StubCanvasDraftReadOptions,
-} from './canvasDraftAuthoring';
 import { installE2eApiFetchStub } from './e2eApiStub';
-import { LIVE_WORKSPACE_SESSION, seedE2eWorkspaceSession } from './workspaceSession';
-
-function readRequiredEnv(name: string): string {
-  const value = Cypress.env(name);
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new Error(`Cypress env ${name} is required for the live protected-runtime lane`);
-  }
-
-  return value.trim();
-}
+import {
+  buildAuthorizationHeaders,
+  buildBearerAuth,
+  buildDraftReadUrl,
+  readRequiredEnv,
+} from './liveProtectedRequest';
+import {
+  LIVE_WORKSPACE_SESSION,
+  seedE2eWorkspaceSession,
+  type E2eWorkspaceSession,
+} from './workspaceSession';
 
 export function hasLiveProtectedRuntimeEnv(): boolean {
   return ['apiBaseUrl', 'apiBearerToken'].every((name) => {
@@ -27,7 +26,7 @@ export function hasLiveProtectedRuntimeEnv(): boolean {
   });
 }
 
-export function resolveLiveWorkspaceSession(): CanvasDraftSessionScope {
+export function resolveLiveWorkspaceSession(): E2eWorkspaceSession {
   return {
     tenantId:
       typeof Cypress.env('workspaceTenantId') === 'string'
@@ -41,27 +40,6 @@ export function resolveLiveWorkspaceSession(): CanvasDraftSessionScope {
       typeof Cypress.env('workspaceEnvironmentId') === 'string'
         ? String(Cypress.env('workspaceEnvironmentId')).trim()
         : LIVE_WORKSPACE_SESSION.environmentId,
-  };
-}
-
-function buildDraftReadUrl(session: CanvasDraftSessionScope): string {
-  const apiBaseUrl = readRequiredEnv('apiBaseUrl');
-  const query = new URLSearchParams(session);
-  return `${apiBaseUrl}/workspace/graph/draft?${query.toString()}`;
-}
-
-function buildAuthorizationHeaders(): Record<string, string> {
-  const apiBearerToken = readRequiredEnv('apiBearerToken');
-
-  return {
-    Authorization: `Bearer ${apiBearerToken}`,
-    Accept: 'application/json',
-  };
-}
-
-function buildBearerAuth(): { bearer: string } {
-  return {
-    bearer: readRequiredEnv('apiBearerToken'),
   };
 }
 
@@ -83,55 +61,8 @@ export function visitWithLiveWorkspaceSession(
   });
 }
 
-export function seedLiveSelectedClosureDraft(
-  options: StubCanvasDraftReadOptions = {}
-): Cypress.Chainable<string> {
-  const session = resolveLiveWorkspaceSession();
-  const readUrl = buildDraftReadUrl(session);
-  const headers = buildAuthorizationHeaders();
-
-  return cy
-    .request({
-      method: 'GET',
-      url: readUrl,
-      headers,
-      auth: buildBearerAuth(),
-      failOnStatusCode: false,
-    })
-    .then((readResponse) => {
-      let expectedRevision = 'initial';
-
-      if (readResponse.status === 200) {
-        expect(readResponse.body.kind).to.equal('ok');
-        expect(readResponse.body.record.scope).to.deep.include(session);
-        expectedRevision = readResponse.body.record.revision as string;
-      } else {
-        expect(readResponse.status).to.equal(404);
-        expect(readResponse.body.kind).to.equal('not_found');
-      }
-
-      return cy.request({
-        method: 'PUT',
-        url: `${readRequiredEnv('apiBaseUrl')}/workspace/graph/draft`,
-        headers,
-        auth: buildBearerAuth(),
-        body: buildCanvasDraftSaveRequest(session, {
-          ...options,
-          expectedRevision,
-          idempotencyKey: `live-selected-closure-${Date.now()}`,
-        }),
-      });
-    })
-    .then((saveResponse) => {
-      expect(saveResponse.status).to.equal(200);
-      expect(saveResponse.body.kind).to.equal('saved');
-
-      return saveResponse.body.revision as string;
-    });
-}
-
 export function readLiveGraphDraft(
-  session: CanvasDraftSessionScope = resolveLiveWorkspaceSession(),
+  session: E2eWorkspaceSession = resolveLiveWorkspaceSession(),
   options: { failOnStatusCode?: boolean } = {}
 ): Cypress.Chainable<Cypress.Response<unknown>> {
   return cy.request({
@@ -144,7 +75,7 @@ export function readLiveGraphDraft(
 }
 
 export function readLiveRunIds(
-  session: CanvasDraftSessionScope = resolveLiveWorkspaceSession()
+  session: E2eWorkspaceSession = resolveLiveWorkspaceSession()
 ): Cypress.Chainable<string[]> {
   const query = new URLSearchParams(session);
 
@@ -188,7 +119,7 @@ export function readLiveRunEvents(runId: string): Cypress.Chainable<Cypress.Resp
 
 export function readLiveWorkspaceFile(
   path: string,
-  session: CanvasDraftSessionScope = resolveLiveWorkspaceSession()
+  session: E2eWorkspaceSession = resolveLiveWorkspaceSession()
 ): Cypress.Chainable<Cypress.Response<unknown>> {
   const query = new URLSearchParams(session);
 

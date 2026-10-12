@@ -18,20 +18,13 @@ import {
 } from './canvasStartupAndDraftRecovery.architecture.support';
 
 describe('canvas startup bootstrap publication architecture', () => {
-  it('documents the Fowler analysis, user stories, and local component guide for the branch semantics', () => {
-    const closeout = readRepoFile(
-      'docs/planning/closeouts/20260429-static-analysis-followup-closeout.md'
-    );
+  it('documents the user stories and current component guide for the branch semantics', () => {
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
-
-    expect(closeout).toContain('## Think-First Analysis');
-    expect(closeout).toContain('## Validation Evidence');
-    expect(closeout).toContain('Canvas startup');
 
     expect(componentGuide).toContain('## Public API');
     expect(componentGuide).toContain('## Invariants');
@@ -56,33 +49,18 @@ describe('canvas startup bootstrap publication architecture', () => {
   });
 
   it('keeps TF-E2 parent closure aligned with the Canvas runtime architecture canon', () => {
-    const productionPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md'
-    );
-    const executionPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md'
-    );
     const runtimeModel = readRepoFile(
       'docs/architecture/components/web/graph/graph-canvas-runtime-model.md'
     );
-    const closeout = readRepoFile('docs/planning/closeouts/20260514-tf-e2-parent-closeout.md');
-
-    for (const source of [productionPlan, executionPlan]) {
-      expect(source).toContain('status: Implemented');
-      expect(source).toContain('## 2026-05-14 Parent Closure');
-      expect(source).not.toContain('TF-E2-A must hard-cut');
-      expect(source).not.toContain('next TF-E2 closure work');
-    }
 
     expect(runtimeModel).toContain('TF-E2 parent closure is complete');
     expect(runtimeModel).not.toContain('parent TF-E2 still remains open');
-
-    expect(closeout).toContain('## Outcome');
-    expect(closeout).toContain('## Fowler Architecture Assessment');
-    expect(closeout).toContain('## Drift Removed');
-    expect(closeout).toContain('## Validation');
-    expect(closeout).toContain('IWorkspaceGraphDraftAuthoringPort');
-    expect(closeout).toContain('React Flow is a projection');
+    expect(runtimeModel).toContain(
+      'React Flow state is a projection, never the semantic source of truth'
+    );
+    expect(readAppSource('../../services/workspace/workspaceGraphDraftAuthoring.api.ts')).toContain(
+      'IWorkspaceGraphDraftAuthoringPort'
+    );
   });
 
   it('keeps owned-concern docblocks on the modules that own the branch behavior', () => {
@@ -166,9 +144,6 @@ describe('canvas startup bootstrap publication architecture', () => {
     const webPackage = JSON.parse(readRepoFile('apps/web/package.json')) as {
       scripts: Record<string, string>;
     };
-    const implementationPlanSource = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md'
-    );
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-first-authoring-live-proof-component.md'
     );
@@ -227,20 +202,28 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressHelperSource).toContain("kind?: string }).kind).to.equal('not_found')");
     expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
     expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
-    expect(cypressSpecSource).toContain('dragFirstAuthoringNodeFromCardBody');
-    expect(cypressSpecSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
+    expect(cypressSpecSource).toContain('dragCanvasNodeByViewportDelta');
+    expect(cypressSpecSource).toContain('hasLiveProtectedRuntimeEnv');
     expect(cypressSpecSource).not.toContain('this.skip()');
-    expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
+    expect(cypressSpecSource).toContain('createLiveProjectThroughUi');
+    expect(cypressSpecSource).toContain('WorkspaceGraphDraftReadResponseSchema.parse');
+    expect(cypressSpecSource).toContain('dvt-web-canvas-interaction');
+    expect(cypressSpecSource).not.toContain('resolveLiveFirstAuthoringWorkspaceSession');
     expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
-    expect(cypressSpecSource).toContain('/transform 1/i');
+    expect(cypressSpecSource).toContain('/model 1/i');
     expect(cypressSpecSource).not.toContain("id: 'dbt'");
-    expect(cypressSpecSource).not.toContain('Model 1');
-    expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
+    expect(liveRunnerSource).toContain("requireLiveProtectedRuntime: '1'");
+    expect(liveRunnerSource).toContain('buildLiveCypressInvocation');
+    expect(liveRunnerSource).toContain('createGovernedProject({');
+    expect(liveRunnerSource).toContain('firstAuthoringProjectId: args.workspaceScope.projectId');
+    expect(liveRunnerSource).not.toContain('buildFirstAuthoringWorkspaceScopes');
     expect(liveRunnerSource).toContain('VITE_PROJECT_OPTIONS');
     expect(liveRunnerSource).toContain('canvas-first-authoring-live.cy.ts');
-    expect(implementationPlanSource).toContain(
-      'pnpm --filter @dvt/web test:e2e:first-authoring:live'
+    expect(liveRunnerSource).toContain(
+      "['--filter', 'dvt-api', 'exec', 'tsx', 'watch', 'src/server.ts']"
     );
+    expect(liveRunnerSource).not.toContain("['--filter', 'dvt-api', 'dev']");
+    expect(liveRunnerSource).not.toContain("'dbt'].map");
     expect(componentGuide).toContain('## User Stories');
     expect(componentGuide).toContain('## Scenario Coverage Matrix');
     expect(componentGuide).toContain('## TDD Traceability');

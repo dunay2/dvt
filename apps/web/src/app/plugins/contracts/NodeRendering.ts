@@ -9,7 +9,7 @@ import type { GraphNodeAlgebraicDrop } from '../graph/GraphNodeAlgebraicDropZone
 import type {
   GraphNodeCalculatedColumnIdentity,
   GraphNodeColumn,
-  GraphNodeColumnFunctionApplyIdentity,
+  GraphNodeInputMapping,
   GraphNodeColumnFunctionApplyResult,
   GraphNodeColumnOutputToggleIdentity,
   GraphNodeColumnPortDirection,
@@ -89,13 +89,13 @@ export type GraphNodeRendererData = Readonly<{
   columns?: readonly GraphNodeColumn[];
   displayTags?: readonly Readonly<{ value: string; label: string }>[];
   canOpenNodeCode?: boolean;
-  sourceDataSampleInteractionLabel?: string;
+  dataActionLabel?: string;
   columnPortDirections?: readonly GraphNodeColumnPortDirection[];
   activeColumnHandleId?: string | null;
   algebraicDrop?: GraphNodeAlgebraicDrop;
   onInspectNode?: (
     nodeId: string,
-    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
+    preferredTabId?: 'general' | 'columns' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
   onOpenSourceDataSample?: (nodeId: string) => void;
   onOpenOperationalDetails?: (
@@ -105,15 +105,13 @@ export type GraphNodeRendererData = Readonly<{
   onFilterByTag?: (tag: string) => void;
   getTagFilterLabel?: (tag: string) => string;
   onColumnPortActivate?: (identity: GraphNodeColumnPortIdentity) => void;
-  onApplyCanvasColumnFunction?: (
-    identity: GraphNodeColumnFunctionApplyIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  onMapCanvasInput?: (identity: GraphNodeInputMapping) => void;
   onApplyCanvasStructuredField?: (
     identity: GraphNodeStructuredFieldIdentity
   ) => GraphNodeColumnFunctionApplyResult;
   onAddCanvasCalculatedColumn?: (
     identity: GraphNodeCalculatedColumnIdentity
-  ) => GraphNodeColumnFunctionApplyResult;
+  ) => GraphNodeColumnFunctionApplyResult | Promise<GraphNodeColumnFunctionApplyResult>;
   onToggleCanvasColumnOutput?: (identity: GraphNodeColumnOutputToggleIdentity) => void;
   onReorderCanvasColumnOutput?: (identity: GraphNodeColumnReorderIdentity) => void;
   onColumnDisclosureChange?: (nodeId: string, expanded: boolean) => void;

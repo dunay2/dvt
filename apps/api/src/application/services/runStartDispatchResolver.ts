@@ -26,12 +26,8 @@ export class RunStartDispatchResolver implements IRunStartDispatchResolver {
 
   public async resolve(
     metadata: RunMetadata,
-    status: CanonicalRunStatus
+    _status: CanonicalRunStatus
   ): Promise<RunStartDispatchResolution> {
-    if (status.status !== 'PENDING') {
-      return { kind: 'confirmed', runRef: metadata.providerRef };
-    }
-
     try {
       const intentId = this.idempotency.startRunIntentId(
         metadata.tenantId,
@@ -47,7 +43,7 @@ export class RunStartDispatchResolver implements IRunStartDispatchResolver {
         return { kind: 'unconfirmed' };
       }
 
-      return { kind: 'confirmed', runRef: intent.engineRunRef };
+      return { kind: 'confirmed', runRef: intent.providerOutcome.runRef };
     } catch {
       return { kind: 'unconfirmed' };
     }
@@ -57,15 +53,19 @@ export class RunStartDispatchResolver implements IRunStartDispatchResolver {
 function isConfirmedIntentForRun(
   intent: Awaited<ReturnType<IStartRunIntentQueryStore['getIntent']>>,
   metadata: RunMetadata
-): intent is NonNullable<typeof intent> & { engineRunRef: EngineRunRef } {
+): intent is NonNullable<typeof intent> & {
+  providerOutcome: { kind: 'started'; runRef: EngineRunRef };
+} {
   return (
     intent !== null &&
-    (intent.status === 'DISPATCHED' || intent.status === 'RESOLVED') &&
-    intent.engineRunRef !== undefined &&
+    intent.status === 'RESOLVED' &&
+    intent.compensation.kind === 'not_required' &&
+    intent.reconciliation.kind !== 'escalated' &&
+    intent.providerOutcome.kind === 'started' &&
     intent.tenantId === metadata.tenantId &&
     intent.runId === metadata.runId &&
     intent.provider === metadata.providerRef.provider &&
-    intent.engineRunRef.tenantId === metadata.tenantId &&
-    intent.engineRunRef.provider === metadata.providerRef.provider
+    intent.providerOutcome.runRef.tenantId === metadata.tenantId &&
+    intent.providerOutcome.runRef.provider === metadata.providerRef.provider
   );
 }

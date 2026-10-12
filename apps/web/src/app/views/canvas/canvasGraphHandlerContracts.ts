@@ -195,6 +195,7 @@ export type CanvasEdgeAuthoringState = {
 export type CanvasEdgeAuthoringEffects = {
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export type CanvasEdgeAuthoringPolicy = {

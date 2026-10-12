@@ -21,7 +21,8 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasTransformationSqlMirror.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitJoinComposition.ts
   - apps/web/src/app/views/canvas/DvtSubstraitInnerJoinAuthoringSection.tsx
-  - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
+  - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/web/src/app/views/canvas/canvasPreviewProvenance.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/VisualTransformRecipe.v1.ts

@@ -16,7 +16,7 @@ import {
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
 } from '@dvt/contracts';
 
-import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
+import type { AuthorizedExecutionContext } from '../ports/authContract.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../ports/workspaceGraphDraft.js';
 
@@ -73,7 +73,7 @@ export class ResolveAuthorizedExecutableSubgraphService {
 
   public async execute(
     input: ResolveExecutableSubgraphInput,
-    context: AuthorizedCommandExecutionContext
+    context: AuthorizedExecutionContext
   ): Promise<ExecutableSubgraphResolution> {
     const result = await this.executeWithAuthorizedDraft(input, context);
     if (!result.ok) return result;
@@ -84,7 +84,7 @@ export class ResolveAuthorizedExecutableSubgraphService {
 
   public async executeWithAuthorizedDraft(
     input: ResolveExecutableSubgraphInput,
-    context: AuthorizedCommandExecutionContext
+    context: AuthorizedExecutionContext
   ): Promise<AuthorizedExecutableSubgraphResolution> {
     const projectId = context.scope.projectId?.value;
     const environmentId = context.scope.environmentId?.value;

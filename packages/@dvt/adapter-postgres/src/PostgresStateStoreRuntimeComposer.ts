@@ -79,6 +79,7 @@ export function composePostgresStateStoreRuntime(
     (fn) => clientSession.withClient(fn)
   );
   const runStateCoordinator = new PostgresRunStateCoordinator({
+    schema,
     metadataRepo,
     runEventRepository,
     snapshotStore,

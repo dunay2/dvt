@@ -11,6 +11,14 @@ export type GraphNodeCardMetric = Readonly<{
   placement?: 'header' | 'body';
 }>;
 
+export type GraphNodeMaterializationControl = Readonly<{
+  label: string;
+  value: string;
+  options: readonly Readonly<{ value: string; label: string }>[];
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}>;
+
 export type GraphNodeCardMetricIcon =
   | 'clock'
   | 'refresh'

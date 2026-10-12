@@ -2,6 +2,7 @@ name: CI - Code Quality
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
   workflow_dispatch:
@@ -40,12 +41,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      any_changed: ${{ steps.matrix.outputs.any_changed }}
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      docs_changed: ${{ steps.scope.outputs.docs_changed }}
-      security_analysis_relevant: ${{ steps.scope.outputs.security_analysis_relevant }}
+      any_changed: ${{ steps.scope.outputs.any_changed }}
+      matrix: ${{ steps.scope.outputs.workspace_matrix }}
+      docs_changed: ${{ fromJSON(steps.scope.outputs.workflow_scope).docs_changed }}
+      security_analysis_relevant:
+        ${{ fromJSON(steps.scope.outputs.workflow_scope).security_analysis_relevant }}
       ci_tool_executable_contracts_relevant:
-        ${{ steps.scope.outputs.ci_tool_executable_contracts_relevant }}
+        ${{ fromJSON(steps.scope.outputs.workflow_scope).ci_tool_executable_contracts_relevant }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -62,14 +64,7 @@ jobs:
 
       - name: Emit workflow scope outputs
         id: scope
-        run: node tools/ci/emit-scope.mjs --mode workflow
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Build matrix from affected workspaces
-        id: matrix
-        run: node tools/ci/emit-workspace-matrix.mjs
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
@@ -78,8 +73,9 @@ jobs:
     name: CI tool executable contracts
     needs: detect-affected
     if: >-
-      github.event_name != 'pull_request' ||
-      needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true'
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (github.event_name != 'pull_request' ||
+      needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -97,7 +93,9 @@ jobs:
   affected-preflight:
     name: Affected workspace preflight
     needs: detect-affected
-    if: github.event_name == 'pull_request' && needs.detect-affected.outputs.any_changed == 'true'
+    if: >-
+      github.event_name == 'pull_request' && !github.event.pull_request.draft &&
+      needs.detect-affected.outputs.any_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -150,7 +148,9 @@ jobs:
   no-affected-workspaces:
     name: No affected workspaces (PR)
     needs: detect-affected
-    if: github.event_name == 'pull_request' && needs.detect-affected.outputs.any_changed != 'true'
+    if: >-
+      github.event_name == 'pull_request' && !github.event.pull_request.draft &&
+      needs.detect-affected.outputs.any_changed != 'true'
     runs-on: ubuntu-latest
     steps:
       - run: echo "No workspace changes detected; skipping workspace build/test jobs."
@@ -189,6 +189,8 @@ jobs:
         ci-tool-executable-contracts,
         affected-preflight,
         no-affected-workspaces,
+        full-ci,
+        markdown-lint,
       ]
     if: always()
     steps:
@@ -197,10 +199,31 @@ jobs:
         with:
           script: |
             const jobs = ${{ toJSON(needs) }};
-            const failedJobs = Object.entries(jobs)
-              .filter(([_, job]) => ['failure', 'cancelled'].includes(job.result))
-              .map(([name, _]) => name);
+            const event = context.eventName;
+            const pr = event === 'pull_request';
+            const draft = pr && context.payload.pull_request?.draft === true;
+            const scope = jobs['detect-affected']?.outputs ?? {};
+            const affected = scope.any_changed === 'true';
+            const executable = scope.ci_tool_executable_contracts_relevant === 'true';
+            const manualMarkdown = context.payload.inputs?.run_markdown_lint;
+            const markdown = event === 'push' ||
+              (event === 'workflow_dispatch' && (manualMarkdown === true || manualMarkdown === 'true'));
 
-            if (failedJobs.length > 0) {
-              core.setFailed(`The following code quality jobs failed: ${failedJobs.join(', ')}`);
+            const expected = {
+              'ci-tool-contracts': 'success',
+              'detect-affected': 'success',
+              'ci-tool-executable-contracts': !pr || (!draft && executable) ? 'success' : 'skipped',
+              'affected-preflight': pr && !draft && affected ? 'success' : 'skipped',
+              'no-affected-workspaces': pr && !draft && !affected ? 'success' : 'skipped',
+              'full-ci': pr ? 'skipped' : 'success',
+              'markdown-lint': markdown ? 'success' : 'skipped',
+            };
+            const unexpected = Object.entries(expected)
+              .filter(([name, result]) => jobs[name]?.result !== result)
+              .map(([name, result]) => `${name}: expected ${result}, got ${jobs[name]?.result ?? 'missing'}`);
+            if (!['pull_request', 'push', 'workflow_dispatch'].includes(event)) {
+              unexpected.push(`Unsupported event: ${event}`);
+            }
+            if (unexpected.length > 0) {
+              core.setFailed(`Code Quality required jobs: ${unexpected.join('; ')}`);
             }

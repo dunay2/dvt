@@ -894,3 +894,9 @@ test('docs quality accepts canonical routes declared by publication policy', () 
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   assert.doesNotMatch(result.stderr, /repository-map\.md.*required canonical surface is missing/su);
 });
+
+test('docs quality requires current traceability contracts instead of retired G6 plans', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'docs-quality-check.cjs'), 'utf8');
+  assert.match(source, /'docs\/contracts\/traceability\/index\.md'/u);
+  assert.doesNotMatch(source, /'docs\/planning\/archive\//u);
+});

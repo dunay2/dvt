@@ -60,6 +60,7 @@ describe('Code Monaco editable access architecture', () => {
     const workingTreeSync = readAppSource('views/code/useCodeWorkingTreeSync.ts');
     const workingTreeStatus = readAppSource('views/code/CodeWorkingTreeStatus.tsx');
     const canvasShell = readAppSource('views/canvas/CanvasShell.tsx');
+    const codeWorkbench = readAppSource('views/canvas/useCanvasCodeWorkbench.tsx');
     const sqlContextWorkbench = readAppSource('views/canvas/SqlContextWorkbench.tsx');
     const dbtContributions = readAppSource('plugins/dbt/dbtContributions.ts');
     const cypressSpec = readFileSync(
@@ -128,7 +129,9 @@ describe('Code Monaco editable access architecture', () => {
     expect(codeSurface).toContain('onChange');
     expect(codeSurface).not.toContain('save');
 
-    expect(canvasShell).toContain('<SqlContextWorkbench');
+    expect(canvasShell).toContain('useCanvasCodeWorkbench(');
+    expect(canvasShell).not.toContain('<SqlContextWorkbench');
+    expect(codeWorkbench).toContain('<SqlContextWorkbench');
     expect(sqlContextWorkbench).toContain('import CodeView, { type CodeViewFileScope');
     expect(sqlContextWorkbench).toContain('publishRouteBootstrap={false}');
     expect(sqlContextWorkbench).not.toContain('useCodeWorkingTreeSync');

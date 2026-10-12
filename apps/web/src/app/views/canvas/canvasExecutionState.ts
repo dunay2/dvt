@@ -1,4 +1,16 @@
+/**
+ * Owned concern: project execution readiness from the current graph and Preview outcome.
+ * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
+ * @decision Reuse named rejection copy when projecting DVT readiness summaries.
+ * @consequence Presentation changes language without changing admission or diagnostics.
+ * @version 1.0.0
+ */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveDvtOperationalRejectionCopy } from '../../services/api/dvtOperationalRejectionCopy';
+import {
+  getApplicationLanguage,
+  normalizeApplicationLanguage,
+} from '../../stores/applicationLanguageStore';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanViewModel } from '../../types/plans';
 import {
@@ -174,13 +186,17 @@ export function deriveCanvasExecutionState({
     capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
     locale: applicationLanguage,
   });
-  const authoritativePreviewReason = previewOutcomeProjection?.diagnostic?.reason;
+  const previewRejectionMessage =
+    resolveDvtOperationalRejectionCopy(
+      previewOutcomeProjection?.diagnostic?.cause,
+      normalizeApplicationLanguage(applicationLanguage) ?? getApplicationLanguage()
+    ) ?? previewOutcomeProjection?.diagnostic?.reason;
   const planRunReadiness =
     previewOutcomeProjection?.readinessBlocker != null
       ? forceReadinessBlocker(
           planRunReadinessSource,
           previewOutcomeProjection.readinessBlocker,
-          authoritativePreviewReason ?? planRunReadinessSource.summary
+          previewRejectionMessage ?? planRunReadinessSource.summary
         )
       : executableGraphFailureMessage != null
         ? forceReadinessBlocker(

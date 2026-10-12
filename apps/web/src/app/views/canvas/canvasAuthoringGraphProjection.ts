@@ -1,11 +1,9 @@
 /** Owned concern: compose semantic authoring truth from protected draft semantics and explicit route-local additions. */
 import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasDraftEdge } from './canvasDraftSession.types';
 
-type CanvasAuthoringVisibleEdge = {
-  sourceId: string;
-  targetId: string;
-};
+type CanvasAuthoringVisibleEdge = CanvasDraftEdge;
 type CanvasAuthoringEdgeRef = Pick<CanvasAuthoringVisibleEdge, 'sourceId' | 'targetId'>;
 
 type BuildCanvasAuthoringGraphProjectionArgs = {
@@ -113,43 +111,6 @@ function buildVisibleFallbackCanonicalEdge(edge: CanvasAuthoringVisibleEdge): Ca
   };
 }
 
-function appendProtectedSemanticEdges(args: {
-  mergedEdges: Map<string, CanonicalEdge>;
-  draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
-  knownNodeIds: ReadonlySet<string>;
-}): void {
-  const { mergedEdges, draftSemanticGraph, knownNodeIds } = args;
-
-  for (const edge of draftSemanticGraph?.canonicalEdges ?? []) {
-    if (!hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds })) {
-      continue;
-    }
-
-    mergedEdges.set(edgeSignature(edge), edge);
-  }
-}
-
-function appendVisibleFallbackEdges(args: {
-  mergedEdges: Map<string, CanonicalEdge>;
-  visibleEdges: readonly CanvasAuthoringVisibleEdge[];
-  knownNodeIds: ReadonlySet<string>;
-}): void {
-  const { mergedEdges, visibleEdges, knownNodeIds } = args;
-
-  for (const edge of visibleEdges) {
-    if (!hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds })) {
-      continue;
-    }
-
-    const signature = edgeSignature(edge);
-    if (mergedEdges.has(signature)) {
-      continue;
-    }
-
-    mergedEdges.set(signature, buildVisibleFallbackCanonicalEdge(edge));
-  }
-}
-
 function mergeDraftSemanticEdges(args: {
   draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   visibleEdges: readonly CanvasAuthoringVisibleEdge[];
@@ -158,16 +119,24 @@ function mergeDraftSemanticEdges(args: {
   const { draftSemanticGraph, visibleEdges, knownNodeIds } = args;
   const mergedEdges = new Map<string, CanonicalEdge>();
 
-  appendProtectedSemanticEdges({
-    mergedEdges,
-    draftSemanticGraph,
-    knownNodeIds,
-  });
-  appendVisibleFallbackEdges({
-    mergedEdges,
-    visibleEdges,
-    knownNodeIds,
-  });
+  for (const edge of draftSemanticGraph?.canonicalEdges ?? []) {
+    if (hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds }))
+      mergedEdges.set(edgeSignature(edge), edge);
+  }
+  for (const edge of visibleEdges) {
+    if (!hasKnownCanvasAuthoringEdgeNodes({ edge, knownNodeIds })) continue;
+    const signature = edgeSignature(edge);
+    const canonical = mergedEdges.get(signature) ?? buildVisibleFallbackCanonicalEdge(edge);
+    mergedEdges.set(
+      signature,
+      edge.inputBindings == null
+        ? canonical
+        : {
+            ...canonical,
+            metadata: { ...canonical.metadata, inputBindings: edge.inputBindings },
+          }
+    );
+  }
 
   return [...mergedEdges.values()];
 }

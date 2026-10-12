@@ -54,9 +54,9 @@ Those concerns stay behind their existing ports and component guides.
 The component treats the first-node defaults as domain facts for this feature,
 not as implementation-time choices.
 
-| Canvas runtime registration | First node kind | First node id     | First node label | Registration source                                |
-| --------------------------- | --------------- | ----------------- | ---------------- | -------------------------------------------------- |
-| `transformation`            | `dvt:transform` | `dvt-transform-1` | `Transform 1`    | `apps/web/src/app/plugins/dvt/dvtContributions.ts` |
+| Canvas runtime registration | First node kind | First node id     | First node label | Registration source                                  |
+| --------------------------- | --------------- | ----------------- | ---------------- | ---------------------------------------------------- |
+| `transformation`            | `dvt:transform` | `dvt-transform-1` | `Model 1`        | `apps/web/src/app/plugins/dvt/dvtNodeTypeCatalog.ts` |
 
 `canvasAuthoringNodeCommand.ts` owns the id and label construction. This
 component guide fixes the implemented first values so later changes cannot pick
@@ -251,7 +251,7 @@ sequenceDiagram
   shared Canvas runtime.
 - `US-CANVAS-FIRST-AUTHORING-004`: as a user, I add the first node after the
   canvas save settles. The command creates the canonical `dvt:transform`
-  first node, rendered as `Transform 1`; premature or wrong-kind nodes fail.
+  first node, rendered as `Model 1`; premature or wrong-kind nodes fail.
 - `US-CANVAS-FIRST-AUTHORING-005`: as a user, I drag the first node from the
   node card body. Active and stopped coordinates persist to route-local layout
   state, and the proof does not depend on a separate grip-only affordance.

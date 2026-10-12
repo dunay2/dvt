@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
+import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesContracts';
 import {
   resolveCanvasNodeWorkbenchContributions,
   type CanvasNodeWorkbenchContribution,

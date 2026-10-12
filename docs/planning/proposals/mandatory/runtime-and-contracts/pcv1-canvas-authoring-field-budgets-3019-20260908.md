@@ -52,6 +52,38 @@ flowchart LR
 
 ## Closed PCV1 authoring denominator
 
+### RELINC1 boundary correction — 2026-09-24
+
+Issue #3263 separates semantic names from physical PostgreSQL identifiers.
+Substrait output names and sidecar field names use the existing 256 Unicode
+code-point name budget, without trimming or normalization. Empty names, exterior
+whitespace, malformed Unicode and NUL remain invalid. String literal budgets,
+physical source/sink identifiers, opaque identities and authorization are unchanged.
+This supersedes the PostgreSQL output-identifier classification below for
+calculated, structured, JOIN and UNION output names only.
+
+```mermaid
+flowchart LR
+  Edit[ConfigureCanvasDvtNode] --> Semantic[Substrait semantic name policy]
+  Semantic --> Save[SaveWorkspaceGraphDraft]
+  Semantic --> Analysis[Provider-neutral relation analysis]
+  Analysis --> Projection[Requested PostgreSQL projection]
+  Projection --> Identifiers[PostgreSQL identifier admission: 63 UTF-8 bytes]
+```
+
+The SQL projection fails before producing SQL when a semantic output name cannot
+be represented by the target. It never truncates or rewrites the authority.
+Persistence enforces the same neutral sidecar name budget as the contract.
+Existing valid documents remain valid; no migration, alternate document format
+or fallback parser is introduced. Older readers may reject newly admitted long
+names; deployments update the Web, contracts and API together.
+
+Proof obligations: canonical save/reload and local delta/export preserve accepted
+Unicode names exactly; invalid names leave the previous revision unchanged;
+PostgreSQL projection accepts its boundary and rejects overflow without mutation;
+direct database writes enforce the semantic budget while physical identifiers
+retain their existing byte budget.
+
 | Surfaces                        | Meaning                         | Owner                  | Unit and limit                 | Rejection                      |
 | ------------------------------- | ------------------------------- | ---------------------- | ------------------------------ | ------------------------------ |
 | Canvas title                    | human name                      | ProjectCanvasLifecycle | 256 code points                | field error; no save           |

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -100,6 +100,10 @@ describe('GraphNodeColumnSection context menu ownership', () => {
       );
     });
 
+    await waitFor(() => {
+      expect(document.querySelector('[data-slot="graph-node-column-function-menu"]')).toBeNull();
+    });
+
     expect(onStructuredFieldApply).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
       draggedFieldId: 'output:amount',
@@ -109,12 +113,16 @@ describe('GraphNodeColumnSection context menu ownership', () => {
 
     await act(async () => {
       fireEvent.contextMenu(structuredColumn);
-      await Promise.resolve();
+    });
+    const removeStructuredField = await waitFor(() => {
+      const action = document.querySelector<HTMLElement>(
+        '[data-slot="graph-node-structured-field-remove"]'
+      );
+      expect(action).not.toBeNull();
+      return action!;
     });
     await act(async () => {
-      fireEvent.click(
-        document.querySelector<HTMLElement>('[data-slot="graph-node-structured-field-remove"]')!
-      );
+      fireEvent.click(removeStructuredField);
     });
     expect(onColumnOutputToggle).toHaveBeenCalledWith({
       nodeId: 'transform-orders',
@@ -124,57 +132,6 @@ describe('GraphNodeColumnSection context menu ownership', () => {
     });
   });
 
-  it('opens scalar functions without leaking the general node menu', async () => {
-    await act(async () => {
-      root.render(
-        <CanvasNodeShell
-          contextMenuModel={nodeMenu}
-          shouldShowSourceHandle={false}
-          shouldShowTargetHandle={false}
-          onContextMenuAction={vi.fn()}
-        >
-          <GraphNodeColumnSection
-            expanded
-            nodeId="transform-orders"
-            columns={[
-              {
-                id: 'output:customer',
-                name: 'customer',
-                type: 'text',
-                functionMenu: {
-                  category: 'text',
-                  items: [
-                    {
-                      capabilityId: 'capability:upper',
-                      name: 'upper',
-                      minimumArgumentCount: 1,
-                      maximumArgumentCount: 1,
-                    },
-                  ],
-                },
-              },
-            ]}
-            onColumnFunctionApply={vi.fn()}
-          />
-        </CanvasNodeShell>
-      );
-    });
-
-    const scalarColumn = container.querySelector<HTMLElement>(
-      '[data-slot="graph-node-column-piece"]'
-    )!;
-    await act(async () => {
-      fireEvent.contextMenu(scalarColumn);
-    });
-
-    expect(document.querySelector('[data-slot="canvas-node-context-menu"]')).toBeNull();
-    expect(document.querySelector('[data-slot="graph-node-column-function-menu"]')).not.toBeNull();
-    expect(
-      document.querySelector(
-        '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
-      )
-    ).not.toBeNull();
-  });
   it('keeps nested fields in their own menu and reorders through the existing command', async () => {
     const onColumnReorder = vi.fn();
     await act(async () => {

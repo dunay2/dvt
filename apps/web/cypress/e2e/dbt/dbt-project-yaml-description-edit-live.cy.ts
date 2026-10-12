@@ -138,48 +138,16 @@ function openModelCodeEditor(): void {
   cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
 }
 
-function proveModelWorkbenchMovement(): void {
-  cy.get('[data-slot="canvas-node-workbench-overlay"]').then(($overlay) => {
-    const initial = $overlay[0]!.getBoundingClientRect();
-
-    cy.get('[data-slot="canvas-node-workbench-drag-handle"]')
-      .focus()
-      .should('have.focus')
-      .type('{leftarrow}{downarrow}');
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .should(($movedOverlay) => {
-        const moved = $movedOverlay[0]!.getBoundingClientRect();
-        expect(moved.left).to.be.lessThan(initial.left);
-        expect(moved.top).to.be.greaterThan(initial.top);
-      })
-      .then(($keyboardMovedOverlay) => {
-        const keyboardMoved = $keyboardMovedOverlay[0]!.getBoundingClientRect();
-        const pointerId = 41;
-
-        cy.get('[data-slot="canvas-node-workbench-drag-handle"]').trigger('pointerdown', {
-          button: 0,
-          clientX: keyboardMoved.left + 40,
-          clientY: keyboardMoved.top + 24,
-          pointerId,
-        });
-        cy.get('[data-slot="canvas-node-workbench-overlay"]')
-          .trigger('pointermove', {
-            clientX: keyboardMoved.left - 24,
-            clientY: keyboardMoved.top + 56,
-            pointerId,
-          })
-          .trigger('pointerup', { pointerId })
-          .should(($pointerMovedOverlay) => {
-            const moved = $pointerMovedOverlay[0]!.getBoundingClientRect();
-            const viewport = $pointerMovedOverlay[0]!.ownerDocument.defaultView;
-            expect(moved.left).to.be.lessThan(keyboardMoved.left);
-            expect(moved.top).to.be.greaterThan(keyboardMoved.top);
-            expect(moved.left).to.be.at.least(0);
-            expect(moved.top).to.be.at.least(0);
-            expect(moved.right).to.be.at.most(viewport!.innerWidth);
-            expect(moved.bottom).to.be.at.most(viewport!.innerHeight);
-          });
-      });
+function proveFixedModelWorkbench(): void {
+  cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').should(($panel) => {
+    const panel = $panel[0]!;
+    const bounds = panel.getBoundingClientRect();
+    expect(panel.tagName).to.equal('ASIDE');
+    expect(panel.style.left).to.equal('');
+    expect(panel.style.top).to.equal('');
+    expect(bounds.right).to.be.at.most(panel.ownerDocument.defaultView!.innerWidth);
+    expect(bounds.bottom).to.be.at.most(panel.ownerDocument.defaultView!.innerHeight);
   });
 }
 
@@ -292,7 +260,7 @@ describe('dbt YAML description edit live vertical', () => {
     visitProject(observedRequests);
 
     openModelWorkbench();
-    proveModelWorkbenchMovement();
+    proveFixedModelWorkbench();
     cy.get('[data-slot="dbt-yaml-description-input"]').should('have.value', ORIGINAL_DESCRIPTION);
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible');
 

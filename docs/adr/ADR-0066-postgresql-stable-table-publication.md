@@ -187,4 +187,4 @@ and database state, not SQL literals.
 - [PostgreSQL transaction isolation](https://www.postgresql.org/docs/16/transaction-iso.html)
 - [PostgreSQL comments](https://www.postgresql.org/docs/16/sql-comment.html)
 - [ADR-0064](./ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
-- [VTX2 publication study](../planning/proposals/mandatory/runtime-and-contracts/vtx2-postgresql-publication-contract-study-20260903.md)
+- [VTX2 publication study](https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-postgresql-publication-contract-study-20260903.md)

@@ -3,7 +3,7 @@ import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSur
 import type {
   NodePropertySection,
   NodePropertySectionId,
-} from '../../components/inspector/nodePropertiesReadModel';
+} from '../../components/inspector/nodePropertiesContracts';
 
 const STRATEGY_SECTION_TO_NODE_PROPERTY_SECTION = new Map<
   CanvasNodeWorkbenchSectionPolicyId,

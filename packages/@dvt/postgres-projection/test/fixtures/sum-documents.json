@@ -1,0 +1,108 @@
+[
+  {
+    "schemaVersion": "dvt-substrait-semantic-document.v1",
+    "profile": {
+      "schemaVersion": "dvt-substrait-profile.v1",
+      "profileId": "dvt.vtx2.substrait.v1",
+      "specVersion": "0.101.0",
+      "specCommitSha": "2653e55516c8c07529cde9bc81c64e4ae3537515"
+    },
+    "semanticPlan": {
+      "encoding": "substrait-plan-protobuf-base64",
+      "bytesBase64": "EhIaEBABGgpjb25jYXQ6c3RyIAESERoPEAIaCXVwcGVyOnN0ciABEhAaDhADGgh0cmltOnN0ciABEhUaExAEGg1jb2FsZXNjZTphbnkxIAISHRobEAUaFWV4dHJhY3Q6cmVxX3B0c3R6X3N0ciADEg8aDRAKGgdzdW06aTY0IAoacRJvCmYiZAoCKAISLQorCgIoARIPCgV2YWx1ZRIGCgQ6AhABOhQKB3BnX3RlbXAKCXN1bV9pdGVtcxoAIi0KKwgKIAMqBDoCEAEwAToKGggSBgoCEgAiAEIRCghvdmVyZmxvdxIFRVJST1ISBXZhbHVlMgIQZUIrCAESJ2V4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX3N0cmluZ0IvCAISK2V4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2NvbXBhcmlzb25CLQgDEilleHRlbnNpb246aW8uc3Vic3RyYWl0OmZ1bmN0aW9uc19kYXRldGltZUIvCAoSK2V4dGVuc2lvbjppby5zdWJzdHJhaXQ6ZnVuY3Rpb25zX2FyaXRobWV0aWM=",
+      "sha256": "d86154a75dcc3a29751683abf10d370caa0c31b13b396d52bd6cb8b087b8b964"
+    },
+    "sidecar": {
+      "schemaVersion": "dvt-substrait-authoring-sidecar.v1",
+      "semanticPlanSha256": "d86154a75dcc3a29751683abf10d370caa0c31b13b396d52bd6cb8b087b8b964",
+      "relations": [
+        {
+          "relationId": "r1",
+          "relAnchor": 1,
+          "sourceRef": {
+            "schemaVersion": "connected-source-ref.v1",
+            "connectionRef": {
+              "schemaVersion": "connection-ref.v1",
+              "connectionId": "warehouse",
+              "provider": "postgres"
+            },
+            "sourceObjectId": "items"
+          },
+          "displayName": "Instance 1"
+        },
+        {
+          "relationId": "r2",
+          "relAnchor": 2,
+          "displayName": "Instance 2"
+        }
+      ],
+      "fields": [
+        {
+          "fieldId": "f1",
+          "relationId": "r1",
+          "outputOrdinal": 0,
+          "displayName": "value"
+        },
+        {
+          "fieldId": "f2",
+          "relationId": "r2",
+          "outputOrdinal": 0,
+          "displayName": "value"
+        }
+      ]
+    }
+  },
+  {
+    "schemaVersion": "dvt-substrait-semantic-document.v1",
+    "profile": {
+      "schemaVersion": "dvt-substrait-profile.v1",
+      "profileId": "dvt.vtx2.substrait.v1",
+      "specVersion": "0.101.0",
+      "specCommitSha": "2653e55516c8c07529cde9bc81c64e4ae3537515"
+    },
+    "semanticPlan": {
+      "encoding": "substrait-plan-protobuf-base64",
+      "bytesBase64": "EhIaEBABGgpjb25jYXQ6c3RyIAESERoPEAIaCXVwcGVyOnN0ciABEhAaDhADGgh0cmltOnN0ciABEhUaExAEGg1jb2FsZXNjZTphbnkxIAISHRobEAUaFWV4dHJhY3Q6cmVxX3B0c3R6X3N0ciADEhAaDhAKGghzdW06ZnA2NCAKGnESbwpmImQKAigCEi0KKwoCKAESDwoFdmFsdWUSBgoEWgIQAToUCgdwZ190ZW1wCglzdW1faXRlbXMaACItCisICiADKgRaAhABMAE6ChoIEgYKAhIAIgBCEQoIb3ZlcmZsb3cSBUVSUk9SEgV2YWx1ZTICEGVCKwgBEidleHRlbnNpb246aW8uc3Vic3RyYWl0OmZ1bmN0aW9uc19zdHJpbmdCLwgCEitleHRlbnNpb246aW8uc3Vic3RyYWl0OmZ1bmN0aW9uc19jb21wYXJpc29uQi0IAxIpZXh0ZW5zaW9uOmlvLnN1YnN0cmFpdDpmdW5jdGlvbnNfZGF0ZXRpbWVCLwgKEitleHRlbnNpb246aW8uc3Vic3RyYWl0OmZ1bmN0aW9uc19hcml0aG1ldGlj",
+      "sha256": "4cae3f893c23fae186636aefc70143ae6dc523ec823d9ae9de20c6fd6dc752da"
+    },
+    "sidecar": {
+      "schemaVersion": "dvt-substrait-authoring-sidecar.v1",
+      "semanticPlanSha256": "4cae3f893c23fae186636aefc70143ae6dc523ec823d9ae9de20c6fd6dc752da",
+      "relations": [
+        {
+          "relationId": "r1",
+          "relAnchor": 1,
+          "sourceRef": {
+            "schemaVersion": "connected-source-ref.v1",
+            "connectionRef": {
+              "schemaVersion": "connection-ref.v1",
+              "connectionId": "warehouse",
+              "provider": "postgres"
+            },
+            "sourceObjectId": "items"
+          },
+          "displayName": "Instance 1"
+        },
+        {
+          "relationId": "r2",
+          "relAnchor": 2,
+          "displayName": "Instance 2"
+        }
+      ],
+      "fields": [
+        {
+          "fieldId": "f1",
+          "relationId": "r1",
+          "outputOrdinal": 0,
+          "displayName": "value"
+        },
+        {
+          "fieldId": "f2",
+          "relationId": "r2",
+          "outputOrdinal": 0,
+          "displayName": "value"
+        }
+      ]
+    }
+  }
+]

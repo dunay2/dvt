@@ -113,4 +113,3 @@ flowchart LR
 - [Frontend Data-Boundary Architecture](./frontend-data-boundary-architecture.md)
 - [Runs Frontend Architecture](./runs/dvt-runs-frontend-architecture.md)
 - [Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md)
-- [F-07 Frontend Runtime Contract Baseline Plan](../../../planning/proposals/mandatory/runtime-and-contracts/f-07-frontend-runtime-contract-baseline-plan-20260404.md)

@@ -54,16 +54,6 @@ describe('web auth and project onboarding architecture', () => {
       'appshell',
       'web-auth-project-onboarding-user-stories.md'
     );
-    const proposal = readRepoFile(
-      '..',
-      '..',
-      'docs',
-      'planning',
-      'proposals',
-      'mandatory',
-      'frontend-and-ux',
-      'web-auth-project-onboarding-and-actionable-gaps-20260501.md'
-    );
 
     for (const section of [
       '## Public API',
@@ -84,27 +74,5 @@ describe('web auth and project onboarding architecture', () => {
     expect(componentGuide).toContain('src_orders');
     expect(userStories).toContain('WAPO-1');
     expect(userStories).toContain('WAPO-8');
-    expect(proposal).toContain('featureId: E-MAND-WEB-AUTH-ONBOARDING-CANON');
-    expect(proposal).toContain('WebAuthProjectOnboardingCanon');
-    expect(proposal).toContain('Browser-store authority drift');
-  });
-
-  it('keeps the accepted proposal mechanically bound to this canonical slice', () => {
-    const proposal = readRepoFile(
-      '..',
-      '..',
-      'docs',
-      'planning',
-      'proposals',
-      'mandatory',
-      'frontend-and-ux',
-      'web-auth-project-onboarding-and-actionable-gaps-20260501.md'
-    );
-
-    expect(proposal).toContain('2026-05-23 Canonical Absorption Status');
-    expect(proposal).toContain('featureId: E-MAND-WEB-AUTH-ONBOARDING-CANON');
-    expect(proposal).toContain('webAuthProjectOnboarding.architecture.test.ts');
-    expect(proposal).toContain('web-auth-project-onboarding-component.md');
-    expect(proposal).toContain('WebAuthProjectOnboardingCanon');
   });
 });

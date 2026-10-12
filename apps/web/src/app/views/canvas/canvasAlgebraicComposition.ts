@@ -12,20 +12,22 @@ import {
   createDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import {
-  createDvtSubstraitInnerJoinDraft,
-  resolveDvtSubstraitInnerJoinEntry,
-} from './canvasDvtSubstraitJoinComposition';
-import {
-  createDvtSubstraitUnionAllDraft,
-  resolveDvtSubstraitUnionAllEntry,
-} from './canvasDvtSubstraitSetComposition';
+import { createCanvasDvtInitialJoinDraft } from './canvasDvtInitialJoinModel';
+import { resolveDvtSubstraitJoinEntry } from './canvasDvtSubstraitJoinSourceResolution';
+import { createSourceSet } from './canvasSourceSet';
+import { resolveConnectedSetEntry } from './canvasConnectedRelationInputs';
+import type { DvtSubstraitSetOperation } from '@dvt/postgres-projection';
 import {
   resolveCanvasEdgeCreationTransaction,
   type CanvasEdgeAdmissionTransaction,
 } from './canvasEdgeAdmissionTransaction';
+import {
+  isCanvasJoinOperation,
+  toSubstraitJoinType,
+  type CanvasJoinOperation,
+} from './canvasRelationalTreeJoinType';
 
-export type CanvasAlgebraicCompositionOperation = 'inner_join' | 'union_all';
+export type CanvasAlgebraicCompositionOperation = CanvasJoinOperation | DvtSubstraitSetOperation;
 
 type CompositionState = {
   canonicalNodesById: Map<string, CanonicalNode>;
@@ -68,8 +70,20 @@ function admittedOperations(args: {
 }): CanvasAlgebraicCompositionOperation[] {
   const edges = canonicalEdges(args.draftSession);
   return [
-    resolveDvtSubstraitInnerJoinEntry({ ...args, edges }) == null ? null : 'inner_join',
-    resolveDvtSubstraitUnionAllEntry({ ...args, edges }) == null ? null : 'union_all',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'inner_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'full_outer_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_semi_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'left_anti_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_semi_join',
+    resolveDvtSubstraitJoinEntry({ ...args, edges }) == null ? null : 'right_anti_join',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'union_all',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'union_distinct',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'intersect_distinct',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'except_distinct',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'intersect_all',
+    resolveConnectedSetEntry({ ...args, edges }) == null ? null : 'except_all',
   ].filter((operation): operation is CanvasAlgebraicCompositionOperation => operation != null);
 }
 
@@ -110,24 +124,31 @@ function createSemanticDraft(args: {
   draftSession: CanvasDraftSession;
 }) {
   const edges = canonicalEdges(args.draftSession);
-  if (args.operation === 'inner_join') {
-    const entry = resolveDvtSubstraitInnerJoinEntry({ ...args, edges });
-    return entry == null ? null : createDvtSubstraitInnerJoinDraft(entry);
+  if (isCanvasJoinOperation(args.operation)) {
+    const entry = resolveDvtSubstraitJoinEntry({ ...args, edges });
+    return entry == null
+      ? null
+      : createCanvasDvtInitialJoinDraft(
+          entry.inputs,
+          entry.pair,
+          entry.targetNodeId,
+          toSubstraitJoinType(args.operation)
+        );
   }
-  const entry = resolveDvtSubstraitUnionAllEntry({ ...args, edges });
-  return entry == null ? null : createDvtSubstraitUnionAllDraft(entry);
+  const entry = resolveConnectedSetEntry({ ...args, edges });
+  return entry == null ? null : createSourceSet({ ...entry, operation: args.operation });
 }
 
-export function resolveCanvasAlgebraicCompositionTransaction(
+export async function resolveCanvasAlgebraicCompositionTransaction(
   args: CompositionState &
     CanvasAlgebraicCompositionIdentity & { operation: CanvasAlgebraicCompositionOperation }
-): CanvasAlgebraicCompositionTransaction {
+): Promise<CanvasAlgebraicCompositionTransaction> {
   if (!resolveCanvasAlgebraicCompositionOperations(args).includes(args.operation)) {
     return { outcome: 'noop', rejection: { code: 'operation_not_available' } };
   }
   const nodes = resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById);
   const canonicalNodesById = new Map(nodes.map((node) => [node.id, node]));
-  const transaction = resolveCanvasEdgeCreationTransaction({
+  const transaction = await resolveCanvasEdgeCreationTransaction({
     ...args,
     canonicalNodesById,
     connection: connection(args),

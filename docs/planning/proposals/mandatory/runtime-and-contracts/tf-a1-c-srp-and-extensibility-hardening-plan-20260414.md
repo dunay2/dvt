@@ -4,7 +4,6 @@ status: Active
 owner: Architecture / Contracts / API / Web
 last_reviewed: 2026-04-14
 planning_type: proposal
-lane: A
 task_id: TF-A1-C
 ---
 
@@ -31,7 +30,6 @@ The goal is structural hardening, not a second contract redesign.
 - [ADR-0018](../../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [ADR-0035](../../../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)
 - [Reference Architecture](../../../../architecture/reference-architecture.md)
-- [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
 - [Transformation flow preview and design graph v1](../../../../contracts/planner/transformation-flow-preview-v1.md)
 - [Transformation flow compiler mapping v1](../../../../contracts/planner/transformation-flow-compiler-v1.md)
 
@@ -144,12 +142,12 @@ This follows the repo dependency direction and keeps the highest-authority seam
 
 ### Risks and mitigations
 
-| Risk                                                  | Impact                             | Mitigation                                                                           |
-| ----------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------ |
-| Contracts split changes exports unexpectedly          | Consumer compile failures          | Cut contracts first, keep explicit export map, run affected package builds and tests |
-| Unknown-kind handling becomes stricter too early      | Runtime regressions in old callers | Keep semantic behavior explicit in tests and cut consumers over in the same slice    |
-| Web or API refactor silently changes operator UX      | Product regression                 | Keep negative-path tests and route or hook behavior assertions active during split   |
-| Planning drift between lane, roadmap, and status docs | Governance inconsistency           | Update lane A, roadmap, domain status, and proposal set together                     |
+| Risk                                                           | Impact                             | Mitigation                                                                                          |
+| -------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Contracts split changes exports unexpectedly                   | Consumer compile failures          | Cut contracts first, keep explicit export map, run affected package builds and tests                |
+| Unknown-kind handling becomes stricter too early               | Runtime regressions in old callers | Keep semantic behavior explicit in tests and cut consumers over in the same slice                   |
+| Web or API refactor silently changes operator UX               | Product regression                 | Keep negative-path tests and route or hook behavior assertions active during split                  |
+| Planning drift between GitHub issues, roadmap, and status docs | Governance inconsistency           | Record task changes in GitHub; update roadmap, domain status and proposals only for durable changes |
 
 ### Out of scope
 
@@ -161,7 +159,6 @@ This follows the repo dependency direction and keeps the highest-authority seam
 ### Validation plan
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
 - `pnpm docs:status:generate`
 - `pnpm --filter @dvt/contracts build`
 - `pnpm --filter @dvt/contracts test`

@@ -37,7 +37,7 @@ Constraints and invariants:
   `ListWarehouseConnectionSourceObjects`, and `ImportWarehouseSources` rails.
 - `docs/architecture/fowler-opportunity-planning-governance.md` requires the
   hardening to name the boundary drift and hidden authority it removes.
-- `docs/planning/roadmap/strategic-product-roadmap.md` requires Lane E to turn
+- `docs/planning/roadmap/strategic-product-roadmap.md` requires frontend delivery to turn
   backend surfaces into an operator-visible product loop.
 - ADR-0058 keeps warehouse source import behind protected runtime rails.
 - `AGENTS.md` no-stub policy forbids replacing the hardcoded catalog with

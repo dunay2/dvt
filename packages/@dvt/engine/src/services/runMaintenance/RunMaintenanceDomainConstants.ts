@@ -1,4 +1,7 @@
 export const RUN_MAINTENANCE_MESSAGE = {
+  intentReconciliationObserved: 'Start intent reconciliation outcome',
+  pendingIntentCancelWithoutAdapter:
+    'Pending intent cancellation requires the observed provider adapter',
   skipStuckRunWithoutCreatedAt: 'Skipping stuck-run candidate without createdAt',
   transitionedStuckRunToFailed: 'Transitioned stuck run to RunFailed',
   transitionedCancellingRunToFailed: 'Transitioned cancelling run to RunFailed',
@@ -24,6 +27,8 @@ export const RUN_MAINTENANCE_MESSAGE = {
     'Expired orphaned PENDING intent because the bootstrapped run is already terminal',
   dispatchedIntentResolvedBootstrapped:
     'Resolved orphaned DISPATCHED intent (run already bootstrapped)',
+  dispatchedIntentMetadataReadFailed:
+    'Keeping orphaned DISPATCHED intent unresolved because run metadata could not be read',
   dispatchedIntentMissingAdapterOrRef:
     'Cannot cancel orphaned intent: adapter or engineRunRef missing',
   dispatchedIntentCancelled: 'Cancelled orphaned provider workflow from DISPATCHED intent',
@@ -41,6 +46,7 @@ export type RunMaintenanceRunFailedReason =
   (typeof RUN_MAINTENANCE_RUN_FAILED_REASON)[keyof typeof RUN_MAINTENANCE_RUN_FAILED_REASON];
 
 export const RUN_MAINTENANCE_METRIC = {
+  intentReconciliationTotal: 'dvt.intent.reconciliation_total',
   queuedTimeoutTotal: 'dvt.run.queued_timeout_total',
   cancellationTimeoutTotal: 'dvt.run.cancellation_timeout_total',
   intentExpiredAfterCancelTotal: 'dvt.intent.expired_after_cancel_total',
@@ -89,6 +95,7 @@ export const RUN_MAINTENANCE_CONTEXT = {
 } as const;
 
 export const RUN_MAINTENANCE_NUMERIC = {
+  defaultIntentReclaimAgeMs: 300_000,
   defaultLimit: 100,
   metricIncrement: 1,
   eventPayloadVersion: 1,

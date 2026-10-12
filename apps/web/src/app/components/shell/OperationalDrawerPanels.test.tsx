@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { asIsoUtcString } from '@dvt/contracts';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -35,7 +36,12 @@ function buildCanvasOperationalDrawerContribution(
       dataUnknownErrorTemplate: 'Sample failed for {nodeName}.',
       dataTruncatedTemplate: 'Showing {limit} rows.',
       dataCaptionTemplate: 'Sample from {nodeName}',
+      dataRowsLabel: 'rows',
+      dataColumnsLabel: 'columns',
       dataNullValue: 'NULL',
+      dataRefreshAction: 'Refresh',
+      dataQueriedAtLabel: 'Queried at',
+      dataBoundedLiveTemplate: 'Up to {limit} rows · First page only · No guaranteed row order.',
       tabsAriaLabel: 'Canvas operational drawer',
       severity: { info: 'Info', warning: 'Warning', error: 'Error' },
     },
@@ -44,7 +50,6 @@ function buildCanvasOperationalDrawerContribution(
       { id: 'problems', label: 'Problems', count: 1 },
       { id: 'runs', label: 'Runs', count: 1 },
       { id: 'preview', label: 'Preview', count: 1 },
-      { id: 'data', label: 'Data', count: null },
     ],
     problems: {
       items: [
@@ -72,7 +77,6 @@ function buildCanvasOperationalDrawerContribution(
       onPreviewExecutionPlan: vi.fn(),
       selectionRecovery: null,
     },
-    dataSample: { status: 'idle' },
     ...overrides,
   };
 }
@@ -98,6 +102,7 @@ describe('OperationalDrawerPanels', () => {
   });
 
   it('renders a bounded source sample as an accessible data table', async () => {
+    const onRefresh = vi.fn();
     const longPayload = '{"runId":"run_019fc867-d439-7319-995f-4af3457311ba","planId":"5579993a"}';
     const contribution = buildCanvasOperationalDrawerContribution({
       tabs: [
@@ -105,32 +110,69 @@ describe('OperationalDrawerPanels', () => {
         { id: 'problems', label: 'Problems', count: 0 },
         { id: 'runs', label: 'Runs', count: null },
         { id: 'preview', label: 'Preview', count: null },
-        { id: 'data', label: 'Data', count: 2 },
-      ],
-      dataSample: {
-        status: 'ready',
-        nodeName: 'orders',
-        sample: {
-          contractVersion: 1,
-          connectionId: 'postgresql-local',
-          objectId: 'relation/dvt/public/orders',
-          columns: [
-            { name: 'order_id', type: 'integer', nullable: false },
-            { name: 'customer', type: 'text', nullable: true },
-          ],
-          rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
-          limit: 20,
-          truncated: true,
-          sampledAt: '2026-08-17T10:00:00.000Z',
+        {
+          id: 'data:orders',
+          label: 'orders',
+          count: null,
+          onRefresh,
+          dataSample: {
+            status: 'ready',
+            nodeName: 'orders',
+            sample: {
+              contractVersion: 1,
+              connectionId: 'postgresql-local',
+              objectId: 'relation/dvt/public/orders',
+              columns: [
+                { name: 'order_id', type: 'integer', nullable: false },
+                { name: 'customer', type: 'text', nullable: true },
+              ],
+              rows: [{ values: ['1', longPayload] }, { values: ['2', null] }],
+              limit: 20,
+              truncated: true,
+              provenance: {
+                mode: 'live',
+                sourceRefs: [
+                  {
+                    schemaVersion: 'connected-source-ref.v1',
+                    connectionRef: {
+                      schemaVersion: 'connection-ref.v1',
+                      connectionId: 'postgresql-local',
+                      provider: 'postgres',
+                    },
+                    sourceObjectId: 'relation/dvt/public/orders',
+                  },
+                ],
+                queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+                limit: 20,
+                navigation: 'bounded-first-page',
+              },
+            },
+          },
         },
-      },
+      ],
     });
 
     await act(async () => {
       root.render(
-        <BottomOperationalDrawerBody activeTab="data" contribution={contribution} logBody={null} />
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          contribution={contribution}
+          logBody={null}
+        />
       );
     });
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      'Sample from orders'
+    );
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '2 rows'
+    );
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '2 columns'
+    );
+    expect(
+      container.querySelector('[data-slot="bottom-operational-data-table"]')?.textContent
+    ).toContain('integer');
 
     const table = container.querySelector<HTMLTableElement>(
       '[data-slot="bottom-operational-data-table"]'
@@ -138,7 +180,9 @@ describe('OperationalDrawerPanels', () => {
     expect(table).not.toBeNull();
     expect(table?.querySelector('caption')?.textContent).toBe('Sample from orders');
     expect(
-      Array.from(table?.querySelectorAll('th[scope="col"]') ?? []).map((cell) => cell.textContent)
+      Array.from(table?.querySelectorAll('th[scope="col"] button') ?? []).map(
+        (cell) => cell.textContent
+      )
     ).toEqual(['order_id', 'customer']);
     const longValue = Array.from(
       table?.querySelectorAll<HTMLElement>('[data-slot="bottom-operational-data-value"][title]') ??
@@ -149,71 +193,162 @@ describe('OperationalDrawerPanels', () => {
     expect(longValue?.getAttribute('aria-label')).toBe(longPayload);
     expect(table?.textContent).toContain('NULL');
     expect(container.textContent).toContain('Showing 20 rows.');
+    const facts = container.querySelector('[data-slot="live-preview-facts"]');
+    expect(facts?.textContent).toContain('LIVE');
+    expect(facts?.textContent).toContain('PostgreSQL');
+    expect(facts?.querySelector('details')?.open).toBe(false);
+    expect(facts?.querySelector('summary')?.textContent).not.toContain('postgresql-local');
+    expect(facts?.querySelector('details li')?.textContent).toContain('postgresql-local');
+    expect(facts?.querySelector('time')?.dateTime).toBe('2026-08-17T10:00:00.000Z');
+    expect(onRefresh).not.toHaveBeenCalled();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')?.click()
+    );
+    expect(onRefresh).toHaveBeenCalledOnce();
   });
 
-  it('announces loading, empty, and governed failure states in the data panel', async () => {
+  it('keeps loading, ready, and failure states isolated per card tab', async () => {
     const baseContribution = buildCanvasOperationalDrawerContribution();
+    const ordersTab = {
+      id: 'data:orders' as const,
+      label: 'orders',
+      count: null,
+      dataSample: { status: 'loading' as const, nodeName: 'orders' },
+    };
+    const customersTab = {
+      id: 'data:customers' as const,
+      label: 'customers',
+      count: null,
+      dataSample: {
+        status: 'error' as const,
+        nodeName: 'customers',
+        reason: 'unavailable' as const,
+      },
+    };
 
     await act(async () => {
       root.render(
         <BottomOperationalDrawerBody
-          activeTab="data"
+          activeTab="data:orders"
           contribution={{
             ...baseContribution,
-            dataSample: { status: 'loading', nodeName: 'orders' },
+            tabs: [...baseContribution.tabs, ordersTab, customersTab],
           }}
           logBody={null}
         />
       );
     });
     expect(container.querySelector('[role="status"]')?.textContent).toBe('Loading orders.');
+    expect(container.textContent).not.toContain('Could not read customers.');
 
     await act(async () => {
       root.render(
         <BottomOperationalDrawerBody
-          activeTab="data"
+          activeTab="data:customers"
           contribution={{
             ...baseContribution,
-            dataSample: {
-              status: 'ready',
-              nodeName: 'orders',
-              sample: {
-                contractVersion: 1,
-                connectionId: 'postgresql-local',
-                objectId: 'relation/dvt/public/orders',
-                columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-                rows: [],
-                limit: 20,
-                truncated: false,
-                sampledAt: '2026-08-17T10:00:00.000Z',
-              },
-            },
-          }}
-          logBody={null}
-        />
-      );
-    });
-    expect(container.textContent).toContain('orders returned no rows.');
-
-    await act(async () => {
-      root.render(
-        <BottomOperationalDrawerBody
-          activeTab="data"
-          contribution={{
-            ...baseContribution,
-            dataSample: {
-              status: 'error',
-              nodeName: 'orders',
-              reason: 'source_object_not_found',
-            },
+            tabs: [...baseContribution.tabs, ordersTab, customersTab],
           }}
           logBody={null}
         />
       );
     });
     expect(container.querySelector('[role="alert"]')?.textContent).toBe(
-      'Object missing for orders.'
+      'Sample unavailable for customers.'
     );
+    expect(container.textContent).not.toContain('Loading orders.');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          contribution={{
+            ...baseContribution,
+            tabs: [
+              ...baseContribution.tabs,
+              {
+                ...ordersTab,
+                dataSample: {
+                  status: 'ready',
+                  nodeName: 'orders',
+                  sample: {
+                    contractVersion: 1,
+                    connectionId: 'postgresql-local',
+                    objectId: 'relation/dvt/public/orders',
+                    columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+                    rows: [],
+                    limit: 20,
+                    truncated: false,
+                    provenance: {
+                      mode: 'live',
+                      sourceRefs: [
+                        {
+                          schemaVersion: 'connected-source-ref.v1',
+                          connectionRef: {
+                            schemaVersion: 'connection-ref.v1',
+                            connectionId: 'postgresql-local',
+                            provider: 'postgres',
+                          },
+                          sourceObjectId: 'relation/dvt/public/orders',
+                        },
+                      ],
+                      queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+                      limit: 20,
+                      navigation: 'bounded-first-page',
+                    },
+                  },
+                },
+              },
+              customersTab,
+            ],
+          }}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.textContent).toContain('orders returned no rows.');
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '0 rows'
+    );
+    expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toContain(
+      '1 columns'
+    );
+    expect(container.querySelector('thead')?.textContent).toContain('order_id');
+    expect(container.querySelector('thead')?.textContent).toContain('integer');
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(0);
+    expect(container.textContent).not.toContain('Could not read customers.');
+  });
+
+  it('keeps explicit refresh disabled while its query is loading', async () => {
+    const onRefresh = vi.fn();
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="data:orders"
+          logBody={null}
+          contribution={buildCanvasOperationalDrawerContribution({
+            tabs: [
+              {
+                id: 'data:orders',
+                label: 'orders',
+                count: null,
+                onRefresh,
+                dataSample: { status: 'loading', nodeName: 'orders' },
+              },
+            ],
+          })}
+        />
+      );
+    });
+    const button = container.querySelector<HTMLButtonElement>('[data-slot="data-sample-refresh"]')!;
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    button.focus();
+    expect(document.activeElement).toBe(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
+    expect(onRefresh).not.toHaveBeenCalled();
   });
 
   it('renders problems, runs, and preview bodies from the route contribution', async () => {

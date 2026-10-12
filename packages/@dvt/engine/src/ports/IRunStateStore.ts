@@ -12,6 +12,8 @@ import type {
   StepId,
 } from '@dvt/contracts';
 
+import type { StartRunIntentClaimReceipt } from './IStartRunIntentStore.js';
+
 export type EventType =
   | 'RunQueued'
   | 'RunStarted'
@@ -177,7 +179,23 @@ export type RecoveryRunBootstrapFactory = (
   reservation: RetryAttemptReservation
 ) => RunBootstrapInput;
 
-export interface IRunStateStoreWrite {
+export type StartRunWrite =
+  | { kind: 'bootstrap'; input: RunBootstrapInput }
+  | { kind: 'bind_provider'; providerRef: ProviderRefUpdate }
+  | { kind: 'fail'; events: EventInput[] };
+
+export type StartRunWriteResult =
+  'applied' | 'not_owner' | 'missing' | 'invalid_state' | 'conflict';
+
+export interface IStartRunStateStoreWrite {
+  /** Receipt validation and canonical mutation MUST share one atomic transaction. */
+  applyStartRunWrite(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult>;
+}
+
+export interface IRunStateStoreWrite extends IStartRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
   /**
    * Atomically reserves retry lineage and bootstraps the recovery child.

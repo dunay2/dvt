@@ -222,8 +222,10 @@ de la barra flotante del nodo seleccionado.
 - Abrir Add Source:
   `Canvas context menu > Add source`. Evidencia E2E:
   `apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts`. Cubre
-  runtime protegido, conexion warehouse real, metadata, seleccion, attach al
-  canvas, conexion source-model y preview sin stubs de draft.
+  runtime protegido, conexion warehouse real, metadata, seleccion y attach al
+  canvas sin stubs de draft. La identidad entre dos conexiones y la recarga se
+  prueban en `canvas-source-identity-live.cy.ts`; Preview y Run de DVT tienen
+  su propia vertical protegida. El flujo dbt Canvas anterior fue retirado.
 - Importar/exportar snapshot:
   `Proyecto > Exportar` o `Importar`. Evidencia:
   `10-project-snapshot-menu.png`. Limite: es snapshot, no flujo de conexion,

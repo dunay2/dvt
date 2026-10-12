@@ -1,5 +1,5 @@
 /** Owns PostgreSQL predicate and typed-literal AST construction. */
-import { pgString, type PostgresAstNode } from './postgresAst.js';
+import { pgString, pgStringLiteral, type PostgresAstNode } from './postgresAst.js';
 
 export type PostgresComparisonOperator = '=' | '<>' | '>' | '>=' | '<' | '<=';
 
@@ -45,9 +45,19 @@ export function pgBooleanLiteral(value: boolean): PostgresAstNode {
 }
 
 export function pgI64Literal(value: bigint): PostgresAstNode {
-  return { A_Const: { ival: { ival: value } } };
+  return {
+    TypeCast: {
+      arg: { A_Const: { ival: { ival: value } } },
+      typeName: { names: [pgString('bigint')], typemod: -1 },
+    },
+  };
 }
 
 export function pgFp64Literal(value: number): PostgresAstNode {
-  return { A_Const: { fval: { fval: String(value) } } };
+  return {
+    TypeCast: {
+      arg: pgStringLiteral(Object.is(value, -0) ? '-0' : String(value)),
+      typeName: { names: [pgString('float8')], typemod: -1 },
+    },
+  };
 }

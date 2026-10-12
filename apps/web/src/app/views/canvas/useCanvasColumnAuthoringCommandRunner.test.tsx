@@ -3,17 +3,21 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { getPluginPortMap } from '../../plugins/registry';
 import { type CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftSession';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import {
   createDvtSubstraitProjectionDraft,
-  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
 } from './canvasDvtSubstraitProjection';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { readCanvasTransformDependencyModel } from './canvasTransformDependencyModel';
+import { transformExpressionDependencies } from './canvasTransformExpressionReferences';
+import { rootFields } from './canvasDerivedOutputExpression';
 import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
@@ -117,7 +121,68 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
     container.remove();
   });
 
-  it('serializes two calculated-output submissions over the latest draft', () => {
+  it.each(['serial', 'stale'] as const)(
+    'keeps one-field connection admission inside the %s draft boundary',
+    async (scenario) => {
+      const model = { ...buildProjectionTransform(), metadata: {} };
+      let runner!: CanvasColumnAuthoringCommandRunner;
+      let currentSession: CanvasDraftSession = {
+        syncState: 'editing',
+        baseline: { record: null },
+        draftRevision: 'rev-1',
+        workingSet: {
+          visibleNodeIds: [source.id, model.id],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+        localNodeCatalog: { [source.id]: source, [model.id]: model },
+      };
+      const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
+        const result = command(currentSession);
+        if (result.outcome === 'applied') currentSession = result.draftSession;
+        return result;
+      };
+      function Harness(): null {
+        runner = useCanvasColumnAuthoringCommandRunner({
+          state: {
+            canonicalNodesById: new Map([
+              [source.id, source],
+              [model.id, model],
+            ]),
+            draftSession: currentSession,
+          },
+          effects: { runDraftSessionCommand },
+        });
+        return null;
+      }
+      act(() => root.render(<Harness />));
+      const map = (columnId: string): ReturnType<CanvasColumnAuthoringCommandRunner['mapInput']> =>
+        runner.mapInput(
+          { source: { nodeId: source.id, columnId }, target: { nodeId: model.id } },
+          getPluginPortMap()
+        );
+      const first = map('customer');
+      if (scenario === 'stale') {
+        await Promise.resolve();
+        currentSession = { ...currentSession, draftRevision: 'rev-2' };
+        expect(await first).toMatchObject({ outcome: 'rejected' });
+        expect(currentSession.workingSet.visibleEdges).toEqual([]);
+      } else {
+        const second = map('amount');
+        expect(await first).toMatchObject({ outcome: 'applied' });
+        expect(await second).toMatchObject({ outcome: 'applied' });
+        expect(currentSession.workingSet.visibleEdges).toHaveLength(1);
+        expect(
+          currentSession.workingSet.visibleEdges[0]?.inputBindings?.fields.map(
+            (field) => field.producerFieldId
+          )
+        ).toEqual(['customer', 'amount']);
+      }
+      expect(currentSession.localNodeCatalog?.[model.id]?.metadata).toEqual({});
+    }
+  );
+
+  it('serializes two calculated-output submissions over the latest draft', async () => {
     const transform = buildProjectionTransform();
     let runner!: CanvasColumnAuthoringCommandRunner;
     let currentSession: CanvasDraftSession = {
@@ -160,36 +225,58 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
       alias: 'customer_alias',
       inputFieldId: 'output:customer',
     };
-    expect(runner.addCalculated(request)).toMatchObject({ outcome: 'applied' });
-    expect(runner.addCalculated(request)).toEqual({
+    const first = await runner.addCalculated(request);
+    expect(first.outcome).toBe('applied');
+    if (first.outcome !== 'applied') throw new Error('Expected calculated output.');
+    const appliedSession = currentSession;
+    expect(await runner.addCalculated(request)).toEqual({
       outcome: 'rejected',
       reason: 'duplicate_alias',
     });
-    expect(commandCalls).toBe(2);
+    expect(commandCalls).toBe(3);
+    expect(currentSession).toBe(appliedSession);
 
     const updated = currentSession.localNodeCatalog?.[transform.id];
     if (updated == null) throw new Error('Expected updated Transform.');
     const authority = readDvtTransformAuthoringAuthority(updated);
     if (authority?.mode !== 'substrait') throw new Error('Expected Substrait authority.');
-    const inspection = inspectDvtSubstraitProjectionDraft(
-      decodeDvtSubstraitProjectionDocument(authority.semanticDocument)
+    const { index } = deriveSubstraitSchemas(
+      decodeDvtSubstraitSemanticDocument(authority.semanticDocument)
     );
-    expect(inspection.ok && inspection.projection.outputs.map((output) => output.name)).toEqual([
+    const model = readCanvasTransformDependencyModel(index.relations.get(index.rootId)!, (id) =>
+      index.relations.get(id)!
+    );
+    const outputs = rootFields(model.root.fields);
+    expect(outputs.map((output) => output.displayName)).toEqual([
       'order_id',
       'customer',
       'amount',
       'customer_alias',
     ]);
+    expect(outputs.map((output) => output.fieldId)).toEqual([
+      'output:order_id',
+      'output:customer',
+      'output:amount',
+      first.createdFieldId,
+    ]);
+    expect(model.definitions).toHaveLength(1);
+    const definition = model.definitions[0]!;
+    expect(definition.output?.fieldId).toBe(first.createdFieldId);
+    expect(transformExpressionDependencies(definition.expression, definition.inputIds)).toEqual([
+      model.input.fields.find((field) => field.displayName === 'customer')!.fieldId,
+    ]);
   });
 
-  it('serializes Source toggle and reorder while an autosave is in flight', () => {
+  it('serializes Source toggle and reorder while an autosave is in flight', async () => {
     let runner!: CanvasColumnAuthoringCommandRunner;
     let currentSession = buildSavingSession();
     let commandCalls = 0;
     const runDraftSessionCommand: CanvasDraftSessionCommandRunner = (command) => {
-      commandCalls += 1;
       const result = command(currentSession);
-      if (result.outcome === 'applied') currentSession = result.draftSession;
+      if (result.outcome === 'applied') {
+        currentSession = result.draftSession;
+        commandCalls += 1;
+      }
       return result;
     };
 
@@ -206,7 +293,7 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
 
     act(() => root.render(<Harness />));
     expect(
-      runner.toggleOutput({
+      await runner.toggleOutput({
         nodeId: source.id,
         columnId: 'customer',
         columnType: 'text',
@@ -214,7 +301,7 @@ describe('useCanvasColumnAuthoringCommandRunner', () => {
       })
     ).toMatchObject({ outcome: 'applied' });
     expect(
-      runner.reorderOutput({
+      await runner.reorderOutput({
         nodeId: source.id,
         columnId: 'amount',
         targetColumnId: 'order_id',

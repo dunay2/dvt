@@ -28,7 +28,6 @@ It explains:
 - [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-- [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
 
 ## Component Reading Rule
 

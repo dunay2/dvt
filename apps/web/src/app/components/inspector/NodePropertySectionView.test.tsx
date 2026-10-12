@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NodePropertySectionView } from './NodePropertySectionView';
-import { NODE_PROPERTY_ROW_ID, type NodePropertySection } from './nodePropertiesReadModel';
+import { NODE_PROPERTY_ROW_ID, type NodePropertySection } from './nodePropertiesContracts';
 
 vi.mock('../monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({

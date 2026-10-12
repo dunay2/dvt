@@ -234,20 +234,8 @@ describe('Start invocation mutation authority', () => {
 
   it('does not fail the dispatched winner when concurrent estimated bootstrap loses', async () => {
     const fixture = createWorkflowEngineFixture({ adapter: makeEstimatedAdapter() });
-    const bothAtBootstrap = createBarrier();
-    const releaseLoser = createBarrier();
     const winnerDispatched = createBarrier();
     const finishWinner = createBarrier();
-    const bootstrap = fixture.store.bootstrapRunTx.bind(fixture.store);
-    let calls = 0;
-    vi.spyOn(fixture.store, 'bootstrapRunTx').mockImplementation(async (input) => {
-      if (++calls === 1) await bothAtBootstrap.reached;
-      else {
-        bothAtBootstrap.release();
-        await releaseLoser.reached;
-      }
-      return bootstrap(input);
-    });
     const resolve = fixture.intentStore.markResolved.bind(fixture.intentStore);
     vi.spyOn(fixture.intentStore, 'markResolved').mockImplementation(async (ref) => {
       winnerDispatched.release();
@@ -256,19 +244,17 @@ describe('Start invocation mutation authority', () => {
     });
     const runId = 'concurrent-fresh';
     const winner = fixture.engine.startRun(makePlanRef(), makeContext(runId));
+    await winnerDispatched.reached;
     const loser = fixture.engine.startRun(makePlanRef(), makeContext(runId));
     const rejected = expect(loser).rejects.toBeInstanceOf(RunAlreadyExistsError);
     try {
       await Promise.race([winnerDispatched.reached, winner, rejected]);
       const before = await captureRunState(fixture, runId);
-      releaseLoser.release();
       await rejected;
       const after = await captureRunState(fixture, runId);
       expect(before.intent?.status).toBe('DISPATCHED');
       expect(after).toEqual(before);
     } finally {
-      bothAtBootstrap.release();
-      releaseLoser.release();
       finishWinner.release();
       await Promise.allSettled([winner, loser, rejected]);
     }
@@ -326,7 +312,7 @@ describe('Start invocation mutation authority', () => {
           ? fixture.engine.recoverRun(sourceId, makePlanRef(), makeContext(targetId))
           : null;
       const rejected =
-        loser == null ? null : expect(loser).rejects.toThrow('losing recovery dispatch');
+        loser == null ? null : expect(loser).rejects.toBeInstanceOf(RunAlreadyExistsError);
       try {
         await Promise.race([
           winnerDispatched.reached,
@@ -339,7 +325,7 @@ describe('Start invocation mutation authority', () => {
         else
           await expect(
             fixture.engine.recoverRun(sourceId, makePlanRef(), makeContext(targetId))
-          ).rejects.toThrow('losing recovery dispatch');
+          ).rejects.toBeInstanceOf(RunAlreadyExistsError);
         const after = await captureRunState(fixture, targetId, 2);
         expect(before.intent?.status).toBe('DISPATCHED');
         expect(after).toEqual(before);
@@ -358,7 +344,7 @@ describe('Start invocation mutation authority', () => {
     const fixture = createWorkflowEngineFixture({ adapter: makeEstimatedAdapter() });
     await fixture.engine.startRun(makePlanRef(), makeContext('intent-source'));
     await appendLifecycleEvent(fixture, 'intent-source', 'RunFailed');
-    vi.spyOn(fixture.intentStore, 'createIntent').mockRejectedValueOnce(
+    vi.spyOn(fixture.intentStore, 'claimIntent').mockRejectedValueOnce(
       new Error('intent unavailable')
     );
     await expect(
@@ -386,19 +372,21 @@ describe('Start invocation mutation authority', () => {
     const cancel = vi.spyOn(adapter, 'cancelRun');
     const fixture = createWorkflowEngineFixture({ adapter });
     const failure = new Error('owned provider ref persistence failure');
-    vi.spyOn(fixture.store, 'saveProviderRef').mockRejectedValueOnce(failure);
+    const write = fixture.store.applyStartRunWrite.bind(fixture.store);
+    vi.spyOn(fixture.store, 'applyStartRunWrite').mockImplementation((receipt, command) => {
+      if (command.kind === 'bind_provider') return Promise.reject(failure);
+      return write(receipt, command);
+    });
     await expect(fixture.engine.startRun(makePlanRef(), makeContext('owned-failure'))).rejects.toBe(
       failure
     );
     const state = await captureRunState(fixture, 'owned-failure');
     expect(state.events.map((event) => event.eventType)).toEqual(['RunQueued', 'RunFailed']);
     expect(state.snapshot?.status).toBe('FAILED');
-    expect(cancel).toHaveBeenCalledExactlyOnceWith({
-      provider: 'temporal',
-      tenantId: 't',
-      namespace: 'default',
-      workflowId: 'wf-owned-failure',
-      runId: 'actual-provider-execution',
+    expect(cancel).not.toHaveBeenCalled();
+    expect(state.intent).toMatchObject({
+      status: 'DISPATCHED',
+      compensation: { kind: 'required', reason: 'provider_ref_failed' },
     });
   });
 });

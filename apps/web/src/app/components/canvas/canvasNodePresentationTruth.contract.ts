@@ -16,9 +16,17 @@ export type CanvasNodePresentationColumn = Readonly<{
   description?: string;
   selected?: boolean;
   children?: readonly CanvasNodePresentationColumn[];
+  sources?: readonly Readonly<{
+    nodeId: string;
+    fieldId: string;
+    name: string;
+    nodeName: string;
+  }>[];
 }>;
 
 export type CanvasNodeColumnTruth = Readonly<{
+  state?: 'ready' | 'pending' | 'unavailable' | 'unconfigured';
+  diagnostic?: string;
   declared: readonly CanvasNodePresentationColumn[];
   inherited: readonly CanvasNodePresentationColumn[];
   visible: readonly CanvasNodePresentationColumn[];
@@ -62,9 +70,62 @@ export type CanvasNodeCodeTruth =
       reason?: CanvasNodeCodeUnavailableReason;
     }>;
 
+export type CanvasRelationalCompositionOperation =
+  | 'inner_join'
+  | 'left_join'
+  | 'right_join'
+  | 'full_outer_join'
+  | 'left_semi_join'
+  | 'left_anti_join'
+  | 'right_semi_join'
+  | 'right_anti_join'
+  | 'cross_join'
+  | 'union_all'
+  | 'union_distinct'
+  | 'intersect_distinct'
+  | 'except_distinct'
+  | 'intersect_all'
+  | 'except_all';
+
+export type CanvasRelationalCompositionTruth =
+  | Readonly<{ state: 'single-input'; connectedInputCount: number }>
+  | Readonly<{
+      state: 'pending';
+      connectedInputCount: number;
+      pendingInputCount: number;
+      canonicalOperation?: CanvasRelationalCompositionOperation;
+    }>
+  | Readonly<{
+      state: 'canonical';
+      connectedInputCount: number;
+      operation: CanvasRelationalCompositionOperation;
+    }>
+  | Readonly<{
+      state: 'incomplete';
+      connectedInputCount: number;
+      missingInputCount: number;
+      canonicalOperation?: CanvasRelationalCompositionOperation;
+    }>
+  | Readonly<{
+      state: 'unresolved';
+      connectedInputCount: number;
+      reason: 'input-identity-unavailable' | 'semantic-authority-invalid';
+    }>;
+
 export type CanvasNodePresentationTruth = Readonly<{
+  inputBindings?: readonly CanvasInputBindingPresentation[];
   columns: CanvasNodeColumnTruth;
   code: CanvasNodeCodeTruth;
+  relationalComposition?: CanvasRelationalCompositionTruth;
+  filterSummary?: string;
+}>;
+
+export type CanvasInputBindingPresentation = Readonly<{
+  inputId: string;
+  source: Readonly<{ nodeId: string; columnId: string }>;
+  name: string;
+  type: string;
+  state: 'available' | 'unresolved';
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -78,7 +139,19 @@ export function isCanvasNodePresentationTruth(
     return false;
   }
 
+  const relationalComposition = value.relationalComposition;
+  const hasValidRelationalComposition =
+    relationalComposition == null ||
+    (isRecord(relationalComposition) &&
+      typeof relationalComposition.connectedInputCount === 'number' &&
+      (relationalComposition.state === 'single-input' ||
+        relationalComposition.state === 'pending' ||
+        relationalComposition.state === 'canonical' ||
+        relationalComposition.state === 'incomplete' ||
+        relationalComposition.state === 'unresolved'));
+
   return (
+    (value.filterSummary == null || typeof value.filterSummary === 'string') &&
     typeof value.columns.visibleCount === 'number' &&
     (value.columns.visibleProvenance === 'declared' ||
       value.columns.visibleProvenance === 'inherited' ||
@@ -88,6 +161,7 @@ export function isCanvasNodePresentationTruth(
       value.code.kind === 'workspace-file' ||
       value.code.kind === 'generated' ||
       value.code.kind === 'canonical' ||
-      value.code.kind === 'unavailable')
+      value.code.kind === 'unavailable') &&
+    hasValidRelationalComposition
   );
 }

@@ -616,7 +616,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
         } as EngineRunRef;
       },
     });
-    const intentStore = new InMemoryStartRunIntentStore();
+    const intentStore = store.startRunIntents;
     const { engine } = createEngine({ adapters, stateStore: store, intentStore });
 
     await engine.startRun(makePlanRef(), makeContext('pre-bootstrap-1'));
@@ -659,12 +659,12 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await engine.startRun(makePlanRef(), makeContext(sourceRunId));
     await appendRunCompleted(store, sourceRunId);
 
-    const results = await Promise.all([
+    const results = await Promise.allSettled([
       engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId)),
       engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId)),
     ]);
 
-    expect(results[0]).toEqual(results[1]);
+    expect(results.map((result) => result.status).sort()).toEqual(['fulfilled', 'rejected']);
     const recovery = await store.getRunMetadataByRunId('t', recoveryRunId);
     expect(recovery?.logicalAttemptId).toBe(2);
     expect(recovery?.parentRunId).toBe(sourceRunId);
@@ -751,7 +751,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
     await engine.startRun(makePlanRef(), makeContext(sourceRunId));
     await appendRunCompleted(store, sourceRunId);
-    vi.spyOn(intentStore, 'createIntent').mockRejectedValueOnce(
+    vi.spyOn(intentStore, 'claimIntent').mockRejectedValueOnce(
       new Error('transient intent persistence failure')
     );
 
@@ -883,7 +883,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await expect(
       engine.startRun(makePlanRef(), makeContext('g7-provider-drift-1'))
     ).rejects.toBeInstanceOf(ContractValidationError);
-    expect(cancelRun).toHaveBeenCalledTimes(1);
+    expect(cancelRun).not.toHaveBeenCalled();
 
     const meta = await store.getRunMetadataByRunId('t', 'g7-provider-drift-1');
     expect(meta?.providerRef).toEqual({
@@ -895,12 +895,20 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
   });
 
-  it('still rejects when compensating cancelRun fails after providerRef reconciliation error', async () => {
+  it('retains the original providerRef error when durable compensation persistence fails', async () => {
     const cancelRun = vi.fn(async () => {
       throw new Error('cancel unavailable');
     });
     const store = new InMemoryTxStore();
-    vi.spyOn(store, 'saveProviderRef').mockRejectedValueOnce(new Error('save boom'));
+    const write = store.applyStartRunWrite.bind(store);
+    vi.spyOn(store, 'applyStartRunWrite').mockImplementation((receipt, command) =>
+      command.kind === 'bind_provider'
+        ? Promise.reject(new Error('save boom'))
+        : write(receipt, command)
+    );
+    vi.spyOn(store.startRunIntents, 'recordReconciliation').mockRejectedValue(
+      new Error('compensation write failed')
+    );
 
     const adapters = makeAdapters({
       cancelRun,
@@ -928,7 +936,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await expect(engine.startRun(makePlanRef(), makeContext('g7-fail-soft-1'))).rejects.toThrow(
       /save boom/
     );
-    expect(cancelRun).toHaveBeenCalledTimes(1);
+    expect(cancelRun).not.toHaveBeenCalled();
   });
 
   it('keeps a pre-bootstrapped run pending when adapter.startRun fails before dispatch', async () => {
@@ -963,7 +971,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
 
   it('keeps a pre-bootstrapped run pending when markDispatched fails after provider start', async () => {
     const store = new InMemoryTxStore();
-    const intentStore = new InMemoryStartRunIntentStore();
+    const intentStore = store.startRunIntents;
     const adapters = makeAdapters({
       estimateRunRef(ctx) {
         return {

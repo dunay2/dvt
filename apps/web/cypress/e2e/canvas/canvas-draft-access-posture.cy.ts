@@ -1,10 +1,7 @@
 /** Owned concern: prove Canvas draft access fail-closed posture in browser. */
 import { buildDraftReadDeniedResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
-import {
-  buildCanvasDraftReadResponse,
-  type CanvasDraftSessionScope,
-} from '../../support/canvasDraftAuthoring';
+import { buildCanvasDraftReadResponse } from '../../support/canvasDraftAuthoring';
 import {
   getE2eApiCalls,
   stubE2eApi,
@@ -14,6 +11,7 @@ import {
 import {
   E2E_PROJECT_WORKSPACE,
   E2E_WORKSPACE_SESSION,
+  type E2eWorkspaceSession,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -39,10 +37,7 @@ function stubRuntimeCapabilities(): void {
   });
 }
 
-function assertDraftReadScope(
-  url: URL,
-  scope: CanvasDraftSessionScope = E2E_WORKSPACE_SESSION
-): void {
+function assertDraftReadScope(url: URL, scope: E2eWorkspaceSession = E2E_WORKSPACE_SESSION): void {
   expect(Object.fromEntries(url.searchParams.entries())).to.deep.include({
     tenantId: scope.tenantId,
     projectId: scope.projectId,

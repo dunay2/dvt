@@ -40,10 +40,6 @@ const CANVAS_VIEWPORT_NODE_REGISTRY_TEST_ADAPTER_SOURCE = readArchitectureSiblin
   import.meta.dirname,
   'canvasViewportNodeTypeRegistryTestAdapter.ts'
 );
-const CANVAS_CONTROLLER_READ_MODEL_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'useCanvasControllerReadModel.ts'
-);
 const DBT_NODE_COMPONENT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/canvas/DbtNodeComponent.tsx'
@@ -142,8 +138,6 @@ describe('CanvasViewport architecture', () => {
   });
 
   it('keeps Impact in the overlay model without a parallel node-data contract', () => {
-    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).toContain('buildCanvasNodeInteractionPresentation');
-    expect(CANVAS_CONTROLLER_READ_MODEL_SOURCE).not.toContain('buildNodesWithImpact');
     expect(DBT_NODE_COMPONENT_SOURCE).not.toContain('impactLevel');
     expect(DBT_NODE_COMPONENT_SOURCE).not.toContain('isHighlighted');
     expect(existsSync(resolve(import.meta.dirname, 'canvasImpactOverlay.ts'))).toBe(false);

@@ -1,5 +1,5 @@
 /** Owned concern: render the canonical ResolveCanvasContextMenu column projection. */
-import { useRef, useState, type ReactElement } from 'react';
+import { useRef, type ReactElement } from 'react';
 
 import {
   buildCanvasColumnContextMenuModel,
@@ -24,9 +24,7 @@ import {
 import { Tooltip, TooltipTrigger } from '../../components/ui/tooltip';
 import type { GraphNodeColumn } from './graphNodeColumnContracts';
 import type { GraphNodeColumnCopy } from './GraphNodeColumnPiece';
-import { graphNodeColumnClasses } from './graphVisualTokens';
-
-type FunctionMenu = NonNullable<GraphNodeColumn['functionMenu']>;
+import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 
 function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
   if (action.id === 'invoke-function') return 'graph-node-column-function';
@@ -39,13 +37,11 @@ function actionSlot(action: CanvasColumnContextMenuAction): string | undefined {
 export function GraphNodeColumnFunctionMenu(props: {
   nodeId: string;
   columnId: string;
-  menu?: FunctionMenu;
   columnName: string;
   appendCandidates?: readonly GraphNodeColumn[];
   copy: GraphNodeColumnCopy;
   keyboardOpen: boolean;
   onKeyboardOpenChange: (open: boolean) => void;
-  onRequest?: (capabilityId: string) => void;
   onCreateAlias?: () => void;
   onStructuredAppend?: (column: GraphNodeColumn) => void;
   onStructuredRemove?: () => void;
@@ -54,11 +50,6 @@ export function GraphNodeColumnFunctionMenu(props: {
 }): ReactElement {
   const pendingPointerFunction = useRef<(() => void) | null>(null);
   const pendingKeyboardFunction = useRef<(() => void) | null>(null);
-  const categoryLabel =
-    props.menu == null
-      ? props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName)
-      : props.copy.columnFunctionCategoryLabels[props.menu.category];
-  const expressionItems = props.menu?.items ?? [];
   const model = buildCanvasColumnContextMenuModel({
     target: {
       kind: 'column',
@@ -66,16 +57,9 @@ export function GraphNodeColumnFunctionMenu(props: {
       columnId: props.columnId,
       columnName: props.columnName,
     },
-    label: categoryLabel,
+    label: props.copy.columnActionsLabelTemplate.replace('{column}', props.columnName),
     createAliasLabel:
       props.onCreateAlias == null ? undefined : props.copy.calculatedColumnKindLabels['field-ref'],
-    functions:
-      props.onRequest == null
-        ? []
-        : expressionItems.map((item) => ({
-            id: item.capabilityId,
-            label: item.name.toUpperCase(),
-          })),
     appendFields:
       props.onStructuredAppend == null
         ? []
@@ -85,18 +69,12 @@ export function GraphNodeColumnFunctionMenu(props: {
           })),
     removeStructuredFieldLabel:
       props.onStructuredRemove == null ? undefined : props.copy.removeStructuredFieldLabel,
-    unavailableLabel:
-      props.menu == null
-        ? props.copy.noColumnActionsLabel
-        : props.copy.noCompatibleColumnFunctionsLabel,
+    unavailableLabel: props.copy.noColumnActionsLabel,
   });
   const selectAction = (action: CanvasColumnContextMenuAction, channel: 'pointer' | 'keyboard') => {
     if (action.disabled) return;
-    if (action.id === 'invoke-function' || action.id === 'create-alias') {
-      const request =
-        action.id === 'invoke-function'
-          ? () => props.onRequest?.(action.targetId)
-          : () => props.onCreateAlias?.();
+    if (action.id === 'create-alias') {
+      const request = () => props.onCreateAlias?.();
       if (channel === 'pointer') pendingPointerFunction.current = request;
       else pendingKeyboardFunction.current = request;
       return;
@@ -110,7 +88,6 @@ export function GraphNodeColumnFunctionMenu(props: {
     }
     if (action.id === 'remove-structured-field') props.onStructuredRemove?.();
   };
-  const [pointerOpen, setPointerOpen] = useState(false);
   const applyPendingFunction = (
     pendingFunction: { current: (() => void) | null },
     event: Event
@@ -124,39 +101,30 @@ export function GraphNodeColumnFunctionMenu(props: {
 
   return (
     <Tooltip>
-      <ContextMenu
-        onOpenChange={(open) => {
-          if (open) setPointerOpen(true);
-        }}
-      >
+      <ContextMenu>
         <ContextMenuTrigger asChild>
           <TooltipTrigger asChild>{props.piece}</TooltipTrigger>
         </ContextMenuTrigger>
-        {pointerOpen ? (
-          <ContextMenuContent
-            data-slot="graph-node-column-function-menu"
-            onCloseAutoFocus={(event) => {
-              applyPendingFunction(pendingPointerFunction, event);
-              setPointerOpen(false);
-            }}
-          >
-            <ContextMenuLabel>{model.label}</ContextMenuLabel>
-            <ContextMenuGroup>
-              {model.actions.map((action) => (
-                <ContextMenuItem
-                  key={action.id + ('targetId' in action ? ':' + action.targetId : '')}
-                  data-slot={actionSlot(action)}
-                  data-capability-id={action.id === 'invoke-function' ? action.targetId : undefined}
-                  data-field-id={action.id === 'append-field' ? action.targetId : undefined}
-                  disabled={action.disabled}
-                  onSelect={() => selectAction(action, 'pointer')}
-                >
-                  {action.label}
-                </ContextMenuItem>
-              ))}
-            </ContextMenuGroup>
-          </ContextMenuContent>
-        ) : null}
+        <ContextMenuContent
+          data-slot="graph-node-column-function-menu"
+          onCloseAutoFocus={(event) => applyPendingFunction(pendingPointerFunction, event)}
+        >
+          <ContextMenuLabel>{model.label}</ContextMenuLabel>
+          <ContextMenuGroup>
+            {model.actions.map((action) => (
+              <ContextMenuItem
+                key={action.id + ('targetId' in action ? ':' + action.targetId : '')}
+                data-slot={actionSlot(action)}
+                data-capability-id={action.id === 'invoke-function' ? action.targetId : undefined}
+                data-field-id={action.id === 'append-field' ? action.targetId : undefined}
+                disabled={action.disabled}
+                onSelect={() => selectAction(action, 'pointer')}
+              >
+                {action.label}
+              </ContextMenuItem>
+            ))}
+          </ContextMenuGroup>
+        </ContextMenuContent>
       </ContextMenu>
       <DropdownMenu open={props.keyboardOpen} onOpenChange={props.onKeyboardOpenChange}>
         <DropdownMenuTrigger asChild>

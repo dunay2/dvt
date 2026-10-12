@@ -23,7 +23,7 @@ aggregate and the existing `SaveWorkspaceGraphDraft` command rail.
 - [Canvas Draft Session Component](./canvas-draft-session-component.md)
 - [Canvas Project Snapshot User Stories](./canvas-project-snapshot-user-stories.md)
 - [Stage 3 Project Snapshot Roundtrip Plan](../../../planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md)
-- [Fowler mailbox analysis](../../../../../buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md)
+- [Fowler mailbox analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md)
 
 ## Component Reading Rule
 
@@ -229,7 +229,7 @@ sequenceDiagram
 - User stories:
   `docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md`
 - Mailbox:
-  `buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md`
+  [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md)
 - Unit tests:
   `apps/web/src/app/views/canvas/canvasProjectSnapshot.test.ts`
   `apps/web/src/app/views/canvas/canvasProjectSnapshotImportCommand.test.ts`

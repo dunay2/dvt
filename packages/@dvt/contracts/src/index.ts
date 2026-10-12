@@ -1,8 +1,18 @@
+/**
+ * Owned concern: expose the shared kernel's public contract surface.
+ * @baseline ADR-0018: Shared Kernel Ownership Governance.
+ * @decision Export contracts without duplicating their validation or behavior.
+ * @consequence Each owning module remains the sole implementation authority.
+ * @version 1.0.0
+ */
 export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './substrait.js';
+export * from './contracts/planner/DvtSubstraitAuthoringGroup.v1.js';
+export * from './contracts/data-access/DataAccess.v1.js';
 export * from './contracts/source-import/index.js';
+export * from './contracts/canvas/index.js';
 export * from './contracts/dbt-project/index.js';
 export * from './contracts/workspace/ProjectWorkspace.v1.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
@@ -28,83 +38,22 @@ export type {
   StepEventInput,
   WorkflowSnapshot,
 } from './contracts/engine/RunStateVocabulary.v1.js';
-export {
-  CURRENT_SIGNAL_SEMANTICS_VERSION,
-  getSignalDerivedEventType,
-  resolveSignalSemanticsContract,
-  SIGNAL_SEMANTICS_REGISTRY,
-} from './contracts/engine/SignalSemantics.v1.js';
-export type {
-  SignalSemanticsContract,
-  SignalSemanticsVersion,
-} from './contracts/engine/SignalSemantics.v1.js';
+export * from './contracts/engine/SignalSemantics.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   GENERIC_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v1.js';
-export {
-  LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES,
-  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
-  LoadObjectFileToPostgresStepTypeConfigSchema,
-  OBJECT_FILE_POSTGRES_COLUMN_TYPE,
-  validateLoadObjectFileToPostgresPlanOwnership,
-} from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
-export type { LoadObjectFileToPostgresStepTypeConfig } from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
-export {
-  DVT_POSTGRES_OPERATIONAL_WORKLOAD_REQUIRED_CAPABILITY,
-  DVT_POSTGRES_PROJECT_REL_PROFILE_ID,
-  DVT_POSTGRES_INNER_JOIN_PROFILE_ID,
-  DVT_POSTGRES_PROJECT_REL_TOOL_IDENTITY,
-  DvtOperationalWorkloadContractV1,
-  DvtOperationalWorkloadV1Schema,
-} from './contracts/planner/DvtOperationalWorkload.v1.js';
-export type { DvtOperationalWorkloadV1 } from './contracts/planner/DvtOperationalWorkload.v1.js';
-export {
-  DvtOperationalWorkloadContract,
-  DvtOperationalWorkloadContractV2,
-  DvtOperationalWorkloadV2Schema,
-} from './contracts/planner/DvtOperationalWorkload.v2.js';
-export type { DvtOperationalWorkloadV2 } from './contracts/planner/DvtOperationalWorkload.v2.js';
-export {
-  DvtPostgresOutputSchemaV1Schema,
-  DvtPostgresOutputTypeV1Schema,
-  createDvtPostgresOutputSchemaDigestV1,
-} from './contracts/planner/DvtPostgresOutputSchema.v1.js';
-export type {
-  DvtPostgresOutputSchemaV1,
-  DvtPostgresOutputTypeV1,
-} from './contracts/planner/DvtPostgresOutputSchema.v1.js';
-export { DvtTransformResultTargetV1Schema } from './contracts/planner/DvtTransformResultTarget.v1.js';
-export type { DvtTransformResultTargetV1 } from './contracts/planner/DvtTransformResultTarget.v1.js';
-export {
-  ACQUIRE_HTTP_JSON_ARTIFACT_MAX_BYTES,
-  ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
-  HttpJsonArtifactStepTypeConfigSchema,
-  validateHttpJsonArtifactPlanOwnership,
-  validateHttpJsonObjectFileHandoff,
-  validateHttpJsonArtifactHandoffs,
-} from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';
-export type { HttpJsonArtifactStepTypeConfig } from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';
-export {
-  OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY,
-  OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV,
-  ObjectFilePostgresDbtBridgeSchema,
-  resolveObjectFilePostgresDbtBridge,
-} from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
-export type {
-  ObjectFilePostgresDbtBridge,
-  ObjectFilePostgresDbtBridgeResolution,
-} from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
-export {
-  DBT_STEP_SELECTOR_CUSTOM_KEY,
-  DbtStepSelectorSchema,
-  resolveDbtStepSelector,
-} from './contracts/planner/DbtStepSelector.v1.js';
-export type {
-  DbtStepSelector,
-  DbtStepSelectorResolution,
-} from './contracts/planner/DbtStepSelector.v1.js';
+export * from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
+export * from './contracts/planner/DvtOperationalWorkload.v1.js';
+export * from './contracts/planner/DvtOperationalRejection.v1.js';
+export * from './contracts/planner/OperationalRejection.v1.js';
+export * from './contracts/engine/RunExecutionRejection.v1.js';
+export * from './contracts/planner/DvtPostgresOutputSchema.v1.js';
+export * from './contracts/planner/DvtTransformResultTarget.v1.js';
+export * from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';
+export * from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
+export * from './contracts/planner/DbtStepSelector.v1.js';
 export {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSION_REGISTRY,
@@ -112,17 +61,7 @@ export {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
-export {
-  EXECUTION_PLAN_ADMISSION_MATRIX,
-  EXECUTION_PLAN_ADMISSION_REGISTRY,
-  isAdmittedExecutionPlanPair,
-  SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
-} from './contracts/planner/PlanAdmission.v1.js';
-export type {
-  ExecutionPlanAdmissionDescriptor,
-  ExecutionPlanAdmissionPair,
-  SupportedPlanSchemaVersion,
-} from './contracts/planner/PlanAdmission.v1.js';
+export * from './contracts/planner/PlanAdmission.v1.js';
 export type {
   ExecutionPlan,
   ExecutionStep,
@@ -139,63 +78,10 @@ export type {
   VersionedExecutionPlan,
   VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v1.js';
-export {
-  PLAN_EXECUTION_DECISION_REASON,
-  PLAN_EXECUTION_DECISION_STATUS,
-} from './contracts/planner/PlanExecutionDecision.v1.js';
-export type {
-  PlanExecutionDecision,
-  PlanExecutionPartialDecision,
-  PlanExecutionRunDecision,
-  PlanExecutionSkipDecision,
-} from './contracts/planner/PlanExecutionDecision.v1.js';
-export {
-  PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
-  PLAN_PREVIEW_REJECTED_OUTCOME_KIND,
-  PREVIEW_PROFILE,
-} from './contracts/planner/TransformationFlowPreview.v1.js';
-export type {
-  PlanPreviewPersistedRecord,
-  PlanPreviewPersistResponse,
-  PlanPreviewPlanInvalidOutcome,
-  PlanPreviewRejectedOutcome,
-  PlanPreviewRequest,
-  PlanPreviewSelectionRejectedOutcome,
-  PlanPreviewSelectionRejection,
-  PlanPreviewSummary,
-  PlanPreviewValidation,
-  PreviewProfile,
-} from './contracts/planner/TransformationFlowPreview.v1.js';
-export {
-  DbtExecutionTargetIdentitySchema,
-  DvtProtectedWorkspaceGraphProvenanceSchema,
-  GitArtifactRefSchema,
-  NonDvtPlanPreviewProvenanceSchema,
-  PLAN_PREVIEW_PROVENANCE_KIND,
-  PlanPreviewProvenanceSchema,
-} from './contracts/planner/PlanPreviewProvenance.v1.js';
-export type {
-  DbtExecutionTargetIdentity,
-  DbtProjectFilesProvenance,
-  DvtProtectedWorkspaceGraphProvenance,
-  GitArtifactRef,
-  NonDvtPlanPreviewProvenance,
-  PlanPreviewProvenance,
-  TransformationGitArtifactsProvenance,
-} from './contracts/planner/PlanPreviewProvenance.v1.js';
-export {
-  CANVAS_AUTHORING_FIELD_LIMITS_V1,
-  CanvasDescriptionV1Schema,
-  CanvasHumanNameV1Schema,
-  CanvasTagV1Schema,
-  CanvasTagsV1Schema,
-  DvtStringLiteralV1Schema,
-  DvtTimestampLiteralV1Schema,
-  PostgresIdentifierV1Schema,
-  countUnicodeCodePoints,
-  countUtf8Bytes,
-  isWellFormedCanvasText,
-} from './contracts/planner/CanvasAuthoringFieldPolicy.v1.js';
+export * from './contracts/planner/PlanExecutionDecision.v1.js';
+export * from './contracts/planner/TransformationFlowPreview.v1.js';
+export * from './contracts/planner/PlanPreviewProvenance.v1.js';
+export * from './contracts/planner/CanvasAuthoringFieldPolicy.v1.js';
 export {
   WORKSPACE_GRAPH_AUTHORING_EDGE_RELATION,
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
@@ -207,6 +93,12 @@ export {
   WorkspaceGraphAuthoringNodePositionSchema,
   WorkspaceGraphAuthoringNodeSchema,
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
+export {
+  DVT_INPUT_BINDINGS_METADATA_KEY,
+  DvtInputBindingsV1Schema,
+  readDvtInputBindings,
+} from './contracts/planner/DvtInputBindings.v1.js';
+export type { DvtInputBindingsV1 } from './contracts/planner/DvtInputBindings.v1.js';
 export type {
   WorkspaceGraphAuthoringCanvasDocument,
   WorkspaceGraphAuthoringCanvasWorkspace,
@@ -218,40 +110,13 @@ export type {
   WorkspaceGraphAuthoringNodeRole,
   WorkspaceGraphAuthoringNodeStatus,
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
-export {
-  WORKSPACE_GRAPH_AUTHORING_EDGE_EXECUTION_GATE,
-  isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
-  readWorkspaceGraphAuthoringEdgeExecutionGate,
-  withWorkspaceGraphAuthoringEdgeExecutionGate,
-} from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
-export type {
-  WorkspaceGraphAuthoringEdgeExecutionGate,
-  WorkspaceGraphAuthoringEdgeExecutionGateCommand,
-  WorkspaceGraphAuthoringEdgeExecutionGateState,
-} from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
-export {
-  DVT_TRANSFORM_AUTHORING_AUTHORITY_METADATA_KEY,
-  DVT_TRANSFORM_AUTHORING_AUTHORITY_VERSION,
-  DVT_TRANSFORM_AUTHORING_MODE,
-  DvtTransformAuthoringAuthorityV1Schema,
-} from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
-export type { DvtTransformAuthoringAuthorityV1 } from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
-export {
-  WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
-  WorkspaceGraphAuthoringCommandSchema,
-} from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
-export type {
-  WorkspaceGraphAuthoringCommand,
-  WorkspaceGraphAuthoringCommandType,
-  WorkspaceGraphAuthoringNodePatch,
-} from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
-export {
-  CanvasAuthoringAuthorityBindingSchema,
-  CanvasAuthoringAuthorityResolutionSchema,
-  WorkspaceRelativeProjectRootSchema,
-  type CanvasAuthoringAuthorityBinding,
-  type CanvasAuthoringAuthorityResolution,
-} from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';
+export * from './contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.js';
+export * from './contracts/planner/DvtTransformAuthoringAuthority.v1.js';
+export * from './contracts/planner/DvtRelationalAuthoringDraft.v1.js';
+export * from './contracts/planner/DvtRelationalOperationInputs.js';
+export * from './contracts/planner/DvtSubstraitReadFieldCoverage.v1.js';
+export * from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
+export * from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';
 export {
   DBT_PROJECT_GRAPH_PROJECTION_FEATURE,
   DbtProjectGraphProjectionSchema,
@@ -259,85 +124,9 @@ export {
   type DbtProjectGraphProjection,
   type DbtProjectRevision,
 } from './contracts/planner/DbtProjectGraphProjection.v1.js';
-export {
-  EXECUTABLE_SUBGRAPH_DIAGNOSTIC_CODE,
-  EXECUTION_SELECTION_MODE,
-  ExecutableSubgraphDiagnosticSchema,
-  ExecutableSubgraphSchema,
-  ExecutionSelectionSchema,
-} from './contracts/planner/index.js';
-export type {
-  ExecutableSubgraph,
-  ExecutableSubgraphDiagnostic,
-  ExecutableSubgraphDiagnosticCode,
-  ExecutionSelection,
-  ExecutionSelectionMode,
-} from './contracts/planner/index.js';
-export {
-  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-  WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
-  WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
-  WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE,
-  WORKSPACE_GRAPH_DRAFT_CAPABILITY_REASON,
-  WORKSPACE_GRAPH_DRAFT_FORMAT_ERROR_REASON,
-  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-  resolveWorkspaceGraphDraftCanvasIds,
-  WorkspaceGraphDraftAuditRefSchema,
-  WorkspaceGraphDraftCapabilityOutcomeSchema,
-  WorkspaceGraphDraftFormatErrorSchema,
-  WorkspaceGraphDraftFormatMetaSchema,
-  WorkspaceGraphDraftReadDeniedSchema,
-  WorkspaceGraphDraftReadFormatFailureSchema,
-  WorkspaceGraphDraftReadNotFoundSchema,
-  WorkspaceGraphDraftReadResponseSchema,
-  WorkspaceGraphDraftReadSuccessSchema,
-  WorkspaceGraphDraftRecordSchema,
-  WorkspaceGraphDraftSaveConflictSchema,
-  WorkspaceGraphDraftSaveAuthoringAuthorityConflictSchema,
-  WorkspaceGraphDraftSaveDeniedSchema,
-  WorkspaceGraphDraftSaveIdempotencyMismatchSchema,
-  WorkspaceGraphDraftSaveRequestSchema,
-  WorkspaceGraphDraftSaveResponseSchema,
-  WorkspaceGraphDraftSaveSuccessSchema,
-  WorkspaceGraphDraftSaveUnsupportedSchemaVersionSchema,
-  WorkspaceGraphDraftScopeSchema,
-} from './contracts/planner/WorkspaceGraphDraft.v1.js';
-export type {
-  WorkspaceGraphDraftAuditAction,
-  WorkspaceGraphDraftAuditOutcome,
-  WorkspaceGraphDraftAuditRef,
-  WorkspaceGraphDraftCapabilityMode,
-  WorkspaceGraphDraftCapabilityOutcome,
-  WorkspaceGraphDraftCapabilityReason,
-  WorkspaceGraphDraftFormatError,
-  WorkspaceGraphDraftFormatErrorReason,
-  WorkspaceGraphDraftFormatMeta,
-  WorkspaceGraphDraftReadDenied,
-  WorkspaceGraphDraftReadFormatFailure,
-  WorkspaceGraphDraftReadNotFound,
-  WorkspaceGraphDraftReadResponse,
-  WorkspaceGraphDraftReadSuccess,
-  WorkspaceGraphDraftRecord,
-  WorkspaceGraphDraftSaveConflict,
-  WorkspaceGraphDraftSaveAuthoringAuthorityConflict,
-  WorkspaceGraphDraftSaveDenied,
-  WorkspaceGraphDraftSaveIdempotencyMismatch,
-  WorkspaceGraphDraftSaveRequest,
-  WorkspaceGraphDraftSaveResponse,
-  WorkspaceGraphDraftSaveSuccess,
-  WorkspaceGraphDraftSaveUnsupportedSchemaVersion,
-  WorkspaceGraphDraftScope,
-} from './contracts/planner/WorkspaceGraphDraft.v1.js';
-export {
-  SparkJobDeployModeSchema,
-  SparkJobRuntimeSchema,
-  SparkJobStepTypeConfigSchema,
-} from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
-export type {
-  SparkJobDeployMode,
-  SparkJobRuntime,
-  SparkJobStepTypeConfig,
-} from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
+export * from './contracts/planner/index.js';
+export * from './contracts/planner/WorkspaceGraphDraft.v1.js';
+export * from './contracts/planner/PlanCompileStepTypeConfigs.v1.js';
 export {
   ConcurrencyPolicySchema,
   MAX_RETRY_POLICY_ATTEMPTS,
@@ -358,12 +147,8 @@ export type {
   TimeoutPolicy,
   UnsupportedPlannerPolicyDetails,
 } from './contracts/planner/PlannerPolicyVocabulary.v2.js';
-export { TEMPORAL_POLICY_MAPPING_TABLE } from './contracts/planner/PolicyMappingTable.v1.js';
-export type {
-  AdapterPolicyMappingTable,
-  PolicyMappingEntry,
-} from './contracts/planner/PolicyMappingTable.v1.js';
-export type { IPlanner, IExecutionPlanner } from './contracts/planner/IExecutionPlanner.v1.js';
+export * from './contracts/planner/PolicyMappingTable.v1.js';
+export * from './contracts/planner/IExecutionPlanner.v1.js';
 export { EXECUTABILITY_REJECTION_CODES } from './contracts/planner/PlanExecutabilityValidation.v1.js';
 export type {
   ExecutabilityRejectionCode,
@@ -391,19 +176,9 @@ export type {
   PlanExecutabilityFinding,
   PreviewSelectionFinding,
 } from './contracts/planner/PlanAdmissionFinding.v1.js';
-export type {
-  PlanRecord,
-  PlanRecordState,
-  ScopedPlanId,
-  ScopedPlanRef,
-  PlanStoreScope,
-} from './contracts/planner/PlanRecord.v1.js';
-export type {
-  PlanExecutabilityRecord,
-  PlanExecutabilityRejectionReport,
-  PlanExecutabilityState,
-} from './contracts/planner/PlanExecutabilityRecord.v1.js';
-export type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
+export * from './contracts/planner/PlanRecord.v1.js';
+export * from './contracts/planner/PlanExecutabilityRecord.v1.js';
+export * from './contracts/planner/PlanAdmissionLink.v1.js';
 export type {
   StoredPlanArtifactValidationRecord,
   StoredPlanArtifactValidationState,
@@ -415,17 +190,7 @@ export type {
   CustomPolicySchemaValidator,
   CustomPolicyValidationError,
 } from './contracts/planner/CustomPolicyNamespaceRegistry.v1.js';
-export {
-  KNOWN_STEP_KINDS,
-  STEP_KIND_BRIDGE_REGISTRY,
-  getBridgeEntry,
-  isBridgeRegisteredStepKind,
-  isKnownStepKind,
-} from './contracts/planner/StepKindRegistry.v1.js';
-export type {
-  KnownStepKind,
-  StepKindBridgeEntry,
-} from './contracts/planner/StepKindRegistry.v1.js';
+export * from './contracts/planner/StepKindRegistry.v1.js';
 export * from './errorContract.js';
 export * from './errors.js';
 export * from './schemas.js';

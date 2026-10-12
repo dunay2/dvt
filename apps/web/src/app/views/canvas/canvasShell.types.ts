@@ -8,8 +8,8 @@ import type { DbtProjectImportResult, DbtProjectSourceTableDeclaration } from '@
 import type {
   ImportSourcesResult,
   IWarehouseSourceDataSampleQueryPort,
-  IWarehouseSourceImportPort,
 } from '../../ports/workspace';
+import type { ICanvasTransformDataSampleQueryPort } from '../../ports/canvasDataSample';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
@@ -18,6 +18,7 @@ import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
@@ -32,9 +33,9 @@ import type {
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
-import type { IRunsPort, RunSnapshot } from '../../ports/runs';
-import type { PlanViewModel } from '../../types/plans';
+import type { RunSnapshot } from '../../ports/runs';
 import type { CanvasEdgeCommandRunner } from './useCanvasEdgeCommandRunner';
+import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -57,11 +58,13 @@ export type CanvasShellLayout = {
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurface?: React.ReactNode;
+  centerSurfaceVisible?: boolean;
   readOnlyBanner?: React.ReactNode;
 };
 
 export type CanvasShellContextualWorkbench = Readonly<{
-  id: 'project-code';
+  id: 'project-code' | 'output-expression';
+  presentation?: 'docked';
   title: string;
   closeLabel: string;
   moveLabel?: string;
@@ -82,6 +85,7 @@ export type CanvasShellPanels = {
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
+  relationalTreeAuthoring?: CanvasRelationalTreeAuthoringContract;
   inspectorWorkbenchContributions: readonly CanvasNodeWorkbenchContribution[];
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
@@ -170,11 +174,6 @@ export type CanvasShellWorkspaceCommands = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
-export type CanvasRunOutputPreviewAuthority = Readonly<{
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-}>;
-
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -185,11 +184,10 @@ export type CanvasShellProps = Readonly<{
   canvasCommands: CanvasShellCanvasCommands;
   runControls: OperationalDrawerRunControls | null;
   workspaceCommands?: CanvasShellWorkspaceCommands;
-  warehouseSourceImport?: IWarehouseSourceImportPort;
   warehouseSourceDataSampleQuery?: IWarehouseSourceDataSampleQueryPort;
+  canvasTransformDataSampleQuery?: ICanvasTransformDataSampleQueryPort;
+  prepareModelPreview?: CanvasModelPreviewPreparation;
   runSnapshot?: RunSnapshot | null;
-  runOutputPreviewAuthority?: CanvasRunOutputPreviewAuthority;
-  runMaterializationSampleQuery?: IRunsPort['getRunMaterializationSample'];
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition
   ) => CanvasContextMenuPosition;

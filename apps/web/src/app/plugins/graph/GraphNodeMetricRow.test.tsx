@@ -169,7 +169,8 @@ describe('GraphNodeMetricRow', () => {
       container.querySelectorAll('[data-slot="graph-node-metric-hotspot"]')
     );
 
-    expect(row?.className).toContain('grid-cols-2');
+    expect(row?.className).toContain('inline-flex');
+    expect(row?.className).not.toContain('grid-cols-2');
     expect(hotspots).toHaveLength(2);
     expect(
       hotspots.map((hotspot) =>

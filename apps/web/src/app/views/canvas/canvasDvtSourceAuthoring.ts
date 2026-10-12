@@ -6,7 +6,7 @@ import {
   type ConnectionRef,
 } from '@dvt/contracts';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 import type {
   DvtNodeAuthoringMetadataErrors,
   DvtSourceAuthoringMetadata,
@@ -68,27 +68,6 @@ export function resolveEffectiveDvtConnectionRef(node: CanonicalNode): Connectio
     throw new Error('DVT sources require a PostgreSQL ConnectionRef.');
   }
   return connectionRef;
-}
-
-export function resolveInheritedDvtConnectionRef(args: {
-  node: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-}): ConnectionRef | undefined {
-  const nodesById = new Map(args.nodes.map((candidate) => [candidate.id, candidate]));
-  const sourceIdByTargetId = new Map(args.edges.map((edge) => [edge.targetId, edge.sourceId]));
-  const visited = new Set<string>();
-  let current: CanonicalNode | undefined = args.node;
-  while (current) {
-    if (visited.has(current.id)) {
-      throw new Error('DVT connection inheritance cannot traverse a cyclic graph.');
-    }
-    visited.add(current.id);
-    if (current.kind === 'dvt:source') return resolveEffectiveDvtConnectionRef(current);
-    const sourceId = sourceIdByTargetId.get(current.id);
-    current = sourceId ? nodesById.get(sourceId) : undefined;
-  }
-  return undefined;
 }
 
 export function createDvtSourceAuthoringMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {

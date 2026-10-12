@@ -6,6 +6,7 @@ import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
+import { RunAlreadyExistsError } from '../contracts/errors.js';
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
 import type { StartRunTraceContext } from '../core/lifecycle/StartRunTraceContext.js';
 import type { IPlanIntegrityValidator } from '../ports/IPlanIntegrityValidator.js';
@@ -162,15 +163,17 @@ export class StartRunApplicationService {
         })
       ).adapter;
     errorContext.phase = 'intent';
-    const intentId = await this.intentService.createIntent(resolvedContext, adapter.provider);
-    errorContext.intentId = intentId;
+    const claim = await this.intentService.claimIntent(resolvedContext, adapter.provider);
+    if (claim.kind === 'existing') throw new RunAlreadyExistsError(resolvedContext.runId);
+    const receipt = claim.receipt;
+    errorContext.receipt = receipt;
 
     const executionInput = {
       adapter,
       planRef,
       resolvedContext,
       traceContext,
-      intentId,
+      receipt,
       errorContext,
     };
     return preparedRunRef === undefined
@@ -201,7 +204,6 @@ export function buildStartRunApplicationService(
     stateStoreWrite: deps.stateStoreWrite,
     intentStore: deps.intentStore,
     eventFactory,
-    failurePolicy,
     observability: deps.observability,
     clock: deps.clock,
     ...(deps.timeouts ? { timeouts: deps.timeouts } : {}),

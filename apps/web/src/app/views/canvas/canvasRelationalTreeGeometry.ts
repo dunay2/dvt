@@ -1,0 +1,136 @@
+/** Owned concern: calculate deterministic left-to-right geometry for one relational tree. */
+import type {
+  CanvasRelationalTreeChildRole,
+  CanvasRelationalTreeNode,
+} from './canvasRelationalTreeProjection';
+import {
+  measureCanvasRelationalTree,
+  type CanvasRelationalTreeNodeSize,
+  type CardPosition,
+  type CanvasRelationalTreePlacedNode,
+  type CanvasRelationalTreePlacedEdge,
+} from './canvasRelationalTreeGeometryMetrics';
+import { projectCanvasRelationalCardExpansion } from './canvasRelationalCardExpansion';
+import { projectCanonicalRelationEdges } from './relational-layout/relationalTreeEdgeProjection';
+
+export type {
+  CardPosition,
+  CanvasRelationalTreePlacedNode,
+  CanvasRelationalTreePlacedEdge,
+} from './canvasRelationalTreeGeometryMetrics';
+export const CANVAS_RELATIONAL_OUTPUT_POSITION_ID = 'canvas-relational-output';
+const NODE_HEIGHT = 76;
+const HORIZONTAL_PADDING = 36;
+const OUTPUT_GAP = 64;
+const OUTPUT_WIDTH = 156;
+const BOTTOM_PADDING = 36;
+
+export type CanvasRelationalTreeLayout = Readonly<{
+  expansionFrame?: Readonly<{ key: string }> &
+    Readonly<Record<'offsets' | 'origins', ReadonlyMap<string, CardPosition>>>;
+  width: number;
+  height: number;
+  output:
+    | (CardPosition & CanvasRelationalTreeNodeSize & Readonly<{ inputLocator: string | null }>)
+    | null;
+  nodes: readonly CanvasRelationalTreePlacedNode[];
+  edges: readonly CanvasRelationalTreePlacedEdge[];
+}>;
+
+export function layoutCanvasRelationalTree(
+  root: CanvasRelationalTreeNode | null,
+  sizes: ReadonlyMap<string, CanvasRelationalTreeNodeSize> = new Map(),
+  positions: ReadonlyMap<string, CardPosition> = new Map(),
+  detached: readonly CanvasRelationalTreeNode[] = [],
+  previousExpansion?: CanvasRelationalTreeLayout['expansionFrame'] | null
+): CanvasRelationalTreeLayout {
+  const expanded =
+    sizes.size > 0 && (positions.size > 0 || previousExpansion !== undefined)
+      ? projectCanvasRelationalCardExpansion(
+          layoutCanvasRelationalTree(root, new Map(), positions, detached),
+          sizes,
+          CANVAS_RELATIONAL_OUTPUT_POSITION_ID,
+          previousExpansion
+        )
+      : undefined;
+  const effectivePositions = expanded?.positions ?? positions;
+  const first = root ?? detached[0];
+  const output = {
+    ...(effectivePositions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID) ?? { x: 320, y: 36 }),
+    width: OUTPUT_WIDTH,
+    height: NODE_HEIGHT,
+    inputLocator: null as string | null,
+  };
+  if (first == null) return { width: 512, height: 148, output, nodes: [], edges: [] };
+  const { depths, rootDepth, rows, columnLeft, sizeFor } = measureCanvasRelationalTree(
+    first,
+    sizes
+  );
+  const nodes: CanvasRelationalTreePlacedNode[] = [];
+  const positionFor = (node: CanvasRelationalTreeNode): CardPosition =>
+    effectivePositions.get(node.relationId ?? node.locator) ?? {
+      x: columnLeft[depths.get(node.locator) ?? 0]!,
+      y: rows.get(node.locator)!,
+    };
+
+  const place = (
+    node: CanvasRelationalTreeNode,
+    parentLocator: string | null,
+    role: CanvasRelationalTreeChildRole | null,
+    ordinal: number,
+    siblingCount: number
+  ): void => {
+    const depth = depths.get(node.locator) ?? 0;
+    const { x, y } = positionFor(node);
+    nodes.push({
+      node,
+      x,
+      y,
+      ...sizeFor(node),
+      level: rootDepth - depth + 1,
+      parentLocator,
+      role,
+      ordinal,
+      siblingCount,
+    });
+
+    node.children.forEach((child) => {
+      place(child.node, node.locator, child.role, child.ordinal, node.children.length);
+    });
+  };
+
+  if (root != null) place(root, null, null, 0, 1);
+  const rootNode = nodes[0];
+  if (rootNode != null) {
+    output.inputLocator = rootNode.node.locator;
+    if (!effectivePositions.has(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)) {
+      output.x = rootNode.x + rootNode.width + OUTPUT_GAP;
+      output.y = rootNode.y;
+    }
+  }
+  const bottom = Math.max(0, ...nodes.map((node) => node.y + node.height)) + BOTTOM_PADDING;
+  detached.forEach((node, ordinal) =>
+    nodes.push({
+      node,
+      ...(effectivePositions.get(node.relationId ?? node.locator) ?? {
+        x: HORIZONTAL_PADDING,
+        y: bottom + ordinal * (NODE_HEIGHT + BOTTOM_PADDING),
+      }),
+      ...sizeFor(node),
+      level: 1,
+      parentLocator: null,
+      role: null,
+      ordinal,
+      siblingCount: detached.length,
+    })
+  );
+  const bounds = [...nodes, output];
+  return {
+    expansionFrame: expanded?.frame,
+    width: Math.max(...bounds.map((node) => node.x + node.width)) + HORIZONTAL_PADDING,
+    height: Math.max(...bounds.map((node) => node.y + node.height)) + BOTTOM_PADDING,
+    output,
+    nodes,
+    edges: projectCanonicalRelationEdges(nodes),
+  };
+}

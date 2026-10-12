@@ -10,7 +10,7 @@ const {
   readComponentIntegrityRows,
 } = require('./planning-db/queries/component-integrity-query.cjs');
 const { readRailVocabularyRows } = require('./planning-db/queries/rail-vocabulary-query.cjs');
-const { readSourceDriftRows } = require('./planning-db/queries/code-symbol-query.cjs');
+const { readSourceDriftRows } = require('./planning-db/queries/source-drift-query.cjs');
 
 const databaseUrl = process.env.PLANNING_DATABASE_URL || process.env.DATABASE_URL || defaultPgUrl;
 const severityOrder = Object.freeze(['blocker', 'error', 'warning', 'info']);

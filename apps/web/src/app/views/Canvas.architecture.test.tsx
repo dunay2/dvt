@@ -35,10 +35,8 @@ describe('Canvas route architecture', () => {
     expect(CANVAS_ROUTE_SOURCE).toContain("'./canvas/CanvasModalHost'");
     expect(CANVAS_ROUTE_SOURCE).toContain('...buildCanvasShellProps({');
     expect(CANVAS_ROUTE_SOURCE).toContain('modalHostProps={buildCanvasModalHostProps(controller)}');
-    expect(CANVAS_ROUTE_SOURCE).toContain(
-      'const warehouseSourceImport = useWarehouseSourceImportPort();'
-    );
-    expect(CANVAS_ROUTE_SOURCE).toContain('warehouseSourceImport,');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('useWarehouseSourceImportPort');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('warehouseSourceImport,');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasModalLayer');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('renderCanvasCenterSurface');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasRecoveryBanner');

@@ -7,7 +7,7 @@ import {
   type MetricEvidenceTone,
 } from '../../components/metrics/MetricEvidenceHotspot';
 import type { GraphNodeCardStatusTone } from './graphNodeCardStrategyContracts';
-import { graphNodeMetricRowClasses } from './graphVisualTokens';
+import { graphNodeMetricRowClasses } from './graphMetricVisualTokens';
 
 export type GraphNodeMetricHotspotProps = Readonly<{
   className?: string;

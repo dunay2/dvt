@@ -10,7 +10,7 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts
   - packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts
   - docs/architecture/components/engine/adapters/temporal/temporal-planref-capacity-sla.md
-  - buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md
+  - https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260430-codex-fowler-ar-d2-temporal-capacity-sla-analysis-and-remediation.md
 evidence:
   tests:
     - pnpm --filter @dvt/adapter-temporal exec vitest run test/temporalPlanRefCapacitySlaPolicy.test.ts test/workflow-component-semantics.architecture.test.ts

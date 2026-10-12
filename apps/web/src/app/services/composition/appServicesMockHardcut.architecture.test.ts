@@ -72,16 +72,6 @@ const HARDCUT_DOCUMENTATION_FILES = [
     'workspace',
     'workspace-port-decomposition-user-stories.md',
   ],
-  [
-    '..',
-    '..',
-    'docs',
-    'planning',
-    'proposals',
-    'mandatory',
-    'frontend-and-ux',
-    'web-api-mock-runtime-hardcut-plan-20260510.md',
-  ],
   ['..', '..', 'docs', 'planning', 'reviews', '20260510-web-api-integration-gap-review.md'],
 ] as const;
 

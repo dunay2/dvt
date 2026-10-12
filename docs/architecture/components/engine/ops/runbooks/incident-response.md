@@ -101,7 +101,7 @@ Check:
 - `dvt_api_plan_compile_latency_seconds_bucket`
 
 Do not substitute old `run completion` or `pause latency` dashboards for the
-current Lane C signal set.
+current runtime signal set.
 
 ### Snapshot freshness or unknown-ratio breach
 
@@ -173,4 +173,4 @@ For every Sev0 or Sev1 event, record:
 2. threshold or failure symptom used for classification
 3. impacted environment and scope
 4. actions taken
-5. follow-up docs or lane tasks opened
+5. follow-up documentation or GitHub issues opened

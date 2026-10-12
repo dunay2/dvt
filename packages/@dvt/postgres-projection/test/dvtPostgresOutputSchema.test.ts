@@ -6,8 +6,8 @@ import { projectDvtPostgresOutputSchemaV1 } from '../src/index.js';
 describe('DVT PostgreSQL output schema projection', () => {
   it('normalizes the admitted semantic types without changing output order', () => {
     const schema = projectDvtPostgresOutputSchemaV1([
-      { name: 'order_id', dataType: 'i64', outputOrdinal: 0 },
-      { name: 'country', dataType: 'string', outputOrdinal: 1 },
+      { name: 'order_id', dataType: 'i64', outputOrdinal: 0, nullable: false },
+      { name: 'country', dataType: 'string', outputOrdinal: 1, nullable: true },
       { name: 'active', dataType: 'bool', outputOrdinal: 2 },
       { name: 'amount', dataType: 'fp64', outputOrdinal: 3 },
       { name: 'ordered_at', dataType: 'precisionTimestampTz', outputOrdinal: 4 },
@@ -20,7 +20,14 @@ describe('DVT PostgreSQL output schema projection', () => {
       { name: 'amount', postgresType: 'double precision' },
       { name: 'ordered_at', postgresType: 'timestamp with time zone' },
     ]);
+    expect(schema?.columns.map(({ nullable }) => nullable)).toEqual([true, true, true, true, true]);
     expect(schema && createDvtPostgresOutputSchemaDigestV1(schema)).toMatch(/^[0-9a-f]{64}$/u);
+  });
+
+  it('keeps logical required fields separate from nullable CREATE TABLE AS columns', () => {
+    const output = { name: 'empty_text', dataType: 'string', outputOrdinal: 0, nullable: false };
+    expect(projectDvtPostgresOutputSchemaV1([output])?.columns[0]?.nullable).toBe(true);
+    expect(output.nullable).toBe(false);
   });
 
   it.each([

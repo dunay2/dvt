@@ -162,6 +162,38 @@ function buildService(projection = buildProjection()): {
 }
 
 describe('ResolveAuthorizedPreviewSelectionService', () => {
+  it('canonicalizes graph IDs independently of locale without mutating caller order', async () => {
+    const orderedIds = ['10', '2', 'Z', '_', 'a', 'e\u0301', '\u00e9'].map(
+      (suffix) => `model.analytics.${suffix}`
+    );
+    const selectedIds = Object.freeze([...orderedIds].reverse());
+    const template = buildProjection().nodes.find((node) => node.resourceType === 'model')!;
+    const projection = buildProjection({
+      nodes: selectedIds.map((uniqueId) => ({ ...template, uniqueId })),
+      edges: [],
+      capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: selectedIds.length },
+    });
+    Object.freeze(projection.nodes);
+    const { service } = buildService(projection);
+    const graphSource = {
+      ...GRAPH_SOURCE,
+      nodes: Object.freeze(selectedIds.map((nodeId) => ({ ...GRAPH_SOURCE.nodes[0]!, nodeId }))),
+    };
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'explicit', nodeIds: selectedIds }),
+        graphSource,
+        provenance: { ...PROVENANCE, selectedUniqueIds: orderedIds },
+      },
+      buildContext()
+    );
+
+    if (!result.ok) throw new Error(result.rejection.cause);
+    expect(result.value.graphSource.nodes.map((node) => node.nodeId)).toEqual(orderedIds);
+    expect(graphSource.nodes.map((node) => node.nodeId)).toEqual(selectedIds);
+    expect(projection.nodes.map((node) => node.uniqueId)).toEqual(selectedIds);
+  });
+
   it('delegates protected DVT Preview without accepting a browser graph', async () => {
     const { service, dvtPreview, graphDraftResolver, projectGraph } = buildService();
     const selection = parseExecutionSelection({ mode: 'upstream', nodeIds: ['transform-a'] });

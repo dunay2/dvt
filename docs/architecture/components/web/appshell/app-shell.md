@@ -300,7 +300,9 @@ flowchart LR
 
 - the top bar stays visible across all routed views;
 - platform-health state must be visible without entering a diagnostic route;
-- focus mode hides secondary chrome but keeps the active view intact;
+- focus mode hides secondary chrome but keeps the active view intact; an
+  explicit card Preview or Properties action exits focus mode to reveal its
+  requested data drawer or contextual window;
 - route switches should not remount the entire shell frame.
 
 ### Keyboard And Route Focus Invariants
@@ -394,9 +396,8 @@ state must be placed in the smallest named slice that owns the concern.
 
 ## Related Pages
 
-- [Main Workspace Views And UX](../main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](../screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](../ux-implementation-guide.md)
-- [Workbench UI Contract And Component Inventory](../workbench-ui-contract-and-component-inventory.md)
 - [Data Source Service Boundary](./data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
 - [Canvas Workbench Tabs Component](../graph/canvas-workbench-tabs-component.md)

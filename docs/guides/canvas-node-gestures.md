@@ -36,6 +36,14 @@ Double click/Enter -> Data -> authoritative sample or explicit unavailable state
 Right click -------> existing Properties operation
 ```
 
+Semantic inspection compares the stored Substrait source identities with the
+currently connected graph. When an input was removed or a new input was added,
+the drawer shows one pending-composition state instead of presenting the stored
+relation as current. Inspection does not guess a replacement JOIN and does not
+destroy the recoverable semantic document; explicit confirmed dependency
+removal remains owned by
+[#3123](https://github.com/dunay2/dvt/issues/3123).
+
 Opening Data must invalidate any earlier sample request: a late Source or Sink
 response must never appear under a Transform's name. Navigation does not execute
 SQL, start a run, write Graph Draft or change node geometry. If no authoritative

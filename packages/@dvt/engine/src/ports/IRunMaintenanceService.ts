@@ -4,7 +4,7 @@
  * @baseline ADR-0030: Pre-Dispatch Intent Log for startRun Crash Consistency
  * @decision Batch/operational maintenance operations are separated from lifecycle methods on IWorkflowEngine
  * @decision reconcileOrphanedIntents added per ADR-0030 for intent orphan detection
- * @consequence Orphaned provider workflows from process crashes are automatically detected and cancelled
+ * @consequence Orphans remain actionable until observed compensation or durable escalation
  * @version 1.0.0
  * @date 2026-03-03
  */
@@ -38,13 +38,13 @@ export interface ReconcileOrphanedIntentsOptions {
 
 export interface ReconcileOrphanedIntentsResult {
   inspected: number;
-  /** Intent IDs expired (for example: PENDING beyond threshold with no provider workflow). */
+  /** Intent IDs expired before any start request; a missing observation alone is insufficient. */
   expired: string[];
   /** Intent IDs resolved after the run was already bootstrapped and no provider cancellation was needed. */
   resolved: string[];
-  /** Intent IDs cancelled after the reconciler cleaned up an orphaned provider workflow. */
+  /** Intent IDs with positively observed cancelled/terminated compensation, not cancel acknowledgements. */
   cancelled: string[];
-  /** Intent IDs where cancellation failed (will be retried next sweep). */
+  /** Intent IDs where cancellation failed; persisted backoff controls the next eligible sweep. */
   cancelFailed: string[];
   /**
    * Intent IDs intentionally left unresolved by policy (for example: lookup unsupported,
@@ -53,16 +53,20 @@ export interface ReconcileOrphanedIntentsResult {
    * is executed.
    */
   deferred: string[];
+  /** Durable escalation requires operator attention; it is not a successful start. */
+  escalated: string[];
 }
 
 export interface ReconcileStartRunIntentOptions {
   tenantId: string;
   intentId: string;
+  /** Minimum store-clock age before maintenance may rotate acquisition authority. */
+  minimumAgeMs?: number;
 }
 
 export type ReconcileStartRunIntentResult =
   | Readonly<{ kind: 'confirmed' }>
-  | Readonly<{ kind: 'ready_to_dispatch' }>
+  | Readonly<{ kind: 'escalated' }>
   | Readonly<{ kind: 'missing' }>
   | Readonly<{ kind: 'blocked' }>;
 

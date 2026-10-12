@@ -37,6 +37,8 @@ template generation.
   imports Monaco runtime modules, not only the React adapter package.
 - Monaco surfaces configure local Vite-bundled workers before rendering editor
   instances; they must not depend on CDN worker loading.
+- Worker imports use Monaco's public `.js` exports with Vite's `?worker` suffix,
+  not deep `esm/vs` paths that bypass the package export map.
 - Canvas production modules must not import Monaco gateways or
   `@monaco-editor/react`.
 

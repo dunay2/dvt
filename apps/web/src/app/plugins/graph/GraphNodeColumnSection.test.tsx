@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
-import type { GraphNodeColumn, GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
+import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 
 describe('GraphNodeColumnSection', () => {
   const EIGHT_COLUMNS = [
@@ -106,6 +106,36 @@ describe('GraphNodeColumnSection', () => {
     expect(container.querySelector('[data-slot="graph-node-column-remainder-toggle"]')).toBeNull();
   });
 
+  it('keeps the calculated-column action in its hover-sensitive expanded gap', () => {
+    act(() => {
+      root.render(
+        <GraphNodeColumnSection
+          columns={[{ id: 'output:request_id', name: 'request_id', type: 'text' }]}
+          expressionInputs={[
+            { id: 'input:request_id', name: 'request_id', type: 'text' },
+            { id: 'input:event_id', name: 'event_id', type: 'text' },
+          ]}
+          nodeId="model-1"
+          onCalculatedColumnAdd={() => ({ outcome: 'applied', createdFieldId: 'created' })}
+        />
+      );
+    });
+
+    act(() => {
+      fireEvent.click(
+        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
+      );
+    });
+
+    const columnList = container.querySelector('[data-slot="graph-node-column-list"]');
+    const addButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-calculated-column-trigger"]'
+    );
+    expect(columnList?.parentElement?.contains(addButton)).toBe(true);
+    expect(addButton?.className).toContain('opacity-0');
+    expect(addButton?.className).toContain('group-hover/add:opacity-100');
+  });
+
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
@@ -125,7 +155,7 @@ describe('GraphNodeColumnSection', () => {
     }
   });
 
-  it('presents stacked output pieces with truthful inline and focused metadata', async () => {
+  it('keeps inline field controls but limits the focused tooltip to its type', async () => {
     await act(async () => {
       root.render(
         <GraphNodeColumnSection
@@ -183,14 +213,7 @@ describe('GraphNodeColumnSection', () => {
     });
 
     const tooltip = document.body.querySelector('[role="tooltip"]');
-    expect(tooltip?.textContent).toContain('Tipo');
-    expect(tooltip?.textContent).toContain('text');
-    expect(tooltip?.textContent).toContain('No nulo');
-    expect(tooltip?.textContent).toContain('auth_audit_events');
-    expect(tooltip?.textContent).toContain('field:model:event_id');
-    expect(tooltip?.textContent).toContain(
-      'event_id → TRIM(event_id) → UPPER(TRIM(event_id)) → event_id_clean'
-    );
+    expect(tooltip?.textContent).toBe('text');
   });
 
   it('toggles canonical output inclusion from the check control', async () => {
@@ -246,6 +269,149 @@ describe('GraphNodeColumnSection', () => {
     ]);
   });
 
+  it('keeps focus on the initiating output control when its semantic state commits', async () => {
+    const renderSection = (output: boolean): void =>
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[{ id: 'output:order_id', name: 'order_id', type: 'integer', output }]}
+          onColumnOutputToggle={vi.fn()}
+        />
+      );
+
+    await act(async () => renderSection(true));
+    const outputControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    const disclosureControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    )!;
+    let focusFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        focusFrame = callback;
+        return 29;
+      });
+
+    await act(async () => {
+      disclosureControl.focus();
+      fireEvent.pointerDown(outputControl);
+      fireEvent.click(outputControl);
+    });
+    expect(document.activeElement).toBe(outputControl);
+
+    await act(async () => {
+      disclosureControl.focus();
+      renderSection(false);
+    });
+    act(() => focusFrame!(0));
+
+    expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).toBe(
+      outputControl
+    );
+    expect(document.activeElement).toBe(outputControl);
+    requestFrame.mockRestore();
+  });
+
+  it('does not reclaim output focus from a newer independent interaction', async () => {
+    const externalControl = document.createElement('button');
+    document.body.appendChild(externalControl);
+    const renderSection = (output: boolean): void =>
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[{ id: 'output:order_id', name: 'order_id', type: 'integer', output }]}
+          onColumnOutputToggle={vi.fn()}
+        />
+      );
+
+    await act(async () => renderSection(true));
+    const outputControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-output-state"]'
+    )!;
+    const disclosureControl = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-column-toggle"]'
+    )!;
+    let focusFrame: FrameRequestCallback | undefined;
+    const requestFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation((callback) => {
+        focusFrame = callback;
+        return 30;
+      });
+
+    await act(async () => {
+      disclosureControl.focus();
+      fireEvent.pointerDown(outputControl);
+      fireEvent.click(outputControl);
+      externalControl.focus();
+      renderSection(false);
+    });
+    act(() => focusFrame!(0));
+
+    expect(document.activeElement).toBe(externalControl);
+    requestFrame.mockRestore();
+    externalControl.remove();
+  });
+
+  it('shows every inherited field origin and toggles the exact field row', async () => {
+    const onColumnOutputToggle = vi.fn();
+    await act(async () => {
+      root.render(
+        <GraphNodeColumnSection
+          expanded
+          nodeId="transform-orders"
+          columns={[
+            {
+              id: 'clients.client_id',
+              name: 'client_id',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'client_id' },
+            },
+            {
+              id: 'orders.client_id',
+              name: 'client_id',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'orders',
+              source: { nodeId: 'orders', columnId: 'client_id' },
+            },
+            {
+              id: 'clients.country',
+              name: 'country',
+              type: 'text',
+              output: false,
+              sourceNodeName: 'client',
+              source: { nodeId: 'clients', columnId: 'country' },
+            },
+          ]}
+          onColumnOutputToggle={onColumnOutputToggle}
+        />
+      );
+    });
+
+    const fields = container.querySelectorAll<HTMLElement>('[data-slot="graph-node-column-piece"]');
+    expect([...fields].map((field) => field.textContent)).toEqual([
+      expect.stringContaining('client.client_id'),
+      expect.stringContaining('orders.client_id'),
+      expect.stringContaining('client.country'),
+    ]);
+    await act(async () => fireEvent.click(fields[0]!.querySelector('button')!));
+
+    expect(onColumnOutputToggle).toHaveBeenCalledWith({
+      nodeId: 'transform-orders',
+      columnId: 'clients.client_id',
+      columnType: 'text',
+      output: true,
+      source: { nodeId: 'clients', columnId: 'client_id' },
+    });
+  });
+
   it('emits the same semantic reorder command for pointer and keyboard movement', async () => {
     const onColumnReorder = vi.fn();
     await act(async () => {
@@ -293,355 +459,6 @@ describe('GraphNodeColumnSection', () => {
         placement: 'before',
       },
     ]);
-  });
-
-  it('requires an output alias before applying a function from pointer or keyboard menus', async () => {
-    const onColumnFunctionApply = vi
-      .fn<NonNullable<GraphNodeColumnSectionProps['onColumnFunctionApply']>>()
-      .mockReturnValue({ outcome: 'applied', createdFieldId: 'output:customer_clean' });
-    await act(async () => {
-      root.render(
-        <GraphNodeColumnSection
-          nodeId="transform-orders"
-          columns={[
-            {
-              id: 'output:customer',
-              name: 'customer',
-              type: 'text',
-              functionMenu: {
-                category: 'text',
-                items: [
-                  {
-                    capabilityId: 'capability:trim',
-                    name: 'trim',
-                    minimumArgumentCount: 1,
-                    maximumArgumentCount: 1,
-                  },
-                  {
-                    capabilityId: 'capability:upper',
-                    name: 'upper',
-                    minimumArgumentCount: 1,
-                    maximumArgumentCount: 1,
-                  },
-                  {
-                    capabilityId: 'capability:concat',
-                    name: 'concat',
-                    minimumArgumentCount: 2,
-                    maximumArgumentCount: 2,
-                  },
-                ],
-              },
-            },
-            { id: 'input:status', name: 'status', type: 'text', output: false },
-          ]}
-          onColumnFunctionApply={onColumnFunctionApply}
-        />
-      );
-    });
-    await act(async () => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
-      );
-    });
-
-    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
-    await act(async () => {
-      piece.dispatchEvent(
-        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
-      );
-      await Promise.resolve();
-    });
-
-    const upperItem = document.body.querySelector<HTMLElement>(
-      '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
-    );
-    expect(upperItem).not.toBeNull();
-    expect(
-      document.body.querySelector(
-        '[data-slot="graph-node-column-function"][data-capability-id="capability:concat"]'
-      )
-    ).not.toBeNull();
-    await act(async () => {
-      fireEvent.click(upperItem!);
-    });
-    await vi.waitFor(() => {
-      expect(
-        document.body.querySelector('[data-slot="graph-node-expression-composer"]')
-      ).not.toBeNull();
-    });
-    expect(onColumnFunctionApply).not.toHaveBeenCalled();
-    const aliasInput = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="graph-node-column-function-alias-input"]'
-    );
-    const aliasSubmit = document.body.querySelector<HTMLButtonElement>(
-      '[data-slot="graph-node-column-function-alias-submit"]'
-    );
-    expect(aliasInput).not.toBeNull();
-    expect(aliasSubmit?.disabled).toBe(true);
-    await act(async () => {
-      fireEvent.change(aliasInput!, { target: { value: 'status' } });
-      fireEvent.click(aliasSubmit!);
-    });
-    expect(onColumnFunctionApply).not.toHaveBeenCalled();
-    expect(document.body.querySelector('[role="alert"]')).not.toBeNull();
-    expect(
-      document.body.querySelector('[data-slot="graph-node-expression-composer"]')
-    ).not.toBeNull();
-    await act(async () => {
-      fireEvent.change(aliasInput!, { target: { value: 'customer_clean' } });
-      fireEvent.click(aliasSubmit!);
-    });
-    expect(onColumnFunctionApply).toHaveBeenCalledWith({
-      nodeId: 'transform-orders',
-      columnId: 'output:customer',
-      operandFieldIds: ['output:customer'],
-      capabilityId: 'capability:upper',
-      alias: 'customer_clean',
-    });
-    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
-
-    await act(async () => {
-      piece.focus();
-      fireEvent.keyDown(piece, { key: 'F10', shiftKey: true });
-      await Promise.resolve();
-    });
-    expect(
-      document.body.querySelector('[data-slot="graph-node-column-function-menu"]')
-    ).not.toBeNull();
-  });
-
-  it('keeps the alias form through the initiating click and dismisses it explicitly', async () => {
-    await act(async () => {
-      root.render(
-        <GraphNodeColumnSection
-          nodeId="transform-orders"
-          expanded
-          columns={[
-            {
-              id: 'output:customer',
-              name: 'customer',
-              type: 'text',
-              functionMenu: {
-                category: 'text',
-                items: [
-                  {
-                    capabilityId: 'capability:upper',
-                    name: 'upper',
-                    minimumArgumentCount: 1,
-                    maximumArgumentCount: 1,
-                  },
-                ],
-              },
-            },
-          ]}
-          onColumnFunctionApply={vi.fn()}
-        />
-      );
-    });
-    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
-    const openAliasForm = async (): Promise<void> => {
-      await act(async () => {
-        piece.dispatchEvent(
-          new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
-        );
-        await Promise.resolve();
-      });
-      await act(async () => {
-        fireEvent.click(
-          document.body.querySelector<HTMLElement>(
-            '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
-          )!
-        );
-        await Promise.resolve();
-      });
-      await act(
-        () =>
-          new Promise<void>((resolve) => {
-            requestAnimationFrame(() => resolve());
-          })
-      );
-
-      expect(
-        document.body.querySelector('[data-slot="graph-node-expression-composer"]')
-      ).not.toBeNull();
-    };
-
-    await openAliasForm();
-    await act(async () => {
-      fireEvent.keyDown(document, { key: 'Escape' });
-      await Promise.resolve();
-    });
-    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
-
-    await openAliasForm();
-    await act(async () => {
-      fireEvent.pointerDown(container);
-      fireEvent.click(container);
-      await Promise.resolve();
-    });
-    expect(document.body.querySelector('[data-slot="graph-node-expression-composer"]')).toBeNull();
-  });
-
-  it('reveals and focuses the created output while retaining a rejected proposal', async () => {
-    function Harness(): React.ReactElement {
-      const [columns, setColumns] = React.useState<GraphNodeColumn[]>([
-        {
-          id: 'output:column_1',
-          name: 'column_1',
-          type: 'text',
-          functionMenu: {
-            category: 'text' as const,
-            items: [
-              {
-                capabilityId: 'capability:upper',
-                name: 'upper',
-                minimumArgumentCount: 1,
-                maximumArgumentCount: 1,
-              },
-            ],
-          },
-        },
-        ...EIGHT_COLUMNS.slice(1, 6),
-      ]);
-      return (
-        <GraphNodeColumnSection
-          expanded
-          nodeId="transform-orders"
-          columns={columns}
-          onColumnFunctionApply={(identity) => {
-            if (identity.alias === 'rejected_alias') {
-              return { outcome: 'rejected', reason: 'duplicate_alias' };
-            }
-            const createdFieldId = 'field:derived';
-            setColumns((current) => [
-              ...current,
-              {
-                id: createdFieldId,
-                name: identity.alias,
-                type: 'text',
-                output: true,
-                operations: ['UPPER'],
-              },
-            ]);
-            return { outcome: 'applied', createdFieldId };
-          }}
-        />
-      );
-    }
-
-    await act(async () => {
-      root.render(<Harness />);
-    });
-    const firstPiece = container.querySelector<HTMLElement>(
-      '[data-slot="graph-node-column-piece"][data-column-name="column_1"]'
-    );
-    await act(async () => {
-      firstPiece?.dispatchEvent(
-        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
-      );
-      await Promise.resolve();
-    });
-    await act(async () => {
-      fireEvent.click(
-        document.body.querySelector<HTMLElement>(
-          '[data-slot="graph-node-column-function"][data-capability-id="capability:upper"]'
-        )!
-      );
-    });
-    await act(
-      () =>
-        new Promise<void>((resolve) => {
-          requestAnimationFrame(() => resolve());
-        })
-    );
-    const expression = document.body.querySelector(
-      '[data-slot="graph-node-column-function-expression"]'
-    );
-    expect(expression?.textContent).toBe('UPPER(column_1)');
-
-    const aliasInput = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="graph-node-column-function-alias-input"]'
-    );
-    await act(async () => {
-      fireEvent.change(aliasInput!, { target: { value: '   ' } });
-    });
-    expect(aliasInput?.value).toBe('   ');
-    expect(aliasInput?.getAttribute('aria-invalid')).toBe('true');
-    const aliasAlert = document.body.querySelector<HTMLElement>(
-      '[data-slot="graph-node-expression-composer"] [role="alert"]'
-    );
-    expect(aliasInput?.getAttribute('aria-describedby')).toBe(aliasAlert?.id);
-    expect(aliasAlert?.textContent).toContain('sin espacios exteriores');
-    expect(
-      document.body.querySelector<HTMLButtonElement>(
-        '[data-slot="graph-node-column-function-alias-submit"]'
-      )?.disabled
-    ).toBe(true);
-
-    await act(async () => {
-      fireEvent.change(aliasInput!, { target: { value: 'rejected_alias' } });
-      fireEvent.click(
-        document.body.querySelector<HTMLButtonElement>(
-          '[data-slot="graph-node-column-function-alias-submit"]'
-        )!
-      );
-    });
-    expect(aliasInput?.value).toBe('rejected_alias');
-    expect(
-      document.body.querySelector('[data-slot="graph-node-expression-composer"]')
-    ).not.toBeNull();
-
-    await act(async () => {
-      fireEvent.change(aliasInput!, { target: { value: 'column_1_upper' } });
-      fireEvent.click(
-        document.body.querySelector<HTMLButtonElement>(
-          '[data-slot="graph-node-column-function-alias-submit"]'
-        )!
-      );
-      await Promise.resolve();
-    });
-
-    const created = container.querySelector<HTMLElement>(
-      '[data-slot="graph-node-column-piece"][data-column-name="column_1_upper"]'
-    );
-    expect(created).not.toBeNull();
-    expect(container.querySelectorAll('[data-slot="graph-node-column-row"]')).toHaveLength(7);
-    expect(document.activeElement).toBe(created);
-  });
-  it('explains truthfully when the connected profile admits no function for a type', async () => {
-    await act(async () => {
-      root.render(
-        <GraphNodeColumnSection
-          nodeId="transform-orders"
-          columns={[
-            {
-              id: 'output:amount',
-              name: 'amount',
-              type: 'numeric',
-              functionMenu: { category: 'numeric', items: [] },
-            },
-          ]}
-          onColumnFunctionApply={vi.fn()}
-        />
-      );
-    });
-    await act(async () => {
-      fireEvent.click(
-        container.querySelector<HTMLButtonElement>('[data-slot="graph-node-column-toggle"]')!
-      );
-    });
-
-    const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
-    await act(async () => {
-      piece.dispatchEvent(
-        new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 })
-      );
-      await Promise.resolve();
-    });
-
-    expect(document.body.textContent).toContain(
-      'No hay funciones compatibles con este tipo y destino.'
-    );
   });
 
   it('renders a collapsed governed column disclosure with Spanish product copy', () => {

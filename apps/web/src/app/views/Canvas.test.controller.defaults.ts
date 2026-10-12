@@ -96,6 +96,7 @@ export function buildDefaultCanvasDraftStatusState(): CanvasDraftStatusState {
     label: 'Draft synced',
     tone: 'neutral',
     showReloadAction: false,
+    persistence: 'durable',
   };
 }
 
@@ -267,6 +268,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleSelectCanvasDocument'
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
+  | 'applyNodeDraft'
   | 'applyInspectorNodeDraft'
   | 'handleDuplicateNode'
   | 'handleToggleNodeSelection'
@@ -308,6 +310,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleSelectCanvasDocument: vi.fn(),
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
+    applyNodeDraft: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
     handleDuplicateNode: vi.fn(),
     handleToggleNodeSelection: vi.fn(),

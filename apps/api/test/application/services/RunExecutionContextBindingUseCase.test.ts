@@ -1,5 +1,6 @@
 import {
   DBT_STEP_REQUIRED_CAPABILITY,
+  RUN_REJECTIONS,
   createDefaultStepTypeRegistry,
   parseExecutionSelection,
   parseExecutionPlan,
@@ -10,11 +11,15 @@ import {
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import { DuplicateRunContextPreparerError } from '../../../src/application/ports/runExecutionContextPreparer.js';
 import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import { DbtRunExecutionContextPreparer } from '../../../src/application/services/dbt/DbtRunExecutionContextPreparer.js';
 import { RunExecutionContextBindingUseCase } from '../../../src/application/services/RunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
+
+type DbtDependencies = ConstructorParameters<typeof DbtRunExecutionContextPreparer>[0];
 
 type BindingDependencies = ConstructorParameters<typeof RunExecutionContextBindingUseCase>[0];
 
@@ -50,6 +55,151 @@ const RUN_CONTEXT_REF = parseRunExecutionContextRef({
 const STEP_TYPE_REGISTRY = createDefaultStepTypeRegistry();
 
 describe('RunExecutionContextBindingUseCase', () => {
+  it.each(['prepared', 'rejected', 'store-unavailable'] as const)(
+    'dispatches only after every context is prepared and persisted: %s',
+    async (outcome) => {
+      const delegate = makeDelegate();
+      const contextWriter = {
+        write: vi.fn(async () =>
+          outcome === 'store-unavailable'
+            ? { ok: false as const, reason: 'artifact_store_unavailable' as const }
+            : { ok: true as const, ref: RUN_CONTEXT_REF }
+        ),
+      };
+      const first = {
+        contextKey: 'first',
+        isRequired: () => true,
+        prepare: vi.fn(async () => ({
+          ok: true as const,
+          context: { artifactRef: 'first:input' },
+        })),
+      };
+      const second = {
+        contextKey: 'second',
+        isRequired: () => true,
+        prepare: vi.fn(async () =>
+          outcome === 'rejected'
+            ? { ok: false as const, ...RUN_REJECTIONS.projectRevisionMismatch }
+            : { ok: true as const, context: { artifactRef: 'second:input' } }
+        ),
+      };
+      const useCase = new RunExecutionContextBindingUseCase({
+        delegate,
+        contextWriter,
+        preparers: [first, second],
+      });
+      const result = await useCase.executeAdmitted(
+        buildCommand(),
+        buildContext(),
+        makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+      );
+      expect(first.prepare).toHaveBeenCalledOnce();
+      expect(second.prepare).toHaveBeenCalledOnce();
+      expect(contextWriter.write).toHaveBeenCalledTimes(outcome === 'rejected' ? 0 : 1);
+      expect(delegate.execute).toHaveBeenCalledTimes(outcome === 'prepared' ? 1 : 0);
+      expect(result).toMatchObject({
+        value:
+          outcome === 'prepared'
+            ? { kind: 'accepted' }
+            : {
+                kind: 'plan_rejected',
+                cause:
+                  outcome === 'rejected'
+                    ? RUN_REJECTIONS.projectRevisionMismatch.cause
+                    : RUN_REJECTIONS.contextStoreUnavailable.cause,
+              },
+      });
+      if (outcome === 'prepared')
+        expect(contextWriter.write).toHaveBeenCalledWith({
+          runId: 'run-test-1',
+          context: expect.objectContaining({
+            pluginContexts: {
+              first: { artifactRef: 'first:input' },
+              second: { artifactRef: 'second:input' },
+            },
+          }),
+        });
+    }
+  );
+
+  it.each(['dbt', 'dvt-postgres', 'test-plugin'])(
+    'rejects caller context before preparing %s or dispatching',
+    async (contextKey) => {
+      const prepare = vi.fn();
+      const delegate = makeDelegate();
+      const contextWriter = { write: vi.fn() };
+      const useCase = new RunExecutionContextBindingUseCase({
+        delegate,
+        contextWriter,
+        preparers: [{ contextKey, isRequired: () => true, prepare }],
+      });
+      const result = await useCase.executeAdmitted(
+        { ...buildCommand(), runExecutionContextRef: RUN_CONTEXT_REF },
+        buildContext(),
+        makeAdmission('DBT_MODEL', DBT_PROVENANCE)
+      );
+      expect(result).toMatchObject({
+        value: {
+          kind: 'plan_rejected',
+          cause: 'run_execution_context_caller_ref_rejected',
+        },
+      });
+      expect(prepare).not.toHaveBeenCalled();
+      expect(contextWriter.write).not.toHaveBeenCalled();
+      expect(delegate.execute).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects duplicate context ownership at assembly', () => {
+    const preparer = { contextKey: 'test-plugin', isRequired: () => true, prepare: vi.fn() };
+    expect(
+      () =>
+        new RunExecutionContextBindingUseCase({
+          delegate: makeDelegate(),
+          contextWriter: { write: vi.fn() },
+          preparers: [preparer, preparer],
+        })
+    ).toThrow(DuplicateRunContextPreparerError);
+  });
+
+  it('prepares an injected plugin without built-in provider dependencies', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = {
+      write: vi.fn(async () => ({ ok: true as const, ref: RUN_CONTEXT_REF })),
+    };
+    const prepare = vi.fn(async () => ({
+      ok: true as const,
+      context: { artifactRef: 'artifact:admitted-input' },
+    }));
+    const useCase = new RunExecutionContextBindingUseCase({
+      delegate,
+      contextWriter,
+      preparers: [{ contextKey: 'test-plugin', isRequired: () => true, prepare }],
+    });
+    const admitted = makeAdmission('DBT_MODEL', DBT_PROVENANCE);
+    const result = await useCase.executeAdmitted(buildCommand(), buildContext(), admitted);
+
+    expect(result).toMatchObject({ value: { kind: 'accepted' } });
+    expect(prepare).toHaveBeenCalledWith({
+      plan: admitted.materialized.plan,
+      planRef: PLAN_REF,
+      runId: 'run-test-1',
+      targetAdapter: 'temporal',
+      scope: { tenantId: 'tenant-1', projectId: 'proj-1', environmentId: 'env-1' },
+    });
+    expect(contextWriter.write).toHaveBeenCalledWith({
+      runId: 'run-test-1',
+      context: expect.objectContaining({
+        planSha256: PLAN_REF.sha256,
+        pluginContexts: { 'test-plugin': { artifactRef: 'artifact:admitted-input' } },
+      }),
+    });
+    expect(delegate.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ planRef: PLAN_REF, runExecutionContextRef: RUN_CONTEXT_REF }),
+      expect.any(Object)
+    );
+  });
+
   it('orchestrates a revision-bound bundle and server-owned run context before dispatch', async () => {
     const delegate = makeDelegate();
     const bundleBuilder = {
@@ -69,11 +219,15 @@ describe('RunExecutionContextBindingUseCase', () => {
     };
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder,
       contextWriter,
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(),
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder,
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(),
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -111,18 +265,22 @@ describe('RunExecutionContextBindingUseCase', () => {
     const contextWriter = { write: vi.fn() };
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder: {
-        build: vi.fn(async () => ({
-          ok: false as const,
-          reason: 'revision_mismatch' as const,
-          expectedContentSetSha256: PROJECT_REVISION,
-          actualContentSetSha256: '9'.repeat(64),
-        })),
-      },
       contextWriter,
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(),
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder: {
+            build: vi.fn(async () => ({
+              ok: false as const,
+              reason: 'revision_mismatch' as const,
+              expectedContentSetSha256: PROJECT_REVISION,
+              actualContentSetSha256: '9'.repeat(64),
+            })),
+          },
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(),
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -136,7 +294,7 @@ describe('RunExecutionContextBindingUseCase', () => {
       value: {
         kind: 'plan_rejected',
         accepted: false,
-        reason: 'The DBT project changed after Preview. Run Preview again before Run.',
+        cause: 'run_dbt_project_revision_mismatch',
       },
     });
     expect(contextWriter.write).not.toHaveBeenCalled();
@@ -150,11 +308,15 @@ describe('RunExecutionContextBindingUseCase', () => {
     const context = buildContext();
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder,
       contextWriter: { write: vi.fn() },
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(),
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder,
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(),
+        }),
+      ],
     });
 
     await useCase.executeAdmitted(command, context, makeAdmission(undefined, undefined));
@@ -174,11 +336,15 @@ describe('RunExecutionContextBindingUseCase', () => {
     const stepTypeRegistry = createDbtExtensionRegistry();
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder,
       contextWriter: { write: vi.fn() },
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry,
-      ...dbtBindingDependencies(),
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder,
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry,
+          ...dbtBindingDependencies(),
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -188,7 +354,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      value: { reason: 'The DBT project bundle artifact store is not configured.' },
+      value: { cause: 'run_dbt_bundle_store_unavailable' },
     });
     expect(bundleBuilder.build).toHaveBeenCalledOnce();
     expect(delegate.execute).not.toHaveBeenCalled();
@@ -198,16 +364,20 @@ describe('RunExecutionContextBindingUseCase', () => {
     const delegate = makeDelegate();
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder: {
-        build: vi.fn(async () => ({
-          ok: false as const,
-          reason: 'artifact_store_unavailable' as const,
-        })),
-      },
       contextWriter: { write: vi.fn() },
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(),
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder: {
+            build: vi.fn(async () => ({
+              ok: false as const,
+              reason: 'artifact_store_unavailable' as const,
+            })),
+          },
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(),
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -217,7 +387,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      value: { reason: 'The DBT project bundle artifact store is not configured.' },
+      value: { cause: 'run_dbt_bundle_store_unavailable' },
     });
     expect(delegate.execute).not.toHaveBeenCalled();
   });
@@ -227,13 +397,17 @@ describe('RunExecutionContextBindingUseCase', () => {
     const bundleBuilder = { build: vi.fn() };
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder,
       contextWriter: { write: vi.fn() },
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(async () => {
-        throw new WarehouseConnectionNotFoundError(TARGET.connectionRef.connectionId);
-      }),
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder,
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(async () => {
+            throw new WarehouseConnectionNotFoundError(TARGET.connectionRef.connectionId);
+          }),
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -243,7 +417,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      value: { reason: 'The Preview-bound DBT connection is not in this workspace.' },
+      value: { cause: 'run_dbt_connection_not_found' },
     });
     expect(bundleBuilder.build).not.toHaveBeenCalled();
     expect(delegate.execute).not.toHaveBeenCalled();
@@ -255,12 +429,16 @@ describe('RunExecutionContextBindingUseCase', () => {
     const verify = vi.fn(async () => false);
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder,
       contextWriter: { write: vi.fn() },
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(),
-      executionConnectionBindingVerifier: { verify },
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder,
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(),
+          executionConnectionBindingVerifier: { verify },
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -276,8 +454,7 @@ describe('RunExecutionContextBindingUseCase', () => {
     });
     expect(result).toMatchObject({
       value: {
-        reason:
-          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+        cause: 'run_dbt_profile_mismatch',
       },
     });
     expect(bundleBuilder.build).not.toHaveBeenCalled();
@@ -290,18 +467,22 @@ describe('RunExecutionContextBindingUseCase', () => {
     const verify = vi.fn(async () => true);
     const useCase = new RunExecutionContextBindingUseCase({
       delegate,
-      bundleBuilder,
       contextWriter: { write: vi.fn() },
-      executionTargetResolver: { resolve: () => TARGET },
-      stepTypeRegistry: STEP_TYPE_REGISTRY,
-      ...dbtBindingDependencies(async (_scope, connectionId) => ({
-        id: connectionId,
-        name: 'DBT execution warehouse',
-        type: 'postgres',
-        database: 'analytics',
-        sourceObjects: [],
-      })),
-      executionConnectionBindingVerifier: { verify },
+      preparers: [
+        new DbtRunExecutionContextPreparer({
+          bundleBuilder,
+          executionTargetResolver: { resolve: () => TARGET },
+          stepTypeRegistry: STEP_TYPE_REGISTRY,
+          ...dbtBindingDependencies(async (_scope, connectionId) => ({
+            id: connectionId,
+            name: 'DBT execution warehouse',
+            type: 'postgres',
+            database: 'analytics',
+            sourceObjects: [],
+          })),
+          executionConnectionBindingVerifier: { verify },
+        }),
+      ],
     });
 
     const result = await useCase.executeAdmitted(
@@ -312,8 +493,7 @@ describe('RunExecutionContextBindingUseCase', () => {
 
     expect(result).toMatchObject({
       value: {
-        reason:
-          'The Preview-bound DBT profile does not resolve to its governed workspace connection.',
+        cause: 'run_dbt_profile_mismatch',
       },
     });
     expect(verify).not.toHaveBeenCalled();
@@ -343,7 +523,7 @@ function makeDelegate(): BindingDependencies['delegate'] {
 }
 
 function dbtBindingDependencies(
-  getConnection: BindingDependencies['warehouseConnectionCatalog']['getConnection'] = async (
+  getConnection: DbtDependencies['warehouseConnectionCatalog']['getConnection'] = async (
     _scope,
     connectionId
   ) => ({
@@ -354,7 +534,7 @@ function dbtBindingDependencies(
     credentialRef: TARGET.credentialRef,
     sourceObjects: [],
   })
-): Pick<BindingDependencies, 'executionConnectionBindingVerifier' | 'warehouseConnectionCatalog'> {
+): Pick<DbtDependencies, 'executionConnectionBindingVerifier' | 'warehouseConnectionCatalog'> {
   const unexpected = async (): Promise<never> => {
     throw new Error('Unexpected PostgreSQL binding for a DBT-only plan');
   };

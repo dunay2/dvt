@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDvtSubstraitProjectionOutput } from './canvasDvtSubstraitCalculatedColumn';
+import { createDvtSubstraitProjectionOutput } from './canvasLegacyProjectionOutput.test-support';
 import {
   applyDvtSubstraitProjectionFunction,
   createDvtSubstraitProjectionDraft,

@@ -42,10 +42,6 @@ const PRETTIER_CLI =
   resolveCliPath(['prettier/bin/prettier.cjs', 'prettier/bin-prettier.js']) ??
   resolvePackageBin('prettier', ['bin/prettier.cjs', 'bin-prettier.js']);
 
-const ESLINT_CLI =
-  resolveCliPath(['eslint/bin/eslint.js', 'eslint/bin/eslint.mjs', 'eslint/bin/eslint.cjs']) ??
-  resolvePackageBin('eslint', ['bin/eslint.js', 'bin/eslint.mjs', 'bin/eslint.cjs']);
-
 function chunk(items, size) {
   const out = [];
   for (let i = 0; i < items.length; i += size) {
@@ -100,49 +96,73 @@ function runNodeCli(toolName, cliPath, args) {
   return spawnSync(process.execPath, [cliPath, ...args], { stdio: 'inherit' });
 }
 
-const changed = listLocalChangedFiles({ repoRootPath: repoRoot });
-if (changed.length === 0) {
-  console.log('No changed files detected. Skipping format/lint checks.');
-  process.exit(0);
+async function runEslint(files, options = {}) {
+  const createEslint = options.createEslint ?? ((config) => new (require('eslint').ESLint)(config));
+  const write = options.write ?? ((message) => process.stdout.write(message));
+  const reportError = options.reportError ?? ((message) => console.error(message));
+
+  try {
+    const eslint = createEslint({ cwd: repoRoot, warnIgnored: false });
+    const results = await eslint.lintFiles(files);
+    const formatter = await eslint.loadFormatter('stylish');
+    const report = formatter.format(results);
+    if (report) write(report);
+    return results.some((result) => result.errorCount > 0 || result.warningCount > 0) ? 1 : 0;
+  } catch (error) {
+    reportError(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
 }
 
-const prettierFiles = changed.filter((f) => /\.(ts|tsx|js|cjs|mjs|json|md|yml|yaml)$/.test(f));
-const eslintFiles = changed
-  .filter((f) => /\.(ts|tsx|js|cjs|mjs)$/.test(f))
-  // Exclude declaration files: ESLint typically ignores them and emits
-  // "File ignored because of a matching ignore pattern" warnings.
-  .filter((f) => !f.endsWith('.d.ts'))
-  // Frontend is not yet part of the repo's root TypeScript/ESLint project setup.
-  // Exclude it from pre-push checks until it has its own tsconfig + eslint config integration.
-  .filter((f) => !f.startsWith('packages/frontend/'));
+async function main() {
+  const changed = listLocalChangedFiles({ repoRootPath: repoRoot });
+  if (changed.length === 0) {
+    console.log('No changed files detected. Skipping format/lint checks.');
+    return 0;
+  }
 
-// remove deleted files from the lists
-const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
-const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
+  const prettierFiles = changed.filter((f) => /\.(ts|tsx|js|cjs|mjs|json|md|yml|yaml)$/.test(f));
+  const eslintFiles = changed
+    .filter((f) => /\.(ts|tsx|js|cjs|mjs)$/.test(f))
+    // Declaration files and packages/frontend are outside this ESLint project.
+    .filter((f) => !f.endsWith('.d.ts') && !f.startsWith('packages/frontend/'));
 
-if (existingPrettierFiles.length) {
-  console.log('Running Prettier check on changed files:');
-  console.log(existingPrettierFiles.join('\n'));
-  const status = runToolBatched(
-    (args) => runNodeCli('Prettier', PRETTIER_CLI, args),
-    ['--check', '--end-of-line', 'auto'],
-    existingPrettierFiles,
-    'Prettier files'
-  );
-  if (status !== 0) process.exit(status);
+  // Deleted files are in the diff but cannot be passed to format or lint tools.
+  const existingPrettierFiles = prettierFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
+  const existingEslintFiles = eslintFiles.filter((f) => fs.existsSync(path.join(repoRoot, f)));
+
+  if (existingPrettierFiles.length) {
+    console.log('Running Prettier check on changed files:');
+    console.log(existingPrettierFiles.join('\n'));
+    const status = runToolBatched(
+      (args) => runNodeCli('Prettier', PRETTIER_CLI, args),
+      ['--check', '--end-of-line', 'auto'],
+      existingPrettierFiles,
+      'Prettier files'
+    );
+    if (status !== 0) return status;
+  }
+
+  if (existingEslintFiles.length) {
+    console.log('Running ESLint on changed files:');
+    console.log(existingEslintFiles.join('\n'));
+    const status = await runEslint(existingEslintFiles);
+    if (status !== 0) return status;
+  }
+
+  console.log('Changed-file checks passed.');
+  return 0;
 }
 
-if (existingEslintFiles.length) {
-  console.log('Running ESLint on changed files:');
-  console.log(existingEslintFiles.join('\n'));
-  const status = runToolBatched(
-    (args) => runNodeCli('ESLint', ESLINT_CLI, args),
-    ['--max-warnings', '0', '--no-warn-ignored'],
-    existingEslintFiles,
-    'ESLint files'
-  );
-  if (status !== 0) process.exit(status);
+if (require.main === module) {
+  main()
+    .then((status) => {
+      process.exitCode = status;
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    });
 }
 
-console.log('Changed-file checks passed.');
-process.exit(0);
+module.exports = { main, runEslint };

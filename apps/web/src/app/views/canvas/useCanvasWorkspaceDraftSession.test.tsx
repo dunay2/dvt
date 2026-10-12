@@ -1,11 +1,14 @@
 // @vitest-environment jsdom
 
-import React, { act, type Dispatch, type SetStateAction } from 'react';
+import React, { act, useState, type Dispatch, type SetStateAction } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasWorkspaceDraftSession } from './useCanvasWorkspaceDraftSession';
+import { buildAuthoringDraft } from './canvasDraftRepository.test.fixtures';
+import { markDraftSaving } from './canvasDraftPersistenceRuntime';
 
 describe('useCanvasWorkspaceDraftSession', () => {
   beforeEach(() => {
@@ -159,5 +162,69 @@ describe('useCanvasWorkspaceDraftSession', () => {
     expect(latest.session?.draftRevision).toBe('authoring-command');
 
     act(() => root.unmount());
+  });
+
+  it('preserves a visible input removal when an unrelated render interrupts save scheduling', async () => {
+    const fields = Array.from({ length: 6 }, (_, index) => ({
+      inputId: `input-${index}`,
+      producerFieldId: `field-${index}`,
+    }));
+    const draft = buildAuthoringDraft();
+    draft.edges[0]!.metadata = { inputBindings: { version: 'v1', fields } };
+    const record = { draft, revision: 'before-save', savedAt: '2026-10-08T00:00:00Z' };
+    const sent = canvasDraftSession.machine.bootstrap({
+      remoteDraft: record,
+      canonicalNodeIds: [],
+      canonicalEdges: [],
+    });
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    let current!: ReturnType<typeof useCanvasWorkspaceDraftSession>;
+    let rerender!: Dispatch<SetStateAction<number>>;
+    function HookHost(): React.ReactElement {
+      const [pulse, setPulse] = useState(0);
+      rerender = setPulse;
+      current = useCanvasWorkspaceDraftSession('tenant::project-a::dev');
+      return (
+        <output data-pulse={pulse}>
+          {current[0].workingSet.visibleEdges[0]?.inputBindings?.fields.length ?? 0}
+        </output>
+      );
+    }
+    try {
+      await act(async () => root.render(<HookHost />));
+      await act(async () => current[1](sent));
+      expect(container.textContent).toBe('6');
+      await act(async () => {
+        markDraftSaving(current[1], sent);
+        // Interrupt the queued save render, as a synchronous presentation update can.
+        flushSync(() => rerender((value) => value + 1));
+        flushSync(() =>
+          current[2]((session) => ({
+            outcome: 'applied',
+            draftSession: canvasDraftSession.workingSet.replaceEdges(
+              session,
+              session.workingSet.visibleEdges.map((edge, index) =>
+                index === 0
+                  ? { ...edge, inputBindings: { version: 'v1', fields: fields.slice(1) } }
+                  : edge
+              )
+            ),
+          }))
+        );
+        expect(container.textContent).toBe('5');
+      });
+      expect(container.textContent).toBe('5');
+      expect(current[0].savingWorkingSet).toBe(sent.workingSet);
+      await act(async () =>
+        current[1]((session) =>
+          canvasDraftSession.machine.applySaveSuccess(session, { ...record, revision: 'saved-six' })
+        )
+      );
+      expect(container.textContent).toBe('5');
+      expect(current[0].draftRevision).toBe('saved-six');
+    } finally {
+      act(() => root.unmount());
+    }
   });
 });

@@ -115,4 +115,4 @@ flowchart TD
 
 - [Documentation Usability Canon User Stories](./documentation-usability-canon-user-stories.md)
 - [Documentation Usability Canon Plan 2026-05-24](../../../planning/proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md)
-- [Documentation Usability Mailbox Analysis](../../../../buzon/20260524-codex-fowler-documentation-usability-canon.md)
+- [Documentation Usability Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-documentation-usability-canon.md)

@@ -36,6 +36,7 @@ function buildArgs(
         label: 'Draft synced',
         tone: 'neutral',
         showReloadAction: false,
+        persistence: 'durable',
       },
       routeReadiness: {
         status: 'complete',

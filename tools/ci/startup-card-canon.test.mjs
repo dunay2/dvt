@@ -19,7 +19,6 @@ const requiredFiles = [
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/planning/domains/documentation-governance.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
 ];
 
 const requiredRails = [
@@ -59,7 +58,6 @@ const planningAuthorityFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
 ];
 
 const planningDomainEntrypoints = [
@@ -85,8 +83,6 @@ const baseActivePlanningEntrypoints = [
   'docs/architecture/reference-architecture.md',
   'docs/architecture/system/index.md',
   'docs/architecture/domain-map.md',
-  'docs/architecture/atlas/index.md',
-  'docs/architecture/atlas/README.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/architecture/components/engine/roadmap/engine-phases.md',
@@ -99,14 +95,12 @@ const baseActivePlanningEntrypoints = [
   'docs/planning/roadmap/diagrams/execution-runtime-architecture-delta.md',
   'docs/planning/roadmap/diagrams/execution-tracking-flow.md',
   'docs/planning/roadmap/diagrams/gap-execution-dependency-graph.md',
-  'docs/planning/roadmap/diagrams/gap-execution-parallel-lanes.md',
+  'docs/planning/roadmap/diagrams/execution-dependency-gates.md',
   'docs/planning/domains/index.md',
   ...planningDomainEntrypoints,
   'docs/planning/gaps/index.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/index.md',
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
-  'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
-  'docs/planning/proposals/mandatory/runtime-and-contracts/mw-c1-to-tf-c2-runtime-vertical-sequence-analysis-20260409.md',
   'scripts/sync-docs.cjs',
 ];
 
@@ -403,7 +397,7 @@ test('planning startup artifacts preserve GitHub task authority', () => {
 
   assert.match(
     readRepoFile(
-      'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md'
+      'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md'
     ),
     /issue\/PR evidence \+ `pnpm verify:prepush`/,
     'planning route must preserve the GitHub issue/PR closeout baseline'
@@ -419,31 +413,29 @@ test('active domain and roadmap routing expand the retired-surface guard', () =>
   );
   assert.ok(
     linkedActivePlanningPlans.includes(
-      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md'
+      'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md'
     ),
-    'documentation governance active proposal routing must be scanned regardless of destination status'
+    'documentation governance current canon routing must be scanned'
   );
   assert.ok(
     linkedCurrentRoadmapDocuments.includes(
-      'docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md'
+      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md'
     ),
     'roadmap current sources must resolve mandatory plans'
   );
   assert.ok(
     linkedCurrentRoadmapRoutingDocuments.includes(
-      'docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md'
+      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md'
     ),
-    'roadmap current reviews must be exposed to retired-surface validation'
+    'roadmap current hardening plans must be exposed to retired-surface validation'
   );
   assert.ok(
-    linkedCurrentRoadmapDocuments.includes(
-      'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md'
-    ),
-    'roadmap historical closeout evidence must still resolve as a current source'
+    linkedCurrentRoadmapDocuments.every((path) => !path.startsWith('docs/planning/closeouts/')),
+    'retired historical closeouts must not remain current roadmap sources'
   );
   assert.ok(
-    !linkedCurrentRoadmapRoutingDocuments.includes(
-      'docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md'
+    linkedCurrentRoadmapRoutingDocuments.every(
+      (path) => !path.startsWith('docs/planning/closeouts/')
     ),
     'historical closeout evidence must not be rewritten as current routing authority'
   );

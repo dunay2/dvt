@@ -11,7 +11,7 @@ function baseArgs(action) {
     'fowler-analysis',
     action,
     '--path',
-    'buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md',
+    'buzon/20260515-example-fowler-analysis.md',
     '--actor',
     'codex',
     '--reason',
@@ -33,7 +33,7 @@ test('parseArgs builds Fowler analysis DB-first command rails', () => {
   ]);
 
   assert.equal(disposition.kind, 'fowler_analysis_disposition_record');
-  assert.equal(disposition.documentPath, 'buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md');
+  assert.equal(disposition.documentPath, 'buzon/20260515-example-fowler-analysis.md');
   assert.equal(disposition.dispositionStatus, 'accepted');
   assert.equal(disposition.dispositionKind, 'canonicalized');
   assert.equal(
@@ -136,10 +136,7 @@ test('Fowler analysis planner emits disposition, target, reference and retiremen
     now,
   });
 
-  assert.equal(
-    disposition.disposition.documentPath,
-    'buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md'
-  );
+  assert.equal(disposition.disposition.documentPath, 'buzon/20260515-example-fowler-analysis.md');
   assert.equal(disposition.disposition.dispositionStatus, 'accepted');
   assert.equal(disposition.audit.operationType, 'fowler_analysis_disposition_record');
   assert.equal(
@@ -226,7 +223,7 @@ test('writePlannedFowlerAnalysisOperation persists facts and audit rows', async 
     /insert into planning_query_store\.fowler_analysis_reference_resolutions/
   );
   assert.match(queries[1].sql, /insert into planning_query_store\.fowler_analysis_operations/);
-  assert.equal(queries[0].params[0], 'buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md');
+  assert.equal(queries[0].params[0], 'buzon/20260515-example-fowler-analysis.md');
   assert.equal(
     queries[0].params[1],
     'docs/planning/proposals/mandatory/governance-and-docs/example.md'

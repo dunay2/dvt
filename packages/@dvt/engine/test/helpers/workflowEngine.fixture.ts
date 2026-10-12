@@ -113,10 +113,12 @@ interface WorkflowEngineFixture {
 export function createWorkflowEngineFixture(
   input?: WorkflowEngineFixtureInput
 ): WorkflowEngineFixture {
-  const store = input?.stateStore ?? input?.stateStoreRead ?? new InMemoryTxStore();
+  const providedStore = input?.stateStore ?? input?.stateStoreRead;
+  const intentStore =
+    input?.intentStore ?? providedStore?.startRunIntents ?? new InMemoryStartRunIntentStore();
+  const store = providedStore ?? new InMemoryTxStore({ startRunIntents: intentStore });
   const stateStoreRead = input?.stateStoreRead ?? store;
   const stateStoreWrite = input?.stateStoreWrite ?? store;
-  const intentStore = input?.intentStore ?? new InMemoryStartRunIntentStore();
   const projector = input?.projector ?? new SnapshotProjector();
   const idempotency = input?.idempotency ?? new IdempotencyKeyBuilder();
   const clock = input?.clock ?? new SequenceClock(asIsoUtcString('2026-02-12T00:00:00.000Z'));

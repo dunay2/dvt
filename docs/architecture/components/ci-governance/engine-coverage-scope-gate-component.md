@@ -2,7 +2,7 @@
 title: Engine Coverage Scope Gate Component
 status: Accepted
 owner: Engineering / CI Governance
-last_reviewed: 2026-05-15
+last_reviewed: 2026-09-30
 planning_type: architecture
 ---
 
@@ -50,7 +50,7 @@ The component does not own:
 | `computeWorkflowModeScopeOutputs('test', changedFiles, context)` | `tools/ci/scope-config.mjs`  | Returns `coverage_relevant` and package-scope booleans for Test Suite consumers.      |
 | `TEST_SCOPE_PATTERNS.coverage_relevant`                          | `tools/ci/scope-config.mjs`  | Names the file patterns that can require engine coverage threshold enforcement.       |
 | `TEST_SCOPE_PATTERNS.engine`                                     | `tools/ci/scope-config.mjs`  | Names the engine workspace package scope used by package tests and coverage canaries. |
-| `node tools/ci/emit-scope.mjs --mode test`                       | `tools/ci/emit-scope.mjs`    | Emits GitHub Action outputs for Test Suite jobs.                                      |
+| `node tools/ci/emit-scope.mjs`                                   | `tools/ci/emit-scope.mjs`    | Emits GitHub Action outputs for Test Suite jobs.                                      |
 | `detect_test_matrix.outputs.coverage_relevant`                   | `.github/workflows/test.yml` | Gates the Engine Coverage Gate job before runner setup on pull requests.              |
 | `pnpm test:coverage:engine`                                      | root `package.json`          | Runs the engine coverage command whose execution is gated by `coverage_relevant`.     |
 | `pnpm test:ci-tools`                                             | root `package.json`          | Runs semantic CI scope tests that prevent coverage false negatives.                   |
@@ -60,11 +60,94 @@ The component does not own:
 | Rail                                  | Type  | DDD owner                  | Application port                  | Adapter surface               | Negative tests                                                        |
 | ------------------------------------- | ----- | -------------------------- | --------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
 | `ClassifyChangedCiScope`              | query | Repository CI scope policy | `computeWorkflowModeScopeOutputs` | GitHub Actions scope emission | Engine config changes must set `coverage_relevant=true`.              |
-| `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy | `emit-scope.mjs --mode test`      | `.github/workflows/test.yml`  | PR coverage job must consume `coverage_relevant` before runner setup. |
+| `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy | `emit-scope.mjs`                  | `.github/workflows/test.yml`  | PR coverage job must consume `coverage_relevant` before runner setup. |
 | `ValidateEngineCoverageScopeContract` | query | CI tool contract tests     | `node --test tools/ci/*.test.mjs` | `pnpm test:ci-tools`          | Test fails if coverage stops covering the engine workspace policy.    |
 
 No new user-facing command is introduced. This slice changes an internal CI
 query read model consumed by GitHub Actions.
+
+## Coverage Evidence Consumer
+
+Routing does not prove that the selected job actually measures coverage.
+The existing `pnpm test:coverage:engine` command implements the
+`ValidateEngineCoverageEvidence` query in CI Governance, owned by the
+`EngineCoverageEvidence` policy. Its input is the checked-out engine source,
+tests and Vitest policy; its output is the validation exit status and JSON
+coverage report. Vitest is the CLI adapter, and Test Suite is the remote
+consumer. This is separate from the routing-only scope query above.
+
+The command retains the engine package test/pretest lifecycle and passes
+`--coverage` directly to Vitest. An extra `--` separator would disable the
+coverage flag in the installed Vitest CLI and is rejected by the executable
+contract. Root `vitest.config.ts` owns `engineCoveragePolicy`: V8, the existing
+65% statement/line/function and 55% branch thresholds, all source files, clean
+reports, and text/JSON/HTML/LCOV reporters. The engine config reuses that policy
+and owns only its package-relative source inclusion/exclusion paths.
+
+This query reads repository files and writes disposable reports only. Local
+operators and GitHub workflows need no application database or tenant data;
+workflow contents access remains read-only. Every invocation cleans its report
+directory, so an earlier report cannot satisfy the current execution. The
+workflow uploads `coverage/coverage-final.json` explicitly and treats a missing
+file as an error. A passing unit suite without coverage is not valid evidence.
+
+```mermaid
+flowchart LR
+    Scope[coverage_relevant] --> Command[pnpm test:coverage:engine]
+    Command --> Lifecycle[Engine test and pretest lifecycle]
+    Lifecycle --> Vitest[Vitest with coverage enabled]
+    Policy[Single root coverage policy] --> Vitest
+    Vitest --> Thresholds[Tests and thresholds must pass]
+    Vitest --> Report[Fresh coverage-final.json]
+    Report --> Upload[Required artifact: missing means failure]
+```
+
+`tools/ci/engine-coverage.test.mjs` belongs to the executable CI-tool partition.
+It checks the installed CLI argument parser, resolves both actual configs,
+checks the workflow artifact contract, and executes a real Vitest negative
+fixture: unexecuted source must be counted and low coverage must return nonzero.
+A fully covered control must succeed. The fixture is isolated under `tmp/` and
+removed after the test. No mock replaces the coverage provider.
+
+The coverage-command repair is tracked in
+[#3494](https://github.com/dunay2/dvt/issues/3494). The single-execution cut is
+governed by [#2928](https://github.com/dunay2/dvt/issues/2928).
+
+## Single Engine Evidence Lane
+
+Within Test Suite, Engine Coverage Gate owns the entire engine test suite,
+including architecture, determinism and replay tests. The generic package matrix
+excludes engine, and no separate determinism/replay job repeats its collection.
+Local focus commands remain available. Real adapter/provider integrations and
+the Code Quality main/manual baseline remain independent and unchanged.
+
+`coverage_relevant` includes the union of the displaced routes: engine package
+scope, determinism scope, existing coverage scope and root-build-sensitive
+changes (including conservative unknown classifications). The shared scope
+policy owns this union; the workflow has no path classifier of its own.
+
+```mermaid
+flowchart LR
+    Scope[Shared semantic scope: union of engine triggers] --> Coverage[All engine tests with V8 once]
+    Coverage --> Aggregate[Test Suite Required for Merge]
+    Other[Other package and integration lanes] --> Aggregate
+```
+
+The existing required aggregate implements `ValidateTestSuiteEvidenceResult`, a
+CI Governance query owned by `TestSuiteEvidenceResult`. Its inputs are the
+current event, draft posture, detector outputs and this run's named job results;
+its output is an accepted/rejected check status. Its application port is
+`Test Suite Required for Merge`, adapted by the workflow's GitHub script. It
+reads workflow metadata only, has no tenant/application data access, and cannot
+reuse another SHA's successful result.
+
+For ready PRs, the detector must succeed and each selected lane must succeed.
+Only out-of-scope lanes may be skipped. Drafts require the detector and heavy
+lanes to be skipped; `ready_for_review` recalculates the current SHA's scope.
+Push and manual events require every lane. Missing/malformed scope, missing
+results, failure, cancellation and unsupported events reject. The check name
+and repository protections remain unchanged. Executable workflow tests in
+`tools/ci/test-suite-outcome.test.mjs` protect these outcomes.
 
 ## DDD Objects
 
@@ -81,6 +164,8 @@ query read model consumed by GitHub Actions.
   `coverage_relevant=true`.
 - Every pattern in the governed engine workspace scope must be covered by the
   engine coverage scope.
+- Root-build-sensitive and determinism routes must also select coverage, even
+  when they do not match a literal engine source path.
 - `coverage_relevant` must also remain true for contracts, root package
   dependency changes, root Vitest config, TypeScript config, and lockfiles.
 - Test Suite workflow YAML changes stay on CI-tool contract and changed-file
@@ -109,7 +194,7 @@ stateDiagram-v2
 sequenceDiagram
     participant PR as PR diff
     participant Scope as ClassifyChangedCiScope
-    participant Emit as emit-scope --mode test
+    participant Emit as emit-scope
     participant Detect as detect_test_matrix outputs
     participant Workflow as Test Suite coverage job
     participant Coverage as pnpm test:coverage:engine
@@ -126,7 +211,7 @@ sequenceDiagram
 
 - `.github/workflows/test.yml` consumes `coverage_relevant` in the Engine
   Coverage Gate job.
-- `tools/ci/emit-scope.mjs` emits `coverage_relevant` for PR and non-PR events.
+- `tools/ci/emit-scope.mjs` emits `test_scope.coverage_relevant` for PR and non-PR events.
 - `tools/ci/emit-scope.test.mjs` proves concrete changed-file behavior.
 - `tools/ci/workflow-pattern-parity.test.mjs` proves the workflow and scope
   policy stay wired to the component contract.

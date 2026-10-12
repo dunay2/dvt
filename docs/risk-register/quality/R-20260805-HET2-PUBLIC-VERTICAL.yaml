@@ -12,8 +12,9 @@ owners:
 severity: High
 probability: Low
 context: >
-  HET2 adds one bounded HTTPS JSON acquisition before the retained object-file loader and dbt route,
-  with endpoint and credential resolution owned by the Temporal worker.
+  The retained runtime supports bounded HTTPS JSON acquisition, an immutable artifact store and
+  object-file/PostgreSQL loading, with endpoint and credential resolution owned by the Temporal
+  worker. GH-3021 retires the superseded HET2 Canvas story, not these runtime guarantees.
 risk: >
   A regression in endpoint allowlisting, DNS/IP validation, redirect handling, response bounds,
   content-addressed publication, static loader handoff, or evidence mapping could permit SSRF,
@@ -30,14 +31,19 @@ mitigations:
     type, UTF-8, JSON/JSONL syntax, expected size and SHA-256.'
   - 'Publish by conditional create to the exact tenant-scoped content address; verify identical
     retries and refuse conflicts or loader handoff drift.'
-  - 'Keep activity results receipt-only and run a protected live proof that asserts tokens, URLs and
-    payload bytes are absent across success, HTTP status failure, digest mismatch, timeout,
-    cancellation during acquisition and recovery.'
+  - 'Keep activity results receipt-only. Retain nodeHttpsJsonClient.test.ts,
+    HttpJsonArtifactPlugin.test.ts and contentAddressedArtifactStore.test.ts for their adapter/port
+    boundaries, plus contract, planner, plan-verifier, object-file service, dbt-plugin and generic
+    lifecycle proofs.'
+  - 'Preserve historical browser evidence at
+    https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts.
+    Generic JOIN and Run-controls LIVE evidence is not a replacement HET2 chain.'
   - 'Guard the engine and generic Temporal adapter against HTTP-specific ownership and keep the
     network implementation in the worker adapter.'
 residual_risk: >
-  The MVP covers one fixed JSON Lines representation, one authenticated HTTPS endpoint, one
-  S3-compatible store and PostgreSQL/dbt. Pagination, OAuth refresh, schema inference, remote
-  cloud-network variance and broader formats require separate contracts and evidence.
+  No current equivalent real HTTPS-to-S3-to-PostgreSQL-to-dbt browser E2E, or acquisition recovery
+  to completion, is claimed after the obsolete UI story retirement. Adapter/port tests are not that
+  service-backed chain. Pagination, OAuth refresh, schema inference, remote cloud-network variance
+  and broader formats also require separate contracts and evidence. This risk remains open.
 review_after: 2026-09-05
 ---

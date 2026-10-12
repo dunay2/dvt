@@ -11,7 +11,7 @@ export default function App() {
   return (
     <AppProviders>
       <RouterProvider router={router} flushSync={flushRouterUpdate} />
-      <Toaster position="top-right" />
+      <Toaster position="bottom-right" />
     </AppProviders>
   );
 }

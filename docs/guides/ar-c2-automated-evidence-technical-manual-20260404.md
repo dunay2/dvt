@@ -24,7 +24,7 @@ Define a deterministic technical architecture that:
 
 - collects AR-C2 observability signals and rule metadata,
 - evaluates sustained threshold windows,
-- renders a governed artifact consumable by lane closeout.
+- renders a governed artifact consumable by the governing GitHub issue.
 
 ## Technical scope
 
@@ -50,7 +50,7 @@ flowchart LR
   Normalize --> Eval["Sustained window evaluator"]
   Eval --> Render["Artifact renderer"]
   Render --> Store["docs/runbooks generated evidence"]
-  Store --> Lane["Lane C + closeout linkage"]
+  Store --> Issue["GitHub issue + evidence linkage"]
 ```
 
 ## Runtime sequence
@@ -127,6 +127,5 @@ different `expected` values so T4 rows can be resolved independently.
 
 ## References
 
-- [AR-C2 automated evidence generation plan](../planning/proposals/mandatory/runtime-and-contracts/ar-c2-automated-evidence-generation-plan-20260404.md)
 - [AR-C2 SLA Signal Threshold Mapping](../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [AR-C2 SLA operational closure checklist](../planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md)

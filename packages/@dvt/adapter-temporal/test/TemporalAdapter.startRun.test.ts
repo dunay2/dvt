@@ -1,4 +1,5 @@
 import { RUN_PLAN_WORKFLOW } from '@dvt/contracts';
+import { WorkflowIdConflictPolicy, WorkflowIdReusePolicy } from '@temporalio/client';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TemporalAdapter } from '../src/TemporalAdapter.js';
@@ -81,6 +82,8 @@ describe('TemporalAdapter.startRun', () => {
     expect(workflowClient.start).toHaveBeenCalledWith(RUN_PLAN_WORKFLOW, {
       taskQueue: 'q-main-tenant-1',
       workflowId: 'run-1',
+      workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      workflowIdConflictPolicy: WorkflowIdConflictPolicy.FAIL,
       args: [
         {
           planRef: BASE_PLAN_REF,
@@ -99,6 +102,16 @@ describe('TemporalAdapter.startRun', () => {
         taskQueue: 'q-main-tenant-1',
       })
     );
+  });
+
+  it('preserves a rejected provider start without retrying or inventing a run ref', async () => {
+    const { adapter, workflowClient } = makeAdapter();
+    const rejection = new Error('provider rejected duplicate execution');
+    workflowClient.start.mockRejectedValueOnce(rejection);
+
+    await expect(adapter.startRun(BASE_PLAN_REF, BASE_CTX)).rejects.toBe(rejection);
+    expect(workflowClient.start).toHaveBeenCalledTimes(1);
+    expect(workflowClient.getHandle).not.toHaveBeenCalled();
   });
 
   it('does not reject large plan artifacts based only on planRef.sizeBytes', async () => {

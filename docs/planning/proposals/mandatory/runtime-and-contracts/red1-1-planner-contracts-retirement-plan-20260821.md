@@ -139,7 +139,6 @@ componentGuides:
   - docs/architecture/domain-shared.md
   - docs/architecture/typescript-package-classification.md
   - docs/architecture/diagrams/implementation-architecture-diagrams.md
-  - docs/architecture/atlas/engineering/engineering-playbook.md
 userStories:
   - docs/planning/proposals/mandatory/runtime-and-contracts/red1-1-planner-contracts-retirement-plan-20260821.md
 governingSources:
@@ -232,7 +231,6 @@ redGreenCycles:
     patchSurfaces:
       - tools/ci/planner-package-governance.test.mjs
       - docs/architecture/diagrams/implementation-architecture-diagrams.md
-      - docs/architecture/atlas/engineering/engineering-playbook.md
     greenTest: node --test tools/ci/planner-package-governance.test.mjs
 symbols:
   - name: WORKSPACE_ENTRIES

@@ -9,7 +9,7 @@ arc_level: ARC-1
 breaking: false
 evidence_class: context
 code_refs:
-  - docs/planning/proposals/mvp-backend-operability-baseline-roadmap-20260329.md
+  - https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
   - docs/planning/roadmap/index.md
   - docs/planning/state/domain-status-board.md
   - docs/planning/state/agent-lane-a.yaml

@@ -4,14 +4,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  classifyPackageJsonChange,
-  computeWorkflowModeScopeOutputs,
-  parseScopeMode,
-} from './scope-config.mjs';
+import { classifyPackageJsonChange, computeWorkflowModeScopeOutputs } from './scope-config.mjs';
 
 const scriptsOnlyContext = {
-  packageJsonChange: {
+  'package.json': {
     packageScriptsOnly: true,
     rootBuildSensitive: false,
     dependencySensitive: false,
@@ -68,7 +64,7 @@ test('emit-scope workflow mode preserves non-package matches mixed with scripts-
 
 test('emit-scope workflow mode routes dependency-sensitive package json to security analysis', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
-    packageJsonChange: {
+    'package.json': {
       packageScriptsOnly: false,
       rootBuildSensitive: true,
       dependencySensitive: true,
@@ -94,8 +90,8 @@ test('emit-scope contracts mode keeps scripts-only package json out of contract 
 
 test('emit-scope contracts mode routes contract tooling package aliases to contracts', () => {
   const contractToolingContext = {
-    packageJsonChange: {
-      ...scriptsOnlyContext.packageJsonChange,
+    'package.json': {
+      ...scriptsOnlyContext['package.json'],
       contractCapabilitySensitive: true,
     },
   };
@@ -111,7 +107,7 @@ test('emit-scope contracts mode routes contract tooling package aliases to contr
 
 test('emit-scope contracts mode routes lint:determinism script changes to determinism scan', () => {
   const scope = computeWorkflowModeScopeOutputs('contracts', ['package.json'], {
-    packageJsonChange: packageJsonScriptChange(
+    'package.json': packageJsonScriptChange(
       'lint:determinism',
       'pnpm --filter @dvt/engine lint',
       'pnpm --filter @dvt/engine lint --max-warnings 0'
@@ -182,9 +178,9 @@ test('emit-scope fails closed for an uncatalogued CI configuration', () => {
   assert.equal(qualityScope.temporal_postgres_changed, true);
 });
 
-test('emit-scope test mode routes test:determinism script changes to determinism job', () => {
+test('emit-scope test mode routes test:determinism script changes to full engine evidence', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
-    packageJsonChange: packageJsonScriptChange(
+    'package.json': packageJsonScriptChange(
       'test:determinism',
       'pnpm --filter @dvt/engine test --testNamePattern determinism',
       'pnpm --filter @dvt/engine test --testNamePattern deterministic'
@@ -193,11 +189,12 @@ test('emit-scope test mode routes test:determinism script changes to determinism
 
   assert.equal(scope.root_build_sensitive, false);
   assert.equal(scope.determinism_relevant, true);
+  assert.equal(scope.coverage_relevant, true);
 });
 
-test('emit-scope test mode routes test:replay script changes to determinism job', () => {
+test('emit-scope test mode routes test:replay script changes to full engine evidence', () => {
   const scope = computeWorkflowModeScopeOutputs('test', ['package.json'], {
-    packageJsonChange: packageJsonScriptChange(
+    'package.json': packageJsonScriptChange(
       'test:replay',
       'pnpm --filter @dvt/engine test --testNamePattern replay',
       'pnpm --filter @dvt/engine test --testNamePattern replay-consistency'
@@ -206,6 +203,29 @@ test('emit-scope test mode routes test:replay script changes to determinism job'
 
   assert.equal(scope.root_build_sensitive, false);
   assert.equal(scope.determinism_relevant, true);
+  assert.equal(scope.coverage_relevant, true);
+});
+
+test('coverage retains every displaced engine matrix and conservative root trigger', () => {
+  for (const file of [
+    'turbo.json',
+    'tsconfig.json',
+    'vitest.config.ts',
+    'pnpm-lock.yaml',
+    'package.json',
+    '.github/actions/setup-node-pnpm/action.yml',
+    'scripts/run-turbo-workspace-task.cjs',
+    'scripts/unclassified-runtime.cjs',
+    'tools/ci/policy/unknown-policy.json',
+    'packages/@dvt/contracts/src/index.ts',
+    'packages/@dvt/engine/vitest.config.ts',
+    'packages/@dvt/engine/test/replay.test.ts',
+  ]) {
+    assert.equal(computeWorkflowModeScopeOutputs('test', [file]).coverage_relevant, true, file);
+  }
+  for (const file of ['docs/guides/unrelated.md', '.github/workflows/test.yml']) {
+    assert.equal(computeWorkflowModeScopeOutputs('test', [file]).coverage_relevant, false, file);
+  }
 });
 
 test('emit-scope test mode marks engine changes coverage relevant', () => {
@@ -227,7 +247,7 @@ test('emit-scope test mode marks engine package config coverage relevant', () =>
 test('emit-scope test mode routes governed web test docs to web frontend tests', () => {
   const scope = computeWorkflowModeScopeOutputs('test', [
     'docs/architecture/components/web/frontend-test-governance-component.md',
-    'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md',
+    'docs/architecture/components/web/frontend-test-governance-user-stories.md',
   ]);
 
   assert.equal(scope.any_test, true);
@@ -285,15 +305,13 @@ test('emit-scope workflow mode routes executable CI tool contracts only for inst
 
   assert.equal(executableScope.ci_tool_executable_contracts_relevant, true);
 
-  const staticScope = computeWorkflowModeScopeOutputs('workflow', [
-    'tools/ci/workflow-pattern-parity.test.mjs',
-  ]);
+  const staticScope = computeWorkflowModeScopeOutputs('workflow', ['tools/ci/emit-scope.test.mjs']);
 
   assert.equal(staticScope.changed_file_validation_relevant, true);
   assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
 
   const packageScriptScope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
-    packageJsonChange: {
+    'package.json': {
       packageScriptsOnly: true,
       rootBuildSensitive: false,
       dependencySensitive: false,
@@ -336,10 +354,4 @@ test('emit-scope workflow mode routes traceability only for ADRs and governed so
   assert.equal(engineScope.traceability_adr0_relevant, true);
   assert.equal(engineScope.feature_mechanization_relevant, true);
   assert.equal(engineScope.code_validation_relevant, true);
-});
-
-test('parseScopeMode accepts known modes and rejects missing or unknown mode', () => {
-  assert.equal(parseScopeMode(['--mode', 'workflow']), 'workflow');
-  assert.throws(() => parseScopeMode([]), /MODE_REQUIRED/);
-  assert.throws(() => parseScopeMode(['--mode', 'unknown']), /UNSUPPORTED_MODE/);
 });

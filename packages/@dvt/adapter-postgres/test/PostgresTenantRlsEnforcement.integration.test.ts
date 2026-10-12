@@ -205,7 +205,6 @@ async function prepareTenantIsolationSchema(
   const intentStore = new PostgresStartRunIntentStore({
     connectionString: harness.connections.adminConnectionString,
     schema,
-    now: () => POSTGRES_RLS_PROOF_NOW,
   });
 
   try {
@@ -559,9 +558,11 @@ async function insertTenantIsolationProbeRow(
             run_id,
             provider,
             created_at,
-            updated_at
+            updated_at,
+            provider_outcome, compensation, reconciliation, next_reconcile_at, revision, claim_token
           )
-          VALUES ($1, $2, $3, 'temporal', $4, $4)
+          VALUES ($1, $2, $3, 'temporal', $4, $4, '{"kind":"not_requested"}', '{"kind":"not_required"}',
+            jsonb_build_object('kind', 'pending', 'attempts', 0, 'nextAttemptAt', $4::timestamptz), $4, 0, gen_random_uuid())
         `,
         [rowId, tenantId, runId, POSTGRES_RLS_PROOF_NOW]
       );

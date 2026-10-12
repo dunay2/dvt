@@ -6,6 +6,7 @@ import { bindStateStoreRoles } from '../../src/modules/stateStoreRoles.js';
 
 function createStateStoreSource(): StateStoreRoleSource {
   return {
+    applyStartRunWrite: async () => 'not_owner',
     bootstrapRunTx: async () => null as never,
     bootstrapRecoveryRunTx: async () => null as never,
     appendAndEnqueueTx: async () => null as never,
@@ -54,6 +55,7 @@ describe('bindStateStoreRoles', () => {
   });
 
   it.each([
+    ['applyStartRunWrite', 'fenced start write role'],
     ['bootstrapRunTx', 'read bootstrap role'],
     ['bootstrapRecoveryRunTx', 'recovery bootstrap role'],
     ['appendAndEnqueueTx', 'write append role'],
@@ -62,6 +64,7 @@ describe('bindStateStoreRoles', () => {
     ['isSnapshotStale', 'snapshot staleness role'],
   ] as const)('rejects a source missing %s for the %s', (methodName, _roleLabel) => {
     const partialSource = {
+      applyStartRunWrite: async () => 'not_owner',
       bootstrapRunTx: async () => null as never,
       bootstrapRecoveryRunTx: async () => null as never,
       appendAndEnqueueTx: async () => null as never,

@@ -1,23 +1,33 @@
 #!/usr/bin/env node
 /**
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
+ * @baseline GH-3594: outbox admission stays enforced against the disposable proof database.
+ * @baseline GH-3021: PCV1 external inputs are prepared explicitly inside that claimed lease.
+ * @decision Validate the literal spec list before allocation and execute it in one owned runtime.
+ * @consequence Outbox delivery, readiness and cleanup stay real; incomplete evidence rejects.
+ * @version 1.0.0
  */
-const { spawn, spawnSync } = require('node:child_process');
+const { spawnSync } = require('node:child_process');
 const { existsSync, readdirSync } = require('node:fs');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
-const http = require('node:http');
-const https = require('node:https');
 const path = require('node:path');
-const { Client } = require('pg');
 const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
+const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
+const { validateCypressProofSpecs } = require('./run-selected-closure-cypress.cjs');
+const {
+  allocateDisposablePostgresDatabase,
+  installDisposablePostgresInterruptCleanup,
+} = require('./disposable-postgres-database.cjs');
 
 const {
   buildCoordinatedTemporalWorkerEnv,
   buildLocalDbtArtifactEnv,
   ensureLocalWarehouseConnectionViaApi,
+  prepareTemporalWorkerRuntimeDependencies,
   resolveDatabaseUrl,
+  resolvePostgresCredentialBindings,
   seedLocalPostgresProofData,
   shouldBootstrapLocalPostgres,
   waitForUrlOrProcessExit,
@@ -28,15 +38,19 @@ const {
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
 const { allocateFreePort, buildTemporalApiEnv } = require('./run-dev-stack.temporal.cjs');
+const { seedPcv1PostgresProofData } = require('./run-dev-stack.postgres-seed.cjs');
 
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const DEFAULT_API_PORT = 3300;
 const DEFAULT_WEB_PORT = 4174;
 const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
+const READINESS_RECEIPT_TIMEOUT_MS = 5_000;
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-local-postgres.cjs');
+const WORKSPACE_RUNTIME_BUILD_SCRIPT = path.resolve(__dirname, 'build-workspace-runtime-deps.cjs');
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
-const DEFAULT_SPEC_RELATIVE_PATH = 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts';
+const DEFAULT_SPEC_RELATIVE_PATH =
+  'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts';
 const CYPRESS_IMAGE = 'cypress/included:15.18.1';
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
@@ -48,10 +62,6 @@ const SELECTED_CLOSURE_LIVE_PROOF_ROOT = path.resolve(
 const LIVE_PROOF_DBT_PROFILE = 'dvt_live_proof';
 const GENERATED_CANVAS_DBT_PROFILE = 'default';
 const LOCAL_TEMPORAL_TEST_SERVER_ROOT = path.resolve(__dirname, '../.dvt/temporal-test-server');
-
-function quoteIdentifier(identifier) {
-  return `"${identifier.replaceAll('"', '""')}"`;
-}
 
 function allocateLiveProofSchema() {
   return `dvt_live_selected_closure_${Date.now()}_${process.pid}`;
@@ -66,65 +76,19 @@ function pipePrefixedOutput(stream, prefix) {
 }
 
 function spawnProcess(name, args, envOverrides = {}) {
-  const child = spawn(PNPM_COMMAND, args, {
+  const handle = spawnLiveProofProcess(name, PNPM_COMMAND, args, {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, ...envOverrides },
     shell: process.platform === 'win32',
     windowsHide: true,
   });
+  const { child } = handle;
 
   return {
-    name,
-    child,
+    ...handle,
     stdoutReader: pipePrefixedOutput(child.stdout, `[${name}]`),
     stderrReader: pipePrefixedOutput(child.stderr, `[${name}]`),
   };
-}
-
-function request(url) {
-  const transport = url.startsWith('https:') ? https : http;
-
-  return new Promise((resolve, reject) => {
-    const req = transport.get(
-      url,
-      {
-        timeout: 5_000,
-        headers: { Accept: 'application/json,text/html,*/*' },
-      },
-      (response) => {
-        response.resume();
-        resolve(response);
-      }
-    );
-
-    req.on('timeout', () => req.destroy(new Error(`Timeout while requesting ${url}`)));
-    req.on('error', reject);
-  });
-}
-
-async function waitForUrl(url, validator, label) {
-  const startedAt = Date.now();
-  let lastError = null;
-
-  while (Date.now() - startedAt < DEFAULT_READY_TIMEOUT_MS) {
-    try {
-      const response = await request(url);
-      if (validator(response)) {
-        return;
-      }
-      lastError = new Error(`${label} responded with ${response.statusCode}`);
-    } catch (error) {
-      lastError = error;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, DEFAULT_POLL_INTERVAL_MS));
-  }
-
-  throw new Error(
-    `${label} did not become ready within ${DEFAULT_READY_TIMEOUT_MS}ms. Last error: ${
-      lastError?.message ?? 'unknown'
-    }`
-  );
 }
 
 function ensureLocalPostgresReady(shouldBootstrap) {
@@ -193,40 +157,9 @@ function buildLiveProofTemporalTimeSkippingOptions(sourceEnv = process.env) {
       };
 }
 
-async function terminateProcess(processHandle) {
-  if (processHandle.child.killed || processHandle.child.exitCode !== null) {
-    return;
-  }
-
-  if (process.platform === 'win32') {
-    await new Promise((resolve) => {
-      const killer = spawn('taskkill', ['/pid', String(processHandle.child.pid), '/t', '/f'], {
-        stdio: 'ignore',
-        windowsHide: true,
-      });
-      killer.on('exit', () => resolve());
-      killer.on('error', () => resolve());
-    });
-    return;
-  }
-
-  processHandle.child.kill('SIGTERM');
-}
-
 async function closeReaders(processHandle) {
-  processHandle.stdoutReader.close();
-  processHandle.stderrReader.close();
-}
-
-async function dropSchemaIfExists(databaseUrl, schema) {
-  const client = new Client({ connectionString: databaseUrl });
-  await client.connect();
-
-  try {
-    await client.query(`DROP SCHEMA IF EXISTS ${quoteIdentifier(schema)} CASCADE`);
-  } finally {
-    await client.end();
-  }
+  processHandle.stdoutReader?.close();
+  processHandle.stderrReader?.close();
 }
 
 function readNonEmptyEnv(value) {
@@ -284,40 +217,23 @@ function resolveLiveProofDbtExecutable(
   return executable;
 }
 
-function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
+function resolveLiveProofSpecPaths(argv = process.argv.slice(2)) {
   if (argv.length === 0) {
-    return `/repo/${DEFAULT_SPEC_RELATIVE_PATH}`;
+    return [`/repo/${DEFAULT_SPEC_RELATIVE_PATH}`];
   }
 
   if (argv.length !== 2 || argv[0] !== '--spec' || readNonEmptyEnv(argv[1]) === undefined) {
     throw new Error(
-      'Usage: run-selected-closure-live-proof.cjs [--spec apps/web/cypress/e2e/<path>.cy.ts]'
+      'Usage: run-selected-closure-live-proof.cjs [--spec apps/web/cypress/e2e/<path>.cy.ts,...]'
     );
   }
 
-  const relativeSpecPath = argv[1].trim().replaceAll('\\', '/');
-  const pathSegments = relativeSpecPath.split('/');
-
-  if (
-    !relativeSpecPath.startsWith('apps/web/cypress/e2e/') ||
-    pathSegments.includes('..') ||
-    pathSegments.includes('.')
-  ) {
+  const relativeSpecPaths = argv[1].trim().replaceAll('\\', '/').split(',');
+  if (relativeSpecPaths.some((spec) => !spec.startsWith('apps/web/cypress/e2e/'))) {
     throw new Error('Live proof spec must stay inside apps/web/cypress/e2e.');
   }
-
-  if (!relativeSpecPath.endsWith('.cy.ts')) {
-    throw new Error('Live proof spec must end in .cy.ts.');
-  }
-
-  if (
-    pathSegments.some((segment) => segment.length === 0) ||
-    !/^[A-Za-z0-9._/-]+$/.test(relativeSpecPath)
-  ) {
-    throw new Error('Live proof requires exactly one literal Cypress spec path.');
-  }
-
-  return `/repo/${relativeSpecPath}`;
+  validateCypressProofSpecs(relativeSpecPaths.map((spec) => spec.slice('apps/web/'.length)));
+  return relativeSpecPaths.map((spec) => `/repo/${spec}`);
 }
 
 function buildLiveProofCypressJunctionMirror(repoRoot, deps = {}) {
@@ -355,23 +271,22 @@ function buildLiveProofCypressDockerInvocation(
     '-w',
     '/repo/apps/web',
     '-e',
-    `CYPRESS_baseUrl=http://host.docker.internal:${args.webPort}`,
+    'CYPRESS_baseUrl',
     '-e',
-    `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
+    'CYPRESS_apiBaseUrl',
     '-e',
-    `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
+    'CYPRESS_apiBearerToken',
     ...(args.restrictedApiBearerToken === undefined
       ? []
-      : ['-e', `CYPRESS_restrictedApiBearerToken=${args.restrictedApiBearerToken}`]),
+      : ['-e', 'CYPRESS_restrictedApiBearerToken']),
     '-e',
-    `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
+    'CYPRESS_workspaceTenantId',
     '-e',
-    `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
+    'CYPRESS_workspaceProjectId',
     '-e',
-    `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
-    ...(args.postgresTargetSchema === undefined
-      ? []
-      : ['-e', `CYPRESS_postgresTargetSchema=${args.postgresTargetSchema}`]),
+    'CYPRESS_workspaceEnvironmentId',
+    ...(args.postgresTargetSchema === undefined ? [] : ['-e', 'CYPRESS_postgresTargetSchema']),
+    ...(args.postgresDatabaseName === undefined ? [] : ['-e', 'CYPRESS_postgresDatabaseName']),
     CYPRESS_IMAGE,
     '--project',
     '/repo/apps/web',
@@ -380,31 +295,29 @@ function buildLiveProofCypressDockerInvocation(
     '--browser',
     'chrome',
     '--spec',
-    args.specPath,
+    args.specPaths.join(','),
   ];
 }
 
 function buildLiveProofCypressNativeInvocation(args) {
   const specPrefix = '/repo/apps/web/';
-  if (!args.specPath.startsWith(specPrefix)) {
+  if (
+    !Array.isArray(args.specPaths) ||
+    args.specPaths.some((spec) => typeof spec !== 'string' || !spec.startsWith(specPrefix))
+  ) {
     throw new Error('Native Cypress live proof requires a governed web spec path.');
   }
+  const specs = validateCypressProofSpecs(
+    args.specPaths.map((spec) => spec.slice(specPrefix.length))
+  );
 
   return {
-    command: PNPM_COMMAND,
+    command: process.execPath,
     args: [
-      '--filter',
-      '@dvt/web',
-      'exec',
-      'cypress',
-      'run',
-      '--config-file',
-      'cypress.config.ts',
-      '--browser',
-      'chrome',
-      ...(args.headed ? ['--headed'] : []),
+      path.join(__dirname, 'run-selected-closure-cypress.cjs'),
       '--spec',
-      args.specPath.slice(specPrefix.length),
+      specs.join(','),
+      ...(args.headed ? ['--headed'] : []),
     ],
     env: {
       CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
@@ -419,6 +332,9 @@ function buildLiveProofCypressNativeInvocation(args) {
       ...(args.postgresTargetSchema === undefined
         ? {}
         : { CYPRESS_postgresTargetSchema: args.postgresTargetSchema }),
+      ...(args.postgresDatabaseName === undefined
+        ? {}
+        : { CYPRESS_postgresDatabaseName: args.postgresDatabaseName }),
     },
   };
 }
@@ -576,9 +492,8 @@ function buildLiveProofApiEnv({
     HOST: API_BIND_HOST,
     PORT: String(DEFAULT_API_PORT),
     DATABASE_URL: databaseUrl,
-    DVT_POSTGRES_CREDENTIAL_BINDINGS:
-      readNonEmptyEnv(sourceEnv.DVT_POSTGRES_CREDENTIAL_BINDINGS) ??
-      JSON.stringify({ 'postgres:local-postgres-proof': databaseUrl }),
+    DVT_OUTBOX_SHARD_COUNT: '1',
+    DVT_POSTGRES_CREDENTIAL_BINDINGS: resolvePostgresCredentialBindings(databaseUrl, sourceEnv),
     DVT_PG_SCHEMA: liveProofSchema,
     DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
     DVT_READYZ_ENABLED: 'true',
@@ -588,6 +503,72 @@ function buildLiveProofApiEnv({
     ...artifactEnv,
     ...oidcEnv,
   };
+}
+
+function buildLiveProofOutboxWorkerEnv(apiEnv, adminPort) {
+  return {
+    ...apiEnv,
+    SERVICE_NAME: 'dvt-outbox-worker-live-proof',
+    DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+    DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+    DVT_OUTBOX_WORKER_RUN_MIGRATIONS: 'false',
+    DVT_OUTBOX_SHARD_COUNT: '1',
+    DVT_OUTBOX_OWNED_SHARD_IDS: '0',
+    DVT_OUTBOX_ADMIN_HOST: LOCAL_AUTH_HOST,
+    DVT_OUTBOX_ADMIN_PORT: String(adminPort),
+    DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: path.join(
+      SELECTED_CLOSURE_LIVE_PROOF_ROOT,
+      apiEnv.DVT_PG_SCHEMA,
+      'outbox-archive'
+    ),
+  };
+}
+
+function prepareLiveProofOutboxWorkerDependencies({ spawnCommand = spawnSync } = {}) {
+  console.log('[selected-closure-live] Building outbox worker runtime workspace dependencies');
+  const result = spawnCommand(
+    process.execPath,
+    [WORKSPACE_RUNTIME_BUILD_SCRIPT, 'dvt-outbox-worker'],
+    { stdio: 'inherit', env: process.env, windowsHide: true }
+  );
+  if (result.error) throw result.error;
+  if (result.status !== 0 || result.signal != null) {
+    throw new Error(
+      `Outbox worker runtime dependency build failed: exit ${result.status}, signal ${result.signal}`
+    );
+  }
+}
+
+async function startLiveProofOutboxWorker(apiEnv, processHandles, deps = {}) {
+  const port = await (deps.allocateFreePort ?? allocateFreePort)(LOCAL_AUTH_HOST);
+  const env = buildLiveProofOutboxWorkerEnv(apiEnv, port);
+  const handle = (deps.spawnProcess ?? spawnProcess)(
+    'outbox-live-proof',
+    ['--filter', 'dvt-outbox-worker', 'dev'],
+    env
+  );
+  processHandles.push(handle);
+  const readyzUrl = `http://${LOCAL_AUTH_HOST}:${port}/readyz`;
+  await (deps.waitForUrlOrProcessExit ?? waitForUrlOrProcessExit)(
+    readyzUrl,
+    (response) => response.statusCode === 200,
+    DEFAULT_READY_TIMEOUT_MS,
+    DEFAULT_POLL_INTERVAL_MS,
+    'Outbox worker readyz',
+    handle
+  );
+  const response = await (deps.fetch ?? fetch)(readyzUrl, {
+    signal: AbortSignal.timeout(READINESS_RECEIPT_TIMEOUT_MS),
+  });
+  const readiness = response.status === 200 ? await response.json() : null;
+  if (
+    readiness?.ready !== true ||
+    readiness?.owner !== true ||
+    readiness?.tickFresh !== true ||
+    readiness?.service !== env.SERVICE_NAME
+  ) {
+    throw new Error('Outbox worker did not report active, fresh readiness.');
+  }
 }
 
 function buildLiveProofTemporalWorkerEnv(apiEnv, sourceEnv = process.env) {
@@ -612,6 +593,7 @@ async function seedSelectedClosureLocalWarehouseProof(
   apiEnv,
   deps = {
     seedLocalPostgresProofData,
+    seedPcv1PostgresProofData,
     log: console.log,
   }
 ) {
@@ -623,42 +605,42 @@ async function seedSelectedClosureLocalWarehouseProof(
 
   deps.log('[selected-closure-live] Seeding local Postgres proof source data');
   await deps.seedLocalPostgresProofData(databaseUrl);
+  await deps.seedPcv1PostgresProofData(databaseUrl);
 }
 
-async function runCypress(args, runtime) {
-  const nativeInvocation =
-    runtime === 'native' ? buildLiveProofCypressNativeInvocation(args) : undefined;
-  const childEnv = { ...process.env, ...(nativeInvocation?.env ?? {}) };
+async function runCypress(args, runtime, processHandles, deps = {}) {
+  const nativeInvocation = buildLiveProofCypressNativeInvocation(args);
+  const childEnv = {
+    ...process.env,
+    ...nativeInvocation.env,
+    ...(runtime === 'docker'
+      ? {
+          CYPRESS_baseUrl: `http://host.docker.internal:${args.webPort}`,
+          CYPRESS_apiBaseUrl: `http://host.docker.internal:${args.apiPort}`,
+        }
+      : {}),
+  };
   delete childEnv.ELECTRON_RUN_AS_NODE;
-  const child = spawn(
-    nativeInvocation?.command ?? 'docker',
-    nativeInvocation?.args ?? buildLiveProofCypressDockerInvocation(args),
+  const handle = (deps.spawnLiveProofProcess ?? spawnLiveProofProcess)(
+    'cypress-live-proof',
+    runtime === 'native' ? nativeInvocation.command : 'docker',
+    runtime === 'native' ? nativeInvocation.args : buildLiveProofCypressDockerInvocation(args),
     {
       stdio: 'inherit',
       env: childEnv,
-      shell: runtime === 'native' && process.platform === 'win32',
+      shell: false,
       windowsHide: true,
     }
   );
-
-  const exitCode = await new Promise((resolve, reject) => {
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (signal != null) {
-        reject(new Error(`Cypress live selected-closure proof exited from signal ${signal}`));
-        return;
-      }
-      resolve(code);
-    });
-  });
-
-  if (typeof exitCode !== 'number' || exitCode !== 0) {
-    throw new Error(`Cypress live selected-closure proof failed with exit code ${exitCode}`);
+  processHandles.push(handle);
+  const { code, signal } = await handle.completion;
+  if (signal != null || code !== 0) {
+    throw new Error(`Cypress live selected-closure proof failed: exit ${code}, signal ${signal}`);
   }
 }
 
 async function main() {
-  const specPath = resolveLiveProofSpecPath();
+  const specPaths = resolveLiveProofSpecPaths();
   const dbtExecutable = resolveLiveProofDbtExecutable();
   const cypressRuntime = resolveLiveProofCypressRuntime();
   const cypressHeaded = resolveLiveProofCypressHeaded();
@@ -666,33 +648,58 @@ async function main() {
   if (cypressHeaded && cypressRuntime !== 'native') {
     throw new Error('Headed Chrome requires DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME=native.');
   }
-  const { databaseUrl, shouldBootstrap } = resolveLiveProofDatabaseUrl();
+  const { databaseUrl: adminDatabaseUrl, shouldBootstrap } = resolveLiveProofDatabaseUrl();
   ensureLocalPostgresReady(shouldBootstrap);
-
-  const { TestWorkflowEnvironment } = await loadTemporalTesting();
-  const timeSkippingOptions = buildLiveProofTemporalTimeSkippingOptions();
-  const temporalEnv = timeSkippingOptions
-    ? await TestWorkflowEnvironment.createTimeSkipping(timeSkippingOptions)
-    : await TestWorkflowEnvironment.createTimeSkipping();
-  const localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
-    env: process.env,
-    host: LOCAL_AUTH_HOST,
-  });
-  const restrictedPrincipalId = `${localProtectedRuntimeAuth.principalId}-without-run-start`;
-  const restrictedPrincipalToken = await localProtectedRuntimeAuth.issueBearerToken({
-    principalId: restrictedPrincipalId,
-  });
+  const lease = await allocateDisposablePostgresDatabase(adminDatabaseUrl, 'selected_closure');
+  const databaseUrl = lease.url;
+  let temporalEnv;
+  let localProtectedRuntimeAuth;
   const liveProofSchema = allocateLiveProofSchema();
   const processHandles = [];
+  let shutdownPromise;
 
   async function shutdown() {
-    await Promise.all(processHandles.map((handle) => terminateProcess(handle)));
-    await Promise.all(processHandles.map((handle) => closeReaders(handle)));
-    await localProtectedRuntimeAuth.close();
-    await temporalEnv.teardown();
+    shutdownPromise ??= (async () => {
+      const processes = await Promise.allSettled(
+        processHandles.map(async (handle) => {
+          try {
+            await terminateLiveProofProcess(handle);
+          } finally {
+            await closeReaders(handle);
+          }
+        })
+      );
+      const resources = await Promise.allSettled([
+        Promise.resolve().then(() => localProtectedRuntimeAuth?.close()),
+        Promise.resolve().then(() => temporalEnv?.teardown()),
+      ]);
+      const failures = [...processes, ...resources].filter(
+        (result) => result.status === 'rejected'
+      );
+      if (failures.length)
+        throw new AggregateError(
+          failures.map((result) => result.reason),
+          'Live proof shutdown failed'
+        );
+    })();
+    return shutdownPromise;
   }
+  const removeInterruptCleanup = installDisposablePostgresInterruptCleanup(lease, shutdown);
 
   try {
+    const { TestWorkflowEnvironment } = await loadTemporalTesting();
+    const timeSkippingOptions = buildLiveProofTemporalTimeSkippingOptions();
+    temporalEnv = timeSkippingOptions
+      ? await TestWorkflowEnvironment.createTimeSkipping(timeSkippingOptions)
+      : await TestWorkflowEnvironment.createTimeSkipping();
+    localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
+      env: process.env,
+      host: LOCAL_AUTH_HOST,
+    });
+    const restrictedPrincipalId = `${localProtectedRuntimeAuth.principalId}-without-run-start`;
+    const restrictedPrincipalToken = await localProtectedRuntimeAuth.issueBearerToken({
+      principalId: restrictedPrincipalId,
+    });
     const hasExternallyManagedAnalyzerProfile =
       readNonEmptyEnv(process.env.DVT_DBT_ANALYZER_PROFILES_DIR) !== undefined;
     const apiEnv = buildLiveProofApiEnv({
@@ -709,28 +716,46 @@ async function main() {
     }
     await seedSelectedClosureLocalWarehouseProof(apiEnv);
 
+    prepareLiveProofOutboxWorkerDependencies();
+    if (temporalWorkerRuntime === 'available') {
+      prepareTemporalWorkerRuntimeDependencies(apiEnv);
+    }
+
     const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], apiEnv);
     processHandles.push(apiHandle);
 
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/healthz`,
       (response) => response.statusCode === 200,
-      'API healthz'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API healthz',
+      apiHandle
     );
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/db/ready`,
       (response) => response.statusCode === 200,
-      'API db/ready'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API db/ready',
+      apiHandle
     );
-    await waitForUrl(
+    await startLiveProofOutboxWorker(apiEnv, processHandles);
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/readyz`,
       (response) => response.statusCode === 200,
-      'API readyz'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API readyz',
+      apiHandle
     );
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_API_PORT}/version`,
       (response) => response.statusCode === 200,
-      'API version'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'API version',
+      apiHandle
     );
 
     await seedLocalProtectedRuntimeGrant({
@@ -751,6 +776,7 @@ async function main() {
     });
 
     await ensureLocalWarehouseConnectionViaApi({
+      databaseUrl,
       apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
       bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
@@ -813,11 +839,34 @@ async function main() {
     );
     processHandles.push(webHandle);
 
-    await waitForUrl(
+    await waitForUrlOrProcessExit(
       `http://127.0.0.1:${DEFAULT_WEB_PORT}/`,
       (response) => (response.statusCode ?? 500) < 500,
-      'Web dev server'
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'Web dev server',
+      webHandle
     );
+
+    const sourceProof = spawnProcess(
+      'source-live-provider-proof',
+      [
+        '--filter',
+        'dvt-api',
+        'exec',
+        'vitest',
+        'run',
+        '--config',
+        'vitest.integration.config.ts',
+        'test/integration/sourceLivePreviewPostgres.proof.ts',
+      ],
+      { DVT_SOURCE_LIVE_PROOF_DATABASE_URL: databaseUrl }
+    );
+    processHandles.push(sourceProof);
+    const providerResult = await sourceProof.completion;
+    if (providerResult.code !== 0 || providerResult.signal != null) {
+      throw new Error('Source LIVE provider proof failed.');
+    }
 
     await runCypress(
       {
@@ -827,18 +876,24 @@ async function main() {
         restrictedApiBearerToken: restrictedPrincipalToken.bearerToken,
         workspaceScope: localProtectedRuntimeAuth.workspaceScope,
         postgresTargetSchema: liveProofSchema,
-        specPath,
+        postgresDatabaseName: lease.name,
+        specPaths,
         headed: cypressHeaded,
       },
-      cypressRuntime
+      cypressRuntime,
+      processHandles
     );
   } finally {
-    await shutdown();
-    await dropSchemaIfExists(databaseUrl, liveProofSchema);
-    await rm(path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema), {
-      recursive: true,
-      force: true,
-    });
+    removeInterruptCleanup();
+    try {
+      await shutdown();
+    } finally {
+      await lease.dispose();
+      await rm(path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema), {
+        recursive: true,
+        force: true,
+      });
+    }
   }
 }
 
@@ -846,16 +901,20 @@ module.exports = {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
+  prepareLiveProofOutboxWorkerDependencies,
   resolveLiveProofDbtExecutable,
   resolveLiveProofDatabaseUrl,
   resolveLiveProofCypressRuntime,
   resolveLiveProofCypressHeaded,
-  resolveLiveProofSpecPath,
+  resolveLiveProofSpecPaths,
   resolveLiveProofTemporalWorkerRuntime,
   seedSelectedClosureLocalWarehouseProof,
+  startLiveProofOutboxWorker,
+  runCypress,
 };
 
 if (require.main === module) {

@@ -17,7 +17,6 @@ The normative sources remain:
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - [Execution selection and executable subgraph v1](../../../contracts/planner/execution-selection-and-executable-subgraph-v1.md)
-- [TF-A2-C execution selection and executable subgraph plan](../../../planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md)
 
 ## Owned concern
 

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import type { DvtTransformResultTargetV1 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import {
   applyDvtTransformAuthoringMetadata,
   createDvtTransformAuthoringMetadata,
@@ -12,6 +14,10 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { createCustomerOrdersJoin } from './canvasJoin.test-support';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import type { ConnectedRelationSource } from './canvasSourceRelation';
+import { createSourceCross } from './canvasSourceCross';
 
 const target: DvtTransformResultTargetV1 = {
   schemaVersion: 'dvt-transform-result-target.v1',
@@ -35,6 +41,66 @@ const node: CanonicalNode = {
 };
 
 describe('Transform result destination metadata', () => {
+  it('restores and persists CROSS JOIN as the canonical CrossRel authoring shape', () => {
+    const input = (nodeId: string): CanvasDvtCompositionInput => ({
+      nodeId,
+      schema: 'raw',
+      table: nodeId,
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1' as const,
+        connectionRef: target.connectionRef,
+        sourceObjectId: `raw.${nodeId}`,
+      },
+      fields: [{ name: 'id', dataType: 'string', joinDataType: 'string' as const, nullable: true }],
+    });
+    const semanticNode = applyDvtSubstraitSemanticDocument(
+      node,
+      encodeDvtSubstraitSemanticDocument(createSourceCross([input('sizes'), input('colours')]))
+    );
+
+    const metadata = createDvtTransformAuthoringMetadata(semanticNode);
+
+    expect(metadata).toMatchObject({ mode: 'substrait', shape: 'cross_join' });
+    expect(applyDvtTransformAuthoringMetadata(semanticNode, metadata)).toEqual(semanticNode);
+  });
+
+  it.each([
+    [JoinRel_JoinType.LEFT, 'left_join'],
+    [JoinRel_JoinType.RIGHT, 'right_join'],
+    [JoinRel_JoinType.OUTER, 'full_outer_join'],
+    [JoinRel_JoinType.LEFT_SEMI, 'left_semi_join'],
+    [JoinRel_JoinType.LEFT_ANTI, 'left_anti_join'],
+    [JoinRel_JoinType.RIGHT_SEMI, 'right_semi_join'],
+    [JoinRel_JoinType.RIGHT_ANTI, 'right_anti_join'],
+  ] as const)('restores and persists %s as the canonical %s authoring shape', (joinType, shape) => {
+    const source = (id: string, table: string): ConnectedRelationSource => ({
+      nodeId: id,
+      schema: 'raw',
+      table,
+      sourceRef: {
+        schemaVersion: 'connected-source-ref.v1' as const,
+        connectionRef: target.connectionRef,
+        sourceObjectId: `raw.${table}`,
+      },
+    });
+    const semanticNode = applyDvtSubstraitSemanticDocument(
+      node,
+      encodeDvtSubstraitSemanticDocument(
+        createCustomerOrdersJoin({
+          left: source('orders', 'orders'),
+          right: source('clients', 'clients'),
+          targetNodeId: node.id,
+          joinType,
+        })
+      )
+    );
+
+    const metadata = createDvtTransformAuthoringMetadata(semanticNode);
+
+    expect(metadata).toMatchObject({ mode: 'substrait', shape });
+    expect(applyDvtTransformAuthoringMetadata(semanticNode, metadata)).toEqual(semanticNode);
+  });
+
   it('keeps canonical semantics and output identities when configuring a result target', () => {
     const projection = createDvtSubstraitProjectionDraft({
       targetNodeId: node.id,

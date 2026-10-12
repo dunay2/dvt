@@ -11,7 +11,8 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitProjection.ts
-  - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
+  - packages/@dvt/postgres-projection/src/relationalSql/project.ts
   - apps/web/src/app/plugins/graph/GraphNodeColumnRow.tsx
   - apps/web/src/app/plugins/graph/GraphNodeColumnFunctionMenu.tsx
   - apps/web/src/app/plugins/graph/GraphNodeColumnFunctionAliasForm.tsx

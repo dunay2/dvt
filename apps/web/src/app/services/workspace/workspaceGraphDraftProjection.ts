@@ -2,6 +2,7 @@
 import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode, PluginNodeKind } from '../../types/canonical';
+import { migrateWorkspaceProducerInputs } from './workspaceProducerInputMigration';
 
 export type CanvasAuthoringSemanticGraph = {
   canonicalNodes: CanonicalNode[];
@@ -75,7 +76,10 @@ export function projectWorkspaceGraphAuthoringDraftSemanticGraph(
   draft: WorkspaceGraphAuthoringDraft
 ): CanvasAuthoringSemanticGraph {
   return {
-    canonicalNodes: draft.nodes.map((node) => projectAuthoringNodeToCanonical(node)),
+    canonicalNodes: migrateWorkspaceProducerInputs(
+      draft.nodes.map((node) => projectAuthoringNodeToCanonical(node)),
+      draft.edges
+    ),
     canonicalEdges: draft.edges.map((edge) => buildCanonicalEdgeProjection(edge)),
   };
 }

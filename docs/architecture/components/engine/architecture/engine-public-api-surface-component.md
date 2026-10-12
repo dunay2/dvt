@@ -116,5 +116,4 @@ stateDiagram-v2
 
 - [Engine public API surface user stories](./engine-public-api-surface-user-stories.md)
 - [EA-20260429-05 implementation plan](../../../planning/proposals/mandatory/runtime-and-contracts/ea-20260429-05-engine-public-api-surface-plan-20260514.md)
-- [Fowler mailbox analysis](../../../../../buzon/20260514-codex-fowler-ea-20260429-05-engine-public-api-surface-analysis.md)
 - [DVT engine package audit review](../../../../planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md)

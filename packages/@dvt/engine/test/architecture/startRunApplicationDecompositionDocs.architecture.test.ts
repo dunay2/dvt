@@ -16,8 +16,7 @@ const USER_STORIES_PATH =
   'docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md';
 const EVIDENCE_PATH = 'docs/evidence/ed-20260512-we-hx-3-start-run-decomposition.md';
 const RISK_PATH = 'docs/risk-register/quality/R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml';
-const CLOSEOUT_PATH =
-  'docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md';
+
 const PLAN_PATH =
   'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md';
 
@@ -48,7 +47,6 @@ describe('WE-HX-3 start-run documentation pack', () => {
       USER_STORIES_PATH,
       EVIDENCE_PATH,
       RISK_PATH,
-      CLOSEOUT_PATH,
     ]) {
       expect(existsSync(repoPath(path)), `${path} should exist`).toBe(true);
     }
@@ -64,7 +62,6 @@ describe('WE-HX-3 start-run documentation pack', () => {
       USER_STORIES_PATH,
       EVIDENCE_PATH,
       RISK_PATH,
-      CLOSEOUT_PATH,
     ]) {
       expect(plan, `${path} should be declared in WE-HX-3 mechanization`).toContain(path);
     }

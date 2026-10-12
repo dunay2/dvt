@@ -16,12 +16,14 @@ and build flows.
 ## Conventions
 
 - Use `index.md` (lowercase) for every directory landing page
-- Mark document status explicitly (`Accepted`, `Active`, `Draft`, `Review`, `Archived`)
+- Mark document status explicitly (`Accepted`, `Active`, `Draft`, `Review`)
 - Keep ADR IDs unique globally
-- Move historical documents to `docs/archive/` or `docs/adr/_archive/`
+- Delete obsolete documentation after reconciling its consumers and current
+  obligations. Git preserves history; do not create archive copies, historical
+  landing pages, or replacement summaries merely to preserve deleted material.
 - Use the governed maintenance procedure in
   [`docs/guides/documentation-maintenance-guide-20260407.md`](./guides/documentation-maintenance-guide-20260407.md)
-  when code, planning, or archive moves change active reader routes
+  when code, planning, or document retirement changes active reader routes
 
 ## Quick start
 

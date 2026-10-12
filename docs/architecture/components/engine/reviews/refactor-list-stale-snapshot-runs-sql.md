@@ -14,7 +14,7 @@ Este draft está alineado con:
 - ADR-0004 (event log append-only, `runSeq` monotónico, replay determinista, tenant scope)
 - ADR-0031 (aislamiento tenant en adapters)
 - ADR-0039 (snapshot como read-model cache, no source of truth)
-- Lane A `S19-F1` (Phase 1 heads + evidencia EXPLAIN bajo carga)
+- `S19-F1` (Phase 1 heads + evidencia EXPLAIN bajo carga)
 
 # Estado actual (problema real)
 
@@ -206,7 +206,7 @@ SET latest_run_seq = GREATEST(run_event_heads.latest_run_seq, EXCLUDED.latest_ru
 - Calcular el head por fila en polling continuo es costo estructural, no incidente puntual.
 - Sin head materializado, la observabilidad de retraso del projector es opaca.
 - Escala no se "optimiza después": se diseña con costos de lectura y mantenimiento explícitos.
-- Mantener el lateral como camino principal tras `S19-F1` sería incumplir el objetivo del lane, no una decisión neutral.
+- Mantener el lateral como camino principal tras `S19-F1` sería incumplir el objetivo de la tarea, no una decisión neutral.
 
 # Fuera de alcance (Phase 2)
 

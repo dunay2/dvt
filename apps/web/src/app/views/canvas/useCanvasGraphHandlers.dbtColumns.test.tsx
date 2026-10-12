@@ -61,7 +61,7 @@ describe('Canvas DBT model column handlers', () => {
     });
     await harness.render();
 
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleToggleCanvasColumnOutput({
         nodeId: model.id,
         columnId: 'customer',
@@ -105,7 +105,7 @@ describe('Canvas DBT model column handlers', () => {
     });
     await harness.render();
 
-    act(() => {
+    await act(async () => {
       harness.latest()?.handleReorderCanvasColumnOutput({
         nodeId: model.id,
         columnId: 'customer',

@@ -60,7 +60,7 @@ opportunity types:
 <!-- markdownlint-enable MD060 -->
 
 The opportunity list is not a backlog by itself. It becomes executable only
-when attached to a lane task, story, closeout, proposal, ADR, component guide,
+when attached to a GitHub issue, story, closeout, proposal, ADR, component guide,
 or contract document.
 
 ## Required Planning Matrix

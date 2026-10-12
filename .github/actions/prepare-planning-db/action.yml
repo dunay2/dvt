@@ -5,13 +5,20 @@ description: Start and rebuild the current Planning DB state for CI gates
 runs:
   using: composite
   steps:
+    - name: Prepare Planning DB image
+      id: image
+      uses: ./.github/actions/prepare-cached-image
+      with:
+        image: postgres-16
     - name: Prepare planning DB
       shell: bash
+      env:
+        DVT_PLANNING_DB_IMAGE: ${{ steps.image.outputs.image }}
       run: |
         set -euo pipefail
 
         export DVT_PLANNING_DB_DATA_DIR="${RUNNER_TEMP}/dvt-planning-db/postgres-data"
-        pnpm planning:db:up
+        pnpm planning:db:up --pull never
         for attempt in {1..30}; do
           if pnpm planning:db:health; then
             break

@@ -4,7 +4,6 @@ status: Accepted
 owner: Web / API / DBT
 last_reviewed: 2026-08-08
 planning_type: mandatory-proposal
-archived_record: docs/planning/archive/proposals/dbt-project-roundtrip-product-plan-20260527.md
 ---
 
 # DBT project round-trip
@@ -344,5 +343,3 @@ symbols:
     cypressCoverage: not_applicable:governance_read_model
     unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
 ```
-
-The detailed delivery record is historical and remains at `archived_record`.

@@ -492,11 +492,20 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerSemanticTab: {
     key: 'canvas.operationalDrawer.semanticTab',
-    fallback: 'Semantics',
+    fallback: 'Relational tree',
   },
   operationalDrawerSemanticIdleMessage: {
     key: 'canvas.operationalDrawer.semanticIdleMessage',
-    fallback: 'Select a Substrait Transform to inspect its relational flow.',
+    fallback: 'Select a Transform to inspect its relational tree.',
+  },
+  operationalDrawerSemanticTopologyMismatchTitle: {
+    key: 'canvas.operationalDrawer.semanticTopologyMismatchTitle',
+    fallback: 'Semantic composition pending',
+  },
+  operationalDrawerSemanticTopologyMismatchMessage: {
+    key: 'canvas.operationalDrawer.semanticTopologyMismatchMessage',
+    fallback:
+      '{transformName} has {connectedInputCount} connected inputs that no longer match its saved semantics. Define the new composition to replace it.',
   },
   operationalDrawerProblemsAriaLabel: {
     key: 'canvas.operationalDrawer.problemsAriaLabel',
@@ -552,7 +561,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerDataIdleMessage: {
     key: 'canvas.operationalDrawer.dataIdleMessage',
-    fallback: 'Double-click the rows and size area of an imported source to inspect a sample.',
+    fallback: 'Use Preview on a card to inspect its data.',
   },
   operationalDrawerDataLoadingTemplate: {
     key: 'canvas.operationalDrawer.dataLoadingTemplate',
@@ -586,13 +595,30 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.dataCaptionTemplate',
     fallback: 'Data sample from {nodeName}',
   },
+  operationalDrawerDataRowsLabel: {
+    key: 'canvas.operationalDrawer.dataRowsLabel',
+    fallback: 'rows',
+  },
+  operationalDrawerDataColumnsLabel: {
+    key: 'canvas.operationalDrawer.dataColumnsLabel',
+    fallback: 'columns',
+  },
   operationalDrawerDataNullValue: {
     key: 'canvas.operationalDrawer.dataNullValue',
     fallback: 'NULL',
   },
-  sourceDataSampleInteractionLabel: {
-    key: 'canvas.sourceDataSample.interactionLabel',
-    fallback: 'Double-click this metrics area or press Enter to open a data sample.',
+  operationalDrawerDataRefreshAction: {
+    key: 'canvas.operationalDrawer.dataRefreshAction',
+    fallback: 'Refresh',
+  },
+  operationalDrawerDataQueriedAtLabel: {
+    key: 'canvas.operationalDrawer.dataQueriedAtLabel',
+    fallback: 'Queried at',
+  },
+  operationalDrawerDataBoundedLiveTemplate: {
+    key: 'canvas.operationalDrawer.dataBoundedLiveTemplate',
+    fallback:
+      'Up to {limit} rows · First page only · No guaranteed row order. The source may have changed since this query.',
   },
   operationalDrawerTabsAriaLabel: {
     key: 'canvas.operationalDrawer.tabsAriaLabel',

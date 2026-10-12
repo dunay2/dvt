@@ -20,7 +20,7 @@ describe('web Vitest changed-file discovery', () => {
       env: { GIT_BASE: 'origin/release', GIT_HEAD: 'merge-sha' },
       gitOutput(args) {
         calls.push(args.join(' '));
-        if (args.join(' ') === 'diff --name-only --diff-filter=ACMR origin/release merge-sha') {
+        if (args.join(' ') === 'diff --name-only --no-renames -z origin/release merge-sha') {
           return ['apps/web/src/app/views/canvas/CanvasToolbar.tsx'];
         }
         if (args[0] === 'merge-base') {
@@ -34,24 +34,49 @@ describe('web Vitest changed-file discovery', () => {
     expect(calls).not.toContain('merge-base origin/release merge-sha');
   });
 
-  it('falls back to merge-base diffing when the direct CI range is unavailable', () => {
+  it.each(['range', 'index', 'working tree', 'untracked'])(
+    'fails closed when Git cannot read %s',
+    (failed) => {
+      expect(() =>
+        readChangedFiles('/repo', {
+          env: { GIT_BASE: 'missing', GIT_HEAD: 'candidate' },
+          gitOutput(args) {
+            const stage =
+              args[0] === 'ls-files'
+                ? 'untracked'
+                : args.includes('--cached')
+                  ? 'index'
+                  : args.includes('candidate')
+                    ? 'range'
+                    : 'working tree';
+            if (stage === failed) throw new Error(`unreadable ${stage}`);
+            return [];
+          },
+        })
+      ).toThrow(`unreadable ${failed}`);
+    }
+  );
+
+  it('retains deleted paths and combines range, index, working tree and untracked changes', () => {
     const files = readChangedFiles('/repo', {
-      env: { GIT_BASE: 'origin/main', GIT_HEAD: 'HEAD' },
+      env: {},
       gitOutput(args) {
-        const command = args.join(' ');
-        if (command === 'diff --name-only --diff-filter=ACMR origin/main HEAD') {
-          throw new Error('base ref not fetched as a diffable object');
-        }
-        if (command === 'merge-base origin/main HEAD') {
-          return ['base-sha'];
-        }
-        if (command === 'diff --name-only --diff-filter=ACMR base-sha HEAD') {
-          return ['apps/web/src/app/views/canvas/canvasDraftScope.test.ts'];
-        }
-        return [];
+        if (args[0] === 'ls-files') return ['new.ts'];
+        expect(args.some((arg) => arg.startsWith('--diff-filter'))).toBe(false);
+        expect(args).toContain('--no-renames');
+        return args.includes('--cached')
+          ? ['staged.ts']
+          : args.includes('HEAD')
+            ? ['deleted.cy.ts', 'type-changed.cy.ts', 'source.ts']
+            : ['source.ts'];
       },
     });
-
-    expect(files).toEqual(['apps/web/src/app/views/canvas/canvasDraftScope.test.ts']);
+    expect(files).toEqual([
+      'deleted.cy.ts',
+      'new.ts',
+      'source.ts',
+      'staged.ts',
+      'type-changed.cy.ts',
+    ]);
   });
 });

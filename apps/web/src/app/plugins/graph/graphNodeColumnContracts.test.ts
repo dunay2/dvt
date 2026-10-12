@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { resolveGraphNodeColumnInteractionProps } from './graphNodeColumnContracts';
+import { resolveGraphNodeColumnInteractionProps } from './graphNodeColumnInteractionProps';
 
 describe('graph node column interaction contracts', () => {
   it('offers Source projection gestures without exposing Transform algebra', () => {
@@ -32,7 +32,7 @@ describe('graph node column interaction contracts', () => {
 
     expect(onReorder).toHaveBeenCalledOnce();
     expect(onToggle).toHaveBeenCalledOnce();
-    expect(interactions.onColumnFunctionApply).toBeUndefined();
+    expect(interactions).not.toHaveProperty('onColumnFunctionApply');
     expect(interactions.onStructuredFieldApply).toBeUndefined();
   });
 });

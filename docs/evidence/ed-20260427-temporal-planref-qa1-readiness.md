@@ -65,8 +65,8 @@ code_refs:
   - docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md
   - docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md
   - docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md
-  - buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md
-  - buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
+  - https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260428-codex-fowler-temporal-dbt-core-decoupling-analysis-and-remediation.md
+  - https://github.com/dunay2/dvt/blob/7bb1b3e39efaf8df701db02dbdf2b10c763cfd28/buzon/20260428-codex-fowler-temporal-planref-workflow-boundary-analysis-and-remediation.md
   - docs/runbooks/temporal-planref-drained-cutover-20260427.md
 evidence:
   tests:

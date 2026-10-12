@@ -14,7 +14,7 @@ code_refs:
   - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
   - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
   - scripts/lib/feature-mechanization-manifest.cjs
-  - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
+  - https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
 evidence:
   tests:
     - pnpm --filter @dvt/engine test -- test/services/StartRunApplicationDecomposition.test.ts
@@ -42,12 +42,12 @@ same start-run decomposition. The active WE-HX-3 architecture guard now parses
 structured feature mechanization data and requires a single start-run
 decomposition feature identity for the `IWorkflowEngine.startRun` command rail.
 The rationale is recorded in
-`buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md`.
+[Fowler hardcut analysis for WE-HX-3 start-run decomposition](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md).
 
 ## QA Hardening Update
 
 On 2026-05-15 the slice also implemented the QA hardening plan recorded in
-`buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md`.
+[Historical analysis](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md).
 
 The follow-up separates semantic architecture checks from documentation-pack
 completeness checks. Runtime decomposition remains guarded by

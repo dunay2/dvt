@@ -30,4 +30,3 @@ remain pinned in emitted lineage payloads.
 ## Related
 
 - [Traceability Contracts](../../index.md)
-- [G6 Hub](../../../../planning/archive/gaps/g6/index.md)

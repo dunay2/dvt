@@ -4,7 +4,6 @@ status: Active
 owner: Product / Frontend / Architecture
 last_reviewed: 2026-05-08
 planning_type: mandatory-proposal
-lane: E
 task_id: F-28-B
 parent_task_id: F-28
 ---
@@ -34,7 +33,6 @@ truthful in the browser:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
@@ -107,7 +105,6 @@ pnpm --filter @dvt/web test -- src/app/views/canvas/canvasDraftToolbarState.test
 pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
 pnpm --filter @dvt/web typecheck
 pnpm docs:sync
-pnpm docs:workboard:generate
 pnpm lint:md:changed
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush

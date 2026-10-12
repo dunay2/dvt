@@ -6,7 +6,6 @@ last_reviewed: 2026-06-04
 owners:
   - apps/web
 planning_type: proposal
-lane: E
 ---
 
 # Canvas Inspector Plugin Authoring Fields Plan

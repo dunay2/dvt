@@ -22,7 +22,7 @@ bounded contexts, explicit dependencies, and traceable contracts. This plan
 adds that control surface without replacing existing ADRs, proposals, reviews,
 or status docs: it indexes them and makes gaps visible.
 
-**Tech Stack:** Markdown governance docs, planning lane YAML, generated docs
+**Tech Stack:** Markdown governance docs, GitHub issue links, generated docs
 indexes, existing repository validation scripts, and later architecture tests.
 
 ---
@@ -62,7 +62,7 @@ file and exported operation has a parent, owner, rail, and validation route.
 The repository has strong local governance but weak global unit indexing:
 
 - ADRs govern decisions, not every implementation unit.
-- Planning lanes govern tasks, not every system surface.
+- GitHub Issues governs tasks; Planning DB governs architecture.
 - The operations inventory classifies runtime operations, not all units.
 - Frontend, docs, CI, and governance infrastructure do not yet have the same
   hierarchical unit treatment as backend runtime surfaces.
@@ -160,12 +160,10 @@ Modify:
 
 - `docs/planning/status/system-operations-inventory-20260501.md`
 - `docs/planning/proposals/portfolio-map-20260403.md`
-- `docs/planning/state/agent-lane-a.yaml`
 
 Generated:
 
 - run `pnpm docs:sync` after adding docs;
-- run `pnpm docs:workboard:generate` after lane YAML changes.
 - run `pnpm docs:governance:unit-coverage` after manifest changes.
 
 ## Phase 0: Existing Documentation Review
@@ -263,10 +261,9 @@ full content.
       the operations inventory.
 - [ ] Update `portfolio-map-20260403.md` so the plan is visible under mandatory
       governance/docs proposals.
-- [ ] Update `agent-lane-a.yaml` only if S08 or architecture lane posture
-      changes.
+- [ ] Record task status and acceptance in the governing GitHub issue; use the
+      existing Planning DB commands for architecture changes.
 - [ ] Run `pnpm docs:sync`.
-- [ ] Run `pnpm docs:workboard:generate` if lane YAML changed.
 
 ## Phase 4: First Deep Subdivision - `SYS-PLANSTORE`
 
@@ -2109,7 +2106,6 @@ symbols:
 Run after each document-changing slice:
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate` when lane YAML changes
 - `pnpm docs:governance:unit-coverage`
 - `pnpm test:docs:governance:unit-coverage`
 - `pnpm exec markdownlint-cli2 "<changed-docs>"`

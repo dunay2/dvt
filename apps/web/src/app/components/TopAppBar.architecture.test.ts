@@ -84,13 +84,10 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(contextDetailsSource).toContain('copy.deploymentScopeAria');
   });
 
-  it('documents API, invariants, transitions, consumers, and recorded risks', () => {
+  it('documents API, invariants, transitions, consumers, and user stories', () => {
     const appShellGuide = readRepoSource('docs/architecture/components/web/appshell/app-shell.md');
-    const workbenchInventory = readRepoSource(
-      'docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md'
-    );
-    const stage1Plan = readRepoSource(
-      'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md'
+    const workbenchManual = readRepoSource(
+      'docs/architecture/components/web/screen-manuals-and-user-stories.md'
     );
     const componentGuide = readRepoSource(
       'docs/architecture/components/web/appshell/shell-workspace-context-component.md'
@@ -116,35 +113,22 @@ describe('ShellTopBar workspace context architecture', () => {
       expect(appShellGuide).toContain(requiredGuideSection);
     }
 
-    for (const requiredInventorySignal of [
+    for (const requiredManualSignal of [
       'Global context lives in compact top-bar labels',
       'Shell workspace context',
       'read-only presentation model',
       'shell-workspace-context-component.md',
       'shell-workspace-context-user-stories.md',
     ]) {
-      expect(workbenchInventory).toContain(requiredInventorySignal);
-    }
-
-    for (const requiredPlanSignal of [
-      'shell-context-relocation',
-      'ProjectIdentityBadge',
-      'ShellWorkspaceContextMenu',
-      'ShellWorkspaceContextDetails',
-      'ShellWorkspaceContextComponentGuide',
-      'ShellWorkspaceContextUserStories',
-      'workspace-context-read-only-main-screen',
-    ]) {
-      expect(stage1Plan).toContain(requiredPlanSignal);
+      expect(workbenchManual).toContain(requiredManualSignal);
     }
 
     for (const requiredCanonicalSignal of [
       'ShellWorkspaceContextMenu',
       'Semantic Fitness Function',
       '## Scenario Matrix',
-      'workspace-context-read-only-main-screen',
     ]) {
-      expect(`${stage1Plan}\n${componentGuide}\n${userStories}`).toContain(requiredCanonicalSignal);
+      expect(`${componentGuide}\n${userStories}`).toContain(requiredCanonicalSignal);
     }
 
     for (const requiredComponentGuideSection of [

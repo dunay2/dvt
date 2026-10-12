@@ -125,4 +125,4 @@ stateDiagram-v2
 
 - [AR-C5 plan](../../../../planning/proposals/mandatory/runtime-and-contracts/ar-c5-adapter-circuit-breaker-plan-20260512.md)
 - [AR-C5 user stories](./adapter-circuit-breaker-user-stories.md)
-- [Fowler mailbox analysis](../../../../../buzon/20260512-codex-fowler-ar-c5-adapter-circuit-breaker-analysis-and-remediation.md)
+- [Fowler mailbox analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260512-codex-fowler-ar-c5-adapter-circuit-breaker-analysis-and-remediation.md)

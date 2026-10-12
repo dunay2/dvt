@@ -1,7 +1,13 @@
 /**
  * Owned concern: prove that importing dbt source declarations continues through
  * one governed connection binding and projects one Canvas node per table.
+ * @baseline GH-3578: catalog order does not select the object this proof inspects.
+ * @decision Activate the governed object through its existing catalog controls.
+ * @consequence Selection, metadata, keyboard and import assertions remain independent.
+ * @version 1.0.0
  */
+import type { RelationalSourceObject, SourceObjectMetricEvidence } from '@dvt/contracts';
+
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   getE2eApiCalls,
@@ -61,7 +67,7 @@ const AUTHORITY_BINDING = {
   authority: { kind: 'dbt-project-files', projectRoot: PROJECT_ROOT },
 } as const;
 
-function buildMetricEvidence(rowCount: number): Readonly<Record<string, unknown>> {
+function buildMetricEvidence(rowCount: number): SourceObjectMetricEvidence {
   return {
     observedAt: '2026-08-16T08:00:00.000Z',
     observationScope: { kind: 'snapshot' },
@@ -84,7 +90,7 @@ function buildMetricEvidence(rowCount: number): Readonly<Record<string, unknown>
 function buildSourceObject(
   table: 'CUSTOMERS' | 'ORDERS' | 'PRODUCTS',
   rowCount: number
-): Readonly<Record<string, unknown>> {
+): RelationalSourceObject {
   return {
     objectId: `relation/RAW/ERP/${table}`,
     displayName: table,
@@ -357,7 +363,16 @@ describe('dbt source connection binding', () => {
     cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
     cy.contains('[data-slot="source-import-connection-option"]', 'Governed warehouse').click();
     cy.contains('[role="dialog"]', 'Selected: 3', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[data-source-import-schema]', 'ERP')
+      .find('button[aria-expanded]')
+      .then(($disclosure) => {
+        if ($disclosure.attr('aria-expanded') !== 'true') cy.wrap($disclosure).click();
+      });
+    cy.get('[data-source-import-object="relation/RAW/ERP/ORDERS"]')
+      .contains('button', 'ORDERS')
+      .click();
     cy.get('[data-source-import-object-metadata="relation/RAW/ERP/ORDERS"]')
+      .scrollIntoView()
       .should('be.visible')
       .and('contain.text', 'order_id')
       .and('contain.text', '42 rows')
@@ -366,6 +381,7 @@ describe('dbt source connection binding', () => {
       .click({ scrollBehavior: 'center' })
       .should('have.attr', 'aria-checked', 'true');
     cy.get('[data-source-import-object-metadata="relation/RAW/ERP/CUSTOMERS"]')
+      .scrollIntoView()
       .should('be.visible')
       .and('contain.text', 'customer_id')
       .and('contain.text', '12 rows')
@@ -379,6 +395,7 @@ describe('dbt source connection binding', () => {
       'true'
     );
     cy.get('[data-source-import-object-metadata="relation/RAW/ERP/ORDERS"]')
+      .scrollIntoView()
       .should('be.visible')
       .and('contain.text', 'order_id')
       .and('contain.text', '42 rows')

@@ -68,11 +68,7 @@ describe('Postgres run-event retention policy component semantics', () => {
     expect(stories).toContain('```mermaid');
   });
 
-  it('keeps the Fowler analysis, proposal, evidence, and risk entry tied to the same rail', () => {
-    const mailboxPath = join(
-      import.meta.dirname,
-      '../../../../buzon/20260523-codex-fowler-ar-d5-tenant-retention-policy-analysis.md'
-    );
+  it('keeps the proposal, evidence, and risk entry tied to the same rail', () => {
     const proposalPath = join(
       import.meta.dirname,
       '../../../../docs/planning/proposals/mandatory/runtime-and-contracts/ar-d5-tenant-configurable-retention-policy-plan-20260522.md'
@@ -86,19 +82,14 @@ describe('Postgres run-event retention policy component semantics', () => {
       '../../../../docs/risk-register/quality/R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml'
     );
 
-    expect(existsSync(mailboxPath)).toBe(true);
-
-    const mailbox = readFileSync(mailboxPath, 'utf8');
     const proposal = readFileSync(proposalPath, 'utf8');
     const evidence = readFileSync(evidencePath, 'utf8');
     const risk = readFileSync(riskPath, 'utf8');
 
-    for (const content of [mailbox, proposal, evidence, risk]) {
+    for (const content of [proposal, evidence, risk]) {
       expect(content).toContain('ConfigureRunEventRetentionPolicy');
     }
-    expect(mailbox).toContain('## Mature-system comparison');
-    expect(mailbox).toContain('## Antipatterns detected');
-    expect(mailbox).toContain('## Repetitions and drift fixed');
+
     expect(proposal).toContain('PostgresRunEventRetentionPolicy.architecture.test.ts');
   });
 

@@ -15,9 +15,6 @@ Canonical frontend docs:
 - `docs/architecture/components/web/index.md`
 - `docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md`
 - `docs/architecture/components/web/plugin-contributions-developer-guide.md`
-- `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
-
-Historical local notes from `apps/web/*.md` were moved to `docs/planning/archive/`.
 
 ## Features
 

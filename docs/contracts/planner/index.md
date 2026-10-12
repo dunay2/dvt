@@ -16,10 +16,14 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtInputBindings.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.shared.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v2.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtPostgresOutputSchema.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtRelationalOperationInputs.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringGroup.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitAuthoringIdentity.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts`
@@ -27,8 +31,11 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityIdentity.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanBinary.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitPlanFieldPolicy.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProducerReference.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProductNeeds.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitReadFieldCoverage.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitStandardCandidates.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts`
@@ -42,6 +49,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/index.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/OperationalRejection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
@@ -59,6 +67,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresWorkloadConstraints.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts`
@@ -70,7 +79,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 
 ## Repository-local documents
 
-- [DVT Operational Run Workload v2](dvt-operational-run-workload-v2.md)
+- [DVT Operational Workload v1](dvt-operational-workload-v1.md)
 - [DVT Transform Result Target v1](dvt-transform-result-target-v1.md)
 - [Execution selection and executable subgraph v1](execution-selection-and-executable-subgraph-v1.md)
 - [Plan store records v1](plan-store-records-v1.md)

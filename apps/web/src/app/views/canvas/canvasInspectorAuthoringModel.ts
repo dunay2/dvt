@@ -6,10 +6,12 @@ import {
   CanvasTagsV1Schema,
   countUnicodeCodePoints,
   isWellFormedCanvasText,
-  PostgresIdentifierV1Schema,
+  DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY,
+  DvtRelationalAuthoringDraftV1Schema,
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { retainIncompleteCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
@@ -23,11 +25,9 @@ import {
 } from './canvasDbtTestAuthoringModel';
 import {
   applyDvtNodeAuthoringMetadata,
-  createDvtNodeAuthoringMetadata,
+  resolveDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
 } from './canvasDvtAuthoringModel';
-import type { DvtNodeAuthoringMetadata } from './canvasDvtAuthoringTypes';
-import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
@@ -70,42 +70,17 @@ function normalizeNodeTags(tags: readonly string[]): string[] {
   return tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
 }
 
-export function resolveCanvasDvtOutputNameDraftError(
-  dvt: DvtNodeAuthoringMetadata | undefined,
-  outputNameDrafts: Readonly<Record<string, string>>,
-  key: string
-): CanvasInspectorNodeDraftErrorCode | null {
-  const value = outputNameDrafts[key];
-  if (value == null) return null;
-  if (value.trim().length === 0) return 'dvt_alias_required';
-  if (!isWellFormedCanvasText(value)) return 'dvt_identifier_invalid';
-  if (value !== value.trim()) return 'dvt_identifier_whitespace';
-  if (!PostgresIdentifierV1Schema.safeParse(value).success) return 'dvt_identifier_too_long';
-  if (dvt?.kind !== 'transform' || dvt.mode !== 'substrait') return null;
-
-  const resultRelation = dvt.sidecar.relations
-    .filter((relation) => relation.sourceRef == null)
-    .reduce<(typeof dvt.sidecar.relations)[number] | undefined>(
-      (current, relation) =>
-        current == null || relation.relAnchor > current.relAnchor ? relation : current,
-      undefined
-    );
-  if (resultRelation == null) return null;
-  const duplicate = dvt.sidecar.fields.some(
-    (field) =>
-      field.relationId === resultRelation.relationId &&
-      field.fieldId !== key &&
-      field.displayName === value
-  );
-  return duplicate ? 'dvt_alias_duplicate' : null;
-}
-
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
   const hasDbtCompatibility = hasDbtCompatibilityMetadata(node);
-  const dvtMetadata = hasDbtCompatibility ? null : createDvtNodeAuthoringMetadata(node);
+  const dvtResolution = hasDbtCompatibility
+    ? ({ outcome: 'resolved', metadata: undefined } as const)
+    : resolveDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
   const tags = normalizeNodeTags(node.tags);
+  const relationalAuthoringDraft = DvtRelationalAuthoringDraftV1Schema.safeParse(
+    node.metadata?.[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY]
+  );
 
   return {
     name: node.name,
@@ -117,7 +92,19 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     ...(node.pluginId === 'dbt' && node.kind === 'dbt:test'
       ? { dbtTest: createDbtTestAuthoringMetadata(node) }
       : {}),
-    ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
+    ...(dvtResolution.outcome === 'resolved' && dvtResolution.metadata
+      ? { dvt: dvtResolution.metadata }
+      : {}),
+    ...(dvtResolution.outcome === 'rejected'
+      ? { semanticAuthoringIssue: dvtResolution.reason }
+      : {}),
+    ...(relationalAuthoringDraft.success
+      ? {
+          relationalAuthoringDraft: retainIncompleteCanvasRelationalAuthoringDraft(
+            relationalAuthoringDraft.data
+          ),
+        }
+      : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
     ...(httpJsonArtifactDraft == null ? {} : { httpJsonArtifact: httpJsonArtifactDraft }),
   };
@@ -127,7 +114,42 @@ export function areCanvasInspectorNodeDraftsEqual(
   left: CanvasInspectorNodeDraft,
   right: CanvasInspectorNodeDraft
 ): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  return areInspectorValuesEqual(left, right);
+}
+
+function areInspectorValuesEqual(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (typeof left !== typeof right || left == null || right == null) return false;
+  if (typeof left !== 'object') return false;
+  if (left instanceof Uint8Array || right instanceof Uint8Array) {
+    return (
+      left instanceof Uint8Array &&
+      right instanceof Uint8Array &&
+      left.length === right.length &&
+      left.every((value, index) => value === right[index])
+    );
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => areInspectorValuesEqual(value, right[index]))
+    );
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const leftKeys = Object.keys(leftRecord).filter((key) => leftRecord[key] !== undefined);
+  const rightKeys = Object.keys(rightRecord).filter((key) => rightRecord[key] !== undefined);
+  return (
+    leftKeys.length === rightKeys.length &&
+    leftKeys.every(
+      (key) =>
+        Object.hasOwn(rightRecord, key) &&
+        rightRecord[key] !== undefined &&
+        areInspectorValuesEqual(leftRecord[key], rightRecord[key])
+    )
+  );
 }
 
 export function validateCanvasInspectorNodeDraft(
@@ -172,11 +194,11 @@ export function validateCanvasInspectorNodeDraft(
   if (!CanvasTagsV1Schema.safeParse(normalizedTags).success) {
     return { tags: 'node_tags_invalid' };
   }
-  const outputNameDrafts = draft.outputNameDrafts ?? {};
-  for (const key of Object.keys(outputNameDrafts)) {
-    const error = resolveCanvasDvtOutputNameDraftError(draft.dvt, outputNameDrafts, key);
-    if (error != null) return { outputNames: error };
-  }
+  if (
+    draft.relationalAuthoringDraft != null &&
+    !DvtRelationalAuthoringDraftV1Schema.safeParse(draft.relationalAuthoringDraft).success
+  )
+    return { relationalAuthoringDraft: 'dvt_relational_authoring_draft_invalid' };
   if (draft.dbt) {
     const dbtErrors: NonNullable<CanvasInspectorNodeDraftErrors['dbt']> = {};
     if (draft.dbt.packageName.trim().length === 0) {
@@ -303,15 +325,19 @@ export function hasCanvasInspectorNodeDraftChanges(
   return (
     node.name !== normalizeNodeName(draft.name) ||
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
-    JSON.stringify(originalDraft.tags) !== JSON.stringify(draftTags) ||
-    JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
-    JSON.stringify(originalDraft.dbtTest ?? null) !== JSON.stringify(draft.dbtTest ?? null) ||
-    JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
-    Object.keys(draft.outputNameDrafts ?? {}).length > 0 ||
-    JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
-      JSON.stringify(draft.objectFilePostgres ?? null) ||
-    JSON.stringify(originalDraft.httpJsonArtifact ?? null) !==
-      JSON.stringify(draft.httpJsonArtifact ?? null)
+    !areInspectorValuesEqual(originalDraft.tags, draftTags) ||
+    !areInspectorValuesEqual(originalDraft.dbt ?? null, draft.dbt ?? null) ||
+    !areInspectorValuesEqual(originalDraft.dbtTest ?? null, draft.dbtTest ?? null) ||
+    !areInspectorValuesEqual(originalDraft.dvt ?? null, draft.dvt ?? null) ||
+    !areInspectorValuesEqual(
+      originalDraft.relationalAuthoringDraft ?? null,
+      draft.relationalAuthoringDraft ?? null
+    ) ||
+    !areInspectorValuesEqual(
+      originalDraft.objectFilePostgres ?? null,
+      draft.objectFilePostgres ?? null
+    ) ||
+    !areInspectorValuesEqual(originalDraft.httpJsonArtifact ?? null, draft.httpJsonArtifact ?? null)
   );
 }
 
@@ -321,38 +347,36 @@ export function applyCanvasInspectorNodeDraft(
   workspaceScope?: WorkspaceScope
 ): CanonicalNode {
   const tags = normalizeNodeTags(draft.tags);
-  const baseNode = {
+  const baseNode: CanonicalNode = {
     ...node,
     name: normalizeNodeName(draft.name),
     description: normalizeNodeDescription(draft.description),
     tags,
   };
 
-  if (draft.dbtTest) {
-    return applyDbtTestAuthoringMetadata(baseNode, draft.dbtTest);
-  }
-
-  if (draft.dbt) {
-    return applyDbtNodeAuthoringMetadata(baseNode, draft.dbt);
-  }
-
-  if (draft.dvt) {
-    return applyDvtNodeAuthoringMetadata(baseNode, draft.dvt);
-  }
-
-  if (draft.objectFilePostgres) {
-    return workspaceScope == null
-      ? node
-      : applyObjectFilePostgresAuthoringDraft(baseNode, draft.objectFilePostgres, workspaceScope);
-  }
-
-  if (draft.httpJsonArtifact) {
-    return workspaceScope == null
-      ? node
-      : applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact, workspaceScope);
-  }
-
-  return baseNode;
+  let applied = baseNode;
+  if (draft.dbtTest) applied = applyDbtTestAuthoringMetadata(baseNode, draft.dbtTest);
+  else if (draft.dbt) applied = applyDbtNodeAuthoringMetadata(baseNode, draft.dbt);
+  else if (draft.dvt) applied = applyDvtNodeAuthoringMetadata(baseNode, draft.dvt);
+  else if (draft.objectFilePostgres)
+    applied =
+      workspaceScope == null
+        ? node
+        : applyObjectFilePostgresAuthoringDraft(baseNode, draft.objectFilePostgres, workspaceScope);
+  else if (draft.httpJsonArtifact)
+    applied =
+      workspaceScope == null
+        ? node
+        : applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact, workspaceScope);
+  if (draft.relationalAuthoringDraft === undefined) return applied;
+  const metadata = { ...applied.metadata };
+  const incomplete =
+    draft.relationalAuthoringDraft == null
+      ? null
+      : retainIncompleteCanvasRelationalAuthoringDraft(draft.relationalAuthoringDraft);
+  if (incomplete === null) delete metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY];
+  else metadata[DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY] = incomplete;
+  return { ...applied, metadata };
 }
 
 export function canonicalizeCanvasInspectorNodeDraft(

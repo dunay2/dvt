@@ -40,7 +40,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     // Use a spy on intentStore to capture the intentId
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
 
     const { engine } = createEngine({
       adapters,
@@ -53,8 +53,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const intentId = createSpy.mock.results[0]?.value;
     const resolvedIntent = await intentId;
     const intent = await intentStore.getIntent({
-      tenantId: resolvedIntent.tenantId,
-      intentId: resolvedIntent.intentId,
+      tenantId: resolvedIntent.intent.tenantId,
+      intentId: resolvedIntent.intent.intentId,
     });
     expect(intent?.status).toBe('RESOLVED');
     expect(intent?.runId).toBe('il-resolved-1');
@@ -74,9 +74,9 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     ]);
 
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
 
-    const store = new InMemoryTxStore();
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
     const { engine } = createEngine({
       adapters,
       intentStore,
@@ -91,8 +91,8 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(createSpy).toHaveBeenCalledOnce();
     const created = await createSpy.mock.results[0]?.value;
     const intent = await intentStore.getIntent({
-      tenantId: created.tenantId,
-      intentId: created.intentId,
+      tenantId: created.intent.tenantId,
+      intentId: created.intent.intentId,
     });
     expect(intent?.status).toBe('PENDING');
   });
@@ -111,12 +111,12 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     });
 
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
     intentStore.markDispatched = async () => {
       throw new Error('intent store boom');
     };
 
-    const store = new InMemoryTxStore();
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
     const { engine } = createEngine({
       adapters,
       intentStore,
@@ -130,11 +130,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     const created = await createSpy.mock.results[0]?.value;
     const intent = await intentStore.getIntent({
-      tenantId: created.tenantId,
-      intentId: created.intentId,
+      tenantId: created.intent.tenantId,
+      intentId: created.intent.intentId,
     });
     expect(intent?.status).toBe('PENDING');
-    expect(intent?.engineRunRef).toBeUndefined();
+    expect(intent?.providerOutcome.kind).toBe('unknown');
 
     const meta = await store.getRunMetadataByRunId('t', 'il-mark-dispatched-fail-1');
     expect(meta?.runId).toBe('il-mark-dispatched-fail-1');
@@ -143,7 +143,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(events.map((event) => event.eventType)).toEqual(['RunQueued']);
   });
 
-  it('when bootstrapRunTx() throws, compensation fires AND intent is RESOLVED', async () => {
+  it('when fenced bootstrap throws, compensation remains pending for observed termination', async () => {
     let cancelCalled = false;
     const adapters = makeAdapters({
       async cancelRun() {
@@ -152,16 +152,16 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     });
 
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
 
     // Create a store that will fail on bootstrapRunTx for a specific runId
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === 'il-bootstrap-fail-1') {
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
+    const originalBootstrap = store.applyStartRunWrite.bind(store);
+    store.applyStartRunWrite = async (receipt, write) => {
+      if (write.kind === 'bootstrap' && write.input.metadata.runId === 'il-bootstrap-fail-1') {
         throw new Error('bootstrap boom');
       }
-      return originalBootstrap(input);
+      return originalBootstrap(receipt, write);
     };
 
     const { engine } = createEngine({
@@ -175,17 +175,18 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       engine.startRun(makePlanRef(), makeContext('il-bootstrap-fail-1'))
     ).rejects.toThrow(/bootstrap boom/);
 
-    expect(cancelCalled).toBe(true);
+    expect(cancelCalled).toBe(false);
 
     const created = await createSpy.mock.results[0]?.value;
     const intent = await intentStore.getIntent({
-      tenantId: created.tenantId,
-      intentId: created.intentId,
+      tenantId: created.intent.tenantId,
+      intentId: created.intent.intentId,
     });
-    // Intent is resolved because compensation succeeded
-    expect(intent?.status).toBe('RESOLVED');
-    // engineRunRef was set during DISPATCHED phase
-    expect(intent?.engineRunRef).toBeDefined();
+    expect(intent).toMatchObject({
+      status: 'DISPATCHED',
+      compensation: { kind: 'required', reason: 'bootstrap_failed' },
+      providerOutcome: { kind: 'started' },
+    });
   });
 
   it('bootstraps the exact providerRef returned by adapter.startRun on the no-estimate path', async () => {
@@ -212,7 +213,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(meta?.providerRef).toEqual(returnedProviderRef);
   });
 
-  it('compensates bootstrap failure against the exact providerRef returned by adapter.startRun', async () => {
+  it('retains the exact providerRef for durable compensation after bootstrap failure', async () => {
     const returnedProviderRef: EngineRunRef = {
       provider: 'temporal',
       tenantId: 't',
@@ -231,14 +232,17 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       },
     });
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === 'il-provider-ref-compensation-1') {
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
+    const originalBootstrap = store.applyStartRunWrite.bind(store);
+    store.applyStartRunWrite = async (receipt, write) => {
+      if (
+        write.kind === 'bootstrap' &&
+        write.input.metadata.runId === 'il-provider-ref-compensation-1'
+      ) {
         throw new Error('bootstrap unavailable');
       }
-      return originalBootstrap(input);
+      return originalBootstrap(receipt, write);
     };
     const { engine } = createEngine({ adapters, intentStore, stateStore: store });
 
@@ -246,22 +250,23 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       engine.startRun(makePlanRef(), makeContext('il-provider-ref-compensation-1'))
     ).rejects.toThrow(/bootstrap unavailable/);
 
-    expect(cancelledProviderRefs).toEqual([returnedProviderRef]);
+    expect(cancelledProviderRefs).toEqual([]);
     await expect(
       store.getRunMetadataByRunId('t', 'il-provider-ref-compensation-1')
     ).resolves.toBeNull();
     const created = await createSpy.mock.results[0]?.value;
     const intent = await intentStore.getIntent({
-      tenantId: created.tenantId,
-      intentId: created.intentId,
+      tenantId: created.intent.tenantId,
+      intentId: created.intent.intentId,
     });
     expect(intent).toMatchObject({
-      status: 'RESOLVED',
-      engineRunRef: returnedProviderRef,
+      status: 'DISPATCHED',
+      providerOutcome: { kind: 'started', runRef: returnedProviderRef },
+      compensation: { kind: 'required', reason: 'bootstrap_failed' },
     });
   });
 
-  it('when bootstrapRunTx and cancelRun both throw, intent markResolved is still attempted', async () => {
+  it('when bootstrap and compensation persistence fail, the intent is not falsely resolved', async () => {
     const adapters = makeAdapters({
       async cancelRun() {
         throw new Error('cancel boom');
@@ -269,16 +274,19 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     });
 
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
     const resolveSpy = vi.spyOn(intentStore, 'markResolved');
+    vi.spyOn(intentStore, 'recordReconciliation').mockRejectedValue(
+      new Error('compensation write failed')
+    );
 
-    const store = new InMemoryTxStore();
-    const originalBootstrap = store.bootstrapRunTx.bind(store);
-    store.bootstrapRunTx = async (input) => {
-      if (input.metadata.runId === 'il-double-fail-1') {
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
+    const originalBootstrap = store.applyStartRunWrite.bind(store);
+    store.applyStartRunWrite = async (receipt, write) => {
+      if (write.kind === 'bootstrap' && write.input.metadata.runId === 'il-double-fail-1') {
         throw new Error('bootstrap boom');
       }
-      return originalBootstrap(input);
+      return originalBootstrap(receipt, write);
     };
 
     const { engine } = createEngine({
@@ -292,23 +300,22 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       /bootstrap boom/
     );
 
-    // markResolved was called on the compensation path (best-effort)
-    expect(resolveSpy).toHaveBeenCalled();
+    expect(resolveSpy).not.toHaveBeenCalled();
 
-    // Should be resolved despite cancelRun failure
+    // Keep the observed start available for the next maintenance observation.
     const created = await createSpy.mock.results[0]?.value;
     const intent = await intentStore.getIntent({
-      tenantId: created.tenantId,
-      intentId: created.intentId,
+      tenantId: created.intent.tenantId,
+      intentId: created.intent.intentId,
     });
-    expect(intent?.status).toBe('RESOLVED');
+    expect(intent).toMatchObject({ status: 'DISPATCHED', compensation: { kind: 'not_required' } });
   });
 
   it('intent uses the engine clock for createdAt', async () => {
     const adapters = makeAdapters();
 
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
 
     const { engine } = createEngine({
       adapters,
@@ -326,7 +333,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const adapters = makeAdapters();
 
     const intentStore = new InMemoryStartRunIntentStore();
-    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const createSpy = vi.spyOn(intentStore, 'claimIntent');
 
     const { engine } = createEngine({
       adapters,
@@ -345,7 +352,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     const intentStore = new InMemoryStartRunIntentStore();
     const dispatchSpy = vi.spyOn(intentStore, 'markDispatched');
 
-    const store = new InMemoryTxStore();
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
     const { engine } = createEngine({
       adapters,
       intentStore,
@@ -361,7 +368,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(runRef.runId).toBe('il-ref-1');
   });
 
-  it('when intentStore.createIntent() throws, startRun propagates the error (no adapter call)', async () => {
+  it('when intentStore.claimIntent() throws, startRun propagates the error (no adapter call)', async () => {
     let adapterCalled = false;
     const adapters = new Map<EngineRunRef['provider'], IProviderAdapter>([
       [
@@ -382,11 +389,11 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     ]);
 
     const intentStore = new InMemoryStartRunIntentStore();
-    vi.spyOn(intentStore, 'createIntent').mockRejectedValueOnce(
+    vi.spyOn(intentStore, 'claimIntent').mockRejectedValueOnce(
       new Error('intent store unavailable')
     );
 
-    const store = new InMemoryTxStore();
+    const store = new InMemoryTxStore({ startRunIntents: intentStore });
     const { engine } = createEngine({
       adapters,
       intentStore,

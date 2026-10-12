@@ -45,10 +45,6 @@ const USER_STORIES_DOC = join(
   REPO_ROOT,
   'docs/architecture/components/engine/contracts/plan-admission-user-stories.md'
 );
-const MAILBOX_REVIEW = join(
-  REPO_ROOT,
-  'buzon/20260429-codex-fowler-plan-admission-hard-cut-analysis-and-remediation.md'
-);
 
 const ACTIVE_SURFACES = [
   PLAN_ADMISSION_SOURCE,
@@ -60,7 +56,6 @@ const ACTIVE_SURFACES = [
   COMPONENT_GUIDE,
   USER_STORIES_DOC,
   ADR_0036,
-  MAILBOX_REVIEW,
 ] as const;
 const RETIRED_NAME_FRAGMENTS = [
   'Plan' + 'Compatibility',
@@ -143,23 +138,10 @@ describe('ExecutionPlan admission matrix architecture', () => {
     }
   });
 
-  it('saves the Fowler review in the branch mailbox with findings and remediation rationale', () => {
-    expect(existsSync(MAILBOX_REVIEW)).toBe(true);
-
-    const review = readFileSync(MAILBOX_REVIEW, 'utf8');
-    for (const section of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Removed Or Prevented',
-      '## Component Grouping',
-      '## Repetitions And Drift Fixed',
-      '## Future Lessons',
-      '## Opportunities',
-    ]) {
-      expect(review).toContain(section);
+  it('requires every declared active admission surface to exist', () => {
+    for (const currentPath of ACTIVE_SURFACES) {
+      expect(existsSync(currentPath), currentPath).toBe(true);
     }
-    expect(review).toContain('```mermaid');
   });
 
   it('keeps active admission surfaces free of retired compatibility naming', () => {

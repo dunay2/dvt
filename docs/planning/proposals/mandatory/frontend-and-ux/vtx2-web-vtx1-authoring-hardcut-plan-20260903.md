@@ -37,6 +37,11 @@ capability.
   semantic authority.
 - A new Transform may be uninitialized in presentation state, but applying authoring
   creates canonical Substrait metadata through `ConfigureCanvasDvtNode`.
+- Explicitly clearing the final relation returns the same Transform to uninitialized
+  through that command: remove its semantic authority, preserve its identity,
+  disposition and workspace dependencies. Apply may persist that deliberate empty
+  state. Incomplete compositions persist only as non-executable authoring state;
+  they cannot supply a valid Preview, Plan or Run.
 - Existing canonical projection, field-function, join, set, aggregate, window, reorder,
   output-toggle, alias, lineage, and comment behaviors remain available.
 - Legacy SQL/VTX1 metadata is unsupported and fails closed; there is no migration,
@@ -151,6 +156,26 @@ unchanged. Prove clearing and restoring binary/N-input outputs, detached edges,
 save/reload, preserved identities and SQL rejection with focused unit and browser
 regressions. Issue #3180 owns the implementation journal and evidence.
 
+The #3596 reconciliation keeps that contract on the current Model Output rail.
+Missing Canvas dependencies and connected-but-excluded or invalid Input mappings
+are distinct eligibility facts. Only the existing final JOIN output-selection
+command may edit retained slots after disconnection. Its existing validator must
+prove one root JOIN upsert with unchanged binding, operands, predicates and
+relation structure except `common.emit`, with no removals or extension changes;
+output bindings and root names still come from canonical selection. It must not
+grant a general authoring permission or a caller-supplied validation bypass.
+
+```text
+Retained JOIN + disconnected provenance -> Model Output -> exact emit-only delta -> save
+Denied provenance -> unchanged publication, formula, Source and execution rejection
+```
+
+Read-only and stale revisions, unmapped connected fields, non-root/non-JOIN
+edits and disconnected physical Source reinclusion remain rejected. Re-including
+a retained JOIN field does not publish unavailable input data or make Preview/Run
+ready. The analysis session derives these facts from the same document and
+Canvas graph; no persisted selection flag, alternate schema or new cache is added.
+
 ## Physical field reinclusion correction (#3144)
 
 A validated projection from a physical Source distinguishes a selected input
@@ -248,6 +273,43 @@ Verify Source -> A -> B -> C, serialization, malformed/disconnected/stale inputs
 the real SQL viewer and read-only execution against test PostgreSQL. Existing
 filter admission is unchanged; unsupported nested relations still fail closed.
 Schema evolution (#3150) and Canvas runtime execution (#2723) are excluded.
+
+## Card removal confirmation (#3606)
+
+`ConfigureCanvasDvtNode` owns card deletion in the editable graph. This is not
+the algebraic remove-and-splice operation exposed by an operator's configuration
+form. The context menu and Delete key share one card-removal command.
+
+```mermaid
+flowchart LR
+  A[Delete selected card] --> B[Read-only impact proposal]
+  B --> C[Inline Canvas toolbar: Cancel / Delete]
+  C -->|Cancel or Escape| D[Unchanged graph and persistence]
+  C -->|Confirm current revision and permissions| E[Remove one card and incident edges]
+  E --> F[Retain dependent cards and configuration without executable semantics]
+  F --> G[Existing Apply / Cancel and SaveWorkspaceGraphDraft]
+```
+
+- Dependent cards or a connected model Output require confirmation. The toolbar
+  names the target and direct consumers, highlights affected cards, and leaves
+  the Canvas and inspector visible. It is not a modal, toast or popup.
+- Delete removes only the selected card. Missing producer slots remain explicit;
+  there is no implicit reconnection, deletion of neighbours, or binary
+  keep-left/keep-right action. Configuration survives transitively, but stale
+  executable documents do not. Cards with disconnected inputs say "Missing input".
+- Proposals bind the semantic revision, source occurrence identities, working
+  graph, output and authorization identity. Changes reject rather than applying
+  outdated consent. A proposal is consumed once; unmount cancels it.
+- Preparation and Cancel never save. Apply persists the existing authoring DTO;
+  reopen restores retained configuration and missing inputs. The existing draft
+  Cancel restores the saved baseline.
+- Presentation owns ES/EN copy, external CSS and keyboard focus. Pure graph
+  preparation owns impact; the React coordinator owns consent lifetime. No new
+  API, contract version, undo stack or cascading field-removal behavior is added.
+
+Verification uses the card-removal unit/presentation tests and the existing
+`canvas-relational-workbench-removal.cy.ts` journey, plus affected operator
+journeys. Native admission is recorded under `GH-3606-CANVAS-CARD-REMOVAL`.
 
 ## Feature mechanization
 
@@ -446,7 +508,6 @@ symbols:
   - { <<: *vtx2Symbol, name: readDvtNodeConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: readDvtString, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: resolveEffectiveDvtConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
-  - { <<: *vtx2Symbol, name: resolveInheritedDvtConnectionRef, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: validateDvtSourceAuthoringMetadata, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: withDvtConfig, path: apps/web/src/app/views/canvas/canvasDvtSourceAuthoring.ts }
   - { <<: *vtx2Symbol, name: TransformMetadata, path: apps/web/src/app/views/canvas/canvasDvtTransformAuthoring.ts }

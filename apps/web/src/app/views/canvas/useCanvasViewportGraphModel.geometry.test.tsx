@@ -41,6 +41,7 @@ describe('useCanvasViewportGraphModel geometry invalidation', () => {
         mounted.readState()?.onNodesChange([
           { id: source.id, type: 'dimensions', dimensions: { width: 384, height: 180 } },
           { id: model.id, type: 'dimensions', dimensions: { width: 384, height: 320 } },
+          { id: model.id, type: 'select', selected: true },
         ]);
       });
       const measuredNodes = mounted.readState()!.nodes;
@@ -58,6 +59,7 @@ describe('useCanvasViewportGraphModel geometry invalidation', () => {
         const current = mounted.readState()!.nodes.find((node) => node.id === previous.id)!;
         expect(current.measured).toEqual(previous.measured);
         expect(current.position).toEqual(previous.position);
+        expect(current.selected).toEqual(previous.selected);
       }
       expect(mounted.readState()!.nodes.find((node) => node.id === model.id)?.data.name).toBe(
         'Updated model'

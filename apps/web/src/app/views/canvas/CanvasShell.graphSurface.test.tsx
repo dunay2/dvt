@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell keeps the graph as the base work surface. */
+import { asIsoUtcString } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent } from '@testing-library/dom';
 import { act } from 'react';
@@ -14,8 +15,8 @@ import {
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { CanvasShellProps } from './canvasShell.types';
 import type { SourceDataSample } from '../../ports/workspace';
+import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
 import { canvasViewCopy } from './copy';
-import { resolveWorkspaceFilePath } from './CanvasShell';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -38,106 +39,6 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
-  });
-
-  it('does not fabricate a dbt model workspace path when the draft omitted it', () => {
-    expect(
-      resolveWorkspaceFilePath({
-        name: 'Model 1',
-        pluginKind: 'dvt:transform',
-        status: 'idle',
-      })
-    ).toBeNull();
-  });
-
-  it('routes generated dbt model code to the node authoring surface', async () => {
-    const onInspectNode = vi.fn();
-    await renderShell({
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'dbt-model-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Model 1',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              presentationTruth: {
-                code: {
-                  kind: 'generated',
-                  content: 'select * from source_1',
-                  path: 'models/model_1.sql',
-                  language: 'sql',
-                },
-              },
-              onInspectNode,
-            },
-          },
-        ],
-      },
-    });
-
-    const forwardedNode = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        | Array<{
-            data: {
-              canOpenNodeCode?: boolean;
-              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
-            };
-          }>
-        | undefined
-    )?.[0];
-    forwardedNode?.data.onInspectNode?.('dbt-model-1', 'code');
-
-    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
-    expect(onInspectNode).toHaveBeenCalledWith('dbt-model-1', 'code');
-    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
-  });
-
-  it('routes canonical Transform code to the node inspector', async () => {
-    const onInspectNode = vi.fn();
-    await renderShell({
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'transform-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Transform 1',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              presentationTruth: {
-                code: {
-                  kind: 'canonical',
-                  content: '{"schemaVersion":"dvt-substrait-semantic-document.v1"}',
-                  language: 'json',
-                  schemaVersion: 'dvt-substrait-semantic-document.v1',
-                  digest: 'a'.repeat(64),
-                },
-              },
-              onInspectNode,
-            },
-          },
-        ],
-      },
-    });
-
-    const forwardedNode = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        | Array<{
-            data: {
-              canOpenNodeCode?: boolean;
-              onInspectNode?: (nodeId: string, preferredTabId?: string) => void;
-            };
-          }>
-        | undefined
-    )?.[0];
-    forwardedNode?.data.onInspectNode?.('transform-1', 'code');
-
-    expect(forwardedNode?.data.canOpenNodeCode).toBe(true);
-    expect(onInspectNode).toHaveBeenCalledWith('transform-1', 'code');
   });
 
   it('keeps workspace-file Code inside the preserved node Properties context', async () => {
@@ -185,144 +86,119 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-slot="canvas-contextual-workbench-close"]')).toBeNull();
   });
 
-  it('opens a bounded source sample in the bottom drawer from an imported source node', async () => {
-    const previewSourceObjectRows = vi.fn().mockResolvedValue({
-      contractVersion: 1,
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/public/orders',
-      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-      rows: [{ values: ['1'] }],
-      limit: 20,
-      truncated: false,
-      sampledAt: '2026-08-17T10:00:00.000Z',
-    });
-    await renderShell({
-      warehouseSourceDataSampleQuery: { previewSourceObjectRows },
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'source-orders',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'orders',
-              status: 'idle',
-              metadata: {
-                connectedSourceRef: {
-                  schemaVersion: 'connected-source-ref.v1',
-                  connectionRef: {
-                    schemaVersion: 'connection-ref.v1',
-                    connectionId: 'postgresql-local',
-                    provider: 'postgres',
+  it.each([false, true])(
+    'opens a bounded source preview and explicit errors (focus mode: %s)',
+    async (focusMode) => {
+      useUiLayoutStore.setState({ focusMode, bottomDrawerVisible: false });
+      const previewSourceObjectRows = vi.fn().mockResolvedValue({
+        contractVersion: 1,
+        connectionId: 'postgresql-local',
+        objectId: 'relation/dvt/public/orders',
+        columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+        rows: [{ values: ['1'] }],
+        limit: 20,
+        truncated: false,
+        provenance: {
+          mode: 'live' as const,
+          sourceRefs: [
+            {
+              schemaVersion: 'connected-source-ref.v1' as const,
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1' as const,
+                connectionId: 'local-postgres-proof',
+                provider: 'postgres',
+              },
+              sourceObjectId: 'relation/dvt/public/orders',
+            },
+          ],
+          queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+          limit: 20,
+          navigation: 'bounded-first-page' as const,
+        },
+      });
+      await renderShell({
+        warehouseSourceDataSampleQuery: { previewSourceObjectRows },
+        graph: {
+          nodesWithImpact: [
+            {
+              id: 'source-orders',
+              type: 'dbtNode',
+              position: { x: 0, y: 0 },
+              data: {
+                name: 'orders',
+                status: 'idle',
+                metadata: {
+                  connectedSourceRef: {
+                    schemaVersion: 'connected-source-ref.v1',
+                    connectionRef: {
+                      schemaVersion: 'connection-ref.v1',
+                      connectionId: 'postgresql-local',
+                      provider: 'postgres',
+                    },
+                    sourceObjectId: 'relation/dvt/public/orders',
                   },
-                  sourceObjectId: 'relation/dvt/public/orders',
                 },
               },
             },
-          },
-        ],
-      },
-    });
-
-    const forwardedNode = (
-      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
-        | Array<{
-            data: {
-              onOpenSourceDataSample?: (nodeId: string) => void;
-              sourceDataSampleInteractionLabel?: string;
-            };
-          }>
-        | undefined
-    )?.[0];
-    await act(async () => {
-      forwardedNode?.data.onOpenSourceDataSample?.('source-orders');
-      await Promise.resolve();
-    });
-
-    expect(previewSourceObjectRows).toHaveBeenCalledWith({
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/public/orders',
-      limit: 20,
-    });
-    expect(forwardedNode?.data.sourceDataSampleInteractionLabel).toContain('Double-click');
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
-      contribution: {
-        dataSample: {
-          status: 'ready',
-          nodeName: 'orders',
+          ],
         },
-      },
-    });
-    expect(useUiLayoutStore.getState()).toMatchObject({
-      bottomDrawerVisible: true,
-      bottomDrawerHeight: 300,
-    });
-  });
+      });
 
-  it('projects the active run timestamp onto each participating Transform', async () => {
-    await renderShell({
-      runSnapshot: {
-        runId: 'run-1',
-        status: 'completed',
-        startedAt: '2026-08-18T10:00:00.000Z',
-        completedAt: '2026-08-18T10:00:01.500Z',
-        durationMs: 1_500,
-      },
-      graph: {
-        nodesWithImpact: [
-          {
-            id: 'transform-1',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Transform 1',
-              pluginId: 'dvt',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              runStatusByNodeId: new Map([['transform-1', 'completed']]),
-            },
-          },
-          {
-            id: 'transform-outside-run',
-            type: 'dbtNode',
-            position: { x: 0, y: 0 },
-            data: {
-              name: 'Transform outside run',
-              pluginId: 'dvt',
-              pluginKind: 'dvt:transform',
-              status: 'idle',
-              runStatusByNodeId: new Map(),
-            },
-          },
-        ],
-      },
-    });
+      const forwardedNode = (
+        getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+          | Array<{
+              data: {
+                onOpenSourceDataSample?: (nodeId: string) => void;
+                dataActionLabel?: string;
+              };
+            }>
+          | undefined
+      )?.[0];
+      await act(async () => {
+        forwardedNode?.data.onOpenSourceDataSample?.('source-orders');
+        await Promise.resolve();
+      });
 
-    const forwardedNodes = getCanvasShellState().canvasViewportProps?.nodesWithImpact as Array<{
-      id: string;
-      data: { lastRunAt?: string; durationMs?: number };
-    }>;
+      expect(previewSourceObjectRows).toHaveBeenCalledWith({
+        connectionId: 'postgresql-local',
+        objectId: 'relation/dvt/public/orders',
+        limit: 20,
+      });
+      expect(forwardedNode?.data.dataActionLabel).toBe('Preview');
+      const sourceDataState = useOperationalDrawerContributionStore.getState();
+      expect(sourceDataState.activeTab).toBe('data:source-orders');
+      expect(
+        sourceDataState.contribution?.tabs.find((tab) => tab.id === 'data:source-orders')
+      ).toMatchObject({
+        dataSample: { status: 'ready', nodeName: 'orders' },
+      });
+      expect(useUiLayoutStore.getState()).toMatchObject({
+        focusMode: false,
+        bottomDrawerVisible: true,
+        bottomDrawerHeight: 300,
+      });
+      expect(
+        useOperationalDrawerContributionStore
+          .getState()
+          .contribution?.tabs.find((tab) => tab.id === 'data:source-orders')?.dataSample
+      ).toMatchObject({ status: 'ready', sample: { rows: [{ values: ['1'] }] } });
 
-    expect(forwardedNodes[0]?.data).toMatchObject({
-      lastRunAt: '2026-08-18T10:00:01.500Z',
-      durationMs: 1_500,
-    });
-    expect(forwardedNodes[1]?.data.lastRunAt).toBeUndefined();
-    expect(forwardedNodes[1]?.data.durationMs).toBeUndefined();
-  });
+      previewSourceObjectRows.mockRejectedValueOnce(
+        new WarehouseSourceDataSampleQueryError('source_object_not_found')
+      );
+      await act(async () => {
+        forwardedNode?.data.onOpenSourceDataSample?.('source-orders');
+        await Promise.resolve();
+      });
+      expect(
+        useOperationalDrawerContributionStore
+          .getState()
+          .contribution?.tabs.find((tab) => tab.id === 'data:source-orders')?.dataSample
+      ).toMatchObject({ status: 'error', reason: 'source_object_not_found' });
+    }
+  );
 
-  it('projects a completed run result onto its exact sink and opens the existing data drawer', async () => {
-    const getRunMaterializationSample = vi.fn().mockResolvedValue({
-      contractVersion: 1,
-      connectionId: 'postgresql-local',
-      objectId: 'relation/dvt/public/sink_1',
-      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-      rows: [{ values: ['1'] }],
-      limit: 20,
-      truncated: false,
-      sampledAt: '2026-08-18T10:00:02.000Z',
-    });
+  it('projects persisted sink evidence without offering the retired row query', async () => {
     const sinkNodeData = {
       name: 'Sink 1',
       status: 'idle',
@@ -377,7 +253,6 @@ describe('CanvasShell graph base surface', () => {
           durationMs: 1_500,
         },
       },
-      runMaterializationSampleQuery: getRunMaterializationSample,
       graph: {
         nodesWithImpact: [draftSinkNode],
       },
@@ -410,19 +285,14 @@ describe('CanvasShell graph base surface', () => {
     });
     expect(forwardedNode?.data.runStatusByNodeId?.get('sink-1')).toBe('completed');
     expect(forwardedNode?.ariaLabel).toBe('Sink 1, Output, Completed');
-    expect(getRunMaterializationSample).toHaveBeenCalledWith('run-1', 20);
-    expect(useOperationalDrawerContributionStore.getState()).toMatchObject({
-      activeTab: 'data',
-      contribution: {
-        dataSample: {
-          status: 'ready',
-          nodeName: 'Sink 1',
-        },
-      },
-    });
+    expect(forwardedNode?.data.onOpenSourceDataSample).toBeUndefined();
+    const sinkDataState = useOperationalDrawerContributionStore.getState();
+    expect(
+      sinkDataState.contribution?.tabs.find((tab) => tab.id === 'data:sink-1')
+    ).toBeUndefined();
   });
 
-  it('ignores a stale sample response after the user opens another source', async () => {
+  it('keeps both source samples when their responses finish out of order', async () => {
     const resolvers = new Map<string, (sample: SourceDataSample) => void>();
     const previewSourceObjectRows = vi.fn(
       ({ objectId }: { objectId: string }) =>
@@ -471,7 +341,13 @@ describe('CanvasShell graph base surface', () => {
       rows: [{ values: ['1'] }],
       limit: 20,
       truncated: false,
-      sampledAt: '2026-08-17T10:00:00.000Z',
+      provenance: {
+        mode: 'live',
+        sourceRefs: [connectedSourceRef(table)],
+        queriedAt: asIsoUtcString('2026-08-17T10:00:00.000Z'),
+        limit: 20,
+        navigation: 'bounded-first-page',
+      },
     });
     await act(async () => {
       resolvers.get('relation/dvt/public/customers')?.(sample('customers'));
@@ -480,13 +356,26 @@ describe('CanvasShell graph base surface', () => {
       await Promise.resolve();
     });
 
-    expect(useOperationalDrawerContributionStore.getState().contribution?.dataSample).toMatchObject(
-      {
+    const dataState = useOperationalDrawerContributionStore.getState();
+    expect(dataState.activeTab).toBe('data:source-customers');
+    expect(
+      dataState.contribution?.tabs.find((tab) => tab.id === 'data:source-orders')
+    ).toMatchObject({
+      dataSample: {
+        status: 'ready',
+        nodeName: 'orders',
+        sample: { objectId: 'relation/dvt/public/orders' },
+      },
+    });
+    expect(
+      dataState.contribution?.tabs.find((tab) => tab.id === 'data:source-customers')
+    ).toMatchObject({
+      dataSample: {
         status: 'ready',
         nodeName: 'customers',
         sample: { objectId: 'relation/dvt/public/customers' },
-      }
-    );
+      },
+    });
   });
 
   it('keeps plain node click out of the application shell command contract', async () => {
@@ -494,13 +383,6 @@ describe('CanvasShell graph base surface', () => {
 
     expect('onNodeClick' in props.graphCommands).toBe(false);
     expect('onSelectionChange' in props.graphCommands).toBe(false);
-    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
-  });
-
-  it('keeps host-owned tab chrome out of the graph base panel', async () => {
-    await renderShell();
-
-    expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).toBeNull();
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 

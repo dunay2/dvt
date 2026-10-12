@@ -11,7 +11,8 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts
   - apps/web/src/app/views/canvas/canvasDvtSubstraitFilter.ts
   - apps/web/src/app/views/canvas/DvtRelationFilterAuthoringSection.tsx
-  - apps/web/src/app/views/canvas/canvasDvtSubstraitPostgresProjection.ts
+  - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
+  - packages/@dvt/postgres-projection/src/relationalSql/project.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test -- dvt-substrait-capability-catalog

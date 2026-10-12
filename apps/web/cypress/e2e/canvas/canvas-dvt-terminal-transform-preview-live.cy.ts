@@ -1,9 +1,14 @@
 /**
  * Owned concern: prove one protected terminal DVT Transform from persisted
  * Canvas revision through PreviewPlan, StartRun, Temporal and PostgreSQL.
+ * @baseline ADR-0044: Structural rejection causes are stable; Web owns translated copy.
+ * @decision Verify V1 responses and retain this spec's exclusive data-action and recovery proofs.
+ * @consequence Unsupported output dispositions cannot expose Run or create an execution.
+ * @version 1.0.0
  */
-import { KNOWN_STEP_KINDS } from '@dvt/contracts';
+import { DVT_REJECTIONS, KNOWN_STEP_KINDS } from '@dvt/contracts';
 
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   getVisibleCanvasNode,
@@ -11,17 +16,40 @@ import {
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
-  seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { livePostgresDatabaseName } from '../../support/liveWarehouseSourceImport';
+import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+
+import { registerCanvasNodeDataActionsProof } from './canvasNodeDataActions.proof';
+import {
+  assertAuthoritativeLiveRunTimeline,
+  interruptLiveRunEventFeed,
+  type LiveRunEventIdentity,
+} from './liveRunEventRecovery.proof';
+
+function visitEnglishLiveCanvas(): void {
+  visitWithLiveWorkspaceSession('/canvas', {
+    onBeforeLoad(window) {
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
+    },
+  });
+}
+
+registerCanvasNodeDataActionsProof();
 
 describe('DVT terminal Transform Preview and Run live', () => {
   beforeEach(function () {
-    if (!hasLiveProtectedRuntimeEnv()) this.skip();
+    if (!hasLiveProtectedRuntimeEnv())
+      throw new Error('Terminal live proof requires protected runtime credentials.');
     resetE2eApiStubs();
   });
 
@@ -35,18 +63,20 @@ describe('DVT terminal Transform Preview and Run live', () => {
       readonly persisted?: { readonly canonicalPlanSha256?: string };
     };
     type RunEventResponse = {
-      readonly items?: ReadonlyArray<{
-        readonly eventType?: string;
-        readonly payload?: {
-          readonly resultEvidence?: {
-            readonly evidenceType?: string;
-            readonly plan?: { readonly sha256?: string };
-            readonly target?: { readonly schema?: string; readonly relation?: string };
-            readonly publication?: { readonly token?: string; readonly outcome?: string };
-            readonly rowsWritten?: number;
+      readonly items?: ReadonlyArray<
+        LiveRunEventIdentity & {
+          readonly eventType?: string;
+          readonly payload?: {
+            readonly resultEvidence?: {
+              readonly evidenceType?: string;
+              readonly plan?: { readonly sha256?: string };
+              readonly target?: { readonly schema?: string; readonly relation?: string };
+              readonly publication?: { readonly token?: string; readonly outcome?: string };
+              readonly rowsWritten?: number;
+            };
           };
-        };
-      }>;
+        }
+      >;
     };
     const targetSchemaValue = Cypress.env('postgresTargetSchema');
     if (typeof targetSchemaValue !== 'string' || targetSchemaValue.trim().length === 0) {
@@ -69,6 +99,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       terminalTransformResultTarget: { schema: targetSchema, relation: targetRelation },
       title: 'DVT terminal Transform Run',
     });
@@ -88,9 +119,50 @@ describe('DVT terminal Transform Preview and Run live', () => {
       request.continue();
     });
 
-    visitWithLiveWorkspaceSession('/canvas');
+    visitEnglishLiveCanvas();
     getVisibleCanvasNode('source-1').should('be.visible');
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
+    cy.intercept('GET', '**/source-data-sample?*').as('sourceLivePreview');
+    hoverWorkbenchCard('.react-flow__node[data-id="source-1"] [data-slot="canvas-node-shell"]');
+    getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').focus().click();
+    cy.wait('@sourceLivePreview').then(({ response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(response?.body.provenance).to.deep.include({
+        mode: 'live',
+        limit: 20,
+        navigation: 'bounded-first-page',
+      });
+      expect(response?.body.rows).to.have.length(3);
+    });
+    cy.get('[data-slot="live-preview-facts"]')
+      .should('contain.text', 'LIVE')
+      .and('contain.text', 'PostgreSQL');
+    cy.get('[data-slot="data-sample-refresh"]').click();
+    cy.wait('@sourceLivePreview').its('response.statusCode').should('equal', 200);
+    cy.intercept('GET', '**/transforms/dvt-transform-1/data-sample?*').as('transformLivePreview');
+    hoverWorkbenchCard(
+      '.react-flow__node[data-id="dvt-transform-1"] [data-slot="canvas-node-shell"]'
+    );
+    getVisibleCanvasNode('dvt-transform-1')
+      .find('[data-slot="canvas-node-execute"]')
+      .focus()
+      .click();
+    cy.wait('@transformLivePreview').then(({ response }) => {
+      expect(response?.statusCode).to.equal(200);
+      expect(response?.body.provenance).to.deep.include({
+        mode: 'live',
+        limit: 20,
+        navigation: 'bounded-first-page',
+      });
+      expect(response?.body.provenance.sourceRefs).to.have.length(1);
+      expect(response?.body.rows).to.have.length(3);
+      expect(response?.body).not.to.have.property('sampledAt');
+    });
+    cy.get('[data-slot="live-preview-facts"]')
+      .should('contain.text', 'LIVE')
+      .and('contain.text', 'PostgreSQL');
+    cy.get('[data-slot="data-sample-refresh"]').click();
+    cy.wait('@transformLivePreview').its('response.statusCode').should('equal', 200);
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
 
@@ -111,9 +183,15 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
       .should('be.visible')
       .and('contain.text', KNOWN_STEP_KINDS.DVT_POSTGRES_OPERATIONAL_WORKLOAD);
+    const assertEventFeedRecovery = interruptLiveRunEventFeed();
+    cy.intercept('POST', '**/runs/start').as('terminalRunStart');
     cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
+    cy.wait('@terminalRunStart').then(({ response }) => {
+      expect(response?.statusCode, response?.body?.error?.reason).to.equal(202);
+    });
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
+    assertEventFeedRecovery();
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
@@ -139,13 +217,14 @@ describe('DVT terminal Transform Preview and Run live', () => {
             'verified-existing',
           ]);
           expect(evidence?.rowsWritten).to.equal(3);
+          cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
+            .should('be.visible')
+            .and('contain.text', 'completed');
+          assertAuthoritativeLiveRunTimeline((response.body as RunEventResponse).items ?? []);
         });
       });
     });
 
-    cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
-      .should('be.visible')
-      .and('contain.text', 'Completada');
     cy.get('[data-slot="run-result-tab"]').click();
     cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 })
       .should('be.visible')
@@ -160,28 +239,8 @@ describe('DVT terminal Transform Preview and Run live', () => {
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
-      cy.intercept('GET', '**/source-data-sample?*').as('publishedTransformRows');
-
       cy.go('back');
       cy.location('pathname', { timeout: 20_000 }).should('equal', '/canvas');
-      getVisibleCanvasNode('dvt-transform-1')
-        .find('[data-slot="canvas-node-shell"]')
-        .dblclick('bottom', { force: true });
-      cy.wait('@publishedTransformRows', { timeout: 30_000 }).then((interception) => {
-        expect(interception.response?.statusCode).to.equal(200);
-        expect(
-          new URL(interception.request.url).searchParams.get('expectedPublicationToken')
-        ).to.equal(publicationToken);
-        expect(interception.response?.body).to.deep.include({
-          connectionId: 'local-postgres-proof',
-          limit: 20,
-        });
-        expect(interception.response?.body.rows).to.have.length(3);
-      });
-      cy.get('[data-slot="bottom-operational-drawer-data"]', { timeout: 20_000 })
-        .should('be.visible')
-        .and('contain.text', 'customer');
-
       cy.intercept('GET', `**/runs/${runId}?*`).as('reopenedDvtRunSnapshot');
       cy.visit(`/runs/${runId}`);
       cy.wait('@reopenedDvtRunSnapshot', { timeout: 30_000 })
@@ -195,7 +254,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
         .should('equal', 200);
       cy.get('[data-slot="run-itinerary-card"]', { timeout: 30_000 })
         .should('be.visible')
-        .and('contain.text', 'Completada');
+        .and('contain.text', 'completed');
       cy.get('[data-slot="run-result-tab"]').click();
       cy.get('[data-slot="run-dvt-publication-plan-sha"]').should(($value) => {
         expect($value.text()).to.equal(previewSha);
@@ -212,6 +271,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       title: 'DVT stale Preview guard',
     });
     cy.intercept('POST', '**/plans/preview').as('dvtPreviewBeforeEdit');
@@ -219,7 +279,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
       startRunRequests += 1;
       request.continue();
     });
-    visitWithLiveWorkspaceSession('/canvas');
+    visitEnglishLiveCanvas();
     getVisibleCanvasNode('dvt-transform-1').should('be.visible');
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
@@ -266,6 +326,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
     seedLiveSelectedClosureDraft({
       authoringGenerated: true,
       terminalTransformPreview: true,
+      sourceDatabaseName: livePostgresDatabaseName(),
       terminalTransformResultTarget: {
         schema: targetSchemaValue.trim(),
         relation: 'unsupported_view_result',
@@ -277,7 +338,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
       startRunRequests += 1;
       request.continue();
     });
-    visitWithLiveWorkspaceSession('/canvas');
+    visitEnglishLiveCanvas();
 
     getVisibleCanvasNode('dvt-transform-1')
       .find('[data-slot="canvas-node-shell"]')
@@ -292,12 +353,16 @@ describe('DVT terminal Transform Preview and Run live', () => {
 
     selectCanvasClosure(['dvt-transform-1']);
     clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.wait('@unsupportedDispositionPreview', { timeout: 30_000 })
-      .its('response.statusCode')
-      .should('equal', 422);
+    cy.wait('@unsupportedDispositionPreview', { timeout: 30_000 }).then(({ response }) => {
+      expect(response?.statusCode).to.equal(422);
+      expect(response?.body.error.details.rejection.cause).to.equal(
+        DVT_REJECTIONS.runDispositionUnsupported.cause
+      );
+    });
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
       .should('be.visible')
-      .and('contain.text', 'Configured Run supports only table result disposition.');
+      .and('contain.text', 'Run currently requires a table output. Change the output type.')
+      .and('not.contain.text', DVT_REJECTIONS.runDispositionUnsupported.reason);
     cy.get('[data-slot="plan-preview-start-run"]').should('not.exist');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');
     cy.then(() => {

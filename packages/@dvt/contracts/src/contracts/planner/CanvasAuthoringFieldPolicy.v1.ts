@@ -115,6 +115,15 @@ export const PostgresIdentifierV1Schema = boundedUtf8String(
     message: 'PostgreSQL identifiers must not contain exterior whitespace.',
   });
 
+export const DvtSemanticFieldNameV1Schema = boundedCodePointString(
+  CANVAS_AUTHORING_FIELD_LIMITS_V1.humanNameCodePoints,
+  'DVT semantic field name'
+)
+  .refine((value): boolean => isNonBlankString(value), { message: NON_BLANK_STRING_MESSAGE })
+  .refine((value) => value === value.trim(), {
+    message: 'DVT semantic field names must not contain exterior whitespace.',
+  });
+
 export const DvtStringLiteralV1Schema = boundedUtf8String(
   CANVAS_AUTHORING_FIELD_LIMITS_V1.stringLiteralUtf8Bytes,
   'DVT string literal'

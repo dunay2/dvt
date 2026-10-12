@@ -4,6 +4,8 @@ import process from 'node:process';
 
 import {
   CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  decodeDvtSubstraitPlanV1,
+  encodeDvtSubstraitPlanV1,
   type DvtSubstraitSemanticDocumentV1,
 } from '@dvt/contracts';
 import { base64Bytes, sha256Hex } from '@dvt/crypto';
@@ -53,37 +55,48 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
     await pool!.end();
   });
 
-  it('persists and reloads the exact Plan, digest and stable DVT identities through both rails', async () => {
-    const draft = buildCanonicalSemanticWorkspaceGraphDraft();
-    const save = buildSemanticSaveUseCase(store!);
-    const get = buildSemanticGetUseCase(store!);
-    const first = await save.execute({
-      request: buildWorkspaceGraphDraftSaveRequest({ draft }),
-      decision: writableSemanticDecision(),
-    });
+  it.each(['name', '😀'.repeat(256)])(
+    'persists and reloads semantic names, Plan and stable identities through both rails',
+    async (name) => {
+      const document = buildCanonicalSemanticDocument();
+      const plan = decodeDvtSubstraitPlanV1(document);
+      const root = plan.relations[0]!.relType;
+      if (root.case !== 'root') throw new Error('Expected semantic root.');
+      root.value.names[0] = name;
+      document.semanticPlan = encodeDvtSubstraitPlanV1(plan);
+      document.sidecar.semanticPlanSha256 = document.semanticPlan.sha256;
+      document.sidecar.fields[0]!.displayName = name;
+      const draft = withSemanticDocument(buildCanonicalSemanticWorkspaceGraphDraft(), document);
+      const save = buildSemanticSaveUseCase(store!);
+      const get = buildSemanticGetUseCase(store!);
+      const first = await save.execute({
+        request: buildWorkspaceGraphDraftSaveRequest({ draft }),
+        decision: writableSemanticDecision(),
+      });
 
-    expect(first.response.kind).toBe('saved');
-    const loaded = await get.execute(writableSemanticDecision());
-    expect(loaded.response.kind).toBe('ok');
-    if (loaded.response.kind !== 'ok') throw new Error('Expected a persisted draft.');
-    const authority = readTransformAuthority(loaded.response.record.draft);
-    expect(authority.semanticDocument).toEqual(buildCanonicalSemanticDocument());
-    expect(
-      authority.semanticDocument.sidecar.relations.map(({ relationId }) => relationId)
-    ).toEqual(['relation:source-node', 'relation:transform-node:project']);
-    expect(authority.semanticDocument.sidecar.fields.map(({ fieldId }) => fieldId)).toEqual([
-      'field:transform-node:name',
-      'field:transform-node:email',
-      'field:transform-node:country',
-    ]);
+      expect(first.response.kind).toBe('saved');
+      const loaded = await get.execute(writableSemanticDecision());
+      expect(loaded.response.kind).toBe('ok');
+      if (loaded.response.kind !== 'ok') throw new Error('Expected a persisted draft.');
+      const authority = readTransformAuthority(loaded.response.record.draft);
+      expect(authority.semanticDocument).toEqual(document);
+      expect(
+        authority.semanticDocument.sidecar.relations.map(({ relationId }) => relationId)
+      ).toEqual(['relation:source-node', 'relation:transform-node:project']);
+      expect(authority.semanticDocument.sidecar.fields.map(({ fieldId }) => fieldId)).toEqual([
+        'field:transform-node:name',
+        'field:transform-node:email',
+        'field:transform-node:country',
+      ]);
 
-    const stale = await save.execute({
-      request: buildWorkspaceGraphDraftSaveRequest({ draft, idempotencyKey: 'stale-save' }),
-      decision: writableSemanticDecision(),
-    });
-    expect(stale.response.kind).toBe('conflict');
-    expect((await get.execute(writableSemanticDecision())).response).toEqual(loaded.response);
-  });
+      const stale = await save.execute({
+        request: buildWorkspaceGraphDraftSaveRequest({ draft, idempotencyKey: 'stale-save' }),
+        decision: writableSemanticDecision(),
+      });
+      expect(stale.response.kind).toBe('conflict');
+      expect((await get.execute(writableSemanticDecision())).response).toEqual(loaded.response);
+    }
+  );
 
   it('fails closed when stored semantic bytes are corrupted with a matching forged digest', async () => {
     const save = buildSemanticSaveUseCase(store!);
@@ -195,9 +208,7 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
           ...document.sidecar,
           fields: document.sidecar.fields.map((field) => ({
             ...field,
-            displayName: 'x'.repeat(
-              CANVAS_AUTHORING_FIELD_LIMITS_V1.postgresIdentifierUtf8Bytes + 1
-            ),
+            displayName: 'x'.repeat(CANVAS_AUTHORING_FIELD_LIMITS_V1.humanNameCodePoints + 1),
           })),
         },
       });

@@ -28,7 +28,6 @@ presentation semantics themselves.
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
-- [Canvas component governance follow-up review](../../../../planning/reviews/architecture-and-governance/20260422-canvas-component-governance-follow-up-review.md)
 - [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
 
 ## Reading Rule

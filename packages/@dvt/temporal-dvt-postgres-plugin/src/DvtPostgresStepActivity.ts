@@ -1,8 +1,8 @@
 /**
  * Owned concern: admit one DVT PostgreSQL workload into the Temporal plugin runner.
  * @baseline ADR-0064: Substrait semantic reference and bounded logical profile
- * @decision Validate workload v2 and its server-owned run context before invoking provider effects.
- * @consequence Preview v1 and mismatched contexts fail permanently at the activity boundary.
+ * @decision Admit only the Run intent of workload V1 and its server-owned context before provider effects.
+ * @consequence Preview intent, unsupported versions and mismatched contexts fail permanently at the activity boundary.
  * @version 1.0.0
  */
 import {
@@ -15,7 +15,7 @@ import {
 } from '@dvt/adapter-temporal';
 import {
   DVT_POSTGRES_PLUGIN_CONTEXT_KEY,
-  DvtOperationalWorkloadV2Schema,
+  DvtOperationalRunWorkloadV1Schema,
   KNOWN_STEP_KINDS,
   parseDvtPostgresPluginContext,
   type RunExecutionContext,
@@ -30,8 +30,8 @@ export class DvtPostgresStepActivity implements StepActivity {
   public constructor(private readonly deps: DvtPostgresStepActivityDeps) {}
 
   public async execute(step: StepDefinition, context: StepExecutionContext): Promise<StepResult> {
-    const config = DvtOperationalWorkloadV2Schema.safeParse(step.stepTypeConfig);
-    if (!config.success) reject(`DVT_WORKLOAD_V2_REQUIRED:${step.stepId}`);
+    const config = DvtOperationalRunWorkloadV1Schema.safeParse(step.stepTypeConfig);
+    if (!config.success) reject(`DVT_RUN_WORKLOAD_V1_REQUIRED:${step.stepId}`);
     const ref = context.runContext.runExecutionContextRef;
     if (ref === undefined) reject(`RUN_EXECUTION_CONTEXT_REQUIRED:${step.stepId}`);
 
@@ -79,7 +79,7 @@ export function createDvtPostgresPluginProfile(
 }
 
 function assertContextAlignment(
-  config: ReturnType<typeof DvtOperationalWorkloadV2Schema.parse>,
+  config: ReturnType<typeof DvtOperationalRunWorkloadV1Schema.parse>,
   activityContext: StepExecutionContext,
   runExecutionContext: RunExecutionContext,
   connectionRef: { readonly connectionId: string; readonly provider: string }

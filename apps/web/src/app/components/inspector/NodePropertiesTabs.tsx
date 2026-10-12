@@ -1,5 +1,5 @@
 /** Owned concern: render passive node properties from a table-like Inspector read model. */
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
@@ -15,14 +15,13 @@ import {
 } from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../ui/utils';
-import {
-  NodePropertySectionView,
-  type NodePropertyTableCellRenderContext,
-} from './NodePropertySectionView';
+import { NodePropertySectionView } from './NodePropertySectionView';
+import type { NodePropertyTableCellRenderContext } from './NodePropertyTable';
 import { SourceColumnsPanel } from './SourceColumnsPanel';
 import { SourceInputsOutputsPanel } from './SourceInputsOutputsPanel';
-import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
+import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesContracts';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
 
 export type NodePropertiesTabsProps = Readonly<{
   node: CanonicalNode;
@@ -45,6 +44,7 @@ export type NodePropertiesTabsProps = Readonly<{
     canReorder: boolean;
     workspaceLayoutKey: string | null;
   }>;
+  sourceTransferColumns?: readonly GraphNodeColumn[];
   renderTableCell?: (context: NodePropertyTableCellRenderContext) => ReactNode;
   onActiveTabChange: (tab: string) => void;
   onHide: () => void;
@@ -139,11 +139,29 @@ export function NodePropertiesTabs({
   surface = 'inspector',
   showSectionCountBadge = false,
   sourceListOrdering,
+  sourceTransferColumns,
   renderTableCell,
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const [sourceColumnDetail, setSourceColumnDetail] = useState<{
+    nodeId: string;
+    name: string;
+  } | null>(null);
+  if (
+    sourceColumnDetail != null &&
+    (sourceColumnDetail.nodeId !== node.id || activeTab !== 'columns')
+  ) {
+    setSourceColumnDetail(null);
+  }
+  const detailColumnName =
+    node.kind === 'dvt:source' &&
+    node.pluginId === 'dvt.warehouse-source' &&
+    activeTab === 'columns' &&
+    sourceColumnDetail?.nodeId === node.id
+      ? sourceColumnDetail.name
+      : null;
   const slots =
     slotPrefix == null
       ? {
@@ -196,10 +214,23 @@ export function NodePropertiesTabs({
       onValueChange={onActiveTabChange}
       className={cn('gap-4', fillAvailableHeight && 'h-full min-h-0')}
     >
-      <div data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
+      <div
+        data-slot={slots.list}
+        hidden={detailColumnName != null}
+        className={cn(
+          inspectorVisualClasses.contextPanelFlatTabsList,
+          detailColumnName != null && 'hidden',
+          surface === 'workbench' && 'flex-nowrap overflow-hidden'
+        )}
+      >
         <TabsList
           data-slot={`${slots.list}-tablist`}
-          className="flex h-auto w-full shrink-0 flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
+          className={cn(
+            'flex h-auto shrink-0 justify-start gap-x-3 rounded-none bg-transparent p-0',
+            surface === 'workbench'
+              ? 'min-w-0 flex-1 flex-nowrap overflow-x-auto'
+              : 'w-full flex-wrap'
+          )}
         >
           {primarySections.map((section) => (
             <TabsTrigger
@@ -221,6 +252,7 @@ export function NodePropertiesTabs({
                 data-slot={slots.moreTrigger}
                 className={cn(
                   inspectorVisualClasses.contextPanelFlatTabTrigger,
+                  'shrink-0',
                   activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
                 )}
               >
@@ -279,11 +311,17 @@ export function NodePropertiesTabs({
           >
             {sourceColumns ? (
               <SourceColumnsPanel
+                key={node.id}
                 node={node}
+                detailColumnName={detailColumnName}
+                onDetailColumnChange={(name) =>
+                  setSourceColumnDetail(name == null ? null : { nodeId: node.id, name })
+                }
                 beforeBody={beforeBody}
                 afterBody={afterBody}
                 canReorder={sourceListOrdering?.canReorder}
                 workspaceLayoutKey={sourceListOrdering?.workspaceLayoutKey}
+                transferColumns={sourceTransferColumns}
               />
             ) : sourceInputsOutputs ? (
               <SourceInputsOutputsPanel

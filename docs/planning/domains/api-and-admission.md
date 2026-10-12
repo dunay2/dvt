@@ -20,39 +20,7 @@ and auth-runtime integration.
 
 ## Active Planning Inputs
 
-- [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)
-- [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md)
-- [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md)
-
-## Historical Proposal Inputs
-
-These proposals informed the admission and API hardening path, but they are now
-archived planning inputs rather than active proposal authorities.
-
-- [Gap 4 Backpressure Admission Design](../archive/proposals/gap4-backpressure-admission-design-20260319.md)
-- [Gap 4 PR1 Admission Foundation](../archive/proposals/gap4-backpressure-admission-pr1-foundation-20260319.md)
-- [Gap 4 PR2 Raw Snapshot Store](../archive/proposals/gap4-backpressure-admission-pr2-raw-store-20260319.md)
-- [Gap 4 PR3 Resilience Envelope](../archive/proposals/gap4-backpressure-admission-pr3-resilience-20260319.md)
-- [Gap 4 PR4 Operability and Rollout](../archive/proposals/gap4-backpressure-admission-pr4-operability-20260319.md)
-- [Gap 4 PR5 Projected Read Model](../archive/proposals/gap4-backpressure-admission-pr5-projected-read-model-20260319.md)
-
-## Relevant Reviews And Closeouts
-
-- [20260321 Planner-Backed StartRun QA Review](../reviews/execution-runtime/20260321-planner-backed-start-run-qa-review.md)
-- [20260316 API Start Run Adapter Config Closeout](../closeouts/20260316-api-start-run-adapter-config-closeout.md)
-- [20260320 API Runtime Query Integration Closeout](../closeouts/20260320-api-runtime-query-integration-closeout.md)
-- [20260414 TF-C3 dbt plugin runtime projection slice closeout](../closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md)
-- [20260414 TF-C3 runExecutionContext resolver slice closeout](../closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md)
-- [20260414 TF-C1 preview-persist convergence closeout](../closeouts/20260414-tf-c1-preview-persist-convergence-closeout.md)
-- [20260408 TF-C1-B preview profile contract closeout](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
-
 ## Risk And Evidence Links
 
 - [API Auth Runtime Integration Coverage Risk](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
 - [Evidence Index](../../evidence/index.md)
-
-## Diagram Sources
-
-- [API and Admission Architecture Delta](../roadmap/diagrams/api-admission-architecture-delta.md)
-- [Review Sprint Critical Path 2026-04](../roadmap/diagrams/review-sprint-critical-path-2026-04.md)

@@ -159,19 +159,6 @@ const fixtureRows = [
     database_write_eligible: false,
   },
   {
-    surface_name: 'Docs task disposition inventory',
-    canonical_source: 'docs task disposition docs',
-    write_rail: 'Git edit',
-    write_rail_kind: 'git_edit',
-    read_query_rail: 'pnpm planning:db:query docs-disposition',
-    projection: 'disposition rows',
-    validation: 'pnpm docs:governance:changed-files:check',
-    authority_mode: 'git-indexed',
-    source_ref: 'tools/planning-db/schema.sql',
-    source_content_sha256: surfaceHash,
-    database_write_eligible: false,
-  },
-  {
     surface_name: 'Docs resolution overlays',
     canonical_source: 'doc_resolution_overlays',
     write_rail: 'pnpm planning:db:operate docs-disposition resolve',
@@ -202,6 +189,20 @@ test('DB surface inventory validates canonical planning and governance DB rows',
 
   assert.deepEqual(result.errors, []);
   assert.equal(result.ok, true);
+});
+
+test('DB surface inventory requires DB disposition ownership, not the retired snapshot', () => {
+  const { requiredSurfaces, validateDbSurfaceInventoryRows } = loadInventoryCheck();
+  assert.equal(
+    requiredSurfaces.some((surface) => surface.surfaceName === 'Docs task disposition inventory'),
+    false
+  );
+  const result = validateDbSurfaceInventoryRows(
+    fixtureRows.filter((row) => row.surface_name !== 'Docs resolution overlays')
+  );
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /missing required surface "Docs resolution overlays"/);
 });
 
 test('DB surface inventory validator rejects missing required surfaces', () => {

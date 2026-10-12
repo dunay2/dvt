@@ -1,0 +1,282 @@
+// @vitest-environment jsdom
+/** Owned concern: moving cards changes presentation, never semantic selection or order. */
+import React, { act, useState } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CanvasRelationalTreeLayout } from '../CanvasRelationalTreeLayout';
+import { resolveCanvasViewCopy } from '../canvasCopyCatalog';
+import type { CanvasRelationalTreeNode } from '../canvasRelationalTreeProjection';
+import type { CardPosition } from '../canvasRelationalTreeGeometry';
+import { RelationalLayoutSession } from './RelationalLayoutSession';
+
+const read = (id: string): CanvasRelationalTreeNode => ({
+  locator: id,
+  relationId: id,
+  operator: 'read',
+  substraitKind: 'read',
+  displayName: id,
+  sourceRef: null,
+  output: { fields: [] },
+  expressionRefs: [],
+  decorations: [],
+  children: [],
+});
+const tree: CanvasRelationalTreeNode = {
+  ...read('join'),
+  operator: 'join',
+  operation: 'left_join',
+  children: [
+    { role: 'left', ordinal: 0, node: read('employee') },
+    { role: 'right', ordinal: 1, node: read('manager') },
+  ],
+};
+
+function ControlledLayout({ children }: Readonly<{ children: React.ReactNode }>): JSX.Element {
+  const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(() => new Map());
+  return (
+    <RelationalLayoutSession initialPositions={positions} onPositionsChange={setPositions}>
+      {children}
+    </RelationalLayoutSession>
+  );
+}
+
+describe('Relational card movement', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+  const select = vi.fn();
+  const expand = vi.fn();
+  const manual = vi.fn();
+  const render = (viewKey = 'inspection'): void =>
+    act(() =>
+      root.render(
+        <ControlledLayout>
+          <CanvasRelationalTreeLayout
+            key={viewKey}
+            root={tree}
+            outputName="Model"
+            selectedLocator="join"
+            copy={resolveCanvasViewCopy('en')}
+            zoom={0.5}
+            onSelect={select}
+            onExpand={expand}
+            onManualLayout={manual}
+          />
+        </ControlledLayout>
+      )
+    );
+  const card = (): HTMLButtonElement =>
+    container.querySelector<HTMLButtonElement>('[data-relation-id="employee"]')!;
+  const output = (): HTMLDivElement =>
+    container.querySelector<HTMLDivElement>('[data-slot="canvas-relational-tree-output"]')!;
+  const position = (): CardPosition => ({
+    x: parseFloat(card().parentElement!.style.left),
+    y: parseFloat(card().parentElement!.style.top),
+  });
+  const pointerAt = (
+    target: HTMLElement,
+    type: string,
+    x: number,
+    y: number,
+    pointerId = 1
+  ): void => {
+    const event = new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0 });
+    Object.defineProperty(event, 'pointerId', { value: pointerId });
+    act(() => {
+      target.dispatchEvent(event);
+    });
+  };
+  const pointer = (type: string, x: number, y: number): void => pointerAt(card(), type, x, y);
+  const outputPointer = (type: string, x: number, y: number): void =>
+    pointerAt(output(), type, x, y, 2);
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+    container = document.createElement('div');
+    document.body.append(container);
+    root = createRoot(container);
+    render();
+    Object.assign(card(), {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+  });
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  it('moves at the displayed zoom, updates ports, preserves tree and suppresses the drag click', () => {
+    const before = position();
+    const document = JSON.stringify(tree);
+    const paths = (): Array<string | null> =>
+      [...container.querySelectorAll('path')].map((path) => path.getAttribute('d'));
+    const edges = paths();
+    pointer('pointerdown', 100, 100);
+    pointer('pointermove', 130, 120);
+    expect(card().dataset.dragging).toBe('true');
+    pointer('pointerup', 130, 120);
+    expect(card().dataset.dragging).toBeUndefined();
+    act(() => {
+      card().click();
+    });
+    expect(position()).toEqual({ x: before.x + 60, y: before.y + 40 });
+    expect(paths()).not.toEqual(edges);
+    expect(JSON.stringify(tree)).toBe(document);
+    expect(select).not.toHaveBeenCalled();
+    expect(expand).not.toHaveBeenCalled();
+    expect(manual).toHaveBeenCalled();
+    render('editing');
+    expect(position()).toEqual({ x: before.x + 60, y: before.y + 40 });
+  });
+
+  it('restores the position on pointer cancellation', () => {
+    const before = position();
+    pointer('pointerdown', 100, 100);
+    pointer('pointermove', 120, 120);
+    pointer('pointercancel', 120, 120);
+    expect(card().dataset.dragging).toBeUndefined();
+    expect(position()).toEqual(before);
+  });
+
+  it('restores the origin on Escape and still allows keyboard activation', () => {
+    const before = position();
+    pointer('pointerdown', 100, 100);
+    pointer('pointermove', 120, 120);
+    act(() => {
+      card().dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape' }));
+    });
+    expect(position()).toEqual(before);
+    act(() => {
+      card().dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+      card().click();
+    });
+    expect(select).toHaveBeenCalledExactlyOnceWith('employee');
+  });
+
+  it('cancels lost capture and never moves a card outside the drawable area', () => {
+    const before = position();
+    pointer('pointerdown', 100, 100);
+    pointer('pointermove', -1000, -1000);
+    expect(position()).toEqual({ x: 0, y: 0 });
+    pointer('lostpointercapture', -1000, -1000);
+    expect(position()).toEqual(before);
+  });
+
+  it('keeps a simple click and supports keyboard movement without semantic edits', () => {
+    pointer('pointerdown', 100, 100);
+    pointer('pointerup', 101, 101);
+    act(() => {
+      card().click();
+    });
+    expect(select).toHaveBeenCalledExactlyOnceWith('employee');
+    select.mockClear();
+    const before = position();
+    act(() => {
+      card().dispatchEvent(
+        new KeyboardEvent('keydown', { bubbles: true, altKey: true, key: 'ArrowRight' })
+      );
+    });
+    expect(position()).toEqual({ x: before.x + 10, y: before.y });
+    expect(select).not.toHaveBeenCalled();
+  });
+  it('moves the passive Output through the same presentation-only gesture', () => {
+    const terminal = output();
+    Object.assign(terminal, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    const before = { x: parseFloat(terminal.style.left), y: parseFloat(terminal.style.top) };
+    outputPointer('pointerdown', 100, 100);
+    outputPointer('pointermove', 130, 120);
+    outputPointer('pointerup', 130, 120);
+    expect({ x: parseFloat(terminal.style.left), y: parseFloat(terminal.style.top) }).toEqual({
+      x: before.x + 60,
+      y: before.y + 40,
+    });
+    expect(select).not.toHaveBeenCalled();
+    expect(expand).not.toHaveBeenCalled();
+  });
+
+  it('keeps the other cards stationary when the first manually moved card is the root operation', () => {
+    const held = container.querySelector<HTMLElement>('[data-relational-card-id="join"]')!;
+    Object.assign(held, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    const sourcePosition = position();
+    const terminalPosition = output().getAttribute('style');
+    const origin = held.parentElement!.getAttribute('style');
+    pointerAt(held, 'pointerdown', 100, 100);
+    for (const delta of [10, 20, 30, 20, 10]) {
+      pointerAt(held, 'pointermove', 100 + delta, 100 + delta);
+      expect(held.parentElement!.getAttribute('style')).not.toBe(origin);
+      expect(position()).toEqual(sourcePosition);
+      expect(output().getAttribute('style')).toBe(terminalPosition);
+    }
+    pointerAt(held, 'pointercancel', 110, 110);
+    expect(held.parentElement!.getAttribute('style')).toBe(origin);
+    expect(output().getAttribute('style')).toBe(terminalPosition);
+  });
+
+  it('retains the scrollable extent when the last card moves inward, including after release', () => {
+    const held = output();
+    const layout = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-relational-tree-layout"]'
+    )!;
+    const before = layout.getAttribute('style');
+    Object.assign(held, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    outputPointer('pointerdown', 100, 100);
+    for (const delta of [-10, -20, -30, -20, -10]) {
+      outputPointer('pointermove', 100 + delta, 100);
+      expect(layout.getAttribute('style')).toBe(before);
+    }
+    outputPointer('pointerup', 90, 100);
+    expect(layout.getAttribute('style')).toBe(before);
+  });
+  it('moves a pending operation without selecting or connecting it', () => {
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <CanvasRelationalTreeLayout
+            root={null}
+            stagedOperations={[
+              { id: 'pending-operation', operation: 'inner_join', inputs: [null, null] },
+            ]}
+            outputName="Model"
+            selectedLocator=""
+            copy={resolveCanvasViewCopy('en')}
+            onSelect={select}
+            onExpand={expand}
+            onManualLayout={manual}
+          />
+        </RelationalLayoutSession>
+      )
+    );
+    const pending = container.querySelector<HTMLElement>(
+      '[data-relational-card-id="pending-operation"]'
+    )!;
+    Object.assign(pending, {
+      setPointerCapture: vi.fn(),
+      releasePointerCapture: vi.fn(),
+      hasPointerCapture: () => true,
+    });
+    const host = pending.parentElement!;
+    const before = { x: parseFloat(host.style.left), y: parseFloat(host.style.top) };
+    pointerAt(pending, 'pointerdown', 100, 100, 3);
+    pointerAt(pending, 'pointermove', 130, 120, 3);
+    pointerAt(pending, 'pointerup', 130, 120, 3);
+    expect({ x: parseFloat(host.style.left), y: parseFloat(host.style.top) }).toEqual({
+      x: before.x + 30,
+      y: before.y + 20,
+    });
+    expect(select).not.toHaveBeenCalled();
+    expect(expand).not.toHaveBeenCalled();
+  });
+});

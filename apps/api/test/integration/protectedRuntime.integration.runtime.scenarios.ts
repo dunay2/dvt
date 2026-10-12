@@ -12,6 +12,7 @@ import {
 
 import type { ProtectedRuntimeHarness } from './protectedRuntime.integration.harness.js';
 import { readAcceptedRunId } from './protectedRuntime.integration.http.js';
+import { buildProtectedRuntimeStep } from './protectedRuntime.integration.plan.js';
 import {
   ENVIRONMENT_ID,
   PROJECT_ID,
@@ -384,18 +385,7 @@ async function startTemporalRun(
         kind: 'generic-graph-v1',
         sourceFamily: 'dvt-substrait',
         sourceVersion: 'substrait-v1',
-        nodes: [
-          {
-            nodeId: input.graphNodeId,
-            stepKind: 'SPARK_JOB',
-            dependsOn: [],
-            stepTypeConfig: {
-              application: 'orders-daily',
-              entrypoint: 'jobs/orders.py',
-              runtime: 'python',
-            },
-          },
-        ],
+        nodes: [buildProtectedRuntimeStep(input.graphNodeId)],
       },
       targetAdapter: 'temporal',
     },

@@ -26,8 +26,6 @@ invention ahead of `TF-C4` and `TF-E2`.
 - `packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/validation.ts`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
 
 ## Scope and capability envelope
 
@@ -119,6 +117,124 @@ flowchart LR
 ```
 
 ## Canvas authoring field budgets
+
+### Incomplete relational source identity
+
+The existing `DvtRelationalAuthoringDraft.v1` contract persists each pending source occurrence as a
+single canonical Substrait Read document and its existing DVT identity sidecar.
+The source node reference identifies the producer; the saved Read owns local
+RelationId, FieldIds, field hierarchy and ordinals. It does not copy the producer's
+operations. The former positional `fieldIds` snapshot is unsupported: missing
+provenance must not be guessed from array order or display names.
+
+```mermaid
+flowchart LR
+  Saved[Saved Read and identity sidecar] --> Validate[Validate current producer]
+  Current[Current source or published fields] --> Validate
+  Validate -->|compatible| Restore[Restore unchanged occurrence]
+  Validate -->|incompatible| Reject[Explicit unavailable state; no write]
+```
+
+For model producers, validate the saved `producerRef` by stable published FieldId
+and admitted type; reorder or alias changes cannot change the local reference.
+Additional published fields do not widen a saved occurrence. Removed fields or
+incompatible types make restoration unavailable. Physical sources require the
+same connected source reference and the same physical column names and types;
+physical order may change, but rename, addition, removal or type change must
+reject rather than silently bind another column. Physical names are source
+identifiers, not display aliases.
+
+Hydration is read-only. An incompatible saved occurrence blocks editing and
+preview of that incomplete draft and displays an explicit diagnostic. It does
+not silently discard pending operations, initialize a replacement document, or
+save a repair. Existing protected draft scope, revision and format outcomes
+continue to govern persistence. The current contract is corrected in place:
+no second version, compatibility reader or automatic data migration is introduced.
+Previously stored positional snapshots are rejected, not guessed or rewritten.
+
+The existing `SaveWorkspaceGraphDraft`, `ConfigureCanvasDvtNode` and
+`ProjectCanvasRelationalTree` rails own this boundary. Required regressions cover
+reorder with equal cardinality, physical rename/add/remove/type changes, producer
+aliases and publication changes, independent occurrences, dependent expressions,
+unsupported positional payloads and no implicit hydration writes.
+
+The React session only coordinates hydration, analysis and existing commands.
+The pure apply-draft projector owns incomplete/cleared/change decisions and the
+exact persistence request. Occurrence identity code does not import tree
+presentation; pending Read rendering belongs to the existing authoring query
+projector. Catalogue projection owns presentation selection and participation,
+not persistence or producer identity validation.
+
+```mermaid
+flowchart LR
+  Session[React session coordinator] --> Apply[Pure apply-draft preparation]
+  Apply --> Command[Existing ConfigureCanvasDvtNode port]
+  Hydrate[Read-only hydration] --> Identity[Occurrence provenance validation]
+  Identity --> Query[Authoring tree projector]
+  Query --> View[Canvas presentation]
+```
+
+### Disconnected operation configuration
+
+Operation input cardinality has one contract-owned policy, consumed by both
+the draft parser and Web admission. UNION ALL and UNION DISTINCT accept two or
+more ordered ports. Other operations retain their declared fixed cardinality.
+Null ports represent incomplete authoring, not executable semantics. The current
+contract is corrected in place; no new payload version, migration or compatibility
+reader is introduced. An explicit UNION topology edit preserves output selection,
+aliases and identities and rebinds operand lineage; incompatible schemas or
+connections cannot produce executable semantics.
+
+Removing an incorporated relation edge uses the existing incomplete authoring
+draft, preserving source and operation identities. `configurationDocument` retains
+the original canonical Substrait subtree solely for editing and exact reconnect;
+it is not executable authority. It must own the same operation relation identity
+and cannot coexist with `semanticDocument`. The latter still requires every Input.
+Disconnect invalidates the consumer and all its descendants: they publish no
+fields or Preview. Only reconnect to the exact original producer identities and
+canonical contents can restore that configuration automatically. Comparison uses
+the existing composition mapper to normalize embedding-local relation/function
+anchors and excludes unused function declarations inherited from a consumer.
+It preserves field identities, schema, aliases, provenance, and expression meaning;
+changed function identities or producer contents must not compare equal.
+Changed producers require explicit
+reconfiguration; display-name matching, default expression replacement and stale
+semantic resurrection are forbidden. Apply removes obsolete complete authority
+when the terminal is incomplete. Save/reopen preserves this state through the
+existing protected draft boundary. No new version or migration is introduced.
+
+### Completed relational layout
+
+Completed relational authoring retains nonempty `positions` in the existing v1
+DTO but omits `outputRelationId`. Absence is allowed only when `sources` and
+`operations` are empty: the current canonical semantic root owns Output.
+`outputRelationId: null` means explicitly disconnected, while a string denotes
+pending explicit wiring. Coordinates remain finite and nonnegative and confer no
+semantic authority. No new version, migration or compatibility reader is added.
+An empty completed snapshot is omitted entirely. Operation completion and
+subsequent inspector saves preserve positions by stable card ID. Movement alone
+does not become a save command.
+
+Only explicitly moved cards belong to the retained manual-position map. A drag
+may temporarily freeze other visible cards, but acceptance must not turn those
+automatic coordinates into persisted manual positions. Automatic Output follows
+the current canonical root after subsequent insertions; an explicitly moved
+Output remains manual. Pointer and keyboard movement obey the same boundary.
+
+### Pending Read identity coverage
+
+Pending source Reads require complete stable field identity coverage of their
+saved `baseSchema`: exactly one sidecar binding per root field and nested struct
+field, at the correct parent and sibling ordinal. List/map fields remain single
+bound fields under the existing structural analysis model. Missing, duplicate,
+out-of-range or extra bindings reject the draft on both write and read. The same
+contract-owned policy governs Read schema derivation and pending-source restore,
+for physical sources and producer-backed inputs alike. Binding array order does
+not matter; opaque identities are preserved, never regenerated from position or
+display name. Invalid stored state uses the existing format-error outcome, with
+no migration, silent repair, fallback or save on reopen.
+
+### String categories
 
 Every editable string admitted into `WorkspaceGraphAuthoringDraft` has one
 contract-owned category, unit, normalization and maximum. The closed PCV1-I1

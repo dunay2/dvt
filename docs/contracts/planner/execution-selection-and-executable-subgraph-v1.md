@@ -23,7 +23,6 @@ model instead of drifting back to whole-draft compile assumptions.
 - `packages/@dvt/contracts/src/contracts/planner/index.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/validation.ts`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md`
 
 ## Selection contract
 

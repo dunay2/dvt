@@ -1,6 +1,6 @@
 /** Owned concern: update one field description in the canonical DVT Substrait sidecar. */
 import type { DvtSubstraitTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
-import { inspectDvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 
 export function setDvtSubstraitFieldDescription(args: {
   metadata: DvtSubstraitTransformAuthoringMetadata;
@@ -20,7 +20,7 @@ export function setDvtSubstraitFieldDescription(args: {
   });
   if (!found) return args.metadata;
   const next = { ...args.metadata, sidecar: { ...args.metadata.sidecar, fields } };
-  return inspectDvtSubstraitProjectionDraft({ plan: next.plan, sidecar: next.sidecar }).ok
+  return indexSubstraitRelations({ plan: next.plan, sidecar: next.sidecar }).ok
     ? next
     : args.metadata;
 }

@@ -19,15 +19,9 @@ gates.
 
 ## Active Proposal Set
 
-- [Architecture Documentation Reconciliation Plan 2026-04-02](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-plan-20260402.md)
 - [Architecture Documentation Reconciliation Canon Plan 2026-05-23](../proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md)
 - [Architecture Governance Review Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md)
 - [CI Delivery Governance Consolidated Action Plan](../proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md)
-
-## Relevant Reviews And Closeouts
-
-- [20260316 Docs Governance Tooling Closeout](../closeouts/20260316-docs-governance-tooling-closeout.md)
-- [20260320 Planning Archive Sweep Closeout](../closeouts/20260320-planning-archive-sweep-closeout.md)
 
 ## Operational Check References
 
@@ -38,13 +32,12 @@ gates.
 
 ## Diagram Sources
 
-- [Documentation Governance Architecture Delta](../roadmap/diagrams/documentation-governance-architecture-delta.md)
 - [Planning Domain Map](../roadmap/diagrams/planning-domain-map.md)
 
 ## 2026-05-23 Architecture Documentation Reconciliation Canon
 
-`GD-MAND-ARCH-DOC-RECON` owns canonization of the 2026-04-02 architecture
-documentation reconciliation proposal.
+`GD-MAND-ARCH-DOC-RECON` owns the current architecture documentation reconciliation canon.
+The superseded 2026-04-02 proposal remains available through Git history only.
 
 No architecture documentation reconciliation proposal remains an orphan execution queue after this disposition.
 

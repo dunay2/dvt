@@ -1,0 +1,68 @@
+/** Match catalogue identities and validate a target binding before lowering. */
+import type { Expression_ScalarFunction } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import type { Plan } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { TypeSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { equals } from '@bufbuild/protobuf';
+import { DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1 } from '@dvt/contracts';
+
+import type { PostgresAstNode } from '../postgresAst.js';
+import { resolveFunctionReference } from '../substrait-profile/functionReference.js';
+
+import { valuesOnly } from './scalarArguments.js';
+import { scalarBindings, scalarResultType } from './scalarBindings.js';
+import { unsupported } from './scope.js';
+
+export function scalarSql(
+  plan: Plan,
+  fn: Expression_ScalarFunction,
+  args: readonly PostgresAstNode[],
+  types: readonly Type[]
+): PostgresAstNode {
+  const reference = resolveFunctionReference(plan, fn.functionReference);
+  if (!reference.ok) return unsupported(reference.reason);
+  const identity = reference.value;
+  const name = identity.name.split(':')[0]!;
+  const binding = Object.hasOwn(scalarBindings, identity.name)
+    ? scalarBindings[identity.name]!
+    : Object.hasOwn(scalarBindings, name)
+      ? scalarBindings[name]!
+      : undefined;
+  const capability = DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1.entries.find(
+    (entry) =>
+      entry.kind === 'standard' &&
+      entry.category === 'scalar-function' &&
+      entry.profileStatus === 'supported-profile' &&
+      entry.identity.sourceKind === 'simple-extension' &&
+      entry.identity.urn === identity.urn &&
+      entry.identity.name === name
+  );
+  if (
+    binding == null ||
+    capability?.kind !== 'standard' ||
+    identity.urn !== `extension:io.substrait:${binding.family}`
+  )
+    return unsupported('Scalar function has no admitted PostgreSQL binding.');
+  const invocation =
+    capability.overloads?.find((item) => item.signature === identity.name) ?? capability.invocation;
+  if (capability.overloads != null && invocation == null)
+    return unsupported('Arithmetic overload is not admitted.');
+  const options = invocation?.options ?? [];
+  if (
+    identity.name !== (invocation?.signature ?? binding.signature) ||
+    args.length < binding.minimum ||
+    (binding.maximum != null && args.length > binding.maximum) ||
+    !binding.accepts(types) ||
+    !(binding.arguments ?? valuesOnly)(fn) ||
+    fn.options.length !== options.length ||
+    fn.options.some(
+      (option, ordinal) =>
+        option.name !== options[ordinal]?.name ||
+        option.preference.join() !== options[ordinal]?.preference.join()
+    ) ||
+    fn.outputType == null ||
+    !equals(TypeSchema, fn.outputType, scalarResultType(binding, types))
+  )
+    return unsupported('Scalar invocation differs from the admitted signature.');
+  return binding.sql(args);
+}

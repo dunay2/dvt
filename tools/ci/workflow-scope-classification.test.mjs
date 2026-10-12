@@ -67,7 +67,7 @@ test('classifies Repository Map binding and lifecycle inputs as generated-status
 
 test('keeps mailbox analysis out of security analysis scope', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', [
-    'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',
+    'buzon/20260531-example-fowler-analysis.md',
   ]);
 
   assert.equal(scope.any_code, false);
@@ -148,6 +148,27 @@ test('workflow policy changes stay on CI contracts without runtime fan-out', () 
   assert.equal(testScope.coverage_relevant, false);
 });
 
+test('admitted browser runtime changes require Web evidence without unrelated package fan-out', () => {
+  for (const file of [
+    'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',
+    'apps/api/vitest.integration.config.ts',
+    '.github/workflows/test.yml',
+    'apps/api/package.json',
+    'scripts/run-selected-closure-live-proof.cjs',
+    'scripts/run-selected-closure-cypress.cjs',
+    'scripts/live-proof-process.cjs',
+    'tools/ci/run-web-cypress-native.mjs',
+  ]) {
+    const scope = computeWorkflowModeScopeOutputs('test', [file]);
+    assert.equal(scope.web, true, file);
+    assert.equal(scope.root_build_sensitive, false, file);
+    assert.equal(scope.coverage_relevant, false, file);
+  }
+  for (const file of ['scripts/ai-preflight.cjs', 'apps/api/src/server.ts']) {
+    assert.equal(computeWorkflowModeScopeOutputs('test', [file]).web, false, file);
+  }
+});
+
 test('classifies dependency-cruiser config as CI policy validation without workspace fan-out', () => {
   const scope = computeBooleanScope(['.dependency-cruiser.cjs'], WORKFLOW_SCOPE_PATTERNS);
   const matrix = computeWorkspaceMatrix(['.dependency-cruiser.cjs']);
@@ -199,7 +220,7 @@ test('classifies executable CI tool contracts separately from static CI policy t
     WORKFLOW_SCOPE_PATTERNS
   );
   const staticScope = computeBooleanScope(
-    ['tools/ci/workflow-pattern-parity.test.mjs'],
+    ['tools/ci/emit-scope.test.mjs'],
     WORKFLOW_SCOPE_PATTERNS
   );
 

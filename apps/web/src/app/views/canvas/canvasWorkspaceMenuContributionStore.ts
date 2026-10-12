@@ -17,7 +17,20 @@ export type CanvasWorkspaceMenuContribution = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
+export type CanvasModelWorkspaceTabContribution = Readonly<{
+  canvasId: string;
+  nodeId: string;
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+  onCanvas: () => void;
+  onClose: (afterClose?: () => void) => void;
+}>;
+
 type CanvasWorkspaceMenuContributionState = {
+  modelTab: CanvasModelWorkspaceTabContribution | null;
+  registerModelTab: (tab: CanvasModelWorkspaceTabContribution) => void;
+  clearModelTab: (tab: CanvasModelWorkspaceTabContribution) => void;
   contribution: CanvasWorkspaceMenuContribution | null;
   registerCanvasWorkspaceMenuContribution: (contribution: CanvasWorkspaceMenuContribution) => void;
   clearCanvasWorkspaceMenuContribution: (contribution: CanvasWorkspaceMenuContribution) => void;
@@ -26,6 +39,9 @@ type CanvasWorkspaceMenuContributionState = {
 export const useCanvasWorkspaceMenuContributionStore = create<CanvasWorkspaceMenuContributionState>(
   (set) => ({
     contribution: null,
+    modelTab: null,
+    registerModelTab: (modelTab) => set({ modelTab }),
+    clearModelTab: (tab) => set((state) => (state.modelTab === tab ? { modelTab: null } : state)),
     registerCanvasWorkspaceMenuContribution: (contribution) => set({ contribution }),
     clearCanvasWorkspaceMenuContribution: (contribution) =>
       set((state) => (state.contribution === contribution ? { contribution: null } : state)),

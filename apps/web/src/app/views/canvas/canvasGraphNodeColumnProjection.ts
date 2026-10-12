@@ -1,6 +1,87 @@
 /** Owned concern: map recursive Canvas presentation truth into graph-card columns. */
-import type { CanvasNodePresentationColumn } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import type { Node } from '@xyflow/react';
+
+import type {
+  CanvasNodePresentationColumn,
+  CanvasNodePresentationTruth,
+} from '../../components/canvas/canvasNodePresentationTruth.contract';
+import type { CanonicalNode } from '../../types/canonical';
 import type { GraphNodeColumn } from '../../plugins/graph/graphNodeColumnContracts';
+import { createCanvasColumnHandleId } from './canvasColumnHandleIdentity';
+
+function isInteractiveColumn(value: unknown): value is GraphNodeColumn {
+  if (
+    typeof value !== 'object' ||
+    value == null ||
+    typeof (value as { name?: unknown }).name !== 'string' ||
+    typeof (value as { type?: unknown }).type !== 'string'
+  ) {
+    return false;
+  }
+  const children = (value as { children?: unknown }).children;
+  return children == null || (Array.isArray(children) && children.every(isInteractiveColumn));
+}
+
+function readInteractiveColumns(node: Node): GraphNodeColumn[] {
+  return Array.isArray(node.data.columns) ? node.data.columns.filter(isInteractiveColumn) : [];
+}
+
+export function projectInteractiveCanvasColumns(
+  node: Node,
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>,
+  columnOverrides?: GraphNodeColumn[]
+): GraphNodeColumn[] {
+  const columns = columnOverrides ?? readInteractiveColumns(node);
+  const presentationTruth = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
+  const presentationColumns = presentationTruth?.columns.visible ?? [];
+  const presentationColumnsByReference = new Map(
+    [...(presentationTruth?.columns.inherited ?? []), ...presentationColumns].flatMap((column) =>
+      column.reference == null ? [] : [[column.reference, column] as const]
+    )
+  );
+  const presentationColumnsByName = new Map(
+    presentationColumns.map((column) => [column.name, column] as const)
+  );
+  return columns.map((column) => {
+    const presentationColumn =
+      column.id == null
+        ? presentationColumnsByName.get(column.name)
+        : presentationColumnsByReference.get(column.id);
+    const sourceNodeId = presentationColumn?.sourceNodeId;
+    const sourceNode = sourceNodeId == null ? undefined : canonicalNodesById.get(sourceNodeId);
+    const id =
+      columnOverrides != null || presentationColumn == null
+        ? (column.id ?? column.name)
+        : (presentationColumn.reference ?? column.id ?? column.name);
+    const sourceColumnId =
+      sourceNode?.kind === 'dvt:transform'
+        ? presentationColumn?.provenance === 'inherited'
+          ? presentationColumn.reference
+          : (presentationColumn?.sourceReference ?? presentationColumn?.reference)
+        : (presentationColumn?.sourceFieldName ?? presentationColumn?.name);
+    return {
+      ...column,
+      id,
+      ...(sourceNodeId == null || sourceColumnId == null
+        ? {}
+        : { source: { nodeId: sourceNodeId, columnId: sourceColumnId } }),
+      ...(node.data.role === 'input' && column.output === false
+        ? {}
+        : {
+            sourceHandleId: createCanvasColumnHandleId({
+              direction: 'source',
+              nodeId: node.id,
+              columnId: id,
+            }),
+          }),
+      targetHandleId: createCanvasColumnHandleId({
+        direction: 'target',
+        nodeId: node.id,
+        columnId: id,
+      }),
+    };
+  });
+}
 
 export function projectGraphNodeColumn(
   column: CanvasNodePresentationColumn,
@@ -25,4 +106,55 @@ export function projectGraphNodeColumn(
           children: column.children.map((child) => projectGraphNodeColumn(child, output)),
         }),
   };
+}
+
+/** Input handles address stable input slots, never consumer output fields. */
+export function projectGraphNodeCardInputs(
+  truth: CanvasNodePresentationTruth,
+  nodeId: string
+): readonly GraphNodeColumn[] {
+  return (truth.inputBindings ?? []).map((input) => ({
+    id: input.inputId,
+    name: input.name,
+    type: input.type,
+    source: input.source,
+    sourceNodeName: truth.columns.inherited.find(
+      (column) => column.sourceNodeId === input.source.nodeId
+    )?.sourceNodeName,
+    targetHandleId: createCanvasColumnHandleId({
+      direction: 'target',
+      nodeId,
+      columnId: input.inputId,
+    }),
+  }));
+}
+
+function representsInheritedInput(
+  column: CanvasNodePresentationColumn,
+  inherited: CanvasNodePresentationColumn
+): boolean {
+  if (column.reference != null && column.reference === inherited.reference) return true;
+  if (column.sourceNodeId == null || column.sourceNodeId !== inherited.sourceNodeId) return false;
+  if (column.provenance === 'inherited' && column.name === inherited.name) return true;
+  return (
+    column.sourceFieldName === inherited.name &&
+    column.name === inherited.name &&
+    (column.operations == null || column.operations.length === 0)
+  );
+}
+
+export function selectGraphNodeCardColumns(
+  truth: CanvasNodePresentationTruth
+): readonly CanvasNodePresentationColumn[] {
+  if (truth.inputBindings != null)
+    return truth.columns.declared.filter((column) => column.selected !== false);
+  if (truth.relationalComposition?.state !== 'pending') return truth.columns.visible;
+
+  return [
+    ...truth.columns.visible,
+    ...truth.columns.inherited.filter(
+      (inherited) =>
+        !truth.columns.visible.some((column) => representsInheritedInput(column, inherited))
+    ),
+  ];
 }

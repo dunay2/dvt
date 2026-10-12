@@ -9,6 +9,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.edge.dependencyAddedMessage',
     fallback: 'Dependency added',
   },
+  dependencyCreationFailedMessage: {
+    key: 'canvas.edge.dependencyCreationFailedMessage',
+    fallback: 'The connection failed. Check the model and try again.',
+  },
   layoutAppliedMessage: {
     key: 'canvas.layout.appliedMessage',
     fallback: 'Layout applied',
@@ -494,19 +498,19 @@ export const canvasViewToolbarCopyByKey = {
   },
   draftSyncedLabel: {
     key: 'canvas.draft.toolbar.syncedLabel',
-    fallback: 'Draft synced',
+    fallback: 'Synced',
   },
   savingDraftLabel: {
     key: 'canvas.draft.toolbar.savingLabel',
-    fallback: 'Saving draft',
+    fallback: 'Saving',
   },
   draftSavedLabel: {
     key: 'canvas.draft.toolbar.savedLabel',
-    fallback: 'Draft saved',
+    fallback: 'Saved',
   },
   draftSaveFailedLabel: {
     key: 'canvas.draft.toolbar.saveFailedLabel',
-    fallback: 'Draft save failed',
+    fallback: 'Save failed',
   },
   staleVersionLabel: {
     key: 'canvas.draft.toolbar.staleVersionLabel',

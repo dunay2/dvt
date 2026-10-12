@@ -1,3 +1,4 @@
+import { rowNumberFunction } from './canvasMeasureFunctions';
 /** Owned concern: build and inspect admitted calculated ProjectRel expressions. */
 import { create } from '@bufbuild/protobuf';
 import {
@@ -16,11 +17,6 @@ import {
   buildDvtSubstraitStandardCapabilityId,
 } from '@dvt/contracts';
 
-import {
-  createDvtSubstraitNullableI64Type,
-  ensureDvtSubstraitRowNumberFunction,
-  isDvtSubstraitRowNumberFunction,
-} from './canvasDvtSubstraitWindow';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
 
 export type DvtSubstraitCalculatedExpression =
@@ -72,13 +68,13 @@ export function buildDvtSubstraitCalculatedExpression(
       value: calculation.value,
     });
   }
-  const functionReference = ensureDvtSubstraitRowNumberFunction(plan);
+  const functionReference = rowNumberFunction.ensure(plan);
   return create(ExpressionSchema, {
     rexType: {
       case: 'windowFunction',
       value: create(Expression_WindowFunctionSchema, {
         functionReference,
-        outputType: createDvtSubstraitNullableI64Type(),
+        outputType: rowNumberFunction.resultType(),
         phase: AggregationPhase.INITIAL_TO_RESULT,
         invocation: AggregateFunction_AggregationInvocation.ALL,
         sorts: [
@@ -122,7 +118,7 @@ export function inspectDvtSubstraitCalculatedExpression(
     window.sorts[0].sortKind.value === SortField_SortDirection.ASC_NULLS_LAST
       ? dvtSubstraitExpression.fieldOrdinal(window.sorts[0].expr)
       : null;
-  return orderOrdinal == null || !isDvtSubstraitRowNumberFunction(plan, window)
+  return orderOrdinal == null || !rowNumberFunction.matches(plan, window)
     ? null
     : {
         calculation: { kind: 'row-number', orderSourceOrdinal: orderOrdinal },

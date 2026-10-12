@@ -1,109 +1,98 @@
 /** Owned concern: project Canvas nodes onto the existing governed data-sample query. */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
-import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasShellProps } from './canvasShell.types';
-import {
-  CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-  resolveCanvasSinkDataSampleTarget,
-  resolveCanvasSourceDataSampleTarget,
-  type CanvasSinkDataSampleTarget,
-  type CanvasSourceDataSampleTarget,
-} from './canvasSourceDataSample';
-import { resolveCanvasTransformOutputSampleTarget } from './canvasTransformOutputSample';
+import { type CanvasSourceDataSampleTarget } from './canvasSourceDataSample';
 import { useCanvasDataSample } from './useCanvasDataSample';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { useCanvasTransformDataSample } from './useCanvasTransformDataSample';
+import { useCanvasSourceDataSample } from './useCanvasSourceDataSample';
 
-type CanvasNodeDataSampleProjection = Readonly<{
+export type CanvasNodeDataSampleProjection = Readonly<{
   canOpen: boolean;
   onOpen?: () => void;
-  sinkResult: CanvasSinkDataSampleTarget | null;
+  sourceMetricAvailability?: 'unavailable';
 }>;
 
 type CanvasNodeDataSampleArgs = Pick<
   CanvasShellProps,
-  | 'runMaterializationSampleQuery'
-  | 'runOutputPreviewAuthority'
-  | 'runSnapshot'
-  | 'warehouseSourceDataSampleQuery'
+  'canvasTransformDataSampleQuery' | 'warehouseSourceDataSampleQuery' | 'prepareModelPreview'
 > &
-  Readonly<{ graphNodes: readonly CanonicalNode[] }>;
+  Readonly<{
+    activeCanvasId: string | null;
+    canonicalNodes: readonly CanonicalNode[];
+    canonicalEdges: readonly CanonicalEdge[];
+    canEditModel: boolean;
+    nodes: CanvasShellProps['graph']['nodesWithImpact'];
+  }>;
 
 export function useCanvasNodeDataSample({
-  graphNodes,
-  runMaterializationSampleQuery,
-  runOutputPreviewAuthority,
-  runSnapshot,
+  activeCanvasId,
+  canvasTransformDataSampleQuery,
   warehouseSourceDataSampleQuery,
+  prepareModelPreview,
+  canonicalNodes,
+  canonicalEdges,
+  canEditModel,
+  nodes,
 }: CanvasNodeDataSampleArgs): Readonly<{
-  dataSample: ReturnType<typeof useCanvasDataSample>['dataSample'];
+  dataSampleTabs: ReturnType<typeof useCanvasDataSample>['dataSampleTabs'];
   projectNode: (nodeId: string, data: DbtNodeData) => CanvasNodeDataSampleProjection;
+  openSource?: (
+    nodeId: string,
+    target: CanvasSourceDataSampleTarget,
+    selectedFieldNames?: readonly string[]
+  ) => void;
 }> {
-  const { dataSample, openDataSample } = useCanvasDataSample();
-  const openSource = useCallback(
-    (target: CanvasSourceDataSampleTarget) => {
-      if (warehouseSourceDataSampleQuery == null) return;
-      openDataSample(target.nodeName, () =>
-        warehouseSourceDataSampleQuery.previewSourceObjectRows({
-          connectionId: target.connectionId,
-          objectId: target.objectId,
-          ...(target.expectedPublicationToken == null
-            ? {}
-            : { expectedPublicationToken: target.expectedPublicationToken }),
-          limit: CANVAS_SOURCE_DATA_SAMPLE_LIMIT,
-        })
-      );
-    },
-    [openDataSample, warehouseSourceDataSampleQuery]
-  );
-  const openSink = useCallback(
-    (target: CanvasSinkDataSampleTarget) => {
-      if (runMaterializationSampleQuery == null) return;
-      openDataSample(target.nodeName, () =>
-        runMaterializationSampleQuery(target.runId, CANVAS_SOURCE_DATA_SAMPLE_LIMIT)
-      );
-    },
-    [openDataSample, runMaterializationSampleQuery]
-  );
+  const { dataSampleTabs, openDataSample, invalidateDataSample } = useCanvasDataSample();
+  const { openSource, projectSource } = useCanvasSourceDataSample({
+    canvasId: activeCanvasId,
+    nodes,
+    query: warehouseSourceDataSampleQuery,
+    openDataSample,
+    invalidateDataSample,
+  });
+  const projectTransform = useCanvasTransformDataSample({
+    canvasId: activeCanvasId,
+    nodes: canonicalNodes,
+    edges: canonicalEdges,
+    query: canvasTransformDataSampleQuery,
+    preparePreview: prepareModelPreview,
+    canEditModel,
+    openDataSample,
+    invalidateDataSample,
+  });
   const projectNode = useCallback(
     (nodeId: string, data: DbtNodeData): CanvasNodeDataSampleProjection => {
       const isNativeTransform = data.pluginKind === 'dvt:transform';
-      const sourceTarget = resolveCanvasSourceDataSampleTarget(data);
-      const transform = graphNodes.find((node) => node.id === nodeId);
-      const transformTarget =
-        isNativeTransform && transform != null && runOutputPreviewAuthority != null
-          ? resolveCanvasTransformOutputSampleTarget({
-              transform,
-              graphNodes,
-              currentPlan: runOutputPreviewAuthority.currentPlan,
-              isCurrentPlanStale: runOutputPreviewAuthority.isCurrentPlanStale,
-              runSnapshot,
-            })
-          : null;
-      const sinkTarget = resolveCanvasSinkDataSampleTarget(data, runSnapshot);
-      const onOpen = isNativeTransform
-        ? transformTarget == null
-          ? () => openDataSample(data.name)
-          : () => openSource(transformTarget)
-        : sourceTarget != null && warehouseSourceDataSampleQuery != null
-          ? () => openSource(sourceTarget)
-          : sinkTarget != null && runMaterializationSampleQuery != null
-            ? () => openSink(sinkTarget)
-            : undefined;
+      const onOpen = isNativeTransform ? projectTransform(nodeId) : projectSource(nodeId);
 
-      return { canOpen: onOpen != null, onOpen, sinkResult: sinkTarget };
+      const sample = dataSampleTabs.find((tab) => tab.id === `data:${nodeId}`)?.dataSample;
+      const sourceMetricAvailability =
+        !isNativeTransform &&
+        sample != null &&
+        (sample.status !== 'ready' || sample.sample.rows.length === 0)
+          ? ('unavailable' as const)
+          : undefined;
+      return { canOpen: onOpen != null, onOpen, sourceMetricAvailability };
     },
-    [
-      graphNodes,
-      openDataSample,
-      openSink,
-      openSource,
-      runMaterializationSampleQuery,
-      runOutputPreviewAuthority,
-      runSnapshot,
-      warehouseSourceDataSampleQuery,
-    ]
+    [projectSource, projectTransform, dataSampleTabs]
   );
 
-  return { dataSample, projectNode };
+  const refreshableTabs = useMemo(
+    () =>
+      dataSampleTabs.map((tab) => ({
+        ...tab,
+        onRefresh:
+          projectTransform(tab.id.slice('data:'.length)) ??
+          projectSource(tab.id.slice('data:'.length)),
+      })),
+    [dataSampleTabs, projectSource, projectTransform]
+  );
+  return {
+    dataSampleTabs: refreshableTabs,
+    projectNode,
+    openSource,
+  };
 }

@@ -18,6 +18,8 @@ import type {
   HttpJsonArtifactAuthoringErrors,
 } from './httpJsonArtifactAuthoringModel';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import type { CanvasDraftSession } from './canvasDraftSession';
+import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -26,7 +28,8 @@ export type CanvasInspectorNodeDraft = Readonly<{
   dbt?: DbtNodeAuthoringMetadata;
   dbtTest?: DbtTestAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
-  outputNameDrafts?: Readonly<Record<string, string>>;
+  semanticAuthoringIssue?: 'invalid_document' | 'unsupported_shape';
+  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;
   objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
   httpJsonArtifact?: HttpJsonArtifactAuthoringDraft;
 }>;
@@ -38,10 +41,19 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   dbt?: Partial<Record<keyof DbtNodeAuthoringMetadata, CanvasInspectorNodeDraftErrorCode>>;
   dbtTest?: DbtTestAuthoringMetadataErrors;
   dvt?: DvtNodeAuthoringMetadataErrors;
-  outputNames?: CanvasInspectorNodeDraftErrorCode;
+  relationalAuthoringDraft?: CanvasInspectorNodeDraftErrorCode;
   objectFilePostgres?: ObjectFilePostgresAuthoringErrors;
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
 }>;
+
+export type CanvasInspectorNodeDraftApplyResult =
+  | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
+  | Readonly<{ outcome: 'no_changes' }>
+  | Readonly<{
+      outcome: 'rejected';
+      reason: 'node_unavailable' | 'invalid_draft';
+      errors?: CanvasInspectorNodeDraftErrors;
+    }>;
 
 export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;

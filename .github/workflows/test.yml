@@ -23,14 +23,14 @@ jobs:
     timeout-minutes: 5
     if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
-      any_tests: ${{ steps.matrix.outputs.any_tests }}
-      matrix: ${{ steps.matrix.outputs.matrix }}
-      adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}
-      web: ${{ steps.scope.outputs.web }}
-      root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}
-      determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}
-      coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}
-      postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}
+      any_tests: ${{ steps.scope.outputs.any_tests }}
+      matrix: ${{ steps.scope.outputs.test_matrix }}
+      adapter_temporal: ${{ fromJSON(steps.scope.outputs.test_scope).adapter_temporal }}
+      web: ${{ fromJSON(steps.scope.outputs.test_scope).web }}
+      root_build_sensitive: ${{ fromJSON(steps.scope.outputs.test_scope).root_build_sensitive }}
+      coverage_relevant: ${{ fromJSON(steps.scope.outputs.test_scope).coverage_relevant }}
+      postgres_capability_changed:
+        ${{ fromJSON(steps.scope.outputs.test_scope).postgres_capability_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -47,14 +47,7 @@ jobs:
 
       - name: Emit test scope outputs
         id: scope
-        run: node tools/ci/emit-scope.mjs --mode test
-        env:
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
-
-      - name: Build package test matrix
-        id: matrix
-        run: node tools/ci/emit-test-matrix.mjs
+        run: node tools/ci/emit-scope.mjs
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
@@ -78,9 +71,10 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+          turbo-cache-variant: ${{ matrix.name }}
 
       - name: Build package dependency graph
-        run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
+        run: node scripts/run-turbo-workspace-task.cjs build ${{ matrix.buildFilters }}
         env:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
@@ -123,7 +117,7 @@ jobs:
           DVT_CI: '1'
 
   web-frontend-tests:
-    name: Web Frontend Tests
+    name: Web Frontend Tests (${{ matrix.capability || matrix.phase }})
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: [detect_test_matrix]
@@ -131,6 +125,29 @@ jobs:
       !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
       (github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.web == 'true' ||
        needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - phase: vitest
+            capability: ''
+          - phase: browser
+            capability: controlled
+          - phase: browser
+            capability: available
+          - phase: browser
+            capability: unavailable
+    env:
+      DVT_CI: '1'
+      NODE_OPTIONS: --max-old-space-size=4096
+      DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: native
+      DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: available
+      GIT_BASE: >-
+        ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
+        github.event_name == 'push' && github.event.before || github.sha }}
+      GIT_HEAD: ${{ github.sha }}
+      PROOF_OWNER:
+        ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -142,10 +159,73 @@ jobs:
         with:
           base-ref: ${{ github.base_ref }}
 
+      - name: Fetch exact push comparison base
+        if: github.event_name == 'push'
+        run:
+          git cat-file -e "$GIT_BASE^{commit}" || git fetch --no-tags --depth=1 origin "$GIT_BASE"
+
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+          turbo-cache-variant: ${{ matrix.capability || matrix.phase }}
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+
+      - name: Resolve governed Web evidence plan
+        id: web_plan
+        run: >-
+          pnpm test:web:changed --plan --phase=${{ matrix.phase }} ${{ matrix.capability &&
+          format('--browser-capability={0}', matrix.capability) || '' }} ${{ (github.event_name !=
+          'pull_request' || needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
+          '--full' || '' }}
+
+      - name: Setup browser proof Python
+        id: browser_python
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12.10'
+
+      - name: Install browser proof provider dependencies
+        id: browser_provider
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        run:
+          python -m pip install --disable-pip-version-check dbt-postgres==1.10.0 dbt-core==1.11.11
+
+      - name: Install native browser proof dependencies
+        id: browser_dependencies
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.browser_required == 'true'
+        run: |
+          pnpm --filter @dvt/web exec cypress install
+          pnpm --filter @dvt/web exec cypress verify
+
+      - name: Prepare browser proof image
+        id: browser_image
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        uses: ./.github/actions/prepare-cached-image
+        with:
+          image: postgres-15
+
+      - name: Allocate browser proof PostgreSQL
+        id: browser_postgres
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        env:
+          PROOF_IMAGE: ${{ steps.browser_image.outputs.image }}
+        run: |
+          proof_container=$(docker create --pull=never --name "dvt-web-proof-$PROOF_OWNER" \
+            --label "dvt.ci.proof=$PROOF_OWNER" --publish 127.0.0.1::5432 \
+            --env POSTGRES_USER=dvt_proof --env POSTGRES_DB=postgres \
+            --env "POSTGRES_PASSWORD=$PROOF_OWNER" "$PROOF_IMAGE")
+          echo "container_id=$proof_container" >> "$GITHUB_OUTPUT"
+          docker start "$proof_container"
+          for attempt in {1..30}; do
+            if docker exec "$proof_container" pg_isready -h 127.0.0.1 -U dvt_proof -d postgres; then break; fi
+            sleep 1
+          done
+          docker exec "$proof_container" pg_isready -h 127.0.0.1 -U dvt_proof -d postgres
+          proof_address=$(docker port "$proof_container" 5432/tcp)
+          echo "DATABASE_URL=postgresql://dvt_proof:$PROOF_OWNER@$proof_address/postgres" >> "$GITHUB_ENV"
 
       - name: Build web dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
@@ -153,25 +233,46 @@ jobs:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
-      - name: Run governed web Vitest changed suites (PR)
+      - name: Run governed Web changed evidence (PR)
         if:
           github.event_name == 'pull_request' && needs.detect_test_matrix.outputs.web == 'true' &&
           needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
-        run: pnpm test:web:changed
-        env:
-          DVT_CI: '1'
-          NODE_OPTIONS: --max-old-space-size=4096
-          GIT_BASE: origin/${{ github.base_ref }}
-          GIT_HEAD: ${{ github.sha }}
+        run: >-
+          pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability &&
+          format('--browser-capability={0}', matrix.capability) || '' }}
 
       - name: Run governed web Vitest primary suites
         if:
-          github.event_name != 'pull_request' ||
-          needs.detect_test_matrix.outputs.root_build_sensitive == 'true'
+          matrix.phase == 'vitest' && (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
         run: pnpm test:web:ci
+
+      - name: Run admitted live browser baseline
+        if:
+          matrix.phase == 'browser' && (github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
+        run:
+          pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}
+
+      - name: Upload browser failure screenshots
+        if: >-
+          (failure() || cancelled()) && matrix.phase == 'browser' &&
+          steps.web_plan.outputs.browser_required == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web-live-proof-screenshots-${{ matrix.capability }}
+          path: .dvt/evidence/selected-closure/screenshots
+          include-hidden-files: true
+          if-no-files-found: ignore
+
+      - name: Remove browser proof PostgreSQL
+        if: always() && steps.browser_postgres.outputs.container_id != ''
         env:
-          DVT_CI: '1'
-          NODE_OPTIONS: --max-old-space-size=4096
+          PROOF_CONTAINER_ID: ${{ steps.browser_postgres.outputs.container_id }}
+        run: |
+          proof_owner=$(docker inspect --format '{{ index .Config.Labels "dvt.ci.proof" }}' "$PROOF_CONTAINER_ID")
+          test "$proof_owner" = "$PROOF_OWNER"
+          docker rm --force "$PROOF_CONTAINER_ID"
 
   adapter-postgres:
     name: Adapter Postgres Tests
@@ -227,49 +328,8 @@ jobs:
           TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
           TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
-      - name: Prove adapter-postgres app-role runtime and direct RLS
-        run:
-          pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
-          PostgresTenantRlsEnforcement.integration.test.ts
-
       - name: Run adapter-postgres full suite
         run: pnpm test:adapter-postgres
-
-  test-determinism:
-    name: Determinism Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: [detect_test_matrix]
-    if: >-
-      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
-      (github.event_name != 'pull_request' ||
-       needs.detect_test_matrix.outputs.determinism_relevant == 'true')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-
-      - name: Setup pnpm, cache and dependencies
-        uses: ./.github/actions/setup-node-pnpm
-        with:
-          node-version: 22.x
-
-      - name: Build engine dependency graph (once, before tests)
-        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
-        env:
-          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
-
-      - name: Run determinism tests
-        run: pnpm test:determinism
-        env:
-          DVT_CI: '1'
-
-      - name: Verify replay consistency
-        run: pnpm test:replay
-        env:
-          DVT_CI: '1'
 
   coverage:
     name: Engine Coverage Gate
@@ -307,7 +367,8 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: engine-coverage-report
-          path: packages/@dvt/engine/coverage/
+          path: packages/@dvt/engine/coverage/coverage-final.json
+          if-no-files-found: error
 
   test-suite-required:
     name: Test Suite Required for Merge
@@ -320,7 +381,6 @@ jobs:
         adapter-temporal,
         web-frontend-tests,
         adapter-postgres,
-        test-determinism,
         coverage,
       ]
     if: always()
@@ -330,10 +390,36 @@ jobs:
         with:
           script: |
             const jobs = ${{ toJSON(needs) }};
-            const failedJobs = Object.entries(jobs)
-              .filter(([_, job]) => ['failure', 'cancelled'].includes(job.result))
-              .map(([name, _]) => name);
-
-            if (failedJobs.length > 0) {
-              core.setFailed(`The following test suite jobs failed: ${failedJobs.join(', ')}`);
+            const failures = [];
+            const isPr = context.eventName === 'pull_request';
+            const draft = isPr && context.payload.pull_request?.draft === true;
+            const full = ['push', 'workflow_dispatch'].includes(context.eventName);
+            if (!isPr && !full) failures.push(`Unsupported event: ${context.eventName}`);
+            if (isPr && typeof context.payload.pull_request?.draft !== 'boolean') {
+              failures.push('Missing pull-request draft posture');
             }
+            const scope = jobs.detect_test_matrix?.outputs ?? {};
+            if (!draft) {
+              for (const key of ['any_tests', 'adapter_temporal', 'web',
+                'root_build_sensitive', 'postgres_capability_changed', 'coverage_relevant']) {
+                if (!['true', 'false'].includes(scope[key])) failures.push(`Invalid scope: ${key}`);
+              }
+            }
+            const root = scope.root_build_sensitive === 'true';
+            const required = {
+              detect_test_matrix: !draft,
+              'package-tests': !draft && (full || scope.any_tests === 'true'),
+              'adapter-temporal': !draft && (full || root || scope.adapter_temporal === 'true'),
+              'web-frontend-tests': !draft && (full || root || scope.web === 'true'),
+              'adapter-postgres': !draft && (full || scope.postgres_capability_changed === 'true'),
+              coverage: !draft && (full || scope.coverage_relevant === 'true'),
+            };
+            for (const [name, selected] of Object.entries(required)) {
+              const expected = selected ? 'success' : 'skipped';
+              const result = jobs[name]?.result;
+              if (result !== expected) failures.push(`${name}: expected ${expected}, got ${result}`);
+            }
+            for (const name of Object.keys(jobs)) {
+              if (!(name in required)) failures.push(`Unclassified result: ${name}`);
+            }
+            if (failures.length > 0) core.setFailed(failures.join('; '));

@@ -17,7 +17,7 @@ This plan closes only the remaining AR-C2 scope:
 
 1. complete dashboard wiring against emitted metrics,
 2. complete alert wiring with explicit threshold mapping,
-3. capture sustained threshold-validation evidence and lane closeout posture.
+3. capture sustained threshold-validation evidence and GitHub acceptance posture.
 
 No runtime contract/API changes are planned in this slice.
 
@@ -27,7 +27,7 @@ No runtime contract/API changes are planned in this slice.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/agent-lane-c.yaml` (`AR-C2`)
+- Governing GitHub issue for `AR-C2`.
 - `docs/planning/templates/qa/qa-artifact-example-template.md`
 - `docs/planning/templates/qa/qa-current-task-check-prompt.md`
 - `docs/runbooks/api-runtime-sla-canonical-20260404.md`
@@ -57,7 +57,7 @@ AR-C2 is considered complete only when:
 - each alert rule maps to SLA threshold semantics in the canonical SLA runbook;
 - evidence captures real threshold-validation runs and resulting operator
   posture;
-- Lane C registry can mark AR-C2 `done` with evidence-backed status reason.
+- The governing AR-C2 GitHub issue can close only with evidence-backed acceptance.
 
 ## Mermaid diagram: current-state signal path
 
@@ -68,7 +68,7 @@ flowchart LR
   Freshness["Run-status freshness SLO"] --> SlaDoc
   Outbox["Outbox drain and event-delivery telemetry"] --> SlaDoc
   SlaDoc --> Manuals["API technical/user manuals"]
-  Manuals --> Lane["Lane C AR-C2 (in progress)"]
+  Manuals --> Issue["AR-C2 GitHub issue (in progress)"]
 ```
 
 ## Mermaid diagram: target closure path
@@ -78,7 +78,7 @@ flowchart LR
   Signals["Instrumented AR-C2 signals"] --> Dashboards["Dashboards wired to each signal"]
   Dashboards --> Alerts["Alert rules wired to SLA thresholds"]
   Alerts --> Evidence["Evidence of sustained threshold validation"]
-  Evidence --> LaneDone["Lane C AR-C2 status updated to done"]
+  Evidence --> Accepted["AR-C2 GitHub acceptance"]
 ```
 
 ## Unblock roadmap
@@ -127,13 +127,13 @@ DoD:
 ### AR-C2-T4 Sustained validation evidence and closeout
 
 - run threshold-validation windows and collect evidence
-- update lane status posture and closeout references
+- record status and evidence in the governing GitHub issue
 
 DoD:
 
 - evidence artifact records validation windows and outcomes
 - unresolved AR-C2 blockers are either closed or explicitly re-tracked
-- lane registry can move AR-C2 from `in_progress` to `done` when complete
+- the governing AR-C2 GitHub issue can close only when acceptance is complete
 
 ## QA validation artifact section
 
@@ -145,8 +145,8 @@ as the baseline action artifact shape for this slice.
 ### High
 
 - Title: AR-C2 operational closure evidence is incomplete.
-  Why it matters: lane closure depends on operational, not doc-only, proof.
-  Evidence: `docs/planning/state/agent-lane-c.yaml` status reason for `AR-C2`.
+  Why it matters: task acceptance depends on operational, not doc-only, proof.
+  Evidence: the evidence and acceptance recorded in the governing GitHub issue for `AR-C2`.
   Risk: SLA contract cannot be treated as enforced in real operations.
   Recommendation: execute `AR-C2-T1..T4` and record governed evidence.
 
@@ -162,9 +162,9 @@ as the baseline action artifact shape for this slice.
 
 ### Low
 
-- [Task: RUNTIME-PROP-DISP-1] Title: AR-C2 decomposition was not explicit in lane task children.
+- [Task: RUNTIME-PROP-DISP-1] Title: AR-C2 decomposition was not explicit in the original task decomposition.
   Why it matters: execution ownership and progress checkpoints remain coarse.
-  Evidence: lane entry had one parent task without child decomposition.
+  Evidence: original record had one parent task without child decomposition.
   Risk: weak milestone tracking.
   Recommendation: track `AR-C2-T1..T4` as explicit child tasks.
 
@@ -210,7 +210,6 @@ as the baseline action artifact shape for this slice.
 
 - Commands executed:
   - `pnpm qa:artifact:check`
-  - `pnpm docs:workboard:generate`
   - `pnpm docs:sync`
   - `pnpm verify:prepush`
 - What passed: to be recorded during execution closeout.
@@ -274,13 +273,13 @@ Canonical progress tracker:
 #### `AR-C2-T4` Capture sustained validation evidence and closeout posture
 
 - Objective: prove AR-C2 thresholds hold under sustained observation windows.
-- Scope: governed evidence + lane posture update.
+- Scope: governed evidence + GitHub issue update.
 - [Task: RUNTIME-PROP-DISP-1] In current task scope: yes.
 - Dependencies: `AR-C2-T2`, `AR-C2-T3`.
-- Documentation impact: closeout/evidence and lane updates.
+- Documentation impact: closeout/evidence and GitHub issue updates.
 - Evidence / risk-doc impact: direct; may require risk update if failures found.
 - Comment with rationale: AR-C2 cannot close without sustained evidence.
-- Definition of Done: validation evidence is recorded and lane closure posture is
+- Definition of Done: validation evidence is recorded and GitHub acceptance posture is
   explicitly updated.
 
 ## Final Verdict

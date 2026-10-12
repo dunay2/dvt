@@ -9,16 +9,12 @@ import {
   readEngineArchitectureDoc,
   readEngineTestSource,
   readRepoSource,
-  repoPath,
 } from './engineArchitectureTestSupport.js';
 
 describe('WorkflowEngine boundary fitness architecture', () => {
-  it('documents WE-HX-6 component semantics, Fowler analysis, stories, and proposal trace', () => {
+  it('documents WE-HX-6 component semantics, stories, and proposal trace', () => {
     expectFileExists(engineArchitectureDocPath('workflow-engine-boundary-fitness-component.md'));
     expectFileExists(engineArchitectureDocPath('workflow-engine-boundary-fitness-user-stories.md'));
-    expectFileExists(
-      repoPath('buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md')
-    );
 
     const guide = readEngineArchitectureDoc('workflow-engine-boundary-fitness-component.md');
     expectMarkdownSections(guide, [
@@ -49,22 +45,6 @@ describe('WorkflowEngine boundary fitness architecture', () => {
     ]) {
       expect(stories).toContain(expectedStory);
     }
-
-    const mailbox = readRepoSource(
-      'buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md'
-    );
-    expectMarkdownSections(mailbox, [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetition Register',
-      '## Opportunity Register',
-      '## Drift Register',
-      '## Applied Fixes',
-      '## Future Lessons',
-    ]);
 
     const proposal = readRepoSource(
       'docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md'

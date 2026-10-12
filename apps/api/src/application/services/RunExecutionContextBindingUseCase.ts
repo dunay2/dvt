@@ -1,57 +1,43 @@
 /**
  * Owned concern: orchestrate one server-owned run-context binding for an
  * already persisted executable plan.
+ * @baseline ADR-0018: Provider behavior is behind application-owned ports.
+ * @decision Inject context preparers; retain one persistence and dispatch path.
+ * @consequence Adding a provider does not add branches to this coordinator.
+ * @version 1.0.0
  */
 import {
-  DBT_STEP_REQUIRED_CAPABILITY,
-  START_RUN_PLAN_REJECTION_CODE,
   START_RUN_RESULT_KIND,
-  collectRequiredCapabilitiesForSteps,
-  type ExecutionPlan,
-  type IStepTypeRegistry,
+  RUN_REJECTIONS,
+  type OperationalRejection,
   type StartRunCommand,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
-import type {
-  IDbtExecutionConnectionBindingVerifier,
-  IDbtExecutionTargetResolver,
-} from '../ports/dbtExecutionTarget.js';
-import type {
-  DbtProjectBundleBuildResult,
-  IDbtProjectBundleBuilder,
-} from '../ports/dbtProjectBundle.js';
-import type {
-  IRunExecutionContextWriter,
-  RunExecutionContextWriteResult,
-} from '../ports/runExecutionContextWriter.js';
+import {
+  DuplicateRunContextPreparerError,
+  type IRunExecutionContextPreparer,
+} from '../ports/runExecutionContextPreparer.js';
+import type { IRunExecutionContextWriter } from '../ports/runExecutionContextWriter.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
-import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
-import { resolveDbtExecutionConnectionBinding } from './dbtExecutionConnectionBinding.js';
-import { resolveDbtPlanExecutionBinding } from './dbtPlanExecutionBinding.js';
-import { resolveDvtPostgresExecutionContextBinding } from './dvtPostgresExecutionContextBinding.js';
-import type { DvtPostgresPublicationPredecessorReader } from './dvtPostgresExecutionContextBinding.js';
 import { buildRunExecutionContext } from './runExecutionContextFactory.js';
 import type { StoredPlanAdmissionResult } from './StoredPlanAdmissionCoordinator.js';
-
-const CALLER_CONTEXT_REJECTION =
-  'Caller-provided run execution context references are not accepted for governed execution.';
 
 export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
   public constructor(
     private readonly deps: {
       readonly delegate: IStartRunUseCase;
-      readonly bundleBuilder: IDbtProjectBundleBuilder;
       readonly contextWriter: IRunExecutionContextWriter;
-      readonly executionTargetResolver: IDbtExecutionTargetResolver;
-      readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
-      readonly stepTypeRegistry: IStepTypeRegistry;
-      readonly warehouseConnectionCatalog: IWarehouseConnectionCatalog;
-      readonly dvtPostgresPublicationPredecessorReader?: DvtPostgresPublicationPredecessorReader;
+      readonly preparers: readonly IRunExecutionContextPreparer[];
     }
-  ) {}
+  ) {
+    const keys = deps.preparers.map((preparer) => preparer.contextKey);
+    if (new Set(keys).size !== keys.length) {
+      throw new DuplicateRunContextPreparerError();
+    }
+  }
 
   public async execute(
     command: StartRunCommand,
@@ -68,29 +54,12 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
     const commandWithPlanRef = { ...command, planRef: admission.planRef };
     const { materialized, scopedPlanRef } = admission;
     const { plan } = materialized;
-    const bindsDbt = isDbtPlan(plan, this.deps.stepTypeRegistry);
-    const dvtBinding = await resolveDvtPostgresExecutionContextBinding({
-      plan,
-      planRef: scopedPlanRef.planRef,
-      runId: command.runId,
-      scope: {
-        tenantId: scopedPlanRef.tenantId,
-        projectId: scopedPlanRef.projectId,
-        environmentId: scopedPlanRef.environmentId,
-      },
-      catalog: this.deps.warehouseConnectionCatalog,
-      ...(this.deps.dvtPostgresPublicationPredecessorReader === undefined
-        ? {}
-        : { predecessorReader: this.deps.dvtPostgresPublicationPredecessorReader }),
-    });
-    if (dvtBinding.kind === 'rejected') {
-      return rejectRunExecutionContext(dvtBinding.reason);
-    }
-    if (!bindsDbt && dvtBinding.kind === 'not-required') {
+    const preparers = this.deps.preparers.filter((preparer) => preparer.isRequired(plan));
+    if (preparers.length === 0) {
       return this.deps.delegate.execute(command, context);
     }
     if (command.runExecutionContextRef !== undefined) {
-      return rejectRunExecutionContext(CALLER_CONTEXT_REJECTION);
+      return rejectRunExecutionContext(RUN_REJECTIONS.callerContextProvided);
     }
 
     const scope: WorkspaceStorageScope = {
@@ -98,52 +67,25 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       projectId: scopedPlanRef.projectId,
       environmentId: scopedPlanRef.environmentId,
     };
-    const pluginContexts: Record<string, Record<string, unknown>> = {};
-
-    if (dvtBinding.kind === 'bound') {
-      pluginContexts[dvtBinding.key] = { ...dvtBinding.context };
-    }
-
-    if (bindsDbt) {
-      const sourceBinding = resolveDbtPlanExecutionBinding({
-        plan,
-        targetAdapter: commandWithPlanRef.targetAdapter,
-        executionTarget: this.deps.executionTargetResolver.resolve(),
-      });
-      if (!sourceBinding.ok) return rejectRunExecutionContext(sourceBinding.reason);
-      const executionConnection = await resolveDbtExecutionConnectionBinding({
-        catalog: this.deps.warehouseConnectionCatalog,
-        verifier: this.deps.executionConnectionBindingVerifier,
-        scope,
-        connectionRef: sourceBinding.connectionRef,
-        targetProfile: sourceBinding.targetProfile,
-        runtimeCredentialRef: sourceBinding.credentialRef,
-      });
-      if (!executionConnection.ok) {
-        return rejectRunExecutionContext(executionConnection.reason);
-      }
-
-      const bundle = await this.deps.bundleBuilder.build({
-        scope,
-        projectRoot: sourceBinding.projectRoot,
-        ...(sourceBinding.expectedContentSetSha256 === undefined
-          ? {}
-          : { expectedContentSetSha256: sourceBinding.expectedContentSetSha256 }),
-      });
-      if (!bundle.ok) return rejectRunExecutionContext(renderBundleFailure(bundle));
-
-      pluginContexts['dbt'] = {
-        projectBundleRef: bundle.projectBundleRef,
-        targetProfile: sourceBinding.targetProfile,
-        credentialRef: sourceBinding.credentialRef,
-      };
+    const pluginContexts = new Map<string, Readonly<Record<string, unknown>>>();
+    const preparation = {
+      plan,
+      planRef: scopedPlanRef.planRef,
+      runId: command.runId,
+      targetAdapter: commandWithPlanRef.targetAdapter,
+      scope,
+    };
+    for (const preparer of preparers) {
+      const prepared = await preparer.prepare(preparation);
+      if (!prepared.ok) return rejectRunExecutionContext(prepared);
+      pluginContexts.set(preparer.contextKey, prepared.context);
     }
 
     const runExecutionContext = buildRunExecutionContext({
       command: commandWithPlanRef,
       context,
       scope,
-      pluginContexts,
+      pluginContexts: Object.fromEntries(pluginContexts),
       ...(materialized.executionPolicy.pluginCompatibilityFingerprint === undefined
         ? {}
         : {
@@ -156,7 +98,7 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
       context: runExecutionContext,
     });
     if (!writtenContext.ok) {
-      return rejectRunExecutionContext(renderContextWriteFailure(writtenContext));
+      return rejectRunExecutionContext(RUN_REJECTIONS.contextStoreUnavailable);
     }
 
     return this.deps.delegate.execute(
@@ -166,44 +108,19 @@ export class RunExecutionContextBindingUseCase implements IStartRunUseCase {
   }
 }
 
-function isDbtPlan(plan: ExecutionPlan, stepTypeRegistry: IStepTypeRegistry): boolean {
-  return collectRequiredCapabilitiesForSteps(stepTypeRegistry, plan.steps).includes(
-    DBT_STEP_REQUIRED_CAPABILITY
-  );
-}
-
-function renderBundleFailure(failure: Extract<DbtProjectBundleBuildResult, { ok: false }>): string {
-  switch (failure.reason) {
-    case 'artifact_store_unavailable':
-      return 'The DBT project bundle artifact store is not configured.';
-    case 'artifact_store_unsupported':
-      return 'The configured DBT project bundle store cannot create execution bundles.';
-    case 'project_unavailable':
-      return 'The authorized DBT project root is not available.';
-    case 'project_unreadable':
-      return 'The authorized DBT project could not be bundled safely.';
-    case 'revision_mismatch':
-      return 'The DBT project changed after Preview. Run Preview again before Run.';
-  }
-}
-
-function renderContextWriteFailure(
-  failure: Extract<RunExecutionContextWriteResult, { ok: false }>
-): string {
-  return failure.reason === 'artifact_store_unavailable'
-    ? 'The run-context artifact store is not configured.'
-    : failure.reason;
-}
-
-function rejectRunExecutionContext(reason: string): StartRunUseCaseResult {
+function rejectRunExecutionContext({
+  code,
+  cause,
+  reason,
+}: OperationalRejection): StartRunUseCaseResult {
   return {
     ok: true,
     value: {
       kind: START_RUN_RESULT_KIND.planRejected,
       accepted: false,
-      code: START_RUN_PLAN_REJECTION_CODE.rejected,
+      code,
+      cause,
       reason,
-      cause: 'run_execution_context',
     },
   };
 }

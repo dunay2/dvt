@@ -75,7 +75,9 @@ this branch contains no fake adapters for them.
 
 ## Boundaries
 
-No SQL/Temporal/browser/DVT product test is performed here. No production
-imports, dependencies, contracts, workflows or Planning DB records are changed.
-Planning DB reconciliation, repository hooks/lint/typecheck/prepush and C0
-acceptance remain separate gates. Do not merge this lab as a product feature.
+No SQL/Temporal/browser/DVT product test is performed here. The laboratory
+runner changes no production imports, dependencies, contracts, workflows or
+Planning DB records. Lab-only integration is governed separately through
+`RunPlannerSchedulingLaboratory` and `GH-3205-LAB-ONLY-INTEGRATION`; repository
+hooks/lint/prepush and exact-head CI remain required. C0 adoption acceptance is
+separate and remains open. Do not merge this lab as a product feature.

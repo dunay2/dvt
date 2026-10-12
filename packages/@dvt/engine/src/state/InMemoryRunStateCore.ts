@@ -28,8 +28,12 @@ import type {
   RecoveryRunBootstrapResult,
   RetryAttemptReservation,
   RunBootstrapInput,
+  StartRunWrite,
+  StartRunWriteResult,
 } from '../ports/IRunStateStore.js';
+import type { StartRunIntentClaimReceipt } from '../ports/IStartRunIntentStore.js';
 
+import { applyInMemoryStartRunWrite } from './applyInMemoryStartRunWrite.js';
 import {
   reserveInMemoryRetryAttempt,
   saveInMemoryProviderRef,
@@ -45,6 +49,7 @@ import {
   listInMemoryStaleSnapshotRuns,
   rebuildInMemorySnapshot,
 } from './InMemoryRunStateSnapshotSupport.js';
+import { InMemoryStartRunIntentStore } from './InMemoryStartRunIntentStore.js';
 import {
   captureRetryLineageCheckpoint,
   initializeRetryLineageFromMetadata,
@@ -65,6 +70,7 @@ import {
 
 type InMemoryRunStateCoreOptions = {
   commitOutbox?: (runId: string, events: EventEnvelope[]) => Promise<void>;
+  startRunIntents?: InMemoryStartRunIntentStore;
 };
 
 type InMemoryAppendContext = {
@@ -82,6 +88,8 @@ type PlannedInMemoryAppend = {
 };
 
 export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalenessQuery {
+  readonly startRunIntents: InMemoryStartRunIntentStore;
+  private readonly runWriteTails = new Map<string, Promise<void>>();
   readonly metadataByRunId = new Map<string, RunMetadata>();
   readonly eventsByRunId = new Map<string, EventEnvelope[]>();
   readonly idempIndexByRunId = new Map<string, Map<string, EventEnvelope>>();
@@ -93,6 +101,33 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
 
   constructor(options: InMemoryRunStateCoreOptions = {}) {
     this.commitOutbox = options.commitOutbox ?? (async () => {});
+    this.startRunIntents = options.startRunIntents ?? new InMemoryStartRunIntentStore();
+  }
+
+  async applyStartRunWrite(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult> {
+    const result = await this.startRunIntents.withClaim(receipt, async (intent) => {
+      if (write.kind !== 'fail' && intent.compensation.kind !== 'not_required')
+        return 'invalid_state' as const;
+      if (write.kind === 'fail' && intent.status !== 'DISPATCHED') return 'invalid_state' as const;
+      return this.withRunWriteLock(receipt.runId, () =>
+        applyInMemoryStartRunWrite(
+          {
+            getRunMetadataByRunId: (tenantId, runId) => this.getRunMetadataByRunId(tenantId, runId),
+            getSnapshot: (tenantId, runId) => this.getSnapshot(tenantId, runId),
+            bootstrapRunTx: (input) => this.bootstrapRunUnlocked(input),
+            saveProviderRef: (tenantId, runId, ref) =>
+              Promise.resolve(saveInMemoryProviderRef(this, tenantId, runId, ref)),
+            appendAndEnqueueTx: (runId, events) => this.appendUnlocked(runId, events),
+          },
+          receipt,
+          write
+        )
+      );
+    });
+    return result.kind === 'applied' ? result.value : result.kind;
   }
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
@@ -113,10 +148,16 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     runId: string,
     providerRef: RunMetadata['providerRef']
   ): Promise<RunMetadata> {
-    return saveInMemoryProviderRef(this, tenantId, runId, providerRef);
+    return this.withRunWriteLock(runId, async () =>
+      saveInMemoryProviderRef(this, tenantId, runId, providerRef)
+    );
   }
 
   async bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
+    return this.withRunWriteLock(input.metadata.runId, () => this.bootstrapRunUnlocked(input));
+  }
+
+  private async bootstrapRunUnlocked(input: RunBootstrapInput): Promise<AppendResult> {
     const metadata: RunMetadata = {
       ...input.metadata,
       providerRef: normalizeEngineRunRef(parseEngineRunRef(input.metadata.providerRef)),
@@ -136,7 +177,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     this.snapshotByRunId.set(metadata.runId, createDefaultWorkflowSnapshot(metadata.runId));
     this.snapshotLastRunSeqByRunId.set(metadata.runId, 0);
     try {
-      return await this.appendAndEnqueueTx(metadata.runId, input.firstEvents);
+      return await this.appendUnlocked(metadata.runId, input.firstEvents);
     } catch (error) {
       this.metadataByRunId.delete(metadata.runId);
       this.snapshotByRunId.delete(metadata.runId);
@@ -179,6 +220,10 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
    * happen as a single ordered mutation from the caller's perspective.
    */
   async appendAndEnqueueTx(runId: string, eventsToAppend: EventInput[]): Promise<AppendResult> {
+    return this.withRunWriteLock(runId, () => this.appendUnlocked(runId, eventsToAppend));
+  }
+
+  private async appendUnlocked(runId: string, eventsToAppend: EventInput[]): Promise<AppendResult> {
     this.assertRunExists(runId);
     const context = this.getAppendContext(runId);
 
@@ -234,6 +279,22 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     sourceRunId: string
   ): Promise<RetryAttemptReservation> {
     return reserveInMemoryRetryAttempt(this, tenantId, sourceRunId);
+  }
+
+  private async withRunWriteLock<T>(runId: string, write: () => Promise<T>): Promise<T> {
+    const previous = this.runWriteTails.get(runId) ?? Promise.resolve();
+    let release!: () => void;
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    this.runWriteTails.set(runId, current);
+    await previous;
+    try {
+      return await write();
+    } finally {
+      release();
+      if (this.runWriteTails.get(runId) === current) this.runWriteTails.delete(runId);
+    }
   }
 
   private async withRecoveryBootstrapLock<T>(

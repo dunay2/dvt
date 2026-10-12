@@ -1,4 +1,10 @@
-/** Owns deterministic PostgreSQL source fixtures used by the local product stack. */
+/**
+ * Owned concern: prepare deterministic external PostgreSQL source fixtures.
+ * @baseline GH-3021: PCV1 authoring must consume real inputs, never seeded graph or Run state.
+ * @decision Keep the default source SQL unchanged; require explicit PCV1 preparation by the LIVE owner.
+ * @consequence Only the claimed proof lease receives the additional acceptance inputs.
+ * @version 1.0.0
+ */
 module.exports = () =>
   `
 CREATE SCHEMA IF NOT EXISTS raw;
@@ -49,3 +55,39 @@ INSERT INTO raw.order_details (order_id, product) VALUES
   ('3', 'Laptop');
 ANALYZE raw.order_details;
 `.trim();
+
+async function seedPcv1PostgresProofData(databaseUrl, { Client = require('pg').Client } = {}) {
+  const client = new Client({ connectionString: databaseUrl });
+  try {
+    await client.connect();
+    await client.query(`
+BEGIN;
+CREATE SCHEMA pcv1;
+CREATE TABLE pcv1.customers (
+  customer_id bigint PRIMARY KEY,
+  customer_name text
+);
+INSERT INTO pcv1.customers (customer_id, customer_name) VALUES
+  (10, ' Ana '),
+  (20, ' Luis '),
+  (30, NULL);
+CREATE TABLE pcv1.orders (
+  order_id bigint PRIMARY KEY,
+  customer_id bigint NOT NULL,
+  amount bigint NOT NULL
+);
+INSERT INTO pcv1.orders (order_id, customer_id, amount) VALUES
+  (1, 10, 100),
+  (2, 20, 200),
+  (3, 30, 300),
+  (4, 99, 400);
+ANALYZE pcv1.customers;
+ANALYZE pcv1.orders;
+COMMIT;
+`);
+  } finally {
+    await client.end();
+  }
+}
+
+module.exports.seedPcv1PostgresProofData = seedPcv1PostgresProofData;

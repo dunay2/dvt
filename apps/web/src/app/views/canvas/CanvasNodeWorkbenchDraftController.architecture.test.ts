@@ -10,9 +10,17 @@ const PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasNodeWorkbenchPanel.tsx'
 );
+const PANEL_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasNodeWorkbenchController.ts'
+);
 const AUTHORING_SECTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasInspectorAuthoringSection.tsx'
+);
+const SUBMISSION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasInspectorDraftSubmission.ts'
 );
 
 describe('Canvas node workbench draft controller architecture', () => {
@@ -29,7 +37,9 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(CONTROLLER_SOURCE).not.toContain('DbtAuthoringFields');
     expect(CONTROLLER_SOURCE).not.toContain('DvtAuthoringFields');
 
-    expect(PANEL_SOURCE).toContain(
+    expect(PANEL_SOURCE).toContain('useCanvasNodeWorkbenchController(props)');
+    expect(PANEL_SOURCE).not.toContain('useCanvasNodeWorkbenchDraftController');
+    expect(PANEL_CONTROLLER_SOURCE).toContain(
       'useCanvasNodeWorkbenchDraftController(node, authoring.workspaceScope)'
     );
     expect(PANEL_SOURCE).not.toContain('authoritativeNodeRef');
@@ -39,8 +49,11 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(AUTHORING_SECTION_SOURCE).toContain(
       'import type { CanvasNodeWorkbenchDraftController }'
     );
-    expect(AUTHORING_SECTION_SOURCE).toContain('authoring.onApplyNodeDraft(draft)');
-    expect(AUTHORING_SECTION_SOURCE).toContain('draftController.onDraftSubmitted(draft)');
+    expect(AUTHORING_SECTION_SOURCE).toContain('useCanvasInspectorDraftSubmission');
+    expect(AUTHORING_SECTION_SOURCE).not.toContain('validateCanvasInspectorNodeDraft');
+    expect(SUBMISSION_SOURCE).toContain('authoring.onApplyNodeDraft(draft)');
+    expect(SUBMISSION_SOURCE).toContain('draftController.onDraftSubmitted(draft)');
+    expect(SUBMISSION_SOURCE).toContain('validateCanvasInspectorNodeDraft');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('useState(');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
   });

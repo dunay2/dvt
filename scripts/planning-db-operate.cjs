@@ -8,6 +8,7 @@
  * @version 1.2.0
  */
 const { spawnSync } = require('node:child_process');
+const { readFileSync } = require('node:fs');
 const { Client } = require('pg');
 const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
@@ -35,6 +36,8 @@ const {
 const {
   applyGovernedSourceRefreshOperation,
 } = require('./planning-db/governed-source-refresh-write-rail.cjs');
+const { parseCatalogReconciliation } = require('./planning-db/catalog-reconciliation.cjs');
+const { applyCatalogReconciliation } = require('./planning-db/catalog-reconciliation-write.cjs');
 
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 const allowedFowlerAnalysisDispositionStatuses = new Set([
@@ -435,8 +438,10 @@ const operationHelp = Object.freeze({
     details: [
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
+      '--red-green-cycle <existing-id> reconciles one cycle with --expected-revision and explicit admitted --patch-surface evidence.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'Referenced rails require the exact pair --reference-only true and --authority-ref <canonical-source>.',
+      'record --catalog-reconciliation <json-file> performs explicitly scoped, atomic metadata repair without rebuilding declarations; no other CLI flags may be mixed into this mode.',
       'RetireFeatureMechanizationRail deletes one stale local rail under exact may-delete design scope, expected revision, and audited provenance.',
     ],
   },
@@ -1569,6 +1574,7 @@ function operationPayload(command) {
       redTest: command.redTest,
       expectedFailure: command.expectedFailure,
       patchSurfaces: command.patchSurfaces || [],
+      ...(command.redGreenCycle === undefined ? {} : { redGreenCycle: command.redGreenCycle }),
       greenTest: command.greenTest,
       replaceImplementationRefs: command.replaceImplementationRefs,
       replaceArchitectureGuards: command.replaceArchitectureGuards,
@@ -3213,6 +3219,31 @@ function validateFeatureMechanizationRecordCommand(command) {
     );
   }
 
+  if (command.redGreenCycle !== undefined) {
+    if (!normalizeOptionalText(command.redGreenCycle) || command.expectedRevision == null) {
+      throw new Error(
+        'Named red-green cycle reconciliation requires an ID and --expected-revision.'
+      );
+    }
+    if (command.patchSurfaces.length === 0) {
+      throw new Error(
+        'Named red-green cycle reconciliation requires explicit --patch-surface evidence.'
+      );
+    }
+    for (const surface of command.patchSurfaces) {
+      if (excludesFeatureMechanizationSurface(surface, command.forbiddenImplementationSurfaces)) {
+        throw new Error(`Red-green cycle patch surface ${surface} is forbidden.`);
+      }
+      if (
+        !command.allowedImplementationSurfaces.some((pattern) =>
+          surfaceMatchesPattern(surface, pattern)
+        )
+      ) {
+        throw new Error(`Red-green cycle patch surface ${surface} is outside allowed surfaces.`);
+      }
+    }
+  }
+
   const terminalRailStatus =
     command.railStatus === 'retired' || command.railStatus === 'deprecated';
   if (terminalRailStatus && command.mechanizationStatus !== 'closed') {
@@ -3238,6 +3269,14 @@ function validateFeatureMechanizationRecordCommand(command) {
 }
 
 function parseFeatureMechanizationCommand(action, args) {
+  if (args.includes('--catalog-reconciliation')) {
+    if (action !== 'record' || args.length !== 2 || args[0] !== '--catalog-reconciliation') {
+      throw new Error(
+        'Catalog reconciliation requires record --catalog-reconciliation <json-file> only.'
+      );
+    }
+    return parseCatalogReconciliation(JSON.parse(readFileSync(args[1], 'utf8')));
+  }
   const options = parseFlagOptions(args);
   const featureId = validateFeatureMechanizationFeatureId(requireOption(options, 'feature'));
   const railName = requireOption(options, 'rail');
@@ -3310,6 +3349,9 @@ function parseFeatureMechanizationCommand(action, args) {
     redTest: requireOption(options, 'redTest'),
     expectedFailure: requireOption(options, 'expectedFailure'),
     patchSurfaces: normalizeListOption(options.patchSurface),
+    ...(options.redGreenCycle === undefined
+      ? {}
+      : { redGreenCycle: requireOption(options, 'redGreenCycle') }),
     greenTest: requireOption(options, 'greenTest'),
     replaceImplementationRefs:
       parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
@@ -5208,11 +5250,15 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
       incomingManifest.commandQueryRails,
       (rail) => `${rail.type}#${rail.name}`
     ),
-    redGreenCycles: mergeFeatureMechanizationObjectsByKey(
-      existing.redGreenCycles || [],
-      incomingManifest.redGreenCycles,
-      (cycle) => cycle.id
-    ),
+    redGreenCycles: command.redGreenCycle
+      ? existing.redGreenCycles.map((cycle) =>
+          cycle.id === command.redGreenCycle ? incomingManifest.redGreenCycles[0] : cycle
+        )
+      : mergeFeatureMechanizationObjectsByKey(
+          existing.redGreenCycles || [],
+          incomingManifest.redGreenCycles,
+          (cycle) => cycle.id
+        ),
     symbols,
   };
   return {
@@ -5247,6 +5293,7 @@ function buildFeatureMechanizationSymbols(command) {
 }
 
 function planFeatureMechanizationRailRecordOperation({ command, existingRail, operationId, now }) {
+  if (command.redGreenCycle !== undefined) validateFeatureMechanizationRecordCommand(command);
   const previous = normalizeFeatureMechanizationRail(existingRail);
   const previousRevision = previous ? previous.revision : null;
   if (
@@ -5259,6 +5306,15 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     );
   }
 
+  if (
+    command.redGreenCycle !== undefined &&
+    previous?.rawManifest.redGreenCycles?.filter((cycle) => cycle.id === command.redGreenCycle)
+      .length !== 1
+  ) {
+    throw new Error(
+      `Red-green cycle ${command.redGreenCycle} not found uniquely in rail ${command.railId}.`
+    );
+  }
   const resultingRevision = previousRevision === null ? 0 : previousRevision + 1;
   const updatedAt = toIso(now);
   const createdAt = previous?.createdAt || updatedAt;
@@ -5304,7 +5360,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     commandQueryRails: [rawRail],
     redGreenCycles: [
       {
-        id: `${command.normalizedRailName}-record`,
+        id: command.redGreenCycle ?? `${command.normalizedRailName}-record`,
         redTest: command.redTest,
         expectedFailure: command.expectedFailure,
         patchSurfaces,
@@ -8066,6 +8122,9 @@ async function applyDbSurfaceUpsertOperation(command, options = {}) {
 }
 
 async function applyFeatureMechanizationRailRecordOperation(command, options = {}) {
+  if (command.catalogReconciliation) {
+    return applyCatalogReconciliation(command.catalogReconciliation, options);
+  }
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
@@ -8197,6 +8256,12 @@ async function applyFowlerAnalysisOperation(command, options = {}) {
 }
 
 function printOperationResult(result) {
+  if (result.catalogReconciliation) {
+    console.log(
+      `[planning:db:operate] catalog reconciliation changed=${result.catalogReconciliation.changed} idempotent=${result.idempotent}`
+    );
+    return;
+  }
   if (result.idempotent) {
     if (result.audit.source_commit_sha && result.audit.paths) {
       console.log(

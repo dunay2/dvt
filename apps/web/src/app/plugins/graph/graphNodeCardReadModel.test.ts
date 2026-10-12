@@ -14,15 +14,8 @@ const CARD_STRATEGIES = [
   dvtGraphNodeCardStrategy,
 ];
 
-const UNCONFIGURED_TRANSFORM_HEADER = [
-  { id: 'materialization', label: 'Mat.', value: 'Not configured', placement: 'header' },
-  {
-    id: 'last-run',
-    label: 'Last run',
-    value: 'Not calculated',
-    icon: 'clock',
-    placement: 'header',
-  },
+const DEFAULT_DVT_TRANSFORM_HEADER = [
+  { id: 'materialization', label: 'Mat.', value: 'view', icon: 'eye', placement: 'header' },
 ] as const;
 const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
 const SPANISH_PRESENTATION_COPY = {
@@ -79,6 +72,94 @@ function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
 }
 
 describe('buildGraphNodeCardReadModel', () => {
+  it('does not repeat inner Filter details on the outer Model card', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({ kind: 'dvt:transform', role: 'transform' }),
+      {
+        presentationTruth: {
+          columns: {
+            state: 'ready',
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: { kind: 'unavailable' },
+          filterSummary: "order_id = '1'",
+        },
+      },
+      CARD_STRATEGIES
+    );
+    expect(model.metrics.map((metric) => metric.id)).not.toContain('filter');
+  });
+  it('leaves last execution out of both model-card metric rails', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:transform',
+        role: 'transform',
+        metadata: { lastRunAt: '2026-09-26T10:00:00Z' },
+      }),
+      {},
+      CARD_STRATEGIES
+    );
+    expect(
+      [...model.metrics, ...model.operationalMetrics].map((metric) => metric.id)
+    ).not.toContain('last-run');
+  });
+  it('shows the effective view materialization for a new DVT Transform', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({ kind: 'dvt:transform', pluginId: 'dvt', role: 'transform' }),
+      {},
+      CARD_STRATEGIES
+    );
+
+    expect(model.metrics[0]).toEqual({
+      id: 'materialization',
+      label: 'Mat.',
+      value: 'view',
+      icon: 'eye',
+      placement: 'header',
+    });
+  });
+
+  it.each([
+    { materialized: 'table', expected: 'table' },
+    { materialized: 'incremental', expected: 'incremental' },
+    { materialized: undefined, expected: 'Not configured' },
+  ])(
+    'uses file authority materialization $materialized without draft defaults',
+    ({ materialized, expected }) => {
+      const model = buildGraphNodeCardReadModel(
+        buildNode({
+          kind: 'dvt:transform',
+          role: 'transform',
+          metadata: {
+            authority: 'dbt-project-files',
+            materialized,
+            config: { materialized: 'view' },
+          },
+        }),
+        {},
+        CARD_STRATEGIES
+      );
+
+      expect(model.metrics[0]?.value).toBe(expected);
+    }
+  );
+
+  it('does not default materialization for another plugin', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({ kind: 'dvt:transform', pluginId: 'custom', role: 'transform' }),
+      {},
+      [sharedSourceModelGraphNodeCardStrategy]
+    );
+
+    expect(model.metrics[0]?.value).toBe('Not configured');
+  });
+
   it('keeps Code and Columns out of the compact upper metric row', () => {
     const presentationTruth = {
       columns: {
@@ -485,17 +566,10 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.health).toEqual({ label: 'Completed', tone: 'healthy' });
     expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
-      { id: 'materialization', label: 'Mat.', value: 'Not configured', placement: 'header' },
+      { id: 'materialization', label: 'Mat.', value: 'view', icon: 'eye', placement: 'header' },
       { id: 'status', label: 'Status', value: 'completed' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'warnings', label: 'Warnings', value: '2' },
-      {
-        id: 'last-run',
-        label: 'Last run',
-        value: '2026-06-12T20:45:00Z',
-        icon: 'clock',
-        placement: 'header',
-      },
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
@@ -606,7 +680,6 @@ describe('buildGraphNodeCardReadModel', () => {
       },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'cost', label: 'Cost', value: '$0.42' },
-      UNCONFIGURED_TRANSFORM_HEADER[1],
     ]);
   });
 
@@ -808,9 +881,7 @@ describe('buildGraphNodeCardReadModel', () => {
           authority: 'dbt-project-files',
           package: 'analytics',
           dependencies: ['source.raw.orders', 'ref.stg_customers'],
-          config: {
-            materialized: 'incremental',
-          },
+          materialized: 'incremental',
           columns: [{ name: 'order_id', type: 'integer' }],
         },
       }),
@@ -832,13 +903,6 @@ describe('buildGraphNodeCardReadModel', () => {
         placement: 'header',
       },
       { id: 'dependencies', label: 'Deps', value: '2' },
-      {
-        id: 'last-run',
-        label: 'Last run',
-        value: 'Not calculated',
-        icon: 'clock',
-        placement: 'header',
-      },
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'rows', label: 'Rows', value: 'Not calculated', icon: 'rows' },
@@ -898,7 +962,7 @@ describe('buildGraphNodeCardReadModel', () => {
       CARD_STRATEGIES
     );
 
-    expect(model.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(model.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
   });
 
   it('keeps localized code posture in the inspector instead of the graph card header', () => {
@@ -1023,10 +1087,10 @@ describe('buildGraphNodeCardReadModel', () => {
       CARD_STRATEGIES
     );
 
-    expect(generated.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
-    expect(authored.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
-    expect(fileBacked.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
-    expect(canonical.metrics).toEqual(UNCONFIGURED_TRANSFORM_HEADER);
+    expect(generated.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
+    expect(authored.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
+    expect(fileBacked.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
+    expect(canonical.metrics).toEqual(DEFAULT_DVT_TRANSFORM_HEADER);
   });
 
   it('keeps Source row and byte evidence when dbt is the external authority', () => {

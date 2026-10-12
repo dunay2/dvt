@@ -3,6 +3,7 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewToolbarCopyEs = {
   dependencyAddedMessage: 'Dependencia añadida',
+  dependencyCreationFailedMessage: 'La conexión ha fallado. Revisa el modelo e inténtalo de nuevo.',
   layoutAppliedMessage: 'Layout aplicado',
   toolbarWorkflowRecoveryLabel: 'Recuperación',
   toolbarWorkflowReadOnlyLabel: 'Solo lectura',
@@ -136,10 +137,10 @@ export const canvasViewToolbarCopyEs = {
     'Esto agrega otra hoja de trabajo al borrador del proyecto. El canvas activo sigue disponible en la lista izquierda.',
   replaceCanvasCancelLabel: 'Cancelar',
   replaceCanvasConfirmLabel: 'Crear canvas',
-  draftSyncedLabel: 'Borrador sincronizado',
-  savingDraftLabel: 'Guardando borrador',
-  draftSavedLabel: 'Borrador guardado',
-  draftSaveFailedLabel: 'Guardado del borrador fallido',
+  draftSyncedLabel: 'Sincronizado',
+  savingDraftLabel: 'Guardando',
+  draftSavedLabel: 'Guardado',
+  draftSaveFailedLabel: 'Error al guardar',
   staleVersionLabel: 'Version obsoleta',
   draftMissingLabel: 'Draft ausente',
   projectionGapLabel: 'Hueco de proyeccion',

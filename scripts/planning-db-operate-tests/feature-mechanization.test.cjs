@@ -144,6 +144,166 @@ test('parseArgs builds an explicit referenced feature mechanization rail command
   assert.equal(command.authorityRef, authorityRef);
 });
 
+test('named cycle reconciliation requires a revision and explicit admitted patch surfaces', () => {
+  const base = ['--red-green-cycle', 'retained-cycle'];
+  const revision = ['--expected-revision', '4'];
+  const patch = ['--patch-surface', 'scripts/planning-db-operate.cjs'];
+  for (const extraArgs of [base, [...base, ...revision], [...base, ...patch]]) {
+    assert.throws(() => parseArgs(featureMechanizationRecordArgs({ extraArgs })), /requires/);
+  }
+  for (const surface of ['apps/web/unowned.ts', 'docs/archive/retired.ts']) {
+    assert.throws(
+      () =>
+        parseArgs(
+          featureMechanizationRecordArgs({
+            extraArgs: [...base, ...revision, '--patch-surface', surface],
+          })
+        ),
+      /outside allowed|forbidden/
+    );
+  }
+  assert.throws(
+    () =>
+      parseArgs(
+        featureMechanizationRecordArgs({
+          extraArgs: [
+            ...base,
+            ...revision,
+            ...patch,
+            '--forbidden-surface',
+            'scripts/planning-db-operate.cjs',
+          ],
+        })
+      ),
+    /forbidden/
+  );
+  const command = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: [...base, ...revision, ...patch] })
+  );
+  assert.equal(command.redGreenCycle, 'retained-cycle');
+  assert.equal(command.expectedRevision, 4);
+});
+
+test('named cycle reconciliation replaces only existing evidence with audited compare-and-set', () => {
+  const now = new Date('2026-09-27T12:00:00.000Z');
+  const originalCommand = parseArgs(featureMechanizationRecordArgs());
+  const original = planFeatureMechanizationRailRecordOperation({
+    command: originalCommand,
+    existingRail: null,
+    operationId: 'create',
+    now,
+  }).rail;
+  const retainedCycle = original.rawManifest.redGreenCycles[0];
+  const existingRail = {
+    ...original,
+    revision: 4,
+    rawManifest: {
+      ...original.rawManifest,
+      redGreenCycles: [
+        retainedCycle,
+        { ...retainedCycle, id: 'retained-cycle', patchSurfaces: [] },
+      ],
+    },
+  };
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: [
+        '--red-green-cycle',
+        'retained-cycle',
+        '--expected-revision',
+        '4',
+        '--patch-surface',
+        'scripts/planning-db-operate.cjs',
+      ],
+    })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'repair',
+    now,
+  });
+  assert.equal(planned.rail.revision, 5);
+  assert.equal(planned.rail.rawManifest.redGreenCycles.length, 2);
+  assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0], retainedCycle);
+  assert.deepEqual(planned.rail.rawManifest.redGreenCycles[1], {
+    id: 'retained-cycle',
+    redTest: command.redTest,
+    expectedFailure: command.expectedFailure,
+    patchSurfaces: command.patchSurfaces,
+    greenTest: command.greenTest,
+  });
+  assert.equal(planned.audit.payload.redGreenCycle, 'retained-cycle');
+  assert.equal(planned.audit.expectedRevision, 4);
+  assert.notEqual(command.idempotencyKey, originalCommand.idempotencyKey);
+  const anotherCycleCommand = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: [
+        '--red-green-cycle',
+        'another-cycle',
+        '--expected-revision',
+        '4',
+        '--patch-surface',
+        'scripts/planning-db-operate.cjs',
+      ],
+    })
+  );
+  assert.notEqual(command.idempotencyKey, anotherCycleCommand.idempotencyKey);
+  assert.deepEqual(
+    validateFeatureMechanizationManifest(planned.rail.rawManifest, planned.rail.sourcePath).errors,
+    []
+  );
+  assert.throws(
+    () =>
+      planFeatureMechanizationRailRecordOperation({
+        command: { ...command, redGreenCycle: 'unknown' },
+        existingRail,
+        operationId: 'wrong-cycle',
+        now,
+      }),
+    /cycle.*not found/
+  );
+  assert.throws(
+    () =>
+      planFeatureMechanizationRailRecordOperation({
+        command,
+        existingRail: {
+          ...existingRail,
+          rawManifest: {
+            ...existingRail.rawManifest,
+            redGreenCycles: [
+              existingRail.rawManifest.redGreenCycles[1],
+              existingRail.rawManifest.redGreenCycles[1],
+            ],
+          },
+        },
+        operationId: 'ambiguous',
+        now,
+      }),
+    /not found uniquely/
+  );
+  assert.throws(
+    () =>
+      planFeatureMechanizationRailRecordOperation({
+        command,
+        existingRail: { ...existingRail, revision: 5 },
+        operationId: 'stale',
+        now,
+      }),
+    /expected revision 4/
+  );
+  assert.throws(
+    () =>
+      planFeatureMechanizationRailRecordOperation({
+        command,
+        existingRail: null,
+        operationId: 'missing',
+        now,
+      }),
+    /expected revision 4/
+  );
+});
+
 test('parseArgs rejects incomplete or false feature mechanization rail references', () => {
   const authorityRef =
     'docs/planning/proposals/mandatory/governance-and-docs/planning-db-operational-integrity-reconciliation-plan-20260830.md';

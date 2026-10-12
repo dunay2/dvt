@@ -12,6 +12,7 @@ const INITIAL_CANVAS_DRAFT_PRESENTATION_STATE: CanvasDraftPresentationState = {
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
+    persistence: 'durable',
   },
   routeReadiness: {
     status: 'pending',
@@ -41,7 +42,8 @@ function arePresentationStatesEqual(
     left.routeReadiness.detail === right.routeReadiness.detail &&
     left.draftStatusState.label === right.draftStatusState.label &&
     left.draftStatusState.tone === right.draftStatusState.tone &&
-    left.draftStatusState.showReloadAction === right.draftStatusState.showReloadAction
+    left.draftStatusState.showReloadAction === right.draftStatusState.showReloadAction &&
+    left.draftStatusState.persistence === right.draftStatusState.persistence
   );
 }
 

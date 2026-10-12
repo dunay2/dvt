@@ -85,8 +85,8 @@ describe('Canvas Source Inspector ordering', () => {
     openSourceSection('columns');
     cy.get('[data-slot="source-columns-search"]').should('have.css', 'font-size', '12px');
     cy.get('[data-slot="source-column-row"]').should('have.css', 'font-size', '12px');
-    cy.get('[data-slot="source-column-detail"] h3').should('have.css', 'font-size', '14px');
-    cy.get('[data-slot="source-column-detail"] dl').should('have.css', 'font-size', '12px');
+    cy.get('[data-slot="source-column-detail"]').should('not.exist');
+    cy.get('[data-slot="source-column-summary"]').should('be.visible');
     dragBefore('[data-column-name="amount"]', '[data-column-name="order_id"]');
     expectOrder('[data-slot="source-column-row"]', 'columnName', [
       'amount',
@@ -99,6 +99,30 @@ describe('Canvas Source Inspector ordering', () => {
     cy.get('[data-column-name="amount"]')
       .should('be.focused')
       .and('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="source-column-detail"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-columns-list');
+    cy.get('[data-column-name="amount"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tabs-list"]').should('not.be.visible');
+    cy.get('[data-slot="source-column-detail"] h3')
+      .should('have.text', 'amount')
+      .and('have.css', 'font-size', '16px');
+    cy.get('[data-slot="source-column-detail"] dl').should('have.css', 'font-size', '12px');
+    cy.get('[data-slot="source-column-previous"]').should('be.disabled');
+    cy.get('[data-slot="source-column-next"]').click();
+    cy.get('[data-slot="source-column-detail"] h3').should('have.text', 'order_id');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-detail');
+    cy.get('[data-slot="source-columns-back"]').click();
+    cy.get('[data-column-name="order_id"]').should('be.focused');
+    cy.get('[data-slot="source-columns-search"]').type('amount');
+    cy.get('[data-column-name="amount"]').focus().type('{enter}');
+    cy.get('[data-slot="source-column-next"]').should('be.disabled');
+    cy.get('[data-slot="source-columns-back"]').type('{esc}');
+    cy.get('[data-slot="source-columns-search"]').should('have.value', 'amount').clear();
+    cy.get('[data-slot="source-columns-filter"]').select('not-null');
+    cy.get('[data-slot="source-column-row"]').each(($row) =>
+      expect($row.text()).to.contain('Not null')
+    );
+    cy.get('[data-slot="source-columns-filter"]').select('all');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     openSourceSection('inputs-outputs');

@@ -108,7 +108,7 @@ describe('StartRunApplicationService', () => {
       executionService: {
         async executeStartRun(input) {
           executionCalls.push({
-            intentId: input.intentId,
+            intentId: input.receipt.intentId,
             adapterProvider: input.adapter.provider,
           });
           return expectedRunRef;
@@ -144,6 +144,7 @@ describe('StartRunApplicationService', () => {
   });
 
   it('checks tenant access before planRef validation', async () => {
+    const store = new InMemoryTxStore();
     const planRef = makePlanRef('ftp://not-allowed.example/plan');
     const calls: string[] = [];
     const unauthorizedError = new Error('UNAUTHORIZED');
@@ -164,14 +165,14 @@ describe('StartRunApplicationService', () => {
     const service = buildStartRunApplicationService({
       guard: new StartRunAdmissionGuard({
         policy,
-        stateStoreRead: new InMemoryTxStore(),
+        stateStoreRead: store,
         adapters: new Map([['temporal', makeTemporalAdapter()]]),
       }),
-      stateStoreRead: new InMemoryTxStore(),
-      stateStoreWrite: new InMemoryTxStore(),
+      stateStoreRead: store,
+      stateStoreWrite: store,
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
-      intentStore: new InMemoryStartRunIntentStore(),
+      intentStore: store.startRunIntents,
       observability: createNoopObservability(),
       planFetcher: makePlanFetcherForPlan(makeDefaultExecutionPlan()),
     });
@@ -205,7 +206,7 @@ describe('StartRunApplicationService', () => {
       stateStoreWrite: store,
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
-      intentStore: new InMemoryStartRunIntentStore(),
+      intentStore: store.startRunIntents,
       observability: createNoopObservability(),
       planFetcher: makePlanFetcherForPlan(plan),
     });
@@ -237,6 +238,7 @@ describe('StartRunApplicationService', () => {
   });
 
   it('remains non-fatal when startup log emission fails', async () => {
+    const store = new InMemoryTxStore();
     const plan = makeDefaultExecutionPlan();
     const planRef = makePlanRefForPlan(plan);
     const base = createNoopObservability();
@@ -258,14 +260,14 @@ describe('StartRunApplicationService', () => {
     const service = buildStartRunApplicationService({
       guard: new StartRunAdmissionGuard({
         policy,
-        stateStoreRead: new InMemoryTxStore(),
+        stateStoreRead: store,
         adapters: new Map([['temporal', makeTemporalAdapter()]]),
       }),
-      stateStoreRead: new InMemoryTxStore(),
-      stateStoreWrite: new InMemoryTxStore(),
+      stateStoreRead: store,
+      stateStoreWrite: store,
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
-      intentStore: new InMemoryStartRunIntentStore(),
+      intentStore: store.startRunIntents,
       observability,
       planFetcher: makePlanFetcherForPlan(plan),
     });
@@ -285,6 +287,7 @@ describe('StartRunApplicationService', () => {
   });
 
   it('remains non-fatal when success metrics emission fails', async () => {
+    const store = new InMemoryTxStore();
     const plan = makeDefaultExecutionPlan();
     const planRef = makePlanRefForPlan(plan);
     const base = createNoopObservability();
@@ -306,14 +309,14 @@ describe('StartRunApplicationService', () => {
     const service = buildStartRunApplicationService({
       guard: new StartRunAdmissionGuard({
         policy,
-        stateStoreRead: new InMemoryTxStore(),
+        stateStoreRead: store,
         adapters: new Map([['temporal', makeTemporalAdapter()]]),
       }),
-      stateStoreRead: new InMemoryTxStore(),
-      stateStoreWrite: new InMemoryTxStore(),
+      stateStoreRead: store,
+      stateStoreWrite: store,
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
-      intentStore: new InMemoryStartRunIntentStore(),
+      intentStore: store.startRunIntents,
       observability,
       planFetcher: makePlanFetcherForPlan(plan),
     });
@@ -333,6 +336,7 @@ describe('StartRunApplicationService', () => {
   });
 
   it('emits start metrics with expected tags on successful startRun', async () => {
+    const store = new InMemoryTxStore();
     const plan = makeDefaultExecutionPlan();
     const planRef = makePlanRefForPlan(plan);
     const counterCalls: Array<{ name: string; tags: Record<string, string> }> = [];
@@ -364,14 +368,14 @@ describe('StartRunApplicationService', () => {
     const service = buildStartRunApplicationService({
       guard: new StartRunAdmissionGuard({
         policy,
-        stateStoreRead: new InMemoryTxStore(),
+        stateStoreRead: store,
         adapters: new Map([['temporal', makeTemporalAdapter()]]),
       }),
-      stateStoreRead: new InMemoryTxStore(),
-      stateStoreWrite: new InMemoryTxStore(),
+      stateStoreRead: store,
+      stateStoreWrite: store,
       idempotency: new IdempotencyKeyBuilder(),
       clock: new SequenceClock('2026-03-26T00:00:00.000Z'),
-      intentStore: new InMemoryStartRunIntentStore(),
+      intentStore: store.startRunIntents,
       observability,
       planFetcher: makePlanFetcherForPlan(plan),
     });

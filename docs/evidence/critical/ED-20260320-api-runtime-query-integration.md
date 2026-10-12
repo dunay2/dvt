@@ -93,4 +93,4 @@ $env:DATABASE_URL='postgresql://dvt:dvt@localhost:5432/dvt'; pnpm --filter dvt-a
 - Read-model separation: `ADR-0015`
 - Tenant isolation: `ADR-0031`
 - Slice closeout:
-  `docs/planning/closeouts/20260320-api-runtime-query-integration-closeout.md`
+  [20260320 api runtime query integration closeout](https://github.com/dunay2/dvt/blob/d3fe40beaa66bd8d98ae9397b76340ff5f895f21/docs/planning/closeouts/20260320-api-runtime-query-integration-closeout.md)

@@ -1,25 +1,41 @@
 #!/usr/bin/env node
 /**
- * Owned concern: run the web Cypress browser harness with a clean Electron
- * process environment and deterministic argument forwarding.
+ * Owned concern: provision the controlled Web preview and require complete Cypress evidence.
+ * @baseline GH-3578: browser exit zero alone cannot prove the requested specs ran.
+ * @decision Reuse the Module API and shared validator; keep interactive open outside evidence.
+ * @consequence Exact batches reject omissions and always restore environment and preview ownership.
+ * @version 1.0.0
  */
 import http from 'node:http';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+  validateCypressProofSpecs,
+  validateCypressProofResult,
+} from '../../scripts/run-selected-closure-cypress.cjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(scriptDir, '..', '..');
 const defaultWebDir = path.join(repoRoot, 'apps', 'web');
 const defaultPreviewUrl = 'http://127.0.0.1:4173';
+const require = createRequire(import.meta.url);
+const evidenceEnv = Object.fromEntries(
+  ['screenshots', 'downloads', 'videos'].map((kind) => [
+    `CYPRESS_${kind.toUpperCase()}_FOLDER`,
+    path.join(repoRoot, '.dvt/evidence/selected-closure', kind),
+  ])
+);
 
 export function createCypressProcessEnv(sourceEnv = process.env) {
-  const env = { ...sourceEnv };
+  const env = { ...evidenceEnv, ...sourceEnv };
   delete env.ELECTRON_RUN_AS_NODE;
   return env;
 }
 
 export function parseCypressRunnerArgs(argv) {
+  if (argv[0] === '--') argv = argv.slice(1);
   const [firstArg, ...remainingArgs] = argv;
 
   if (firstArg === 'open') {
@@ -33,18 +49,38 @@ export function parseCypressRunnerArgs(argv) {
   return { mode: 'run', extraArgs: argv };
 }
 
-export function buildCypressInvocation(parsedArgs, platform = process.platform) {
-  return {
-    command: platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
-    args: [
-      'exec',
-      'cypress',
-      parsedArgs.mode,
-      '--config-file',
-      'cypress.config.ts',
-      ...parsedArgs.extraArgs,
-    ],
-  };
+async function readCypressProofOptions(cypress, args) {
+  let options;
+  try {
+    options = await cypress.cli.parseRunArguments(['cypress', 'run', ...args]);
+  } catch {
+    throw new Error('Cypress native arguments are invalid');
+  }
+  const specs = validateCypressProofSpecs(options.spec?.split(','));
+  return { options, specs };
+}
+
+export async function runCypressProof(cypress, options, specs) {
+  const keys = ['ELECTRON_RUN_AS_NODE', ...Object.keys(evidenceEnv)];
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  const clean = createCypressProcessEnv();
+  let result;
+  try {
+    for (const key of keys) {
+      if (clean[key] === undefined) delete process.env[key];
+      else process.env[key] = clean[key];
+    }
+    result = await cypress.run(options);
+  } catch {
+    // Module results and exceptions may include credentials; export bounded evidence only.
+    throw new Error('Cypress native execution failed');
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+  return validateCypressProofResult(result, specs);
 }
 
 function resolvePnpmCommand(platform = process.platform) {
@@ -158,40 +194,59 @@ function stopPreview(child, platform = process.platform) {
   child.kill();
 }
 
-export async function runWebCypressNative(options = {}) {
+export async function runWebCypressNative(options = {}, deps = {}) {
+  const runtime = { runCommand, spawn, isPreviewReachable, waitForPreview, stopPreview, ...deps };
   const webDir = options.webDir ?? defaultWebDir;
   const previewUrl = options.previewUrl ?? defaultPreviewUrl;
   const pnpmCommand = resolvePnpmCommand(options.platform);
   const argv = options.argv ?? process.argv.slice(2);
+  const parsed = parseCypressRunnerArgs(argv);
+  const cypress =
+    parsed.mode === 'run'
+      ? (deps.cypress ?? require(require.resolve('cypress', { paths: [webDir] })))
+      : null;
+  const proof = cypress === null ? null : await readCypressProofOptions(cypress, parsed.extraArgs);
 
-  const buildExitCode = await runCommand(pnpmCommand, ['build:e2e'], { cwd: webDir });
+  const buildExitCode = await runtime.runCommand(pnpmCommand, ['build:e2e'], { cwd: webDir });
   if (buildExitCode !== 0) {
     return buildExitCode;
   }
 
-  if (await isPreviewReachable(previewUrl)) {
+  if (await runtime.isPreviewReachable(previewUrl)) {
     throw new Error(
       `Preview URL ${previewUrl} already responds before this runner started. Stop the stale preview process and rerun Cypress.`
     );
   }
 
-  const preview = spawn(pnpmCommand, ['preview:e2e'], {
+  const preview = runtime.spawn(pnpmCommand, ['preview:e2e'], {
     ...buildSpawnOptions({ cwd: webDir }),
   });
 
   try {
-    await waitForPreview(previewUrl);
-
-    const cypressInvocation = buildCypressInvocation(
-      parseCypressRunnerArgs(argv),
-      options.platform
+    await runtime.waitForPreview(previewUrl);
+    if (proof === null) {
+      return await runtime.runCommand(
+        pnpmCommand,
+        ['exec', 'cypress', 'open', '--config-file', 'cypress.config.ts', ...parsed.extraArgs],
+        { cwd: webDir, env: createCypressProcessEnv() }
+      );
+    }
+    const evidence = await runCypressProof(
+      cypress,
+      {
+        ...proof.options,
+        project: webDir,
+        configFile: path.join(webDir, 'cypress.config.ts'),
+        spec: proof.specs.map((spec) => path.resolve(webDir, spec)).join(','),
+      },
+      proof.specs
     );
-    return await runCommand(cypressInvocation.command, cypressInvocation.args, {
-      cwd: webDir,
-      env: createCypressProcessEnv(process.env),
-    });
+    (deps.log ?? console.log)(
+      `[web-cypress-native] Cypress proof: ${evidence.passed} passed (${evidence.specs.join(',')})`
+    );
+    return 0;
   } finally {
-    stopPreview(preview, options.platform);
+    runtime.stopPreview(preview, options.platform);
   }
 }
 

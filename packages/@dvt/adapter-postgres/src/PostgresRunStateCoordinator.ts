@@ -8,10 +8,19 @@
  * @version 1.0.0
  * @date 2026-03-28
  */
-import { RunAlreadyExistsError } from '@dvt/engine';
+import {
+  RunAlreadyExistsError,
+  type StartRunIntentClaimReceipt,
+  type StartRunWrite,
+  type StartRunWriteResult,
+  type WorkflowSnapshot,
+} from '@dvt/engine';
+import { matchesStartRunWriteScope, isActiveStartRunIntent } from '@dvt/engine/runtime';
+import { TERMINAL_RUN_STATUSES } from '@dvt/run-domain';
 import type { PoolClient } from 'pg';
 
 import { POSTGRES_RUN_STATE_COORDINATOR_CONSTANTS as C } from './PostgresRunStateCoordinatorConstants.js';
+import { lockStartRunIntent } from './PostgresStartRunIntentPersistence.js';
 import type { RunEventWriteRepository } from './RunEventWriteRepository.js';
 import type {
   AppendResult,
@@ -29,6 +38,12 @@ type WithTransaction = <T>(fn: (client: PoolClient) => Promise<T>) => Promise<T>
 type SetTenantContext = (client: PoolClient, tenantId: string) => Promise<void>;
 
 interface RunMetadataWritePort {
+  saveProviderRefWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId,
+    providerRef: RunMetadata['providerRef']
+  ): Promise<RunMetadata>;
   resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string>;
   insertWithClient(client: PoolClient, metadata: RunMetadata): Promise<void>;
   reserveRetryAttemptWithClient(
@@ -39,6 +54,11 @@ interface RunMetadataWritePort {
 }
 
 interface SnapshotWritePort {
+  readCanonicalStatusWithClient(
+    client: PoolClient,
+    tenantId: string,
+    runId: RunId
+  ): Promise<WorkflowSnapshot['status'] | null>;
   updateWithClient(
     client: PoolClient,
     runId: RunId,
@@ -60,6 +80,7 @@ interface OutboxEnqueuePort {
 }
 
 export interface PostgresRunStateCoordinatorDeps {
+  schema: string;
   metadataRepo: RunMetadataWritePort;
   runEventRepository: Pick<RunEventWriteRepository, 'append'>;
   snapshotStore: SnapshotWritePort;
@@ -76,13 +97,58 @@ export class PostgresRunStateCoordinator {
   private readonly setTenantContext: SetTenantContext;
   private readonly withTransaction: WithTransaction;
 
-  constructor(deps: PostgresRunStateCoordinatorDeps) {
+  constructor(private readonly deps: PostgresRunStateCoordinatorDeps) {
     this.metadataRepo = deps.metadataRepo;
     this.runEventRepository = deps.runEventRepository;
     this.snapshotStore = deps.snapshotStore;
     this.outboxStore = deps.outboxStore;
     this.setTenantContext = deps.setTenantContext;
     this.withTransaction = deps.withTransaction;
+  }
+
+  async applyStartRunWrite(
+    receipt: StartRunIntentClaimReceipt,
+    write: StartRunWrite
+  ): Promise<StartRunWriteResult> {
+    return this.withTransaction(async (client) => {
+      await this.setTenantContext(client, requireTenantId(receipt.tenantId));
+      const locked = await lockStartRunIntent(client, this.deps.schema, receipt);
+      if (locked.kind !== 'owned') return locked.kind;
+      if (!isActiveStartRunIntent(locked.intent.status)) return 'invalid_state';
+      if (locked.intent.reconciliation.kind === 'escalated') return 'invalid_state';
+      if (write.kind !== 'fail' && locked.intent.compensation.kind !== 'not_required')
+        return 'invalid_state';
+      if (write.kind === 'fail' && locked.intent.status !== 'DISPATCHED') return 'invalid_state';
+      if (!matchesStartRunWriteScope(receipt, write)) return 'conflict';
+      if (write.kind === 'bootstrap') {
+        await this.bootstrapRunWithClient(client, receipt.tenantId, write.input);
+        return 'applied';
+      }
+      const status = await this.snapshotStore.readCanonicalStatusWithClient(
+        client,
+        receipt.tenantId,
+        receipt.runId as RunId
+      );
+      if (status === null) return 'missing';
+      if (TERMINAL_RUN_STATUSES.has(status)) return 'invalid_state';
+      if (write.kind === 'bind_provider') {
+        await this.metadataRepo.saveProviderRefWithClient(
+          client,
+          receipt.tenantId,
+          receipt.runId as RunId,
+          write.providerRef
+        );
+      } else {
+        const append = await this.appendEventsTxWithClient(
+          client,
+          receipt.tenantId,
+          receipt.runId as RunId,
+          write.events
+        );
+        await this.outboxStore.enqueueWithClient(client, receipt.runId as RunId, append.appended);
+      }
+      return 'applied';
+    });
   }
 
   async appendAndEnqueueTx(runId: RunId, envelopes: EventInput[]): Promise<AppendResult> {
