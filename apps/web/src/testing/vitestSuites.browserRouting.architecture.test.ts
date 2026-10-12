@@ -104,6 +104,54 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 const browserModules = readBrowserModules();
 
 describe('public Canvas gesture preconditions', () => {
+  it.each(['canvas-graph-search-filter-live', 'canvas-minimap-focus-live'])(
+    'owns an acknowledged independent project for read-only evidence in %s',
+    (name) => {
+      const ast = browserModules.get(resolve(`cypress/e2e/canvas/${name}.cy.ts`))!;
+      expect(ast.getText()).toContain('createLiveProjectThroughUi');
+      expect(ast.getText()).toContain('WorkspaceGraphDraftScope');
+      expect(ast.getText()).not.toContain('readLiveGraphDraft(resolveLiveWorkspaceSession()');
+    }
+  );
+
+  it('recovers unavailable dbt roots through real file authority and Monaco synchronization', () => {
+    const ast = browserModules.get(
+      resolve('cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts')
+    )!;
+    const body = ast.getText();
+    expect(body).toContain('adoptLiveDbtProjectFileAuthority');
+    expect(body).toContain('waitForLiveWorkspaceFileContent');
+    expect(body).toContain('monaco-code-editor');
+    expect(body).toContain('enabled=false');
+    expect(body).not.toContain('resolveLiveFirstAuthoringWorkspaceSession');
+    expect(body).not.toContain('replaceLiveWorkspaceFile');
+    expect(body).not.toContain('readLiveGraphDraft');
+  });
+
+  it('uses the single current template and an owned language for graph-search evidence', () => {
+    const ast = browserModules.get(
+      resolve('cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts')
+    )!;
+    const body = ast.getText();
+    expect(body).toContain('APPLICATION_LANGUAGE_STORAGE_KEY');
+    expect(body).toContain('canvas-playground-template-choice');
+    expect(body).not.toContain("cy.contains('Create canvas'");
+    expect(body).not.toContain(".contains('button', 'dbt canvas')");
+  });
+
+  it.each([
+    ['dbt-project-preview-run-live', 'visitProjectWithRequestObservations'],
+    ['dbt-project-yaml-description-edit-live', 'openModelWorkbench'],
+  ])('targets the real title for dbt inspection in %s', (name, symbol) => {
+    const ast = browserModules.get(resolve(`cypress/e2e/dbt/${name}.cy.ts`))!;
+    expect(ast.getText()).toContain('graph-node-card-title');
+    const declaration = ast.statements.find(
+      (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === symbol
+    );
+    expect(declaration).toBeDefined();
+    expect(ast.getText()).not.toMatch(/canvas-node-shell[^;]*\.dblclick\(\)/u);
+  });
+
   it('opens Connections after creation before checking the selected connection option', () => {
     const ast = browserModules.get(resolve('cypress/support/liveWarehouseSourceImport.ts'))!;
     const declaration = ast.statements.find(
@@ -339,6 +387,8 @@ describe('governed browser evidence routing', () => {
     const expected = [
       'canvas-dvt-join-preview-live',
       'canvas-first-authoring-live',
+      'canvas-graph-search-filter-live',
+      'canvas-minimap-focus-live',
       'canvas-source-identity-live',
       'canvas-source-import-live-clean',
     ];

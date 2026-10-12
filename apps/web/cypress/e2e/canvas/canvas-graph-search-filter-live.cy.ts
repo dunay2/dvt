@@ -1,16 +1,23 @@
 /**
  * Owned concern: prove Canvas graph search and filtering against the live
  * protected runtime without intercepting or directly seeding the graph draft.
+ * @baseline GH-3610: the shared default workspace is not an empty-draft authority.
+ * @decision Reuse CreateProject and its acknowledged scope with the current single Canvas template.
+ * @consequence Search and filter keep real revision invariants independent of earlier specs.
+ * @version 1.0.1
  */
+import type { WorkspaceGraphDraftScope } from '@dvt/contracts';
+
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickCanvasAddCatalogAction,
   clickCanvasContextMenuAction,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
+import { createLiveProjectThroughUi } from '../../support/liveProjectAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
-  resolveLiveWorkspaceSession,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
@@ -27,33 +34,34 @@ function addDbtNode(registrationKind: 'dvt:transform' | 'dbt:seed', x: number, y
 
 function waitForDraftNodeCount(
   expectedCount: number,
+  scope: WorkspaceGraphDraftScope,
   attemptsRemaining = 40
 ): Cypress.Chainable<DraftSnapshot> {
-  return readLiveGraphDraft(resolveLiveWorkspaceSession(), { failOnStatusCode: false }).then(
-    (response) => {
-      if (response.status === 200) {
-        const body = response.body as {
-          kind: string;
-          record: { revision: string; draft: { nodeIds: string[] } };
+  return readLiveGraphDraft(scope, { failOnStatusCode: false }).then((response) => {
+    if (response.status === 200) {
+      const body = response.body as {
+        kind: string;
+        record: { revision: string; draft: { nodeIds: string[] } };
+      };
+      if (body.kind === 'ok' && body.record.draft.nodeIds.length === expectedCount) {
+        return {
+          revision: body.record.revision,
+          nodeIds: [...body.record.draft.nodeIds].sort(),
         };
-        if (body.kind === 'ok' && body.record.draft.nodeIds.length === expectedCount) {
-          return {
-            revision: body.record.revision,
-            nodeIds: [...body.record.draft.nodeIds].sort(),
-          };
-        }
       }
-
-      if (attemptsRemaining <= 0) {
-        throw new Error(
-          `Timed out waiting for ${expectedCount} persisted Canvas nodes. ` +
-            `Last response: ${JSON.stringify(response.body)}`
-        );
-      }
-
-      return cy.wait(250).then(() => waitForDraftNodeCount(expectedCount, attemptsRemaining - 1));
     }
-  );
+
+    if (attemptsRemaining <= 0) {
+      throw new Error(
+        `Timed out waiting for ${expectedCount} persisted Canvas nodes. ` +
+          `Last response: ${JSON.stringify(response.body)}`
+      );
+    }
+
+    return cy
+      .wait(250)
+      .then(() => waitForDraftNodeCount(expectedCount, scope, attemptsRemaining - 1));
+  });
 }
 
 function openGraphSearch(): Cypress.Chainable<JQuery<HTMLInputElement>> {
@@ -81,11 +89,26 @@ describe('Canvas graph search and filtering live protected runtime', () => {
   });
 
   it('authors, searches, navigates, filters, and clears without mutating the draft', () => {
-    visitWithLiveWorkspaceSession('/canvas');
+    let scope: WorkspaceGraphDraftScope;
+    cy.viewport(1500, 900);
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          APPLICATION_LANGUAGE_STORAGE_KEY,
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    createLiveProjectThroughUi(`Graph search ${Date.now()}`).then((createdScope) => {
+      scope = createdScope;
+      return readLiveGraphDraft(scope, { failOnStatusCode: false })
+        .its('status')
+        .should('equal', 404);
+    });
 
-    cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-playground-empty-state"]')
-      .contains('button', 'dbt canvas')
+    cy.get('[data-slot="canvas-playground-template-choice"]', { timeout: 20_000 })
+      .should('have.length', 1)
       .should('be.enabled')
       .click();
     cy.get('[data-slot="canvas-viewport"]').should('be.visible');
@@ -100,7 +123,7 @@ describe('Canvas graph search and filtering live protected runtime', () => {
     addDbtNode('dbt:seed', 900, 250);
     cy.contains('[data-slot="graph-node-card-title"]', 'Seed 1').should('be.visible');
 
-    waitForDraftNodeCount(3).as('draftBeforeReadOnlyQueries');
+    cy.then(() => waitForDraftNodeCount(3, scope)).as('draftBeforeReadOnlyQueries');
 
     openGraphSearch().type('Model');
     cy.get('[data-slot="canvas-graph-search-control"] output').should('have.text', '1 / 2');
@@ -132,7 +155,7 @@ describe('Canvas graph search and filtering live protected runtime', () => {
     cy.get('[data-slot="canvas-graph-search-control"]').should('not.exist');
 
     cy.get<DraftSnapshot>('@draftBeforeReadOnlyQueries').then((before) => {
-      waitForDraftNodeCount(3).then((after) => {
+      waitForDraftNodeCount(3, scope).then((after) => {
         expect(after).to.deep.equal(before);
       });
     });
