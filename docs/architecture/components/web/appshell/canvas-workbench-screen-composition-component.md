@@ -2,7 +2,7 @@
 title: Canvas Workbench Screen Composition Component
 status: Active
 owner: Frontend / Shell / Canvas
-last_reviewed: 2026-05-20
+last_reviewed: 2026-10-12
 component_type: frontend-component
 ---
 
@@ -17,6 +17,42 @@ copy, and visual preferences are presented.
 
 It does not own graph persistence, protected draft semantics, Admin route
 behavior, Plugins route behavior, or backend contracts.
+
+## Approved Menu Responsibility Contract
+
+[The bounded menu cut](https://github.com/dunay2/dvt/issues/3622), approved under
+#3296, supersedes the older mixed `ShellMenu` placement described below. It does
+not accept the entire Figma migration or introduce another application rail.
+
+| Surface                | Owned concern                                                 | Existing authority                                           |
+| ---------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| Raven application menu | Global destinations when the navigation rail is hidden; About | `ListShellNavigationItems`, `GetCompiledApplicationMetadata` |
+| Project menu           | Granted project/environment selection, context and Git        | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`       |
+| File menu              | New Project and active project import/export, files and code  | `CreateProject`, existing Canvas workspace contribution      |
+| View menu              | Explorer/drawer recovery, focus mode and ES/EN preference     | Existing layout commands, `ConfigureApplicationLanguage`     |
+| Execution controls     | Existing explicit execution intent/readiness                  | Unchanged operational contribution                           |
+
+```mermaid
+flowchart LR
+  Raven[Raven] --> Routes[Existing Router navigation and pending-edit guard]
+  Project[Project] --> Scope[Granted scope port and read-only context]
+  File[File] --> Contribution[Existing project/file commands]
+  View[View] --> Layout[Existing layout and language preferences]
+```
+
+Each action has one menu owner. Controllers retain lifecycle and dispatch;
+concern-specific templates own passive markup and shared chrome styles. No
+generic menu framework, new store or second command catalog is introduced.
+Menu opening does not execute data queries or change graph authoring state.
+
+Focus ownership follows the selected intent: code/explorer and project creation
+return to File; granted-scope recovery remains Project. A menu closing to open
+an editor/dialog must not steal the receiving surface's focus. Router navigation
+must preserve the existing unapplied-edit guard.
+
+Source import still registers only; dragging creates an instance. This contract
+does not add Source double-click/Insert creation, change JOIN output, or expose
+unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 ## Public API
 
