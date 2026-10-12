@@ -459,7 +459,8 @@ units:
       adoption.
     publicApi:
       - node labs/pln2-scheduling/src/run.mjs --out <new-output-directory>
-      - python labs/pln2-scheduling/src/probe.py --backend <dask|highs>
+      - python labs/pln2-scheduling/src/probe.py --backend <dask|highs> --corpus <corpus-json> --out
+        <new-evidence-file>
     owns:
       - labs/pln2-scheduling/.gitignore
       - labs/pln2-scheduling/PROTOCOL.md

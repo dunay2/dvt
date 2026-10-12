@@ -476,6 +476,11 @@ test('real manifest gives the isolated scheduling laboratory exact non-product s
   assert.equal(unit.parent, 'SYS-CI-GOVERNANCE-ROOT');
   assert.equal(unit.dddOwner, 'SchedulingLaboratoryRun');
   assert.equal(unit.cqRails, 'RunPlannerSchedulingLaboratory');
+  assert.ok(
+    unit.publicApi.includes(
+      'python labs/pln2-scheduling/src/probe.py --backend <dask|highs> --corpus <corpus-json> --out <new-evidence-file>'
+    )
+  );
   assert.deepEqual(unit.owns, schedulingLaboratoryFiles);
   assert.deepEqual(unit.excludes || [], []);
 
