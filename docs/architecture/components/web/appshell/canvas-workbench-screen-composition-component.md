@@ -21,7 +21,7 @@ behavior, Plugins route behavior, or backend contracts.
 ## Approved Menu Responsibility Contract
 
 [The bounded menu cut](https://github.com/dunay2/dvt/issues/3622), approved under
-#3296, replaces the older mixed `ShellMenu` placement. It does
+issue #3296, replaces the older mixed `ShellMenu` placement. It does
 not accept the entire Figma migration or introduce another application rail.
 
 | Surface                | Owned concern                                                 | Existing authority                                           |
