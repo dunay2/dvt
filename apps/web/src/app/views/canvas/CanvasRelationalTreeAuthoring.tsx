@@ -57,7 +57,6 @@ export function CanvasRelationalTreeAuthoring({
     }),
     [staged, data.draft, data.stagedOperations, data.pendingSources]
   );
-  const reservedAliases = data.pendingSources.map((item) => item.read.binding.displayName);
   const expand = (id: string | null, open = true) => {
     actions.selectRelation(id);
     onExpandedChange(open);
@@ -120,11 +119,12 @@ export function CanvasRelationalTreeAuthoring({
           />
         ) : (
           <CanvasRelationalTreeInlineEditor
-            reservedAliases={reservedAliases}
+            reservedAliases={data.pendingSources.map((item) => item.read.binding.displayName)}
             copy={copy}
             joinDraft={data.draft}
             operation={data.operation}
             onChangeJoinDraft={actions.changeDraft}
+            onSelectRelation={actions.reconcileSelection}
             onPendingConditionChange={onPendingConditionChange}
             selectedRelationId={selectedRelationId}
             transformNode={transformNode}

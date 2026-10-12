@@ -180,7 +180,11 @@ function buildRuntimeAdmissionPolicy(
       return false;
     }
 
-    return node.pluginId === registration.pluginId && node.role === registration.role;
+    return (
+      node.role === registration.role &&
+      (node.pluginId === registration.pluginId ||
+        registration.importedBy?.includes(node.pluginId) === true)
+    );
   }
 
   return {

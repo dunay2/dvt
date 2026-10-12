@@ -30,7 +30,7 @@ describe('SourceImportWizard plugin options', () => {
     await harness.clickTab('Browse');
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
 
     expect(importSources).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -93,7 +93,7 @@ describe('SourceImportWizard plugin options', () => {
     await harness.clickTab('Browse');
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Metadata');
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
 
     expect(importSources).toHaveBeenCalledWith(
       expect.objectContaining({

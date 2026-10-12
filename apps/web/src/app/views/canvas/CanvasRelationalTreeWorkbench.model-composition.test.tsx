@@ -12,10 +12,64 @@ import {
   root,
   setupWorkbenchTest,
 } from './CanvasRelationalTreeWorkbench.test-support';
-import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
+import {
+  occurrenceGraph,
+  occurrenceInput,
+} from './relational-source-occurrence/occurrence.test.fixtures';
+import { createSourceJoin } from './canvasSourceJoin';
+import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 describe('Model composition Workbench', () => {
   setupWorkbenchTest();
+
+  it.each(['en', 'es'])(
+    'keeps stale type codes out of the Model summary in %s without writes',
+    async (locale) => {
+      const graph = occurrenceGraph();
+      const draft = createSourceJoin({
+        left: occurrenceInput,
+        right: occurrenceInput,
+        targetNodeId: graph.targetNode.id,
+        leftFieldName: 'parent_id',
+        rightFieldName: 'id',
+        joinType: JoinRel_JoinType.INNER,
+      });
+      draft.sidecar.relations.at(-1)!.displayName = 'left_join';
+      const original = structuredClone(draft);
+      const node = applyDvtSubstraitSemanticDocument(
+        graph.targetNode,
+        encodeDvtSubstraitSemanticDocument(draft)
+      );
+      const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
+      await act(async () =>
+        root.render(
+          <CanvasRelationalTreeWorkbench
+            transformNode={node}
+            nodes={[graph.source, node]}
+            edges={graph.edges}
+            copy={{ ...COPY, ...resolveCanvasViewCopy(locale) }}
+            authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+          />
+        )
+      );
+      await act(async () =>
+        container
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
+          .click()
+      );
+      const step = container.querySelector(
+        '[data-slot="canvas-model-composition-steps"] [data-operator="join"]'
+      )!;
+      expect(step.textContent).toContain('INNER JOIN');
+      expect(step.textContent).not.toContain('left_join');
+      expect(step.querySelectorAll('span.min-w-0 > span')).toHaveLength(1);
+      expect(applied).not.toHaveBeenCalled();
+      expect(draft).toEqual(original);
+    }
+  );
 
   it('opens a selected Source on Output with only its producer publication', async () => {
     const graph = occurrenceGraph();

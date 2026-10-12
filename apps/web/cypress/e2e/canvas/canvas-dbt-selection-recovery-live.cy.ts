@@ -1,162 +1,138 @@
 /**
- * Owned concern: prove unavailable DBT execution selection recovery through
- * the live protected Canvas workflow without draft endpoint interception.
+ * Owned concern: prove unavailable DBT root recovery through real file authority.
+ * @baseline GH-3610: invented projects and graph-owned dbt models are not admitted authority.
+ * @decision Disable an explicitly selected file-authoritative model through Monaco synchronization.
+ * @consequence Analysis removes the root; only explicit recovery may admit the surviving model.
+ * @version 1.0.1
  */
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
+import { canvasViewExecutionCopyByKey } from '../../../src/app/views/canvas/canvasCopyCatalog.execution';
 import {
-  clickCanvasAddCatalogAction,
-  clickCanvasContextMenuItem,
-  openCanvasContextMenuAt,
   revealOperationalDrawer,
+  selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import {
-  assertLiveFirstAuthoringDraftScopeIsClean,
-  resolveLiveFirstAuthoringWorkspaceSession,
-  skipWhenFirstAuthoringLiveEnvIsMissing,
-} from '../../support/canvasFirstAuthoring';
-import { readLiveGraphDraft } from '../../support/liveProtectedRuntime';
-import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
+  adoptLiveDbtProjectFileAuthority,
+  seedLiveWorkspaceFiles,
+} from '../../support/dbtProjectLive';
+import {
+  hasLiveProtectedRuntimeEnv,
+  visitWithLiveWorkspaceSession,
+  waitForLiveWorkspaceFileContent,
+} from '../../support/liveProtectedRuntime';
 
-function resolveSelectionRecoverySession(): ReturnType<
-  typeof resolveLiveFirstAuthoringWorkspaceSession
-> {
-  return resolveLiveFirstAuthoringWorkspaceSession('dbt');
-}
+const PROJECT_ROOT = 'selection-recovery';
+const CANVAS_ID = 'selection-recovery-files';
+const SELECTED_MODEL_ID = 'model.selection_recovery.selected_model';
+const SURVIVING_MODEL_ID = 'model.selection_recovery.surviving_model';
+const SELECTED_MODEL_PATH = `${PROJECT_ROOT}/models/selected_model.sql`;
+const DISABLED_MODEL_SQL = "{{ config(enabled=false, materialized='view') }}\nselect 1 as id\n";
+const PROJECT_FILES = {
+  [`${PROJECT_ROOT}/dbt_project.yml`]: `name: selection_recovery
+version: '0.4.0'
+config-version: 2
+profile: dvt_live_proof
+model-paths: ['models']
+`,
+  [SELECTED_MODEL_PATH]: "{{ config(materialized='view') }}\nselect 1 as id\n",
+  [`${PROJECT_ROOT}/models/surviving_model.sql`]:
+    "{{ config(materialized='view') }}\nselect 2 as id\n",
+};
 
 function visitCleanDbtCanvas(): void {
-  const session = resolveSelectionRecoverySession();
-
-  cy.visit('/canvas', {
-    onBeforeLoad(window) {
-      window.localStorage.clear();
-      seedE2eWorkspaceSession(window, session);
-    },
-  });
-}
-
-function addDbtModelAt(x: number, y: number): void {
-  openCanvasContextMenuAt(x, y);
-  clickCanvasContextMenuItem(/^(Add|Anadir)\.\.\.$/);
-  clickCanvasAddCatalogAction('create-node', 'dvt:transform');
-}
-
-function readPersistedNodeIds(response: Cypress.Response<unknown>): readonly string[] | null {
-  const nodeIds = (response.body as { record?: { draft?: { nodeIds?: unknown } } }).record?.draft
-    ?.nodeIds;
-
-  return Array.isArray(nodeIds) && nodeIds.every((nodeId) => typeof nodeId === 'string')
-    ? nodeIds
-    : null;
-}
-
-function waitForPersistedDraftRecord(attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft(resolveSelectionRecoverySession()).then((response) => {
-    if (response.status === 200) return;
-    if (attempt >= 80) {
-      throw new Error(`Timed out waiting for persisted DBT draft; last status ${response.status}.`);
+  cy.viewport(1500, 900);
+  visitWithLiveWorkspaceSession(
+    `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
+    {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          APPLICATION_LANGUAGE_STORAGE_KEY,
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
     }
-
-    return cy.wait(250).then(() => waitForPersistedDraftRecord(attempt + 1));
-  });
+  );
+  cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`, { timeout: 60_000 }).should(
+    'be.visible'
+  );
+  cy.get(`.react-flow__node[data-id="${SURVIVING_MODEL_ID}"]`).should('be.visible');
 }
 
-function waitForPersistedNodePresence(nodeId: string, attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft(resolveSelectionRecoverySession()).then((response) => {
-    expect(response.status).to.equal(200);
-    const nodeIds = readPersistedNodeIds(response);
-
-    if (nodeIds?.includes(nodeId)) return;
-    if (attempt >= 80) {
-      throw new Error(`Timed out waiting for persisted node ${nodeId}.`);
-    }
-
-    return cy.wait(250).then(() => waitForPersistedNodePresence(nodeId, attempt + 1));
+function disableSelectedModelThroughCode(): void {
+  cy.get('.react-flow__controls-fitview').click();
+  cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`)
+    .find('[data-slot="graph-node-card-title"]')
+    .dblclick();
+  cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
+    .should('be.visible')
+    .and('have.attr', 'data-file-path', SELECTED_MODEL_PATH);
+  cy.get('[data-testid="monaco-code-editor"]').find('.view-lines').click();
+  cy.focused()
+    .should(($editor) => {
+      expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true);
+    })
+    .type('{ctrl+a}');
+  cy.window().then((window) => {
+    const clipboardData = new window.DataTransfer();
+    clipboardData.setData('text/plain', DISABLED_MODEL_SQL);
+    cy.focused().trigger('paste', { clipboardData, force: true });
   });
-}
-
-function waitForPersistedNodeAbsence(nodeId: string, attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft(resolveSelectionRecoverySession()).then((response) => {
-    expect(response.status).to.equal(200);
-    const nodeIds = readPersistedNodeIds(response);
-
-    if (nodeIds != null && !nodeIds.includes(nodeId)) return;
-    if (attempt >= 80) {
-      throw new Error(`Timed out waiting for persisted deletion of ${nodeId}.`);
-    }
-
-    return cy.wait(250).then(() => waitForPersistedNodeAbsence(nodeId, attempt + 1));
-  });
+  waitForLiveWorkspaceFileContent(SELECTED_MODEL_PATH, DISABLED_MODEL_SQL);
+  cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`, { timeout: 60_000 }).should(
+    'not.exist'
+  );
+  cy.get(`.react-flow__node[data-id="${SURVIVING_MODEL_ID}"]`).should('be.visible');
 }
 
 describe('Canvas DBT execution-selection recovery live protected runtime', () => {
-  beforeEach(function () {
-    if (skipWhenFirstAuthoringLiveEnvIsMissing(this)) return;
+  before(() => {
+    if (!hasLiveProtectedRuntimeEnv()) {
+      throw new Error('DBT selection recovery requires the LIVE protected runtime.');
+    }
+    return seedLiveWorkspaceFiles(PROJECT_FILES).then(() =>
+      adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID)
+    );
   });
 
-  it('recovers a deleted selected root without silently widening execution scope', () => {
-    assertLiveFirstAuthoringDraftScopeIsClean('dbt');
+  it('recovers an unavailable selected root without silently widening execution scope', () => {
     visitCleanDbtCanvas();
-
-    cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-playground-empty-state"]')
-      .contains('button', 'dbt')
-      .should('be.enabled')
-      .click();
-    waitForPersistedDraftRecord();
-
-    addDbtModelAt(360, 260);
-    waitForPersistedNodePresence('dbt-model-1');
-    addDbtModelAt(700, 360);
-    waitForPersistedNodePresence('dbt-model-2');
-
-    cy.get('.react-flow__node[data-id="dbt-model-2"]')
-      .should('be.visible')
-      .within(() => {
-        cy.get('button[aria-label="Deselect for execution"]').should('be.enabled').click();
-        cy.get('button[aria-label="Select for execution"]').should('be.visible');
-      });
-
-    cy.get('.react-flow__node[data-id="dbt-model-1"]', { timeout: 20_000 })
-      .should('be.visible')
-      .within(() => {
-        cy.get('button[aria-label="Select for execution"]').should('be.enabled').click();
-        cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
-      });
-
-    cy.get('.react-flow__node[data-id="dbt-model-1"]')
-      .find('[data-slot="graph-node-card-actions"]')
-      .should('be.visible')
-      .click();
-    cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Delete|Eliminar)$/)
-      .should('be.visible')
-      .click();
-    cy.get('.react-flow__node[data-id="dbt-model-1"]').should('not.exist');
-    waitForPersistedNodeAbsence('dbt-model-1');
+    selectCanvasClosure([SELECTED_MODEL_ID]);
+    disableSelectedModelThroughCode();
 
     revealOperationalDrawer();
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
       .should('match', /blocked|bloqueada/i);
-    cy.contains(/^(Unavailable roots|Raíces no disponibles)$/)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryUnavailableRootsLabel.fallback)
       .parent()
-      .should('contain.text', 'dbt-model-1');
-    cy.contains(/^(Admitted scope|Alcance admitido)$/)
+      .should('contain.text', SELECTED_MODEL_ID);
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
       .parent()
       .invoke('text')
       .should('match', /None|Ninguno/i);
-    cy.contains('button', /^(Use workspace scope|Usar alcance del workspace)$/)
+    cy.contains(
+      'button',
+      canvasViewExecutionCopyByKey.selectionRecoveryUseWorkspaceScopeAction.fallback
+    )
+      .scrollIntoView()
+      .should('be.visible')
       .should('be.enabled')
       .click();
 
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
       .should('match', /ready|lista/i);
-    cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]')
-      .should('contain.text', 'dbt-model-1')
-      .and('contain.text', 'workspace');
-    cy.contains(/^(Admitted scope|Alcance admitido)$/)
+    cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]').should(
+      'have.text',
+      canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate.fallback.replace(
+        '{affected}',
+        SELECTED_MODEL_ID
+      )
+    );
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
       .parent()
-      .should('contain.text', 'dbt-model-2');
+      .should('contain.text', SURVIVING_MODEL_ID);
     cy.get('[data-slot="bottom-operational-preview-action"]').should('be.enabled');
     cy.screenshot('canvas-dbt-selection-recovery-live-ready');
   });

@@ -6,6 +6,16 @@ import {
 } from './TransformDependencyError';
 
 const en = {
+  joinFormula: {
+    edit: 'Edit condition as formula',
+    save: 'Save condition',
+    cancel: 'Cancel',
+    hint: 'Use L and R input fields. The complete condition must return a boolean.',
+    advanced: 'This condition uses an expression. Use the formula editor to edit it.',
+    invalid: 'Invalid condition. Check field names, argument types and supported scalar functions.',
+    booleanRequired: 'The JOIN condition must return true, false or NULL, not a value to output.',
+    failed: 'The condition could not be saved. Check input availability and model changes.',
+  },
   back: 'Back to Canvas',
   editor: 'Semantic editor',
   sql: 'SQL',
@@ -65,8 +75,6 @@ const en = {
   discard: 'Discard changes',
   stay: 'Keep editing',
   resources: 'Resources',
-  showSources: 'Show sources',
-  hideSources: 'Collapse sources',
   search: 'Search sources…',
   noMatches: 'No matching sources.',
   noCompatibleJoinFields: 'No compatible fields for this selection.',
@@ -174,6 +182,19 @@ const en = {
   },
 };
 const es: typeof en = {
+  joinFormula: {
+    edit: 'Editar condición como fórmula',
+    save: 'Guardar condición',
+    cancel: 'Cancelar',
+    hint: 'Usa campos de las entradas L y R. La condición completa debe devolver un booleano.',
+    advanced: 'Esta condición usa una expresión. Usa el editor de fórmulas para modificarla.',
+    invalid:
+      'Condición no válida. Revisa los campos, los tipos de argumentos y las funciones escalares admitidas.',
+    booleanRequired:
+      'La condición del JOIN debe devolver verdadero, falso o NULL, no un valor de salida.',
+    failed:
+      'No se pudo guardar la condición. Revisa la disponibilidad de las entradas y los cambios del modelo.',
+  },
   back: 'Volver al Canvas',
   editor: 'Editor semántico',
   sql: 'SQL',
@@ -236,8 +257,6 @@ const es: typeof en = {
   discard: 'Descartar cambios',
   stay: 'Seguir editando',
   resources: 'Recursos',
-  showSources: 'Mostrar fuentes',
-  hideSources: 'Plegar fuentes',
   search: 'Buscar fuentes…',
   noMatches: 'No hay fuentes que coincidan.',
   noCompatibleJoinFields: 'No hay campos compatibles con esta selección.',

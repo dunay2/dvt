@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 /** Selecting data is not an instruction to mutate it. */
 import React, { act, createRef } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import {
   CanvasRelationalTreeWorkbench,
@@ -17,61 +18,66 @@ import {
 describe('explicit relational editing', () => {
   setupWorkbenchTest();
 
-  it.each(['read', 'join'])(
-    'inspects an editable %s before entering a cancellable edit session',
-    async (operator) => {
-      const graph = occurrenceGraph();
-      const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
-      const handle = createRef<CanvasRelationalTreeWorkbenchHandle>();
-      await act(async () =>
-        root.render(
-          <CanvasRelationalTreeWorkbench
-            ref={handle}
-            transformNode={graph.targetNode}
-            nodes={graph.nodes}
-            edges={graph.edges}
-            copy={COPY}
-            authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
-          />
-        )
-      );
-      await act(async () =>
-        container
-          .querySelector<HTMLButtonElement>(
-            `[data-slot="canvas-relational-tree-node"][data-operator="${operator}"]`
-          )!
-          .click()
-      );
-      const inspector = container.querySelector(
-        '[data-slot="canvas-relational-tree-inline-editor"]'
-      );
-      expect(inspector).not.toBeNull();
-      expect(inspector!.querySelector('input, select, textarea')).toBeNull();
-      expect(handle.current!.hasUnappliedChanges).toBe(false);
-      expect(applied).not.toHaveBeenCalled();
-      const edit = inspector!.querySelector<HTMLButtonElement>(
-        '[data-slot="canvas-relational-edit"]'
-      );
-      expect(edit).not.toBeNull();
-      await act(async () => edit!.click());
-      const authoringCanvas = container.querySelector(
-        '[data-slot="canvas-relational-tree-block-canvas"]'
-      );
-      expect(authoringCanvas).not.toBeNull();
-      expect(authoringCanvas?.classList).toContain('h-full');
-      expect(handle.current!.hasUnappliedChanges).toBe(false);
-      const cancel = container.querySelector<HTMLButtonElement>(
-        '[data-slot="canvas-relational-tree-cancel"]'
-      );
-      expect(cancel).not.toBeNull();
-      await act(async () => cancel!.click());
-      expect(
-        container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')
-      ).toBeNull();
-      expect(container.querySelector('[data-slot="canvas-relational-edit"]')).not.toBeNull();
-      expect(applied).not.toHaveBeenCalled();
-    }
-  );
+  it.each([
+    { operator: 'read', tab: 'output' },
+    { operator: 'join', tab: 'output' },
+    { operator: 'join', tab: 'tree' },
+  ])('keeps $operator $tab selected through Edit and Cancel', async ({ operator, tab }) => {
+    const tabSelector = `[data-slot="canvas-operation-${tab}-tab"]`;
+    const visibleTabSelector = `[data-canvas-inspector="true"]:not([hidden]) ${tabSelector}`;
+    const graph = occurrenceGraph();
+    const applied = vi.fn(() => ({ outcome: 'no_changes' as const }));
+    const handle = createRef<CanvasRelationalTreeWorkbenchHandle>();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          ref={handle}
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+        />
+      )
+    );
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(
+          `[data-slot="canvas-relational-tree-node"][data-operator="${operator}"]`
+        )!
+        .click()
+    );
+    const inspector = container.querySelector('[data-slot="canvas-relational-tree-inline-editor"]');
+    expect(inspector).not.toBeNull();
+    expect(inspector!.querySelector('input, select, textarea')).toBeNull();
+    expect(handle.current!.hasUnappliedChanges).toBe(false);
+    expect(applied).not.toHaveBeenCalled();
+    const edit = inspector!.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-edit"]'
+    );
+    expect(edit).not.toBeNull();
+    await act(async () =>
+      fireEvent.mouseDown(inspector!.querySelector(tabSelector)!, { button: 0 })
+    );
+    expect(inspector!.querySelector(tabSelector)?.getAttribute('aria-selected')).toBe('true');
+    await act(async () => edit!.click());
+    expect(container.querySelector(visibleTabSelector)?.getAttribute('aria-selected')).toBe('true');
+    const authoringCanvas = container.querySelector(
+      '[data-slot="canvas-relational-tree-block-canvas"]'
+    );
+    expect(authoringCanvas).not.toBeNull();
+    expect(authoringCanvas?.classList).toContain('h-full');
+    expect(handle.current!.hasUnappliedChanges).toBe(false);
+    const cancel = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-tree-cancel"]'
+    );
+    expect(cancel).not.toBeNull();
+    await act(async () => cancel!.click());
+    expect(container.querySelector('[data-slot="canvas-relational-tree-block-canvas"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-edit"]')).not.toBeNull();
+    expect(container.querySelector(visibleTabSelector)?.getAttribute('aria-selected')).toBe('true');
+    expect(applied).not.toHaveBeenCalled();
+  });
 
   it('does not offer edit without model edit permission', async () => {
     const graph = occurrenceGraph();

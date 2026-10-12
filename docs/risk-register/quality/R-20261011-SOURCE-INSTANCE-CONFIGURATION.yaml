@@ -1,0 +1,30 @@
+---
+id: R-20261011-SOURCE-INSTANCE-CONFIGURATION
+title: Source instances could diverge from their configuration owner
+status: Open
+date: 2026-10-11
+owners:
+  - dvt-web
+  - dvt-api
+  - '@dvt/contracts'
+severity: Medium
+probability: Low
+---
+mitigations:
+  - Reject missing, self, chained, cross-kind and cross-plugin references in the existing v1 draft
+    schema.
+  - Reject persisted metadata and path overrides on instances.
+  - Reuse one definition resolver in Web projections and protected API selection.
+  - Route configuration edits and source rebind through the definition while retaining independent
+    aliases and placements.
+  - Prove repeated drag, save, reload, sibling retention and configuration propagation before
+    integration.
+  - Deploy updated contract readers before the Web begins writing instance references.
+  - Allocate placement identities through the existing secure UUID primitive and reject absent
+    entropy; prove both the non-secure browser origin and injected-ID roundtrip without weak
+    fallbacks.
+  - Keep canonical JOIN type labels separate from sidecar names in shared presentation; omit exact
+    operation-code subtitles without rewriting aliases or introducing naming provenance.
+evidence:
+  - docs/architecture/components/web/code-workbench-workspace-files-component.md
+  - docs/evidence/ED-20261011-source-instance-identity.md

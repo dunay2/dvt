@@ -107,6 +107,47 @@ describe('useCanvasGraphHandlers schema attachment', () => {
     harness.cleanup();
   });
 
+  it('updates the shared source schema without placing its definition or copying configuration', async () => {
+    const source = buildCanonicalNode('source', 'input');
+    const instances = ['first', 'second'].map((id) => ({
+      ...source,
+      id,
+      sourceDefinitionId: source.id,
+    }));
+    const setDraftSession = vi.fn();
+    const setNodes = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      canonicalNodes: [source, ...instances],
+      nodes: instances.map((node) => ({
+        id: node.id,
+        data: { name: node.name },
+        position: { x: 0, y: 0 },
+      })),
+      draftSession: {
+        ...buildDraftSession(),
+        workingSet: {
+          visibleNodeIds: ['first', 'second'],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      setDraftSession,
+      setNodes,
+    });
+    await harness.render();
+    act(() => harness.latest()?.handleAttachSchemaToNode('first', 'mart'));
+    const session = setDraftSession.mock.calls[0]?.[0];
+    expect(session.workingSet.visibleNodeIds).toEqual(['first', 'second']);
+    expect(Object.keys(session.localNodeCatalog)).toEqual(['source']);
+    expect(session.localNodeCatalog.source.metadata.config.schema).toBe('mart');
+    expect(setNodes.mock.calls[0]?.[0].map((node: Node) => node.data.metadata)).toEqual([
+      session.localNodeCatalog.source.metadata,
+      session.localNodeCatalog.source.metadata,
+    ]);
+    harness.cleanup();
+  });
+
   it('rejects schema resource attachment when graph edits are gated', async () => {
     const setNodes = vi.fn();
     const setDraftSession = vi.fn();

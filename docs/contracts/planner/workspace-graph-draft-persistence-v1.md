@@ -98,6 +98,16 @@ concurrent edits in this contract line.
 
 ## Authoring aggregate posture
 
+Input nodes may declare `sourceDefinitionId` to identify a registered source in
+the same canvas. Such nodes are placements with independent IDs and names, not
+configuration copies. The referenced node must be a definition (not another
+instance) with matching input role, kind and plugin. Instances persist neither
+`metadata` nor `path`; the shared source resolver supplies those values from the
+definition for presentation and protected execution selection. Missing, self,
+chained or incompatible references reject the aggregate. Definition edits are
+therefore observed by all instances after projection. Removing a placement does
+not remove its definition. This remains the single v1 contract.
+
 `WorkspaceGraphDraft.v1` persists `WorkspaceGraphAuthoringDraft` as editable
 authoring truth. The payload can represent zero nodes, one node, disconnected
 graphs, and partially connected graphs. Those states are valid authoring states

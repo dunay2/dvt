@@ -1,0 +1,169 @@
+/* Owned concern: compact, provider-neutral source catalogue presentation. */
+.emptyState {
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.groups,
+.group {
+  display: grid;
+  gap: 8px;
+}
+.groupHeader {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.groupHeaderContent,
+.groupIdentity,
+.objectHeader,
+.objectIdentity,
+.schemaHeader {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+.groupHeaderContent {
+  justify-content: space-between;
+}
+.groupTitle,
+.schemaTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 500;
+}
+.groupMetrics {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.filterList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.filterButton,
+.loadMoreButton {
+  padding: 3px 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.filterButton:hover {
+  color: var(--text-default);
+  border-color: var(--primary);
+}
+.filterButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.activeFilterButton {
+  background: var(--surface-selected);
+  color: var(--text-default);
+  border-color: var(--primary);
+}
+.filterCount {
+  margin-left: 4px;
+  color: var(--text-muted);
+}
+.schemaHeader {
+  min-height: 30px;
+}
+.schemaDisclosure,
+.objectInspectButton {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 3px;
+}
+.schemaDisclosure:focus-visible,
+.objectInspectButton:focus-visible,
+.filterButton:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.objectList {
+  margin-left: 20px;
+}
+.objectCard {
+  padding: 4px 8px;
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.objectCard:hover {
+  background: var(--surface-elevated);
+}
+.selectedObjectCard {
+  background: var(--surface-selected);
+  border-color: var(--border-default);
+}
+.objectIdentity {
+  flex: 1;
+  overflow: hidden;
+}
+.objectIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+.objectNameBlock {
+  min-width: 0;
+}
+.objectName,
+.objectCanonicalName {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.objectCanonicalName {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.importability {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--status-warning);
+}
+.loadingState {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.countBadge {
+  font-size: 11px;
+}
+.spinner {
+  width: 12px;
+  height: 12px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

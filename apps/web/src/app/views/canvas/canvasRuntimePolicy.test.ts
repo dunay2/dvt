@@ -115,7 +115,7 @@ describe('resolveCanvasRuntimePolicy', () => {
     expect(policy.admission.allowsNodeKind('dvt:transform')).toBe(false);
   });
 
-  it('keeps dbt export metadata on the shared Model without adding a node profile', () => {
+  it('admits declared authoring and imported nodes without adding a node profile', () => {
     const policy = resolveCanvasRuntimePolicy({
       activeRuntime: {
         kind: 'ready',
@@ -140,6 +140,20 @@ describe('resolveCanvasRuntimePolicy', () => {
     expect(policy.commands.canEditInspectorNode).toBe(true);
     expect(policy.commands.canPlan).toBe(false);
     expect(policy.commands.canRun).toBe(false);
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dvt.warehouse-source',
+          kind: 'dvt:source',
+          role: 'input',
+        })
+      )
+    ).toBe(true);
+    for (const overrides of [
+      { pluginId: 'unknown-importer', role: 'input' as const },
+      { pluginId: 'dvt.warehouse-source', role: 'output' as const },
+    ])
+      expect(policy.admission.allowsCanonicalNode(buildCanonicalNode(overrides))).toBe(false);
     expect(policy.execution.kind).toBe('not_executable');
     expect(
       policy.admission.allowsCanonicalNode(

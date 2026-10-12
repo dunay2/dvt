@@ -13,6 +13,7 @@ import { useRef, useState } from 'react';
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
 import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
+import { CanvasExplorerViewMenu } from '../../views/canvas/explorer/CanvasExplorerViewMenu';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveProjectOnboardingCopy } from '../../views/projectOnboardingCopy';
 import { ProjectCreationDialog } from '../../views/projectAdmission/ProjectCreationDialog';
@@ -174,6 +175,7 @@ export function ShellMenu({
           ) : (
             <>
               <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
+              <CanvasExplorerViewMenu />
               {viewControls.showBottomDrawerToggle ? (
                 <DropdownMenuCheckboxItem
                   checked={bottomDrawerVisible}

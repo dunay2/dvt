@@ -41,19 +41,9 @@ function renderHookHost({
 
   function HookHost(): null {
     latest = useCanvasSourceImportHandlers({
-      state: {
-        graphModel: {
-          nodes: [],
-          edges: [],
-          setNodes: vi.fn(),
-          setEdges: vi.fn(),
-        },
-      },
       effects: {
         setDraftSession,
-        setInspectorNode: vi.fn(),
         setCurrentPlan,
-        onLayoutComplete: vi.fn(),
         invalidateInFlightSaveAttempt,
       },
       policy: {
@@ -112,6 +102,7 @@ describe('useCanvasSourceImportHandlers', () => {
       harness.latest()?.handleSourceImportComplete(
         buildGraphDraftSourceImportResult({
           draftRevision: 'rev-imported',
+          importedNodeIds: ['catalogued-source'],
         })
       );
     });
@@ -143,5 +134,10 @@ describe('useCanvasSourceImportHandlers', () => {
     expect(session?.draftRevision).toBe('rev-imported');
     expect(session?.savingBaseRevision).toBeUndefined();
     expect(session?.savingWorkingSet).toBeUndefined();
+    expect(session?.workingSet).toEqual({
+      visibleNodeIds: ['node_1'],
+      visibleEdges: [],
+      pendingExplicitNodeIds: [],
+    });
   });
 });

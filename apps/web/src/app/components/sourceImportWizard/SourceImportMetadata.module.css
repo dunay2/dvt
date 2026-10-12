@@ -1,0 +1,112 @@
+/* Owned concern: dense source metadata and schema grid presentation. */
+.root {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.heading {
+  display: grid;
+  gap: 4px;
+}
+.title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.description,
+.sharedCatalog,
+.metrics {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+.sharedCatalog,
+.identity,
+.metrics,
+.constraintList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.list {
+  display: grid;
+  gap: 8px;
+}
+.item {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+}
+.trigger {
+  padding: 8px 10px;
+}
+.trigger:hover {
+  text-decoration: none;
+}
+.triggerContent {
+  flex: 1;
+  min-width: 0;
+}
+.objectName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+.metrics {
+  margin-top: 4px;
+  font-weight: 400;
+}
+.content {
+  padding: 0 10px 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+.columnRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 45%);
+  align-items: start;
+  gap: 10px;
+  min-height: 28px;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.columnRow:nth-child(odd) {
+  background: var(--surface-shell);
+}
+.columnIdentity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.columnName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.columnType {
+  overflow-wrap: anywhere;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.constraintList {
+  flex-shrink: 0;
+}
+.columnScroll,
+.columnScroll [data-slot='scroll-area-viewport'] {
+  max-height: 224px;
+}
+.notice,
+.importability {
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.importability {
+  color: var(--status-warning);
+}

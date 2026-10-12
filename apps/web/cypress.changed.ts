@@ -1,9 +1,9 @@
 /**
  * Owned concern: assign exact browser consumers to their real runtime evidence.
- * @baseline GH-3578/GH-3593: fixture consumers retain their admitted runtime and owned journeys.
+ * @baseline GH-3578/GH-3593/GH-3610: fixture and selection consumers retain their real runtime and owned journeys.
  * @decision Reuse three existing runtime commands with explicit paths and invocation-local environment.
  * @consequence Unknown ownership rejects; one available invocation executes each owned spec independently.
- * @version 1.0.0
+ * @version 1.0.1
  */
 export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
 export type WebCypressCommand = Readonly<{
@@ -65,6 +65,9 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
   ],
   available: [
+    'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
+    'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
@@ -88,11 +91,21 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/canvas/canvas-semantic-unsupported-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-transform-data-sample-live.cy.ts',
     'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts',
+    'apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
+    'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
   ],
   unavailable: ['apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts'],
 } as const;
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+  'apps/web/cypress/support/canvasExecutionSelection.ts': [
+    'controlled',
+    'available',
+    'unavailable',
+  ],
   'apps/web/cypress/support/canvasGraphAuthoring.ts': ['controlled', 'available'],
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',
@@ -136,6 +149,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/liveCanvasDraftAuthoring.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProjectAuthoring.ts': ['available'],
+  'apps/web/cypress/support/liveWarehouseSourceImport.ts': ['available'],
   'apps/web/cypress/support/liveProtectedRuntime.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProtectedRequest.ts': ['available', 'unavailable'],
   'apps/web/cypress/e2e/canvas/liveRunEventRecovery.proof.ts': ['available'],

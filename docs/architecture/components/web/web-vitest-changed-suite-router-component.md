@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-07
+last_reviewed: 2026-10-12
 planning_type: architecture
 ---
 
@@ -363,3 +363,122 @@ and one unavailable cases; first authoring adds one available case. This does
 not prove that a stalled case is fixed. Individual
 test durations or results from the previous serial layout cannot establish the
 new bound. No new workflow, timeout increase or evidence waiver is admitted.
+
+### Execution Selection Consumer Closure — GH-3610
+
+The shared `cypress/support/canvasExecutionSelection.ts` helper is not an
+exclusive live consumer. Its runtime import closure contains 25 independently
+registered specs. A change to its public selection gesture must retain all of
+them in their existing real runtimes. Before this admission, the changed-file
+query rejects the helper before executing any test; passing a manually selected
+live subset cannot satisfy the complete branch obligation.
+
+```mermaid
+flowchart LR
+  Before["Changed selection helper"] --> Reject["Unadmitted path: reject before startup"]
+  After["Exact helper consumer closure"] --> Controlled["5 controlled consumers"]
+  After --> Available["19 available consumers"]
+  After --> Unavailable["1 unavailable consumer"]
+  Controlled --> Existing["Existing capability commands and strict result validation"]
+  Available --> Existing
+  Unavailable --> Existing
+```
+
+All paths below are relative to `apps/web/cypress/e2e/`:
+
+| Runtime     | Exact consumers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Controlled  | `canvas/canvas-happy-path-draggable.cy.ts`, `canvas/canvas-project-snapshot-roundtrip.cy.ts`, `canvas/canvas-ready-node-authoring.cy.ts`, `shell/canvas-workbench-screen-composition.cy.ts`, `shell/shell-layout-contract.cy.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Available   | `canvas/canvas-dbt-author-code-run-live.cy.ts`, `canvas/canvas-dbt-selection-recovery-live.cy.ts`, `canvas/canvas-dvt-join-preview-live.cy.ts`, `canvas/canvas-dvt-start-run-boundaries-live.cy.ts`, `canvas/canvas-dvt-terminal-transform-preview-live.cy.ts`, `canvas/canvas-first-authoring-live.cy.ts`, `canvas/canvas-formula-lineage-live.cy.ts`, `canvas/canvas-graph-search-filter-live.cy.ts`, `canvas/canvas-minimap-focus-live.cy.ts`, `canvas/canvas-selected-filter-live.cy.ts`, `canvas/canvas-semantic-persistence-run-live.cy.ts`, `canvas/canvas-semantic-unsupported-live.cy.ts`, `canvas/canvas-source-identity-live.cy.ts`, `canvas/canvas-source-import-live-clean.cy.ts`, `canvas/canvas-sql-progressive-live.cy.ts`, `canvas/canvas-transform-data-sample-live.cy.ts`, `dbt/dbt-project-preview-run-live.cy.ts`, `dbt/dbt-project-yaml-description-edit-live.cy.ts`, `runs/run-controls-live.cy.ts` |
+| Unavailable | `canvas/canvas-dvt-runtime-unavailable-live.cy.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+
+The existing controlled and unavailable inventories already contain their
+consumers. Add only the five missing available paths: selection recovery, graph
+search/filter, minimap focus, file-authoritative project Preview/Run and YAML
+description editing. The available inventory therefore contains 31 exact specs;
+the controlled and unavailable inventories remain 48 and one. Available here
+means the real protected provider runtime is provisioned; it does not redefine
+an unavailable selection root as an unavailable Temporal worker.
+
+The existing architecture guard computes the real runtime import closure and
+compares it with this exact disjoint matrix. It must reject an omitted consumer,
+a wrong runtime, a duplicate registration or an unknown browser path. The
+fixture-builder guard remains separate: these five UI/file-authoritative
+consumers do not import the semantic draft builder and must not be falsely
+classified as fixture consumers. Other unadmitted live specs remain rejected.
+
+Reuse `RouteChangedWebVitestSuites` and `RunWebCypressNative`; do not introduce a
+wildcard, another runner, altered assertions, a larger deadline or a result
+waiver. Readiness requires executing the complete selected plan and recording
+the unchanged CI budget, exact base/head admission and strict result counters
+on [issue 3610](https://github.com/dunay2/dvt/issues/3610).
+
+#### Retained Live Consumer Preconditions
+
+The controlled source-binding consumer also waits for the existing bottom-right
+success notification to leave the DOM before its normal `Done` click. A toast
+marked `data-removed=true` is still present during its exit animation and can
+intercept hit-testing. Await actual absence within the existing 20-second
+UI-transition budget; do not filter out exiting nodes, force the click, dismiss
+or remove the notification artificially, add a fixed wait, or change product
+CSS/duration and the global CI budget. Connection, source identities, metadata,
+keyboard, accessibility, i18n and exact import-command assertions remain intact.
+
+```mermaid
+flowchart LR
+  R[Successful import receipt] --> A[Observe success toast absent from DOM]
+  A --> C[Normal Done click]
+  C --> P[Original binding and graph assertions]
+```
+
+The first six-case execution of those five newly admitted specs passes minimap
+focus and exposes five failures in the remaining four specs. Keep their unique
+assertions; repair only the obsolete preparation and adapter gestures:
+
+- Selection recovery must not invent an ungranted project or recreate the
+  retired graph-owned dbt model path. Use an acknowledged file-authoritative dbt
+  project with two executable models. Select one root, disable it through the
+  existing Monaco working-tree synchronization rail, and prove that refreshed
+  analysis removes it without silently widening execution scope. Only the
+  explicit workspace-scope recovery action may admit the surviving model.
+  Recovery labels come from the existing owned English copy catalog, not retired
+  `Unavailable roots` / `Admitted scope` / `Use workspace scope` labels. Expose
+  the real scrollable recovery action before its normal click. Assert the exact
+  translated recovery receipt with the affected node ID; the internal strategy
+  name `workspace` is not presentation copy.
+- Graph search/filter starts the single current Canvas template and owns its
+  English presentation precondition. It retains three real authored nodes,
+  search navigation, filter/clear counts and unchanged protected draft revision.
+  The third, non-transform node comes from the actual unified catalog (`dvt:sink`),
+  not the retired `dbt:seed` creation surface. The two Model search matches and
+  transform-role filter still admit exactly two of three authored nodes.
+- Project Preview/Run uses the fixture's canonical source label and waits for
+  its actual graph before selection. Model inspection targets the card title,
+  not an expanded field row at the centre of the card. Exact project/analysis
+  revisions, no regeneration, dependency scope and real Run events remain.
+  Card titles use the actual projected model name (`Order Summary`); exact model
+  IDs continue to govern selection, dependencies and completed Run step assertions.
+- YAML description editing retains its lossless proposal/apply/revert and
+  reopened file/analysis/Run assertions. Node Code is the known-file editor in
+  Properties; project Code is the separate project-tree workbench. Do not revive
+  the removed contextual node-code workbench to satisfy an old test. The real
+  card title opens inspection, and the scrollable project command must be
+  exposed before its normal click. Execution selection uses the existing node
+  operations menu, not retired card-header selection buttons. Preview values
+  retain their exact assertions through the current accessible labels (`Canvas`,
+  `Requested resources`, `Project root`), without the retired `value` suffix.
+
+The existing rails remain `InspectCanvasNode`, `SaveWorkspaceFileContent`,
+`RouteChangedWebVitestSuites` and `RunWebCypressNative`. SQL and YAML edits must
+use their real UI commands and revision-guarded writes, not intercepted success,
+direct replacement of the edited file or invented authorization. No product
+runtime, contract, executor, acceptance assertion or deadline changes.
+
+Graph search and minimap must also own independently granted projects through
+the existing `CreateProject` UI gesture. The complete available plan runs after
+other specs have persisted the default workspace draft; an initial `404` in
+that shared workspace is not an isolation contract. Read the exact workspace
+scope returned by creation, retain absent-draft and unchanged-revision proofs
+in that scope, and leave other consumers' drafts intact. This reuses the
+existing `liveProjectAuthoring.ts` owner; no random scope, cleanup of another
+spec's graph or separate project-creation implementation is admitted.

@@ -112,7 +112,8 @@ describe('SourceImportWizardFrame focus', () => {
     expect(document.body.querySelectorAll('[data-slot="dialog-footer"] button')).toHaveLength(2);
   });
 
-  it('moves from the header and keeps the dialog inside the viewport', async () => {
+  it('belongs to the workspace without a backdrop or outside-click dismissal', async () => {
+    const onClose = vi.fn();
     const renderFrame = (open: boolean): void => {
       root.render(
         <SourceImportWizardFrame
@@ -122,7 +123,7 @@ describe('SourceImportWizardFrame focus', () => {
           isProcessing={false}
           canImport={false}
           sections={<button type="button">Connections</button>}
-          onClose={vi.fn()}
+          onClose={onClose}
           onDone={vi.fn()}
           onImport={vi.fn()}
         >
@@ -133,34 +134,14 @@ describe('SourceImportWizardFrame focus', () => {
     await act(async () => renderFrame(true));
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
-    const dragHandle = dialog.querySelector<HTMLElement>('[data-slot="dialog-header"]')!;
-    vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(new DOMRect(262, 184, 500, 400));
-    dragHandle.setPointerCapture = vi.fn();
-
-    act(() => {
-      fireEvent.pointerDown(dragHandle, {
-        pointerId: 7,
-        button: 0,
-        clientX: 300,
-        clientY: 220,
-      });
-      fireEvent.pointerMove(dragHandle, {
-        pointerId: 7,
-        clientX: 5_000,
-        clientY: 5_000,
-      });
-      fireEvent.pointerUp(dragHandle, { pointerId: 7 });
+    expect(container.contains(dialog)).toBe(true);
+    expect(dialog.getAttribute('aria-modal')).not.toBe('true');
+    expect(document.querySelector('[data-slot="dialog-overlay"]')).toBeNull();
+    await act(async () => {
+      fireEvent.pointerDown(focusReturnTarget);
+      focusReturnTarget.focus();
     });
-
-    expect(dragHandle.setPointerCapture).toHaveBeenCalledWith(7);
-    expect(dialog.style.left).toBe('calc(50% + 246px)');
-    expect(dialog.style.top).toBe('calc(50% + 168px)');
-
-    await act(async () => renderFrame(false));
-    await act(async () => renderFrame(true));
-
-    const reopenedDialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
-    expect(reopenedDialog.style.left).toBe('calc(50% + 0px)');
-    expect(reopenedDialog.style.top).toBe('calc(50% + 0px)');
+    expect(onClose).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(focusReturnTarget);
   });
 });

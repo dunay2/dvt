@@ -13,6 +13,7 @@ import {
 import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
 import { canvasColumnTruth } from './canvasPresentationColumns';
 import { buildGraphNodeVolumeMetricProjection } from '../../plugins/graph/graphNodeSourceMetricProjection';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 
 const sample: SourceDataSample = {
   contractVersion: 1,
@@ -185,6 +186,43 @@ it.each(['failed', 'empty'] as const)(
   }
 );
 
+it('retains card metric evidence during the initial preview request', async () => {
+  let complete!: (value: SourceDataSample) => void;
+  query.mockReturnValueOnce(
+    new Promise<SourceDataSample>((resolve) => {
+      complete = resolve;
+    })
+  );
+  await preview(await render('ready'));
+  expect(dataState()?.status).toBe('loading');
+  const pending = await render('ready');
+  expect(
+    buildGraphNodeVolumeMetricProjection({
+      isSourceObject: true,
+      data: pending,
+      metadata: pending.metadata!,
+    }).rowCount
+  ).toBe(12);
+  await act(async () => complete(sample));
+});
+
+it('retains the same sample and timestamp while refreshing, but discards it on publication change', async () => {
+  await preview(await render('ready'));
+  const previous = dataState();
+  let complete!: (value: SourceDataSample) => void;
+  query.mockReturnValueOnce(
+    new Promise<SourceDataSample>((resolve) => {
+      complete = resolve;
+    })
+  );
+  await act(async () => refreshAction()?.());
+  expect(dataState()).toEqual({ ...previous, refreshing: true });
+  await render('ready', ['client_id']);
+  expect(dataState()).toMatchObject({ status: 'error', reason: 'unavailable' });
+  await act(async () => complete(sample));
+  expect(dataState()?.status).toBe('error');
+});
+
 it.each(['pending', 'unavailable', 'ready'] as const)(
   'withdraws old samples on changed publication (%s), without requery',
   async (state) => {
@@ -226,6 +264,14 @@ it('does not invalidate samples or query again for unchanged publication', async
   await render('ready');
   expect(dataState()?.status).toBe('ready');
   expect(query).toHaveBeenCalledOnce();
+});
+
+it('preserves the user-sized drawer when opening or refreshing a sample', async () => {
+  useUiLayoutStore.setState({ bottomDrawerVisible: true, bottomDrawerHeight: 450 });
+  await preview(await render('ready'));
+  expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(450);
+  await act(async () => refreshAction()?.());
+  expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(450);
 });
 
 it('refreshes the current publication explicitly, without marking old rows as fresh', async () => {
@@ -280,7 +326,7 @@ it('rejects a late refresh after rebinding and queries only the new binding on t
   );
   const obsolete = refreshAction();
   await act(async () => obsolete?.());
-  expect(dataState()?.status).toBe('loading');
+  expect(dataState()).toMatchObject({ status: 'ready', refreshing: true });
   await render('ready', ['country'], 'new-warehouse');
   await act(async () => {
     complete(sample);

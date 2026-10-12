@@ -1,4 +1,10 @@
-/** Fixed Model inspector backed by the canonical relational projection and output command. */
+/**
+ * Owned concern: present Model composition and output through the canonical projection and command.
+ * @baseline ADR-0064: sidecar names are not relation-type authority.
+ * @decision Reuse shared node copy and omit absent secondary detail in the composition summary.
+ * @consequence Cards and summaries agree without rewriting stored names or semantic data.
+ * @version 1.0.0
+ */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Database } from 'lucide-react';
 
@@ -71,7 +77,7 @@ export function CanvasModelOutputInspector({
                 <span className="block truncate text-xs font-semibold text-(--text-primary)">
                   {presentation.title}
                 </span>
-                {step.kind === 'input' ? null : (
+                {step.kind === 'input' || presentation.detail.length === 0 ? null : (
                   <span className="block truncate text-[11px] text-(--text-muted)">
                     {presentation.detail}
                   </span>

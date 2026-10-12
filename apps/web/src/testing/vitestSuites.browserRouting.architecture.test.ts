@@ -2,9 +2,9 @@
 /**
  * Owned concern: prove independent browser and Vitest obligations remain complete.
  * @baseline GH-3540: browser admission is independent of Vitest ownership.
- * @decision GH-3578/GH-3583: prove disjoint capabilities and independent, exactly-once spec ownership.
+ * @decision GH-3578/GH-3583/GH-3610: prove disjoint runtimes and complete fixture/selection consumer ownership.
  * @consequence No phase or helper change can hide input obligations or replace real browser evidence.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -103,6 +103,164 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 
 const browserModules = readBrowserModules();
 
+describe('public Canvas gesture preconditions', () => {
+  it('requeries direction cues until all original marker and edge invariants hold', () => {
+    const body = browserModules
+      .get(resolve('cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'))!
+      .statements.find(
+        (statement) =>
+          ts.isFunctionDeclaration(statement) &&
+          statement.name?.text === 'assertDependencyDirectionCues'
+      )!
+      .getText()
+      .replace(/\s+/gu, ' ');
+    expect(body).toContain('.should(($cues) => {');
+    expect(body).toContain('for (const cue of $cues.toArray()) {');
+    expect(body).toContain(
+      'expect(getComputedStyle(glyph).fill).to.equal(getComputedStyle(edgePath!).stroke)'
+    );
+    expect(body).not.toMatch(/\.each\(|cy\.wait\(|timeout:/u);
+  });
+
+  it('awaits actual toast removal before the normal source-import receipt close', () => {
+    const body = browserModules
+      .get(resolve('cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts'))!
+      .getText()
+      .replace(/\s+/gu, ' ');
+    const toast = body.indexOf(
+      '[data-sonner-toast][data-type="success"][data-y-position="bottom"][data-x-position="right"]'
+    );
+    const close = body.indexOf("cy.contains('[role=\"dialog\"] button', 'Done').click()");
+    expect(toast).toBeGreaterThanOrEqual(0);
+    expect(close).toBeGreaterThan(toast);
+    expect(body.slice(toast, close)).toContain(".should('not.exist')");
+    expect(body.slice(toast, close)).toContain('timeout: 20_000');
+    expect(body).not.toContain('data-removed="false"');
+    expect(body).not.toContain('toast.dismiss');
+    expect(body).not.toContain('.remove()');
+    expect(body).not.toContain('cy.wait(');
+    expect(body).not.toContain('force: true');
+  });
+  it.each(['canvas-graph-search-filter-live', 'canvas-minimap-focus-live'])(
+    'owns an acknowledged independent project for read-only evidence in %s',
+    (name) => {
+      const ast = browserModules.get(resolve(`cypress/e2e/canvas/${name}.cy.ts`))!;
+      expect(ast.getText()).toContain('createLiveProjectThroughUi');
+      expect(ast.getText()).toContain('WorkspaceGraphDraftScope');
+      expect(ast.getText()).not.toContain('readLiveGraphDraft(resolveLiveWorkspaceSession()');
+    }
+  );
+
+  it('recovers unavailable dbt roots through real file authority and Monaco synchronization', () => {
+    const ast = browserModules.get(
+      resolve('cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts')
+    )!;
+    const body = ast.getText();
+    expect(body).toContain('adoptLiveDbtProjectFileAuthority');
+    expect(body).toContain('waitForLiveWorkspaceFileContent');
+    expect(body).toContain('monaco-code-editor');
+    expect(body).toContain('enabled=false');
+    expect(body).toContain('canvasViewExecutionCopyByKey');
+    expect(body).toContain('selectionRecoveryWorkspaceReceiptTemplate.fallback');
+    expect(body).not.toContain(".and('contain.text', 'workspace')");
+    expect(body).not.toContain('Unavailable roots');
+    expect(body).not.toContain('Admitted scope');
+    expect(body).not.toContain('Use workspace scope');
+    expect(body).not.toContain('resolveLiveFirstAuthoringWorkspaceSession');
+    expect(body).not.toContain('replaceLiveWorkspaceFile');
+    expect(body).not.toContain('readLiveGraphDraft');
+  });
+
+  it('uses the single current template and an owned language for graph-search evidence', () => {
+    const ast = browserModules.get(
+      resolve('cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts')
+    )!;
+    const body = ast.getText();
+    expect(body).toContain('APPLICATION_LANGUAGE_STORAGE_KEY');
+    expect(body).toContain('canvas-playground-template-choice');
+    expect(body).toContain('[data-testid="canvas-viewport"]');
+    expect(body).not.toContain('[data-slot="canvas-viewport"]');
+    expect(body).toContain("addCanvasNode('dvt:sink'");
+    expect(body).not.toContain('dbt:seed');
+    expect(body).not.toContain("cy.contains('Create canvas'");
+    expect(body).not.toContain(".contains('button', 'dbt canvas')");
+  });
+
+  it.each([
+    ['dbt-project-preview-run-live', 'visitProjectWithRequestObservations'],
+    ['dbt-project-yaml-description-edit-live', 'openModelWorkbench'],
+  ])('targets the real title for dbt inspection in %s', (name, symbol) => {
+    const ast = browserModules.get(resolve(`cypress/e2e/dbt/${name}.cy.ts`))!;
+    expect(ast.getText()).toContain('graph-node-card-title');
+    const declaration = ast.statements.find(
+      (statement) => ts.isFunctionDeclaration(statement) && statement.name?.text === symbol
+    );
+    expect(declaration).toBeDefined();
+    expect(ast.getText()).not.toMatch(/canvas-node-shell[^;]*\.dblclick\(\)/u);
+    if (name === 'dbt-project-preview-run-live') {
+      expect(ast.getText()).not.toContain('Order Summary Model');
+    } else {
+      expect(ast.getText()).toContain('selectCanvasClosure([MODEL_UNIQUE_ID])');
+      expect(ast.getText()).toContain('openCanvasNodeOperations(MODEL_UNIQUE_ID)');
+      expect(ast.getText()).not.toContain('button[aria-label="Select for execution"]');
+      for (const label of ['Canvas', 'Requested resources', 'Project root']) {
+        expect(ast.getText()).toContain(`[aria-label="${label}"]`);
+        expect(ast.getText()).not.toContain(`[aria-label="${label} value"]`);
+      }
+    }
+  });
+
+  it('opens Connections after creation before checking the selected connection option', () => {
+    const ast = browserModules.get(resolve('cypress/support/liveWarehouseSourceImport.ts'))!;
+    const declaration = ast.statements.find(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) &&
+        statement.name?.text === 'createLivePostgresConnection'
+    );
+    expect(declaration).toBeDefined();
+    const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain(
+      "cy.get('[data-slot=\"source-import-create-connection-name\"]').should('not.exist')"
+    );
+    expect(body.indexOf("'not.exist'")).toBeLessThan(body.indexOf("'Connections'"));
+    expect(body).toContain("cy.contains('[role=\"tab\"]', 'Connections').click()");
+    expect(body.indexOf("'Connections'")).toBeLessThan(
+      body.indexOf('source-import-connection-option')
+    );
+    expect(body).toContain("'aria-pressed', 'true'");
+    expect(body).not.toContain('force: true');
+  });
+
+  it('fits and focuses a visible node before an unforced context selection gesture', () => {
+    const ast = browserModules.get(resolve('cypress/support/canvasExecutionSelection.ts'))!;
+    const declaration = ast.statements.find(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) && statement.name?.text === 'openCanvasNodeOperations'
+    );
+    expect(declaration).toBeDefined();
+    const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain("cy.get('.react-flow__controls-fitview').click()");
+    expect(body.indexOf('controls-fitview')).toBeLessThan(body.indexOf('getVisibleCanvasNode'));
+    expect(body).toContain(".should('be.visible')");
+    expect(body).toContain(".should('be.focused')");
+    expect(body).toContain(".rightclick('center')");
+    expect(body).not.toContain('force: true');
+  });
+
+  it('fits the outer Canvas before hovering and requesting a Model Preview', () => {
+    const ast = browserModules.get(resolve('cypress/support/relationalWorkbench/navigation.ts'))!;
+    const declaration = ast.statements.find(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) && statement.name?.text === 'previewWorkbenchModel'
+    );
+    expect(declaration).toBeDefined();
+    const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain("cy.get('.react-flow__controls-fitview').click()");
+    expect(body.indexOf('controls-fitview')).toBeLessThan(body.indexOf('hoverWorkbenchCard'));
+    expect(body).not.toContain('force: true');
+  });
+});
+
 function runtimeImports(path: string, ast: ts.SourceFile): string[] {
   return ast.statements.flatMap((statement) => {
     if (
@@ -141,6 +299,97 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('admits every exact selection-helper consumer in its real runtime', () => {
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const helperPath = 'apps/web/cypress/support/canvasExecutionSelection.ts';
+    const target = resolve(helperPath.slice('apps/web/'.length));
+    const consumers = [...browserModules.keys()]
+      .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .sort();
+    const expected = {
+      controlled: [
+        'canvas/canvas-happy-path-draggable.cy.ts',
+        'canvas/canvas-project-snapshot-roundtrip.cy.ts',
+        'canvas/canvas-ready-node-authoring.cy.ts',
+        'shell/canvas-workbench-screen-composition.cy.ts',
+        'shell/shell-layout-contract.cy.ts',
+      ],
+      available: [
+        'canvas/canvas-dbt-author-code-run-live.cy.ts',
+        'canvas/canvas-dbt-selection-recovery-live.cy.ts',
+        'canvas/canvas-dvt-join-preview-live.cy.ts',
+        'canvas/canvas-dvt-start-run-boundaries-live.cy.ts',
+        'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+        'canvas/canvas-first-authoring-live.cy.ts',
+        'canvas/canvas-formula-lineage-live.cy.ts',
+        'canvas/canvas-graph-search-filter-live.cy.ts',
+        'canvas/canvas-minimap-focus-live.cy.ts',
+        'canvas/canvas-selected-filter-live.cy.ts',
+        'canvas/canvas-semantic-persistence-run-live.cy.ts',
+        'canvas/canvas-semantic-unsupported-live.cy.ts',
+        'canvas/canvas-source-identity-live.cy.ts',
+        'canvas/canvas-source-import-live-clean.cy.ts',
+        'canvas/canvas-sql-progressive-live.cy.ts',
+        'canvas/canvas-transform-data-sample-live.cy.ts',
+        'dbt/dbt-project-preview-run-live.cy.ts',
+        'dbt/dbt-project-yaml-description-edit-live.cy.ts',
+        'runs/run-controls-live.cy.ts',
+      ],
+      unavailable: ['canvas/canvas-dvt-runtime-unavailable-live.cy.ts'],
+    };
+    const exactConsumers = Object.values(expected)
+      .flat()
+      .map((path) => `apps/web/cypress/e2e/${path}`);
+    expect(consumers).toEqual(
+      exactConsumers.map((path) => resolve(path.slice('apps/web/'.length))).sort()
+    );
+    for (const [capability, paths] of Object.entries(expected)) {
+      for (const path of paths) {
+        const repositoryPath = `apps/web/cypress/e2e/${path}`;
+        expect(
+          resolveWebVitestChangedSuitePlan([repositoryPath]).browserCommands.map(
+            (command) => command.capability
+          ),
+          repositoryPath
+        ).toEqual([capability]);
+      }
+    }
+    const plan = resolveWebVitestChangedSuitePlan([helperPath]);
+    expect(plan.browserCommands.map((command) => command.capability)).toEqual([
+      'controlled',
+      'available',
+      'unavailable',
+    ]);
+    expect(plan.browserFiles).toEqual(expect.arrayContaining(exactConsumers));
+  });
+
+  it('routes all real source-import helper consumers to the available runtime', () => {
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const target = resolve('cypress/support/liveWarehouseSourceImport.ts');
+    const consumers = [...browserModules.keys()]
+      .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .sort();
+    const expected = [
+      'canvas/canvas-dvt-join-preview-live.cy.ts',
+      'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
+      'canvas/canvas-formula-lineage-live.cy.ts',
+      'canvas/canvas-source-identity-live.cy.ts',
+      'canvas/canvas-source-import-live-clean.cy.ts',
+      'canvas/canvas-transform-data-sample-live.cy.ts',
+      'dbt/dbt-project-import-source-live.cy.ts',
+    ].map((path) => `apps/web/cypress/e2e/${path}`);
+    expect(consumers).toEqual(
+      expected.map((path) => resolve(path.slice('apps/web/'.length))).sort()
+    );
+    for (const path of [...expected, 'apps/web/cypress/support/liveWarehouseSourceImport.ts']) {
+      expect(resolveWebVitestChangedSuitePlan([path]).browserCommands).toEqual([liveCommand]);
+    }
+  });
+
   it('admits the complete graph-authoring helper closure with exact runtime ownership', () => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
@@ -185,7 +434,7 @@ describe('governed browser evidence routing', () => {
     ).toEqual(['controlled', 'available']);
   });
 
-  it('admits the two real project-authoring consumers in the available runtime', () => {
+  it('admits the real project-authoring consumers in the available runtime', () => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
     );
@@ -193,7 +442,14 @@ describe('governed browser evidence routing', () => {
     const consumers = [...browserModules.keys()]
       .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
       .sort();
-    const expected = ['canvas-dvt-join-preview-live', 'canvas-first-authoring-live'];
+    const expected = [
+      'canvas-dvt-join-preview-live',
+      'canvas-first-authoring-live',
+      'canvas-graph-search-filter-live',
+      'canvas-minimap-focus-live',
+      'canvas-source-identity-live',
+      'canvas-source-import-live-clean',
+    ];
     expect(consumers).toEqual(
       expected.map((name) => resolve(`cypress/e2e/canvas/${name}.cy.ts`)).sort()
     );
@@ -223,6 +479,14 @@ describe('governed browser evidence routing', () => {
     const uiOnlyConsumers = [
       'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
+      'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts',
+      'apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
+      'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
     ];
     expect(fixtureConsumers.sort()).toEqual(
       registered
@@ -238,7 +502,7 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(23);
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(31);
     expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(48);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
@@ -250,7 +514,7 @@ describe('governed browser evidence routing', () => {
         !fixtureConsumers.includes(path) &&
         !uiOnlyConsumers.some((consumer) => path === resolve(consumer.slice('apps/web/'.length)))
     );
-    expect(unadmittedTransport).toHaveLength(9);
+    expect(unadmittedTransport).toHaveLength(1);
     for (const path of unadmittedTransport) {
       expect(() =>
         resolveWebVitestChangedSuitePlan([
@@ -343,7 +607,7 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(23);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(31);
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);

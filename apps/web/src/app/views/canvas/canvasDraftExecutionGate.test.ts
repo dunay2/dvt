@@ -114,16 +114,22 @@ describe('Canvas draft edge execution gate', () => {
   });
 
   it('adopts a remote gate when local gate state is unchanged', () => {
-    const locallyDirty = canvasDraftSession.workingSet.queueExplicitNodeIds(bootstrap(), [
-      'pending-node',
-    ]);
+    const locallyDirty = canvasDraftSession.workingSet.addExplicitNode(bootstrap(), {
+      id: 'placed-node',
+      name: 'Source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    });
     const reloaded = canvasDraftSession.machine.reloadFromRemote(
       locallyDirty,
       buildRecord('rev-2', 'closed')
     );
 
     expect(reloaded.workingSet.visibleEdges[0]?.executionGate).toBe('closed');
-    expect(reloaded.workingSet.pendingExplicitNodeIds).toEqual(['pending-node']);
+    expect(reloaded.workingSet.visibleNodeIds).toContain('placed-node');
   });
 
   it('keeps a local gate change when a remote revision arrives', () => {

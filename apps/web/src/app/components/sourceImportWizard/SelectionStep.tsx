@@ -1,15 +1,25 @@
-import { Loader2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+/**
+ * Owned concern: compose accessible catalogue inspection and selection in the source workspace.
+ * @baseline GH-3610: catalogue/detail resizing retains the import controller and permissions.
+ * @decision Supply the same unique panel identity to the DOM and keyboard separator.
+ * @consequence Assistive technology can address the mounted catalogue panel.
+ * @version 1.0.0
+ */
+import { Database, Loader2 } from 'lucide-react';
+import { useId, useMemo, useState } from 'react';
 
 import type { SourceObjectCatalogSchemaSummary } from '@dvt/contracts';
 
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
+import { Button } from '../ui/button';
 import { ScrollArea } from '../ui/scroll-area';
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 import { useSourceImportLocalization } from './copy';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportObjectsMetadata } from './SourceImportObjectsMetadata';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
+import { SourceImportSample } from './SourceImportSample';
 import {
   buildSourceImportCatalogViewModel,
   buildSourceObjectIdentityKey,
@@ -24,6 +34,9 @@ import type {
 } from './types';
 
 interface SelectionStepProps {
+  connectionId?: string;
+  connectionName?: string;
+  onChangeConnection?: () => void;
   sourceObjects: SelectableSourceObject[];
   sourceObjectSchemas: readonly SourceObjectCatalogSchemaSummary[];
   sourceObjectSchemaListPage: SourceImportCatalogPageState;
@@ -46,23 +59,13 @@ interface SelectionStepProps {
   onToggleSourceObject: (index: number) => void;
 }
 
-export const sourceImportSelectionStepClassNames = {
-  root: 'space-y-4',
-  title: 'mb-2 text-lg font-medium',
-  description: 'mb-4 text-sm text-slate-300',
-  error: 'border-red-700 bg-red-950/30 p-3 text-sm text-red-200',
-  loading: 'flex items-center gap-3 border-slate-600 p-4 text-slate-300',
-  content: 'grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]',
-  catalog: 'space-y-3',
-  search: 'grid gap-2',
-  searchLabel: 'text-xs font-medium uppercase tracking-wide text-slate-400',
-  resultCount: 'text-xs text-slate-400',
-  detail: 'space-y-4',
-  loadMore:
-    'rounded border border-slate-700 px-2.5 py-1 text-xs text-slate-300 disabled:opacity-50',
-} as const;
+import styles from './SourceImportWorkspace.module.css';
+export const sourceImportSelectionStepClassNames = styles;
 
 export function SelectionStep({
+  connectionId,
+  connectionName,
+  onChangeConnection,
   sourceObjects,
   sourceObjectSchemas,
   sourceObjectSchemaListPage,
@@ -85,6 +88,7 @@ export function SelectionStep({
   onToggleSourceObject,
 }: SelectionStepProps) {
   const { copy, numberFormatter } = useSourceImportLocalization();
+  const cataloguePanelId = useId();
   const [catalogFilterId, setCatalogFilterId] = useState<SourceImportCatalogFilterId>('all');
   const normalizedSearch = sourceObjectSearchQuery.trim();
   const visibleObjectIds = useMemo(
@@ -108,15 +112,21 @@ export function SelectionStep({
         buildSourceObjectIdentityKey(sourceObject) ===
         catalogViewModel.activeSourceObject?.identityKey
     ) ?? null;
-  const loadMoreLabel = copy.selection.loadMore ?? 'Load more';
+  const loadMoreLabel = copy.selection.loadMore;
 
   return (
     <div className={sourceImportSelectionStepClassNames.root}>
-      <div>
+      <div className={styles.catalogToolbar}>
         <h3 className={sourceImportSelectionStepClassNames.title}>{copy.selection.title}</h3>
-        <p className={sourceImportSelectionStepClassNames.description}>
-          {copy.selection.descriptionPrefix} {selectedCount}
-        </p>
+        {connectionName == null ? null : (
+          <Button variant="outline" onClick={onChangeConnection}>
+            <Database aria-hidden="true" />
+            {connectionName}
+          </Button>
+        )}
+        <span className={styles.description}>
+          {copy.footer.selectionCount.replace('{count}', String(selectedCount))}
+        </span>
       </div>
 
       {loadError ? (
@@ -125,12 +135,17 @@ export function SelectionStep({
 
       {isLoadingSourceObjects ? (
         <Card className={sourceImportSelectionStepClassNames.loading}>
-          <Loader2 className="size-4 animate-spin" />
+          <Loader2 className={styles.spinner} aria-hidden="true" />
           {copy.selection.loading}
         </Card>
       ) : (
-        <div className={sourceImportSelectionStepClassNames.content}>
-          <div className={sourceImportSelectionStepClassNames.catalog}>
+        <ResizablePanelGroup direction="horizontal" autoSaveId="source-import-catalog-detail">
+          <ResizablePanel
+            id={cataloguePanelId}
+            defaultSize={55}
+            minSize={30}
+            className={sourceImportSelectionStepClassNames.catalog}
+          >
             <div className={sourceImportSelectionStepClassNames.search}>
               <label
                 htmlFor="source-import-object-search"
@@ -151,10 +166,7 @@ export function SelectionStep({
                   : catalogViewModel.resultCountLabel}
               </div>
             </div>
-            <ScrollArea
-              data-source-import-catalog-scroll
-              className="h-96 min-w-0 [&_[data-slot=scroll-area-viewport]>div]:!block"
-            >
+            <ScrollArea data-source-import-catalog-scroll className={styles.catalogScroll}>
               <SourceImportCatalogView
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
@@ -190,19 +202,34 @@ export function SelectionStep({
                 </button>
               ) : null}
             </ScrollArea>
-          </div>
-          <div className={sourceImportSelectionStepClassNames.detail}>
+          </ResizablePanel>
+          <ResizableHandle className={styles.resize} aria-label={copy.catalogDetailResize} />
+          <ResizablePanel
+            defaultSize={45}
+            minSize={30}
+            className={sourceImportSelectionStepClassNames.detail}
+          >
             <SourceImportObjectsMetadata
               sourceObjects={activeBrowseSourceObject ? [activeBrowseSourceObject] : []}
               activeSourceObjectKey={catalogViewModel.activeSourceObject?.identityKey ?? null}
               scope="active"
             />
+            {connectionId == null || activeBrowseSourceObject == null ? null : (
+              <SourceImportSample
+                connectionId={connectionId}
+                objectId={activeBrowseSourceObject.objectId}
+                name={
+                  catalogViewModel.activeSourceObject?.canonicalName ??
+                  activeBrowseSourceObject.objectId
+                }
+              />
+            )}
             <SourceImportSelectionBasket
               selectedSourceObjects={catalogViewModel.selectedSourceObjects}
               onRemoveSourceObject={onToggleSourceObject}
             />
-          </div>
-        </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       )}
     </div>
   );

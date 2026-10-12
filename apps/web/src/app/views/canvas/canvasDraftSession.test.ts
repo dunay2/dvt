@@ -109,40 +109,6 @@ describe('canvasDraftSession', () => {
     ]);
   });
 
-  it('promotes queued explicit nodes and their canonical edges when they appear in a refreshed snapshot', () => {
-    const queuedSession = canvasDraftSession.workingSet.queueExplicitNodeIds(
-      canvasDraftSession.machine.bootstrap({
-        remoteDraft: buildRemoteDraftRecord({
-          draft: buildAuthoringDraft({
-            canvas: {
-              kind: 'transformation',
-              title: 'Main canvas',
-            },
-            nodeIds: ['node_1'],
-            nodePositions: {
-              node_1: { x: 0, y: 0 },
-            },
-            edges: [],
-          }),
-        }),
-        canonicalNodeIds: ['node_1'],
-        canonicalEdges: [],
-      }),
-      ['node_imported']
-    );
-
-    const reconciledSession = canvasDraftSession.workingSet.reconcileSnapshot(queuedSession, {
-      canonicalNodeIds: ['node_1', 'node_imported'],
-      canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_imported' }],
-    });
-
-    expect(reconciledSession.workingSet.visibleNodeIds).toEqual(['node_1', 'node_imported']);
-    expect(reconciledSession.workingSet.visibleEdges).toEqual([
-      { sourceId: 'node_1', targetId: 'node_imported' },
-    ]);
-    expect(reconciledSession.workingSet.pendingExplicitNodeIds).toEqual([]);
-  });
-
   it('does not auto-merge unrelated new snapshot nodes into an active draft', () => {
     const session = canvasDraftSession.machine.bootstrap({
       remoteDraft: buildRemoteDraftRecord({
@@ -215,6 +181,31 @@ describe('canvasDraftSession', () => {
     expect(reconciledSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'node_1', targetId: 'node_remote_only' },
     ]);
+  });
+
+  it('retains unplaced source configuration across reconciliation without revealing the source', () => {
+    const node: CanonicalNode = {
+      id: 'registered',
+      name: 'Configured',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    };
+    const session = canvasDraftSession.machine.bootstrap({
+      remoteDraft: null,
+      canonicalNodeIds: [],
+      canonicalEdges: [],
+    });
+    const updated = canvasDraftSession.workingSet.updateNodeDefinition(session, node);
+    const reconciled = canvasDraftSession.workingSet.reconcileSnapshot(updated, {
+      canonicalNodeIds: [node.id],
+      canonicalEdges: [],
+    });
+    expect(reconciled.workingSet.visibleNodeIds).toEqual([]);
+    expect(reconciled.workingSet.pendingExplicitNodeIds).toEqual([]);
+    expect(reconciled.localNodeCatalog?.[node.id]).toBe(node);
   });
 
   it('stores local overrides for visible persisted nodes without changing the working set', () => {
@@ -297,7 +288,7 @@ describe('canvasDraftSession', () => {
     expect(session.savingWorkingSet).toBeUndefined();
   });
 
-  it('adopts an external revision as editing state while preserving the imported working set', () => {
+  it('adopts an external revision while preserving an explicitly placed node', () => {
     const savingSession = canvasDraftSession.machine.markSaving(
       canvasDraftSession.machine.bootstrap({
         remoteDraft: buildRemoteDraftRecord({
@@ -318,21 +309,29 @@ describe('canvasDraftSession', () => {
         canonicalEdges: [],
       })
     );
-    const importedSession = canvasDraftSession.workingSet.queueExplicitNodeIds(savingSession, [
-      'node_imported',
-    ]);
+    const placedNode: CanonicalNode = {
+      id: 'node_placed',
+      name: 'Source',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    };
+    const placedSession = canvasDraftSession.workingSet.addExplicitNode(savingSession, placedNode);
     const adoptedSession = canvasDraftSession.machine.adoptExternalRevision(
-      importedSession,
+      placedSession,
       'rev-imported'
     );
 
     expect(adoptedSession.syncState).toBe('editing');
     expect(adoptedSession.draftRevision).toBe('rev-imported');
     expect(adoptedSession.workingSet).toEqual({
-      visibleNodeIds: ['node_1'],
+      visibleNodeIds: ['node_1', placedNode.id],
       visibleEdges: [],
-      pendingExplicitNodeIds: ['node_imported'],
+      pendingExplicitNodeIds: [],
     });
+    expect(adoptedSession.localNodeCatalog?.[placedNode.id]).toEqual(placedNode);
     expect(adoptedSession.savingBaseRevision).toBeUndefined();
     expect(adoptedSession.savingWorkingSet).toBeUndefined();
   });
@@ -354,35 +353,6 @@ describe('canvasDraftSession', () => {
     expect(session.baseline.record?.revision).toBe('rev-saved');
     expect(session.workingSet.visibleNodeIds).toEqual(['node_1', 'node_2']);
     expect(session.workingSet.visibleEdges).toEqual([{ sourceId: 'node_1', targetId: 'node_2' }]);
-    expect(session.savingWorkingSet).toBeUndefined();
-  });
-
-  it('preserves local edits made while a save request is in flight', () => {
-    const savingSession = canvasDraftSession.machine.markSaving(
-      canvasDraftSession.machine.bootstrap({
-        remoteDraft: null,
-        canonicalNodeIds: ['node_1'],
-        canonicalEdges: [],
-      })
-    );
-    const editedWhileSavingSession = canvasDraftSession.workingSet.queueExplicitNodeIds(
-      savingSession,
-      ['node_local']
-    );
-
-    const session = canvasDraftSession.machine.applySaveSuccess(
-      editedWhileSavingSession,
-      buildRemoteDraftRecord({ revision: 'rev-saved' })
-    );
-
-    expect(session.syncState).toBe('editing');
-    expect(session.draftRevision).toBe('rev-saved');
-    expect(session.baseline.record?.revision).toBe('rev-saved');
-    expect(session.workingSet).toEqual({
-      visibleNodeIds: ['node_1'],
-      visibleEdges: [],
-      pendingExplicitNodeIds: ['node_local'],
-    });
     expect(session.savingWorkingSet).toBeUndefined();
   });
 
