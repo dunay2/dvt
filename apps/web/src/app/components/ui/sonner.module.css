@@ -1,3 +1,10 @@
+/**
+ * Owned concern: compact notification presentation and lifecycle hit-testing.
+ * @baseline GH-3620: a withdrawn toast may remain mounted and visible during exit.
+ * @decision Project Sonner's removed state without changing active interaction or timers.
+ * @consequence Exiting toasts and their pseudo-elements cannot intercept underlying controls.
+ * @version 1.0.0
+ */
 .compact[data-sonner-toast][data-styled='true'] {
   padding: 8px 12px;
   min-height: 0;
@@ -5,4 +12,8 @@
   max-width: 320px;
   margin-left: auto;
   font-size: 12px;
+}
+
+.compact[data-sonner-toast][data-removed='true'] {
+  pointer-events: none;
 }

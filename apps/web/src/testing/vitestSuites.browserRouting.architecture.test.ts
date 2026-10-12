@@ -2,9 +2,9 @@
 /**
  * Owned concern: prove independent browser and Vitest obligations remain complete.
  * @baseline GH-3540: browser admission is independent of Vitest ownership.
- * @decision GH-3578/GH-3583/GH-3610: prove disjoint runtimes and complete fixture/selection consumer ownership.
+ * @decision GH-3578/GH-3583/GH-3610/GH-3620: prove disjoint runtimes, complete consumer ownership and real toast withdrawal.
  * @consequence No phase or helper change can hide input obligations or replace real browser evidence.
- * @version 1.0.1
+ * @version 1.0.2
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -122,20 +122,70 @@ describe('public Canvas gesture preconditions', () => {
     expect(body).not.toMatch(/\.each\(|cy\.wait\(|timeout:/u);
   });
 
-  it('awaits actual toast removal before the normal source-import receipt close', () => {
-    const body = browserModules
-      .get(resolve('cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts'))!
-      .getText()
-      .replace(/\s+/gu, ' ');
-    const toast = body.indexOf(
-      '[data-sonner-toast][data-type="success"][data-y-position="bottom"][data-x-position="right"]'
-    );
-    const close = body.indexOf("cy.contains('[role=\"dialog\"] button', 'Done').click()");
-    expect(toast).toBeGreaterThanOrEqual(0);
-    expect(close).toBeGreaterThan(toast);
-    expect(body.slice(toast, close)).toContain(".should('not.exist')");
-    expect(body.slice(toast, close)).toContain('timeout: 20_000');
-    expect(body).not.toContain('data-removed="false"');
+  it('proves active and withdrawn toast hit-testing before normal receipt close', () => {
+    const ast = browserModules.get(
+      resolve('cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts')
+    )!;
+    const calls: ts.CallExpression[] = [];
+    const visit = (node: ts.Node): void => {
+      if (ts.isCallExpression(node)) calls.push(node);
+      ts.forEachChild(node, visit);
+    };
+    visit(ast);
+    const namedCalls = (name: string): ts.CallExpression[] =>
+      calls.filter(
+        (call) =>
+          ts.isPropertyAccessExpression(call.expression) && call.expression.name.text === name
+      );
+    const literalArgs = (call: ts.CallExpression): Array<string | null> =>
+      call.arguments.map((argument) => (ts.isStringLiteral(argument) ? argument.text : null));
+    const clocks = namedCalls('clock');
+    expect(clocks).toHaveLength(1);
+    const clock = clocks[0]!;
+    const timers = clock.arguments[1];
+    expect(timers && ts.isArrayLiteralExpression(timers)).toBe(true);
+    if (timers && ts.isArrayLiteralExpression(timers)) {
+      expect(
+        timers.elements.map((timer) => (ts.isStringLiteral(timer) ? timer.text : null))
+      ).toEqual(['setTimeout', 'clearTimeout']);
+    }
+    const ticks = namedCalls('tick');
+    expect(ticks.map((tick) => Number(tick.arguments[0]?.getText(ast)))).toEqual([0, 4000, 200]);
+    const expiry = ticks[1]!;
+    const unmount = ticks[2]!;
+    const assertions = [...namedCalls('should'), ...namedCalls('and')].map(literalArgs);
+    for (const state of [
+      ['data-mounted', 'true'],
+      ['data-visible', 'true'],
+      ['data-removed', 'false'],
+      ['data-removed', 'true'],
+    ]) {
+      expect(assertions).toContainEqual(['have.attr', ...state]);
+    }
+    const done = namedCalls('contains').find((call) => literalArgs(call)[1] === 'Done')!;
+    expect(done.getStart(ast)).toBeGreaterThan(expiry.getStart(ast));
+    expect(done.getEnd()).toBeLessThan(unmount.getStart(ast));
+    expect(
+      namedCalls('click').some(
+        (click) =>
+          click.getStart(ast) === done.getStart(ast) &&
+          click.getEnd() > done.getEnd() &&
+          click.arguments.length === 0
+      )
+    ).toBe(true);
+    expect(
+      namedCalls('should').some(
+        (call) =>
+          literalArgs(call)[0] === 'exist' &&
+          call.getStart(ast) > done.getEnd() &&
+          call.getEnd() < unmount.getStart(ast)
+      )
+    ).toBe(true);
+    expect(namedCalls('restore')).toHaveLength(1);
+    expect(namedCalls('restore')[0]!.getStart(ast)).toBeGreaterThan(unmount.getStart(ast));
+    expect(namedCalls('elementFromPoint')).toHaveLength(1);
+    expect(namedCalls('getComputedStyle')).toHaveLength(1);
+    const body = ast.getText().replace(/\s+/gu, ' ');
     expect(body).not.toContain('toast.dismiss');
     expect(body).not.toContain('.remove()');
     expect(body).not.toContain('cy.wait(');

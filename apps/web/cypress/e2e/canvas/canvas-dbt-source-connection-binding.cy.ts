@@ -2,10 +2,10 @@
  * Owned concern: prove that importing dbt source declarations continues through
  * one governed connection binding and projects one Canvas node per table.
  * @baseline GH-3578: catalog order does not select the object this proof inspects.
- * @baseline GH-3610: an exiting notification is still hit-tested until DOM removal.
- * @decision Use the existing catalog controls and await toast absence before normal receipt close.
+ * @baseline GH-3620: a withdrawn notification must stop hit-testing before DOM removal.
+ * @decision Exercise the actual toast lifetime and normal receipt close with timeout-only clock control.
  * @consequence Selection, metadata, keyboard and import assertions remain independent.
- * @version 1.0.1
+ * @version 1.0.2
  */
 import type { RelationalSourceObject, SourceObjectMetricEvidence } from '@dvt/contracts';
 
@@ -354,6 +354,17 @@ function assertSeriousAccessibility(): void {
   );
 }
 
+function assertSourceImportHitTarget(element: HTMLElement): void {
+  const bounds = element.getBoundingClientRect();
+  expect(bounds.width).to.be.greaterThan(0);
+  expect(bounds.height).to.be.greaterThan(0);
+  const hitTarget = element.ownerDocument.elementFromPoint(
+    bounds.left + bounds.width / 2,
+    bounds.top + bounds.height / 2
+  );
+  expect(element === hitTarget || element.contains(hitTarget)).to.equal(true);
+}
+
 describe('dbt source connection binding', () => {
   it('binds one governed connection and projects one node per imported table', () => {
     stubDbtSourceBindingFlow();
@@ -403,15 +414,47 @@ describe('dbt source connection binding', () => {
       .and('contain.text', '5.3 KB');
     cy.contains('[role="dialog"]', 'Selected: 3').should('be.visible');
     assertSeriousAccessibility();
+    cy.clock(undefined, ['setTimeout', 'clearTimeout']).as('sourceImportClock');
     cy.contains('button', 'Add sources').should('be.enabled').click();
 
     waitForE2eApiCall('/workspace/sources/import', 'POST');
     cy.contains('[role="dialog"]', 'Sources imported', { timeout: 20_000 }).should('be.visible');
-    cy.get(
+    cy.tick(0);
+    cy.contains<HTMLLIElement>(
       '[data-sonner-toast][data-type="success"][data-y-position="bottom"][data-x-position="right"]',
+      'Sources attached successfully',
       { timeout: 20_000 }
-    ).should('not.exist');
-    cy.contains('[role="dialog"] button', 'Done').click();
+    )
+      .as('sourceImportToast')
+      .should('have.attr', 'data-mounted', 'true')
+      .and('have.attr', 'data-visible', 'true')
+      .and('have.attr', 'data-removed', 'false')
+      .and('be.visible')
+      .should(($toast) => {
+        expect($toast.css('pointer-events')).not.to.equal('none');
+        assertSourceImportHitTarget($toast[0]);
+      });
+    cy.tick(4000);
+    cy.get<HTMLLIElement>('@sourceImportToast')
+      .should('have.attr', 'data-removed', 'true')
+      .and('have.attr', 'data-mounted', 'true')
+      .and('have.attr', 'data-visible', 'true')
+      .should(($toast) => {
+        expect($toast.css('pointer-events')).to.equal('none');
+        const toast = $toast[0];
+        for (const pseudo of ['::before', '::after']) {
+          expect(
+            toast.ownerDocument.defaultView!.getComputedStyle(toast, pseudo).pointerEvents
+          ).to.equal('none');
+        }
+      });
+    cy.contains<HTMLButtonElement>('[role="dialog"] button', 'Done')
+      .should(($button) => assertSourceImportHitTarget($button[0]))
+      .click();
+    cy.get<HTMLLIElement>('@sourceImportToast').should('exist');
+    cy.tick(200);
+    cy.get<HTMLLIElement>('@sourceImportToast').should('not.exist');
+    cy.get<Cypress.Clock>('@sourceImportClock').then((clock) => clock.restore());
 
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/workspace/dbt/graph', 'GET').length).to.be.greaterThan(1);
