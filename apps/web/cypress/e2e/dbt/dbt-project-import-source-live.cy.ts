@@ -124,13 +124,12 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       .should('be.enabled')
       .click();
     cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]')
+      .scrollIntoView()
       .should('be.visible')
       .should(($command) => {
         expect($command).not.to.have.attr('data-disabled');
       })
-      .then(($command) => {
-        $command[0]?.click();
-      });
+      .click();
 
     cy.get('[data-slot="dbt-project-import-dialog"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="dbt-project-import-root"]')
