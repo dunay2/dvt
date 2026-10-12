@@ -1,3 +1,10 @@
+/**
+ * Owned concern: prove Planning DB import snapshots and fail-closed authority boundaries.
+ * @baseline Command/query rail governance: references cannot create or replace canonical authority.
+ * @decision Exercise the existing repository snapshot without importing a local database.
+ * @consequence A populated local projection cannot hide a retired bootstrap authority.
+ * @version 1.0.0
+ */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { sha256HexUtf8 } = require('@dvt/crypto');
@@ -445,6 +452,50 @@ test('command/query rail snapshot rejects a dangling feature reference', () => {
   assert.throws(
     () => buildCommandQueryRailSnapshot({ docs }),
     /does not resolve authority docs\/planning\/proposals\/mandatory\/missing\.md/
+  );
+});
+
+test('real repository rail bootstrap retains the canonical Canvas rename authority', () => {
+  const catalog = require('./planning-db/command-query-rail-catalog.cjs');
+  const { documents, referenceDocuments } = catalog.resolveSnapshotInputs({ sourceFiles: [] });
+  const snapshot = catalog.buildCommandQueryRailSnapshot({
+    docs: documents,
+    referenceDocuments,
+    sourceFiles: [],
+  });
+  const consumerPath =
+    'docs/planning/proposals/mandatory/runtime-and-contracts/pcv1-canvas-authoring-field-budgets-3019-20260908.md';
+  const authorityPath =
+    'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md';
+  const reference = snapshot.rails.find(
+    (rail) => rail.sourcePath === consumerPath && rail.railName === 'RenameProjectCanvas'
+  );
+
+  assert.ok(reference, 'The real PCV1 rename reference must remain in the bootstrap snapshot');
+  assert.equal(reference.railType, 'command');
+  assert.equal(reference.railStatus, 'referenced');
+  assert.equal(reference.rawRail.referenceOnly, true);
+  assert.equal(reference.rawRail.authorityRef, authorityPath);
+  assert.ok(
+    snapshot.rails.some(
+      (rail) =>
+        rail.sourcePath === authorityPath &&
+        rail.railName === reference.railName &&
+        rail.railType === reference.railType &&
+        rail.rawRail?.referenceOnly !== true
+    ),
+    'The referenced path must retain its canonical command declaration'
+  );
+  assert.throws(
+    () =>
+      catalog.buildCommandQueryRailSnapshot({
+        docs: documents.filter((document) => document.sourcePath !== authorityPath),
+        referenceDocuments: referenceDocuments.filter(
+          (document) => document.sourcePath !== authorityPath
+        ),
+        sourceFiles: [],
+      }),
+    /Command\/query rail reference command:RenameProjectCanvas .* does not resolve authority/
   );
 });
 
