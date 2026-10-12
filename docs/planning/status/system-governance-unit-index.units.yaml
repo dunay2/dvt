@@ -449,6 +449,55 @@ units:
       - docs/guides/testing-and-ci-capabilities.md
     fowlerSignals:
       - coverage refinement
+  - id: SYS-CI-SCHEDULING-LABORATORY
+    name: Isolated scheduling strategy laboratory
+    parent: SYS-CI-GOVERNANCE-ROOT
+    level: source
+    status: review
+    ownedConcern:
+      Execute isolated repository scheduling experiments and preserve evidence without production
+      adoption.
+    publicApi:
+      - node labs/pln2-scheduling/src/run.mjs --out <new-output-directory>
+      - python labs/pln2-scheduling/src/probe.py --backend <dask|highs>
+    owns:
+      - labs/pln2-scheduling/.gitignore
+      - labs/pln2-scheduling/PROTOCOL.md
+      - labs/pln2-scheduling/README.md
+      - labs/pln2-scheduling/evidence/verification.json
+      - labs/pln2-scheduling/requirements-dask.txt
+      - labs/pln2-scheduling/requirements-highs.txt
+      - labs/pln2-scheduling/sources.json
+      - labs/pln2-scheduling/src/corpus.mjs
+      - labs/pln2-scheduling/src/model.mjs
+      - labs/pln2-scheduling/src/probe.py
+      - labs/pln2-scheduling/src/run.mjs
+      - labs/pln2-scheduling/test/lab.test.mjs
+    childrenRequired: false
+    dddOwner: SchedulingLaboratoryRun
+    cqRails: RunPlannerSchedulingLaboratory
+    invariants:
+      - Exact laboratory file ownership does not admit future or unrelated paths.
+      - No production workspace, policy, scheduler or application imports this laboratory.
+      - Frozen corpus and fresh output directories preserve reproducible experiment identity.
+      - Unavailable optional probes are not execution evidence or simulated upstream results.
+      - C0 acceptance and production adoption remain pending in issues 3205 and 3204.
+    transitions:
+      - Fresh experiment invocation produces measured receipts or an explicit rejection.
+      - Optional probe invocation records execution, unavailable or error without hidden
+        installation.
+    consumers:
+      - Repository operators conducting the isolated experiment.
+      - Existing local and CI governance ownership validators.
+    governance:
+      - labs/pln2-scheduling/README.md
+      - labs/pln2-scheduling/PROTOCOL.md
+      - docs/planning/status/system-governance-unit-taxonomy-20260501.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/architecture/fowler-opportunity-planning-governance.md
+    fowlerSignals:
+      - hidden authority
+      - documentation drift
   - id: SYS-CONTRACTS
     name: Contracts workspace family
     parent: SYS-DVT
