@@ -96,6 +96,7 @@ function visitCanvas(session: E2eWorkspaceSession): void {
       seedE2eWorkspaceSession(window, session);
     },
   });
+  cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
 }
 
 describe('dbt project import and file-backed Source Import live vertical', () => {
