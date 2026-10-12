@@ -23,6 +23,7 @@
     "proof:start-run-otel": "vitest run --config vitest.integration.config.ts test/integration/startRunOpenTelemetry.integration.test.ts"
   },
   "dependencies": {
+    "@duckdb/node-api": "1.5.6-r.1",
     "@dvt/adapter-postgres": "workspace:*",
     "@dvt/adapter-temporal": "workspace:*",
     "@dvt/artifacts": "workspace:*",

@@ -20,10 +20,10 @@ and document lifecycle are owned by Planning DB. Query that authority before
 using repository documents for design work:
 
 ```bash
-pnpm planning:db:import --if-stale
 pnpm planning:db:query architecture-designs --limit 100 --no-refresh
 pnpm planning:db:query component-profile --component SYS-API-ROOT --no-refresh
 pnpm planning:db:query command-query-rails --filter API --no-refresh
+pnpm planning:db:query documentation-lifecycle --component SYS-API-ROOT --no-refresh
 ```
 
 The authored architecture entry is
@@ -53,6 +53,25 @@ pnpm --filter dvt-api dev
 - `http://localhost:3000/healthz`
 - `http://localhost:3000/readyz`
 - `http://localhost:3000/version`
+
+### Optional local data setup
+
+`DVT_LOCAL_DATA_ENABLED=false` is the default. Opt-in requires an absolute,
+operator-provisioned, service-owned POSIX mode-0700 `DVT_LOCAL_DATA_ROOT`,
+separate from and not nested with `DVT_WORKSPACE_FILES_ROOT`. Enabled Windows
+configuration fails closed: POSIX permission checks cannot establish Windows
+ACL privacy. Do not enable it there as a way to obtain LOCAL Preview.
+
+Use [`.env.example`](.env.example) to supply explicit positive memory, thread,
+spill, open-workspace and concurrent-session budgets before enabling the
+option. Memory and spill settings apply per instance, not per session or as
+hard RSS limits; retain process/container memory and disk limits. This lazy
+infrastructure setup does not make LOCAL execution or Preview available.
+
+The native driver is pinned in `package.json` and the generated lockfile.
+Driver upgrades require dependency review and rerunning the actual native
+security, persistence/reopen, session-isolation and shutdown tests on a
+supported POSIX host; Windows fail-closed tests are not that positive proof.
 
 ## Deploy notes
 

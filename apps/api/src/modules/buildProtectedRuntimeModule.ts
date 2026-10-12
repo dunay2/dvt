@@ -17,6 +17,8 @@ import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/Conf
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
+import { validateDuckDbLocalDataRoots } from '../infrastructure/duckdb/duckDbLocalDataPaths.js';
+import { DuckDbLocalDataRuntime } from '../infrastructure/duckdb/DuckDbLocalDataRuntime.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -53,6 +55,7 @@ export async function buildProtectedRuntimeModule(
   observability: IObservability
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
+  await validateDuckDbLocalDataRoots(env.localData);
   const pool = getPgPool(databaseUrl);
   const appLogger = app.log as unknown as Logger;
 
@@ -188,6 +191,9 @@ export async function buildProtectedRuntimeModule(
     warehouseConnectionCatalog: storageRuntime.warehouseConnectionCatalog,
     postgresCredentialResolver: storageRuntime.postgresCredentialResolver,
   });
+  // Construct only after the other assembly steps succeed; no native handle is opened until an
+  // authorized infrastructure consumer acquires a session. Keep the gateway out of public ports.
+  const localDataRuntime = new DuckDbLocalDataRuntime(env.localData);
   return {
     startRunUseCase: startRunRuntime.startRunUseCase,
     startRunTelemetry: startRunRuntime.startRunTelemetry,
@@ -249,6 +255,7 @@ export async function buildProtectedRuntimeModule(
     },
     close: async () => {
       await closeAllClosers([
+        () => localDataRuntime.close(),
         () => executionRuntime.closeAdapters(),
         () => storageRuntime.planStore.close(),
         () => workspaceGraphDraftRuntime.workspaceGraphDraftStore.close(),
