@@ -123,9 +123,13 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
       .should('match', /ready|lista/i);
-    cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]')
-      .should('contain.text', SELECTED_MODEL_ID)
-      .and('contain.text', 'workspace');
+    cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]').should(
+      'have.text',
+      canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate.fallback.replace(
+        '{affected}',
+        SELECTED_MODEL_ID
+      )
+    );
     cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
       .parent()
       .should('contain.text', SURVIVING_MODEL_ID);

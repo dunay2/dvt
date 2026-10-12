@@ -427,7 +427,9 @@ assertions; repair only the obsolete preparation and adapter gestures:
   explicit workspace-scope recovery action may admit the surviving model.
   Recovery labels come from the existing owned English copy catalog, not retired
   `Unavailable roots` / `Admitted scope` / `Use workspace scope` labels. Expose
-  the real scrollable recovery action before its normal click.
+  the real scrollable recovery action before its normal click. Assert the exact
+  translated recovery receipt with the affected node ID; the internal strategy
+  name `workspace` is not presentation copy.
 - Graph search/filter starts the single current Canvas template and owns its
   English presentation precondition. It retains three real authored nodes,
   search navigation, filter/clear counts and unchanged protected draft revision.
@@ -445,7 +447,10 @@ assertions; repair only the obsolete preparation and adapter gestures:
   Properties; project Code is the separate project-tree workbench. Do not revive
   the removed contextual node-code workbench to satisfy an old test. The real
   card title opens inspection, and the scrollable project command must be
-  exposed before its normal click.
+  exposed before its normal click. Execution selection uses the existing node
+  operations menu, not retired card-header selection buttons. Preview values
+  retain their exact assertions through the current accessible labels (`Canvas`,
+  `Requested resources`, `Project root`), without the retired `value` suffix.
 
 The existing rails remain `InspectCanvasNode`, `SaveWorkspaceFileContent`,
 `RouteChangedWebVitestSuites` and `RunWebCypressNative`. SQL and YAML edits must

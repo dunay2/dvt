@@ -10,6 +10,8 @@ import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applic
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  openCanvasNodeOperations,
+  selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
@@ -347,10 +349,12 @@ describe('dbt YAML description edit live vertical', () => {
     ).should('be.visible');
     closeContextualWorkbench();
 
-    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).within(() => {
-      cy.get('button[aria-label="Select for execution"]').should('be.enabled').click();
-      cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
-    });
+    selectCanvasClosure([MODEL_UNIQUE_ID]);
+    openCanvasNodeOperations(MODEL_UNIQUE_ID);
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Deselect for execution').should(
+      'be.visible'
+    );
+    cy.get('body').type('{esc}');
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.wrap(null, { timeout: 60_000 }).should(() => {
       const previewRequest = observedRequests.find(
@@ -361,9 +365,9 @@ describe('dbt YAML description edit live vertical', () => {
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 60_000 })
       .should('be.visible')
       .within(() => {
-        cy.get('[aria-label="Canvas value"]').should('have.text', CANVAS_ID);
-        cy.get('[aria-label="Requested resources value"]').should('have.text', MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Project root value"]').should('have.text', PROJECT_ROOT);
+        cy.get('[aria-label="Canvas"]').should('have.text', CANVAS_ID);
+        cy.get('[aria-label="Requested resources"]').should('have.text', MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Project root"]').should('have.text', PROJECT_ROOT);
       });
     clickButtonNatively('Start Run');
 

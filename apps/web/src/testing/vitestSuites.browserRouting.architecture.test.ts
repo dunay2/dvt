@@ -124,6 +124,8 @@ describe('public Canvas gesture preconditions', () => {
     expect(body).toContain('monaco-code-editor');
     expect(body).toContain('enabled=false');
     expect(body).toContain('canvasViewExecutionCopyByKey');
+    expect(body).toContain('selectionRecoveryWorkspaceReceiptTemplate.fallback');
+    expect(body).not.toContain(".and('contain.text', 'workspace')");
     expect(body).not.toContain('Unavailable roots');
     expect(body).not.toContain('Admitted scope');
     expect(body).not.toContain('Use workspace scope');
@@ -160,6 +162,14 @@ describe('public Canvas gesture preconditions', () => {
     expect(ast.getText()).not.toMatch(/canvas-node-shell[^;]*\.dblclick\(\)/u);
     if (name === 'dbt-project-preview-run-live') {
       expect(ast.getText()).not.toContain('Order Summary Model');
+    } else {
+      expect(ast.getText()).toContain('selectCanvasClosure([MODEL_UNIQUE_ID])');
+      expect(ast.getText()).toContain('openCanvasNodeOperations(MODEL_UNIQUE_ID)');
+      expect(ast.getText()).not.toContain('button[aria-label="Select for execution"]');
+      for (const label of ['Canvas', 'Requested resources', 'Project root']) {
+        expect(ast.getText()).toContain(`[aria-label="${label}"]`);
+        expect(ast.getText()).not.toContain(`[aria-label="${label} value"]`);
+      }
     }
   });
 
