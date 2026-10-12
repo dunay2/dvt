@@ -23,6 +23,11 @@ import {
   resolveCanvasRelationalOperationPresentation,
 } from './canvasRelationalOperationPresentation';
 import { canvasJoinOperationForType, toSubstraitJoinType } from './canvasRelationalTreeJoinType';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
+import { createSourceJoin } from './canvasSourceJoin';
+import { occurrenceInput } from './relational-source-occurrence/occurrence.test.fixtures';
+import { buildCanvasRelationalTreeRelation } from './canvasRelationalTreeRelationProjection';
+import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 
 const cases = [
   ['projection', 'PROJECT', 'project'],
@@ -44,6 +49,59 @@ const cases = [
 ] as const;
 
 describe('operation presentation catalog', () => {
+  it.each(cases.filter(([, , category]) => category === 'join'))(
+    'does not present preserved %s as a second JOIN type',
+    (name) => {
+      const document = createSourceJoin({
+        left: occurrenceInput,
+        right: occurrenceInput,
+        targetNodeId: 'model',
+        leftFieldName: 'parent_id',
+        rightFieldName: 'id',
+        joinType: JoinRel_JoinType.INNER,
+      });
+      document.sidecar.relations.at(-1)!.displayName = name;
+      document.sidecar.relations[0]!.displayName = 'left_join';
+      const original = structuredClone(document);
+      const indexed = indexSubstraitRelations(document);
+      if (!indexed.ok) throw new Error('The canonical JOIN fixture must be indexed');
+      const node = buildCanvasRelationalTreeRelation({ index: indexed.index, digest: 'proof' });
+      for (const language of ['en', 'es']) {
+        const copy = resolveCanvasViewCopy(language);
+        expect(resolveCanvasRelationalNodeCopy(node, copy)).toMatchObject({
+          operation: 'inner_join',
+          title: 'INNER JOIN',
+          detail: '',
+        });
+        expect(resolveCanvasRelationalNodeCopy(node.children[0]!.node, copy).title).toBe(
+          'left_join'
+        );
+      }
+      expect(node.displayName).toBe(name);
+      expect(document).toEqual(original);
+    }
+  );
+  it.each(['Customers and orders', 'LEFT_JOIN', 'left_join_custom', 'join', null])(
+    'preserves the free JOIN name %s and its null fallback',
+    (name) => {
+      const node = {
+        locator: 'join',
+        operator: 'join' as const,
+        operation: 'inner_join' as const,
+        substraitKind: 'join',
+        relationId: 'join',
+        displayName: name,
+        sourceRef: null,
+        output: { fields: [] },
+        expressionRefs: [],
+        decorations: [],
+        children: [],
+      };
+      expect(resolveCanvasRelationalNodeCopy(node, resolveCanvasViewCopy('en')).detail).toBe(
+        name ?? 'join'
+      );
+    }
+  );
   it('covers every composition operation exactly once', () => {
     expect(Object.keys(canvasRelationalOperationPresentation).sort()).toEqual(
       cases.map(([id]) => id).sort()

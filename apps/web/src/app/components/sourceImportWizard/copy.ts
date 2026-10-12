@@ -8,8 +8,23 @@ import type { SourceImportFailure } from './types';
 const EN_COPY = {
   title: 'Add source',
   description:
-    'Explore governed connections, inspect source objects, and attach supported origins to the canvas.',
+    'Explore governed connections, inspect source objects, and register sources in the catalog.',
   closeAction: 'Close source import',
+  catalogDetailResize: 'Resize catalogue and object details',
+  sample: {
+    title: 'Source sample',
+    action: 'View sample',
+    loading: 'Loading sample…',
+    notice:
+      'Up to 20 rows, first page only, without guaranteed order. Reading a sample does not select or import the source.',
+    failures: {
+      connection_not_found: 'The connection is no longer available.',
+      source_object_not_found: 'The source object is no longer available. Refresh the catalogue.',
+      publication_changed: 'The source changed. Request a new sample.',
+      unavailable: 'A row sample is not available for this source.',
+      unknown: 'The sample could not be loaded. Try again.',
+    },
+  },
   sections: {
     ariaLabel: 'Add source sections',
     connections: 'Connections',
@@ -18,10 +33,11 @@ const EN_COPY = {
     selected: 'Selected',
   },
   footer: {
+    selectionCount: 'Selected: {count}',
     doneAction: 'Done',
     cancelAction: 'Cancel',
     attachingAction: 'Attaching...',
-    attachAction: 'Attach sources to canvas',
+    attachAction: 'Add sources ({count})',
   },
   selectConnectionError: 'Please select a connection',
   selectAtLeastOneObjectError: 'Select at least one importable source object.',
@@ -81,7 +97,7 @@ const EN_COPY = {
   },
   selection: {
     title: 'Browse source objects',
-    descriptionPrefix: 'Choose supported objects to attach as source nodes. Selected:',
+    descriptionPrefix: 'Choose supported objects to register as sources. Selected:',
     loading: 'Loading source objects...',
     empty: 'No source objects are available for this connection.',
     searchLabel: 'Search source catalog',
@@ -128,8 +144,8 @@ const EN_COPY = {
   },
   review: {
     title: 'Selected sources',
-    description: 'Review the selected source objects before attaching them to the canvas.',
-    previewTitle: 'Canvas attachment preview',
+    description: 'Review the selected source objects before registering them.',
+    previewTitle: 'Source registration preview',
     connectionLabel: 'Connection:',
     sourceObjectsSelectedLabel: 'Source objects selected:',
     dataObjectGroupsLabel: 'Data object groups:',
@@ -203,7 +219,7 @@ const EN_COPY = {
     filesTitle: 'Source files updated',
     fileLabel: 'file',
     graphDraftWarning:
-      'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes.',
+      'Sources are registered in the left catalogue. Click a source to inspect its configuration; drag it onto the canvas to place a card.',
     dbtProjectFilesWarning:
       'The dbt project files were updated and the file-backed graph projection will refresh from project authority.',
   },
@@ -220,8 +236,23 @@ export type SourceImportWizardCopy = LocalizedCopyShape<typeof EN_COPY>;
 const ES_COPY = {
   title: 'Añadir origen',
   description:
-    'Explora conexiones gobernadas, inspecciona objetos de origen y adjunta al canvas los orígenes compatibles.',
+    'Explora conexiones gobernadas, inspecciona objetos de origen y registra fuentes en el catálogo.',
   closeAction: 'Cerrar importación de orígenes',
+  catalogDetailResize: 'Redimensionar catálogo y detalles del objeto',
+  sample: {
+    title: 'Muestra del origen',
+    action: 'Ver muestra',
+    loading: 'Cargando muestra…',
+    notice:
+      'Hasta 20 filas, solo la primera página y sin orden garantizado. Consultar la muestra no selecciona ni importa la fuente.',
+    failures: {
+      connection_not_found: 'La conexión ya no está disponible.',
+      source_object_not_found: 'El objeto de origen ya no está disponible. Actualiza el catálogo.',
+      publication_changed: 'El origen ha cambiado. Solicita una nueva muestra.',
+      unavailable: 'No hay una muestra de filas disponible para este origen.',
+      unknown: 'No se ha podido cargar la muestra. Vuelve a intentarlo.',
+    },
+  },
   sections: {
     ariaLabel: 'Secciones para añadir orígenes',
     connections: 'Conexiones',
@@ -233,7 +264,8 @@ const ES_COPY = {
     doneAction: 'Terminar',
     cancelAction: 'Cancelar',
     attachingAction: 'Adjuntando...',
-    attachAction: 'Adjuntar orígenes al canvas',
+    attachAction: 'Añadir fuentes ({count})',
+    selectionCount: 'Seleccionados: {count}',
   },
   selectConnectionError: 'Selecciona una conexión',
   selectAtLeastOneObjectError: 'Selecciona al menos un objeto de origen importable.',
@@ -295,7 +327,8 @@ const ES_COPY = {
   },
   selection: {
     title: 'Explorar objetos de origen',
-    descriptionPrefix: 'Elige los objetos compatibles que se adjuntarán como nodos. Seleccionados:',
+    descriptionPrefix:
+      'Elige los objetos compatibles que se registrarán como fuentes. Seleccionados:',
     loading: 'Cargando objetos de origen...',
     empty: 'No hay objetos de origen disponibles para esta conexión.',
     searchLabel: 'Buscar en el catálogo de orígenes',
@@ -342,8 +375,8 @@ const ES_COPY = {
   },
   review: {
     title: 'Orígenes seleccionados',
-    description: 'Revisa los objetos de origen seleccionados antes de adjuntarlos al canvas.',
-    previewTitle: 'Vista previa de adjuntos del canvas',
+    description: 'Revisa los objetos de origen seleccionados antes de registrarlos.',
+    previewTitle: 'Vista previa del registro de fuentes',
     connectionLabel: 'Conexión:',
     sourceObjectsSelectedLabel: 'Objetos de origen seleccionados:',
     dataObjectGroupsLabel: 'Grupos de objetos de datos:',
@@ -417,7 +450,7 @@ const ES_COPY = {
     filesTitle: 'Archivos de origen actualizados',
     fileLabel: 'archivo',
     graphDraftWarning:
-      'Canvas ha puesto en cola los identificadores importados y los enfocará cuando se actualice la autoridad gobernada del borrador.',
+      'Los orígenes están registrados en el catálogo izquierdo. Haz clic para ver su configuración; arrástralos al lienzo para colocar una tarjeta.',
     dbtProjectFilesWarning:
       'Se actualizaron los archivos del proyecto dbt y la proyección del grafo se refrescará desde la autoridad del proyecto.',
   },

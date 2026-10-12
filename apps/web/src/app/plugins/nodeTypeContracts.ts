@@ -8,6 +8,8 @@ import type { LucideIcon } from 'lucide-react';
 export type NodeKindRegistration = {
   kind: PluginNodeKind;
   pluginId: string;
+  /** Exact importer identities that may persist this kind; the authoring factory remains pluginId. */
+  importedBy?: readonly string[];
   label: string;
   role: CoreNodeRole;
   icon: LucideIcon;

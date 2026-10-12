@@ -4,14 +4,8 @@ import { SOURCE_IMPORT_SECTIONS } from './sourceImportWizardModel';
 import { useSourceImportLocalization } from './copy';
 import type { SourceImportSection } from './types';
 
-const sourceImportSectionTabClassNames = {
-  list: 'mb-4 grid grid-cols-4 overflow-hidden rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)]',
-  tabBase:
-    'border-r border-[color:var(--border-default)] px-3 py-2 text-center text-xs font-medium transition-colors last:border-r-0 disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:bg-transparent disabled:hover:text-[var(--text-muted)]',
-  tabActive: 'bg-[var(--surface-selected)] text-[var(--text-strong)]',
-  tabInactive:
-    'text-[var(--text-muted)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-strong)]',
-} as const;
+import styles from './SourceImportWorkspace.module.css';
+const sourceImportSectionTabClassNames = styles;
 
 type SourceImportSectionTabsProps = Readonly<{
   activeSection: SourceImportSection;

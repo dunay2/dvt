@@ -5,7 +5,8 @@
  * @consequence No query, clipboard or table-state policy is owned by markup.
  * @version 1.0.0
  */
-import { AlignJustify, Copy, Search, WrapText } from 'lucide-react';
+import { AlignJustify, Copy, Info, Search, WrapText } from 'lucide-react';
+import type { ReactNode } from 'react';
 import type { useOperationalDrawerDataTable } from './useOperationalDrawerDataTable';
 import type { OperationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import styles from './OperationalDrawerDataTable.module.css';
@@ -13,9 +14,13 @@ import styles from './OperationalDrawerDataTable.module.css';
 export function OperationalDrawerDataTableTemplate({
   model,
   copy,
+  toolbarActions,
+  footer,
 }: Readonly<{
   model: ReturnType<typeof useOperationalDrawerDataTable>;
   copy: OperationalDrawerDataTableCopy;
+  toolbarActions?: ReactNode;
+  footer?: ReactNode;
 }>): JSX.Element {
   return (
     <section
@@ -25,7 +30,7 @@ export function OperationalDrawerDataTableTemplate({
       data-wrap={model.wrap}
       aria-label={model.caption}
     >
-      <div className={styles.toolbar}>
+      <div className={styles.toolbar} data-slot="data-grid-toolbar">
         <label className={styles.search}>
           <Search aria-hidden="true" />
           <input
@@ -42,6 +47,7 @@ export function OperationalDrawerDataTableTemplate({
             .replace('{total}', String(model.total))}
         </span>
         <div className={styles.actions}>
+          {toolbarActions}
           <button
             type="button"
             title={model.comfortable ? copy.compact : copy.comfortable}
@@ -143,10 +149,15 @@ export function OperationalDrawerDataTableTemplate({
           <p className={styles.empty}>{copy.noMatches}</p>
         ) : null}
       </div>
-      <div className={styles.footer}>
-        <span>{copy.scope}</span>
+      <footer className={styles.footer}>
         <span role="status">{model.feedback == null ? '' : copy[model.feedback]}</span>
-      </div>
+        <div className={styles.footerFacts}>
+          {footer}
+          <span className={styles.help} tabIndex={0} aria-label={copy.scope} title={copy.scope}>
+            <Info aria-hidden="true" />
+          </span>
+        </div>
+      </footer>
     </section>
   );
 }

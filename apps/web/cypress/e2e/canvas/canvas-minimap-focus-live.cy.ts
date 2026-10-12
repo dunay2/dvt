@@ -1,13 +1,22 @@
-/** Owned concern: prove minimap focus through the shared Canvas and live protected API. */
+/**
+ * Owned concern: prove minimap focus through the shared Canvas and live protected API.
+ * @baseline GH-3610: earlier specs may persist the default workspace draft.
+ * @decision Obtain an independent granted project through the shared CreateProject UI owner.
+ * @consequence Minimap geometry and unchanged draft revision use its acknowledged exact scope.
+ * @version 1.0.1
+ */
+import type { WorkspaceGraphDraftScope } from '@dvt/contracts';
+
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickCanvasAddCatalogAction,
   clickCanvasContextMenuAction,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
+import { createLiveProjectThroughUi } from '../../support/liveProjectAuthoring';
 import {
   readLiveGraphDraft,
-  resolveLiveWorkspaceSession,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
@@ -17,19 +26,20 @@ function createModel(x: number, y: number): void {
   clickCanvasAddCatalogAction('create-node', 'dvt:transform');
 }
 
-function waitForSavedNodes(attempts = 40): Cypress.Chainable<unknown> {
-  return readLiveGraphDraft(resolveLiveWorkspaceSession(), { failOnStatusCode: false }).then(
-    (response) => {
-      const body = response.body as {
-        record?: { revision: string; draft: { nodeIds: string[] } };
-      };
-      if (response.status === 200 && body.record?.draft.nodeIds.length === 2) {
-        return body.record;
-      }
-      if (attempts === 0) throw new Error('The two Canvas nodes were not persisted');
-      return cy.wait(250).then(() => waitForSavedNodes(attempts - 1));
+function waitForSavedNodes(
+  scope: WorkspaceGraphDraftScope,
+  attempts = 40
+): Cypress.Chainable<unknown> {
+  return readLiveGraphDraft(scope, { failOnStatusCode: false }).then((response) => {
+    const body = response.body as {
+      record?: { revision: string; draft: { nodeIds: string[] } };
+    };
+    if (response.status === 200 && body.record?.draft.nodeIds.length === 2) {
+      return body.record;
     }
-  );
+    if (attempts === 0) throw new Error('The two Canvas nodes were not persisted');
+    return cy.wait(250).then(() => waitForSavedNodes(scope, attempts - 1));
+  });
 }
 
 function assertNodeCentered(nodeId: string): void {
@@ -56,11 +66,21 @@ describe('Canvas minimap node focus live', () => {
   });
 
   it('centers distant nodes without changing their positions or the saved graph', () => {
+    let scope: WorkspaceGraphDraftScope;
     cy.viewport(1440, 900);
-    readLiveGraphDraft(resolveLiveWorkspaceSession(), { failOnStatusCode: false })
-      .its('status')
-      .should('eq', 404);
-    visitWithLiveWorkspaceSession('/canvas');
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          APPLICATION_LANGUAGE_STORAGE_KEY,
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    createLiveProjectThroughUi(`Minimap focus ${Date.now()}`).then((createdScope) => {
+      scope = createdScope;
+      return readLiveGraphDraft(scope, { failOnStatusCode: false }).its('status').should('eq', 404);
+    });
     cy.get('[data-slot="canvas-playground-template-choice"]', { timeout: 20_000 })
       .should('have.length', 1)
       .should('be.enabled')
@@ -74,7 +94,7 @@ describe('Canvas minimap node focus live', () => {
     createModel(1120, 430);
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('.react-flow__minimap-node').should('have.length', 2);
-    waitForSavedNodes().as('savedGraph');
+    cy.then(() => waitForSavedNodes(scope)).as('savedGraph');
 
     cy.get('.react-flow__node').then(($nodes) => {
       const nodes = [...$nodes].map((node) => ({
@@ -150,7 +170,7 @@ describe('Canvas minimap node focus live', () => {
       }
     });
     cy.get('@savedGraph').then((before) => {
-      waitForSavedNodes().should('deep.equal', before);
+      waitForSavedNodes(scope).should('deep.equal', before);
     });
   });
 });

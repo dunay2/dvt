@@ -20,14 +20,9 @@ function graphChange(contracts: CanvasMutationContracts): CanvasGraphChangeContr
 
 function sourceImport(contracts: CanvasMutationContracts): CanvasSourceImportContracts {
   return {
-    state: {
-      graphModel: contracts.state.graphModel,
-    },
     effects: {
       setDraftSession: contracts.effects.setDraftSession,
-      setInspectorNode: contracts.effects.setInspectorNode,
       setCurrentPlan: contracts.effects.setCurrentPlan,
-      onLayoutComplete: contracts.effects.onLayoutComplete,
       invalidateInFlightSaveAttempt: contracts.effects.invalidateInFlightSaveAttempt,
     },
     policy: contracts.policy,

@@ -1,5 +1,14 @@
-/** Owned concern: drive the real warehouse Source Import dialog in live browser proofs. */
+/**
+ * Owned concern: drive the real warehouse Source Import dialog in live browser proofs.
+ * @baseline GH-3610: file-backed creation returns to Browse after its asynchronous response.
+ * @decision Await the creation form closing, then visit Connections before its assertions.
+ * @consequence Proofs retain exact connection identity and real import/file authority checks.
+ * @version 1.0.2
+ */
+import type { WorkspaceGraphDraftScope, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
+
+import { readLiveGraphDraft } from './liveProtectedRuntime';
 
 function toStableYamlIdentifierPart(part: string): string {
   const normalized = part
@@ -43,6 +52,8 @@ function createLivePostgresConnection(connectionNameSuffix = ''): void {
     .clear()
     .type('postgres:local-postgres-proof');
   cy.contains('[role="dialog"] button', 'Create connection').should('be.enabled').click();
+  cy.get('[data-slot="source-import-create-connection-name"]').should('not.exist');
+  cy.contains('[role="tab"]', 'Connections').click();
   cy.contains('[data-slot="source-import-connection-option"]', connectionName, {
     timeout: 30_000,
   })
@@ -68,7 +79,7 @@ export function importLivePostgresSource(
 
   if (expectedAuthority.kind === 'dbt-project-files') {
     cy.contains('[role="dialog"]', 'Selected: 1', { timeout: 20_000 }).should('be.visible');
-    cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+    cy.contains('button', 'Add sources').should('be.enabled').click();
     cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
     cy.contains('[role="dialog"]', 'Source files updated').should('be.visible');
     cy.contains('[role="dialog"]', `[file] ${expectedAuthority.expectedYamlPath}`).should(
@@ -134,10 +145,65 @@ export function importLivePostgresSource(
     .and('contain.text', '3 rows')
     .and('contain.text', '32 KB')
     .and('contain.text', '3 columns');
-  cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+  cy.contains('button', 'Add sources').should('be.enabled').click();
 
   cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
 
-  cy.contains('[role="dialog"]', 'governed draft authority refreshes').should('be.visible');
+  cy.contains('[role="dialog"]', 'Sources are registered in the left catalogue').should(
+    'be.visible'
+  );
   cy.contains('[role="dialog"] button', 'Done').click();
+}
+
+function waitForPlacedSource(
+  id: string,
+  scope: WorkspaceGraphDraftScope,
+  previousIds: readonly string[],
+  attempts = 40
+): Cypress.Chainable<string> {
+  return readLiveGraphDraft(scope).then(({ body }) => {
+    const draft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
+    const placed = draft.nodes.find(
+      (node) =>
+        node.sourceDefinitionId === id &&
+        draft.nodeIds.includes(node.id) &&
+        !previousIds.includes(node.id)
+    );
+    if (placed != null) return cy.wrap(placed.id, { log: false });
+    if (attempts === 0)
+      throw new Error(`Source ${id} was not durably placed in ${scope.projectId}`);
+    return cy.wait(250).then(() => waitForPlacedSource(id, scope, previousIds, attempts - 1));
+  });
+}
+
+export function placeRegisteredSource(
+  id: string,
+  scope: WorkspaceGraphDraftScope,
+  position = { x: 220, y: 160 }
+): Cypress.Chainable<string> {
+  let previousIds: string[] = [];
+  cy.get('body').then((body) => {
+    previousIds = Array.from(body[0]!.querySelectorAll('.react-flow__node')).map((node) =>
+      node.getAttribute('data-id')!
+    );
+  });
+  const dataTransfer = new DataTransfer();
+  cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`)
+    .should('have.attr', 'draggable', 'true')
+    .trigger('dragstart', { dataTransfer });
+  cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
+    const bounds = $pane[0]!.getBoundingClientRect();
+    cy.wrap($pane)
+      .trigger('dragover', { dataTransfer })
+      .trigger('drop', {
+        dataTransfer,
+        clientX: bounds.left + position.x,
+        clientY: bounds.top + position.y,
+      });
+  });
+  cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`).trigger(
+    'dragend',
+    { dataTransfer }
+  );
+  return cy.then(() => waitForPlacedSource(id, scope, previousIds));
 }

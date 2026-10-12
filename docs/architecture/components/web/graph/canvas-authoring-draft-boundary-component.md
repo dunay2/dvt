@@ -89,6 +89,32 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
 
 ## Invariants
 
+### Source definitions and explicit instances
+
+A registered input owns source configuration. Each explicit catalogue drop
+creates a fresh input identity referencing it via `sourceDefinitionId`. The
+instance persists no metadata or path override. The shared contracts resolver
+supplies current configuration to Canvas and protected preview projections.
+Missing, self, chained and incompatible references fail closed. Removing one
+instance retains its source definition and siblings. Existing placed definitions
+remain valid without migration. These semantics remain on `CreateCanvasNode`
+and `SaveWorkspaceGraphDraft`, with existing permission and concurrency gates.
+
+Placement identities use the shared `@dvt/crypto` UUID primitive, not the
+secure-context-only browser `crypto.randomUUID` API. The primitive requires
+cryptographically secure entropy and fails explicitly when it is unavailable;
+there is no timestamp or pseudo-random fallback. The existing injected identity
+seam remains available for deterministic tests.
+
+```mermaid
+flowchart LR
+  Definition[Source configuration] -->|drop| Instance[Independent placement]
+  Instance -->|sourceDefinitionId| Definition
+  Definition --> Resolver[Shared source resolver]
+  Instance --> Resolver
+  Resolver --> Consumers[Canvas and protected preview]
+```
+
 - `WorkspaceGraphAuthoringDraft` is the only protected save payload.
 - `apps/web/src/app/ports/workspace.ts` must not export
   `WorkspaceGraphDraft`, `WorkspaceGraphDraftRecord`,

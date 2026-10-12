@@ -104,14 +104,8 @@ export type CanvasEdgeChangeContracts = {
 
 export type CanvasSourceImportEffects = {
   setDraftSession: CanvasDraftSessionSetter;
-  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   setCurrentPlan: (value: null) => void;
-  onLayoutComplete: CanvasLayoutCompletionHandler;
   invalidateInFlightSaveAttempt: () => void;
-};
-
-export type CanvasSourceImportState = {
-  graphModel: CanvasGraphModelLike;
 };
 
 export type CanvasSourceImportPolicy = {
@@ -120,7 +114,6 @@ export type CanvasSourceImportPolicy = {
 };
 
 export type CanvasSourceImportContracts = {
-  state: CanvasSourceImportState;
   effects: CanvasSourceImportEffects;
   policy: CanvasSourceImportPolicy;
 };

@@ -41,7 +41,7 @@ describe('CanvasViewport graph search', () => {
       fireEvent.keyDown(surface, { key: 'f', ctrlKey: true });
     });
     const input = await waitFor(() => {
-      const candidate = harness.container.querySelector<HTMLInputElement>('input[type="search"]');
+      const candidate = searchControl().querySelector<HTMLInputElement>('input[type="search"]');
       expect(candidate).not.toBeNull();
       expect(document.activeElement).toBe(candidate);
       return candidate!;
@@ -110,7 +110,7 @@ describe('CanvasViewport graph search', () => {
     act(() => {
       fireEvent.keyDown(surface, { key: 'f', metaKey: true });
     });
-    const reopenedInput = harness.container.querySelector<HTMLInputElement>('input[type="search"]');
+    const reopenedInput = searchControl().querySelector<HTMLInputElement>('input[type="search"]');
     expect(reopenedInput?.value).toBe('');
   });
 
@@ -125,7 +125,7 @@ describe('CanvasViewport graph search', () => {
       fireEvent.keyDown(surface, { key: 'f', ctrlKey: true });
     });
     const input = await waitFor(() => {
-      const candidate = harness.container.querySelector<HTMLInputElement>('input[type="search"]');
+      const candidate = searchControl().querySelector<HTMLInputElement>('input[type="search"]');
       expect(candidate).not.toBeNull();
       return candidate!;
     });

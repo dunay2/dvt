@@ -43,6 +43,15 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
 ## Invariants
 
 - Canvas edge projection reads edge colors from `graphFlowPalette`.
+- Outer Canvas dependencies follow the analyzer's curved cyan 1.5px convention.
+  React Flow's Bezier geometry respects source and target handle orientation;
+  an SVG marker follows the path without duplicating direction calculations.
+  Search highlighting addresses the marker's path, not just its parent, so the
+  glyph and dependency line retain the same computed color. Forced-colors uses
+  the same child-glyph boundary.
+  Selection increases stroke width. Closed execution gates keep their dashed
+  line and valve cue. Existing edge selection, context menu and deletion rails
+  remain unchanged; these are not nested relational operation controls.
 - Node-kind catalogs do not own hex minimap literals.
 - Generic graph renderers and plugin-owned dbt node renderer chrome do not own
   `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
@@ -145,6 +154,22 @@ flowchart LR
 - `DbtNodeRenderer.tsx`
 
 ## Drift Guard
+
+The controlled screen-composition proof compares each direction glyph with its
+own edge after normal rendering, search highlighting, and accessibility-media
+emulation. Media acknowledgement is not a final computed-style receipt. Keep
+the complete marker, geometry, edge-reference, accessibility, and computed-color
+assertions inside a retryable Cypress assertion against the queried DOM. Use
+the existing assertion deadline; do not add sleeps, enlarge timeouts, relax
+color equality, or change production CSS to accommodate an intermediate sample.
+
+```mermaid
+flowchart LR
+    Media["Accessibility media acknowledged"] --> Query["Query actual direction cues"]
+    Query --> Compare["Assert every marker and its edge"]
+    Compare -->|"Not yet equal; existing deadline"| Query
+    Compare -->|"All invariants hold"| Proof["Browser evidence"]
+```
 
 `graphVisualTokenConvergence.architecture.test.ts` rejects reintroduced local
 color-family or hex ownership in the graph renderer, fallback renderer, dbt

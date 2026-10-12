@@ -1,7 +1,13 @@
-/** Transform owns a stable edit draft; analysis refreshes cannot erase typed input. */
+/**
+ * Owned concern: retain a calculated SELECT draft and submit it through the existing projection command.
+ * @baseline ADR-0064: canonical ProjectRel owns calculated fields, independently of JOIN predicates.
+ * @decision Keep the output-list slot mounted across schema queries and hide it during formula editing.
+ * @consequence Formula editing fills Output; closing it restores the retained list and drafts.
+ * @version 1.2.1
+ */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Pencil, Plus } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Button } from '../../components/ui/button';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
@@ -17,11 +23,15 @@ export function CanvasDerivedOutputSection({
   relationId,
   onChange,
   onPendingChange,
+  onSaved,
+  children,
 }: Readonly<{
   relationId: string;
   onChange: (document: SubstraitDocument) => void | boolean;
   onPendingChange?: (pending: boolean) => void;
-}>): JSX.Element | null {
+  onSaved?: (relationId: string) => void;
+  children?: ReactNode;
+}>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
   const current = useCanvasDerivedOutputAuthoring(relationId);
@@ -39,10 +49,10 @@ export function CanvasDerivedOutputSection({
     pendingCallback.current?.(pending);
     return () => pendingCallback.current?.(false);
   }, [pending]);
-  if (model == null) return null;
   return (
     <section className="space-y-3">
-      {editing != null ? (
+      {children == null ? null : <div hidden={pending}>{children}</div>}
+      {model == null ? null : editing != null ? (
         <DerivedOutputFormulaForm
           initial={editing.initial}
           fields={model.fields.filter((field) => field.fieldId !== editing.outputFieldId)}
@@ -59,15 +69,23 @@ export function CanvasDerivedOutputSection({
             .map((field) => field.name)}
           onCancel={() => setEditing(null)}
           onSubmit={async (request) => {
-            const result = await command.executeDetailed((session, identity) =>
-              applySelectedRelationDerivedOutput(session, {
+            let savedRelationId = relationId;
+            const result = await command.executeDetailed(async (session, identity) => {
+              const document = await applySelectedRelationDerivedOutput(session, {
                 ...identity,
                 ...request,
                 expectedRevision: model.dragScope.revision,
                 outputFieldId: editing.outputFieldId,
                 intent: model.intent,
-              })
-            );
+              });
+              if (model.intent === 'insert') {
+                const consumerId = session.locate(relationId, session.revision).consumers[0]!;
+                const { binding } = session.locate(consumerId, session.revision);
+                savedRelationId = binding.authoringOwnerRelationId ?? binding.relationId;
+              }
+              return document;
+            });
+            if (result.ok) onSaved?.(savedRelationId);
             return result.ok
               ? null
               : (formatCanvasTransformDependencyError(result.error, copy) ??

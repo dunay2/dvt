@@ -8,8 +8,14 @@ import NodeButtonSource from './CanvasRelationalTreeNodeButton.tsx?raw';
 import CardMenuSource from './CanvasRelationalTreeCardMenu.tsx?raw';
 import InspectionSource from './CanvasRelationalTreeInspection.tsx?raw';
 import InspectionModelSource from './relational-inspection/inspectionModel.ts?raw';
+import JoinFormulaSource from './canvasJoinPredicateFormula.ts?raw';
+import JoinFormulaEditorSource from './CanvasJoinPredicateFormulaController.tsx?raw';
+import DerivedOutputSource from './CanvasDerivedOutputSection.tsx?raw';
+import CalculatedOutputsSource from './CanvasCalculatedRelationOutputs.tsx?raw';
+import TransformInspectorSource from './CanvasTransformInspector.tsx?raw';
 import InspectionPanelSource from './relational-inspection/RelationalInspectionPanel.tsx?raw';
 import NodePresentationSource from './canvasRelationalNodePresentation.ts?raw';
+import ModelOutputInspectorSource from './CanvasModelOutputInspector.tsx?raw';
 import RemovalSessionSource from './useCanvasRelationalTreeRemoval.ts?raw';
 import CardDetailSource from './canvasRelationalTreeDetails.ts?raw';
 import ScalarTreeSource from './CanvasRelationalScalarTree.tsx?raw';
@@ -71,6 +77,27 @@ import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps JOIN type-code suppression in the shared read-only presentation mapper', () => {
+    expect(NodePresentationSource).toContain('isCanvasJoinOperation(node.displayName)');
+    expect(NodePresentationSource).not.toMatch(/displayName\s*=|session\.apply|useEffect/);
+    for (const source of [NodeButtonSource, ModelOutputInspectorSource]) {
+      expect(source).toContain('resolveCanvasRelationalNodeCopy');
+      expect(source).not.toContain('isCanvasJoinOperation');
+    }
+  });
+  it('shares calculated SELECT authoring through the existing atomic projection command', () => {
+    for (const source of [InlineEditorSource, TransformInspectorSource]) {
+      expect(source.match(/<CanvasCalculatedRelationOutputs\b/g)).toHaveLength(1);
+      expect(source).not.toMatch(/compileDerivedOutputFormula|applySelectedRelationDerivedOutput/);
+    }
+    expect(DerivedOutputSource).toContain('applySelectedRelationDerivedOutput');
+    expect(CalculatedOutputsSource.match(/<CanvasDerivedOutputSection\b/g)).toHaveLength(1);
+    expect(CalculatedOutputsSource).not.toMatch(
+      /compileDerivedOutputFormula|applySelectedRelationDerivedOutput/
+    );
+    expect(DerivedOutputSource).toContain('authoringOwnerRelationId');
+    expect(DerivedOutputSource).not.toMatch(/insertSelectedRelationTransform|session\.apply\(/);
+  });
   it('has no second scalar editor on passive Model cards', () => {
     expect(
       Object.keys(
@@ -84,7 +111,14 @@ describe('Canvas relational-tree Workbench architecture', () => {
       )
     ).toEqual([]);
   });
-  it('retires JOIN scalar creation without moving its compiler into presentation', () => {
+  it('reuses the shared formula compiler without reviving JOIN scalar-chain creation', () => {
+    expect(JoinFormulaSource).toContain('compileDerivedOutputFormula');
+    expect(JoinFormulaSource).toContain('describeDerivedOutputFormula');
+    expect(JoinFormulaEditorSource).toContain('DerivedOutputFormulaEditor');
+    expect(JoinFormulaEditorSource).toContain('replaceSelectedJoinConditions');
+    expect(JoinFormulaEditorSource).not.toMatch(
+      /\.scalarFunction\(|ensureScalarFunction|session\.apply\(/
+    );
     expect(Object.keys(import.meta.glob('./join-condition/JoinOperandFunctionChain.tsx'))).toEqual(
       []
     );

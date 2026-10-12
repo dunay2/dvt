@@ -44,6 +44,7 @@ export default function SourceImportWizard({
       isResultStep={isResultStep}
       isProcessing={state.isProcessing}
       canImport={controller.canImport}
+      selectedCount={controller.selectedCount}
       preventCloseOnEscape={state.renameConnectionFormOpen}
       onClose={onClose}
       onRestoreFocus={onRestoreFocus}

@@ -210,6 +210,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Snapshot work queue claim semantics can introduce duplicate rebuild churn under heavy write bursts](R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml)
 - [Source adapters can drift from the provider-neutral catalog contract](R-20260711-SOURCE-OBJECT-CATALOG-CONTRACT.yaml)
 - [Source identity could diverge across Canvas authorities or retain stale connection labels](R-20260815-SOURCE-IDENTITY-AUTHORITY-DRIFT.yaml)
+- [Source instances could diverge from their configuration owner](R-20261011-SOURCE-INSTANCE-CONFIGURATION.yaml)
 - [Source operations could diverge from canonical Substrait authority](R-20260903-SOURCE-FILTER-AUTHORITY.yaml)
 - [SQL and visual transformation authority could diverge](R-20260816-VTX1-VISUAL-TRANSFORM-AUTHORITY.yaml)
 - [SQL-first compiler mapping consumers may drift from the frozen canonical contract](R-20260414-TF-A1-B-COMPILER-MAPPING-DRIFT.yaml)

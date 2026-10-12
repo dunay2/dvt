@@ -1,6 +1,10 @@
 /**
  * Owned concern: provide the governed Cypress interaction seam for Canvas
  * selection and native button clicks used by selected-closure proof lanes.
+ * @baseline GH-3610: a styled node can still lie outside the visible Canvas viewport.
+ * @decision Use public Fit and focus before an unforced node context gesture.
+ * @consequence Selection evidence retains actionability and restores focus to its real opener.
+ * @version 1.0.1
  */
 type CanvasMenuLabel = string | RegExp;
 
@@ -25,10 +29,13 @@ export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery
 }
 
 export function openCanvasNodeOperations(nodeName: string): void {
+  cy.get('.react-flow__controls-fitview').click();
   getVisibleCanvasNode(nodeName)
     .find('[data-slot="canvas-node-shell"]')
-    .should('exist')
-    .rightclick('center', { force: true });
+    .should('be.visible')
+    .focus()
+    .should('be.focused')
+    .rightclick('center');
   cy.get('[data-slot="canvas-node-context-menu"]').should('be.visible');
 }
 

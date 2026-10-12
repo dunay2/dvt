@@ -7,6 +7,8 @@ import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinCon
 import { CanvasSelectedJoinConditionTree } from './CanvasSelectedJoinConditionTree';
 import type { Dispatch, SetStateAction } from 'react';
 import type { ConditionDraft } from './join-condition/conditionDraft';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import {
   appendDvtSubstraitJoinComparison,
   updateDvtSubstraitJoinComparison,
@@ -35,6 +37,8 @@ export function DvtSubstraitJoinPredicateEditors({
   onDraftChange: Dispatch<SetStateAction<ConditionDraft | null>>;
 }>) {
   const command = useRelationCommand(selected.relationId, onChange);
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasSemanticEditorCopy(language).joinFormula;
   const conditions = selected.conditions;
   const commit = (next: readonly DvtSubstraitJoinPredicateCondition[] | null) =>
     next == null
@@ -50,10 +54,7 @@ export function DvtSubstraitJoinPredicateEditors({
           conditions={null}
           onSelectCondition={() => undefined}
         />
-        <p role="status">
-          Esta expresión no se puede editar con el formulario de condiciones. El JOIN compara campos
-          y valores; crea los cálculos en un Transform previo.
-        </p>
+        <p role="status">{copy.advanced}</p>
       </>
     );
   return (
@@ -63,9 +64,7 @@ export function DvtSubstraitJoinPredicateEditors({
       data-slot="dvt-substrait-join-predicate-editors"
       data-relation-id={selected.relationId}
     >
-      {command.state === 'error' ? (
-        <p role="alert">No se pudo guardar la condición. Revisa sus operandos.</p>
-      ) : null}
+      {command.state === 'error' ? <p role="alert">{copy.failed}</p> : null}
       <SemanticWorkbenchJoinConditionEditor
         key={selected.relationId}
         fields={selected.fields}

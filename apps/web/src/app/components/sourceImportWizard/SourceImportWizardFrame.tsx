@@ -1,24 +1,25 @@
-/** Owned concern: render the Add Source modal frame without owning import workflow state. */
+/**
+ * Owned concern: render the inline Add Sources workspace without owning import workflow state.
+ * @baseline GH-3610: registration does not place a Canvas card.
+ * @decision Reuse dialog focus semantics without a portal, backdrop or movable frame.
+ * @consequence The surrounding explorer remains accessible and Canvas stays mounted.
+ * @version 1.0.0
+ */
 import type { ReactNode } from 'react';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
+import { Content as DialogContent, Close as DialogClose } from '@radix-ui/react-dialog';
 
 import { Button } from '../ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../ui/dialog';
+import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { ScrollArea } from '../ui/scroll-area';
-import { useDraggableDialogPosition } from '../ui/use-draggable-dialog-position';
 import { useSourceImportLocalization } from './copy';
+import styles from './SourceImportWorkspace.module.css';
 
 type SourceImportWizardFooterProps = Readonly<{
   isResultStep: boolean;
   isProcessing: boolean;
   canImport: boolean;
+  selectedCount?: number;
   onClose: () => void;
   onDone: () => void;
   onImport: () => void;
@@ -28,6 +29,7 @@ export function SourceImportWizardFooter({
   isResultStep,
   isProcessing,
   canImport,
+  selectedCount = 0,
   onClose,
   onDone,
   onImport,
@@ -36,35 +38,28 @@ export function SourceImportWizardFooter({
 
   if (isResultStep) {
     return (
-      <Button
-        onClick={onDone}
-        className="w-full bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
-      >
+      <Button onClick={onDone} className={styles.primaryAction}>
         {copy.footer.doneAction}
       </Button>
     );
   }
 
   return (
-    <div className="flex w-full flex-wrap justify-end gap-2">
+    <div className={styles.footerActions}>
+      <span className={styles.selectionCount}>
+        {copy.footer.selectionCount.replace('{count}', String(selectedCount))}
+      </span>
       <Button variant="outline" onClick={onClose}>
         {copy.footer.cancelAction}
       </Button>
-      <Button
-        onClick={onImport}
-        disabled={!canImport}
-        className="bg-blue-700 text-white hover:bg-blue-600 disabled:bg-slate-800 disabled:text-slate-300 disabled:opacity-100"
-      >
+      <Button onClick={onImport} disabled={!canImport} className={styles.primaryAction}>
         {isProcessing ? (
           <>
-            <Loader2 className="mr-2 size-4 animate-spin" />
+            <Loader2 className={styles.spinner} aria-hidden="true" />
             {copy.footer.attachingAction}
           </>
         ) : (
-          <>
-            <CheckCircle2 className="mr-2 size-4" />
-            {copy.footer.attachAction}
-          </>
+          copy.footer.attachAction.replace('{count}', String(selectedCount))
         )}
       </Button>
     </div>
@@ -77,6 +72,7 @@ type SourceImportWizardFrameProps = Readonly<{
   isResultStep: boolean;
   isProcessing: boolean;
   canImport: boolean;
+  selectedCount?: number;
   preventCloseOnEscape?: boolean;
   sections: ReactNode;
   children: ReactNode;
@@ -92,6 +88,7 @@ export function SourceImportWizardFrame({
   isResultStep,
   isProcessing,
   canImport,
+  selectedCount,
   preventCloseOnEscape = false,
   sections,
   children,
@@ -101,10 +98,10 @@ export function SourceImportWizardFrame({
   onImport,
 }: SourceImportWizardFrameProps): JSX.Element {
   const { copy } = useSourceImportLocalization();
-  const dialogPosition = useDraggableDialogPosition(open);
 
   return (
     <Dialog
+      modal={false}
       open={open}
       onOpenChange={(nextOpen) => {
         if (!nextOpen) {
@@ -113,10 +110,9 @@ export function SourceImportWizardFrame({
       }}
     >
       <DialogContent
-        ref={dialogPosition.contentRef}
-        closeLabel={copy.closeAction}
-        style={dialogPosition.contentStyle}
-        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] min-w-0 flex-col overflow-hidden sm:max-w-[min(64rem,calc(100vw-2rem))]"
+        data-slot="source-import-workspace"
+        className={styles.workspace}
+        onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => {
           if (preventCloseOnEscape) {
             event.preventDefault();
@@ -129,31 +125,36 @@ export function SourceImportWizardFrame({
           }
         }}
       >
-        <DialogHeader
-          className="shrink-0 cursor-move touch-none select-none pr-10"
-          {...dialogPosition.dragHandleProps}
-        >
+        <DialogHeader className={styles.header}>
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
+        <DialogClose
+          className={styles.close}
+          aria-label={copy.closeAction}
+          title={copy.closeAction}
+        >
+          <X aria-hidden="true" />
+        </DialogClose>
 
-        {isResultStep ? null : <div className="shrink-0">{sections}</div>}
+        {isResultStep ? null : <div className={styles.sections}>{sections}</div>}
 
         <ScrollArea
           key={activeContentId}
           type="always"
           data-slot="source-import-wizard-content-scroll"
           data-overflow-affordance="always"
-          className="-mx-6 min-h-0 min-w-0 flex-1 px-6"
+          className={styles.contentScroll}
         >
-          <div className="min-w-0 pb-4">{children}</div>
+          <div className={styles.content}>{children}</div>
         </ScrollArea>
 
-        <DialogFooter className="mt-4 shrink-0">
+        <DialogFooter className={styles.footer}>
           <SourceImportWizardFooter
             isResultStep={isResultStep}
             isProcessing={isProcessing}
             canImport={canImport}
+            selectedCount={selectedCount}
             onClose={onClose}
             onDone={onDone}
             onImport={onImport}

@@ -1,4 +1,10 @@
-/** Owned concern: verify the governed Canvas entry screen chrome in browser e2e. */
+/**
+ * Owned concern: verify the governed Canvas entry screen chrome in browser e2e.
+ * @baseline GH-3610: Bezier dependencies use oriented SVG markers, not manual triangles.
+ * @decision Requery actual glyph/edge invariants within the existing deadline after media changes.
+ * @consequence Direction, node inspection and project-file independence retain real browser proof.
+ * @version 1.0.1
+ */
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
@@ -225,19 +231,28 @@ function assertCanvasPropertiesFitsViewport(width: number, height: number): void
 }
 
 function assertDependencyDirectionCues(): void {
-  cy.get('[data-slot="canvas-dependency-direction-cue"]')
+  cy.get<SVGMarkerElement>('[data-slot="canvas-dependency-direction-cue"]')
     .should('have.length.at.least', 2)
-    .each(($cue) => {
-      const cue = $cue.get(0) as SVGGraphicsElement;
-      const bounds = cue.getBBox();
-      const edgePath = cue.closest('.react-flow__edge')?.querySelector('.react-flow__edge-path');
+    .should(($cues) => {
+      for (const cue of $cues.toArray()) {
+        const glyph = cue.querySelector<SVGPathElement>('path')!;
+        const bounds = glyph.getBBox();
+        const edgePath = cue
+          .closest('.react-flow__edge')
+          ?.querySelector<SVGPathElement>('.react-flow__edge-path');
 
-      expect(bounds.width).to.equal(12);
-      expect(bounds.height).to.equal(10);
-      expect(cue.getAttribute('aria-hidden')).to.equal('true');
-      expect(getComputedStyle(cue).fill).not.to.equal('none');
-      expect(getComputedStyle(cue).pointerEvents).to.equal('none');
-      expect(edgePath?.getAttribute('marker-end')).to.equal(null);
+        expect(cue.tagName.toLowerCase()).to.equal('marker');
+        expect(cue.getAttribute('markerWidth')).to.equal('12');
+        expect(cue.getAttribute('markerHeight')).to.equal('12');
+        expect(cue.getAttribute('orient')).to.equal('auto');
+        expect(cue.getAttribute('markerUnits')).to.equal('userSpaceOnUse');
+        expect(bounds.width).to.equal(8);
+        expect(bounds.height).to.equal(8);
+        expect(cue.getAttribute('aria-hidden')).to.equal('true');
+        expect(getComputedStyle(glyph).fill).to.equal(getComputedStyle(edgePath!).stroke);
+        expect(getComputedStyle(cue).pointerEvents).to.equal('none');
+        expect(edgePath?.getAttribute('marker-end')).to.equal(`url(#${cue.id})`);
+      }
     });
 }
 
@@ -1107,6 +1122,7 @@ describe('Canvas workbench screen composition', () => {
     assertDependencyDirectionCues();
     cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
+    cy.get('.react-flow__controls-fitview').click();
     openWorkbenchProperties('model_orders');
     cy.get('[data-slot="canvas-node-workbench-panel"] h2')
       .should('be.visible')

@@ -128,7 +128,9 @@ body {
   stroke-width: var(--canvas-search-relevant-edge-width);
 }
 
-.react-flow__edge.canvas-graph-search-relevant-edge [data-slot='canvas-dependency-direction-cue'] {
+.react-flow__edge.canvas-graph-search-relevant-edge
+  [data-slot='canvas-dependency-direction-cue']
+  path {
   fill: var(--canvas-search-relevant-edge) !important;
 }
 

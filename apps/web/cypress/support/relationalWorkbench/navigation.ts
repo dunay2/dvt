@@ -1,9 +1,9 @@
 /**
  * Owned concern: navigate Canvas Properties and connect the semantic editor through user gestures.
  * @baseline GH-2524-LIVE-V1-CONSUMERS: prove current authoring before protected execution.
- * @decision Share gestures, while each caller owns section, semantic and provider assertions.
+ * @decision Share gestures and public Fit; callers own section, semantic and provider assertions.
  * @consequence No alternate editor, persistence or drag semantics live in a proof.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
@@ -68,6 +68,7 @@ export function revisitWorkbenchCanvas(navigate: () => void = visitWorkbenchCanv
 /** Request the model sample through the existing card action, not editor navigation. */
 export function previewWorkbenchModel(nodeId = 'join-transform'): void {
   cy.get('[data-slot="canvas-workspace-tab"]').click();
+  cy.get('.react-flow__controls-fitview').click();
   hoverWorkbenchCard(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`);
   cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-execute"]`)
     .focus()

@@ -75,15 +75,6 @@ describe('canvasGraphLifecycle', () => {
     );
   });
 
-  it('queues imported source nodes through the aggregate owner', () => {
-    const nextSession = canvasGraphLifecycle.node.queueImported(buildDraftSession(), [
-      'transform-node',
-      'source-node',
-    ]);
-
-    expect(nextSession.workingSet.pendingExplicitNodeIds).toEqual(['transform-node']);
-  });
-
   it('removes a node from visible graph, ui fallout, and draft session in one command', () => {
     const result = canvasGraphLifecycle.node.remove(buildState(), 'source-node');
 

@@ -11,6 +11,7 @@ import {
 
 interface UiLayoutState {
   leftNavCollapsed: boolean;
+  canvasExplorerVisible: boolean;
   inspectorPanelWidth: number;
   inspectorPanelVisible: boolean;
   bottomDrawerHeight: number;
@@ -23,6 +24,8 @@ interface UiLayoutState {
   canvasSnapToGrid: boolean;
 
   toggleLeftNav: () => void;
+  showCanvasExplorer: () => void;
+  hideCanvasExplorer: () => void;
   setInspectorPanelWidth: (width: number) => void;
   setBottomDrawerHeight: (height: number) => void;
   toggleFocusMode: () => void;
@@ -43,6 +46,7 @@ type PersistedUiLayoutState = Partial<
   Pick<
     UiLayoutState,
     | 'leftNavCollapsed'
+    | 'canvasExplorerVisible'
     | 'inspectorPanelWidth'
     | 'bottomDrawerHeight'
     | 'bottomDrawerVisible'
@@ -59,6 +63,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
   persist(
     (set) => ({
       leftNavCollapsed: false,
+      canvasExplorerVisible: true,
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
       bottomDrawerHeight: 0,
@@ -71,6 +76,8 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       canvasSnapToGrid: false,
 
       toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
+      showCanvasExplorer: () => set({ canvasExplorerVisible: true }),
+      hideCanvasExplorer: () => set({ canvasExplorerVisible: false }),
       setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
       setBottomDrawerHeight: (height) => set({ bottomDrawerHeight: height }),
       toggleFocusMode: () => set((state) => ({ focusMode: !state.focusMode })),
@@ -105,6 +112,10 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         return {
           ...currentState,
           leftNavCollapsed: persistedLayoutState.leftNavCollapsed ?? currentState.leftNavCollapsed,
+          canvasExplorerVisible:
+            typeof persistedLayoutState.canvasExplorerVisible === 'boolean'
+              ? persistedLayoutState.canvasExplorerVisible
+              : currentState.canvasExplorerVisible,
           inspectorPanelWidth:
             persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
           inspectorPanelVisible: currentState.inspectorPanelVisible,
@@ -133,6 +144,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       },
       partialize: (state) => ({
         leftNavCollapsed: state.leftNavCollapsed,
+        canvasExplorerVisible: state.canvasExplorerVisible,
         inspectorPanelWidth: state.inspectorPanelWidth,
         bottomDrawerHeight: state.bottomDrawerHeight,
         bottomDrawerVisible: state.bottomDrawerVisible,

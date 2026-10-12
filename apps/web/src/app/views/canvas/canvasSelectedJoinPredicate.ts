@@ -1,4 +1,10 @@
-/** Replace a selected JOIN predicate atomically; both operands use the same typed field scope. */
+/**
+ * Owned concern: replace a selected JOIN predicate atomically through the existing authoring command.
+ * @baseline GH-3612: simple conditions and scalar formulas share the typed input scope.
+ * @decision Validate provider admission and revision before applying a canonical expression.
+ * @consequence Rejected edits preserve the JOIN, its inputs and its output selection.
+ * @version 1.0.0
+ */
 import {
   cloneLocalRelation,
   readRelationStructure,
@@ -9,15 +15,19 @@ import { querySelectedJoin } from './canvasSelectedJoin';
 import { validateRelationChanges } from './canvasRelationChangeValidation';
 import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
 import { buildSelectedJoinExpression } from './canvasSelectedJoinExpression';
+import { compileJoinPredicateFormula } from './canvasJoinPredicateFormula';
 
 export async function replaceSelectedJoinConditions(
   session: CanvasRelationAnalysisSession,
   request: Readonly<{
     relationId: string;
     expectedRevision: number;
-    conditions: readonly DvtSubstraitJoinPredicateCondition[];
     signal?: AbortSignal;
-  }>
+  }> &
+    (
+      | Readonly<{ conditions: readonly DvtSubstraitJoinPredicateCondition[]; formula?: never }>
+      | Readonly<{ formula: string; conditions?: never }>
+    )
 ) {
   const selected = await querySelectedJoin(
     session,
@@ -25,10 +35,23 @@ export async function replaceSelectedJoinConditions(
     request.expectedRevision,
     request.signal
   );
-  const { plan, expression } = buildSelectedJoinExpression(
-    { ...selected, plan: selected.target.plan },
-    request.conditions
-  );
+  const inputSchemas = selected.inputs.flatMap((input) => input.fields);
+  const { plan, expression } =
+    request.formula !== undefined
+      ? compileJoinPredicateFormula(
+          {
+            ...selected,
+            fields: selected.fields.filter((field) =>
+              session.allowsInputSchema(inputSchemas[field.ordinal]!)
+            ),
+          },
+          request.formula,
+          session.executionProvider(request.expectedRevision)
+        )
+      : buildSelectedJoinExpression(
+          { ...selected, plan: selected.target.plan },
+          request.conditions
+        );
   const relation = cloneLocalRelation(
     selected.target.relation,
     readRelationStructure(selected.target.relation).inputs
