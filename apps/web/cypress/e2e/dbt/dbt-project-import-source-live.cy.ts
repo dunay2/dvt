@@ -2,6 +2,7 @@
  * Owned concern: prove project import and file-backed Source Import through the
  * real protected browser, API, workspace-file, dbt analyzer, and Postgres rails.
  */
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
 import {
   readLiveGraphDraft,
@@ -94,6 +95,10 @@ function visitCanvas(session: E2eWorkspaceSession): void {
     onBeforeLoad(window) {
       window.localStorage.clear();
       seedE2eWorkspaceSession(window, session);
+      window.localStorage.setItem(
+        APPLICATION_LANGUAGE_STORAGE_KEY,
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
     },
   });
   cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
