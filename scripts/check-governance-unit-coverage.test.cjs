@@ -21,6 +21,21 @@ const fixtureFiles = [
   'package.json',
 ];
 
+const schedulingLaboratoryFiles = [
+  'labs/pln2-scheduling/.gitignore',
+  'labs/pln2-scheduling/PROTOCOL.md',
+  'labs/pln2-scheduling/README.md',
+  'labs/pln2-scheduling/evidence/verification.json',
+  'labs/pln2-scheduling/requirements-dask.txt',
+  'labs/pln2-scheduling/requirements-highs.txt',
+  'labs/pln2-scheduling/sources.json',
+  'labs/pln2-scheduling/src/corpus.mjs',
+  'labs/pln2-scheduling/src/model.mjs',
+  'labs/pln2-scheduling/src/probe.py',
+  'labs/pln2-scheduling/src/run.mjs',
+  'labs/pln2-scheduling/test/lab.test.mjs',
+];
+
 function manifest(overrides = {}) {
   return {
     version: 1,
@@ -449,5 +464,81 @@ test('real manifest subdivides runtime package files below the runtime root modu
       (unit) => unit.id
     ),
     ['SYS-PLANSTORE-ENGINE-FETCH']
+  );
+});
+
+test('real manifest gives the isolated scheduling laboratory exact non-product source ownership', () => {
+  const realManifest = readManifest();
+  const unit = realManifest.units.find((entry) => entry.id === 'SYS-CI-SCHEDULING-LABORATORY');
+  assert.ok(unit);
+  assert.equal(unit.level, 'source');
+  assert.equal(unit.status, 'review');
+  assert.equal(unit.parent, 'SYS-CI-GOVERNANCE-ROOT');
+  assert.equal(unit.dddOwner, 'SchedulingLaboratoryRun');
+  assert.equal(unit.cqRails, 'RunPlannerSchedulingLaboratory');
+  assert.ok(
+    unit.publicApi.includes(
+      'python labs/pln2-scheduling/src/probe.py --backend <dask|highs> --corpus <corpus-json> --out <new-evidence-file>'
+    )
+  );
+  assert.deepEqual(unit.owns, schedulingLaboratoryFiles);
+  assert.deepEqual(unit.excludes || [], []);
+
+  const component = realManifest.units.find((entry) => entry.id === unit.parent);
+  assert.equal(component.level, 'component');
+  assert.equal(component.parent, 'SYS-CI-GOVERNANCE');
+  const workspace = realManifest.units.find((entry) => entry.id === component.parent);
+  assert.equal(workspace.parent, 'SYS-DVT');
+  assert.deepEqual(validateManifest(realManifest, schedulingLaboratoryFiles).errors, []);
+
+  const ownerMatcher = buildOwnerMatcher(realManifest.units);
+  for (const filePath of schedulingLaboratoryFiles) {
+    assert.deepEqual(
+      ownerMatcher(filePath).map((entry) => entry.id),
+      [unit.id],
+      filePath
+    );
+  }
+  for (const filePath of fixtureFiles) {
+    assert.equal(
+      ownerMatcher(filePath).some((entry) => entry.id === unit.id),
+      false,
+      filePath
+    );
+  }
+});
+
+test('removing only the real laboratory source unit leaves its twelve files unowned', () => {
+  const realManifest = readManifest();
+  assert.equal(
+    realManifest.units.filter((unit) => unit.id === 'SYS-CI-SCHEDULING-LABORATORY').length,
+    1
+  );
+  const withoutLaboratory = {
+    ...realManifest,
+    units: realManifest.units.filter((unit) => unit.id !== 'SYS-CI-SCHEDULING-LABORATORY'),
+  };
+  const result = validateManifest(withoutLaboratory, schedulingLaboratoryFiles);
+  assert.deepEqual(
+    result.errors,
+    schedulingLaboratoryFiles.map(
+      (filePath) => `Tracked file ${filePath} has no owning governance unit.`
+    )
+  );
+});
+
+test('real laboratory ownership rejects extra files rather than claiming future or unrelated experiments', () => {
+  const realManifest = readManifest();
+  const extraFiles = [
+    'labs/pln2-scheduling/src/unadmitted.mjs',
+    'labs/pln2-scheduling/.runs/another/summary.json',
+    'labs/other-scheduler/src/run.mjs',
+  ];
+  for (const filePath of extraFiles) {
+    assert.deepEqual(findOwnerMatches(filePath, realManifest.units), [], filePath);
+  }
+  assert.deepEqual(
+    validateManifest(realManifest, extraFiles).errors,
+    extraFiles.map((filePath) => `Tracked file ${filePath} has no owning governance unit.`)
   );
 });
