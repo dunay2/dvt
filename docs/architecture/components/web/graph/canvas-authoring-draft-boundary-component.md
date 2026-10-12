@@ -100,6 +100,12 @@ instance retains its source definition and siblings. Existing placed definitions
 remain valid without migration. These semantics remain on `CreateCanvasNode`
 and `SaveWorkspaceGraphDraft`, with existing permission and concurrency gates.
 
+Placement identities use the shared `@dvt/crypto` UUID primitive, not the
+secure-context-only browser `crypto.randomUUID` API. The primitive requires
+cryptographically secure entropy and fails explicitly when it is unavailable;
+there is no timestamp or pseudo-random fallback. The existing injected identity
+seam remains available for deterministic tests.
+
 ```mermaid
 flowchart LR
   Definition[Source configuration] -->|drop| Instance[Independent placement]

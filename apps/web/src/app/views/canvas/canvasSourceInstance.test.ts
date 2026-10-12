@@ -1,5 +1,5 @@
 /** Owned concern: prove source identity, shared configuration and persisted placement semantics. */
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { createCanvasSourceInstance } from './canvasSourceInstance';
@@ -18,6 +18,25 @@ const source: CanonicalNode = {
   metadata: { config: { schema: 'raw', table: 'orders' } },
 };
 describe('Canvas source instances', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('allocates a secure placement identity when the browser has no randomUUID API', () => {
+    vi.stubGlobal('crypto', {
+      getRandomValues: (bytes: Uint8Array): Uint8Array => bytes.fill(0),
+    });
+    const instance = createCanvasSourceInstance(source, new Set());
+    expect(instance.id).toBe('00000000-0000-4000-8000-000000000000');
+    expect(instance.sourceDefinitionId).toBe(source.id);
+    expect(instance.metadata).toBe(source.metadata);
+  });
+
+  it('rejects placement creation when secure entropy is unavailable', () => {
+    vi.stubGlobal('crypto', undefined);
+    expect(() => createCanvasSourceInstance(source, new Set())).toThrow(
+      'CRYPTO_SECURE_RANDOM_UNAVAILABLE'
+    );
+  });
+
   it('persists two independent placements but one configuration, then resolves latest edits after reload', () => {
     const first = createCanvasSourceInstance(source, new Set(), 'first');
     const second = createCanvasSourceInstance(source, new Set([first.name]), 'second');
