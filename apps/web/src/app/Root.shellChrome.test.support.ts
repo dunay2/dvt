@@ -63,6 +63,7 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
     expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
     expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
     expect(shellTopBar.querySelector('[data-slot="shell-workspace-menu-trigger"]')).toBeTruthy();
+    expect(shellTopBar.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeTruthy();
     expect(shellMenuTrigger.textContent).toContain('View');
     return;
   }
@@ -81,6 +82,7 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
   expect(shellTopBar.querySelector('[data-slot="shell-project-identity-badge"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-menu-trigger"]')).toBeNull();
+  expect(shellTopBar.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeNull();
   expect(shellGitRef.className).toContain('text-[var(--text-subtle)]');
   expect(
     shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-title"]')

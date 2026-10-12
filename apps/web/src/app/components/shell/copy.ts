@@ -1,4 +1,10 @@
-/** Owned concern: resolve copy for global shell chrome without owning route behavior. */
+/**
+ * Owned concern: resolve copy for global shell chrome without owning route behavior.
+ * @baseline GH-3622: menu responsibility labels must follow the active application language.
+ * @decision Extend the existing EN/ES catalog, not component-local strings.
+ * @consequence File and View update reactively without reloading or changing command metadata.
+ * @version 1.0.0
+ */
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
 
 export type ShellTopBarCopy = {
@@ -11,6 +17,7 @@ export type ShellTopBarCopy = {
   readonly aboutBuildDateLabel: string;
   readonly aboutBuildDateUnavailable: string;
   readonly workspaceMenu: string;
+  readonly fileMenu: string;
   readonly workspacePanels: string;
   readonly globalNavigation: string;
   readonly workspaceContext: string;
@@ -75,6 +82,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   aboutBuildDateLabel: { key: 'shell.about.buildDateLabel', fallback: 'Build date' },
   aboutBuildDateUnavailable: { key: 'shell.about.buildDateUnavailable', fallback: 'Not published' },
   workspaceMenu: { key: 'shell.workspaceMenu', fallback: 'Workspace' },
+  fileMenu: { key: 'shell.fileMenu', fallback: 'File' },
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
   globalNavigation: { key: 'shell.globalNavigation', fallback: 'Navigation' },
   workspaceContext: { key: 'shell.workspaceContext', fallback: 'Workspace context' },
@@ -178,6 +186,7 @@ const COPY_ES: ShellTopBarCopy = {
   aboutBuildDateLabel: 'Fecha de build',
   aboutBuildDateUnavailable: 'No publicada',
   workspaceMenu: 'Espacio de trabajo',
+  fileMenu: 'Archivo',
   workspacePanels: 'Paneles',
   globalNavigation: 'Navegación',
   workspaceContext: 'Contexto del proyecto',
@@ -265,6 +274,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     aboutBuildDateLabel: resolveString(COPY_BY_KEY.aboutBuildDateLabel, locale),
     aboutBuildDateUnavailable: resolveString(COPY_BY_KEY.aboutBuildDateUnavailable, locale),
     workspaceMenu: resolveString(COPY_BY_KEY.workspaceMenu, locale),
+    fileMenu: resolveString(COPY_BY_KEY.fileMenu, locale),
     workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
     globalNavigation: resolveString(COPY_BY_KEY.globalNavigation, locale),
     workspaceContext: resolveString(COPY_BY_KEY.workspaceContext, locale),

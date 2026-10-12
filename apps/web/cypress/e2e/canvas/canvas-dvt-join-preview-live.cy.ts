@@ -507,7 +507,7 @@ describe('N-input DVT Run live', () => {
     });
     cy.get('html').should('have.attr', 'lang', 'es');
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
         contents: Cypress.Buffer.from(contents),

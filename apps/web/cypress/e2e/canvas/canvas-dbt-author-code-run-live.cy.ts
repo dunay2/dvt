@@ -136,7 +136,7 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
 }
 
 function openEditableDbtProjectCodeFile(path: string): void {
-  cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).click();
+  cy.get('[data-slot="shell-file-menu-trigger"]', { timeout: 20_000 }).click();
   cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
     .scrollIntoView()
     .should('be.visible')

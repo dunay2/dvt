@@ -1,4 +1,10 @@
-/** Owned concern: compose the Canvas shell from route-owned presentation contracts. */
+/**
+ * Owned concern: compose the Canvas shell from route-owned presentation contracts.
+ * @baseline GH-3622: opening project files from File must return focus to the same owner.
+ * @decision Preserve existing dialogs, commands and route state; change only the recovery target.
+ * @consequence Scope recovery remains Project and no shell menu authors graph state.
+ * @version 1.0.0
+ */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
@@ -114,7 +120,7 @@ export default function CanvasShell({
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
   const restoreProjectExplorerFocus = useCallback(() => {
     document
-      .querySelector<HTMLButtonElement>('[data-slot="shell-workspace-menu-trigger"]')
+      .querySelector<HTMLButtonElement>('[data-slot="shell-file-menu-trigger"]')
       ?.focus({ preventScroll: true });
   }, []);
   const sourceImportOptions = useMemo(

@@ -325,7 +325,7 @@ function openAndValidateDbtImport(language: 'en' | 'es'): void {
       ? { ready: 'Listo para importar', validate: 'Validar proyecto', import: 'Importar proyecto' }
       : { ready: 'Ready to import', validate: 'Validate project', import: 'Import project' };
 
-  cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.visible').click();
+  cy.get('[data-slot="shell-file-menu-trigger"]').should('be.visible').click();
   cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').click();
   cy.get('[data-slot="dbt-project-import-root"]').clear().type(PROJECT_ROOT);
   cy.get('[data-slot="dbt-project-import-canvas-id"]').clear().type(CANVAS_ID);

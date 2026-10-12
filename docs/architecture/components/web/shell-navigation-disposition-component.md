@@ -2,7 +2,7 @@
 title: Shell Navigation Disposition Component
 status: Review
 owner: Frontend / Shell
-last_reviewed: 2026-05-18
+last_reviewed: 2026-10-12
 component_type: frontend-component
 ---
 
@@ -36,7 +36,7 @@ Current values:
 - Product workbench routes such as `/canvas`, `/runs`, `/runs/:runId`,
   `/templates`, `/plugins`, and `/admin` do not mount a permanent left rail.
 - Only uncataloged global shell routes keep the permanent rail.
-- Hiding the rail must not hide global routes. The top-bar `View` menu remains
+- Hiding the rail must not hide global routes. The Raven application menu is
   the menu-mode navigation surface.
 - `AppShellFrame` applies posture but does not classify route pathnames.
 - Canvas workbench tab navigation remains separate from shell navigation.
@@ -63,18 +63,20 @@ flowchart LR
   RootShell --> Disposition[resolveShellNavigationDisposition]
   Disposition --> AppShellFrame
   Runtime[useShellRuntime navigationModel] --> TopAppBar
-  TopAppBar --> ShellMenu
-  ShellMenu --> GlobalLinks[Canvas Runs Plugins Admin links]
+  TopAppBar --> ShellAppMenu
+  ShellAppMenu --> Entries[ShellNavigationEntriesTemplate]
+  Entries --> GlobalLinks[Canvas Runs Plugins Admin links]
   AppShellFrame --> LeftRail[LeftNavigation rail]
 ```
 
-| Consumer                                          | Use                                                        |
-| ------------------------------------------------- | ---------------------------------------------------------- |
-| `RootShell`                                       | Resolves the active route family once per pathname change. |
-| `AppShellFrame`                                   | Mounts or omits the permanent left rail.                   |
-| `ShellMenu`                                       | Provides global navigation links when the rail is hidden.  |
-| `Root.shellChrome.test.tsx`                       | Verifies workbench and global-route render posture.        |
-| `shellNavigationDisposition.architecture.test.ts` | Guards semantic ownership and menu fallback.               |
+| Consumer                                          | Use                                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------- |
+| `RootShell`                                       | Resolves the active route family once per pathname change.        |
+| `AppShellFrame`                                   | Mounts or omits the permanent left rail.                          |
+| `ShellAppMenu`                                    | Coordinates guarded Router navigation when the rail is hidden.    |
+| `ShellNavigationEntriesTemplate`                  | Presents the existing navigation read model without route policy. |
+| `Root.shellChrome.test.tsx`                       | Verifies workbench and global-route render posture.               |
+| `shellNavigationDisposition.architecture.test.ts` | Guards semantic ownership and menu fallback.                      |
 
 ## Fowler Analysis
 

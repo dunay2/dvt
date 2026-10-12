@@ -606,7 +606,7 @@ describe('Canvas workbench screen composition', () => {
       .and('not.contain.text', 'Abrir código del proyecto');
     cy.get('body').type('{esc}');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-explore-project-command"]')
       .should('be.visible')
       .should(($item) => {
@@ -619,9 +619,9 @@ describe('Canvas workbench screen composition', () => {
       .and('contain.text', 'Canvas actual');
     cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
       .should('be.visible')
       .should(($item) => {
@@ -685,12 +685,8 @@ describe('Canvas workbench screen composition', () => {
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
     cy.focused().closest('.react-flow__node').should('have.attr', 'data-id', 'source-1');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
-      'have.attr',
-      'aria-expanded',
-      'true'
-    );
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').should('be.visible').click();
     cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${ALTERNATE_MODEL_PATH}"]`)
       .should('be.visible')
@@ -843,7 +839,7 @@ describe('Canvas workbench screen composition', () => {
       .click();
     cy.get('[role="dialog"]').should('not.exist');
     cy.get('.react-flow__node').should('have.length.at.least', 1);
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
+    cy.get('[data-slot="shell-file-menu-trigger"]').focus().type('{enter}');
     cy.get('[data-slot="canvas-workspace-explore-project-command"]').click();
     cy.get('[data-slot="canvas-project-explorer-dialog"]')
       .should('be.visible')
@@ -858,9 +854,9 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
     cy.get('[data-slot="canvas-project-explorer-dialog"]').should('not.exist');
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
     cy.get('[data-slot="canvas-contextual-workbench-overlay"]')
       .should('be.visible')
@@ -881,7 +877,7 @@ describe('Canvas workbench screen composition', () => {
     assertViewportHasNoGlobalHorizontalOverflow(390);
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
 
     revealOperationalDrawer();
     cy.get('[data-slot="bottom-operational-drawer-tabs"]')
@@ -947,7 +943,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('.react-flow').should('have.css', 'background-color', 'rgb(34, 51, 68)');
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-import-dbt-project-command"]').click();
     cy.get('[data-slot="dbt-project-import-dialog"]')
       .should('be.visible')
@@ -955,7 +951,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="dbt-project-cancel-command"]').click();
     cy.get('[data-slot="dbt-project-import-dialog"]').should('not.exist');
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-language-menu"]').should('contain.text', 'Idioma');
@@ -1166,7 +1162,7 @@ describe('Canvas workbench screen composition', () => {
       [ORPHAN_PATH, ORPHAN_SQL],
       [MODEL_PATH, MODEL_SQL],
     ] as const) {
-      cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+      cy.get('[data-slot="shell-file-menu-trigger"]').click();
       cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
       cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
       cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`)
@@ -1185,7 +1181,7 @@ describe('Canvas workbench screen composition', () => {
       assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
       cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
       cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
-      cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+      cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
     }
 
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');

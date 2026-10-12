@@ -1,4 +1,10 @@
-/** Adapt the project Code editor lifecycle to the existing contextual workbench contract. */
+/**
+ * Owned concern: adapt the project Code editor lifecycle to the existing contextual workbench contract.
+ * @baseline GH-3622: File now owns the code opener; pending drafts retain their existing guards.
+ * @decision Capture the File trigger through the existing focus lifecycle.
+ * @consequence Closing code restores its opener without creating a new editor or navigation rail.
+ * @version 1.0.0
+ */
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type {
@@ -76,7 +82,7 @@ export function useCanvasCodeWorkbench(
     [layout, selected, restore]
   );
   const openProjectCode = useCallback(() => {
-    capture('[data-slot="shell-workspace-menu-trigger"]');
+    capture('[data-slot="shell-file-menu-trigger"]');
     if (workspaceCommands?.onOpenProjectCode != null) workspaceCommands.onOpenProjectCode();
     else if (ownerKey != null) open('project-code', ownerKey);
   }, [capture, workspaceCommands?.onOpenProjectCode, ownerKey, open]);

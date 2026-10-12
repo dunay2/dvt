@@ -59,10 +59,10 @@ describe('Canvas project snapshot round trip', () => {
     clickCanvasAddCatalogAction('create-node', 'dvt:transform');
   }
 
-  function openWorkspaceMenuIfClosed(): void {
+  function openFileMenuIfClosed(): void {
     cy.get('body').then(($body) => {
       if ($body.find('[data-slot="canvas-workspace-import-input"]').length === 0) {
-        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+        cy.get('[data-slot="shell-file-menu-trigger"]').click();
       }
     });
   }
@@ -94,7 +94,7 @@ describe('Canvas project snapshot round trip', () => {
     addSqlTransformNode();
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     clickVisibleWorkspaceExportSnapshotCommand();
 
     cy.readFile(downloadPath).then((contents) => {
@@ -124,7 +124,7 @@ describe('Canvas project snapshot round trip', () => {
     cy.then(() => {
       saveCountBeforeRejectedImport = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    openWorkspaceMenuIfClosed();
+    openFileMenuIfClosed();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
         contents: Cypress.Buffer.from('{not-json'),
@@ -139,7 +139,7 @@ describe('Canvas project snapshot round trip', () => {
       );
     });
 
-    openWorkspaceMenuIfClosed();
+    openFileMenuIfClosed();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(downloadPath, {
       force: true,
     });

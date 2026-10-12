@@ -1,4 +1,10 @@
-/** Owned concern: compose global shell top-bar context, health, and command menus. */
+/**
+ * Owned concern: compose global shell top-bar context, health, and command menus.
+ * @baseline GH-3622: application navigation, project scope, File and View have distinct owners.
+ * @decision Apply the existing route posture and delegate each menu to its concern-owned controller.
+ * @consequence No route-owned commands or authorization policy are copied into the shell.
+ * @version 1.0.0
+ */
 import { useLocation } from 'react-router';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
@@ -16,6 +22,8 @@ import { ShellAppMenu } from './shell/ShellAppMenu';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
+import { ShellProjectMenu } from './shell/ShellProjectMenu';
+import { ShellFileMenu } from './shell/ShellFileMenu';
 import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
 import { ShellRunStatusIndicator } from './shell/ShellRunStatusIndicator';
 import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
@@ -58,7 +66,7 @@ export function ShellTopBar({
   const copy = resolveShellTopBarCopy(applicationLanguage);
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
   const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
-  const exposeWorkspaceNavigationMenu = focusMode || navigationDisposition.railMode === 'hidden';
+  const exposeWorkbenchMenus = focusMode || navigationDisposition.railMode === 'hidden';
   const shellViewControls = resolveShellViewControls(navigationDisposition);
   const projectIdentityBadge = buildProjectIdentityBadge({
     workspaceBootstrap,
@@ -79,7 +87,7 @@ export function ShellTopBar({
           <ShellAppMenu
             copy={copy}
             navigationModel={navigationModel}
-            showNavigation={exposeWorkspaceNavigationMenu}
+            showNavigation={exposeWorkbenchMenus}
           />
 
           {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
@@ -102,30 +110,21 @@ export function ShellTopBar({
           className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:gap-2"
         >
           <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
-          {exposeWorkspaceNavigationMenu && (
-            <ShellMenu
-              kind="workspace"
-              viewControls={shellViewControls}
-              bottomDrawerVisible={bottomDrawerVisible}
-              focusMode={focusMode}
-              navigationModel={navigationModel}
-              projectIdentityBadge={projectIdentityBadge}
-              gitBranch={workspaceBootstrap.gitBranch}
-              gitSha={workspaceBootstrap.gitSha}
-              toggleBottomDrawer={toggleBottomDrawer}
-              toggleFocusMode={toggleFocusMode}
-              copy={copy}
-            />
+          {exposeWorkbenchMenus && (
+            <>
+              <ShellFileMenu copy={copy} />
+              <ShellProjectMenu
+                badge={projectIdentityBadge}
+                gitBranch={workspaceBootstrap.gitBranch}
+                gitSha={workspaceBootstrap.gitSha}
+                copy={copy}
+              />
+            </>
           )}
           <ShellMenu
-            kind="view"
             viewControls={shellViewControls}
             bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
-            navigationModel={navigationModel}
-            projectIdentityBadge={projectIdentityBadge}
-            gitBranch={workspaceBootstrap.gitBranch}
-            gitSha={workspaceBootstrap.gitSha}
             toggleBottomDrawer={toggleBottomDrawer}
             toggleFocusMode={toggleFocusMode}
             copy={copy}

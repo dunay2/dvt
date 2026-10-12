@@ -1,9 +1,21 @@
-/** Owned concern: publish shell chrome class contracts without route or session authority. */
+/**
+ * Owned concern: publish shell chrome class contracts without route or session authority.
+ * @baseline GH-3622: templates share compact menu styling without inline style objects.
+ * @decision Keep named class contracts alongside the existing shell chrome styles.
+ * @consequence Controllers retain behavior; presentation owns spacing, size and color.
+ * @version 1.0.0
+ */
 export const topAppBarClasses = {
   appMenuButton:
     'flex h-8 shrink-0 items-center gap-2 rounded-md px-1.5 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:mr-1',
   applicationMenuContent: 'w-56 max-w-[calc(100vw-1rem)] text-xs',
   menuItemIcon: 'mr-2 size-4 shrink-0',
+  menuTriggerIcon: 'size-4 shrink-0',
+  contextMenuContent: 'w-72 max-w-[calc(100vw-1rem)] text-xs',
+  menuContextBody: 'px-2 py-1.5',
+  menuGitContext: 'px-2 pb-2 text-xs text-(--text-subtle)',
+  menuGitSeparator: 'px-1',
+  menuLanguageLabel: 'flex items-center',
   shellBar:
     'flex min-h-10 min-w-0 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 py-1 text-[var(--text-default)] sm:h-10 sm:flex-nowrap sm:gap-2 sm:px-3 sm:py-0',
   readOnlyScopeField:

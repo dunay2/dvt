@@ -48,7 +48,7 @@ describe('Active project creation live vertical', () => {
       .should('be.visible')
       .invoke('text')
       .then((initialProjectTriggerText) => {
-        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+        cy.get('[data-slot="shell-file-menu-trigger"]').click();
         cy.get('[data-slot="shell-new-project-command"]')
           .should('be.visible')
           .should(($command) => {

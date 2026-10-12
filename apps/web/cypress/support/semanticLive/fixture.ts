@@ -149,7 +149,7 @@ export function importSemanticModel(
     workspaceScope: { ...resolveLiveWorkspaceSession(), targetAdapter: 'temporal' },
     exportedAt: '2026-09-21T00:00:00.000Z',
   }).contents;
-  cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+  cy.get('[data-slot="shell-file-menu-trigger"]').click();
   cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
     {
       contents: Cypress.Buffer.from(contents),

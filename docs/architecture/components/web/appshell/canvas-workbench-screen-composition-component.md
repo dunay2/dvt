@@ -21,7 +21,7 @@ behavior, Plugins route behavior, or backend contracts.
 ## Approved Menu Responsibility Contract
 
 [The bounded menu cut](https://github.com/dunay2/dvt/issues/3622), approved under
-#3296, supersedes the older mixed `ShellMenu` placement described below. It does
+#3296, replaces the older mixed `ShellMenu` placement. It does
 not accept the entire Figma migration or introduce another application rail.
 
 | Surface                | Owned concern                                                 | Existing authority                                           |
@@ -58,8 +58,12 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 | API                          | Kind                   | Responsibility                                                                                                  |
 | ---------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `ShellTopBar`                | shell renderer         | Renders low-noise global chrome and delegates hidden route-family controls to `ShellMenu`.                      |
-| `ShellMenu`                  | shell renderer         | Renders global navigation, workspace context, view controls, and active Canvas view contributions.              |
+| `ShellTopBar`                | shell renderer         | Composes concern-owned menus and unchanged execution/connection controls.                                       |
+| `ShellAppMenu`               | shell controller       | Coordinates guarded global navigation and About.                                                                |
+| `ShellProjectMenu`           | shell controller       | Coordinates granted scope selection, context and Git.                                                           |
+| `ShellFileMenu`              | shell controller       | Coordinates project creation and the existing Canvas file contribution.                                         |
+| `ShellMenu`                  | shell controller       | Coordinates View preferences only.                                                                              |
+| `ShellMenu.templates`        | passive presentation   | Presents navigation, Project, File and View through existing Radix primitives.                                  |
 | `CanvasShellMainPanel`       | Canvas route renderer  | Places Canvas tabs, route-local toolbar, banners, viewport, and center-surface states.                          |
 | `CanvasToolbar`              | Canvas route renderer  | Renders graph/document commands only inside the Canvas workbench.                                               |
 | `CanvasTemplatePresentation` | presentation model     | Resolves route-visible first-canvas template title and description from a `CanvasKindRegistration` plus locale. |
@@ -68,14 +72,16 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 ## Invariants
 
 - Canvas workbench routes do not mount a permanent left navigation rail.
-- Canvas route commands must not render inside the persistent global top bar.
-- `ShellTopBar` may show global health and the menu trigger; route-local Canvas
-  command controls belong in Canvas workbench chrome.
+- Canvas graph/document editing commands remain route-local. The existing
+  project/file contribution is rendered only inside File, not as loose top-bar
+  controls.
+- `ShellTopBar` shows concern-owned menu triggers, health and the unchanged
+  execution controls; it does not import Canvas controller hooks.
 - `Admin` and `Plugins` remain reachable when the rail is hidden.
 - The first-canvas state must not show disabled Plan, Run, Export, or Import
   controls before a canvas document exists.
-- Workspace context is read-only on the Canvas entry screen. Switching project,
-  tenant, or environment belongs to a separate governed flow.
+- Identity details remain read-only. Granted scope selection reuses
+  `SelectWorkspaceScope` in Project; menu presentation does not grant access.
 - Visible first-canvas template title and description are resolved by a
   presentation model, not by leaking raw plugin registry strings directly into
   the route.
@@ -109,7 +115,10 @@ flowchart LR
   Router["React Router pathname"]
   Disposition["ResolveShellNavigationDisposition"]
   TopBar["ShellTopBar"]
-  Menu["ShellMenu"]
+  AppMenu["ShellAppMenu"]
+  ProjectMenu["ShellProjectMenu"]
+  FileMenu["ShellFileMenu"]
+  ViewMenu["ShellMenu: View"]
   CanvasPanel["CanvasShellMainPanel"]
   Toolbar["CanvasToolbar"]
   Host["CanvasPlaygroundHost"]
@@ -117,7 +126,10 @@ flowchart LR
 
   Router --> Disposition
   Disposition --> TopBar
-  TopBar --> Menu
+  TopBar --> AppMenu
+  TopBar --> ProjectMenu
+  TopBar --> FileMenu
+  TopBar --> ViewMenu
   Router --> CanvasPanel
   CanvasPanel --> Toolbar
   CanvasPanel --> Host
@@ -130,14 +142,14 @@ flowchart LR
 sequenceDiagram
   participant Operator
   participant Shell as ShellTopBar
-  participant Menu as ShellMenu
+  participant Menus as Concern-owned shell menus
   participant Canvas as CanvasShellMainPanel
   participant Host as CanvasPlaygroundHost
   participant Draft as Workspace graph draft
 
   Operator->>Shell: Open /canvas
-  Shell->>Menu: Publish global navigation and workspace details
-  Shell-->>Operator: Show brand, health, and menu only
+  Shell->>Menus: Publish navigation, context, file contribution and view preferences
+  Shell-->>Operator: Show concern-owned triggers and unchanged execution/health controls
   Canvas->>Host: Render first-canvas state
   Host-->>Operator: Show localized template choices
   Operator->>Host: Select a template
@@ -148,15 +160,18 @@ sequenceDiagram
 
 ## Consumers
 
-| Consumer                              | Use                                                                     |
-| ------------------------------------- | ----------------------------------------------------------------------- |
-| `RootShell`                           | Resolves route family and passes shell navigation model to the top bar. |
-| `ShellTopBar`                         | Applies low-noise Canvas posture and owns the menu trigger.             |
-| `ShellMenu`                           | Provides hidden-rail global navigation and workspace details.           |
-| `CanvasShellMainPanel`                | Applies Canvas route-local command placement.                           |
-| `CanvasPlaygroundHost`                | Resolves first-canvas template presentation and command title.          |
-| `CanvasToolbar.architecture.test.tsx` | Guards route-local toolbar ownership.                                   |
-| `Root.shellChrome.test.tsx`           | Guards no-rail and hidden-rail global navigation.                       |
+| Consumer                              | Use                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| `RootShell`                           | Resolves route family and passes shell navigation model to the top bar.   |
+| `ShellTopBar`                         | Applies low-noise Canvas posture and owns the menu trigger.               |
+| `ShellAppMenu`                        | Coordinates hidden-rail navigation without bypassing pending-edit guards. |
+| `ShellProjectMenu`                    | Composes the existing granted scope selector and context read model.      |
+| `ShellFileMenu`                       | Reuses project creation and Canvas file commands; owns focus transfer.    |
+| `ShellMenu`                           | Coordinates View preferences without navigation or project actions.       |
+| `CanvasShellMainPanel`                | Applies Canvas route-local command placement.                             |
+| `CanvasPlaygroundHost`                | Resolves first-canvas template presentation and command title.            |
+| `CanvasToolbar.architecture.test.tsx` | Guards route-local toolbar ownership.                                     |
+| `Root.shellChrome.test.tsx`           | Guards no-rail and hidden-rail global navigation.                         |
 
 ## Command And Query Rails
 
