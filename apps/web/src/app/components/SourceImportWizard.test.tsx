@@ -28,6 +28,18 @@ describe('SourceImportWizard', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
+  it('makes the catalogue panel identity addressable for keyboard resizing', async () => {
+    await harness.renderWizard();
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Browse');
+    const separator = document.querySelector('[data-slot="resizable-handle"]')!;
+    const catalogue = document.querySelector('[data-slot="resizable-panel"]')!;
+    const panelId = catalogue.getAttribute('data-panel-id');
+    expect(catalogue.id).toBe(panelId);
+    expect(document.getElementById(panelId!)).toBe(catalogue);
+    expect(separator.getAttribute('tabindex')).toBe('0');
+  });
+
   it('renders the complete connection entry in Spanish and reacts to language changes', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 
@@ -44,8 +56,10 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Cambiar nombre');
     expect(document.body.textContent).toContain('Probar conexión');
     expect(document.body.textContent).toContain('Cancelar');
-    expect(document.body.textContent).toContain('Adjuntar orígenes al canvas');
-    expect(harness.findButtonContaining('Cerrar importación de orígenes')).toBeDefined();
+    expect(document.body.textContent).toContain('Añadir fuentes');
+    expect(
+      document.querySelector('button[aria-label="Cerrar importación de orígenes"]')
+    ).not.toBeNull();
     expect(document.body.textContent).not.toContain('Choose database connection');
 
     await harness.clickButtonContaining('Nueva conexión');
@@ -556,7 +570,7 @@ describe('SourceImportWizard', () => {
     await harness.clickTab('Explorar');
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Seleccionados');
-    await harness.clickButtonContaining('Adjuntar orígenes al canvas');
+    await harness.clickButtonContaining('Añadir fuentes');
     await harness.flushPendingWork();
 
     expect(document.body.textContent).toContain('No se pudieron registrar los objetos de datos.');
@@ -600,10 +614,10 @@ describe('SourceImportWizard', () => {
 
     await harness.clickTab('Seleccionados');
 
-    expect(document.body.textContent).toContain('Vista previa de adjuntos del canvas');
+    expect(document.body.textContent).toContain('Vista previa del registro de fuentes');
     expect(document.body.textContent).toContain('Conexión:');
 
-    await harness.clickButtonContaining('Adjuntar orígenes al canvas');
+    await harness.clickButtonContaining('Añadir fuentes');
 
     expect(document.body.textContent).toContain('Orígenes importados');
     expect(document.body.textContent).toContain('Archivos de origen actualizados');
@@ -611,7 +625,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain('Sources imported');
   });
 
-  it('declares a wide responsive dialog and wrapping connection and form actions', async () => {
+  it('uses an inline workspace and retains wrapping connection and form actions', async () => {
     await harness.renderWizard();
 
     const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]');
@@ -622,8 +636,8 @@ describe('SourceImportWizard', () => {
       '[data-slot="source-import-connection-actions"]'
     );
 
-    expect(dialog?.className).toContain('sm:max-w-[min(64rem,calc(100vw-2rem))]');
-    expect(dialog?.className).not.toContain('sm:max-w-5xl');
+    expect(dialog?.getAttribute('data-slot')).toBe('source-import-workspace');
+    expect(dialog?.getAttribute('aria-modal')).not.toBe('true');
     expect(connectionSummary?.className).toContain('flex-col');
     expect(connectionSummary?.className).toContain('md:flex-row');
     expect(connectionActions?.className).toContain('grid');
@@ -639,9 +653,8 @@ describe('SourceImportWizard', () => {
       expect(action.className).toContain('w-full');
     }
 
-    const attachAction = harness.findButtonContaining('Attach sources to canvas');
-    expect(attachAction?.className).toContain('disabled:opacity-100');
-    expect(attachAction?.className).toContain('disabled:text-slate-300');
+    const attachAction = harness.findButtonContaining('Add sources');
+    expect(attachAction?.disabled).toBe(true);
 
     await harness.clickButtonContaining('New connection');
 
@@ -951,7 +964,7 @@ describe('SourceImportWizard', () => {
     await harness.clickTab('Browse');
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(
@@ -970,7 +983,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
     expect(document.body.textContent).toContain(
-      'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes'
+      'Sources are registered in the left catalogue. Click a source to inspect its configuration; drag it onto the canvas to place a card.'
     );
     expect(document.body.textContent).not.toContain('Add imported sources to canvas');
 
@@ -1030,7 +1043,7 @@ describe('SourceImportWizard', () => {
     await harness.flushPendingWork();
     await harness.clickDatabaseSelection('RAW');
     await harness.clickTab('Selected');
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
 
     expect(importSources).toHaveBeenCalledWith({
       schemaVersion: 'source-import-request.v2',
@@ -1078,12 +1091,12 @@ describe('SourceImportWizard', () => {
     await harness.clickTab('Browse');
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
     await harness.flushPendingWork();
 
     expect(onComplete).not.toHaveBeenCalled();
 
-    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.clickButtonContaining('Add sources');
     await harness.flushPendingWork();
 
     expect(onComplete).toHaveBeenCalledTimes(1);

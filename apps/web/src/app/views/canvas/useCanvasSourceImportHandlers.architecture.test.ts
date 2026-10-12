@@ -13,4 +13,13 @@ describe('useCanvasSourceImportHandlers architecture', () => {
     expect(SOURCE_IMPORT_HANDLERS_SOURCE).not.toContain('Pick<');
     expect(SOURCE_IMPORT_HANDLERS_SOURCE).not.toContain('UseCanvasMutationHandlersArgs');
   });
+  it('never places, positions or inspects a source on registration', () => {
+    for (const command of [
+      'queueImported',
+      'admitExplicit',
+      'onLayoutComplete',
+      'setInspectorNode',
+    ])
+      expect(SOURCE_IMPORT_HANDLERS_SOURCE).not.toContain(command);
+  });
 });

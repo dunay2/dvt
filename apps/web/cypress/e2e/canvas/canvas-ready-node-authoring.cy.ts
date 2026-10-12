@@ -1,4 +1,10 @@
-/** Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser. */
+/**
+ * Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser.
+ * @baseline GH-3610: the Sources dock and inspector retain the user's viewport.
+ * @decision Fit the graph before Model inspection after closing Source and Sink configuration.
+ * @consequence Ordinary context-menu guards and canonical roundtrip assertions remain intact.
+ * @version 1.0.0
+ */
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
 
@@ -697,6 +703,7 @@ describe('Canvas ready node authoring', () => {
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
+    cy.get('.react-flow__controls-fitview').click();
     openNodeProperties('dvt-transform-1');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(

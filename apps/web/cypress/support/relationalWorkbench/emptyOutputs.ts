@@ -67,10 +67,12 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
         const exposed = [...$paths]
           .map((path) => {
             const matrix = path.getScreenCTM()!;
-            const points = Array.from({ length: 19 }, (_, index) =>
-              path
-                .getPointAtLength((path.getTotalLength() * (index + 1)) / 20)
-                .matrixTransform(matrix)
+            const fractions = Array.from({ length: 19 }, (_, index) => (index + 1) / 20).sort(
+              (left, right) => Math.abs(left - 0.5) - Math.abs(right - 0.5)
+            );
+            // Prefer the middle of the route, away from reconnect circles at its endpoints.
+            const points = fractions.map((fraction) =>
+              path.getPointAtLength(path.getTotalLength() * fraction).matrixTransform(matrix)
             );
             const point = points.find(
               (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path

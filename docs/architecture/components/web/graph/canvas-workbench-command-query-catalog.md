@@ -195,22 +195,113 @@ flowchart LR
 
 ## JOIN Operand Authoring Boundary
 
-Under `ConfigureCanvasDvtNode`, JOIN comparisons accept only fields already
-produced by their inputs and typed literals. Scalar calculations belong to the
-upstream Transform; the JOIN condition editor must not offer function chains or
-compile them through another mutation path. Comparison operators, NULL tests and
-AND/OR condition groups remain predicate semantics, not field transformations.
+Under `ConfigureCanvasDvtNode`, the simple JOIN form compares produced fields and
+typed literals. Issue #3612 extends the same selected-JOIN command with a scalar
+formula input: one function may reference fields from both input rows. Such a
+calculation cannot generally move into a single upstream Transform, nor may it
+move into a filter after an outer JOIN.
 
-The selected JOIN command rejects function-bearing operands atomically. The
-existing query may show an imported canonical expression, but exposes no editable
-condition projection for that unsupported shape. It must not unwrap functions,
-rewrite the plan or migrate computations upstream. The original expression tree
-remains inspectable with an explicit unavailable-form notice. Revision, field
-scope, writable-draft and persistence checks remain unchanged.
+```text
+Selected JoinRel + exact left/right field scope
+  -> shared Transform formula editor and compiler
+  -> boolean canonical expression
+  -> existing selected-JOIN command, revision and provenance validation
+  -> JoinRel.expression -> existing persistence and target SQL projection
+```
 
-Proof covers both ports, nested/grouped/null predicates, literal validation,
-computed upstream fields, save/reopen identity and no mutation on rejection.
-This implements the #3416 / #3422 boundary without reviving #3420.
+Reuse the existing scalar compiler, capability catalogue and expression renderer;
+do not revive the retired JOIN function-chain compiler or introduce a second
+mutation path. Input names distinguish ports, including self-JOINs. The compiler
+uses actual input ordinals, not the position of a filtered suggestion list.
+Only canonical Substrait persists: reopening derives text from that expression.
+Unknown imported expressions remain inspectable and must not be silently cleared
+or rewritten when a form cannot represent them.
+
+The result must be boolean and every function/type must be admitted for the
+execution provider. Foreign, unmapped, ambiguous and stale references reject
+atomically. Read-only, revision, authorization,
+input identities, JOIN type, output selection and pending-edit guards remain.
+
+The expanded #3612 request covers composable aggregate/window inputs and
+existence predicates through the existing relational operators, not SQL text
+embedded in the formula. An AggregateRel or window ProjectRel computes the
+value upstream; the JOIN references its published field by input ordinal.
+Neither form may be moved across the JOIN automatically: that would change
+the rows counted or the window partition. Existing semi/anti JOINs implement
+correlated existence/nonexistence and retain only their declared input side;
+their mixed-input predicates use the same compiler.
+
+```text
+Source -> Aggregate / Window -> published L.field --+
+Source ----------------------> published R.field --+-> JOIN scalar predicate
+                                                       | ordinary JOIN: ON
+                                                       | semi/anti: EXISTS / NOT EXISTS
+```
+
+General scalar subqueries, arbitrary correlated subqueries and new function
+capabilities remain explicit open design work in #3612, not completed support.
+They require cardinality, correlation scope, types and provider execution
+evidence before admission. The current formula rejects SQL subqueries and
+inline aggregate/window calls without mutation. No regex translation, raw SQL
+escape hatch, inferred grouping or silent post-JOIN filter is permitted.
+
+Proof covers both ports, nested arithmetic/boolean expressions, identical input
+names, NULL behavior, nonboolean/unsupported rejection, cancel, save/reopen and
+target SQL retaining the predicate in `ON`. This revises the field-only product
+restriction from #3416 / #3422 without restoring its duplicate compiler (#3420).
+
+### JOIN Type Presentation
+
+Under `ProjectCanvasRelationalTree`, the card title derives from the canonical
+JOIN type, never from the sidecar name. Issue #3615 removes misleading secondary
+type codes from the shared card/Model-summary presentation:
+
+```text
+JoinRel.type -> existing operation catalog -> localized title
+JOIN displayName exactly recognized by isCanvasJoinOperation -> no secondary row
+other name/operator -> existing name presentation
+```
+
+The query does not rename, migrate or repair persisted bindings. Version 1 does
+not distinguish a generated operation code from an intentional identical alias;
+either remains unchanged in the document, but is not repeated as a JOIN card
+subtitle. Names outside the exact existing catalog, generic `join`, null fallback
+and Source names retain their existing behavior. Unknown semantic types remain
+unsupported. No duplicated operation dictionary, fuzzy matching, effect-based
+normalization or second semantic authority is introduced. Proof covers already
+saved INNER/`left_join`, all eight codes, both locales, free names, unchanged
+canonical data and actual type-change/Apply/reopen consumers.
+
+### Calculated SELECT Fields
+
+Issue #3613 exposes the existing calculated-field editor in editable `Output`.
+Unlike `ON`, a SELECT expression may return any scalar type admitted by the
+existing provider. `CanvasDerivedOutputSection` and
+`applySelectedRelationDerivedOutput` remain the only formula authoring path;
+move the Transform entry point, do not render two independently owned forms.
+While adding or editing a calculated field, the shared section displays only its
+alias, operand palette, formula and actions. It owns the output-list presentation
+slot and hides that list for the lifetime of the form, retaining local selection
+state. Cancel or accepted submission restores the list; rejected submission keeps
+the form and typed input visible. No second editing-state flag is introduced in
+the inspector composition. Schema-query readiness changes only the formula
+affordances, never the list container: output commands must retain its DOM identity,
+keyboard focus and local alias drafts while the schema is refreshed.
+
+```text
+JOIN Output -> shared formula + alias -> existing atomic derived-field command
+  -> ProjectRel over the unchanged JOIN -> focus the new visible Transform
+Transform Output -> same editor/command -> edit the existing projection
+```
+
+JOIN calculations consume published JOIN fields. They do not change its
+predicate, inputs or selected output slots. A successful first calculation
+creates an explicit downstream Transform; its selection changes only after the
+document is accepted. Subsequent edits target that projection. No hidden JOIN
+formula metadata, automatic provider extension or second compiler is permitted.
+Cancel, stale input, duplicate alias and failed admission create no projection
+and do not move selection. Read-only inspection never exposes authoring, and
+pending formula/alias edits retain the existing outer Apply/navigation guards.
 
 ## Column Menu Lifecycle
 
@@ -473,6 +564,19 @@ and later inspector saves preserve card coordinates without creating semantics,
 replaying a historical root or invoking Preview/Run.
 Movement alone retains its existing discardable-session behavior; this does not
 add an autosave or change navigation/cancellation ownership.
+
+Inspector visibility is presentation state, not the lifetime of that transaction.
+The active inspector tab is also Model-local presentation state, keyed by relation
+identity. Entering Edit, applying or cancelling a draft must not reset the selected
+tab when the same relation remains selected. Inspection and authoring frames share
+that state; selecting a different relation retains its appropriate default, and
+explicit expression navigation may still open Properties. No tab state is written
+into the semantic document or kept alive through an obsolete edit transaction.
+Applying an operation preserves its open Properties panel and reconciles the
+selection to the accepted canonical relation. Staged and applied inspectors use
+the same visibility intent. Explicit Close remains closed; Cancel retains its
+existing discard semantics, and rejected Apply does not discard the edit.
+Keeping a panel open must not keep an obsolete draft active or issue another save.
 
 ```mermaid
 flowchart LR

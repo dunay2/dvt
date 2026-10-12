@@ -73,6 +73,9 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
       return (
         <div id="source-import-section-browse">
           <SelectionStep
+            connectionId={state.selectedConnection || undefined}
+            connectionName={controller.selectedConnectionObject?.name}
+            onChangeConnection={() => controller.setCurrentSection('connections')}
             sourceObjects={state.sourceObjects}
             sourceObjectSchemas={state.sourceObjectSchemas}
             sourceObjectSchemaListPage={state.sourceObjectSchemaListPage}

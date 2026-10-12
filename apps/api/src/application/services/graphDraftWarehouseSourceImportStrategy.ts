@@ -1,3 +1,10 @@
+/**
+ * Owned concern: register warehouse source definitions through the graph-draft import authority.
+ * @baseline GH-3610: registration and visible Canvas placement are separate actions.
+ * @decision Preserve nodeIds and positions; append only semantic source definitions.
+ * @consequence Import and retry cannot create or move a Canvas card.
+ * @version 1.0.0
+ */
 import {
   ConnectedSourceRefSchema,
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
@@ -205,7 +212,7 @@ function appendImportedSourceNodes(
   selectedNodeIds: readonly string[];
 }> {
   const target = readTargetCanvas(draft, context.canvasId);
-  const existingIds = new Set(target.nodeIds);
+  const existingIds = new Set(target.nodes.map((node) => node.id));
   const existingNodeIdByConnectedSourceRef = new Map<string, string>();
   for (const node of target.nodes) {
     if (node.pluginId !== 'dvt.warehouse-source') continue;
@@ -224,11 +231,6 @@ function appendImportedSourceNodes(
 
   const importedNodes: WorkspaceGraphAuthoringNode[] = [];
   const selectedNodeIds: string[] = [];
-  const nextPositions = { ...target.nodePositions };
-  const rightmostExistingPosition = Object.values(target.nodePositions).reduce(
-    (rightmost, position) => Math.max(rightmost, position.x),
-    -200
-  );
   for (const sourceObject of context.sourceObjects) {
     const connectedSourceRef: ConnectedSourceRef = {
       schemaVersion: 'connected-source-ref.v1',
@@ -256,16 +258,10 @@ function appendImportedSourceNodes(
     selectedNodeIds.push(nodeId);
     const binding = sourceYamlBindings.get(sourceObjectIdentity(sourceObject));
     importedNodes.push(toSourceNode(nodeId, context, sourceObject, binding));
-    nextPositions[nodeId] = {
-      x: rightmostExistingPosition + importedNodes.length * 320,
-      y: 120,
-    };
   }
 
   const nextTarget = {
     ...target,
-    nodeIds: [...target.nodeIds, ...importedNodes.map((node) => node.id)],
-    nodePositions: nextPositions,
     nodes: [...target.nodes, ...importedNodes],
   };
   const targetIsActive = draft.activeCanvasId === context.canvasId;

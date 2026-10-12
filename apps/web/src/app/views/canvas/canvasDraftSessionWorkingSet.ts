@@ -1,3 +1,4 @@
+/** Owned concern: mutate explicit Canvas placement and source definitions without coupling registration to placement. */
 import type { CanonicalNode } from '../../types/canonical';
 import type {
   CanvasDraftEdge,
@@ -7,7 +8,7 @@ import type {
 } from './canvasDraftSession.types';
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
 import { canvasDraftWorkingSetModel } from './canvasDraftWorkingSetModel';
-const { arraysEqual, dedupeNodeIds, buildVisibleEdges } = canvasDraftWorkingSetModel;
+const { arraysEqual, buildVisibleEdges } = canvasDraftWorkingSetModel;
 export const EMPTY_WORKING_SET: CanvasDraftWorkingSet = {
   visibleNodeIds: [],
   visibleEdges: [],
@@ -70,28 +71,20 @@ function reconcileSnapshot(
   const retainedLocalNodeIds = new Set([
     ...reconciledSession.workingSet.visibleNodeIds,
     ...reconciledSession.workingSet.pendingExplicitNodeIds,
+    ...Object.values(currentLocalNodeCatalog)
+      .filter(
+        (node) =>
+          node.role === 'input' &&
+          node.sourceDefinitionId == null &&
+          snapshot.canonicalNodeIds.includes(node.id)
+      )
+      .map((node) => node.id),
   ]);
   const nextLocalNodeCatalog = Object.fromEntries(
     Object.entries(currentLocalNodeCatalog).filter(([nodeId]) => retainedLocalNodeIds.has(nodeId))
   );
 
   return withLocalNodeCatalog(reconciledSession, nextLocalNodeCatalog);
-}
-function queueExplicitNodeIds(session: CanvasDraftSession, nodeIds: string[]): CanvasDraftSession {
-  if (nodeIds.length === 0) {
-    return session;
-  }
-  const nextPendingNodeIds = dedupeNodeIds([
-    ...session.workingSet.pendingExplicitNodeIds,
-    ...nodeIds.filter((nodeId) => !session.workingSet.visibleNodeIds.includes(nodeId)),
-  ]);
-  if (arraysEqual(session.workingSet.pendingExplicitNodeIds, nextPendingNodeIds)) {
-    return session;
-  }
-  return withWorkingSet(session, {
-    ...session.workingSet,
-    pendingExplicitNodeIds: nextPendingNodeIds,
-  });
 }
 function addExplicitNode(
   session: CanvasDraftSession,
@@ -118,10 +111,14 @@ function upsertNode(session: CanvasDraftSession, canonicalNode: CanonicalNode): 
     pendingExplicitNodeIds: nextPendingNodeIds,
   });
 
-  return withLocalNodeCatalog(nextSession, {
-    ...readLocalNodeCatalog(nextSession),
-    [nodeId]: canonicalNode,
-  });
+  return updateNodeDefinition(nextSession, canonicalNode);
+}
+
+function updateNodeDefinition(
+  session: CanvasDraftSession,
+  node: CanonicalNode
+): CanvasDraftSession {
+  return withLocalNodeCatalog(session, { ...readLocalNodeCatalog(session), [node.id]: node });
 }
 
 function explicitNodeAlreadyTracked(
@@ -149,6 +146,7 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
     ),
   });
   const { [nodeId]: _removedNode, ...nextLocalNodeCatalog } = readLocalNodeCatalog(nextSession);
+  if (_removedNode?.role === 'input' && _removedNode.sourceDefinitionId == null) return nextSession;
   return withLocalNodeCatalog(nextSession, nextLocalNodeCatalog);
 }
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {
@@ -178,9 +176,9 @@ export const canvasDraftSessionWorkingSet = {
   buildFromDraft: canvasDraftWorkingSetModel.buildFromDraft,
   equals: canvasDraftWorkingSetModel.equals,
   reconcileSnapshot,
-  queueExplicitNodeIds,
   addExplicitNode,
   upsertNode,
+  updateNodeDefinition,
   removeNode,
   replaceEdges,
   setEdgeExecutionGate,

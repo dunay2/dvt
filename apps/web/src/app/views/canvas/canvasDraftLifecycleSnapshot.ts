@@ -124,9 +124,13 @@ export function isCurrentDraftProjectable(
   currentDraftPayload: WorkspaceGraphAuthoringDraft,
   draftSession: CanvasDraftSession
 ): boolean {
+  const semanticNodeIds = new Set(currentDraftPayload.nodes.map((node) => node.id));
   return (
     currentDraftPayload.nodeIds.length === draftSession.workingSet.visibleNodeIds.length &&
-    currentDraftPayload.nodes.length === draftSession.workingSet.visibleNodeIds.length &&
+    draftSession.workingSet.visibleNodeIds.every((nodeId) => semanticNodeIds.has(nodeId)) &&
+    currentDraftPayload.nodes.every(
+      (node) => node.role === 'input' || draftSession.workingSet.visibleNodeIds.includes(node.id)
+    ) &&
     currentDraftPayload.edges.length === draftSession.workingSet.visibleEdges.length
   );
 }

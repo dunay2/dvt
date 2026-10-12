@@ -2,6 +2,7 @@
 
 /** Owned concern: prove CanvasShell exposes source-import commands only when allowed. */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act } from 'react';
 
 import {
   createCanvasShellHarness,
@@ -33,6 +34,9 @@ describe('CanvasShell source import availability', () => {
       canOpenSourceImport: true,
     });
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
+    await act(async () => {
+      (shellState.canvasViewportProps?.onOpenSourceImport as () => void)();
+    });
     expect(shellState.sourceImportWizardProps).toMatchObject({
       sourceImportOptions: [
         expect.objectContaining({ id: 'includeColumns' }),
@@ -99,6 +103,9 @@ describe('CanvasShell source import availability', () => {
       canOpenSourceImport: true,
     });
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
+    await act(async () => {
+      (shellState.canvasViewportProps?.onOpenSourceImport as () => void)();
+    });
     expect(shellState.sourceImportWizardProps).toMatchObject({
       sourceImportOptions: [
         expect.objectContaining({ id: 'includeColumns' }),
@@ -126,8 +133,6 @@ describe('CanvasShell source import availability', () => {
       canOpenSourceImport: false,
     });
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
-    expect(shellState.sourceImportWizardProps).toMatchObject({
-      sourceImportOptions: [],
-    });
+    expect(shellState.sourceImportWizardProps).toBeNull();
   });
 });

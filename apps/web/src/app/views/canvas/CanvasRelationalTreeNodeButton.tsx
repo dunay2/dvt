@@ -1,4 +1,10 @@
-/** Owned concern: readable card content and accessible semantic input roles. */
+/**
+ * Owned concern: readable card content and accessible semantic input roles.
+ * @baseline ADR-0064: the shared presentation mapper owns the canonical type label.
+ * @decision Render secondary text only when the mapper supplies a meaningful detail.
+ * @consequence Stale JOIN codes cannot imply another type or leave an empty card row.
+ * @version 1.0.0
+ */
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
@@ -97,7 +103,7 @@ export function CanvasRelationalTreeNodeButton({
       </span>
       {pending ? (
         <span className={styles.pending}>{pendingLabel}</span>
-      ) : isSource || hideDetail ? null : (
+      ) : isSource || hideDetail || detail.length === 0 ? null : (
         <span title={detail} className={styles.detail}>
           {detail}
         </span>

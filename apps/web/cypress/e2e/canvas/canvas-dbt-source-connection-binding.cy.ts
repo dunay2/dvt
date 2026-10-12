@@ -2,9 +2,10 @@
  * Owned concern: prove that importing dbt source declarations continues through
  * one governed connection binding and projects one Canvas node per table.
  * @baseline GH-3578: catalog order does not select the object this proof inspects.
- * @decision Activate the governed object through its existing catalog controls.
+ * @baseline GH-3610: an exiting notification is still hit-tested until DOM removal.
+ * @decision Use the existing catalog controls and await toast absence before normal receipt close.
  * @consequence Selection, metadata, keyboard and import assertions remain independent.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import type { RelationalSourceObject, SourceObjectMetricEvidence } from '@dvt/contracts';
 
@@ -402,10 +403,14 @@ describe('dbt source connection binding', () => {
       .and('contain.text', '5.3 KB');
     cy.contains('[role="dialog"]', 'Selected: 3').should('be.visible');
     assertSeriousAccessibility();
-    cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+    cy.contains('button', 'Add sources').should('be.enabled').click();
 
     waitForE2eApiCall('/workspace/sources/import', 'POST');
     cy.contains('[role="dialog"]', 'Sources imported', { timeout: 20_000 }).should('be.visible');
+    cy.get(
+      '[data-sonner-toast][data-type="success"][data-y-position="bottom"][data-x-position="right"]',
+      { timeout: 20_000 }
+    ).should('not.exist');
     cy.contains('[role="dialog"] button', 'Done').click();
 
     cy.wrap(null).should(() => {
@@ -466,7 +471,7 @@ describe('dbt source connection binding', () => {
     cy.contains('[role="dialog"]', 'Añadir origen', { timeout: 20_000 }).should('be.visible');
     cy.contains('[data-slot="source-import-connection-option"]', 'Governed warehouse').click();
     cy.contains('[role="dialog"]', 'Seleccionados: 3', { timeout: 20_000 }).should('be.visible');
-    cy.contains('button', 'Adjuntar orígenes al canvas').should('be.enabled');
+    cy.contains('button', 'Añadir fuentes').should('be.enabled');
     assertSeriousAccessibility();
   });
 });

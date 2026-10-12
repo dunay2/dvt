@@ -1,5 +1,6 @@
 /** Owned concern: compose semantic authoring truth from protected draft semantics and explicit route-local additions. */
 import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
+import { resolveWorkspaceSourceInstances } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftEdge } from './canvasDraftSession.types';
 
@@ -47,7 +48,7 @@ function mergeDraftSemanticNodes(args: {
     scopedNodeIds,
   });
 
-  return selectScopedMergedNodes({ mergedNodes, scopedNodeIds });
+  return resolveWorkspaceSourceInstances(selectScopedMergedNodes({ mergedNodes, scopedNodeIds }));
 }
 
 function indexScopedDraftSemanticNodes(args: {
@@ -147,13 +148,26 @@ export function buildCanvasAuthoringGraphProjection({
   draftSemanticGraph,
   localCanonicalNodes,
 }: BuildCanvasAuthoringGraphProjectionArgs): CanvasAuthoringGraphProjection {
-  const scopedNodeIds = [...new Set(visibleNodeIds)];
+  const scopedNodeIds = [
+    ...new Set([
+      ...visibleNodeIds,
+      ...(draftSemanticGraph?.canonicalNodes ?? [])
+        .filter((node) => node.role === 'input' && node.sourceDefinitionId == null)
+        .map((node) => node.id),
+      ...localCanonicalNodes
+        .filter((node) => node.role === 'input' && node.sourceDefinitionId == null)
+        .map((node) => node.id),
+    ]),
+  ];
   const canonicalNodes = mergeDraftSemanticNodes({
     draftSemanticGraph,
     localCanonicalNodes,
     scopedNodeIds,
   });
-  const knownNodeIds = new Set(canonicalNodes.map((node) => node.id));
+  const visibleIds = new Set(visibleNodeIds);
+  const knownNodeIds = new Set(
+    canonicalNodes.filter((node) => visibleIds.has(node.id)).map((node) => node.id)
+  );
   const canonicalEdges = mergeDraftSemanticEdges({
     draftSemanticGraph,
     visibleEdges,

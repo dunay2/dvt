@@ -144,6 +144,7 @@ function buildCanvasShellGraphCommandsArgs({
       onSetEdgeExecutionGate: controller.onSetEdgeExecutionGate,
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
+      handleInspectNode: controller.handleInspectNode,
       handleDragOver: controller.handleDragOver,
       handleToggleFrozenNode: controller.handleToggleFrozenNode,
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,

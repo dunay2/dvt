@@ -36,6 +36,12 @@ const shellState = vi.hoisted(() => ({
 vi.mock('../../components/SourceImportWizard', () => ({
   default: (props: Record<string, unknown>) => {
     shellState.sourceImportWizardProps = props;
+    React.useEffect(
+      () => () => {
+        shellState.sourceImportWizardProps = null;
+      },
+      []
+    );
     return <div data-testid="source-import-wizard" />;
   },
 }));
@@ -50,7 +56,7 @@ vi.mock('../../components/dbtProjectImport/DbtProjectImportDialog', () => ({
 vi.mock('./CanvasViewport', () => ({
   default: (props: Record<string, unknown>) => {
     shellState.canvasViewportProps = props;
-    return <div data-testid="canvas-viewport" />;
+    return <div data-testid="canvas-viewport">{props.workspaceTask as React.ReactNode}</div>;
   },
 }));
 

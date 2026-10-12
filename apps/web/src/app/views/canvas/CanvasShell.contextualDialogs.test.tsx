@@ -201,7 +201,7 @@ describe('CanvasShell contextual dialogs', () => {
 
     expect(onDbtProjectImported).toHaveBeenCalledWith(result, sourceTableDeclarations);
     expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: false });
-    expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
+    expect(shellState.sourceImportWizardProps).toBeNull();
   });
 
   it('retains a dbt source-binding continuation until a successful source import', async () => {
@@ -239,7 +239,7 @@ describe('CanvasShell contextual dialogs', () => {
       const close = shellState.sourceImportWizardProps?.onClose as (() => void) | undefined;
       close?.();
     });
-    expect(shellState.sourceImportWizardProps).toMatchObject({ open: false });
+    expect(shellState.sourceImportWizardProps).toBeNull();
     expect(onConsumed).not.toHaveBeenCalled();
 
     await act(async () => {

@@ -6,6 +6,7 @@
  * @version 1.0.0
  */
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { ReactNode } from 'react';
 import { OperationalDrawerDataTableTemplate } from './OperationalDrawerDataTableTemplate';
 import { operationalDrawerDataTableCopy } from './operationalDrawerDataTableCopy';
 import {
@@ -13,13 +14,21 @@ import {
   type OperationalDrawerDataTableInput,
 } from './useOperationalDrawerDataTable';
 
-export function OperationalDrawerDataTable(props: OperationalDrawerDataTableInput): JSX.Element {
+export function OperationalDrawerDataTable(
+  props: OperationalDrawerDataTableInput &
+    Readonly<{
+      toolbarActions?: ReactNode;
+      footer?: ReactNode;
+    }>
+): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const model = useOperationalDrawerDataTable(props);
   return (
     <OperationalDrawerDataTableTemplate
       model={model}
       copy={operationalDrawerDataTableCopy[language]}
+      toolbarActions={props.toolbarActions}
+      footer={props.footer}
     />
   );
 }

@@ -1,9 +1,9 @@
 /**
  * Owned concern: prove Aggregate and Window composition, persistence and discardable removal.
  * @baseline GH-3578: applied Window forms save directly while card removal opens a draft.
- * @decision Follow the saved Project identity and inspect its Window definition across Cancel and reload.
+ * @decision Select Properties explicitly and inspect the saved Window across Cancel and reload.
  * @consequence Pipelines retain canonical identities and reload without writes from cancelled edits.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
@@ -32,6 +32,11 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 function inspectSavedWindow(relationId: string, language: 'en' | 'es'): void {
   cy.get(`[data-operator="project"][data-relation-id="${relationId}"]`).rightclick();
   activateMenu('canvas-relational-edit-operation');
+  cy.get('[data-canvas-inspector="true"]')
+    .filter(':visible')
+    .should('have.length', 1)
+    .find('[data-slot="canvas-operation-properties-tab"]')
+    .click();
   const action = `${resolveCanvasSemanticEditorCopy(language).edit} · ${resolveCanvasViewCopy(language).operationWindowLabel}`;
   cy.contains('[data-slot="canvas-transform-inspector"] button', action).click();
   cy.get(form).find('input').should('have.value', 'ranked_customer');

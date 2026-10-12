@@ -1,10 +1,17 @@
 /**
  * Owned concern: prove the governed dbt YAML description transaction through
  * protected HTTP, file authority, project analysis, Preview, Run, and reopen.
+ * @baseline GH-3610: node Code uses Properties; project Code owns its separate file tree.
+ * @decision Inspect the real model title and expose the project command before its normal click.
+ * @consequence Lossless YAML/SQL writes retain their existing authority without a node-code clone.
+ * @version 1.0.1
  */
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  openCanvasNodeOperations,
+  selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
@@ -91,6 +98,10 @@ function visitProject(observedRequests: ObservedRequest[]): void {
     `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
     {
       onBeforeLoad(window) {
+        window.localStorage.setItem(
+          APPLICATION_LANGUAGE_STORAGE_KEY,
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
         const originalFetch = window.fetch.bind(window);
         window.fetch = (input, init) => {
           const request = input instanceof window.Request ? input : undefined;
@@ -111,9 +122,10 @@ function visitProject(observedRequests: ObservedRequest[]): void {
 }
 
 function openModelWorkbench(): void {
+  cy.get('.react-flow__controls-fitview', { timeout: 20_000 }).click();
   cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
     .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
+    .find('[data-slot="graph-node-card-title"]')
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
@@ -125,9 +137,10 @@ function openModelWorkbench(): void {
 }
 
 function openModelCodeEditor(): void {
+  cy.get('.react-flow__controls-fitview').click();
   cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
     .should('be.visible')
-    .find('[data-slot="canvas-node-shell"]')
+    .find('[data-slot="graph-node-card-title"]')
     .dblclick();
   cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .should('be.visible')
@@ -283,10 +296,9 @@ describe('dbt YAML description edit live vertical', () => {
     closeModelWorkbench();
 
     openModelCodeEditor();
-    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
-    cy.get(
-      `[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_SQL_PATH}"]`
-    ).should('be.visible');
+    cy.get('[data-slot="workspace-file-code-editor"]')
+      .should('be.visible')
+      .and('have.attr', 'data-file-path', MODEL_SQL_PATH);
     cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
@@ -316,11 +328,11 @@ describe('dbt YAML description edit live vertical', () => {
       'data-phase',
       'synchronized'
     );
-    closeContextualWorkbench();
     closeModelWorkbench();
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+      .scrollIntoView()
       .should('be.visible')
       .should(($command) => {
         expect($command.attr('data-disabled')).to.be.undefined;
@@ -337,10 +349,12 @@ describe('dbt YAML description edit live vertical', () => {
     ).should('be.visible');
     closeContextualWorkbench();
 
-    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).within(() => {
-      cy.get('button[aria-label="Select for execution"]').should('be.enabled').click();
-      cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
-    });
+    selectCanvasClosure([MODEL_UNIQUE_ID]);
+    openCanvasNodeOperations(MODEL_UNIQUE_ID);
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Deselect for execution').should(
+      'be.visible'
+    );
+    cy.get('body').type('{esc}');
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.wrap(null, { timeout: 60_000 }).should(() => {
       const previewRequest = observedRequests.find(
@@ -351,9 +365,9 @@ describe('dbt YAML description edit live vertical', () => {
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 60_000 })
       .should('be.visible')
       .within(() => {
-        cy.get('[aria-label="Canvas value"]').should('have.text', CANVAS_ID);
-        cy.get('[aria-label="Requested resources value"]').should('have.text', MODEL_UNIQUE_ID);
-        cy.get('[aria-label="Project root value"]').should('have.text', PROJECT_ROOT);
+        cy.get('[aria-label="Canvas"]').should('have.text', CANVAS_ID);
+        cy.get('[aria-label="Requested resources"]').should('have.text', MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Project root"]').should('have.text', PROJECT_ROOT);
       });
     clickButtonNatively('Start Run');
 
@@ -383,7 +397,9 @@ describe('dbt YAML description edit live vertical', () => {
     expectAuthoritativeDescription(RUN_DESCRIPTION);
     closeModelWorkbench();
     openModelCodeEditor();
-    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
+    cy.get('[data-slot="workspace-file-code-editor"]')
+      .should('be.visible')
+      .and('have.attr', 'data-file-path', MODEL_SQL_PATH);
     cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
@@ -396,7 +412,6 @@ describe('dbt YAML description edit live vertical', () => {
       expect(response.status).to.equal(200);
       expect((response.body as { content: string }).content).to.equal(UPDATED_MODEL_SQL);
     });
-    closeContextualWorkbench();
     closeModelWorkbench();
 
     cy.wrap(null).should(() => {

@@ -312,6 +312,67 @@
     );
   });
 
+  test('real Git retirement evidence stays complete beyond 1 MiB and invalidates tail changes', (t) => {
+    const { root, git, write, commit, head, inspect } = prepushRepository(t);
+    git('config', 'core.autocrlf', 'false');
+    const retired = Array.from({ length: 77 }, (_, index) => `retired-${index}.md`);
+    const content = `${'Governed retirement evidence '.repeat(3)}µ\n`.repeat(256);
+    for (const filename of retired) write(filename, content);
+    write('zz-tail.txt', 'before\n');
+    const base = commit(head);
+    git('update-ref', 'refs/remotes/origin/main', base);
+    git('rm', '--', ...retired);
+    write('zz-tail.txt', 'tail-one\n');
+    git('add', 'zz-tail.txt');
+
+    const environment = { ...createGitRepositoryEnvironment(), GIT_BASE: base };
+    delete environment.GIT_HEAD;
+    const diff = execFileSync('git', ['diff', '--cached', '--binary', '--diff-filter=ACMRD'], {
+      cwd: root,
+      env: environment,
+      encoding: 'utf8',
+      maxBuffer: 32 * 1024 * 1024,
+    });
+    assert.ok(Buffer.byteLength(diff) > 1024 * 1024, 'real deletion patch exceeds old budget');
+    assert.ok(diff.includes('deleted file mode 100644'));
+    assert.ok(diff.includes(`--- a/${retired[0]}`));
+    assert.ok(diff.includes(`--- a/${retired.at(-1)}`));
+    assert.ok(
+      Buffer.byteLength(diff.slice(0, diff.lastIndexOf('+tail-one'))) > 1024 * 1024,
+      'changed tail bytes are beyond the old budget in the same native Git patch'
+    );
+    const oracleScript = `
+      const { buildPrepushStamp, listPrepushChangedFiles } = require(${JSON.stringify(__filename.replace('.test.cjs', '.cjs'))});
+      const options = {
+        repoRootPath: process.cwd(),
+        runGitText: (args) => require('node:child_process').execFileSync('git', args, {
+          encoding: 'utf8', maxBuffer: 32 * 1024 * 1024
+        })
+      };
+      console.log(JSON.stringify(buildPrepushStamp(listPrepushChangedFiles(options), options)));
+    `;
+    const oracle = JSON.parse(
+      execFileSync(process.execPath, ['-e', oracleScript], {
+        cwd: root,
+        env: environment,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      })
+    );
+    const actual = inspect(base);
+    assert.deepEqual(actual, oracle, 'default acquisition hashes the same complete real Git bytes');
+    assert.equal(actual.changedFiles.length, retired.length + 1);
+    assert.deepEqual(inspect(base), actual, 'identical complete bytes preserve the stamp');
+
+    write('zz-tail.txt', 'tail-two\n');
+    git('add', 'zz-tail.txt');
+    const mutated = inspect(base);
+    assert.deepEqual(mutated.changedFiles, actual.changedFiles);
+    assert.notEqual(mutated.validationFingerprint, actual.validationFingerprint);
+    assert.notEqual(mutated.stateFingerprint, actual.stateFingerprint);
+    assert.equal(isPrepushStampValid(actual, mutated), false, 'tail mutation cannot reuse success');
+  });
+
   test('manual prepush reuses a matching validation stamp before rerunning changed checks', () => {
     const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
     const stamp = buildPrepushStamp(changedFiles, {

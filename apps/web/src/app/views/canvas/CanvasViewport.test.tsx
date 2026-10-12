@@ -81,7 +81,7 @@ describe('CanvasViewport', () => {
     const viewportStyle = (viewport as HTMLDivElement).style;
     const viewportDataset = (viewport as HTMLDivElement | null)?.dataset;
 
-    expect(Array.from(container.querySelectorAll('button'), (button) => button.ariaLabel)).toEqual([
+    expect(Array.from(viewport!.querySelectorAll('button'), (button) => button.ariaLabel)).toEqual([
       canvasViewCopy.canvasGraphFilterLabel,
     ]);
     expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
@@ -347,27 +347,31 @@ describe('CanvasViewport', () => {
     });
   });
 
-  it('fits the viewport around explicitly imported nodes only once', async () => {
+  it('acknowledges imported catalogue entries without fitting or mutating the graph', async () => {
     const props = buildCanvasViewportProps({
       nodesWithImpact: [
         { id: 'src_erp_orders', position: { x: 0, y: 0 }, data: {}, type: 'dbtNode' },
         { id: 'src_erp_customers', position: { x: 240, y: 0 }, data: {}, type: 'dbtNode' },
       ] as CanvasViewportProps['nodesWithImpact'],
       importedNodeFocusIds: ['src_erp_orders', 'src_erp_customers'],
+      sourceCatalogue: [
+        {
+          id: 'src_erp_orders',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+      ],
       onImportedNodeFocusComplete: vi.fn(),
     });
 
     await renderViewport(props);
 
-    expect(xyflowState.fitView).toHaveBeenCalledWith({
-      nodes: expect.arrayContaining([
-        expect.objectContaining({ id: 'src_erp_orders' }),
-        expect.objectContaining({ id: 'src_erp_customers' }),
-      ]),
-      padding: 0.24,
-      maxZoom: 0.9,
-      duration: 300,
-    });
+    expect(xyflowState.fitView).not.toHaveBeenCalled();
+    expect(props.onNodesChange).not.toHaveBeenCalled();
     expect(props.onImportedNodeFocusComplete).toHaveBeenCalledTimes(1);
   });
 });

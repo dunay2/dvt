@@ -53,7 +53,9 @@ describe('CanvasViewport graph filtering', () => {
     act(() => {
       fireEvent.keyDown(surface, { key: 'f', ctrlKey: true });
     });
-    const input = harness.container.querySelector<HTMLInputElement>('input[type="search"]')!;
+    const input = harness.container.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-graph-search-control"] input[type="search"]'
+    )!;
     act(() => {
       fireEvent.change(input, { target: { value: 'orders' } });
     });
@@ -265,9 +267,14 @@ describe('CanvasViewport graph filtering', () => {
       fireEvent.keyDown(surface, { key: 'f', ctrlKey: true });
     });
     act(() => {
-      fireEvent.change(harness.container.querySelector('input[type="search"]')!, {
-        target: { value: query },
-      });
+      fireEvent.change(
+        harness.container.querySelector(
+          '[data-slot="canvas-graph-search-control"] input[type="search"]'
+        )!,
+        {
+          target: { value: query },
+        }
+      );
     });
   }
 
