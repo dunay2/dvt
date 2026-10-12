@@ -200,14 +200,23 @@ jobs:
           pnpm --filter @dvt/web exec cypress install
           pnpm --filter @dvt/web exec cypress verify
 
+      - name: Prepare browser proof image
+        id: browser_image
+        if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        uses: ./.github/actions/prepare-cached-image
+        with:
+          image: postgres-15
+
       - name: Allocate browser proof PostgreSQL
         id: browser_postgres
         if: matrix.phase == 'browser' && steps.web_plan.outputs.provider_required == 'true'
+        env:
+          PROOF_IMAGE: ${{ steps.browser_image.outputs.image }}
         run: |
-          proof_container=$(docker create --name "dvt-web-proof-$PROOF_OWNER" \
+          proof_container=$(docker create --pull=never --name "dvt-web-proof-$PROOF_OWNER" \
             --label "dvt.ci.proof=$PROOF_OWNER" --publish 127.0.0.1::5432 \
             --env POSTGRES_USER=dvt_proof --env POSTGRES_DB=postgres \
-            --env "POSTGRES_PASSWORD=$PROOF_OWNER" postgres:15)
+            --env "POSTGRES_PASSWORD=$PROOF_OWNER" "$PROOF_IMAGE")
           echo "container_id=$proof_container" >> "$GITHUB_OUTPUT"
           docker start "$proof_container"
           for attempt in {1..30}; do

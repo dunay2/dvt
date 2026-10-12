@@ -72,6 +72,14 @@ export class PreviewCanvasTransformRowsUseCase {
       if (input.relationId !== undefined && input.semanticPlanSha256 === undefined) {
         throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
       }
+      if (
+        input.relationId !== undefined &&
+        !closure.authority.semanticDocument.sidecar.relations.some(
+          (relation) => relation.relationId === input.relationId
+        )
+      ) {
+        throw new CanvasTransformDataSampleUnavailableError('relation_outside_output_plan');
+      }
       projection = await projectDvtPostgresTransform(closure, input.relationId);
     } catch (error) {
       if (error instanceof CanvasTransformDataSampleUnavailableError) throw error;

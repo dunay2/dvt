@@ -37,6 +37,7 @@ describe('join-consumers', () => {
     cy.get(
       '[data-slot="context-menu-content"][data-state="open"] [data-slot="canvas-relational-remove-source"]'
     ).click();
+    cy.get('[data-slot="canvas-card-removal-confirm"]').click();
     cy.get('[data-slot="canvas-relational-node-title"]').should('not.contain.text', 'Window');
     cy.get('[data-operator="aggregate"]').rightclick();
     cy.get(

@@ -40,7 +40,8 @@ capability.
 - Explicitly clearing the final relation returns the same Transform to uninitialized
   through that command: remove its semantic authority, preserve its identity,
   disposition and workspace dependencies. Apply may persist that deliberate empty
-  state; incomplete pending compositions remain local and cannot be applied.
+  state. Incomplete compositions persist only as non-executable authoring state;
+  they cannot supply a valid Preview, Plan or Run.
 - Existing canonical projection, field-function, join, set, aggregate, window, reorder,
   output-toggle, alias, lineage, and comment behaviors remain available.
 - Legacy SQL/VTX1 metadata is unsupported and fails closed; there is no migration,
@@ -272,6 +273,43 @@ Verify Source -> A -> B -> C, serialization, malformed/disconnected/stale inputs
 the real SQL viewer and read-only execution against test PostgreSQL. Existing
 filter admission is unchanged; unsupported nested relations still fail closed.
 Schema evolution (#3150) and Canvas runtime execution (#2723) are excluded.
+
+## Card removal confirmation (#3606)
+
+`ConfigureCanvasDvtNode` owns card deletion in the editable graph. This is not
+the algebraic remove-and-splice operation exposed by an operator's configuration
+form. The context menu and Delete key share one card-removal command.
+
+```mermaid
+flowchart LR
+  A[Delete selected card] --> B[Read-only impact proposal]
+  B --> C[Inline Canvas toolbar: Cancel / Delete]
+  C -->|Cancel or Escape| D[Unchanged graph and persistence]
+  C -->|Confirm current revision and permissions| E[Remove one card and incident edges]
+  E --> F[Retain dependent cards and configuration without executable semantics]
+  F --> G[Existing Apply / Cancel and SaveWorkspaceGraphDraft]
+```
+
+- Dependent cards or a connected model Output require confirmation. The toolbar
+  names the target and direct consumers, highlights affected cards, and leaves
+  the Canvas and inspector visible. It is not a modal, toast or popup.
+- Delete removes only the selected card. Missing producer slots remain explicit;
+  there is no implicit reconnection, deletion of neighbours, or binary
+  keep-left/keep-right action. Configuration survives transitively, but stale
+  executable documents do not. Cards with disconnected inputs say "Missing input".
+- Proposals bind the semantic revision, source occurrence identities, working
+  graph, output and authorization identity. Changes reject rather than applying
+  outdated consent. A proposal is consumed once; unmount cancels it.
+- Preparation and Cancel never save. Apply persists the existing authoring DTO;
+  reopen restores retained configuration and missing inputs. The existing draft
+  Cancel restores the saved baseline.
+- Presentation owns ES/EN copy, external CSS and keyboard focus. Pure graph
+  preparation owns impact; the React coordinator owns consent lifetime. No new
+  API, contract version, undo stack or cascading field-removal behavior is added.
+
+Verification uses the card-removal unit/presentation tests and the existing
+`canvas-relational-workbench-removal.cy.ts` journey, plus affected operator
+journeys. Native admission is recorded under `GH-3606-CANVAS-CARD-REMOVAL`.
 
 ## Feature mechanization
 

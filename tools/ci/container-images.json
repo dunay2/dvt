@@ -1,0 +1,12 @@
+{
+  "postgres-15": {
+    "reference": "postgres:15.19@sha256:a5f9ead8ed7cb25abc36bea51fb9bb2be8d5579ed4ef3d28876027e438391ff0",
+    "configDigest": "sha256:59eb02d644f8b1279cf0c268f171817a3ba86b8c358821aedc217ac496fefffb",
+    "platform": "linux/amd64"
+  },
+  "postgres-16": {
+    "reference": "postgres:16.15@sha256:75adc2a65806c96bc0e59030230bfe3f1c1b0d6d8f8181a8913e2b8b53bdc166",
+    "configDigest": "sha256:275447c94b11b151decd1f29877965301d5a77032037c46de93d990f739f00a9",
+    "platform": "linux/amd64"
+  }
+}

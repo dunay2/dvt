@@ -63,6 +63,7 @@ it.each([
           }}
           nodeId="model"
           semanticDigest={null}
+          outputPlanRelationIds={new Set()}
           canEditModel
           unapplied
         >

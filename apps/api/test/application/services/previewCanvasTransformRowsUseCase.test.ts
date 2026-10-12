@@ -203,7 +203,9 @@ describe('PreviewCanvasTransformRowsUseCase', () => {
       };
       await expect(
         useCase.execute(TransformDataSampleRequestSchema.parse(selection), context())
-      ).rejects.toBeInstanceOf(CanvasTransformDataSampleUnavailableError);
+      ).rejects.toMatchObject({
+        reason: reason === 'unknown' ? 'relation_outside_output_plan' : 'canvas_changed',
+      });
       expect(previewTransformRows).not.toHaveBeenCalled();
     }
   );

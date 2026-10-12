@@ -45,6 +45,15 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
       },
     };
   }
+  if (!context.outputPlanRelationIds.has(node.relationId)) {
+    return {
+      label: copy.previewAction,
+      disabled: true,
+      title: copy.operationPreviewOutsideOutputPlan,
+      disabledReason: copy.operationPreviewOutsideOutputPlan,
+      onExecute: () => undefined,
+    };
+  }
   const { presentation } = resolveCanvasRelationalNodePresentation(node);
   const label = resolveCanvasViewCopy(language)[presentation.labelKey];
   const disabled =

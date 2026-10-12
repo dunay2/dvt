@@ -75,7 +75,8 @@ describe('Workbench cross', () => {
     });
 
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="cross"]').last().rightclick();
-    cy.get('[data-slot="canvas-relational-remove-left"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-relational-remove-source"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-card-removal-confirm"]').click();
     cy.get('[data-slot="canvas-relational-tree-draft"] [data-operator="cross"]').should(
       'have.length',
       1

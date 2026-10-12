@@ -71,6 +71,15 @@ describe('Canvas relational-tree source removal', () => {
           .querySelector<HTMLElement>('[data-slot="canvas-relational-remove-source"]')!
           .click()
       );
+      if (state === 'saved') {
+        expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(1);
+        expect(handle.current!.hasUnappliedChanges).toBe(false);
+        await act(async () =>
+          container
+            .querySelector<HTMLButtonElement>('[data-slot="canvas-card-removal-confirm"]')!
+            .click()
+        );
+      }
       expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(0);
       expect(container.querySelector('[data-slot="canvas-relational-tree-output"]')).not.toBeNull();
       expect(container.querySelector('[data-slot="canvas-relational-output-edge"]')).toBeNull();

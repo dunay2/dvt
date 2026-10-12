@@ -246,7 +246,8 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(AuthoringSessionSource).toContain('createCanvasRelationalTreeApplyCommand');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeExistingSeed');
     expect(AuthoringSessionSource).toContain('useCanvasRelationalTreeRemoval');
-    expect(RemovalSessionSource).toContain('useRelationRemoval');
+    expect(RemovalSessionSource).toContain('prepareCanvasCardRemoval');
+    expect(RemovalSessionSource).not.toContain('useRelationRemoval');
     expect(RemovalSessionSource).not.toContain('onApplyNodeDraft');
     expect(CardMenuSource).not.toContain('onApplyNodeDraft');
     expect(AuthoringProjectionSource).toContain('projectCanvasRelationalTree');

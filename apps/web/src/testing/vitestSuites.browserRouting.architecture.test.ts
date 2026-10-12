@@ -750,7 +750,7 @@ describe('governed browser evidence routing', () => {
     expect(consumers.sort()).toEqual(expected.sort());
     expect(revisitConsumers.sort()).toEqual(
       [
-        ...expected.filter((path) => !path.endsWith('canvas-relational-operation-execution.cy.ts')),
+        ...expected,
         ...inputConsumers,
         resolve('cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts'),

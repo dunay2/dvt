@@ -13,10 +13,40 @@ import {
 
 import { createApiCanvasTransformDataSampleQueryPort } from './canvasTransformDataSample.api';
 import { CanvasTransformDataSampleQueryError } from '../../ports/canvasDataSample';
+import { CanvasTransformDataSampleOutsideOutputPlanError } from '../../ports/canvasDataSample';
+import { ApiError } from '../api/createApiClient';
 
 installWorkspaceScopeHarness();
 
 describe('canvasTransformDataSample.api', () => {
+  it.each([
+    [422, CanvasTransformDataSampleOutsideOutputPlanError.reason, true],
+    [422, 'transform_data_sample_failed', false],
+    [403, CanvasTransformDataSampleOutsideOutputPlanError.reason, false],
+  ])(
+    'classifies only the explicit outside-plan rejection (%s, %s)',
+    async (statusCode, reason, outside) => {
+      setWorkspaceScope(buildWorkspaceScope());
+      const { apiClient } = createApiClientHarness({
+        getJson: async () => {
+          throw new ApiError({
+            message: 'private provider diagnostic',
+            endpoint: '/data-sample',
+            statusCode,
+            category: 'client',
+            responseBody: { error: { type: 'unprocessable_entity', reason } },
+          });
+        },
+      });
+      const port = createApiCanvasTransformDataSampleQueryPort(apiClient, { record: vi.fn() });
+      const failure = await port
+        .previewTransformRows({ canvasId: 'canvas', transformNodeId: 'model', limit: 20 })
+        .catch((error) => error);
+      expect(failure).toBeInstanceOf(CanvasTransformDataSampleQueryError);
+      expect(failure instanceof CanvasTransformDataSampleOutsideOutputPlanError).toBe(outside);
+      expect(failure.message).not.toContain('private provider diagnostic');
+    }
+  );
   it('includes the selected relation and semantic version without accepting client SQL', async () => {
     setWorkspaceScope(buildWorkspaceScope());
     const { apiClient, getJson } = createApiClientHarness({
