@@ -104,6 +104,23 @@ function readBrowserModules(): Map<string, ts.SourceFile> {
 const browserModules = readBrowserModules();
 
 describe('public Canvas gesture preconditions', () => {
+  it('opens Connections after creation before checking the selected connection option', () => {
+    const ast = browserModules.get(resolve('cypress/support/liveWarehouseSourceImport.ts'))!;
+    const declaration = ast.statements.find(
+      (statement) =>
+        ts.isFunctionDeclaration(statement) &&
+        statement.name?.text === 'createLivePostgresConnection'
+    );
+    expect(declaration).toBeDefined();
+    const body = declaration!.getText(ast).replace(/\s+/gu, ' ');
+    expect(body).toContain("cy.contains('[role=\"tab\"]', 'Connections').click()");
+    expect(body.indexOf("'Connections'")).toBeLessThan(
+      body.indexOf('source-import-connection-option')
+    );
+    expect(body).toContain("'aria-pressed', 'true'");
+    expect(body).not.toContain('force: true');
+  });
+
   it('fits and focuses a visible node before an unforced context selection gesture', () => {
     const ast = browserModules.get(resolve('cypress/support/canvasExecutionSelection.ts'))!;
     const declaration = ast.statements.find(
