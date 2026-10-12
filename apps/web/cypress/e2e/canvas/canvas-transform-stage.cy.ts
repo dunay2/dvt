@@ -104,6 +104,7 @@ describe('Semantic dataset Transform', () => {
     cy.wrap(null).should(() =>
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(writes)
     );
+    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
     revisitWorkbenchCanvas();
     openModel();
     cy.get(card).click();

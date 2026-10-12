@@ -145,6 +145,7 @@ export function exerciseTransformFormulaAuthoring(): void {
     const saved = JSON.stringify(getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body);
     expect(saved).to.include('normalized_name').and.include('fallback_name');
   });
+  cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
   revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).should('have.length', 1).click();
