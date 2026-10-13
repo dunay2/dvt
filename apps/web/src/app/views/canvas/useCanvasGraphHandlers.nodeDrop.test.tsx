@@ -10,6 +10,7 @@ import { applyStateUpdater } from './canvasCreateCanvasDocumentCommand.test.supp
 import {
   buildCanonicalNode,
   buildDraftSession,
+  graphHandlerScreenToFlowPosition,
   renderGraphHandlersHook,
   resetGraphHandlersTestDoubles,
   restoreGraphHandlersTestDoubles,
@@ -19,6 +20,73 @@ import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.
 import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 describe('useCanvasGraphHandlers node drop', () => {
+  it.each([
+    { targetName: 'pane', left: 300, top: 200 },
+    { targetName: 'nested card child', left: 650, top: 440 },
+  ])('uses viewport projection instead of the $targetName bounds', async ({ left, top }) => {
+    const initialNodes: Node[] = [
+      { id: 'existing', data: { name: 'Existing' }, position: { x: -400, y: 180 } },
+    ];
+    const setNodes = vi.fn();
+    const harness = renderGraphHandlersHook({ canEditEdges: true, nodes: initialNodes, setNodes });
+    await harness.render();
+    graphHandlerScreenToFlowPosition.mockReturnValue({ x: 2600, y: 1200 });
+    const target = document.createElement('div');
+    const readTargetBounds = vi
+      .spyOn(target, 'getBoundingClientRect')
+      .mockReturnValue(DOMRect.fromRect({ x: left, y: top, width: 120, height: 80 }));
+
+    act(() => {
+      harness
+        .latest()
+        ?.handleDrop(
+          buildCanonicalDropEvent(
+            buildCanonicalNode('dropped', 'transform'),
+            { x: 800, y: 580 },
+            target
+          )
+        );
+    });
+
+    expect(graphHandlerScreenToFlowPosition).toHaveBeenCalledExactlyOnceWith(
+      { x: 800, y: 580 },
+      { snapToGrid: false }
+    );
+    expect(readTargetBounds).not.toHaveBeenCalled();
+    const admittedNodes = setNodes.mock.calls[0]?.[0] as Node[];
+    expect(admittedNodes.find((node) => node.id === 'dropped')?.position).toEqual({
+      x: 2500,
+      y: 1160,
+    });
+    expect(admittedNodes.find((node) => node.id === 'existing')).toEqual(initialNodes[0]);
+    harness.cleanup();
+  });
+
+  it('projects each drop against the current viewport before applying the graph-unit anchor', async () => {
+    const setNodes = vi.fn();
+    const harness = renderGraphHandlersHook({ canEditEdges: true, nodes: [], setNodes });
+    await harness.render();
+    graphHandlerScreenToFlowPosition
+      .mockReturnValueOnce({ x: 510, y: 640 })
+      .mockReturnValueOnce({ x: 1330, y: 720 });
+
+    act(() => {
+      harness
+        .latest()
+        ?.handleDrop(buildCanonicalDropEvent(buildCanonicalNode('first', 'transform')));
+      harness
+        .latest()
+        ?.handleDrop(buildCanonicalDropEvent(buildCanonicalNode('second', 'transform')));
+    });
+
+    expect(graphHandlerScreenToFlowPosition).toHaveBeenCalledTimes(2);
+    expect((setNodes.mock.calls[1]?.[0] as Node[]).map((node) => node.position)).toEqual([
+      { x: 410, y: 600 },
+      { x: 1230, y: 680 },
+    ]);
+    harness.cleanup();
+  });
+
   it('creates distinct instances for consecutive drops without re-registering the source', async () => {
     const source = buildCanonicalNode('registered', 'input');
     const setNodes = vi.fn();
@@ -31,6 +99,7 @@ describe('useCanvasGraphHandlers node drop', () => {
       setDraftSession,
     });
     await harness.render();
+    graphHandlerScreenToFlowPosition.mockReturnValue({ x: 800, y: 600 });
     const event = buildCanonicalDropEvent(source);
     Object.assign(event.dataTransfer, {
       types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
@@ -45,6 +114,11 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(new Set(placed.map((n) => n.id)).size).toBe(2);
     expect(placed.every((n) => n.id !== source.id)).toBe(true);
     expect(placed.map((n) => n.data.name)).toEqual(['registered', 'registered 2']);
+    expect(placed.map((node) => node.position)).toEqual([
+      { x: 700, y: 560 },
+      { x: 700, y: 560 },
+    ]);
+    expect(graphHandlerScreenToFlowPosition).toHaveBeenCalledTimes(2);
     expect(setDraftSession).toHaveBeenCalledTimes(2);
     harness.cleanup();
   });
@@ -78,6 +152,7 @@ describe('useCanvasGraphHandlers node drop', () => {
         expect(setNodes.mock.calls[0]?.[0][0]?.data.name).toBe('Current configuration');
         expect(setDraftSession).toHaveBeenCalledTimes(1);
       } else {
+        expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
         expect(setNodes).not.toHaveBeenCalled();
         expect(setDraftSession).not.toHaveBeenCalled();
         expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.nodeDropPayloadInvalidMessage);
@@ -114,6 +189,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     });
 
     expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.mutationUnavailableMessage);
+    expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
     expect(setNodes).not.toHaveBeenCalled();
 
     harness.cleanup();
@@ -144,6 +220,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     });
 
     expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.nodeDropPayloadInvalidMessage);
+    expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
     expect(setNodes).not.toHaveBeenCalled();
     expect(setDraftSession).not.toHaveBeenCalled();
 
@@ -171,6 +248,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     });
 
     expect(toastState.error).not.toHaveBeenCalled();
+    expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
     expect(setNodes).not.toHaveBeenCalled();
     expect(setDraftSession).not.toHaveBeenCalled();
 
@@ -302,6 +380,7 @@ describe('useCanvasGraphHandlers node drop', () => {
     });
 
     expect(setNodes).not.toHaveBeenCalled();
+    expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
 
     harness.cleanup();
   });

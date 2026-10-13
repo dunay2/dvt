@@ -1,7 +1,14 @@
-/** Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API. */
+/**
+ * Owned concern: admit explicit dropped nodes into the draft graph through the node lifecycle API.
+ * @baseline GH-3630: screen offsets are not graph coordinates after viewport pan or zoom.
+ * @decision Delegate projection to the active viewport, then preserve the graph-unit drop anchor.
+ * @consequence Identity, admission, existing saved positions and movement snapping stay unchanged.
+ * @version 1.0.1
+ */
 
 import { useCallback, useRef } from 'react';
 import { toast } from 'sonner';
+import { useReactFlow } from '@xyflow/react';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE, type CanonicalNode } from '../../types/canonical';
 import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
@@ -14,6 +21,8 @@ import {
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 import { createCanvasSourceInstance } from './canvasSourceInstance';
+
+const CANVAS_NODE_DROP_GRAPH_ANCHOR = { x: 100, y: 40 } as const;
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
@@ -31,6 +40,7 @@ export function useCanvasNodeDropHandlers({
   const { canonicalNodesById, draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
   const { graphStrategy, canEditEdges, columnLevelLineageEnabled, allowsCanonicalNode } = policy;
+  const { screenToFlowPosition } = useReactFlow();
   const latestNodesRef = useRef(nodes);
   latestNodesRef.current = nodes;
   const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
@@ -85,10 +95,13 @@ export function useCanvasNodeDropHandlers({
         return;
       }
 
-      const reactFlowBounds = (event.target as HTMLElement).getBoundingClientRect();
+      const flowPosition = screenToFlowPosition(
+        { x: event.clientX, y: event.clientY },
+        { snapToGrid: false }
+      );
       const position = {
-        x: event.clientX - reactFlowBounds.left - 100,
-        y: event.clientY - reactFlowBounds.top - 40,
+        x: flowPosition.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
+        y: flowPosition.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
       };
 
       const admittedNode =
@@ -110,7 +123,7 @@ export function useCanvasNodeDropHandlers({
       });
       if (transaction.outcome === 'added') latestNodesRef.current = transaction.nodes;
     },
-    [canEditEdges, canonicalNodesById, graphStrategy, runAdmissionCommand]
+    [canEditEdges, canonicalNodesById, graphStrategy, runAdmissionCommand, screenToFlowPosition]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>(
