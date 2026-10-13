@@ -1,6 +1,7 @@
 /** Assemble localized Inspector sections without owning node semantics. */
 import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
 import type { CanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth.contract';
+import { selectCanvasNodeOutputColumns } from '../canvas/canvasNodePresentationTruth';
 import type { NodePropertySection, NodePropertySectionId } from './nodePropertiesContracts';
 import {
   interpolatePresentationTemplate,
@@ -53,6 +54,14 @@ export function describeNodePropertyColumns(
   copy?: CanvasNodePresentationCopy
 ): string | undefined {
   if (copy == null) return undefined;
+  if (truth.inputBindings != null) {
+    const count = selectCanvasNodeOutputColumns(truth).length;
+    return count === 0
+      ? copy.noColumnsDetail
+      : interpolatePresentationTemplate(copy.declaredColumnsDetailTemplate, {
+          count: String(count),
+        });
+  }
   const columns = truth.columns;
   switch (columns.visibleProvenance) {
     case 'declared':

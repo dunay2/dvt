@@ -1,5 +1,6 @@
 /** Owned concern: map recursive Canvas presentation truth into graph-card columns. */
 import type { Node } from '@xyflow/react';
+import { selectCanvasNodeOutputColumns } from '../../components/canvas/canvasNodePresentationTruth';
 
 import type {
   CanvasNodePresentationColumn,
@@ -146,8 +147,7 @@ function representsInheritedInput(
 export function selectGraphNodeCardColumns(
   truth: CanvasNodePresentationTruth
 ): readonly CanvasNodePresentationColumn[] {
-  if (truth.inputBindings != null)
-    return truth.columns.declared.filter((column) => column.selected !== false);
+  if (truth.inputBindings != null) return selectCanvasNodeOutputColumns(truth);
   if (truth.relationalComposition?.state !== 'pending') return truth.columns.visible;
 
   return [
