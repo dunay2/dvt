@@ -7,6 +7,16 @@
  */
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
+import { createCanvasColumnHandleId } from '../../../src/app/views/canvas/canvasColumnHandleIdentity';
+import { buildCanvasAuthoringDraft } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import { applyDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtTransformAuthoringAuthority';
+import { canvasInputSlotId } from '../../../src/app/views/canvas/canvasInputBindings';
+import {
+  createModelOutputDependencyFixture,
+  selectModelDependencyOutputs,
+  modelDependencyDocument,
+} from '../../../src/app/views/canvas/canvasModelOutputDependency.test-support';
+import { resolveCanvasSubstraitGraphBindings } from '../../../src/app/views/canvas/canvasSubstraitGraphBindings';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import {
@@ -141,6 +151,173 @@ function dropPublishedField(producerId: string, name: string, view = 'Input'): v
 }
 
 describe('Producer fields enter Input; Output is passive', () => {
+  it('explicitly repairs missing model inputs, saves and reloads the unchanged consumer semantics', () => {
+    cy.then(async () => {
+      const graph = await createModelOutputDependencyFixture();
+      const narrowed = await selectModelDependencyOutputs(graph.producer, ['customer']);
+      const producer = await selectModelDependencyOutputs(narrowed, [
+        'order_id',
+        'customer',
+        'amount',
+      ]);
+      const nodes = graph.nodes.map((entry) => (entry.id === producer.id ? producer : entry));
+      const producerRead = graph.consumerDocument.sidecar.relations.find(
+        (entry) => entry.producerRef?.nodeId === producer.id
+      )!;
+      const oldFields = new Map(
+        producerRead.producerRef!.fields.map((mapping) => [
+          graph.consumerDocument.sidecar.fields.find((field) => field.fieldId === mapping.fieldId)!
+            .displayName,
+          mapping.producerFieldId,
+        ])
+      );
+      return { graph, producer, nodes, oldFields };
+    }).then(({ graph, producer, nodes, oldFields }) => {
+      cy.viewport(1920, 1080);
+      stubShellBootstrapApis({
+        scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
+      });
+      stubE2eJsonApi('GET', '/workspace/context', {
+        defaultWorkspace: E2E_PROJECT_WORKSPACE,
+        availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+      });
+      stubE2eJsonApi('GET', '/capabilities', {
+        apiVersion: '1.0.0',
+        minFrontendVersion: '0.0.1',
+        plugins: { dvt: { available: true } },
+      });
+      const saved = stubStatefulCanvasDraftAuthoring({ emptyCanvas: true });
+      Object.assign(
+        saved,
+        buildCanvasAuthoringDraft({
+          canvas: saved.canvas,
+          nodeIds: nodes.map((entry) => entry.id),
+          nodePositions: {
+            [graph.source.id]: { x: 60, y: 60 },
+            [graph.right.id]: { x: 60, y: 340 },
+            [producer.id]: { x: 400, y: 60 },
+            [graph.consumer.id]: { x: 820, y: 60 },
+          },
+          visibleEdges: graph.edges,
+          canonicalNodes: nodes,
+          canonicalEdges: graph.edges,
+        })
+      );
+      const originalNodes = structuredClone(saved.nodes);
+      visitWithE2eWorkspaceSession('/canvas', {
+        onBeforeLoad(window) {
+          window.localStorage.setItem(
+            'dvt-web-application-language',
+            JSON.stringify({ state: { language: 'en' }, version: 0 })
+          );
+          window.localStorage.setItem(
+            'dvt-web-canvas-interaction',
+            JSON.stringify({
+              state: {
+                impactOverlayEnabled: false,
+                columnLevelLineageEnabled: true,
+                canvasLayouts: {},
+              },
+              version: 0,
+            })
+          );
+        },
+      });
+      waitForE2eApiCall('/workspace/graph/draft', 'GET');
+      node(graph.consumer.id).contains('[role="tab"]', 'Output (Unavailable)').should('be.visible');
+      expand(producer.id);
+      node(producer.id).contains('[role="tab"]', 'Output (3)').click();
+      expand(graph.consumer.id);
+      showAll(graph.consumer.id);
+      for (const name of ['order_id', 'amount']) {
+        const oldId = oldFields.get(name)!;
+        const inputId = canvasInputSlotId(producer.id, oldId);
+        node(graph.consumer.id)
+          .find(`[data-field-id="${inputId}"]`)
+          .should('have.attr', 'data-input-state', 'unresolved');
+        node(producer.id)
+          .find(`[data-slot="graph-node-column-piece"][data-column-name="${name}"]`)
+          .closest('[data-slot="graph-node-column-row"]')
+          .find('[data-port="source"]')
+          .focus()
+          .should('be.focused')
+          .trigger('keydown', { key: 'Enter', code: 'Enter' });
+        const targetHandle = createCanvasColumnHandleId({
+          direction: 'target',
+          nodeId: graph.consumer.id,
+          columnId: inputId,
+        });
+        node(graph.consumer.id)
+          .find(`[data-handleid="${targetHandle}"]`)
+          .focus()
+          .should('be.focused')
+          .trigger('keydown', { key: 'Enter', code: 'Enter' });
+        node(graph.consumer.id)
+          .find(`[data-field-id="${inputId}"]`)
+          .should('have.attr', 'data-input-state', 'available');
+      }
+      node(graph.consumer.id).contains('[role="tab"]', 'Output (3)').should('be.visible');
+      cy.wrap(null).should(() => {
+        const body = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+          { draft: WorkspaceGraphAuthoringDraft } | undefined;
+        const authority = body?.draft.nodes.find((entry) => entry.id === graph.consumer.id)
+          ?.metadata?.transformAuthoring as { semanticDocument: unknown } | undefined;
+        expect(authority, 'real submitted consumer authority').to.exist;
+        const consumer = applyDvtSubstraitSemanticDocument(
+          graph.consumer,
+          authority!.semanticDocument as Parameters<typeof applyDvtSubstraitSemanticDocument>[1]
+        );
+        const document = modelDependencyDocument(consumer);
+        expect(document.plan).to.deep.equal(graph.consumerDocument.plan);
+        expect(document.sidecar.fields).to.deep.equal(graph.consumerDocument.sidecar.fields);
+        expect(body!.draft.nodes.filter((entry) => entry.id !== consumer.id)).to.deep.equal(
+          originalNodes.filter((entry) => entry.id !== consumer.id)
+        );
+        expect(
+          body!.draft.edges.map(({ sourceId, targetId }) => ({ sourceId, targetId }))
+        ).to.deep.equal(graph.edges.map(({ sourceId, targetId }) => ({ sourceId, targetId })));
+        const bindings = body!.draft.edges.find(
+          (edge) => edge.sourceId === producer.id && edge.targetId === consumer.id
+        )!.metadata!.inputBindings as {
+          fields: Array<{ inputId: string; producerFieldId: string }>;
+        };
+        const publication = modelDependencyDocument(producer);
+        for (const name of ['order_id', 'amount']) {
+          const current = publication.sidecar.fields.find(
+            (field) =>
+              field.relationId === publication.sidecar.relations.at(-1)!.relationId &&
+              field.displayName === name
+          )!;
+          expect(bindings.fields).to.deep.include({
+            inputId: canvasInputSlotId(producer.id, oldFields.get(name)!),
+            producerFieldId: current.fieldId,
+          });
+        }
+        expect(() =>
+          resolveCanvasSubstraitGraphBindings({
+            node: consumer,
+            nodes: nodes.map((entry) => (entry.id === consumer.id ? consumer : entry)),
+            edges: body!.draft.edges,
+          })
+        ).not.to.throw();
+      });
+      cy.on('window:before:load', installE2eApiFetchStub);
+      revisitWorkbenchCanvas(() => {
+        cy.reload();
+      });
+      node(graph.consumer.id).contains('[role="tab"]', 'Output (3)').should('be.visible');
+      expand(graph.consumer.id);
+      node(graph.consumer.id)
+        .find('[data-slot="graph-node-column-piece"]')
+        .should('have.length', 5);
+      for (const name of ['order_id', 'amount']) {
+        node(graph.consumer.id)
+          .find(`[data-field-id="${canvasInputSlotId(producer.id, oldFields.get(name)!)}"]`)
+          .should('have.attr', 'data-input-state', 'available');
+      }
+      node(graph.consumer.id).find('[data-input-state="unresolved"]').should('not.exist');
+    });
+  });
   it('drags one published column from source properties into a disconnected Model and reloads it', () => {
     visitInputs(true, false, 'en', true);
     cy.viewport(1280, 720);

@@ -1,3 +1,10 @@
+/**
+ * Owned concern: project independent Input repair and Output publication interactions.
+ * @baseline ADR-0064 / GH-3628: unavailable Output must not erase exact retained Input targets.
+ * @decision Allow target-only recovery for admitted incomplete inputs; suspend pending or invalid truth.
+ * @consequence Repair reuses existing authorization/CAS, without exposing unavailable Output sources.
+ * @version 1.0.0
+ */
 import type { Node } from '@xyflow/react';
 import type { CanonicalNode, CanonicalEdge } from '../../types/canonical';
 import {
@@ -36,7 +43,11 @@ export function projectCanvasNodeColumnInteraction(
     canonicalNode.kind === 'dvt:transform' &&
     !isDbtCompatibleModel(canonicalNode)
   ) {
-    let inputsCurrent = columnsCurrent;
+    const recoveryInputs =
+      presentation?.columns.state === 'unavailable' &&
+      presentation.relationalComposition?.state === 'incomplete' &&
+      presentation.inputBindings?.some((input) => input.state === 'unresolved') === true;
+    let inputsCurrent = columnsCurrent || recoveryInputs;
     try {
       readDvtTransformAuthoringAuthority(canonicalNode);
     } catch {
@@ -48,7 +59,11 @@ export function projectCanvasNodeColumnInteraction(
         ...node.data,
         columns: projectInteractiveCanvasColumns(node, canonicalNodesById),
         inputColumns: presentation == null ? [] : projectGraphNodeCardInputs(presentation, node.id),
-        columnPortDirections: inputsCurrent ? ['target', 'source'] : [],
+        columnPortDirections: inputsCurrent
+          ? columnsCurrent
+            ? ['target', 'source']
+            : ['target']
+          : [],
         expressionInputColumns: [],
         onMapCanvasInput: inputsCurrent ? node.data.onMapCanvasInput : undefined,
         onRemoveCanvasInput: inputsCurrent ? node.data.onRemoveCanvasInput : undefined,
