@@ -5,6 +5,13 @@
  * @consequence Implicit and explicit repairs retain consumer semantics through successive edits.
  * @version 1.1.0
  */
+/**
+ * Owned concern: prove exact Input provenance and atomic repair of retained producer references.
+ * @baseline ADR-0064 / GH-3628: new publication IDs never replace consumer identities implicitly.
+ * @decision Exercise real documents, partial repair and unchanged rejected aggregates.
+ * @consequence Schema, scope and publication failures cannot leave half-written bindings.
+ * @version 1.0.0
+ */
 import { describe, expect, it } from 'vitest';
 import { WorkspaceGraphAuthoringDraftSchema, type ConnectedSourceRef } from '@dvt/contracts';
 import { bindCanvasInputField, removeCanvasInputField } from './canvasInputBindingAuthoring';
@@ -132,9 +139,7 @@ const producers = new Map(
   ])
 );
 
-function repairFixture(
-  explicit = false
-): Readonly<{
+function repairFixture(explicit = false): Readonly<{
   document: SubstraitDocument;
   draftSession: CanvasDraftSession;
   inputId: string;
