@@ -492,7 +492,22 @@ describe('Producer fields enter Input; Output is passive', () => {
 
   it('exposes localized Input connectors without selection toggles', () => {
     visitInputs(false, false, 'es');
+    let writesBeforeDisclosure = 0;
+    cy.then(() => {
+      writesBeforeDisclosure = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
+    });
     expand('source-orders');
+    node('source-orders').find('[data-slot="graph-node-column-output-state"]').should('not.exist');
+    node('source-orders').find('[data-slot="graph-node-column-output-check"]').should('not.exist');
+    node('source-orders').find('[aria-label="Conectar salida de order_id"]').should('be.visible');
+    node('source-orders')
+      .find('[data-slot="graph-node-column-piece"][data-column-name="order_id"]')
+      .should('have.attr', 'draggable', 'true');
+    expand('source-orders');
+    expand('source-orders');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeDisclosure)
+    );
     expand('model-orders');
     node('source-orders').find('[aria-label="Conectar salida de order_id"]').should('be.visible');
     node('model-orders').find('[aria-label="Asignar a order_id"]').should('be.visible');
