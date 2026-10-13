@@ -53,6 +53,7 @@ describe('join-consumers', () => {
         expect(saved.sidecar.relations).to.deep.equal(original.sidecar.relations);
         expect(saved.sidecar.fields).to.deep.equal(original.sidecar.fields);
       });
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     };
     applyType('LEFT JOIN');
     applyType('INNER JOIN');
