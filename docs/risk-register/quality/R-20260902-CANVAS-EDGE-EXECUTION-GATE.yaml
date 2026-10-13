@@ -19,7 +19,7 @@ mitigation:
     edge gate.
   evidence:
     - docs/evidence/ED-20260902-canvas-edge-execution-gate.md
-    - docs/planning/proposals/mandatory/frontend-and-ux/canvas-edge-execution-gate-plan-20260902.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-edge-execution-gate-plan-20260902.md
     - packages/@dvt/contracts/test/workspace-graph-authoring-edge-execution.contract.test.ts
     - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
     - apps/web/src/app/views/canvas/canvasDraftExecutionGate.test.ts

@@ -7,7 +7,7 @@ owners:
 arc_level: ARC-2
 breaking: false
 code_refs:
-  - docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
+  - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/postgres-tenant-isolation-service-access-remediation-plan-20260425.md
   - packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
   - packages/@dvt/adapter-postgres/src/StartRunIntentSchemaManager.ts
   - packages/@dvt/adapter-postgres/src/PostgresTenantIsolationPolicy.ts

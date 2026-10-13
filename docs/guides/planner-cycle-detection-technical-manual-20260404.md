@@ -18,7 +18,7 @@ deterministic fail-closed rejection on cyclic selected subgraphs using
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
 - the governing GitHub issue
-- `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md`
+- [Historical 20260402-deep-architectural-review-principal-architect.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md)
 
 ## Current boundary
 

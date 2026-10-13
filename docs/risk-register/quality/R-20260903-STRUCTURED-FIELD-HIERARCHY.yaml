@@ -16,7 +16,7 @@ mitigation:
     unavailable.
   evidence:
     - docs/evidence/ED-20260903-substrait-structured-field-gate.md
-    - docs/planning/proposals/mandatory/frontend-and-ux/canvas-structured-transform-fields-plan-20260903.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-structured-transform-fields-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts
     - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts

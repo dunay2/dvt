@@ -20,7 +20,7 @@ mitigation:
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/evidence/ED-20260902-canvas-calculated-column-authoring.md
-    - docs/planning/proposals/mandatory/frontend-and-ux/canvas-calculated-column-authoring-plan-20260902.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-calculated-column-authoring-plan-20260902.md
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
     - apps/web/src/app/views/canvas/canvasCalculatedColumnAuthoring.test.ts
     - apps/web/src/app/views/canvas/canvasProjectionFunctionContract.test.ts

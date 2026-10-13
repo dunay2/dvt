@@ -47,11 +47,8 @@ describe('CanvasPlaygroundHost architecture', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
-    const implementationPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f15e-canvas-startup-template-selection-plan-20260518.md'
-    );
 
-    for (const document of [componentGuide, hostGuide, userStories, implementationPlan]) {
+    for (const document of [componentGuide, hostGuide, userStories]) {
       expect(document).toContain('active workspace');
       expect(document).toContain('canvas template');
     }
@@ -62,8 +59,8 @@ describe('CanvasPlaygroundHost architecture', () => {
 
     expect(componentGuide).toContain('```mermaid');
     expect(userStories).toContain('US-CANVAS-FIRST-AUTHORING-007');
-    expect(implementationPlan).toContain('F15E-CANVAS-STARTUP-TEMPLATE-SELECTION-20260518');
-    expect(implementationPlan).toContain('CreateCanvasDocumentCommand');
+    expect(componentGuide).toContain('One direct Start canvas action');
+    expect(componentGuide).toContain('CreateCanvasDocumentCommand');
   });
 
   it('keeps first-canvas availability separate from graph mutation availability', () => {

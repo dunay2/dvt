@@ -9,7 +9,7 @@ last_reviewed: 2026-09-14
 
 The product-owner correction in [#3186](https://github.com/dunay2/dvt/issues/3186)
 supersedes the native DVT Transform gesture policy in
-[Canvas Node Workbench Hardening](../planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md).
+[Canvas Node Workbench Hardening](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md).
 File-backed dbt node entry is unchanged.
 
 | Native DVT Transform gesture                                        | Result                                         |
