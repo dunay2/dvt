@@ -1,5 +1,12 @@
-/** Controlled condition form; the same operand component serves both input ports. */
+/**
+Owned concern: present a controlled condition form using one operand component for both ports.
+@baseline GH-3623: functions must remain reachable from the comparison editor.
+@decision Render an injected action without owning drafts, compilation or persistence.
+@consequence Formula and simple modes share their owner and authorization fences.
+@version 1.0.0
+ */
 import { Braces, X } from 'lucide-react';
+import type { ReactNode } from 'react';
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 import { Button } from '../../../components/ui/button';
 import { SemanticWorkbenchJoinOperandEditor } from '../SemanticWorkbenchJoinOperandEditor';
@@ -28,6 +35,7 @@ export function JoinConditionForm({
   onChange,
   onClose,
   onSave,
+  formulaAction,
 }: Readonly<{
   draft: ConditionDraft;
   fields: readonly ConditionFieldOption[];
@@ -36,6 +44,7 @@ export function JoinConditionForm({
   onChange: (draft: ConditionDraft) => void;
   onClose: () => void;
   onSave: () => void;
+  formulaAction?: ReactNode;
 }>) {
   const fieldOptions = fields.filter((field) => field.dataType === draft.dataType);
   const dataTypes = [...new Set(fields.map((field) => field.dataType))];
@@ -160,6 +169,7 @@ export function JoinConditionForm({
       <Button type="button" size="sm" className="mt-2" disabled={!canApply} onClick={onSave}>
         {draft.conditionKey == null ? 'Añadir condición' : 'Guardar condición'}
       </Button>
+      {formulaAction}
     </div>
   );
 }

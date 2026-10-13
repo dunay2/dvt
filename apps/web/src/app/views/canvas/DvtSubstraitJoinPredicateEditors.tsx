@@ -1,4 +1,10 @@
-/** One selected JOIN editor over the shared typed read model and atomic condition command. */
+/**
+Owned concern: edit one selected JOIN through the shared typed read model and atomic command.
+@baseline GH-3623: simple comparisons and functions are two views of the same predicate.
+@decision Project pending comparisons with the existing condition helpers before formula handoff.
+@consequence Switching editors does not write or drop sibling clauses.
+@version 1.0.0
+ */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { SelectedJoin } from './canvasSelectedJoin';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
@@ -6,9 +12,10 @@ import { useRelationCommand } from './useRelationCommand';
 import { SemanticWorkbenchJoinConditionEditor } from './SemanticWorkbenchJoinConditionEditor';
 import { CanvasSelectedJoinConditionTree } from './CanvasSelectedJoinConditionTree';
 import type { Dispatch, SetStateAction } from 'react';
-import type { ConditionDraft } from './join-condition/conditionDraft';
+import type { Comparison, ConditionDraft } from './join-condition/conditionDraft';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { Button } from '../../components/ui/button';
 import {
   appendDvtSubstraitJoinComparison,
   updateDvtSubstraitJoinComparison,
@@ -29,19 +36,25 @@ export function DvtSubstraitJoinPredicateEditors({
   onChange,
   draft,
   onDraftChange,
+  onEditFormula,
+  formulaDisabled = false,
+  saveBlocked = false,
 }: Readonly<{
   selected: SelectedJoin;
   disabled: boolean;
   onChange: (document: SubstraitDocument) => void;
   draft: ConditionDraft | null;
   onDraftChange: Dispatch<SetStateAction<ConditionDraft | null>>;
+  onEditFormula?: (conditions: readonly DvtSubstraitJoinPredicateCondition[]) => void;
+  formulaDisabled?: boolean;
+  saveBlocked?: boolean;
 }>) {
   const command = useRelationCommand(selected.relationId, onChange);
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language).joinFormula;
   const conditions = selected.conditions;
   const commit = (next: readonly DvtSubstraitJoinPredicateCondition[] | null) =>
-    next == null
+    next == null || saveBlocked
       ? Promise.resolve(false)
       : command.execute((session, request) =>
           replaceSelectedJoinConditions(session, { ...request, conditions: next })
@@ -71,24 +84,30 @@ export function DvtSubstraitJoinPredicateEditors({
         conditions={conditions}
         draft={draft}
         onDraftChange={onDraftChange}
+        saveBlocked={saveBlocked}
+        renderFormulaAction={
+          onEditFormula == null
+            ? undefined
+            : (edit) => {
+                const next = projectEditedConditions(conditions, edit);
+                return (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    data-slot="join-condition-formula-edit"
+                    disabled={formulaDisabled || command.state === 'busy' || next == null}
+                    onClick={() => {
+                      if (next != null) onEditFormula(next);
+                    }}
+                  >
+                    {copy.edit}
+                  </Button>
+                );
+              }
+        }
         renderExpression={(edit, onSelectCondition) => {
-          const preview =
-            edit == null
-              ? conditions
-              : edit.condition == null
-                ? null
-                : edit.conditionKey == null
-                  ? appendDvtSubstraitJoinComparison({
-                      conditions,
-                      condition: edit.condition,
-                      groupWithPrevious: edit.groupWithPrevious,
-                    })
-                  : updateDvtSubstraitJoinComparison({
-                      conditions,
-                      condition: edit.condition,
-                      conditionKey: edit.conditionKey,
-                      operandKey,
-                    });
+          const preview = projectEditedConditions(conditions, edit);
           return (
             <CanvasSelectedJoinConditionTree
               selected={selected}
@@ -111,4 +130,28 @@ export function DvtSubstraitJoinPredicateEditors({
       />
     </fieldset>
   );
+}
+
+function projectEditedConditions(
+  conditions: readonly DvtSubstraitJoinPredicateCondition[],
+  edit: Readonly<{
+    conditionKey: string | null;
+    condition: Comparison | null;
+    groupWithPrevious: boolean;
+  }> | null
+) {
+  if (edit == null) return conditions;
+  if (edit.condition == null) return null;
+  return edit.conditionKey == null
+    ? appendDvtSubstraitJoinComparison({
+        conditions,
+        condition: edit.condition,
+        groupWithPrevious: edit.groupWithPrevious,
+      })
+    : updateDvtSubstraitJoinComparison({
+        conditions,
+        condition: edit.condition,
+        conditionKey: edit.conditionKey,
+        operandKey,
+      });
 }

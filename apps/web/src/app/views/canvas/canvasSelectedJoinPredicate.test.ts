@@ -8,7 +8,10 @@ import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import { resolveDvtSubstraitJoinUnaryFunctions } from './canvasDvtSubstraitJoinOperand';
 import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { joinPredicateFormulaScope } from './canvasJoinPredicateFormula';
+import {
+  describeJoinConditionFormula,
+  joinPredicateFormulaScope,
+} from './canvasJoinPredicateFormula';
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
@@ -20,6 +23,41 @@ import { configureCompositionStep } from './canvasCompositionConfiguration.test-
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 
 describe('selected JOIN predicate', () => {
+  it('round-trips a pending compound condition without dropping AND, OR or grouped siblings', async () => {
+    const { session, document } = selectedUnaryScenario();
+    const selected = await querySelectedJoin(session, session.rootId, session.revision);
+    const first = selected.conditions![0]!;
+    if (first.kind === 'group' || first.right == null)
+      throw new Error('Expected a binary comparison fixture');
+    const conditions: readonly DvtSubstraitJoinPredicateCondition[] = [
+      {
+        kind: 'group',
+        conditions: [first, { ...first, combination: 'or', operator: 'not_equal' }],
+      },
+      { ...first, combination: 'and' },
+    ];
+    const formula = describeJoinConditionFormula(selected, conditions)!;
+    expect(formula).toContain('AND');
+    expect(formula).toContain('OR');
+    expect(formula).toContain('NOT_EQUAL');
+    expect(session.hasDocument(document)).toBe(true);
+    expect(session.revision).toBe(selected.revision);
+    await replaceSelectedJoinConditions(session, {
+      relationId: selected.relationId,
+      expectedRevision: selected.revision,
+      formula,
+    });
+    const reopened = await querySelectedJoin(session, session.rootId, session.revision);
+    expect(describeJoinConditionFormula(reopened, reopened.conditions!)).toBe(formula);
+    expect(reopened.conditions).toEqual([
+      first,
+      { ...first, combination: 'or', operator: 'not_equal' },
+      { ...first, combination: 'and' },
+    ]);
+    expect(reopened.output.bindings).toEqual(selected.output.bindings);
+    expect(reopened.target.inputs).toEqual(selected.target.inputs);
+    session.dispose();
+  });
   it.each([
     { joinType: JoinRel_JoinType.INNER, clause: /ON .* = 'match'/ },
     { joinType: JoinRel_JoinType.LEFT, clause: /ON .* = 'match'/ },
