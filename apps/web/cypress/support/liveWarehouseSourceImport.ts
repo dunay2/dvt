@@ -179,7 +179,8 @@ function waitForPlacedSource(
 export function placeRegisteredSource(
   id: string,
   scope: WorkspaceGraphDraftScope,
-  position = { x: 220, y: 160 }
+  position = { x: 220, y: 160 },
+  dropTarget?: HTMLElement
 ): Cypress.Chainable<string> {
   let previousIds: string[] = [];
   cy.get('body').then((body) => {
@@ -193,7 +194,7 @@ export function placeRegisteredSource(
     .trigger('dragstart', { dataTransfer });
   cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
     const bounds = $pane[0]!.getBoundingClientRect();
-    cy.wrap($pane)
+    cy.wrap(dropTarget ?? $pane)
       .trigger('dragover', { dataTransfer })
       .trigger('drop', {
         dataTransfer,

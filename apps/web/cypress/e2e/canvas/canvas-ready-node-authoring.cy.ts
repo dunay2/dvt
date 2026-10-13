@@ -23,7 +23,12 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
@@ -143,6 +148,82 @@ function visitReadyCanvas(path = '/canvas'): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
+function readRegisteredCssLayers(document: Document): string[] {
+  const layers = new Set<string>();
+  for (const stylesheet of Array.from(document.styleSheets)) {
+    for (const rule of Array.from(stylesheet.cssRules)) {
+      const names = rule.cssText.match(/^@layer\s+([^;{]+)/u)?.[1];
+      for (const name of names?.split(',') ?? []) layers.add(name.trim());
+    }
+  }
+  return Array.from(layers);
+}
+
+function resolveComputedPaletteColor(value: string): string {
+  if (!/^#[\da-f]{6}$/iu.test(value)) return value;
+  const channels = [1, 3, 5].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
+  return `rgb(${channels.join(', ')})`;
+}
+
+function assertCanvasComputedAppearance(): void {
+  const sourceCard = '.react-flow__node[data-id="src_orders"] [data-slot="graph-node-card"]';
+  cy.get(sourceCard)
+    .should('be.visible')
+    .and('have.css', 'font-size', '14px')
+    .and('have.css', 'border-top-width', '1px')
+    .and('have.css', 'border-top-style', 'solid');
+  cy.get(sourceCard)
+    .children()
+    .first()
+    .should('have.css', 'padding-left', '16px')
+    .and('have.css', 'padding-right', '16px')
+    .and('have.css', 'padding-top', '12px')
+    .and('have.css', 'padding-bottom', '12px');
+  cy.get(sourceCard)
+    .find('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]')
+    .should('have.length', 1)
+    .and('have.css', 'font-size', '14px')
+    .and('have.css', 'font-weight', '600');
+  cy.get(sourceCard)
+    .find('[data-slot="graph-node-tag"]')
+    .first()
+    .should('have.css', 'font-size', '12px')
+    .and('have.css', 'padding-left', '8px')
+    .and('have.css', 'padding-top', '2px')
+    .and('have.css', 'border-top-width', '1px');
+  cy.get('[data-testid="canvas-viewport"]').should(($viewport) => {
+    const viewport = $viewport.get(0);
+    const window = viewport.ownerDocument.defaultView!;
+    const palette = window.getComputedStyle(viewport);
+    for (const [selector, property, token] of [
+      ['.react-flow__controls', 'background-color', '--canvas-controls-surface'],
+      ['.react-flow__controls-button', 'background-color', '--canvas-controls-button-surface'],
+      ['.react-flow__controls-button', 'color', '--canvas-controls-foreground'],
+      ['.react-flow__minimap', 'background-color', '--canvas-minimap-surface'],
+      ['.react-flow__minimap', 'border-top-color', '--canvas-minimap-border'],
+    ] as const) {
+      const surface = viewport.querySelector(selector);
+      expect(surface, selector).not.to.be.null;
+      const expectedColor = palette.getPropertyValue(token).trim();
+      expect(expectedColor, token).not.to.equal('');
+      expect(
+        window.getComputedStyle(surface!).getPropertyValue(property),
+        `${selector} ${property}`
+      ).to.equal(resolveComputedPaletteColor(expectedColor));
+    }
+  });
+  cy.document().should((document) => {
+    expect(readRegisteredCssLayers(document), 'actual browser cascade-layer order').to.deep.equal([
+      'properties',
+      'theme',
+      'base',
+      'components',
+      'utilities',
+    ]);
+  });
+  cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+}
+
 function waitForDraftSaveCount(expectedCount: number): void {
   cy.wrap(null).should(() => {
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(expectedCount);
@@ -208,6 +289,20 @@ function openNodeProperties(nodeId: string): void {
 describe('Canvas ready node authoring', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
+  });
+
+  it('preserves computed card styles and Canvas palettes on cold load and reload without writing', () => {
+    const draft = stubStatefulCanvasDraftAuthoring();
+    Object.assign(draft, normalizeProjectCanvasDraft(draft));
+
+    visitReadyCanvas();
+    assertCanvasComputedAppearance();
+
+    cy.on('window:before:load', installE2eApiFetchStub);
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
+    assertCanvasComputedAppearance();
   });
 
   it('persists business tags while semantic tags stay protected and directly filterable', () => {
