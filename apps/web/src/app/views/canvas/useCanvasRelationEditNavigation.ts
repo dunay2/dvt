@@ -1,6 +1,13 @@
 /** Card navigation leaves the existing edit transaction only after an explicit decision. */
 import { useRef, useState } from 'react';
-import type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
+import type { CanvasRelationalTreeApplyResult } from './canvasRelationalTreeWorkbench.types';
+
+export type CanvasRelationEditNavigationSession = Readonly<{
+  hasUnappliedChanges: boolean;
+  canApply: boolean;
+  apply: () => CanvasRelationalTreeApplyResult;
+  cancel: () => void;
+}>;
 
 export function useCanvasRelationEditNavigation({
   editing,
@@ -10,7 +17,7 @@ export function useCanvasRelationEditNavigation({
 }: Readonly<{
   editing: boolean;
   selectedRelationId: string | null;
-  session: CanvasRelationalTreeWorkbenchHandle;
+  session: CanvasRelationEditNavigationSession;
   onSelect: (relationId: string | null) => void;
 }>) {
   const [pending, setPending] = useState<{ relationId: string | null } | null>(null);

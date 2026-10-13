@@ -1,5 +1,5 @@
 /**
- * Owned concern: assert the direct stylesheet ownership contract shared by two component evidence owners.
+ * Owned concern: assert the direct stylesheet ownership contract shared by component evidence owners.
  * @baseline GH-3629: source ownership is distinct from rendered behavior and browser geometry.
  * @decision Share only identical import, inline-style and declared-class assertions with explicit inputs.
  * @consequence Component readers and semantic-token checks remain in their concern-specific tests.

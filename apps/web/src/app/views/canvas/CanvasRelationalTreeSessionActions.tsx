@@ -1,69 +1,54 @@
-/** Owned concern: present the existing local Apply/Cancel transaction without a second edit gate. */
+/**
+ * Owned concern: render projected session actions through existing portal and dialog adapters.
+ * @baseline GH-3629: presentation cannot resolve transaction or navigation policy.
+ * @decision Consume only the UI model, explicit callbacks and concern-owned stylesheet.
+ * @consequence Apply/Cancel and leave decisions remain with their existing command owners.
+ */
 import { createPortal } from 'react-dom';
-import type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
-import type { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { CanvasRelationalTreeEditButtons } from './CanvasRelationalTreeEditButtons';
-import { formatCanvasModelOutputDependencyRejection } from './canvasCopyFormatting';
+import type {
+  CanvasRelationalTreeSessionActionsBinding,
+  CanvasRelationalTreeSessionActionsModel,
+} from './canvasRelationalTreeSessionActionsModel';
+import styles from './CanvasRelationalTreeSessionActions.module.css';
 
 export function CanvasRelationalTreeSessionActions({
-  session,
-  copy,
+  model,
+  binding,
   host,
-  active,
-  navigation,
 }: Readonly<{
-  session: CanvasRelationalTreeWorkbenchHandle;
-  copy: CanvasRelationalTreeWorkbenchCopy;
+  model: CanvasRelationalTreeSessionActionsModel;
+  binding: CanvasRelationalTreeSessionActionsBinding;
   host?: HTMLElement | null;
-  active: boolean;
-  navigation: ReturnType<typeof useCanvasRelationEditNavigation>;
 }>): JSX.Element | null {
-  const language = useApplicationLanguageStore((state) => state.language);
-  const localCopy = resolveCanvasSemanticEditorCopy(language);
-  if (!active) return null;
-  const rejectionMessage =
-    session.applyRejection?.reason === 'model_output_required' ||
-    session.applyRejection?.reason === 'model_output_dependency_unavailable'
-      ? formatCanvasModelOutputDependencyRejection(session.applyRejection, language)
-      : session.applyRejection?.reason === 'node_unavailable'
-        ? localCopy.applyNodeUnavailable
-        : session.applyRejection == null
-          ? null
-          : localCopy.applyRejected;
+  if (model.kind === 'hidden') return null;
   const actions = (
-    <div className="flex items-center gap-1 rounded border border-(--border-subtle) bg-(--surface-panel) p-0.5">
-      {rejectionMessage == null ? null : (
-        <span role="alert" className="max-w-72 px-2 text-[11px] text-rose-300">
-          {rejectionMessage}
+    <div className={styles.actions}>
+      {model.rejectionMessage == null ? null : (
+        <span role="alert" className={styles.rejection}>
+          {model.rejectionMessage}
         </span>
       )}
-      {session.hasUnappliedChanges ? (
-        <span role="status" className="px-2 text-[11px] text-amber-200">
-          {localCopy.draft}
+      {model.draftLabel == null ? null : (
+        <span role="status" className={styles.draft}>
+          {model.draftLabel}
         </span>
-      ) : null}
-      <CanvasRelationalTreeEditButtons session={session} copy={copy} />
+      )}
+      <CanvasRelationalTreeEditButtons model={model} binding={binding} />
     </div>
   );
   return (
     <>
       <CanvasDraftDecisionDialog
-        open={navigation.pending}
-        canApply={session.canApply}
-        onStay={navigation.stay}
-        onDiscard={navigation.discard}
-        onApply={navigation.apply}
-        error={rejectionMessage}
+        open={model.decision.open}
+        canApply={model.decision.canApply}
+        onStay={binding.onStay}
+        onDiscard={binding.onDiscard}
+        onApply={binding.onApplyAndNavigate}
+        error={model.rejectionMessage}
       />
-      {host ? (
-        createPortal(actions, host)
-      ) : (
-        <div className="absolute right-3 top-2 z-20">{actions}</div>
-      )}
+      {host ? createPortal(actions, host) : <div className={styles.fallback}>{actions}</div>}
     </>
   );
 }
