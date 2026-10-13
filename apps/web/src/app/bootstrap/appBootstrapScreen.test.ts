@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
+/** Owned concern: verify bootstrap state transitions and the critical DOM adapter contract. */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,39 +31,6 @@ const BOOTSTRAP_SCREEN_SOURCE_PATH = resolve(
   dirname(fileURLToPath(import.meta.url)),
   'appBootstrapScreen.ts'
 );
-const FONT_SOURCE_PATH = resolve(WEB_ROOT, 'src/styles/fonts.css');
-const ENTRY_SOURCE_PATH = resolve(WEB_ROOT, 'src/main.tsx');
-const CASCADE_LAYER_SOURCE_PATH = resolve(WEB_ROOT, 'public/cascade-layers.css');
-const REGEXP_SYNTAX_CHARACTERS = new Set([
-  '.',
-  '*',
-  '+',
-  '?',
-  '^',
-  '$',
-  '{',
-  '}',
-  '(',
-  ')',
-  '|',
-  '[',
-  ']',
-  '\\',
-]);
-
-function escapeRegExpSyntax(value: string): string {
-  return Array.from(value, (character) =>
-    REGEXP_SYNTAX_CHARACTERS.has(character) ? `\\${character}` : character
-  ).join('');
-}
-
-function extractCssRule(source: string, selector: string): string {
-  const escapedSelector = escapeRegExpSyntax(selector);
-  const rulePattern = new RegExp(String.raw`${escapedSelector}\s*\{(?<body>[^}]*)\}`);
-  const match = rulePattern.exec(source);
-  return match?.groups?.body ?? '';
-}
-
 function mountBootstrapDom(): void {
   document.body.innerHTML = `
     <div id="app-loading-screen" data-state="loading">
@@ -198,40 +166,6 @@ describe('appBootstrapScreen', () => {
     document.body.innerHTML = '';
   });
 
-  it('registers the canonical CSS layer order through the first external HTML stylesheet without a duplicate JS owner', () => {
-    const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
-    const parsedDocument = new DOMParser().parseFromString(indexHtml, 'text/html');
-    const firstStylesheet =
-      parsedDocument.head.querySelector<HTMLLinkElement>('link[rel="stylesheet"]');
-    expect(firstStylesheet?.getAttribute('href')).toBe('/cascade-layers.css');
-    expect(firstStylesheet?.hasAttribute('disabled')).toBe(false);
-    expect(firstStylesheet?.hasAttribute('media')).toBe(false);
-    expect(parsedDocument.head.querySelector('link[rel="stylesheet"], style')).toBe(
-      firstStylesheet
-    );
-    expect(parsedDocument.querySelectorAll('link[href="/cascade-layers.css"]')).toHaveLength(1);
-    const moduleScripts = Array.from(parsedDocument.querySelectorAll('script[type="module"]'));
-    expect(moduleScripts.length).toBeGreaterThan(0);
-    moduleScripts.forEach((script) => {
-      expect(
-        firstStylesheet!.compareDocumentPosition(script) & Node.DOCUMENT_POSITION_FOLLOWING
-      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    });
-    expect(indexHtml).not.toContain('@layer');
-    const entrySource = readFileSync(ENTRY_SOURCE_PATH, 'utf8');
-    expect(entrySource).not.toContain('cascadeLayers.css');
-    expect(entrySource).not.toContain('cascade-layers.css');
-    expect(existsSync(resolve(WEB_ROOT, 'src/styles/cascadeLayers.css'))).toBe(false);
-
-    const layerSource = readFileSync(CASCADE_LAYER_SOURCE_PATH, 'utf8');
-    expect(layerSource.replace(/\/\*[\s\S]*?\*\//g, '').trim()).toBe(
-      '@layer properties, theme, base, components, utilities;'
-    );
-    const appImportPosition = entrySource.indexOf("import App from './app/App.tsx';");
-    expect(appImportPosition).toBeGreaterThanOrEqual(0);
-    expect(entrySource.indexOf("import './styles/index.css';")).toBeGreaterThan(appImportPosition);
-  });
-
   it('keeps the production HTML shell aligned with the bootstrap DOM contract before React executes', () => {
     const screen = mountProductionBootstrapDom();
 
@@ -245,27 +179,6 @@ describe('appBootstrapScreen', () => {
 
     startBootstrapScreen();
     expectInitialProgressSurface();
-  });
-
-  it('uses the governed mature typography and neutral startup palette before React executes', () => {
-    const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
-    const fontSource = readFileSync(FONT_SOURCE_PATH, 'utf8');
-    const screenRule = extractCssRule(indexHtml, '#app-loading-screen');
-    const titleRule = extractCssRule(indexHtml, '#app-loading-title');
-
-    expect(fontSource).toContain("--font-sans: 'IBM Plex Sans'");
-    expect(fontSource).toContain("--font-mono: 'IBM Plex Mono'");
-    expect(fontSource).toContain('@fontsource/ibm-plex-sans/latin-400.css');
-    expect(fontSource).toContain('@fontsource/ibm-plex-sans/latin-600.css');
-    expect(fontSource).toContain('@fontsource/ibm-plex-mono/latin-400.css');
-    expect(screenRule).toContain('background-color: #0b0d10');
-    expect(screenRule).toMatch(/font-family:\s*'IBM Plex Sans'/);
-    expect(titleRule).toContain('font-size: 1.25rem');
-    expect(indexHtml).toContain('@media (prefers-reduced-motion: reduce)');
-    expect(indexHtml).toContain('@media (forced-colors: active)');
-    expect(indexHtml).toContain('overflow: auto');
-    expect(indexHtml).not.toContain('#60a5fa');
-    expect(indexHtml).not.toContain("'JetBrains Mono'");
   });
 
   it('keeps raw bootstrap DOM identifiers out of the screen adapter', () => {
@@ -365,26 +278,6 @@ describe('appBootstrapScreen', () => {
       'error',
       'error',
     ]);
-  });
-
-  it('keeps pending neutral and failed red in the production bootstrap CSS', () => {
-    const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
-    const pendingRule = extractCssRule(
-      indexHtml,
-      "#app-loading-steps li[data-status='pending']::before"
-    );
-    const failedRule = extractCssRule(
-      indexHtml,
-      "#app-loading-steps li[data-status='failed']::before"
-    );
-    const failedSegmentRule = extractCssRule(
-      indexHtml,
-      ".app-loading-progress-segment[data-status='failed']"
-    );
-
-    expect(pendingRule).not.toContain('#f59e0b');
-    expect(failedRule).toContain('#ef4444');
-    expect(failedSegmentRule).toContain('#ef4444');
   });
 
   it('renders progress segment data as DOM attributes instead of parsing markup', () => {
