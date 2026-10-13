@@ -33,6 +33,21 @@ describe('card Input / Output boundary', () => {
       source: { nodeId: 'producer-b', columnId: 'email' },
     },
   ];
+  it.each(['en', 'es'] as const)(
+    'distinguishes an unresolved input without hiding its stable target in %s',
+    (language) => {
+      useApplicationLanguageStore.setState({ language });
+      const unavailable = { ...inputs[0]!, inputState: 'unresolved' as const };
+      render(undefined, { inputColumns: [unavailable, inputs[1]!] });
+      const piece = container.querySelector<HTMLElement>('[data-field-id="input-a"]')!;
+      expect(piece.getAttribute('data-input-state')).toBe('unresolved');
+      expect(piece.getAttribute('aria-label')).toBe(
+        language === 'es' ? 'name, entrada no disponible' : 'name, unavailable input'
+      );
+      expect(piece.textContent).toContain(language === 'es' ? 'No disponible' : 'Unavailable');
+      expect(container.querySelectorAll('[data-slot="graph-node-column-piece"]')).toHaveLength(2);
+    }
+  );
   function render(
     onInputMapping?: GraphNodeColumnSectionProps['onInputMapping'],
     overrides: Partial<GraphNodeColumnSectionProps> = {}

@@ -57,10 +57,13 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       showSourceName === true && column.sourceNodeName != null
         ? `${column.sourceNodeName}.${column.name}`
         : column.name;
+    const unavailableInput = view === 'input' && column.inputState === 'unresolved';
     const accessibleLabel = (
       view !== 'input' && isOutput
         ? copy.columnOutputAriaLabelTemplate
-        : copy.columnAvailableInputAriaLabelTemplate
+        : unavailableInput
+          ? copy.columnUnavailableInputAriaLabelTemplate
+          : copy.columnAvailableInputAriaLabelTemplate
     ).replace('{column}', displayedName);
     const outputFocus = useGraphColumnOutputFocus();
 
@@ -72,6 +75,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
         data-field-id={column.id}
+        data-input-state={view === 'input' ? column.inputState : undefined}
         data-output={view === 'input' ? undefined : String(isOutput)}
         tabIndex={0}
         aria-label={accessibleLabel}
@@ -107,7 +111,9 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
           <span className={graphNodeColumnClasses.name}>{displayedName}</span>
         )}
         <span className={graphNodeColumnClasses.metadata}>
-          <span className={graphNodeColumnClasses.type}>{column.type}</span>
+          <span className={graphNodeColumnClasses.type}>
+            {unavailableInput ? copy.outputStateLabels.unavailable : column.type}
+          </span>
           {column.primaryKey === true ? (
             <span className={graphNodeColumnClasses.constraint}>PK</span>
           ) : null}

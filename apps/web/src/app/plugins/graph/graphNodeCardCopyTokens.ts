@@ -50,6 +50,7 @@ type GraphNodeCardCopy = Readonly<{
   targetColumnPortLabelTemplate: string;
   columnOutputAriaLabelTemplate: string;
   columnAvailableInputAriaLabelTemplate: string;
+  columnUnavailableInputAriaLabelTemplate: string;
   columnFunctionCategoryLabels: Readonly<
     Record<
       'text' | 'numeric' | 'date-time' | 'boolean' | 'conversion' | 'aggregate' | 'window',
@@ -178,6 +179,7 @@ const ENGLISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   targetColumnPortLabelTemplate: 'Map into {column}',
   columnOutputAriaLabelTemplate: '{column}, included in output',
   columnAvailableInputAriaLabelTemplate: '{column}, available input',
+  columnUnavailableInputAriaLabelTemplate: '{column}, unavailable input',
   columnFunctionCategoryLabels: {
     text: 'Text functions',
     numeric: 'Numeric functions',
@@ -314,6 +316,7 @@ const SPANISH_GRAPH_NODE_CARD_COPY: GraphNodeCardCopy = {
   targetColumnPortLabelTemplate: 'Asignar a {column}',
   columnOutputAriaLabelTemplate: '{column}, incluida en salida',
   columnAvailableInputAriaLabelTemplate: '{column}, entrada disponible',
+  columnUnavailableInputAriaLabelTemplate: '{column}, entrada no disponible',
   columnFunctionCategoryLabels: {
     text: 'Funciones de texto',
     numeric: 'Funciones numéricas',

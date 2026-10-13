@@ -116,6 +116,7 @@ export function projectGraphNodeCardInputs(
 ): readonly GraphNodeColumn[] {
   return (truth.inputBindings ?? []).map((input) => ({
     id: input.inputId,
+    inputState: input.state,
     name: input.name,
     type: input.type,
     source: input.source,
