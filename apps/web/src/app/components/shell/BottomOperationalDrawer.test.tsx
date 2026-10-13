@@ -15,6 +15,7 @@ import {
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import BottomOperationalDrawer from './BottomOperationalDrawer';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
+import styles from './BottomOperationalDrawer.module.css';
 
 const liveLogStreamState: {
   lines: string[];
@@ -90,6 +91,12 @@ describe('BottomOperationalDrawer', () => {
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-idle"]')?.textContent
     ).toContain('Start a run to see live run events here.');
+    expect(document.body.querySelector('[data-slot="bottom-operational-drawer"]')?.className).toBe(
+      styles.drawer
+    );
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-drawer-idle"]')?.className
+    ).toBe(styles.bodyMessage);
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-mode-badge"]')
     ).toBeNull();
@@ -177,6 +184,9 @@ describe('BottomOperationalDrawer', () => {
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-stream"]')
     ).toBeTruthy();
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-drawer-stream"]')?.className
+    ).toBe(styles.stream);
     expect(document.body.querySelector('[data-testid="xterm-console"]')?.textContent).toContain(
       'step: started'
     );
@@ -206,6 +216,10 @@ describe('BottomOperationalDrawer', () => {
       '[data-slot="bottom-operational-feed-retry"]'
     );
     expect(retry?.textContent).toContain('Retry event feed');
+    expect(retry?.classList.contains(styles.feedRetry)).toBe(true);
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.className
+    ).toBe(styles.feedHealth);
     fireEvent.click(retry!);
     expect(liveLogStreamState.retry).toHaveBeenCalledTimes(1);
   });
@@ -224,6 +238,7 @@ describe('BottomOperationalDrawer', () => {
     );
 
     expect(closeButton).toBeTruthy();
+    expect(closeButton?.classList.contains(styles.closeButton)).toBe(true);
     fireEvent.click(closeButton!);
     expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(0);
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(false);

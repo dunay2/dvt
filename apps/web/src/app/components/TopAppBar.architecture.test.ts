@@ -33,7 +33,10 @@ function readCssMedia(source: string, minWidth: number): string {
 describe('ShellTopBar workspace context architecture', () => {
   it('keeps selected shell presentation in its CSS Module while preserving named class contracts', () => {
     const chromeSource = readAppSource('components/shell/chrome.ts');
-    const topBarClassesSource = chromeSource.split('export const leftNavigationRailClasses')[0]!;
+    const topBarClassesSource = chromeSource;
+    expect([...chromeSource.matchAll(/export const (\w+)/gu)].map((match) => match[1])).toEqual([
+      'topAppBarClasses',
+    ]);
     expect(topBarClassesSource).toContain("from './ShellChrome.module.css'");
     expect(topBarClassesSource).not.toMatch(/:\s*['"`]/u);
     for (const key of [

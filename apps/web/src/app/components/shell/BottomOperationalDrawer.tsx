@@ -1,3 +1,10 @@
+/**
+ * Owned concern: compose the operational drawer and its existing contribution and log surfaces.
+ * @baseline GH-3629: drawer appearance does not depend on the TopBar stylesheet.
+ * @decision Import concern-owned CSS directly without changing contribution or feed lifecycle.
+ * @consequence Tabs, retry, close, localization and terminal behavior retain their owners.
+ * @version 1.0.0
+ */
 import { Suspense, lazy } from 'react';
 import { Activity, X } from 'lucide-react';
 
@@ -6,7 +13,7 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useConsoleLogStream } from '../console/useConsoleLogStream';
 import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
-import { bottomOperationalDrawerClasses } from './chrome';
+import styles from './BottomOperationalDrawer.module.css';
 import { resolveShellTopBarCopy } from './copy';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import { BottomOperationalDrawerBody } from './OperationalDrawerPanels';
@@ -26,34 +33,31 @@ function BottomOperationalLogBody({
 }>): JSX.Element {
   if (model.kind === 'idle') {
     return (
-      <div
-        data-slot="bottom-operational-drawer-idle"
-        className={bottomOperationalDrawerClasses.bodyMessage}
-      >
+      <div data-slot="bottom-operational-drawer-idle" className={styles.bodyMessage}>
         {model.message}
       </div>
     );
   }
 
   return (
-    <div className={bottomOperationalDrawerClasses.logBody}>
+    <div className={styles.logBody}>
       <div
         role="status"
         aria-live="polite"
         data-slot="bottom-operational-feed-health"
         data-state={model.healthState}
-        className={bottomOperationalDrawerClasses.feedHealth}
+        className={styles.feedHealth}
       >
-        <Badge variant="outline" className={bottomOperationalDrawerClasses.feedHealthBadge}>
+        <Badge variant="outline" className={styles.feedHealthBadge}>
           {model.statusLabel}
         </Badge>
-        <span className={bottomOperationalDrawerClasses.feedHealthMessage}>{model.message}</span>
+        <span className={styles.feedHealthMessage}>{model.message}</span>
         {model.canRetry ? (
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className={bottomOperationalDrawerClasses.feedRetry}
+            className={styles.feedRetry}
             data-slot="bottom-operational-feed-retry"
             onClick={onRetry}
           >
@@ -67,16 +71,13 @@ function BottomOperationalLogBody({
           fallback={
             <div
               data-slot="bottom-operational-drawer-terminal-loading"
-              className={bottomOperationalDrawerClasses.bodyMessage}
+              className={styles.bodyMessage}
             >
               {model.terminalLoadingLabel}
             </div>
           }
         >
-          <div
-            data-slot="bottom-operational-drawer-stream"
-            className={bottomOperationalDrawerClasses.stream}
-          >
+          <div data-slot="bottom-operational-drawer-stream" className={styles.stream}>
             <XtermConsole key={model.runLabel} lines={[...model.lines]} />
           </div>
         </Suspense>
@@ -114,21 +115,15 @@ export function BottomOperationalDrawer() {
     contribution?.tabs.filter((tab) => hiddenOperationalTabs.includes(tab.id)) ?? [];
 
   return (
-    <div data-slot="bottom-operational-drawer" className={bottomOperationalDrawerClasses.drawer}>
-      <div
-        data-slot="bottom-operational-drawer-header"
-        className={bottomOperationalDrawerClasses.header}
-      >
-        <div
-          data-slot="bottom-operational-drawer-title"
-          className={bottomOperationalDrawerClasses.headerMain}
-        >
-          <Activity className={bottomOperationalDrawerClasses.titleIcon} />
-          <span className={bottomOperationalDrawerClasses.title}>{drawerTitle}</span>
+    <div data-slot="bottom-operational-drawer" className={styles.drawer}>
+      <div data-slot="bottom-operational-drawer-header" className={styles.header}>
+        <div data-slot="bottom-operational-drawer-title" className={styles.headerMain}>
+          <Activity className={styles.titleIcon} />
+          <span className={styles.title}>{drawerTitle}</span>
           {model.runLabel && (
             <Badge
               variant="outline"
-              className={bottomOperationalDrawerClasses.runBadge}
+              className={styles.runBadge}
               data-slot="bottom-operational-drawer-run-badge"
             >
               {model.runLabel}
@@ -139,11 +134,11 @@ export function BottomOperationalDrawer() {
           variant="ghost"
           size="icon"
           aria-label={copy.closeOperationalDrawer}
-          className={bottomOperationalDrawerClasses.closeButton}
+          className={styles.closeButton}
           onClick={hideBottomDrawer}
           data-slot="bottom-operational-drawer-close"
         >
-          <X className={bottomOperationalDrawerClasses.closeIcon} />
+          <X className={styles.closeIcon} />
         </Button>
       </div>
 
@@ -161,10 +156,7 @@ export function BottomOperationalDrawer() {
         />
       )}
 
-      <div
-        data-slot="bottom-operational-drawer-body"
-        className={bottomOperationalDrawerClasses.body}
-      >
+      <div data-slot="bottom-operational-drawer-body" className={styles.body}>
         <BottomOperationalDrawerBody
           activeTab={activeOperationalTab}
           contribution={contribution}

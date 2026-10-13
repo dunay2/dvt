@@ -9,6 +9,8 @@ import { readLeftNavigationCaptions } from './appRoute.test.support';
 import { queryKeys } from './queries/queryKeys';
 import { waitForReactQuery } from '../testing/reactQueryHarness';
 import { waitForShellBootstrapSurface } from './Root.test.support';
+import navigationStyles from './components/LeftNavigation.module.css';
+import topBarStyles from './components/shell/ShellChrome.module.css';
 
 type RootShellMountedHarness = {
   container: ParentNode;
@@ -51,7 +53,7 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
   expect(appMenu.getAttribute('aria-label')).toBe('Raven');
   expect(appMenu.textContent).toBe('');
   expect(shellTopBar.textContent).toContain('View');
-  expect(shellTopBar.className).toContain('bg-[var(--surface-shell)]');
+  expect(shellTopBar.className).toBe(topBarStyles.shellBar);
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-selectors"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-menu-trigger"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
@@ -83,14 +85,14 @@ function expectRootShellHeaderChrome(container: ParentNode, mode: RootShellHeade
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeTruthy();
   expect(shellTopBar.querySelector('[data-slot="shell-workspace-menu-trigger"]')).toBeNull();
   expect(shellTopBar.querySelector('[data-slot="shell-file-menu-trigger"]')).toBeNull();
-  expect(shellGitRef.className).toContain('text-[var(--text-subtle)]');
+  expect(shellGitRef.className).toBe(topBarStyles.gitRef);
   expect(
     shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-title"]')
   ).not.toBeNull();
   expect(
     shellProjectIdentityBadge.querySelector('[data-slot="shell-project-identity-env"]')
   ).not.toBeNull();
-  expect(shellProjectIdentityBadge.className).toContain('bg-[var(--surface-app)]');
+  expect(shellProjectIdentityBadge.className).toBe(topBarStyles.projectIdentityBadge);
   expect(shellWorkspaceContextTrigger.textContent).toContain('Workspace context');
   expect(shellMenuTrigger.textContent).toContain('View');
 }
@@ -170,14 +172,13 @@ export function expectRootShellNavigationChrome(container: ParentNode, activeHre
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
 
-  expect(leftNavigationRail.className).toContain('bg-[var(--surface-shell)]');
-  expect(leftNavigationRail.className).toContain('h-full');
+  expect(leftNavigationRail.className).toBe(navigationStyles.rail);
   expect(leftNavigationLinks.map((link) => link.getAttribute('href'))).toEqual(
     ROOT_SHELL_NAVIGATION_HREFS
   );
   expect(readLeftNavigationCaptions(container)).toContain('Runs');
   expect(readLeftNavigationCaptions(container)).toContain('Canvas');
-  expect(activeNavigationLink.className).toContain('grid-cols-[18px_1fr]');
+  expect(activeNavigationLink.classList.contains(navigationStyles.link)).toBe(true);
   expectActiveRootShellNavigationLink(container, activeHref);
 }
 
@@ -192,6 +193,6 @@ export function expectActiveRootShellNavigationLink(
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
 
-  expect(activeNavigationLink.className).toContain('border-[color:var(--status-running)]');
+  expect(activeNavigationLink.classList.contains(navigationStyles.linkActive)).toBe(true);
   expect(activeNavigationLink.className).not.toContain('isActive');
 }

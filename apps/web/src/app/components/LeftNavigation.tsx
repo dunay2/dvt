@@ -1,7 +1,14 @@
+/**
+ * Owned concern: present shell navigation destinations and their active state.
+ * @baseline GH-3629: navigation appearance does not depend on the TopBar stylesheet.
+ * @decision Import concern-owned CSS directly while retaining the existing navigation read model.
+ * @consequence Route selection, links and keyboard focus retain their current behavior.
+ * @version 1.0.0
+ */
 import { NavLink, useLocation } from 'react-router';
 
 import { useShellRuntime } from '../shell/useShellRuntime';
-import { leftNavigationRailClasses } from './shell/chrome';
+import styles from './LeftNavigation.module.css';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { cn } from './ui/utils';
 
@@ -16,9 +23,9 @@ export function LeftNavigationRail() {
   } = useShellRuntime();
 
   return (
-    <div data-slot="left-navigation-rail" className={leftNavigationRailClasses.rail}>
+    <div data-slot="left-navigation-rail" className={styles.rail}>
       <TooltipProvider delayDuration={300}>
-        <nav data-slot="left-navigation-nav" className={leftNavigationRailClasses.nav}>
+        <nav data-slot="left-navigation-nav" className={styles.nav}>
           {primaryItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -27,18 +34,14 @@ export function LeftNavigationRail() {
                   <NavLink
                     to={item.to}
                     className={cn(
-                      leftNavigationRailClasses.link,
-                      leftNavigationRailClasses.linkInteractive,
-                      isNavigationItemActive(location.pathname, item.to) &&
-                        leftNavigationRailClasses.linkActive
+                      styles.link,
+                      styles.linkInteractive,
+                      isNavigationItemActive(location.pathname, item.to) && styles.linkActive
                     )}
                     data-slot="left-navigation-link"
                   >
-                    <Icon className={leftNavigationRailClasses.icon} />
-                    <span
-                      data-slot="left-navigation-caption"
-                      className={leftNavigationRailClasses.caption}
-                    >
+                    <Icon className={styles.icon} />
+                    <span data-slot="left-navigation-caption" className={styles.caption}>
                       {item.label}
                     </span>
                   </NavLink>
@@ -50,7 +53,7 @@ export function LeftNavigationRail() {
             );
           })}
 
-          <div className="flex-1" />
+          <div className={styles.spacer} />
 
           {footerItems.map((item) => (
             <Tooltip key={item.to}>
@@ -58,18 +61,14 @@ export function LeftNavigationRail() {
                 <NavLink
                   to={item.to}
                   className={cn(
-                    leftNavigationRailClasses.link,
-                    leftNavigationRailClasses.linkInteractive,
-                    isNavigationItemActive(location.pathname, item.to) &&
-                      leftNavigationRailClasses.linkActive
+                    styles.link,
+                    styles.linkInteractive,
+                    isNavigationItemActive(location.pathname, item.to) && styles.linkActive
                   )}
                   data-slot="left-navigation-link"
                 >
-                  <item.icon className={leftNavigationRailClasses.icon} />
-                  <span
-                    data-slot="left-navigation-caption"
-                    className={leftNavigationRailClasses.caption}
-                  >
+                  <item.icon className={styles.icon} />
+                  <span data-slot="left-navigation-caption" className={styles.caption}>
                     {item.label}
                   </span>
                 </NavLink>
