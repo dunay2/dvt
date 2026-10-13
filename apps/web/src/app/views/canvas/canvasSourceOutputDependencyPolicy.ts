@@ -1,17 +1,12 @@
 /**
  * Owned concern: protect source columns used by canonical connected computations.
  * @baseline ADR-0064: canonical expressions own dependencies, not presentation profiles.
- * @decision Reuse schema provenance and publication analysis, including hidden definitions.
+ * @decision Reuse schema provenance and shared canonical dependency analysis, including hidden definitions.
  * @consequence Internal passthrough columns alone do not prevent source output edits.
- * @version 1.0.0
+ * @version 1.1.0
  */
 import { jcsCanonicalize } from '@dvt/crypto';
-import {
-  deriveExpressionSchema,
-  deriveSubstraitPublication,
-  deriveSubstraitSchemas,
-  type SubstraitDocument,
-} from '@dvt/substrait-analysis';
+import { deriveSubstraitSchemas, type SubstraitDocument } from '@dvt/substrait-analysis';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -19,13 +14,14 @@ import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { canonicalInputFieldsAreRequired } from './canvasCanonicalInputDependencyPolicy';
 
 function documentUsesSourceColumn(
   document: SubstraitDocument,
   sourceRef: ConnectedSourceRef,
   columnName: string
 ): boolean {
-  const { index, schemas } = deriveSubstraitSchemas(document);
+  const { index } = deriveSubstraitSchemas(document);
   const sourceKey = jcsCanonicalize(sourceRef);
   const reads = [...index.relations.values()].filter(
     (entry) =>
@@ -39,15 +35,7 @@ function documentUsesSourceColumn(
       read.fields.filter((field) => field.displayName === columnName).map((field) => field.fieldId)
     )
   );
-  const published = deriveSubstraitPublication(document, denied).get(index.rootId)!;
-  if (published.rowUnavailable || published.unavailableFieldIds.length > 0) return true;
-  return [...index.relations.values()].some((entry) => {
-    if (entry.relation.relType.case !== 'project') return false;
-    const input = entry.inputs.flatMap((id) => schemas.get(id)!);
-    return entry.relation.relType.value.expressions.some((expression) =>
-      deriveExpressionSchema(expression, input).sourceFieldIds.some((id) => denied.has(id))
-    );
-  });
+  return canonicalInputFieldsAreRequired(document, denied);
 }
 
 export function sourceOutputIsRequired(args: {
