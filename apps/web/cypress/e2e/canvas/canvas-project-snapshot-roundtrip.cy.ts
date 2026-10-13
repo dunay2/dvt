@@ -46,14 +46,6 @@ describe('Canvas project snapshot round trip', () => {
   }
 
   function addSqlTransformNode(): void {
-    cy.get('body').then(($body) => {
-      if ($body.find('[data-slot="canvas-playground-empty-state"]').length > 0) {
-        cy.get('[data-slot="canvas-playground-empty-state"]')
-          .contains('button', /Transformation|Transformación/i)
-          .should('be.enabled')
-          .click();
-      }
-    });
     openCanvasContextMenuAt(360, 260);
     clickCanvasContextMenuAction('open-add-node-catalog');
     clickCanvasAddCatalogAction('create-node', 'dvt:transform');
@@ -95,7 +87,7 @@ describe('Canvas project snapshot round trip', () => {
     const downloadPath = `${Cypress.config('downloadsFolder')}/sales-canvas-project-snapshot.json`;
 
     stubRuntimeCapabilities();
-    stubStatefulCanvasDraftAuthoring();
+    stubStatefulCanvasDraftAuthoring({ emptyCanvas: true });
     visitReadyCanvas();
 
     addSqlTransformNode();
@@ -122,16 +114,21 @@ describe('Canvas project snapshot round trip', () => {
       expect(snapshot.draft.nodePositions['dvt-transform-1']?.y).to.be.a('number');
     });
 
-    stubRuntimeCapabilities();
-    stubStatefulCanvasDraftAuthoring({ emptyCanvas: true });
+    cy.then(() => {
+      stubRuntimeCapabilities();
+      stubStatefulCanvasDraftAuthoring({ emptyCanvas: true });
+    });
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('not.exist');
+    openFileMenuIfClosed();
+    cy.get('[data-slot="canvas-workspace-export-command"]').should(($command) => {
+      expect($command.attr('data-disabled'), 'settled initial draft').to.be.undefined;
+    });
     let saveCountBeforeRejectedImport = 0;
     cy.then(() => {
       saveCountBeforeRejectedImport = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    openFileMenuIfClosed();
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
         contents: Cypress.Buffer.from('{not-json'),
@@ -152,7 +149,7 @@ describe('Canvas project snapshot round trip', () => {
       force: true,
     });
     assertSnapshotSelectionClosedFile();
-    waitForDraftSaveCount(saveCountBeforeRejectedImport + 1);
+    cy.then(() => waitForDraftSaveCount(saveCountBeforeRejectedImport + 1));
 
     visitReadyCanvas();
 
