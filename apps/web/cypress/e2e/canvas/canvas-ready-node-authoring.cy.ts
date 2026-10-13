@@ -1,9 +1,9 @@
 /**
  * Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser.
- * @baseline GH-3610: the Sources dock and inspector retain the user's viewport.
- * @decision Fit the graph before Model inspection after closing Source and Sink configuration.
- * @consequence Ordinary context-menu guards and canonical roundtrip assertions remain intact.
- * @version 1.0.0
+ * @baseline GH-3628: manual connection configuration does not establish a physical Source identity.
+ * @decision Keep unresolved Model Code unavailable and compare retained documents on saves and reload.
+ * @consequence Source/Sink configuration roundtrips without fabricating code or canonical identity.
+ * @version 1.0.1
  */
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
@@ -284,6 +284,59 @@ function openNodeProperties(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
   cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
+}
+
+function assertModelSemanticDocumentUnchanged(
+  draft: CanvasDraftSaveRequestBody['draft'],
+  originalDocument: unknown
+): void {
+  const model = draft.nodes.find((node) => node.id === 'dvt-transform-1');
+  const authoring = model?.metadata?.transformAuthoring as
+    { semanticDocument?: unknown } | undefined;
+  expect(authoring?.semanticDocument, 'retained canonical Model document').to.deep.equal(
+    originalDocument
+  );
+}
+
+function assertUnresolvedModelCodeUnavailable(): void {
+  cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('contain.text', 'RECONNECT INPUT');
+  openNodeProperties('dvt-transform-1');
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+    .click()
+    .should('have.attr', 'aria-selected', 'true');
+  cy.get('[data-slot="canvas-node-workbench-code-section"]').should('be.visible');
+  cy.get('[data-slot="canvas-open-semantic-editor"]').should('be.visible');
+  cy.get('[data-slot="dvt-transform-output-view-selector"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+}
+
+function assertReloadedModelSemanticDocumentUnchanged(originalDocument: unknown): void {
+  cy.window().then(async (window) => {
+    const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+    expect(saves, 'persisted Source and Sink configurations').not.to.be.empty;
+    for (const save of saves) {
+      assertModelSemanticDocumentUnchanged(
+        (save.body as CanvasDraftSaveRequestBody).draft,
+        originalDocument
+      );
+    }
+    const read = getE2eApiCalls('/workspace/graph/draft', 'GET').at(-1);
+    expect(read, 'observed scoped draft query after reload').not.to.be.undefined;
+    const response = await window.fetch(read!.url.href, { method: 'GET', headers: read!.headers });
+    expect(response.status, 'persisted draft read status').to.equal(200);
+    const body = (await response.json()) as {
+      kind: string;
+      record: { draft: CanvasDraftSaveRequestBody['draft'] };
+    };
+    expect(body.kind, 'persisted draft query result').to.equal('ok');
+    assertModelSemanticDocumentUnchanged(body.record.draft, originalDocument);
+    expect(
+      getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+      'read-only document proof'
+    ).to.have.length(saves.length);
+  });
 }
 
 describe('Canvas ready node authoring', () => {
@@ -763,11 +816,15 @@ describe('Canvas ready node authoring', () => {
     cy.contains('[data-slot="canvas-node-workbench-panel"]', 'raw_orders').should('be.visible');
   });
 
-  it('roundtrips Source and Sink properties while Model semantics stay canonical', () => {
+  it('roundtrips manual Source and Sink properties without exposing unresolved Model Code', () => {
     const draft = stubStatefulCanvasDraftAuthoring({
       authoringGenerated: true,
       title: 'DVT properties roundtrip',
     });
+    const modelAuthoring = draft.nodes.find((node) => node.id === 'dvt-transform-1')!.metadata!
+      .transformAuthoring as { semanticDocument: unknown };
+    const originalSemanticDocument = structuredClone(modelAuthoring.semanticDocument);
+    expect(originalSemanticDocument, 'initial canonical Model document').not.to.be.undefined;
     const sourceMetadata = draft.nodes.find((node) => node.id === 'source-1')!.metadata!;
     delete sourceMetadata.connectedSourceRef;
     sourceMetadata.connectionRef = {
@@ -789,8 +846,8 @@ describe('Canvas ready node authoring', () => {
     cy.wrap(null).should(() => {
       const savedSource = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'source-1'))
-        .find((node) => {
+        .find((body) => {
+          const node = body.draft.nodes.find((candidate) => candidate.id === 'source-1');
           const config = node?.metadata?.config as
             { alias?: string; database?: string; schema?: string; table?: string } | undefined;
           return (
@@ -803,6 +860,7 @@ describe('Canvas ready node authoring', () => {
           );
         });
       expect(savedSource, 'saved Source properties').to.not.be.undefined;
+      assertModelSemanticDocumentUnchanged(savedSource!.draft, originalSemanticDocument);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
@@ -818,8 +876,8 @@ describe('Canvas ready node authoring', () => {
     cy.wrap(null).should(() => {
       const savedSink = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'sink-1'))
-        .find((node) => {
+        .find((body) => {
+          const node = body.draft.nodes.find((candidate) => candidate.id === 'sink-1');
           const config = node?.metadata?.config as
             | {
                 database?: string;
@@ -840,20 +898,12 @@ describe('Canvas ready node authoring', () => {
           );
         });
       expect(savedSink, 'saved Sink properties').to.not.be.undefined;
+      assertModelSemanticDocumentUnchanged(savedSink!.draft, originalSemanticDocument);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__controls-fitview').click();
-    openNodeProperties('dvt-transform-1');
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
-    cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
-    cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    assertUnresolvedModelCodeUnavailable();
 
     visitReadyCanvas();
 
@@ -871,6 +921,10 @@ describe('Canvas ready node authoring', () => {
     cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
     cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get('.react-flow__controls-fitview').click();
+    assertUnresolvedModelCodeUnavailable();
+    assertReloadedModelSemanticDocumentUnchanged(originalSemanticDocument);
   });
   it('does not present failed draft saves as persisted after reload', () => {
     stubCanvasDraftRead();
