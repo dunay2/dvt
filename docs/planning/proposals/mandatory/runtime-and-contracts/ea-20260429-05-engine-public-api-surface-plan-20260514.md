@@ -109,7 +109,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
+  - https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-05-engine-public-api-surface-plan-20260514.md
   - docs/architecture/components/engine/architecture/engine-public-api-surface-component.md

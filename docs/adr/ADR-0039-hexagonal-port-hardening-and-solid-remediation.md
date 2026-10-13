@@ -14,7 +14,7 @@ Accepted.
 ## Context
 
 The 2026-03-22 DDD and Hexagonal Port Audit
-([20260322-ddd-hexagonal-port-audit-review.md](../planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md))
+([20260322-ddd-hexagonal-port-audit-review.md](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md))
 identified five structural gaps after Phase 1 gap closure (G1–G10):
 
 | Finding | Violation                                                                                      |
@@ -268,7 +268,7 @@ Recommended order: F1 → S02 → S03.
 
 ## References
 
-- [20260322 DDD and Hexagonal Port Audit](../planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
+- [20260322 DDD and Hexagonal Port Audit](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
 - [ADR-0034 — Bounded Context Boundaries](./ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 - [ADR-0018 — Shared Kernel Ownership Governance](./ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [Phase 2 Roadmap — S02 and S03 (Git provenance)](https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md)

@@ -66,4 +66,4 @@ been requested. Late native cancellation requests can also race with provider
 live status observation, leaving `describe()` temporarily on `RUNNING` or
 eventually on `COMPLETED` even after the canonical event log reaches
 `RunCancelled`. Those residuals are tracked in
-[R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP](../risk-register/quality/R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml).
+[R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/risk-register/quality/R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml).

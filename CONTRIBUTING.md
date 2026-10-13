@@ -20,4 +20,4 @@ pnpm test
 
 Commit convention reference:
 
-- [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md)
+- [Commit helper and format](AGENTS.md#git-commit-format-rule)

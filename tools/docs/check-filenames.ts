@@ -48,7 +48,6 @@ const UPPERCASE_EXCEPTIONS = new Set([
   'AGENTS.md',
   'LICENSE.md',
   'DOCS_README.md',
-  'SPANISH_TEXTS.md',
 ]);
 
 function main(): void {

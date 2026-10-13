@@ -19,7 +19,7 @@ domains or an operational review cluster.
 Examples:
 
 - `docs/planning/reviews/ci-and-delivery/20260924-example-configuration-review.md`
-- `docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md`
+- `docs/planning/reviews/architecture-and-governance/20260924-example-architecture-review.md`
 
 Delete reviews that no longer serve an active responsibility after reconciling
 consumers and current evidence obligations. Git preserves their history; do not
@@ -39,7 +39,7 @@ Where:
 
 Examples:
 
-- `20260322-ddd-hexagonal-port-audit-review.md`
+- `20260924-example-architecture-review.md`
 - `20260924-example-configuration-review.md`
 
 ## Migration Rule

@@ -30,7 +30,7 @@ runtime hardening.
 
 ## Relevant Reviews And Closeouts
 
-- [20260322 DDD and Hexagonal Port Audit](../reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
+- [20260322 DDD and Hexagonal Port Audit](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
 - [AR-C10 protected runtime rail closure closeout 2026-05-05](../closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
 
 ## Runtime Review Canon

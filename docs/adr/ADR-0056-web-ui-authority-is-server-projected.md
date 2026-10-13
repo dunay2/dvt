@@ -102,5 +102,5 @@ flowchart LR
 
 - `docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md`
 - `docs/adr/ADR-0062-server-owned-effective-workspace-context.md`
-- `docs/planning/reviews/20260510-web-api-integration-gap-review.md`
+- [Historical source](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/20260510-web-api-integration-gap-review.md)
 - `docs/architecture/command-query-rail-governance.md`
