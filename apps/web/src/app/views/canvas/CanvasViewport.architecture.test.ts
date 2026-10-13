@@ -50,6 +50,21 @@ const CANVAS_VIEWPORT_BEHAVIOR_SPECS = [
 ] as const;
 
 describe('CanvasViewport architecture', () => {
+  it('owns viewport appearance in CSS without embedding utility classes in its view', () => {
+    expect(CANVAS_VIEWPORT_SURFACE_VIEW_SOURCE).toContain(
+      "from './CanvasViewportSurfaceView.module.css'"
+    );
+    expect(CANVAS_VIEWPORT_SURFACE_VIEW_SOURCE).not.toMatch(/\bstyle\s*=|className\s*=\s*['"]/);
+    const stylesheet = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'CanvasViewportSurfaceView.module.css'
+    );
+    expect(stylesheet).toContain('flex: 1 1 0%');
+    expect(stylesheet).toContain('var(--canvas-surface)');
+    expect(stylesheet).toContain(':focus-visible');
+    expect(stylesheet).toContain('var(--focus-ring)');
+    expect(stylesheet).toContain('var(--radius-lg)');
+  });
   it('keeps the route-facing viewport as an orchestrator, not the React Flow template', () => {
     expect(CANVAS_VIEWPORT_SOURCE).toContain('CanvasViewportSurfaceView');
     expect(CANVAS_VIEWPORT_SOURCE).toContain('useCanvasViewportLifecycle');

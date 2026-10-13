@@ -1,8 +1,8 @@
 /** Owned concern: render the Canvas React Flow surface from an already-resolved viewport model.
  * @baseline GH-3629: the graph viewport frame and sibling overlays share one context boundary.
- * @decision Capture on the actual viewport while the shared primitive owns opening and cancellation.
- * @consequence Background menus cover the rendered surface; keyboard and specific owners remain intact.
- * @version 1.1.0
+ * @decision Preserve interaction ownership and keep static appearance in its CSS Module.
+ * @consequence Background menus and keyboard focus retain their boundary without JSX styling.
+ * @version 1.2.0
  */
 import {
   Controls,
@@ -32,6 +32,7 @@ import type { CanvasGraphFilterController } from './useCanvasGraphFilterControll
 import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
 import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
+import styles from './CanvasViewportSurfaceView.module.css';
 
 const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
 const CANVAS_EDGE_TYPES = {
@@ -213,7 +214,7 @@ function CanvasViewportReactFlowSurface({
       role="region"
       aria-label={contextSurfaceLabel}
       tabIndex={0}
-      className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
+      className={styles.contextSurface}
       onFocusCapture={(event) => {
         onImpactFocusNodeChange?.(
           event.target instanceof Element
@@ -270,7 +271,7 @@ function CanvasViewportReactFlowSurface({
         onDrop={onDrop}
         onDragOver={onDragOver}
         onEdgeContextMenu={handleEdgeContextMenu}
-        className="bg-(--canvas-surface)"
+        className={styles.flow}
         ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}
       >
         <Controls fitViewOptions={CANVAS_FIT_VIEW_OPTIONS} />
@@ -278,7 +279,7 @@ function CanvasViewportReactFlowSurface({
           pannable
           zoomable
           onNodeClick={onMiniMapNodeClick}
-          className="rounded-lg"
+          className={styles.minimap}
           maskColor="var(--canvas-minimap-mask)"
           maskStrokeColor="var(--canvas-minimap-mask-stroke)"
           maskStrokeWidth={3}
@@ -319,7 +320,7 @@ export function CanvasViewportSurfaceView({
         ref={viewportRef}
         data-testid="canvas-viewport"
         data-canvas-palette={resolvedCanvasPalette}
-        className="relative flex-1 overflow-hidden"
+        className={styles.viewport}
         onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
       >
         <CanvasViewportReactFlowSurface

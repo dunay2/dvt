@@ -1,0 +1,38 @@
+/*
+ * Owned concern: static Canvas menu, catalog and keyboard-anchor appearance.
+ * @baseline GH-3629: runtime anchor coordinates are not static styling authority.
+ * @decision Preserve current sizes, tokens and responsive bounds in concern-owned CSS.
+ * @consequence Menu rendering contains neither utility class strings nor style objects.
+ * @version 1.0.0
+ */
+.commandSurface {
+  width: 18rem;
+  max-width: calc(100vw - 1.5rem);
+}
+
+.keyboardAnchor {
+  position: fixed;
+  left: var(--canvas-context-menu-anchor-x, 0px);
+  top: var(--canvas-context-menu-anchor-y, 0px);
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.catalog[data-slot='dialog-content'] {
+  display: grid;
+  max-height: calc(100vh - 2rem);
+  width: 42rem;
+  max-width: calc(100vw - 2rem);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 1rem;
+  overflow: hidden;
+  background-color: var(--surface-panel);
+  padding: 1.25rem;
+}
+
+@media (min-width: 40rem) {
+  .catalog[data-slot='dialog-content'] {
+    max-width: 42rem;
+  }
+}

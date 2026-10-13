@@ -1,8 +1,8 @@
 /** Owned concern: render the Canvas contextual surfaces without owning interaction decisions.
  * @baseline GH-3629: cancellation and menu opening must share the rendered viewport boundary.
- * @decision Use the actual graph viewport as the existing primitive trigger child.
- * @consequence The viewport retains flex sizing without an extra layout wrapper or parallel menu.
- * @version 1.1.0
+ * @decision Keep primitive ownership, static CSS and live anchor coordinates separate.
+ * @consequence The viewport retains sizing and menus without JSX styles or parallel state.
+ * @version 1.2.0
  */
 import type { ReactElement, RefObject } from 'react';
 
@@ -45,6 +45,8 @@ import {
   buildCanvasContextMenuSections,
   type CanvasContextMenuViewItem,
 } from './canvasContextMenuViewModel';
+import { positionCanvasContextMenuAnchor } from './canvasContextMenuAnchor';
+import styles from './CanvasContextMenuView.module.css';
 
 type CanvasContextMenuViewProps = Readonly<{
   children: ReactElement;
@@ -130,7 +132,7 @@ export function CanvasContextMenuView({
         {commandSurfaceOpen && !keyboardMenuOpen ? (
           <ContextMenuContent
             aria-label={ariaLabel ?? copy.canvasContextMenuLabel}
-            className="w-72 max-w-[calc(100vw-1.5rem)]"
+            className={styles.commandSurface}
             onCloseAutoFocus={(event) => event.preventDefault()}
           >
             {commandMenuContents}
@@ -149,14 +151,10 @@ export function CanvasContextMenuView({
         <DropdownMenuTrigger asChild>
           <span
             aria-hidden="true"
-            style={{
-              position: 'fixed',
-              left: localizedModel?.screenPosition.x ?? 0,
-              top: localizedModel?.screenPosition.y ?? 0,
-              width: 1,
-              height: 1,
-              pointerEvents: 'none',
-            }}
+            ref={(anchor) =>
+              positionCanvasContextMenuAnchor(anchor, localizedModel?.screenPosition ?? null)
+            }
+            className={styles.keyboardAnchor}
           />
         </DropdownMenuTrigger>
         {commandSurfaceOpen && keyboardMenuOpen ? (
@@ -164,7 +162,7 @@ export function CanvasContextMenuView({
             aria-label={ariaLabel ?? copy.canvasContextMenuLabel}
             align="start"
             sideOffset={0}
-            className="w-72 max-w-[calc(100vw-1.5rem)]"
+            className={styles.commandSurface}
             onCloseAutoFocus={(event) => event.preventDefault()}
           >
             {commandMenuContents}
@@ -185,7 +183,7 @@ export function CanvasContextMenuView({
             ref={menuRef}
             aria-modal="true"
             closeLabel={copy.canvasAddNodeCatalogCloseLabel}
-            className="grid max-h-[calc(100vh-2rem)] w-[42rem] max-w-[calc(100vw-2rem)] grid-rows-[auto_minmax(0,1fr)] gap-4 overflow-hidden bg-(--surface-panel) p-5 sm:max-w-[42rem]"
+            className={styles.catalog}
             onCloseAutoFocus={(event) => event.preventDefault()}
           >
             <DialogHeader>

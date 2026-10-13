@@ -15,6 +15,20 @@ const CANVAS_CONTEXT_MENU_PRIMITIVES_PATH = resolve(
 );
 
 describe('CanvasContextMenuView architecture', () => {
+  it('owns static menu appearance in CSS and delegates only anchor coordinates', () => {
+    expect(CANVAS_CONTEXT_MENU_VIEW_SOURCE).toContain("from './CanvasContextMenuView.module.css'");
+    expect(CANVAS_CONTEXT_MENU_VIEW_SOURCE).not.toMatch(/\bstyle\s*=|className\s*=\s*['"]/);
+    expect(CANVAS_CONTEXT_MENU_VIEW_SOURCE).toContain('positionCanvasContextMenuAnchor');
+    const stylesheet = readArchitectureSiblingSource(
+      import.meta.dirname,
+      'CanvasContextMenuView.module.css'
+    );
+    expect(stylesheet).toContain('position: fixed');
+    expect(stylesheet).toContain('pointer-events: none');
+    expect(stylesheet).toContain('var(--canvas-context-menu-anchor-x');
+    expect(stylesheet).toContain('var(--canvas-context-menu-anchor-y');
+    expect(stylesheet).toContain('var(--surface-panel)');
+  });
   it('reuses shared primitives and retires the duplicate Canvas menu implementation', () => {
     expect(existsSync(CANVAS_CONTEXT_MENU_PRIMITIVES_PATH)).toBe(false);
     expect(CANVAS_CONTEXT_MENU_VIEW_SOURCE).toContain("from '../../components/ui/context-menu'");
