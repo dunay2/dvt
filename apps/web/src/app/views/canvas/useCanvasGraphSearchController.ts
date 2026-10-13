@@ -14,29 +14,13 @@ import {
   type CanvasGraphSearchNode,
 } from './canvasGraphSearch.contract';
 import { searchCanvasGraph } from './canvasGraphSearch';
+import type { CanvasGraphSearchViewportBinding } from './canvasGraphSearchControl.binding';
 
-export type CanvasGraphSearchControlModel = Readonly<{
-  open: boolean;
-  focusRequestId: number;
-  query: string;
-  status: 'idle' | 'no-match' | 'matched';
-  matchCount: number;
-  activeMatchPosition: number | null;
-  activeNodeId: string | null;
-}>;
-
-export type CanvasGraphSearchController = Readonly<{
-  model: CanvasGraphSearchControlModel;
-  matchingNodeIds: readonly string[];
-  open: () => void;
-  close: () => void;
-  setQuery: (query: string) => void;
-  showPrevious: () => void;
-  showNext: () => void;
-  onViewportKeyDown: KeyboardEventHandler<HTMLElement>;
-  onControlKeyDown: KeyboardEventHandler<HTMLElement>;
-  onQueryKeyDown: KeyboardEventHandler<HTMLInputElement>;
-}>;
+export type CanvasGraphSearchController = CanvasGraphSearchViewportBinding &
+  Readonly<{
+    matchingNodeIds: readonly string[];
+    open: () => void;
+  }>;
 
 type UseCanvasGraphSearchControllerArgs = Readonly<{
   nodes: readonly Node[];

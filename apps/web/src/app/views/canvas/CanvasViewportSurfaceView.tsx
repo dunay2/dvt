@@ -27,8 +27,8 @@ import { CanvasGraphFilterControl } from './CanvasGraphFilterControl';
 import { CanvasGraphSearchControl } from './CanvasGraphSearchControl';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
-import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
-import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
+import type { CanvasGraphSearchViewportBinding } from './canvasGraphSearchControl.binding';
+import type { CanvasGraphFilterControlBinding } from './canvasGraphFilterControl.binding';
 import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
 import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
@@ -73,8 +73,8 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
   onImpactFocusNodeChange?: (nodeId: string | null) => void;
   onMiniMapNodeClick: NonNullable<MiniMapProps<Node>['onNodeClick']>;
-  graphSearchController: CanvasGraphSearchController;
-  graphFilterController: CanvasGraphFilterController;
+  graphSearchController: CanvasGraphSearchViewportBinding;
+  graphFilterController: CanvasGraphFilterControlBinding;
   copy: CanvasViewCopy;
 }>;
 
@@ -331,28 +331,8 @@ export function CanvasViewportSurfaceView({
           graphSearchController={graphSearchController}
           copy={copy}
         />
-        <CanvasGraphSearchControl
-          model={graphSearchController.model}
-          copy={copy}
-          onQueryChange={graphSearchController.setQuery}
-          onPrevious={graphSearchController.showPrevious}
-          onNext={graphSearchController.showNext}
-          onClose={graphSearchController.close}
-          onKeyDown={graphSearchController.onControlKeyDown}
-          onQueryKeyDown={graphSearchController.onQueryKeyDown}
-        />
-        <CanvasGraphFilterControl
-          model={graphFilterController.model}
-          copy={copy}
-          onOpenChange={graphFilterController.setOpen}
-          onSelectDimension={graphFilterController.selectDimension}
-          onSelectValue={graphFilterController.selectValue}
-          onAddPredicate={graphFilterController.addDraftPredicate}
-          onRemovePredicate={graphFilterController.removePredicate}
-          onSetComposition={graphFilterController.setComposition}
-          onSetPresentation={graphFilterController.setPresentation}
-          onClear={graphFilterController.clear}
-        />
+        <CanvasGraphSearchControl binding={graphSearchController} copy={copy} />
+        <CanvasGraphFilterControl binding={graphFilterController} copy={copy} />
         {nodeHealthPopoverModel == null ? null : (
           <GraphNodeHealthPopoverView
             detail={nodeHealthPopoverModel.detail}

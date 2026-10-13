@@ -1,6 +1,12 @@
-/** Owned concern: render the accessible Canvas graph search control from a presentation model. */
+/**
+ * Owned concern: render accessible Canvas graph search from its UI binding and separate localized copy.
+ * @baseline GH-3634: control-owned appearance belongs to its stylesheet, not JSX utility strings.
+ * @decision Keep semantic CSS classes separate from bindings, focus restoration and primitive behavior.
+ * @consequence Search interaction and accessibility remain unchanged while appearance has one owner.
+ * @version 1.0.0
+ */
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
-import { useEffect, useId, useRef, type KeyboardEventHandler, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -11,29 +17,19 @@ import {
   TooltipTrigger,
 } from '../../components/ui/tooltip';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import type { CanvasGraphSearchControlModel } from './useCanvasGraphSearchController';
+import type { CanvasGraphSearchControlBinding } from './canvasGraphSearchControl.binding';
+import styles from './CanvasGraphSearchControl.module.css';
 
 type CanvasGraphSearchControlProps = Readonly<{
-  model: CanvasGraphSearchControlModel;
+  binding: CanvasGraphSearchControlBinding;
   copy: CanvasViewCopy;
-  onQueryChange: (query: string) => void;
-  onPrevious: () => void;
-  onNext: () => void;
-  onClose: () => void;
-  onKeyDown: KeyboardEventHandler<HTMLElement>;
-  onQueryKeyDown: KeyboardEventHandler<HTMLInputElement>;
 }>;
 
 export function CanvasGraphSearchControl({
-  model,
+  binding,
   copy,
-  onQueryChange,
-  onPrevious,
-  onNext,
-  onClose,
-  onKeyDown,
-  onQueryKeyDown,
 }: CanvasGraphSearchControlProps): JSX.Element | null {
+  const { model } = binding;
   const inputId = useId();
   const restoreFocusRef = useRef<HTMLElement | null>(null);
 
@@ -77,25 +73,22 @@ export function CanvasGraphSearchControl({
       role="search"
       data-slot="canvas-graph-search-control"
       aria-label={copy.canvasGraphSearchLabel}
-      className="bg-popover text-popover-foreground border-border absolute top-3 left-1/2 z-20 flex w-[min(32rem,calc(100%-2rem))] -translate-x-1/2 items-center gap-1 rounded-lg border p-1.5 shadow-2xl backdrop-blur"
-      onKeyDown={onKeyDown}
+      className={styles.control}
+      onKeyDown={binding.onControlKeyDown}
     >
-      <Search className="text-muted-foreground ml-2 size-4 shrink-0" aria-hidden="true" />
+      <Search className={styles.searchIcon} aria-hidden="true" />
       <Input
         id={inputId}
         type="search"
         value={model.query}
         aria-label={copy.canvasGraphSearchInputLabel}
         placeholder={copy.canvasGraphSearchPlaceholder}
-        className="h-8 border-0 bg-transparent shadow-none focus-visible:ring-0"
-        onChange={(event) => onQueryChange(event.currentTarget.value)}
-        onKeyDown={onQueryKeyDown}
+        className={styles.queryInput}
+        onChange={(event) => binding.setQuery(event.currentTarget.value)}
+        onKeyDown={binding.onQueryKeyDown}
       />
       {resultStatus == null ? null : (
-        <output
-          aria-live="polite"
-          className="text-muted-foreground shrink-0 px-2 text-xs tabular-nums"
-        >
+        <output aria-live="polite" className={styles.status}>
           {resultStatus}
         </output>
       )}
@@ -103,18 +96,18 @@ export function CanvasGraphSearchControl({
         <SearchAction
           label={copy.canvasGraphSearchPreviousLabel}
           disabled={!canNavigate}
-          onClick={onPrevious}
+          onClick={binding.showPrevious}
         >
           <ChevronUp aria-hidden="true" />
         </SearchAction>
         <SearchAction
           label={copy.canvasGraphSearchNextLabel}
           disabled={!canNavigate}
-          onClick={onNext}
+          onClick={binding.showNext}
         >
           <ChevronDown aria-hidden="true" />
         </SearchAction>
-        <SearchAction label={copy.canvasGraphSearchCloseLabel} onClick={onClose}>
+        <SearchAction label={copy.canvasGraphSearchCloseLabel} onClick={binding.close}>
           <X aria-hidden="true" />
         </SearchAction>
       </TooltipProvider>
@@ -137,7 +130,7 @@ function SearchAction({ label, disabled = false, onClick, children }: SearchActi
           type="button"
           variant="ghost"
           size="icon"
-          className="text-popover-foreground size-8"
+          className={styles.actionButton}
           aria-label={label}
           disabled={disabled}
           onClick={onClick}
