@@ -77,7 +77,7 @@ describe('exact JOIN predicate selection', () => {
     const { session, document } = graphJoin();
     let saved = document;
     const writes = vi.fn();
-    function Host() {
+    function Host(): React.JSX.Element {
       const [draft, setDraft] = useState(document);
       return (
         <RelationAnalysisTestHost document={draft}>
@@ -147,7 +147,7 @@ describe('exact JOIN predicate selection', () => {
             });
       session.receive(document);
       const writes = vi.fn();
-      const render = (disabled: boolean) => (
+      const render = (disabled: boolean): React.JSX.Element => (
         <RelationAnalysisTestHost document={document}>
           <CanvasRelationalTreeJoinEditor
             copy={COPY}
@@ -199,7 +199,7 @@ describe('exact JOIN predicate selection', () => {
     const { session, document } = graphJoin();
     const writes = vi.fn();
     let refresh!: (next: SubstraitDocument) => void;
-    function Host() {
+    function Host(): React.JSX.Element {
       const [draft, setDraft] = useState(document);
       refresh = setDraft;
       return (

@@ -43,7 +43,13 @@ describe('native Model Output inspection parity', () => {
     tags: [],
     metadata: { columns: [...declared, ...available] },
   };
-  function inspect(state: CanvasNodePresentationTruth['columns']['state'], output = declared) {
+  function inspect(
+    state: CanvasNodePresentationTruth['columns']['state'],
+    output = declared
+  ): Readonly<{
+    section: NodePropertySection;
+    card: ReturnType<typeof selectGraphNodeCardColumns>;
+  }> {
     const truth: CanvasNodePresentationTruth = {
       inputBindings: [],
       columns: {
