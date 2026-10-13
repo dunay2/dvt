@@ -83,13 +83,14 @@ through a specific callback passed by its passive template. The controller owns
 menu closure; the Canvas contribution retains import admission and dispatch.
 Unlike Code and New Project, snapshot import does not transfer focus to another
 editor or dialog, so the normal Radix close autofocus remains enabled.
+Focus returns when the menu content unmounts, not as a prerequisite to import.
 
 ```mermaid
 flowchart LR
   Picker[Native picker; menu and receiver retained] --> Choice{File selected?}
   Choice -->|No| Retain[No import; retain receiver]
   Choice -->|Yes| Capture[Capture File and clear input]
-  Capture --> Close[Controller closes File; Radix restores trigger focus]
+  Capture --> Close[Controller requests File closure]
   Close --> Import[Existing ImportProjectSnapshot handler]
 ```
 
