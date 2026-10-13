@@ -31,6 +31,8 @@ const BOOTSTRAP_SCREEN_SOURCE_PATH = resolve(
   'appBootstrapScreen.ts'
 );
 const FONT_SOURCE_PATH = resolve(WEB_ROOT, 'src/styles/fonts.css');
+const ENTRY_SOURCE_PATH = resolve(WEB_ROOT, 'src/main.tsx');
+const CASCADE_LAYER_SOURCE_PATH = resolve(WEB_ROOT, 'src/styles/cascadeLayers.css');
 const REGEXP_SYNTAX_CHARACTERS = new Set([
   '.',
   '*',
@@ -194,6 +196,20 @@ describe('appBootstrapScreen', () => {
     vi.useRealTimers();
     vi.unstubAllEnvs();
     document.body.innerHTML = '';
+  });
+
+  it('registers only the canonical CSS layer order before eager App styles without reordering global overrides', () => {
+    const entrySource = readFileSync(ENTRY_SOURCE_PATH, 'utf8');
+    const firstStaticImport = entrySource.match(/^[\t ]*import[\t ]+[^\r\n]+/m)?.[0].trim();
+    expect(firstStaticImport).toBe("import './styles/cascadeLayers.css';");
+
+    const layerSource = readFileSync(CASCADE_LAYER_SOURCE_PATH, 'utf8');
+    expect(layerSource.replace(/\/\*[\s\S]*?\*\//g, '').trim()).toBe(
+      '@layer properties, theme, base, components, utilities;'
+    );
+    const appImportPosition = entrySource.indexOf("import App from './app/App.tsx';");
+    expect(appImportPosition).toBeGreaterThanOrEqual(0);
+    expect(entrySource.indexOf("import './styles/index.css';")).toBeGreaterThan(appImportPosition);
   });
 
   it('keeps the production HTML shell aligned with the bootstrap DOM contract before React executes', () => {
