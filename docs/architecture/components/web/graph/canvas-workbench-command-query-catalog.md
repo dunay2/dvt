@@ -388,6 +388,41 @@ flowchart TD
 
 ## Producer Input And Published Output Boundary
 
+### Cross-model dependency admission and explicit repair
+
+Issue [#3628](https://github.com/dunay2/dvt/issues/3628) refines the existing
+`ConfigureCanvasDvtNode` command, not graph persistence or provider execution.
+Before committing an Output candidate, compare published stable FieldIds and
+inspect the connected consumers' canonical producer references. Reject removal
+of an identity required by a published field, row condition or retained hidden
+expression. The rejection identifies the consumer and required fields; the
+aggregate remains unchanged. Alias changes and reordering preserve identity.
+Disconnected retained configuration is not an active dependency.
+
+An already incomplete consumer retains its own semantic document. The existing
+`ProjectCanvasRelationalTree` and `ProjectGraphNodeCardReadModel` queries may
+inspect a structurally valid retained tree whose connected producer no longer
+publishes referenced FieldIds. They mark the exact local Read fields denied;
+this inspection is not successful producer resolution or execution admission.
+Malformed authority, cycles, foreign producers and incompatible present types
+do not qualify. Missing Input slots remain visible even on implicit edges.
+
+Recovery reuses the existing exact Input-slot mapping gesture and serialized
+draft command. Only an unresolved slot may be explicitly rebound to a compatible
+published field of the same producer. Validate its complete retained TypeSchema,
+including nullability, and atomically update the canonical `producerRef` and
+edge provenance. Preserve the consumer's Read, operation, field and Output
+identities, expressions and semantic plan. Do not match names, restore removed
+publication IDs or choose replacements automatically. An available consumed
+slot still rejects rewiring. Partial repair remains incomplete; Preview and Run
+stay unavailable until their real canonical admission succeeds.
+
+Negative evidence covers required/hidden dependencies, unconsumed removals,
+implicit and explicit unresolved slots, type/producer mismatch, duplicate
+consumed slots, read-only/stale commands and atomic failure. Repair/save/reload
+must retain consumer semantics and pass strict producer resolution; displaying
+the retained tree alone is not completion evidence.
+
 The Canvas model card has two read models, not two transformation editors.
 `Input` receives bindings from connected producers. `Output` passively publishes
 the fields defined by explicit operations inside the model. Connecting another
