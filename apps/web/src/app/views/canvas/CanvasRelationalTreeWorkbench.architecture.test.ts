@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { readArchitectureSiblingSource } from '../architecture.test.support';
+
 import DetailSource from './CanvasRelationalExpressionTree.tsx?raw';
 import GeometrySource from './canvasRelationalTreeGeometry.ts?raw';
 import GraphNodeSource from './CanvasRelationalTreeGraphNode.tsx?raw';
@@ -78,7 +80,31 @@ import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
 import PresentationNodeSource from './canvasPresentationNode.ts?raw';
 
+const ModelDataPanelStyles = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasModelDataPanel.module.css'
+);
+
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps Model sample layout and compact variants in its own stylesheet', () => {
+    expect(ModelDataPanelSource).toContain("from './CanvasModelDataPanel.module.css'");
+    expect(ModelDataPanelSource).not.toMatch(
+      /\bstyle\s*=|className\s*=\s*['"]|className\s*=\s*\{(?:`|compact\s*\?)/
+    );
+    expect(ModelDataPanelSource).toContain('className={styles.panel}');
+    expect(ModelDataPanelSource).toContain('data-compact={compact}');
+    expect(ModelDataPanelSource).toContain('className={styles.empty}');
+    expect(ModelDataPanelSource).toContain('data-slot="canvas-model-preview"');
+    expect(ModelDataPanelSource).toContain('data-slot="canvas-model-data-stale"');
+    expect(ModelDataPanelSource).toContain('gridStyles.actions');
+    expect(ModelDataPanelSource).toContain('gridStyles.sampleSummary');
+    expect(ModelDataPanelStyles).toContain('@layer utilities');
+    expect(ModelDataPanelStyles).toContain(".panel[data-compact='true']");
+    expect(ModelDataPanelStyles).toContain(".previewAction:where([data-compact='true'])");
+    expect(ModelDataPanelStyles).toContain('min-height: 6rem');
+    expect(ModelDataPanelStyles).toContain('min-height: 10rem');
+    expect(ModelDataPanelStyles).toContain('var(--text-muted)');
+  });
   it('projects explicit Input posture instead of rebuilding semantic policy in the adapter', () => {
     expect(ColumnInteractionSource).toContain('presentation?.inputBindingPosture');
     expect(ColumnInteractionSource).not.toMatch(
