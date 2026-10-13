@@ -10,9 +10,43 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 import {
   canvasViewCopy,
   formatCanvasConnectionRejection,
+  formatCanvasModelOutputDependencyRejection,
   formatCanvasInspectorNodeDraftError,
   formatTransformationGraphValidationSummary,
 } from './copy';
+
+describe('Model output dependency rejection copy', () => {
+  it.each(['en', 'es'])('names the actual consumer and fields in %s', (locale) => {
+    const message = formatCanvasModelOutputDependencyRejection(
+      {
+        outcome: 'rejected',
+        reason: 'model_output_required',
+        consumer: { nodeId: 'model2', name: 'Model 2' },
+        fields: [
+          { fieldId: 'stable-order', name: 'order_id' },
+          { fieldId: 'stable-amount', name: 'amount' },
+        ],
+      },
+      locale
+    );
+    expect(message).toContain('Model 2');
+    expect(message).toContain('order_id, amount');
+    expect(message).not.toContain('stable-order');
+    expect(message).not.toContain('{model}');
+  });
+
+  it.each(['en', 'es'])(
+    'keeps unavailable verification distinct from a known dependency in %s',
+    (locale) => {
+      expect(
+        formatCanvasModelOutputDependencyRejection(
+          { outcome: 'rejected', reason: 'model_output_dependency_unavailable' },
+          locale
+        )
+      ).toBe(resolveCanvasViewCopy(locale).modelOutputDependencyUnavailableMessage);
+    }
+  );
+});
 
 const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
   ['node_name_required', 'inspectorErrorNodeNameRequired'],

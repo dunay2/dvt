@@ -3,11 +3,25 @@ import type { Connection } from '@xyflow/react';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 import type { GraphNodeInputMapping } from '../../plugins/graph/graphNodeColumnContracts';
-import type { CanvasColumnMappingRejection } from './canvasColumnMappingModel';
+import type {
+  CanvasColumnMappingRejection,
+  CanvasColumnMappingResult,
+} from './canvasColumnMappingModel';
 import { parseCanvasColumnHandleId } from './canvasColumnHandleIdentity';
 import { canvasViewCopy } from './copy';
+import { formatCanvasModelOutputDependencyRejection } from './canvasCopyFormatting';
 
-export function formatColumnMappingRejection(reason: CanvasColumnMappingRejection): string {
+export function formatColumnMappingRejection(
+  rejection:
+    CanvasColumnMappingRejection | Extract<CanvasColumnMappingResult, { outcome: 'rejected' }>
+): string {
+  if (
+    typeof rejection !== 'string' &&
+    (rejection.reason === 'model_output_required' ||
+      rejection.reason === 'model_output_dependency_unavailable')
+  )
+    return formatCanvasModelOutputDependencyRejection(rejection);
+  const reason = typeof rejection === 'string' ? rejection : rejection.reason;
   if (reason === 'source_not_connected')
     return canvasViewCopy.columnMappingRequiresDependencyMessage;
   if (reason === 'complex_expression_not_editable')

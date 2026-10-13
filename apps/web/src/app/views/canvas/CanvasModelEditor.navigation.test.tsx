@@ -175,6 +175,37 @@ describe('CanvasModelEditor navigation', () => {
     globalThis.Request = NativeRequest;
   });
 
+  it('keeps a rejected model output draft open and explains the dependent model', async () => {
+    const onApplyNodeDraft = vi.fn(
+      () =>
+        ({
+          outcome: 'rejected',
+          reason: 'model_output_required',
+          consumer: { nodeId: 'model2', name: 'Model 2' },
+          fields: [{ fieldId: 'stable-order', name: 'order_id' }],
+        }) as const
+    );
+    const onClose = vi.fn();
+    await act(async () =>
+      root.render(<Editor onClose={onClose} authoring={{ canEditNode: true, onApplyNodeDraft }} />)
+    );
+    await beginProjection(container);
+    const apply = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-tree-apply"]'
+    )!;
+    await act(async () => apply.click());
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('Model 2');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('order_id');
+    expect(container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    act(() => useCanvasWorkspaceMenuContributionStore.getState().modelTab?.onClose());
+    await act(async () => findButton('Apply and continue').click());
+    expect(document.querySelector('[role="alertdialog"] [role="alert"]')?.textContent).toContain(
+      'Model 2'
+    );
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('keeps the local draft and current view when Apply is rejected', async () => {
     const onApplyNodeDraft = vi.fn(
       () => ({ outcome: 'rejected', reason: 'node_unavailable' }) as const

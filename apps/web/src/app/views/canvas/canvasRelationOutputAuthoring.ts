@@ -20,6 +20,7 @@ import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { insertSelectedRelationTransform } from './canvasSelectedRelationTransform';
 import { relationOutputIntent, type RelationOutputIntent } from './canvasRelationOutputIntent';
 import { resolveCanvasReadFieldEligibility } from './canvasInputFieldEligibility';
+import { modelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 
 export async function applyCanvasRelationOutput(
   args: Readonly<{
@@ -73,12 +74,20 @@ export async function applyCanvasRelationOutput(
       outputs,
       signal,
     });
+    const candidate = applyDvtSubstraitSemanticDocument(
+      node,
+      encodeDvtSubstraitSemanticDocument(updated)
+    );
+    const dependencyRejection = modelOutputDependencyRejection({
+      node,
+      candidate,
+      nodes: [...catalog.values()],
+      edges: current.workingSet.visibleEdges,
+    });
+    if (dependencyRejection != null) return dependencyRejection;
     return {
       outcome: 'applied',
-      draftSession: canvasDraftSession.workingSet.upsertNode(
-        current,
-        applyDvtSubstraitSemanticDocument(node, encodeDvtSubstraitSemanticDocument(updated))
-      ),
+      draftSession: canvasDraftSession.workingSet.upsertNode(current, candidate),
     };
   } catch {
     return { outcome: 'rejected', reason: 'invalid_transform_authority' };

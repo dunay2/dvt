@@ -21,6 +21,7 @@ import {
   applyDvtSubstraitSemanticDocument,
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
+import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 
 export type CanvasStructuredFieldRequest = Readonly<{
   nodeId: string;
@@ -29,6 +30,7 @@ export type CanvasStructuredFieldRequest = Readonly<{
   parentName: string;
 }>;
 export type CanvasStructuredFieldResult =
+  | CanvasModelOutputDependencyRejection
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
   | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
 export type CanvasStructuredFieldCompositionResult =
@@ -37,7 +39,7 @@ export type CanvasStructuredFieldCompositionResult =
       draftSession: CanvasDraftSession;
       createdFieldId: string;
     }>
-  | Extract<CanvasStructuredFieldResult, { outcome: 'rejected' }>;
+  | Readonly<{ outcome: 'rejected'; reason: DvtSubstraitProjectionAuthoringRejection }>;
 export type CanvasStructuredFieldReorderRequest = Readonly<{
   nodeId: string;
   parentFieldId: string;

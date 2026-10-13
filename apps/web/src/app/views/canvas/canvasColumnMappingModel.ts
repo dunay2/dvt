@@ -1,5 +1,6 @@
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 
 export type CanvasColumnMappingSource = Readonly<{ nodeId: string; columnId: string }>;
 
@@ -21,6 +22,7 @@ export type CanvasColumnMappingRejection =
   | 'no_compatible_mappings';
 
 export type CanvasColumnMappingResult =
+  | CanvasModelOutputDependencyRejection
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
   | Readonly<{ outcome: 'rejected'; reason: CanvasColumnMappingRejection }>;
 

@@ -617,6 +617,9 @@ export type CanvasViewCopy = {
   readonly relationalTreeUnavailableMessage: string;
   readonly relationalTreeInvalidMessage: string;
   readonly relationalTreeInputIdentityUnavailableMessage: string;
+  readonly relationalTreeProducerFieldsUnavailableMessage: string;
+  readonly modelOutputRequiredTemplate: string;
+  readonly modelOutputDependencyUnavailableMessage: string;
   readonly relationalTreeSelectFirstSourceMessage: string;
   readonly relationalTreeSelectOperationMessage: string;
   readonly relationalTreeSourceActionHint: string;

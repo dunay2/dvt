@@ -5,6 +5,7 @@ import type { CanvasModelBlockedNavigation } from './CanvasModelNavigationGuard'
 import type { CanvasModelPreviewPreparation } from './canvasDraftLifecycle.types';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { formatCanvasModelOutputDependencyRejection } from './canvasCopyFormatting';
 
 export function useCanvasModelNavigation({
   workbench,
@@ -78,7 +79,12 @@ export function useCanvasModelNavigation({
     if (result?.outcome === 'rejected') {
       applyDecisionInFlight.current = false;
       setNavigationError(
-        result.reason === 'node_unavailable' ? copy.applyNodeUnavailable : copy.applyRejected
+        result.reason === 'model_output_required' ||
+          result.reason === 'model_output_dependency_unavailable'
+          ? formatCanvasModelOutputDependencyRejection(result)
+          : result.reason === 'node_unavailable'
+            ? copy.applyNodeUnavailable
+            : copy.applyRejected
       );
       return;
     }

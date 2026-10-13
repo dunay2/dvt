@@ -5,8 +5,153 @@ import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthori
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import { canvasDraftSession } from './canvasDraftSession';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
+import {
+  createModelOutputDependencyFixture,
+  selectModelDependencyOutputs,
+} from './canvasModelOutputDependency.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import { applySelectedRelationWindow } from './canvasSelectedRelationWindow';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('applyCanvasInspectorNodeDraftToSession', () => {
+  it.each(['order_id', 'amount'])(
+    'rejects removal of producer output %s used by a connected model',
+    async (removed) => {
+      const fixture = await createModelOutputDependencyFixture();
+      const candidate = await selectModelDependencyOutputs(
+        fixture.producer,
+        ['order_id', 'customer', 'amount'].filter((name) => name !== removed)
+      );
+      const before = structuredClone(fixture.draftSession);
+      const result = applyCanvasInspectorNodeDraftToSession({
+        ...fixture,
+        node: fixture.producer,
+        draft: createCanvasInspectorNodeDraft(candidate),
+        workspaceScope: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'environment-1',
+          targetAdapter: 'temporal',
+        },
+      });
+      expect(result).toMatchObject({ outcome: 'rejected', reason: 'model_output_required' });
+      expect(fixture.draftSession).toEqual(before);
+      expect(fixture.draftSession.localNodeCatalog).toBeUndefined();
+    }
+  );
+
+  it('uses the latest local consumer authority when an unused field is removed', async () => {
+    const fixture = await createModelOutputDependencyFixture();
+    const consumer = await selectModelDependencyOutputs(fixture.consumer, ['customer', 'country']);
+    const candidate = await selectModelDependencyOutputs(fixture.producer, [
+      'order_id',
+      'customer',
+    ]);
+    const result = applyCanvasInspectorNodeDraftToSession({
+      ...fixture,
+      draftSession: { ...fixture.draftSession, localNodeCatalog: { [consumer.id]: consumer } },
+      node: fixture.producer,
+      draft: createCanvasInspectorNodeDraft(candidate),
+      workspaceScope: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'environment-1',
+        targetAdapter: 'temporal',
+      },
+    });
+    expect(result.outcome).toBe('applied');
+    if (result.outcome !== 'applied') throw new Error('Expected unused removal');
+    expect(result.draftSession.localNodeCatalog?.[consumer.id]).toBe(consumer);
+  });
+
+  it('retains a hidden Window dependency after the generated field is excluded from Output', async () => {
+    const fixture = await createModelOutputDependencyFixture();
+    const session = new CanvasRelationAnalysisSession(fixture.consumer.id);
+    try {
+      session.receive(fixture.consumerDocument);
+      const fields = (await session.query(null)).bindings;
+      const ordered = fields.find((field) => field.displayName === 'amount')!;
+      const document = await applySelectedRelationWindow(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        intent: 'insert',
+        fieldId: ordered.fieldId,
+        alias: 'rank',
+      });
+      const windowModel = applyDvtSubstraitSemanticDocument(
+        fixture.consumer,
+        encodeDvtSubstraitSemanticDocument(document)
+      );
+      const consumer = await selectModelDependencyOutputs(windowModel, ['customer', 'country']);
+      const candidate = await selectModelDependencyOutputs(fixture.producer, [
+        'order_id',
+        'customer',
+      ]);
+      const result = applyCanvasInspectorNodeDraftToSession({
+        ...fixture,
+        draftSession: { ...fixture.draftSession, localNodeCatalog: { [consumer.id]: consumer } },
+        node: fixture.producer,
+        draft: createCanvasInspectorNodeDraft(candidate),
+        workspaceScope: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'environment-1',
+          targetAdapter: 'temporal',
+        },
+      });
+      expect(result).toMatchObject({
+        outcome: 'rejected',
+        reason: 'model_output_required',
+        fields: [{ name: 'amount' }],
+      });
+    } finally {
+      session.dispose();
+    }
+  });
+
+  it('checks every connected consumer rather than only the first edge', async () => {
+    const fixture = await createModelOutputDependencyFixture();
+    const first = await selectModelDependencyOutputs(fixture.consumer, ['customer', 'country']);
+    const secondFixture = await createModelOutputDependencyFixture();
+    const second = { ...secondFixture.consumer, id: 'model3', name: 'Model 3' };
+    const nodes = [fixture.source, fixture.producer, fixture.right, first, second];
+    const draftSession = {
+      ...fixture.draftSession,
+      workingSet: {
+        ...fixture.draftSession.workingSet,
+        visibleNodeIds: nodes.map((node) => node.id),
+        visibleEdges: [
+          ...fixture.draftSession.workingSet.visibleEdges,
+          { sourceId: fixture.producer.id, targetId: second.id },
+        ],
+      },
+    };
+    const candidate = await selectModelDependencyOutputs(fixture.producer, [
+      'order_id',
+      'customer',
+    ]);
+    expect(
+      applyCanvasInspectorNodeDraftToSession({
+        ...fixture,
+        draftSession,
+        canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+        node: fixture.producer,
+        draft: createCanvasInspectorNodeDraft(candidate),
+        workspaceScope: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'environment-1',
+          targetAdapter: 'temporal',
+        },
+      })
+    ).toMatchObject({
+      outcome: 'rejected',
+      reason: 'model_output_required',
+      consumer: { nodeId: second.id, name: 'Model 3' },
+    });
+  });
+
   it('edits shared source configuration through an instance while retaining its own alias', () => {
     const source: CanonicalNode = {
       id: 'source',

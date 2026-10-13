@@ -13,6 +13,11 @@ import {
   inspectDvtSubstraitStructuredFieldDraft,
 } from './canvasDvtSubstraitStructuredField';
 import { composeDvtSubstraitProjectionFields } from './canvasDvtSubstraitStructuredFieldMutation';
+import { createModelOutputDependencyFixture } from './canvasModelOutputDependency.test-support';
+import { applyCanvasRelationOutput } from './canvasRelationOutputAuthoring';
+import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
+import { createCanvasRelationalTreeProjectionDraft } from './canvasRelationalTreeProjectionAuthoring';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
   emptyModel,
   sourceNode,
@@ -23,6 +28,85 @@ import {
 } from './canvasColumnOutputAuthoring.test-support';
 
 describe('Non-relational output command boundary', () => {
+  it('preserves a structured root used by a canonical model consumer and its typed rejection', async () => {
+    const fixture = await createModelOutputDependencyFixture();
+    const structured = composeDvtSubstraitProjectionFields(
+      projectionDraft(fixture.source, ['order_id', 'customer', 'amount']),
+      {
+        draggedFieldId: 'output:customer',
+        targetFieldId: 'output:amount',
+        parentFieldId: 'output:identity',
+        parentName: 'identity',
+      }
+    );
+    const producer = applyDvtSubstraitSemanticDocument(
+      fixture.producer,
+      encodeDvtSubstraitStructuredFieldDocument(structured)
+    );
+    const nodes = [fixture.source, producer, fixture.consumer];
+    const edges = fixture.edges.filter((edge) => edge.sourceId !== fixture.right.id);
+    const input = resolveCanvasDvtCompositionInputs({
+      nodes,
+      edges,
+      targetNodeId: fixture.consumer.id,
+    })[0]!;
+    const consumer = applyDvtSubstraitSemanticDocument(
+      fixture.consumer,
+      encodeDvtSubstraitSemanticDocument(
+        createCanvasRelationalTreeProjectionDraft({ input, targetNodeId: fixture.consumer.id })
+      )
+    );
+    const catalog = new Map([fixture.source, producer, consumer].map((node) => [node.id, node]));
+    const draftSession = {
+      ...fixture.draftSession,
+      workingSet: {
+        ...fixture.draftSession.workingSet,
+        visibleNodeIds: [...catalog.keys()],
+        visibleEdges: edges.map(({ sourceId, targetId }) => ({ sourceId, targetId })),
+      },
+    };
+    const before = structuredClone(draftSession);
+    expect(
+      setCanvasColumnOutputIncluded({
+        draftSession,
+        canonicalNodesById: catalog,
+        targetNodeId: producer.id,
+        columnId: 'output:identity',
+        output: false,
+      })
+    ).toMatchObject({
+      outcome: 'rejected',
+      reason: 'model_output_required',
+      consumer: { nodeId: consumer.id },
+      fields: [
+        { fieldId: 'output:identity:child:output:amount', name: 'amount' },
+        { fieldId: 'output:identity:child:output:customer', name: 'customer' },
+        { fieldId: 'output:identity', name: 'identity' },
+      ],
+    });
+    expect(draftSession).toEqual(before);
+  });
+
+  it.each(['order_id', 'amount'])(
+    'rejects card removal of %s before returning a changed aggregate',
+    async (removed) => {
+      const fixture = await createModelOutputDependencyFixture();
+      const before = structuredClone(fixture.draftSession);
+      expect(
+        await applyCanvasRelationOutput({
+          ...fixture,
+          intent: {
+            nodeId: fixture.producer.id,
+            columnId: `output:${removed}`,
+            output: false,
+            columnType: 'string',
+          },
+        })
+      ).toMatchObject({ outcome: 'rejected', reason: 'model_output_required' });
+      expect(fixture.draftSession).toEqual(before);
+    }
+  );
+
   it.each(['empty', 'array', 'record', 'projection', 'sql'])(
     'does not manufacture or edit native Output through %s fallback',
     (shape) => {

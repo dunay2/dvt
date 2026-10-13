@@ -282,6 +282,12 @@ export const canvasViewAuthoringCopyEs = {
   relationalTreeUnavailableMessage: 'No hay un árbol relacional canónico disponible.',
   relationalTreeInvalidMessage: 'No se pudo leer el árbol relacional canónico.',
   relationalTreeInputIdentityUnavailableMessage: 'Una Fuente conectada no tiene identidad estable.',
+  relationalTreeProducerFieldsUnavailableMessage:
+    'Hay campos de entrada que ya no se publican. En Canvas, conecta cada entrada no disponible con un campo compatible del mismo modelo. Preview sigue bloqueado hasta reparar las entradas.',
+  modelOutputRequiredTemplate:
+    '{model} utiliza los campos de salida {fields}. Consérvalos o modifica primero ese modelo.',
+  modelOutputDependencyUnavailableMessage:
+    'No se han podido verificar las dependencias de salida. No se ha aplicado ningún cambio.',
   relationalTreeSelectFirstSourceMessage: 'Selecciona la primera Fuente.',
   relationalTreeSelectOperationMessage: 'Selecciona una operación relacional.',
   relationalTreeSelectNextSourceMessage: 'Añade una segunda Fuente para habilitar JOIN o UNION.',

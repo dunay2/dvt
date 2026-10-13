@@ -7,6 +7,7 @@ import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
 import type { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { CanvasRelationalTreeEditButtons } from './CanvasRelationalTreeEditButtons';
+import { formatCanvasModelOutputDependencyRejection } from './canvasCopyFormatting';
 
 export function CanvasRelationalTreeSessionActions({
   session,
@@ -25,11 +26,14 @@ export function CanvasRelationalTreeSessionActions({
   const localCopy = resolveCanvasSemanticEditorCopy(language);
   if (!active) return null;
   const rejectionMessage =
-    session.applyRejection?.reason === 'node_unavailable'
-      ? localCopy.applyNodeUnavailable
-      : session.applyRejection == null
-        ? null
-        : localCopy.applyRejected;
+    session.applyRejection?.reason === 'model_output_required' ||
+    session.applyRejection?.reason === 'model_output_dependency_unavailable'
+      ? formatCanvasModelOutputDependencyRejection(session.applyRejection, language)
+      : session.applyRejection?.reason === 'node_unavailable'
+        ? localCopy.applyNodeUnavailable
+        : session.applyRejection == null
+          ? null
+          : localCopy.applyRejected;
   const actions = (
     <div className="flex items-center gap-1 rounded border border-(--border-subtle) bg-(--surface-panel) p-0.5">
       {rejectionMessage == null ? null : (
