@@ -216,7 +216,7 @@ describe('BottomOperationalDrawer', () => {
       '[data-slot="bottom-operational-feed-retry"]'
     );
     expect(retry?.textContent).toContain('Retry event feed');
-    expect(retry?.classList.contains(styles.feedRetry)).toBe(true);
+    expect(retry?.classList).toContain(styles.feedRetry);
     expect(
       document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.className
     ).toBe(styles.feedHealth);
@@ -238,7 +238,7 @@ describe('BottomOperationalDrawer', () => {
     );
 
     expect(closeButton).toBeTruthy();
-    expect(closeButton?.classList.contains(styles.closeButton)).toBe(true);
+    expect(closeButton?.classList).toContain(styles.closeButton);
     fireEvent.click(closeButton!);
     expect(useUiLayoutStore.getState().bottomDrawerHeight).toBe(0);
     expect(useUiLayoutStore.getState().bottomDrawerVisible).toBe(false);

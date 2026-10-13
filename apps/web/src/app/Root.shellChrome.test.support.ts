@@ -178,7 +178,7 @@ export function expectRootShellNavigationChrome(container: ParentNode, activeHre
   );
   expect(readLeftNavigationCaptions(container)).toContain('Runs');
   expect(readLeftNavigationCaptions(container)).toContain('Canvas');
-  expect(activeNavigationLink.classList.contains(navigationStyles.link)).toBe(true);
+  expect(activeNavigationLink.classList).toContain(navigationStyles.link);
   expectActiveRootShellNavigationLink(container, activeHref);
 }
 
@@ -193,6 +193,6 @@ export function expectActiveRootShellNavigationLink(
     throw new Error(`Expected left navigation link for "${activeHref}".`);
   }
 
-  expect(activeNavigationLink.classList.contains(navigationStyles.linkActive)).toBe(true);
+  expect(activeNavigationLink.classList).toContain(navigationStyles.linkActive);
   expect(activeNavigationLink.className).not.toContain('isActive');
 }

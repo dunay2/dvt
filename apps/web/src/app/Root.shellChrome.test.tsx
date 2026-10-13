@@ -64,14 +64,14 @@ describe('RootShell chrome', () => {
       );
       expect(rail?.className).toBe(navigationStyles.rail);
       expect(nav?.className).toBe(navigationStyles.nav);
-      expect(admin?.classList.contains(navigationStyles.link)).toBe(true);
-      expect(admin?.classList.contains(navigationStyles.linkInteractive)).toBe(true);
-      expect(admin?.classList.contains(navigationStyles.linkActive)).toBe(false);
+      expect(admin?.classList).toContain(navigationStyles.link);
+      expect(admin?.classList).toContain(navigationStyles.linkInteractive);
+      expect(admin?.classList).not.toContain(navigationStyles.linkActive);
       expect(admin?.querySelector('[data-slot="left-navigation-caption"]')?.className).toBe(
         navigationStyles.caption
       );
       expect(admin?.textContent).toContain('Admin');
-      expect(runs?.classList.contains(navigationStyles.linkActive)).toBe(false);
+      expect(runs?.classList).not.toContain(navigationStyles.linkActive);
       await act(async () => admin!.focus());
       expect(document.activeElement).toBe(admin);
       await act(async () => fireEvent.click(runs!));
