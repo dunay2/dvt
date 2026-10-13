@@ -1,6 +1,7 @@
 /** Owned concern: verify protected route startup waits for runtime capability and context readiness in browser. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { visitCanvasWithPendingCapabilities } from '../../support/startupReadiness';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -86,32 +87,7 @@ describe('Startup route readiness', () => {
   });
 
   it('keeps the fifth startup check pending until capabilities settle', () => {
-    let releaseCapabilities: () => void = () => undefined;
-    stubE2eApi(
-      'GET',
-      '/capabilities',
-      () =>
-        new Promise((resolve) => {
-          releaseCapabilities = () => {
-            resolve({
-              body: {
-                apiVersion: '1.0.0',
-                minFrontendVersion: '0.0.1',
-                plugins: {
-                  dvt: { available: true },
-                },
-              },
-            });
-          };
-        })
-    );
-    stubE2eJsonApi('GET', '/workspace/context', {
-      defaultWorkspace: E2E_PROJECT_WORKSPACE,
-      availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-    });
-    stubCanvasDraftRead();
-
-    visitWithE2eWorkspaceSession('/canvas');
+    const releaseCapabilities = visitCanvasWithPendingCapabilities();
 
     cy.get('#app-loading-screen').should('be.visible');
     cy.get('#app-loading-screen').should('not.have.attr', 'data-state', 'complete');

@@ -63,6 +63,7 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
     'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
     'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+    'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
     'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
   ],
   available: [
@@ -133,6 +134,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/canvasDrafts/union.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDrafts/warehouse.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDraftAuthoring.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/support/startupReadiness.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
