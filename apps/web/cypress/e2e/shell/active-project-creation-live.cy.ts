@@ -2,7 +2,7 @@
  * Owned concern: prove active-session project creation and workspace isolation
  * through the real protected runtime without request stubs.
  * @baseline GH-3622: retained menu evidence requires the granted protected-runtime session.
- * @decision Reuse the live session owner and reject absent runtime instead of a manual enable flag.
+ * @decision Reuse the live session owner, require completed startup and reject absent runtime.
  * @consequence The complete available plan executes the original isolation and single-POST proof.
  * @version 1.0.0
  */
@@ -44,6 +44,7 @@ describe('Active project creation live vertical', () => {
     const projectName = `PTH1 live ${Date.now()}`;
 
     visitCanvasWithProjectCreationObservation();
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 })
       .should('be.visible')
