@@ -1,3 +1,10 @@
+/**
+ * Owned concern: prove dependency Input projection without fabricating model publication.
+ * @baseline ADR-0064 / GH-3628: producer names do not substitute for lost identities.
+ * @decision Retain exact implicit stale slots and preserve explicit saved slot identities.
+ * @consequence Unresolved bindings remain addressable without becoming available outputs.
+ * @version 1.1.0
+ */
 import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
@@ -7,7 +14,14 @@ import {
 } from './canvasGraphNodeColumnProjection';
 import { projectCanvasColumnLineage } from './canvasColumnLineageProjection';
 import { createCanvasColumnHandleId } from './canvasColumnHandleIdentity';
-import { canvasInputSlotId } from './canvasInputBindings';
+import { canvasInputSlotId, projectCanvasInputBindings } from './canvasInputBindings';
+import { createProducerInput } from '@dvt/substrait-analysis';
+import {
+  createDvtSubstraitProjectionDraft,
+  resolveDvtSubstraitProjectionSource,
+} from './canvasDvtSubstraitProjection';
+import { SOURCE } from './canvasOutputProjection.test-support';
+import { createSourceDocument } from './canvasSourceDocument';
 
 const producer = (id: string): CanonicalNode => ({
   id,
@@ -39,6 +53,55 @@ const nodes = [first, second, consumer];
 const edges = [first, second].map((node) => ({ sourceId: node.id, targetId: consumer.id }));
 
 describe('consumer card input publication boundary', () => {
+  it('retains exact missing implicit model slots without matching newly published names', () => {
+    const producerDocument = createDvtSubstraitProjectionDraft({
+      source: resolveDvtSubstraitProjectionSource(SOURCE)!,
+      targetNodeId: 'publisher',
+      outputs: [{ fieldId: 'lost-identity', name: 'customer', sourceFieldName: 'customer' }],
+    });
+    const read = createProducerInput(
+      { nodeId: 'publisher', name: 'Publisher', document: producerDocument },
+      1
+    );
+    const sidecar = createSourceDocument([read], read).sidecar;
+    const args = {
+      targetNodeId: consumer.id,
+      edges: [{ sourceId: 'publisher', targetId: consumer.id }],
+      producers: new Map([
+        ['publisher', [{ columnId: 'new-identity', name: 'customer', type: 'text' }]],
+      ]),
+      retainedSidecar: sidecar,
+    };
+    const result = projectCanvasInputBindings(args);
+    expect(result).toContainEqual({
+      inputId: canvasInputSlotId('publisher', 'lost-identity'),
+      source: { nodeId: 'publisher', columnId: 'lost-identity' },
+      name: 'customer',
+      type: 'unknown',
+      state: 'unresolved',
+    });
+    expect(result).toContainEqual({
+      inputId: canvasInputSlotId('publisher', 'new-identity'),
+      source: { nodeId: 'publisher', columnId: 'new-identity' },
+      name: 'customer',
+      type: 'text',
+      state: 'available',
+    });
+    expect(
+      projectCanvasInputBindings({
+        ...args,
+        edges: [
+          {
+            ...args.edges[0]!,
+            inputBindings: {
+              version: 'v1',
+              fields: [{ inputId: 'saved-slot', producerFieldId: 'lost-identity' }],
+            },
+          },
+        ],
+      })
+    ).toEqual([{ ...result[1]!, inputId: 'saved-slot' }]);
+  });
   it('shows both producers as Input but does not invent Output for an incomplete model', async () => {
     const truth = await projectCanvasNodePresentationTruth({ node: consumer, nodes, edges });
     const inputs = projectGraphNodeCardInputs(truth, consumer.id);

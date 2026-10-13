@@ -1,3 +1,10 @@
+/**
+ * Owned concern: prove existing Input admission and explicit retained producer identity repair.
+ * @baseline ADR-0064 / GH-3628: a replacement publication has a new stable FieldId.
+ * @decision Exercise real commands and preserve both aggregate components on rejection.
+ * @consequence Implicit and explicit repairs retain consumer semantics through successive edits.
+ * @version 1.1.0
+ */
 import { describe, expect, it } from 'vitest';
 import { WorkspaceGraphAuthoringDraftSchema, type ConnectedSourceRef } from '@dvt/contracts';
 import { bindCanvasInputField, removeCanvasInputField } from './canvasInputBindingAuthoring';
@@ -18,6 +25,20 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import { canvasDraftEdgeExecutionGate } from './canvasDraftEdgeExecutionGate';
 import { buildCanvasCanonicalSnapshot } from './canvasCanonicalSnapshot';
 import { getPluginPortMap } from '../../plugins/registry';
+import {
+  createProducerInput,
+  deriveSubstraitSchemas,
+  resolveProducerInput,
+  type SubstraitDocument,
+} from '@dvt/substrait-analysis';
+import { createSourceDocument } from './canvasSourceDocument';
+import { SOURCE, TRANSFORM } from './canvasOutputProjection.test-support';
+import { resolveDvtSubstraitProjectionSource } from './canvasDvtSubstraitProjection';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
+import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
 function producer(id: string): CanonicalNode {
   return {
@@ -110,6 +131,172 @@ const producers = new Map(
     ],
   ])
 );
+
+function repairFixture(
+  explicit = false
+): Readonly<{
+  document: SubstraitDocument;
+  draftSession: CanvasDraftSession;
+  inputId: string;
+  publisher: CanonicalNode;
+  retained: CanonicalNode;
+}> {
+  const source = resolveDvtSubstraitProjectionSource(SOURCE)!;
+  const publication = (prefix: string): SubstraitDocument =>
+    createDvtSubstraitProjectionDraft({
+      source,
+      targetNodeId: 'publisher',
+      outputs: ['order_id', 'customer'].map((name) => ({
+        fieldId: `${prefix}:${name}`,
+        name,
+        sourceFieldName: name,
+      })),
+    });
+  const retainedRead = createProducerInput(
+    { nodeId: 'publisher', name: 'Publisher', document: publication('old') },
+    1
+  );
+  const document = createSourceDocument([retainedRead], retainedRead);
+  const publisher = applyDvtSubstraitSemanticDocument(
+    { ...TRANSFORM, id: 'publisher' },
+    encodeDvtSubstraitSemanticDocument(publication('new'))
+  );
+  const retained = applyDvtSubstraitSemanticDocument(
+    consumer,
+    encodeDvtSubstraitSemanticDocument(document)
+  );
+  const inputId = explicit
+    ? 'stable-original-slot'
+    : canvasInputSlotId(publisher.id, 'old:order_id');
+  const draftSession: CanvasDraftSession = {
+    ...session(),
+    localNodeCatalog: { [SOURCE.id]: SOURCE, publisher, consumer: retained },
+    workingSet: {
+      visibleNodeIds: [SOURCE.id, publisher.id, consumer.id],
+      pendingExplicitNodeIds: [],
+      visibleEdges: [
+        { sourceId: SOURCE.id, targetId: publisher.id },
+        {
+          sourceId: publisher.id,
+          targetId: consumer.id,
+          ...(explicit
+            ? {
+                inputBindings: {
+                  version: 'v1' as const,
+                  fields: [{ inputId, producerFieldId: 'old:order_id' }],
+                },
+              }
+            : {}),
+        },
+      ],
+    },
+  };
+  return { document, draftSession, inputId, publisher, retained };
+}
+
+describe('explicit repair of retained model Input identities', () => {
+  it.each([false, true])(
+    'repairs a consumed missing identity atomically (explicit edge: %s)',
+    async (explicit) => {
+      const fixture = repairFixture(explicit);
+      const before = structuredClone(fixture.draftSession);
+      const result = await bindCanvasInputField({
+        draftSession: fixture.draftSession,
+        canonicalNodesById: new Map(Object.entries(fixture.draftSession.localNodeCatalog!)),
+        source: { nodeId: fixture.publisher.id, columnId: 'new:order_id' },
+        target: { nodeId: consumer.id, inputId: fixture.inputId },
+      });
+      expect(result.outcome).toBe('applied');
+      if (result.outcome !== 'applied') throw new Error('Expected admitted repair');
+      const repaired = decodeDvtSubstraitSemanticDocument(
+        readDvtTransformAuthoringAuthority(result.draftSession.localNodeCatalog!.consumer!)!
+          .semanticDocument
+      );
+      expect(repaired.plan).toEqual(fixture.document.plan);
+      expect(repaired.sidecar.fields).toEqual(fixture.document.sidecar.fields);
+      expect(repaired.sidecar.relations[0]!.producerRef!.fields).toEqual(
+        fixture.document.sidecar.relations[0]!.producerRef!.fields.map((mapping) => ({
+          ...mapping,
+          producerFieldId:
+            mapping.producerFieldId === 'old:order_id' ? 'new:order_id' : mapping.producerFieldId,
+        }))
+      );
+      expect(result.draftSession.workingSet.visibleEdges[1]!.inputBindings!.fields).toContainEqual({
+        inputId: fixture.inputId,
+        producerFieldId: 'new:order_id',
+      });
+      expect(fixture.draftSession).toEqual(before);
+    }
+  );
+  it('repairs successive missing slots while retaining their original IDs after the edge becomes explicit', async () => {
+    const fixture = repairFixture();
+    let current = fixture.draftSession;
+    for (const name of ['order_id', 'customer']) {
+      const result = await bindCanvasInputField({
+        draftSession: current,
+        canonicalNodesById: new Map(Object.entries(fixture.draftSession.localNodeCatalog!)),
+        source: { nodeId: fixture.publisher.id, columnId: `new:${name}` },
+        target: {
+          nodeId: consumer.id,
+          inputId: canvasInputSlotId(fixture.publisher.id, `old:${name}`),
+        },
+      });
+      expect(result.outcome).toBe('applied');
+      if (result.outcome !== 'applied') throw new Error('Expected admitted repair');
+      current = result.draftSession;
+    }
+    const repaired = decodeDvtSubstraitSemanticDocument(
+      readDvtTransformAuthoringAuthority(current.localNodeCatalog!.consumer!)!.semanticDocument
+    );
+    const published = decodeDvtSubstraitSemanticDocument(
+      readDvtTransformAuthoringAuthority(fixture.publisher)!.semanticDocument
+    );
+    const index = deriveSubstraitSchemas(repaired).index;
+    expect(() => resolveProducerInput(index.relations.get(index.rootId)!, published)).not.toThrow();
+    expect(current.workingSet.visibleEdges[1]!.inputBindings!.fields).toEqual(
+      ['order_id', 'customer'].map((name) => ({
+        inputId: canvasInputSlotId(fixture.publisher.id, `old:${name}`),
+        producerFieldId: `new:${name}`,
+      }))
+    );
+    expect(repaired.plan).toEqual(fixture.document.plan);
+    expect(repaired.sidecar.fields).toEqual(fixture.document.sidecar.fields);
+  });
+  it.each(['type', 'foreign', 'consumed-duplicate', 'forged', 'readonly', 'aborted'])(
+    'rejects %s atomically',
+    async (scenario) => {
+      const fixture = repairFixture();
+      let source = { nodeId: fixture.publisher.id, columnId: 'new:order_id' };
+      let inputId = fixture.inputId;
+      if (scenario === 'type') source = { ...source, columnId: 'new:customer' };
+      if (scenario === 'foreign') source = { nodeId: SOURCE.id, columnId: 'order_id' };
+      if (scenario === 'forged') inputId = 'not-a-retained-slot';
+      if (scenario === 'consumed-duplicate') {
+        const retained = decodeDvtSubstraitSemanticDocument(
+          readDvtTransformAuthoringAuthority(fixture.retained)!.semanticDocument
+        );
+        retained.sidecar.relations[0]!.producerRef!.fields[1]!.producerFieldId = 'new:order_id';
+        fixture.draftSession.localNodeCatalog!.consumer = applyDvtSubstraitSemanticDocument(
+          fixture.retained,
+          encodeDvtSubstraitSemanticDocument(retained)
+        );
+      }
+      const before = structuredClone(fixture.draftSession);
+      const signal = scenario === 'aborted' ? AbortSignal.abort() : undefined;
+      const result = bindCanvasInputField({
+        draftSession: fixture.draftSession,
+        canonicalNodesById: new Map(Object.entries(fixture.draftSession.localNodeCatalog!)),
+        source,
+        target: { nodeId: consumer.id, inputId },
+        editable: scenario !== 'readonly',
+        signal,
+      });
+      if (scenario === 'aborted') await expect(result).rejects.toThrow();
+      else expect(await result).toMatchObject({ outcome: 'rejected' });
+      expect(fixture.draftSession).toEqual(before);
+    }
+  );
+});
 
 describe('consumer Input binding command', () => {
   it('projects transfer candidates from publication, never from an alias or hidden physical field', () => {
