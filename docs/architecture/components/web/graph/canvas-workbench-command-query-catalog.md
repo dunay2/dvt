@@ -589,6 +589,39 @@ flowchart LR
 
 ## Exhaustiveness Rule
 
+### Inspector and bounded preview presentation parity
+
+For native Models, the outer Inspector Columns section and card Output consume
+the same selected canonical output projection, including its order and types.
+Available producer fields remain an Input/editor catalogue, not extra published
+columns. Counts describe the fields actually listed. Empty, pending, unavailable
+and unconfigured output never fall back to stale physical metadata. Sources keep
+their existing physical-schema inspection; this is not a global catalogue filter.
+
+Source and operation previews share the bounded grid presentation: search and
+refresh in one toolbar, rows filling the available height, and identity, counts,
+LIVE/provider/query-time facts in its footer. Accessible captions and bounded-read
+disclosures remain; operation previews do not repeat them above the grid. Query
+admission, limits, request identity, stale/error handling and revision fences are
+unchanged. The noncompact Model data view retains its existing context header.
+
+The simple JOIN condition editor exposes an explicit formula handoff beside its
+save action. Only a valid, current simple draft may transfer. Compose its update
+or append with every other canonical condition through the existing condition
+helpers, then derive the full predicate formula through the shared decompiler.
+Switching editors performs no semantic command. Keep the simple draft while the
+formula is open; Cancel restores it, and only an accepted formula save clears it.
+Invalid, stale, read-only, busy or unavailable-provider handoffs preserve both
+draft and canonical predicate. Function admission and boolean ON validation stay
+in the existing formula compiler and revision-bound command, with no second AST.
+
+```text
+Canonical native Output -> shared projection -> card and Inspector Columns
+Protected sample -> existing grid toolbar / rows / provenance footer
+Valid simple JOIN draft -> all clauses -> shared full-predicate formula
+                       -> Cancel restores draft / accepted save clears draft
+```
+
 Every externally observable Canvas workbench behavior must map to one rail in
 this catalog before implementation. This includes route entries, toolbar
 commands, plugin view placements, layout-preference controls, contextual graph
