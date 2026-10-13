@@ -1,45 +1,39 @@
 /**
  * Owned concern: publish shell chrome class contracts without route or session authority.
- * @baseline GH-3622: templates share compact menu styling without inline style objects.
- * @decision Keep named class contracts together, including the shared header reflow boundary.
+ * @baseline GH-3629: static shell presentation belongs to its stylesheet, not utility strings.
+ * @decision Preserve named top-bar class contracts as bindings to the concern-owned CSS Module.
  * @consequence Controllers retain behavior; presentation owns spacing, size and color.
- * @version 1.0.0
+ * @version 1.1.0
  */
+import styles from './ShellChrome.module.css';
+
 export const topAppBarClasses = {
-  appMenuButton:
-    'flex h-8 shrink-0 items-center gap-2 rounded-md px-1.5 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] sm:mr-1',
-  applicationMenuContent: 'w-56 max-w-[calc(100vw-1rem)] text-xs',
-  menuItemIcon: 'mr-2 size-4 shrink-0',
-  menuTriggerIcon: 'size-4 shrink-0',
-  contextMenuContent: 'w-72 max-w-[calc(100vw-1rem)] text-xs',
-  menuContextBody: 'px-2 py-1.5',
-  menuGitContext: 'px-2 pb-2 text-xs text-(--text-subtle)',
-  menuGitSeparator: 'px-1',
-  menuLanguageLabel: 'flex items-center',
-  shellBar:
-    'flex min-h-10 min-w-0 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 py-1 text-[var(--text-default)] md:h-10 md:flex-nowrap md:gap-2 md:px-3 md:py-0',
-  contextCluster: 'flex w-full min-w-0 items-center gap-1 md:w-auto md:flex-1 md:gap-2',
-  commandCluster:
-    'flex w-full min-w-0 flex-wrap items-center justify-end gap-1 md:w-auto md:shrink-0 md:flex-nowrap md:gap-2',
-  readOnlyScopeField:
-    'h-8 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-3 text-sm text-[var(--text-default)]',
-  contextLabel: 'text-[11px] font-medium uppercase text-[var(--text-subtle)]',
-  gitRef:
-    'hidden h-7 items-center gap-1.5 rounded-md border border-transparent px-1.5 text-[11px] text-[var(--text-subtle)] lg:flex',
-  gitRefIcon: 'size-3.5 text-[var(--text-subtle)]',
-  gitRefSeparator: 'text-[var(--text-subtle)]',
-  gitRefSha: 'text-[11px] text-[var(--text-default)]',
-  projectIdentityBadge:
-    'flex h-8 min-w-0 max-w-[18rem] items-center gap-1.5 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)]',
-  contextChip:
-    'flex h-8 min-w-0 max-w-[12rem] items-center gap-2 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-2.5 text-xs text-[var(--text-default)]',
-  contextChipIcon: 'size-3.5 text-[var(--text-subtle)]',
-  contextChipLabel: 'truncate text-[var(--text-strong)]',
-  contextChipMeta: 'hidden shrink-0 text-[var(--text-subtle)] md:inline',
-  contextChipSeparator: 'hidden shrink-0 text-[var(--text-subtle)] md:inline',
-  smallStatusText: 'flex cursor-default items-center gap-1.5 px-1 text-[11px]',
-  menuButton:
-    'h-8 gap-1.5 px-2 text-[var(--text-default)] hover:bg-[var(--surface-selected)] hover:text-[var(--text-strong)]',
+  appMenuButton: styles.appMenuButton,
+  applicationMenuContent: styles.applicationMenuContent,
+  menuItemIcon: styles.menuItemIcon,
+  menuTriggerIcon: styles.menuTriggerIcon,
+  contextMenuContent: styles.contextMenuContent,
+  menuContextBody: styles.menuContextBody,
+  menuGitContext: styles.menuGitContext,
+  menuGitSeparator: styles.menuGitSeparator,
+  menuLanguageLabel: styles.menuLanguageLabel,
+  shellBar: styles.shellBar,
+  contextCluster: styles.contextCluster,
+  commandCluster: styles.commandCluster,
+  readOnlyScopeField: styles.readOnlyScopeField,
+  contextLabel: styles.contextLabel,
+  gitRef: styles.gitRef,
+  gitRefIcon: styles.gitRefIcon,
+  gitRefSeparator: styles.gitRefSeparator,
+  gitRefSha: styles.gitRefSha,
+  projectIdentityBadge: styles.projectIdentityBadge,
+  contextChip: styles.contextChip,
+  contextChipIcon: styles.contextChipIcon,
+  contextChipLabel: styles.contextChipLabel,
+  contextChipMeta: styles.contextChipMeta,
+  contextChipSeparator: styles.contextChipSeparator,
+  smallStatusText: styles.smallStatusText,
+  menuButton: styles.menuButton,
 };
 
 export const leftNavigationRailClasses = {

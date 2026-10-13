@@ -22,6 +22,7 @@ import type { ShellTopBarCopy } from './copy';
 import { resolveCompiledApplicationMetadata } from './appBuildMetadata';
 import { ShellNavigationEntriesTemplate } from './ShellMenu.templates';
 import { topAppBarClasses } from './chrome';
+import styles from './ShellChrome.module.css';
 
 type ShellAppMenuProps = Readonly<{
   copy: ShellTopBarCopy;
@@ -58,7 +59,7 @@ export function ShellAppMenu({
             aria-label="Raven"
             className={topAppBarClasses.appMenuButton}
           >
-            <AppBrandMark className="size-6 shrink-0" />
+            <AppBrandMark className={styles.appBrandMark} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
@@ -86,7 +87,7 @@ export function ShellAppMenu({
               setAboutOpen(true);
             }}
           >
-            <Info className="mr-2 size-4" />
+            <Info className={styles.aboutIcon} />
             {copy.aboutCommand}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -95,7 +96,7 @@ export function ShellAppMenu({
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent
           data-slot="shell-about-dialog"
-          className="border-[var(--border-default)]"
+          className={styles.aboutDialog}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             triggerRef.current?.focus();
@@ -105,14 +106,14 @@ export function ShellAppMenu({
             <DialogTitle>{copy.aboutTitle}</DialogTitle>
             <DialogDescription>{copy.aboutDescription}</DialogDescription>
           </DialogHeader>
-          <dl className="grid gap-3 text-sm">
-            <div className="grid grid-cols-[9rem_1fr] gap-3">
-              <dt className="text-[var(--text-subtle)]">{copy.aboutVersionLabel}</dt>
-              <dd className="font-mono text-[var(--text-strong)]">{metadata.version}</dd>
+          <dl className={styles.aboutMetadata}>
+            <div className={styles.aboutMetadataRow}>
+              <dt className={styles.aboutLabel}>{copy.aboutVersionLabel}</dt>
+              <dd className={styles.aboutValue}>{metadata.version}</dd>
             </div>
-            <div className="grid grid-cols-[9rem_1fr] gap-3">
-              <dt className="text-[var(--text-subtle)]">{copy.aboutBuildDateLabel}</dt>
-              <dd className="font-mono text-[var(--text-strong)]">
+            <div className={styles.aboutMetadataRow}>
+              <dt className={styles.aboutLabel}>{copy.aboutBuildDateLabel}</dt>
+              <dd className={styles.aboutValue}>
                 {metadata.buildDate ?? copy.aboutBuildDateUnavailable}
               </dd>
             </div>

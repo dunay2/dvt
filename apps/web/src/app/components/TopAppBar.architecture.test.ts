@@ -16,7 +16,92 @@ function readRepoSource(relativePathFromRepo: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePathFromRepo), 'utf8');
 }
 
+function readCssRule(source: string, className: string): string {
+  const match = source.match(new RegExp(`\\.${className}\\s*\\{([^}]+)\\}`, 'u'));
+  expect(match, `CSS rule for ${className}`).not.toBeNull();
+  return match![1]!;
+}
+
+function readCssMedia(source: string, minWidth: number): string {
+  const match = source.match(
+    new RegExp(`@media\\s*\\(min-width:\\s*${minWidth}rem\\)\\s*\\{([\\s\\S]*?)^\\}`, 'mu')
+  );
+  expect(match, `CSS media at ${minWidth}rem`).not.toBeNull();
+  return match![1]!;
+}
+
 describe('ShellTopBar workspace context architecture', () => {
+  it('keeps selected shell presentation in its CSS Module while preserving named class contracts', () => {
+    const chromeSource = readAppSource('components/shell/chrome.ts');
+    const topBarClassesSource = chromeSource.split('export const leftNavigationRailClasses')[0]!;
+    expect(topBarClassesSource).toContain("from './ShellChrome.module.css'");
+    expect(topBarClassesSource).not.toMatch(/:\s*['"`]/u);
+    for (const key of [
+      'appMenuButton',
+      'applicationMenuContent',
+      'menuItemIcon',
+      'menuTriggerIcon',
+      'contextMenuContent',
+      'menuContextBody',
+      'menuGitContext',
+      'menuGitSeparator',
+      'menuLanguageLabel',
+      'shellBar',
+      'contextCluster',
+      'commandCluster',
+      'readOnlyScopeField',
+      'contextLabel',
+      'gitRef',
+      'gitRefIcon',
+      'gitRefSeparator',
+      'gitRefSha',
+      'projectIdentityBadge',
+      'contextChip',
+      'contextChipIcon',
+      'contextChipLabel',
+      'contextChipMeta',
+      'contextChipSeparator',
+      'smallStatusText',
+      'menuButton',
+    ]) {
+      expect(topBarClassesSource).toContain(`${key}: styles.${key}`);
+    }
+    for (const sourcePath of [
+      'components/TopAppBar.tsx',
+      'components/shell/ShellAppMenu.tsx',
+      'components/shell/ShellMenu.templates.tsx',
+    ]) {
+      expect(readAppSource(sourcePath), sourcePath).not.toMatch(
+        /\bclassName\s*=\s*['"]|\bstyle\s*=/u
+      );
+    }
+  });
+
+  it('preserves header wrapping below 48rem and the 48rem/64rem responsive CSS contracts', () => {
+    const cssSource = readAppSource('components/shell/ShellChrome.module.css');
+    expect(readCssRule(cssSource, 'shellBar')).toMatch(/flex-wrap:\s*wrap;/u);
+    expect(readCssRule(cssSource, 'shellBar')).toMatch(/min-height:\s*2\.5rem;/u);
+    for (const className of ['contextCluster', 'commandCluster']) {
+      expect(readCssRule(cssSource, className)).toMatch(/width:\s*100%;/u);
+    }
+    expect(readCssRule(cssSource, 'commandCluster')).toMatch(/flex-wrap:\s*wrap;/u);
+    const mediumSource = readCssMedia(cssSource, 48);
+    expect(readCssRule(mediumSource, 'shellBar')).toMatch(/height:\s*2\.5rem;/u);
+    expect(readCssRule(mediumSource, 'contextCluster')).toMatch(/flex:\s*1;/u);
+    expect(readCssRule(mediumSource, 'commandCluster')).toMatch(/flex-shrink:\s*0;/u);
+    for (const className of ['contextCluster', 'commandCluster']) {
+      expect(readCssRule(mediumSource, className)).toMatch(/width:\s*auto;/u);
+    }
+    for (const className of ['shellBar', 'commandCluster']) {
+      expect(readCssRule(mediumSource, className)).toMatch(/flex-wrap:\s*nowrap;/u);
+    }
+    expect(readCssRule(cssSource, 'gitRef')).toMatch(/display:\s*none;/u);
+    expect(readCssRule(readCssMedia(cssSource, 64), 'gitRef')).toMatch(/display:\s*flex;/u);
+    const smallSource = readCssMedia(cssSource, 40);
+    expect(readCssRule(smallSource, 'appMenuButton')).toMatch(/margin-right:\s*0\.25rem;/u);
+    expect(smallSource).not.toMatch(/\.(?:shellBar|contextCluster|commandCluster)\b/u);
+  });
+
   it.each([
     ['/** Owned concern: read context. */', true],
     ['/**\n * Owned concern: read context.\n */', true],
