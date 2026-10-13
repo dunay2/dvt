@@ -1,0 +1,33 @@
+/*
+ * Owned concern: retained inspection layout and recovery-notice appearance.
+ * @baseline Canvas theme tokens own border and diagnostic colors.
+ * @decision Keep component appearance outside JSX without changing workspace containment.
+ * @consequence The retained tree and its status remain independently maintainable.
+ * @version 1.0.0
+ */
+.inspection {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.recoveryNotice {
+  margin: 0;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.5rem 0.75rem;
+  color: var(--status-warning);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.workspace {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 0%;
+  overflow: hidden;
+}

@@ -77,6 +77,15 @@ import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('keeps retained inspection styling outside JSX and preserves its semantic workspace class', () => {
+    expect(InspectionSource).toContain("from './CanvasRelationalTreeInspection.module.css'");
+    expect(InspectionSource).not.toMatch(/\bstyle\s*=|className\s*=\s*['"]|(?:border|text)-\(--/);
+    expect(InspectionSource).toContain('styles.inspection');
+    expect(InspectionSource).toContain('styles.recoveryNotice');
+    expect(InspectionSource).toContain('canvas-operation-workspace ${styles.workspace}');
+    expect(InspectionSource).toContain('role="status"');
+    expect(InspectionSource).toContain('data-slot="canvas-producer-input-recovery"');
+  });
   it('keeps JOIN type-code suppression in the shared read-only presentation mapper', () => {
     expect(NodePresentationSource).toContain('isCanvasJoinOperation(node.displayName)');
     expect(NodePresentationSource).not.toMatch(/displayName\s*=|session\.apply|useEffect/);

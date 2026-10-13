@@ -1,5 +1,12 @@
-/** Owned concern: compose the applied read-only tree and its explicit editing entry. */
+/**
+ * Owned concern: compose the applied read-only tree and its explicit editing entry.
+ * @baseline ADR-0044: recovery copy is presentation, not semantic authority.
+ * @decision Keep appearance in a CSS Module and preserve the semantic workspace class.
+ * @consequence Styling can change without altering retained inspection or editing admission.
+ * @version 1.0.0
+ */
 import type { ComponentProps } from 'react';
+import styles from './CanvasRelationalTreeInspection.module.css';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import { CanvasRelationalTreeSideInspector } from './CanvasRelationalTreeSideInspector';
 import { CanvasRelationalTreeView } from './CanvasRelationalTreeView';
@@ -10,15 +17,12 @@ export function CanvasRelationalTreeInspection(
   const { model, transformNode, copy, onExpandedChange, modelOutput } = props;
   if (model.projection == null) return null;
   return (
-    <div
-      data-slot="canvas-relational-tree-inspection"
-      className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
-    >
+    <div data-slot="canvas-relational-tree-inspection" className={styles.inspection}>
       {model.unavailableMessage != null && (
         <p
           role="status"
           data-slot="canvas-producer-input-recovery"
-          className="m-0 border-b border-(--border-default) px-3 py-2 text-xs text-(--status-warning)"
+          className={styles.recoveryNotice}
         >
           {model.unavailableMessage}
         </p>
@@ -28,7 +32,7 @@ export function CanvasRelationalTreeInspection(
         editable={model.authoringAvailable}
         onStageOperation={model.session.staged.stage}
       />
-      <div className="canvas-operation-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div className={`canvas-operation-workspace ${styles.workspace}`}>
         <CanvasRelationalTreeView
           sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
           transformNode={transformNode}
