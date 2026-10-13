@@ -2,7 +2,7 @@
 title: Canvas Workbench Screen Composition Component
 status: Active
 owner: Frontend / Shell / Canvas
-last_reviewed: 2026-10-12
+last_reviewed: 2026-10-13
 component_type: frontend-component
 ---
 
@@ -53,6 +53,42 @@ must preserve the existing unapplied-edit guard.
 Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
+
+## Compact Header Reflow
+
+The real workbench viewport proof exposed a regression at 640 x 450 CSS pixels:
+the added File trigger reserved command width while the single-row header
+compressed the Canvas/model identity below its tab and close-control widths.
+The existing geometry assertion must remain intact; hiding labels, clipping
+controls or forcing clicks would not correct the layout.
+
+```mermaid
+flowchart TD
+  Current[Single row from 640px] --> Commands[Commands reserve their width]
+  Commands --> Clipped[Context shrinks below tab and close-control widths]
+  Coordinated[One shared 768px reflow boundary] --> Compact[Full-width context row and wrapping commands]
+  Coordinated --> Wide[Retain the existing wide single-row layout]
+```
+
+The shell bar and its two named cluster class contracts belong together in
+`shell/chrome.ts`. All three switch to the wide layout at the same `md`
+breakpoint. Below it, the existing full-width groups wrap and the header takes
+its natural height; the workbench's existing flex allocation retains the footer
+and inspector inside the viewport. No new layout store, JavaScript resize
+handler, command/query rail or permanent shell-height assumption is introduced.
+
+| CSS viewport width | Header posture                                   | Required evidence                                      |
+| ------------------ | ------------------------------------------------ | ------------------------------------------------------ |
+| 390, 640, 767 px   | Full-width context and wrapping command rows     | Visible tabs/close controls; no command overflow       |
+| 768, 960, 1366 px  | Existing single-row context and command clusters | Unchanged menu ownership, execution and focus behavior |
+
+Unit evidence checks the shared class boundary, not simulated geometry. The
+existing native browser viewport proof checks actual tab/close containment at
+640 x 450, inspector/footer containment and absence of graph writes. Provider
+menu evidence must wait for the existing startup overlay to disappear before
+interacting with the shell; a mounted trigger alone does not prove route
+readiness. This is an observable precondition, not an arbitrary delay or a
+forced-click workaround.
 
 ## Public API
 
