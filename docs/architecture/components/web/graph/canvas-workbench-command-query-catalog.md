@@ -407,6 +407,18 @@ this inspection is not successful producer resolution or execution admission.
 Malformed authority, cycles, foreign producers and incompatible present types
 do not qualify. Missing Input slots remain visible even on implicit edges.
 
+The owning query classifies retained required producer references before normal
+schema refresh: `not-needed`, `retained` or `rejected`. A rejected recovery never
+falls through as a healthy read. Missing required fields combined with an
+incompatible still-published type cannot silently prune the consumer Output.
+The connected publication catalog retains valid producer documents even when
+stale explicit Input bindings make an Input unusable. Classification reuses
+that catalog, and presentation reuses the resulting document and publication.
+The read model exposes Input interaction posture explicitly; adapters do not
+infer repair admission from Output, composition and slot symptoms or reparse
+semantic authority. Normal healthy schema refresh, permissions and CAS remain
+owned by their existing rails.
+
 Recovery reuses the existing exact Input-slot mapping gesture and serialized
 draft command. Only an unresolved slot may be explicitly rebound to a compatible
 published field of the same producer. Validate its complete retained TypeSchema,
