@@ -33,6 +33,28 @@ describe('card Input / Output boundary', () => {
       source: { nodeId: 'producer-b', columnId: 'email' },
     },
   ];
+  it.each([
+    ['input', []],
+    ['output', []],
+    ['input', ['source']],
+    ['output', ['target']],
+  ] as const)('does not revive denied ports in %s view from %j', (view, portDirections) => {
+    renderPorts(view, portDirections);
+    expect(container.querySelectorAll('[data-slot="canvas-node-port-handle"]')).toHaveLength(0);
+  });
+  it.each([
+    ['input', ['target']],
+    ['output', ['source']],
+    ['input', ['target', 'source']],
+    ['output', ['target', 'source']],
+    ['input', undefined],
+    ['output', undefined],
+  ] as const)('keeps only the admitted view direction in %s from %j', (view, portDirections) => {
+    renderPorts(view, portDirections);
+    const handles = container.querySelectorAll('[data-slot="canvas-node-port-handle"]');
+    expect(handles).toHaveLength(1);
+    expect(handles[0]!.getAttribute('data-port')).toBe(view === 'input' ? 'target' : 'source');
+  });
   it.each(['en', 'es'] as const)(
     'distinguishes an unresolved input without hiding its stable target in %s',
     (language) => {
@@ -73,6 +95,19 @@ describe('card Input / Output boundary', () => {
       )
     );
     return mutation;
+  }
+  function renderPorts(
+    view: GraphNodeColumnSectionProps['view'],
+    portDirections: GraphNodeColumnSectionProps['portDirections']
+  ): void {
+    const column = {
+      id: 'amount',
+      name: 'amount',
+      type: 'numeric',
+      sourceHandleId: 'column:source:consumer:amount',
+      targetHandleId: 'column:target:consumer:amount',
+    };
+    render(undefined, { columns: [column], inputColumns: [column], view, portDirections });
   }
   function outputView(): void {
     const tab = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find(
