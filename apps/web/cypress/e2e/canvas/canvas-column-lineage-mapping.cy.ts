@@ -7,8 +7,12 @@
  */
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
 import { createCanvasColumnHandleId } from '../../../src/app/views/canvas/canvasColumnHandleIdentity';
-import { buildCanvasAuthoringDraft } from '../../../src/app/views/canvas/canvasDraftAuthoring';
+import {
+  buildCanvasAuthoringDraft,
+  projectCanonicalNodeToAuthoringNode,
+} from '../../../src/app/views/canvas/canvasDraftAuthoring';
 import { applyDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtTransformAuthoringAuthority';
 import { canvasInputSlotId } from '../../../src/app/views/canvas/canvasInputBindings';
 import {
@@ -51,13 +55,22 @@ function visitInputs(
     minFrontendVersion: '0.0.1',
     plugins: { dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({
+  const draft = stubStatefulCanvasDraftAuthoring({
     canvasKind: 'transformation',
     columnMapping: true,
     columnMappingDisconnected: disconnected,
     columnMappingSecondSource: secondProducer,
     sourceInspectorOrdering,
   });
+  const { canonicalNodes } = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
+  // Normalize the captured GET seed without manufacturing a persistence command.
+  Object.assign(
+    draft,
+    normalizeProjectCanvasDraft({
+      ...draft,
+      nodes: canonicalNodes.map(projectCanonicalNodeToAuthoringNode),
+    })
+  );
   visitWithE2eWorkspaceSession('/canvas', {
     onBeforeLoad(window) {
       window.localStorage.setItem(
