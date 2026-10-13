@@ -183,7 +183,7 @@ describe('selected operation data preview', () => {
     { language: 'en' as const, count: 20, limit: 20, truncated: true, expected: '20/20 records' },
     { language: 'en' as const, count: 1, limit: 10, truncated: false, expected: '1/10 records' },
   ])(
-    'shows only the operation label and $expected in the compact header',
+    'uses the shared compact toolbar and provenance footer for $expected',
     async ({ language, count, limit, truncated, expected }) => {
       useApplicationLanguageStore.setState({ language });
       query.previewTransformRows.mockResolvedValue({
@@ -197,24 +197,29 @@ describe('selected operation data preview', () => {
       expect(container.querySelector('h2')).toBeNull();
       expect(container.querySelector('[data-slot="canvas-operation-record-count"]')).toBeNull();
       await preview();
-      const header = container.querySelector('header');
-      expect(header?.textContent).toBe(`INNER JOIN${expected}`);
-      expect(header?.querySelector('p')).toBeNull();
+      expect(container.querySelector('header')).toBeNull();
+      expect(container.querySelector('h2')).toBeNull();
+      const recordCount = container.querySelector('[data-slot="data-sample-summary"]');
+      expect(recordCount?.getAttribute('title')).toBe(expected);
+      expect(recordCount?.textContent).toContain(String(count));
+      expect(recordCount?.textContent).toContain('1');
+      const facts = container.querySelector('[data-slot="live-preview-facts"]');
+      expect(recordCount?.parentElement).toBe(facts?.parentElement);
+      expect(facts?.textContent).toContain('INNER JOIN');
+      const refresh = container.querySelector('[data-slot="canvas-model-preview"]');
+      expect(refresh?.closest('[data-slot="data-grid-toolbar"]')).not.toBeNull();
       expect(container.querySelector('code')).toBeNull();
-      expect(header?.querySelector('time')).toBeNull();
       expect(container.querySelector('[data-slot="live-preview-facts"]')?.textContent).toContain(
         'LIVE'
       );
       expect(container.querySelector('time')?.dateTime).toBe('2026-09-19T00:00:00.000Z');
       expect(container.querySelector('thead')?.textContent).toContain('id');
       expect(container.textContent).not.toContain('r7');
-      expect(
-        container.querySelector('header')?.querySelector('[data-slot="canvas-model-preview"]')
-      ).not.toBeNull();
+      expect(refresh).not.toBeNull();
       render('join-2');
-      expect(
-        container.querySelector('[data-slot="canvas-operation-record-count"]')?.textContent
-      ).toBe(expected);
+      expect(container.querySelector('[data-slot="data-sample-summary"]')?.textContent).toBe(
+        recordCount?.textContent
+      );
       expect(query.previewTransformRows).toHaveBeenCalledOnce();
     }
   );

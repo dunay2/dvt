@@ -1,4 +1,10 @@
-/** Owned concern: present sample state without owning commands, queries or lifecycle. */
+/**
+Owned concern: present sample state without owning commands, queries or lifecycle.
+@baseline GH-3623: source and operation samples share compact grid presentation.
+@decision Compose existing toolbar and footer slots; keep the full Model view unchanged.
+@consequence Sample identity, provenance and query fences remain owned by existing ports.
+@version 1.0.0
+ */
 import { AlertTriangle, Play, RefreshCw, Table2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { OperationalDrawerDataTable } from '../../components/shell/OperationalDrawerDataTable';
@@ -37,53 +43,47 @@ export function CanvasModelDataPanel({
     }>;
     actions: Readonly<{ load: () => Promise<void> }>;
   }>): JSX.Element {
+  const previewAction = (
+    <Button
+      data-slot="canvas-model-preview"
+      size="sm"
+      variant={compact ? 'ghost' : 'default'}
+      title={sample == null ? copy.preview : copy.refresh}
+      aria-label={sample == null ? copy.preview : copy.refresh}
+      className={compact ? 'size-8 shrink-0 p-0' : undefined}
+      disabled={!available}
+      aria-disabled={loading || !available}
+      aria-busy={loading}
+      onClick={loading ? undefined : () => void load()}
+    >
+      {sample == null ? (
+        <Play className="size-4" aria-hidden="true" />
+      ) : (
+        <RefreshCw className="size-4" aria-hidden="true" />
+      )}
+      {compact ? null : loading ? copy.loading : sample == null ? copy.preview : copy.refresh}
+    </Button>
+  );
   return (
     <section
       data-slot="canvas-model-data"
       className={`${styles.modelPanel} flex h-full min-h-0 min-w-0 flex-col ${compact ? 'gap-2 p-2' : 'gap-4 p-4'}`}
     >
-      <header
-        className={`flex shrink-0 items-center justify-between gap-3 ${compact ? '' : 'flex-wrap'}`}
-      >
-        <div className={compact ? 'flex min-w-0 items-center gap-3' : 'space-y-1'}>
-          <h2 className={`text-sm font-semibold ${compact ? 'truncate' : ''}`} title={nodeName}>
-            {nodeName}
-          </h2>
-          {compact ? (
-            sample == null ? null : (
-              <span
-                data-slot="canvas-operation-record-count"
-                className="shrink-0 text-xs text-(--text-muted)"
-              >
-                {copy.operationPreviewRecords
-                  .replace('{count}', String(sample.rows.length))
-                  .replace('{limit}', String(sample.limit))}
-              </span>
-            )
-          ) : (
+      {compact ? (
+        sample == null ? (
+          <div className={styles.actions}>{previewAction}</div>
+        ) : null
+      ) : (
+        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3">
+          <div className="space-y-1">
+            <h2 className="text-sm font-semibold" title={nodeName}>
+              {nodeName}
+            </h2>
             <p className="text-xs text-(--text-muted)">{copy.previewHint}</p>
-          )}
-        </div>
-        <Button
-          data-slot="canvas-model-preview"
-          size="sm"
-          variant={compact ? 'ghost' : 'default'}
-          title={sample == null ? copy.preview : copy.refresh}
-          aria-label={sample == null ? copy.preview : copy.refresh}
-          className={compact ? 'size-8 shrink-0 p-0' : undefined}
-          disabled={!available}
-          aria-disabled={loading || !available}
-          aria-busy={loading}
-          onClick={loading ? undefined : () => void load()}
-        >
-          {sample == null ? (
-            <Play className="size-4" aria-hidden="true" />
-          ) : (
-            <RefreshCw className="size-4" aria-hidden="true" />
-          )}
-          {compact ? null : loading ? copy.loading : sample == null ? copy.preview : copy.refresh}
-        </Button>
-      </header>
+          </div>
+          {previewAction}
+        </header>
+      )}
       <CanvasModelUnresolvedInputs
         unresolvedInputs={unresolvedInputs}
         onReviewInputs={onReviewInputs}
@@ -121,7 +121,9 @@ export function CanvasModelDataPanel({
         </div>
       ) : (
         <>
-          <OperationalDrawerLivePreviewFacts provenance={sample.provenance} copy={copy} />
+          {compact ? null : (
+            <OperationalDrawerLivePreviewFacts provenance={sample.provenance} copy={copy} />
+          )}
           {compact ? null : (
             <div className="flex flex-wrap items-center gap-4 text-xs text-(--text-muted)">
               <span>
@@ -143,6 +145,32 @@ export function CanvasModelDataPanel({
             columns={sample.columns}
             rows={sample.rows}
             nullValueLabel="NULL"
+            toolbarActions={compact ? previewAction : undefined}
+            footer={
+              compact ? (
+                <>
+                  <span
+                    data-slot="data-sample-summary"
+                    className={styles.sampleSummary}
+                    title={copy.operationPreviewRecords
+                      .replace('{count}', String(sample.rows.length))
+                      .replace('{limit}', String(sample.limit))}
+                  >
+                    <span>
+                      {sample.rows.length} {copy.rows}
+                    </span>
+                    <span>
+                      {sample.columns.length} {copy.columns}
+                    </span>
+                  </span>
+                  <OperationalDrawerLivePreviewFacts
+                    provenance={sample.provenance}
+                    copy={copy}
+                    nodeName={nodeName}
+                  />
+                </>
+              ) : undefined
+            }
           />
         </>
       )}
