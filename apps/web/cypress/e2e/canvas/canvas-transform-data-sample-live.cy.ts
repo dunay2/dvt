@@ -78,6 +78,17 @@ describe('Canvas live data exploration', () => {
     cy.get('[data-slot="bottom-operational-drawer-data"]')
       .should('contain.text', 'customer')
       .and('contain.text', 'Ada');
+    cy.get('[data-slot="bottom-operational-drawer-data"]').should(
+      'not.have.descendants',
+      'header, h2'
+    );
+    cy.get('[data-slot="data-grid-toolbar"] [data-slot="data-sample-refresh"]').should(
+      'be.visible'
+    );
+    cy.get('[data-slot="data-sample-summary"]')
+      .parent()
+      .find('[data-slot="live-preview-facts"]')
+      .should('be.visible');
 
     getVisibleCanvasNode('source-1').find('[data-slot="canvas-node-execute"]').should('be.enabled');
     cy.press(Cypress.Keyboard.Keys.TAB);
