@@ -14,8 +14,6 @@ These documents are supporting analysis, not the component home.
 
 ## Current pages
 
-- [Engine class review and gap analysis 2026-03-31](./engine-class-review-and-gaps-2026-03-31.md)
-- [QA review - slice S19-F1](./audit.md)
 - [Refactor de listStaleSnapshotRunsSql con run_event_heads](./refactor-list-stale-snapshot-runs-sql.md)
 
 ## Related pages

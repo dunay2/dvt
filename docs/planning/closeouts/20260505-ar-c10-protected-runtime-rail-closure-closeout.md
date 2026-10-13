@@ -24,8 +24,8 @@ negative evidence, or compatibility posture drifts.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md`
-- `docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml`
-- `docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml`
+- [Historical source](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-CLOSURE.yaml)
+- [Historical source](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
 
 ## Closure Result
 

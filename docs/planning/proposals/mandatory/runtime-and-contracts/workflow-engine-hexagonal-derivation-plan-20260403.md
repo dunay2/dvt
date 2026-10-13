@@ -25,7 +25,7 @@ This is a **reconcile-and-replace** plan, not an additive docs layer.
 - `ADR-0034`
 - `ADR-0042`
 - `docs/guides/dvt-code-style-solid-hexagonal-cqrs.md`
-- `docs/architecture/components/engine/reviews/engine-class-review-and-gaps-2026-03-31.md`
+- [Historical source](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/architecture/components/engine/reviews/engine-class-review-and-gaps-2026-03-31.md)
 
 ## As-is findings
 
@@ -85,7 +85,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+  - https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
   - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
 allowedImplementationSurfaces:
   - apps/api/src/runtime/intentReconcilerRuntime.ts
@@ -506,7 +506,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
+  - https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md
   - docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md
 allowedImplementationSurfaces:
   - apps/api/src/application/services/WorkflowEngineFactory.ts

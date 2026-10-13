@@ -410,13 +410,12 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for semantic
 versioning:
 
 ```bash
-feat(engine): add new feature
-fix(temporal): correct bug
-docs(architecture): update documentation
+pnpm commit feat engine "Add new feature"
+pnpm commit fix temporal "Correct bug"
+pnpm commit docs docs "Update documentation"
 ```
 
-See [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for full
-guidelines.
+Use the [commit helper and format rules](AGENTS.md#git-commit-format-rule).
 
 ### Documentation Changes
 

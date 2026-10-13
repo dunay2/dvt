@@ -72,7 +72,6 @@ const HARDCUT_DOCUMENTATION_FILES = [
     'workspace',
     'workspace-port-decomposition-user-stories.md',
   ],
-  ['..', '..', 'docs', 'planning', 'reviews', '20260510-web-api-integration-gap-review.md'],
 ] as const;
 
 const PRODUCT_COMPOSITION_FILES = [
