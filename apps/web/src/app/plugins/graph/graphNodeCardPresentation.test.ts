@@ -34,6 +34,55 @@ function rendererProps(): NodeRendererProps {
 }
 
 describe('projectGraphNodeCardViewProps', () => {
+  it.each(
+    [undefined, 'input', 'output'].flatMap((columnView) =>
+      [false, true].map((writable) => ({ columnView, writable }))
+    )
+  )(
+    'projects Source fields as output for view=$columnView writable=$writable',
+    ({ columnView, writable }) => {
+      const props = rendererProps();
+      const outputToggle = writable ? vi.fn() : undefined;
+      const reorder = writable ? vi.fn() : undefined;
+      const columns = [{ id: 'order_id', name: 'order_id', type: 'integer', nullable: false }];
+      const projected = projectGraphNodeCardViewProps({
+        ...props,
+        node: { ...props.node, id: 'source-orders', kind: 'dvt:source', role: 'input' },
+        data: {
+          ...props.data,
+          columns,
+          columnView,
+          columnPortDirections: ['source'],
+          onToggleCanvasColumnOutput: outputToggle,
+          onReorderCanvasColumnOutput: reorder,
+        },
+      });
+
+      expect(projected.columnSection?.view).toBe('output');
+      expect(projected.columnSection?.inputColumns).toBeUndefined();
+      expect(projected.columnSection?.columns).toBe(columns);
+      expect(projected.columnSection?.portDirections).toEqual(['source']);
+      expect(projected.columnSection?.onColumnOutputToggle).toBe(outputToggle);
+      expect(projected.columnSection?.onColumnReorder).toBe(reorder);
+      if (outputToggle != null) expect(outputToggle).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([undefined, 'input', 'output'] as const)(
+    'preserves Model/Transform view %s and its existing authoring callback',
+    (columnView) => {
+      const props = rendererProps();
+      const outputToggle = vi.fn();
+      const projected = projectGraphNodeCardViewProps({
+        ...props,
+        data: { ...props.data, columnView, onToggleCanvasColumnOutput: outputToggle },
+      });
+      expect(projected.columnSection?.view).toBe(columnView);
+      expect(projected.columnSection?.onColumnOutputToggle).toBe(outputToggle);
+      expect(outputToggle).not.toHaveBeenCalled();
+    }
+  );
+
   it.each(['ready', 'pending', 'unavailable', 'unconfigured'] as const)(
     'preserves %s output state even when the canonical schema has no fields',
     (state) => {

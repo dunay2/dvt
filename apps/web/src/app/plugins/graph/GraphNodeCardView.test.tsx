@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent } from '@testing-library/dom';
+import { ReactFlowProvider } from '@xyflow/react';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { Database } from 'lucide-react';
@@ -73,6 +74,99 @@ describe('GraphNodeCardView', () => {
       globalThis.ResizeObserver = previousResizeObserver;
     }
   });
+
+  it.each([false, true])(
+    'renders Source schema without publication checks (writable=%s)',
+    (writable) => {
+      const onToggle = vi.fn();
+      const onDisclosure = vi.fn();
+      const onPortActivate = vi.fn();
+      const node: CanonicalNode = {
+        id: 'source-orders',
+        name: 'orders',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'success',
+        tags: [],
+      };
+      act(() =>
+        root.render(
+          <ReactFlowProvider>
+            <GraphNodeRenderer
+              node={node}
+              selected={false}
+              hovered={false}
+              overlayDecoration={null}
+              badges={[]}
+              graphNodeCardStrategies={[sharedSourceModelGraphNodeCardStrategy]}
+              data={{
+                showColumns: true,
+                columnPortDirections: ['source'],
+                onColumnPortActivate: onPortActivate,
+                onColumnDisclosureChange: onDisclosure,
+                onToggleCanvasColumnOutput: writable ? onToggle : undefined,
+                columns: [
+                  {
+                    id: 'order_id',
+                    name: 'order_id',
+                    type: 'integer',
+                    nullable: false,
+                    primaryKey: true,
+                    output: true,
+                    sourceHandleId: 'column:source:source-orders:order_id',
+                  },
+                  { id: 'customer', name: 'customer', type: 'text', nullable: true, output: false },
+                ],
+              }}
+            />
+          </ReactFlowProvider>
+        )
+      );
+      const disclosure = container.querySelector<HTMLButtonElement>(
+        '[data-slot="graph-node-column-toggle"]'
+      )!;
+      act(() => fireEvent.click(disclosure));
+      const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
+      expect(piece.textContent).toContain('order_id');
+      expect(piece.textContent).toContain('integer');
+      expect(piece.textContent).toContain('PK');
+      expect(piece.textContent).toContain('NN');
+      expect(piece.getAttribute('data-output')).toBe('true');
+      expect(piece.getAttribute('draggable')).toBe('true');
+      const unpublished = container.querySelector<HTMLElement>(
+        '[data-slot="graph-node-column-piece"][data-field-id="customer"]'
+      )!;
+      expect(unpublished.textContent).toContain('customertext');
+      expect(unpublished.getAttribute('data-output')).toBe('false');
+      expect(unpublished.getAttribute('draggable')).toBe('false');
+      expect(container.querySelector('[role="tab"]')).toBeNull();
+      expect(container.querySelector('[data-slot="graph-node-column-output-state"]')).toBeNull();
+      expect(container.querySelector('[data-slot="graph-node-column-output-check"]')).toBeNull();
+      const port = container.querySelector(
+        '[data-slot="canvas-node-port-handle"][data-port="source"]'
+      )!;
+      expect(port.getAttribute('data-handleid')).toBe('column:source:source-orders:order_id');
+      act(() => fireEvent.keyDown(port, { key: 'Enter' }));
+      expect(onPortActivate).toHaveBeenCalledWith({
+        direction: 'source',
+        nodeId: node.id,
+        columnId: 'order_id',
+      });
+      const dataTransfer = { setData: vi.fn(), effectAllowed: 'none' };
+      act(() => fireEvent.dragStart(piece, { dataTransfer }));
+      expect(dataTransfer.setData).toHaveBeenCalledWith(
+        'application/x-dvt-canvas-field',
+        JSON.stringify({ nodeId: node.id, columnId: 'order_id' })
+      );
+      act(() => fireEvent.click(disclosure));
+      expect(onDisclosure.mock.calls).toEqual([
+        [node.id, true],
+        [node.id, false],
+      ]);
+      expect(onToggle).not.toHaveBeenCalled();
+    }
+  );
 
   it('keeps execution selection and redundant node actions out of the card header', () => {
     act(() => {

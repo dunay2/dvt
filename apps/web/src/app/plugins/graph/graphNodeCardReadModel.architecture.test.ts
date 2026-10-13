@@ -9,6 +9,10 @@ const READ_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'graphNodeCardReadModel.ts'
 );
+const COLUMN_INTERACTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'graphNodeColumnInteractionProps.ts'
+);
 const REGISTRY_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../registry.ts');
 const CONTRACT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -56,6 +60,16 @@ const DBT_RUNTIME_CONTRIBUTIONS_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('Graph node card strategy architecture', () => {
+  it('projects passive Source fields at the existing role-aware read-model boundary', () => {
+    expect(READ_MODEL_SOURCE).toContain('resolveGraphNodeColumnInteractionProps');
+    expect(COLUMN_INTERACTION_SOURCE).toMatch(
+      /view:\s*args\.nodeRole === 'input'\s*\? \('output' as const\)/u
+    );
+    expect(COLUMN_INTERACTION_SOURCE).not.toContain('style:');
+    expect(COLUMN_INTERACTION_SOURCE).not.toContain('display:');
+    expect(COLUMN_INTERACTION_SOURCE).not.toContain('saveGraphDraft');
+  });
+
   it('uses one product card strategy for equivalent Source and Model roles', () => {
     expect(CONTRACT_SOURCE).toContain('export type GraphNodeCardStrategy');
     expect(CONTRACT_SOURCE).toContain('GraphNodeCardReadModel');
