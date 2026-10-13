@@ -230,10 +230,6 @@ describe('Canvas Model output toggle lifecycle', () => {
     modelColumnRow('customer')
       .find('[data-slot="graph-node-column-piece"]')
       .should('have.attr', 'data-output', 'true');
-    showCustomerType();
-    assertColumnMenuStaysOpenAndReopens();
-
-    cy.get('body').type('{esc}');
     openWorkbenchProperties('model-orders');
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="node-property-column-disclosure"]')
@@ -241,6 +237,9 @@ describe('Canvas Model output toggle lifecycle', () => {
       .and('contain.text', 'customer');
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should('contain.text', '1');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    showCustomerType();
+    assertColumnMenuStaysOpenAndReopens();
 
     revisitWorkbenchCanvas(visitCanvas);
     openModelColumns();
