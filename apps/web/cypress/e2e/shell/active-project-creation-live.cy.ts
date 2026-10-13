@@ -93,6 +93,7 @@ describe('Active project creation live vertical', () => {
         cy.get('[data-slot="shell-workspace-scope-selector"] button').contains(projectName).click();
         cy.get('[data-slot="shell-workspace-menu-trigger"]').should('contain.text', projectName);
         cy.reload();
+        cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
         cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 }).should(
           'contain.text',
           projectName

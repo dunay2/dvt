@@ -86,7 +86,8 @@ Unit evidence checks the shared class boundary, not simulated geometry. The
 existing native browser viewport proof checks actual tab/close containment at
 640 x 450, inspector/footer containment and absence of graph writes. Provider
 menu evidence must wait for the existing startup overlay to disappear before
-interacting with the shell; a mounted trigger alone does not prove route
+interacting with the shell or inspecting the route after a visit or reload;
+a mounted trigger alone does not prove route
 readiness. This is an observable precondition, not an arbitrary delay or a
 forced-click workaround.
 
