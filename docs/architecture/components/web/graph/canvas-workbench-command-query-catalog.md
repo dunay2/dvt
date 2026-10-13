@@ -622,6 +622,25 @@ Valid simple JOIN draft -> all clauses -> shared full-predicate formula
                        -> Cancel restores draft / accepted save clears draft
 ```
 
+### Controlled Inspector edit evidence
+
+Common metadata edits on an unsupported but valid canonical operation reuse the
+existing Inspector configuration and protected draft save rails. Inspection
+alone must not write or replace its stored semantic document.
+
+The browser proof verifies the initial Name, ends the clear action, re-queries
+the current input to verify it is empty, then types and re-queries to verify the
+exact new Name before Apply. Persistence assertions still require that exact
+name and the unchanged canonical semantic document. A previously observed PUT
+does not establish the outcome of a later edit.
+
+This observable sequence prevents a concatenated name from being misdiagnosed
+as an absent save. It does not attribute the internal cause to hydration or
+change product behavior. No direct DOM value injection, forced interaction,
+fixed delay, timeout increase or weakened persistence assertion is permitted.
+If an edit transition fails, diagnose it at that transition rather than retrying
+the action until green.
+
 Every externally observable Canvas workbench behavior must map to one rail in
 this catalog before implementation. This includes route entries, toolbar
 commands, plugin view placements, layout-preference controls, contextual graph
