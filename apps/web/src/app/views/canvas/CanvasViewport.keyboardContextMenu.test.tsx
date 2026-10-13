@@ -47,6 +47,103 @@ describe('CanvasViewport keyboard context menu', () => {
     );
   }
 
+  async function openFromPointer(target: Element): Promise<MouseEvent> {
+    const event = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      button: 2,
+      clientX: 320,
+      clientY: 260,
+    });
+    await act(async () => {
+      target.dispatchEvent(event);
+    });
+    return event;
+  }
+
+  it.each(['viewport', 'overlay'] as const)(
+    'opens and cancels native context from the full %s boundary, including after close',
+    async (targetKind) => {
+      const onNodesChange = vi.fn();
+      const onEdgesChange = vi.fn();
+      await renderViewport({
+        authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+        onNodesChange,
+        onEdgesChange,
+      });
+      const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]')!;
+      const target = targetKind === 'viewport' ? viewport : document.createElement('div');
+      if (target !== viewport) viewport.append(target);
+      expect(menuItems()).toHaveLength(0);
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const event = await openFromPointer(target);
+        expect(event.defaultPrevented).toBe(true);
+        expect(menuItems()).not.toHaveLength(0);
+        expect(document.querySelectorAll('[data-slot="canvas-context-menu"]')).toHaveLength(1);
+        await act(async () => {
+          fireEvent.keyDown(document, { key: 'Escape' });
+        });
+        expect(menuItems()).toHaveLength(0);
+      }
+      expect(xyflowState.screenToFlowPosition).toHaveBeenCalledTimes(2);
+      expect(onNodesChange).not.toHaveBeenCalled();
+      expect(onEdgesChange).not.toHaveBeenCalled();
+    }
+  );
+
+  it('cancels the native menu on the real filter control without opening background actions', async () => {
+    await renderViewport({ authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')] });
+    const filter = container.querySelector<HTMLButtonElement>('button[aria-label="Filter graph"]')!;
+    expect(filter).not.toBeNull();
+    const event = await openFromPointer(filter);
+    expect(event.defaultPrevented).toBe(true);
+    expect(menuItems()).toHaveLength(0);
+    expect(xyflowState.screenToFlowPosition).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['input', 'input', null, null],
+    ['textarea', 'textarea', null, null],
+    ['editable', 'div', 'contenteditable', 'true'],
+    ['search', 'section', 'data-slot', 'canvas-graph-search-control'],
+    ['filter', 'section', 'data-slot', 'canvas-graph-filter-control'],
+    ['health', 'aside', 'data-slot', 'graph-node-health-popover'],
+    ['menu', 'div', 'role', 'menu'],
+    ['dialog', 'div', 'role', 'dialog'],
+  ] as const)(
+    'does not treat a %s overlay as graph background',
+    async (_, tag, attribute, value) => {
+      await renderViewport({ authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')] });
+      const target = document.createElement(tag);
+      if (attribute != null) target.setAttribute(attribute, value!);
+      container.querySelector('[data-testid="canvas-viewport"]')!.append(target);
+      const event = await openFromPointer(target);
+      expect(event.defaultPrevented).toBe(true);
+      expect(menuItems()).toHaveLength(0);
+      expect(xyflowState.screenToFlowPosition).not.toHaveBeenCalled();
+    }
+  );
+
+  it('opens inspect-only background actions without mutation in read-only posture', async () => {
+    const onNodesChange = vi.fn();
+    const onEdgesChange = vi.fn();
+    await renderViewport({
+      canEditEdges: false,
+      canOpenCanvasSettings: true,
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      onNodesChange,
+      onEdgesChange,
+    });
+    const event = await openFromPointer(
+      container.querySelector('[data-testid="canvas-viewport"]')!
+    );
+    expect(event.defaultPrevented).toBe(true);
+    expect(menuItems().map((item) => item.textContent)).toEqual(['Canvas properties']);
+    expect(onNodesChange).not.toHaveBeenCalled();
+    expect(onEdgesChange).not.toHaveBeenCalled();
+  });
+
   async function openFromKeyboard(key: 'ContextMenu' | 'F10' = 'F10'): Promise<void> {
     const surface = contextSurface();
     Object.defineProperty(surface, 'getBoundingClientRect', {

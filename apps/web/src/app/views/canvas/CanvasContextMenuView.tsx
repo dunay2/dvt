@@ -1,4 +1,9 @@
-/** Owned concern: render the Canvas contextual surfaces without owning interaction decisions. */
+/** Owned concern: render the Canvas contextual surfaces without owning interaction decisions.
+ * @baseline GH-3629: cancellation and menu opening must share the rendered viewport boundary.
+ * @decision Use the actual graph viewport as the existing primitive trigger child.
+ * @consequence The viewport retains flex sizing without an extra layout wrapper or parallel menu.
+ * @version 1.1.0
+ */
 import type { ReactElement, RefObject } from 'react';
 
 import {
@@ -118,10 +123,8 @@ export function CanvasContextMenuView({
           }
         }}
       >
-        <ContextMenuTrigger asChild>
-          <div data-slot="canvas-context-menu-trigger" className="h-full w-full">
-            {children}
-          </div>
+        <ContextMenuTrigger asChild data-slot="canvas-context-menu-trigger">
+          {children}
         </ContextMenuTrigger>
 
         {commandSurfaceOpen && !keyboardMenuOpen ? (

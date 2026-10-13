@@ -313,6 +313,26 @@ closing without selection performs no command. Pointer and keyboard entries keep
 the same action owner. Neither entry may repair a leaked modal lock by rewriting
 global pointer styles or disabling modal behavior.
 
+### Canvas context-menu event ownership
+
+Issue [#3629](https://github.com/dunay2/dvt/issues/3629) refines the existing
+`ResolveCanvasContextMenu` query and shared Radix trigger over the actual graph
+viewport, including its frame and sibling overlays. Background targets open one
+application menu. Nodes, edges and fields retain their specific menu owners;
+controls do not become background command targets.
+
+An accepted menu cancels the native browser default when its existing trigger
+opens. Excluded controls and nested fields without menu identity cancel that
+default without opening background actions or performing a mutation. Do not
+blanket-call `preventDefault` in capture before Radix handles an accepted target,
+intercept `document` globally, or add a second pane route for the same intent.
+
+Evidence starts with the application menu closed and dispatches a real cancelable
+context event. It asserts both the single rendered application menu and
+`defaultPrevented`, including close and reopen; default cancellation alone does
+not prove that the intended menu opened. Inspection and menu opening dispatch no
+command until an admitted action is selected.
+
 ## Retired Rail Disposition
 
 `ResolveLegacyCanvasRouteIntent` is retired by RED1.3. It previously translated

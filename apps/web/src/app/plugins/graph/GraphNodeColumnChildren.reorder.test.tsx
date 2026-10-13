@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
+import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
 
 describe('GraphNodeColumnChildren reorder', () => {
   let container: HTMLDivElement;
@@ -28,6 +29,85 @@ describe('GraphNodeColumnChildren reorder', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+  });
+
+  it.each(['node', 'parent', 'field'] as const)(
+    'cancels native context defaults for a nested field without %s menu identity',
+    async (missingIdentity) => {
+      const onAncestorContextMenu = vi.fn();
+      const onColumnReorder = vi.fn();
+      await act(async () => {
+        root.render(
+          <div onContextMenu={onAncestorContextMenu}>
+            <GraphNodeColumnChildren
+              nodeId={missingIdentity === 'node' ? undefined : 'transform-orders'}
+              parentColumnId={missingIdentity === 'parent' ? undefined : 'output:identity'}
+              children={[
+                {
+                  id: missingIdentity === 'field' ? undefined : 'output:customer',
+                  name: 'customer',
+                  type: 'text',
+                },
+              ]}
+              onColumnReorder={onColumnReorder}
+            />
+          </div>
+        );
+      });
+      const nested = container.querySelector<HTMLElement>(
+        '[data-slot="graph-node-nested-column"]'
+      )!;
+      const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+      await act(async () => {
+        fireEvent(nested, event);
+      });
+
+      expect(event.defaultPrevented).toBe(true);
+      expect(onAncestorContextMenu).not.toHaveBeenCalled();
+      expect(document.querySelector('[data-slot="graph-node-nested-column-menu"]')).toBeNull();
+      expect(onColumnReorder).not.toHaveBeenCalled();
+    }
+  );
+
+  it('preserves the nested field menu without dispatching a command before an action is chosen', async () => {
+    const onAncestorContextMenu = vi.fn();
+    const onColumnReorder = vi.fn();
+    await act(async () => {
+      root.render(
+        <div onContextMenu={onAncestorContextMenu}>
+          <GraphNodeColumnChildren
+            nodeId="transform-orders"
+            parentColumnId="output:identity"
+            children={[
+              { id: 'output:order_id', name: 'order_id', type: 'integer' },
+              { id: 'output:customer', name: 'customer', type: 'text' },
+            ]}
+            onColumnReorder={onColumnReorder}
+          />
+        </div>
+      );
+    });
+    const nested = container.querySelector<HTMLElement>('[data-field-id="output:customer"]')!;
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    await act(async () => {
+      fireEvent(nested, event);
+    });
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(onAncestorContextMenu).not.toHaveBeenCalled();
+    expect(document.querySelector('[data-slot="graph-node-nested-column-menu"]')).not.toBeNull();
+    expect(onColumnReorder).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(document.querySelector('[data-slot="nested-column-move-up"]')!);
+    });
+    expect(onColumnReorder).toHaveBeenCalledExactlyOnceWith({
+      nodeId: 'transform-orders',
+      parentColumnId: 'output:identity',
+      columnId: 'output:customer',
+      targetColumnId: 'output:order_id',
+      placement: 'before',
+    });
   });
 
   it('moves a nested field with the accessible keyboard path', async () => {

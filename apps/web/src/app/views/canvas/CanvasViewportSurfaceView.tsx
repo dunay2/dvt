@@ -1,4 +1,9 @@
-/** Owned concern: render the Canvas React Flow surface from an already-resolved viewport model. */
+/** Owned concern: render the Canvas React Flow surface from an already-resolved viewport model.
+ * @baseline GH-3629: the graph viewport frame and sibling overlays share one context boundary.
+ * @decision Capture on the actual viewport while the shared primitive owns opening and cancellation.
+ * @consequence Background menus cover the rendered surface; keyboard and specific owners remain intact.
+ * @version 1.1.0
+ */
 import {
   Controls,
   MiniMap,
@@ -209,7 +214,6 @@ function CanvasViewportReactFlowSurface({
       aria-label={contextSurfaceLabel}
       tabIndex={0}
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
-      onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
       onFocusCapture={(event) => {
         onImpactFocusNodeChange?.(
           event.target instanceof Element
@@ -300,22 +304,23 @@ export function CanvasViewportSurfaceView({
   ...reactFlowSurfaceProps
 }: CanvasViewportSurfaceViewProps): JSX.Element {
   return (
-    <div
-      ref={viewportRef}
-      data-testid="canvas-viewport"
-      data-canvas-palette={resolvedCanvasPalette}
-      className="relative flex-1 overflow-hidden"
+    <CanvasContextMenuView
+      ariaLabel={contextMenuLabel}
+      model={contextMenuPresenter.model}
+      keyboardMenuOpen={contextMenuPresenter.keyboardMenuOpen}
+      menuRef={contextMenuPresenter.menuRef}
+      onClose={() => contextMenuPresenter.closeContextMenu({ preserveCatalog: true })}
+      onCatalogClose={contextMenuPresenter.closeContextMenu}
+      onCanvasAction={contextMenuPresenter.handleCanvasAction}
+      onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
+      onEdgeAction={contextMenuPresenter.handleEdgeAction}
     >
-      <CanvasContextMenuView
-        ariaLabel={contextMenuLabel}
-        model={contextMenuPresenter.model}
-        keyboardMenuOpen={contextMenuPresenter.keyboardMenuOpen}
-        menuRef={contextMenuPresenter.menuRef}
-        onClose={() => contextMenuPresenter.closeContextMenu({ preserveCatalog: true })}
-        onCatalogClose={contextMenuPresenter.closeContextMenu}
-        onCanvasAction={contextMenuPresenter.handleCanvasAction}
-        onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
-        onEdgeAction={contextMenuPresenter.handleEdgeAction}
+      <div
+        ref={viewportRef}
+        data-testid="canvas-viewport"
+        data-canvas-palette={resolvedCanvasPalette}
+        className="relative flex-1 overflow-hidden"
+        onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
       >
         <CanvasViewportReactFlowSurface
           {...reactFlowSurfaceProps}
@@ -325,37 +330,37 @@ export function CanvasViewportSurfaceView({
           graphSearchController={graphSearchController}
           copy={copy}
         />
-      </CanvasContextMenuView>
-      <CanvasGraphSearchControl
-        model={graphSearchController.model}
-        copy={copy}
-        onQueryChange={graphSearchController.setQuery}
-        onPrevious={graphSearchController.showPrevious}
-        onNext={graphSearchController.showNext}
-        onClose={graphSearchController.close}
-        onKeyDown={graphSearchController.onControlKeyDown}
-        onQueryKeyDown={graphSearchController.onQueryKeyDown}
-      />
-      <CanvasGraphFilterControl
-        model={graphFilterController.model}
-        copy={copy}
-        onOpenChange={graphFilterController.setOpen}
-        onSelectDimension={graphFilterController.selectDimension}
-        onSelectValue={graphFilterController.selectValue}
-        onAddPredicate={graphFilterController.addDraftPredicate}
-        onRemovePredicate={graphFilterController.removePredicate}
-        onSetComposition={graphFilterController.setComposition}
-        onSetPresentation={graphFilterController.setPresentation}
-        onClear={graphFilterController.clear}
-      />
-      {nodeHealthPopoverModel == null ? null : (
-        <GraphNodeHealthPopoverView
-          detail={nodeHealthPopoverModel.detail}
-          position={nodeHealthPopoverModel.position}
-          onClose={() => onCloseNodeHealthPopover(true)}
+        <CanvasGraphSearchControl
+          model={graphSearchController.model}
+          copy={copy}
+          onQueryChange={graphSearchController.setQuery}
+          onPrevious={graphSearchController.showPrevious}
+          onNext={graphSearchController.showNext}
+          onClose={graphSearchController.close}
+          onKeyDown={graphSearchController.onControlKeyDown}
+          onQueryKeyDown={graphSearchController.onQueryKeyDown}
         />
-      )}
-    </div>
+        <CanvasGraphFilterControl
+          model={graphFilterController.model}
+          copy={copy}
+          onOpenChange={graphFilterController.setOpen}
+          onSelectDimension={graphFilterController.selectDimension}
+          onSelectValue={graphFilterController.selectValue}
+          onAddPredicate={graphFilterController.addDraftPredicate}
+          onRemovePredicate={graphFilterController.removePredicate}
+          onSetComposition={graphFilterController.setComposition}
+          onSetPresentation={graphFilterController.setPresentation}
+          onClear={graphFilterController.clear}
+        />
+        {nodeHealthPopoverModel == null ? null : (
+          <GraphNodeHealthPopoverView
+            detail={nodeHealthPopoverModel.detail}
+            position={nodeHealthPopoverModel.position}
+            onClose={() => onCloseNodeHealthPopover(true)}
+          />
+        )}
+      </div>
+    </CanvasContextMenuView>
   );
 }
 

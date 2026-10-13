@@ -1,4 +1,10 @@
-/** Owned concern: render and reorder nested field members inside one structured column piece. */
+/**
+ * Owned concern: render and reorder nested field members with their own context-menu boundary.
+ * @baseline GH-3629: stopping propagation alone leaves the browser context default uncancelled.
+ * @decision Cancel that default only without a field menu; let the existing Radix trigger own it otherwise.
+ * @consequence Nested inspection cannot leak a native menu or trigger a parent command.
+ * @version 1.1.0
+ */
 import { GripVertical } from 'lucide-react';
 import { useState, type DragEvent, type KeyboardEvent, type ReactElement } from 'react';
 
@@ -115,7 +121,10 @@ export function GraphNodeColumnChildren(props: {
             draggable={canReorder && child.id != null}
             tabIndex={0}
             className="relative flex min-w-0 items-center gap-1 rounded px-1 text-[11px] data-[drop-placement=after]:border-b-2 data-[drop-placement=before]:border-t-2 data-[drop-placement]:border-blue-400"
-            onContextMenu={(event) => event.stopPropagation()}
+            onContextMenu={(event) => {
+              event.stopPropagation();
+              if (menuModel == null) event.preventDefault();
+            }}
             onDragStart={(event) => {
               if (child.id == null) return;
               event.stopPropagation();

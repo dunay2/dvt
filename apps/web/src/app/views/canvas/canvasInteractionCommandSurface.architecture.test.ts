@@ -225,4 +225,16 @@ describe('Canvas interaction command surface architecture', () => {
       expect(source, cypressSourcePath).not.toMatch(/\.trigger\(\s*['"]contextmenu/);
     }
   });
+
+  it('keeps one app-owned context boundary around the complete graph viewport', () => {
+    const surface = readAppSource('views/canvas/CanvasViewportSurfaceView.tsx');
+    const policy = readAppSource('views/canvas/canvasContextMenuTargetPolicy.ts');
+    expect(surface.match(/onContextMenuCapture=/g)).toHaveLength(1);
+    expect(surface).toMatch(
+      /<CanvasContextMenuView[\s\S]*?<div\s+ref=\{viewportRef\}[^>]*onContextMenuCapture=\{contextMenuPresenter\.handleViewportContextMenu\}/
+    );
+    for (const source of [surface, policy]) {
+      expect(source).not.toMatch(/(?:document|window)\.addEventListener\(\s*['"]contextmenu/);
+    }
+  });
 });
