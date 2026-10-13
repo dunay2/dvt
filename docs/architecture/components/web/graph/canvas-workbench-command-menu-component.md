@@ -2,7 +2,7 @@
 title: Canvas Workbench Command Menu Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-10-12
+last_reviewed: 2026-10-13
 ---
 
 # Canvas Workbench Command Menu Component
@@ -38,7 +38,10 @@ Canvas handlers still execute project import, files/code and snapshots.
 - Disabled or missing handlers cannot dispatch through menu selection.
 - Pointer and keyboard share Radix selection semantics, not raw click callbacks.
 - Snapshot selection retains its input until the native chooser produces a
-  change; cancellation does not import, and the same file can be selected again.
+  file; an empty selection does not import or close File. A non-empty selection
+  captures the file and clears the input before requesting menu close and
+  dispatching the existing import handler. Radix restores focus to File; reopening
+  the menu permits the same file to be selected again.
 - Project creation reuses its existing dialog and port; it does not require a
   Canvas contribution.
 - Code/explorer return focus to File. Granted-scope recovery remains Project.
@@ -71,6 +74,25 @@ flowchart LR
 
 ## Command And Query Rails
 
+### Native Snapshot Selection Lifecycle
+
+The retained receiver previously dispatched import without closing the controlled
+File menu. Review of [PR-3627](https://github.com/dunay2/dvt/pull/3627) identified
+that incomplete presentation transition. Selection now notifies `ShellFileMenu`
+through a specific callback passed by its passive template. The controller owns
+menu closure; the Canvas contribution retains import admission and dispatch.
+Unlike Code and New Project, snapshot import does not transfer focus to another
+editor or dialog, so the normal Radix close autofocus remains enabled.
+
+```mermaid
+flowchart LR
+  Picker[Native picker; menu and receiver retained] --> Choice{File selected?}
+  Choice -->|No| Retain[No import; retain receiver]
+  Choice -->|Yes| Capture[Capture File and clear input]
+  Capture --> Close[Controller closes File; Radix restores trigger focus]
+  Close --> Import[Existing ImportProjectSnapshot handler]
+```
+
 The presentation reuses `ResolveCanvasProjectSnapshotActions`,
 `ImportProjectSnapshot`, `ExportProjectSnapshot`, `ImportDbtProject` and the
 existing workspace-file/code queries. Their capability and authorization
@@ -101,5 +123,7 @@ Project scope selection remains `SelectWorkspaceScope` in Project.
 - Reintroducing file commands or global navigation into Project or View.
 - Changing granted scope through File or hiding the existing recovery path.
 - Closing the native snapshot receiver before a selected file reaches it.
+- Leaving File open after a non-empty snapshot selection or suppressing its
+  normal focus return when no other surface receives focus.
 - Bypassing pending-edit guards or contribution capabilities.
 - Claiming implementation of Insert or other absent shell capabilities.
