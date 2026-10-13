@@ -18,7 +18,7 @@ mitigation:
     unavailable PostgreSQL conformance without treating mapping as runtime readiness.
   evidence:
     - docs/evidence/ED-20260903-vtx2-standard-first-capability-admission.md
-    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-standard-first-capability-admission-plan-20260903.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-standard-first-capability-admission-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
     - docs/evidence/ed-20260930-explicit-capability-admission.md

@@ -18,4 +18,4 @@ mitigations:
 
 evidence:
   - docs/evidence/ED-20260903-source-filter-capability-admission.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/canvas-source-semantic-operations-plan-20260903.md
+  - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-source-semantic-operations-plan-20260903.md

@@ -16,45 +16,21 @@ function readRepoDoc(relativePathFromRepo: string): string {
 }
 
 describe('Diff Monaco review surface architecture', () => {
-  it('documents the component API, invariants, transitions, consumers, and stories', () => {
+  it('keeps internal viewers under the current shared Monaco boundary', () => {
     const componentGuide = readRepoDoc(
-      'docs/architecture/components/web/diff/diff-monaco-review-surface-component.md'
-    );
-    const userStories = readRepoDoc(
-      'docs/architecture/components/web/diff/diff-monaco-review-surface-user-stories.md'
+      'docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md'
     );
 
-    for (const requiredSection of [
+    for (const requiredSignal of [
       '## Public API',
       '## Invariants',
-      '## Transitions',
       '## Consumers',
-      '## Component Diagram',
-      '```mermaid',
+      'Internal comparison',
       'MonacoDiffViewer',
-      'MonacoDiffSurface',
-      'SqlDiffPanel',
-      'CatalogDiffPanel',
-      'DiffReviewSurfaceReadModel',
-      'read-only',
-      'diff-only',
-      'GetWorkspaceDiffChanges',
-      'GetWorkspaceFileContent',
+      'Read-only comparison',
+      'Consumer modules use lazy gateways',
     ]) {
-      expect(componentGuide).toContain(requiredSection);
-    }
-
-    for (const requiredStory of [
-      'US-F17B-001',
-      'US-F17B-002',
-      'US-F17B-003',
-      'US-F17B-004',
-      'US-F17B-005',
-      '## Scenario Matrix',
-      'read-only',
-      'diff-only',
-    ]) {
-      expect(userStories).toContain(requiredStory);
+      expect(componentGuide).toContain(requiredSignal);
     }
   });
 

@@ -36,7 +36,7 @@ and tests before implementation.
 - `docs/architecture/components/web/appshell/shell-workspace-context-component.md`
 - `docs/architecture/components/web/templates/execution-template-source-generation-component.md`
 - `docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md`
+- [Historical f21-execution-template-source-generation-workbench-plan-20260522.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/artifacts-workspace-project-files-plan-20260524.md`
 - Planning DB tasks `E-SHELL-TOP-MENU-RATIONALIZATION-1` and
   `E-TEMPLATES-ARTIFACT-GRAPH-FLOW-1`

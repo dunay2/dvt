@@ -24,7 +24,7 @@ Fowler review prose from becoming a hidden backlog.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/frontend-fowler-implementation-pattern.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
-- `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
+- `docs/architecture/components/web/appshell/canvas-workbench-screen-composition-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 - `docs/planning/state/github-mvp-issue-workflow.md`

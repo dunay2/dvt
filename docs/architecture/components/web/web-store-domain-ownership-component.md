@@ -15,14 +15,13 @@ Use this guide with:
 
 - [Local component guide](./web-store-domain-ownership-local-guide.md)
 - [User stories](./web-store-domain-ownership-user-stories.md)
-- [Fowler analysis mailbox](../../../../buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md)
+- [Fowler analysis mailbox](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md)
 - [F-05 closure plan](../../../planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md)
 
 Canonical local paths:
 
 - `docs/architecture/components/web/web-store-domain-ownership-local-guide.md`
 - `docs/architecture/components/web/web-store-domain-ownership-user-stories.md`
-- `buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md`
 
 ## Local Guide Boundary
 

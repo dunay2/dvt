@@ -22,7 +22,7 @@ and diagnostics that name the first missing or non-function role member.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/proposals/mandatory/runtime-and-contracts/s18-f1-a-state-store-role-boundary-plan-20260513.md`
+- [Historical s18-f1-a-state-store-role-boundary-plan-20260513.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/s18-f1-a-state-store-role-boundary-plan-20260513.md)
 - [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md)
 - `docs/planning/proposals/mandatory/runtime-and-contracts/s18-f1-b-state-store-role-regression-guards-plan-20260514.md`
 - `docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md`
@@ -81,7 +81,7 @@ componentGuides:
   - docs/architecture/components/api/state-store-role-boundary-component.md
 userStories:
   - docs/planning/closeouts/20260324-s18-explicit-state-store-root-bindings-closeout.md
-  - docs/planning/proposals/mandatory/runtime-and-contracts/s18-f1-a-state-store-role-boundary-plan-20260513.md
+  - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/s18-f1-a-state-store-role-boundary-plan-20260513.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md

@@ -15,7 +15,7 @@ Use this guide with:
 
 - [Web Store Domain Ownership Component](./web-store-domain-ownership-component.md)
 - [Web Store Domain Ownership User Stories](./web-store-domain-ownership-user-stories.md)
-- [Fowler analysis mailbox](../../../../buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md)
+- [Fowler analysis mailbox](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md)
 
 ## Public API
 

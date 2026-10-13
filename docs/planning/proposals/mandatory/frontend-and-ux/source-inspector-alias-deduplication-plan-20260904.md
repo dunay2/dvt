@@ -106,8 +106,8 @@ mechanizationStatus: closed
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-alias-deduplication-plan-20260904.md
 componentGuides:
-  - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-properties-authoring-roundtrip-plan-20260812.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/canvas-inspector-plugin-authoring-fields-plan-20260604.md
+  - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
+  - docs/architecture/components/web/graph/canvas-inspector-authoring-component.md
 userStories:
   - https://github.com/dunay2/dvt/issues/2908
 governingSources:

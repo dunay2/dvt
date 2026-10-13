@@ -933,7 +933,6 @@ Suggested related internal docs:
 - `docs/architecture/components/web/artifacts/front-artifacts.md`
 - `docs/architecture/components/web/lineage/dvt-frontend-lineage.md`
 - `docs/architecture/components/web/observability/front-observability-architecture-dvt.md`
-- `docs/architecture/components/web/git/git-mode-architecture.md`
 
 ---
 

@@ -36,9 +36,6 @@ describe('Canvas interaction command surface architecture', () => {
     const commandQueryCatalog = readRepoFile(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
     );
-    const workflowPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/e-canvas-workflow-e2e-usability-plan-20260601.md'
-    );
 
     for (const requiredSection of [
       '## Public API',
@@ -76,9 +73,7 @@ describe('Canvas interaction command surface architecture', () => {
       'canvasInteractionCommandSurface.architecture.test.ts',
       'CanvasContextMenuModel',
     ]) {
-      expect(`${componentGuide}\n${userStories}\n${workflowPlan}`).toContain(
-        requiredCanonicalSignal
-      );
+      expect(`${componentGuide}\n${userStories}`).toContain(requiredCanonicalSignal);
     }
 
     for (const requiredRail of [

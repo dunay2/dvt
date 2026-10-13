@@ -22,7 +22,7 @@ of treating every alias as baseUrl cleanup.
   the baseUrl retirement posture and local documentation contract.
 - `docs/architecture/typescript-package-classification.md`: canonical lane
   model for Bundler, NodeNext, runtime-sensitive package, and web aliases.
-- `docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md`:
+- [Historical cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md):
   accepted staged plan for CFG-TS-T1.
 - `pnpm test:ci-tools`: local test surface that runs the CI policy guard.
 
