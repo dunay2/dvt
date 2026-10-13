@@ -16,6 +16,10 @@ import {
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import {
+  readCanvasProducerInputRecovery,
+  type CanvasMissingProducerField,
+} from './canvasProducerInputRecovery';
 import type {
   CanvasRelationalTreeInput,
   CanvasRelationalTreeProjectionResult,
@@ -41,6 +45,7 @@ export type CanvasRelationalAnalysis = Readonly<{
     publication?: ReadonlyMap<string, RelationPublication>;
   }> | null;
   failure: Failure | null;
+  missingProducerFields?: readonly CanvasMissingProducerField[];
 }>;
 
 export function canvasSourceReferenceKey(ref: ConnectedSourceRef): string {
@@ -152,17 +157,28 @@ export function analyzeCanvasRelations(
         continue;
       producers.set(node.id, node);
     }
-    if (inputs.length !== connectedInputCount)
+    const recovery = readCanvasProducerInputRecovery(args);
+    const recoverableProducers = new Set(recovery?.missing.map((field) => field.producerNodeId));
+    if (
+      inputs.length !== connectedInputCount &&
+      [...incomingIds].some(
+        (id) => !inputs.some((input) => input.nodeId === id) && !recoverableProducers.has(id)
+      )
+    )
       return { ...base, failure: 'input-identity-unavailable' };
     const authority = readDvtTransformAuthoringAuthority(args.node);
     if (authority == null) return { ...base, failure: 'missing-semantic-authority' };
-    const document = resolveCanvasProducerDocument(args.node, args.nodes)!;
+    const document = recovery?.document ?? resolveCanvasProducerDocument(args.node, args.nodes)!;
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) return { ...base, failure: 'invalid-semantic-authority' };
-    const denied = resolveUnmappedCanvasReadFields({ ...args, nodeId: args.node.id, document });
+    const denied = new Set([
+      ...resolveUnmappedCanvasReadFields({ ...args, nodeId: args.node.id, document }),
+      ...(recovery?.denied ?? []),
+    ]);
     return {
       ...base,
       failure: null,
+      ...(recovery == null ? {} : { missingProducerFields: recovery.missing }),
       connectedModelRelationIds: [...indexed.index.relations.values()]
         .filter((entry) => entry.binding.producerRef != null)
         .map((entry) => entry.binding.relationId),

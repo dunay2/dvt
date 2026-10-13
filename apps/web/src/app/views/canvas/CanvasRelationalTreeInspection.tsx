@@ -14,6 +14,15 @@ export function CanvasRelationalTreeInspection(
       data-slot="canvas-relational-tree-inspection"
       className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden"
     >
+      {model.unavailableMessage != null && (
+        <p
+          role="status"
+          data-slot="canvas-producer-input-recovery"
+          className="m-0 border-b border-(--border-default) px-3 py-2 text-xs text-(--status-warning)"
+        >
+          {model.unavailableMessage}
+        </p>
+      )}
       <CanvasRelationalTreeOperationShelf
         copy={copy}
         editable={model.authoringAvailable}

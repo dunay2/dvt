@@ -121,15 +121,18 @@ export function useCanvasRelationalTreeWorkbenchModel(
     session.staged.operations,
     selectedLocator,
   ]);
-  const unavailableMessage = session.restorationUnavailable
-    ? args.copy.relationalTreeInputIdentityUnavailableMessage
-    : result.ok
-      ? null
-      : result.failure.code === 'invalid-semantic-authority'
-        ? args.copy.relationalTreeInvalidMessage
-        : result.failure.code === 'input-identity-unavailable'
-          ? args.copy.relationalTreeInputIdentityUnavailableMessage
-          : args.copy.relationalTreeUnavailableMessage;
+  const unavailableMessage =
+    (analysis.missingProducerFields?.length ?? 0) > 0
+      ? args.copy.relationalTreeProducerFieldsUnavailableMessage
+      : session.restorationUnavailable
+        ? args.copy.relationalTreeInputIdentityUnavailableMessage
+        : result.ok
+          ? null
+          : result.failure.code === 'invalid-semantic-authority'
+            ? args.copy.relationalTreeInvalidMessage
+            : result.failure.code === 'input-identity-unavailable'
+              ? args.copy.relationalTreeInputIdentityUnavailableMessage
+              : args.copy.relationalTreeUnavailableMessage;
   const selectCatalogueItem = (item: CanvasRelationalTreeCatalogueItem): void => {
     if (!session.active && projection != null && item.treeLocator != null)
       selectTreeNode(item.treeLocator);

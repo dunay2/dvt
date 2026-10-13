@@ -5,8 +5,25 @@ import { projectCanvasRelationalComposition } from './canvasRelationalCompositio
 import { projectAnalyzedCanvasRelationalTree } from './canvasRelationalTreeProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  createModelOutputDependencyFixture,
+  selectModelDependencyOutputs,
+} from './canvasModelOutputDependency.test-support';
 
 describe('shared Canvas relational analysis', () => {
+  it('inspects the retained consumer tree when its producer removed a required field', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);
+    const analysis = analyzeCanvasRelations({
+      node: graph.consumer,
+      nodes: graph.nodes.map((node) => (node.id === producer.id ? producer : node)),
+      edges: graph.edges,
+    });
+    expect(analysis.failure).toBeNull();
+    expect(analysis.semantic?.document).toEqual(graph.consumerDocument);
+    expect(projectAnalyzedCanvasRelationalTree(analysis).ok).toBe(true);
+    expect(projectCanvasRelationalComposition(analysis)?.state).toBe('incomplete');
+  });
   it('preserves the existing graph-order resolution of a physical dependency', () => {
     const graph = occurrenceGraph();
     const duplicate = { ...graph.source, id: 'another-source-card' };

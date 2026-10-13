@@ -20,6 +20,10 @@ import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilitie
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { createProducerInput } from '@dvt/substrait-analysis';
 import { createSourceDocument } from './canvasSourceDocument';
+import {
+  createModelOutputDependencyFixture,
+  selectModelDependencyOutputs,
+} from './canvasModelOutputDependency.test-support';
 
 const SOURCE_REF: ConnectedSourceRef = {
   schemaVersion: 'connected-source-ref.v1',
@@ -96,6 +100,23 @@ function buildCanonicalTransform(): CanonicalNode {
 }
 
 describe('projectCanvasNodePresentationTruth', () => {
+  it('retains unresolved implicit Input slots while an affected model Output stays unavailable', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);
+    const truth = await projectCanvasNodePresentationTruth({
+      node: graph.consumer,
+      nodes: graph.nodes.map((node) => (node.id === producer.id ? producer : node)),
+      edges: graph.edges,
+    });
+    expect(truth.columns.state).toBe('unavailable');
+    expect(truth.relationalComposition?.state).toBe('incomplete');
+    expect(
+      truth.inputBindings
+        ?.filter((input) => input.state === 'unresolved')
+        .map((input) => input.name)
+        .sort()
+    ).toEqual(['amount', 'order_id']);
+  });
   it('publishes an imported Source default selection as explicitly ready', async () => {
     const truth = await projectCanvasNodePresentationTruth({
       node: SOURCE,

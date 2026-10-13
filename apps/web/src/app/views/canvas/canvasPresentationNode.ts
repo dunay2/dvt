@@ -10,7 +10,12 @@ import {
 } from './canvasNodePresentationBase';
 import { canvasColumnTruth, projectSourceSelection } from './canvasPresentationColumns';
 import { presentCanvasSubstraitFields } from './canvasSubstraitFieldPresentation';
-import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
+import {
+  projectCanvasRelationalComposition,
+  resolveCanvasRelationalCompositionTruth,
+} from './canvasRelationalCompositionTruth';
+import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { resolveCanvasPresentationInputs } from './canvasPresentationInputs';
 import type { CanonicalNode } from '../../types/canonical';
@@ -60,14 +65,19 @@ export async function projectCanvasPresentationNode(
       }));
   });
   signal?.throwIfAborted();
-  const composition = resolveCanvasRelationalCompositionTruth(args);
   const nativeModel =
     args.node.pluginId === 'dvt' &&
     args.node.kind === 'dvt:transform' &&
     !isDbtCompatibleModel(args.node);
+  const structural = nativeModel ? analyzeCanvasRelations(args) : null;
+  const composition =
+    structural == null
+      ? resolveCanvasRelationalCompositionTruth(args)
+      : projectCanvasRelationalComposition(structural);
   const inputBindings = nativeModel
     ? projectCanvasInputBindings({
         targetNodeId: args.node.id,
+        retainedSidecar: structural?.semantic?.document.sidecar,
         edges: args.edges,
         producers: new Map(
           inputs.map((producer) => [
@@ -92,6 +102,16 @@ export async function projectCanvasPresentationNode(
     ...(inputBindings == null ? {} : { inputBindings }),
     ...(composition == null ? {} : { relationalComposition: composition }),
   };
+  if ((structural?.missingProducerFields?.length ?? 0) > 0)
+    return {
+      ...truth,
+      code: { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' },
+      columns: {
+        ...canvasColumnTruth([], inherited, []),
+        state: 'unavailable',
+        diagnostic: resolveCanvasViewCopy().relationalTreeProducerFieldsUnavailableMessage,
+      },
+    };
   const semanticNode =
     nativeModel ||
     (args.node.kind === 'dvt:source' &&
