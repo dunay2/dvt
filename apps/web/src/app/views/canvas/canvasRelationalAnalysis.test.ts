@@ -7,10 +7,26 @@ import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoring
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import {
   createModelOutputDependencyFixture,
+  createIncompatibleRetainedModelFixture,
   selectModelDependencyOutputs,
 } from './canvasModelOutputDependency.test-support';
+import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindings';
 
 describe('shared Canvas relational analysis', () => {
+  it('rejects incompatible retained inputs without refreshing away a required consumer Output', async () => {
+    const graph = await createIncompatibleRetainedModelFixture();
+    const args = { node: graph.consumer, nodes: graph.nodes, edges: graph.edges };
+    const before = structuredClone(args);
+    expect(() =>
+      resolveCanvasSubstraitGraphBindings({ ...args, node: graph.producer })
+    ).not.toThrow();
+    const analysis = analyzeCanvasRelations(args);
+    expect(analysis.failure).toBe('invalid-semantic-authority');
+    expect(analysis.semantic).toBeNull();
+    expect(projectAnalyzedCanvasRelationalTree(analysis).ok).toBe(false);
+    expect(projectCanvasRelationalComposition(analysis)?.state).toBe('unresolved');
+    expect(args).toEqual(before);
+  });
   it('inspects the retained consumer tree when its producer removed a required field', async () => {
     const graph = await createModelOutputDependencyFixture();
     const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);

@@ -75,8 +75,20 @@ import JoinOperandSource from './canvasDvtSubstraitJoinOperand.ts?raw';
 import JoinOperandEditorSource from './SemanticWorkbenchJoinOperandEditor.tsx?raw';
 import JoinFormSource from './join-condition/JoinConditionForm.tsx?raw';
 import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
+import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
+import PresentationNodeSource from './canvasPresentationNode.ts?raw';
 
 describe('Canvas relational-tree Workbench architecture', () => {
+  it('projects explicit Input posture instead of rebuilding semantic policy in the adapter', () => {
+    expect(ColumnInteractionSource).toContain('presentation?.inputBindingPosture');
+    expect(ColumnInteractionSource).not.toMatch(
+      /readDvtTransformAuthoringAuthority|recoveryInputs/
+    );
+    expect(PresentationNodeSource).toContain('structural?.semantic?.document');
+    expect(PresentationNodeSource).not.toMatch(
+      /deriveSubstraitPublication|resolveUnmappedCanvasReadFields/
+    );
+  });
   it('keeps retained inspection styling outside JSX and preserves its semantic workspace class', () => {
     expect(InspectionSource).toContain("from './CanvasRelationalTreeInspection.module.css'");
     expect(InspectionSource).not.toMatch(/\bstyle\s*=|className\s*=\s*['"]|(?:border|text)-\(--/);

@@ -122,7 +122,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
     selectedLocator,
   ]);
   const unavailableMessage =
-    (analysis.missingProducerFields?.length ?? 0) > 0
+    analysis.semantic?.state === 'retained'
       ? args.copy.relationalTreeProducerFieldsUnavailableMessage
       : session.restorationUnavailable
         ? args.copy.relationalTreeInputIdentityUnavailableMessage

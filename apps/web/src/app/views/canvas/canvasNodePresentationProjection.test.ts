@@ -22,6 +22,7 @@ import { createProducerInput } from '@dvt/substrait-analysis';
 import { createSourceDocument } from './canvasSourceDocument';
 import {
   createModelOutputDependencyFixture,
+  createIncompatibleRetainedModelFixture,
   selectModelDependencyOutputs,
 } from './canvasModelOutputDependency.test-support';
 
@@ -100,6 +101,17 @@ function buildCanonicalTransform(): CanonicalNode {
 }
 
 describe('projectCanvasNodePresentationTruth', () => {
+  it('does not publish a refreshed Output when retained input recovery rejects a valid producer type change', async () => {
+    const graph = await createIncompatibleRetainedModelFixture();
+    const args = { node: graph.consumer, nodes: graph.nodes, edges: graph.edges };
+    const before = structuredClone(args);
+    const truth = await projectCanvasNodePresentationTruth(args);
+    expect(truth.columns.state).toBe('unavailable');
+    expect(truth.inputBindingPosture).toBe('unavailable');
+    expect(truth.columns.visible).toEqual([]);
+    expect(truth.relationalComposition?.state).toBe('unresolved');
+    expect(args).toEqual(before);
+  });
   it('retains unresolved implicit Input slots while an affected model Output stays unavailable', async () => {
     const graph = await createModelOutputDependencyFixture();
     const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);
@@ -109,6 +121,7 @@ describe('projectCanvasNodePresentationTruth', () => {
       edges: graph.edges,
     });
     expect(truth.columns.state).toBe('unavailable');
+    expect(truth.inputBindingPosture).toBe('repair-only');
     expect(truth.relationalComposition?.state).toBe('incomplete');
     expect(
       truth.inputBindings

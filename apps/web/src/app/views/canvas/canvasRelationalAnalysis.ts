@@ -1,4 +1,10 @@
-/** One structural read shared by tree, composition status and input catalogue. */
+/**
+ * Owned concern: classify one relational read shared by tree, composition and presentation.
+ * @baseline ADR-0064: retained identities cannot be refreshed after a rejected recovery.
+ * @decision Distinguish resolved and retained documents using the shared producer catalog.
+ * @consequence Consumers project the owning result instead of rebuilding repair admission.
+ * @version 1.1.0
+ */
 import {
   indexSubstraitRelations,
   type SubstraitDocument,
@@ -10,7 +16,7 @@ import type { ConnectedSourceRef } from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInputBindingEdge } from './canvasInputBindings';
 import {
-  resolveCanvasDvtCompositionInputs,
+  readCanvasDvtCompositionInputCatalog,
   type CanvasDvtCompositionInput,
 } from './canvasDvtCompositionInputCatalog';
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
@@ -31,6 +37,16 @@ export type CanvasRelationalAnalysisArgs = Readonly<{
   edges: readonly CanvasInputBindingEdge[];
 }>;
 type Failure = Extract<CanvasRelationalTreeProjectionResult, { ok: false }>['failure']['code'];
+type RelationalDocument = Readonly<{
+  index: SubstraitRelationIndex;
+  digest: string;
+  document: SubstraitDocument;
+  publication?: ReadonlyMap<string, RelationPublication>;
+}> &
+  (
+    | Readonly<{ state: 'resolved' }>
+    | Readonly<{ state: 'retained'; missingProducerFields: readonly CanvasMissingProducerField[] }>
+  );
 export type CanvasRelationalAnalysis = Readonly<{
   transformNodeId: string;
   isTransform: boolean;
@@ -38,14 +54,8 @@ export type CanvasRelationalAnalysis = Readonly<{
   connectedModelRelationIds: readonly string[];
   inputs: readonly CanvasDvtCompositionInput[];
   projectedInputs: readonly CanvasRelationalTreeInput[];
-  semantic: Readonly<{
-    index: SubstraitRelationIndex;
-    digest: string;
-    document: SubstraitDocument;
-    publication?: ReadonlyMap<string, RelationPublication>;
-  }> | null;
+  semantic: RelationalDocument | null;
   failure: Failure | null;
-  missingProducerFields?: readonly CanvasMissingProducerField[];
 }>;
 
 export function canvasSourceReferenceKey(ref: ConnectedSourceRef): string {
@@ -129,11 +139,12 @@ export function analyzeCanvasRelations(
     args.node.pluginId === 'dvt' &&
     args.node.kind === 'dvt:transform' &&
     args.node.role === 'transform';
-  const inputs = resolveCanvasDvtCompositionInputs({
+  const catalog = readCanvasDvtCompositionInputCatalog({
     targetNodeId: args.node.id,
     nodes: args.nodes,
     edges: args.edges,
   });
+  const { inputs } = catalog;
   const connectedInputCount = new Set(
     args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
   ).size;
@@ -148,6 +159,8 @@ export function analyzeCanvasRelations(
   };
   if (!isTransform) return { ...base, failure: 'invalid-semantic-authority' };
   try {
+    const authority = readDvtTransformAuthoringAuthority(args.node);
+    if (authority == null) return { ...base, failure: 'missing-semantic-authority' };
     const incomingIds = new Set(
       args.edges.filter((edge) => edge.targetId === args.node.id).map((edge) => edge.sourceId)
     );
@@ -157,8 +170,10 @@ export function analyzeCanvasRelations(
         continue;
       producers.set(node.id, node);
     }
-    const recovery = readCanvasProducerInputRecovery(args);
-    const recoverableProducers = new Set(recovery?.missing.map((field) => field.producerNodeId));
+    const recovery = readCanvasProducerInputRecovery(args, catalog);
+    if (recovery.kind === 'rejected') return { ...base, failure: recovery.failure };
+    const retained = recovery.kind === 'retained' ? recovery : null;
+    const recoverableProducers = new Set(retained?.missing.map((field) => field.producerNodeId));
     if (
       inputs.length !== connectedInputCount &&
       [...incomingIds].some(
@@ -166,23 +181,23 @@ export function analyzeCanvasRelations(
       )
     )
       return { ...base, failure: 'input-identity-unavailable' };
-    const authority = readDvtTransformAuthoringAuthority(args.node);
-    if (authority == null) return { ...base, failure: 'missing-semantic-authority' };
-    const document = recovery?.document ?? resolveCanvasProducerDocument(args.node, args.nodes)!;
+    const document = retained?.document ?? resolveCanvasProducerDocument(args.node, args.nodes)!;
     const indexed = indexSubstraitRelations(document);
     if (!indexed.ok) return { ...base, failure: 'invalid-semantic-authority' };
     const denied = new Set([
       ...resolveUnmappedCanvasReadFields({ ...args, nodeId: args.node.id, document }),
-      ...(recovery?.denied ?? []),
+      ...(retained?.denied ?? []),
     ]);
     return {
       ...base,
       failure: null,
-      ...(recovery == null ? {} : { missingProducerFields: recovery.missing }),
       connectedModelRelationIds: [...indexed.index.relations.values()]
         .filter((entry) => entry.binding.producerRef != null)
         .map((entry) => entry.binding.relationId),
       semantic: {
+        ...(retained == null
+          ? { state: 'resolved' as const }
+          : { state: 'retained' as const, missingProducerFields: retained.missing }),
         index: indexed.index,
         digest: authority.semanticDocument.semanticPlan.sha256,
         document,

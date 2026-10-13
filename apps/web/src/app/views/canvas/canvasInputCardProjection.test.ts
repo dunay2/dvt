@@ -5,7 +5,7 @@
  * @consequence Unresolved bindings remain addressable without becoming available outputs.
  * @version 1.1.0
  */
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import {
@@ -22,6 +22,7 @@ import {
 } from './canvasDvtSubstraitProjection';
 import { SOURCE } from './canvasOutputProjection.test-support';
 import { createSourceDocument } from './canvasSourceDocument';
+import { projectCanvasNodeColumnInteraction } from './canvasNodeColumnInteraction';
 
 const producer = (id: string): CanonicalNode => ({
   id,
@@ -53,6 +54,57 @@ const nodes = [first, second, consumer];
 const edges = [first, second].map((node) => ({ sourceId: node.id, targetId: consumer.id }));
 
 describe('consumer card input publication boundary', () => {
+  it.each([undefined, 'unavailable'] as const)(
+    'does not infer repair from presentation symptoms when explicit posture is %s',
+    (inputBindingPosture) => {
+      const onMapCanvasInput = vi.fn();
+      const result = projectCanvasNodeColumnInteraction(
+        {
+          id: consumer.id,
+          position: { x: 0, y: 0 },
+          data: {
+            onMapCanvasInput,
+            presentationTruth: {
+              inputBindingPosture,
+              columns: {
+                state: 'unavailable',
+                declared: [],
+                inherited: [],
+                visible: [],
+                declaredCount: 0,
+                inheritedCount: 0,
+                visibleCount: 0,
+                visibleProvenance: 'none',
+              },
+              code: { kind: 'unavailable' },
+              relationalComposition: {
+                state: 'incomplete',
+                connectedInputCount: 1,
+                missingInputCount: 1,
+              },
+              inputBindings: [
+                {
+                  inputId: 'retained-slot',
+                  source: { nodeId: first.id, columnId: 'removed' },
+                  name: 'removed',
+                  type: 'text',
+                  state: 'unresolved',
+                },
+              ],
+            },
+          },
+        },
+        {
+          canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+          columnFunctionEdges: edges,
+          readOnlyColumnLineageNodeIds: new Set(),
+        }
+      );
+      expect(result.data.columnPortDirections).toEqual([]);
+      expect(result.data.onMapCanvasInput).toBeUndefined();
+      expect(onMapCanvasInput).not.toHaveBeenCalled();
+    }
+  );
   it('retains exact missing implicit model slots without matching newly published names', () => {
     const producerDocument = createDvtSubstraitProjectionDraft({
       source: resolveDvtSubstraitProjectionSource(SOURCE)!,

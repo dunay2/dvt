@@ -43,12 +43,12 @@ export function projectCanvasRelationalComposition(
       : { state: 'single-input', connectedInputCount };
   const operation = compositionOperation(analysis);
   const canonicalOperation = operation == null ? {} : { canonicalOperation: operation };
-  if ((analysis.missingProducerFields?.length ?? 0) > 0)
+  if (analysis.semantic.state === 'retained')
     return {
       state: 'incomplete',
       connectedInputCount,
       missingInputCount: new Set(
-        analysis.missingProducerFields!.map((field) => field.producerNodeId)
+        analysis.semantic.missingProducerFields.map((field) => field.producerNodeId)
       ).size,
       ...canonicalOperation,
     };
