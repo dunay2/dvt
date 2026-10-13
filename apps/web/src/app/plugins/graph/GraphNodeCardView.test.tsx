@@ -126,7 +126,9 @@ describe('GraphNodeCardView', () => {
       const disclosure = container.querySelector<HTMLButtonElement>(
         '[data-slot="graph-node-column-toggle"]'
       )!;
-      act(() => fireEvent.click(disclosure));
+      act(() => {
+        fireEvent.click(disclosure);
+      });
       const piece = container.querySelector<HTMLElement>('[data-slot="graph-node-column-piece"]')!;
       expect(piece.textContent).toContain('order_id');
       expect(piece.textContent).toContain('integer');
@@ -147,19 +149,25 @@ describe('GraphNodeCardView', () => {
         '[data-slot="canvas-node-port-handle"][data-port="source"]'
       )!;
       expect(port.getAttribute('data-handleid')).toBe('column:source:source-orders:order_id');
-      act(() => fireEvent.keyDown(port, { key: 'Enter' }));
+      act(() => {
+        fireEvent.keyDown(port, { key: 'Enter' });
+      });
       expect(onPortActivate).toHaveBeenCalledWith({
         direction: 'source',
         nodeId: node.id,
         columnId: 'order_id',
       });
       const dataTransfer = { setData: vi.fn(), effectAllowed: 'none' };
-      act(() => fireEvent.dragStart(piece, { dataTransfer }));
+      act(() => {
+        fireEvent.dragStart(piece, { dataTransfer });
+      });
       expect(dataTransfer.setData).toHaveBeenCalledWith(
         'application/x-dvt-canvas-field',
         JSON.stringify({ nodeId: node.id, columnId: 'order_id' })
       );
-      act(() => fireEvent.click(disclosure));
+      act(() => {
+        fireEvent.click(disclosure);
+      });
       expect(onDisclosure.mock.calls).toEqual([
         [node.id, true],
         [node.id, false],
