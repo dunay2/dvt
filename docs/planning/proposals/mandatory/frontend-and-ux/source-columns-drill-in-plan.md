@@ -93,7 +93,7 @@ invent ARC-specific artifacts for a confirmed ARC-0 result.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-alias-deduplication-plan-20260904.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-list-order-plan-20260909.md`
+- [Historical source-inspector-list-order-plan-20260909.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/source-inspector-list-order-plan-20260909.md)
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.ts`
 - GitHub #2974 and the user's replacement image

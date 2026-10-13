@@ -18,9 +18,6 @@ describe('web Vitest suite governance documentation', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/frontend-test-governance-user-stories.md'
     );
-    const suitePartitionPlan = readRepoFile(
-      'docs/planning/proposals/mandatory/frontend-and-ux/web-vitest-suite-partition-plan-20260517.md'
-    );
     const webIndex = readRepoFile('docs/architecture/components/web/index.md');
 
     expect(suiteCatalog).toMatch(/^\/\*\*\s*\n \* @ownedConcern Own the web Vitest suite catalog/);
@@ -31,9 +28,9 @@ describe('web Vitest suite governance documentation', () => {
     expect(componentGuide).toContain('WebVitestSuiteCatalog');
     expect(webIndex).toContain('Web Vitest changed suite router component');
     expect(userStories).toContain('F-14');
-    expect(suitePartitionPlan).toContain('featureId: WEB-VITEST-SUITE-PARTITION-20260517');
-    expect(suitePartitionPlan).toContain('fowlerSignals:');
-    expect(suitePartitionPlan).toContain('vitestSuites.architecture.test.ts');
+    expect(suiteCatalog).toContain('WEB_VITEST_PRIMARY_SUITE_NAMES');
+    expect(suiteCatalog).toContain('classifyWebVitestFile');
+    expect(componentGuide).toContain('exactly one primary suite');
     expect(webIndex).toContain('Frontend test governance component');
   });
 });

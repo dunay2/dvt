@@ -428,7 +428,7 @@ Main Canvas left-click opens the existing fixed inspector. Source inspection
 starts at Output; Model double-click retains semantic-editor navigation.
 Embedded controls, Preview and drag must not trigger card navigation.
 This explicitly supersedes the selection-only click and floating node Properties
-policy in `canvas-node-workbench-hardening-plan-20260808.md`. Reuse
+policy in [Historical canvas-node-workbench-hardening-plan-20260808.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md). Reuse
 `InspectCanvasNode`, the existing panel and draft controller; no new inspector
 DTO, store or command. The shell owns its fixed right slot. Retire only the
 node inspector's position controller and draggable header; the independent

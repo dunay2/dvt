@@ -25,9 +25,6 @@ describe('RouteWorkbenchFrame architecture', () => {
     const userStories = readRepoDoc(
       'docs/architecture/components/web/route-workbench-frame-user-stories.md'
     );
-    const implementationPlan = readRepoDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f15-route-workbench-frame-semantic-slots-plan-20260521.md'
-    );
     const cypressProof = readRepoDoc('apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts');
 
     expect(source.trimStart().startsWith('/** Owned concern:')).toBe(true);
@@ -86,15 +83,8 @@ describe('RouteWorkbenchFrame architecture', () => {
       expect(cypressProof).toContain(requiredCypressSignal);
     }
 
-    for (const requiredPlanSignal of [
-      'featureId: F15-ROUTE-WORKBENCH-FRAME-SEMANTIC-SLOTS-20260521',
-      '## Fowler Opportunity Matrix',
-      'fowlerSignals:',
-      'Documentation drift',
-      'routeWorkbenchFrame.architecture.test.ts',
-    ]) {
-      expect(implementationPlan).toContain(requiredPlanSignal);
-    }
+    expect(componentGuide).toContain('## Command And Query Rail Posture');
+    expect(componentGuide).toContain('does not own route commands');
   });
 
   it('keeps direct route workbench consumers on semantic slots', () => {

@@ -400,6 +400,6 @@ state must be placed in the smallest named slice that owns the concern.
 - [UX Implementation Guide](../ux-implementation-guide.md)
 - [Data Source Service Boundary](./data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
-- [Canvas Workbench Tabs Component](../graph/canvas-workbench-tabs-component.md)
+- [Canvas Workbench Screen Composition](canvas-workbench-screen-composition-component.md)
 - [Shell Workspace Context Component](./shell-workspace-context-component.md)
 - [Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md)

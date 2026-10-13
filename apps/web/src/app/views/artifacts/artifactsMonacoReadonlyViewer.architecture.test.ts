@@ -36,44 +36,21 @@ function collectProductionSourceFiles(root: string): string[] {
 }
 
 describe('Artifacts Monaco read-only viewer architecture', () => {
-  it('documents the component API, invariants, transitions, consumers, and stories', () => {
+  it('keeps internal viewers under the current shared Monaco boundary', () => {
     const componentGuide = readRepoDoc(
-      'docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-component.md'
-    );
-    const userStories = readRepoDoc(
-      'docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-user-stories.md'
+      'docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md'
     );
 
-    for (const requiredSection of [
+    for (const requiredSignal of [
       '## Public API',
       '## Invariants',
-      '## Transitions',
       '## Consumers',
-      '## Component Diagram',
-      '```mermaid',
-      'ArtifactPreviewTabs',
-      'ArtifactMonacoPreviewPanel',
+      'Artifact readers',
       'MonacoCodeViewer',
-      'MonacoCodeSurface',
-      'ArtifactsStructuredPayloadReadModel',
-      'read-only',
-      'ListWorkspaceFiles',
-      'GetWorkspaceFileContent',
+      'Read-only payload inspection',
+      'Consumer modules use lazy gateways',
     ]) {
-      expect(componentGuide).toContain(requiredSection);
-    }
-
-    for (const requiredStory of [
-      'US-F17C-001',
-      'US-F17C-002',
-      'US-F17C-003',
-      'US-F17C-004',
-      'US-F17C-005',
-      'US-F17C-006',
-      '## Scenario Matrix',
-      'read-only',
-    ]) {
-      expect(userStories).toContain(requiredStory);
+      expect(componentGuide).toContain(requiredSignal);
     }
   });
 

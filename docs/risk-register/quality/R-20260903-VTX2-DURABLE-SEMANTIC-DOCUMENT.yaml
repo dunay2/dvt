@@ -17,7 +17,7 @@ mitigation:
     closed without SQL, VTX1 or project-file fallback.
   evidence:
     - docs/evidence/ED-20260903-vtx2-durable-semantic-document.md
-    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-durable-semantic-document-plan-20260903.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-durable-semantic-document-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
     - packages/@dvt/contracts/test/workspace-graph-semantic-document.contract.test.ts
     - apps/api/test/integration/workspaceGraphDraftSemanticPersistence.test.ts

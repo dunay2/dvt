@@ -102,7 +102,7 @@ flowchart TD
 
 - [Canvas Fowler Canon User Stories](./canvas-fowler-canon-user-stories.md)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
-- [Canvas Workbench Tabs Component](./canvas-workbench-tabs-component.md)
+- [Canvas Workbench Screen Composition](../appshell/canvas-workbench-screen-composition-component.md)
 - [Canvas Layout Persistence Component](./canvas-layout-persistence-component.md)
 - [Canvas Fowler Canon Plan 2026-05-23](../../../../planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md)
 - [Canvas Fowler Canon Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260523-codex-fowler-canvas-workbench-canon.md)
