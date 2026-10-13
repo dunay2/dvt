@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -32,7 +32,7 @@ const BOOTSTRAP_SCREEN_SOURCE_PATH = resolve(
 );
 const FONT_SOURCE_PATH = resolve(WEB_ROOT, 'src/styles/fonts.css');
 const ENTRY_SOURCE_PATH = resolve(WEB_ROOT, 'src/main.tsx');
-const CASCADE_LAYER_SOURCE_PATH = resolve(WEB_ROOT, 'src/styles/cascadeLayers.css');
+const CASCADE_LAYER_SOURCE_PATH = resolve(WEB_ROOT, 'public/cascade-layers.css');
 const REGEXP_SYNTAX_CHARACTERS = new Set([
   '.',
   '*',
@@ -198,10 +198,30 @@ describe('appBootstrapScreen', () => {
     document.body.innerHTML = '';
   });
 
-  it('registers only the canonical CSS layer order before eager App styles without reordering global overrides', () => {
+  it('registers the canonical CSS layer order through the first external HTML stylesheet without a duplicate JS owner', () => {
+    const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
+    const parsedDocument = new DOMParser().parseFromString(indexHtml, 'text/html');
+    const firstStylesheet =
+      parsedDocument.head.querySelector<HTMLLinkElement>('link[rel="stylesheet"]');
+    expect(firstStylesheet?.getAttribute('href')).toBe('/cascade-layers.css');
+    expect(firstStylesheet?.hasAttribute('disabled')).toBe(false);
+    expect(firstStylesheet?.hasAttribute('media')).toBe(false);
+    expect(parsedDocument.head.querySelector('link[rel="stylesheet"], style')).toBe(
+      firstStylesheet
+    );
+    expect(parsedDocument.querySelectorAll('link[href="/cascade-layers.css"]')).toHaveLength(1);
+    const moduleScripts = Array.from(parsedDocument.querySelectorAll('script[type="module"]'));
+    expect(moduleScripts.length).toBeGreaterThan(0);
+    moduleScripts.forEach((script) => {
+      expect(
+        firstStylesheet!.compareDocumentPosition(script) & Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(indexHtml).not.toContain('@layer');
     const entrySource = readFileSync(ENTRY_SOURCE_PATH, 'utf8');
-    const firstStaticImport = entrySource.match(/^[\t ]*import[\t ]+[^\r\n]+/m)?.[0].trim();
-    expect(firstStaticImport).toBe("import './styles/cascadeLayers.css';");
+    expect(entrySource).not.toContain('cascadeLayers.css');
+    expect(entrySource).not.toContain('cascade-layers.css');
+    expect(existsSync(resolve(WEB_ROOT, 'src/styles/cascadeLayers.css'))).toBe(false);
 
     const layerSource = readFileSync(CASCADE_LAYER_SOURCE_PATH, 'utf8');
     expect(layerSource.replace(/\/\*[\s\S]*?\*\//g, '').trim()).toBe(

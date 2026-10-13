@@ -1,6 +1,0 @@
-/*
- * Owned concern: establish the canonical cascade order before eager component CSS.
- * Reason: declaring order alone preserves the existing vendor/global override order
- * without loading presentation values or registering a second style authority.
- */
-@layer properties, theme, base, components, utilities;
