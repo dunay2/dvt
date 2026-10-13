@@ -1,7 +1,7 @@
 /**
  * Owned concern: publish shell chrome class contracts without route or session authority.
  * @baseline GH-3622: templates share compact menu styling without inline style objects.
- * @decision Keep named class contracts alongside the existing shell chrome styles.
+ * @decision Keep named class contracts together, including the shared header reflow boundary.
  * @consequence Controllers retain behavior; presentation owns spacing, size and color.
  * @version 1.0.0
  */
@@ -17,7 +17,10 @@ export const topAppBarClasses = {
   menuGitSeparator: 'px-1',
   menuLanguageLabel: 'flex items-center',
   shellBar:
-    'flex min-h-10 min-w-0 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 py-1 text-[var(--text-default)] sm:h-10 sm:flex-nowrap sm:gap-2 sm:px-3 sm:py-0',
+    'flex min-h-10 min-w-0 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 py-1 text-[var(--text-default)] md:h-10 md:flex-nowrap md:gap-2 md:px-3 md:py-0',
+  contextCluster: 'flex w-full min-w-0 items-center gap-1 md:w-auto md:flex-1 md:gap-2',
+  commandCluster:
+    'flex w-full min-w-0 flex-wrap items-center justify-end gap-1 md:w-auto md:shrink-0 md:flex-nowrap md:gap-2',
   readOnlyScopeField:
     'h-8 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-3 text-sm text-[var(--text-default)]',
   contextLabel: 'text-[11px] font-medium uppercase text-[var(--text-subtle)]',

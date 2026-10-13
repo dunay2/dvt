@@ -80,10 +80,7 @@ export function ShellTopBar({
   return (
     <TooltipProvider>
       <header data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
-        <div
-          data-slot="shell-top-bar-context-cluster"
-          className="flex w-full min-w-0 items-center gap-1 sm:w-auto sm:flex-1 sm:gap-2"
-        >
+        <div data-slot="shell-top-bar-context-cluster" className={topAppBarClasses.contextCluster}>
           <ShellAppMenu
             copy={copy}
             navigationModel={navigationModel}
@@ -105,10 +102,7 @@ export function ShellTopBar({
           )}
         </div>
 
-        <div
-          data-slot="shell-top-bar-command-cluster"
-          className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:gap-2"
-        >
+        <div data-slot="shell-top-bar-command-cluster" className={topAppBarClasses.commandCluster}>
           <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
           {exposeWorkbenchMenus && (
             <>

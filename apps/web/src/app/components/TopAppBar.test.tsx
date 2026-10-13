@@ -314,6 +314,20 @@ describe('ShellTopBar workspace context', () => {
     expect(
       topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]')?.className
     ).toContain('flex-wrap');
+    const contextCluster = topBar?.querySelector('[data-slot="shell-top-bar-context-cluster"]');
+    const commandCluster = topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]');
+    expect(topBar?.classList.contains('md:h-10')).toBe(true);
+    expect(contextCluster?.classList.contains('md:flex-1')).toBe(true);
+    expect(commandCluster?.classList.contains('md:shrink-0')).toBe(true);
+    for (const cluster of [contextCluster, commandCluster]) {
+      expect(cluster?.classList.contains('md:w-auto')).toBe(true);
+    }
+    for (const cluster of [topBar, commandCluster]) {
+      expect(cluster?.classList.contains('md:flex-nowrap')).toBe(true);
+    }
+    for (const cluster of [topBar, contextCluster, commandCluster]) {
+      expect(cluster?.className).not.toMatch(/\bsm:(?:h-10|w-auto|flex-1|shrink-0|flex-nowrap)\b/u);
+    }
   });
 
   it('renders Canvas run readiness as compact top-bar status without restoring Plan chrome', async () => {
