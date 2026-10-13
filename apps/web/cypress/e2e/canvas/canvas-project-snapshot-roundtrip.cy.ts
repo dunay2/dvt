@@ -78,6 +78,13 @@ describe('Canvas project snapshot round trip', () => {
     cy.get('[data-slot="canvas-workspace-export-command"]').click();
   }
 
+  function assertSnapshotSelectionClosedFile(): void {
+    cy.get('[data-slot="canvas-workspace-import-input"]').should('not.exist');
+    cy.get('[data-slot="shell-file-menu-trigger"]')
+      .should('have.attr', 'data-state', 'closed')
+      .and('be.focused');
+  }
+
   function waitForDraftSaveCount(expectedCount: number): void {
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(expectedCount);
@@ -133,6 +140,7 @@ describe('Canvas project snapshot round trip', () => {
       },
       { force: true }
     );
+    assertSnapshotSelectionClosedFile();
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
         saveCountBeforeRejectedImport
@@ -143,6 +151,7 @@ describe('Canvas project snapshot round trip', () => {
     cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(downloadPath, {
       force: true,
     });
+    assertSnapshotSelectionClosedFile();
     waitForDraftSaveCount(saveCountBeforeRejectedImport + 1);
 
     visitReadyCanvas();

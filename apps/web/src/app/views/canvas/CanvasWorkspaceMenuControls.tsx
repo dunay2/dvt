@@ -1,8 +1,8 @@
 /**
  * Owned concern: render existing Canvas project commands inside the shell File menu.
  * @baseline GH-3622: disabled entries must not dispatch; selecting a file is asynchronous.
- * @decision Dispatch through Radix selection and retain the input while the native picker is open.
- * @consequence Pointer and keyboard share admission; cancellation cannot lose the file receiver.
+ * @decision Retain the native picker receiver; notify its menu owner only after capturing a file.
+ * @consequence Cancellation retains the receiver; file selection closes File before existing dispatch.
  * @version 1.0.0
  */
 import { Code2, Download, FolderInput, FolderOpen, Upload } from 'lucide-react';
@@ -105,10 +105,12 @@ export function CanvasWorkspaceMenuContributionRegistrar(
 
 type CanvasWorkspaceMenuControlsProps = Readonly<{
   onProjectCodeSelected?: () => void;
+  onSnapshotFileSelected?: () => void;
 }>;
 
 export function CanvasWorkspaceMenuControls({
   onProjectCodeSelected,
+  onSnapshotFileSelected,
 }: CanvasWorkspaceMenuControlsProps = {}): JSX.Element | null {
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
   useApplicationLanguageStore((state) => state.language);
@@ -188,6 +190,7 @@ export function CanvasWorkspaceMenuControls({
           const file = event.currentTarget.files?.[0];
           event.currentTarget.value = '';
           if (file != null) {
+            onSnapshotFileSelected?.();
             contribution.onImportProjectSnapshotFile?.(file);
           }
         }}

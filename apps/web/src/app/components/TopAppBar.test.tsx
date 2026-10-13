@@ -648,7 +648,7 @@ describe('ShellTopBar workspace context', () => {
     expect(rejectedCommand).not.toHaveBeenCalled();
   });
 
-  it('retains the snapshot receiver while choosing a file and imports exactly once', async () => {
+  it('retains the snapshot receiver until selection, then closes File and restores focus', async () => {
     const onImportProjectSnapshotFile = vi.fn();
     useCanvasWorkspaceMenuContributionStore.setState({
       contribution: {
@@ -658,8 +658,11 @@ describe('ShellTopBar workspace context', () => {
       },
     });
     await act(async () => root.render(renderShellTopBar('/canvas')));
+    const fileTrigger = container.querySelector<HTMLElement>(
+      '[data-slot="shell-file-menu-trigger"]'
+    )!;
     await act(async () => {
-      fireEvent.pointerDown(container.querySelector('[data-slot="shell-file-menu-trigger"]')!);
+      fireEvent.pointerDown(fileTrigger);
     });
     const input = await waitFor(() => {
       const receiver = document.querySelector<HTMLInputElement>(
@@ -679,11 +682,35 @@ describe('ShellTopBar workspace context', () => {
     expect(openPicker).toHaveBeenCalledTimes(1);
     expect(input.isConnected).toBe(true);
     expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
+    await act(async () => fireEvent.change(input, { target: { files: [] } }));
+    expect(input.isConnected).toBe(true);
+    expect(fileTrigger.getAttribute('data-state')).toBe('open');
+    expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
     const file = new File(['{}'], 'project.json', { type: 'application/json' });
     await act(async () => fireEvent.change(input, { target: { files: [file] } }));
     expect(onImportProjectSnapshotFile).toHaveBeenCalledExactlyOnceWith(file);
     expect(input.value).toBe('');
     openPicker.mockRestore();
+    await waitFor(() => {
+      expect(input.isConnected).toBe(false);
+      expect(fileTrigger.getAttribute('data-state')).toBe('closed');
+      expect(document.activeElement).toBe(fileTrigger);
+    });
+    await act(async () => fireEvent.pointerDown(fileTrigger));
+    const reopenedInput = await waitFor(() => {
+      const receiver = document.querySelector<HTMLInputElement>(
+        '[data-slot="canvas-workspace-import-input"]'
+      );
+      expect(receiver).not.toBeNull();
+      return receiver!;
+    });
+    await act(async () => fireEvent.change(reopenedInput, { target: { files: [file] } }));
+    expect(onImportProjectSnapshotFile).toHaveBeenCalledTimes(2);
+    expect(onImportProjectSnapshotFile).toHaveBeenLastCalledWith(file);
+    await waitFor(() => {
+      expect(reopenedInput.isConnected).toBe(false);
+      expect(document.activeElement).toBe(fileTrigger);
+    });
   });
 
   it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {

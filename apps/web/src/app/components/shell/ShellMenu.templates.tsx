@@ -138,6 +138,7 @@ export function ShellFileMenuTemplate({
   triggerRef,
   onNewProject,
   onProjectCodeSelected,
+  onSnapshotFileSelected,
   onCloseAutoFocus,
 }: MenuLifecycle &
   Readonly<{
@@ -146,6 +147,7 @@ export function ShellFileMenuTemplate({
     triggerRef: RefObject<HTMLButtonElement>;
     onNewProject: () => void;
     onProjectCodeSelected: () => void;
+    onSnapshotFileSelected: () => void;
     onCloseAutoFocus: (event: Event) => void;
   }>) {
   return (
@@ -171,7 +173,10 @@ export function ShellFileMenuTemplate({
           <FolderPlus aria-hidden="true" className={topAppBarClasses.menuItemIcon} />
           {newProjectLabel}
         </DropdownMenuItem>
-        <CanvasWorkspaceMenuControls onProjectCodeSelected={onProjectCodeSelected} />
+        <CanvasWorkspaceMenuControls
+          onProjectCodeSelected={onProjectCodeSelected}
+          onSnapshotFileSelected={onSnapshotFileSelected}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

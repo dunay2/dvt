@@ -36,6 +36,7 @@ export function ShellFileMenu({ copy }: Readonly<{ copy: ShellTopBarCopy }>) {
           setProjectCreationOpen(true);
         }}
         onProjectCodeSelected={transferFocus}
+        onSnapshotFileSelected={() => setOpen(false)}
         onCloseAutoFocus={(event) => {
           if (!transferFocusRef.current) return;
           event.preventDefault();
