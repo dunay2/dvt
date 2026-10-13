@@ -1,5 +1,16 @@
-/** Owned concern: compose real producer-reference fixtures for cross-model output admission. */
+/**
+ * Owned concern: compose real producer-reference fixtures for admission and retained read classification.
+ * @baseline ADR-0064 / GH-3628: current producer validity is distinct from retained consumer compatibility.
+ * @decision Reproduce missing publication and coherent source-type updates through real canonical commands.
+ * @consequence Negative cases cannot pass merely because their producer was already malformed.
+ * @version 1.1.0
+ */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { create } from '@bufbuild/protobuf';
+import {
+  TypeSchema,
+  Type_Nullability,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { emptyModel, projectedModel, sourceNode } from './canvasColumnOutputAuthoring.test-support';
 import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
@@ -116,5 +127,52 @@ export async function createModelOutputDependencyFixture() {
     canonicalNodesById,
     producerDocument: modelDependencyDocument(producer),
     consumerDocument: modelDependencyDocument(consumer),
+  };
+}
+
+/** Keep the current producer valid while its consumer retains a required missing field and old type. */
+export async function createIncompatibleRetainedModelFixture(): Promise<
+  Awaited<ReturnType<typeof createModelOutputDependencyFixture>>
+> {
+  const graph = await createModelOutputDependencyFixture();
+  const narrowed = await selectModelDependencyOutputs(graph.producer, ['order_id', 'customer']);
+  const document = modelDependencyDocument(narrowed);
+  const root = document.plan.relations[0]!.relType;
+  if (
+    root.case !== 'root' ||
+    root.value.input?.relType.case !== 'project' ||
+    root.value.input.relType.value.input?.relType.case !== 'read'
+  )
+    throw new Error('Expected producer projection');
+  root.value.input.relType.value.input.relType.value.baseSchema!.struct!.types[1] = create(
+    TypeSchema,
+    {
+      kind: { case: 'i64', value: { nullability: Type_Nullability.NULLABLE } },
+    }
+  );
+  const producer = applyDvtSubstraitSemanticDocument(
+    narrowed,
+    encodeDvtSubstraitSemanticDocument(document)
+  );
+  const columns = graph.source.metadata!.columns as Array<{ name: string; type: string }>;
+  const source = {
+    ...graph.source,
+    metadata: {
+      ...graph.source.metadata,
+      columns: columns.map((column) =>
+        column.name === 'customer' ? { ...column, type: 'bigint' } : column
+      ),
+    },
+  };
+  const nodes = graph.nodes.map((node) =>
+    node.id === producer.id ? producer : node.id === source.id ? source : node
+  );
+  return {
+    ...graph,
+    source,
+    producer,
+    nodes,
+    canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+    producerDocument: modelDependencyDocument(producer),
   };
 }
