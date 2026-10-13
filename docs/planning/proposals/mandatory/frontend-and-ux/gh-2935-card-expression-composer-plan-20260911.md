@@ -372,7 +372,6 @@ for PostgreSQL text operands:
     "docs/**/index.md",
     "docs/planning/status/**",
     "docs/.manifest.json",
-    "docs/planning/proposals/mandatory/frontend-and-ux/gh-2935-card-unary-derived-output-plan-20260907.md",
     "docs/planning/proposals/mandatory/frontend-and-ux/gh-2935-card-expression-composer-plan-20260911.md"
   ],
   "forbiddenImplementationSurfaces": [
