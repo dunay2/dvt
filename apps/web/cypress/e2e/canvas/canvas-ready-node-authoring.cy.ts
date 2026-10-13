@@ -9,6 +9,7 @@ import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_p
 import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
@@ -405,22 +406,66 @@ describe('Canvas ready node authoring', () => {
     );
   });
 
-  it('keeps the canvas context menu visible after a real browser right-click gesture', () => {
-    stubCanvasDraftRead();
-    stubCanvasDraftSave();
+  describe('native context-menu boundary', () => {
+    let removeContextMenuObserver: (() => void) | undefined;
 
-    visitReadyCanvas();
+    afterEach(() => {
+      removeContextMenuObserver?.();
+      removeContextMenuObserver = undefined;
+    });
 
-    cy.get('.react-flow__pane').should('be.visible').rightclick(320, 260, { force: true });
+    for (const emptyCanvas of [true, false]) {
+      it(`owns real context gestures on the ${emptyCanvas ? 'empty' : 'populated'} Canvas without writing`, () => {
+        const draft = stubStatefulCanvasDraftAuthoring({ emptyCanvas });
+        Object.assign(draft, normalizeProjectCanvasDraft(draft));
+        const contextEvents: Event[] = [];
 
-    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    cy.wait(1_500);
-    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    cy.contains(
-      '[data-slot="canvas-context-menu"] [role="menuitem"]',
-      /^(Add|Anadir)\.\.\.$/
-    ).should('be.visible');
-    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Explore project');
+        visitReadyCanvas();
+        if (emptyCanvas) cy.get('.react-flow__node').should('not.exist');
+        else cy.get('.react-flow__node').should('have.length', draft.nodes.length);
+        cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+        cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+        cy.window().then((window) => {
+          const observeContextMenu = (event: Event): void => {
+            contextEvents.push(event);
+          };
+          window.addEventListener('contextmenu', observeContextMenu, true);
+          removeContextMenuObserver = () =>
+            window.removeEventListener('contextmenu', observeContextMenu, true);
+        });
+
+        for (const expectedEventCount of [1, 2]) {
+          cy.get('[data-testid="canvas-viewport"]').should('be.visible').rightclick(8, 8);
+          cy.get('[data-slot="canvas-context-menu"]').should('have.length', 1).and('be.visible');
+          cy.contains(
+            '[data-slot="canvas-context-menu"] [role="menuitem"]',
+            /^(Add|Anadir)\.\.\.$/
+          ).should('be.visible');
+          cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Explore project');
+          cy.wrap(null).should(() => {
+            expect(contextEvents).to.have.length(expectedEventCount);
+            expect(
+              contextEvents.at(-1)?.defaultPrevented,
+              'native context menu cancelled'
+            ).to.equal(true);
+            expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+          });
+          cy.press(Cypress.Keyboard.Keys.ESC);
+          cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+        }
+
+        cy.get('button[aria-label="Filter graph"]').should('be.visible').rightclick();
+        cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+        cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
+        cy.wrap(null).should(() => {
+          expect(contextEvents).to.have.length(3);
+          expect(contextEvents.at(-1)?.defaultPrevented, 'control native menu cancelled').to.equal(
+            true
+          );
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+        });
+      });
+    }
   });
 
   it('projects semantic health borders without a visible status chip', () => {

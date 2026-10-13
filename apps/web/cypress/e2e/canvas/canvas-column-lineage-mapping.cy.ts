@@ -13,9 +13,11 @@ import { applyDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas
 import { canvasInputSlotId } from '../../../src/app/views/canvas/canvasInputBindings';
 import {
   createModelOutputDependencyFixture,
+  createIncompatibleRetainedModelFixture,
   selectModelDependencyOutputs,
   modelDependencyDocument,
 } from '../../../src/app/views/canvas/canvasModelOutputDependency.test-support';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { resolveCanvasSubstraitGraphBindings } from '../../../src/app/views/canvas/canvasSubstraitGraphBindings';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
@@ -150,7 +152,83 @@ function dropPublishedField(producerId: string, name: string, view = 'Input'): v
     .trigger('dragend', { dataTransfer: transfer });
 }
 
+function visitCanonicalModels(
+  graph: Awaited<ReturnType<typeof createModelOutputDependencyFixture>>
+): WorkspaceGraphAuthoringDraft {
+  cy.viewport(1920, 1080);
+  stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    defaultWorkspace: E2E_PROJECT_WORKSPACE,
+    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+  });
+  stubE2eJsonApi('GET', '/capabilities', {
+    apiVersion: '1.0.0',
+    minFrontendVersion: '0.0.1',
+    plugins: { dvt: { available: true } },
+  });
+  const saved = stubStatefulCanvasDraftAuthoring({ emptyCanvas: true });
+  Object.assign(
+    saved,
+    normalizeProjectCanvasDraft(
+      buildCanvasAuthoringDraft({
+        canvas: saved.canvas,
+        nodeIds: graph.nodes.map((entry) => entry.id),
+        nodePositions: {
+          [graph.source.id]: { x: 60, y: 60 },
+          [graph.right.id]: { x: 60, y: 340 },
+          [graph.producer.id]: { x: 400, y: 60 },
+          [graph.consumer.id]: { x: 820, y: 60 },
+        },
+        visibleEdges: graph.edges,
+        canonicalNodes: graph.nodes,
+        canonicalEdges: graph.edges,
+      })
+    )
+  );
+  visitWithE2eWorkspaceSession('/canvas', {
+    onBeforeLoad(window) {
+      window.localStorage.setItem(
+        'dvt-web-application-language',
+        JSON.stringify({ state: { language: 'en' }, version: 0 })
+      );
+      window.localStorage.setItem(
+        'dvt-web-canvas-interaction',
+        JSON.stringify({
+          state: {
+            impactOverlayEnabled: false,
+            columnLevelLineageEnabled: true,
+            canvasLayouts: {},
+          },
+          version: 0,
+        })
+      );
+    },
+  });
+  waitForE2eApiCall('/workspace/graph/draft', 'GET');
+  return saved;
+}
+
 describe('Producer fields enter Input; Output is passive', () => {
+  it('denies Input repair and ready Output after an incompatible retained producer change', () => {
+    cy.then(() => createIncompatibleRetainedModelFixture()).then((graph) => {
+      expect(() =>
+        resolveCanvasSubstraitGraphBindings({ ...graph, node: graph.producer })
+      ).not.to.throw();
+      const saved = visitCanonicalModels(graph);
+      const original = structuredClone(saved);
+      node(graph.consumer.id).contains('[role="tab"]', 'Output (Unavailable)').should('be.visible');
+      expand(graph.consumer.id);
+      node(graph.consumer.id)
+        .find('[data-slot="graph-node-column-row"] [data-port]')
+        .should('not.exist');
+      node(graph.consumer.id).contains('[role="tab"]', 'Output (Unavailable)').click();
+      node(graph.consumer.id).find('[data-slot="graph-node-column-row"]').should('not.exist');
+      cy.then(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+        expect(saved).to.deep.equal(original);
+      });
+    });
+  });
   it('explicitly repairs missing model inputs, saves and reloads the unchanged consumer semantics', () => {
     cy.then(async () => {
       const graph = await createModelOutputDependencyFixture();
@@ -173,57 +251,8 @@ describe('Producer fields enter Input; Output is passive', () => {
       );
       return { graph, producer, nodes, oldFields };
     }).then(({ graph, producer, nodes, oldFields }) => {
-      cy.viewport(1920, 1080);
-      stubShellBootstrapApis({
-        scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
-      });
-      stubE2eJsonApi('GET', '/workspace/context', {
-        defaultWorkspace: E2E_PROJECT_WORKSPACE,
-        availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-      });
-      stubE2eJsonApi('GET', '/capabilities', {
-        apiVersion: '1.0.0',
-        minFrontendVersion: '0.0.1',
-        plugins: { dvt: { available: true } },
-      });
-      const saved = stubStatefulCanvasDraftAuthoring({ emptyCanvas: true });
-      Object.assign(
-        saved,
-        buildCanvasAuthoringDraft({
-          canvas: saved.canvas,
-          nodeIds: nodes.map((entry) => entry.id),
-          nodePositions: {
-            [graph.source.id]: { x: 60, y: 60 },
-            [graph.right.id]: { x: 60, y: 340 },
-            [producer.id]: { x: 400, y: 60 },
-            [graph.consumer.id]: { x: 820, y: 60 },
-          },
-          visibleEdges: graph.edges,
-          canonicalNodes: nodes,
-          canonicalEdges: graph.edges,
-        })
-      );
+      const saved = visitCanonicalModels({ ...graph, producer, nodes });
       const originalNodes = structuredClone(saved.nodes);
-      visitWithE2eWorkspaceSession('/canvas', {
-        onBeforeLoad(window) {
-          window.localStorage.setItem(
-            'dvt-web-application-language',
-            JSON.stringify({ state: { language: 'en' }, version: 0 })
-          );
-          window.localStorage.setItem(
-            'dvt-web-canvas-interaction',
-            JSON.stringify({
-              state: {
-                impactOverlayEnabled: false,
-                columnLevelLineageEnabled: true,
-                canvasLayouts: {},
-              },
-              version: 0,
-            })
-          );
-        },
-      });
-      waitForE2eApiCall('/workspace/graph/draft', 'GET');
       node(graph.consumer.id).contains('[role="tab"]', 'Output (Unavailable)').should('be.visible');
       expand(producer.id);
       node(producer.id).contains('[role="tab"]', 'Output (3)').click();
