@@ -59,7 +59,7 @@ the snapshot work queue was added to remove.
 
 ## Evidence
 
-- `docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md`
+- [S19-F1 delivery evidence at its recorded revision](https://github.com/dunay2/dvt/blob/9ab717e3c10d49487319e44208ce46aae72ce0e5/docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md)
 - `packages/@dvt/delivery/test/ProjectorWorkerRuntime.test.ts`
 
 <a id="section-projector-event-driven-invalidation-user-stories"></a>
