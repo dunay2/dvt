@@ -100,7 +100,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/gh-3021-dvt-preview-run-live-plan-20260915.md
 componentGuides:
   - docs/architecture/components/web/graph/canvas-execution-selection-component.md
-  - docs/architecture/components/web/api-client-auth-component.md
+  - docs/architecture/components/web/frontend-data-boundary-architecture.md
 userStories:
   - https://github.com/dunay2/dvt/issues/3021
 governingSources:

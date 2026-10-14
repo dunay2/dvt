@@ -63,7 +63,7 @@ pending evidence explicit.
   closeout tracker.
 - Touched files or paths:
   `docs/guides/ar-c2-observability-technical-manual-20260404.md`,
-  `docs/guides/ar-c2-observability-user-manual-20260404.md`, and this closeout.
+  `docs/guides/ar-c2-observability-technical-manual-20260404.md`, and this closeout.
 - Expected outcome: AR-C2 manuals no longer define local logical signal aliases
   outside the canonical mapping.
 - Risks and mitigations: alert/dashboard wiring remains pending by design; this

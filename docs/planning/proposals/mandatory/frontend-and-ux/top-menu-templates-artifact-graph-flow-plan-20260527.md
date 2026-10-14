@@ -279,9 +279,9 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md
 componentGuides:
   - docs/architecture/components/web/appshell/app-shell.md
-  - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
-  - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
-  - docs/architecture/components/web/graph/canvas-workbench-command-menu-component.md
+  - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/style-guide.md
+  - docs/architecture/components/web/appshell/app-shell.md
 userStories:
   - docs/architecture/components/web/workbench-ux-canon-component.md
 governingSources:
@@ -290,14 +290,14 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/appshell/app-shell.md
-  - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
-  - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
+  - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/style-guide.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md
   - docs/architecture/components/web/appshell/app-shell.md
-  - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
-  - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
-  - docs/architecture/components/web/graph/canvas-workbench-command-menu-component.md
+  - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/style-guide.md
+  - docs/architecture/components/web/appshell/app-shell.md
   - docs/architecture/components/web/workbench-ux-canon-component.md
   - apps/web/src/app/components/TopAppBar.tsx
   - apps/web/src/app/components/TopAppBar.test.tsx

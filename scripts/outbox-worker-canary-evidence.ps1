@@ -599,7 +599,7 @@ arc_level: ARC-2
 breaking: false
 code_refs:
   - scripts/outbox-worker-canary-evidence.ps1
-  - docs/runbooks/outbox-worker-g5.md
+  - docs/guides/outbox-worker-technical-manual-20260404.md
   - apps/outbox-worker/src/ops/OperationalServer.ts
 evidence:
   code:

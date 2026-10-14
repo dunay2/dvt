@@ -16,7 +16,7 @@ not own artifact publication, artifact reads, or artifact-reference enrichment.
 Current target reading for graph-source generalization:
 
 - [DB-first Component Map](./component-map.md)
-- `docs/guides/generic-graph-source-user-manual-20260404.md`
+- `docs/guides/generic-graph-source-technical-manual-20260404.md`
 
 ## Scope
 

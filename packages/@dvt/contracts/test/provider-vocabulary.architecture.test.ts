@@ -146,7 +146,7 @@ describe('contracts: active provider vocabulary', () => {
       'utf8'
     );
     const compileCatalogManual = readFileSync(
-      join(REPO_ROOT, 'docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md'),
+      join(REPO_ROOT, 'docs/guides/plan-compile-target-architecture-technical-manual-20260417.md'),
       'utf8'
     );
     const governedProviderTruthSources = [

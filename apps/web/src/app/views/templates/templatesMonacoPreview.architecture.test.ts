@@ -177,10 +177,10 @@ describe('Templates Monaco preview architecture', () => {
 
   it('documents API, invariants, transitions, consumers, and stories', () => {
     const componentGuide = readRepoDoc(
-      'docs/architecture/components/web/templates/execution-template-monaco-preview-component.md'
+      'docs/architecture/components/web/templates/execution-template-source-generation-component.md'
     );
     const userStories = readRepoDoc(
-      'docs/architecture/components/web/templates/execution-template-monaco-preview-component.md'
+      'docs/architecture/components/web/templates/execution-template-source-generation-component.md'
     );
 
     for (const requiredSection of [

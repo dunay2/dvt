@@ -24,7 +24,7 @@ Use this guide with:
 
 - [Canonical API architecture authority](../../api/index.md)
 - [Canvas execution selection component](../graph/canvas-execution-selection-component.md)
-- [Frontend-facing backend MVP contract](./frontend-backend-mvp-contract.md)
+- [Frontend-facing backend MVP contract](frontend-runtime-contract-technical-manual.md#section-frontend-backend-mvp-contract)
 - [ADR-0050 platform-owned start-run identity](../../../../adr/adr-0050-platform-owned-start-run-identity.md)
 
 ## Owned Concern

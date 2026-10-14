@@ -27,8 +27,8 @@ canonical runtime SLA documents.
 - [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 - [AR-C2 Observability Technical Manual](../../../../guides/ar-c2-observability-technical-manual-20260404.md)
-- [AR-C2 Observability User Manual](../../../../guides/ar-c2-observability-user-manual-20260404.md)
-- [Outbox Worker Runbook](../../../../runbooks/outbox-worker-g5.md)
+- [AR-C2 Observability User Manual](../../../../guides/ar-c2-observability-technical-manual-20260404.md#section-ar-c2-observability-user-manual-20260404)
+- [Outbox Worker Runbook](../../../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 - [Backend MVP Control-Plane Runbook](../../../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
 
 ## Current posture
@@ -60,18 +60,18 @@ flowchart LR
 
 ## Current signal families
 
-| Signal family                       | Logical signal                                                                     | Current source                                                                                            | Code anchor                                                                                            |
-| ----------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| API admission/runtime latency       | `dvt_api_run_start_latency_seconds`                                                | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
-| Planner/API compile latency         | `dvt_api_plan_compile_latency_seconds`                                             | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
-| Run-status freshness classification | `dvt.api.run_status.snapshot_staleness_result_total`                               | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
-| Unknown freshness fallback reasons  | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
-| Run diagnostics pointers            | `diagnostics.pointers[]` on `GET /runs/:runId`                                     | Frontend Runtime Contract Technical Manual                                                                | API evidence model and Web Run Detail view                                                             |
-| Ambient run diagnostic context      | `ObservabilityContext` fields attached to structured logs inside `withContext()`   | This guide and `@dvt/observability-otel` README                                                           | `@dvt/observability` port and `@dvt/observability-otel` adapter                                        |
-| Outbox claimed-lag                  | `dvt_outbox_oldest_claimed_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
-| Outbox drain lag                    | `dvt_delivery_outbox_drain_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
-| Event delivery latency              | `dvt_delivery_event_delivery_latency_seconds`                                      | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
-| Worker readiness and ownership      | `dvt_outbox_runtime_ready`, `dvt_outbox_runtime_owner`, `dvt_outbox_runtime_state` | [Outbox Worker Runbook](../../../../runbooks/outbox-worker-g5.md)                                         | `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts` |
+| Signal family                       | Logical signal                                                                     | Current source                                                                                                  | Code anchor                                                                                            |
+| ----------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| API admission/runtime latency       | `dvt_api_run_start_latency_seconds`                                                | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                         | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
+| Planner/API compile latency         | `dvt_api_plan_compile_latency_seconds`                                             | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                         | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
+| Run-status freshness classification | `dvt.api.run_status.snapshot_staleness_result_total`                               | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                         | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
+| Unknown freshness fallback reasons  | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                         | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
+| Run diagnostics pointers            | `diagnostics.pointers[]` on `GET /runs/:runId`                                     | Frontend Runtime Contract Technical Manual                                                                      | API evidence model and Web Run Detail view                                                             |
+| Ambient run diagnostic context      | `ObservabilityContext` fields attached to structured logs inside `withContext()`   | This guide and `@dvt/observability-otel` README                                                                 | `@dvt/observability` port and `@dvt/observability-otel` adapter                                        |
+| Outbox claimed-lag                  | `dvt_outbox_oldest_claimed_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)       | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
+| Outbox drain lag                    | `dvt_delivery_outbox_drain_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)       | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
+| Event delivery latency              | `dvt_delivery_event_delivery_latency_seconds`                                      | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)       | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
+| Worker readiness and ownership      | `dvt_outbox_runtime_ready`, `dvt_outbox_runtime_owner`, `dvt_outbox_runtime_state` | [Outbox Worker Runbook](../../../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5) | `apps/outbox-worker/src/ops/OperationalServer.ts`, `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts` |
 
 ## Operator surfaces
 
@@ -98,7 +98,7 @@ Use the outbox worker runbook for:
 
 Reference:
 
-- [Outbox Worker Runbook](../../../../runbooks/outbox-worker-g5.md)
+- [Outbox Worker Runbook](../../../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 
 ## Reading rules
 

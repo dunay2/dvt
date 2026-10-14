@@ -45,7 +45,7 @@ describe('Outbox shard assignment architecture', () => {
 
   it('keeps ADR, runbook, and component docs aligned with tenant-aware sharding', () => {
     const adr = readRepoFile('docs/adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md');
-    const runbook = readRepoFile('docs/runbooks/outbox-worker-g5.md');
+    const runbook = readRepoFile('docs/guides/outbox-worker-technical-manual-20260404.md');
     const component = readRepoFile(
       'docs/architecture/components/outbox-worker/tenant-aware-outbox-sharding-component.md'
     );

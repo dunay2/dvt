@@ -78,5 +78,5 @@ specialized detail sections.
 ## Related Pages
 
 - [Graph Frontend Architecture](../graph/graph-frontend-architecture.md)
-- [UX Implementation Guide](../ux-implementation-guide.md)
-- [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
+- [UX Implementation Guide](../style-guide.md#section-ux-implementation-guide)
+- [Library And Open-Source Reference Stack](../style-guide.md#section-library-and-open-source-reference-stack)

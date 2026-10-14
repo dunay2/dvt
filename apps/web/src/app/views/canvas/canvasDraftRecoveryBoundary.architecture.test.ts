@@ -8,7 +8,9 @@ import {
 
 describe('canvas draft recovery boundary architecture', () => {
   it('documents and guards protected-runtime token refresh and layout persistence semantics', () => {
-    const authGuide = readRepoFile('docs/architecture/components/web/api-client-auth-component.md');
+    const authGuide = readRepoFile(
+      'docs/architecture/components/web/frontend-data-boundary-architecture.md'
+    );
     const layoutGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
     );

@@ -50,7 +50,7 @@ describe('canvas startup bootstrap publication architecture', () => {
 
   it('keeps TF-E2 parent closure aligned with the Canvas runtime architecture canon', () => {
     const runtimeModel = readRepoFile(
-      'docs/architecture/components/web/graph/graph-canvas-runtime-model.md'
+      'docs/architecture/components/web/graph/graph-frontend-architecture.md'
     );
 
     expect(runtimeModel).toContain('TF-E2 parent closure is complete');

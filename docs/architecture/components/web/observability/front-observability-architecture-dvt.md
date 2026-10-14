@@ -119,6 +119,6 @@ patterns rather than inventing custom dashboard primitives.
 
 ## Related Pages
 
-- [Runs](../runs/dvt-runs-frontend-architecture.md)
-- [UX Implementation Guide](../ux-implementation-guide.md)
-- [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
+- [Runs](../runs/component-runs.md#section-dvt-runs-frontend-architecture)
+- [UX Implementation Guide](../style-guide.md#section-ux-implementation-guide)
+- [Library And Open-Source Reference Stack](../style-guide.md#section-library-and-open-source-reference-stack)

@@ -17,7 +17,7 @@ Use this for examples like `PYTHON_SCRIPT`, `SPARK_JOB`, or `API_CALL`.
 
 If the work introduces a new step family, a plugin-backed catalog contribution,
 or a new plan compile profile, also follow
-[Plan Compile Catalog Extension Technical Manual](plan-compile-catalog-extension-technical-manual-20260417.md).
+[Plan Compile Catalog Extension Technical Manual](plan-compile-target-architecture-technical-manual-20260417.md#section-plan-compile-catalog-extension-technical-manual-20260417).
 
 ## Prerequisites
 

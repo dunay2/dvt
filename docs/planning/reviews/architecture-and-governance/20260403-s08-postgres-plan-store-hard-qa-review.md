@@ -47,7 +47,7 @@ Result: the S08 hard-QA findings are closed for the scoped architecture:
 - `packages/@dvt/adapter-postgres/test/PostgresPlanStore.records.integration.test.ts`
 - `packages/@dvt/adapter-postgres/test/PostgresPlanStore.sql.test.ts`
 - `docs/guides/postgres-plan-store-technical-manual-20260403.md`
-- `docs/guides/postgres-plan-store-user-manual-20260403.md`
+- `docs/guides/postgres-plan-store-technical-manual-20260403.md`
 
 ## Final status matrix
 

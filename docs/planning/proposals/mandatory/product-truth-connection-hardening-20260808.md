@@ -675,7 +675,7 @@ allowedImplementationSurfaces:
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
   - scripts/run-canvas-source-import-live-proof.test.cjs
-  - docs/guides/canvas-authoring-user-manual-20260501.md
+  - docs/guides/canvas-workbench-user-manual-20260806.md
   - docs/guides/canvas-workbench-user-manual-20260806.md
   - docs/evidence/**
   - docs/risk-register/quality/**
