@@ -368,7 +368,6 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/status/**
-  - docs/risk-register/quality/R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml
   - docs/risk-register/quality/index.md
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
   - packages/@dvt/engine/src/services/runControl/RunCommandService.ts

@@ -808,3 +808,787 @@ mitigation: >
   command/query ownership, negative tests, architecture guard update, ARC evidence, and risk update
   in the same slice.
 ```
+
+<a id="risk-r-20260514-s08-plan-store-inventory-drift"></a>
+
+## Independent risk R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT
+
+```risk-record-v1
+---
+id: R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT
+title: S08 operations inventory can drift from scoped plan-store implementation truth
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/contracts'
+  - docs
+severity: Low
+probability: Low
+context: >
+  S08 scoped plan-store records, ports, and Postgres adapter surfaces now carry tenant, project, and
+  environment scope. The system operations inventory still contained older rows that described those
+  same surfaces as unscoped legacy drift.
+risk: >
+  Future S08 work could rely on stale inventory rows and re-open already closed drift, causing
+  duplicate remediation tasks or incorrect architecture review conclusions.
+mitigations:
+  - 'Keep the semantic architecture guard in plan-store-records.architecture.test.ts checking that
+    closed scoped plan-store drift is not restated as current truth.'
+  - 'Update the operations inventory in the same slice as future scoped plan-store API changes.'
+  - 'Run the contracts architecture test and pre-push gate before publishing S08 follow-up PRs.'
+review_after: 2026-06-30
+---
+```
+
+<a id="risk-r-20260515-ci-contracts-hash-scope-e2e"></a>
+
+## Independent risk R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E
+
+```risk-record-v1
+---
+id: R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E
+title: Contracts hash-compare scope change lacks PR-runtime E2E validation
+status: Open
+date: 2026-05-15
+owners:
+  - ci
+  - '@dvt/contracts'
+severity: Medium
+probability: Medium
+---
+summary: >
+  The contracts workflow gates snapshot hash comparison through centralized `emit-scope.mjs` output
+  (`contracts_scope.hash_compare_relevant`) instead of an inline PR `git diff` detector. Unit and
+  parity tests passed, but no PR-runtime end-to-end execution evidence has been captured yet in
+  GitHub Actions.
+
+mitigations:
+  - Capture one real pull_request run where `hash_compare_relevant=true` and verify `Compare
+    snapshot hashes (blocking)` executes.
+  - Capture one real pull_request run where `hash_compare_relevant=false` and verify the
+    hash-compare step is skipped.
+  - Attach run URLs and step evidence to the task closeout and then close this risk.
+
+validation:
+  - node --test tools/ci/emit-scope.test.mjs
+  - node --test tools/ci/workflow-pattern-parity.test.mjs
+  - node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+```
+
+<a id="risk-r-20260601-planner-local-doc-archive"></a>
+
+## Independent risk R-20260601-PLANNER-LOCAL-DOC-ARCHIVE
+
+```risk-record-v1
+---
+id: R-20260601-PLANNER-LOCAL-DOC-ARCHIVE
+title: Planner local documentation archive can hide stale reference paths
+status: Open
+date: 2026-06-01
+last_reviewed: 2026-09-15
+owners:
+  - '@dvt/planner'
+  - docs
+severity: Low
+probability: Low
+---
+
+# R-20260601-PLANNER-LOCAL-DOC-ARCHIVE
+
+## Context
+
+The obsolete Planner documentation archive is retired under
+[issue #3004](https://github.com/dunay2/dvt/issues/3004) and
+[PR #3223](https://github.com/dunay2/dvt/pull/3223). Historical content remains in
+Git, not in package-local copies, archive indexes, or preservation summaries.
+Planning DB remains the architecture authority; current contracts, code, and
+tests govern implementation.
+
+## Risk
+
+Active readers or evidence consumers can still follow retired Planner paths
+instead of the current owning authority. This risk remains open until the
+relevant consumers and integration checks are reconciled. Retaining obsolete
+files is no longer an accepted mitigation.
+
+## Mitigation
+
+- Resolve current architecture through the existing Planning DB query rail;
+  fail closed when that authority is unavailable instead of rebuilding it from
+  historical Markdown.
+- Reconcile active links, generated indexes, and current evidence obligations
+  against surviving owners. Do not restore the retired archive to satisfy a
+  stale reference.
+- Run `pnpm docs:sync` and the manifest generator after structural changes.
+- Run affected link, Markdown, governance, and pre-push checks before merge;
+  record actual results and unexecuted checks in the governing issue and PR.
+- Use exact Git revisions only where an existing current obligation requires
+  provenance. An old migration record does not require preserving its former
+  directory layout.
+
+## Evidence
+
+- [Retirement implementation and validation](https://github.com/dunay2/dvt/pull/3223)
+- [Original migration record at its pre-retirement Git revision](https://github.com/dunay2/dvt/blob/88b7922f7246386959700da5866e330076f8dd97/docs/evidence/ed-20260601-planner-local-doc-archive.md)
+
+The original migration record describes June's repository state, not a current
+requirement to retain archived snapshots. This reconciliation does not claim
+that all repository backlinks or the operational architecture authority have
+been validated.
+```
+
+<a id="risk-r-20260603-planner-json-canonicalize-2-upgrade"></a>
+
+## Independent risk R-20260603-PLANNER-JSON-CANONICALIZE-2-UPGRADE
+
+```risk-record-v1
+---
+id: R-20260603-PLANNER-JSON-CANONICALIZE-2-UPGRADE
+title: Planner canonical JSON dependency upgrades can drift from deterministic hashing behavior
+status: Open
+date: 2026-06-03
+owners:
+  - packages/@dvt/planner
+severity: Low
+probability: Low
+context: >
+  PR #991 upgrades the planner package from json-canonicalize 1.2.0 to 2.0.0. The dependency is part
+  of planner canonicalization support, so dependency-only changes still require ARC-2 visibility.
+risk: >
+  A major dependency upgrade could alter canonical JSON edge-case behavior and affect deterministic
+  planner hashes even when TypeScript compilation and package metadata remain valid.
+mitigations:
+  - Keep `@dvt/planner` type-check and unit-test validation in the PR evidence.
+  - Keep pre-push validation as the merge closeout gate.
+  - Reopen this risk if planner hash, canonicalization, or determinism tests regress after merge.
+review_after: 2026-06-17
+---
+```
+
+<a id="risk-r-20260612-contracts-compat-schema-parity"></a>
+
+## Independent risk R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY
+
+```risk-record-v1
+---
+id: R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY
+title: Packaged compatibility schema can drift from canonical root compatibility matrix
+status: Open
+date: 2026-06-12
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+context: >
+  The repository keeps the canonical ExecutionPlan compatibility matrix under contracts/compat and
+  also ships a packaged schema copy under @dvt/contracts. The packaged copy previously allowed a
+  prefixed version literal while the canonical matrix and runtime adapter compatibility use
+  major.minor literals.
+risk: >
+  A consumer or future maintainer could treat the packaged schema as an independent contract and
+  reintroduce a second compatibility vocabulary, allowing v-prefixed versions to appear valid
+  outside the canonical matrix.
+mitigations:
+  - 'Keep `packages/@dvt/contracts/compat/plan-compat.schema.json` byte-level equivalent in shape to
+    `contracts/compat/plan-compat.schema.json`.'
+  - 'Run `node --test tools/ci/contracts-compat-schema-parity.test.mjs` when compatibility schema
+    surfaces change.'
+  - 'Keep `packages/test/matrix-alignment.test.ts` validating the canonical root matrix against the
+    root schema.'
+review_after: 2026-07-12
+---
+```
+
+<a id="risk-r-20260713-dbt-project-file-projection"></a>
+
+## Independent risk R-20260713-DBT-PROJECT-FILE-PROJECTION
+
+```risk-record-v1
+---
+id: R-20260713-DBT-PROJECT-FILE-PROJECTION
+title: dbt manifest or analysis-profile drift can make file projection unavailable
+status: Open
+date: 2026-07-13
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  Phase two derives a read-only Canvas projection from a fresh server-side dbt parse using an
+  explicitly configured analysis profile and normalized manifest resources.
+risk: >
+  A future dbt manifest version, adapter-specific profile requirement, unsupported resource type, or
+  deployment misconfiguration could make analysis unavailable or omit semantics without an
+  intentional contract evolution.
+mitigations:
+  - 'Reject unsupported manifest shapes and return an explicit unavailable projection rather than a
+    valid empty graph or graph-draft fallback.'
+  - 'Require a server-managed analysis profile; never read workspace profiles.yml or inherit secret
+    environment variables into dbt parse.'
+  - 'Keep manifest normalization behind IDbtProjectAnalyzerPort and cover source, model, test,
+    dependency, stale-target, invalid-project, and cleanup behavior.'
+  - 'Version Canvas authority and graph projection contracts and fail closed on duplicate unique_id
+    or missing edge endpoints.'
+review_after: 2026-08-13
+---
+```
+
+<a id="risk-r-20260714-dbt-project-import-authority"></a>
+
+## Independent risk R-20260714-DBT-PROJECT-IMPORT-AUTHORITY
+
+```risk-record-v1
+---
+id: R-20260714-DBT-PROJECT-IMPORT-AUTHORITY
+title: dbt import authority or atomic file mutation can diverge under runtime failure
+status: Open
+date: 2026-07-14
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Phase three introduces persisted Canvas authoring authority, validation-bound dbt project imports,
+  atomic workspace file batches, and authority-specific warehouse source import.
+risk: >
+  A future adapter, retry path, or transaction-boundary change could bind a Canvas to stale project
+  evidence, partially mutate project files, or write both project files and graph draft state for
+  one product command.
+mitigations:
+  - 'Bind imports to a validation receipt and reject changed project inventory or an already-bound
+    Canvas before mutation.'
+  - 'Execute workspace file writes through one atomic batch gateway with deterministic rollback and
+    restored preconditions.'
+  - 'Resolve one persisted authority before Source Import and delegate to exactly one strategy.'
+  - 'Acquire one shared tenant/project/environment/Canvas transaction lock from both graph-draft
+    save and file-authority bind, then revalidate the competing store before commit.'
+  - 'Hash file-batch command intent independently from mutable CAS revision values and verify stored
+    receipt postconditions before replaying a completed retry.'
+  - 'Use idempotency keys at protected command routes and test retries, conflicts, rollback, and
+    projection refresh failures.'
+  - 'Apply the protected runtime rate limit to graph-draft read and save routes before repeated
+    authorization attempts reach application services.'
+  - 'Persist the completed ImportDbtProject result and replay it before validating mutable project
+    files; reject a reused idempotency key whose request hash differs.'
+  - 'Own authority binding, active-operation leasing, completed replay, and compensation through one
+    durable import process store. Recover an incomplete operation only after lease expiry and reject
+    completion or compensation from a stale owner token.'
+  - 'Keep authority and import payloads versioned in @dvt/contracts and reject unsupported shapes.'
+review_after: 2026-08-14
+---
+```
+
+<a id="risk-r-20260731-plan-admission-finding-identity"></a>
+
+## Independent risk R-20260731-PLAN-ADMISSION-FINDING-IDENTITY
+
+```risk-record-v1
+---
+id: R-20260731-PLAN-ADMISSION-FINDING-IDENTITY
+title: Finding identity could drift if canonical input ordering changes
+status: Open
+date: 2026-07-31
+owners:
+  - '@dvt/contracts'
+severity: Medium
+probability: Low
+---
+context: >
+  Plan admission finding identifiers are deterministic artifact identities. A future producer that
+  hashes subjects or evidence in encounter order could assign different identifiers to the same
+  semantic rejection.
+mitigation: >
+  The contract owns one identity factory that sorts subjects and evidence before hashing a
+  fixed-shape payload. Contract tests prove order independence and the runtime schema rejects
+  identifiers that do not match the canonical payload.
+```
+
+<a id="risk-r-20260801-lossless-dbt-dependency-edit"></a>
+
+## Independent risk R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT
+
+```risk-record-v1
+---
+id: R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT
+title: A dbt semantic edit could alter content outside its proven region
+status: Open
+date: 2026-08-01
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Graph-to-Code dependency edits cross native dbt semantics, workspace file revisions, and an atomic
+  publication boundary.
+risk: >
+  Incorrect source ranges, stale analysis, ambiguous Jinja, or a non-lossless rewrite could alter
+  user-authored dbt content beyond the requested dependency target.
+mitigations:
+  - 'Bind the request to project, native-analysis, selected-analysis, region, file, and target
+    identities.'
+  - 'Accept only manifest-confirmed literal ref and source regions owned by the selected model.'
+  - 'Refuse code_only, overlapping, incompatible, stale, invalid, or semantically mismatched
+    candidates before publication.'
+  - 'Parse an isolated candidate with the installed dbt runtime before publication.'
+  - 'Revalidate the exact canonical dbt file set under a workspace-scoped lock.'
+  - 'Publish the target SQL and immutable semantic receipt in one rollback-capable atomic mutation.'
+  - 'Verify that every unrelated analyzed file remains byte-identical.'
+  - 'Bind one idempotency key to one request and preserve immutable applied receipts.'
+  - 'Cover UTF-8 offsets, quote and whitespace preservation, Jinja, macros, YAML sources/tests,
+    no-op, authorization, and CAS conflicts with focused tests.'
+residual_risk: >
+  Unsupported dbt or Jinja syntax remains code_only and cannot be edited visually until native
+  semantic evidence explicitly classifies it. This limits edit coverage but preserves losslessness.
+review_after: 2026-09-01
+---
+```
+
+<a id="risk-r-20260801-selected-dbt-analysis"></a>
+
+## Independent risk R-20260801-SELECTED-DBT-ANALYSIS
+
+```risk-record-v1
+---
+id: R-20260801-SELECTED-DBT-ANALYSIS
+title: Ambiguous dbt syntax could be mistaken for a writable semantic region
+status: Open
+date: 2026-08-01
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Selected dbt analysis combines exact project files with native manifest identities and source
+  locations so later Graph-to-Code operations can distinguish supported regions from code-only
+  content.
+risk: >
+  If dynamic Jinja, comments, statements, or source locations that do not match native manifest
+  evidence were classified as writable, a later patch could alter user-authored code without a
+  lossless semantic guarantee.
+mitigations:
+  - 'Use the installed dbt runtime and its manifest as the semantic authority.'
+  - 'Classify only literal, manifest-confirmed ref and source calls as supported regions.'
+  - 'Classify all ambiguous or unsupported syntax as code_only.'
+  - 'Bind file revisions, semantic evidence, capabilities, and selected identity into a stable
+    analysis hash.'
+  - 'Return typed unavailable or invalid outcomes instead of fabricated partial success.'
+  - 'Cover contract, application query, HTTP authorization, native analyzer, and region projection
+    boundaries with focused tests.'
+residual_risk: >
+  New dbt or Jinja syntax remains code_only until the native evidence projection explicitly supports
+  it. This reduces automatic edit coverage but preserves losslessness and fail-closed behavior.
+review_after: 2026-09-01
+---
+```
+
+<a id="risk-r-20260824-substrait-profile-drift"></a>
+
+## Independent risk R-20260824-SUBSTRAIT-PROFILE-DRIFT
+
+```risk-record-v1
+---
+id: R-20260824-SUBSTRAIT-PROFILE-DRIFT
+title: Substrait profile and tool version drift can change semantic portability
+status: Open
+date: 2026-08-24
+owners:
+  - architecture
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+---
+mitigation:
+  summary: >
+    ADR-0064 requires an exact pinned Substrait logical profile, explicit profile/version identity,
+    serialization and compatibility fixtures, fail-closed unsupported features, and provider-native
+    readiness after rendering. DVT stable RelationId/FieldId authoring identity remains outside raw
+    Substrait structural/positional field references. The production profile pins Substrait v0.101.0
+    at commit 2653e55516c8c07529cde9bc81c64e4ae3537515 and rejects profile/spec version or commit
+    skew as a compatibility mismatch rather than semantic-plan corruption. The SUB1 capability
+    catalog is bound to that exact profile and records only selected upstream identities plus
+    explicit product gaps; catalog presence does not imply provider execution, UI exposure, or
+    semantic admission. The audited v0.102.0 delta remains governed by #2643 rather than silently
+    entering the pinned catalog. The #2598 and #2634 pilots were historically bounded by whole-plan
+    shapes; RELINC1 now derives admitted relation schemas compositionally from canonical Substrait
+    and stable identities. The #3263 convergence removes the four shape-specific Web SQL renderers
+    and routes output through the shared PostgreSQL target. Preview still verifies scoped source
+    connection, source-object, schema, table and upstream semantic-document identity before SQL.
+    Semantic field names follow the contract's Unicode budget; physical PostgreSQL identifiers and
+    rendered aliases follow target-specific byte limits. Web, contracts and API must roll out
+    together; older readers may reject newly admitted long semantic names. Scalar target bindings
+    preserve Substrait null propagation and UTC extraction, with real PostgreSQL regression tests.
+    SQL and dbt remain projections, never semantic fallbacks. Canvas cards, inspector fields and
+    column lineage now consume shared asynchronous schema facts rather than whole-plan profiles.
+    Consumer lifetime, canonical revision and edit authorization fence obsolete completions; a
+    bounded shared schema cache is independent of provider data and geometry changes. The #3369
+    prerequisite preserves struct child schemas and dependency identities in the shared
+    analysis/cache, including nullable-parent selection and both SET operands. This does not grant
+    structured-value execution to a target. Remaining shape-specific authoring readers and full
+    document receipt/export costs are not declared converged by this presentation migration. The
+    projection inspector keeps its exact Project input as the Filter command target and disables
+    stale projection editing while another incoming node awaits composition. Regression proofs cover
+    reopening without stacked filters and unchanged stable field bindings. The #3369 hard cut also
+    repoints admission evidence from the removed JOIN-composition test to selected-condition
+    persistence. Catalog contract checks require local canonical, semantic and negative proof
+    references to resolve; a retired implementation cannot remain the advertised admission proof.
+    This changes no admitted identity or target status. The #3298 producer/consumer boundary adds
+    optional producerRef and inputBindings contracts: consumer Input stores provenance and explicit
+    internal operations alone define published Output. Stable producer FieldIds are validated
+    against the immediate published schema; excluded or missing fields cannot be recovered by
+    matching names. Exact-match migration may replace embedded producer trees, but does not guess
+    identity or widen semantic admission. Older strict clients may reject documents containing the
+    new optional fields, so Web, API and shared packages require coordinated deployment. Protected
+    preview continues to validate authorization, direct dependencies, cycles, physical source
+    coverage and a single connection before provider access. The optional
+    DvtRelationalAuthoringDraft v1 records incomplete source occurrences, algebraic operation ports,
+    explicit terminal Output selection and card positions without promoting them to executable
+    Substrait. Its validator rejects duplicate identities, invalid arity and cycles. Positions may
+    retain canonical relation identities after Apply; hydration removes those identities from the
+    incomplete graph before rendering, so layout persistence cannot duplicate applied operations. A
+    configured staged operation may carry a semantic document only with all Input ports filled and
+    with a sidecar relation matching its own output identity. Transform materializes one ProjectRel
+    over the exact connected producer; configuring it does not remove the operation card. Producer
+    edits run through the complete configured tree so canonical rebinding preserves consumer aliases
+    and derived fields or rejects an incompatible edit atomically. Explicit disconnections
+    invalidate disconnected downstream documents before publication. Only the operation explicitly
+    connected to terminal Output is promoted. Draft persistence remains separate from readiness.
+    Internal editor connection commands count canonical, staged and terminal consumers together,
+    reject producer fan-out and require distinct aliased instances for self-joins. New terminal
+    links require operation outputs; legacy direct source links remain visible and removable rather
+    than silently migrated. Source, operation and terminal Output cards share presentation-only
+    movement, and the node overlay does not obscure removable edge actions. Movement cannot mutate
+    producers, consumers or semantic output. Browser fixture tests and protected API/SQL unit proofs
+    do not establish live PostgreSQL or complete chained StartRun support; bounded operational
+    admission remains unchanged. Governance evidence repair preserves exact cycle identity, expected
+    revision, audit and idempotency. Distinct rail surface scopes cannot be unioned into artificial
+    cross-rail permission or denial; equally specific conflicting owners still deny admission.
+    Governance acceptance is not product or live-provider execution proof. Binary staging now uses
+    exact producer subtrees and a single canonical builder; document-local relation/function anchors
+    are rebased on clones, preserving stable identities and rejecting overlapping occurrences or
+    incompatible SET operands. Output refresh cannot replace the inspector or focused controls.
+    Semantic zoom reserves lexical-detail space as a disposable projection, never a semantic write
+    or replacement of manually authored coordinates. Expansion offsets remain stable while cards
+    move; visible bounds/topology changes and Arrange invalidate the session frame. Repeated
+    boundary-crossing, cancellation and real-browser drag tests reject geometry feedback without
+    adding a persisted layout authority. Browser checks cover repeated zoom, column
+    inclusion/reorder and JOIN/CROSS/UNION Apply/reopen; controlled API transport still does not
+    prove live provider execution. Name/formula editing compiles directly to canonical expressions
+    and preserves FieldIds. Only matching i64/fp64 arithmetic signatures are admitted. Shared
+    numeric literal rendering explicitly retains those SQL types, including fp64 negative zero;
+    PostgreSQL inference cannot silently replace the model type. Read-only constant queries prove
+    values, result OIDs, NULL propagation and i64 overflow without touching user tables.
+  evidence:
+    - apps/web/src/app/views/canvas/canvasDerivedOutputFormula.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-arithmetic.contract.test.ts
+    - packages/@dvt/postgres-projection/test/relationalArithmetic.test.ts
+    - apps/web/src/app/views/canvas/canvasStagedBinaryConfiguration.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalTreeGeometry.test.ts
+    - apps/web/src/app/views/canvas/relational-layout/RelationalCardDisclosure.test.tsx
+    - apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts
+    - scripts/check-feature-mechanization.test.cjs
+    - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
+    - docs/evidence/ED-20260926-producer-consumer-input-boundary.md
+    - packages/@dvt/contracts/test/dvt-input-bindings.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-relational-authoring-draft.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalAuthoringDraft.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalDraftApply.test.ts
+    - apps/web/src/app/views/canvas/canvasStagedOperationActions.test.ts
+    - apps/web/src/app/views/canvas/CanvasRelationalTreeWorkbench.transform.test.tsx
+    - apps/web/src/app/views/canvas/CanvasRelationalTreeWorkbench.apply.test.tsx
+    - packages/@dvt/substrait-analysis/test/producerInputRefresh.test.ts
+    - packages/@dvt/substrait-analysis/test/migrateEmbeddedProducerInput.test.ts
+    - packages/@dvt/postgres-projection/test/producerGraph.test.ts
+    - apps/api/test/application/services/previewCanvasProducerRows.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
+    - apps/web/cypress/e2e/canvas/canvas-relational-card-movement.cy.ts
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
+    - docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md
+    - apps/web/src/app/views/canvas/canvasRelationAnalysisSession.ts
+    - apps/web/src/app/views/canvas/canvasSelectedJoinConsumers.test.ts
+    - apps/web/src/app/views/canvas/canvasSelectedJoinConditionPersistence.test.ts
+    - apps/web/src/app/views/canvas/canvasSubstraitPreviewProvenance.test.ts
+    - docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-substrait-semantic-reference-design-20260824.md
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitProfile.v1.ts
+    - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
+    - packages/@dvt/contracts/test/dvt-substrait-profile.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260908-canvas-authoring-field-budgets.md
+    - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
+    - apps/web/src/app/views/canvas/canvasSubstraitGraphBindings.ts
+    - packages/@dvt/postgres-projection/test/relationalSqlNames.test.ts
+    - apps/api/test/integration/dvtScalarSql.integration.test.ts
+    - packages/@dvt/substrait-analysis/test/schemaHierarchy.test.ts
+    - packages/@dvt/substrait-analysis/test/schemaStructuredComposition.test.ts
+    - apps/web/src/app/views/canvas/canvasNodePresentationProjection.ts
+    - apps/web/src/app/views/canvas/canvasPresentationAnalysis.test.ts
+    - apps/web/src/app/views/canvas/useCanvasControllerReadModel.geometry.test.tsx
+    - apps/web/src/app/views/canvas/useCanvasEdgeCommandRunner.lifecycle.test.tsx
+    - apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts
+    - apps/web/src/app/views/canvas/CanvasSelectedFilterEditor.test.tsx
+    - apps/web/src/app/views/canvas/canvasSelectedRelationFilter.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts
+  follow_up:
+    - Issue #2597 must prove SQL AST/source mapping to the pinned semantic profile and governed target rendering.
+    - Issue #2641 owns semantic admission/conformance and the first promotion to supported-profile.
+    - Issue #2642 must project admitted capabilities into visual authoring without a second semantic registry.
+    - Issue #2599 must prove semantic roundtrip and provider-native Preview against the exact profile.
+    - Issue #2643 governs future profile upgrades, version skew, capability deltas, compatibility fixtures, and fail-closed gaps.
+    - Issue #2634 governs typed field selection, grouping, and window capability admissions after the first INNER JOIN cut.
+```
+
+<a id="risk-r-20260902-planner-environment-ingress-drift"></a>
+
+## Independent risk R-20260902-PLANNER-ENVIRONMENT-INGRESS-DRIFT
+
+```risk-record-v1
+---
+id: R-20260902-PLANNER-ENVIRONMENT-INGRESS-DRIFT
+title: Planner callers could retain the removed no-op environment input
+status: Open
+date: 2026-09-02
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - apps/api
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The pre-stable hard cut removes the generic environment bag from every shared Planner and
+    planner-backed StartRun contract surface. Strict schemas and HTTP ingress reject the retired
+    field, while the normative boundary directs callers to resolve environment-dependent values
+    upstream into typed graph, policy, ownership, or step configuration. PlanOwnership.environmentId
+    remains intact because it carries real authorization and ownership scope. Focused contract,
+    Planner, and API tests guard against reintroducing accept-and-drop behavior.
+  evidence:
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260902-planner-environment-contract-truth.md
+    - docs/architecture/components/engine/contracts/engine/start-run-boundary.v1.md
+    - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
+    - packages/@dvt/contracts/src/contracts/engine/StartRunBoundary.v1.ts
+    - packages/@dvt/contracts/test/start-run-boundary.contract.test.ts
+    - apps/api/src/entrypoints/http/planRoutePlannerEnvelopeParser.ts
+  follow_up:
+    - Issue #2691 owns removal of the no-op Planner input and its caller migration.
+    - Any future Planner-owned environment fact requires a typed deterministic consumer and a new
+      governed contract change.
+```
+
+<a id="risk-r-20260903-run-execution-context-sha256-crypto-migration"></a>
+
+## Independent risk R-20260903-RUN-EXECUTION-CONTEXT-SHA256-CRYPTO-MIGRATION
+
+```risk-record-v1
+---
+id: R-20260903-RUN-EXECUTION-CONTEXT-SHA256-CRYPTO-MIGRATION
+title:
+  Run execution context sha256 fields tightened to Sha256HexString; writers migrated to @dvt/crypto
+status: Open
+date: 2026-09-03
+owners:
+  - '@dvt/contracts'
+  - 'dvt-api'
+severity: Low
+probability: Low
+---
+summary: >
+  RunExecutionContextRef.sha256 and RunExecutionContext.planSha256 were loosely typed as
+  NonBlankString and validated with node:crypto createHash('sha256') in three apps/api writers/
+  readers. Tightening the Zod schema to Sha256HexStringSchema is a backward-compatible narrowing for
+  any caller that already produces valid SHA-256 hex digests (which all known production callers
+  do), but any external or future caller that supplied a non-64-char-hex value in this field would
+  now be rejected at validation time instead of silently accepted.
+
+mitigations:
+  - Reused the already-existing Sha256HexString branded type and Sha256HexStringSchema (already
+    applied to pluginCompatibilityFingerprint and PlanRef.sha256) rather than introducing a new
+    validation primitive.
+  - Full build + test pass across @dvt/contracts, dvt-api, @dvt/engine, @dvt/artifacts,
+    @dvt/adapter-temporal, @dvt/temporal-dbt-plugin, and dvt-temporal-worker confirms no production
+    caller regresses.
+  - sha256Hex(bytes) from @dvt/crypto is a byte-for-byte drop-in replacement for
+    createHash('sha256').update(bytes).digest('hex'); no digest value produced by the migrated
+    writers changes.
+  - Repo-wide grep confirmed apps/web does not consume the RunExecutionContext.v1 parsers, so the
+    frontend surface is unaffected.
+
+monitoring:
+  - Watch for new ContractValidationError occurrences tagged to
+    RunExecutionContextRefSchema/RunExecutionContextSchema after rollout, which would indicate an
+    undiscovered caller producing non-canonical sha256/planSha256 values.
+
+follow_up:
+  - >-
+    Issue #2191 (epic #2185) tracks the remaining ~39-file crypto duplication cleanup inventory;
+    this change addresses only the first, highest-consensus item (this file's code_refs).
+  - >-
+    Issue #2193 tracks the CI guard to prevent new node:crypto duplicates from being introduced; not
+    yet implemented.
+  - A recurring md5($1) SQL-side pattern for Postgres advisory locks (6 files) and a
+    non-cryptographic CRC32 usage in @dvt/state-store/archiveLifecycle.ts remain open, non-blocking
+    governance notes from the issue's inventory, out of scope for this cut.
+```
+
+<a id="risk-r-20260903-structured-field-hierarchy"></a>
+
+## Independent risk R-20260903-STRUCTURED-FIELD-HIERARCHY
+
+```risk-record-v1
+---
+id: R-20260903-STRUCTURED-FIELD-HIERARCHY
+title: Structured sidecar identity can diverge from canonical Substrait nesting
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Parent references are validated against one relation, sibling order is scoped to the parent,
+    ancestry cycles and duplicate identities fail closed, and the visual authoring flow now proves
+    autosave and reload agreement with the canonical Plan. PostgreSQL projection remains
+    unavailable.
+  evidence:
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260903-substrait-structured-field-gate.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/canvas-structured-transform-fields-plan-20260903.md
+    - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-struct-capability.contract.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-structured-transform-fields.cy.ts
+  follow_up:
+    - Keep open until a supported target projection proves agreement with card, inspector, lineage
+      and reload.
+```
+
+<a id="risk-r-20260903-substrait-capability-admission"></a>
+
+## Independent risk R-20260903-SUBSTRAIT-CAPABILITY-ADMISSION
+
+```risk-record-v1
+---
+id: R-20260903-SUBSTRAIT-CAPABILITY-ADMISSION
+title: Capability evidence can drift into unsupported semantic or provider claims
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Supported-profile entries require typed standard-first evidence. Semantic, target, and visual
+    postures remain independent; provider-native support cannot be inferred from mapping. Bounded
+    DVT proposals fail when a reviewed standard identity exists or upstream-gap evidence is absent.
+    Issue #3485 removes internal mapped/exposed defaults: every group explicitly declares target and
+    visual postures. Web references published capability IDs and rejects absent exposure or
+    unavailable PostgreSQL conformance without treating mapping as runtime readiness.
+  evidence:
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260903-vtx2-standard-first-capability-admission.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-standard-first-capability-admission-plan-20260903.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+    - docs/evidence/ed-20260930-explicit-capability-admission.md
+    - packages/@dvt/contracts/test/dvt-substrait-admission-types.contract.test.ts
+    - apps/web/src/app/views/canvas/canvasRelationalOperationChoices.capabilities.test.ts
+  follow_up:
+    - Require this admission contract before structured-type work can unblock issue #2771.
+```
+
+<a id="risk-r-20260903-vtx2-durable-semantic-document"></a>
+
+## Independent risk R-20260903-VTX2-DURABLE-SEMANTIC-DOCUMENT
+
+```risk-record-v1
+---
+id: R-20260903-VTX2-DURABLE-SEMANTIC-DOCUMENT
+title: Persisted Transform metadata may contain corrupt or unsupported Substrait semantics
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The canonical workspace aggregate validates the pinned profile, exact protobuf decoding,
+    semantic digest, sidecar binding and unique stable identities on both save and reload.
+    PostgreSQL JSONB/CAS remains the single durable authority, and corrupt stored payloads fail
+    closed without SQL, VTX1 or project-file fallback.
+  evidence:
+    - docs/evidence/ED-20260903-vtx2-durable-semantic-document.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-durable-semantic-document-plan-20260903.md
+    - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
+    - packages/@dvt/contracts/test/workspace-graph-semantic-document.contract.test.ts
+    - apps/api/test/integration/workspaceGraphDraftSemanticPersistence.test.ts
+  follow_up:
+    - Keep future Substrait profile upgrades explicit and versioned; never accept them through a
+      permissive compatibility fallback.
+```
+
+<a id="risk-r-20260911-substrait-variadic-arity-drift"></a>
+
+## Independent risk R-20260911-SUBSTRAIT-VARIADIC-ARITY-DRIFT
+
+```risk-record-v1
+---
+id: R-20260911-SUBSTRAIT-VARIADIC-ARITY-DRIFT
+title: Function consumers could misread open Substrait invocation arity
+status: Open
+date: 2026-09-11
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    The canonical capability catalog now expresses a positive minimum and an optional maximum. Fixed
+    invocations use equal bounds; official coalesce:any1 requires at least two operands and omits
+    the maximum. The schema rejects the retired argumentCount field, inverted ranges, and malformed
+    admitted CONCAT or COALESCE identities. PostgreSQL text exposure must consume this catalog range
+    directly and must not introduce a Web-side capability registry.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/evidence/ED-20260911-substrait-coalesce-variadic-admission.md
+    - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
+  follow_up:
+    - Migrate every capability consumer to the range contract in the same integration before merge.
+```
+
+<a id="risk-r-20260911-terminal-transform-preview"></a>
+
+## Independent risk R-20260911-TERMINAL-TRANSFORM-PREVIEW
+
+```risk-record-v1
+---
+id: R-20260911-TERMINAL-TRANSFORM-PREVIEW
+title: Persisted terminal Transform Preview may outlive executor capability posture
+status: Open
+date: 2026-09-11
+owners:
+  - apps/api
+  - packages/@dvt/planner
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Preview fails closed with MISSING_CAPABILITY and keeps Start Run disabled. The browser cannot
+    provide SQL, Substrait bytes, workload payloads, or planner graph semantics. The persisted plan
+    and SQL artifact retain exact hashes and protected Canvas provenance.
+  risk: >
+    A persisted INVALID Preview plan cannot silently become executable when #2723 adds the executor;
+    it requires a fresh governed admission decision.
+  follow_up:
+    - Issue #2723 must add the real executor and a fresh-admission lifecycle test before Run is enabled.
+    - Issue #2784 remains open for the wider execution and Sink acceptance.
+```

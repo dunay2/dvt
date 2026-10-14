@@ -1704,3 +1704,452 @@ mitigations:
     workflow-engine-boundary-ownership-component.md keeps the public API, invariants, transitions,
     consumers, diagrams, and drift guards together.
 ```
+
+<a id="risk-r-20260514-ar-c2-prom-sla-hardcut"></a>
+
+## Independent risk R-20260514-AR-C2-PROM-SLA-HARDCUT
+
+```risk-record-v1
+---
+id: R-20260514-AR-C2-PROM-SLA-HARDCUT
+title: AR-C2 Prometheus metric hardcut may require dashboard and alert query updates
+status: Open
+date: 2026-05-14
+owners:
+  - dvt-api
+  - dvt-outbox-worker
+  - '@dvt/engine'
+severity: Medium
+probability: Medium
+---
+The AR-C2 Prometheus latency metrics are intentionally hard-cut to `_seconds` names without legacy
+aliases. Any dashboard, alert, or evidence snapshot still querying `_ms` names must be updated
+before AR-C2 operational closure.
+```
+
+<a id="risk-r-20260514-ar-d3-worker-scaling"></a>
+
+## Independent risk R-20260514-AR-D3-WORKER-SCALING
+
+```risk-record-v1
+---
+id: R-20260514-AR-D3-WORKER-SCALING
+title: Worker scaling docs can be mistaken for automated 1000+ tenant provisioning
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/adapter-temporal'
+severity: Low
+probability: Medium
+---
+summary: >
+  AR-D3 closes the worker scaling strategy and operator contract, but it does not implement
+  tenant-to-queue assignment automation, KEDA manifests, or production load evidence for 1000+ live
+  tenant queues.
+mitigation: >
+  The strategy and runbook explicitly state that the global shared pool is not implemented and that
+  automated 1000+ tenant provisioning is future work. The architecture test guards those semantics.
+next_review: 2026-06-14
+```
+
+<a id="risk-r-20260514-ea-20260429-05-engine-public-api-surface"></a>
+
+## Independent risk R-20260514-EA-20260429-05-ENGINE-PUBLIC-API-SURFACE
+
+```risk-record-v1
+---
+id: R-20260514-EA-20260429-05-ENGINE-PUBLIC-API-SURFACE
+title: Engine runtime imports can drift back into the root package surface
+status: Open
+date: 2026-05-14
+owners:
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-temporal
+  - apps/outbox-worker
+  - packages/@dvt/delivery
+severity: Low
+probability: Low
+---
+summary: >
+  The engine package surface is now split into public, runtime, and testing entrypoints, and event
+  vocabulary now hard-cuts engine-local compatibility aliases. Future runtime, adapter, or outbox
+  work could accidentally re-export implementation services from the root barrel, consume runtime
+  constructors from the root package, or reintroduce alias names around canonical @dvt/contracts
+  events unless the architecture guard remains active.
+mitigation: >
+  Keep packages/@dvt/engine/test/architecture/enginePublicApiSurface.architecture.test.ts in the
+  package test baseline, require component docs to change before expanding any public root export
+  family, keep adapter runtime constructors on @dvt/engine/runtime, and fail the guard if event
+  aliases such as persisted/run-level/step-level legacy names reappear.
+```
+
+<a id="risk-r-20260515-ar-d-plan-pointer-semantic-fitness"></a>
+
+## Independent risk R-20260515-AR-D-PLAN-POINTER-SEMANTIC-FITNESS
+
+```risk-record-v1
+---
+id: R-20260515-AR-D-PLAN-POINTER-SEMANTIC-FITNESS
+title: PlanRef workflow semantic drift can hide integrity and ownership gaps
+status: Open
+date: 2026-05-15
+owners:
+  - packages/@dvt/adapter-temporal
+severity: Low
+probability: Low
+---
+summary: >
+  AR-D PlanRef workflow documentation, module ownership docblocks, and runtime tests can drift
+  independently unless architecture fitness checks validate the semantic relationships instead of
+  duplicated literals.
+mitigation: >
+  The component semantics test now parses the component guide, validates exact @ownedConcern
+  declarations, checks module-set parity, rejects duplicate component-map rows, and requires the
+  governed user-story coverage matrix.
+validation:
+  - pnpm --filter @dvt/adapter-temporal exec vitest run
+    test/workflow-component-semantics.architecture.test.ts
+  - pnpm --filter @dvt/adapter-temporal exec vitest run test/runPlanWorkflow.layers.order.test.ts
+```
+
+<a id="risk-r-20260601-execution-plan-schema-hardcut"></a>
+
+## Independent risk R-20260601-EXECUTION-PLAN-SCHEMA-HARDCUT
+
+```risk-record-v1
+---
+id: R-20260601-EXECUTION-PLAN-SCHEMA-HARDCUT
+title: ExecutionPlan schema hard-cut can drift across generated fixtures and persisted stores
+status: Open
+date: 2026-06-01
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/adapter-postgres
+  - packages/@dvt/engine
+  - packages/@dvt/plan-verifier
+severity: Medium
+probability: Low
+context: >
+  The active pre-alpha ExecutionPlan admission pair is hard-cut to planVersion 1.0 and schemaVersion
+  1.0. The previous v1.2 schema literal is intentionally rejected instead of being preserved as a
+  compatibility alias.
+risk: >
+  A producer, fixture, persisted plan row, or documentation example could continue to emit v1.2 and
+  appear valid locally while runtime admission rejects it. Conversely, a consumer could reintroduce
+  a prefixed or semver-style compatibility rule and silently admit a non-current plan shape.
+mitigations:
+  - 'Keep `CURRENT_EXECUTION_PLAN_SCHEMA_VERSION` as the single source for generated test fixtures.'
+  - 'Keep `PlanRecord.v1.schema.json` and `contracts/compat/plan-compat.json` aligned to the same
+    schema literal.'
+  - 'Keep negative tests proving `schemaVersion = v1.2` rejects for `planVersion = 1.0`.'
+  - 'Use feature mechanization to prevent unrelated command/query or runtime surfaces from changing
+    in this hard-cut.'
+  - 'Move plan creation authority into a persisted command/query rail before adding any future
+    schema line.'
+review_after: 2026-07-15
+---
+```
+
+<a id="risk-r-20260603-dbt-capability-admission"></a>
+
+## Independent risk R-20260603-DBT-CAPABILITY-ADMISSION
+
+```risk-record-v1
+---
+id: R-20260603-DBT-CAPABILITY-ADMISSION
+title: DBT runtime capability posture can drift between API and worker deployment
+status: Open
+date: 2026-06-03
+owners:
+  - apps/api
+  - apps/temporal-worker
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+context: >
+  DBT step kinds now require executor.dbt and the API declares that capability for the Temporal
+  adapter only when DVT_TEMPORAL_DBT_ENABLED=true. The worker also uses the same flag to compose DBT
+  activities.
+risk: >
+  A deployment can misconfigure API and worker independently: API could advertise executor.dbt while
+  the worker lacks DBT activities, or the worker could be DBT-enabled while API never declares the
+  capability. The first case reintroduces late UNSUPPORTED_STEP_KIND failures; the second case
+  rejects valid DBT runs.
+mitigations:
+  - 'Keep DVT_TEMPORAL_DBT_ENABLED documented as an API and worker runtime posture flag.'
+  - 'Keep start-run tests proving the API factory declares executor.dbt only for explicit true.'
+  - 'Keep Temporal adapter capabilities plugin-agnostic and driven by composition-time
+    additionalCapabilities.'
+  - 'Use the worker readyz dbtEnabled signal in future runtime-capability health checks before broad
+    rollout.'
+review_after: 2026-07-15
+---
+```
+
+<a id="risk-r-20260603-temporal-sdk-1-17-2-upgrade"></a>
+
+## Independent risk R-20260603-TEMPORAL-SDK-1-17-2-UPGRADE
+
+```risk-record-v1
+---
+id: R-20260603-TEMPORAL-SDK-1-17-2-UPGRADE
+title: Temporal SDK minor upgrades can drift from provider integration behavior
+status: Open
+date: 2026-06-03
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: Medium
+probability: Low
+context: >
+  PR #1098 upgrades the Temporal TypeScript SDK packages used by the adapter and Temporal worker
+  from 1.16.1 to 1.17.2. The adapter boundary is governed by ARC-2 because provider SDK behavior can
+  affect workflow execution, worker startup, test harness semantics, and integration lane behavior.
+risk: >
+  Temporal SDK minor-version behavior could change provider-side edge cases that are not fully
+  covered by dependency metadata review alone.
+mitigations:
+  - Keep adapter-temporal type-check and unit-test validation in the PR evidence.
+  - Keep temporal-worker type-check and unit-test validation in the PR evidence.
+  - Keep GitHub Temporal integration lanes as the merge gate for provider-level regressions.
+  - Reopen this risk if Temporal worker startup, activity execution, or workflow lifecycle tests
+    regress after merge.
+review_after: 2026-06-17
+---
+```
+
+<a id="risk-r-20260731-engine-guard-planning-authority"></a>
+
+## Independent risk R-20260731-ENGINE-GUARD-PLANNING-AUTHORITY
+
+```risk-record-v1
+---
+id: R-20260731-ENGINE-GUARD-PLANNING-AUTHORITY
+title: Engine architecture checks could regain a local task-authority dependency
+status: Open
+date: 2026-07-31
+owners:
+  - packages/@dvt/engine
+  - ci-governance
+severity: Low
+probability: Low
+context: >
+  The WorkflowEngine architecture suite previously coupled engine invariants to a local lane YAML
+  that is retired by ADR-0061.
+risk: >
+  A future architecture test could again read local assignment or task-state files, recreating a
+  second task authority and making engine verification depend on unrelated planning projections.
+mitigations:
+  - Keep engine architecture tests scoped to engine documents, contracts, and source ownership.
+  - Keep MVP task lifecycle and acceptance state exclusively in GitHub Issues.
+  - Run the engine package suite and the governed pre-push baseline before merge.
+residual_risk: >
+  Historical documents can still mention former lanes as historical context, but they cannot act as
+  executable task state or an input to engine architecture verification.
+review_after: 2026-08-31
+---
+```
+
+<a id="risk-r-20260804-object-file-postgres-runtime"></a>
+
+## Independent risk R-20260804-OBJECT-FILE-POSTGRES-RUNTIME
+
+```risk-record-v1
+---
+id: R-20260804-OBJECT-FILE-POSTGRES-RUNTIME
+title: Bounded object parsing can pressure Temporal worker memory
+status: Open
+date: 2026-08-04
+owners:
+  - packages/@dvt/temporal-object-file-postgres-plugin
+  - apps/temporal-worker
+severity: Medium
+probability: Low
+context: >
+  HET1.2 verifies and parses each admitted CSV or JSON Lines object in memory before atomically
+  replacing a PostgreSQL staging relation.
+risk: >
+  Concurrent loads near the admitted object-size ceiling could increase worker memory pressure or
+  extend activity duration even though each individual payload is bounded.
+mitigations:
+  - Enforce the contract-level maximum byte size before parsing.
+  - Verify reported and actual object size, media type, and SHA-256 before database mutation.
+  - Keep object ingestion behind an explicit worker feature flag and readiness capability.
+  - Propagate cancellation through object reads and PostgreSQL batch insertion.
+  - Keep PostgreSQL publication transactional so retries cannot leave partial or duplicate state.
+  - Exercise the production composition against real MinIO, Temporal Server, and PostgreSQL in CI.
+monitoring:
+  - Track object byte size, activity duration, retry count, cancellation, and worker memory
+    pressure.
+follow_up:
+  - Introduce streaming only when measured workload evidence shows the bounded in-memory profile is
+    insufficient; do not add a second ingestion framework pre-emptively.
+review_after: 2026-11-04
+---
+```
+
+<a id="risk-r-20260903-vtx2-runtime-step-hardcut"></a>
+
+## Independent risk R-20260903-VTX2-RUNTIME-STEP-HARDCUT
+
+```risk-record-v1
+---
+id: R-20260903-VTX2-RUNTIME-STEP-HARDCUT
+title: Persisted plans may contain retired SQL-first step kinds
+status: Open
+date: 2026-09-03
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/adapter-temporal
+severity: Medium
+probability: Low
+---
+mitigation:
+  summary: >
+    Canonical plan validation rejects all three retired kinds before dispatch. The compile catalog,
+    API context binding, worker registry, adapter exports, and proof commands contain no fallback or
+    alias. Current DBT, Spark, RLS, and object-file behavior remains covered independently.
+  evidence:
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260903-vtx2-runtime-step-hardcut.md
+    - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-runtime-step-hardcut-plan-20260903.md
+    - packages/@dvt/contracts/test/step-registry.test.ts
+    - apps/api/test/modules/planCompileBoundary.test.ts
+    - apps/api/test/entrypoints/http/retiredRuntimeRoutes.test.ts
+  follow_up:
+    - Operators must recompile supported plans instead of migrating retired SQL-first plan
+      artifacts.
+```
+
+<a id="risk-r-20260905-artifact-compiled-code-hard-cut"></a>
+
+## Independent risk R-20260905-ARTIFACT-COMPILED-CODE-HARD-CUT
+
+```risk-record-v1
+---
+id: R-20260905-ARTIFACT-COMPILED-CODE-HARD-CUT
+title:
+  Compiled-code hard cut invalidates histories and payloads that depend on the retired wire model
+status: Open
+date: 2026-09-05
+owners:
+  - '@dvt/artifacts'
+  - '@dvt/contracts'
+  - '@dvt/adapter-temporal'
+  - '@dvt/traceability-service'
+severity: High
+probability: Medium
+---
+summary: >
+  The artifact authority hard cut removes CompiledCodeRef and the compiled-code-specific storage and
+  lineage access subsystem. Temporal histories or persisted event payloads created with the retired
+  wire shape can no longer rely on a compatibility reader or replay branch after deployment.
+mitigation: >
+  Treat the release as an explicit operational compatibility boundary: drain or complete
+  incompatible in-flight histories before rollout, deploy contracts/runtime/traceability together,
+  and verify the global zero-reachability gate plus affected determinism/golden tests. Roll back by
+  reverting the atomic PR rather than reintroducing aliases, dual reads, or compatibility adapters.
+next_review: 2026-10-05
+```
+
+<a id="risk-r-20260915-dvt-postgres-publication"></a>
+
+## Independent risk R-20260915-DVT-POSTGRES-PUBLICATION
+
+```risk-record-v1
+---
+id: R-20260915-DVT-POSTGRES-PUBLICATION
+title: Stable PostgreSQL publication could be bypassed by out-of-band owner writes
+status: Open
+date: 2026-09-15
+owners:
+  - '@dvt/adapter-postgres'
+  - '@dvt/temporal-dvt-postgres-plugin'
+severity: High
+probability: Low
+---
+description: >-
+  The stable-table fencing contract cannot detect a direct write performed with the dedicated DVT
+  owner credential between admission and publication unless that write also changes governed
+  metadata.
+mitigations:
+  - Resolve only governed postgres credential aliases from the immutable run execution context
+  - Reject non-table, wrong-owner, unmanaged, schema-drifted and write-granted targets before
+    mutation
+  - Serialize DVT publishers with a physical-target advisory lock and compare-and-swap token
+  - Keep the dedicated publication owner credential unavailable to user-authored workloads
+  - Cover stale, unmanaged, idempotent and stable-OID outcomes with PostgreSQL integration tests
+```
+
+<a id="risk-r-20260924-historical-document-test-consumers"></a>
+
+## Independent risk R-20260924-HISTORICAL-DOCUMENT-TEST-CONSUMERS
+
+```risk-record-v1
+---
+id: R-20260924-HISTORICAL-DOCUMENT-TEST-CONSUMERS
+title: Historical document retirement could hide a live validation obligation
+status: Open
+date: 2026-09-24
+owners:
+  - Architecture / Docs
+severity: Medium
+probability: Low
+description: >
+  Removing old report-presence assertions can accidentally remove a current behavioral or
+  architecture requirement. Operated evidence relationships and independent review have not been
+  accepted in this best-effort cut. The 2026-10-02 follow-up also reconciles test consumers left
+  behind by PR 3489; a missing historical proposal must not be confused with a missing current
+  component or behavioral proof.
+mitigation: >
+  Preserve current contracts, component guides, user stories, evidence, risk records and all
+  feature-mechanization blocks. Keep each behavioral assertion; use current-owner assertions instead
+  of obsolete report headings. Validate touched package architecture tests, contracts, schema and
+  golden fixtures, CI-tool partitions and the normal prepush gate. Exercise individual restoration,
+  relocation and authority-reference negatives. Record operated reconciliation and independent
+  review in issue 3004 when actually executed; do not infer them from bootstrap CI or close this
+  risk merely on merge. For the 2026-10-02 follow-up, preserve all alpha acceptance/rejection cases,
+  its evaluator and existence checks, the five PostgreSQL component checks and nine rollback
+  behavior cases. Independent inspection verifies that the two removed alpha evidence references are
+  test-only. Keep this broader relationship risk open; no Planning DB reconciliation is claimed by
+  that test-consumer repair. For the 2026-10-14 consolidation, preserve every scenario body in the
+  existing component guide, verify exact source-to-section correspondence, and retain behavioral
+  assertions. Check fragments as well as paths; do not let a broader guide hide a missing scenario.
+  Planning DB document relationships remain pending in issue 3643; integration does not close this
+  risk or imply that unavailable DB validation passed. The manuals/visual-receipt cut must preserve
+  inherited section anchors and exact historical execution commands. Colocated guidance must not
+  imply that separate components share runtime ownership or that a Draft/target-state section is
+  deployed behavior.
+---
+```
+
+<a id="risk-r-20260925-temporal-sdk-1-24-upgrade"></a>
+
+## Independent risk R-20260925-TEMPORAL-SDK-1-24-UPGRADE
+
+```risk-record-v1
+---
+id: R-20260925-TEMPORAL-SDK-1-24-UPGRADE
+title: Temporal SDK 1.24 could change worker or replay behavior
+status: Open
+date: 2026-09-25
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: High
+probability: Low
+context: >
+  PR #3345 upgrades all Temporal TypeScript SDK packages used by the adapter and worker from 1.23.0
+  to 1.24.0 without changing DVT workflow or activity contracts. DVT does not consume the upstream
+  OpenAI Agents or experimental external-storage surfaces with declared breaking changes.
+risk: >
+  An upstream worker, core bridge, protocol, or replay change could pass compilation while changing
+  execution, cancellation, time-skipping, transformation dispatch, or integration behavior.
+mitigations:
+  - Keep every Temporal package on the same exact SDK version across adapter and worker manifests.
+  - Require frozen dependency resolution plus adapter and worker behavior and typecheck suites.
+  - Require Temporal integration, dependency-review, and deterministic-workflow merge gates.
+review_after: 2026-10-25
+---
+```

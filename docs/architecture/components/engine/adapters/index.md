@@ -46,8 +46,8 @@ Current reading rule:
 ## Navigation
 
 - [Engine component home](../index.md)
-- [Core](../architecture/core.md)
-- [Workflows](../architecture/workflows.md)
+- [Core](../architecture/c4-engine.md#section-core)
+- [Workflows](../architecture/c4-engine.md#section-workflows)
 - [Security](../security/index.md)
 - [Operations](../ops/index.md)
 - [Contracts](../contracts/index.md)

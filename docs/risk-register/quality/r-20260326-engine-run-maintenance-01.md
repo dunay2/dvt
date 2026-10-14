@@ -487,3 +487,122 @@ evidence:
   - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
   - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
 ```
+
+<a id="risk-r-20260514-we-hx-0-hardcut-canonical-map"></a>
+
+## Independent risk R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP
+
+```risk-record-v1
+---
+id: R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP
+title: WorkflowEngine canonical docs can drift back to retrocompatibility posture
+status: Open
+date: 2026-05-14
+last_reviewed: 2026-05-22
+owners:
+  - '@dvt/engine'
+severity: Medium
+probability: Low
+---
+summary: >
+  Active WorkflowEngine architecture documentation can regress to migration or retrocompatibility
+  language after the hardcut, creating two active truths for the same engine boundary.
+
+mitigation: >
+  The WE-HX-0 architecture guard rejects compatibility-first, compatibility facade, and
+  compatibility adapter posture in the canonical WorkflowEngine architecture docs, active engine
+  roadmap, and run-control headers.
+
+validation:
+  - pnpm --filter @dvt/engine test --
+    test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts
+  - pnpm governance:refresh
+```
+
+<a id="risk-r-20260518-dhm-ws3-admission-seam"></a>
+
+## Independent risk R-20260518-DHM-WS3-ADMISSION-SEAM
+
+```risk-record-v1
+---
+id: R-20260518-DHM-WS3-ADMISSION-SEAM
+title: Start-run admission phase can drift back into coordinator construction
+status: Open
+date: 2026-05-18
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+summary: >
+  Future edits could reintroduce direct StartRunAdmissionService construction or plan-integrity
+  dependencies inside StartRunApplicationService instead of using the injected
+  IStartRunAdmissionService seam.
+mitigation: >
+  startRunApplicationDecomposition.architecture.test.ts now fails if the coordinator constructs the
+  admission phase, and StartRunApplicationService.test.ts proves the injected admission seam is
+  invoked before intent creation and provider execution.
+evidence:
+  - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
+  - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
+  - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
+```
+
+<a id="risk-r-20260522-we-hx-parent-hardcut-closeout"></a>
+
+## Independent risk R-20260522-WE-HX-PARENT-HARDCUT-CLOSEOUT
+
+```risk-record-v1
+---
+id: R-20260522-WE-HX-PARENT-HARDCUT-CLOSEOUT
+title: WE-HX parent closure can hide future engine decomposition work
+status: Open
+date: 2026-05-22
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+---
+description: >
+  Closing the WE-HX parent removes the umbrella task from next-work routing. The residual risk is
+  that future engine decomposition work could be treated as implicitly covered by the parent instead
+  of being tracked through its own command/query rail, component guide, architecture guard,
+  evidence, and risk record.
+
+mitigation: >
+  The parent closeout states that future engine work must be represented by independent tasks. The
+  updated architecture guard validates current Lane A hardcut posture, and the parent evidence
+  points to the accepted child waves that actually implemented the architecture.
+```
+
+<a id="risk-r-20260915-transform-row-preview"></a>
+
+## Independent risk R-20260915-TRANSFORM-ROW-PREVIEW
+
+```risk-record-v1
+---
+id: R-20260915-TRANSFORM-ROW-PREVIEW
+title: Transform exploration can load an expensive warehouse projection
+status: Open
+date: 2026-09-15
+owners:
+  - dvt-api
+severity: Medium
+probability: Low
+---
+description: >-
+  A semantically valid Transform can still project an expensive upstream query while a user is
+  exploring rows from Canvas. A selected-operation sample can also be misattributed if relation
+  identity or semantic revision changes while a query is in flight.
+mitigations:
+  - Resolve SQL only from the protected current Canvas draft and semantic closure
+  - Execute inside a read-only transaction with a three-second statement timeout
+  - Enforce a default limit of 20 and a maximum limit of 50 at the contract and API boundary
+  - Return stable failures without exposing SQL, credentials or connection authority to the client
+  - Cover timeout, rollback, bounds and live PostgreSQL exploration with automated tests
+  - Require the full semantic digest with selected RelationId and resolve both against the protected
+    draft
+  - Echo selected identity and clear stale or late samples instead of presenting final-Model rows
+  - Block unapplied local conditions and reject unsupported selected subtrees before the database
+    probe
+```

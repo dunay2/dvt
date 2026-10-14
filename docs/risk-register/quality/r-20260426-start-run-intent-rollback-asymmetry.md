@@ -775,3 +775,285 @@ drifts from the adapter contract. This slice mitigates the risk by partitioning 
 preserving the existing primary and unique constraints, copying a fixed canonical column list during
 conversion, testing rollback, and reapplying tenant RLS after conversion.
 ```
+
+<a id="risk-r-20260515-s08-lifecycle-contract-retirement"></a>
+
+## Independent risk R-20260515-S08-LIFECYCLE-CONTRACT-RETIREMENT
+
+```risk-record-v1
+---
+id: R-20260515-S08-LIFECYCLE-CONTRACT-RETIREMENT
+title: S08 lifecycle contract retirement can strand stale imports or docs
+status: Open
+date: 2026-05-15
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/artifacts
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  S08 removes PlanValidationLifecycle.v1.ts as an active contract source and renames the remaining
+  serializable validation DTO to StoredPlanArtifactValidationRecord.
+risk: >
+  External consumers or stale active documentation may still refer to PlanValidationRecord,
+  PlanValidationState, or PlanValidationLifecycle.v1 as current contract names.
+mitigations:
+  - 'Architecture tests reject the retired contract source and root-barrel export.'
+  - 'Type-checking fails any workspace import of the removed names.'
+  - 'Active component and inventory docs name the artifact-validation DTO instead of the lifecycle
+    contract.'
+review_after: 2026-06-30
+---
+```
+
+<a id="risk-r-20260523-postgres-tenant-isolation-canon"></a>
+
+## Independent risk R-20260523-POSTGRES-TENANT-ISOLATION-CANON
+
+```risk-record-v1
+---
+id: R-20260523-POSTGRES-TENANT-ISOLATION-CANON
+title: Postgres tenant isolation semantic docs can drift from runtime RLS catalog
+status: Open
+date: 2026-05-23
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  The Postgres adapter already enforces tenant isolation through adapter predicates,
+  transaction-local tenant/service context, forced RLS, and real integration proofs. The 2026-05-23
+  canonization pass adds a local component guide and semantic architecture test so future changes
+  keep the table catalog, service-owner matrix, transitions, consumers, and user stories aligned.
+risk: >
+  Future tenant-owned table or service-owner changes could still update code without updating
+  explanatory documentation if the semantic guard is narrowed or bypassed. Drift would make security
+  review harder even if lower-level RLS tests still pass.
+mitigations:
+  - >
+    Keep PostgresTenantIsolationSemantic.architecture.test.ts in the adapter suite so documentation
+    must mention every tenant-owned table and approved service owner from TENANT_ISOLATION_TABLES.
+  - >
+    Keep real RLS integration tests as the runtime authority; the semantic test is a documentation
+    and architecture fitness guard, not a substitute for database enforcement proof.
+  - >
+    Update tenant-isolation-component.md and tenant-isolation-component.md in the same slice as any
+    future RLS catalog change.
+review_after: 2026-06-30
+---
+```
+
+<a id="risk-r-20260607-archive-redaction-baseline"></a>
+
+## Independent risk R-20260607-ARCHIVE-REDACTION-BASELINE
+
+```risk-record-v1
+---
+id: R-20260607-ARCHIVE-REDACTION-BASELINE
+title: Archive redaction baseline can drift from runtime composition config
+status: Open
+date: 2026-06-07
+owners:
+  - packages/@dvt/state-store
+severity: High
+probability: Low
+context: >
+  State-store archive export writes run event payloads to cold object storage. The O6 archive
+  redaction baseline requires built-in sensitive keys to remain active while local configuration may
+  only extend the sensitive key set or change the replacement token.
+risk: >
+  Future runtime composition or config mapping could reintroduce a disable switch or otherwise
+  weaken the baseline redaction policy, causing secret-bearing event payload fields to be written to
+  cold archive objects.
+mitigations:
+  - Keep ArchiveRedactionPolicy free of disable switches.
+  - Keep ObjectStorageRunArchiveExporter tests covering legacy enabled:false input as a fail-closed
+    regression.
+  - Keep feature mechanization implementation checks tied to the O6 archive redaction plan.
+  - Keep ARC-2 evidence and PR quality gates active for state-store archive lifecycle changes.
+review_after: 2026-07-07
+---
+```
+
+<a id="risk-r-20260822-crypto-authority-drift"></a>
+
+## Independent risk R-20260822-CRYPTO-AUTHORITY-DRIFT
+
+```risk-record-v1
+---
+id: R-20260822-CRYPTO-AUTHORITY-DRIFT
+title: Crypto primitive implementations could drift across repository boundaries
+status: Open
+date: 2026-08-22
+owners:
+  - packages/@dvt/crypto
+  - packages/@dvt/engine
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/plan-verifier
+  - packages/@dvt/state-store
+severity: High
+probability: Low
+context: >
+  Deterministic plan identities, idempotency keys, and archive checksums depend on identical
+  encoding, canonicalization, and digest behavior across packages and runtimes.
+risk: >
+  Parallel helpers or an ambiguous physical package path could produce different identities for the
+  same domain preimage or hide an unsupported compatibility branch.
+mitigations:
+  - Keep one strict public primitive API under the matching packages/@dvt/crypto path.
+  - Distinguish byte and UTF-8 text digest functions without overloads.
+  - Reuse maintained JCS, digest, and UUID libraries rather than handwritten algorithms.
+  - Preserve existing domain preimages and prove them through Engine and State Store vectors.
+  - Fail closed when secure randomness or valid JSON input is unavailable.
+  - Remove the obsolete canonical package path and its aliases.
+  - Require direct consumer imports and dependencies instead of domain-package re-exports.
+  - Keep retired duplicate paths absent through the architecture dependency guard.
+  - Keep tooling, Planning DB rails, and golden-path checks on the shared crypto primitives.
+  - Preserve domain preimages, delimiters, truncation, and operation-ID injection seams during
+    migration.
+  - Complete the remaining bounded consumer cuts under GitHub issue 2191 before closing this risk.
+review_after: 2026-11-22
+---
+```
+
+<a id="risk-r-20260915-transform-output-sample"></a>
+
+## Independent risk R-20260915-TRANSFORM-OUTPUT-SAMPLE
+
+```risk-record-v1
+---
+id: R-20260915-TRANSFORM-OUTPUT-SAMPLE
+title: Published Transform rows could change without a new publication token
+status: Open
+date: 2026-09-15
+owners:
+  - '@dvt/adapter-postgres'
+  - dvt-api
+severity: Medium
+probability: Low
+---
+description: >-
+  A direct out-of-band write by the governed PostgreSQL owner could change rows while leaving the
+  DVT publication marker unchanged, so a token-aligned sample would no longer prove row
+  immutability.
+mitigations:
+  - Keep the governed publication owner unavailable to user-authored workloads
+  - Read the marker and rows in one repeatable-read transaction
+  - Reject absent, malformed or mismatched publication markers before selecting rows
+  - Require exact PlanRef, semantic digest, result target and connection authority in Canvas
+  - Cover successful and mismatched publication tokens with probe, API and headed live tests
+```
+
+<a id="risk-r-20260915-transform-run-workload-drift"></a>
+
+## Independent risk R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT
+
+```risk-record-v1
+---
+id: R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT
+title: Run workload target or output schema could drift before provider effects
+status: Open
+date: 2026-09-15
+owners:
+  - '@dvt/contracts'
+  - '@dvt/postgres-projection'
+  - dvt-api
+severity: High
+probability: Low
+---
+description: >-
+  A persisted Run plan could otherwise detach its canonical semantic revision, PostgreSQL target, or
+  expected output schema from the provider activity that eventually materializes it.
+mitigations:
+  - Provider-owned context preparers share one immutable-write and dispatch coordinator; duplicate
+    ownership and caller-provided contexts reject before preparation
+  - Neutral workload identity and artifact schemas remain independent of DBT and PostgreSQL; the V1
+    composition retains strict PostgreSQL profile, graph and publication constraints
+  - One strict V1 workload with explicit intent and exact target-to-workload connection equality
+  - Ordinal selected-graph ID ordering distinguishes Unicode identities without locale dependence
+  - JCS and SHA-256 fingerprint of ordered, admitted PostgreSQL output metadata
+  - Fail-closed lowering for incomplete target configuration or unknown output types
+  - PostgreSQL-backed plan persistence and replay regression coverage
+  - Issue 2723 must revalidate immutable refs before any provider effect
+  - Deploy producer and worker together; reject V2 and missing intent instead of rewriting old plans
+  - Preview intent is rejected before context reads and provider effects
+  - Named immutable rejection definitions preserve distinct admission failures without raw
+    diagnostic UI text
+```
+
+<a id="risk-r-20260921-read-occurrence-physical-coverage"></a>
+
+## Independent risk R-20260921-READ-OCCURRENCE-PHYSICAL-COVERAGE
+
+```risk-record-v1
+---
+id: R-20260921-READ-OCCURRENCE-PHYSICAL-COVERAGE
+title: Logical Read occurrences could be confused with physical dependency coverage
+status: Open
+date: 2026-09-21
+owners:
+  - contracts
+  - api
+  - postgres-projection
+severity: High
+probability: Low
+---
+mitigation:
+  summary: >
+    Distinct RelationIds and FieldIds bind logical occurrences. Repeated physical references must
+    agree on table and field schema. One shared API policy checks exact authorized dependency
+    coverage and every rendered physical table. V1 and V2 workload validators count physical
+    dependencies, not JOIN operands. Web JOIN rebuilds preserve Reads by explicit occurrence
+    identity, not by matching source shape. Human-readable Read aliases never select a physical
+    table or a field occurrence.
+  evidence:
+    - docs/evidence/ED-20260921-repeated-read-occurrence-projection.md
+    - packages/@dvt/contracts/test/dvt-repeated-read-workload.contract.test.ts
+    - packages/@dvt/postgres-projection/test/repeatedSourceInspection.test.ts
+    - apps/api/test/application/services/dvtRepeatedSourceProjection.test.ts
+    - apps/api/test/application/services/dvtRepeatedSourceRun.test.ts
+    - apps/api/test/integration/dvtRepeatedSourcePostgres.integration.test.ts
+    - apps/web/src/app/views/canvas/relational-source-occurrence/joinOccurrenceIdentity.test.ts
+    - apps/web/src/app/views/canvas/relational-source-occurrence/occurrenceReopen.test.ts
+  follow_up:
+    - Deploy API and worker validators together before exposing occurrence authoring.
+    - Complete generic transformed-result reuse and occurrence-aware editing under GH-3342.
+    - Do not infer ReferenceRel admission or product completion from repeated Read support.
+```
+
+<a id="risk-r-20260929-sql-expression-physical-drift"></a>
+
+## Independent risk R-20260929-SQL-EXPRESSION-PHYSICAL-DRIFT
+
+```risk-record-v1
+---
+id: R-20260929-SQL-EXPRESSION-PHYSICAL-DRIFT
+title: Catalog expressions could diverge from PostgreSQL result semantics
+status: Open
+date: 2026-09-29
+owners:
+  - packages/@dvt/postgres-projection
+severity: High
+probability: Low
+---
+mitigation:
+  summary: >
+    One pinned capability catalog and shared target bindings own admission. SUM i64 explicitly casts
+    PostgreSQL's widened numeric result back to bigint and rejects unsupported invocation modes.
+    Real PostgreSQL tests cover NULL, Unicode, empty values, UTC extraction, physical types and
+    overflow. Physical CTAS nullability is projected separately from logical REQUIRED; publication
+    still checks exact candidate and target digests. Progressive browser flows verify persisted
+    semantic identity through Preview and protected Run.
+  evidence:
+    - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+    - docs/adr/ADR-0066-postgresql-stable-table-publication.md
+    - docs/evidence/ED-20260929-sql-expression-verticals.md
+    - apps/api/test/integration/dvtScalarSql.integration.test.ts
+    - apps/api/test/integration/dvtSumSql.integration.test.ts
+    - apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts
+  follow_up:
+    - Keep unsupported types and invocation forms closed until their own conformance evidence
+      exists.
+```

@@ -143,8 +143,8 @@ flowchart LR
 
 - `architecture/`
   - [index](./architecture/index.md)
-  - [core](./architecture/core.md)
-  - [workflows](./architecture/workflows.md)
+  - [core](architecture/c4-engine.md#section-core)
+  - [workflows](architecture/c4-engine.md#section-workflows)
   - [c4-engine](./architecture/c4-engine.md)
   - [workflow-engine-subsystem-context](./architecture/workflow-engine-subsystem-context.md)
   - [workflow-engine-target-architecture.v1](./architecture/workflow-engine-target-architecture.v1.md)

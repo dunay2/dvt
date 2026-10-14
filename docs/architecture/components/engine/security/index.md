@@ -17,9 +17,9 @@ contract documents.
 ## Navigation
 
 - [Engine component home](../index.md)
-- [Core](../architecture/core.md)
+- [Core](../architecture/c4-engine.md#section-core)
 - [Adapters](../adapters/index.md)
-- [Workflows](../architecture/workflows.md)
+- [Workflows](../architecture/c4-engine.md#section-workflows)
 - [Operations](../ops/index.md)
 - [Contracts](../contracts/index.md)
 - [Capabilities](../contracts/capabilities/index.md)
