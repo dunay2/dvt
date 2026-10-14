@@ -3,7 +3,15 @@ import { resolve } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
-const eslint = new ESLint({ cwd: resolve(import.meta.dirname, '../../../..') });
+const eslint = new ESLint({
+  cwd: resolve(import.meta.dirname, '../../../..'),
+  overrideConfig: {
+    languageOptions: {
+      // lintText supplies successive in-memory fixtures, not the first on-disk CI Program.
+      parserOptions: { disallowAutomaticSingleRunInference: true },
+    },
+  },
+});
 const filePath = 'apps/web/src/testing/webUnusedDeclarations.architecture.test.ts';
 
 describe('web unused declarations', () => {
@@ -14,12 +22,10 @@ describe('web unused declarations', () => {
     'rejects unconsumed declarations using canonical lint: %s',
     async (source) => {
       const [result] = await eslint.lintText(source, { filePath });
-      expect(
-        result?.messages.some(
-          (message) =>
-            message.ruleId === '@typescript-eslint/no-unused-vars' && message.severity === 2
-        )
-      ).toBe(true);
+      expect(result?.fatalErrorCount).toBe(0);
+      expect(result?.messages).toContainEqual(
+        expect.objectContaining({ ruleId: '@typescript-eslint/no-unused-vars', severity: 2 })
+      );
     },
     30_000
   );
