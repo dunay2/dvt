@@ -231,7 +231,7 @@ describe('app services mock hardcut architecture', () => {
   });
 
   it('keeps Source Import documentation aligned with implemented protected-runtime rails', () => {
-    const componentSource = readRepoFile(
+    const documentation = readRepoFile(
       '..',
       '..',
       'docs',
@@ -241,18 +241,8 @@ describe('app services mock hardcut architecture', () => {
       'workspace',
       'workspace-port-decomposition-component.md'
     );
-    const userStoriesSource = readRepoFile(
-      '..',
-      '..',
-      'docs',
-      'architecture',
-      'components',
-      'web',
-      'workspace',
-      'workspace-port-decomposition-component.md'
-    );
-
-    for (const source of [componentSource, userStoriesSource]) {
+    for (const anchor of [null, 'section-workspace-port-decomposition-user-stories']) {
+      const source = hardcutSection(documentation, anchor);
       expect(source).toContain('ListWarehouseConnections');
       expect(source).toContain('ListWarehouseConnectionSourceObjects');
       expect(source).toContain('ImportWarehouseSources');
