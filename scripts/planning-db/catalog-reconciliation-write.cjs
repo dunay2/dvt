@@ -5,8 +5,16 @@ const { Client } = require('pg');
 const { randomUuidV4, sha256Hex } = require('@dvt/crypto');
 const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
+const { readRailReferenceAuthority } = require('./command-query-rail-authority.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
 const { readGovernedSourceSnapshots } = require('./governed-source-refresh-write-rail.cjs');
+const {
+  extractFeatureMechanizationManifests,
+} = require('../lib/feature-mechanization-manifest.cjs');
+const {
+  buildCurrentDocumentSql,
+  historicalDocumentTarget,
+} = require('./catalog-current-document.cjs');
 const {
   catalogRowHash,
   parseCatalogReconciliation,
@@ -215,6 +223,40 @@ async function applyCatalogReconciliation(input, options = {}) {
       if (snapshot.snapshot_hash !== change.expectedRowSha256)
         throw new Error(`CATALOG-STALE: ${change.railId}.`);
       const before = snapshot.row;
+      if (change.currentDocument) {
+        const document = change.currentDocument;
+        const key = `document:${document.commit}:${document.path}`;
+        if (!sourceProofs.has(key)) {
+          const proof = verifyCurrentSourceContent(document, before.source_path, options);
+          const content = execFileSync('git', ['cat-file', 'blob', proof.blob], {
+            cwd: options.repoRoot || path.resolve(__dirname, '..', '..'),
+            env: createGitRepositoryEnvironment(),
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+            maxBuffer: 16 * 1024 * 1024,
+          });
+          const manifests = extractFeatureMechanizationManifests(content, document.path);
+          if (manifests.some((entry) => entry.parseError))
+            throw new Error('CATALOG-DOCUMENT: Invalid committed feature manifest.');
+          sourceProofs.set(key, { ...proof, manifests: manifests.map((entry) => entry.manifest) });
+        }
+        for (const ref of document.references) {
+          const targetKey = `document-target:${document.commit}:${ref.to}`;
+          if (!sourceProofs.has(targetKey)) {
+            const historical = historicalDocumentTarget(ref);
+            sourceProofs.set(
+              targetKey,
+              historical
+                ? verifyHistoricalSource(historical, ref.from, options)
+                : verifyCurrentSourceContent(
+                    { commit: document.commit, path: ref.to },
+                    ref.to,
+                    options
+                  )
+            );
+          }
+        }
+      }
       if (change.source) {
         const key = `${change.source.commit}:${change.source.path}`;
         if (!sourceProofs.has(key))
@@ -277,7 +319,19 @@ async function applyCatalogReconciliation(input, options = {}) {
         preserved.push(...assignments);
         changedColumns.push('source_path', 'source_content_sha256');
       }
-      if (request.changes[index].sourceContent) {
+      const currentDocument = request.changes[index].currentDocument;
+      if (currentDocument) {
+        entry.documentaryTargets = currentDocument.references.map((ref) =>
+          sourceProofs.get(`document-target:${currentDocument.commit}:${ref.to}`)
+        );
+        const columns = buildCurrentDocumentSql(currentDocument, { bind, beforeSnapshot });
+        for (const [column, expression] of Object.entries(columns)) {
+          assignments.push(`${column} = ${expression}`);
+          preserved.push(`${column} = (${expression})`);
+          changedColumns.push(column);
+        }
+      }
+      if (request.changes[index].sourceContent || currentDocument) {
         const content = `source_content_sha256 = ${bind(after.source_content_sha256)}`;
         assignments.push(content);
         preserved.push(content);
@@ -355,21 +409,13 @@ async function applyCatalogReconciliation(input, options = {}) {
       [ids('imported'), ids('local'), affectedPaths]
     );
     for (const reference of references.rows) {
-      const authority = await client.query(
-        `select rail_id from ${schemaName}.command_query_rail_query
-        where source_path = $1 and rail_type = $2 and normalized_rail_name = $3
-        and not (rail_source = $4 and rail_id = $5)
-        and lower(coalesce(rail_status, '')) not in ('deprecated', 'retired')
-        and not is_gap and not (raw_rail @> '{"referenceOnly":true}'::jsonb)`,
-        [
-          reference.raw_rail.authorityRef,
-          reference.rail_type,
-          reference.normalized_rail_name,
-          reference.origin,
-          reference.rail_id,
-        ]
-      );
-      if (authority.rows.length !== 1)
+      const authority = await readRailReferenceAuthority(client, {
+        rawRail: reference.raw_rail,
+        railType: reference.rail_type,
+        normalizedRailName: reference.normalized_rail_name,
+        railId: reference.rail_id,
+      });
+      if (!authority)
         throw new Error(`CATALOG-REFERENCE: Unresolved authority for ${reference.rail_id}.`);
     }
     for (const [index, entry] of planned.entries()) {
@@ -399,6 +445,7 @@ async function applyCatalogReconciliation(input, options = {}) {
             origin,
             proof,
             evidenceHistory: entry.evidenceHistory,
+            documentaryTargets: entry.documentaryTargets,
           }),
           beforeText,
           afterText,

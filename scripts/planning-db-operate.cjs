@@ -5773,21 +5773,10 @@ async function assertFeatureMechanizationReferenceAuthority(client, rail) {
     return;
   }
 
-  const result = await client.query(
-    `select rail_id
-     from ${schemaName}.command_query_rail_query
-     where source_path = $1
-       and rail_type = $2
-       and normalized_rail_name = $3
-       and rail_id <> $4
-       and lower(coalesce(rail_status, '')) not in ('deprecated', 'retired')
-       and not is_gap
-       and not (raw_rail @> '{"referenceOnly": true}'::jsonb)
-     limit 1`,
-    [rail.rawRail.authorityRef, rail.railType, rail.normalizedRailName, rail.railId]
-  );
+  const { readRailReferenceAuthority } = require('./planning-db/command-query-rail-authority.cjs');
+  const authority = await readRailReferenceAuthority(client, rail);
 
-  if (!result.rows[0]) {
+  if (!authority) {
     throw new Error(
       `FEATURE-MECHANIZATION-REFERENCE-AUTHORITY-NOT-FOUND: ${rail.railType} ${rail.normalizedRailName} at ${rail.rawRail.authorityRef}.`
     );

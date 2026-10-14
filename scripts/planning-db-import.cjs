@@ -28,6 +28,7 @@ const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
 const { buildCommandQueryRailSnapshot } = require('./planning-db/command-query-rail-catalog.cjs');
+const { readRailReferenceAuthority } = require('./planning-db/command-query-rail-authority.cjs');
 const {
   buildFrontendMechanicalTruthSnapshot,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
@@ -2495,6 +2496,15 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
       toJson(rail.rawManifest),
     ]
   );
+  const references = await client.query(`select rail_id as "railId", rail_type as "railType",
+    normalized_rail_name as "normalizedRailName", raw_rail as "rawRail"
+    from ${schemaName}.command_query_rail_manifest_query
+    where raw_rail->'referenceOnly' = 'true'::jsonb`);
+  for (const rail of references.rows) {
+    if (!(await readRailReferenceAuthority(client, rail))) {
+      throw new Error(`AUTHORITY-NOT-FOUND: effective reference ${rail.railId}`);
+    }
+  }
 }
 
 function readDbGovernanceSurfaceCatalog(catalogPath = dbGovernanceSurfaceCatalogPath) {

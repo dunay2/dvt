@@ -508,20 +508,33 @@ function catalogWriterFixture(failure) {
         };
       if (sql.startsWith('select') && sql.includes('command_query_rail_query')) {
         return {
-          rows: values.length
-            ? failure === 'reference'
-              ? []
-              : [{ rail_id: 'authority' }]
-            : [
-                {
-                  rail_type: 'command',
-                  normalized_rail_name: row.normalized_rail_name,
-                  rail_source: 'local',
-                  rail_id: 'authority',
-                },
-              ],
+          rows: [
+            {
+              rail_type: 'command',
+              normalized_rail_name: row.normalized_rail_name,
+              rail_source: 'local',
+              rail_id: 'authority',
+            },
+          ],
         };
       }
+      if (sql.startsWith('with declarations'))
+        return {
+          rows:
+            failure === 'reference'
+              ? []
+              : [
+                  {
+                    railId: 'authority',
+                    sourcePath: values[0],
+                    railType: values[1],
+                    normalizedRailName: values[2],
+                    railStatus: 'implemented',
+                    implementationRefCount: 1,
+                    rawRail: {},
+                  },
+                ],
+        };
       if (sql.startsWith('update')) {
         const entry = rows.find((item) => item.row.rail_id === values[0]);
         for (const field of ['source_path', 'source_content_sha256', 'revision']) {
