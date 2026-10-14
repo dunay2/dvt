@@ -436,7 +436,7 @@ mitigations:
     low coverage and include unexecuted source; Test Suite requires coverage-final.json and fails if
     the report is missing. This closes false-green evidence before any later deduplication.'
 evidence:
-  - docs/evidence/ed-20260930-engine-coverage-evidence.md
+  - https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ed-20260930-engine-coverage-evidence.md
   - https://github.com/dunay2/dvt/issues/3494
 review_after: 2026-10-30
 ---
@@ -1009,7 +1009,7 @@ mitigation:
     identity, not by matching source shape. Human-readable Read aliases never select a physical
     table or a field occurrence.
   evidence:
-    - docs/evidence/ED-20260921-repeated-read-occurrence-projection.md
+    - https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20260921-repeated-read-occurrence-projection.md
     - packages/@dvt/contracts/test/dvt-repeated-read-workload.contract.test.ts
     - packages/@dvt/postgres-projection/test/repeatedSourceInspection.test.ts
     - apps/api/test/application/services/dvtRepeatedSourceProjection.test.ts
@@ -1049,7 +1049,7 @@ mitigation:
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
     - docs/adr/ADR-0066-postgresql-stable-table-publication.md
-    - docs/evidence/ED-20260929-sql-expression-verticals.md
+    - https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20260929-sql-expression-verticals.md
     - apps/api/test/integration/dvtScalarSql.integration.test.ts
     - apps/api/test/integration/dvtSumSql.integration.test.ts
     - apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts
