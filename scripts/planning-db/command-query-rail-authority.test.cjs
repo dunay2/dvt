@@ -25,7 +25,11 @@ test('exact documentary authority is independent of a competing implementation r
     { ...authority, railId: 'local-winner', sourcePath: 'docs/local.md' },
     authority,
   ];
-  assert.equal(resolveRailReferenceAuthority(reference, candidates), authority);
+  assert.deepEqual(resolveRailReferenceAuthority(reference, candidates), {
+    sourcePath: 'docs/api.md',
+    railType: 'command',
+    normalizedRailName: 'previewplan',
+  });
   assert.doesNotThrow(() => assertManifestRailReferences([reference, ...candidates]));
 });
 
@@ -58,11 +62,15 @@ test('shared policy rejects missing, mismatched, self, inactive, reference-only 
   assert.equal(resolveRailReferenceAuthority(reference, []), null);
 });
 
-test('multiple eligible definitions reject instead of choosing an arbitrary authority', () => {
+test('multiple evidence rows resolve the same identity without choosing a feature winner', () => {
   const candidates = [authority, { ...authority, railId: 'second-definition' }];
-  assert.equal(resolveRailReferenceAuthority(reference, candidates), null);
-  assert.throws(
-    () => assertManifestRailReferences([reference, ...candidates]),
-    /does not resolve authority/
+  assert.deepEqual(
+    resolveRailReferenceAuthority(reference, candidates),
+    resolveRailReferenceAuthority(reference, [authority])
   );
+  assert.deepEqual(
+    resolveRailReferenceAuthority(reference, candidates.toReversed()),
+    resolveRailReferenceAuthority(reference, candidates)
+  );
+  assert.doesNotThrow(() => assertManifestRailReferences([reference, ...candidates]));
 });

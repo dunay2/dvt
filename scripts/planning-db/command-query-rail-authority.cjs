@@ -18,8 +18,12 @@ function isRailReferenceAuthority(reference, candidate) {
 }
 
 function resolveRailReferenceAuthority(reference, candidates) {
-  const eligible = candidates.filter((candidate) => isRailReferenceAuthority(reference, candidate));
-  return eligible.length === 1 ? eligible[0] : null;
+  if (!candidates.some((candidate) => isRailReferenceAuthority(reference, candidate))) return null;
+  return {
+    sourcePath: reference.rawRail.authorityRef,
+    railType: reference.railType,
+    normalizedRailName: reference.normalizedRailName,
+  };
 }
 
 async function readRailReferenceAuthority(client, reference) {

@@ -113,7 +113,6 @@ module.exports = function registerCatalogAuthorityIntegration(dbUrl) {
       for (const variant of [
         { feature: 'AUTHORITY-DOC', path: 'docs/api.md', status: 'retired' },
         { feature: 'AUTHORITY-DOC', path: 'docs/moved.md', status: 'implemented' },
-        { feature: 'AUTHORITY-AMBIGUOUS', path: 'docs/api.md', status: 'implemented' },
       ]) {
         await insert(
           'local',
@@ -134,6 +133,13 @@ module.exports = function registerCatalogAuthorityIntegration(dbUrl) {
           "delete from planning_query_store.feature_mechanization_local_rails where rail_id='authority-overlay'"
         );
       }
+      await insert(
+        'imported',
+        'authority-additional-evidence',
+        'AUTHORITY-ADDITIONAL',
+        'PreviewPlan',
+        'docs/api.md'
+      );
       for (const name of names)
         await assertFeatureMechanizationReferenceAuthority(client, reference(name));
       assert.equal((await applyCatalogReconciliation(request, { client })).changed, 2);

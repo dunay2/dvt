@@ -167,11 +167,13 @@ dangling reference fails the catalog import.
 An explicit `authorityRef` resolves a documentary declaration by exact source,
 rail type and normalized name, not by the globally ranked implementation/evidence
 representative. Import and operational writers share that eligibility rule:
-exactly one active, non-gap, non-reference declaration other than the referencing
-row must exist. A local revision supersedes the imported declaration of the same
+at least one active, non-gap, non-reference declaration other than the referencing
+row must support that exact identity. Multiple feature evidence rows at the same
+source do not create multiple documentary identities; the resolver selects no
+feature or implementation. A local revision supersedes the imported declaration of the same
 feature identity; it cannot leave an older imported declaration eligible after
 retirement or relocation. Resolving a reference does not change canonical ranking
-or authorize a new command. Missing, mismatched, ambiguous, inactive and
+or authorize a new command. Missing, mismatched, inactive and
 reference-only targets fail closed in both fresh and existing catalogs.
 
 A governed source reference may be a repository-relative path or external

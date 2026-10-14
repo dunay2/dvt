@@ -137,7 +137,9 @@ declaration path; providing either field alone or explicitly setting
 `rawRail`. Before writing, the command resolves `authorityRef` against the
 exact documentary declaration with the same source, type, and normalized name,
 using the same eligibility policy as catalog import, not the globally ranked
-implementation representative. Missing, mismatched, ambiguous, retired,
+implementation representative. Multiple eligible feature evidence rows may
+support that same documentary identity without selecting a feature winner.
+Missing, mismatched, retired,
 reference-only, and gap authorities fail closed. Local revisions supersede the
 same imported feature identity, including retirement and relocation. The
 effective feature-mechanization state becomes `referenced` without changing the
