@@ -44,9 +44,21 @@ module.exports = function registerCatalogAuthorityImportIntegration(dbUrl) {
         )
       ).rows;
     try {
-      for (const variant of ['fresh', 'active', 'retired', 'moved']) {
+      for (const variant of [
+        'fresh',
+        'active',
+        'retired',
+        'moved',
+        'local-valid',
+        'local-removed',
+        'local-retired',
+        'local-moved',
+      ]) {
+        const localConsumer = variant.startsWith('local-');
         await client.query('begin');
-        await insertCommandQueryRailSnapshot(client, { rails: [authority] });
+        await insertCommandQueryRailSnapshot(client, {
+          rails: localConsumer ? [authority, reference] : [authority],
+        });
         if (variant !== 'fresh') {
           await client.query(
             `insert into planning_query_store.feature_mechanization_local_rails
@@ -59,22 +71,37 @@ module.exports = function registerCatalogAuthorityImportIntegration(dbUrl) {
             from planning_query_store.command_query_rails where rail_id = $3`,
             [
               variant === 'retired' ? 'retired' : 'implemented',
-              variant === 'moved' ? 'docs/moved.md' : authority.sourcePath,
-              authority.railId,
+              localConsumer
+                ? reference.sourcePath
+                : variant === 'moved'
+                  ? 'docs/moved.md'
+                  : authority.sourcePath,
+              localConsumer ? reference.railId : authority.railId,
             ]
           );
         }
         const before = await rows();
         await client.query('savepoint import_catalog');
-        const write = () =>
-          insertCommandQueryRailSnapshot(client, { rails: [authority, reference] });
-        if (variant === 'retired' || variant === 'moved') {
+        const importedAuthority = {
+          ...authority,
+          railStatus: variant === 'local-retired' ? 'retired' : authority.railStatus,
+          sourcePath: variant === 'local-moved' ? 'docs/moved.md' : authority.sourcePath,
+        };
+        const rails = localConsumer
+          ? variant === 'local-removed'
+            ? []
+            : [importedAuthority]
+          : [authority, reference];
+        const write = () => insertCommandQueryRailSnapshot(client, { rails });
+        if (
+          ['retired', 'moved', 'local-removed', 'local-retired', 'local-moved'].includes(variant)
+        ) {
           await assert.rejects(write, /AUTHORITY-NOT-FOUND/, variant);
           await client.query('rollback to savepoint import_catalog');
           assert.deepEqual(await rows(), before, `${variant} restores previous catalog`);
         } else {
           await write();
-          assert.equal((await rows()).length, 2, variant);
+          assert.equal((await rows()).length, rails.length, variant);
         }
         await client.query('rollback');
       }

@@ -2496,10 +2496,13 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
       toJson(rail.rawManifest),
     ]
   );
-  for (const rail of snapshot.rails) {
-    if (rail.rawRail.referenceOnly !== true) continue;
+  const references = await client.query(`select rail_id as "railId", rail_type as "railType",
+    normalized_rail_name as "normalizedRailName", raw_rail as "rawRail"
+    from ${schemaName}.command_query_rail_manifest_query
+    where raw_rail->'referenceOnly' = 'true'::jsonb`);
+  for (const rail of references.rows) {
     if (!(await readRailReferenceAuthority(client, rail))) {
-      throw new Error(`AUTHORITY-NOT-FOUND: imported reference ${rail.railId}`);
+      throw new Error(`AUTHORITY-NOT-FOUND: effective reference ${rail.railId}`);
     }
   }
 }
