@@ -13,7 +13,7 @@ code_refs:
   - docs/architecture/system-delivery-status.md
   - docs/planning/status/canonical-doc-code-matrix.md
   - docs/guides/testing-and-ci-capabilities.md
-  - docs/risk-register/quality/R-20260327-eslint9-engine-surface-churn.md#risk-r-20260308-api-auth-01
+  - docs/risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260308-api-auth-01
 evidence:
   tests: []
   notes:

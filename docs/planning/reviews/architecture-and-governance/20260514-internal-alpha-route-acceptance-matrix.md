@@ -85,7 +85,7 @@ route boundary with rationale.
   [R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP](../../../risk-register/quality/R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
   because local Temporal startup is operator setup, not alpha route proof.
 - `Workspace context`: Included
-  [R-20260308-api-auth-runtime-integration-coverage](../../../risk-register/quality/R-20260327-eslint9-engine-surface-churn.md#risk-r-20260308-api-auth-01)
+  [R-20260308-api-auth-runtime-integration-coverage](../../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260308-api-auth-01)
   because protected route auth can regress without full runtime proof. Excluded
   admin provisioning depth because the accepted F-27 proof only consumes
   already-scoped tenant, project, and environment context.

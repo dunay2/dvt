@@ -106,7 +106,7 @@ repository can drift into a false sense of completion:
   ADR/runtime drift if it is not resolved or consciously accepted;
 - the standalone runtime and reusable worker can still drift over time, as
   already tracked by
-  [R-20260308-G5-OUTBOX-WORKER-01](../adapters/R-20260308-temporal-operational-hardening-residuals.md#risk-r-20260308-g5-outbox-worker-01).
+  [R-20260308-G5-OUTBOX-WORKER-01](r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260308-g5-outbox-worker-01).
 
 If that happens, reviewers may approve a technically good hardening slice while
 the repository still lacks enough evidence to declare `G5.3` formally closed.
@@ -127,7 +127,7 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
   shipped `10` attempts, aligning code to `5`, or recording an explicit
   accepted deviation with follow-up ownership.
 - Keep runtime/core drift visible through
-  [R-20260308-G5-OUTBOX-WORKER-01](../adapters/R-20260308-temporal-operational-hardening-residuals.md#risk-r-20260308-g5-outbox-worker-01)
+  [R-20260308-G5-OUTBOX-WORKER-01](r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260308-g5-outbox-worker-01)
   until ownership converges on one semantic core.
 
 ## Evidence
@@ -142,7 +142,7 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
 - `packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts`
 - `packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts`
-- `docs/risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md#risk-r-20260308-g5-outbox-worker-01`
+- `docs/risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260308-g5-outbox-worker-01`
 ```
 
 <a id="risk-r-20260328-rcb5f2-lineage-claim-race"></a>
