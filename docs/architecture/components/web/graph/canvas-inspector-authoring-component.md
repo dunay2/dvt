@@ -22,7 +22,7 @@ state as semantic truth, or create a second transform authority.
 - [Command/query rail governance](../../../command-query-rail-governance.md)
 - [Workspace graph draft persistence v1](../../../../contracts/planner/workspace-graph-draft-persistence-v1.md)
 - [Canvas Workbench command/query catalog](./canvas-workbench-command-query-catalog.md)
-- [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
+- [Graph Canvas Runtime Model](graph-frontend-architecture.md#section-graph-canvas-runtime-model)
 - [Semantic Transformation](../../../system/subsystems/semantic-transformation/index.md)
 - [VTX1 authoring authority hard cut](../../../../planning/proposals/mandatory/frontend-and-ux/vtx2-web-vtx1-authoring-hardcut-plan-20260903.md)
 

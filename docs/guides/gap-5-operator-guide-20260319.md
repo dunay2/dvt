@@ -140,5 +140,186 @@ If an archive unit is `VERIFY_FAILED`:
 
 ## Related Documents
 
-- [Gap 5 User Reference](./gap-5-user-reference-20260319.md)
-- [Gap 5 Archive Operations Runbook](../runbooks/gap-5-archive-operations-runbook-20260319.md)
+- [Gap 5 User Reference](gap-5-operator-guide-20260319.md#section-gap-5-user-reference-20260319)
+- [Gap 5 Archive Operations Runbook](gap-5-operator-guide-20260319.md#section-gap-5-archive-operations-runbook-20260319)
+
+<a id="section-gap-5-user-reference-20260319"></a>
+
+## Gap 5 User Reference
+
+### Purpose
+
+Provide one consultable reference for people who need to understand the Gap 5
+solution without reading every proposal and PR slice.
+
+This is the shortest complete reading surface for:
+
+- operators
+- reviewers
+- support engineers
+- developers integrating with lifecycle behavior
+
+### What Gap 5 Solves
+
+Gap 5 gives DVT a governed lifecycle for stored execution history:
+
+- recent history stays in hot PostgreSQL
+- old terminal history moves to cold object storage
+- terminal snapshots remain queryable in warm storage
+- delivery buffers are cleaned with their own short-lived retention rules
+- restore is possible when deeper investigation is required
+
+### The Core Rule
+
+**DVT archives domain history. It does not compact it away.**
+
+That means:
+
+- `run_events` remain authoritative
+- snapshots speed up reads but do not replace event history
+- deletion from hot storage only happens after export, verification, and grace
+
+### Tier Model
+
+| Tier   | What it contains                                   | What it is for                              |
+| ------ | -------------------------------------------------- | ------------------------------------------- |
+| `hot`  | active event history and recent runs               | execution, replay, recent operational reads |
+| `warm` | pinned terminal snapshots and archive catalog rows | fast status reads for older terminal runs   |
+| `cold` | full archived event history in object storage      | compliance, forensics, exceptional restore  |
+
+### What This Resembles In Proven Systems
+
+| DVT concern                         | Mature precedent                   | What we borrow                            | What stays custom                   |
+| ----------------------------------- | ---------------------------------- | ----------------------------------------- | ----------------------------------- |
+| event history remains authoritative | EventStoreDB / Kurrent             | append-only discipline                    | DVT run semantics                   |
+| hot plus cold lifecycle             | Temporal, Confluent tiered storage | export to object storage, finite hot tier | catalog, policy, snapshots, restore |
+| PostgreSQL partition mechanics      | `pg_partman`                       | partition maintenance patterns            | DVT archive-unit semantics          |
+| delivery buffer pattern             | Debezium outbox                    | operational buffer discipline             | DVT outbox and DLQ governance       |
+
+### What Can Be Reused
+
+- `pg_partman` for partition management and retention mechanics
+- object storage and Parquet tooling for export format and storage
+- Debezium ideas for outbox cleanup discipline
+
+### What Must Stay DVT-Specific
+
+- archive catalog semantics
+- per-tenant retention policy resolution
+- terminal snapshot pinning rules
+- restore authorization and recovery path
+- the distinction between `run_events` and delivery buffers
+
+### Governance Documents
+
+Read these in order if you need more than this summary:
+
+1. [ADR-0037 - Run Event Lifecycle Archival, Verification, and Restore Model](../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md)
+2. [ADR-0038 - Delivery Buffer Retention and Purge Policy](../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)
+3. [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
+4. [Gap 5 Archive Operations Runbook](gap-5-operator-guide-20260319.md#section-gap-5-archive-operations-runbook-20260319)
+
+### PR Breakdown
+
+| PR       | Purpose                       |
+| -------- | ----------------------------- |
+| `G5-PR1` | minimal usable archival       |
+| `G5-PR2` | deferred deletion and restore |
+| `G5-PR3` | delivery-buffer retention     |
+| `G5-PR4` | redaction ADR and follow-up   |
+
+### Common Questions
+
+#### Are archived runs deleted?
+
+No. Their hot copy may be removed later, but the authoritative event history is
+preserved in cold storage.
+
+#### Can normal product reads fetch full archived history?
+
+Not by default. Normal reads use hot state or warm terminal snapshots.
+
+#### When is restore used?
+
+When audit, forensics, or exceptional recovery requires access to archived
+event sequences.
+
+#### Is outbox history part of the authoritative run history?
+
+No. Outbox and dead-letter tables are operational buffers and follow separate
+retention rules.
+
+> Section status: Review. Owner: Architecture / Operations. Colocation does not merge component responsibilities.
+
+<a id="section-gap-5-archive-operations-runbook-20260319"></a>
+
+## Gap 5 Archive Operations Runbook
+
+### Purpose
+
+Operational procedure for archive export, verification failure, restore, and
+delete-after-grace workflows.
+
+### Preconditions
+
+- archive catalog available
+- lifecycle leadership working
+- metrics available
+- admin authorization in place for restore and override actions
+
+### Routine Checks
+
+Daily checks:
+
+1. no backlog growth in `ELIGIBLE`
+2. no stale `EXPORTED` units beyond verification SLA
+3. no unexpected `VERIFY_FAILED` growth
+4. delete-eligible units progressing after grace expiry
+5. delivery-buffer retained rows within expected envelope
+
+### Procedure: Verification Failure
+
+1. Identify the `archiveUnitKey`.
+2. Confirm object presence and manifest presence.
+3. Compare manifest row count and checksum against catalog state.
+4. Retry verification if failure cause is transient.
+5. Re-export only if manifest or object is invalid.
+6. Do not allow deletion while unit remains `VERIFY_FAILED`.
+
+### Procedure: Restore One Run
+
+1. Confirm operator authorization and reason.
+2. Resolve archive location from catalog.
+3. Restore to temporary target by default.
+4. Validate restored row count and sequence continuity.
+5. Hand over temporary target to investigator.
+
+### Procedure: Restore One Archive Unit
+
+1. Confirm operator authorization.
+2. Restore archive unit to temporary schema.
+3. Validate manifest, row count, and `run_seq` continuity.
+4. Use hot rehydrate only if explicitly approved.
+
+### Procedure: Delete After Grace
+
+1. Confirm archive unit state is `VERIFIED`.
+2. Confirm grace window elapsed.
+3. Re-check leadership before destructive action.
+4. Drop hot archive unit.
+5. Record `DROPPED_FROM_HOT` in catalog.
+
+### Stop Conditions
+
+Pause lifecycle processing if:
+
+- verification failure rate spikes
+- object storage access is degraded
+- leadership ownership flaps
+- restore operations saturate system capacity
+
+### Related Documents
+
+- [Gap 5 Operator Guide](gap-5-operator-guide-20260319.md)
+
+> Section status: Review. Owner: Architecture / Operations. Colocation does not merge component responsibilities.

@@ -50,7 +50,7 @@ describe('route bootstrap startup readiness architecture', () => {
     const componentGuide = readFileSync(
       path.resolve(
         import.meta.dirname,
-        '../../../../../docs/architecture/components/web/app-bootstrap-screen-component.md'
+        '../../../../../docs/architecture/components/web/appshell/app-shell.md'
       ),
       'utf8'
     );
@@ -67,7 +67,7 @@ describe('route bootstrap startup readiness architecture', () => {
     const componentGuide = readFileSync(
       path.resolve(
         import.meta.dirname,
-        '../../../../../docs/architecture/components/web/app-bootstrap-screen-component.md'
+        '../../../../../docs/architecture/components/web/appshell/app-shell.md'
       ),
       'utf8'
     );

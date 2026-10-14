@@ -23,7 +23,7 @@ and draft lifecycle.
 - [Canvas Shell Component](./canvas-shell-component.md)
 - [Canvas Empty Authoring Entrypoint Component](./canvas-empty-authoring-entrypoint-component.md)
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
-- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
+- [Canvas Graph Lifecycle Component](canvas-authoring-runtime-component.md#section-canvas-graph-lifecycle-component)
 
 ## Public API
 

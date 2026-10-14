@@ -24,40 +24,40 @@ out of the active tree.
 
 - shell and bootstrap:
   [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md),
-  [App bootstrap screen component](./app-bootstrap-screen-component.md),
+  [App bootstrap screen component](appshell/app-shell.md#section-app-bootstrap-screen-component),
   [Admin route position component](./admin-route-position-component.md),
-  [API client auth component](./api-client-auth-component.md),
+  [API client auth component](frontend-data-boundary-architecture.md#section-api-client-auth-component),
   [App shell](./appshell/app-shell.md),
   [Web Auth Project Onboarding Component](./appshell/web-auth-project-onboarding-component.md),
-  [Data source service boundary](./appshell/data-source-service-boundary.md)
+  [Data source service boundary](frontend-data-boundary-architecture.md#section-data-source-service-boundary)
 - graph and authoring surfaces:
   [Graph docs entrypoint](./graph/index.md),
   [Graph frontend architecture](./graph/graph-frontend-architecture.md),
-  [Graph route bootstrap architecture](./graph/graph-route-bootstrap-architecture.md),
-  [Graph canvas runtime model](./graph/graph-canvas-runtime-model.md),
-  [Graph sequences and state machines](./graph/graph-sequences-and-state-machines.md),
-  [Graph decision rationale and patterns](./graph/graph-decision-rationale-and-patterns.md),
+  [Graph route bootstrap architecture](graph/graph-frontend-architecture.md#section-graph-route-bootstrap-architecture),
+  [Graph canvas runtime model](graph/graph-frontend-architecture.md#section-graph-canvas-runtime-model),
+  [Graph sequences and state machines](graph/graph-frontend-architecture.md#section-graph-sequences-and-state-machines),
+  [Graph decision rationale and patterns](graph/graph-frontend-architecture.md#section-graph-decision-rationale-and-patterns),
   [Canvas layout persistence component](./graph/canvas-layout-persistence-component.md),
   [Canvas controller current-to-target](./graph/canvas-controller-current-to-target-architecture.md)
 - runtime and run-inspection surfaces:
-  [Runs architecture](./runs/dvt-runs-frontend-architecture.md),
+  [Runs architecture](runs/component-runs.md#section-dvt-runs-frontend-architecture),
   [Frontend runtime contract technical manual](./runs/frontend-runtime-contract-technical-manual.md),
-  [Frontend runtime contract user manual](./runs/frontend-runtime-contract-user-manual.md)
+  [Frontend runtime contract user manual](runs/frontend-runtime-contract-technical-manual.md#section-frontend-runtime-contract-user-manual)
 - cross-cutting UX:
   [DVT Style Guide v0.2](./style-guide.md),
-  [UX implementation guide](./ux-implementation-guide.md),
-  [Iconography and design tokens contract](./iconography-and-design-tokens-contract.md),
+  [UX implementation guide](style-guide.md#section-ux-implementation-guide),
+  [Iconography and design tokens contract](style-guide.md#section-iconography-and-design-tokens-contract),
   [Workbench UX Canon Component](./workbench-ux-canon-component.md),
   [Frontend component inventory](./frontend-component-inventory.md),
   [Frontend command and query rail inventory](./frontend-command-query-rail-inventory.md),
   [Frontend mechanical truth inventory](./frontend-mechanical-truth-inventory.md),
-  [Frontend query boundary component](./frontend-query-boundary-component.md),
+  [Frontend query boundary component](frontend-data-boundary-architecture.md#section-frontend-query-boundary-component),
   [Frontend test governance component](./frontend-test-governance-component.md),
   [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
   [Web store domain ownership component](./web-store-domain-ownership-component.md),
-  [Route Workbench Frame Component](./route-workbench-frame-component.md),
-  [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
-  [Marquez public-data visual system](./public-data/marquez-visual-system-component.md),
+  [Route Workbench Frame Component](appshell/app-shell.md#section-route-workbench-frame-component),
+  [Library and open-source reference stack](style-guide.md#section-library-and-open-source-reference-stack),
+  [Marquez public-data visual system](style-guide.md#section-marquez-visual-system-component),
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)
 
 ## Public Operational Surface

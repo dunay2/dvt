@@ -23,8 +23,8 @@ describe('canvas route posture priority architecture', () => {
 
   it('keeps active Canvas architecture docs from routing through retired tab-strip seams', () => {
     const activeDocs = [
-      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md',
-      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md',
+      'docs/architecture/components/web/style-guide.md',
+      'docs/architecture/components/web/style-guide.md',
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md',
@@ -49,12 +49,8 @@ describe('canvas route posture priority architecture', () => {
     const tokenSource = readAppSource('canvasChromeTokens.ts');
     const draftSaveStatusSource = readAppSource('CanvasDraftSaveStatus.tsx');
     const layoutSource = readAppSource('canvasShellLayoutBuilder.tsx');
-    const componentGuide = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
-    );
-    const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
-    );
+    const componentGuide = readRepoFile('docs/architecture/components/web/style-guide.md');
+    const userStories = readRepoFile('docs/architecture/components/web/style-guide.md');
 
     expect(tokenSource).toContain('Owned concern: own Canvas route chrome visual tokens');
     expect(tokenSource).toContain('canvasChromeClasses');

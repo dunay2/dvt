@@ -103,7 +103,7 @@ flowchart TD
 - [Workbench UX Canon User Stories](workbench-ux-canon-component.md#section-workbench-ux-canon-user-stories)
 - [DVT Workbench UX Canon Plan 2026-05-24](../../../planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md)
 - [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
-- [UX Implementation Guide](./ux-implementation-guide.md)
+- [UX Implementation Guide](style-guide.md#section-ux-implementation-guide)
 - [Workbench UX Canon Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-workbench-ux-canon.md)
 
 <a id="section-workbench-ux-canon-user-stories"></a>

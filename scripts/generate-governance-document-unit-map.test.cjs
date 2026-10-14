@@ -38,8 +38,14 @@ test('resolveSubjectUnit maps plan-store docs before generic postgres or contrac
 });
 
 test('resolveSubjectUnit maps frontend and worker docs to owning system units', () => {
-  assert.equal(resolveSubjectUnit('docs/guides/top-app-bar-user-manual-20260404.md'), 'SYS-WEB');
-  assert.equal(resolveSubjectUnit('docs/runbooks/outbox-worker-g5.md'), 'SYS-WORKERS');
+  assert.equal(
+    resolveSubjectUnit('docs/architecture/components/web/appshell/app-shell.md'),
+    'SYS-WEB'
+  );
+  assert.equal(
+    resolveSubjectUnit('docs/guides/outbox-worker-technical-manual-20260404.md'),
+    'SYS-WORKERS'
+  );
 });
 
 test('resolveSubjectUnit does not match short tokens inside unrelated words', () => {

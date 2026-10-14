@@ -29,9 +29,15 @@ const HARDCUT_DOCUMENTATION_FILES = [
     'architecture',
     'components',
     'web',
-    'f04-frontend-data-boundary-technical-manual-20260404.md',
+    'frontend-data-boundary-architecture.md',
   ],
-  ['..', '..', 'docs', 'guides', 'f04-frontend-data-boundary-user-manual-20260404.md'],
+  [
+    '..',
+    '..',
+    'docs',
+    'guides',
+    '../architecture/components/web/frontend-data-boundary-architecture.md',
+  ],
   [
     '..',
     '..',

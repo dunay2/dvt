@@ -66,7 +66,7 @@ Expected interpretation:
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md`
-- `docs/architecture/components/web/api-client-auth-component.md`
+- `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/canvas-execution-selection-component.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`

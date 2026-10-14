@@ -33,7 +33,7 @@ No runtime contract/API changes are planned in this slice.
 - `docs/runbooks/api-runtime-sla-canonical-20260404.md`
 - `docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md`
 - `docs/guides/api-control-plane-technical-manual-20260404.md`
-- `docs/guides/api-control-plane-user-manual-20260404.md`
+- `docs/guides/api-control-plane-technical-manual-20260404.md`
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md`
 
 ## Problem statement

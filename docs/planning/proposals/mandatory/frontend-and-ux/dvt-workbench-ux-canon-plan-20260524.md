@@ -23,9 +23,9 @@ F-24, F-25, F-28, and route-level component guides.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/ux-implementation-guide.md`
+- `docs/architecture/components/web/style-guide.md`
 - `docs/architecture/components/web/screen-manuals-and-user-stories.md`
-- `docs/architecture/components/web/route-workbench-frame-component.md`
+- `docs/architecture/components/web/appshell/app-shell.md`
 
 Historical input, not a governing contract: [UX v0.4 design input (Git)](https://github.com/dunay2/dvt/blob/b1778255afcc6392e54b887c79660005ed8754ad/docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md)
 
@@ -91,7 +91,7 @@ Accepted now:
 - historical v0.4 input is consulted from Git, not retained as an active file;
 - `screen-manuals-and-user-stories.md` owns current Process Map and
   contextual-surface placement; component ownership remains in Planning DB;
-- `ux-implementation-guide.md` remains the implementation direction guide;
+- `style-guide.md` remains the implementation direction guide;
 - future executable UX changes must name their command/query rail and governing
   GitHub issue before code changes; architecture changes use Planning DB.
 
@@ -147,7 +147,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/architecture/components/web/ux-implementation-guide.md
+  - docs/architecture/components/web/style-guide.md
   - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-workbench-ux-canon.md

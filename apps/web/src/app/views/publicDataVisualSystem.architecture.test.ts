@@ -35,10 +35,8 @@ describe('public data visual system architecture', () => {
   });
 
   it('documents Marquez as a scoped public-data visual system', () => {
-    const componentPath =
-      'docs/architecture/components/web/public-data/marquez-visual-system-component.md';
-    const storiesPath =
-      'docs/architecture/components/web/public-data/marquez-visual-system-component.md';
+    const componentPath = 'docs/architecture/components/web/style-guide.md';
+    const storiesPath = 'docs/architecture/components/web/style-guide.md';
 
     expect(repoFileExists(componentPath)).toBe(true);
     expect(repoFileExists(storiesPath)).toBe(true);
@@ -58,10 +56,8 @@ describe('public data visual system architecture', () => {
   });
 
   it('keeps Marquez separated from operator workbench guidance', () => {
-    const uxGuide = readRepoFile('docs/architecture/components/web/ux-implementation-guide.md');
-    const referenceStack = readRepoFile(
-      'docs/architecture/components/web/library-and-open-source-reference-stack.md'
-    );
+    const uxGuide = readRepoFile('docs/architecture/components/web/style-guide.md');
+    const referenceStack = readRepoFile('docs/architecture/components/web/style-guide.md');
     const webIndex = readRepoFile('docs/architecture/components/web/index.md');
 
     expect(uxGuide).toContain('Marquez visual system');

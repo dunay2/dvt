@@ -24,38 +24,38 @@ taxonomy, or the detailed draft-state-machine spec.
 
 ## Governing Sources
 
-- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
-- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-- [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
-- [Canvas Draft Session Component](./canvas-draft-session-component.md)
-- [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
-- [Canvas Route Composition Component](./canvas-route-composition-component.md)
-- [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
-- [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-- [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
+- [Canvas Authoring Projection Component](canvas-authoring-runtime-component.md#section-canvas-authoring-projection-component)
+- [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
+- [Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component)
+- [Canvas Handler Contracts Component](canvas-authoring-runtime-component.md#section-canvas-handler-contracts-component)
+- [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
+- [Canvas Route Presentation Component](graph-frontend-architecture.md#section-canvas-route-presentation-component)
+- [Graph Sequences And State Machines](graph-frontend-architecture.md#section-graph-sequences-and-state-machines)
+- [Frontend Fowler Implementation Pattern](../frontend-data-boundary-architecture.md#section-frontend-fowler-implementation-pattern)
 - [Frontend Data Boundary Architecture](../frontend-data-boundary-architecture.md)
 
 Reading rule:
 
 - use this page for controller-local composition and target shape
-- use `canvas-draft-session-component.md` for aggregate internals and state
+- use `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md` for aggregate internals and state
   reading
-- use `canvas-route-composition-component.md` for route composition, shell prop
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for route composition, shell prop
   contracts, and presentation boundaries
 - use `canvas-authoring-runtime-component.md` for the authoring-runtime
   contract, baseline seam, draft-flow seam, and runtime invariants
-- use `canvas-authoring-projection-component.md` for protected-draft semantic
+- use `docs/architecture/components/web/graph/canvas-authoring-runtime-component.md` for protected-draft semantic
   projection, viewport projection, and canonical snapshot boundaries
-- use `canvas-handler-contracts-component.md` for adapter composition
+- use `docs/architecture/components/web/graph/canvas-authoring-runtime-component.md` for adapter composition
   vocabulary, namespaced builder APIs, and handler-seam invariants
-- use `canvas-route-composition-component.md` for route orchestration, modal
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for route orchestration, modal
   adaptation, and concern-scoped shell-builder contracts
-- use `canvas-route-presentation-component.md` for route-visible posture and
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for route-visible posture and
   alignment across banner, toolbar, center surface, and bootstrap publication
-- use `graph-route-bootstrap-architecture.md` for route publication and startup
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for route publication and startup
   contract rules
-- use `graph-sequences-and-state-machines.md` for sequence and state-machine
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for sequence and state-machine
   diagrams
 - use the `TF-E2` plan for roadmap, scope, and delivery ordering
 
@@ -243,7 +243,7 @@ Target reading:
 - save and preview flows must consume authoritative route scope, not visible-only
   widget state.
 - route startup publication stays governed by
-  `graph-route-bootstrap-architecture.md`.
+  `docs/architecture/components/web/graph/graph-frontend-architecture.md`.
 - no compatibility shim should reintroduce parallel mutation paths.
 
 ## Out Of Scope
@@ -252,4 +252,4 @@ Target reading:
 - the shell-wide startup taxonomy
 - Diff, Artifacts, or Templates route behavior
 - the full draft state machine, which already lives in
-  `graph-sequences-and-state-machines.md`
+  `docs/architecture/components/web/graph/graph-frontend-architecture.md`

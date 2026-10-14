@@ -18,7 +18,7 @@ function markdownSection(markdown, heading) {
 }
 
 test('bootstrap component guide separates component test coverage from governance drift guards', () => {
-  const guide = readText('docs/architecture/components/web/app-bootstrap-screen-component.md');
+  const guide = readText('docs/architecture/components/web/appshell/app-shell.md');
   const testCoverage = markdownSection(guide, '## Test Coverage');
   const governanceGuard = markdownSection(guide, '## Governance Drift Guard');
 

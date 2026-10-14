@@ -15,9 +15,9 @@ last_reviewed: 2026-09-05
 4. [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 5. [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
 6. [ADR-0064: Substrait semantic reference](../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)
-7. [GenericGraphSource user manual](../../../guides/generic-graph-source-user-manual-20260404.md)
+7. [GenericGraphSource user manual](../../../guides/generic-graph-source-technical-manual-20260404.md#section-generic-graph-source-user-manual-20260404)
 8. [Planner cycle detection technical manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md)
-9. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-user-manual-20260404.md)
+9. [Planner cycle detection user manual](../../../guides/planner-cycle-detection-technical-manual-20260404.md#section-planner-cycle-detection-user-manual-20260404)
 
 ## Scope and location
 

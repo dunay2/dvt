@@ -89,4 +89,4 @@ Ownership observability:
 - `/metrics` exposes `dvt_outbox_runtime_owner`
 - `/metrics` exposes retention posture gauges: `dvt_delivery_buffer_purge_configured`, `dvt_delivery_buffer_purge_disabled`, `dvt_run_event_retention_configured`, `dvt_run_event_retention_disabled`, and `dvt_run_event_retention_filesystem_archive_storage`
 
-Operator guidance lives in [`docs/runbooks/outbox-worker-g5.md`](../../docs/runbooks/outbox-worker-g5.md).
+Operator guidance lives in [`docs/guides/outbox-worker-technical-manual-20260404.md`](../../docs/guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5).

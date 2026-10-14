@@ -19,12 +19,8 @@ describe('RouteWorkbenchFrame architecture', () => {
   it('documents and enforces the semantic workbench slot contract', () => {
     const source = readAppSource('components/workbench/RouteWorkbenchFrame.tsx');
     const codeView = readAppSource('views/CodeView.tsx');
-    const componentGuide = readRepoDoc(
-      'docs/architecture/components/web/route-workbench-frame-component.md'
-    );
-    const userStories = readRepoDoc(
-      'docs/architecture/components/web/route-workbench-frame-component.md'
-    );
+    const componentGuide = readRepoDoc('docs/architecture/components/web/appshell/app-shell.md');
+    const userStories = readRepoDoc('docs/architecture/components/web/appshell/app-shell.md');
     const cypressProof = readRepoDoc('apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts');
 
     expect(source.trimStart().startsWith('/** Owned concern:')).toBe(true);
