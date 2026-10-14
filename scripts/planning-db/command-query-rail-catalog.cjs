@@ -8,6 +8,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
   const shared = deps.shared || require('./command-query-rail-shared.cjs');
   const documentation = deps.documentation || require('./command-query-rail-documentation.cjs');
   const references = deps.references || require('./command-query-rail-reference-index.cjs');
+  const { resolveRailReferenceAuthority } = require('./command-query-rail-authority.cjs');
 
   const repoRoot = deps.repoRoot || path.resolve(__dirname, '..', '..');
   const {
@@ -168,13 +169,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
   function assertManifestRailReferences(rails) {
     for (const rail of rails.filter((candidate) => candidate.rawRail?.referenceOnly === true)) {
       const authorityRef = toPosix(normalizeText(rail.rawRail?.authorityRef).trim());
-      const hasAuthority = rails.some(
-        (candidate) =>
-          candidate.rawRail?.referenceOnly !== true &&
-          candidate.sourcePath === authorityRef &&
-          candidate.railType === rail.railType &&
-          candidate.normalizedRailName === rail.normalizedRailName
-      );
+      const hasAuthority = resolveRailReferenceAuthority(rail, rails);
 
       if (!hasAuthority) {
         throw new Error(
@@ -217,7 +212,6 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
       ...buildManifestRailRows(documents),
       ...extractDocumentedRailRows(referenceDocuments),
     ];
-    assertManifestRailReferences(rails);
     const sourceImplementationRefIndex = buildSourceImplementationRefIndex(sourceFiles, rails);
     const documentationRefIndex = buildDocumentationRefIndex(referenceDocuments, rails);
     const governanceImplementationRefIndex = buildGovernanceImplementationRefIndex(
@@ -225,19 +219,18 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
       rails
     );
 
-    return {
-      sourcePath: 'docs/planning/proposals/mandatory',
-      rails: rails.map((rail) =>
-        attachCommandQueryRailRefs(rail, {
-          referenceDocuments,
-          sourceFiles,
-          governanceSnapshot: options.governanceSnapshot,
-          sourceImplementationRefIndex,
-          documentationRefIndex,
-          governanceImplementationRefIndex,
-        })
-      ),
-    };
+    const enrichedRails = rails.map((rail) =>
+      attachCommandQueryRailRefs(rail, {
+        referenceDocuments,
+        sourceFiles,
+        governanceSnapshot: options.governanceSnapshot,
+        sourceImplementationRefIndex,
+        documentationRefIndex,
+        governanceImplementationRefIndex,
+      })
+    );
+    assertManifestRailReferences(enrichedRails);
+    return { sourcePath: 'docs/planning/proposals/mandatory', rails: enrichedRails };
   }
 
   return {

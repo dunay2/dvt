@@ -5,6 +5,7 @@ const { Client } = require('pg');
 const { randomUuidV4, sha256Hex } = require('@dvt/crypto');
 const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
+const { readRailReferenceAuthority } = require('./command-query-rail-authority.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
 const { readGovernedSourceSnapshots } = require('./governed-source-refresh-write-rail.cjs');
 const {
@@ -408,21 +409,13 @@ async function applyCatalogReconciliation(input, options = {}) {
       [ids('imported'), ids('local'), affectedPaths]
     );
     for (const reference of references.rows) {
-      const authority = await client.query(
-        `select rail_id from ${schemaName}.command_query_rail_query
-        where source_path = $1 and rail_type = $2 and normalized_rail_name = $3
-        and not (rail_source = $4 and rail_id = $5)
-        and lower(coalesce(rail_status, '')) not in ('deprecated', 'retired')
-        and not is_gap and not (raw_rail @> '{"referenceOnly":true}'::jsonb)`,
-        [
-          reference.raw_rail.authorityRef,
-          reference.rail_type,
-          reference.normalized_rail_name,
-          reference.origin,
-          reference.rail_id,
-        ]
-      );
-      if (authority.rows.length !== 1)
+      const authority = await readRailReferenceAuthority(client, {
+        rawRail: reference.raw_rail,
+        railType: reference.rail_type,
+        normalizedRailName: reference.normalized_rail_name,
+        railId: reference.rail_id,
+      });
+      if (!authority)
         throw new Error(`CATALOG-REFERENCE: Unresolved authority for ${reference.rail_id}.`);
     }
     for (const [index, entry] of planned.entries()) {

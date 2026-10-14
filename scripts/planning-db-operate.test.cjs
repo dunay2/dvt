@@ -2,6 +2,7 @@ require('./planning-db-operate-tests/cli.test.cjs');
 require('./planning-db-operate-tests/docs-resolution.test.cjs');
 require('./planning-db-operate-tests/db-surface.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization.test.cjs');
+require('./planning-db/command-query-rail-authority.test.cjs');
 require('./planning-db-operate-tests/catalog-reconciliation.test.cjs');
 require('./planning-db-operate-tests/catalog-current-document.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization-retirement.test.cjs');
