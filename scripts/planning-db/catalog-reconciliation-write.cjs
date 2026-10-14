@@ -10,7 +10,10 @@ const { readGovernedSourceSnapshots } = require('./governed-source-refresh-write
 const {
   extractFeatureMechanizationManifests,
 } = require('../lib/feature-mechanization-manifest.cjs');
-const { buildCurrentDocumentSql } = require('./catalog-current-document.cjs');
+const {
+  buildCurrentDocumentSql,
+  historicalDocumentTarget,
+} = require('./catalog-current-document.cjs');
 const {
   catalogRowHash,
   parseCatalogReconciliation,
@@ -238,11 +241,19 @@ async function applyCatalogReconciliation(input, options = {}) {
         }
         for (const ref of document.references) {
           const targetKey = `document-target:${document.commit}:${ref.to}`;
-          if (!sourceProofs.has(targetKey))
+          if (!sourceProofs.has(targetKey)) {
+            const historical = historicalDocumentTarget(ref);
             sourceProofs.set(
               targetKey,
-              verifyCurrentSourceContent({ commit: document.commit, path: ref.to }, ref.to, options)
+              historical
+                ? verifyHistoricalSource(historical, ref.from, options)
+                : verifyCurrentSourceContent(
+                    { commit: document.commit, path: ref.to },
+                    ref.to,
+                    options
+                  )
             );
+          }
         }
       }
       if (change.source) {
@@ -309,6 +320,9 @@ async function applyCatalogReconciliation(input, options = {}) {
       }
       const currentDocument = request.changes[index].currentDocument;
       if (currentDocument) {
+        entry.documentaryTargets = currentDocument.references.map((ref) =>
+          sourceProofs.get(`document-target:${currentDocument.commit}:${ref.to}`)
+        );
         const columns = buildCurrentDocumentSql(currentDocument, { bind, beforeSnapshot });
         for (const [column, expression] of Object.entries(columns)) {
           assignments.push(`${column} = ${expression}`);
@@ -438,6 +452,7 @@ async function applyCatalogReconciliation(input, options = {}) {
             origin,
             proof,
             evidenceHistory: entry.evidenceHistory,
+            documentaryTargets: entry.documentaryTargets,
           }),
           beforeText,
           afterText,

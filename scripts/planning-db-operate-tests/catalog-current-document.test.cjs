@@ -158,3 +158,33 @@ test('scalar and governing references preserve their shape and keep the query pr
     /projection disagrees/
   );
 });
+
+test('hash-only documentary rows need no feature fence, but reference edits still require it', () => {
+  const f = fixture();
+  f.proof.manifests = [];
+  f.request.changes[0].currentDocument.references = [];
+  assert.deepEqual(
+    planCatalogReconciliation(f.request, f.snapshots, f.proofs)[0].after.raw_manifest,
+    f.row.raw_manifest
+  );
+});
+
+test('historical targets admit only immutable same-repository documentary blob identities', () => {
+  const f = fixture();
+  const historical = `https://github.com/dunay2/dvt/blob/${'e'.repeat(40)}/docs/old.md`;
+  f.request.changes[0].currentDocument.references[0].to = historical;
+  f.proof.manifests[0].componentGuides[0] = historical;
+  assert.equal(
+    planCatalogReconciliation(f.request, f.snapshots, f.proofs)[0].after.raw_manifest
+      .componentGuides[0],
+    historical
+  );
+  for (const to of [
+    historical.replace('/dunay2/dvt/', '/other/repo/'),
+    historical.replace('e'.repeat(40), 'main'),
+    historical.replace('/docs/old.md', '/docs/other.md'),
+  ]) {
+    f.request.changes[0].currentDocument.references[0].to = to;
+    assert.throws(() => parseCatalogReconciliation(f.request), /CATALOG/);
+  }
+});

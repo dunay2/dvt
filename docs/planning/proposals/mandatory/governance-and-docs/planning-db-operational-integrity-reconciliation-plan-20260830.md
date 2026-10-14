@@ -267,7 +267,12 @@ Only `implementationPlan`, `componentGuides`, `userStories` and `governingSource
 are eligible. Each replacement names its field, array index where applicable,
 exact old value and new value. No array insertion, removal or reordering is
 allowed. The replacement must equal that slot in the selected feature manifest
-of the committed source and resolve to a tracked repository Markdown file.
+of the committed source and resolve to a tracked repository Markdown file or
+an immutable same-repository Git blob for the same retired reference path.
+Historical targets require the existing full ancestor-commit and regular-blob
+proof; arbitrary external URLs and path substitutions reject. Hash-only changes
+do not require a feature fence because they copy no manifest data; this preserves
+documentation-table rows and independently authored local declarations.
 Missing or ambiguous features, invalid fields, duplicate selectors, stale values,
 uncommitted sources, unresolved targets and mixed patch modes reject.
 

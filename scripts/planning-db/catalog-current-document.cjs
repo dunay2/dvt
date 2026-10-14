@@ -9,6 +9,15 @@ function documentPath(value) {
   );
 }
 
+function historicalDocumentTarget(ref) {
+  const match = /^https:\/\/github\.com\/dunay2\/dvt\/blob\/([a-f0-9]{40})\/(.+)$/u.exec(
+    ref.to || ''
+  );
+  return match && match[2] === ref.from && documentPath(match[2])
+    ? { commit: match[1], path: match[2] }
+    : null;
+}
+
 function validateCurrentDocument(document) {
   if (
     !document ||
@@ -31,7 +40,7 @@ function validateCurrentDocument(document) {
       (!scalar && !arrayFields.has(ref.field)) ||
       (scalar ? Object.hasOwn(ref, 'index') : !Number.isSafeInteger(ref.index) || ref.index < 0) ||
       !documentPath(ref.from) ||
-      !documentPath(ref.to) ||
+      (!documentPath(ref.to) && !historicalDocumentTarget(ref)) ||
       ref.from === ref.to
     )
       throw new Error('CATALOG-DOCUMENT: Invalid exact documentary selector.');
@@ -57,7 +66,7 @@ function projectCurrentDocument(before, document, proof) {
   )
     throw new Error('CATALOG-DOCUMENT: Exact clean HEAD source proof required.');
   const matches = proof.manifests?.filter((manifest) => manifest?.featureId === before.feature_id);
-  if (matches?.length !== 1)
+  if (document.references.length && matches?.length !== 1)
     throw new Error('CATALOG-DOCUMENT: Expected exactly one committed feature manifest.');
   const rawManifest = structuredClone(before.raw_manifest);
   const patch = { raw_manifest: rawManifest, source_content_sha256: proof.contentSha256 };
@@ -92,4 +101,9 @@ function buildCurrentDocumentSql(document, { bind, beforeSnapshot }) {
   return columns;
 }
 
-module.exports = { validateCurrentDocument, projectCurrentDocument, buildCurrentDocumentSql };
+module.exports = {
+  validateCurrentDocument,
+  projectCurrentDocument,
+  buildCurrentDocumentSql,
+  historicalDocumentTarget,
+};

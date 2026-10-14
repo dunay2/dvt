@@ -27,6 +27,12 @@ module.exports = function registerCurrentDocumentIntegration(dbUrl) {
       git('config', 'user.email', 'fixture@example.invalid');
       git('config', 'core.autocrlf', 'false');
       fs.mkdirSync(path.join(repoRoot, 'docs'));
+      fs.writeFileSync(path.join(repoRoot, 'docs/old.md'), '# Historical guide\n');
+      git('add', '.');
+      const ancestor = git('commit-tree', git('write-tree'), '-m', 'Historical document fixture');
+      git('update-ref', 'HEAD', ancestor);
+      fs.unlinkSync(path.join(repoRoot, 'docs/old.md'));
+      const historical = `https://github.com/dunay2/dvt/blob/${ancestor}/docs/old.md`;
       fs.writeFileSync(path.join(repoRoot, 'docs/new.md'), '# Current guide\n');
       fs.writeFileSync(
         path.join(repoRoot, 'docs/current.md'),
@@ -34,13 +40,20 @@ module.exports = function registerCurrentDocumentIntegration(dbUrl) {
           '```feature-mechanization',
           'featureId: CURRENT-DOCUMENT',
           'componentGuides: [docs/new.md]',
-          'governingSources: [docs/new.md]',
+          `governingSources: [${historical}]`,
           '```',
           '',
         ].join('\n')
       );
       git('add', '.');
-      const commit = git('commit-tree', git('write-tree'), '-m', 'Current document fixture');
+      const commit = git(
+        'commit-tree',
+        git('write-tree'),
+        '-p',
+        ancestor,
+        '-m',
+        'Current document fixture'
+      );
       git('update-ref', 'HEAD', commit);
       await client.query(`insert into architecture.design
         (design_id, work_item_id, title, owner, status, rationale, rail_ref)
@@ -80,7 +93,7 @@ module.exports = function registerCurrentDocumentIntegration(dbUrl) {
                 field,
                 index: 0,
                 from: 'docs/old.md',
-                to: 'docs/new.md',
+                to: field === 'governingSources' ? historical : 'docs/new.md',
               })),
             },
           },
