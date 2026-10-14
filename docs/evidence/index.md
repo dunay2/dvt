@@ -11,7 +11,6 @@ Evidence documents that justify or validate relevant changes.
 
 ## Index
 
-- [Context](context/index.md)
 - [Critical](critical/index.md)
 - [Supporting](supporting/index.md)
 - [Algebraic derived output evidence](ED-20260908-algebraic-derived-output.md)
