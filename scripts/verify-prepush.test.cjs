@@ -151,18 +151,22 @@
     const defaultStamp = buildPrepushStamp(changedFiles, {
       full: false,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
     });
     const fullStamp = buildPrepushStamp(changedFiles, {
       full: true,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
     });
     const expectedDefault = buildPrepushStamp(changedFiles, {
       full: false,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
     });
     const expectedFull = buildPrepushStamp(changedFiles, {
       full: true,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
     });
 
     assert.equal(validationLevelSatisfies('full', 'default'), true);
@@ -378,12 +382,14 @@
     const stamp = buildPrepushStamp(changedFiles, {
       full: false,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
     });
     const calls = [];
 
     const status = main([], {
       changedFiles,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
       readPrepushStamp: () => stamp,
       executePrepushPlan: () => calls.push('execute'),
       writePrepushStamp: () => calls.push('write'),
@@ -399,12 +405,14 @@
     const defaultStamp = buildPrepushStamp(changedFiles, {
       full: false,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
     });
     const calls = [];
 
     const status = main(['--full'], {
       changedFiles,
       stateFingerprint: 'same-tree',
+      validationFingerprint: 'same-validation-inputs',
       readPrepushStamp: () => defaultStamp,
       executePrepushPlan: () => calls.push('execute'),
       writePrepushStamp: () => calls.push('write'),
