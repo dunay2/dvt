@@ -538,5 +538,5 @@ Acceptance:
   diagrams, and semantic fitness commands.
 
 > Acceptance scope status: Active. Owner: Frontend / Architecture.
-
+>
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.

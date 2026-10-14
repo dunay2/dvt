@@ -211,5 +211,5 @@ Acceptance:
 | US-F24-LINEAGE-TOKEN-02 | `lineageChromeTokens` | `lineagePanelTokenConvergence.architecture.test.ts` |
 
 > Acceptance scope status: Active. Owner: Frontend / Lineage.
-
+>
 > Section status: Active. Owner: Frontend / Lineage. Colocation does not merge component responsibilities.

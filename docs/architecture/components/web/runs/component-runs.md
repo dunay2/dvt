@@ -1130,7 +1130,7 @@ Acceptance:
 | US-F16-07 | presentation state       | `RunListStateView.test.tsx`                |
 
 > Acceptance scope status: Active. Owner: Web / Runs.
-
+>
 > Section status: Active. Owner: Web / Runs. Colocation does not merge component responsibilities.
 
 <a id="section-run-event-timeline-component"></a>
@@ -1417,5 +1417,5 @@ Acceptance:
 | F10-11 | `RunsWorkbenchSurface`    | `RunsView.test.tsx`                               |
 
 > Acceptance scope status: Active. Owner: Web / Runs.
-
+>
 > Section status: Active. Owner: Web / Runs. Colocation does not merge component responsibilities.

@@ -264,5 +264,5 @@ flowchart LR
   define a persisted template-generation rail.
 
 > Acceptance scope status: Accepted. Owner: See component owner.
-
+>
 > Section status: Accepted. Owner: See named component boundary. Colocation does not merge component responsibilities.

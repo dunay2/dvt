@@ -743,7 +743,7 @@ flowchart LR
 - Adding a new route command or query rail.
 
 > Acceptance scope status: Active. Owner: Frontend / Architecture.
-
+>
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
 
 <a id="section-app-bootstrap-screen-component"></a>

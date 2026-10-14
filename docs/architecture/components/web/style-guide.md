@@ -361,7 +361,7 @@ flowchart LR
 | Templates generated-source preview stays read-only      | `templatesMonacoPreview.architecture.test.ts`        |
 
 > Acceptance scope status: Accepted. Owner: Frontend / Architecture.
-
+>
 > Section status: Accepted. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
 
 <a id="section-react-flow-visual-token-component"></a>
@@ -547,7 +547,7 @@ Canvas edge mapper.
 | `US-F24-GRAPH-TOKEN-03` | Reviewer            | I want graph renderer visual drift to fail mechanically  | `graphVisualTokenConvergence.architecture.test.ts` rejects local color-family and hex drift in graph rendering modules. |
 
 > Acceptance scope status: Active. Owner: Web / Canvas.
-
+>
 > Section status: Active. Owner: Web / Canvas. Colocation does not merge component responsibilities.
 
 <a id="section-runs-dense-table-visual-tokens-component"></a>
@@ -685,7 +685,7 @@ Acceptance:
 | US-F24-RUNS-TOKEN-03 | Row semantics remain separate | Existing F-16 table model tests and architecture guard |
 
 > Acceptance scope status: Active. Owner: Web / Runs.
-
+>
 > Section status: Active. Owner: Web / Runs. Colocation does not merge component responsibilities.
 
 <a id="section-marquez-visual-system-component"></a>
@@ -847,7 +847,7 @@ Acceptance:
 - the reference stack states that Marquez is not a dependency.
 
 > Acceptance scope status: Active. Owner: Frontend / Architecture.
-
+>
 > Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
 
 <a id="section-canvas-route-chrome-token-component"></a>
@@ -983,7 +983,7 @@ Acceptance:
 | `US-F24-CANVAS-CHROME-03` | compact Canvas shell/status presentation                                      | `canvasRoutePosturePriority.architecture.test.ts` |
 
 > Acceptance scope status: Active. Owner: Web / Canvas.
-
+>
 > Section status: Active. Owner: Web / Canvas. Colocation does not merge component responsibilities.
 
 <a id="section-iconography-and-design-tokens-contract"></a>

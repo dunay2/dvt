@@ -87,6 +87,7 @@ catalog exposed to the `Insert` surface. It must be derived from the active
 
 The hard cut replaces an anemic prop bag with grouped semantic ownership:
 
+<!-- markdownlint-capture -->
 <!-- markdownlint-disable MD013 MD060 -->
 
 | Group            | Owned concern                                              | Must not absorb                           |
@@ -98,10 +99,11 @@ The hard cut replaces an anemic prop bag with grouped semantic ownership:
 | `graphCommands`  | viewport and import interaction callbacks                  | shell chrome toggles                      |
 | `chromeCommands` | shell-local chrome and toolbar command handlers            | React Flow primitive callbacks            |
 
-<!-- markdownlint-enable MD013 MD060 -->
+<!-- markdownlint-restore -->
 
 ## File responsibilities
 
+<!-- markdownlint-capture -->
 <!-- markdownlint-disable MD013 MD060 -->
 
 | File                                  | Owned concern                                           | Public to other modules |
@@ -121,7 +123,7 @@ The hard cut replaces an anemic prop bag with grouped semantic ownership:
 | `CanvasShell.tsx`                     | three-panel shell layout and local chrome               | yes                     |
 | `CanvasShell.test.tsx`                | runtime behavior proof for the shell contract           | test only               |
 
-<!-- markdownlint-enable MD013 MD060 -->
+<!-- markdownlint-restore -->
 
 ## Current topology after hard cut
 
@@ -490,5 +492,5 @@ Acceptance:
 - The top bar must not own Canvas route command semantics.
 
 > Acceptance scope status: Active. Owner: Frontend / Shell / Canvas.
-
+>
 > Section status: Active. Owner: Frontend / Shell / Canvas. Colocation does not merge component responsibilities.
