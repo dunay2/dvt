@@ -104,6 +104,7 @@ export const WEB_CYPRESS_SPECS = {
 } as const;
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+  'scripts/live-proof-web-runtime.cjs': ['available', 'unavailable'],
   'apps/web/cypress/support/canvasExecutionSelection.ts': [
     'controlled',
     'available',
@@ -291,6 +292,7 @@ export function resolveWebCypressChangedPlan(
       continue;
     }
     if (
+      Object.hasOwn(SUPPORT_CAPABILITIES, path) ||
       path.startsWith('apps/web/cypress/') ||
       (path.startsWith('apps/web/cypress.') && path !== 'apps/web/cypress.changed.ts')
     ) {

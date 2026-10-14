@@ -838,6 +838,14 @@ describe('governed browser evidence routing', () => {
     expect(resolveWebVitestChangedSuitePlan([]).browserCommands).toEqual([]);
   });
 
+  it('compiled provider runtime changes retain both real obligations without allocating controlled providers', () => {
+    expect(
+      resolveWebVitestChangedSuitePlan(['scripts/live-proof-web-runtime.cjs']).browserCommands.map(
+        ({ capability }) => capability
+      )
+    ).toEqual(['available', 'unavailable']);
+  });
+
   it.each([
     [helper, 'interruptLiveRunEventFeed', spec],
     [dataHelper, 'registerCanvasNodeDataActionsProof', spec],

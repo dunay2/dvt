@@ -41,6 +41,8 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/run-selected-closure-cypress.test.cjs': 'scripts/run-selected-closure-cypress.test.cjs',
   'scripts/live-proof-process.cjs': 'scripts/live-proof-process.test.cjs',
   'scripts/live-proof-process.test.cjs': 'scripts/live-proof-process.test.cjs',
+  'scripts/live-proof-web-runtime.cjs': 'scripts/live-proof-web-runtime.test.cjs',
+  'scripts/live-proof-web-runtime.test.cjs': 'scripts/live-proof-web-runtime.test.cjs',
   'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
@@ -352,6 +354,7 @@ function hasWebChange(changedFiles) {
         'scripts/run-selected-closure-live-proof.cjs',
         'scripts/run-selected-closure-cypress.cjs',
         'scripts/live-proof-process.cjs',
+        'scripts/live-proof-web-runtime.cjs',
         'tools/ci/run-web-cypress-native.mjs',
       ].includes(filePath)
   );

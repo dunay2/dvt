@@ -414,6 +414,49 @@ measured evidence belong to [issue 3656](https://github.com/dunay2/dvt/issues/36
 | ----------------------------------------- | -------------- | --------------------------------------- | --------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Available evidence exceeds one job budget | Boundary drift | Policy separated from execution adapter | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites; RunWebCypressNative | Existing browser policy, changed-suite adapter, Test Suite workflow and their guards | Disjoint complete partition; invalid selectors; validation before filtering | Workflow schedules every shard with identical plan/execution selection and unique resource identities | All existing available specs through the real protected runtime | Product behavior, new catalogs/runners, timeout increases, total CPU optimization |
 
+### Compiled Client For Real-Provider Browser Proof — GH-3656
+
+The available provider group failed twice while loading development URLs such
+as `/src/app/views/Canvas.tsx` and `/src/app/views/RunsView.tsx`. Other failures
+showed a page reload that removed an import or Preview dialog. The API remained
+available. These observations identify unstable client asset delivery in the
+proof; they do not establish its low-level network cause.
+
+```mermaid
+flowchart LR
+  Current[Live proof starts Vite development server] --> Dynamic[Transform and serve modules during the journey]
+  Dynamic --> Observed[Observed module load errors or lost dialog after reload]
+  Existing[Existing build e2e command] --> Assets[Compiled client assets]
+  Assets --> Preview[Vite preview with the same proof profile]
+  Preview --> Browser[Existing Cypress specs and result guard]
+  Browser --> Providers[Real protected API and disposable providers]
+```
+
+The existing `RunWebCypressNative` command and selected-closure runner retain
+their spec selection, provider allocation, authentication and cleanup. An
+internal Web runtime adapter uses the existing `build:e2e` command once with
+the proof's Web environment, then serves those assets through Vite preview.
+Build and preview receive the same API URL, authentication and workspace
+profile. The bundle remains stable for the complete invocation.
+
+The adapter owns only build/start/readiness sequencing. It reuses the runner's
+process launcher and HTTP readiness port; both child handles remain in the
+existing cleanup collection. A failed or signaled build prevents preview from
+starting. Preview is ready only when its root returns HTTP 200; missing assets,
+early process exit or readiness failure retain the failing proof result.
+
+| Concern             | Existing owner / proof                                                            |
+| ------------------- | --------------------------------------------------------------------------------- |
+| Rail and allocation | `RunWebCypressNative`, selected-closure runner                                    |
+| Profile and build   | Existing `build:e2e`, identical build/preview environment                         |
+| Lifecycle           | Focused adapter tests: ordering, rejected build and readiness, owned handles      |
+| Routing             | Existing changed-file catalog selects real provider consumers for adapter changes |
+| Acceptance          | All admitted provider specs, unchanged assertions and CI budget                   |
+
+This changes the proof's client serving mode; it adds no product behavior,
+command rail, browser retry, exception suppression or fake provider. Runtime
+policy tests stay separate from the larger provider-composition test file.
+
 ### Execution Selection Consumer Closure — GH-3610
 
 The shared `cypress/support/canvasExecutionSelection.ts` helper is not an

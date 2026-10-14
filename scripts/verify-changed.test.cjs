@@ -76,6 +76,7 @@ test('runtime runner source and test changes select their isolated contract exac
     'run-selected-closure-live-proof',
     'run-selected-closure-cypress',
     'live-proof-process',
+    'live-proof-web-runtime',
     'run-dev-stack',
   ]) {
     const source = `scripts/${name}.cjs`;
@@ -97,6 +98,7 @@ test('live browser runtime inputs select the existing Web router without broad A
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
+    'scripts/live-proof-web-runtime.cjs',
     'tools/ci/run-web-cypress-native.mjs',
   ];
   for (const changed of [...files.map((file) => [file]), files]) {
