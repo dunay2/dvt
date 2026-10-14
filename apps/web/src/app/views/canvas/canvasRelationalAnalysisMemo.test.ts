@@ -70,6 +70,7 @@ describe('relational analysis dependency closure', () => {
     const graph = { ...analysisChain(), edges: [] };
     const read = createCanvasRelationalAnalysisReader();
     const initial = read(graph);
+    expect(initial.failure).toBe('input-identity-unavailable');
     const changed = {
       ...graph,
       nodes: graph.nodes.map((node) =>
@@ -79,7 +80,8 @@ describe('relational analysis dependency closure', () => {
       ),
     };
     const fresh = analyzeCanvasRelations(changed);
-    expect(fresh).not.toEqual(initial);
+    expect(fresh.failure).toBe('input-identity-unavailable');
+    expect(read(changed)).not.toBe(initial);
     expect(read(changed)).toEqual(fresh);
     expect(read(graph)).toEqual(initial);
   });

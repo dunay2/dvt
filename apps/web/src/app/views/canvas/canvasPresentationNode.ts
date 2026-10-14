@@ -116,7 +116,7 @@ export async function projectCanvasPresentationNode(
       inputBindingPosture: retained ? 'repair-only' : 'unavailable',
       code: { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' },
       columns: {
-        ...canvasColumnTruth([], inherited, []),
+        ...canvasColumnTruth([], retained ? inherited : [], []),
         state: 'unavailable',
         diagnostic: retained
           ? resolveCanvasViewCopy().relationalTreeProducerFieldsUnavailableMessage
