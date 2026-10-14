@@ -34,7 +34,7 @@ Concept anchors for this page:
 2. [packages/@dvt/adapter-postgres/DESIGN.md](../../../packages/@dvt/adapter-postgres/DESIGN.md)
 3. [API architecture](../components/api/index.md)
 4. [System Delivery Status](../system-delivery-status.md)
-5. [R-20260308 G5 state-store outbox worker drift](../../risk-register/adapters/r-20260308-g5-state-store-outbox-worker-drift.md)
+5. [R-20260308 G5 state-store outbox worker drift](../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md#risk-r-20260308-g5-outbox-worker-01)
 
 ## Primary Infrastructure Anchors
 

@@ -14,7 +14,7 @@ code_refs:
   - apps/api/src/entrypoints/http/previewPlanRoute.ts
   - apps/api/test/entrypoints/http/planRouteResponseTranslation.architecture.test.ts
   - packages/@dvt/adapter-postgres/tsconfig.json
-  - docs/risk-register/quality/R-20260421-ADAPTER-PG-WORKSPACE-PATH-DRIFT.yaml
+  - docs/risk-register/quality/r-20260426-start-run-intent-rollback-asymmetry.md#risk-r-20260421-adapter-pg-workspace-path-drift
 evidence:
   tests:
     - pnpm exec vitest run --config vitest.config.ts test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts test/entrypoints/http/planRouteResponseTranslation.architecture.test.ts test/entrypoints/http/planRouteResponseTranslation.test.ts test/entrypoints/http/executePlanRouteFacade.test.ts test/entrypoints/http/compilePlanRoute.test.ts test/entrypoints/http/importPlanRoute.test.ts test/entrypoints/http/previewPlanRoute.auth.test.ts test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts

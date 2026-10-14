@@ -22,5 +22,5 @@ and auth-runtime integration.
 
 ## Risk And Evidence Links
 
-- [API Auth Runtime Integration Coverage Risk](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
+- [API Auth Runtime Integration Coverage Risk](../../risk-register/quality/R-20260327-eslint9-engine-surface-churn.md#risk-r-20260308-api-auth-01)
 - [Evidence Index](../../evidence/index.md)

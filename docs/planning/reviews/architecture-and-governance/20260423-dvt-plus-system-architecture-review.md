@@ -77,7 +77,7 @@ No alternative definitions are introduced.
 - `apps/web/src/app/views/canvas/canvasRunStartAction.ts`
 - `apps/web/src/app/services/plans/plansService.api.ts`
 - `apps/web/src/app/services/runs/runsService.api.ts`
-- `docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml`
+- `docs/risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260420-temporal-dbt-builtin-coupling`
 
 ## Source-Of-Truth Correction
 
