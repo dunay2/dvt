@@ -48,5 +48,5 @@ Canonical navigation for the Graph and Canvas architecture pack.
 
 ## Related Existing Reviews
 
-- [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
-- [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
+- [Canvas Controller Current To Target Architecture](canvas-authoring-runtime-component.md#section-canvas-controller-current-to-target-architecture)
+- [Canvas Component Map And Modernization Review](graph-frontend-architecture.md#section-canvas-component-map-and-modernization-review)

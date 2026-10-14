@@ -191,239 +191,216 @@ the new command and identity witnesses are green.
 ## Feature mechanization
 
 ```feature-mechanization
-{
-  "version": 1,
-  "featureId": "GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING",
-  "userStories": [
-    "Existing semantic outputs mutate only by stable FieldId",
-    "A compatible physical Source rebind preserves logical graph and Substrait identity"
-  ],
-  "cypressFlows": [
-    "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-    "N/A - the new rebind command is covered at contract/application/HTTP boundaries; #2994 separately owns the retired dbt-profile E2E"
-  ],
-  "domainObjects": [
-    "Workspace graph Source identity",
-    "ConnectedSourceRef physical binding",
-    "DVT Substrait identity sidecar",
-    "Semantic FieldId",
-    "GenericGraphSource"
-  ],
-  "fowlerSignals": [
-    "Hidden authority",
-    "Primitive obsession",
-    "Duplicate semantics",
-    "Boundary drift",
-    "Test-only confidence"
-  ],
-  "symbols": [
-    {
-      "name": "RebindWarehouseSourceUseCase",
-      "path": "apps/api/src/application/services/rebindWarehouseSourceUseCase.ts",
-      "cqRails": ["RebindWarehouseSource"],
-      "dddOwner": "Warehouse source import",
-      "unitTests": ["pnpm --filter dvt-api test:unit"],
-      "fowlerSignals": ["Hidden authority", "Boundary drift"],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    },
-    {
-      "name": "rebindDvtSubstraitSemanticSourceRefV1",
-      "path": "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
-      "cqRails": ["RebindWarehouseSource"],
-      "dddOwner": "Warehouse source import",
-      "unitTests": ["pnpm --filter @dvt/contracts test"],
-      "fowlerSignals": ["Duplicate semantics", "Boundary drift"],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    },
-    {
-      "name": "resolveCanvasColumnMappingTarget",
-      "path": "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
-      "cqRails": ["ConfigureCanvasDvtNode"],
-      "dddOwner": "Canvas semantic authoring",
-      "unitTests": ["pnpm --filter @dvt/web test"],
-      "fowlerSignals": ["Hidden authority", "Primitive obsession"],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    },
-    {
-      "name": "PlannerFacade",
-      "path": "packages/@dvt/planner/src/application/PlannerFacade.ts",
-      "cqRails": ["StartRun"],
-      "dddOwner": "Run command application service",
-      "unitTests": ["pnpm --filter @dvt/planner test"],
-      "fowlerSignals": ["Boundary drift"],
-      "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-      "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING"
-    }
-  ],
-  "completionGate": [
-    "pnpm --filter @dvt/contracts test",
-    "pnpm --filter @dvt/contracts typecheck",
-    "pnpm --filter dvt-api test",
-    "pnpm --filter dvt-api typecheck",
-    "pnpm --filter @dvt/web test",
-    "pnpm --filter @dvt/web typecheck",
-    "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs",
-    "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING",
-    "pnpm verify:prepush"
-  ],
-  "redGreenCycles": [
-    {
-      "id": "fieldid-only-semantic-mutation",
-      "redTest": "pnpm --filter @dvt/web test",
-      "greenTest": "pnpm --filter @dvt/web test",
-      "patchSurfaces": [
-        "apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts",
-        "apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts",
-        "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
-        "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts",
-        "apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts",
-        "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts",
-        "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts"
-      ],
-      "expectedFailure": "Existing semantic output is incorrectly recoverable by display/physical name or legacy Source repair"
-    },
-    {
-      "id": "verified-source-rebind",
-      "redTest": "pnpm --filter dvt-api test",
-      "greenTest": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test",
-      "patchSurfaces": [
-        "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
-        "packages/@dvt/contracts/src/contracts/source-import/index.ts",
-        "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
-        "packages/@dvt/contracts/test/dvt-substrait-source-rebind.contract.test.ts",
-        "apps/api/src/application/ports/accessDecisionActions.ts",
-        "apps/api/src/application/ports/warehouseSourceRebind.ts",
-        "apps/api/src/application/services/projectOnboardingPolicy.ts",
-        "apps/api/src/application/services/rebindWarehouseSourceUseCase.ts",
-        "apps/api/src/application/services/warehouseSourceRebindPlan.ts",
-        "apps/api/src/application/services/warehouseSourceRebindArtifactTransaction.ts",
-        "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
-        "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts",
-        "apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts",
-        "apps/api/test/application/ports/accessDecision.test.ts",
-        "apps/api/test/application/services/createProjectUseCase.test.ts",
-        "apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts",
-        "apps/api/test/entrypoints/http/warehouseSourceRebindRoute.test.ts",
-        "scripts/run-dev-stack.auth.cjs",
-        "scripts/run-dev-stack.source-rebind.auth.test.cjs",
-    "docs/adr/ADR-0058-warehouse-source-import-rails.md",
-        "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml"
-      ],
-      "expectedFailure": "Physical binding cannot be changed through one verified command while preserving logical identity"
-    }
-  ],
-  "componentGuides": [
-    "docs/architecture/system/subsystems/semantic-transformation/index.md"
-  ],
-  "governingSources": [
-    "AGENTS.md",
-    "docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md",
-    "docs/adr/ADR-0058-warehouse-source-import-rails.md",
-    "docs/architecture/command-query-rail-governance.md",
-    "docs/architecture/fowler-opportunity-planning-governance.md"
-  ],
-  "commandQueryRails": [
-    {
-      "name": "ConfigureCanvasDvtNode",
-      "type": "command",
-      "status": "implemented",
-      "dddOwner": "DvtNodeAuthoringMetadata",
-      "negativeTests": [
-        "unknown FieldId fails closed",
-        "display-name collision cannot resolve an existing output"
-      ],
-      "adapterSurface": "Canvas DVT authoring command",
-      "applicationPort": "ConfigureCanvasDvtNode",
-      "authorizationScope": "writable project Canvas scope"
-    },    {
-      "name": "ImportWarehouseSources",
-      "type": "command",
-      "status": "implemented",
-      "dddOwner": "Warehouse source import",
-      "negativeTests": ["duplicate connected binding fails closed"],
-      "adapterSurface": "warehouse Source Import HTTP rail",
-      "applicationPort": "ImportWarehouseSourcesUseCase",
-      "authorizationScope": "tenant/project/environment source-import command"
-    },
-    {
-      "name": "RebindWarehouseSource",
-      "type": "command",
-      "status": "implemented",
-      "dddOwner": "Warehouse source import",
-      "negativeTests": [
-        "schema drift fails before mutation",
-        "duplicate target binding fails closed",
-        "shared dbt source-group physical move fails closed",
-        "graph CAS failure compensates artifact mutation"
-      ],
-      "adapterSurface": "PATCH /workspace/sources/:nodeId/binding",
-      "applicationPort": "RebindWarehouseSourceUseCase",
-      "authorizationScope": "workspace:source-import:rebind"
-    },
-    {
-      "name": "StartRun",
-      "type": "command",
-      "status": "implemented",
-      "dddOwner": "Run command application service",
-      "negativeTests": ["invalid or duplicate logical graph IDs reject"],
-      "adapterSurface": "protected StartRun HTTP command",
-      "applicationPort": "PlannerBackedStartRunUseCase",
-      "authorizationScope": "tenant/project/environment run-start command"
-    }
-  ],
-  "architectureGuards": [
-    "pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING",
-    "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs"
-  ],
-  "implementationPlan": "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
-  "mechanizationStatus": "implemented",
-  "noHumanDecisionsRemaining": true,
-  "allowedImplementationSurfaces": [
-    "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
-    "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
-    "packages/@dvt/contracts/src/contracts/source-import/index.ts",
-    "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts",
-    "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts",
-    "packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts",
-    "packages/@dvt/contracts/test/**",
-    "packages/@dvt/planner/**",
-    "apps/api/src/application/ports/accessDecisionActions.ts",
-    "apps/api/src/application/ports/warehouseSourceRebind.ts",
-    "apps/api/src/application/services/projectOnboardingPolicy.ts",
-    "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
-    "apps/api/src/application/services/rebindWarehouseSourceUseCase.ts",
-    "apps/api/src/application/services/warehouseSourceRebindPlan.ts",
-    "apps/api/src/application/services/warehouseSourceRebindArtifactTransaction.ts",
-    "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
-    "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts",
-    "apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts",
-    "apps/api/test/**",
-    "apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts",
-    "apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts",
-    "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts",
-    "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts",
-    "apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts",
-    "apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts",
-    "apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts",
-    "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
-    "apps/web/cypress/support/liveWarehouseSourceImport.ts",
-    "scripts/run-canvas-source-import-live-proof.cjs",
-    "scripts/run-canvas-source-import-live-proof.test.cjs",
-    "scripts/run-dev-stack.auth.cjs",
-    "scripts/run-dev-stack.source-rebind.auth.test.cjs",
-    "docs/adr/ADR-0058-warehouse-source-import-rails.md",
-    "docs/architecture/**",
-    "docs/.manifest.json",
-    "docs/guides/generic-graph-source-technical-manual-20260404.md",
-    "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",
-    "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md"
-  ],
-  "forbiddenImplementationSurfaces": [
-    "packages/@dvt/engine/**",
-    "new identity stores, second IRs, compatibility aliases, feature flags, name/physical fallback paths or dual lookup modes"
-  ]
-}
+version: 1
+featureId: GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+userStories:
+  - Existing semantic outputs mutate only by stable FieldId
+  - A compatible physical Source rebind preserves logical graph and Substrait identity
+cypressFlows:
+  - apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts
+  - 'N/A - the new rebind command is covered at contract/application/HTTP boundaries; #2994 separately owns the retired dbt-profile E2E'
+domainObjects:
+  - Workspace graph Source identity
+  - ConnectedSourceRef physical binding
+  - DVT Substrait identity sidecar
+  - Semantic FieldId
+  - GenericGraphSource
+fowlerSignals:
+  - Hidden authority
+  - Primitive obsession
+  - Duplicate semantics
+  - Boundary drift
+  - Test-only confidence
+symbols:
+  - name: RebindWarehouseSourceUseCase
+    path: apps/api/src/application/services/rebindWarehouseSourceUseCase.ts
+    cqRails:
+      - RebindWarehouseSource
+    dddOwner: Warehouse source import
+    unitTests:
+      - pnpm --filter dvt-api test:unit
+    fowlerSignals:
+      - Hidden authority
+      - Boundary drift
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+  - name: rebindDvtSubstraitSemanticSourceRefV1
+    path: packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
+    cqRails:
+      - RebindWarehouseSource
+    dddOwner: Warehouse source import
+    unitTests:
+      - pnpm --filter @dvt/contracts test
+    fowlerSignals:
+      - Duplicate semantics
+      - Boundary drift
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+  - name: resolveCanvasColumnMappingTarget
+    path: apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts
+    cqRails:
+      - ConfigureCanvasDvtNode
+    dddOwner: Canvas semantic authoring
+    unitTests:
+      - pnpm --filter @dvt/web test
+    fowlerSignals:
+      - Hidden authority
+      - Primitive obsession
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+  - name: PlannerFacade
+    path: packages/@dvt/planner/src/application/PlannerFacade.ts
+    cqRails:
+      - StartRun
+    dddOwner: Run command application service
+    unitTests:
+      - pnpm --filter @dvt/planner test
+    fowlerSignals:
+      - Boundary drift
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+completionGate:
+  - pnpm --filter @dvt/contracts test
+  - pnpm --filter @dvt/contracts typecheck
+  - pnpm --filter dvt-api test
+  - pnpm --filter dvt-api typecheck
+  - pnpm --filter @dvt/web test
+  - pnpm --filter @dvt/web typecheck
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+  - pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: fieldid-only-semantic-mutation
+    redTest: pnpm --filter @dvt/web test
+    greenTest: pnpm --filter @dvt/web test
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts
+      - apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts
+      - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts
+      - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts
+      - apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts
+      - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts
+      - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts
+    expectedFailure: Existing semantic output is incorrectly recoverable by display/physical name or legacy Source repair
+  - id: verified-source-rebind
+    redTest: pnpm --filter dvt-api test
+    greenTest: pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts
+      - packages/@dvt/contracts/src/contracts/source-import/index.ts
+      - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
+      - packages/@dvt/contracts/test/dvt-substrait-source-rebind.contract.test.ts
+      - apps/api/src/application/ports/accessDecisionActions.ts
+      - apps/api/src/application/ports/warehouseSourceRebind.ts
+      - apps/api/src/application/services/projectOnboardingPolicy.ts
+      - apps/api/src/application/services/rebindWarehouseSourceUseCase.ts
+      - apps/api/src/application/services/warehouseSourceRebindPlan.ts
+      - apps/api/src/application/services/warehouseSourceRebindArtifactTransaction.ts
+      - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+      - apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts
+      - apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts
+      - apps/api/test/application/ports/accessDecision.test.ts
+      - apps/api/test/application/services/createProjectUseCase.test.ts
+      - apps/api/test/application/services/rebindWarehouseSourceUseCase.test.ts
+      - apps/api/test/entrypoints/http/warehouseSourceRebindRoute.test.ts
+      - scripts/run-dev-stack.auth.cjs
+      - scripts/run-dev-stack.source-rebind.auth.test.cjs
+      - docs/adr/ADR-0058-warehouse-source-import-rails.md
+    expectedFailure: Physical binding cannot be changed through one verified command while preserving logical identity
+componentGuides:
+  - docs/architecture/system/subsystems/semantic-transformation/index.md
+governingSources:
+  - AGENTS.md
+  - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
+  - docs/adr/ADR-0058-warehouse-source-import-rails.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+commandQueryRails:
+  - name: ConfigureCanvasDvtNode
+    type: command
+    status: implemented
+    dddOwner: DvtNodeAuthoringMetadata
+    negativeTests:
+      - unknown FieldId fails closed
+      - display-name collision cannot resolve an existing output
+    adapterSurface: Canvas DVT authoring command
+    applicationPort: ConfigureCanvasDvtNode
+    authorizationScope: writable project Canvas scope
+  - name: ImportWarehouseSources
+    type: command
+    status: implemented
+    dddOwner: Warehouse source import
+    negativeTests:
+      - duplicate connected binding fails closed
+    adapterSurface: warehouse Source Import HTTP rail
+    applicationPort: ImportWarehouseSourcesUseCase
+    authorizationScope: tenant/project/environment source-import command
+  - name: RebindWarehouseSource
+    type: command
+    status: implemented
+    dddOwner: Warehouse source import
+    negativeTests:
+      - schema drift fails before mutation
+      - duplicate target binding fails closed
+      - shared dbt source-group physical move fails closed
+      - graph CAS failure compensates artifact mutation
+    adapterSurface: PATCH /workspace/sources/:nodeId/binding
+    applicationPort: RebindWarehouseSourceUseCase
+    authorizationScope: workspace:source-import:rebind
+  - name: StartRun
+    type: command
+    status: implemented
+    dddOwner: Run command application service
+    negativeTests:
+      - invalid or duplicate logical graph IDs reject
+    adapterSurface: protected StartRun HTTP command
+    applicationPort: PlannerBackedStartRunUseCase
+    authorizationScope: tenant/project/environment run-start command
+architectureGuards:
+  - pnpm docs:feature-mechanization:implementation -- --feature GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+allowedImplementationSurfaces:
+  - packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts
+  - packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts
+  - packages/@dvt/contracts/src/contracts/source-import/index.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSemanticDocument.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitFieldBindingHierarchy.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts
+  - packages/@dvt/contracts/test/**
+  - packages/@dvt/planner/**
+  - apps/api/src/application/ports/accessDecisionActions.ts
+  - apps/api/src/application/ports/warehouseSourceRebind.ts
+  - apps/api/src/application/services/projectOnboardingPolicy.ts
+  - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+  - apps/api/src/application/services/rebindWarehouseSourceUseCase.ts
+  - apps/api/src/application/services/warehouseSourceRebindPlan.ts
+  - apps/api/src/application/services/warehouseSourceRebindArtifactTransaction.ts
+  - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
+  - apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts
+  - apps/api/src/entrypoints/http/warehouseSourceRebindRoute.ts
+  - apps/api/test/**
+  - apps/web/src/app/views/canvas/canvasColumnMappingAuthoring.ts
+  - apps/web/src/app/views/canvas/canvasColumnOutputAuthoring.ts
+  - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.ts
+  - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.ts
+  - apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts
+  - apps/web/src/app/views/canvas/canvasColumnProjectionAuthority.identity.test.ts
+  - apps/web/src/app/views/canvas/canvasDvtSourceSemanticAuthoring.test.ts
+  - apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts
+  - apps/web/cypress/support/liveWarehouseSourceImport.ts
+  - scripts/run-canvas-source-import-live-proof.cjs
+  - scripts/run-canvas-source-import-live-proof.test.cjs
+  - scripts/run-dev-stack.auth.cjs
+  - scripts/run-dev-stack.source-rebind.auth.test.cjs
+  - docs/adr/ADR-0058-warehouse-source-import-rails.md
+  - docs/architecture/**
+  - docs/.manifest.json
+  - docs/guides/generic-graph-source-technical-manual-20260404.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md
+forbiddenImplementationSurfaces:
+  - packages/@dvt/engine/**
+  - new identity stores, second IRs, compatibility aliases, feature flags, name/physical fallback paths or dual lookup modes
 ```

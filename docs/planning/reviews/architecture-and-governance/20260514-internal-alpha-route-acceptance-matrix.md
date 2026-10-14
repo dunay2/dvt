@@ -85,30 +85,30 @@ route boundary with rationale.
   [R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP](../../../risk-register/quality/R-20260427-DEV-STACK-TEMPORAL-BOOTSTRAP.yaml)
   because local Temporal startup is operator setup, not alpha route proof.
 - `Workspace context`: Included
-  [R-20260308-api-auth-runtime-integration-coverage](../../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
+  [R-20260308-api-auth-runtime-integration-coverage](../../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260308-api-auth-01)
   because protected route auth can regress without full runtime proof. Excluded
   admin provisioning depth because the accepted F-27 proof only consumes
   already-scoped tenant, project, and environment context.
 - `Workspace context`: Included
-  [R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE](../../../risk-register/quality/R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE.yaml)
+  [R-20260425-PRODUCTION-TENANT-ISOLATION-BASELINE](../../../risk-register/quality/r-20260426-start-run-intent-rollback-asymmetry.md#risk-r-20260425-production-tenant-isolation-baseline)
   because missing tenant isolation can leak product authority across contexts.
   Excluded historical gap IDs because current context truth must route through
   protected runtime rails and current evidence.
 - `Canvas workbench`: Included
-  [R-20260423-CANVAS-HOST-DRAFT-BOUNDARY](../../../risk-register/quality/R-20260423-CANVAS-HOST-DRAFT-BOUNDARY.yaml)
+  [R-20260423-CANVAS-HOST-DRAFT-BOUNDARY](../../../risk-register/quality/r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260423-canvas-host-draft-boundary)
   because host UX can overclaim persistence beyond the authoritative draft
   boundary. Excluded advanced multi-canvas persistence until a later
   command/query rail owns it.
 - `Code workbench`: Included
-  [R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP](../../../risk-register/quality/R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP.yaml)
+  [R-20260411-WEB-WORKSPACE-FILE-NOT-FOUND-CONTRACT-GAP](../../../risk-register/quality/r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260411-web-workspace-file-not-found-contract-gap)
   because missing-file copy can drift from backend reason vocabulary. Excluded
   file-write behavior because the accepted F-27 route proof has no
   workspace-file command rail.
 - `Plan/run readiness`: Included
-  [R-20260424-TEMPORAL-PLAN-REF-CONTRACT](../../../risk-register/quality/R-20260424-TEMPORAL-PLAN-REF-CONTRACT.yaml)
+  [R-20260424-TEMPORAL-PLAN-REF-CONTRACT](../../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260424-temporal-plan-ref-contract)
   because runtime execution can regress to unchecked `PlanRef` behavior.
   Excluded
-  [R-20260514-AR-D3-WORKER-SCALING](../../../risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml)
+  [R-20260514-AR-D3-WORKER-SCALING](../../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260514-ar-d3-worker-scaling)
   because worker scale automation is outside internal alpha route proof; the
   route only needs readiness copy for blockers.
 - `Recovery states`: Included

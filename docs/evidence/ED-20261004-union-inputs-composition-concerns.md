@@ -117,6 +117,6 @@ profiles remain outside this admission.
 
 No hooks or rules are bypassed or relaxed. No compatibility facade, stub, fake
 success or new debt entry is introduced. The
-[set-composition risk](../risk-register/quality/R-20260831-SUBSTRAIT-UNION-ALL-DRIFT.yaml)
+[set-composition risk](../risk-register/quality/r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260831-substrait-union-all-drift)
 and the broader #3271 accessibility/performance acceptance remain explicit; this
 bounded slice does not close the programme by inference.

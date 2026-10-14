@@ -168,7 +168,7 @@ forcing the entire subsystem into either a false `AS-IS` or a false `not impleme
 
 ## Historical / Supporting Routes
 
-- [DVT System Architecture](../system-overview.md) is a supporting overview, not the canonical
+- [DVT System Architecture](../reference-architecture.md#section-system-overview) is a supporting overview, not the canonical
   reference.
 - [Architecture Surface Inventory 2026-04-02](../architecture-surface-inventory-20260402.md)
   is a dated inventory and must not be treated as a current work queue.

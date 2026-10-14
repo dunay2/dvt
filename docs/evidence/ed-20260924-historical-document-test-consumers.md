@@ -23,7 +23,7 @@ code_refs:
   - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts
   - packages/@dvt/plan-verifier/test/planVersionAdmission.architecture.test.ts
   - tools/ci/docs-disposition-canon.test.mjs
-  - docs/risk-register/quality/r-20260924-historical-document-test-consumers.yaml
+  - docs/risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260924-historical-document-test-consumers
 evidence:
   tests:
     - 'pnpm --dir packages/@dvt/adapter-postgres exec vitest run test/PostgresRunEventRetentionPolicy.architecture.test.ts test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts'
@@ -65,7 +65,7 @@ literal; no product risk is closed by retiring a report.
 
 # Residual risk
 
-[R-20260924-HISTORICAL-DOCUMENT-TEST-CONSUMERS](../risk-register/quality/r-20260924-historical-document-test-consumers.yaml)
+[R-20260924-HISTORICAL-DOCUMENT-TEST-CONSUMERS](../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260924-historical-document-test-consumers)
 tracks regression and unreconciled operational relationship risk.
 
 # Follow-up: consumers left behind by PR #3489 (2026-10-02)

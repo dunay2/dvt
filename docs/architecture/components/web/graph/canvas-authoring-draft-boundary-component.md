@@ -335,8 +335,8 @@ It explains:
 
 ### Governing Sources
 
-- [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)
-- [Canvas Component Map And Modernization Review](canvas-component-map-and-modernization-review.md)
+- [Canvas Controller Current To Target Architecture](canvas-authoring-runtime-component.md#section-canvas-controller-current-to-target-architecture)
+- [Canvas Component Map And Modernization Review](graph-frontend-architecture.md#section-canvas-component-map-and-modernization-review)
 - [Graph Sequences And State Machines](graph-frontend-architecture.md#section-graph-sequences-and-state-machines)
 - [canvasDraftSession.ts](../../../../../../apps/web/src/app/views/canvas/canvasDraftSession.ts)
 - [canvasDraftSession.types.ts](../../../../../../apps/web/src/app/views/canvas/canvasDraftSession.types.ts)

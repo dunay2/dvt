@@ -232,6 +232,6 @@ the implementation does not guess dependencies from equal expression text.
 
 No hooks or validation rules are disabled. No stub, fake success, compatibility
 facade or new debt entry is introduced. The
-[dependency integrity risk](../risk-register/quality/R-20261005-TRANSFORM-DEPENDENCIES.yaml)
+[dependency integrity risk](../risk-register/quality/r-20260329-mvp-backend-scope-drift-01.md#risk-r-20261005-transform-dependencies)
 records the integrity boundary and its mitigations. Unrelated local work and the
 user's running application are not replaced by this isolated worktree.
