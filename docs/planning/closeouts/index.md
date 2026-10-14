@@ -22,10 +22,6 @@ before retaining or retiring a record.
 - [Event Lifecycle and Retention](../domains/event-lifecycle-and-retention.md)
 - [Documentation Governance](../domains/documentation-governance.md)
 
-## Representative Recent Closeouts
-
-- [20260324 S18 Explicit State-Store Root Bindings Closeout](./20260324-s18-explicit-state-store-root-bindings-closeout.md)
-
 ## Full Portfolio Views
 
 - [Planning State](../state/index.md)

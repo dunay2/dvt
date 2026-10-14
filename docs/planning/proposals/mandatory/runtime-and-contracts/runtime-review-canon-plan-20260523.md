@@ -26,7 +26,7 @@ command/query rails, and completed work through closeout evidence.
 - `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/domains/execution-runtime.md`
 - `docs/architecture/components/api/protected-runtime-command-query-rail-design.md`
-- `docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md`
+- [Historical AR-C10 closeout](https://github.com/dunay2/dvt/blob/ae7e3b4c23e782f8beb6c666bdbfc75b99287eca/docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
 
 ## Fowler Analysis
 
