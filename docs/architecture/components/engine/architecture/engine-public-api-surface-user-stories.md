@@ -89,7 +89,7 @@ Acceptance criteria:
 
 - Task: `A/EA-20260429-05`.
 - Audit finding: broad public package barrel in
-  `docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md`.
+  [Historical source](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md).
 - Component guide:
   `docs/architecture/components/engine/architecture/engine-public-api-surface-component.md`.
 - Plan:

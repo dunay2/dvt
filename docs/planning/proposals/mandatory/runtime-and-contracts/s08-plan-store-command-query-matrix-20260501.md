@@ -595,7 +595,6 @@ allowedImplementationSurfaces:
   - apps/temporal-worker/src/runtime/temporalWorkerRuntimeResources.ts
   - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
   - apps/temporal-worker/test/runtime/createTemporalWorkerRuntime.srp.architecture.test.ts
-  - docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260502-s08-temporal-legacy-removal-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md

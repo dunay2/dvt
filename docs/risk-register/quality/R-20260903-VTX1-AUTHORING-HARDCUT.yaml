@@ -17,7 +17,7 @@ mitigation:
     authority. Existing workspace SQL remains a read-only artifact path rather than an authoring
     fallback.
   evidence:
-    - docs/evidence/ED-20260903-vtx1-authoring-hardcut.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260903-vtx1-authoring-hardcut.md
     - docs/planning/proposals/mandatory/frontend-and-ux/vtx2-web-vtx1-authoring-hardcut-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-transform-authoring-authority.contract.test.ts
     - apps/web/src/app/views/canvas/canvasDvtTransformAuthoringAuthority.test.ts

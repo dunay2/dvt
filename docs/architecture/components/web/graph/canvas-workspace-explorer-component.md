@@ -23,7 +23,7 @@ top-menu or toolbar `Insert` command.
 - [Canvas Shell Component](./canvas-shell-component.md)
 - [Canvas Ready Node Authoring Entrypoint Component](./canvas-ready-node-authoring-entrypoint-component.md)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
-- [Canvas Workspace Explorer Fowler Review](../../../../planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md)
+- [Canvas Workspace Explorer Fowler Review](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md`
 
 ## Public API

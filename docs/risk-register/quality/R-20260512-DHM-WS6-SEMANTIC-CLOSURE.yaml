@@ -17,6 +17,6 @@ mitigation: >
   the retained semantic-closure hardening analysis. Historical closeout existence is not asserted by
   that test.
 evidence:
-  - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
+  - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
   - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
   - packages/@dvt/engine/test/architecture/workflowEngineSemanticClosure.architecture.test.ts

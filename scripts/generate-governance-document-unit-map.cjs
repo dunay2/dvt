@@ -50,10 +50,6 @@ function classifyDocument(filePath) {
     return 'governs unit';
   }
 
-  if (normalized === 'docs/spanish_texts.md') {
-    return 'describes unit';
-  }
-
   if (normalized.includes('/archive/') || normalized.includes('/_archive/')) {
     return 'historical/reference only';
   }

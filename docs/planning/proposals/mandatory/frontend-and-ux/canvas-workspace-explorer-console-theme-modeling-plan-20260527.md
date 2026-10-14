@@ -248,7 +248,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
-  - docs/evidence/ed-20260527-canvas-multi-worksheet-draft.md
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260527-CANVAS-MULTI-WORKSHEET.yaml
   - docs/risk-register/quality/index.md
@@ -763,7 +762,7 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
-  - docs/planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md
+  - https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md
 allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
@@ -796,7 +795,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
   - docs/architecture/components/web/graph/graph-frontend-architecture.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md
-  - docs/planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/**

@@ -18,7 +18,7 @@ mitigation:
     compatibility aliases. The next ordered #2600 slice removes runtime-only SQL step handlers.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
-    - docs/evidence/ED-20260903-vtx2-preview-contract-hardcut.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260903-vtx2-preview-contract-hardcut.md
     - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-preview-contract-hardcut-plan-20260903.md
     - packages/@dvt/contracts/test/validation/preview.ts
     - apps/api/test/entrypoints/http/previewPlanRoute.inputPolicy.test.ts

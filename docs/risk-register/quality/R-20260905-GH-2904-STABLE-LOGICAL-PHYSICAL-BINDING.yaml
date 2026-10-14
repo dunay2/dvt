@@ -17,7 +17,7 @@ mitigation:
     FieldId-only and physical Source rebind is explicit, verified, CAS-protected, and fail-closed on
     drift.
   evidence:
-    - docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md
     - docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md
     - packages/@dvt/contracts/test/dvt-substrait-semantic-document-decoding.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-source-rebind.contract.test.ts

@@ -51,7 +51,6 @@ units:
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-generic-execution-workload-projection-plan-20260903.md
-      - docs/evidence/ED-20260911-terminal-transform-preview.md
     fowlerSignals:
       - package boundary
       - deterministic target projection
@@ -87,7 +86,6 @@ units:
     cqRails: WorkflowEngine.startRun DVT PostgreSQL execution
     governance:
       - docs/adr/ADR-0066-postgresql-stable-table-publication.md
-      - docs/evidence/ED-20260915-dvt-postgres-operational-runtime.md
     fowlerSignals:
       - package boundary
       - single step-kind ownership
@@ -105,7 +103,6 @@ units:
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/het2-public-rest-artifact-dbt-vertical-plan-20260805.md
-      - docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md
     fowlerSignals:
       - package boundary
       - single step-kind ownership
@@ -122,7 +119,6 @@ units:
     cqRails: WorkflowEngine.startRun object-file PostgreSQL execution
     governance:
       - docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md
-      - docs/evidence/ED-20260804-object-file-postgres-runtime.md
     fowlerSignals:
       - package boundary
       - single step-kind ownership
@@ -554,11 +550,6 @@ units:
       - docs/adr/adr-0052-planref-continuation-safety.md
       - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
       - docs/contracts/planner/plan-store-records-v1.md
-      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
-      - docs/evidence/ED-20260403-s08-*.md
-      - docs/evidence/ed-20260427-temporal-planref-*.md
-      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
-      - docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
       - docs/guides/postgres-plan-store-*.md
       - docs/planning/closeouts/20260402-s08-*.md
       - docs/planning/closeouts/20260403-s08-*.md
@@ -576,7 +567,6 @@ units:
       - docs/risk-register/quality/R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml
       - docs/risk-register/quality/r-20260502-s08-temporal-dispatch-scope.yaml
       - docs/architecture/system/subsystems/runtime/**
-      - docs/evidence/ed-20260513-runtime-root-subdivision.md
       - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
     childrenRequired: true
     dddOwner: INFRA
@@ -772,11 +762,6 @@ units:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/adr/adr-0052-planref-continuation-safety.md
       - docs/architecture/components/engine/adapters/temporal/temporal-planref*.md
-      - docs/evidence/ED-20260402-s08-contract-layer-hardening.md
-      - docs/evidence/ED-20260403-s08-*.md
-      - docs/evidence/ed-20260427-temporal-planref-*.md
-      - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
-      - docs/evidence/ed-20260502-s08-temporal-legacy-removal.md
       - docs/guides/postgres-plan-store-*.md
       - docs/planning/closeouts/20260402-s08-*.md
       - docs/planning/closeouts/20260403-s08-*.md
@@ -987,7 +972,6 @@ units:
     status: coverage-required
     owns:
       - docs/architecture/system/subsystems/runtime/**
-      - docs/evidence/ed-20260513-runtime-root-subdivision.md
       - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
     childrenRequired: false
     dddOwner: AS
@@ -995,7 +979,6 @@ units:
     governance:
       - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
       - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-user-stories.md
-      - docs/evidence/ed-20260513-runtime-root-subdivision.md
       - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
     fowlerSignals:
       - documentation drift

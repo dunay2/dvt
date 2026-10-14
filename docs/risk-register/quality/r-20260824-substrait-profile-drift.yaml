@@ -114,7 +114,7 @@ mitigation:
     - apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts
     - apps/web/cypress/e2e/canvas/canvas-relational-card-movement.cy.ts
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
-    - docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260824-substrait-semantic-reference-traceability.md
     - docs/evidence/ED-20260826-vtx2-substrait-card-pilot.md
     - apps/web/src/app/views/canvas/canvasRelationAnalysisSession.ts
     - apps/web/src/app/views/canvas/canvasSelectedJoinConsumers.test.ts
@@ -125,7 +125,7 @@ mitigation:
     - packages/@dvt/contracts/src/contracts/planner/DvtSubstraitCapabilityCatalog.v1.ts
     - packages/@dvt/contracts/test/dvt-substrait-profile.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
-    - docs/evidence/ED-20260908-canvas-authoring-field-budgets.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260908-canvas-authoring-field-budgets.md
     - apps/web/src/app/views/canvas/canvasDvtSubstraitOutputProjection.ts
     - apps/web/src/app/views/canvas/canvasSubstraitGraphBindings.ts
     - packages/@dvt/postgres-projection/test/relationalSqlNames.test.ts

@@ -50,4 +50,4 @@ between the two schema managers.
 - `apps/api/src/runtime/intentReconcilerRuntime.ts`
 - `apps/api/src/modules/buildProtectedRuntimeModule.ts`
 - `docs/planning/reviews/architecture-and-governance/20260426-api-tenant-review.md`
-- `docs/evidence/ed-20260426-api-tenant-qa-hardening.md`
+- [Historical source](https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260426-api-tenant-qa-hardening.md)
