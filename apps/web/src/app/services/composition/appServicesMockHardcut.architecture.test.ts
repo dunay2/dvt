@@ -98,12 +98,16 @@ const HARDCUT_DOCUMENTATION_SECTIONS = [
 ] as const;
 
 function hardcutSection(source: string, anchor: string | null): string {
-  if (anchor === null) return source.split('\n<a id="')[0];
+  if (anchor === null) return source.split('\n<a id="')[0] ?? '';
   const marker = '<a id="' + anchor + '"></a>';
   const parts = source.split(marker);
-  if (parts.length !== 2) throw new Error('Missing or duplicated hardcut section: ' + anchor);
-  const body = parts[1].split('\n<a id="')[0];
-  if (body.trim().length < 100) throw new Error('Empty hardcut section: ' + anchor);
+  const section = parts[1];
+  if (parts.length !== 2 || section === undefined) {
+    throw new Error('Missing or duplicated hardcut section: ' + anchor);
+  }
+  const body = section.split('\n<a id="')[0];
+  if (body === undefined || body.trim().length < 100)
+    throw new Error('Empty hardcut section: ' + anchor);
   return body;
 }
 
@@ -214,10 +218,9 @@ describe('app services mock hardcut architecture', () => {
     ];
 
     for (const [index, filePath] of HARDCUT_DOCUMENTATION_FILES.entries()) {
-      const source = hardcutSection(
-        readRepoFile(...filePath),
-        HARDCUT_DOCUMENTATION_SECTIONS[index]
-      );
+      const sectionAnchor = HARDCUT_DOCUMENTATION_SECTIONS[index];
+      if (sectionAnchor === undefined) throw new Error('Missing documentation section mapping');
+      const source = hardcutSection(readRepoFile(...filePath), sectionAnchor);
 
       for (const forbiddenTerm of forbiddenDriftTerms) {
         expect(source, `${filePath.join('/')} contains ${forbiddenTerm}`).not.toMatch(
