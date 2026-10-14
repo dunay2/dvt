@@ -177,7 +177,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md
   - docs/architecture/system-delivery-status.md
   - docs/planning/closeouts/20260514-ar-d-plan-pointer-dbt-package-extraction-closeout.md
-  - docs/risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml
   - docs/planning/status/**
   - packages/@dvt/adapter-temporal/package.json
   - packages/@dvt/adapter-temporal/src/index.ts

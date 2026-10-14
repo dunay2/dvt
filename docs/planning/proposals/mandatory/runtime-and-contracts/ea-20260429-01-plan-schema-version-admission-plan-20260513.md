@@ -42,35 +42,213 @@ featureId: EA-20260429-01-PLAN-SCHEMA-VERSION-ADMISSION
 mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-01-plan-schema-version-admission-plan-20260513.md
-componentGuides: [docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md]
-userStories: [docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md]
-governingSources: [AGENTS.md, docs/planning/status/governance-document-rule-inventory.md, docs/guides/ai-work-protocol.md, docs/architecture/command-query-rail-governance.md, docs/architecture/fowler-opportunity-planning-governance.md, docs/adr/ADR-0003-execution-model.md, docs/adr/ADR-0012-plan-integrity-ownership.md, docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md, docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md, https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md]
-allowedImplementationSurfaces: [buzon/20260513-codex-fowler-ea-20260429-01-schema-version-admission-analysis.md, docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-01-plan-schema-version-admission-plan-20260513.md, docs/planning/closeouts/20260513-ea-20260429-01-plan-schema-version-admission-closeout.md, docs/architecture/components/engine/contracts/plan-admission-matrix.md, docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md, docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md, docs/risk-register/quality/R-20260513-PLAN-SCHEMA-VERSION-ADMISSION.yaml, packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts, packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts, packages/@dvt/engine/src/index.ts, packages/@dvt/engine/test/contracts/PlanSchemaVersionPolicy.test.ts, packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts]
-forbiddenImplementationSurfaces: [apps/**, packages/@dvt/adapter-*/**, packages/@dvt/planner/**, packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts]
+componentGuides:
+  - docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md
+userStories:
+  - docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/ADR-0003-execution-model.md
+  - docs/adr/ADR-0012-plan-integrity-ownership.md
+  - docs/adr/ADR-0017_ExecutionPlan_Schema_Versioning.md
+  - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md
+  - https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260429-dvt-engine-package-audit-review.md
+allowedImplementationSurfaces:
+  - buzon/20260513-codex-fowler-ea-20260429-01-schema-version-admission-analysis.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-01-plan-schema-version-admission-plan-20260513.md
+  - docs/planning/closeouts/20260513-ea-20260429-01-plan-schema-version-admission-closeout.md
+  - docs/architecture/components/engine/contracts/plan-admission-matrix.md
+  - docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md
+  - docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md
+  - packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts
+  - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+  - packages/@dvt/engine/src/index.ts
+  - packages/@dvt/engine/test/contracts/PlanSchemaVersionPolicy.test.ts
+  - packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts
 commandQueryRails:
-  - {name: StartRun, type: command, dddOwner: PlanSchemaVersionPolicy}
+  - name: StartRun
+    type: command
+    dddOwner: PlanSchemaVersionPolicy
 domainObjects:
-  - {name: PlanSchemaVersionPolicy, type: policy, owner: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts}
-fowlerSignals: [Primitive obsession around schemaVersion strings, Duplicate semantics between matrix and engine wording, Documentation drift around explicit schema-version component]
-architectureGuards: [pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, pnpm docs:feature-mechanization:implementation]
-cypressFlows: [N/A - engine admission command only]
-completionGate: [pnpm docs:feature-mechanization -- --feature EA-20260429-01-PLAN-SCHEMA-VERSION-ADMISSION, pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts test/core/WorkflowEngine.test.ts, pnpm --filter @dvt/engine typecheck, GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs, pnpm docs:sync, pnpm docs:status:generate, pnpm governance:refresh, pnpm docs:feature-mechanization:implementation, pnpm verify:prepush]
+  - name: PlanSchemaVersionPolicy
+    type: policy
+    owner: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts
+fowlerSignals:
+  - Primitive obsession around schemaVersion strings
+  - Duplicate semantics between matrix and engine wording
+  - Documentation drift around explicit schema-version component
+architectureGuards:
+  - pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - engine admission command only
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature EA-20260429-01-PLAN-SCHEMA-VERSION-ADMISSION
+  - pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts test/core/WorkflowEngine.test.ts
+  - pnpm --filter @dvt/engine typecheck
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+  - pnpm docs:sync
+  - pnpm docs:status:generate
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
 redGreenCycles:
-  - {id: schema-version-policy-red, redTest: pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts, expectedFailure: PlanSchemaVersionPolicy module missing, patchSurfaces: [packages/@dvt/engine/test/contracts/PlanSchemaVersionPolicy.test.ts, packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts], greenTest: pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts}
-  - {id: start-run-policy-wiring, redTest: pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts, expectedFailure: direct generic admission wording remains, patchSurfaces: [packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts, packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts], greenTest: pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts}
+  - id: schema-version-policy-red
+    redTest: pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    expectedFailure: PlanSchemaVersionPolicy module missing
+    patchSurfaces:
+      - packages/@dvt/engine/test/contracts/PlanSchemaVersionPolicy.test.ts
+      - packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts test/architecture/planSchemaVersionAdmission.architecture.test.ts
+  - id: start-run-policy-wiring
+    redTest: pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts
+    expectedFailure: direct generic admission wording remains
+    patchSurfaces:
+      - packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts
+      - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
+    greenTest: pnpm --filter @dvt/engine test -- test/core/WorkflowEngine.test.ts
 symbols:
-  - {name: PlanSchemaVersionAdmissionInput, path: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts, dddOwner: PlanSchemaVersionPolicy, cqRails: [StartRun], fowlerSignals: [typed policy input], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts]}
-  - {name: PlanSchemaVersionPolicy, path: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts, dddOwner: PlanSchemaVersionPolicy, cqRails: [StartRun], fowlerSignals: [policy], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts]}
-  - {name: assertSupportedPlanSchemaVersion, path: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts, dddOwner: PlanSchemaVersionPolicy, cqRails: [StartRun], fowlerSignals: [intention-revealing API], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts]}
-  - {name: TEST_ROOT, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: ENGINE_ROOT, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: REPO_ROOT, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: POLICY_SOURCE, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: START_RUN_VALIDATION_SOURCE, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: COMPONENT_GUIDE, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: USER_STORIES, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: MAILBOX_ANALYSIS, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
-  - {name: PROPOSAL, path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts, dddOwner: PlanSchemaVersionPolicyArchitectureGuard, cqRails: [StartRun], fowlerSignals: [semantic architecture guard], architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts, cypressCoverage: N/A - engine admission command only, unitTests: [N/A]}
+  - name: PlanSchemaVersionAdmissionInput
+    path: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts
+    dddOwner: PlanSchemaVersionPolicy
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - typed policy input
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts
+  - name: PlanSchemaVersionPolicy
+    path: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts
+    dddOwner: PlanSchemaVersionPolicy
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - policy
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts
+  - name: assertSupportedPlanSchemaVersion
+    path: packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts
+    dddOwner: PlanSchemaVersionPolicy
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - intention-revealing API
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - pnpm --filter @dvt/engine test -- test/contracts/PlanSchemaVersionPolicy.test.ts
+  - name: TEST_ROOT
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: ENGINE_ROOT
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: REPO_ROOT
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: POLICY_SOURCE
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: START_RUN_VALIDATION_SOURCE
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: COMPONENT_GUIDE
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: USER_STORIES
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: MAILBOX_ANALYSIS
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
+  - name: PROPOSAL
+    path: packages/@dvt/engine/test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    dddOwner: PlanSchemaVersionPolicyArchitectureGuard
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - semantic architecture guard
+    architectureGuard: pnpm --filter @dvt/engine test -- test/architecture/planSchemaVersionAdmission.architecture.test.ts
+    cypressCoverage: N/A - engine admission command only
+    unitTests:
+      - N/A
 ```
 
 ## Red/Green Cycle 1

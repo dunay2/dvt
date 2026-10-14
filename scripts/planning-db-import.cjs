@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 const { Client } = require('pg');
 const yaml = require('js-yaml');
+const { extractColocatedRiskRecords } = require('./lib/risk-document-records.cjs');
 
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
 const {
@@ -1137,7 +1138,19 @@ function buildRiskDebtSnapshot(options = {}) {
   const seenRiskIds = new Set();
   const riskDebtItems = [];
 
-  for (const sourceDocument of riskDocuments) {
+  for (const sourceDocument of riskDocuments.flatMap((document) => {
+    const raw = normalizeText(document.raw);
+    const contentSha256 = normalizeText(document.contentSha256) || sha256HexUtf8(raw);
+    return [
+      document,
+      ...extractColocatedRiskRecords(raw, document.sourcePath).map((record) => ({
+        sourcePath: document.sourcePath,
+        raw: record.raw,
+        contentSha256,
+        sourceFragment: record.sourceFragment,
+      })),
+    ];
+  })) {
     const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
     if (!isRiskRegisterItemPath(sourcePath)) {
       continue;
@@ -1185,6 +1198,7 @@ function buildRiskDebtSnapshot(options = {}) {
       rawDebt: {
         sourcePath,
         sourceBytes: Buffer.byteLength(raw, 'utf8'),
+        ...(sourceDocument.sourceFragment ? { sourceFragment: sourceDocument.sourceFragment } : {}),
       },
     });
   }
