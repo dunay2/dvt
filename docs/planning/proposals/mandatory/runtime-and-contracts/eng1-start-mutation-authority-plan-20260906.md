@@ -205,7 +205,6 @@ allowedImplementationSurfaces:
   - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
   - docs/planning/proposals/mandatory/runtime-and-contracts/eng1-start-mutation-authority-plan-20260906.md
   - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
-  - docs/evidence/ed-20260906-eng1-start-mutation-authority.md
   - docs/risk-register/quality/R-20260906-ENG1-START-MUTATION-AUTHORITY.yaml
   - docs/**/index.md
   - docs/planning/status/**

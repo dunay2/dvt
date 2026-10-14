@@ -22,7 +22,7 @@ determinism, and coverage workflow consumers now read semantic outputs from
 package-root rules. The slice closed the shared-consumer migration for
 `CI-AUDIT-CONTRACTS-SCOPE`; `CI-AUDIT-ENGINE-COVERAGE` still required the
 follow-up engine package canary documented in
-`ci-audit-engine-coverage-plan-20260515.md`. Local hook convergence remains
+[Historical source](https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/planning/proposals/mandatory/governance-and-docs/ci-audit-engine-coverage-plan-20260515.md). Local hook convergence remains
 separately governed by `CDG-W1-3`.
 
 **Architecture:** Keep `tools/ci/scope-config.mjs` as the workflow scope API and

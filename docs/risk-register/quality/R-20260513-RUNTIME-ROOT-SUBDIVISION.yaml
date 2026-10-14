@@ -17,5 +17,5 @@ mitigation: >
   and that concrete runtime package files map to package-level runtime component owners while
   plan-store plan-ref policy remains outside the engine core owner.
 evidence:
-  - docs/evidence/ed-20260513-runtime-root-subdivision.md
+  - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260513-runtime-root-subdivision.md
   - scripts/check-governance-unit-coverage.test.cjs

@@ -14,7 +14,7 @@ mitigations:
   - Shared Canvas reader rejects unsupported JOIN shapes instead of dropping semantics.
   - Real PostgreSQL persistence and live browser tests retain the missing executor rejection.
 evidence:
-  - docs/evidence/ED-20260914-n-input-join-preview.md
+  - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260914-n-input-join-preview.md
 tracking:
   - https://github.com/dunay2/dvt/issues/2524
   - https://github.com/dunay2/dvt/issues/2723

@@ -248,7 +248,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
-  - docs/evidence/ed-20260527-canvas-multi-worksheet-draft.md
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260527-CANVAS-MULTI-WORKSHEET.yaml
   - docs/risk-register/quality/index.md

@@ -95,7 +95,6 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
-  - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
@@ -365,7 +364,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
   - docs/evidence/index.md
   - docs/guides/workflow-engine-user-manual.v1.md
   - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
@@ -518,7 +516,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
@@ -831,7 +828,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
-  - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
@@ -1095,7 +1091,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260512-we-hx-5-provider-telemetry-seams.md
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
   - docs/risk-register/quality/index.md
@@ -1358,7 +1353,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/architecture/components/engine/roadmap/engine-phases.md
-  - docs/evidence/ed-20260512-we-hx-6-boundary-fitness.md
   - docs/planning/closeouts/20260512-we-hx-6-boundary-fitness-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/state/**

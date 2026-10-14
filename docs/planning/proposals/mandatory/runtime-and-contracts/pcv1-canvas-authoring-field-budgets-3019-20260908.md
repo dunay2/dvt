@@ -740,7 +740,6 @@ unrelated editors are excluded.
     "docs/planning/proposals/mandatory/frontend-and-ux/vtx2-opaque-authoring-identity-plan-20260906.md",
     "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md",
     "docs/planning/proposals/mandatory/runtime-and-contracts/pcv1-canvas-authoring-field-budgets-3019-20260908.md",
-    "docs/evidence/ED-20260908-canvas-authoring-field-budgets.md",
     "docs/risk-register/quality/R-20260908-CANVAS-AUTHORING-FIELD-DRIFT.yaml",
     "scripts/check-feature-mechanization.cjs",
     "scripts/check-feature-mechanization.test.cjs",

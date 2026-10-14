@@ -17,6 +17,6 @@ mitigation: >
   admission phase, and StartRunApplicationService.test.ts proves the injected admission seam is
   invoked before intent creation and provider execution.
 evidence:
-  - docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
+  - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
   - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
   - packages/@dvt/engine/test/services/StartRunApplicationService.test.ts
