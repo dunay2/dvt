@@ -121,7 +121,10 @@ const PACKAGE_PREFIX_DOMAINS = [
 ];
 
 const SCRIPT_FILE_RULES = [
-  [/^scripts\/(run-selected-closure-cypress|live-proof-process)\.cjs$/u, 'test-tooling'],
+  [
+    /^scripts\/(run-selected-closure-cypress|live-proof-process|live-proof-web-runtime)\.cjs$/u,
+    'test-tooling',
+  ],
   [/^scripts\/build-workspace-runtime-deps\.cjs$/u, 'runtime-root'],
   [/^scripts\/run-turbo-workspace-task\.cjs$/u, 'runtime-root'],
   [/^scripts\/skip-pre(build|test)-if-.+\.cjs$/u, 'runtime-root'],

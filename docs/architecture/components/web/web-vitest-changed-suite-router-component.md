@@ -445,6 +445,13 @@ existing cleanup collection. A failed or signaled build prevents preview from
 starting. Preview is ready only when its root returns HTTP 200; missing assets,
 early process exit or readiness failure retain the failing proof result.
 
+The canonical repository command catalog must admit this exact lifecycle
+adapter as `test-tooling`, alongside the existing browser child and process
+adapters. It remains relevant to changed-file validation without product
+runtime fan-out. Neighboring unregistered helper paths remain `unknown`, and
+the existing discovery/coverage guard must continue to reject them. Catalog
+admission does not alter runtime implementation or browser obligations.
+
 | Concern             | Existing owner / proof                                                            |
 | ------------------- | --------------------------------------------------------------------------------- |
 | Rail and allocation | `RunWebCypressNative`, selected-closure runner                                    |
