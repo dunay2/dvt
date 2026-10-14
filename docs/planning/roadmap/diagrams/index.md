@@ -17,5 +17,3 @@ Diagram navigation for planning structure, domains, and delivery lanes.
 - [Gap Execution Dependency Graph](./gap-execution-dependency-graph.md)
 - [Execution Dependency Gates](./execution-dependency-gates.md)
 - [Execution Runtime Architecture Delta](./execution-runtime-architecture-delta.md)
-- [DVT System Map God Diagram](../../execution-model/dvt-system-map-god-diagram.md)
-- [DVT Dependency Risk Map](../../execution-model/dvt-dependency-risk-map.md)
