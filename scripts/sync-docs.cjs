@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const { extractColocatedRiskRecords } = require('./lib/risk-document-records.cjs');
 
 const fs = require('node:fs');
 const path = require('node:path');
@@ -1003,6 +1004,16 @@ function scanSectionEntries(sectionRelativePath, lifecycleAuthority) {
       continue;
     }
 
+    for (const record of extractColocatedRiskRecords(fileContent, documentPath)) {
+      const recordKey = record.frontmatter.id.toLowerCase();
+      if (dedupedRiskRows.has(recordKey))
+        throw new Error('Duplicate indexed risk ' + record.frontmatter.id);
+      dedupedRiskRows.set(recordKey, {
+        type: 'file',
+        label: record.frontmatter.title,
+        link: entry.name + '#' + record.sourceFragment,
+      });
+    }
     const key = riskRegisterEntryKey(entry.name, fileContent);
     const existing = dedupedRiskRows.get(key);
     if (!existing) {
@@ -1049,7 +1060,7 @@ function orderRowsByPreferredLinks(rows, preferredLinks) {
 }
 
 function renderBulletList(rows) {
-  return rows.map((row) => `- [${row.label}](${encodeURI(row.link)})`);
+  return rows.map((row) => `- [${row.label.replace(/\s+/gu, ' ').trim()}](${encodeURI(row.link)})`);
 }
 
 function renderConceptsIndex(meta, rows) {
@@ -1310,6 +1321,7 @@ module.exports = {
   lifecycleStateIsPublishable,
   main,
   readDocumentationLifecycleAuthority,
+  renderBulletList,
   scanSectionEntries,
   shouldIncludeDocumentationPath,
   shouldIncludePlanningDoc,

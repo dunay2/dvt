@@ -62,6 +62,6 @@ scoped.
 
 ## Related Docs
 
-- [Risk: workflow gateway context guard](../../risk-register/adapters/R-20260307-workflow-gateway-context-guard.md)
+- [Risk: workflow gateway context guard](../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260307-g4-t3-01)
 - [Canonical Doc Code Matrix](../../planning/status/canonical-doc-code-matrix.md)
 - [Repository Map](../../concepts/repository-map.md)

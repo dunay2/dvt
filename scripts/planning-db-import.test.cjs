@@ -335,7 +335,10 @@ test('command/query rail snapshot keeps feature references without creating rail
         '  - name: ConfigureWidget',
         '    type: command',
         '    dddOwner: WidgetAggregate',
-        'symbols: []',
+        'symbols:',
+        '  - name: ConfigureWidget',
+        '    path: apps/api/src/configure-widget.ts',
+        '    cqRails: [ConfigureWidget]',
         '```',
       ].join('\n'),
     },
@@ -396,11 +399,11 @@ test('command/query rail snapshot rejects a dangling feature reference', () => {
 
 test('real repository rail bootstrap retains the canonical Canvas rename authority', () => {
   const catalog = require('./planning-db/command-query-rail-catalog.cjs');
-  const { documents, referenceDocuments } = catalog.resolveSnapshotInputs({ sourceFiles: [] });
+  const { documents, referenceDocuments, sourceFiles } = catalog.resolveSnapshotInputs({});
   const snapshot = catalog.buildCommandQueryRailSnapshot({
     docs: documents,
     referenceDocuments,
-    sourceFiles: [],
+    sourceFiles,
   });
   const consumerPath =
     'docs/planning/proposals/mandatory/runtime-and-contracts/pcv1-canvas-authoring-field-budgets-3019-20260908.md';
@@ -432,7 +435,7 @@ test('real repository rail bootstrap retains the canonical Canvas rename authori
         referenceDocuments: referenceDocuments.filter(
           (document) => document.sourcePath !== authorityPath
         ),
-        sourceFiles: [],
+        sourceFiles,
       }),
     /Command\/query rail reference command:RenameProjectCanvas .* does not resolve authority/
   );

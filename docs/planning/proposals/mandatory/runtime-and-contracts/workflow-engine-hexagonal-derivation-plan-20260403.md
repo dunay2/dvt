@@ -99,7 +99,6 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/status/**
-  - docs/risk-register/quality/R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml
   - docs/risk-register/quality/index.md
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
@@ -369,7 +368,6 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/status/**
-  - docs/risk-register/quality/R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml
   - docs/risk-register/quality/index.md
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
   - packages/@dvt/engine/src/services/runControl/RunCommandService.ts
@@ -520,7 +518,6 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/status/**
-  - docs/risk-register/quality/R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml
   - docs/risk-register/quality/index.md
   - packages/@dvt/engine/src/application/workflow-engine-use-cases/**
   - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
@@ -1088,7 +1085,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/evidence/index.md
-  - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
   - docs/risk-register/quality/index.md
   - traceability.manifest.json
   - packages/@dvt/engine/src/application/providerSelection.ts
@@ -1351,7 +1347,6 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/state/**
   - docs/planning/status/**
-  - docs/risk-register/quality/R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml
   - packages/@dvt/engine/test/architecture/engineArchitectureTestSupport.ts
   - packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
   - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts

@@ -206,7 +206,7 @@ existing job and retains its strict aggregate. The previous local 40/40 receipt
 does not replace final-head remote acceptance. No timeout, worker, assertion,
 skip policy or browser runtime is relaxed by this scheduling change.
 
-The existing [Run workload drift risk](../risk-register/quality/R-20260915-TRANSFORM-RUN-WORKLOAD-DRIFT.yaml)
+The existing [Run workload drift risk](../risk-register/quality/r-20260426-start-run-intent-rollback-asymmetry.md#risk-r-20260915-transform-run-workload-drift)
 now explicitly includes rejecting old formats and coordinating producer/worker
 deployment. Old persisted plans must be recreated through protected Preview;
 they are not silently converted or truncated.

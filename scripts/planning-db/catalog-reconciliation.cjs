@@ -1,6 +1,10 @@
 /** Owned concern: validate and plan lossless catalog provenance/reference patches. */
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
+  validateCurrentDocument,
+  projectCurrentDocument,
+} = require('./catalog-current-document.cjs');
+const {
   validateFeatureMechanizationEvidenceRetirementCommand,
   projectFeatureMechanizationEvidenceRetirement,
 } = require('./feature-mechanization-evidence-retirement.cjs');
@@ -65,6 +69,7 @@ function parseCatalogReconciliation(value) {
         'evidenceRetirement',
         'sourceContent',
         'railRetirement',
+        'currentDocument',
       ],
       'change'
     );
@@ -81,11 +86,21 @@ function parseCatalogReconciliation(value) {
       !change.reference &&
       !change.evidenceRetirement &&
       !change.sourceContent &&
-      !change.railRetirement
+      !change.railRetirement &&
+      !change.currentDocument
     )
       throw new Error(
         'CATALOG-REQUEST: Explicit source, reference, evidence retirement, rail retirement or current content patch required.'
       );
+    if (Object.hasOwn(change, 'currentDocument')) {
+      if (
+        ['source', 'reference', 'evidenceRetirement', 'sourceContent', 'railRetirement'].some(
+          (key) => Object.hasOwn(change, key)
+        )
+      )
+        throw new Error('CATALOG-DOCUMENT: Current document requires an exclusive patch.');
+      validateCurrentDocument(change.currentDocument);
+    }
     if (Object.hasOwn(change, 'railRetirement')) {
       if (
         change.origin !== 'imported' ||
@@ -158,6 +173,11 @@ function planCatalogReconciliation(request, storedRows, sourceProofs) {
         projectFeatureMechanizationEvidenceRetirement(before, change.evidenceRetirement)
       );
     let proof = null;
+    if (change.currentDocument) {
+      const document = change.currentDocument;
+      proof = sourceProofs.get(`document:${document.commit}:${document.path}`);
+      Object.assign(after, projectCurrentDocument(before, document, proof));
+    }
     if (change.source) {
       proof = sourceProofs.get(`${change.source.commit}:${change.source.path}`);
       if (

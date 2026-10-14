@@ -23,10 +23,10 @@ mutation policy.
 
 ## Governing sources
 
-- [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
+- [Canvas Component Map And Modernization Review](graph-frontend-architecture.md#section-canvas-component-map-and-modernization-review)
 - [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
 - [Canvas Route Presentation Component](graph-frontend-architecture.md#section-canvas-route-presentation-component)
-- [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
+- [Canvas Controller Current To Target Architecture](canvas-authoring-runtime-component.md#section-canvas-controller-current-to-target-architecture)
 - [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
 
 ## Reading rule

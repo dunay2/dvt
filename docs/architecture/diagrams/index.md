@@ -13,7 +13,7 @@ planned (orange) elements.
 
 ## Catalog
 
-- [Architecture Problem Register](./architecture-problem-register.md) -
+- [Architecture Problem Register](../reference-architecture.md#section-architecture-problem-register) -
   source-first current problem graph with explicit issue/epic ownership and a
   maintained traceability rule preventing discovered problems from becoming lost work
 - [Implementation Architecture Diagrams](./implementation-architecture-diagrams.md) -
@@ -21,13 +21,13 @@ planned (orange) elements.
   and consolidated desired-architecture delta
 - [Engine Internal Components](./engine-internal-components.md) -
   engine-layer topology, southbound ports, and runtime capability dispatch
-- [Run State Machines](./run-state-machines.md) -
+- [Run State Machines](../workflow-failure-handling-and-recovery.md#section-run-state-machines) -
   run and step lifecycle diagrams plus active state-machine concerns
-- [Start-run Sequences](./start-run-sequences.md) -
+- [Start-run Sequences](../components/engine/architecture/start-run-application-decomposition-diagrams.md#section-start-run-sequences) -
   `startRun`, `signal`, and `cancel` sequence diagrams
-- [Maintenance And Reconciliation](./maintenance-and-reconciliation.md) -
+- [Maintenance And Reconciliation](../workflow-failure-handling-and-recovery.md#section-maintenance-and-reconciliation) -
   orphaned-intent and stuck-run reconciliation flows
-- [Outbox Delivery Architecture](./outbox-delivery-architecture.md) -
+- [Outbox Delivery Architecture](../domain-delivery.md#section-outbox-delivery-architecture) -
   outbox worker flow, risks, and delivery architecture
 
 ## Related Pages
@@ -35,4 +35,4 @@ planned (orange) elements.
 - [C4 Engine Architecture](../components/engine/architecture/c4-engine.md)
 - [Domain Map](../domain-map.md)
 - [Component Map](../component-map.md)
-- [System Overview](../system-overview.md)
+- [System Overview](../reference-architecture.md#section-system-overview)

@@ -162,3 +162,20 @@ Acceptance:
 - `pnpm verify:prepush` includes the changed docs and guard.
 
 > Acceptance scope status: Active. Owner: Architecture / Docs / Planning.
+
+## Independent Risk Record Colocation
+
+A physical Markdown risk document may contain independent current records in explicit
+`risk-record-v1` three- or four-backtick fences (matching the closing delimiter). Each fence retains complete source frontmatter
+and narrative, including its own nonempty `id`, `title`, and `status`. A unique
+`risk-<lowercase-id>` HTML anchor identifies the record. Colocation neither closes
+a risk nor merges its owners, severity, probability, mitigation, or acceptance.
+
+The shared `scripts/lib/risk-document-records.cjs` parser rejects malformed,
+unsupported, truncated, unidentified, or unanchored records. The existing Git risk
+debt collector emits one item per risk ID and still rejects duplicates or missing
+physical governance ownership. The existing risk index generator links each record
+anchor. Physical source paths remain valid governance-file identities; the optional
+`rawDebt.sourceFragment` records the section. No new DB schema, import, queue,
+query rail, or runtime contract is introduced. Legacy malformed standalone sources
+remain separate instead of gaining silent normalization through relocation.

@@ -467,7 +467,7 @@ test('feature mechanization rail planner preserves a reference without creating 
   assert.equal(updated.rail.rawRail.authorityRef, authorityRef);
 });
 
-test('referenced feature rails require their exact active canonical authority', async () => {
+test('referenced feature rails require their exact active documentary authority', async () => {
   const authorityRef =
     'docs/planning/proposals/mandatory/governance-and-docs/planning-db-operational-integrity-reconciliation-plan-20260830.md';
   const command = parseArgs(
@@ -485,14 +485,24 @@ test('referenced feature rails require their exact active canonical authority', 
   const client = {
     async query(sql, params) {
       queryCount += 1;
-      assert.match(sql, /command_query_rail_query/);
-      assert.deepEqual(params, [
-        authorityRef,
-        'command',
-        'recordfeaturemechanizationrail',
-        planned.rail.railId,
-      ]);
-      return { rows: queryCount === 1 ? [{ rail_id: 'canonical-authority' }] : [] };
+      assert.match(sql, /command_query_rails imported/);
+      assert.deepEqual(params, [authorityRef, 'command', 'recordfeaturemechanizationrail']);
+      return {
+        rows:
+          queryCount === 1
+            ? [
+                {
+                  railId: 'documentary-authority',
+                  sourcePath: authorityRef,
+                  railType: 'command',
+                  normalizedRailName: 'recordfeaturemechanizationrail',
+                  railStatus: 'implemented',
+                  implementationRefCount: 1,
+                  rawRail: {},
+                },
+              ]
+            : [],
+      };
     },
   };
 

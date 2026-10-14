@@ -18,10 +18,10 @@ Use it when the question is:
 
 ## Primary pages
 
-- [Core responsibilities](./core.md)
+- [Core responsibilities](c4-engine.md#section-core)
 - [Run execution context admission policy component](./run-execution-context-admission-policy-component.md)
 - [Distributed consistency model](../../../system/distributed-consistency-model.md)
-- [Workflow references](./workflows.md)
+- [Workflow references](c4-engine.md#section-workflows)
 - [C4 engine](./c4-engine.md)
 - [Workflow engine subsystem context](./workflow-engine-subsystem-context.md)
 - [Workflow engine target architecture](./workflow-engine-target-architecture.v1.md)

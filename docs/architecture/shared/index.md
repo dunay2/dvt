@@ -19,7 +19,7 @@ silently.
 - [CLI Package](./cli.md)
 - [Gateway DSL Package](./dsl.md)
 - [Plan Interpreter Package](./plan-interpreter.md)
-- [Crypto Package](./crypto.md)
+- [Crypto Package](../domain-shared.md#section-crypto)
 
 ## Why This Section Exists
 
@@ -36,7 +36,7 @@ silently.
 
 1. [Plan Interpreter Package](./plan-interpreter.md)
 2. [Gateway DSL Package](./dsl.md)
-3. [Crypto Package](./crypto.md)
+3. [Crypto Package](../domain-shared.md#section-crypto)
 4. [CLI Package](./cli.md)
 
 ## Current Posture

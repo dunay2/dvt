@@ -124,8 +124,8 @@ flowchart LR
   Reference[Reference feature]
   Command[RecordFeatureMechanizationRail]
   RawRail[rawRail with referenceOnly and authorityRef]
-  Query[Effective command/query rail query]
-  Authority[Existing canonical authority]
+  Query[Exact documentary authority resolver]
+  Authority[Eligible declaration at the explicit source]
 
   Reference --> Command --> RawRail --> Query --> Authority
 ```
@@ -135,8 +135,13 @@ non-empty `--authority-ref` only as a pair. Omitting both keeps the normal activ
 declaration path; providing either field alone or explicitly setting
 `--reference-only false` fails closed. The planner persists both values in
 `rawRail`. Before writing, the command resolves `authorityRef` against the
-active canonical rail with the same source, type, and normalized name; missing,
-mismatched, retired, reference-only, and gap authorities fail closed. The
+exact documentary declaration with the same source, type, and normalized name,
+using the same eligibility policy as catalog import, not the globally ranked
+implementation representative. Multiple eligible feature evidence rows may
+support that same documentary identity without selecting a feature winner.
+Missing, mismatched, retired,
+reference-only, and gap authorities fail closed. Local revisions supersede the
+same imported feature identity, including retirement and relocation. The
 effective feature-mechanization state becomes `referenced` without changing the
 rail's declared `status`. The existing effective query keeps the referenced
 feature as evidence while excluding it from canonical
@@ -247,6 +252,50 @@ active siblings, unchanged unselected metadata including large numeric values,
 atomic rollback on rejection, idempotent replay and actual PostgreSQL execution.
 No schema, new command, product contract or general imported-state editor is
 introduced. Historical UI proof is not claimed to be current provider E2E proof.
+
+### Current document reconciliation
+
+The same command accepts an exclusive `currentDocument` patch for an imported
+or local row whose repository Markdown source survives. It names the exact HEAD
+commit, source path and explicit documentary reference replacements (an empty
+list means hash-only). This does not widen the legacy local `sourceContent` mode.
+
+```mermaid
+flowchart LR
+  Current[Clean committed document and exact row digest] --> Policy[Bounded documentary selectors]
+  Policy --> Writer[Existing reconciliation transaction]
+  Writer --> Preserve[Native JSONB patches preserve symbols and evidence]
+  Preserve --> Audit[Unchanged winners and exact before/after audit]
+```
+
+Only `implementationPlan`, `componentGuides`, `userStories` and `governingSources`
+are eligible. Each replacement names its field, array index where applicable,
+exact old value and new value. No array insertion, removal or reordering is
+allowed. The replacement must equal that slot in the selected feature manifest
+of the committed source and resolve to a tracked repository Markdown file or
+an immutable same-repository Git blob for the same retired reference path.
+Historical targets require the existing full ancestor-commit and regular-blob
+proof; arbitrary external URLs and path substitutions reject. Hash-only changes
+do not require a feature fence because they copy no manifest data; this preserves
+documentation-table rows and independently authored local declarations.
+Missing or ambiguous features, invalid fields, duplicate selectors, stale values,
+uncommitted sources, unresolved targets and mixed patch modes reject.
+
+The source hash and selected documentary slots are the only mutable metadata;
+`governingSources` also updates the matching `governing_sources` query slot and
+rejects a disagreement between those representations. Independently collected
+`documentation_refs` rail evidence remains unchanged. Local revisions advance.
+Symbols, cycles, implementation references, constraints,
+rail status, ownership, timestamps and arbitrary JSONB numeric precision remain
+intact. The writer uses native JSONB updates, never a reconstructed manifest.
+Existing design scope, full-row CAS, atomic rollback, winner, idempotency and audit
+guards remain mandatory. This is an explicitly requested repair, not a routine
+refresh, import, new rail or generic JSON Patch interface.
+
+Unit policy tests and isolated PostgreSQL integration prove these boundaries
+before the real operator batch is applied. The task-specific planning matrix and
+exact implementation scope are recorded in GitHub issue #3643 and design
+`GH-3643-CURRENT-DOCUMENT-RECONCILIATION`.
 
 ## Feature mechanization
 
