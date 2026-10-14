@@ -582,5 +582,5 @@ Acceptance:
 - The top bar must not own Canvas route command semantics.
 
 > Acceptance scope status: Active. Owner: Frontend / Shell / Canvas.
-
+>
 > Section status: Active. Owner: Frontend / Shell / Canvas. Colocation does not merge component responsibilities.
