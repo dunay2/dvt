@@ -140,7 +140,7 @@ implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbe
 componentGuides:
   - docs/architecture/components/web/workbench-ux-canon-component.md
 userStories:
-  - docs/architecture/components/web/workbench-ux-canon-user-stories.md
+  - docs/architecture/components/web/workbench-ux-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -154,7 +154,7 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/architecture/components/web/index.md
   - docs/architecture/components/web/workbench-ux-canon-component.md
-  - docs/architecture/components/web/workbench-ux-canon-user-stories.md
+  - docs/architecture/components/web/workbench-ux-canon-component.md
   - docs/architecture/index.md
   - docs/planning/reviews/architecture-and-governance/20260527-frontend-ux-maturity-audit-review.md
   - docs/planning/proposals/index.md
@@ -209,7 +209,7 @@ redGreenCycles:
       - tools/ci/workbench-ux-canon.test.mjs
       - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
       - docs/architecture/components/web/workbench-ux-canon-component.md
-      - docs/architecture/components/web/workbench-ux-canon-user-stories.md
+      - docs/architecture/components/web/workbench-ux-canon-component.md
       - docs/architecture/components/web/screen-manuals-and-user-stories.md
       - docs/architecture/components/web/index.md
       - buzon/20260524-codex-fowler-workbench-ux-canon.md

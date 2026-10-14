@@ -38,7 +38,7 @@ describe('public data visual system architecture', () => {
     const componentPath =
       'docs/architecture/components/web/public-data/marquez-visual-system-component.md';
     const storiesPath =
-      'docs/architecture/components/web/public-data/marquez-visual-system-user-stories.md';
+      'docs/architecture/components/web/public-data/marquez-visual-system-component.md';
 
     expect(repoFileExists(componentPath)).toBe(true);
     expect(repoFileExists(storiesPath)).toBe(true);

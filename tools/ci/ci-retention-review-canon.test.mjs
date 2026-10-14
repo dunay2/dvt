@@ -18,7 +18,7 @@ const requiredFiles = [
   'docs/planning/domains/event-lifecycle-and-retention.md',
   'docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md',
   'docs/architecture/components/ci-governance/ci-retention-review-canon-component.md',
-  'docs/architecture/components/ci-governance/ci-retention-review-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/ci-retention-review-canon-component.md',
 ];
 
 test('CI, delivery, and retention review canonization has semantic ownership', () => {
@@ -50,7 +50,7 @@ test('CI, delivery, and retention review canonization has semantic ownership', (
   assert.match(componentGuide, /RecordCiRetentionReviewCanon/);
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/ci-retention-review-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/ci-retention-review-canon-component.md'
   );
   for (const persona of [
     'CI maintainer',

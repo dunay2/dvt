@@ -53,7 +53,7 @@ describe('WorkflowEngine provider and telemetry seams architecture', () => {
       engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-component.md')
     );
     expectFileExists(
-      engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-user-stories.md')
+      engineArchitectureDocPath('workflow-engine-provider-telemetry-seams-component.md')
     );
 
     const guide = readEngineArchitectureDoc(
@@ -72,7 +72,7 @@ describe('WorkflowEngine provider and telemetry seams architecture', () => {
     expect(guide).toContain('```mermaid');
 
     const stories = readEngineArchitectureDoc(
-      'workflow-engine-provider-telemetry-seams-user-stories.md'
+      'workflow-engine-provider-telemetry-seams-component.md'
     );
     for (const expectedStory of [
       'US-WE-HX-5-001',

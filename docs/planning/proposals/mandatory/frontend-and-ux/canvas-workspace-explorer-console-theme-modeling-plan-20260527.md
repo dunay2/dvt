@@ -226,7 +226,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
 userStories:
-  - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -247,7 +247,7 @@ allowedImplementationSurfaces:
   - packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
-  - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260527-CANVAS-MULTI-WORKSHEET.yaml
   - docs/risk-register/quality/index.md
@@ -753,8 +753,8 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-ready-node-authoring-entrypoint-component.md
   - docs/architecture/components/web/graph/canvas-shell-component.md
 userStories:
-  - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
-  - docs/architecture/components/web/graph/canvas-ready-node-authoring-user-stories.md
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
+  - docs/architecture/components/web/graph/canvas-ready-node-authoring-entrypoint-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -788,11 +788,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx
   - docs/.manifest.json
   - docs/architecture/components/web/graph/canvas-ready-node-authoring-entrypoint-component.md
-  - docs/architecture/components/web/graph/canvas-ready-node-authoring-user-stories.md
+  - docs/architecture/components/web/graph/canvas-ready-node-authoring-entrypoint-component.md
   - docs/architecture/components/web/graph/canvas-shell-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
-  - docs/architecture/components/web/graph/canvas-workspace-explorer-user-stories.md
+  - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/architecture/components/web/graph/graph-frontend-architecture.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md
 forbiddenImplementationSurfaces:

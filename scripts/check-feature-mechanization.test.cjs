@@ -23,7 +23,7 @@ const validManifest = {
     'docs/architecture/components/web/graph/canvas-draft-access-posture-component.md',
   ],
   userStories: [
-    'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md',
+    'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
   ],
   governingSources: [
     'docs/architecture/command-query-rail-governance.md',

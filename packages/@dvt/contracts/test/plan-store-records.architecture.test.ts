@@ -60,7 +60,7 @@ const COMPONENT_GUIDE = join(
 );
 const USER_STORIES_DOC = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/contracts/plan-store-records-user-stories.md'
+  'docs/architecture/components/engine/contracts/plan-store-records-component.md'
 );
 const MAILBOX_REVIEW = join(
   REPO_ROOT,

@@ -180,7 +180,7 @@ describe('Templates Monaco preview architecture', () => {
       'docs/architecture/components/web/templates/execution-template-monaco-preview-component.md'
     );
     const userStories = readRepoDoc(
-      'docs/architecture/components/web/templates/execution-template-monaco-preview-user-stories.md'
+      'docs/architecture/components/web/templates/execution-template-monaco-preview-component.md'
     );
 
     for (const requiredSection of [

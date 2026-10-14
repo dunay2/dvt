@@ -42,7 +42,7 @@ describe('Postgres run-event retention policy component semantics', () => {
     );
     const userStoriesPath = join(
       import.meta.dirname,
-      '../../../../docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md'
+      '../../../../docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md'
     );
 
     expect(existsSync(componentGuidePath)).toBe(true);

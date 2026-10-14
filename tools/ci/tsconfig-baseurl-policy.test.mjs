@@ -35,7 +35,7 @@ test('tsconfig baseUrl policy docs preserve API, invariants, transitions, and sc
   );
   const userStoriesPath = resolve(
     repoRoot,
-    'docs/architecture/components/ci-governance/tsconfig-baseurl-policy-user-stories.md'
+    'docs/architecture/components/ci-governance/tsconfig-baseurl-policy-component.md'
   );
   const componentDoc = readFileSync(componentDocPath, 'utf8');
   const userStories = readFileSync(userStoriesPath, 'utf8');

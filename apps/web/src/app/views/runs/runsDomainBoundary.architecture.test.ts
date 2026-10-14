@@ -47,7 +47,7 @@ describe('Runs domain boundary', () => {
       'docs/architecture/components/web/runs/run-event-timeline-component.md'
     );
     const eventTimelineStories = readRepoFile(
-      'docs/architecture/components/web/runs/run-event-timeline-user-stories.md'
+      'docs/architecture/components/web/runs/run-event-timeline-component.md'
     );
 
     for (const section of [
@@ -70,7 +70,7 @@ describe('Runs domain boundary', () => {
       'docs/architecture/components/web/runs/dense-operational-tables-component.md'
     );
     const denseTableStories = readRepoFile(
-      'docs/architecture/components/web/runs/dense-operational-tables-user-stories.md'
+      'docs/architecture/components/web/runs/dense-operational-tables-component.md'
     );
 
     for (const section of [
@@ -412,7 +412,7 @@ describe('Runs domain boundary', () => {
       'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-component.md'
     );
     const visualTokenStories = readRepoFile(
-      'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-user-stories.md'
+      'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-component.md'
     );
 
     expect(hasOwnedConcernDocblock(tokenSource)).toBe(true);

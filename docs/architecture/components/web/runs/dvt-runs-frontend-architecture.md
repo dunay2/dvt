@@ -188,7 +188,7 @@ Canonical runtime contract baseline docs:
 - [Frontend Runtime Contract User Manual](./frontend-runtime-contract-user-manual.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 - [Run Event Timeline Component](./run-event-timeline-component.md)
-- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
+- [Run Event Timeline User Stories](run-event-timeline-component.md#section-run-event-timeline-user-stories)
 
 ## Related Pages
 

@@ -100,7 +100,7 @@ describe('protected route session context architecture', () => {
       'components',
       'web',
       'appshell',
-      'effective-workspace-context-user-stories.md'
+      'effective-workspace-context-component.md'
     );
 
     for (const requiredSection of [
@@ -139,7 +139,7 @@ describe('protected route session context architecture', () => {
       'components',
       'web',
       'appshell',
-      'protected-route-session-gate-user-stories.md'
+      'protected-route-session-gate-component.md'
     );
 
     for (const section of [

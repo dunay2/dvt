@@ -13,7 +13,7 @@ describe('canvas draft recovery boundary architecture', () => {
       'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
 
     for (const guide of [authGuide, layoutGuide]) {

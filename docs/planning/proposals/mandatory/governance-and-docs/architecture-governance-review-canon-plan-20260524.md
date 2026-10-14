@@ -115,7 +115,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/archit
 componentGuides:
   - docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md
 userStories:
-  - docs/architecture/components/ci-governance/architecture-governance-review-canon-user-stories.md
+  - docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -126,7 +126,7 @@ governingSources:
 allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-architecture-governance-review-canon.md
   - docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md
-  - docs/architecture/components/ci-governance/architecture-governance-review-canon-user-stories.md
+  - docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md
   - docs/architecture/components/ci-governance/index.md
   - docs/planning/domains/documentation-governance.md
   - docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md
@@ -185,7 +185,7 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md
-      - docs/architecture/components/ci-governance/architecture-governance-review-canon-user-stories.md
+      - docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
       - docs/planning/proposals/portfolio-map-20260403.md

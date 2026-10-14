@@ -45,7 +45,7 @@ describe('CanvasPlaygroundHost architecture', () => {
       'docs/architecture/components/web/graph/canvas-playground-host-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
 
     for (const document of [componentGuide, hostGuide, userStories]) {

@@ -15,9 +15,9 @@ const WorkflowEngineCanonicalMapHardcutGuard = {
     'workflow-engine-target-architecture.v1.md',
     'workflow-engine-facade-use-cases-component.md',
     'workflow-engine-runtime-path-decomposition-component.md',
-    'workflow-engine-runtime-path-decomposition-user-stories.md',
+    'workflow-engine-runtime-path-decomposition-component.md',
     'workflow-engine-semantic-closure-component.md',
-    'workflow-engine-semantic-closure-user-stories.md',
+    'workflow-engine-semantic-closure-component.md',
   ],
   forbiddenPostureTokens: [
     'compatibility-first',

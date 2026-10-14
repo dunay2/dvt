@@ -93,7 +93,7 @@ describe('ShellTopBar workspace context architecture', () => {
       'docs/architecture/components/web/appshell/shell-workspace-context-component.md'
     );
     const userStories = readRepoSource(
-      'docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md'
+      'docs/architecture/components/web/appshell/shell-workspace-context-component.md'
     );
 
     for (const requiredGuideSection of [
@@ -118,7 +118,7 @@ describe('ShellTopBar workspace context architecture', () => {
       'Shell workspace context',
       'read-only presentation model',
       'shell-workspace-context-component.md',
-      'shell-workspace-context-user-stories.md',
+      'shell-workspace-context-component.md',
     ]) {
       expect(workbenchManual).toContain(requiredManualSignal);
     }

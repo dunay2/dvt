@@ -17,7 +17,7 @@ describe('Canvas project snapshot architecture', () => {
       'docs/architecture/components/web/graph/canvas-project-snapshot-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-project-snapshot-component.md'
     );
     const commandQueryCatalog = readRepoFile(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
@@ -40,7 +40,7 @@ describe('Canvas project snapshot architecture', () => {
       'canvasProjectSnapshot.test.ts',
       'canvasProjectSnapshot.architecture.test.ts',
       'canvas-project-snapshot-roundtrip.cy.ts',
-      'canvas-project-snapshot-user-stories.md',
+      'canvas-project-snapshot-component.md',
       '```mermaid',
       'canvasProjectSnapshot.exportFile',
       'canvasProjectSnapshot.validateImport',

@@ -17,7 +17,7 @@ const COMPONENT_GUIDE = readArchitectureSiblingSource(
 );
 const USER_STORIES = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/lineage/lineage-panel-token-user-stories.md'
+  '../../../../../../docs/architecture/components/web/lineage/lineage-panel-token-component.md'
 );
 
 const PANEL_SOURCES = [GRAPH_PANEL_SOURCE, IMPACT_SUMMARY_SOURCE];

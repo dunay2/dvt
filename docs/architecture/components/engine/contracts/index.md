@@ -30,7 +30,7 @@ Read these first for the active runtime boundary:
 - [Runtime provider vocabulary component](./engine/runtime-provider-vocabulary-component.md)
 - [Plan admission matrix](./plan-admission-matrix.md)
 - [Plan store records component](./plan-store-records-component.md)
-- [Plan store records user stories](./plan-store-records-user-stories.md)
+- [Plan store records user stories](plan-store-records-component.md#section-plan-store-records-user-stories)
 - [Event schemas](./engine/events/index.md)
 - [Capabilities contracts](./capabilities/README.md)
 - [State store docs](./state-store/README.md)

@@ -129,7 +129,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/archit
 componentGuides:
   - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md
 userStories:
-  - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-user-stories.md
+  - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -143,7 +143,7 @@ allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-architecture-doc-reconciliation-canon.md
   - docs/.manifest.json
   - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md
-  - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-user-stories.md
+  - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md
   - docs/architecture/components/ci-governance/index.md
   - docs/architecture/index.md
   - docs/planning/domains/documentation-governance.md
@@ -195,7 +195,7 @@ redGreenCycles:
       - tools/ci/architecture-doc-reconciliation-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md
       - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md
-      - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-user-stories.md
+      - docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
       - buzon/20260523-codex-fowler-architecture-doc-reconciliation-canon.md

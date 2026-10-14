@@ -14,7 +14,7 @@ import {
 describe('WorkflowEngine boundary fitness architecture', () => {
   it('documents WE-HX-6 component semantics, stories, and proposal trace', () => {
     expectFileExists(engineArchitectureDocPath('workflow-engine-boundary-fitness-component.md'));
-    expectFileExists(engineArchitectureDocPath('workflow-engine-boundary-fitness-user-stories.md'));
+    expectFileExists(engineArchitectureDocPath('workflow-engine-boundary-fitness-component.md'));
 
     const guide = readEngineArchitectureDoc('workflow-engine-boundary-fitness-component.md');
     expectMarkdownSections(guide, [
@@ -30,7 +30,7 @@ describe('WorkflowEngine boundary fitness architecture', () => {
     expect(guide).toContain('engineArchitectureTestSupport.ts');
     expect(guide).toContain('makeTemporalAdapter');
 
-    const stories = readEngineArchitectureDoc('workflow-engine-boundary-fitness-user-stories.md');
+    const stories = readEngineArchitectureDoc('workflow-engine-boundary-fitness-component.md');
     for (const expectedStory of [
       'US-WE-HX-6-001',
       'US-WE-HX-6-002',

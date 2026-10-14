@@ -58,8 +58,8 @@ as much as library behavior in `@dvt/delivery`.
 ## Historical Deep Dives
 
 - [Tenant-aware outbox sharding component](./tenant-aware-outbox-sharding-component.md)
-- [Tenant-aware outbox sharding user stories](./tenant-aware-outbox-sharding-user-stories.md)
-- [DDD Structure](./outbox-worker-ddd.md)
-- [Functionalities](./outbox-worker-functional.md)
-- [Constraints and invariants](./outbox-worker-constraints.md)
-- [Sequence diagrams](./outbox-worker-sequence.md)
+- [Tenant-aware outbox sharding user stories](tenant-aware-outbox-sharding-component.md#section-tenant-aware-outbox-sharding-user-stories)
+- [DDD Structure](../../domain-delivery.md#section-outbox-worker-ddd)
+- [Functionalities](../../domain-delivery.md#section-outbox-worker-functional)
+- [Constraints and invariants](../../domain-delivery.md#section-outbox-worker-constraints)
+- [Sequence diagrams](../../domain-delivery.md#section-outbox-worker-sequence)

@@ -19,7 +19,7 @@ import {
 const requiredFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md',
   'docs/architecture/components/ci-governance/docs-disposition-canon-component.md',
-  'docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/docs-disposition-canon-component.md',
   'docs/planning/domains/documentation-governance.md',
 ];
 
@@ -100,7 +100,7 @@ test('docs disposition canonization has semantic ownership and DB-first closure'
   assert.match(componentGuide, /ClassifyDocsDispositionClosure/);
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/docs-disposition-canon-component.md'
   );
   for (const persona of [
     'Documentation maintainer',
@@ -2345,6 +2345,6 @@ test('retired Workbench peer-route documents have no live consumers', () => {
   assertFilesExist([
     'docs/architecture/components/web/screen-manuals-and-user-stories.md',
     'docs/architecture/components/web/appshell/shell-workspace-context-component.md',
-    'docs/architecture/components/web/appshell/shell-workspace-context-user-stories.md',
+    'docs/architecture/components/web/appshell/shell-workspace-context-component.md',
   ]);
 });

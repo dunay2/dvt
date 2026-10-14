@@ -16,7 +16,7 @@ const requiredFiles = [
   'docs/planning/state/github-mvp-issue-workflow.md',
   'docs/planning/reviews/review-naming-policy.md',
   'docs/architecture/components/ci-governance/planning-review-canon-component.md',
-  'docs/architecture/components/ci-governance/planning-review-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/planning-review-canon-component.md',
   'docs/architecture/components/ci-governance/index.md',
 ];
 
@@ -56,7 +56,7 @@ test('planning review canonization preserves GitHub issue task authority', () =>
   }
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/planning-review-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/planning-review-canon-component.md'
   );
   for (const scenario of [
     'Review Steward Links Executable Work To GitHub',

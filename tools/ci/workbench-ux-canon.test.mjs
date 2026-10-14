@@ -16,7 +16,7 @@ import {
 const requiredFiles = [
   'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md',
   'docs/architecture/components/web/workbench-ux-canon-component.md',
-  'docs/architecture/components/web/workbench-ux-canon-user-stories.md',
+  'docs/architecture/components/web/workbench-ux-canon-component.md',
   'docs/architecture/components/web/screen-manuals-and-user-stories.md',
   'docs/architecture/components/web/index.md',
 ];
@@ -71,7 +71,7 @@ test('DVT workbench UX canonization preserves current authority and semantic own
   assert.match(componentGuide, /ValidateWorkbenchShellContract/);
 
   const userStories = readRepoFile(
-    'docs/architecture/components/web/workbench-ux-canon-user-stories.md'
+    'docs/architecture/components/web/workbench-ux-canon-component.md'
   );
   for (const persona of [
     'Frontend Maintainer',

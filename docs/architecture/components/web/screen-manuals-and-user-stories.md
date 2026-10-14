@@ -57,7 +57,7 @@ read-only presentation model; scope changes use the separate governed
 project-selection flow rather than mutating those labels.
 
 The [Shell Workspace Context Component](./appshell/shell-workspace-context-component.md)
-and [Shell Workspace Context User Stories](./appshell/shell-workspace-context-user-stories.md)
+and [Shell Workspace Context User Stories](appshell/shell-workspace-context-component.md#section-shell-workspace-context-user-stories)
 own its API, invariants, transitions, and authorized selection behavior.
 
 ### F-04 Data source behavior
@@ -687,3 +687,61 @@ Runtime contract baseline references:
 
 - [Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](./runs/frontend-runtime-contract-user-manual.md)
+
+<a id="section-workspace-diff-backend-rail-user-stories"></a>
+
+## Workspace Diff Backend Rail User Stories
+
+1. As an operator reviewing a workspace diff in API mode, I want DiffView to
+   request `GetWorkspaceDiffChanges` from the protected runtime API so fixture
+   data cannot appear as product truth.
+2. As an authenticated operator without `workspace:diff:view`, I want the diff
+   query to fail closed so unauthorized workspace evidence is not exposed.
+3. As an operator in a workspace with no published diff artifact, I want the
+   diff route to show the empty state from an authoritative backend response.
+4. As an operator whose workspace has a malformed diff artifact, I want a
+   deterministic error rather than partial or guessed diff rows.
+5. As a maintainer, I want route, catalog, web adapter, and docs guarded
+   together so future changes cannot reintroduce an uncataloged diff endpoint.
+
+> Acceptance scope status: Accepted. Owner: Web / API / Architecture.
+
+<a id="section-git-file-history-review-user-stories"></a>
+
+## Git File History Review User Stories
+
+### Scope
+
+These stories cover `F-23` file-scoped history review. They intentionally stop
+before staging, committing, branch management, conflict handling, or a dedicated
+Git explorer.
+
+### Stories
+
+1. As an operator reviewing a workspace file, I can see recent commits for the
+   selected file inside `Code` so that history discovery stays next to file
+   browsing.
+2. As an operator reviewing a selected file with no commits, I see an explicit
+   empty history state so that absence of history is not confused with loading.
+3. As an operator whose history request fails, I see an explicit degraded state
+   while the file preview remains usable.
+4. As an operator selecting a history entry, I can open the existing `Diff`
+   route so that comparison remains owned by the governed Diff workbench.
+5. As a product reviewer, I do not see staging, commit, branch, conflict, or
+   repository-console affordances in this slice.
+
+### Transitions
+
+```mermaid
+stateDiagram-v2
+  [*] --> NoFile
+  NoFile --> LoadingHistory: select file
+  LoadingHistory --> HistoryReady: commits found
+  LoadingHistory --> EmptyHistory: no commits
+  LoadingHistory --> HistoryError: query failed
+  HistoryReady --> Diff: open revision compare
+  EmptyHistory --> LoadingHistory: select another file
+  HistoryError --> LoadingHistory: select another file
+```
+
+> Acceptance scope status: Active. Owner: Frontend / Architecture.

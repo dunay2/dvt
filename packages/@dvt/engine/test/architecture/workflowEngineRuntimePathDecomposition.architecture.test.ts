@@ -13,7 +13,7 @@ const RUNTIME_PATH_COMPONENT_GUIDE = join(
 );
 const RUNTIME_PATH_USER_STORIES = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md'
+  'docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md'
 );
 
 describe('WorkflowEngine runtime path decomposition', () => {

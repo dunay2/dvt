@@ -99,7 +99,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/docume
 componentGuides:
   - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
 userStories:
-  - docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md
+  - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -110,7 +110,7 @@ allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-documentation-usability-canon.md
   - docs/.manifest.json
   - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
-  - docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md
+  - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
   - docs/architecture/components/ci-governance/index.md
   - docs/planning/domains/documentation-governance.md
   - docs/planning/index.md
@@ -171,7 +171,7 @@ redGreenCycles:
       - tools/ci/documentation-usability-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md
       - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
-      - docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md
+      - docs/architecture/components/ci-governance/documentation-usability-canon-component.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
       - buzon/20260524-codex-fowler-documentation-usability-canon.md

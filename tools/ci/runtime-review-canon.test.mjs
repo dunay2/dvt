@@ -18,7 +18,7 @@ const requiredFiles = [
   'docs/planning/domains/execution-runtime.md',
   'docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md',
   'docs/architecture/components/api/runtime-review-canon-component.md',
-  'docs/architecture/components/api/runtime-review-canon-user-stories.md',
+  'docs/architecture/components/api/runtime-review-canon-component.md',
 ];
 
 test('runtime review canonization has a semantic disposition and component contract', () => {
@@ -62,7 +62,7 @@ test('runtime review canonization has a semantic disposition and component contr
   );
 
   const userStories = readRepoFile(
-    'docs/architecture/components/api/runtime-review-canon-user-stories.md'
+    'docs/architecture/components/api/runtime-review-canon-component.md'
   );
   for (const persona of ['Runtime maintainer', 'API maintainer', 'Planning steward']) {
     assert.match(userStories, new RegExp(escapeRegExp(persona)));

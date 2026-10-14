@@ -11,11 +11,11 @@ last_reviewed: 2026-04-09
 
 - [StateStoreAdapter](./StateStoreAdapter.md)
 - [Postgres tenant isolation component](./tenant-isolation-component.md)
-- [Postgres tenant isolation user stories](./tenant-isolation-user-stories.md)
+- [Postgres tenant isolation user stories](tenant-isolation-component.md#section-tenant-isolation-user-stories)
 - [Run event retention policy component](./run-event-retention-policy-component.md)
-- [Run event retention policy user stories](./run-event-retention-policy-user-stories.md)
+- [Run event retention policy user stories](run-event-retention-policy-component.md#section-run-event-retention-policy-user-stories)
 - [Schema rollback zero-downtime component](./schema-rollback-zero-downtime-component.md)
-- [Schema rollback zero-downtime user stories](./schema-rollback-zero-downtime-user-stories.md)
+- [Schema rollback zero-downtime user stories](schema-rollback-zero-downtime-component.md#section-schema-rollback-zero-downtime-user-stories)
 
 ## Related pages
 

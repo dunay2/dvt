@@ -506,7 +506,7 @@ test('keeps AR-C2 immutable evidence gate semantics documented with the collecto
   const stories = readFileSync(
     path.join(
       root,
-      'docs/architecture/components/engine/ops/ar-c2-immutable-evidence-gate-user-stories.md'
+      'docs/architecture/components/engine/ops/ar-c2-immutable-evidence-gate-component.md'
     ),
     'utf8'
   );

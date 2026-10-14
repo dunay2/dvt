@@ -169,9 +169,9 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/f31-authenticated-project-onboarding-plan-20260525.md
 componentGuides:
   - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
-  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
 userStories:
-  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
 governingSources:
   - AGENTS.md
@@ -209,7 +209,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/ProjectOnboardingView.test.tsx
   - apps/web/src/app/views/ProjectOnboardingView.tsx
   - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
-  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f31-authenticated-project-onboarding-plan-20260525.md
   - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
   - docs/planning/closeouts/20260525-f31-authenticated-project-onboarding-closeout.md

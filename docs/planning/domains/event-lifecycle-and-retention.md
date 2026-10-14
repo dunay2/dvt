@@ -45,5 +45,5 @@ guides for public API, invariants, transitions, consumers, and semantic guard
 expectations:
 
 - [CI retention review canon component](../../architecture/components/ci-governance/ci-retention-review-canon-component.md)
-- [CI retention review canon user stories](../../architecture/components/ci-governance/ci-retention-review-canon-user-stories.md)
+- [CI retention review canon user stories](../../architecture/components/ci-governance/ci-retention-review-canon-component.md#section-ci-retention-review-canon-user-stories)
 - [Run event retention policy component](../../architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md)

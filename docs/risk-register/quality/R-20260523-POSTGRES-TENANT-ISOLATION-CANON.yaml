@@ -24,7 +24,7 @@ mitigations:
     Keep real RLS integration tests as the runtime authority; the semantic test is a documentation
     and architecture fitness guard, not a substitute for database enforcement proof.
   - >
-    Update tenant-isolation-component.md and tenant-isolation-user-stories.md in the same slice as
-    any future RLS catalog change.
+    Update tenant-isolation-component.md and tenant-isolation-component.md in the same slice as any
+    future RLS catalog change.
 review_after: 2026-06-30
 ---

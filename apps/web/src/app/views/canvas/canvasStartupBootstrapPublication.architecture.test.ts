@@ -23,7 +23,7 @@ describe('canvas startup bootstrap publication architecture', () => {
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
 
     expect(componentGuide).toContain('## Public API');
