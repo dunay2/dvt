@@ -14,6 +14,15 @@ import {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
+test('classifies the exact-duplicate guard without admitting arbitrary web helpers', () => {
+  const classification = classifyScriptFilePath('scripts/web-code-duplication.cjs');
+  assert.equal(classification.domain, 'ci-tooling');
+  assert.equal(classification.sensitivity, 'ci-policy');
+  assert.equal(classification.runtimeFanout, false);
+  assert.equal(classification.changedFileValidationRelevant, true);
+  assert.equal(classifyScriptFilePath('scripts/web-unadmitted-helper.cjs').domain, 'unknown');
+});
+
 test('admitted browser child and process lifecycle remain test tooling, without widening unknown admission', () => {
   for (const file of [
     'scripts/run-selected-closure-cypress.cjs',

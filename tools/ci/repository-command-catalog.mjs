@@ -159,7 +159,7 @@ const SCRIPT_FILE_RULES = [
     'developer-workflow',
   ],
   [
-    /^scripts\/(check-changed|check-forbidden-tracked-files|type-check-prepush)\.cjs$/u,
+    /^scripts\/(check-changed|check-forbidden-tracked-files|type-check-prepush|web-code-duplication)\.cjs$/u,
     'ci-tooling',
   ],
   [/^scripts\/run-dev-stack(\.[\w-]+)?(\.test)?\.cjs$/u, 'dev-local'],
