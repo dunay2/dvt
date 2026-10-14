@@ -16,6 +16,7 @@ import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
 import { useGraphColumnOutputFocus } from './useGraphColumnOutputFocus';
 import { writeGraphColumnTransfer } from './graphColumnTransfer';
+import styles from './GraphNodeColumnPiece.module.css';
 
 export type GraphNodeColumnCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
 
@@ -94,7 +95,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (
-          <span data-slot="graph-node-column-alias" className="flex min-w-0 items-center gap-1.5">
+          <span data-slot="graph-node-column-alias" className={styles.alias}>
             <span className={graphNodeColumnClasses.sourceName}>
               {showSourceName === true && column.sourceNodeName != null
                 ? `${column.sourceNodeName}.${column.sourceFieldName}`

@@ -28,6 +28,7 @@ import {
 } from './join-condition/conditionDraft';
 import { JoinConditionForm } from './join-condition/JoinConditionForm';
 import { JoinConditionList } from './join-condition/JoinConditionList';
+import styles from './SemanticWorkbenchJoinConditionEditor.module.css';
 
 type ConditionEdit = Readonly<{
   conditionKey: string | null;
@@ -81,13 +82,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
     if (saved) setDraft((current) => (current === draft ? null : current));
   };
   return (
-    <div
-      className={
-        props.renderExpression == null
-          ? undefined
-          : 'canvas-operation-editors grid min-h-0 min-w-0 gap-3'
-      }
-    >
+    <div className={props.renderExpression == null ? undefined : styles.editor}>
       {props.renderExpression?.(
         draft == null
           ? null
@@ -117,10 +112,10 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
       <div
         ref={editorRef}
         data-slot="semantic-workbench-join-condition-list"
-        className="mt-1 min-h-0 overflow-auto pr-1"
+        className={styles.conditionList}
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-(--text-muted)">CONDICIONES DEL JOIN</span>
+        <div className={styles.header}>
+          <span className={styles.heading}>CONDICIONES DEL JOIN</span>
           <Button
             type="button"
             variant="ghost"

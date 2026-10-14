@@ -19,6 +19,7 @@ import { useCanvasWorkbenchFocusRecovery } from './useCanvasWorkbenchFocus';
 import { useCanvasRelationalTreeSessionActions } from './useCanvasRelationalTreeSessionActions';
 import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
 import { CanvasOperationInspectorTabs } from './CanvasRelationalTreeEditorFrame';
+import styles from './CanvasRelationalTreeWorkbench.module.css';
 import {
   useCanvasRelationalTreeWorkbenchHandle,
   type CanvasRelationalTreeWorkbenchHandle,
@@ -95,7 +96,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             event.preventDefault();
             event.stopPropagation();
           }}
-          className="relative h-full min-h-0 min-w-0 w-full overflow-hidden bg-(--surface-panel)"
+          className={styles.workbench}
         >
           <CanvasRelationalTreeSessionActions {...sessionActions} host={actionsHost} />
           <CanvasRelationalExplorer

@@ -23,9 +23,7 @@ import {
   type ConditionFieldOption,
 } from './conditionDraft';
 import { COMPARISON_LABEL } from './conditionRows';
-
-const selectClass =
-  'mt-1 w-full rounded border border-teal-700 bg-(--surface-subtle) p-2 font-mono text-xs text-emerald-300';
+import styles from './JoinConditionForm.module.css';
 
 export function JoinConditionForm({
   draft,
@@ -51,7 +49,7 @@ export function JoinConditionForm({
   return (
     <div
       data-slot="semantic-workbench-join-condition-editor"
-      className="@container mt-2 rounded-lg border border-teal-700 bg-(--surface-subtle) p-2"
+      className={styles.form}
       onKeyDown={(event) => {
         if (event.key !== 'Escape' || event.defaultPrevented) return;
         event.preventDefault();
@@ -59,8 +57,8 @@ export function JoinConditionForm({
         onClose();
       }}
     >
-      <div className="flex flex-wrap items-center gap-3 text-xs">
-        <span className="mr-auto font-semibold text-emerald-300">
+      <div className={styles.header}>
+        <span className={styles.title}>
           {draft.conditionKey == null ? 'NUEVA CONDICIÓN' : 'EDITAR CONDICIÓN'}
         </span>
         <select
@@ -68,7 +66,7 @@ export function JoinConditionForm({
           hidden={!draft.combinationEditable}
           value={draft.combination}
           disabled={!draft.combinationEditable}
-          className={selectClass}
+          className={styles.select}
           onChange={(event) =>
             onChange({
               ...draft,
@@ -82,12 +80,12 @@ export function JoinConditionForm({
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-2 text-(--text-muted)">
+        <label className={styles.dataType}>
           Tipo
           <select
             aria-label="Tipo de dato de la condición"
             value={draft.dataType}
-            className={selectClass}
+            className={styles.select}
             onChange={(event) =>
               onChange(
                 changeConditionDataType(
@@ -115,7 +113,7 @@ export function JoinConditionForm({
           <X size={12} aria-hidden />
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-3 @min-[40rem]:grid-cols-[minmax(0,1fr)_6rem_minmax(0,1fr)]">
+      <div className={styles.operands}>
         <SemanticWorkbenchJoinOperandEditor
           side="izquierdo"
           operand={draft.left}
@@ -123,12 +121,12 @@ export function JoinConditionForm({
           fields={fieldOptions}
           onChange={(left) => onChange({ ...draft, left })}
         />
-        <label className="mt-2 block text-xs text-(--text-muted)">
+        <label className={styles.comparison}>
           COMPARACIÓN
           <select
             aria-label="Comparador de la condición"
             value={draft.operator}
-            className={selectClass}
+            className={styles.select}
             onChange={(event) =>
               onChange({
                 ...draft,
@@ -157,7 +155,7 @@ export function JoinConditionForm({
         <Button
           type="button"
           variant="outline"
-          className="mt-2 w-full"
+          className={styles.groupAction}
           aria-pressed={draft.groupWithPrevious}
           title="Crea un grupo entre paréntesis con la condición anterior."
           onClick={() => onChange({ ...draft, groupWithPrevious: !draft.groupWithPrevious })}
@@ -166,7 +164,13 @@ export function JoinConditionForm({
           Agrupar con la condición anterior
         </Button>
       )}
-      <Button type="button" size="sm" className="mt-2" disabled={!canApply} onClick={onSave}>
+      <Button
+        type="button"
+        size="sm"
+        className={styles.saveAction}
+        disabled={!canApply}
+        onClick={onSave}
+      >
         {draft.conditionKey == null ? 'Añadir condición' : 'Guardar condición'}
       </Button>
       {formulaAction}

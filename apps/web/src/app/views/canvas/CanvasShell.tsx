@@ -30,6 +30,7 @@ import { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 import { useCanvasModelSelection } from './useCanvasModelSelection';
 import { useCanvasCodeWorkbench } from './useCanvasCodeWorkbench';
 import { useCanvasOperationDataTab } from './useCanvasOperationDataTab';
+import styles from './CanvasShell.module.css';
 
 export default function CanvasShell({
   layout,
@@ -171,7 +172,7 @@ export default function CanvasShell({
       data-slot="canvas-shell-panel-group"
       id="canvas-shell-horizontal-panels"
       direction="horizontal"
-      className="h-full min-w-0"
+      className={styles.workspace}
     >
       {layout.surfaceStrategy?.operationalDrawer == null ? null : (
         <CanvasOperationalDrawerContributionRegistrar

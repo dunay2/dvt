@@ -16,6 +16,7 @@ import type { Comparison, ConditionDraft } from './join-condition/conditionDraft
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { Button } from '../../components/ui/button';
+import styles from './DvtSubstraitJoinPredicateEditors.module.css';
 import {
   appendDvtSubstraitJoinComparison,
   updateDvtSubstraitJoinComparison,
@@ -73,7 +74,7 @@ export function DvtSubstraitJoinPredicateEditors({
   return (
     <fieldset
       disabled={disabled || command.state === 'busy'}
-      className="min-h-0 border-0 p-0"
+      className={styles.editors}
       data-slot="dvt-substrait-join-predicate-editors"
       data-relation-id={selected.relationId}
     >

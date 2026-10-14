@@ -15,6 +15,7 @@ import type { ConditionDraft } from './join-condition/conditionDraft';
 import { hasPendingConditionDraft } from './SemanticWorkbenchJoinConditionEditor';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import styles from './CanvasRelationalTreeJoinEditor.module.css';
 import {
   CanvasJoinPredicateFormula,
   type JoinPredicateFormulaDraft,
@@ -54,7 +55,7 @@ export function CanvasRelationalTreeJoinEditor({
   const comparisonDraft = drafts[selected.relationId];
   const stale = comparisonDraft != null && comparisonDraft.revision !== selected.revision;
   return (
-    <div className="min-h-0 space-y-3">
+    <div className={styles.editor}>
       {stale ? <p role="alert">{semanticCopy.derivedOutput.stale}</p> : null}
       <CanvasJoinTypeProperties
         selected={selected}
