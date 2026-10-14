@@ -172,6 +172,7 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
 
 const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
   'src/testing/vitestSuites.browserRouting.architecture.test.ts',
+  'src/testing/vitestSuites.browserShards.architecture.test.ts',
   'src/testing/vitestSuites.architecture.test.ts',
   'src/testing/vitestSuites.catalog.architecture.test.ts',
   'src/testing/vitestSuites.changedFileDiscovery.architecture.test.ts',

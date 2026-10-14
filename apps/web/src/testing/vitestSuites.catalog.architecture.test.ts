@@ -162,12 +162,12 @@ describe('web Vitest suite catalog', () => {
     expect(workflow).toContain('run: ${{ matrix.command }}');
     expect(workflow).toContain('pnpm test:web:ci');
     expect(workflow).toContain('web-frontend-tests:');
-    expect(workflow).toContain('name: Web Frontend Tests');
     const webJob = (
       load(workflow) as {
         jobs: Record<
           string,
           {
+            name: string;
             env?: Record<string, string>;
             steps: Array<{
               run?: string;
@@ -178,6 +178,7 @@ describe('web Vitest suite catalog', () => {
       }
     ).jobs['web-frontend-tests'];
     if (!webJob) throw new Error('Missing governed Web test job');
+    expect(webJob.name).toMatch(/^Web Frontend Tests \(/);
     const executionSteps = webJob.steps.filter(
       (step) => step.run?.includes('pnpm test:web:') && !step.run.includes('--plan')
     );
