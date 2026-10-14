@@ -94,6 +94,13 @@ test('comments and formatting do not change an exact body fingerprint', () => {
   assert.equal(first.bodySha256, second.bodySha256);
 });
 
+test('preserves statement boundaries introduced by automatic semicolon insertion', () => {
+  const [first, second] = symbols(
+    'function one(value) { const ready = true; return\nvalue; }\nfunction two(value) { const ready = true; return value; }'
+  );
+  assert.notEqual(first.bodySha256, second.bodySha256);
+});
+
 for (const [left, right] of [
   ["'a  b'", "'a b'"],
   ['`a  b`', '`a b`'],

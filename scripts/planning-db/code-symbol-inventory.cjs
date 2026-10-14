@@ -84,14 +84,13 @@ function buildOwnershipByPath(governanceSnapshot = {}) {
 }
 
 function normalizeSyntaxTokens(node, source) {
-  const tokens = [];
   function visit(current) {
     const children = current.getChildren(source);
-    if (children.length === 0) tokens.push(current.getText(source));
-    else children.forEach(visit);
+    return children.length === 0
+      ? [current.kind, current.getText(source)]
+      : [current.kind, children.map(visit)];
   }
-  visit(node);
-  return tokens.join(' ');
+  return JSON.stringify(visit(node));
 }
 
 function extractCodeSymbolsFromFile(file, ownershipByPath) {

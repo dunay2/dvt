@@ -191,8 +191,9 @@ registries and side-effect-only imports require dependency and behavior review.
 The static gate separately reports exact-body duplication candidates for changed
 production web files. It reuses the code-symbol inventory over current Git contents,
 including untracked files supplied by `ListLocalChangedFiles`, without refreshing
-Planning DB. Compiler tokens preserve literal contents while ignoring formatting
-and comments. Only bodies with two or more statements and counterparts in another
+Planning DB. Compiler tokens and their syntax-kind nesting preserve literal contents
+and statement boundaries while ignoring formatting and comments. Only bodies with
+two or more statements and counterparts in another
 production file are reported; test/support files and trivial wrappers are excluded.
 
 Each reported group identifies all counterpart locations and requires review.
