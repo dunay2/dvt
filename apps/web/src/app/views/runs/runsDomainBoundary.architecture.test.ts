@@ -25,7 +25,7 @@ function hasOwnedConcernDocblock(source: string): boolean {
 describe('Runs domain boundary', () => {
   it('documents public API, invariants, transitions, and consumers', () => {
     const componentGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
-    const userStories = readRepoFile('docs/architecture/components/web/runs/user-stories-runs.md');
+    const userStories = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
 
     for (const section of [
       '## Public API',
@@ -44,10 +44,10 @@ describe('Runs domain boundary', () => {
     }
 
     const eventTimelineGuide = readRepoFile(
-      'docs/architecture/components/web/runs/run-event-timeline-component.md'
+      'docs/architecture/components/web/runs/component-runs.md'
     );
     const eventTimelineStories = readRepoFile(
-      'docs/architecture/components/web/runs/run-event-timeline-component.md'
+      'docs/architecture/components/web/runs/component-runs.md'
     );
 
     for (const section of [
@@ -66,11 +66,9 @@ describe('Runs domain boundary', () => {
       expect(eventTimelineGuide).toContain(section);
     }
 
-    const denseTableGuide = readRepoFile(
-      'docs/architecture/components/web/runs/dense-operational-tables-component.md'
-    );
+    const denseTableGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
     const denseTableStories = readRepoFile(
-      'docs/architecture/components/web/runs/dense-operational-tables-component.md'
+      'docs/architecture/components/web/runs/component-runs.md'
     );
 
     for (const section of [
@@ -307,9 +305,7 @@ describe('Runs domain boundary', () => {
     const timelineTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
     const timelineTableModelSource = readAppSource('views/runs/runEventTableModel.ts');
     const shellGuide = readRepoFile('docs/architecture/components/web/appshell/app-shell.md');
-    const timelineGuide = readRepoFile(
-      'docs/architecture/components/web/runs/run-event-timeline-component.md'
-    );
+    const timelineGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
 
     expect(timelineModelSource).toContain('normalizeRunEventTimelinePage');
     expect(timelineModelSource).toContain('mergeRunEventTimelinePage');
@@ -405,15 +401,9 @@ describe('Runs domain boundary', () => {
     const runStatusSource = readAppSource('views/runs/runStatesModel.ts');
     const runTableSource = readAppSource('views/runs/RunOperationalTable.tsx');
     const eventTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
-    const denseTableGuide = readRepoFile(
-      'docs/architecture/components/web/runs/dense-operational-tables-component.md'
-    );
-    const visualTokenGuide = readRepoFile(
-      'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-component.md'
-    );
-    const visualTokenStories = readRepoFile(
-      'docs/architecture/components/web/runs/runs-dense-table-visual-tokens-component.md'
-    );
+    const denseTableGuide = readRepoFile('docs/architecture/components/web/runs/component-runs.md');
+    const visualTokenGuide = readRepoFile('docs/architecture/components/web/style-guide.md');
+    const visualTokenStories = readRepoFile('docs/architecture/components/web/style-guide.md');
 
     expect(hasOwnedConcernDocblock(tokenSource)).toBe(true);
     expect(tokenSource).toContain('routeWorkbenchDenseTableClasses');

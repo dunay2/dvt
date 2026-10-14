@@ -47,7 +47,7 @@ repository can drift into a false sense of completion:
   ADR/runtime drift if it is not resolved or consciously accepted;
 - the standalone runtime and reusable worker can still drift over time, as
   already tracked by
-  [R-20260308-G5-OUTBOX-WORKER-01](../adapters/R-20260308-g5-state-store-outbox-worker-drift.md).
+  [R-20260308-G5-OUTBOX-WORKER-01](../adapters/r-20260308-g5-state-store-outbox-worker-drift.md).
 
 If that happens, reviewers may approve a technically good hardening slice while
 the repository still lacks enough evidence to declare `G5.3` formally closed.
@@ -68,14 +68,14 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
   shipped `10` attempts, aligning code to `5`, or recording an explicit
   accepted deviation with follow-up ownership.
 - Keep runtime/core drift visible through
-  [R-20260308-G5-OUTBOX-WORKER-01](../adapters/R-20260308-g5-state-store-outbox-worker-drift.md)
+  [R-20260308-G5-OUTBOX-WORKER-01](../adapters/r-20260308-g5-state-store-outbox-worker-drift.md)
   until ownership converges on one semantic core.
 
 ## Evidence
 
 - `https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/G5-US-G5.3-CORRECTNESS-HARDENING-PLAN.md`
 - `https://github.com/dunay2/dvt/blob/bec9a00d48ce1f02ec26199f670fcf1757680ad7/docs/planning/archive/gaps/GAP_EXECUTION_PLANS.md`
-- `docs/runbooks/outbox-worker-g5.md`
+- `docs/guides/outbox-worker-technical-manual-20260404.md`
 - `apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts`
 - `apps/outbox-worker/test/canary/standaloneCanaryAcceptance.test.ts`
 - `packages/@dvt/delivery/test/OutboxWorker.test.ts`
@@ -83,4 +83,4 @@ the repository still lacks enough evidence to declare `G5.3` formally closed.
 - `packages/@dvt/adapter-postgres/test/PostgresRunEventStore.test.ts`
 - `packages/@dvt/adapter-postgres/src/runEventEnvelopePolicy.ts`
 - `packages/@dvt/adapter-postgres/src/PostgresRunEventStorage.ts`
-- `docs/risk-register/adapters/R-20260308-g5-state-store-outbox-worker-drift.md`
+- `docs/risk-register/adapters/r-20260308-g5-state-store-outbox-worker-drift.md`

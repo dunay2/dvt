@@ -13,7 +13,7 @@ breaking: false
 code_refs:
   - docs/architecture/system/distributed-consistency-model.md
   - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
-  - docs/runbooks/outbox-worker-g5.md
+  - docs/guides/outbox-worker-technical-manual-20260404.md
   - docs/planning/state/agent-lane-b.yaml
 evidence:
   tests:

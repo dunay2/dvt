@@ -29,9 +29,15 @@ const HARDCUT_DOCUMENTATION_FILES = [
     'architecture',
     'components',
     'web',
-    'f04-frontend-data-boundary-technical-manual-20260404.md',
+    'frontend-data-boundary-architecture.md',
   ],
-  ['..', '..', 'docs', 'guides', 'f04-frontend-data-boundary-user-manual-20260404.md'],
+  [
+    '..',
+    '..',
+    'docs',
+    'guides',
+    '../architecture/components/web/frontend-data-boundary-architecture.md',
+  ],
   [
     '..',
     '..',
@@ -81,6 +87,29 @@ const PRODUCT_COMPOSITION_FILES = [
   ['src', 'app', 'services', 'runs', 'runsService.ts'],
   ['src', 'app', 'bootstrap', 'AuthRouteGate.tsx'],
 ] as const;
+
+const HARDCUT_DOCUMENTATION_SECTIONS = [
+  'section-f04-frontend-data-boundary-technical-manual-20260404',
+  'section-f04-frontend-data-boundary-user-manual-20260404',
+  null,
+  'section-mock-runtime-hardcut-user-stories',
+  null,
+  'section-workspace-port-decomposition-user-stories',
+] as const;
+
+function hardcutSection(source: string, anchor: string | null): string {
+  if (anchor === null) return source.split('\n<a id="')[0] ?? '';
+  const marker = '<a id="' + anchor + '"></a>';
+  const parts = source.split(marker);
+  const section = parts[1];
+  if (parts.length !== 2 || section === undefined) {
+    throw new Error('Missing or duplicated hardcut section: ' + anchor);
+  }
+  const body = section.split('\n<a id="')[0];
+  if (body === undefined || body.trim().length < 100)
+    throw new Error('Empty hardcut section: ' + anchor);
+  return body;
+}
 
 function readRepoFile(...segments: string[]): string {
   return readFileSync(resolve(process.cwd(), ...segments), 'utf8');
@@ -172,6 +201,11 @@ describe('app services mock hardcut architecture', () => {
     }
   });
 
+  it('rejects missing or empty consolidated hardcut sections', () => {
+    expect(() => hardcutSection('Unrelated guide body', 'missing')).toThrow();
+    expect(() => hardcutSection('<a id="empty"></a>\n## Empty', 'empty')).toThrow();
+  });
+
   it('keeps hardcut documentation aligned to API-only product runtime and test-only doubles', () => {
     const forbiddenDriftTerms = [
       /test\/demo/i,
@@ -183,8 +217,10 @@ describe('app services mock hardcut architecture', () => {
       /legacy/i,
     ];
 
-    for (const filePath of HARDCUT_DOCUMENTATION_FILES) {
-      const source = readRepoFile(...filePath);
+    for (const [index, filePath] of HARDCUT_DOCUMENTATION_FILES.entries()) {
+      const sectionAnchor = HARDCUT_DOCUMENTATION_SECTIONS[index];
+      if (sectionAnchor === undefined) throw new Error('Missing documentation section mapping');
+      const source = hardcutSection(readRepoFile(...filePath), sectionAnchor);
 
       for (const forbiddenTerm of forbiddenDriftTerms) {
         expect(source, `${filePath.join('/')} contains ${forbiddenTerm}`).not.toMatch(

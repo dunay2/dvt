@@ -89,11 +89,11 @@ const INSPECTOR_CONSUMER_SOURCES = [
 ];
 const COMPONENT_GUIDE = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/graph/react-flow-visual-token-component.md'
+  '../../../../../../docs/architecture/components/web/style-guide.md'
 );
 const USER_STORIES = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/graph/react-flow-visual-token-component.md'
+  '../../../../../../docs/architecture/components/web/style-guide.md'
 );
 
 const GRAPH_CONSUMER_SOURCES = [

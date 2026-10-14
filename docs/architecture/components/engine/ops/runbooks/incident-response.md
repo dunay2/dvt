@@ -25,7 +25,7 @@ the repository cannot back with current operational surfaces.
 - [Engine SLO Posture](../slo-posture.md)
 - [Engine Observability Guide](../observability.md)
 - [Backend MVP Control-Plane Runbook](../../../../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
-- [Outbox Worker Runbook](../../../../../runbooks/outbox-worker-g5.md)
+- [Outbox Worker Runbook](../../../../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 - [API Runtime SLA Canonical](../../../../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [AR-C2 SLA Signal Threshold Mapping](../../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 
@@ -121,7 +121,7 @@ entire engine event model is corrupted.
 
 Use:
 
-- [Outbox Worker Runbook](../../../../../runbooks/outbox-worker-g5.md)
+- [Outbox Worker Runbook](../../../../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 - [AR-C2 SLA Signal Threshold Mapping](../../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md)
 
 Check:

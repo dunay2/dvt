@@ -30,7 +30,7 @@ persistence, multi-canvas persistence, or a second save rail.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
-- `docs/architecture/components/web/graph/canvas-draft-session-component.md`
+- `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md`
 
@@ -130,7 +130,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
-  - docs/architecture/components/web/graph/canvas-draft-session-component.md
+  - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
 userStories:
   - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md

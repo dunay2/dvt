@@ -23,7 +23,7 @@ commands or queries are still needed for a mature end-to-end workflow.
 - `docs/architecture/reference-architecture.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/index.md`
-- `docs/architecture/components/web/frontend-query-boundary-component.md`
+- `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `pnpm planning:db:query command-query-rails --filter Web --no-refresh`
 

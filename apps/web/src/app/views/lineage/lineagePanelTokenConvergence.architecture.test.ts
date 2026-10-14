@@ -13,11 +13,11 @@ const IMPACT_SUMMARY_SOURCE = readArchitectureSiblingSource(
 );
 const COMPONENT_GUIDE = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/lineage/lineage-panel-token-component.md'
+  '../../../../../../docs/architecture/components/web/lineage/dvt-frontend-lineage.md'
 );
 const USER_STORIES = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/lineage/lineage-panel-token-component.md'
+  '../../../../../../docs/architecture/components/web/lineage/dvt-frontend-lineage.md'
 );
 
 const PANEL_SOURCES = [GRAPH_PANEL_SOURCE, IMPACT_SUMMARY_SOURCE];

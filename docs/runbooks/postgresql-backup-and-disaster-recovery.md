@@ -835,7 +835,7 @@ objective keeps the BCDR epic open.
 - [BCDR1.2 backup/PITR implementation](https://github.com/dunay2/dvt/issues/2874)
 - [BCDR1.3 writer fencing and reconciliation](https://github.com/dunay2/dvt/issues/2875)
 - [BCDR1.4 restore/game-day proof](https://github.com/dunay2/dvt/issues/2876)
-- [Gap 5 archive operations runbook](./gap-5-archive-operations-runbook-20260319.md)
+- [Gap 5 archive operations runbook](../guides/gap-5-operator-guide-20260319.md#section-gap-5-archive-operations-runbook-20260319)
 - [PostgreSQL 16: pg_dump](https://www.postgresql.org/docs/16/app-pgdump.html)
 - [PostgreSQL 16: pg_dumpall](https://www.postgresql.org/docs/16/app-pg-dumpall.html)
 - [PostgreSQL 16: pg_basebackup](https://www.postgresql.org/docs/16/app-pgbasebackup.html)

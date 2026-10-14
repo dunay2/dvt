@@ -29,7 +29,7 @@ reconstruct guarantees from source.
 - [ADR-0013: Atomic bootstrapRunTx ownership](../../adr/ADR-0013-run-state-store-bootstrapRunTx.md)
 - [ADR-0015: getRunStatus read-model separation](../../adr/ADR-0015-getRunStatus-read-model-separation.md)
 - [Backend MVP Control-Plane Runbook](../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
-- [Outbox Worker Runbook](../../runbooks/outbox-worker-g5.md)
+- [Outbox Worker Runbook](../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 - [API Runtime SLA Canonical](../../runbooks/api-runtime-sla-canonical-20260404.md)
 - [Read-Your-Writes Freshness SLO](../../runbooks/read-your-writes-freshness-slo-20260330.md)
 
@@ -278,7 +278,7 @@ sequenceDiagram
 - Signal and operator route:
   - `dvt_delivery_outbox_drain_lag_seconds`
   - `dvt_outbox_oldest_claimed_lag_seconds`
-  - [Outbox Worker Runbook](../../runbooks/outbox-worker-g5.md)
+  - [Outbox Worker Runbook](../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 
 ### Window W6: claimed outbox row before delivery, retry, or dead-letter outcome
 
@@ -294,7 +294,7 @@ sequenceDiagram
 - Threshold source:
   - `apps/outbox-worker/src/plugins/env.ts`
   - `packages/@dvt/adapter-postgres/src/PostgresOutboxStore.ts`
-  - [Outbox Worker Runbook](../../runbooks/outbox-worker-g5.md)
+  - [Outbox Worker Runbook](../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 - Failure mode when exceeded: delivery becomes at-least-once with retries and
   possible duplicate downstream observations; persistent failure ends in
   dead-letter.
@@ -302,7 +302,7 @@ sequenceDiagram
   - `dvt_delivery_event_delivery_latency_seconds`
   - `dvt_outbox_retried_records_total`
   - `dvt_outbox_dead_lettered_records_total`
-  - [Outbox Worker Runbook](../../runbooks/outbox-worker-g5.md)
+  - [Outbox Worker Runbook](../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5)
 
 ### Window W7: orphaned or unresolved start-run intent before repair
 
@@ -354,7 +354,7 @@ This repository does not claim exactly-once external delivery.
    is open.
 2. Use [Backend MVP Control-Plane Runbook](../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
    for API or reconciler incidents.
-3. Use [Outbox Worker Runbook](../../runbooks/outbox-worker-g5.md) for
+3. Use [Outbox Worker Runbook](../../guides/outbox-worker-technical-manual-20260404.md#section-outbox-worker-g5) for
    delivery ownership, retry, and dead-letter incidents.
 4. Use [API Runtime SLA Canonical](../../runbooks/api-runtime-sla-canonical-20260404.md)
    and [Read-Your-Writes Freshness SLO](../../runbooks/read-your-writes-freshness-slo-20260330.md)
