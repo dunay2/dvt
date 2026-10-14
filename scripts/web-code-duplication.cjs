@@ -1,4 +1,4 @@
-/** Owned concern: report current web duplicate candidates using the shared symbol inventory. */
+/** Owned concern: reject current web duplicate candidates using the shared symbol inventory. */
 const fs = require('node:fs');
 const path = require('node:path');
 const {
@@ -70,7 +70,7 @@ function reportChangedWebDuplication(changedFiles, options = {}) {
     );
     if (groups.length > 0) {
       write(
-        '[web:duplication] Manual review required: identical syntax is not semantic interchangeability.'
+        '[web:duplication] Validation blocked: resolve exact duplicates without conflating unrelated responsibilities.'
       );
       for (const group of groups) {
         write(
@@ -79,6 +79,7 @@ function reportChangedWebDuplication(changedFiles, options = {}) {
             .join('\n')
         );
       }
+      return 1;
     }
     return 0;
   } catch (error) {

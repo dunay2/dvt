@@ -154,7 +154,7 @@ async function main() {
   const duplicationStatus = reportChangedWebDuplication(changed);
   if (duplicationStatus !== 0) return duplicationStatus;
 
-  console.log('Changed-file checks passed; any duplicate candidates above require review.');
+  console.log('Changed-file checks passed.');
   return 0;
 }
 

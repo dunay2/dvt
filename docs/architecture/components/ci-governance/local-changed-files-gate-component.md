@@ -188,7 +188,7 @@ public exports and effectful calls remain admitted. This is declaration-level
 evidence, not proof that every exported module is reachable at runtime. Dynamic
 registries and side-effect-only imports require dependency and behavior review.
 
-The static gate separately reports exact-body duplication candidates for changed
+The static gate separately rejects exact-body duplication candidates for changed
 production web files. It reuses the code-symbol inventory over current Git contents,
 including untracked files supplied by `ListLocalChangedFiles`, without refreshing
 Planning DB. Compiler tokens and their syntax-kind nesting preserve literal contents
@@ -196,10 +196,11 @@ and statement boundaries while ignoring formatting and comments. Only bodies wit
 two or more statements and counterparts in another
 production file are reported; test/support files and trivial wrappers are excluded.
 
-Each reported group identifies all counterpart locations and requires review.
-Identical syntax does not prove semantic interchangeability, so this diagnostic
-does not automatically reject or refactor a candidate. Source acquisition failures
-do reject validation. A successful scan is not a repository-wide duplicate-free or
+Each reported group identifies all counterpart locations. Any group rejects the
+static gate with a nonzero exit status; there is no warning-only mode or allowlist.
+Identical syntax does not prove semantic interchangeability, so rejection does not
+authorize automatic refactoring across unrelated responsibilities. Source acquisition
+and syntax failures also reject validation. A successful scan is not a repository-wide duplicate-free or
 dead-code-free assertion. Styles and unused declarations retain their independent
 blocking checks. The focused duplicate-report and symbol-inventory tests are routed
 by the existing local-verification plan.

@@ -22,7 +22,7 @@ function report(changed, files, overrides = {}) {
   return { status, output: output.join('\n'), errors };
 }
 
-test('reports changed duplicate bodies with unchanged counterpart locations', () => {
+test('rejects changed duplicate bodies with unchanged counterpart locations', () => {
   const result = report(
     [first],
     [
@@ -30,8 +30,8 @@ test('reports changed duplicate bodies with unchanged counterpart locations', ()
       { path: second, content: body },
     ]
   );
-  assert.equal(result.status, 0);
-  assert.match(result.output, /manual review/i);
+  assert.equal(result.status, 1);
+  assert.match(result.output, /validation blocked/i);
   assert.match(result.output, /first\.ts:1/);
   assert.match(result.output, /second\.ts:1/);
 });
@@ -44,6 +44,7 @@ test('includes an untracked changed file from the same caller inventory', () => 
       return body;
     },
   });
+  assert.equal(result.status, 1);
   assert.match(result.output, /second\.ts:1/);
 });
 
@@ -52,18 +53,18 @@ test('does not report unchanged groups, test support or trivial forwarding wrapp
     { path: first, content: body },
     { path: second, content: body },
   ];
-  assert.doesNotMatch(report(['apps/web/src/app/third.ts'], files).output, /manual review/i);
-  assert.doesNotMatch(
+  assert.equal(report(['apps/web/src/app/third.ts'], files).status, 0);
+  assert.equal(
     report([first], [files[0], { path: 'apps/web/src/app/second.test.support.ts', content: body }])
-      .output,
-    /manual review/i
+      .status,
+    0
   );
-  assert.doesNotMatch(
+  assert.equal(
     report(
       [first],
       files.map((file) => ({ ...file, content: 'function forward(value) { return value; }' }))
-    ).output,
-    /manual review/i
+    ).status,
+    0
   );
 });
 
@@ -75,7 +76,7 @@ test('does not label distinct literal contents as exact duplicates', () => {
       { path: second, content: body.replace('en', 'en us') },
     ]
   );
-  assert.doesNotMatch(result.output, /manual review/i);
+  assert.equal(result.status, 0);
 });
 
 test('fails closed when current inventory cannot be read', () => {
