@@ -23,8 +23,6 @@ later active document explicitly promotes one of them.
 
 ## Documents
 
-- [DVT Dependency Risk Map](./dvt-dependency-risk-map.md)
-- [DVT System Map - God Diagram](./dvt-system-map-god-diagram.md)
 - [DVT Execution Model](./dvt-execution-model.md)
 
 ## Consolidated References

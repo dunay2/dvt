@@ -31,7 +31,7 @@ runtime hardening.
 ## Relevant Reviews And Closeouts
 
 - [20260322 DDD and Hexagonal Port Audit](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/architecture-and-governance/20260322-ddd-hexagonal-port-audit-review.md)
-- [AR-C10 protected runtime rail closure closeout 2026-05-05](../closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
+- [AR-C10 protected runtime rail closure closeout 2026-05-05](https://github.com/dunay2/dvt/blob/ae7e3b4c23e782f8beb6c666bdbfc75b99287eca/docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
 
 ## Runtime Review Canon
 
@@ -46,8 +46,6 @@ invariants, transitions, consumers, and semantic fitness-function expectations:
 
 ## Diagram Sources
 
-- [DVT System Map God Diagram](../execution-model/dvt-system-map-god-diagram.md)
-- [DVT Dependency Risk Map](../execution-model/dvt-dependency-risk-map.md)
 - [Planning Domain Map](../roadmap/diagrams/planning-domain-map.md)
 - [Gap Execution Dependency Graph](../roadmap/diagrams/gap-execution-dependency-graph.md)
 - [Execution Dependency Gates](../roadmap/diagrams/execution-dependency-gates.md)

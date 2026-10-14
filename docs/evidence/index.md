@@ -55,7 +55,6 @@ Evidence documents that justify or validate relevant changes.
 - [Single operational workload V1 hard cut](ED-20261004-single-operational-workload-v1.md)
 - [SortRel and FetchRel end to end](ED-20260920-sort-fetch-end-to-end.md)
 - [Source LIVE preview](ED-20261003-source-live-preview.md)
-- [Start Authority Read Boundaries And Concern Isolation](ed-20260930-start-authority-read-boundaries.md)
 - [Substrait variadic invocation and COALESCE admission](ED-20260911-substrait-coalesce-variadic-admission.md)
 - [Summary](ED-20260417-mw-d1-external-compile-boundary-arc2.md)
 - [Summary](ED-20260419-plan-compile-language-alignment-arc2.md)
