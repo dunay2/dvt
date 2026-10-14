@@ -2032,7 +2032,7 @@ mitigation:
   - Apply removes the former complete document when the selected output is incomplete.
   - Canonical disconnection rejects failed, stale, disposed, and read-only analysis before mutation.
   - Unit, contract, and real-browser evidence is recorded in
-    ED-20261003-canonical-relation-edge-disconnection.
+    https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20261003-canonical-relation-edge-disconnection.md.
 ---
 ```
 
@@ -2065,7 +2065,7 @@ mitigation:
   - Legacy copied expressions are never guessed into new dependencies.
   - Readers and writers deploy together as a development hard cut, without migration or V2.
   - Mutation, roundtrip, composition, browser and validation evidence is recorded in
-    ED-20261005-transform-alias-dependencies.
+    https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20261005-transform-alias-dependencies.md.
 ---
 ```
 
