@@ -16,7 +16,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
 import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
-import { makeRunContext, nb } from '../../testing/contractTestUtils';
+import { makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createCanvasExecutionSelectionIntent,

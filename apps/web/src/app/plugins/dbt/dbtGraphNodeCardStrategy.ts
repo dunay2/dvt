@@ -14,7 +14,6 @@ import {
   arrayCount,
   buildGraphNodeSourceIdentity,
   metadataOf,
-  numericValue,
   pushMetric,
   pushRuntimeMetrics,
   resolveNodeCardAccentTone,
@@ -69,11 +68,6 @@ function buildDbtTitleDetail(node: CanonicalNode): string | null {
 
 function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
-  const dbt = metadata.dbt;
-  const dbtRecord =
-    typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt)
-      ? (dbt as Record<string, unknown>)
-      : {};
   const relationPath = resolveGraphNodeRelationPath(metadata, data);
   const metrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);

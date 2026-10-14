@@ -7,6 +7,8 @@
  */
 import { expect } from 'vitest';
 
+import { inspectEmbeddedComponentStyles } from './embeddedComponentStyles.test.support';
+
 export function assertComponentStyleOwnership({
   componentSource,
   stylesheetSource,
@@ -18,7 +20,9 @@ export function assertComponentStyleOwnership({
 }>): void {
   expect(componentSource).toContain(`import styles from '${stylesheetImport}'`);
   expect(componentSource).not.toMatch(/from ['"][^'"]*chrome['"]/u);
-  expect(componentSource).not.toMatch(/\bclassName\s*=\s*['"]|\bstyle\s*=/u);
+  expect(inspectEmbeddedComponentStyles(componentSource), 'embedded component appearance').toEqual(
+    []
+  );
   const usedKeys = new Set(
     [...componentSource.matchAll(/\bstyles\.([A-Za-z_]\w*)/gu)].map((match) => match[1]!)
   );

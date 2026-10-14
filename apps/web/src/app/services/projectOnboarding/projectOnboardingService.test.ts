@@ -44,7 +44,8 @@ describe('createProjectOnboardingService', () => {
       },
     };
     const { apiClient, postJson } = createApiClientHarness({
-      postJson: async <TRequest, TResponse>() => response as TResponse,
+      postJson: async <TRequest, TResponse>(endpoint: string, payload: TRequest) =>
+        response as TResponse,
     });
 
     const service = createProjectOnboardingService(apiClient, {
@@ -89,7 +90,8 @@ describe('createProjectOnboardingService', () => {
       },
     };
     const { apiClient, postJson } = createApiClientHarness({
-      postJson: async <TRequest, TResponse>() => response as TResponse,
+      postJson: async <TRequest, TResponse>(endpoint: string, payload: TRequest) =>
+        response as TResponse,
     });
 
     await createProjectOnboardingService(apiClient).createProject({

@@ -89,8 +89,10 @@ describe('dbtYamlDescriptionEdit API port', () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
     const responses = [PROPOSAL, APPLIED, REVERTED];
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      responses.shift() as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => responses.shift() as TResponse;
     const { apiClient, postJson } = createApiClientHarness({ postJson: postJsonImpl });
     const port = createApiDbtYamlDescriptionEditPort(apiClient);
 
@@ -117,8 +119,10 @@ describe('dbtYamlDescriptionEdit API port', () => {
   });
 
   it('rejects malformed response data at the browser boundary', async () => {
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      ({ schemaVersion: 'wrong' }) as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => ({ schemaVersion: 'wrong' }) as TResponse;
     const { apiClient } = createApiClientHarness({ postJson: postJsonImpl });
     const port = createApiDbtYamlDescriptionEditPort(apiClient);
 

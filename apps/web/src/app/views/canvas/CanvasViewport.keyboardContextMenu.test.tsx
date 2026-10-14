@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent, waitFor } from '@testing-library/dom';
-import React, { act } from 'react';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));

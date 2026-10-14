@@ -14,7 +14,6 @@ import {
 } from './runs/RunStates';
 import { useExecutionStore } from '../stores/executionStore';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
-import { useRunsService } from '../services/AppServicesContext';
 import type { ExecutionStep, NodeStatus, Run } from '../types/dbt';
 import type { PlanViewModel } from '../types/plans';
 import { useRunWorkspace } from './runs/useRunWorkspace';
@@ -141,7 +140,6 @@ function toFocusedRunModel(
 export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchSurfaceProps) {
   const { runId } = useParams();
   const navigate = useNavigate();
-  const runsService = useRunsService();
   const runControls = useRunControlCommands({
     onRecoveryAccepted: (recoveryRunId) => {
       void navigate(`/runs/${recoveryRunId}`);

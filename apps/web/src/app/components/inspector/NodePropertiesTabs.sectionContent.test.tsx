@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';

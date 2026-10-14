@@ -64,7 +64,11 @@ test('buildFocusedChangedTestPlan retains the ordinary-workflow publication guar
 test('buildFocusedChangedTestPlan validates changes to the changed-file lint gate once', () => {
   const labels = focusedLabelsFor(['scripts/check-changed.cjs', 'scripts/check-changed.test.cjs']);
 
-  assert.deepEqual(labels, ['node --test scripts/check-changed.test.cjs']);
+  assert.deepEqual(labels, [
+    'node --test scripts/web-code-duplication.test.cjs',
+    'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
+    'node --test scripts/check-changed.test.cjs',
+  ]);
 });
 
 test('runtime runner source and test changes select their isolated contract exactly once', () => {
@@ -427,6 +431,8 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'pnpm docs:feature-mechanization:implementation',
     'node scripts/check-changed.cjs',
     'pnpm test:web:changed',
+    'node --test scripts/web-code-duplication.test.cjs',
+    'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
@@ -437,6 +443,8 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
   assert.equal(new Set(plan.map((step) => step.id)).size, plan.length);
   assert.deepEqual(plan.filter((step) => step.kind === 'test').map(commandLabel), [
     'pnpm test:web:changed',
+    'node --test scripts/web-code-duplication.test.cjs',
+    'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',

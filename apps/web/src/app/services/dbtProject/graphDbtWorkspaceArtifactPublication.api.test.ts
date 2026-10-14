@@ -68,8 +68,10 @@ describe('graph DBT workspace artifact publication API port', () => {
   it('publishes through the single scoped protected endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      RESULT as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => RESULT as TResponse;
     const { apiClient, postJson } = createApiClientHarness({ postJson: postJsonImpl });
     const port = createApiGraphDbtWorkspaceArtifactPublicationCommandPort(apiClient);
 
@@ -81,8 +83,10 @@ describe('graph DBT workspace artifact publication API port', () => {
   });
 
   it('rejects malformed result data at the browser boundary', async () => {
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      ({ kind: 'applied' }) as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => ({ kind: 'applied' }) as TResponse;
     const { apiClient } = createApiClientHarness({ postJson: postJsonImpl });
     const port = createApiGraphDbtWorkspaceArtifactPublicationCommandPort(apiClient);
 

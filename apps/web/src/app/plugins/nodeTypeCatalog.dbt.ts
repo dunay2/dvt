@@ -1,6 +1,6 @@
 import { Cpu, FileText, Package, Presentation, TestTube, TrendingUp } from 'lucide-react';
 
-import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { PluginNodeKind } from '../types/canonical';
 import type { DbtNodeType } from '../types/dbt';
 
 import { resolveGraphNodeKindTone } from './graph/graphVisualTokens';

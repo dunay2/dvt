@@ -453,6 +453,36 @@ function buildFocusedChangedTestPlan(files) {
   const changedFiles = normalizeChangedFiles(files);
   const plan = [];
   if (
+    changedFiles.some((file) =>
+      [
+        'scripts/web-code-duplication.cjs',
+        'scripts/web-code-duplication.test.cjs',
+        'scripts/check-changed.cjs',
+        'scripts/planning-db/code-symbol-inventory.cjs',
+        'scripts/planning-db/code-symbol-inventory.test.cjs',
+      ].includes(file)
+    )
+  ) {
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-web-code-duplication',
+        'node',
+        '--test',
+        'scripts/web-code-duplication.test.cjs'
+      )
+    );
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-code-symbol-inventory',
+        'node',
+        '--test',
+        'scripts/planning-db/code-symbol-inventory.test.cjs'
+      )
+    );
+  }
+  if (
     changedFiles.includes('scripts/check-changed.cjs') ||
     changedFiles.includes('scripts/check-changed.test.cjs')
   ) {

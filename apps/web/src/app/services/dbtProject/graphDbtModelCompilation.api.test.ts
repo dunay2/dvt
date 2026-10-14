@@ -49,8 +49,10 @@ describe('Graph DBT model compilation API port', () => {
   it('queries the single scoped protected endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      RESULT as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => RESULT as TResponse;
     const { apiClient, postJson } = createApiClientHarness({ postJson: postJsonImpl });
     const port = createApiGraphDbtModelCompilationQueryPort(apiClient);
 
@@ -62,8 +64,10 @@ describe('Graph DBT model compilation API port', () => {
   });
 
   it('rejects malformed result data at the browser boundary', async () => {
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      ({ kind: 'compiled' }) as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => ({ kind: 'compiled' }) as TResponse;
     const { apiClient } = createApiClientHarness({ postJson: postJsonImpl });
     const port = createApiGraphDbtModelCompilationQueryPort(apiClient);
 

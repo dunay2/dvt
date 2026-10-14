@@ -1,14 +1,9 @@
-import { useEffect, type Dispatch, type SetStateAction } from 'react';
+import { useEffect } from 'react';
 
-import type { CanvasDraftSession } from './canvasDraftSession';
-import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import {
   runCanvasDraftAutosaveEffect,
   type CanvasDraftAutosaveSchedulingArgs,
 } from './canvasDraftAutosaveScheduling';
-
-type SetDraftSession = Dispatch<SetStateAction<CanvasDraftSession>>;
-type SetDraftSaveStatus = Dispatch<SetStateAction<DraftSaveStatus>>;
 
 export function useCanvasDraftAutosave({
   draftRepository,

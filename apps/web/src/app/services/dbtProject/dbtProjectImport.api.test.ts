@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createApiDbtProjectImportPort } from './dbtProjectImport.api';
 import type { ApiClient } from '../api/createApiClient';
-import { createApiClientHarness, jsonResponse } from '../workspace/workspaceApiClient.test.harness';
+import { createApiClientHarness } from '../workspace/workspaceApiClient.test.harness';
 import {
   buildWorkspaceScope,
   installWorkspaceScopeHarness,
@@ -100,8 +100,10 @@ describe('dbtProjectImport API port', () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
     const responses = [VALIDATION_REPORT, IMPORT_RESULT];
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      responses.shift() as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => responses.shift() as TResponse;
     const { apiClient, postJson } = createApiClientHarness({
       postJson: postJsonImpl,
     });
@@ -126,8 +128,10 @@ describe('dbtProjectImport API port', () => {
   });
 
   it('rejects malformed validation and import responses at the browser boundary', async () => {
-    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>() =>
-      ({ success: true }) as TResponse;
+    const postJsonImpl: ApiClient['postJson'] = async <TRequest, TResponse>(
+      endpoint: string,
+      payload: TRequest
+    ) => ({ success: true }) as TResponse;
     const { apiClient } = createApiClientHarness({
       postJson: postJsonImpl,
     });

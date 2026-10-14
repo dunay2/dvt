@@ -116,7 +116,6 @@ export function useCanvasExecutionActions({
     applicationLanguage,
   });
   const {
-    transformationValidation,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
     executableGraphFailureMessage,

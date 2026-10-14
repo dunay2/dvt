@@ -187,67 +187,6 @@ test('tracked document path reader ignores files deleted in the worktree', () =>
   ]);
 });
 
-test('code symbol snapshot extracts owned functions and exact body duplicate hashes', () => {
-  const duplicateBody = [
-    '  if (value === undefined || value === null || value === "") {',
-    '    return fallback;',
-    '  }',
-    '  const parsed = Number(value);',
-    '  if (!Number.isInteger(parsed) || parsed <= 0) {',
-    '    throw new Error(`Invalid limit ${value}`);',
-    '  }',
-    '  return parsed;',
-  ].join('\n');
-  const sourceFiles = [
-    {
-      path: 'scripts/one.cjs',
-      content: `function parseLimit(value, fallback) {\n${duplicateBody}\n}\n`,
-    },
-    {
-      path: 'scripts/two.cjs',
-      content: `const readLimit = (value, fallback) => {\n${duplicateBody}\n};\n`,
-    },
-  ];
-
-  const snapshot = buildCodeSymbolSnapshot({
-    sourceFiles,
-    governanceSnapshot: {
-      files: [
-        {
-          path: 'scripts/one.cjs',
-          componentUnit: 'SYS-CI-TOOLS-PLANNING-DB',
-          owningUnit: 'SYS-CI-TOOLS-PLANNING-DB',
-          rootUnit: 'SYS-CI-GOVERNANCE-ROOT',
-          domainUnit: 'SYS-CI-TOOLS',
-        },
-        {
-          path: 'scripts/two.cjs',
-          componentUnit: 'SYS-CI-TOOLS-PLANNING-DB',
-          owningUnit: 'SYS-CI-TOOLS-PLANNING-DB',
-          rootUnit: 'SYS-CI-GOVERNANCE-ROOT',
-          domainUnit: 'SYS-CI-TOOLS',
-        },
-      ],
-    },
-  });
-
-  assert.equal(snapshot.symbols.length, 2);
-  assert.deepEqual(
-    snapshot.symbols.map((symbol) => [
-      symbol.symbolName,
-      symbol.symbolKind,
-      symbol.filePath,
-      symbol.componentId,
-      symbol.normalizedBodyLength > 100,
-    ]),
-    [
-      ['parseLimit', 'function', 'scripts/one.cjs', 'SYS-CI-TOOLS-PLANNING-DB', true],
-      ['readLimit', 'arrow_function', 'scripts/two.cjs', 'SYS-CI-TOOLS-PLANNING-DB', true],
-    ]
-  );
-  assert.equal(snapshot.symbols[0].bodySha256, snapshot.symbols[1].bodySha256);
-});
-
 const governanceFileSnapshotFixture = (() => {
   let snapshot;
   let generatedInputs;
