@@ -36,7 +36,7 @@ truthful in the browser:
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
-- `docs/architecture/components/web/graph/canvas-draft-session-component.md`
+- `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md`
 
@@ -120,7 +120,7 @@ noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
 componentGuides:
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
-  - docs/architecture/components/web/graph/canvas-draft-session-component.md
+  - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
 userStories:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-2-autosave-e2e-proof-plan-20260508.md
 governingSources:

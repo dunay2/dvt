@@ -28,5 +28,8 @@ mitigation: >
   existing component guide, verify exact source-to-section correspondence, and retain behavioral
   assertions. Check fragments as well as paths; do not let a broader guide hide a missing scenario.
   Planning DB document relationships remain pending in issue 3643; integration does not close this
-  risk or imply that unavailable DB validation passed.
+  risk or imply that unavailable DB validation passed. The manuals/visual-receipt cut must preserve
+  inherited section anchors and exact historical execution commands. Colocated guidance must not
+  imply that separate components share runtime ownership or that a Draft/target-state section is
+  deployed behavior.
 ---

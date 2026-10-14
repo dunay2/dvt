@@ -27,7 +27,7 @@ product semantics.
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
 - `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
-- `docs/architecture/components/web/appshell/canvas-workbench-screen-composition-component.md`
+- `docs/architecture/components/web/graph/canvas-shell-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 
 ## Bounded Context

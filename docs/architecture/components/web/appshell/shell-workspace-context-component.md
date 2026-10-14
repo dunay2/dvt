@@ -15,15 +15,15 @@ tenant, project, environment, deployment adapter, and draft-scope posture
 without allowing the main screen to change workspace ownership.
 
 It is a shell-owned Presentation Model boundary. It projects existing session
-scope into read-only identity labels and read-only context details. Project
-changes belong to a separate governed project-selection screen, not to the App
-Shell top bar or Canvas workbench.
+scope into read-only identity labels and read-only context details. The on-demand
+menu also delegates selection of a complete server-granted scope through the existing
+`SelectWorkspaceScope` rail. Display and command authority remain separate.
 
 ## Owned Concern
 
 The component owns shell presentation of workspace scope.
 
-It does not own tenant switching, project selection, environment switching,
+It does not define tenant, project or environment selection semantics,
 authorization, grants, project persistence, protected draft authority, Canvas
 graph state, Git operations, or route-local workbench commands.
 
@@ -35,7 +35,7 @@ graph state, Git operations, or route-local workbench commands.
 | `ProjectIdentityBadgeInput`      | query input         | `GetEffectiveWorkspaceContext` | Supplies session ids and bootstrap option labels                                             |
 | `buildProjectIdentityBadge`      | projection function | `GetEffectiveWorkspaceContext` | Resolves labels and preserves raw ids when labels are unavailable                            |
 | `ShellProjectIdentityBadge`      | passive view        | `GetEffectiveWorkspaceContext` | Renders breadcrumb-style identity labels with no mutation affordance                         |
-| `ShellWorkspaceContextMenu`      | details UI          | shell context display          | Opens read-only workspace context details                                                    |
+| `ShellWorkspaceContextMenu`      | details UI          | shell context display          | Opens read-only details and the existing granted-scope selector                              |
 | `ShellWorkspaceContextDetails`   | passive view        | shell context display          | Displays tenant, project, environment, and deployment adapter without mutation controls      |
 | `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof         | Guards ownership, docs, invariants, and read-only posture                                    |
 
@@ -49,9 +49,8 @@ The browser posture proof is the Canvas-first shell composition check.
   comboboxes;
 - `ShellWorkspaceContextMenu` does not render tenant, project, or environment
   comboboxes;
-- tenant, project, environment, and deployment adapter scope are read-only
-  inside an active project context;
-- project changes belong to a separate governed project-selection screen;
+- tenant, project, environment, and deployment adapter labels are read-only;
+- scope changes use `SelectWorkspaceScope` with a complete server-granted identity;
 - `ProjectIdentityBadge` may display fallback ids, but must not fabricate
   unavailable labels or grants;
 - the component must not introduce new auth, RBAC, tenant-admin, Git, save,
@@ -130,11 +129,9 @@ checks more than import shape. It validates:
 
 - each module declares its owned concern;
 - the top bar composes the read model, badge, and context details;
-- no shell workspace context module imports selector primitives;
-- no shell workspace context module dispatches tenant, project, or environment
-  mutation commands;
-- tenant, project, and environment scope stay read-only inside an active
-  project context;
+- badge and details components remain passive; the menu composes the existing scope selector;
+- no direct tenant/project/environment setters bypass `SelectWorkspaceScope`;
+- available scopes and accepted selection remain server-granted;
 - local component docs, user stories, and mailbox analysis exist;
 - API, invariants, transitions, consumers, and diagrams stay documented.
 
@@ -211,42 +208,41 @@ Acceptance:
 #### US-SWC-3: Keep Tenant Read-Only
 
 As an operator inside an active project, I want tenant context to be read-only
-so I cannot cross a tenant boundary from the main workbench.
+so displaying context cannot create or expand tenant grants.
 
 Acceptance:
 
 - given the Context menu is opened;
 - when tenant context is shown;
 - then it is rendered as read-only content;
-- and no `setTenantId`, tenant selector, or tenant command mirror exists in
-  the shell workspace context component.
+- and no direct `setTenantId` or tenant command mirror exists; selection delegates
+  complete granted scopes to `SelectWorkspaceScope`.
 
 #### US-SWC-4: Keep Project Read-Only
 
 As an operator inside the main workbench, I want project context to be read-only
-because changing project belongs to a separate governed project-selection
-screen.
+while explicit project changes use the existing granted-scope command.
 
 Acceptance:
 
 - given the Context menu is opened;
 - when project context is shown;
 - then it is rendered as read-only content;
-- and no `setProjectId`, project selector, or project command mirror exists in
-  the shell workspace context component.
+- and no direct `setProjectId` or project command mirror exists; selection delegates
+  complete granted scopes to `SelectWorkspaceScope`.
 
 #### US-SWC-5: Keep Environment Read-Only
 
 As an operator inside the main workbench, I want environment context to be
-read-only so runtime context is not changed from ambient shell chrome.
+read-only so ambient shell chrome cannot construct unvalidated runtime context.
 
 Acceptance:
 
 - given the Context menu is opened;
 - when environment context is shown;
 - then it is rendered as read-only content;
-- and no `setEnvironmentId`, environment selector, or environment command
-  mirror exists in the shell workspace context component.
+- and no direct `setEnvironmentId` or environment command mirror exists; selection
+  delegates complete granted scopes to `SelectWorkspaceScope`.
 
 #### US-SWC-6: Handle Missing Granted Labels Honestly
 

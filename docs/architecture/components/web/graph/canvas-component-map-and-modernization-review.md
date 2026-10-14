@@ -20,25 +20,25 @@ It focuses on:
 - modernization decisions about what to keep, what to change, and what to avoid
 
 For aggregate internals, use
-[Canvas Draft Session Component](./canvas-draft-session-component.md). For
+[Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component). For
 graph mutation semantics, use
-[Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md). For
+[Canvas Graph Lifecycle Component](canvas-authoring-runtime-component.md#section-canvas-graph-lifecycle-component). For
 route-visible posture, use
-[Canvas Route Presentation Component](./canvas-route-presentation-component.md).
+[Canvas Route Presentation Component](graph-frontend-architecture.md#section-canvas-route-presentation-component).
 For route composition and route-owned shell or modal adaptation, use
-[Canvas Route Composition Component](./canvas-route-composition-component.md).
+[Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component).
 For the shell contract and local chrome composition, use
 [Canvas Shell Component](./canvas-shell-component.md). For controller-local
 layering, use
 [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md).
 For the host layer above the route, use
-[Canvas Playground Host Component](./canvas-playground-host-component.md).
+[Canvas Playground Host Component](canvas-startup-and-draft-recovery-component.md#section-canvas-playground-host-component).
 For authoring-runtime contract and command-side runtime composition, use
 [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md).
 For route-owned Inspector editing, use
 [Canvas Inspector Authoring Component](./canvas-inspector-authoring-component.md).
 For protected-draft semantic projection and viewport-boundary detail, use
-[Canvas Authoring Projection Component](./canvas-authoring-projection-component.md).
+[Canvas Authoring Projection Component](canvas-authoring-runtime-component.md#section-canvas-authoring-projection-component).
 
 ## Governing Sources
 
@@ -46,36 +46,36 @@ For protected-draft semantic projection and viewport-boundary detail, use
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
 - [Canvas Inspector Authoring Component](./canvas-inspector-authoring-component.md)
-- [Canvas Draft Session Component](./canvas-draft-session-component.md)
-- [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
-- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
-- [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
-- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component)
+- [Canvas Handler Contracts Component](canvas-authoring-runtime-component.md#section-canvas-handler-contracts-component)
+- [Canvas Graph Lifecycle Component](canvas-authoring-runtime-component.md#section-canvas-graph-lifecycle-component)
+- [Canvas Route Presentation Component](graph-frontend-architecture.md#section-canvas-route-presentation-component)
+- [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
 - [Canvas Shell Component](./canvas-shell-component.md)
-- [Canvas Playground Host Component](./canvas-playground-host-component.md)
-- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-- [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
-- [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
+- [Canvas Playground Host Component](canvas-startup-and-draft-recovery-component.md#section-canvas-playground-host-component)
+- [Canvas Authoring Projection Component](canvas-authoring-runtime-component.md#section-canvas-authoring-projection-component)
+- [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
+- [Graph Sequences And State Machines](graph-frontend-architecture.md#section-graph-sequences-and-state-machines)
 
 Reading rule:
 
 - use this page for route composition and component ownership
 - use `canvas-controller-current-to-target-architecture.md` for seam layering
   inside the controller chain
-- use `canvas-route-composition-component.md` for the local route UI component
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for the local route UI component
   contract
-- use `canvas-authoring-projection-component.md` for protected-draft semantic
+- use `docs/architecture/components/web/graph/canvas-authoring-runtime-component.md` for protected-draft semantic
   projection and viewport-boundary detail
-- use `canvas-handler-contracts-component.md` for adapter-composition
+- use `docs/architecture/components/web/graph/canvas-authoring-runtime-component.md` for adapter-composition
   vocabulary and namespaced builder APIs
-- use `canvas-route-presentation-component.md` for route-visible posture,
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for route-visible posture,
   toolbar, banner, center-surface, and bootstrap alignment
-- use `canvas-route-composition-component.md` for route composition,
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for route composition,
   route-owned shell or modal adaptation, and semantic route fitness functions
 - use `canvas-shell-component.md` for grouped `CanvasShell` API ownership,
   local chrome composition, and shell contract invariants
-- use `graph-route-bootstrap-architecture.md` for shell contract rules
-- use `canvas-draft-session-component.md` for aggregate semantics and state
+- use `docs/architecture/components/web/graph/graph-frontend-architecture.md` for shell contract rules
+- use `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md` for aggregate semantics and state
   transitions
 
 ## Canvas In The Workbench
@@ -357,11 +357,11 @@ Canonical startup rule for this slice:
 ## Related Pages
 
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
-- [Canvas Draft Session Component](./canvas-draft-session-component.md)
-- [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
-- [Canvas Route Composition Component](./canvas-route-composition-component.md)
-- [Canvas Route Presentation Component](./canvas-route-presentation-component.md)
+- [Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component)
+- [Canvas Handler Contracts Component](canvas-authoring-runtime-component.md#section-canvas-handler-contracts-component)
+- [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
+- [Canvas Route Presentation Component](graph-frontend-architecture.md#section-canvas-route-presentation-component)
 - [Canvas Shell Component](./canvas-shell-component.md)
-- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-- [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
-- [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
+- [Canvas Authoring Projection Component](canvas-authoring-runtime-component.md#section-canvas-authoring-projection-component)
+- [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
+- [Graph Sequences And State Machines](graph-frontend-architecture.md#section-graph-sequences-and-state-machines)

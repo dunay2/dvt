@@ -20,7 +20,7 @@ aggregate and the existing `SaveWorkspaceGraphDraft` command rail.
 
 - [Canvas Workbench Command And Query Catalog](./canvas-workbench-command-query-catalog.md)
 - [Canvas Authoring Draft Boundary Component](./canvas-authoring-draft-boundary-component.md)
-- [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component)
 - [Canvas Project Snapshot User Stories](canvas-project-snapshot-component.md#section-canvas-project-snapshot-user-stories)
 - [Stage 3 Project Snapshot Roundtrip Plan](../../../planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md)
 - [Fowler mailbox analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md)

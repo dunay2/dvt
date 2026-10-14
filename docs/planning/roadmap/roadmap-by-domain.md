@@ -87,7 +87,7 @@ flowchart LR
   [Read subsystem](../../architecture/system/subsystems/read/index.md),
   [Frontend subsystem architecture](../../architecture/components/web/index.md),
   [UI / Visualization Domain](../../architecture/domain-ui.md),
-  [Documentation and UX implementation guide](../../architecture/components/web/ux-implementation-guide.md)
+  [Documentation and UX implementation guide](../../architecture/components/web/style-guide.md#section-ux-implementation-guide)
   Near-term target: keep the canonical Substrait authoring and persisted Canvas
   semantic-revision path stable while current GitHub Issues own the remaining
   UI/frontend convergence, especially the one-Canvas/product-vocabulary hard

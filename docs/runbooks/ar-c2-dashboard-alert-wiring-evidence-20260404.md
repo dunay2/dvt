@@ -16,7 +16,7 @@ It is intentionally truth-first:
 
 Companion manuals:
 
-- [AR-C2 Observability User Manual](../guides/ar-c2-observability-user-manual-20260404.md)
+- [AR-C2 Observability User Manual](../guides/ar-c2-observability-technical-manual-20260404.md#section-ar-c2-observability-user-manual-20260404)
 - [AR-C2 Observability Technical Manual](../guides/ar-c2-observability-technical-manual-20260404.md)
 
 ## Governing sources

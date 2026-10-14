@@ -209,8 +209,8 @@ describe('ShellTopBar workspace context architecture', () => {
       'ShellWorkspaceContextMenu',
       'ShellWorkspaceContextDetails',
       'Workspace context is breadcrumb-style read-only content on the main screen',
-      'Tenant, project, environment, and deployment adapter scope are read-only inside an active project',
-      'Project changes belong to a separate governed project-selection',
+      'Tenant, project, environment, and deployment adapter labels are read-only',
+      'SelectWorkspaceScope',
       '```mermaid',
     ]) {
       expect(appShellGuide).toContain(requiredGuideSection);

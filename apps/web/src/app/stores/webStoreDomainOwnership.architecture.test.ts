@@ -59,7 +59,7 @@ describe('web store domain ownership architecture', () => {
     const componentGuidePath =
       'docs/architecture/components/web/web-store-domain-ownership-component.md';
     const localGuidePath =
-      'docs/architecture/components/web/web-store-domain-ownership-local-guide.md';
+      'docs/architecture/components/web/web-store-domain-ownership-component.md';
     const userStoriesPath =
       'docs/architecture/components/web/web-store-domain-ownership-component.md';
 
@@ -67,9 +67,15 @@ describe('web store domain ownership architecture', () => {
     expect(repoFileExists(userStoriesPath)).toBe(true);
     expect(repoFileExists('apps/web/src/app/stores/authorizationStore.ts')).toBe(true);
 
-    const componentGuide = readRepoFile(componentGuidePath);
-    const localGuide = readRepoFile(localGuidePath);
+    const wholeGuide = readRepoFile(componentGuidePath);
+    const localGuideAnchor = '<a id="section-web-store-domain-ownership-local-guide"></a>';
+    const sections = wholeGuide.split(localGuideAnchor);
+    expect(sections).toHaveLength(2);
+    const componentGuide = sections[0] ?? '';
+    const localGuide = sections[1] ?? '';
     const userStories = readRepoFile(userStoriesPath);
+    expect(componentGuide).not.toBe('');
+    expect(localGuide).not.toBe('');
 
     for (const componentSection of [
       '## Local Guide Boundary',

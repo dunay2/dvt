@@ -11,5 +11,5 @@ planning_type: architecture
 This directory owns frontend component guidance for public-data and explanatory
 open-data presentation surfaces.
 
-- [Marquez public-data visual system](./marquez-visual-system-component.md)
-- [Marquez public-data visual system user stories](marquez-visual-system-component.md#section-marquez-visual-system-user-stories)
+- [Marquez public-data visual system](../style-guide.md#section-marquez-visual-system-component)
+- [Marquez public-data visual system user stories](../style-guide.md#section-marquez-visual-system-user-stories)

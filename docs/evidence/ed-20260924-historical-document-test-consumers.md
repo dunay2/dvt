@@ -134,3 +134,25 @@ criterion. The correction explicitly keeps GitHub issue commands accepted and
 rejects database-owned delivery-task commands. A focused regression test covers
 both directions. Three adjacent imported delivery-queue sentences were also
 reconciled to ADR-0061; these corrections do not change architecture ownership.
+
+## 2026-10-14 — Manuals and orphan visual receipts
+
+The next #3643 cut colocates 60 manuals and component references in 28 existing
+owning guides and removes 40 unconsumed historical PNG receipts. The image
+removals are counted separately from text-document consolidation. They have no
+tracked filename or directory consumer and no direct open-issue reference.
+
+Inherited scenario anchors remain valid. Scope/ownership sections stay distinct;
+colocation does not combine runtime responsibilities. Existing Top App Bar prose
+is reconciled to server-granted scope and the persisted application-language
+preference. No runtime or authorization behavior changes. Historical executed
+command strings remain byte-for-byte as originally recorded; active reference
+paths and future evidence-generation inputs use the current owning guides.
+
+The PR records source-to-section mappings, content preservation, actual tests,
+and the continuing Planning DB/scope-validation obligations.
+
+The Web-store guard keeps its overview/detail separation checks against two
+explicit sections of the colocated guide. It asserts exactly one boundary and
+nonempty content on both sides before running all original positive/negative
+checks. This retains semantic separation without requiring two physical files.

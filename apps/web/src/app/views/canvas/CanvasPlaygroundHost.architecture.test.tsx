@@ -39,10 +39,10 @@ describe('CanvasPlaygroundHost architecture', () => {
 
   it('guards first-start selection as templates inside the active workspace', () => {
     const componentGuide = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-startup-template-selection-component.md'
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
     const hostGuide = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-playground-host-component.md'
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
@@ -65,7 +65,7 @@ describe('CanvasPlaygroundHost architecture', () => {
 
   it('keeps first-canvas availability separate from graph mutation availability', () => {
     const componentGuide = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-startup-template-selection-component.md'
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
     );
     const creationCapabilityGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-first-canvas-creation-capability-component.md'

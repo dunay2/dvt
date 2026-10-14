@@ -18,17 +18,17 @@ handoff without becoming the source of execution truth or shell truth.
 
 ## Governing Sources
 
-- [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
+- [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
 - [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 - [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
-- [Canvas Route Composition Component](./canvas-route-composition-component.md)
+- [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
 - [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
-- [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-- [Canvas Draft Session Component](./canvas-draft-session-component.md)
+- [Canvas Authoring Projection Component](canvas-authoring-runtime-component.md#section-canvas-authoring-projection-component)
+- [Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component)
 - [Canvas Startup And Draft Recovery Component](./canvas-startup-and-draft-recovery-component.md)
-- [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
-- [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-- [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
+- [Canvas Graph Lifecycle Component](canvas-authoring-runtime-component.md#section-canvas-graph-lifecycle-component)
+- [Graph Sequences And State Machines](graph-frontend-architecture.md#section-graph-sequences-and-state-machines)
+- [Frontend Fowler Implementation Pattern](../frontend-data-boundary-architecture.md#section-frontend-fowler-implementation-pattern)
 - [Frontend Data Boundary Architecture](../frontend-data-boundary-architecture.md)
 - [US-F10.1 contextual Process Map correction](https://github.com/dunay2/dvt/issues/2102)
 
@@ -669,17 +669,17 @@ where runtime behavior cannot observe ownership directly.
 
 Recommended reading order:
 
-1. [Graph Route Bootstrap Architecture](./graph-route-bootstrap-architecture.md)
+1. [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
 2. [Canvas Controller Current To Target Architecture](./canvas-controller-current-to-target-architecture.md)
 3. [Canvas Component Map And Modernization Review](./canvas-component-map-and-modernization-review.md)
-4. [Canvas Route Composition Component](./canvas-route-composition-component.md)
+4. [Canvas Route Composition Component](graph-frontend-architecture.md#section-canvas-route-composition-component)
 5. [Canvas Authoring Runtime Component](./canvas-authoring-runtime-component.md)
-6. [Canvas Authoring Projection Component](./canvas-authoring-projection-component.md)
-7. [Canvas Draft Session Component](./canvas-draft-session-component.md)
-8. [Canvas Graph Lifecycle Component](./canvas-graph-lifecycle-component.md)
-9. [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
-10. [Graph Canvas Runtime Model](./graph-canvas-runtime-model.md)
-11. [Graph Decision Rationale And Patterns](./graph-decision-rationale-and-patterns.md)
+6. [Canvas Authoring Projection Component](canvas-authoring-runtime-component.md#section-canvas-authoring-projection-component)
+7. [Canvas Draft Session Component](canvas-authoring-draft-boundary-component.md#section-canvas-draft-session-component)
+8. [Canvas Graph Lifecycle Component](canvas-authoring-runtime-component.md#section-canvas-graph-lifecycle-component)
+9. [Graph Sequences And State Machines](graph-frontend-architecture.md#section-graph-sequences-and-state-machines)
+10. [Graph Canvas Runtime Model](graph-frontend-architecture.md#section-graph-canvas-runtime-model)
+11. [Graph Decision Rationale And Patterns](graph-frontend-architecture.md#section-graph-decision-rationale-and-patterns)
 
 ## Evolution Direction
 
@@ -702,5 +702,784 @@ Long-term:
 
 - [Graph Architecture Docs](./index.md)
 - [web component](../index.md)
-- [UX Implementation Guide](../ux-implementation-guide.md)
+- [UX Implementation Guide](../style-guide.md#section-ux-implementation-guide)
 - [System Delivery Status](../../../../system-delivery-status.md)
+
+<a id="section-canvas-route-presentation-component"></a>
+
+## Canvas Route Presentation Component
+
+### Purpose
+
+Define the local component model for route-visible Canvas posture.
+
+This component owns the semantic projection that aligns:
+
+- shell-facing bootstrap publication
+- Canvas center-surface state
+- recovery banner visibility and content
+- toolbar workflow posture
+
+It exists to remove parallel route-state interpretation and to keep one
+canonical presentation truth for the Canvas route.
+
+### Governing sources
+
+- [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
+- [Canvas Component Map And Modernization Review](canvas-component-map-and-modernization-review.md)
+- [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)
+- [Graph Frontend Architecture](graph-frontend-architecture.md)
+
+### Reading rule
+
+Read the component in this order:
+
+1. `canvasDraftPresentationModel.ts`
+   canonical route posture and bootstrap projection
+2. `canvasRouteViewState.ts`
+   route-facing aggregation for visible Canvas posture
+3. `CanvasCenterSurface.tsx`
+   center-surface rendering over canonical posture
+4. `canvas-empty-authoring-entrypoint-component.md`
+   empty Canvas authoring command, governed catalog, and lifecycle invariants
+5. `CanvasRecoveryBanner.tsx`
+   recovery-banner rendering over canonical posture
+6. `canvasToolbarViewModel.ts`
+   toolbar workflow posture over canonical route truth
+7. `CanvasToolbarDraftStatus.tsx`
+8. `CanvasDraftSaveStatus.tsx`
+   draft-status rendering over route-approved affordances
+
+If a change does not fit one of those concerns, it probably belongs in the
+controller read model, the draft aggregate, or the route bootstrap stack
+instead.
+
+### Why this component exists
+
+The Canvas route already had a route presentation model, but the visible
+surfaces drifted in three ways before `TF-E2-F`:
+
+- `CanvasRecoveryBanner.tsx` read raw controller recovery reason directly
+- `CanvasCenterSurface.tsx` reinterpreted route posture locally
+- `canvasToolbarViewModel.ts` inferred recovery from `showReloadAction`, which
+  is an affordance flag rather than canonical route posture
+
+`TF-E2-F` closed that semantic drift by making route presentation one explicit
+local component with one authority model.
+
+### Public API
+
+The public component API is:
+
+- `deriveCanvasDraftPresentationState(...)`
+- `toRouteBootstrapPresentation(...)`
+- `deriveCanvasRouteViewState(...)`
+
+The public state vocabulary is:
+
+- `CanvasRouteState`
+- `CanvasDraftPresentationState`
+- `CanvasRouteViewState`
+
+Rendering adapters consume the component, but they do not own the semantic API.
+
+### File responsibilities
+
+<!-- markdownlint-disable MD060 -->
+
+| File                               | Owned concern                                                | Public to other modules |
+| ---------------------------------- | ------------------------------------------------------------ | ----------------------- |
+| `canvasDraftPresentationModel.ts`  | canonical route posture and bootstrap semantics              | yes                     |
+| `canvasRouteViewState.ts`          | route-facing aggregation over presentation and interaction   | yes                     |
+| `CanvasCenterSurface.tsx`          | center-surface rendering from canonical route posture        | consumer only           |
+| `canvasCenterSurfaceWorkbench.tsx` | workbench and empty-authoring rendering from route posture   | consumer only           |
+| `canvasCenterSurfaceTransport.tsx` | draft transport failure rendering before workbench states    | consumer only           |
+| `CanvasRecoveryBanner.tsx`         | recovery-banner rendering from canonical route posture       | consumer only           |
+| `canvasToolbarViewModel.ts`        | toolbar workflow-status projection from route posture        | consumer only           |
+| `CanvasToolbarDraftStatus.tsx`     | draft-status wrapper from route-approved affordance policy   | consumer only           |
+| `CanvasDraftSaveStatus.tsx`        | draft-status rendering from route-approved affordance policy | token consumer          |
+
+<!-- markdownlint-enable MD060 -->
+
+### Current topology after hard cut
+
+```mermaid
+flowchart LR
+  Controller["useCanvasController"] --> Route["canvasRouteViewState"]
+  Route --> Presentation["canvasDraftPresentationModel"]
+  Route --> Banner["CanvasRecoveryBanner"]
+  Route --> Center["CanvasCenterSurface"]
+  Route --> Toolbar["canvasToolbarViewModel"]
+  Presentation --> Bootstrap["toRouteBootstrapPresentation"]
+
+  Banner -. consumes route posture .- X1["no raw controller recovery reads"]
+  Center -. consumes bootstrap detail and routeState .- X2["no local parallel route taxonomy"]
+  Toolbar -. consumes routeState .- X3["reload affordance no longer defines recovery"]
+```
+
+### Transitions
+
+This component does not own persistence or graph mutation transitions.
+
+It owns visible route-presentation transitions only:
+
+```mermaid
+flowchart TD
+  BackendPending["loading_backend"] --> ShellPending["bootstrap pending"]
+  BackendBlocked["blocked_backend"] --> ShellComplete["bootstrap complete"]
+  GraphLoading["loading_graph"] --> Visible
+  GraphError["error_graph"] --> Visible
+  Recovery["recovery"] --> Visible
+  Empty["empty"] --> Visible
+  Ready["ready"] --> Visible
+
+  ShellPending --> Bootstrap["shell bootstrap publication"]
+  ShellComplete --> Bootstrap["shell bootstrap publication"]
+  Visible --> Banner["recovery banner"]
+  Visible --> Center["center surface"]
+  Visible --> Toolbar["toolbar workflow state"]
+  Visible --> Bootstrap["shell bootstrap publication"]
+```
+
+### Invariants
+
+- Route-visible posture is decided once per render cycle.
+- Banner, center surface, toolbar, and bootstrap publication must consume the
+  same canonical route posture.
+- `blocked_backend` disables unsafe Canvas interactions and publishes a
+  completable shell bootstrap posture. Revealing the route is allowed because
+  the first useful Canvas surface is the governed backend-blocked state, not an
+  editable workbench.
+- Affordances such as reload buttons are consequences of route posture, not
+  authorities that define it.
+- `CanvasRecoveryBanner.tsx` must not read raw controller recovery reason once
+  the component hard cut is complete.
+- `canvasToolbarViewModel.ts` must not infer recovery from
+  `draftToolbarState.showReloadAction`.
+- `CanvasCenterSurface.tsx` must not recreate a parallel route-state taxonomy.
+- Transport-error rendering may stay as a higher-priority rendering concern,
+  but it must still compose through the route-presentation component rather
+  than through controller-local branching.
+
+### Consumers
+
+- `Canvas.tsx`
+- `CanvasShell.tsx` through toolbar props and center-surface composition
+- `usePublishedRouteBootstrap.ts` through `toRouteBootstrapPresentation(...)`
+- `canvasDraftPresentationStore.ts`
+
+### Fitness functions
+
+The canonical fitness checks for this component are:
+
+- `canvasDraftPresentationModel.test.ts`
+- `canvasRouteViewState.architecture.test.ts`
+- `CanvasRecoveryBanner.architecture.test.tsx`
+- `CanvasCenterSurface.architecture.test.ts`
+- `CanvasToolbar.test.tsx`
+- `Canvas.routeStates.smoke.test.tsx`
+- `Canvas.routeStates.first-canvas-policy.test.tsx`
+- `Canvas.routeStates.host-cycle-persistence.test.tsx`
+- `Canvas.routeStates.backend-recovery-priority.test.tsx`
+- `Canvas.draftRecovery.test.tsx`
+
+### Drift to watch
+
+- if toolbar workflow posture starts using draft-affordance flags as semantic
+  authority, the hard cut has regressed
+- if banner or center-surface components read raw controller recovery state,
+  route presentation has leaked backwards into adapters
+- if route bootstrap detail is published from any source other than canonical
+  route presentation, shell startup drift has returned
+- if a future Cypress spec is added for route posture, it must exercise blocked,
+  recovery, and ready transitions rather than only the preview-run happy path
+
+> Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
+
+<a id="section-canvas-route-composition-component"></a>
+
+## Canvas Route Composition Component
+
+### Purpose
+
+Define the local component model for route-owned Canvas composition.
+
+This component owns:
+
+- controller-to-view adaptation at the route boundary
+- shell contract assembly
+- modal-host contract assembly
+- route-publication synchronization
+
+It does not own draft truth, graph mutation semantics, or route-visible
+presentation semantics themselves.
+
+### Governing Sources
+
+- [Graph Frontend Architecture](graph-frontend-architecture.md)
+- [Canvas Component Map And Modernization Review](canvas-component-map-and-modernization-review.md)
+- [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)
+- [Canvas Route Presentation Component](graph-frontend-architecture.md#section-canvas-route-presentation-component)
+- [Canvas Shell Component](canvas-shell-component.md)
+- [Graph Route Bootstrap Architecture](graph-frontend-architecture.md#section-graph-route-bootstrap-architecture)
+
+### Reading Rule
+
+Read the component in this order:
+
+1. `Canvas.tsx`
+   route composition and provider boundary
+2. `useCanvasRoutePresentationSync.ts`
+   route publication and draft-presentation synchronization
+3. `canvasShellBuilder.types.ts`
+   concern-scoped shell builder input vocabulary
+4. `canvasShellPropsBuilder.tsx`
+   route-owned orchestration into shell concern contracts
+5. `canvasModalHost.types.ts`
+   semantic modal-host contract
+6. `canvasModalHostPropsBuilder.ts`
+   route-owned modal adaptation seam
+7. `CanvasModalHost.tsx`
+   passive modal-host rendering over semantic props
+8. `Canvas.architecture.test.tsx`,
+   `CanvasModalHost.architecture.test.tsx`, and
+   `canvasShellPropsBuilder.architecture.test.ts`
+   semantic fitness functions for the route seam
+
+If code in this area starts owning aggregate semantics or widget-local
+heuristics, the component has regressed.
+
+### Public API
+
+The public route-composition API is:
+
+- `buildCanvasShellProps(...)`
+- `buildCanvasModalHostProps(...)`
+- `useCanvasRoutePresentationSync(...)`
+- `CanvasModalHost`
+- `CanvasModalHostProps`
+- `CanvasShellRouteComposerArgs`
+
+The route component itself remains `Canvas.tsx`.
+
+### File Responsibilities
+
+<!-- markdownlint-disable MD060 -->
+
+| File                                | Owned concern                                      | Public to other modules |
+| ----------------------------------- | -------------------------------------------------- | ----------------------- |
+| `Canvas.tsx`                        | route composition over the controller facade       | yes                     |
+| `useCanvasRoutePresentationSync.ts` | route publication and presentation synchronization | adjacent route seam     |
+| `canvasShellBuilder.types.ts`       | concern-scoped shell-builder input vocabulary      | local builder API       |
+| `canvasShellPropsBuilder.tsx`       | route-owned shell contract orchestration           | yes                     |
+| `canvasModalHost.types.ts`          | semantic modal-host vocabulary                     | yes                     |
+| `canvasModalHostPropsBuilder.ts`    | route-owned modal-host contract adaptation         | adjacent route seam     |
+| `CanvasModalHost.tsx`               | passive modal-host rendering                       | yes                     |
+
+<!-- markdownlint-enable MD060 -->
+
+### Current Topology After Hard Cut
+
+```mermaid
+flowchart LR
+  Route["Canvas.tsx"] --> Controller["useCanvasController"]
+  Route --> RouteState["deriveCanvasRouteViewState(...)"]
+  Route --> RouteSync["useCanvasRoutePresentationSync(...)"]
+  Route --> ShellBuilder["buildCanvasShellProps(...)"]
+  Route --> ModalBuilder["buildCanvasModalHostProps(...)"]
+
+  ShellBuilder --> Shell["CanvasShell"]
+  ModalBuilder --> ModalHost["CanvasModalHost"]
+  ModalHost --> PlanModal["PlanPreviewModal"]
+```
+
+### Transitions
+
+The component owns route-composition transitions only:
+
+```mermaid
+flowchart TD
+  Controller["controller facade ready"] --> RouteState["route view state derived"]
+  RouteState --> Publication["bootstrap and draft publication synced"]
+  RouteState --> ShellProps["shell props built"]
+  Controller --> ModalProps["modal-host props built"]
+  ShellProps --> Shell["CanvasShell rendered"]
+  ModalProps --> ModalHost["CanvasModalHost rendered"]
+```
+
+### Invariants
+
+- `Canvas.tsx` is the only route-level composition site for the Canvas route.
+- `Canvas.tsx` may own orchestration, but it must not own inline shell or modal
+  contract assembly once dedicated builders exist.
+- `CanvasModalHost.tsx` must not import `useCanvasController` or consume
+  controller-shaped props.
+- The route composer may see the full controller facade and route view state;
+  shell subbuilders must not.
+- `canvasShellPropsBuilder.tsx` is allowed to adapt route-owned inputs into
+  smaller concern contracts; the concern subbuilders are not allowed to widen
+  those contracts again.
+- Route publication remains an adjacent seam through
+  `useCanvasRoutePresentationSync.ts`; it must not fold back into `Canvas.tsx`
+  inline effects.
+
+### Consumers
+
+- `Canvas.tsx`
+- `Canvas.architecture.test.tsx`
+- `CanvasModalHost.architecture.test.tsx`
+- `canvasShellPropsBuilder.architecture.test.ts`
+
+### Fitness Functions
+
+The canonical fitness checks for this component are:
+
+- `Canvas.architecture.test.tsx`
+- `CanvasModalHost.architecture.test.tsx`
+- `canvasShellBuilder.types.architecture.test.ts`
+- `canvasShellPropsBuilder.architecture.test.ts`
+- `Canvas.routeStates.smoke.test.tsx`
+- `Canvas.routeStates.first-canvas-policy.test.tsx`
+- `Canvas.routeStates.host-cycle-persistence.test.tsx`
+- `Canvas.routeStates.backend-recovery-priority.test.tsx`
+- `Canvas.readOnlyStates.test.tsx`
+- `@dvt/web` typecheck
+
+### Drift To Watch
+
+- if `CanvasModalHost.tsx` starts importing `useCanvasController`, the passive
+  view boundary has regressed
+- if shell subbuilders accept the full route-composer args bag again, semantic
+  ownership has regressed
+- if `Canvas.tsx` starts rebuilding modal or shell props inline, route
+  composition has regressed
+- if route publication moves back into inline `useEffect` logic inside
+  `Canvas.tsx`, route composition and publication have drifted together again
+
+> Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
+
+<a id="section-graph-sequences-and-state-machines"></a>
+
+## Graph Sequences And State Machines
+
+### Sequence 1: Published Route Startup
+
+```mermaid
+sequenceDiagram
+  participant Root as Root.tsx
+  participant Active as useActiveRouteBootstrapRegistration
+  participant Publisher as usePublishedRouteBootstrap
+  participant Registry as routeBootstrapRegistry
+
+  Root->>Active: resolve active route registration
+  Active-->>Root: routeId + mode + initialPresentation
+  Root->>Registry: read(routeId)
+  Publisher->>Registry: publish(routeId, pending|blocked|error|complete)
+  Registry-->>Root: notify updated posture
+  Root->>Root: keep Raven or reveal shell
+```
+
+### Sequence 2: Save With CAS Conflict
+
+```mermaid
+sequenceDiagram
+  participant Operator as Operator
+  participant Controller as useCanvasController
+  participant Session as CanvasDraftSession
+  participant Port as Workspace draft port
+
+  Operator->>Controller: mutate graph
+  Controller->>Session: machine.markSaving()
+  Controller->>Port: save(expectedRevision, payload)
+  alt success
+    Port-->>Controller: persisted record
+    Controller->>Session: machine.applySaveSuccess()
+  else conflict
+    Port-->>Controller: conflict + current record
+    Controller->>Session: machine.applyConflict()
+  else missing remote
+    Port-->>Controller: missing remote record
+    Controller->>Session: machine.markRemoteDraftMissing()
+  end
+```
+
+### State Machine: Route Startup
+
+```mermaid
+stateDiagram-v2
+  [*] --> pending
+  pending --> blocked
+  pending --> error
+  pending --> complete
+  blocked --> pending
+  blocked --> complete
+  error --> pending
+  error --> complete
+  complete --> [*]
+```
+
+Rule:
+
+- reset to initial posture only on unmount or route identity change.
+
+### State Machine: Canvas Draft Session
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrapping
+  bootstrapping --> editing
+  editing --> saving
+  saving --> editing
+  saving --> conflict
+  editing --> missing_remote
+  conflict --> editing: reloadFromRemote
+  missing_remote --> editing: reloadFromRemote
+```
+
+Rule:
+
+- conflict and missing-remote are fail-closed mutation states until an
+  authoritative remote reload succeeds.
+
+> Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
+
+<a id="section-graph-route-bootstrap-architecture"></a>
+
+## Graph Route Bootstrap Architecture
+
+### Intent
+
+Define one shell-facing route startup contract that is explicit, typed, and
+route-identity based.
+
+### Governing Sources
+
+- [Graph Frontend Architecture](graph-frontend-architecture.md)
+- [Canvas Component Map And Modernization Review](canvas-component-map-and-modernization-review.md)
+- [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)
+
+### Module Ownership
+
+| Module                                   | Responsibility                                             |
+| ---------------------------------------- | ---------------------------------------------------------- |
+| `routeBootstrapContract.ts`              | Contract types and helpers                                 |
+| `routeBootstrapRegistration.ts`          | Parse route handle into typed registration                 |
+| `routeBootstrapRegistry.ts`              | Passive publication and read lifecycle keyed by `route.id` |
+| `routeBootstrapDataRouterContext.ts`     | Isolate Data Router context presence detection             |
+| `useActiveRouteBootstrapRegistration.ts` | Resolve active registration from router matches            |
+| `usePublishedRouteBootstrap.ts`          | Publish route read-model posture                           |
+| `routeBootstrapErrors.ts`                | Typed bootstrap error taxonomy                             |
+| `routeBootstrapErrorCopy.ts`             | Locale-resolved bootstrap copy                             |
+| `StaticRouteBootstrapBoundary.tsx`       | Settle truly static routes on mount                        |
+
+### Startup Modes
+
+| Mode        | Meaning                                                        | Rule                                              |
+| ----------- | -------------------------------------------------------------- | ------------------------------------------------- |
+| `published` | Route has startup loading, recovery, missing, or error posture | It must publish posture from its route read model |
+| `static`    | Route is already useful at mount time                          | It may settle once through the static boundary    |
+
+Classification rule:
+
+- if a route owns startup loading, error, or recovery semantics, it is
+  `published`
+- `mount != settled`
+- missing classification is design drift, not an implicit default
+
+### Contract Topology
+
+```mermaid
+flowchart LR
+  Router["React Router match: route.id plus handle"] --> Active["useActiveRouteBootstrapRegistration"]
+  Active --> Registration["RouteBootstrapRegistration"]
+  Registration --> Publisher["usePublishedRouteBootstrap"]
+  Registration --> StaticBoundary["StaticRouteBootstrapBoundary"]
+  Publisher --> Registry["routeBootstrapRegistry"]
+  StaticBoundary --> Registry
+  Registry --> Root["Root.tsx"]
+```
+
+### Published Route Lifecycle
+
+```mermaid
+flowchart LR
+  RouteReadModel["Route read model"] --> Pending["pending"]
+  RouteReadModel --> Blocked["blocked"]
+  RouteReadModel --> Error["error"]
+  RouteReadModel --> Complete["complete"]
+
+  Pending --> Publisher["usePublishedRouteBootstrap"]
+  Blocked --> Publisher
+  Error --> Publisher
+  Complete --> Publisher
+
+  Publisher --> Registry["routeBootstrapRegistry"]
+  Registry --> Root["shell reveal and active-route posture"]
+```
+
+Reading rule:
+
+- the registry stores posture; it does not invent it
+- `Root.tsx` consumes the active route contract; it does not infer readiness
+  from pathname or widget state
+- a published route may complete shell bootstrap only when the route is safe and
+  useful as the first visible workbench surface
+- `blocked` is reserved for startup blockers that must keep the pre-React gate
+  visible because revealing the workbench would be misleading
+- `failed` is reserved for controlled route-local failures that can render a
+  governed error or recovery surface; it records startup evidence but must not
+  keep the shell hidden behind the pre-React gate
+- normal updates replace posture in place; reset only happens on teardown or
+  route identity change
+
+### Failure Policy
+
+- production-like runtime is fail-fast for bootstrap contract violations
+- missing Data Router context throws typed bootstrap failure
+- missing active registration throws typed bootstrap failure at shell
+  consumption time
+- missing explicit registration for a published route throws typed bootstrap
+  failure
+- API backend readiness failures for Canvas are route-visible blockers, not
+  pre-React startup blockers. The shell may reveal Canvas once the route can
+  render a governed backend-blocked surface with unsafe interactions disabled.
+- Missing or failing route-local data that already has a governed route error
+  state must publish `failed` rather than `error`; `error` remains for bootstrap
+  contract failures where the route cannot safely render.
+- fallback to empty matches or no-op publication is allowed only in test
+  runtime for isolated non-router tests
+
+### Invariants
+
+- the registry is passive state storage
+- startup for a mounted published route updates in place
+- static settlement happens only through `StaticRouteBootstrapBoundary.tsx`
+- locale resolution for bootstrap errors is centralized in
+  `routeBootstrapErrorCopy.ts`
+- Data Router context probing is isolated in
+  `routeBootstrapDataRouterContext.ts`
+- publisher ownership is strict by route identity
+
+### Route Matrix
+
+| Route id                      | Path           | Mode        | Owner family                    |
+| ----------------------------- | -------------- | ----------- | ------------------------------- |
+| `dbt.canvas`                  | `/canvas`      | `published` | Canvas draft presentation state |
+| `dvt.templates`               | `/templates`   | `published` | Governed source generation      |
+| `monitoring.runs`             | `/runs`        | `published` | Runs route bootstrap            |
+| `monitoring.run-detail`       | `/runs/:runId` | `published` | Runs route bootstrap            |
+| `cost.dashboard`              | `/cost`        | `published` | Cost route bootstrap            |
+| `shell.default-core-redirect` | `/`            | `published` | Redirect posture handoff        |
+| `shell.plugins`               | `/plugins`     | `static`    | Static shell route              |
+| `shell.admin`                 | `/admin`       | `static`    | Static shell route              |
+
+Special case:
+
+- `shell.default-core-redirect` is transiently `published` while it hands
+  startup ownership to the destination route
+
+### Acceptance Evidence
+
+| Rule                                                               | Evidence anchors                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Every active route declares explicit bootstrap metadata            | [routes.ts](../../../../../apps/web/src/app/routes.ts), [routes.test.tsx](../../../../../apps/web/src/app/routes.test.tsx)                                                                                                                                         |
+| Published routes publish typed posture by explicit route identity  | [usePublishedRouteBootstrap.ts](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.ts), route bootstrap tests under `apps/web/src/app/views/*/*RouteBootstrap.test.ts`                                                                           |
+| Publication is monotonic while mounted                             | [usePublishedRouteBootstrap.test.tsx](../../../../../apps/web/src/app/bootstrap/usePublishedRouteBootstrap.test.tsx)                                                                                                                                               |
+| Missing Data Router context is typed and fail-fast                 | [useActiveRouteBootstrapRegistration.ts](../../../../../apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.ts), [useActiveRouteBootstrapRegistration.test.tsx](../../../../../apps/web/src/app/bootstrap/useActiveRouteBootstrapRegistration.test.tsx) |
+| Missing active registration fails closed at shell consumption time | [Root.tsx](../../../../../apps/web/src/app/Root.tsx), [Root.test.tsx](../../../../../apps/web/src/app/Root.test.tsx), [routeBootstrapErrors.ts](../../../../../apps/web/src/app/bootstrap/routeBootstrapErrors.ts)                                                 |
+| Static routes settle only through the static boundary              | [StaticRouteBootstrapBoundary.tsx](../../../../../apps/web/src/app/bootstrap/StaticRouteBootstrapBoundary.tsx), [Root.bootstrapFlow.test.tsx](../../../../../apps/web/src/app/Root.bootstrapFlow.test.tsx)                                                         |
+
+### Current State
+
+As of 2026-08-02:
+
+- SRP split is implemented and validated
+- Canvas, Templates, Runs, Run Detail, and Cost use explicit startup handles
+- Code and Lineage are contextual Canvas surfaces, not peer routes
+- `/canvas` is the only Canvas route authority; exhausted workbench URL
+  translation and its one-shot query transport are absent
+- static settlement exists only through the explicit static boundary
+- bootstrap errors are typed and locale-resolved
+- fallback behavior remains restricted to test runtime
+
+### Evolution Rules
+
+- every new top-level route must declare explicit startup classification
+- new published routes must ship route-specific posture tests
+- shell logic must continue consuming the contract instead of route-local
+  heuristics
+
+> Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
+
+<a id="section-graph-decision-rationale-and-patterns"></a>
+
+## Graph Decision Rationale And Patterns
+
+### Why This Split Exists
+
+The previous architecture page accumulated too many concerns in one place.
+Splitting into focused documents makes ownership and review boundaries explicit:
+
+- overview (`graph-frontend-architecture.md`)
+- startup contract details (`docs/architecture/components/web/graph/graph-frontend-architecture.md`)
+- runtime model details (`docs/architecture/components/web/graph/graph-frontend-architecture.md`)
+- behavior dynamics (`docs/architecture/components/web/graph/graph-frontend-architecture.md`)
+
+### Decision Rationale
+
+#### Decision 1: Startup must be route-contract driven
+
+Rationale:
+
+- avoids shell heuristics coupled to route internals
+- enforces explicit route operability semantics
+- allows static and published modes without hidden fallback behavior
+
+#### Decision 2: Bootstrap module must be SRP-split
+
+Rationale:
+
+- contract changes, parser changes, and registry behavior evolve at different
+  rates
+- isolates correctness tests by concern
+- lowers regression risk when adding new routes
+
+#### Decision 3: Canvas runtime uses explicit aggregate/read-model seams
+
+Rationale:
+
+- route behavior remains deterministic under conflict and recovery
+- React Flow remains projection-only
+- plan/run handoff stays aligned with canonical route scope
+
+### Patterns Applied
+
+- Fowler:
+  separate aggregate-like session model, read model, and publication adapter.
+- DDD:
+  explicit bounded contexts: shell startup, route startup contract, route
+  authoring runtime.
+- Hexagonal:
+  ports isolate external draft/plan/run dependencies from route policy.
+- SOLID:
+  SRP in bootstrap modules; DIP where shell consumes contract, not route internals.
+
+### Point-In-Time Posture (2026-04-17)
+
+- startup contract generalized and SRP-split in implementation
+- graph architecture docs restructured by concern
+- TF-E2 execution companion remains the canonical backlog and phase sequence
+
+### Evolution Plan
+
+Near term:
+
+- complete TF-E2-A..E execution chain with proof-oriented closure
+- lock startup classification governance for every new route
+- extend route-level negative-path tests for startup and recovery
+
+Medium term:
+
+- align graph and non-graph routes on the same startup contract quality bar
+- strengthen operability runbooks for conflict storms and degraded persistence
+- preserve backwards-compatible draft evolution posture across releases
+
+### Canonical References
+
+- [Canvas Controller Current To Target Architecture](canvas-controller-current-to-target-architecture.md)
+- [Canvas Component Map And Modernization Review](canvas-component-map-and-modernization-review.md)
+
+> Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.
+
+<a id="section-graph-canvas-runtime-model"></a>
+
+## Graph Canvas Runtime Model
+
+### Intent
+
+Define the route-local runtime model for Canvas authoring so rendering remains
+projection-only and product truth stays explicit.
+
+For the local authoring-runtime component contract, API, invariants, and
+consumers, use
+[Canvas Authoring Runtime Component](canvas-authoring-runtime-component.md).
+
+### Runtime Seams
+
+| Seam                           | Responsibility                                                             |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| `CanvasDraftSession`           | Authoritative route-local draft aggregate component API.                   |
+| `CanvasDraftScope`             | Project visible working set and projection-gap posture.                    |
+| `CanvasDraftPresentationState` | Route read model for startup/recovery/workbench posture.                   |
+| `useCanvasController`          | Application composition seam; orchestrates queries, commands, and handoff. |
+
+### Domain Model
+
+```mermaid
+classDiagram
+  class CanvasDraftSession {
+    +syncState
+    +baseline
+    +draftRevision
+    +workingSet
+    +baseline.serialize()
+    +machine.markSaving()
+    +machine.applySaveSuccess()
+    +machine.applyConflict()
+    +machine.markRemoteDraftMissing()
+    +workingSet.reconcileSnapshot()
+  }
+
+  class CanvasDraftScope {
+    +visibleNodeIds
+    +visibleEdges
+    +projectionGap
+  }
+
+  class CanvasDraftPresentationState {
+    +routeStartupStatus
+    +workflowBadge
+    +operatorMessage
+  }
+
+  class CanvasController {
+    +load()
+    +save()
+    +plan()
+    +run()
+  }
+
+  CanvasController --> CanvasDraftSession
+  CanvasController --> CanvasDraftScope
+  CanvasController --> CanvasDraftPresentationState
+```
+
+### Runtime Rules
+
+- React Flow state is a projection, never the semantic source of truth.
+- conflict and `missing_remote` are first-class route states, not incidental
+  exceptions.
+- recovery from conflict, `missing_remote`, or projection-gap posture must come
+  from authoritative remote reload, not route-local adoption of projected
+  state.
+- plan/run actions must consume canonical route scope, not visual-only state.
+- read-only and forbidden posture must be explicit in route behavior.
+
+### Current State
+
+- Session/scope/presentation seams are active.
+- hardening for conflict, missing-remote, and projection-gap posture exists.
+- route-owned Inspector authoring now exists for governed node details, backed
+  by local node overrides in the same draft aggregate used by preview and run.
+- duplicate-node and reconnect-edge now route through adjacent command seams
+  that preserve the draft aggregate as semantic truth instead of pushing policy
+  down into passive React Flow adapters.
+- TF-E2 parent closure is complete. Residual persisted-version compatibility
+  expansion is a future explicit follow-up, not hidden parent scope.
+
+### Future Evolution
+
+- expand end-to-end deterministic reload coverage across additional supported
+  draft versions through separate governed follow-up tasks.
+
+> Section status: Active. Owner: Frontend / Architecture. Colocation does not merge component responsibilities.

@@ -351,4 +351,4 @@ open or while the latest mandatory evidence is stale.
 - [BCDR1 epic](https://github.com/dunay2/dvt/issues/2872)
 - [BCDR1.1 decision task](https://github.com/dunay2/dvt/issues/2873)
 - [ADR-0037](./ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md)
-- [Gap 5 archive operations runbook](../runbooks/gap-5-archive-operations-runbook-20260319.md)
+- [Gap 5 archive operations runbook](../guides/gap-5-operator-guide-20260319.md#section-gap-5-archive-operations-runbook-20260319)
