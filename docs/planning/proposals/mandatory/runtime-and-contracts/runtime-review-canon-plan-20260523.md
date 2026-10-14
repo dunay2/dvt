@@ -123,7 +123,7 @@ implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/runt
 componentGuides:
   - docs/architecture/components/api/runtime-review-canon-component.md
 userStories:
-  - docs/architecture/components/api/runtime-review-canon-user-stories.md
+  - docs/architecture/components/api/runtime-review-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -137,7 +137,7 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/architecture/components/api/index.md
   - docs/architecture/components/api/runtime-review-canon-component.md
-  - docs/architecture/components/api/runtime-review-canon-user-stories.md
+  - docs/architecture/components/api/runtime-review-canon-component.md
   - docs/architecture/index.md
   - docs/planning/domains/execution-runtime.md
   - docs/planning/proposals/index.md
@@ -193,7 +193,7 @@ redGreenCycles:
       - tools/ci/runtime-review-canon.test.mjs
       - docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md
       - docs/architecture/components/api/runtime-review-canon-component.md
-      - docs/architecture/components/api/runtime-review-canon-user-stories.md
+      - docs/architecture/components/api/runtime-review-canon-component.md
       - docs/planning/domains/execution-runtime.md
       - buzon/20260523-codex-fowler-runtime-review-canon.md
     greenTest: node --test tools/ci/runtime-review-canon.test.mjs

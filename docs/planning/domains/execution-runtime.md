@@ -42,7 +42,7 @@ command before implementation. Use the local component guide for public API,
 invariants, transitions, consumers, and semantic fitness-function expectations:
 
 - [Runtime review canon component](../../architecture/components/api/runtime-review-canon-component.md)
-- [Runtime review canon user stories](../../architecture/components/api/runtime-review-canon-user-stories.md)
+- [Runtime review canon user stories](../../architecture/components/api/runtime-review-canon-component.md#section-runtime-review-canon-user-stories)
 
 ## Diagram Sources
 

@@ -43,7 +43,7 @@ const ADR_0036 = join(
 );
 const USER_STORIES_DOC = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/contracts/plan-admission-user-stories.md'
+  'docs/architecture/components/engine/contracts/plan-admission-matrix.md'
 );
 
 const ACTIVE_SURFACES = [

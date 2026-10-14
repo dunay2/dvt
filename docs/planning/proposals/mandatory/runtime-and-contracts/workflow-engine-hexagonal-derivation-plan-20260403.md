@@ -78,7 +78,7 @@ implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/work
 componentGuides:
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
 userStories:
-  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
+  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -94,7 +94,7 @@ allowedImplementationSurfaces:
   - apps/api/test/server.test.ts
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
-  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
+  - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
@@ -149,7 +149,7 @@ redGreenCycles:
       - apps/api/src/runtime/intentReconcilerRuntime.ts
       - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
       - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
-      - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
+      - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
     greenTest: pnpm --filter dvt-api test -- test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
 symbols:
   - name: createIntentReconcilerRuntime
@@ -357,11 +357,11 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
-  - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/evidence/index.md
@@ -497,7 +497,7 @@ componentGuides:
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
 userStories:
-  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -511,9 +511,9 @@ allowedImplementationSurfaces:
   - apps/api/test/integration/plannerEngineContract.test.ts
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/evidence/index.md
@@ -808,7 +808,7 @@ implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/work
 componentGuides:
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
 userStories:
-  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -826,7 +826,7 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/evidence/index.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/status/**
@@ -891,7 +891,7 @@ redGreenCycles:
       - packages/@dvt/engine/src/domain/IRunCommandService.ts
       - packages/@dvt/engine/src/domain/IRunSignalService.ts
       - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
-      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+      - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
       - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
 symbols:
@@ -1066,7 +1066,7 @@ componentGuides:
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
 userStories:
-  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -1085,7 +1085,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/system-operations-inventory-20260501.md
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
@@ -1161,7 +1161,7 @@ redGreenCycles:
       - packages/@dvt/engine/src/services/runControl/RunSignalService.ts
       - packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
       - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
-      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+      - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
 symbols:
   - name: IEngineProviderResolver
@@ -1321,7 +1321,7 @@ componentGuides:
   - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
 userStories:
-  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -1340,10 +1340,10 @@ allowedImplementationSurfaces:
   - docs/index.md
   - docs/**/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
-  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
-  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+  - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
+  - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/architecture/components/engine/roadmap/engine-phases.md
@@ -1417,7 +1417,7 @@ redGreenCycles:
       - packages/@dvt/engine/test/helpers/runLifecycle.fixture.ts
       - packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts
       - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
-      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
+      - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
   - id: architecture-test-support-repetition-removal
     redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
@@ -1697,7 +1697,7 @@ componentGuides:
   - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
 userStories:
-  - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -1723,7 +1723,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md
-  - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+  - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/architecture/components/engine/contracts/engine/StartRunProtocol.v1.md
@@ -1818,7 +1818,7 @@ redGreenCycles:
     patchSurfaces:
       - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
       - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
-      - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
+      - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
       - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
   - id: start-run-qa-hardening-parser-api

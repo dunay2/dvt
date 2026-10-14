@@ -81,7 +81,7 @@ describe('internal alpha route gate architecture', () => {
 
   it('keeps F-27 user stories bound to the command/query rails', () => {
     const userStories = readRepoFile(
-      'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md'
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
     );
 
     for (const rail of [
@@ -173,7 +173,7 @@ describe('internal alpha route gate architecture', () => {
       'docs/architecture/components/web/internal-alpha-route-gate-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md'
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
     );
     const acceptanceMatrix = readRepoFile(
       'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md'
@@ -406,7 +406,7 @@ describe('internal alpha route gate architecture', () => {
       'docs/architecture/components/web/internal-alpha-route-gate-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md'
+      'docs/architecture/components/web/internal-alpha-route-gate-component.md'
     );
 
     expect(recoveryStage?.evidenceAcceptance).toBe('accepted');
@@ -414,7 +414,7 @@ describe('internal alpha route gate architecture', () => {
     expect(recoveryStage?.evidenceRefs).toEqual(
       expect.arrayContaining([
         'docs/architecture/components/web/internal-alpha-route-gate-component.md',
-        'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
+        'docs/architecture/components/web/internal-alpha-route-gate-component.md',
         'apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts',
         'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
         'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',

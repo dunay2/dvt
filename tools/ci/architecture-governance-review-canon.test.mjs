@@ -19,7 +19,7 @@ const requiredFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md',
   'docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md',
   'docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md',
-  'docs/architecture/components/ci-governance/architecture-governance-review-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md',
   'docs/architecture/components/ci-governance/index.md',
 ];
 
@@ -74,7 +74,7 @@ test('architecture governance review canonization has semantic disposition cover
   assert.match(componentGuide, /GD-REV-ARCH-GOV-CANON/);
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/architecture-governance-review-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/architecture-governance-review-canon-component.md'
   );
   for (const scenario of [
     'Architecture steward maps a blocker to an existing task',

@@ -110,3 +110,27 @@ The final documentation commit, exact base/head implementation gate, pre-push
 and CI results are recorded in the implementation PR linked from issue #2925.
 These initial focused results do not claim that a later candidate already passed
 those gates. No test bypass, relaxed rule, added stub or new debt is introduced.
+
+## 2026-10-14 — Consolidated acceptance scenarios
+
+Issue #3643 consolidates 84 standalone scenario pages and 16 auxiliary domain
+pages into their existing component or domain owners. The 100 source paths are
+removed; their substantive requirements, scenario identifiers, negative cases,
+and diagrams remain in the owning guide. This is content-preserving consolidation,
+not disposal of 100 behavioral obligations.
+
+The path-only test-reader changes retain all existing test cases and assertions.
+The lineage-index assertion now checks the specific acceptance-section link.
+Consolidation exposed inherited task-routing prose: its references to Planning DB
+tasks were reconciled to GitHub issues under ADR-0061, without changing the
+Planning DB authority for architecture and mechanization.
+
+Validation commands and exact base/head results are recorded in issue #3643 and
+the implementation PR. Full prepush and DB-backed synchronization remain explicit
+acceptance facts, not inferred from routed CI. Existing Open risks remain Open.
+
+Automated review identified a polarity regression in the planning acceptance
+criterion. The correction explicitly keeps GitHub issue commands accepted and
+rejects database-owned delivery-task commands. A focused regression test covers
+both directions. Three adjacent imported delivery-queue sentences were also
+reconciled to ADR-0061; these corrections do not change architecture ownership.

@@ -216,3 +216,96 @@ The combined fixture lives in
 `apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`. It is
 test-only route proof: it does not create product authority, does not persist
 route state, and must stay behind the F-27 gate.
+
+<a id="section-internal-alpha-route-gate-user-stories"></a>
+
+## Internal Alpha Route Gate User Stories
+
+### Scope
+
+These stories preserve the accepted route-level F-27 proof that supported the
+internal-alpha decision. F-27 is closed; these stories are evidence and semantic
+coverage, not a current task queue. Child slices still own their implementation
+details and tests. Any new executable follow-up starts in GitHub Issues.
+
+- `US-F27-001`: as an internal tester, I need startup posture through
+  `ObserveAppBootstrapRouteReadiness` with happy and fail-closed evidence.
+- `US-F27-002`: as an internal tester, I need tenant, project, and environment
+  context through `GetEffectiveWorkspaceContext`.
+- `US-F27-003`: as an internal tester, I need Canvas graph truth through
+  `GetWorkspaceGraphDraft` and `SaveWorkspaceGraphDraft`.
+- `US-F27-004`: as an internal tester, I need contextual Code inspection and
+  revision-guarded working-tree editing through `ListWorkspaceFiles`,
+  `GetWorkspaceFileContent`, and `SaveWorkspaceFileContent`.
+- `US-F27-005`: as an internal tester, I need plan/run controls to explain
+  enabled or blocked posture through `ObservePlanRunReadiness`.
+- `US-F27-006`: as an internal tester, I need consistent recovery language
+  through `MapRouteRecoveryState`.
+- `US-F27-007`: as a product owner, I need alpha cadence with audience, entry
+  date, duration, exit owner, and extension rule.
+- `US-F27-008`: as an architecture reviewer, I need included and excluded route
+  risks per route stage.
+- `US-F27-009`: as a PR reviewer, I need child-only evidence to be rejected for
+  alpha-full claims.
+- `US-F27-010`: as an architecture reviewer, I need `F-27` to remain the closed
+  route-proof identifier while GitHub Issues owns any new executable task
+  lifecycle and child proposals remain stage-specific architecture/evidence
+  owners.
+- `US-F27-011`: as a reviewer, I need one combined route fixture to traverse
+  startup, workspace context, Canvas, Code, plan/run readiness, and recovery
+  before any alpha-full candidate can move past review.
+
+### Negative Stories
+
+These negative stories remain regression semantics for the accepted route gate;
+they do not imply that F-27 is still open.
+
+- `US-F27-N-001`: Code workbench proof exists but Canvas lacks proof. Alpha full
+  remains blocked.
+- `US-F27-N-002`: a stage has happy proof but no fail-closed proof. Alpha full
+  remains blocked.
+- `US-F27-N-003`: recovery copy differs for equivalent failures. The route
+  returns to review until vocabulary is source-owned.
+- `US-F27-N-004`: cadence lacks exit owner or extension rule. Alpha full remains
+  blocked.
+- `US-F27-N-005`: risk triage lists included risks only. Alpha full remains
+  blocked until exclusion rationale exists.
+- `US-F27-N-006`: the combined route fixture omits a stage fail-closed proof.
+  Alpha full remains blocked and the missing stage is reported by name.
+- `US-F27-N-007`: the combined route fixture omits a route stage or an owned
+  command/query rail. Alpha full remains blocked and the missing stage or rail
+  is reported by name.
+- `US-F27-N-008`: the combined route fixture keeps a stage at `ready` only or
+  omits `blocked`, `unauthorized`, `unavailable`, `stale`, or `not-found`.
+  Alpha full remains blocked and the missing vocabulary is reported by name.
+
+### Scenario Coverage Matrix
+
+| Stage              | Happy-path story | Fail-closed story | Current acceptance |
+| ------------------ | ---------------- | ----------------- | ------------------ |
+| Startup gate       | `US-F27-001`     | `US-F27-N-002`    | accepted           |
+| Workspace context  | `US-F27-002`     | `US-F27-N-007`    | accepted           |
+| Canvas workbench   | `US-F27-003`     | `US-F27-N-001`    | accepted           |
+| Code workbench     | `US-F27-004`     | `US-F27-N-001`    | accepted           |
+| Plan/run readiness | `US-F27-005`     | `US-F27-N-002`    | accepted           |
+| Recovery states    | `US-F27-006`     | `US-F27-N-003`    | accepted           |
+| Alpha cadence      | `US-F27-007`     | `US-F27-N-004`    | accepted           |
+| Risk triage        | `US-F27-008`     | `US-F27-N-005`    | accepted           |
+| Route proof        | `US-F27-010`     | `US-F27-N-006`    | accepted / closed  |
+
+### Traceability
+
+- Closed route-proof identifier: `F-27`.
+- Closure evidence:
+  `docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md`.
+- New executable task lifecycle: GitHub Issues.
+- Component guide:
+  `docs/architecture/components/web/internal-alpha-route-gate-component.md`.
+- Acceptance matrix:
+  `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`.
+- Architecture guard:
+  `apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts`.
+- Combined fixture:
+  `apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts`.
+
+> Acceptance scope status: Review. Owner: Product / Architecture / Frontend.

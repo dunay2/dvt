@@ -365,7 +365,7 @@ componentGuides:
   - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
 userStories:
   - docs/planning/status/system-governance-unit-index-20260501.md
-  - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-user-stories.md
+  - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md

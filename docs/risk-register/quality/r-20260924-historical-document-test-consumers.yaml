@@ -24,5 +24,9 @@ mitigation: >
   its evaluator and existence checks, the five PostgreSQL component checks and nine rollback
   behavior cases. Independent inspection verifies that the two removed alpha evidence references are
   test-only. Keep this broader relationship risk open; no Planning DB reconciliation is claimed by
-  that test-consumer repair.
+  that test-consumer repair. For the 2026-10-14 consolidation, preserve every scenario body in the
+  existing component guide, verify exact source-to-section correspondence, and retain behavioral
+  assertions. Check fragments as well as paths; do not let a broader guide hide a missing scenario.
+  Planning DB document relationships remain pending in issue 3643; integration does not close this
+  risk or imply that unavailable DB validation passed.
 ---

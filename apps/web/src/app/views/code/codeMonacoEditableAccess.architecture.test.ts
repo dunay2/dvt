@@ -21,7 +21,7 @@ describe('Code Monaco editable access architecture', () => {
       'docs/architecture/components/web/code-workbench-workspace-files-component.md'
     );
     const userStories = readRepoDoc(
-      'docs/architecture/components/web/code-workbench-workspace-files-user-stories.md'
+      'docs/architecture/components/web/code-workbench-workspace-files-component.md'
     );
     const authorityDecision = readRepoDoc('docs/adr/ADR-0060-dbt-project-authoring-authority.md');
 

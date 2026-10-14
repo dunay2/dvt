@@ -8,7 +8,7 @@ const REPO_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 const REQUIRED_DOCS = [
   'docs/adr/ADR-0056-web-ui-authority-is-server-projected.md',
   'docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md',
-  'docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md',
+  'docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md',
 ] as const;
 
 function readRepoFile(relativePath: string): string {
@@ -29,7 +29,7 @@ describe('web API authority hardcut architecture', () => {
       'docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md'
+      'docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md'
     );
 
     for (const section of ['## Public API', '## Invariants', '## Transitions', '## Consumers']) {

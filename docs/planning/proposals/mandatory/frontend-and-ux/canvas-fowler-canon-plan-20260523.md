@@ -127,7 +127,7 @@ implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/canvas-fow
 componentGuides:
   - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
 userStories:
-  - docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md
+  - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -140,7 +140,7 @@ allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-canvas-workbench-canon.md
   - docs/.manifest.json
   - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
-  - docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md
+  - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/index.md
   - docs/architecture/index.md
@@ -199,7 +199,7 @@ redGreenCycles:
       - tools/ci/canvas-fowler-canon.test.mjs
       - docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md
       - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
-      - docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md
+      - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
       - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
       - docs/architecture/components/web/graph/index.md
       - buzon/20260523-codex-fowler-canvas-workbench-canon.md

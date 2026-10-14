@@ -31,7 +31,7 @@ describe('Canvas interaction command surface architecture', () => {
       'docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-interaction-command-surface-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md'
     );
     const commandQueryCatalog = readRepoFile(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'

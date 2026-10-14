@@ -17,7 +17,7 @@ describe('Canvas layout persistence architecture', () => {
       'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
     );
     const userStories = readDoc(
-      'docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-layout-persistence-component.md'
     );
     const commandQueryCatalog = readDoc(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
@@ -33,7 +33,7 @@ describe('Canvas layout persistence architecture', () => {
       '## Negative Coverage',
       '## Drift To Watch',
       '## Local Traceability',
-      'canvas-layout-persistence-user-stories.md',
+      'canvas-layout-persistence-component.md',
       'canvas-workbench-command-query-catalog.md',
     ]) {
       expect(componentGuide).toContain(requiredSection);

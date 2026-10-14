@@ -23,7 +23,7 @@ const COMPONENT_GUIDE_PATH = join(
 );
 const USER_STORIES_PATH = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary-user-stories.md'
+  'docs/architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md'
 );
 const CAPACITY_SLA_PATH = join(
   REPO_ROOT,
@@ -73,7 +73,7 @@ describe('Temporal PlanRef workflow component semantics', () => {
     expect(guide).toContain('apps/api provider-adapter factory');
     expect(guide).toContain('apps/temporal-worker runtime host');
     expect(guide).toContain('ADR-0052');
-    expect(guide).toContain('temporal-planref-workflow-boundary-user-stories.md');
+    expect(guide).toContain('temporal-planref-workflow-boundary.md');
   });
 
   it('publishes user stories for continuation safety', () => {

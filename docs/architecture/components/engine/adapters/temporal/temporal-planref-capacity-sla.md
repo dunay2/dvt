@@ -16,7 +16,7 @@ Use this document with:
 
 - [Temporal PlanRef workflow boundary component](./temporal-planref-workflow-boundary.md)
 - [Temporal adapter spec](./temporal-adapter-spec.md)
-- [Temporal PlanRef workflow boundary user stories](./temporal-planref-workflow-boundary-user-stories.md)
+- [Temporal PlanRef workflow boundary user stories](temporal-planref-workflow-boundary.md#section-temporal-planref-workflow-boundary-user-stories)
 - [Temporal PlanRef drained cutover runbook](../../../../../runbooks/temporal-planref-drained-cutover-20260427.md)
 - [ADR-0052 PlanRef continuation safety](../../../../../adr/adr-0052-planref-continuation-safety.md)
 

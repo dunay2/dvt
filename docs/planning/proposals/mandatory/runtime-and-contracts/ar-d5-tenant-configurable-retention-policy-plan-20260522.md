@@ -126,7 +126,7 @@ implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/ar-d
 componentGuides:
   - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
 userStories:
-  - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
+  - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -145,7 +145,7 @@ allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-ar-d5-tenant-retention-policy-analysis.md
   - docs/architecture/components/engine/adapters/state-store/postgres/index.md
   - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
-  - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
+  - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
   - docs/evidence/ed-20260522-ar-d5-tenant-retention-policy.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260522-ar-d5-tenant-configurable-retention-policy-closeout.md
@@ -217,7 +217,7 @@ redGreenCycles:
       - apps/outbox-worker/src/plugins/env.ts
       - buzon/20260523-codex-fowler-ar-d5-tenant-retention-policy-analysis.md
       - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
-      - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-user-stories.md
+      - docs/architecture/components/engine/adapters/state-store/postgres/run-event-retention-policy-component.md
       - docs/evidence/ed-20260522-ar-d5-tenant-retention-policy.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-d5-tenant-configurable-retention-policy-plan-20260522.md
       - docs/risk-register/quality/R-20260522-AR-D5-TENANT-RETENTION-POLICY.yaml

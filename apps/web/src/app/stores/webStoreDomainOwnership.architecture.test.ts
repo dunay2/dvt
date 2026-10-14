@@ -61,7 +61,7 @@ describe('web store domain ownership architecture', () => {
     const localGuidePath =
       'docs/architecture/components/web/web-store-domain-ownership-local-guide.md';
     const userStoriesPath =
-      'docs/architecture/components/web/web-store-domain-ownership-user-stories.md';
+      'docs/architecture/components/web/web-store-domain-ownership-component.md';
 
     expect(repoFileExists(localGuidePath)).toBe(true);
     expect(repoFileExists(userStoriesPath)).toBe(true);

@@ -17,7 +17,7 @@ import {
 const requiredFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
-  'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/planning/domains/documentation-governance.md',
 ];
 
@@ -57,7 +57,7 @@ const requiredRouteBaselines = [
 const planningAuthorityFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
-  'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
 ];
 
 const planningDomainEntrypoints = [
@@ -84,7 +84,7 @@ const baseActivePlanningEntrypoints = [
   'docs/architecture/system/index.md',
   'docs/architecture/domain-map.md',
   'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
-  'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md',
   'docs/architecture/components/engine/roadmap/engine-phases.md',
   'docs/planning/status/governance-document-rule-inventory.md',
   'docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md',
@@ -365,7 +365,7 @@ test('governance startup card canonization preserves routing semantics and basel
   }
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/governance-startup-card-canon-component.md'
   );
   for (const persona of [
     'Bounded-task contributor',

@@ -116,7 +116,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/ci-ret
 componentGuides:
   - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
 userStories:
-  - docs/architecture/components/ci-governance/ci-retention-review-canon-user-stories.md
+  - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -130,7 +130,7 @@ allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-ci-retention-review-canon.md
   - docs/.manifest.json
   - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
-  - docs/architecture/components/ci-governance/ci-retention-review-canon-user-stories.md
+  - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
   - docs/architecture/components/ci-governance/index.md
   - docs/architecture/index.md
   - docs/planning/domains/event-lifecycle-and-retention.md
@@ -189,7 +189,7 @@ redGreenCycles:
       - tools/ci/ci-retention-review-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md
       - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
-      - docs/architecture/components/ci-governance/ci-retention-review-canon-user-stories.md
+      - docs/architecture/components/ci-governance/ci-retention-review-canon-component.md
       - docs/planning/domains/event-lifecycle-and-retention.md
       - buzon/20260523-codex-fowler-ci-retention-review-canon.md
     greenTest: node --test tools/ci/ci-retention-review-canon.test.mjs

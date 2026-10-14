@@ -76,7 +76,7 @@ stateDiagram-v2
 ## User Stories
 
 The executable story set lives in
-[Plan verifier admission user stories](./plan-verifier-admission-user-stories.md).
+[Plan verifier admission user stories](plan-verifier-admission.md#section-plan-verifier-admission-user-stories).
 It covers admitted current pairs, unsupported schema values, unsupported plan
 values, hash ordering, documentation drift, and mature-system comparison.
 
@@ -122,3 +122,34 @@ sequenceDiagram
   pair cases.
 - `verify.test.ts` proves `verifyPlanOrThrow` checks pair admission before
   hashing.
+
+<a id="section-plan-verifier-admission-user-stories"></a>
+
+## Plan Verifier Admission User Stories
+
+| Story      | Actor                      | Scenario                                                | Acceptance                                                                                                           | Negative coverage                                                                                           |
+| ---------- | -------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| US-PVA-001 | Runtime adapter maintainer | Admit the current execution-plan pair                   | `verifyPlanAdmissionOrThrow({ planVersion: "1.0", schemaVersion: "1.0", runtime })` returns for every known runtime. | Unknown runtime rejects before provider execution.                                                          |
+| US-PVA-002 | Runtime adapter maintainer | Reject a future schema under the current plan version   | `planVersion = "1.0"` with `schemaVersion = "1.future"` throws before hashing.                                       | The test message names `schemaVersion`.                                                                     |
+| US-PVA-003 | Runtime adapter maintainer | Reject an unknown plan version under the current schema | `planVersion = "1.0-unsupported"` with `schemaVersion = "1.0"` throws before hashing.                                | The test message names `planVersion`.                                                                       |
+| US-PVA-004 | Operator                   | Avoid wasted hash work for non-admitted pairs           | `verifyPlanOrThrow` performs pair admission before `sha256(canonicalPlanCoreJson)`.                                  | Unsupported pairs never reach provider execution through verifier consumers.                                |
+| US-PVA-005 | Reviewer                   | Detect documentation drift                              | Component guide, README, and architecture test all name `EXECUTION_PLAN_ADMISSION_MATRIX`.                           | `PLAN_RUNTIME_ADMISSION_MATRIX`, `admittedPlanVersions`, and semver fallback terms fail architecture tests. |
+| US-PVA-006 | Architect                  | Compare with mature systems                             | The mailbox records Fowler comparison, antipatterns, grouping, teachings, repetitions, opportunities, and drift.     | Missing mailbox reference fails component documentation guard.                                              |
+
+### Coverage Map
+
+```mermaid
+flowchart LR
+  Stories["User stories"]
+  Unit["planVersionAdmission.test.ts"]
+  Verify["verify.test.ts"]
+  Arch["planVersionAdmission.architecture.test.ts"]
+  Docs["Component guide + README + mailbox"]
+
+  Stories --> Unit
+  Stories --> Verify
+  Stories --> Arch
+  Arch --> Docs
+```
+
+> Acceptance scope status: Active. Owner: Architecture / Contracts / Runtime Adapters.

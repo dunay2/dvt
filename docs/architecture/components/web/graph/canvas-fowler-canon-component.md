@@ -100,9 +100,87 @@ flowchart TD
 
 ## Related Docs
 
-- [Canvas Fowler Canon User Stories](./canvas-fowler-canon-user-stories.md)
+- [Canvas Fowler Canon User Stories](canvas-fowler-canon-component.md#section-canvas-fowler-canon-user-stories)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
 - [Canvas Workbench Screen Composition](../appshell/canvas-workbench-screen-composition-component.md)
 - [Canvas Layout Persistence Component](./canvas-layout-persistence-component.md)
 - [Canvas Fowler Canon Plan 2026-05-23](../../../../planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md)
 - [Canvas Fowler Canon Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260523-codex-fowler-canvas-workbench-canon.md)
+
+<a id="section-canvas-fowler-canon-user-stories"></a>
+
+## Canvas Fowler Canon User Stories
+
+> Owned concern: these stories define how Canvas Fowler review inputs are
+> consumed without creating duplicate queues, duplicate rails, or hidden UI
+> authority.
+
+### Stories
+
+#### Canvas maintainer
+
+As a Canvas maintainer, I want a Canvas Fowler finding to resolve to one
+component owner so that graph strategy, runtime policy, contextual surfaces,
+layout projection, and browser proof do not compete for the same decision.
+
+Acceptance:
+
+- Accepted TF-E2-L graph-strategy findings remain owned by the graph-strategy
+  and admission components.
+- Accepted TF-E2-POL runtime-policy findings remain owned by the runtime-policy
+  boundary.
+- Contextual Canvas surface findings route to their active component owner.
+- Layout findings route to `CanvasLayoutPersistence`.
+
+#### Frontend maintainer
+
+As a frontend maintainer, I want global shell navigation and Canvas contextual
+surfaces to stay separate so that mature-workbench behavior does not drift into
+a single navigation model.
+
+Acceptance:
+
+- `ListShellNavigationItems` remains a shell query.
+- `RenderCanvasContextualGraphSurface` remains a Canvas-local query.
+- Browser proof stays attached to the component evidence row without redefining
+  product semantics.
+
+#### Planning steward
+
+As a planning steward, I want mandatory Canvas proposals to have explicit
+Planning DB ownership so that proposed work is either closed, reference-only,
+accepted, superseded, or promoted to a task.
+
+Acceptance:
+
+- `F-MAND-CANVAS-FOWLER` is the owning task for this canonization.
+- Future Canvas Fowler findings that still need implementation become Planning
+  DB tasks before code changes begin.
+- Review prose does not act as the work queue.
+
+#### Browser proof reviewer
+
+As a browser proof reviewer, I want Cypress and visual proof to map to a named
+query rail so that geometry assertions remain explainable and reviewable.
+
+Acceptance:
+
+- Graph composition proof maps to the current Canvas component evidence row.
+- Label readability proof maps to the component or presenter that owns the
+  rendered surface.
+- Route locality proof checks Canvas outlet ownership rather than shell-nav
+  placement.
+
+#### Product reviewer
+
+As a product reviewer, I want Canvas authoring improvements to reference the
+same canon owner so that UI polish, route behavior, and governance evidence can
+be compared without reading every historical review.
+
+Acceptance:
+
+- The review status board names the canonical disposition.
+- The graph architecture index links this canon component.
+- The buzon analysis records patterns, antipatterns, drift, and future lessons.
+
+> Acceptance scope status: Active. Owner: Frontend / Architecture.

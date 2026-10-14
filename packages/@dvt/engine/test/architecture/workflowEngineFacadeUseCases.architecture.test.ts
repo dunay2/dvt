@@ -16,7 +16,7 @@ const FACADE_COMPONENT_GUIDE = join(
 );
 const FACADE_USER_STORIES = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-user-stories.md'
+  'docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md'
 );
 
 describe('WorkflowEngine facade use-case architecture', () => {
@@ -106,7 +106,7 @@ describe('WorkflowEngine facade use-case architecture', () => {
     expect(guide).toContain('IWorkflowStartRunUseCase');
     expect(guide).toContain('WorkflowStartRunUseCase');
     expect(guide).toContain('```mermaid');
-    expect(guide).toContain('workflow-engine-facade-use-cases-user-stories.md');
+    expect(guide).toContain('workflow-engine-facade-use-cases-component.md');
 
     const stories = readFileSync(FACADE_USER_STORIES, 'utf8');
     for (const expectedStory of [

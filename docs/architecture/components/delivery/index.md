@@ -64,13 +64,13 @@ handling. It is no longer just a placeholder around worker apps.
 ## Component Guides
 
 - [In-Memory Outbox Storage Component](./in-memory-outbox-storage-component.md)
-- [In-Memory Outbox Storage User Stories](./in-memory-outbox-storage-user-stories.md)
+- [In-Memory Outbox Storage User Stories](in-memory-outbox-storage-component.md#section-in-memory-outbox-storage-user-stories)
 - [Projector Event-Driven Invalidation Component](./projector-event-driven-invalidation-component.md)
-- [Projector Event-Driven Invalidation User Stories](./projector-event-driven-invalidation-user-stories.md)
+- [Projector Event-Driven Invalidation User Stories](projector-event-driven-invalidation-component.md#section-projector-event-driven-invalidation-user-stories)
 
 ## Historical Deep Dives
 
-- [DDD Structure](./delivery-ddd.md)
-- [Sequence diagram and flow](./delivery-sequence.md)
-- [Constraints and invariants](./delivery-constraints.md)
-- [Functionalities](./delivery-functional.md)
+- [DDD Structure](../../domain-delivery.md#section-delivery-ddd)
+- [Sequence diagram and flow](../../domain-delivery.md#section-delivery-sequence)
+- [Constraints and invariants](../../domain-delivery.md#section-delivery-constraints)
+- [Functionalities](../../domain-delivery.md#section-delivery-functional)

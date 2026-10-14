@@ -978,7 +978,7 @@ units:
     cqRails: none - runtime architecture documentation and evidence
     governance:
       - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
-      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-user-stories.md
+      - docs/architecture/system/subsystems/runtime/runtime-root-subdivision-component.md
       - docs/risk-register/quality/R-20260513-RUNTIME-ROOT-SUBDIVISION.yaml
     fowlerSignals:
       - documentation drift
@@ -1062,7 +1062,7 @@ units:
     dddOwner: ADP
     cqRails: RT-C01
     governance:
-      - docs/architecture/components/engine/architecture/adapter-circuit-breaker-user-stories.md
+      - docs/architecture/components/engine/architecture/adapter-circuit-breaker-component.md
       - docs/contracts/engine/index.md
     fowlerSignals:
       - adapter boundary drift
@@ -1081,7 +1081,7 @@ units:
     governance:
       - docs/planning/execution-model/dvt-execution-model.md
       - >-
-        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
     fowlerSignals:
       - responsibility overload
       - feature envy
@@ -1099,7 +1099,7 @@ units:
     cqRails: none - architecture and fixture validation harness
     governance:
       - >-
-        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
       - docs/architecture/components/ci-governance/component-engineering-record-component.md
     fowlerSignals:
       - test-only confidence
@@ -1154,7 +1154,7 @@ units:
     governance:
       - docs/planning/execution-model/dvt-execution-model.md
       - >-
-        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
     fowlerSignals:
       - responsibility overload
       - hidden authority
@@ -1366,7 +1366,7 @@ units:
     cqRails: RT-C01, RT-Q01
     governance:
       - >-
-        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
+        docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
       - docs/planning/execution-model/dvt-execution-model.md
     fowlerSignals:
       - boundary drift

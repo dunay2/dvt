@@ -27,7 +27,7 @@ describe('Plugins capability table architecture', () => {
       'docs/architecture/components/web/plugins/plugin-capability-table-component.md'
     );
     const userStories = readRepoDoc(
-      'docs/architecture/components/web/plugins/plugin-capability-table-user-stories.md'
+      'docs/architecture/components/web/plugins/plugin-capability-table-component.md'
     );
 
     expect(route).toContain('Owned concern: adapt the Plugins route query state');

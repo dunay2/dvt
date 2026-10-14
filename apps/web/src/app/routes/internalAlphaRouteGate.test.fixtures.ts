@@ -97,7 +97,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
     'docs/planning/closeouts/20260514-f27-alpha-route-acceptance-matrix-closeout.md',
     'docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md',
     'docs/architecture/components/web/internal-alpha-route-gate-component.md',
-    'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
+    'docs/architecture/components/web/internal-alpha-route-gate-component.md',
   ],
   claim: 'alpha-full-candidate',
   routeAuthority: 'F-27',
@@ -122,7 +122,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/appshell/effective-workspace-context-component.md',
-        'docs/architecture/components/web/appshell/effective-workspace-context-user-stories.md',
+        'docs/architecture/components/web/appshell/effective-workspace-context-component.md',
         'apps/web/src/app/services/session/protectedRouteSessionContext.test.ts',
         'apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts',
         'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
@@ -176,7 +176,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
-        'docs/architecture/components/web/graph/canvas-plan-run-readiness-user-stories.md',
+        'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
         'docs/architecture/components/api/index.md',
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
@@ -195,7 +195,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       evidenceAcceptance: 'accepted',
       evidenceRefs: [
         'docs/architecture/components/web/internal-alpha-route-gate-component.md',
-        'docs/architecture/components/web/internal-alpha-route-gate-user-stories.md',
+        'docs/architecture/components/web/internal-alpha-route-gate-component.md',
         'apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts',
         'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
         'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',

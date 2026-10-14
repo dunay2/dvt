@@ -229,7 +229,7 @@ screen, not to the App Shell top bar or Canvas workbench.
 The dedicated local component guide is
 [Shell Workspace Context Component](./shell-workspace-context-component.md).
 Scenario coverage lives in
-[Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md).
+[Shell Workspace Context User Stories](shell-workspace-context-component.md#section-shell-workspace-context-user-stories).
 
 It uses a Fowler Presentation Model split:
 
@@ -402,4 +402,4 @@ state must be placed in the smallest named slice that owns the concern.
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
 - [Canvas Workbench Screen Composition](canvas-workbench-screen-composition-component.md)
 - [Shell Workspace Context Component](./shell-workspace-context-component.md)
-- [Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md)
+- [Shell Workspace Context User Stories](shell-workspace-context-component.md#section-shell-workspace-context-user-stories)

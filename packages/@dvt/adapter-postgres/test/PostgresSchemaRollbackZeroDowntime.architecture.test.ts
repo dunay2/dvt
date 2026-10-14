@@ -46,7 +46,7 @@ describe('Postgres schema rollback zero-downtime component semantics', () => {
   it('publishes user stories for every rollback scenario', () => {
     const userStoriesPath = join(
       import.meta.dirname,
-      '../../../../docs/architecture/components/engine/adapters/state-store/postgres/schema-rollback-zero-downtime-user-stories.md'
+      '../../../../docs/architecture/components/engine/adapters/state-store/postgres/schema-rollback-zero-downtime-component.md'
     );
 
     expect(existsSync(userStoriesPath)).toBe(true);

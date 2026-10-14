@@ -132,7 +132,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md
   - docs/architecture/components/web/graph/canvas-draft-session-component.md
 userStories:
-  - docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md
+  - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md
 governingSources:
@@ -166,7 +166,7 @@ allowedImplementationSurfaces:
   - apps/web/cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts
   - buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md
   - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
-  - docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md
+  - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
   - docs/architecture/components/web/graph/index.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md
@@ -266,7 +266,7 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/useCanvasDraftLifecycle.ts
       - apps/web/cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts
       - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
-      - docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md
+      - docs/architecture/components/web/graph/canvas-project-snapshot-component.md
       - buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md
     greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasProjectSnapshot.architecture.test.ts
   - id: project-snapshot-import-autosave-cancellation

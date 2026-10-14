@@ -15,8 +15,8 @@ Use this guide with:
 
 - [Runs Frontend Architecture](./dvt-runs-frontend-architecture.md)
 - [Frontend Runtime Contract Technical Manual](./frontend-runtime-contract-technical-manual.md)
-- [Web DDD Structure](../web-ddd.md)
-- [Web Functionalities](../web-functional.md)
+- [Web DDD Structure](../../../domain-ui.md#section-web-ddd)
+- [Web Functionalities](../../../domain-ui.md#section-web-functional)
 - [Command Query Rail Governance](../../../command-query-rail-governance.md)
 
 Canonical local paths:
@@ -316,8 +316,8 @@ module.
 - [Start Run Client Identity Boundary](./start-run-client-identity-boundary.md)
 - [Runs User Stories](./user-stories-runs.md)
 - [Run Event Timeline Component](./run-event-timeline-component.md)
-- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
+- [Run Event Timeline User Stories](run-event-timeline-component.md#section-run-event-timeline-user-stories)
 - [Runs Domain Architecture Test](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
-- [Web DDD Structure](../web-ddd.md)
-- [Web Functionalities](../web-functional.md)
+- [Web DDD Structure](../../../domain-ui.md#section-web-ddd)
+- [Web Functionalities](../../../domain-ui.md#section-web-functional)
 - [Web Store Domain Ownership Component](../web-store-domain-ownership-component.md)

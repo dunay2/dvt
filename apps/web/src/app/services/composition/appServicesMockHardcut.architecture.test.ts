@@ -50,7 +50,7 @@ const HARDCUT_DOCUMENTATION_FILES = [
     'components',
     'web',
     'workspace',
-    'mock-runtime-hardcut-user-stories.md',
+    'mock-runtime-hardcut-component.md',
   ],
   [
     '..',
@@ -70,7 +70,7 @@ const HARDCUT_DOCUMENTATION_FILES = [
     'components',
     'web',
     'workspace',
-    'workspace-port-decomposition-user-stories.md',
+    'workspace-port-decomposition-component.md',
   ],
 ] as const;
 
@@ -213,7 +213,7 @@ describe('app services mock hardcut architecture', () => {
       'components',
       'web',
       'workspace',
-      'workspace-port-decomposition-user-stories.md'
+      'workspace-port-decomposition-component.md'
     );
 
     for (const source of [componentSource, userStoriesSource]) {

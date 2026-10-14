@@ -103,7 +103,7 @@ implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/ea-2
 componentGuides:
   - docs/architecture/components/engine/architecture/engine-public-api-surface-component.md
 userStories:
-  - docs/architecture/components/engine/architecture/engine-public-api-surface-user-stories.md
+  - docs/architecture/components/engine/architecture/engine-public-api-surface-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -113,7 +113,7 @@ governingSources:
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-05-engine-public-api-surface-plan-20260514.md
   - docs/architecture/components/engine/architecture/engine-public-api-surface-component.md
-  - docs/architecture/components/engine/architecture/engine-public-api-surface-user-stories.md
+  - docs/architecture/components/engine/architecture/engine-public-api-surface-component.md
   - docs/architecture/components/engine/architecture/index.md
   - buzon/20260514-codex-fowler-ea-20260429-05-engine-public-api-surface-analysis.md
   - packages/@dvt/engine/package.json

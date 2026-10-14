@@ -84,7 +84,7 @@ flowchart LR
 
 ## User Stories Covered
 
-See [Workbench UX Canon User Stories](../workbench-ux-canon-user-stories.md).
+See [Workbench UX Canon User Stories](../workbench-ux-canon-component.md#section-workbench-ux-canon-user-stories).
 
 ## Fitness Functions
 

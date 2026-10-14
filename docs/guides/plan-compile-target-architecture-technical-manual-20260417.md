@@ -37,7 +37,7 @@ The governing GitHub issue owns delivery status and acceptance.
 - `docs/adr/ADR-0012-plan-integrity-ownership.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
-- `docs/architecture/components/planner/planner-ddd.md`
+- `docs/architecture/domain-planning.md`
 - `docs/architecture/components/api/index.md`
 - `docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md`
 

@@ -21,7 +21,7 @@ keeping child slices as their own implementation authorities.
 - Added the internal alpha route gate component guide:
   `docs/architecture/components/web/internal-alpha-route-gate-component.md`.
 - Added route-level user stories:
-  `docs/architecture/components/web/internal-alpha-route-gate-user-stories.md`.
+  `docs/architecture/components/web/internal-alpha-route-gate-component.md`.
 - Added the F-27 route acceptance matrix:
   `docs/planning/reviews/architecture-and-governance/20260514-internal-alpha-route-acceptance-matrix.md`.
 - Updated the route plan and architecture view to point at the matrix as the

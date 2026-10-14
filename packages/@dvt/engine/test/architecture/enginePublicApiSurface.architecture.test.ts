@@ -51,7 +51,7 @@ function expectNoExportFamilies(
 describe('@dvt/engine public API surface architecture', () => {
   it('documents the package-surface component, stories, and proposal', () => {
     expectFileExists(engineArchitectureDocPath('engine-public-api-surface-component.md'));
-    expectFileExists(engineArchitectureDocPath('engine-public-api-surface-user-stories.md'));
+    expectFileExists(engineArchitectureDocPath('engine-public-api-surface-component.md'));
     expectFileExists(
       repoPath(
         'docs/planning/proposals/mandatory/runtime-and-contracts/ea-20260429-05-engine-public-api-surface-plan-20260514.md'
@@ -75,7 +75,7 @@ describe('@dvt/engine public API surface architecture', () => {
     expect(guide).toContain('```mermaid');
 
     const stories = readRepoSource(
-      'docs/architecture/components/engine/architecture/engine-public-api-surface-user-stories.md'
+      'docs/architecture/components/engine/architecture/engine-public-api-surface-component.md'
     );
     for (const storyId of [
       'US-EA-20260429-05-001',
