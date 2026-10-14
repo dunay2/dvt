@@ -275,7 +275,6 @@ allowedImplementationSurfaces:
   - package.json
   - pnpm-lock.yaml
   - docs/planning/proposals/mandatory/runtime-and-contracts/het2-public-rest-artifact-dbt-vertical-plan-20260805.md
-  - docs/risk-register/quality/R-20260805-HET2-PUBLIC-VERTICAL.yaml
 forbiddenImplementationSurfaces:
   - packages/@dvt/engine/src/**
   - apps/api/src/entrypoints/http/**
@@ -389,41 +388,56 @@ symbols:
   - name: HttpJsonArtifactStepTypeConfigSchema
     path: packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts
     dddOwner: HttpJsonArtifactAcquisitionConfig
-    cqRails: [StartRun]
-    fowlerSignals: [Primitive obsession]
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - Primitive obsession
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
     cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
-    unitTests: [packages/@dvt/contracts/test/http-json-artifact-step.contract.test.ts]
+    unitTests:
+      - packages/@dvt/contracts/test/http-json-artifact-step.contract.test.ts
   - name: S3ContentAddressedArtifactStore
     path: packages/@dvt/artifacts/src/contentAddressed/S3ContentAddressedArtifactStore.ts
     dddOwner: ContentAddressedArtifact
-    cqRails: [StartRun]
-    fowlerSignals: [Hidden authority]
+    cqRails:
+      - StartRun
+    fowlerSignals:
+      - Hidden authority
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
     cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
-    unitTests: [packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts]
+    unitTests:
+      - packages/@dvt/artifacts/test/contentAddressedArtifactStore.test.ts
   - name: HttpJsonArtifactPluginRunner
     path: packages/@dvt/temporal-http-json-plugin/src/HttpJsonArtifactPluginRunner.ts
     dddOwner: HttpEndpointAccessPolicy
-    cqRails: [WorkflowEngine.startRun]
-    fowlerSignals: [Boundary drift]
+    cqRails:
+      - WorkflowEngine.startRun
+    fowlerSignals:
+      - Boundary drift
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
     cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
-    unitTests: [packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts]
+    unitTests:
+      - packages/@dvt/temporal-http-json-plugin/test/HttpJsonArtifactPlugin.test.ts
   - name: createTemporalWorkerHttpJsonProfile
     path: apps/temporal-worker/src/runtime/temporalWorkerHttpJsonProfile.ts
     dddOwner: TemporalWorkerHttpJsonProfile
-    cqRails: [WorkflowEngine.startRun]
-    fowlerSignals: [Responsibility overload]
+    cqRails:
+      - WorkflowEngine.startRun
+    fowlerSignals:
+      - Responsibility overload
     architectureGuard: packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts
     cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
-    unitTests: [apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts]
+    unitTests:
+      - apps/temporal-worker/test/runtime/temporalWorkerHttpJsonProfile.test.ts
   - name: buildDbtPlannerGraphSource
     path: apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts
     dddOwner: PlannerPreviewReadModel
-    cqRails: [PreviewExecutionPlan]
-    fowlerSignals: [Hidden authority]
+    cqRails:
+      - PreviewExecutionPlan
+    fowlerSignals:
+      - Hidden authority
     architectureGuard: apps/web/src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
     cypressCoverage: 'Historical coverage: https://github.com/dunay2/dvt/blob/b00ebb72f742cf28a6c6af187c06b9ca95681b18/apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts'
-    unitTests: [apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts]
+    unitTests:
+      - apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts
 ```

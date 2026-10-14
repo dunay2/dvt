@@ -48,9 +48,9 @@ Read these first for the active runtime boundary:
 ## Navigation
 
 - [Engine component home](../index.md)
-- [Core](../architecture/core.md)
+- [Core](../architecture/c4-engine.md#section-core)
 - [Adapters](../adapters/index.md)
-- [Workflows](../architecture/workflows.md)
+- [Workflows](../architecture/c4-engine.md#section-workflows)
 - [Security](../security/index.md)
 - [Operations](../ops/index.md)
 - [Canonical C4 architecture](../architecture/c4-engine.md)

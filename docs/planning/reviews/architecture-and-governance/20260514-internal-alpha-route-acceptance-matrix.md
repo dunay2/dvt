@@ -108,7 +108,7 @@ route boundary with rationale.
   [R-20260424-TEMPORAL-PLAN-REF-CONTRACT](../../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260424-temporal-plan-ref-contract)
   because runtime execution can regress to unchecked `PlanRef` behavior.
   Excluded
-  [R-20260514-AR-D3-WORKER-SCALING](../../../risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml)
+  [R-20260514-AR-D3-WORKER-SCALING](../../../risk-register/quality/r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260514-ar-d3-worker-scaling)
   because worker scale automation is outside internal alpha route proof; the
   route only needs readiness copy for blockers.
 - `Recovery states`: Included

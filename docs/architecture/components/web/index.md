@@ -38,7 +38,7 @@ out of the active tree.
   [Graph sequences and state machines](graph/graph-frontend-architecture.md#section-graph-sequences-and-state-machines),
   [Graph decision rationale and patterns](graph/graph-frontend-architecture.md#section-graph-decision-rationale-and-patterns),
   [Canvas layout persistence component](./graph/canvas-layout-persistence-component.md),
-  [Canvas controller current-to-target](./graph/canvas-controller-current-to-target-architecture.md)
+  [Canvas controller current-to-target](graph/canvas-authoring-runtime-component.md#section-canvas-controller-current-to-target-architecture)
 - runtime and run-inspection surfaces:
   [Runs architecture](runs/component-runs.md#section-dvt-runs-frontend-architecture),
   [Frontend runtime contract technical manual](./runs/frontend-runtime-contract-technical-manual.md),

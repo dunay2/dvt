@@ -249,7 +249,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/architecture/components/web/graph/canvas-workspace-explorer-component.md
   - docs/evidence/index.md
-  - docs/risk-register/quality/R-20260527-CANVAS-MULTI-WORKSHEET.yaml
   - docs/risk-register/quality/index.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md
 forbiddenImplementationSurfaces:
@@ -366,164 +365,682 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx
     greenTest: pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
 symbols:
-  - &canvas_lifecycle_symbol
-    name: ProjectCanvasDocument
+  - name: ProjectCanvasDocument
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
     dddOwner: ProjectCanvasLifecycle
-    cqRails: [ListProjectCanvases, CreateProjectCanvas, SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-    fowlerSignals: [Primitive obsession, Duplicate semantics]
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
     cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
       - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
-  - <<: *canvas_lifecycle_symbol
-    name: ProjectCanvasPatch
-  - <<: *canvas_lifecycle_symbol
-    name: buildDraftWithCreatedProjectCanvas
-  - <<: *canvas_lifecycle_symbol
-    name: buildDraftWithDeletedActiveProjectCanvas
-  - <<: *canvas_lifecycle_symbol
-    name: buildDraftWithSelectedProjectCanvas
-  - <<: *canvas_lifecycle_symbol
-    name: buildDraftWithUpdatedActiveProjectCanvas
-  - <<: *canvas_lifecycle_symbol
-    name: cloneGraphWorkspace
-  - <<: *canvas_lifecycle_symbol
-    name: createCanvasIdBase
-  - <<: *canvas_lifecycle_symbol
-    name: createProjectCanvasId
-  - <<: *canvas_lifecycle_symbol
-    name: listProjectCanvasDocuments
-  - <<: *canvas_lifecycle_symbol
-    name: normalizeProjectCanvasDraft
-  - <<: *canvas_lifecycle_symbol
-    name: preserveProjectCanvasWorkspaces
-  - <<: *canvas_lifecycle_symbol
-    name: resolveActiveProjectCanvasId
-  - <<: *canvas_lifecycle_symbol
-    name: slugifyCanvasIdPart
-  - <<: *canvas_lifecycle_symbol
-    name: toProjectCanvasDocument
-  - <<: *canvas_lifecycle_symbol
-    name: workspaceToDraft
-  - <<: *canvas_lifecycle_symbol
-    name: SaveGraphDraftInput
+  - name: ProjectCanvasPatch
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildDraftWithCreatedProjectCanvas
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildDraftWithDeletedActiveProjectCanvas
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildDraftWithSelectedProjectCanvas
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildDraftWithUpdatedActiveProjectCanvas
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: cloneGraphWorkspace
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: createCanvasIdBase
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: createProjectCanvasId
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: listProjectCanvasDocuments
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: normalizeProjectCanvasDraft
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: preserveProjectCanvasWorkspaces
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: resolveActiveProjectCanvasId
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: slugifyCanvasIdPart
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: toProjectCanvasDocument
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: workspaceToDraft
+    path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.ts
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: SaveGraphDraftInput
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
-    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: executeDeleteCanvasDocumentCommand
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: executeDeleteCanvasDocumentCommand
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
-    cqRails: [DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: executeProjectCanvasDraftSave
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: executeProjectCanvasDraftSave
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
-    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: executeSelectCanvasDocumentCommand
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: executeSelectCanvasDocumentCommand
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
-    cqRails: [SelectProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: executeUpdateCanvasDocumentCommand
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - SelectProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: executeUpdateCanvasDocumentCommand
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
-    cqRails: [RenameProjectCanvas, UpdateCanvasProperties]
-  - <<: *canvas_lifecycle_symbol
-    name: resolveExpectedRevision
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: resolveExpectedRevision
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycleCommand.ts
-    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: buildCreateCanvasDocumentDraftInput
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildCreateCanvasDocumentDraftInput
     path: apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommandPolicy.ts
-    cqRails: [CreateProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: resolveCreateNewCanvasDocumentEligibility
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - CreateProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: resolveCreateNewCanvasDocumentEligibility
     path: apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommandPolicy.ts
-    cqRails: [CreateProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: CanvasProjectCanvasLifecycleCommandDto
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - CreateProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: CanvasProjectCanvasLifecycleCommandDto
     path: apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
-    cqRails: [SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: CanvasUpdateCanvasDocumentCommand
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: CanvasUpdateCanvasDocumentCommand
     path: apps/web/src/app/views/canvas/canvasDraftLifecycle.types.ts
-    cqRails: [RenameProjectCanvas, UpdateCanvasProperties]
-  - <<: *canvas_lifecycle_symbol
-    name: createNewCanvasDocumentCommand
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: createNewCanvasDocumentCommand
     path: apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts
-    cqRails: [CreateProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: CanvasShellCanvasCommands
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - CreateProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: CanvasShellCanvasCommands
     path: apps/web/src/app/views/canvas/canvasShell.types.ts
-  - <<: *canvas_lifecycle_symbol
-    name: CanvasInspectorCanvasContract
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: CanvasInspectorCanvasContract
     path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
-    cqRails: [ListProjectCanvases, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: CanvasInspectorCanvasSection
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: CanvasInspectorCanvasSection
     path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
-    cqRails: [ListProjectCanvases, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
-  - <<: *canvas_lifecycle_symbol
-    name: buildCanvasEnvironmentOptions
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildCanvasEnvironmentOptions
     path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
-    cqRails: [UpdateCanvasProperties]
-  - <<: *canvas_lifecycle_symbol
-    name: resolveCurrentCanvasEnvironmentId
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: resolveCurrentCanvasEnvironmentId
     path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
-    cqRails: [UpdateCanvasProperties]
-  - <<: *canvas_lifecycle_symbol
-    name: createCanvasExecutionSessionContext
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: createCanvasExecutionSessionContext
     path: apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
-    cqRails: [UpdateCanvasProperties]
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/web test:presentation:run -- useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
-  - <<: *canvas_lifecycle_symbol
-    name: normalizeExecutionEnvironmentId
+  - name: normalizeExecutionEnvironmentId
     path: apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
-    cqRails: [UpdateCanvasProperties]
-  - <<: *canvas_lifecycle_symbol
-    name: WorkspaceOption
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: WorkspaceOption
     path: apps/web/src/app/services/config/workspaceConfig.ts
-    cqRails: [UpdateCanvasProperties]
-  - <<: *canvas_lifecycle_symbol
-    name: buildDraft
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - UpdateCanvasProperties
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: buildDraft
     path: apps/web/src/app/views/canvas/canvasProjectCanvasLifecycle.test.ts
-    fowlerSignals: [Test-only confidence]
+    dddOwner: ProjectCanvasLifecycle
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Test-only confidence
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
     cypressCoverage: N/A - unit test fixture
-  - <<: *canvas_lifecycle_symbol
-    name: WorkspaceGraphAuthoringCanvasWorkspace
+    unitTests:
+      - pnpm --filter @dvt/web test:unit:run -- canvasProjectCanvasLifecycle.test.ts
+      - pnpm --filter @dvt/web test:presentation:run -- CanvasInspectorPanel.test.tsx CanvasShell.test.tsx useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+  - name: WorkspaceGraphAuthoringCanvasWorkspace
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     dddOwner: Planner shared-kernel draft contract
-    cqRails: [ListProjectCanvases, CreateProjectCanvas, SelectProjectCanvas, RenameProjectCanvas, UpdateCanvasProperties, DeleteProjectCanvas]
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
-  - <<: *canvas_lifecycle_symbol
-    name: WorkspaceGraphAuthoringCanvasWorkspaceSchema
+  - name: WorkspaceGraphAuthoringCanvasWorkspaceSchema
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     dddOwner: Planner shared-kernel draft contract
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
-  - <<: *canvas_lifecycle_symbol
-    name: WorkspaceGraphAuthoringGraphShape
+  - name: WorkspaceGraphAuthoringGraphShape
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     dddOwner: Planner shared-kernel draft contract
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
-  - <<: *canvas_lifecycle_symbol
-    name: addGraphShapeIssues
+  - name: addGraphShapeIssues
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     dddOwner: Planner shared-kernel draft contract
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
-  - <<: *canvas_lifecycle_symbol
-    name: areCanvasDocumentsEquivalent
+  - name: areCanvasDocumentsEquivalent
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     dddOwner: Planner shared-kernel draft contract
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
-  - <<: *canvas_lifecycle_symbol
-    name: areGraphShapesEquivalent
+  - name: areGraphShapesEquivalent
     path: packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
     dddOwner: Planner shared-kernel draft contract
+    cqRails:
+      - ListProjectCanvases
+      - CreateProjectCanvas
+      - SelectProjectCanvas
+      - RenameProjectCanvas
+      - UpdateCanvasProperties
+      - DeleteProjectCanvas
+    fowlerSignals:
+      - Primitive obsession
+      - Duplicate semantics
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature E-CANVAS-PROPERTIES-LIFECYCLE-1
+    cypressCoverage: N/A - unit and presentation lifecycle slice
     unitTests:
       - pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts
 ```

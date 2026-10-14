@@ -200,5 +200,5 @@ For plugin work in `apps/web`, the baseline closeout is:
 ## Related Pages
 
 - [web component](./index.md)
-- [Canvas Component Map And Modernization Review](./graph/canvas-component-map-and-modernization-review.md)
+- [Canvas Component Map And Modernization Review](graph/graph-frontend-architecture.md#section-canvas-component-map-and-modernization-review)
 - [Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md)
