@@ -4,6 +4,7 @@ const yaml = require('js-yaml');
 function extractColocatedRiskRecords(markdown, sourcePath) {
   const lines = markdown.split('\n');
   const records = [];
+  let previousRecordEnd = -1;
   for (let index = 0; index < lines.length; index += 1) {
     const opening = lines[index].trimEnd();
     if (!/^`{3,}risk-record/.test(opening)) continue;
@@ -31,10 +32,17 @@ function extractColocatedRiskRecords(markdown, sourcePath) {
     }
     const sourceFragment = `risk-${frontmatter.id.toLowerCase()}`;
     const anchor = `<a id="${sourceFragment}"></a>`;
-    if (markdown.split(anchor).length !== 2) {
+    const precedingAnchors = [
+      ...lines
+        .slice(previousRecordEnd + 1, index)
+        .join('\n')
+        .matchAll(/<a id="([^"]+)"><\/a>/g),
+    ];
+    if (markdown.split(anchor).length !== 2 || precedingAnchors.at(-1)?.[1] !== sourceFragment) {
       throw new Error(`Missing or duplicated risk anchor ${sourceFragment} in ${sourcePath}.`);
     }
     records.push({ raw, frontmatter, sourceFragment });
+    previousRecordEnd = end;
     index = end;
   }
   return records;

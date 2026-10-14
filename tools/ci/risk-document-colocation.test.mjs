@@ -118,3 +118,20 @@ test('risk record parser participates in the existing documentation governance c
     'docs-governance'
   );
 });
+
+test('risk anchors must be attached to their own record rather than merely unique', () => {
+  const first = section(source('R-FIRST'), 'R-FIRST');
+  const second = section(source('R-SECOND'), 'R-SECOND');
+  const detached =
+    first.replace(
+      '<a id="risk-r-first"></a>',
+      '<a id="risk-r-first"></a>\n<a id="risk-r-second"></a>'
+    ) + second.replace('<a id="risk-r-second"></a>', '');
+  assert.throws(() => extractColocatedRiskRecords(detached, ownerPath));
+  const swapped = (first + second)
+    .replaceAll('risk-r-first', 'risk-swap')
+    .replaceAll('risk-r-second', 'risk-r-first')
+    .replaceAll('risk-swap', 'risk-r-second');
+  assert.throws(() => extractColocatedRiskRecords(swapped, ownerPath));
+  assert.equal(extractColocatedRiskRecords(first + second, ownerPath).length, 2);
+});
