@@ -157,7 +157,8 @@ Acceptance:
 #### US-RUNTIME-CANON-003: Planning Steward Keeps Reviews Out Of The Backlog
 
 As a Planning steward, I want review documents to be intake and rationale only
-so Planning DB remains the operational work queue.
+so GitHub Issues remains the delivery work queue while Planning DB owns
+architecture and governed evidence.
 
 Acceptance:
 

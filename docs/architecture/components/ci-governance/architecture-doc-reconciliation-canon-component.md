@@ -148,8 +148,8 @@ Acceptance:
 #### Planning steward
 
 As a Planning steward, I want the parent reconciliation proposal to point at
-child tasks so that work is planned in Planning DB rather than inferred from
-proposal prose.
+child issues so that delivery work is planned in GitHub Issues rather than
+inferred from proposal prose. Planning DB retains architecture relationships.
 
 Acceptance:
 

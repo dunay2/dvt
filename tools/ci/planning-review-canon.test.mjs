@@ -77,3 +77,12 @@ test('planning review canonization preserves GitHub issue task authority', () =>
     'Planning Review Canon Component'
   );
 });
+
+test('task acceptance preserves GitHub authority and rejects database-owned delivery tasks', () => {
+  const component = readRepoFile(
+    'docs/architecture/components/ci-governance/planning-review-canon-component.md'
+  );
+  assert.match(component, /GitHub issue commands remain the accepted task path/);
+  assert.match(component, /rejects database-owned delivery-task commands/);
+  assert.doesNotMatch(component, /rejects GitHub issue commands/);
+});

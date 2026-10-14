@@ -153,6 +153,7 @@ Acceptance:
 
 - The GitHub MVP issue workflow is the governing task procedure.
 - The component guide names only the implemented traceability query rail.
-- The semantic test rejects GitHub issue commands and local lane authority.
+- The semantic test rejects database-owned delivery-task commands and local lane
+  authority; GitHub issue commands remain the accepted task path.
 
 > Acceptance scope status: Active. Owner: Product / Architecture / Docs.

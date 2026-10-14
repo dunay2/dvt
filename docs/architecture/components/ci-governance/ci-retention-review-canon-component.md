@@ -167,8 +167,8 @@ Acceptance:
 #### US-CI-RET-CANON-004: Planning Steward Prevents Review Backlogs
 
 As a Planning steward, I want CI, delivery, and retention reviews to become
-tasks only through Planning DB so that active review boards do not become a
-parallel backlog.
+delivery tasks only through GitHub Issues so that active review boards do not
+become a parallel backlog. Planning DB retains architecture and evidence.
 
 Acceptance:
 

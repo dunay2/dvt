@@ -128,3 +128,9 @@ Planning DB authority for architecture and mechanization.
 Validation commands and exact base/head results are recorded in issue #3643 and
 the implementation PR. Full prepush and DB-backed synchronization remain explicit
 acceptance facts, not inferred from routed CI. Existing Open risks remain Open.
+
+Automated review identified a polarity regression in the planning acceptance
+criterion. The correction explicitly keeps GitHub issue commands accepted and
+rejects database-owned delivery-task commands. A focused regression test covers
+both directions. Three adjacent imported delivery-queue sentences were also
+reconciled to ADR-0061; these corrections do not change architecture ownership.
