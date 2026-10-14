@@ -88,6 +88,25 @@ const PRODUCT_COMPOSITION_FILES = [
   ['src', 'app', 'bootstrap', 'AuthRouteGate.tsx'],
 ] as const;
 
+const HARDCUT_DOCUMENTATION_SECTIONS = [
+  'section-f04-frontend-data-boundary-technical-manual-20260404',
+  'section-f04-frontend-data-boundary-user-manual-20260404',
+  null,
+  'section-mock-runtime-hardcut-user-stories',
+  null,
+  'section-workspace-port-decomposition-user-stories',
+] as const;
+
+function hardcutSection(source: string, anchor: string | null): string {
+  if (anchor === null) return source.split('\n<a id="')[0];
+  const marker = '<a id="' + anchor + '"></a>';
+  const parts = source.split(marker);
+  if (parts.length !== 2) throw new Error('Missing or duplicated hardcut section: ' + anchor);
+  const body = parts[1].split('\n<a id="')[0];
+  if (body.trim().length < 100) throw new Error('Empty hardcut section: ' + anchor);
+  return body;
+}
+
 function readRepoFile(...segments: string[]): string {
   return readFileSync(resolve(process.cwd(), ...segments), 'utf8');
 }
@@ -178,6 +197,11 @@ describe('app services mock hardcut architecture', () => {
     }
   });
 
+  it('rejects missing or empty consolidated hardcut sections', () => {
+    expect(() => hardcutSection('Unrelated guide body', 'missing')).toThrow();
+    expect(() => hardcutSection('<a id="empty"></a>\n## Empty', 'empty')).toThrow();
+  });
+
   it('keeps hardcut documentation aligned to API-only product runtime and test-only doubles', () => {
     const forbiddenDriftTerms = [
       /test\/demo/i,
@@ -189,8 +213,11 @@ describe('app services mock hardcut architecture', () => {
       /legacy/i,
     ];
 
-    for (const filePath of HARDCUT_DOCUMENTATION_FILES) {
-      const source = readRepoFile(...filePath);
+    for (const [index, filePath] of HARDCUT_DOCUMENTATION_FILES.entries()) {
+      const source = hardcutSection(
+        readRepoFile(...filePath),
+        HARDCUT_DOCUMENTATION_SECTIONS[index]
+      );
 
       for (const forbiddenTerm of forbiddenDriftTerms) {
         expect(source, `${filePath.join('/')} contains ${forbiddenTerm}`).not.toMatch(

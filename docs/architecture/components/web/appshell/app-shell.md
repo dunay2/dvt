@@ -222,9 +222,9 @@ The shell workspace context is the bounded replacement for tenant, project, and
 environment dropdowns that previously consumed the main top bar.
 
 Workspace context is breadcrumb-style read-only content on the main screen.
-Tenant, project, environment, and deployment adapter scope are read-only inside an active project
-context. Project changes belong to a separate governed project-selection
-screen, not to the App Shell top bar or Canvas workbench.
+Tenant, project, environment, and deployment adapter labels are read-only.
+The on-demand workspace menu delegates selection among server-granted scopes to
+`SelectWorkspaceScope`; it cannot create grants or construct an unvalidated scope.
 
 The dedicated local component guide is
 [Shell Workspace Context Component](./shell-workspace-context-component.md).
@@ -236,7 +236,7 @@ It uses a Fowler Presentation Model split:
 - `buildProjectIdentityBadge(...)` resolves workspace scope into read-only
   labels;
 - `ShellProjectIdentityBadge` renders those labels without mutation affordance;
-- `ShellWorkspaceContextMenu` owns the on-demand read-only shell context
+- `ShellWorkspaceContextMenu` owns the on-demand shell context and granted-scope selection
   surface;
 - `ShellWorkspaceContextDetails` renders tenant, project, environment, and
   deployment adapter as read-only context fields.
@@ -248,16 +248,15 @@ It uses a Fowler Presentation Model split:
 | `ProjectIdentityBadge`         | read model    | Web shell presentation  | Carries tenant, project, environment, deployment adapter, compact id, slug, and draft-scope label |
 | `buildProjectIdentityBadge`    | query adapter | Web shell presentation  | Resolves granted option labels and falls back to raw ids without fabricating                      |
 | `ShellProjectIdentityBadge`    | passive view  | Shell top-bar rendering | Displays read-only project identity in the persistent shell bar                                   |
-| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Makes read-only workspace context reachable from an on-demand surface                             |
+| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Exposes read-only details and delegates granted-scope selection                                   |
 | `ShellWorkspaceContextDetails` | passive view  | Shell context display   | Displays tenant, project, environment, and deployment adapter without mutation controls           |
 
 ### Invariants
 
 - the main top bar renders no `role="combobox"` workspace controls;
 - `ProjectIdentityBadge` is read-only and cannot dispatch session commands;
-- Tenant, project, environment, and deployment adapter scope are read-only
-  inside an active project context;
-- the menu must not expose tenant, project, or environment comboboxes;
+- scope labels are passive; only `SelectWorkspaceScope` may change the validated selection;
+- the menu offers existing granted scopes as buttons, not free-form tenant or environment inputs;
 - the menu must not create a parallel auth, RBAC, tenant-admin,
   project-selection, or environment-selection rail;
 - Git context remains read-only in this slice and does not become a branch
@@ -413,13 +412,10 @@ state must be placed in the smallest named slice that owns the concern.
 The top app bar controls workspace scope, shows platform connectivity, and
 provides shell-level UI actions.
 
-### Workspace Scope Selectors
+### Granted Workspace Scope Selection
 
-The selectors control active:
-
-- Tenant
-- Project
-- Environment
+The on-demand context menu presents complete granted tenant/project/environment
+scopes as buttons through `ShellWorkspaceScopeSelector`, not independent free-form selectors.
 
 The browser may select only scopes granted by GetEffectiveWorkspaceContext.
 The shell displays the validated selection; it cannot create or expand grants.
@@ -460,11 +456,11 @@ These controls update UI layout state only.
 
 ### Definition Of Done
 
-- [ ] Scope selectors are visible and selectable.
+- [ ] The workspace menu offers only granted scopes and dispatches `SelectWorkspaceScope`.
 - [ ] Connection state indicator transitions correctly.
 - [ ] Shell toggles update panels and focus mode.
-- [ ] Spanish labels render under `es` browser locale.
-- [ ] English labels render for non-`es` locale.
+- [ ] Spanish labels render when the persisted application preference is `es`.
+- [ ] English labels render when the persisted application preference is `en`; browser locale is only the initial fallback.
 
 > Section status: Draft. Owner: Web. Colocation does not merge component responsibilities.
 
