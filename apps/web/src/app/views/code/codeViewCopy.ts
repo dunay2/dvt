@@ -1,4 +1,5 @@
 /** Owned concern: resolve locale-aware copy for the Code workbench route. */
+import { detectBrowserLocale } from '../../browserLocale';
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
 
 export type CodeViewLanguage = 'en' | 'es';
@@ -330,24 +331,7 @@ function resolveCodeViewLanguage(locale?: string): CodeViewLanguage {
   return locale?.trim().toLowerCase().startsWith('es') ? 'es' : 'en';
 }
 
-export function detectCodeViewLocale(): string {
-  if (typeof navigator !== 'undefined') {
-    const navigatorLocale = navigator.language || navigator.languages?.[0];
-    if (navigatorLocale) {
-      return navigatorLocale;
-    }
-  }
-
-  const documentLocale =
-    typeof document === 'undefined' ? '' : document.documentElement.lang?.trim();
-  if (documentLocale) {
-    return documentLocale;
-  }
-
-  return 'en';
-}
-
-export function resolveCodeViewCopy(locale: string = detectCodeViewLocale()): CodeViewCopy {
+export function resolveCodeViewCopy(locale: string = detectBrowserLocale()): CodeViewCopy {
   const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCodeViewLanguage(locale)];
   if (localizedCopy) {
     return localizedCopy;

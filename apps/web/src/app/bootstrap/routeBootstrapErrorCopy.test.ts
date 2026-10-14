@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
-  detectRouteBootstrapLocale,
   formatRouteBootstrapActiveRegistrationMissingMessage,
   formatRouteBootstrapRegistrationNotFoundMessage,
   resolveRouteBootstrapErrorCopy,
@@ -14,36 +13,6 @@ import {
 } from './routeBootstrapErrors';
 
 describe('routeBootstrapErrorCopy', () => {
-  const originalDocumentLang = document.documentElement.lang;
-
-  afterEach(() => {
-    document.documentElement.lang = originalDocumentLang;
-    vi.restoreAllMocks();
-  });
-
-  it('prefers navigator language over static document language', () => {
-    document.documentElement.lang = 'en';
-    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
-
-    expect(detectRouteBootstrapLocale()).toBe('es-ES');
-  });
-
-  it('falls back to document language when navigator language is unavailable', () => {
-    document.documentElement.lang = 'es-ES';
-    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('');
-    vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue([]);
-
-    expect(detectRouteBootstrapLocale()).toBe('es-ES');
-  });
-
-  it('falls back to navigator languages when navigator language is empty', () => {
-    document.documentElement.lang = 'en';
-    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('');
-    vi.spyOn(window.navigator, 'languages', 'get').mockReturnValue(['es-MX']);
-
-    expect(detectRouteBootstrapLocale()).toBe('es-MX');
-  });
-
   it('resolves Spanish bootstrap copy when the runtime locale is Spanish', () => {
     expect(resolveRouteBootstrapErrorCopy('es-ES')).toEqual({
       dataRouterContextMissing:

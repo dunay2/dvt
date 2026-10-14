@@ -1,4 +1,6 @@
 /** Owned concern: resolve locale-aware copy for the pre-React app bootstrap domain. */
+import { detectBrowserLocale } from '../browserLocale';
+import { resolveCopyLanguage } from '../copyLanguage';
 import { resolveString, type LocalizableString } from '../plugins/contracts/PluginManifest';
 
 export type AppBootstrapLanguage = 'en' | 'es';
@@ -225,37 +227,8 @@ const LOCALIZED_COPY_BY_LANGUAGE: Record<AppBootstrapLanguage, AppBootstrapCopy 
   es: SPANISH_COPY,
 };
 
-function resolveAppBootstrapLanguage(locale?: string): AppBootstrapLanguage {
-  const normalizedLocale = locale?.trim().toLowerCase();
-
-  if (normalizedLocale?.startsWith('es')) {
-    return 'es';
-  }
-
-  return 'en';
-}
-
-export function detectAppBootstrapLocale(): string {
-  if (typeof navigator !== 'undefined') {
-    const navigatorLocale = navigator.language || navigator.languages?.[0];
-    if (navigatorLocale) {
-      return navigatorLocale;
-    }
-  }
-
-  const documentLocale =
-    typeof document === 'undefined' ? '' : document.documentElement.lang?.trim();
-  if (documentLocale) {
-    return documentLocale;
-  }
-
-  return 'en';
-}
-
-export function resolveAppBootstrapCopy(
-  locale: string = detectAppBootstrapLocale()
-): AppBootstrapCopy {
-  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveAppBootstrapLanguage(locale)];
+export function resolveAppBootstrapCopy(locale: string = detectBrowserLocale()): AppBootstrapCopy {
+  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCopyLanguage(locale)];
   if (localizedCopy) {
     return localizedCopy;
   }

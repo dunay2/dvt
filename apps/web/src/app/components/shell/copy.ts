@@ -242,23 +242,6 @@ function resolveShellTopBarLanguage(locale?: string): 'en' | 'es' {
   return locale?.trim().toLowerCase().startsWith('es') ? 'es' : 'en';
 }
 
-export function detectShellTopBarLocale(): string {
-  if (typeof navigator !== 'undefined') {
-    const navigatorLocale = navigator.language || navigator.languages?.[0];
-    if (navigatorLocale) {
-      return navigatorLocale;
-    }
-  }
-
-  const documentLocale =
-    typeof document === 'undefined' ? '' : document.documentElement.lang?.trim();
-  if (documentLocale) {
-    return documentLocale;
-  }
-
-  return 'en';
-}
-
 export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
   if (resolveShellTopBarLanguage(locale) === 'es') {
     return COPY_ES;
