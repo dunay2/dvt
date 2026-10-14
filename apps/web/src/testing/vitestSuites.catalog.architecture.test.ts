@@ -186,14 +186,14 @@ describe('web Vitest suite catalog', () => {
       executionSteps.some(
         (step) =>
           step.run?.trim() ===
-          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }}"
+          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
       )
     ).toBe(true);
     expect(
       executionSteps.some(
         (step) =>
           step.run?.trim() ===
-          'pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}'
+          "pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
       )
     ).toBe(true);
     for (const step of executionSteps) {

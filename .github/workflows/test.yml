@@ -117,7 +117,9 @@ jobs:
           DVT_CI: '1'
 
   web-frontend-tests:
-    name: Web Frontend Tests (${{ matrix.capability || matrix.phase }})
+    name:
+      Web Frontend Tests (${{ matrix.capability || matrix.phase }}${{ matrix.shard && format('
+      {0}/3', matrix.shard) || '' }})
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: [detect_test_matrix]
@@ -135,6 +137,13 @@ jobs:
             capability: controlled
           - phase: browser
             capability: available
+            shard: 1
+          - phase: browser
+            capability: available
+            shard: 2
+          - phase: browser
+            capability: available
+            shard: 3
           - phase: browser
             capability: unavailable
     env:
@@ -147,7 +156,8 @@ jobs:
         github.event_name == 'push' && github.event.before || github.sha }}
       GIT_HEAD: ${{ github.sha }}
       PROOF_OWNER:
-        ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}
+        ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}-${{
+        matrix.shard || 0 }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -168,7 +178,7 @@ jobs:
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
-          turbo-cache-variant: ${{ matrix.capability || matrix.phase }}
+          turbo-cache-variant: ${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}
         env:
           CYPRESS_INSTALL_BINARY: '0'
 
@@ -176,7 +186,8 @@ jobs:
         id: web_plan
         run: >-
           pnpm test:web:changed --plan --phase=${{ matrix.phase }} ${{ matrix.capability &&
-          format('--browser-capability={0}', matrix.capability) || '' }} ${{ (github.event_name !=
+          format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&
+          format('--browser-shard={0}/3', matrix.shard) || '' }} ${{ (github.event_name !=
           'pull_request' || needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
           '--full' || '' }}
 
@@ -239,7 +250,8 @@ jobs:
           needs.detect_test_matrix.outputs.root_build_sensitive != 'true'
         run: >-
           pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability &&
-          format('--browser-capability={0}', matrix.capability) || '' }}
+          format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&
+          format('--browser-shard={0}/3', matrix.shard) || '' }}
 
       - name: Run governed web Vitest primary suites
         if:
@@ -251,8 +263,9 @@ jobs:
         if:
           matrix.phase == 'browser' && (github.event_name != 'pull_request' ||
           needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
-        run:
+        run: >-
           pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}
+          ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}
 
       - name: Upload browser failure screenshots
         if: >-
@@ -260,7 +273,7 @@ jobs:
           steps.web_plan.outputs.browser_required == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: web-live-proof-screenshots-${{ matrix.capability }}
+          name: web-live-proof-screenshots-${{ matrix.capability }}-${{ matrix.shard || 0 }}
           path: .dvt/evidence/selected-closure/screenshots
           include-hidden-files: true
           if-no-files-found: ignore

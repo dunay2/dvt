@@ -324,7 +324,8 @@ The existing command plan represents three distinct runtime obligations:
 
 - Controlled API consumers execute once through the native browser runner.
 - Available LIVE consumers execute the exact admitted spec list in one Cypress
-  invocation and one protected runtime bootstrap. Each spec owns its suite and
+  invocation and one protected runtime bootstrap locally, or once per disjoint
+  CI shard as specified below. Each spec owns its suite and
   preparation; no spec imports another spec to register its cases. The terminal
   retains its own cases and exclusive helpers. This restores spec isolation
   without repeating PostgreSQL, API, Temporal or outbox startup for every file.
@@ -357,12 +358,61 @@ not introduce a generic GET recorder or global fixture repair.
 
 Admission requires measuring each complete job critical path, including setup,
 builds, selected runtime, result validation and cleanup, against its unchanged
-25-minute budget. All four matrix jobs must satisfy the existing required
+25-minute budget. All capability/shard matrix jobs must satisfy the existing required
 aggregate. The partition preserves the 119 controlled, 53 existing available
 and one unavailable cases; first authoring adds one available case. This does
 not prove that a stalled case is fixed. Individual
 test durations or results from the previous serial layout cannot establish the
 new bound. No new workflow, timeout increase or evidence waiver is admitted.
+
+### Available Browser Budget Partition — GH-3656
+
+The existing `RouteChangedWebVitestSuites` query and `RunWebCypressNative`
+command retain their application ports, browser catalog and authorization
+boundary. PR #3627 run `38614237742` exhausted the available job's 25-minute
+budget after 15 of 32 specs passed, while starting spec 16. Other capabilities
+passed. This is incomplete execution evidence, not a passing product result.
+
+```text
+Before: complete admitted plan -> available [32 specs] -> 25-minute cancellation
+After:  complete admitted plan -> available 1/3 -> exact result validation
+                              -> available 2/3 -> exact result validation
+                              -> available 3/3 -> exact result validation
+All three producers -> existing required Test Suite matrix aggregate
+```
+
+The existing browser policy partitions its ordered available spec list by
+zero-based index modulo three. Every spec belongs to exactly one shard; the
+union equals the unpartitioned catalog. Reuse the existing command builder,
+protected runtime and strict expected-spec result validator. Do not duplicate
+the catalog in YAML, parse command strings, add another runner or alter cases.
+
+The adapter accepts `--browser-shard=1/3`, `2/3` or `3/3` only together with
+`--phase=browser --browser-capability=available`. Omission preserves the complete
+local invocation. Complete plan admission and physical-path validation precede
+shard selection, including in `--plan` mode. Invalid, repeated, out-of-phase
+or out-of-capability selectors reject before provisioning. A selected shard
+cannot silently admit an empty consumer list.
+
+The existing workflow creates all three available producers for PR and full
+baseline execution. Container ownership, Turbo cache variant and screenshot
+artifact identities include the shard. Provider setup occurs only when the
+selected plan requires it. The unchanged 25-minute deadline and fail-fast-false
+policy apply to each producer; a failed, cancelled or missing shard blocks the
+existing required aggregate. Controlled, unavailable and Vitest ownership do
+not change. Three bootstraps replace one for this capability; lower total CPU
+is not claimed.
+
+Separate focused policy/adapter tests prove disjoint complete coverage,
+unchanged runtime arguments, selector rejection and validation-before-filtering.
+Workflow contracts prove every shard is scheduled with unique resource names
+and identical planning/execution selectors. Each complete CI critical path,
+including preparation and cleanup, must pass within 25 minutes. Delivery and
+measured evidence belong to [issue 3656](https://github.com/dunay2/dvt/issues/3656).
+
+| Scenario                                  | Opportunity    | Fowler pattern                          | DDD owner                   | Command/query rail                               | Implementation surfaces                                                              | Unit or package test                                                        | Architecture test                                                                                     | User-flow test                                                  | Out of scope                                                                      |
+| ----------------------------------------- | -------------- | --------------------------------------- | --------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Available evidence exceeds one job budget | Boundary drift | Policy separated from execution adapter | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites; RunWebCypressNative | Existing browser policy, changed-suite adapter, Test Suite workflow and their guards | Disjoint complete partition; invalid selectors; validation before filtering | Workflow schedules every shard with identical plan/execution selection and unique resource identities | All existing available specs through the real protected runtime | Product behavior, new catalogs/runners, timeout increases, total CPU optimization |
 
 ### Execution Selection Consumer Closure — GH-3610
 

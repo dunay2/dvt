@@ -1,16 +1,16 @@
 /**
  * Owned concern: adapt changed files into governed Web evidence execution.
  * @baseline GH-3540: one router owns both independent evidence obligations.
- * @decision GH-3578: select phase and browser capability after validating the complete plan.
+ * @decision GH-3578/GH-3656: select phase, capability and shard after validating the complete plan.
  * @consequence Local execution remains complete; CI partitions cannot hide invalid paths.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import type { WebCypressCapability } from '../cypress.changed';
+import { selectWebCypressShard, type WebCypressCapability } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
 type GitOutputRunner = (args: readonly string[], cwd: string) => string[];
@@ -21,6 +21,7 @@ type ChangedSuiteArgs = Readonly<{
   full: boolean;
   phase: WebEvidencePhase;
   browserCapability?: WebCypressCapability;
+  browserShard?: number;
   files: readonly string[];
 }>;
 
@@ -44,6 +45,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
   const files: string[] = [];
   let phase: WebEvidencePhase = 'all';
   let browserCapability: WebCypressCapability | undefined;
+  let browserShard: number | undefined;
   for (const arg of argv) {
     if (arg === '--') continue;
     if (!arg.startsWith('--')) {
@@ -52,10 +54,12 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     }
     const selectedPhase = WEB_EVIDENCE_PHASES.get(arg);
     const selectedCapability = WEB_BROWSER_CAPABILITIES.get(arg);
+    const selectedShard = /^--browser-shard=([1-3])\/3$/.exec(arg);
     const flag = arg.split('=', 1)[0]!;
     if (
       (selectedPhase === undefined &&
         selectedCapability === undefined &&
+        selectedShard === null &&
         !['--plan', '--full', '--files'].includes(arg)) ||
       flags.has(flag)
     ) {
@@ -64,11 +68,15 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     flags.add(flag);
     phase = selectedPhase ?? phase;
     browserCapability = selectedCapability ?? browserCapability;
+    if (selectedShard) browserShard = Number(selectedShard[1]);
   }
   const plan = flags.has('--plan');
   const full = flags.has('--full');
   if (browserCapability !== undefined && phase !== 'browser') {
     throw new Error('--browser-capability requires --phase=browser.');
+  }
+  if (browserShard !== undefined && (phase !== 'browser' || browserCapability !== 'available')) {
+    throw new Error('--browser-shard requires --phase=browser --browser-capability=available.');
   }
   if ((full && !plan && phase !== 'browser') || (flags.has('--files') && files.length === 0)) {
     throw new Error(
@@ -81,6 +89,7 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
     phase,
     files,
     ...(browserCapability === undefined ? {} : { browserCapability }),
+    ...(browserShard === undefined ? {} : { browserShard }),
   };
 }
 
@@ -197,11 +206,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
       throw new Error(`Retired browser evidence must remain absent: ${path}`);
     }
   }
-  const browserCommands = plan.browserCommands.filter(
-    (entry) =>
-      args.phase !== 'vitest' &&
-      (args.browserCapability === undefined || entry.capability === args.browserCapability)
-  );
+  const browserCommands = plan.browserCommands
+    .filter(
+      (entry) =>
+        args.phase !== 'vitest' &&
+        (args.browserCapability === undefined || entry.capability === args.browserCapability)
+    )
+    .map((entry) => selectWebCypressShard(entry, args.browserShard));
 
   if (args.plan) {
     process.stdout.write(`${JSON.stringify({ ...plan, browserCommands })}\n`);

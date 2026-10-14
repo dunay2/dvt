@@ -1,9 +1,9 @@
 /**
  * Owned concern: assign exact browser consumers to their real runtime evidence.
  * @baseline GH-3578/GH-3593/GH-3610/GH-3622: retained consumers keep their real runtime and owned journeys.
- * @decision Reuse three existing runtime commands with explicit paths and invocation-local environment.
- * @consequence Unknown ownership rejects; one available invocation executes each owned spec independently.
- * @version 1.0.1
+ * @decision GH-3656: partition available evidence inside its policy; reuse the runtime command builder.
+ * @consequence Unknown ownership rejects; CI shards preserve complete, disjoint spec execution.
+ * @version 1.0.2
  */
 export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
 export type WebCypressCommand = Readonly<{
@@ -209,9 +209,8 @@ function repositoryPath(path: string): string {
 
 function buildBrowserCommand(
   capability: WebCypressCapability,
-  controlledSpecs: readonly string[]
+  specPaths: readonly string[]
 ): WebCypressCommand {
-  const specPaths = capability === 'controlled' ? controlledSpecs : WEB_CYPRESS_SPECS[capability];
   const command =
     capability === 'controlled'
       ? `pnpm run test:e2e:native --browser chrome --spec ${specPaths.map((path) => path.slice('apps/web/'.length)).join(',')}`
@@ -226,6 +225,22 @@ function buildBrowserCommand(
         capability === 'controlled' ? undefined : capability,
     },
   };
+}
+
+export function selectWebCypressShard(
+  command: WebCypressCommand,
+  index?: number
+): WebCypressCommand {
+  if (index === undefined) return command;
+  if (command.capability !== 'available') {
+    throw new Error('Browser shards require the available capability.');
+  }
+  if (!Number.isInteger(index) || index < 1 || index > 3) {
+    throw new Error('Browser shard index must be 1, 2 or 3.');
+  }
+  const specPaths = command.specPaths.filter((_, position) => position % 3 === index - 1);
+  if (specPaths.length === 0) throw new Error('Cannot execute an empty browser shard.');
+  return buildBrowserCommand(command.capability, specPaths);
 }
 
 function browserCapabilities(path: string): readonly WebCypressCapability[] {
@@ -303,7 +318,10 @@ export function resolveWebCypressChangedPlan(
   return {
     vitestFiles: [...vitestFiles],
     commands: capabilities.map((capability) =>
-      buildBrowserCommand(capability, [...controlledSpecs])
+      buildBrowserCommand(
+        capability,
+        capability === 'controlled' ? [...controlledSpecs] : WEB_CYPRESS_SPECS[capability]
+      )
     ),
     requiredFiles: [...requiredFiles],
     retiredFiles: [...retiredFiles],
