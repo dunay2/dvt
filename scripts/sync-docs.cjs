@@ -1060,7 +1060,7 @@ function orderRowsByPreferredLinks(rows, preferredLinks) {
 }
 
 function renderBulletList(rows) {
-  return rows.map((row) => `- [${row.label}](${encodeURI(row.link)})`);
+  return rows.map((row) => `- [${row.label.replace(/\s+/gu, ' ').trim()}](${encodeURI(row.link)})`);
 }
 
 function renderConceptsIndex(meta, rows) {
@@ -1321,6 +1321,7 @@ module.exports = {
   lifecycleStateIsPublishable,
   main,
   readDocumentationLifecycleAuthority,
+  renderBulletList,
   scanSectionEntries,
   shouldIncludeDocumentationPath,
   shouldIncludePlanningDoc,

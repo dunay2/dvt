@@ -28,6 +28,7 @@ const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
 const { buildCommandQueryRailSnapshot } = require('./planning-db/command-query-rail-catalog.cjs');
+const { readRailReferenceAuthority } = require('./planning-db/command-query-rail-authority.cjs');
 const {
   buildFrontendMechanicalTruthSnapshot,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
@@ -2495,6 +2496,12 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
       toJson(rail.rawManifest),
     ]
   );
+  for (const rail of snapshot.rails) {
+    if (rail.rawRail.referenceOnly !== true) continue;
+    if (!(await readRailReferenceAuthority(client, rail))) {
+      throw new Error(`AUTHORITY-NOT-FOUND: imported reference ${rail.railId}`);
+    }
+  }
 }
 
 function readDbGovernanceSurfaceCatalog(catalogPath = dbGovernanceSurfaceCatalogPath) {

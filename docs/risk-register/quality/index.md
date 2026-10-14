@@ -52,8 +52,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Connected source identity can collide or cross workspace boundaries](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260808-pth1-connected-source-truth)
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260409-provider-status-semantic-drift)
 - [Contract compatibility drift during artifact-store migration](r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260307-artifact-store-01)
-- [Contract schema-pack refactor depends on an ESLint 10 compatibility shim for import-order linting
-  ](r-20260321-planner-validation-lifecycle-semantics.md#risk-r-20260414-contract-schema-pack-lint-compat)
+- [Contract schema-pack refactor depends on an ESLint 10 compatibility shim for import-order linting](r-20260321-planner-validation-lifecycle-semantics.md#risk-r-20260414-contract-schema-pack-lint-compat)
 - [Contracts hash-compare scope change lacks PR-runtime E2E validation](r-20260321-planner-validation-lifecycle-semantics.md#risk-r-20260515-ci-contracts-hash-scope-e2e)
 - [Crypto primitive implementations could drift across repository boundaries](r-20260426-start-run-intent-rollback-asymmetry.md#risk-r-20260822-crypto-authority-drift)
 - [dbt import authority or atomic file mutation can diverge under runtime failure](r-20260321-planner-validation-lifecycle-semantics.md#risk-r-20260714-dbt-project-import-authority)
@@ -66,10 +65,8 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Displayed dbt target could diverge from its governed execution connection](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260818-dbt-target-connection-drift)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](r-20260311-g5-4-operability-and-fencing-residuals.md#risk-r-20260402-snapshot-retry-fallback-cadence)
 - [Downstream consumers may still depend on retired status helper exports or mixed status semantics](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260413-ar-a12-b-status-model-consumer-drift)
-- [Downstream consumers may still reference retired engine contract-pack aliases or mixed-generation paths
-  ](r-20260321-planner-validation-lifecycle-semantics.md#risk-r-20260413-ar-a12-a-contract-pack-reset)
-- [Downstream planner and consumer surfaces may drift while adopting the frozen SQL-first preview contract
-  ](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260413-tf-a1-a-preview-contract-adoption-drift)
+- [Downstream consumers may still reference retired engine contract-pack aliases or mixed-generation paths](r-20260321-planner-validation-lifecycle-semantics.md#risk-r-20260413-ar-a12-a-contract-pack-reset)
+- [Downstream planner and consumer surfaces may drift while adopting the frozen SQL-first preview contract](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260413-tf-a1-a-preview-contract-adoption-drift)
 - [DVT authoring nodes can drift behind dbt-owned renderer and inspector behavior](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260416-web-dvt-renderer-ownership-drift)
 - [DVT_CI warm-build shortcut could hide missing dependency builds on stale local worktrees](R-20260418-LOCAL-BUILD-HOOK-WARM-CACHE-P0.yaml)
 - [Effective workspace context drift can reappear in protected web API mode](r-20260329-mvp-backend-scope-drift-01.md#risk-r-20260510-web-api-ewc)
