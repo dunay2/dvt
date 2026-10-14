@@ -31,7 +31,7 @@ mitigation:
     hidden COUNT or per-input LIMIT is introduced.
   evidence:
     - docs/adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md
-    - docs/evidence/ED-20260911-semantic-workbench-join-composition.md
+    - https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260911-semantic-workbench-join-composition.md
     - docs/evidence/ED-20260919-left-join-end-to-end.md
     - docs/evidence/ED-20261004-single-operational-workload-v1.md
     - docs/evidence/ED-20260919-right-full-join-end-to-end.md

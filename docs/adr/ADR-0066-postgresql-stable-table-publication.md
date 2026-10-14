@@ -18,7 +18,7 @@ Accepted.
 
 Issue #2723 implements the frozen contract through the existing StartRun and
 Temporal plugin rails. Its ARC-2 proof is recorded in
-`ED-20260915-dvt-postgres-operational-runtime.md`.
+[Historical source](https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/evidence/ED-20260915-dvt-postgres-operational-runtime.md).
 
 ## Context
 

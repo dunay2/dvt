@@ -95,7 +95,6 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
-  - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
@@ -365,7 +364,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
   - docs/evidence/index.md
   - docs/guides/workflow-engine-user-manual.v1.md
   - docs/planning/closeouts/20260514-we-hx-0-hardcut-canonical-map-closeout.md
@@ -518,7 +516,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-runtime-path-decomposition-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
   - docs/evidence/index.md
   - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
@@ -825,15 +822,12 @@ allowedImplementationSurfaces:
   - apps/api/src/application/services/WorkflowEngineFactory.ts
   - apps/api/src/runtime/intentReconcilerRuntime.ts
   - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
-  - buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md
   - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/index.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
-  - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
   - docs/evidence/index.md
-  - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/status/**
   - docs/risk-register/quality/R-20260512-DHM-WS6-SEMANTIC-CLOSURE.yaml
@@ -898,7 +892,6 @@ redGreenCycles:
       - packages/@dvt/engine/src/domain/IRunSignalService.ts
       - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
       - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-user-stories.md
-      - buzon/20260512-codex-fowler-dhm-ws6-semantic-closure-analysis.md
       - buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineSemanticClosure.architecture.test.ts
 symbols:
@@ -1086,7 +1079,6 @@ governingSources:
   - docs/adr/ADR-0014-run-driven-adapter-model.md
   - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
 allowedImplementationSurfaces:
-  - buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/closeouts/20260512-we-hx-5-provider-telemetry-seams-closeout.md
   - docs/planning/status/generated-code-state.md
@@ -1095,7 +1087,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
-  - docs/evidence/ed-20260512-we-hx-5-provider-telemetry-seams.md
   - docs/evidence/index.md
   - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
   - docs/risk-register/quality/index.md
@@ -1171,7 +1162,6 @@ redGreenCycles:
       - packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts
       - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-component.md
       - docs/architecture/components/engine/architecture/workflow-engine-provider-telemetry-seams-user-stories.md
-      - buzon/20260512-codex-fowler-we-hx-5-provider-telemetry-seams-analysis-and-remediation.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
 symbols:
   - name: IEngineProviderResolver
@@ -1346,7 +1336,6 @@ governingSources:
   - docs/adr/ADR-0014-run-driven-adapter-model.md
   - docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md
 allowedImplementationSurfaces:
-  - buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md
   - docs/.manifest.json
   - docs/index.md
   - docs/**/index.md
@@ -1358,7 +1347,6 @@ allowedImplementationSurfaces:
   - docs/architecture/components/engine/architecture/workflow-engine-semantic-closure-component.md
   - docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md
   - docs/architecture/components/engine/roadmap/engine-phases.md
-  - docs/evidence/ed-20260512-we-hx-6-boundary-fitness.md
   - docs/planning/closeouts/20260512-we-hx-6-boundary-fitness-closeout.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/state/**
@@ -1430,7 +1418,6 @@ redGreenCycles:
       - packages/@dvt/engine/test/core/WorkflowEngine.helpers.ts
       - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-component.md
       - docs/architecture/components/engine/architecture/workflow-engine-boundary-fitness-user-stories.md
-      - buzon/20260512-codex-fowler-we-hx-6-boundary-fitness-analysis-and-remediation.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
   - id: architecture-test-support-repetition-removal
     redTest: pnpm --filter @dvt/engine test -- test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
@@ -1728,11 +1715,8 @@ governingSources:
 allowedImplementationSurfaces:
   - buzon/20260518-dhm-ws3-fowler-admission-semantics-analysis.md
   - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
-  - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
-  - buzon/20260515-codex-we-hx-3-qa-hardening-tasks.md
   - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
   - docs/planning/closeouts/**
-  - docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/system-operations-inventory-20260501.md
   - docs/architecture/components/engine/architecture/**
@@ -1836,7 +1820,6 @@ redGreenCycles:
       - docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md
       - docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md
       - buzon/20260512-codex-fowler-we-hx-3-start-run-decomposition-analysis-and-remediation.md
-      - buzon/20260515-codex-fowler-we-hx-3-hardcut-analysis.md
     greenTest: pnpm --filter @dvt/engine test -- test/architecture/startRunApplicationDecomposition.architecture.test.ts
   - id: start-run-qa-hardening-parser-api
     redTest: node --test scripts/feature-mechanization-manifest.test.cjs

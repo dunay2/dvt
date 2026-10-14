@@ -28,7 +28,7 @@ code.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - [Historical source](https://github.com/dunay2/dvt/blob/5f1cb78d83b467d8b133380d9115d50b10dd14e7/docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md)
-- `docs/planning/proposals/mandatory/governance-and-docs/ci-audit-engine-coverage-plan-20260515.md`
+- [Historical source](https://github.com/dunay2/dvt/blob/5d0a5952bb7ba76e5bfe5456aec27b61f4b54d09/docs/planning/proposals/mandatory/governance-and-docs/ci-audit-engine-coverage-plan-20260515.md)
 
 ## Owned Concern
 

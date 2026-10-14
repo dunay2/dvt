@@ -310,7 +310,6 @@ the new command and identity witnesses are green.
         "scripts/run-dev-stack.auth.cjs",
         "scripts/run-dev-stack.source-rebind.auth.test.cjs",
     "docs/adr/ADR-0058-warehouse-source-import-rails.md",
-        "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
         "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml"
       ],
       "expectedFailure": "Physical binding cannot be changed through one verified command while preserving logical identity"
@@ -418,7 +417,6 @@ the new command and identity witnesses are green.
     "docs/adr/ADR-0058-warehouse-source-import-rails.md",
     "docs/architecture/**",
     "docs/.manifest.json",
-    "docs/evidence/ED-20260905-gh-2904-stable-logical-physical-binding.md",
     "docs/guides/generic-graph-source-technical-manual-20260404.md",
     "docs/risk-register/quality/R-20260905-GH-2904-STABLE-LOGICAL-PHYSICAL-BINDING.yaml",
     "docs/planning/proposals/mandatory/runtime-and-contracts/gh-2904-stable-logical-physical-binding-hardcut-20260905.md"
