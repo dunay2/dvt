@@ -1957,8 +1957,8 @@ mitigation:
     incomplete saved state fails explicitly without repair, migration or write.
   evidence:
     - docs/contracts/planner/workspace-graph-draft-persistence-v1.md
-    - docs/evidence/ED-20260929-pending-source-identity.md
-    - docs/evidence/ED-20261001-pending-read-coverage.md
+    - https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20260929-pending-source-identity.md
+    - https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20261001-pending-read-coverage.md
     - packages/@dvt/contracts/test/dvt-read-field-coverage.test.ts
     - packages/@dvt/substrait-analysis/test/schemaHierarchy.test.ts
     - apps/web/cypress/e2e/canvas/canvas-pending-read-coverage.cy.ts
@@ -2032,7 +2032,7 @@ mitigation:
   - Apply removes the former complete document when the selected output is incomplete.
   - Canonical disconnection rejects failed, stale, disposed, and read-only analysis before mutation.
   - Unit, contract, and real-browser evidence is recorded in
-    ED-20261003-canonical-relation-edge-disconnection.
+    https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20261003-canonical-relation-edge-disconnection.md.
 ---
 ```
 
@@ -2065,7 +2065,7 @@ mitigation:
   - Legacy copied expressions are never guessed into new dependencies.
   - Readers and writers deploy together as a development hard cut, without migration or V2.
   - Mutation, roundtrip, composition, browser and validation evidence is recorded in
-    ED-20261005-transform-alias-dependencies.
+    https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ED-20261005-transform-alias-dependencies.md.
 ---
 ```
 

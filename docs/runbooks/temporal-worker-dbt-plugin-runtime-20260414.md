@@ -297,7 +297,7 @@ Most likely causes:
 ## Rollout acceptance evidence (TF-C3-E)
 
 TF-C3-E repository acceptance is closed by
-[`ed-20260514-temporal-worker-dbt-canary.md`](../evidence/ed-20260514-temporal-worker-dbt-canary.md).
+[Historical DBT worker canary evidence](https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ed-20260514-temporal-worker-dbt-canary.md).
 That evidence runs the canonical local Docker canary with DBT mode enabled,
 Docker-backed Postgres, a Temporal test service, plan-store artifacts,
 run metadata, readiness endpoints, metrics, a file-backed DBT project bundle,

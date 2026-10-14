@@ -1494,7 +1494,7 @@ mitigation:
     - https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/runtime-and-contracts/vtx2-standard-first-capability-admission-plan-20260903.md
     - packages/@dvt/contracts/test/dvt-substrait-capability-admission.contract.test.ts
     - packages/@dvt/contracts/test/dvt-substrait-capability-catalog.contract.test.ts
-    - docs/evidence/ed-20260930-explicit-capability-admission.md
+    - https://github.com/dunay2/dvt/blob/c751d0946371f69cd0d001bd5690a92596e8f2c0/docs/evidence/ed-20260930-explicit-capability-admission.md
     - packages/@dvt/contracts/test/dvt-substrait-admission-types.contract.test.ts
     - apps/web/src/app/views/canvas/canvasRelationalOperationChoices.capabilities.test.ts
   follow_up:
