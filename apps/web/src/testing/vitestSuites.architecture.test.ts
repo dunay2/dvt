@@ -16,7 +16,7 @@ describe('web Vitest suite governance documentation', () => {
       'docs/architecture/components/web/frontend-test-governance-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/frontend-test-governance-user-stories.md'
+      'docs/architecture/components/web/frontend-test-governance-component.md'
     );
     const webIndex = readRepoFile('docs/architecture/components/web/index.md');
 

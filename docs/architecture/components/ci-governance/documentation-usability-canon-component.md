@@ -113,6 +113,53 @@ flowchart TD
 
 ## Related Docs
 
-- [Documentation Usability Canon User Stories](./documentation-usability-canon-user-stories.md)
+- [Documentation Usability Canon User Stories](documentation-usability-canon-component.md#section-documentation-usability-canon-user-stories)
 - [Documentation Usability Canon Plan 2026-05-24](../../../planning/proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md)
 - [Documentation Usability Mailbox Analysis](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-documentation-usability-canon.md)
+
+<a id="section-documentation-usability-canon-user-stories"></a>
+
+## Documentation Usability Canon User Stories
+
+> Owned concern: this story set covers consultation-path scenarios governed by
+> `ClassifyDocumentationEntryPoint`, `QueryDocumentationConsultationPath`, and
+> `ValidateDocumentationUsefulness`.
+
+### Stories
+
+| Persona                  | Story                                                                                                                                                      | Acceptance                                                                                                                                   |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| New contributor          | As a new contributor, I want one path from home to concepts, status, roadmap, and governing decisions so I can answer basic orientation questions quickly. | `QueryDocumentationConsultationPath` returns canonical entry points for concept, status, roadmap, decision, and contract questions.          |
+| Documentation maintainer | As a documentation maintainer, I want active docs classified by reader intent before changing navigation.                                                  | `ClassifyDocumentationEntryPoint` records canonical, status, local-reference, alias, archive, evidence, risk, or runbook semantics.          |
+| Architecture reviewer    | As an architecture reviewer, I want docs usability reviewed as an architecture concern, not only a markdown concern.                                       | `ValidateDocumentationUsefulness` fails when a governed docs change removes owner, status, source, code, test, or verification traceability. |
+| Governance operator      | As a governance operator, I want CI to guard consultation usefulness so fragmented docs do not return silently.                                            | The semantic guard verifies all canon artifacts name the same rails and component API.                                                       |
+
+### Scenario Coverage
+
+```mermaid
+sequenceDiagram
+  participant Reader
+  participant Home
+  participant Registry
+  participant Consultation
+  participant Policy
+
+  Reader->>Home: asks where to start
+  Home->>Registry: ClassifyDocumentationEntryPoint
+  Registry->>Consultation: QueryDocumentationConsultationPath
+  Consultation-->>Reader: canonical path by reader intent
+  Policy->>Policy: ValidateDocumentationUsefulness
+```
+
+### Negative Scenarios
+
+- A roadmap-like document cannot become a competing roadmap of record without
+  `ClassifyDocumentationEntryPoint`.
+- A package doc cannot remain important but unpublished without a linked-local
+  or canonical entry point.
+- `ValidateDocumentationUsefulness` fails when a governed docs change preserves
+  links but removes the reader path to status, decisions, code, tests, or
+  evidence.
+- Alias and archive pages must not become primary consultation paths.
+
+> Acceptance scope status: Active. Owner: Docs / Architecture / Platform.

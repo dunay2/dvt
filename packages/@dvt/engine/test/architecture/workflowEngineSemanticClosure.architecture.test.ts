@@ -132,7 +132,7 @@ describe('WorkflowEngine semantic closure architecture', () => {
   it('requires local semantic closure docs, Fowler analysis, and complete story coverage', () => {
     for (const path of [
       engineArchitectureDocPath('workflow-engine-semantic-closure-component.md'),
-      engineArchitectureDocPath('workflow-engine-semantic-closure-user-stories.md'),
+      engineArchitectureDocPath('workflow-engine-semantic-closure-component.md'),
 
       repoPath('buzon/20260518-codex-fowler-dhm-ws6-semantic-closure-hardening-analysis.md'),
     ]) {
@@ -168,7 +168,7 @@ describe('WorkflowEngine semantic closure architecture', () => {
       '## Applied Fixes',
     ]);
 
-    const stories = readEngineArchitectureDoc('workflow-engine-semantic-closure-user-stories.md');
+    const stories = readEngineArchitectureDoc('workflow-engine-semantic-closure-component.md');
     for (const expectedStory of [
       'US-DHM-WS6-001',
       'US-DHM-WS6-002',

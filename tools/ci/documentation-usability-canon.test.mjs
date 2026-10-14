@@ -16,7 +16,7 @@ import {
 const requiredFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/documentation-usability-canon-plan-20260524.md',
   'docs/architecture/components/ci-governance/documentation-usability-canon-component.md',
-  'docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/documentation-usability-canon-component.md',
   'docs/planning/domains/documentation-governance.md',
 ];
 
@@ -59,7 +59,7 @@ test('documentation usability canonization preserves consultation semantics and 
   }
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/documentation-usability-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/documentation-usability-canon-component.md'
   );
   for (const persona of [
     'New contributor',

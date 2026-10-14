@@ -85,14 +85,14 @@ flowchart LR
 
 ## Supporting component pages
 
-- [Functional surface](./planner-functional.md)
-- [Constraints and invariants](./planner-constraints.md)
-- [Structure and module map](./planner-ddd.md)
-- [Build sequence](./planner-sequence.md)
+- [Functional surface](../../domain-planning.md#section-planner-functional)
+- [Constraints and invariants](../../domain-planning.md#section-planner-constraints)
+- [Structure and module map](../../domain-planning.md#section-planner-ddd)
+- [Build sequence](../../domain-planning.md#section-planner-sequence)
 - [Workspace authoring draft aggregate](./workspace-authoring-draft-aggregate.md)
 - [Executable subgraph derivation component](./executable-subgraph-derivation-component.md)
 - [Planner private behavior ports component](./planner-private-behavior-ports-component.md)
-- [Custom policy namespace freeze user stories](./custom-policy-namespace-freeze-user-stories.md)
+- [Custom policy namespace freeze user stories](planner-private-behavior-ports-component.md#section-custom-policy-namespace-freeze-user-stories)
 
 ## Notes
 

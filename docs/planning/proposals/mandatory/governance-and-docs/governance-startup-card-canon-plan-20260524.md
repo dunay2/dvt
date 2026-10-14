@@ -123,7 +123,7 @@ governed evidence where its rails apply; it is not a task tracker.
   procedure for the planning route.
 - `docs/architecture/components/ci-governance/governance-startup-card-canon-component.md`:
   component API, invariants, transitions, consumers, and diagrams.
-- `docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md`:
+- `docs/architecture/components/ci-governance/governance-startup-card-canon-component.md`:
   scenario coverage.
 - `tools/ci/startup-card-canon.test.mjs`: architecture fitness function.
 - [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260524-codex-fowler-governance-startup-card-canon.md): Fowler
@@ -160,7 +160,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/govern
 componentGuides:
   - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
 userStories:
-  - docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md
+  - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -173,7 +173,7 @@ allowedImplementationSurfaces:
   - buzon/20260524-codex-fowler-governance-startup-card-canon.md
   - docs/.manifest.json
   - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
-  - docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md
+  - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
   - docs/architecture/components/ci-governance/index.md
   - docs/guides/ai-work-protocol.md
   - docs/planning/domains/documentation-governance.md
@@ -236,7 +236,7 @@ redGreenCycles:
       - tools/ci/startup-card-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md
       - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
-      - docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md
+      - docs/architecture/components/ci-governance/governance-startup-card-canon-component.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
       - buzon/20260524-codex-fowler-governance-startup-card-canon.md

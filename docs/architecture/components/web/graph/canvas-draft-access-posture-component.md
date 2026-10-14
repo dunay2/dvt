@@ -69,7 +69,7 @@ Expected interpretation:
 - `docs/architecture/components/web/api-client-auth-component.md`
 - `docs/architecture/components/web/graph/canvas-execution-selection-component.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
-- `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md`
+- `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
 
 ## Owned Concern

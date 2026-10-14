@@ -123,7 +123,7 @@ implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/docs-d
 componentGuides:
   - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
 userStories:
-  - docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md
+  - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -135,7 +135,7 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/archive/**
   - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
-  - docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md
+  - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
   - docs/architecture/components/ci-governance/index.md
   - docs/planning/archive/**
   - docs/planning/domains/documentation-governance.md
@@ -198,7 +198,7 @@ redGreenCycles:
       - tools/ci/docs-disposition-canon.test.mjs
       - docs/planning/proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md
       - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
-      - docs/architecture/components/ci-governance/docs-disposition-canon-user-stories.md
+      - docs/architecture/components/ci-governance/docs-disposition-canon-component.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/domains/documentation-governance.md
       - buzon/20260524-codex-fowler-docs-disposition-canon.md

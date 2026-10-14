@@ -18,7 +18,7 @@ const requiredFiles = [
   'docs/planning/state/github-mvp-issue-workflow.md',
   'docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md',
   'docs/architecture/components/web/graph/canvas-fowler-canon-component.md',
-  'docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md',
+  'docs/architecture/components/web/graph/canvas-fowler-canon-component.md',
   'docs/architecture/components/web/graph/index.md',
 ];
 
@@ -52,7 +52,7 @@ test('Canvas Fowler remediation canonization has semantic ownership', () => {
   assert.match(componentGuide, /RenderCanvasContextualGraphSurface/);
 
   const userStories = readRepoFile(
-    'docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md'
+    'docs/architecture/components/web/graph/canvas-fowler-canon-component.md'
   );
   for (const persona of [
     'Canvas maintainer',

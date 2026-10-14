@@ -52,7 +52,7 @@ describe('Templates workbench architecture', () => {
       'docs/architecture/components/web/templates/execution-template-source-generation-component.md'
     );
     const storiesDoc = readRepoDoc(
-      'docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md'
+      'docs/architecture/components/web/templates/execution-template-source-generation-component.md'
     );
 
     expect(componentDoc).toContain('## Public API');

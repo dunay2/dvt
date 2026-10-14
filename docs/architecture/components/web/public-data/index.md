@@ -12,4 +12,4 @@ This directory owns frontend component guidance for public-data and explanatory
 open-data presentation surfaces.
 
 - [Marquez public-data visual system](./marquez-visual-system-component.md)
-- [Marquez public-data visual system user stories](./marquez-visual-system-user-stories.md)
+- [Marquez public-data visual system user stories](marquez-visual-system-component.md#section-marquez-visual-system-user-stories)

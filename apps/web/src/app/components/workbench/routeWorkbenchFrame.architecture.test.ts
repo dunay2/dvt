@@ -23,7 +23,7 @@ describe('RouteWorkbenchFrame architecture', () => {
       'docs/architecture/components/web/route-workbench-frame-component.md'
     );
     const userStories = readRepoDoc(
-      'docs/architecture/components/web/route-workbench-frame-user-stories.md'
+      'docs/architecture/components/web/route-workbench-frame-component.md'
     );
     const cypressProof = readRepoDoc('apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts');
 

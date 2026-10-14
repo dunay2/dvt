@@ -13,7 +13,7 @@ const COMPONENT_GUIDE_PATH =
 const COMPONENT_DIAGRAMS_PATH =
   'docs/architecture/components/engine/architecture/start-run-application-decomposition-diagrams.md';
 const USER_STORIES_PATH =
-  'docs/architecture/components/engine/architecture/start-run-application-decomposition-user-stories.md';
+  'docs/architecture/components/engine/architecture/start-run-application-decomposition-component.md';
 const EVIDENCE_PATH = 'docs/evidence/ed-20260512-we-hx-3-start-run-decomposition.md';
 const RISK_PATH = 'docs/risk-register/quality/R-20260512-WE-HX-3-START-RUN-DECOMPOSITION.yaml';
 

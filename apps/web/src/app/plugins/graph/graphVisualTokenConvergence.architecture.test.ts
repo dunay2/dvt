@@ -101,7 +101,7 @@ const COMPONENT_GUIDE = readArchitectureSiblingSource(
 );
 const USER_STORIES = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../../../../../docs/architecture/components/web/graph/react-flow-visual-token-user-stories.md'
+  '../../../../../../docs/architecture/components/web/graph/react-flow-visual-token-component.md'
 );
 
 const GRAPH_CONSUMER_SOURCES = [

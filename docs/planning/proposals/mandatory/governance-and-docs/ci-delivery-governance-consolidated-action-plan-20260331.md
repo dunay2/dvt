@@ -89,7 +89,7 @@ Current absorbed state:
 Canonical component:
 
 - [CI Delivery Governance Component](../../../../architecture/components/ci-governance/ci-delivery-governance-component.md)
-- [CI Delivery Governance User Stories](../../../../architecture/components/ci-governance/ci-delivery-governance-user-stories.md)
+- [CI Delivery Governance User Stories](../../../../architecture/components/ci-governance/ci-delivery-governance-component.md#section-ci-delivery-governance-user-stories)
 - [Fowler analysis mailbox entry](../../../../../buzon/20260523-codex-fowler-ci-delivery-governance-canon.md)
 
 Command/query rail:
@@ -114,7 +114,7 @@ componentGuides:
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
 userStories:
-  - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -124,7 +124,7 @@ governingSources:
 allowedImplementationSurfaces:
   - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
-  - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - docs/planning/status/release-please-continuous.md
   - tools/ci/release-candidate-integrity/releaseCandidateIntegrity.mjs
   - tools/ci/release-candidate-integrity/releaseCandidateIntegrity.test.mjs
@@ -186,7 +186,7 @@ redGreenCycles:
     patchSurfaces:
       - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
       - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
-      - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+      - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
       - docs/architecture/components/ci-governance/index.md
       - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
       - tools/ci/ci-delivery-governance-canon.test.mjs

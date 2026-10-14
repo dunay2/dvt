@@ -78,9 +78,9 @@ out of the active tree.
   [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
 - frontend test governance:
   [Frontend test governance component](./frontend-test-governance-component.md),
-  [Frontend test governance user stories](./frontend-test-governance-user-stories.md),
+  [Frontend test governance user stories](frontend-test-governance-component.md#section-frontend-test-governance-user-stories),
   [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
-  [Web Vitest changed suite router user stories](./web-vitest-changed-suite-router-user-stories.md),
+  [Web Vitest changed suite router user stories](web-vitest-changed-suite-router-component.md#section-web-vitest-changed-suite-router-user-stories),
   [`vitest.suites.ts`](../../../../apps/web/vitest.suites.ts),
   [`test.yml`](../../../../.github/workflows/test.yml)
 

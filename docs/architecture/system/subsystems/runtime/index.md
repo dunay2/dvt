@@ -17,7 +17,7 @@ components.
 ## Entry Points
 
 - [Runtime root subdivision component guide](./runtime-root-subdivision-component.md)
-- [Runtime root subdivision user stories](./runtime-root-subdivision-user-stories.md)
+- [Runtime root subdivision user stories](runtime-root-subdivision-component.md#section-runtime-root-subdivision-user-stories)
 
 ## Current Runtime Component Model
 

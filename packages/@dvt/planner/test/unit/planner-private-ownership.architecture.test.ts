@@ -86,7 +86,7 @@ describe('planner-private behavior ownership', () => {
     const componentGuide = readFile(
       'docs/architecture/components/planner/planner-private-behavior-ports-component.md'
     );
-    const constraints = readFile('docs/architecture/components/planner/planner-constraints.md');
+    const constraints = readFile('docs/architecture/domain-planning.md');
 
     expect(source.slice(0, 520)).toContain('Frozen compatibility seam');
     expect(source.slice(0, 520)).toContain('real consumer and ADR-backed reactivation');

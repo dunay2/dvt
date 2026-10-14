@@ -38,7 +38,7 @@ describe('Postgres tenant isolation semantic architecture', () => {
     );
     const userStoriesPath = resolve(
       repoRoot,
-      'docs/architecture/components/engine/adapters/state-store/postgres/tenant-isolation-user-stories.md'
+      'docs/architecture/components/engine/adapters/state-store/postgres/tenant-isolation-component.md'
     );
     const componentDoc = readFileSync(componentDocPath, 'utf8');
     const userStories = readFileSync(userStoriesPath, 'utf8');

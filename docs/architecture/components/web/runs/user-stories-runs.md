@@ -21,7 +21,7 @@ code_refs:
 - [IRunsPort](../../../../../apps/web/src/app/ports/runs.ts)
 - [Runs Frontend Architecture](./dvt-runs-frontend-architecture.md)
 - [Command Query Rail Governance](../../../command-query-rail-governance.md)
-- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
+- [Run Event Timeline User Stories](run-event-timeline-component.md#section-run-event-timeline-user-stories)
 
 These stories describe current `apps/web` behavior. They do not claim extra
 client-side validation, synthetic run identity, or fields that are not present
@@ -353,7 +353,7 @@ query fails.
 ## 7. Event Timeline Convergence
 
 Detailed event stream scenarios live in
-[Run Event Timeline User Stories](./run-event-timeline-user-stories.md). The
+[Run Event Timeline User Stories](run-event-timeline-component.md#section-run-event-timeline-user-stories). The
 summary scenarios below keep the Runs domain index complete.
 
 ### US-15: Event Timeline - Ordered And Deduped
@@ -437,5 +437,5 @@ alive.
 - [Start Run Client Identity Boundary](./start-run-client-identity-boundary.md)
 - [Runs Domain Architecture Test](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
 - [Run Event Timeline Component](./run-event-timeline-component.md)
-- [Run Event Timeline User Stories](./run-event-timeline-user-stories.md)
+- [Run Event Timeline User Stories](run-event-timeline-component.md#section-run-event-timeline-user-stories)
 - [Command Query Rail Governance](../../../command-query-rail-governance.md)

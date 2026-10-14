@@ -23,7 +23,7 @@ describe('Monaco bundle isolation architecture', () => {
       'docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md'
     );
     const userStories = readRepoDoc(
-      'docs/architecture/components/web/monaco/monaco-bundle-isolation-user-stories.md'
+      'docs/architecture/components/web/monaco/monaco-bundle-isolation-component.md'
     );
 
     for (const requiredText of [

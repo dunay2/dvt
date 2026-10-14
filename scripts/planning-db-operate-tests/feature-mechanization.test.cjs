@@ -41,7 +41,7 @@ function featureMechanizationRecordArgs(options = {}) {
     '--component-guide',
     'docs/architecture/command-query-rail-governance.md',
     '--user-story',
-    'docs/architecture/components/ci-governance/component-engineering-record-user-stories.md',
+    'docs/architecture/components/ci-governance/component-engineering-record-component.md',
     '--documentation-ref',
     'docs/architecture/command-query-rail-governance.md',
     '--governing-source',

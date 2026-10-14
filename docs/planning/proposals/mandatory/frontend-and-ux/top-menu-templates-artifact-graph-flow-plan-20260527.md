@@ -35,7 +35,7 @@ and tests before implementation.
 - `docs/architecture/components/web/screen-manuals-and-user-stories.md`
 - `docs/architecture/components/web/appshell/shell-workspace-context-component.md`
 - `docs/architecture/components/web/templates/execution-template-source-generation-component.md`
-- `docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md`
+- `docs/architecture/components/web/templates/execution-template-source-generation-component.md`
 - [Historical f21-execution-template-source-generation-workbench-plan-20260522.md](https://github.com/dunay2/dvt/blob/f921266eaa528f9533cb5545f7678a408920935e/docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md)
 - `docs/planning/proposals/mandatory/frontend-and-ux/artifacts-workspace-project-files-plan-20260524.md`
 - Planning DB tasks `E-SHELL-TOP-MENU-RATIONALIZATION-1` and
@@ -283,7 +283,7 @@ componentGuides:
   - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-menu-component.md
 userStories:
-  - docs/architecture/components/web/workbench-ux-canon-user-stories.md
+  - docs/architecture/components/web/workbench-ux-canon-component.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -298,7 +298,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/top-app-bar-component-technical-manual-20260404.md
   - docs/architecture/components/web/graph/canvas-route-chrome-token-component.md
   - docs/architecture/components/web/graph/canvas-workbench-command-menu-component.md
-  - docs/architecture/components/web/workbench-ux-canon-user-stories.md
+  - docs/architecture/components/web/workbench-ux-canon-component.md
   - apps/web/src/app/components/TopAppBar.tsx
   - apps/web/src/app/components/TopAppBar.test.tsx
   - apps/web/src/app/components/shell/ShellAppMenu.tsx

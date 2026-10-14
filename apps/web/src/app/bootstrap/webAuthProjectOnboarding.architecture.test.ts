@@ -52,7 +52,7 @@ describe('web auth and project onboarding architecture', () => {
       'components',
       'web',
       'appshell',
-      'web-auth-project-onboarding-user-stories.md'
+      'web-auth-project-onboarding-component.md'
     );
 
     for (const section of [

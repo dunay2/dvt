@@ -14,7 +14,7 @@ last_reviewed: 2026-04-09
 - [Overview](./overview.md)
 - [README](./README.md)
 - [Snapshot Rebuild Concurrency Component](./snapshot-rebuild-concurrency-component.md)
-- [Snapshot Rebuild Concurrency User Stories](./snapshot-rebuild-concurrency-user-stories.md)
+- [Snapshot Rebuild Concurrency User Stories](snapshot-rebuild-concurrency-component.md#section-snapshot-rebuild-concurrency-user-stories)
 
 ## Related pages
 

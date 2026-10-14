@@ -38,7 +38,7 @@ const requiredGuideSections = [
 const userStoryDocs = [
   {
     label: 'start-run admission',
-    path: 'docs/architecture/components/engine/architecture/start-run-admission-user-stories.md',
+    path: 'docs/architecture/components/engine/architecture/start-run-admission-component.md',
     requiredTerms: [
       'As an operator',
       'RunExecutionContextAdmissionRequest',
@@ -51,7 +51,7 @@ const userStoryDocs = [
   },
   {
     label: 'generic artifact lineage extraction',
-    path: 'docs/architecture/components/lineage-worker/artifact-lineage-extraction-user-stories.md',
+    path: 'docs/architecture/components/lineage-worker/artifact-lineage-extraction-component.md',
     requiredTerms: [
       'As a lineage consumer',
       'StepArtifactRef',
@@ -141,7 +141,10 @@ test('branch semantics keep policy, lineage extraction, and test setup behind na
 test('active component indexes link the generic lineage guide', () => {
   const lineageIndex = read('docs/architecture/components/lineage-worker/index.md');
   assert.match(lineageIndex, /artifact-lineage-extraction-component\.md/);
-  assert.match(lineageIndex, /artifact-lineage-extraction-user-stories\.md/);
+  assert.match(
+    lineageIndex,
+    /artifact-lineage-extraction-component\.md#section-artifact-lineage-extraction-user-stories/
+  );
   assert.doesNotMatch(lineageIndex, /compiled-code-ref-lineage-extraction/);
 });
 

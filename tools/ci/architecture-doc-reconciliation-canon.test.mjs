@@ -18,7 +18,7 @@ const requiredFiles = [
   'docs/planning/domains/documentation-governance.md',
   'docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md',
   'docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md',
-  'docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-user-stories.md',
+  'docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md',
   'docs/architecture/components/ci-governance/index.md',
 ];
 
@@ -55,7 +55,7 @@ test('architecture documentation reconciliation canonization has semantic owners
   assert.match(componentGuide, /ClassifyArchitectureDocumentationDisposition/);
 
   const userStories = readRepoFile(
-    'docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-user-stories.md'
+    'docs/architecture/components/ci-governance/architecture-doc-reconciliation-canon-component.md'
   );
   for (const persona of [
     'Architecture reader',

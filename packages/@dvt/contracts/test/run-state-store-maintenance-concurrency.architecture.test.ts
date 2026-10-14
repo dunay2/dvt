@@ -14,7 +14,7 @@ describe('state-store maintenance rebuild concurrency architecture', () => {
       '../../../../docs/architecture/components/engine/contracts/state-store'
     );
     const componentPath = join(stateStoreDocsRoot, 'snapshot-rebuild-concurrency-component.md');
-    const storiesPath = join(stateStoreDocsRoot, 'snapshot-rebuild-concurrency-user-stories.md');
+    const storiesPath = join(stateStoreDocsRoot, 'snapshot-rebuild-concurrency-component.md');
 
     expect(existsSync(componentPath)).toBe(true);
     expect(existsSync(storiesPath)).toBe(true);

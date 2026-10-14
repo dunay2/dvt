@@ -13,7 +13,7 @@ const BOUNDARY_COMPONENT_GUIDE = join(
 );
 const BOUNDARY_USER_STORIES = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-user-stories.md'
+  'docs/architecture/components/engine/architecture/workflow-engine-boundary-ownership-component.md'
 );
 
 const API_STORED_PLAN_PORT = join(REPO_ROOT, 'apps/api/src/application/ports/storedPlan.ts');
@@ -81,7 +81,7 @@ describe('WorkflowEngine boundary ownership architecture', () => {
     expect(guide).toContain('IStoredPlanArtifactReader');
     expect(guide).toContain('IRunExecutionContextResolver');
     expect(guide).toContain('@dvt/artifacts');
-    expect(guide).toContain('workflow-engine-boundary-ownership-user-stories.md');
+    expect(guide).toContain('workflow-engine-boundary-ownership-component.md');
     expect(guide).toContain('```mermaid');
 
     const stories = readFileSync(BOUNDARY_USER_STORIES, 'utf8');

@@ -10,14 +10,14 @@ import { assertFilesExist, assertTextContains, readRepoFile } from './canonizati
 test('CI delivery canon records absorbed workflow gates and local component semantics', () => {
   assertFilesExist([
     'docs/architecture/components/ci-governance/ci-delivery-governance-component.md',
-    'docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md',
+    'docs/architecture/components/ci-governance/ci-delivery-governance-component.md',
     'docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md',
   ]);
   const componentDoc = readRepoFile(
     'docs/architecture/components/ci-governance/ci-delivery-governance-component.md'
   );
   const userStoriesDoc = readRepoFile(
-    'docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md'
+    'docs/architecture/components/ci-governance/ci-delivery-governance-component.md'
   );
 
   for (const requiredSection of [

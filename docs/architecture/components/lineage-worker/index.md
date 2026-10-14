@@ -64,7 +64,7 @@ artifact boundary.
 ## Related Pages
 
 - [Generic artifact lineage extraction component](./artifact-lineage-extraction-component.md)
-- [Generic artifact lineage extraction user stories](./artifact-lineage-extraction-user-stories.md)
+- [Generic artifact lineage extraction user stories](artifact-lineage-extraction-component.md#section-artifact-lineage-extraction-user-stories)
 - [@dvt/delivery](../delivery/index.md)
 - [Delivery Domain](../../domain-delivery.md)
 - [Shared Boundary Domain](../../domain-shared.md)

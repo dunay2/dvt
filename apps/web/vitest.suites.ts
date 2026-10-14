@@ -587,6 +587,6 @@ function isWebVitestGovernancePath(filePath: string): boolean {
     normalizedPath ===
       'docs/architecture/components/web/web-vitest-changed-suite-router-component.md' ||
     normalizedPath ===
-      'docs/architecture/components/web/web-vitest-changed-suite-router-user-stories.md'
+      'docs/architecture/components/web/web-vitest-changed-suite-router-component.md'
   );
 }

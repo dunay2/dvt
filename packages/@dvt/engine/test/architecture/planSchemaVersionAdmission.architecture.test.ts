@@ -28,7 +28,7 @@ const COMPONENT_GUIDE = join(
 );
 const USER_STORIES = join(
   REPO_ROOT,
-  'docs/architecture/components/engine/contracts/plan-schema-version-admission-user-stories.md'
+  'docs/architecture/components/engine/contracts/plan-schema-version-admission-component.md'
 );
 
 const PROPOSAL = join(

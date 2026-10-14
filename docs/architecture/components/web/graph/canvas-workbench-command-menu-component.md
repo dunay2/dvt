@@ -111,6 +111,10 @@ Project scope selection remains `SelectWorkspaceScope` in Project.
 - `canvas-project-snapshot-roundtrip.cy.ts`
 - `code-workbench-workspace-files.cy.ts`
 
+## User Stories Covered
+
+See [Workbench UX Canon User Stories](../workbench-ux-canon-component.md#section-workbench-ux-canon-user-stories).
+
 ## Fitness Functions
 
 - `pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/TopAppBar.test.tsx src/app/views/canvas/CanvasWorkspaceMenuControls.test.tsx`

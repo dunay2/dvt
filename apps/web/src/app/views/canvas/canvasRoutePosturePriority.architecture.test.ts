@@ -24,9 +24,9 @@ describe('canvas route posture priority architecture', () => {
   it('keeps active Canvas architecture docs from routing through retired tab-strip seams', () => {
     const activeDocs = [
       'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md',
-      'docs/architecture/components/web/graph/canvas-route-chrome-token-user-stories.md',
+      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md',
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
-      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md',
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md',
       'docs/architecture/components/web/graph/graph-frontend-architecture.md',
     ];
@@ -53,7 +53,7 @@ describe('canvas route posture priority architecture', () => {
       'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
     );
     const userStories = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-route-chrome-token-user-stories.md'
+      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
     );
 
     expect(tokenSource).toContain('Owned concern: own Canvas route chrome visual tokens');
@@ -167,7 +167,7 @@ describe('canvas route posture priority architecture', () => {
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
       ),
       readRepoFile(
-        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
+        'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
       ),
     ];
     const bannedTerms = RETIRED_ROUTE_SHIM_TERM_PATTERNS.map((pattern) => new RegExp(pattern, 'i'));

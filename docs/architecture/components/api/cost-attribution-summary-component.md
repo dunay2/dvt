@@ -44,3 +44,21 @@ The component must not infer dollars from duration or row counts.
 The route fails closed when tenant scope is missing, tenant/project/environment
 input is malformed, environment is supplied without project, limit exceeds the
 hard ceiling, or authorization denies `run:list`.
+
+<a id="section-cost-attribution-summary-user-stories"></a>
+
+## Cost Attribution Summary User Stories
+
+1. As a finance operator, I want tenant-scoped run usage facts so that billing
+   analysis starts from backend-owned evidence instead of UI mock data.
+2. As a platform operator, I want cost money fields to be explicitly unavailable
+   until provider credits are captured so that the system does not report fake
+   dollars.
+3. As an API consumer, I want project and environment filters to use the same
+   protected runtime authorization scope as run listing so that attribution data
+   cannot leak across tenants.
+4. As a future billing integrator, I want per-step duration facts and per-run
+   rollups so that invoice logic can attach monetary data later without
+   reinterpreting raw event streams.
+
+> Acceptance scope status: Active. Owner: API / Runtime.
