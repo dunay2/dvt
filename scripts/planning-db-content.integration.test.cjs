@@ -7,6 +7,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { buildGovernanceFileSnapshot, importContent } = require('./planning-db-import.cjs');
 const { readHashDriftSummary, readSummary } = require('./planning-db-query.cjs');
 const { applyCurrentPlanningDbSchema } = require('./planning-db-schema.cjs');
+require('./planning-db-operate-tests/catalog-current-document-integration.cjs')(dbUrl);
 
 let adminClient;
 let isolatedDatabaseName;

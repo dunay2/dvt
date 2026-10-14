@@ -248,6 +248,45 @@ atomic rollback on rejection, idempotent replay and actual PostgreSQL execution.
 No schema, new command, product contract or general imported-state editor is
 introduced. Historical UI proof is not claimed to be current provider E2E proof.
 
+### Current document reconciliation
+
+The same command accepts an exclusive `currentDocument` patch for an imported
+or local row whose repository Markdown source survives. It names the exact HEAD
+commit, source path and explicit documentary reference replacements (an empty
+list means hash-only). This does not widen the legacy local `sourceContent` mode.
+
+```mermaid
+flowchart LR
+  Current[Clean committed document and exact row digest] --> Policy[Bounded documentary selectors]
+  Policy --> Writer[Existing reconciliation transaction]
+  Writer --> Preserve[Native JSONB patches preserve symbols and evidence]
+  Preserve --> Audit[Unchanged winners and exact before/after audit]
+```
+
+Only `implementationPlan`, `componentGuides`, `userStories` and `governingSources`
+are eligible. Each replacement names its field, array index where applicable,
+exact old value and new value. No array insertion, removal or reordering is
+allowed. The replacement must equal that slot in the selected feature manifest
+of the committed source and resolve to a tracked repository Markdown file.
+Missing or ambiguous features, invalid fields, duplicate selectors, stale values,
+uncommitted sources, unresolved targets and mixed patch modes reject.
+
+The source hash and selected documentary slots are the only mutable metadata;
+`governingSources` also updates the matching `governing_sources` query slot and
+rejects a disagreement between those representations. Independently collected
+`documentation_refs` rail evidence remains unchanged. Local revisions advance.
+Symbols, cycles, implementation references, constraints,
+rail status, ownership, timestamps and arbitrary JSONB numeric precision remain
+intact. The writer uses native JSONB updates, never a reconstructed manifest.
+Existing design scope, full-row CAS, atomic rollback, winner, idempotency and audit
+guards remain mandatory. This is an explicitly requested repair, not a routine
+refresh, import, new rail or generic JSON Patch interface.
+
+Unit policy tests and isolated PostgreSQL integration prove these boundaries
+before the real operator batch is applied. The task-specific planning matrix and
+exact implementation scope are recorded in GitHub issue #3643 and design
+`GH-3643-CURRENT-DOCUMENT-RECONCILIATION`.
+
 ## Feature mechanization
 
 ```feature-mechanization

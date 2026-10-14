@@ -8,6 +8,10 @@ const { defaultPgUrl } = require('../planning-db-run.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
 const { readGovernedSourceSnapshots } = require('./governed-source-refresh-write-rail.cjs');
 const {
+  extractFeatureMechanizationManifests,
+} = require('../lib/feature-mechanization-manifest.cjs');
+const { buildCurrentDocumentSql } = require('./catalog-current-document.cjs');
+const {
   catalogRowHash,
   parseCatalogReconciliation,
   planCatalogReconciliation,
@@ -215,6 +219,32 @@ async function applyCatalogReconciliation(input, options = {}) {
       if (snapshot.snapshot_hash !== change.expectedRowSha256)
         throw new Error(`CATALOG-STALE: ${change.railId}.`);
       const before = snapshot.row;
+      if (change.currentDocument) {
+        const document = change.currentDocument;
+        const key = `document:${document.commit}:${document.path}`;
+        if (!sourceProofs.has(key)) {
+          const proof = verifyCurrentSourceContent(document, before.source_path, options);
+          const content = execFileSync('git', ['cat-file', 'blob', proof.blob], {
+            cwd: options.repoRoot || path.resolve(__dirname, '..', '..'),
+            env: createGitRepositoryEnvironment(),
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+            maxBuffer: 16 * 1024 * 1024,
+          });
+          const manifests = extractFeatureMechanizationManifests(content, document.path);
+          if (manifests.some((entry) => entry.parseError))
+            throw new Error('CATALOG-DOCUMENT: Invalid committed feature manifest.');
+          sourceProofs.set(key, { ...proof, manifests: manifests.map((entry) => entry.manifest) });
+        }
+        for (const ref of document.references) {
+          const targetKey = `document-target:${document.commit}:${ref.to}`;
+          if (!sourceProofs.has(targetKey))
+            sourceProofs.set(
+              targetKey,
+              verifyCurrentSourceContent({ commit: document.commit, path: ref.to }, ref.to, options)
+            );
+        }
+      }
       if (change.source) {
         const key = `${change.source.commit}:${change.source.path}`;
         if (!sourceProofs.has(key))
@@ -277,7 +307,16 @@ async function applyCatalogReconciliation(input, options = {}) {
         preserved.push(...assignments);
         changedColumns.push('source_path', 'source_content_sha256');
       }
-      if (request.changes[index].sourceContent) {
+      const currentDocument = request.changes[index].currentDocument;
+      if (currentDocument) {
+        const columns = buildCurrentDocumentSql(currentDocument, { bind, beforeSnapshot });
+        for (const [column, expression] of Object.entries(columns)) {
+          assignments.push(`${column} = ${expression}`);
+          preserved.push(`${column} = (${expression})`);
+          changedColumns.push(column);
+        }
+      }
+      if (request.changes[index].sourceContent || currentDocument) {
         const content = `source_content_sha256 = ${bind(after.source_content_sha256)}`;
         assignments.push(content);
         preserved.push(content);
