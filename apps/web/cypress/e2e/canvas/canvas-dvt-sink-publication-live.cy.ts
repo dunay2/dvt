@@ -17,6 +17,7 @@ import {
   loadPublicationRows,
   publicationRows,
   runPublicationModel,
+  waitForPublicationConfig,
 } from '../../support/postgresPublicationFlow';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
@@ -41,6 +42,7 @@ describe('Explicit PostgreSQL Sink live', () => {
       cy.get('select[name="dvt-transform-materialization"]').select('ephemeral');
       cy.get('[data-slot="dvt-transform-result-target"]').should('not.exist');
       cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+      waitForPublicationConfig(scope, modelId, { materialized: 'ephemeral' });
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
     });
     openCanvasContextMenuAt(1050, 700);
@@ -56,12 +58,18 @@ describe('Explicit PostgreSQL Sink live', () => {
     cy.get('.react-flow__edge').should('have.length', 3);
     cy.then(() => {
       openWorkbenchProperties(sinkId);
+      cy.contains('[role="tab"]', /^Sink$/).click();
       cy.get('select[name="dvt-sink-connection"]').should('have.value', '').select(connectionId);
       cy.get('input[name="dvt-sink-schema"]').clear().type(schema);
       cy.get('input[name="dvt-sink-table"]').clear().type(relation);
       cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'table');
       cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'replace');
       cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+      waitForPublicationConfig(scope, sinkId, {
+        schema,
+        table: relation,
+        connectionRef: { connectionId },
+      });
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
     });
     cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
@@ -84,7 +92,10 @@ describe('Explicit PostgreSQL Sink live', () => {
     });
     cy.reload();
     cy.then(() => {
+      cy.get(`.react-flow__node[data-id="${sinkId}"]`, { timeout: 20_000 }).should('exist');
+      cy.get('.react-flow__controls-fitview').click();
       openWorkbenchProperties(sinkId);
+      cy.contains('[role="tab"]', /^Sink$/).click();
       cy.get('select[name="dvt-sink-connection"]').should('have.value', connectionId);
       cy.get('input[name="dvt-sink-table"]').should('have.value', relation);
       cy.get('[data-slot="canvas-node-workbench-close"]').click();

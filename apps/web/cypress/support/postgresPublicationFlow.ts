@@ -127,7 +127,7 @@ export function runPublicationModel(
   cy.wait('@publicationPreview', { timeout: 30_000 }).then(({ request, response }) => {
     expect(request.body).not.to.have.property('graphSource');
     expect(request.body.selection).to.deep.equal({ mode: 'upstream', nodeIds: [modelId] });
-    expect(response?.statusCode).to.equal(200);
+    expect(response?.statusCode, response?.body?.cause).to.equal(200);
     planSha = response!.body.planRef.sha256;
     expect(planSha).to.match(/^[a-f0-9]{64}$/);
   });
@@ -156,6 +156,26 @@ export function runPublicationModel(
         expect(evidence.rowsWritten).to.equal(3);
         return { runId, evidence };
       });
+  });
+}
+
+/** Read the real saved state after Apply; never intercept or fabricate a draft acknowledgement. */
+export function waitForPublicationConfig(
+  scope: WorkspaceGraphDraftScope,
+  nodeId: string,
+  expected: Readonly<Record<string, unknown>>,
+  attempt = 0
+): Cypress.Chainable<void> {
+  return readLiveGraphDraft(scope).then(({ status, body }) => {
+    expect(status).to.equal(200);
+    const draft = WorkspaceGraphAuthoringDraftSchema.parse(
+      (body as { record: { draft: unknown } }).record.draft
+    );
+    const config = draft.nodes.find((node) => node.id === nodeId)?.metadata?.config;
+    if (Cypress._.isMatch(config, expected)) return;
+    if (attempt >= 40)
+      throw new Error(`Publication configuration was not persisted for ${nodeId}.`);
+    return cy.wait(250).then(() => waitForPublicationConfig(scope, nodeId, expected, attempt + 1));
   });
 }
 

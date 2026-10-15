@@ -7,7 +7,7 @@ import { useAuthoringFieldsHarness } from './DvtAuthoringFields.test-support';
 
 describe('Sink connection confirmation', () => {
   const view = useAuthoringFieldsHarness();
-  it('offers the upstream connection but requires explicit selection in Properties', async () => {
+  it('offers the upstream connection but requires explicit selection in Properties', () => {
     const source = buildJoinWarehouseSourceNode({ id: 'source', table: 'orders', columns: ['id'] });
     const model = buildDvtNode('dvt:transform', { config: { materialized: 'ephemeral' } });
     const sink = buildDvtNode('dvt:sink', { config: { schema: 'analytics', table: 'orders' } });
@@ -27,7 +27,7 @@ describe('Sink connection confirmation', () => {
     expect(select.value).toBe('');
     expect(select.disabled).toBe(false);
     expect(JSON.parse(view.draftJson())).not.toHaveProperty('connectionRef');
-    await act(() => {
+    act(() => {
       fireEvent.change(select, { target: { value: 'warehouse-main' } });
     });
     expect(JSON.parse(view.draftJson())).toMatchObject({
@@ -36,7 +36,7 @@ describe('Sink connection confirmation', () => {
       table: 'orders',
     });
     expect(view.container.querySelector('[style]')).toBeNull();
-    await act(() => {
+    act(() => {
       fireEvent.change(select, { target: { value: '' } });
     });
     expect(JSON.parse(view.draftJson()).connectionRef).toBeNull();

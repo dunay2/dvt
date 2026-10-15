@@ -26,17 +26,23 @@ const node = {
   },
 };
 
-describe('Sink authoring metadata contract', () => {
+describe.each(['sink', 'dvt:sink'])('Sink authoring metadata contract: %s', (kind) => {
   it('retains an explicit PostgreSQL destination', () => {
-    expect(WorkspaceGraphAuthoringNodeSchema.parse(node)).toMatchObject(node);
+    expect(WorkspaceGraphAuthoringNodeSchema.parse({ ...node, kind })).toMatchObject({
+      ...node,
+      kind,
+    });
   });
   it('allows incomplete drafts without implicitly assigning a connection', () => {
-    expect(WorkspaceGraphAuthoringNodeSchema.parse({ ...node, metadata: {} }).metadata).toEqual({});
+    expect(
+      WorkspaceGraphAuthoringNodeSchema.parse({ ...node, kind, metadata: {} }).metadata
+    ).toEqual({});
   });
   it('rejects a non-PostgreSQL destination', () => {
     expect(
       WorkspaceGraphAuthoringNodeSchema.safeParse({
         ...node,
+        kind,
         metadata: {
           config: {
             ...node.metadata.config,

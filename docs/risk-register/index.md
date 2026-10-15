@@ -13,6 +13,7 @@ Open technical and delivery risks that still need mitigation or explicit accepta
 
 - [Adapters](adapters/index.md)
 - [Quality](quality/index.md)
+- [Explicit Sink Identity Across Authoring And Publication Admission](explicit-postgres-sink-20261015.md)
 - [Per-Plan Admission Changes Temporal Command Ordering](temporal-plan-concurrency-20261015.md)
 - [Temporal layer outcome ordering requires a drained rollout](temporal-layer-result-evidence-20261015.md)
 

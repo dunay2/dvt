@@ -1,5 +1,6 @@
 /** Validate protected dependency selection independently of semantic projection. */
 import {
+  DVT_SINK_NODE_KINDS,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   WorkspaceGraphAuthoringDraftSchema,
   resolveWorkspaceSourceInstances,
@@ -42,7 +43,10 @@ export function selectProtectedDvtTransforms(
     (node) => node.pluginId === 'dvt' && node.kind === 'transform' && node.role === 'transform'
   );
   const sinks = nodes.filter(
-    (node) => node.pluginId === 'dvt' && node.kind === 'dvt:sink' && node.role === 'output'
+    (node) =>
+      node.pluginId === 'dvt' &&
+      DVT_SINK_NODE_KINDS.some((kind) => node.kind === kind) &&
+      node.role === 'output'
   );
   if (sinks.length > 1 || (input.previewTargetId != null && sinks.length > 0)) {
     throw new Error('Operational selection admits at most one explicit Sink.');

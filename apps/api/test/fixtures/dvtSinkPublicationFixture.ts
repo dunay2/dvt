@@ -16,7 +16,7 @@ export function buildDvtSinkPublicationDraft(): WorkspaceGraphAuthoringDraft {
     id: 'sink-orders',
     name: 'Published orders',
     pluginId: 'dvt',
-    kind: 'dvt:sink',
+    kind: 'sink',
     role: 'output',
     status: 'idle',
     tags: [],

@@ -36,6 +36,7 @@ Evidence documents that justify or validate relevant changes.
 - [INTERSECT and EXCEPT DISTINCT end to end](ED-20260920-intersect-except-distinct-end-to-end.md)
 - [JOIN unary null predicate admission](ED-20260913-join-null-predicates.md)
 - [LEFT JOIN end to end](ED-20260919-left-join-end-to-end.md)
+- [One Explicit PostgreSQL Sink Publication](ED-20261015-explicit-postgres-sink.md)
 - [Ordered UNION inputs and bounded composition concerns](ED-20261004-union-inputs-composition-concerns.md)
 - [Producer Input and passive Output boundary](ED-20260926-producer-consumer-input-boundary.md)
 - [RIGHT and FULL OUTER JOIN end to end](ED-20260919-right-full-join-end-to-end.md)

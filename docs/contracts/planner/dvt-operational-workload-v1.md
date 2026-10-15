@@ -45,6 +45,10 @@ Authoring explicitly selects `materialized: ephemeral` on the Transform without
 `materialization: table`, and `writeMode: replace`. Its connection must equal the
 protected Source connection and remains subject to existing scoped catalog and
 credential admission. A displayed inherited connection is not confirmation.
+The existing persisted kind `sink` and Canvas-qualified kind `dvt:sink` identify
+the same DVT output. One contract-owned kind catalog governs protected selection,
+metadata validation and SQL field-budget projection; neither spelling bypasses
+field validation or changes the required `dvt` plugin and `output` role.
 
 Reject table-plus-Sink, ephemeral Run without Sink, multiple Sinks, missing or
 extra effective dependencies, non-terminal Sink, unsupported write modes,

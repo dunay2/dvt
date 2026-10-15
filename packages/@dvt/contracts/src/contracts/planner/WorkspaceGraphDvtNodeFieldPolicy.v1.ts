@@ -13,6 +13,8 @@ import { DvtPostgresRelationTargetV1Schema } from './postgres/DvtPostgresRelatio
 import type { WorkspaceGraphAuthoringNode } from './WorkspaceGraphAuthoringDraft.v1.js';
 
 export const DVT_TRANSFORM_MATERIALIZATIONS = ['view', 'table', 'ephemeral'] as const;
+/** Persisted node commands use the local kind; Canvas projections use the qualified kind. */
+export const DVT_SINK_NODE_KINDS = ['sink', 'dvt:sink'] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -59,7 +61,7 @@ export function addDvtNodeFieldPolicyIssues(
   const isSource =
     node.kind === 'dvt:source' &&
     (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source');
-  const isSink = node.kind === 'dvt:sink' && node.pluginId === 'dvt';
+  const isSink = node.pluginId === 'dvt' && DVT_SINK_NODE_KINDS.some((kind) => node.kind === kind);
   const isTransform =
     node.pluginId === 'dvt' && (node.kind === 'transform' || node.kind === 'dvt:transform');
   if (!isSource && !isSink && !isTransform) return;

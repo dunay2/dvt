@@ -11,32 +11,37 @@ import { publicationHarness } from '../../fixtures/dvtProjectionPublicationHarne
 import { buildDvtSinkPublicationDraft } from '../../fixtures/dvtSinkPublicationFixture.js';
 
 describe('protected explicit Sink lowering', () => {
-  it('produces one workload for the Sink without an intermediate durable result', async () => {
-    const harness = publicationHarness(buildDvtSinkPublicationDraft());
-    const { graph, workload } = await harness.execute();
-    expect(graph.nodes.map(({ nodeId }) => nodeId)).toEqual(['sink-orders']);
-    expect(workload.output).toEqual({
-      kind: 'transform-result',
-      nodeId: 'transform-orders',
-      disposition: 'ephemeral',
-    });
-    expect(workload).toMatchObject({
-      executionIntent: 'run',
-      graph: {
-        selectedNodeIds: ['sink-orders', 'source-client', 'source-orders', 'transform-orders'],
-        selectedEdgeIds: ['source-client-transform', 'source-orders-transform', 'transform-sink'],
-      },
-      publicationBoundaries: [
-        {
-          kind: 'sink',
-          nodeId: 'sink-orders',
-          inputNodeId: 'transform-orders',
-          target: { schema: 'analytics', relation: 'orders_sink' },
+  it.each(['sink', 'dvt:sink'])(
+    'produces one workload for %s without an intermediate durable result',
+    async (kind) => {
+      const draft = buildDvtSinkPublicationDraft();
+      draft.nodes.find((node) => node.id === 'sink-orders')!.kind = kind;
+      const harness = publicationHarness(draft);
+      const { graph, workload } = await harness.execute();
+      expect(graph.nodes.map(({ nodeId }) => nodeId)).toEqual(['sink-orders']);
+      expect(workload.output).toEqual({
+        kind: 'transform-result',
+        nodeId: 'transform-orders',
+        disposition: 'ephemeral',
+      });
+      expect(workload).toMatchObject({
+        executionIntent: 'run',
+        graph: {
+          selectedNodeIds: ['sink-orders', 'source-client', 'source-orders', 'transform-orders'],
+          selectedEdgeIds: ['source-client-transform', 'source-orders-transform', 'transform-sink'],
         },
-      ],
-    });
-    expect(harness.publish).toHaveBeenCalledOnce();
-  });
+        publicationBoundaries: [
+          {
+            kind: 'sink',
+            nodeId: 'sink-orders',
+            inputNodeId: 'transform-orders',
+            target: { schema: 'analytics', relation: 'orders_sink' },
+          },
+        ],
+      });
+      expect(harness.publish).toHaveBeenCalledOnce();
+    }
+  );
 
   it.each(['view', 'table'])(
     'rejects a %s Transform feeding the Sink before artifact publication',

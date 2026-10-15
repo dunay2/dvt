@@ -53,7 +53,10 @@ export * from './contracts/planner/DvtPostgresOutputSchema.v1.js';
 export * from './contracts/planner/DvtTransformResultTarget.v1.js';
 export * from './contracts/planner/postgres/DvtPostgresRelationTarget.v1.js';
 export * from './contracts/planner/postgres/DvtPostgresPublicationBoundary.v1.js';
-export { DVT_TRANSFORM_MATERIALIZATIONS } from './contracts/planner/WorkspaceGraphDvtNodeFieldPolicy.v1.js';
+export {
+  DVT_TRANSFORM_MATERIALIZATIONS,
+  DVT_SINK_NODE_KINDS,
+} from './contracts/planner/WorkspaceGraphDvtNodeFieldPolicy.v1.js';
 export * from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';
 export * from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
 export * from './contracts/planner/DbtStepSelector.v1.js';
