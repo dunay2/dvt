@@ -34,6 +34,11 @@ not append a substitute `RunFailed` over incomplete publication. The original
 provider failure propagates unchanged. Native cancellation retains its separate
 governed path; this rule does not add retry or recovery automation.
 
+Within a completed layer, the first recorded step failure supplies both the
+terminal diagnostic and the shared run-domain failure summary. Later sibling
+failures retain their step transitions and events without replacing that summary.
+The existing new-StepStarted reset boundary, including retry, remains unchanged.
+
 The component owns one concern:
 
 - run the Temporal interpreter workflow from an immutable `PlanRef`, a resolved

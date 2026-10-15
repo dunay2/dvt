@@ -20,6 +20,9 @@ assumption of replay compatibility. New-history replay is narrower evidence.
 
 ## Mitigation And Activation Boundary
 
+- The user selected a development cutover without old-history compatibility on
+  2026-10-15. This does not authorize deletion/reset of histories or automatic
+  deployment; the operator's activation evidence is still required.
 - Follow the existing
   [drained cutover runbook](../runbooks/temporal-planref-drained-cutover-20260427.md).
   Preserve the current worker for its old executions until the canonical drain
@@ -35,6 +38,8 @@ assumption of replay compatibility. New-history replay is narrower evidence.
 - Verify permanent and exhausted canonical append failures through the workflow
   root. An incomplete canonical history must not receive a substitute terminal;
   the provider failure remains visible and is not automatic recovery evidence.
+- Rebuild multi-failure event histories through the shared production projector
+  and verify that the first-failure diagnostic agrees with the terminal event.
 
 ## Evidence And Residual Scope
 

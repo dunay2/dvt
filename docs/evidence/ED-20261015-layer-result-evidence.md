@@ -14,8 +14,13 @@ code_refs:
   - packages/@dvt/adapter-temporal/test/helpers/integration/layerResultEvidenceCases.ts
   - packages/@dvt/adapter-temporal/test/helpers/integration/layerPublicationFailureCases.ts
   - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
+  - packages/@dvt/run-domain/src/applyRunEvent.ts
+  - packages/@dvt/run-domain/test/applyRunEvent.failure.test.ts
 evidence:
   tests:
+    - pnpm --filter @dvt/run-domain test --maxWorkers=1 --no-file-parallelism
+    - pnpm --filter @dvt/run-domain typecheck
+    - pnpm exec eslint packages/@dvt/run-domain/src packages/@dvt/run-domain/test
     - pnpm traceability:adr0
     - pnpm --filter @dvt/adapter-temporal test --maxWorkers=1 --no-file-parallelism
     - pnpm --filter @dvt/adapter-temporal typecheck
@@ -55,6 +60,9 @@ Command/query rail governance and Fowler opportunity planning govern the slice.
 The [review amendment](https://github.com/dunay2/dvt/issues/3207#issuecomment-6195943732)
 and Planning DB design `GH-3207-EVENT-PUBLICATION-FAILURE` admit the workflow-root
 failure case before its RED tests and implementation.
+The [projection amendment](https://github.com/dunay2/dvt/issues/3207#issuecomment-6196610762)
+and design `GH-3207-FIRST-FAILURE-PROJECTION` admit the shared read-model correction
+before its RED tests; the owner is `SYS-RUNTIME-RUN-DOMAIN`, not an API/UI copy.
 
 ## Root Cause And Change
 
@@ -67,6 +75,11 @@ Review found a second path: an outcome append rejection escaped the applier but
 the workflow's general catch still attempted RunFailed. The existing lifecycle
 failure policy now distinguishes Temporal's typed emitEvent ActivityFailure;
 it does not infer failure identity from text or duplicate publication state.
+
+A second review found the shared projection overwrote its failure summary for
+each sibling, disagreeing with the terminal event's first-failure diagnostic.
+The existing setter now retains that first summary while preserving every step
+transition and the existing new-StepStarted reset boundary, including retry.
 
 No new result store, service, scheduler, publication mechanism or aggregate is
 introduced. The latest-result field remains a summary, not a collection.
@@ -129,6 +142,18 @@ entry point only registers the new cases.
   implemented paths, preserves two deprecated baselines and skips the existing
   unimplemented retry fixture. Both workflow-routed JSON schemas compile using
   the workflow's AJV settings; its existing URI-format warning remains.
+- Projection RED reproduces last-failure overwrite in its focused unit case and
+  a real Temporal case with two failed siblings. The latter rebuilds actual
+  emitted events through the production engine SnapshotProjector, not the test
+  store's simplified status projector. A prior over-specific test-name filter
+  selected no cases; it is not RED or GREEN evidence.
+- The run-domain suite passes 81 tests. Its production typecheck and an explicit
+  strict typecheck of the new test pass after correcting the test snapshot's
+  required schemaVersion. The four affected engine projection/status/store
+  suites pass 71 tests.
+- With the projection correction, the real Temporal time-skipping and
+  transformation files pass all 17 cases on Windows, including the four
+  mixed-outcome histories rebuilt through the production projector and replayed.
 
 The full-diff ARC evaluator selects ARC-2 with evidence/risk and
 lint/test/schema-validate/contract-golden requirements. Hook-normalized prepush,
@@ -139,8 +164,10 @@ the implementation PR and governing issue; they are not inferred from this file.
 
 Event/activity ordering changes. Deploy only through the existing
 [drained cutover runbook](../runbooks/temporal-planref-drained-cutover-20260427.md).
-Replaying newly produced histories does not prove compatibility with histories
-produced by the old early-return behavior. This slice does not deploy a worker,
+The user explicitly selected a development cutover without old-history
+compatibility on 2026-10-15. Replaying newly produced histories does not prove
+compatibility with histories produced by the old early-return behavior. This
+slice does not deploy a worker,
 drain a shared queue, delete history or reset any Run.
 
 The integration uses a real Temporal service, the existing in-memory test event

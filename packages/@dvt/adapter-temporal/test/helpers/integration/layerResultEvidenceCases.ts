@@ -6,6 +6,7 @@
  * @version 1.0.0
  */
 import type { MaterializationEvidence } from '@dvt/contracts';
+import { SnapshotProjector } from '@dvt/engine/runtime';
 import { Worker } from '@temporalio/worker';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -35,9 +36,14 @@ export function registerLayerResultEvidenceCases(): void {
       }
     });
 
-    it.each(['a', 'b', 'c'])(
-      'retains siblings when %s fails and replays the complete history',
-      async (failedStepId) => {
+    it.each(
+      [['a'], ['b'], ['c'], ['a', 'c']].map((failedStepIds) => ({
+        failedStepIds,
+        label: failedStepIds.join('-'),
+      }))
+    )(
+      'retains siblings when $label fails and replays the complete history',
+      async ({ failedStepIds, label }) => {
         const stepIds = ['a', 'b', 'c'];
         const plan = createExecutionPlan({
           ownership: INTEGRATION_PLAN_OWNERSHIP,
@@ -49,8 +55,8 @@ export function registerLayerResultEvidenceCases(): void {
         harness = await createSingleRunDbtTimeSkippingHarness({
           plan,
           planRefId: 'mixed-layer',
-          runId: `mixed-layer-${failedStepId}`,
-          taskQueue: `mixed-layer-${failedStepId}`,
+          runId: `mixed-layer-${label}`,
+          taskQueue: `mixed-layer-${label}`,
         });
         const executed: string[] = [];
         const evidenceByStep = new Map<string, MaterializationEvidence>();
@@ -58,11 +64,11 @@ export function registerLayerResultEvidenceCases(): void {
           dbtPluginRunner: {
             async execute({ step }) {
               executed.push(step.stepId);
-              if (step.stepId === failedStepId) {
+              if (failedStepIds.includes(step.stepId)) {
                 return {
                   stepId: step.stepId,
                   status: 'FAILED',
-                  error: 'denied',
+                  error: `denied-${step.stepId}`,
                   failureReason: 'DENIED',
                 };
               }
@@ -89,7 +95,7 @@ export function registerLayerResultEvidenceCases(): void {
         expect(events.map(({ eventType, stepId }) => [eventType, stepId])).toEqual([
           ['RunStarted', undefined],
           ...stepIds.map((id) => ['StepStarted', id]),
-          ...stepIds.map((id) => [id === failedStepId ? 'StepFailed' : 'StepCompleted', id]),
+          ...stepIds.map((id) => [failedStepIds.includes(id) ? 'StepFailed' : 'StepCompleted', id]),
           ['RunFailed', undefined],
         ]);
         for (const [stepId, resultEvidence] of evidenceByStep) {
@@ -99,6 +105,15 @@ export function registerLayerResultEvidenceCases(): void {
           ).toEqual({ resultEvidence });
         }
         expect(events.at(-1)?.payload).not.toHaveProperty('resultEvidence');
+        const status = new SnapshotProjector().rebuild(harness.ctx.runId, events);
+        expect(status.status).toBe('FAILED');
+        expect(status.execution?.failure).toMatchObject({
+          stepId: failedStepIds[0],
+          reason: 'DENIED',
+          message: `denied-${failedStepIds[0]}`,
+        });
+        expect(status.execution?.failure?.message).toBe(events.at(-1)?.payload?.['message']);
+        expect(status.execution?.materialization).toBeUndefined();
         await Worker.runReplayHistory(
           { workflowsPath: WORKFLOW_PATH },
           await handle.fetchHistory(),
