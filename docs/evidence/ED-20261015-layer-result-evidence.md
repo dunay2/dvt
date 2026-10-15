@@ -39,7 +39,7 @@ the success-only global materialization field.
 
 The [preimplementation plan](https://github.com/dunay2/dvt/issues/3207#issuecomment-6194952698)
 contains the current/solution diagrams, Fowler rationale, negative cases and
-allowed surfaces. Planning DB design `GH-3207-COMPLETE-LAYER-RESULTS` references
+allowed surfaces. Planning DB design `GH-3207-COMPLETE-LAYER-RESULTS-V2` references
 StartRun, without creating a parallel command. Its source documents are
 ADR-0003, ADR-0004, ADR-0047, ExecutionSemantics.v1, RunEvents.v1 and the
 [Temporal component guide](../architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md).
@@ -120,4 +120,4 @@ the broader runtime acceptance issues are not closed by this prerequisite.
 No new debt, production stub, placeholder, hidden compatibility branch, disabled
 rule or bypassed hook is introduced. The existing environment failure and skipped
 legacy fixtures are explicit above. The rollout risk is recorded separately in
-[R-20261015-layer-result-evidence](../risk-register/R-20261015-layer-result-evidence.md).
+[R-20261015-layer-result-evidence](../risk-register/temporal-layer-result-evidence-20261015.md).

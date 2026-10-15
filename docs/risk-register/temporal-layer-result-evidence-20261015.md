@@ -9,7 +9,7 @@ severity: High
 probability: Medium
 ---
 
-# Temporal Layer Outcome Ordering Requires A Drained Rollout
+# Temporal layer outcome ordering requires a drained rollout
 
 ## Risk
 
