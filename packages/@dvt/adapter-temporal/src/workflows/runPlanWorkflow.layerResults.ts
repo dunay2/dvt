@@ -32,10 +32,11 @@ export async function applyLayerResults(args: {
   runtimeExecutor?: TransformationExecutor;
   retainedGatewayDependencyStepIds: ReadonlyArray<string>;
 }): Promise<RunPlanWorkflowResult | null> {
+  let firstFailure: LayerStepExecution | undefined;
   for (const layerStepResult of args.layerResults) {
-    const terminalResult = await processLayerStepResult(args, layerStepResult);
-    if (terminalResult !== null) {
-      return terminalResult;
+    await processLayerStepResult(args, layerStepResult);
+    if (layerStepResult.result.status === 'FAILED') {
+      firstFailure ??= layerStepResult;
     }
   }
 
@@ -43,7 +44,9 @@ export async function applyLayerResults(args: {
     args.runtime.gatewayDependencyFacts,
     args.retainedGatewayDependencyStepIds
   );
-  return null;
+  return firstFailure === undefined
+    ? null
+    : settleLayerFailure({ ...args, error: firstFailure.result.error });
 }
 
 async function processLayerStepResult(
@@ -52,12 +55,10 @@ async function processLayerStepResult(
     planRef: WorkflowPlanRef;
     state: RuntimeWorkflowState;
     runtime: LayerRuntimeState;
-    continuedAsNewCount: number;
-    runtimeExecutor?: TransformationExecutor;
     retainedGatewayDependencyStepIds: ReadonlyArray<string>;
   },
   layerStepResult: LayerStepExecution
-): Promise<RunPlanWorkflowResult | null> {
+): Promise<void> {
   const { stepId, result, gatewayDecision } = layerStepResult;
 
   if (result.status === 'COMPLETED') {
@@ -71,18 +72,15 @@ async function processLayerStepResult(
       runtime: args.runtime,
       retainedGatewayDependencyStepIds: args.retainedGatewayDependencyStepIds,
     });
-    return null;
+    return;
   }
 
-  return handleFailedStepResult({
-    stepId,
-    failureReason: result.failureReason,
-    error: result.error,
+  await eventActivities.emitEvent({
     ctx: args.ctx,
     planRef: args.planRef,
-    state: args.state,
-    continuedAsNewCount: args.continuedAsNewCount,
-    runtimeExecutor: args.runtimeExecutor,
+    eventType: 'StepFailed',
+    stepId,
+    ...toOptionalPayload(buildFailedStepPayload(result.failureReason, result.error)),
   });
 }
 
@@ -120,9 +118,7 @@ async function handleCompletedStepResult(args: {
   args.state.currentStepIndex = args.runtime.completedSteps;
 }
 
-async function handleFailedStepResult(args: {
-  stepId: string;
-  failureReason: string | undefined;
+async function settleLayerFailure(args: {
   error: string | undefined;
   ctx: WorkflowCtx;
   planRef: WorkflowPlanRef;
@@ -130,13 +126,6 @@ async function handleFailedStepResult(args: {
   continuedAsNewCount: number;
   runtimeExecutor?: TransformationExecutor;
 }): Promise<RunPlanWorkflowResult> {
-  await eventActivities.emitEvent({
-    ctx: args.ctx,
-    planRef: args.planRef,
-    eventType: 'StepFailed',
-    stepId: args.stepId,
-    ...toOptionalPayload(buildFailedStepPayload(args.failureReason, args.error)),
-  });
   await eventActivities.emitEvent({
     ctx: args.ctx,
     planRef: args.planRef,

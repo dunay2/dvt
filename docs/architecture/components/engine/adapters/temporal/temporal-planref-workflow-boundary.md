@@ -97,6 +97,18 @@ It does **not** own:
   overflow are reported as `CURSOR_OVERFLOW`.
 - Workflow code remains deterministic; all provider side effects and StateStore
   writes go through activities.
+- A resolved layer records every confirmed step outcome in plan order before
+  settling a run-level failure. A failed sibling must not hide later completed
+  or failed siblings. The first failure in plan order supplies the existing
+  run-failure diagnostic; only one `RunFailed` is emitted and no later layer
+  executes.
+- Step evidence remains on `StepCompleted` events. `latestResultEvidence` is a
+  compact success summary, not a collection of publications, and failed runs
+  do not gain success-only global materialization evidence.
+- Changing layer event order requires the existing drained-cutover procedure.
+  Replay of new histories does not prove old and new worker lines can consume
+  the same active histories. Integration does not authorize a service restart,
+  data reset, or an undrained deployment.
 - Gateway dependency facts must be present when future gateway decisions depend
   on them; missing facts fail closed instead of inventing provider state.
 - `continueAsNewAfterLayerCount > 0` with pending layers triggers rollover

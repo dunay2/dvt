@@ -27,6 +27,7 @@ import { DEFAULT_STEP_EXECUTORS, type StepExecutor } from '../src/activities/ste
 import { loadTemporalAdapterConfig, TemporalAdapter } from '../src/index.js';
 
 import { createExecutionPlan } from './helpers/contractFixtures.js';
+import { registerLayerResultEvidenceCases } from './helpers/integration/layerResultEvidenceCases.js';
 import {
   assertWorkflowArtifactPresentInCi,
   createDbtActivityDeps,
@@ -51,6 +52,7 @@ import {
 } from './integration.time-skipping.shared.js';
 
 assertWorkflowArtifactPresentInCi();
+registerLayerResultEvidenceCases();
 
 async function waitForTerminalStatus(
   adapter: TemporalAdapter,
