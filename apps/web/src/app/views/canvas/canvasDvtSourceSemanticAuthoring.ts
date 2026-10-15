@@ -101,7 +101,6 @@ export function readDvtSourceOutputProjection(
 
   const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
   const inspection = inspectDvtSubstraitProjectionDraft(draft);
-  const physicalNames = source.fields.map((field) => field.name);
   if (
     !inspection.ok ||
     !sameSourceIdentity(

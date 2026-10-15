@@ -1,0 +1,126 @@
+/**
+Owned concern: own operational drawer layout, typography and feed chrome appearance.
+@baseline GH-3629: contribution, feed and layout controllers retain their existing behavior.
+@decision Preserve the existing visual tokens and dimensions through direct stylesheet ownership.
+@consequence Rendering the drawer does not load the unrelated TopBar stylesheet.
+@version 1.0.0
+ */
+.drawer {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-shell);
+  color: var(--text-default);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.5rem 1rem;
+}
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.titleIcon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-subtle);
+}
+
+.title {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.runBadge {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.closeButton {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--text-subtle);
+}
+
+@media (hover: hover) {
+  .closeButton:hover {
+    color: var(--text-strong);
+  }
+}
+
+.closeIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+.bodyMessage {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--text-subtle);
+}
+
+.logBody {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  flex-direction: column;
+}
+
+.feedHealth {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.feedHealthBadge {
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.feedHealthMessage {
+  min-width: 0;
+  flex: 1;
+  color: var(--text-subtle);
+}
+
+.feedRetry {
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+
+.stream {
+  min-height: 0;
+  width: 100%;
+  flex: 1;
+}

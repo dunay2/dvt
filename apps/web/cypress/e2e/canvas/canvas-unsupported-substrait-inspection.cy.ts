@@ -76,7 +76,10 @@ describe('Canvas unsupported Substrait inspection', () => {
         ).to.deep.equal(initialNode?.metadata?.transformAuthoring);
       });
     });
-    cy.get('input[name="node-name"]').clear().type('Recovered customers');
+    cy.get('input[name="node-name"]').should('have.value', initialNode?.name).clear();
+    cy.get('input[name="node-name"]').should('have.value', '');
+    cy.get('input[name="node-name"]').type('Recovered customers');
+    cy.get('input[name="node-name"]').should('have.value', 'Recovered customers');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
 
     cy.wrap(null).should(() => {

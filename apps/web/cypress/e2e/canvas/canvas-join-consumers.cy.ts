@@ -53,6 +53,7 @@ describe('join-consumers', () => {
         expect(saved.sidecar.relations).to.deep.equal(original.sidecar.relations);
         expect(saved.sidecar.fields).to.deep.equal(original.sidecar.fields);
       });
+      cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     };
     applyType('LEFT JOIN');
     applyType('INNER JOIN');
@@ -129,8 +130,14 @@ describe('join-consumers', () => {
       'true'
     );
     cy.get('[data-slot="canvas-operation-properties-tab"]:visible').click();
-    cy.get('[data-slot="join-predicate-formula-open"]').click();
+    cy.get('[aria-label="Editar condición"]').click();
+    cy.get('[aria-label="Comparador de la condición"]').select('not_equal');
+    cy.get('[data-slot="join-condition-formula-edit"]').should('be.enabled').click();
     const formulaForm = '[data-slot="join-predicate-formula"]';
+    cy.get(formulaForm).find('.view-lines').should('contain.text', 'NOT_EQUAL');
+    cy.get(formulaForm).contains('button', 'Cancel').click();
+    cy.get('[aria-label="Comparador de la condición"]').should('have.value', 'not_equal');
+    cy.get('[data-slot="join-condition-formula-edit"]').should('be.enabled').click();
     const write = (formula: string): void => {
       cy.get(formulaForm).find('.monaco-editor').click();
       cy.get(formulaForm)

@@ -14,7 +14,10 @@ import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canva
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import { openModelOutputs } from '../../support/relationalWorkbench/fieldSelection';
-import { revisitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import {
+  openWorkbenchProperties,
+  revisitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
 import { hoverWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import {
   E2E_PROJECT_WORKSPACE,
@@ -227,6 +230,14 @@ describe('Canvas Model output toggle lifecycle', () => {
     modelColumnRow('customer')
       .find('[data-slot="graph-node-column-piece"]')
       .should('have.attr', 'data-output', 'true');
+    openWorkbenchProperties('model-orders');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="node-property-column-disclosure"]')
+      .should('have.length', 1)
+      .and('contain.text', 'customer');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should('contain.text', '1');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
     showCustomerType();
     assertColumnMenuStaysOpenAndReopens();
 

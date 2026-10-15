@@ -64,7 +64,11 @@ test('buildFocusedChangedTestPlan retains the ordinary-workflow publication guar
 test('buildFocusedChangedTestPlan validates changes to the changed-file lint gate once', () => {
   const labels = focusedLabelsFor(['scripts/check-changed.cjs', 'scripts/check-changed.test.cjs']);
 
-  assert.deepEqual(labels, ['node --test scripts/check-changed.test.cjs']);
+  assert.deepEqual(labels, [
+    'node --test scripts/web-code-duplication.test.cjs',
+    'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
+    'node --test scripts/check-changed.test.cjs',
+  ]);
 });
 
 test('runtime runner source and test changes select their isolated contract exactly once', () => {
@@ -72,6 +76,7 @@ test('runtime runner source and test changes select their isolated contract exac
     'run-selected-closure-live-proof',
     'run-selected-closure-cypress',
     'live-proof-process',
+    'live-proof-web-runtime',
     'run-dev-stack',
   ]) {
     const source = `scripts/${name}.cjs`;
@@ -80,6 +85,23 @@ test('runtime runner source and test changes select their isolated contract exac
       const plan = buildFocusedChangedTestPlan(files);
       assert.deepEqual(plan.map(commandLabel), [`node --test ${contract}`], files.join(', '));
       assert.equal(plan[0].kind, 'test');
+    }
+  }
+});
+
+test('Chromium diagnostic source and paired tests retain one focused Node obligation', () => {
+  for (const [source, contract] of [
+    [
+      'apps/web/cypress/node/chromiumNetworkProjection.ts',
+      'scripts/chromium-network-projection.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
+      'scripts/chromium-network-diagnostics.test.cjs',
+    ],
+  ]) {
+    for (const files of [[source], [contract], [source, contract]]) {
+      assert.deepEqual(focusedLabelsFor(files), [`node --test ${contract}`]);
     }
   }
 });
@@ -93,6 +115,7 @@ test('live browser runtime inputs select the existing Web router without broad A
     'scripts/run-selected-closure-live-proof.cjs',
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
+    'scripts/live-proof-web-runtime.cjs',
     'tools/ci/run-web-cypress-native.mjs',
   ];
   for (const changed of [...files.map((file) => [file]), files]) {
@@ -427,6 +450,8 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'pnpm docs:feature-mechanization:implementation',
     'node scripts/check-changed.cjs',
     'pnpm test:web:changed',
+    'node --test scripts/web-code-duplication.test.cjs',
+    'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
@@ -437,6 +462,8 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
   assert.equal(new Set(plan.map((step) => step.id)).size, plan.length);
   assert.deepEqual(plan.filter((step) => step.kind === 'test').map(commandLabel), [
     'pnpm test:web:changed',
+    'node --test scripts/web-code-duplication.test.cjs',
+    'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',

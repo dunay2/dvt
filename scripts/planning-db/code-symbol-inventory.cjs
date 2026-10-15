@@ -2,6 +2,7 @@
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const ts = require('typescript');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
@@ -82,249 +83,116 @@ function buildOwnershipByPath(governanceSnapshot = {}) {
   return ownershipByPath;
 }
 
-function lineNumberAt(content, index) {
-  let lineNumber = 1;
-  for (let position = 0; position < index; position += 1) {
-    if (content.charCodeAt(position) === 10) {
-      lineNumber += 1;
-    }
+function normalizeSyntaxTokens(node, source) {
+  function visit(current) {
+    const children = current.getChildren(source);
+    return children.length === 0
+      ? [current.kind, current.getText(source)]
+      : [current.kind, children.map(visit)];
   }
-  return lineNumber;
-}
-
-function skipString(content, index, quote) {
-  let position = index + 1;
-  while (position < content.length) {
-    const character = content[position];
-    if (character === '\\') {
-      position += 2;
-      continue;
-    }
-    if (character === quote) {
-      return position + 1;
-    }
-    position += 1;
-  }
-  return content.length;
-}
-
-function skipTemplate(content, index) {
-  let position = index + 1;
-  while (position < content.length) {
-    const character = content[position];
-    if (character === '\\') {
-      position += 2;
-      continue;
-    }
-    if (character === '`') {
-      return position + 1;
-    }
-    position += 1;
-  }
-  return content.length;
-}
-
-function skipComment(content, index) {
-  if (content[index + 1] === '/') {
-    const nextLine = content.indexOf('\n', index + 2);
-    return nextLine === -1 ? content.length : nextLine + 1;
-  }
-
-  if (content[index + 1] === '*') {
-    const end = content.indexOf('*/', index + 2);
-    return end === -1 ? content.length : end + 2;
-  }
-
-  return index + 1;
-}
-
-function findMatchingBrace(content, openBraceIndex) {
-  let depth = 0;
-  let position = openBraceIndex;
-  while (position < content.length) {
-    const character = content[position];
-    if (character === '"' || character === "'") {
-      position = skipString(content, position, character);
-      continue;
-    }
-    if (character === '`') {
-      position = skipTemplate(content, position);
-      continue;
-    }
-    if (character === '/' && (content[position + 1] === '/' || content[position + 1] === '*')) {
-      position = skipComment(content, position);
-      continue;
-    }
-    if (character === '{') {
-      depth += 1;
-    } else if (character === '}') {
-      depth -= 1;
-      if (depth === 0) {
-        return position;
-      }
-    }
-    position += 1;
-  }
-  return -1;
-}
-
-function stripComments(content) {
-  let output = '';
-  let position = 0;
-  while (position < content.length) {
-    const character = content[position];
-    if (character === '"' || character === "'") {
-      const end = skipString(content, position, character);
-      output += content.slice(position, end);
-      position = end;
-      continue;
-    }
-    if (character === '`') {
-      const end = skipTemplate(content, position);
-      output += content.slice(position, end);
-      position = end;
-      continue;
-    }
-    if (character === '/' && (content[position + 1] === '/' || content[position + 1] === '*')) {
-      position = skipComment(content, position);
-      output += ' ';
-      continue;
-    }
-    output += character;
-    position += 1;
-  }
-  return output;
-}
-
-function normalizeBody(content) {
-  return stripComments(content)
-    .replace(/\s+/g, ' ')
-    .replace(/\s*([{}()[\];,.:?=+\-*/<>!|&])\s*/g, '$1')
-    .trim();
-}
-
-function normalizeSignature(signature) {
-  return String(signature || '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function extractImports(content) {
-  const refs = new Set();
-  const importRegex = /\bimport\s+(?:[^'";]+?\s+from\s+)?['"]([^'"]+)['"]/g;
-  const requireRegex = /\brequire\(\s*['"]([^'"]+)['"]\s*\)/g;
-
-  for (const regex of [importRegex, requireRegex]) {
-    let match;
-    while ((match = regex.exec(content)) !== null) {
-      refs.add(match[1]);
-    }
-  }
-
-  return [...refs].sort();
-}
-
-function exportedPrefix(content, startIndex) {
-  const prefix = content.slice(Math.max(0, startIndex - 64), startIndex);
-  if (/\bexport\s+default\s+$/.test(prefix)) {
-    return 'default';
-  }
-  if (/\bexport\s+$/.test(prefix)) {
-    return 'named';
-  }
-  return 'internal';
-}
-
-function symbolRecordsForRegex(content, regex, kind) {
-  const records = [];
-  let match;
-  while ((match = regex.exec(content)) !== null) {
-    const openBraceIndex = content.indexOf('{', regex.lastIndex - 1);
-    if (openBraceIndex === -1) {
-      continue;
-    }
-
-    const closeBraceIndex = findMatchingBrace(content, openBraceIndex);
-    if (closeBraceIndex === -1) {
-      continue;
-    }
-
-    const signature = content.slice(match.index, openBraceIndex).trim();
-    const body = content.slice(openBraceIndex + 1, closeBraceIndex);
-    const normalizedBody = normalizeBody(body);
-    if (!normalizedBody) {
-      continue;
-    }
-
-    records.push({
-      symbolName: match[1],
-      symbolKind: kind,
-      exportKind: exportedPrefix(content, match.index),
-      signature,
-      startIndex: match.index,
-      endIndex: closeBraceIndex + 1,
-      body,
-      normalizedBody,
-    });
-  }
-
-  return records;
+  return JSON.stringify(visit(node));
 }
 
 function extractCodeSymbolsFromFile(file, ownershipByPath) {
   const sourcePath = normalizeSourcePath(file.path || file.sourcePath || '');
   const content = String(file.content ?? '');
+  const source = ts.createSourceFile(sourcePath, content, ts.ScriptTarget.Latest, true);
+  const compilerOptions = { noLib: true, noResolve: true, jsx: ts.JsxEmit.Preserve, allowJs: true };
+  const host = ts.createCompilerHost(compilerOptions);
+  host.getSourceFile = (fileName) => (fileName === sourcePath ? source : undefined);
+  const program = ts.createProgram([sourcePath], compilerOptions, host);
+  const syntaxErrors = program.getSyntacticDiagnostics(source);
+  if (syntaxErrors.length > 0) {
+    throw new Error(
+      `Invalid code syntax in ${sourcePath}: ${ts.flattenDiagnosticMessageText(syntaxErrors[0].messageText, ' ')}`
+    );
+  }
   const contentSha256 = sha256HexUtf8(content);
-  const importRefs = extractImports(content);
   const ownership = ownershipByPath.get(sourcePath) || {};
-  const candidates = [
-    ...symbolRecordsForRegex(
-      content,
-      /(?:export\s+default\s+|export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/g,
-      'function'
-    ),
-    ...symbolRecordsForRegex(
-      content,
-      /(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*\{/g,
-      'arrow_function'
-    ),
-  ].sort((left, right) => left.startIndex - right.startIndex);
+  const importRefs = new Set();
+  const candidates = [];
 
-  return candidates.map((symbol) => {
-    const startLine = lineNumberAt(content, symbol.startIndex);
-    const endLine = lineNumberAt(content, symbol.endIndex);
-    const bodySha256 = sha256HexUtf8(symbol.normalizedBody);
-    const signature = normalizeSignature(symbol.signature);
-    return {
-      symbolId: sha256HexUtf8(`${sourcePath}:${symbol.symbolName}:${startLine}:${bodySha256}`),
-      sourcePath,
-      sourceContentSha256: contentSha256,
-      filePath: sourcePath,
-      componentId: ownership.componentId || null,
-      owningUnit: ownership.owningUnit || null,
-      rootUnit: ownership.rootUnit || null,
-      domainUnit: ownership.domainUnit || null,
-      symbolName: symbol.symbolName,
-      symbolKind: symbol.symbolKind,
-      exportKind: symbol.exportKind,
-      signature,
-      signatureSha256: sha256HexUtf8(signature),
-      startLine,
-      endLine,
-      bodySha256,
-      normalizedBodyLength: symbol.normalizedBody.length,
-      importRefs,
-      metadata: {
-        sourceRoot: sourcePath.split('/')[0] || '',
-        importRefCount: importRefs.length,
-      },
-      rawSymbol: {
+  function record(node, name, kind, exportOwner = node) {
+    if (node.body == null || !ts.isBlock(node.body) || node.body.statements.length === 0) return;
+    const modifiers = ts.canHaveModifiers(exportOwner) ? (ts.getModifiers(exportOwner) ?? []) : [];
+    candidates.push({
+      node,
+      name: name.getText(source),
+      kind,
+      start: (kind === 'arrow_function' ? node.parent : node).getStart(source),
+      exportKind: modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword)
+        ? 'default'
+        : modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
+          ? 'named'
+          : 'internal',
+    });
+  }
+
+  function visit(node) {
+    if ((ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node)) && node.name) {
+      record(node, node.name, 'function');
+    } else if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      ts.isArrowFunction(node.initializer)
+    ) {
+      record(node.initializer, node.name, 'arrow_function', node.parent.parent);
+    }
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteralLike(node.moduleSpecifier)
+    ) {
+      importRefs.add(node.moduleSpecifier.text);
+    } else if (
+      ts.isCallExpression(node) &&
+      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(node.expression) && node.expression.text === 'require')) &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      importRefs.add(node.arguments[0].text);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+
+  return candidates
+    .sort((left, right) => left.start - right.start)
+    .map(({ node, name, kind, start, exportKind }) => {
+      const startLine = source.getLineAndCharacterOfPosition(start).line + 1;
+      const endLine = source.getLineAndCharacterOfPosition(node.end).line + 1;
+      const normalizedBody = normalizeSyntaxTokens(node.body, source);
+      const bodySha256 = sha256HexUtf8(normalizedBody);
+      const signature = content.slice(start, node.body.getStart(source)).trim();
+      return {
+        symbolId: sha256HexUtf8(`${sourcePath}:${name}:${startLine}:${bodySha256}`),
+        sourcePath,
+        sourceContentSha256: contentSha256,
+        filePath: sourcePath,
+        componentId: ownership.componentId || null,
+        owningUnit: ownership.owningUnit || null,
+        rootUnit: ownership.rootUnit || null,
+        domainUnit: ownership.domainUnit || null,
+        symbolName: name,
+        symbolKind: kind,
+        exportKind,
         signature,
+        signatureSha256: sha256HexUtf8(signature),
         startLine,
         endLine,
-      },
-    };
-  });
+        bodySha256,
+        normalizedBodyLength: normalizedBody.length,
+        importRefs: [...importRefs].sort(),
+        metadata: {
+          sourceRoot: sourcePath.split('/')[0] || '',
+          importRefCount: importRefs.size,
+          statementCount: node.body.statements.length,
+        },
+        rawSymbol: { signature, startLine, endLine },
+      };
+    });
 }
 
 function buildCodeSymbolSnapshot(options = {}) {

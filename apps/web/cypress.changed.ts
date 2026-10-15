@@ -1,9 +1,9 @@
 /**
  * Owned concern: assign exact browser consumers to their real runtime evidence.
- * @baseline GH-3578/GH-3593/GH-3610: fixture and selection consumers retain their real runtime and owned journeys.
- * @decision Reuse three existing runtime commands with explicit paths and invocation-local environment.
- * @consequence Unknown ownership rejects; one available invocation executes each owned spec independently.
- * @version 1.0.1
+ * @baseline GH-3578/GH-3593/GH-3610/GH-3622: retained consumers keep their real runtime and owned journeys.
+ * @decision GH-3656: partition available evidence inside its policy; reuse the runtime command builder.
+ * @consequence Unknown ownership rejects; CI shards preserve complete, disjoint spec execution.
+ * @version 1.0.2
  */
 export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
 export type WebCypressCommand = Readonly<{
@@ -63,6 +63,8 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
     'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
     'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
+    'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
+    'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
   ],
   available: [
     'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
@@ -96,11 +98,16 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts',
     'apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
     'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
+    'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
   ],
   unavailable: ['apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts'],
 } as const;
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+  'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/chromiumNetworkDiagnostics.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/chromiumNetworkProjection.ts': ['controlled', 'available', 'unavailable'],
+  'scripts/live-proof-web-runtime.cjs': ['available', 'unavailable'],
   'apps/web/cypress/support/canvasExecutionSelection.ts': [
     'controlled',
     'available',
@@ -131,6 +138,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/canvasDrafts/union.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDrafts/warehouse.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDraftAuthoring.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/support/startupReadiness.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
@@ -205,9 +213,8 @@ function repositoryPath(path: string): string {
 
 function buildBrowserCommand(
   capability: WebCypressCapability,
-  controlledSpecs: readonly string[]
+  specPaths: readonly string[]
 ): WebCypressCommand {
-  const specPaths = capability === 'controlled' ? controlledSpecs : WEB_CYPRESS_SPECS[capability];
   const command =
     capability === 'controlled'
       ? `pnpm run test:e2e:native --browser chrome --spec ${specPaths.map((path) => path.slice('apps/web/'.length)).join(',')}`
@@ -222,6 +229,22 @@ function buildBrowserCommand(
         capability === 'controlled' ? undefined : capability,
     },
   };
+}
+
+export function selectWebCypressShard(
+  command: WebCypressCommand,
+  index?: number
+): WebCypressCommand {
+  if (index === undefined) return command;
+  if (command.capability !== 'available') {
+    throw new Error('Browser shards require the available capability.');
+  }
+  if (!Number.isInteger(index) || index < 1 || index > 3) {
+    throw new Error('Browser shard index must be 1, 2 or 3.');
+  }
+  const specPaths = command.specPaths.filter((_, position) => position % 3 === index - 1);
+  if (specPaths.length === 0) throw new Error('Cannot execute an empty browser shard.');
+  return buildBrowserCommand(command.capability, specPaths);
 }
 
 function browserCapabilities(path: string): readonly WebCypressCapability[] {
@@ -272,6 +295,7 @@ export function resolveWebCypressChangedPlan(
       continue;
     }
     if (
+      Object.hasOwn(SUPPORT_CAPABILITIES, path) ||
       path.startsWith('apps/web/cypress/') ||
       (path.startsWith('apps/web/cypress.') && path !== 'apps/web/cypress.changed.ts')
     ) {
@@ -299,7 +323,10 @@ export function resolveWebCypressChangedPlan(
   return {
     vitestFiles: [...vitestFiles],
     commands: capabilities.map((capability) =>
-      buildBrowserCommand(capability, [...controlledSpecs])
+      buildBrowserCommand(
+        capability,
+        capability === 'controlled' ? [...controlledSpecs] : WEB_CYPRESS_SPECS[capability]
+      )
     ),
     requiredFiles: [...requiredFiles],
     retiredFiles: [...retiredFiles],

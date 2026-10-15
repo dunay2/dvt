@@ -5,7 +5,7 @@ import {
   resetRouteBootstrapPresentation,
 } from './routeBootstrapRegistry';
 import type { RouteBootstrapPresentation } from './routeBootstrapContract';
-import { detectRouteBootstrapLocale } from './routeBootstrapErrorCopy';
+import { detectBrowserLocale } from '../browserLocale';
 import { RouteBootstrapRegistrationNotFoundError } from './routeBootstrapErrors';
 import { useActiveRouteBootstrapRegistration } from './useActiveRouteBootstrapRegistration';
 
@@ -20,7 +20,7 @@ export function usePublishedRouteBootstrap(
 ): void {
   const enabled = options.enabled ?? true;
   const allowMissingDataRouterContext = isTestRuntime() || !enabled;
-  const locale = detectRouteBootstrapLocale();
+  const locale = detectBrowserLocale();
   const registration = useActiveRouteBootstrapRegistration(enabled ? routeId : undefined, {
     allowMissingDataRouterContext,
     locale,

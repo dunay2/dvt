@@ -1,4 +1,10 @@
-/** Adapt graph interaction data into the shared column-section DTO. */
+/**
+ * Owned concern: adapt graph interaction data into the shared column-section DTO.
+ * @baseline GH-3631: source schema inspection must not resemble field selection or validation.
+ * @decision Project the existing Output view for input roles before reading a stored view.
+ * @consequence Source checks disappear while field metadata, transfers and authoring rails survive.
+ * @version 1.0.1
+ */
 import type { GraphNodeColumnInspect } from './graphColumnInspection';
 import type {
   GraphNodeColumn,
@@ -25,11 +31,13 @@ export function resolveGraphNodeColumnInteractionProps(args: {
         : undefined,
     nodeId: args.nodeId,
     view:
-      data.columnView === 'input'
-        ? ('input' as const)
-        : data.columnView === 'output'
-          ? ('output' as const)
-          : undefined,
+      args.nodeRole === 'input'
+        ? ('output' as const)
+        : data.columnView === 'input'
+          ? ('input' as const)
+          : data.columnView === 'output'
+            ? ('output' as const)
+            : undefined,
     onViewChange:
       typeof data.onColumnViewChange === 'function'
         ? (view: 'input' | 'output') =>

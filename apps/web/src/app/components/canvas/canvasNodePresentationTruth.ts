@@ -1,4 +1,10 @@
-/** Owned concern: project one provenance-preserving node truth for passive Canvas consumers. */
+/**
+Owned concern: project one provenance-preserving node truth for passive Canvas consumers.
+@baseline ADR-0060: a catalogue is not a second semantic output authority.
+@decision Share native Output selection across cards and inspection; preserve input catalogues.
+@consequence Unavailable and explicitly empty outputs never revive metadata columns.
+@version 1.0.0
+ */
 import type {
   CanvasNodeCodeLanguage,
   CanvasNodeCodeTruth,
@@ -31,6 +37,13 @@ type ColumnCandidate = Readonly<{
   primaryKey?: boolean;
   description?: string;
 }>;
+
+export function selectCanvasNodeOutputColumns(
+  truth: CanvasNodePresentationTruth
+): readonly CanvasNodePresentationColumn[] {
+  if (truth.columns.state != null && truth.columns.state !== 'ready') return [];
+  return truth.columns.declared.filter((column) => column.selected !== false);
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);

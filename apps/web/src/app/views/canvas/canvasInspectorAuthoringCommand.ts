@@ -12,6 +12,7 @@ import type {
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import { modelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 
 export function applyCanvasInspectorNodeDraftToSession(args: {
   draftSession: CanvasDraftSession;
@@ -37,6 +38,13 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
     return { outcome: 'rejected', reason: 'invalid_draft', errors };
 
   const updated = applyCanvasInspectorNodeDraft(node, draft, workspaceScope);
+  const dependencyRejection = modelOutputDependencyRejection({
+    node,
+    candidate: updated,
+    nodes,
+    edges,
+  });
+  if (dependencyRejection != null) return dependencyRejection;
   const definition =
     node.sourceDefinitionId == null
       ? null

@@ -10,7 +10,6 @@ import {
   type RenameWarehouseConnectionRequest,
   type SourceDataSampleRequest,
   type SourceDataSampleResponse,
-  type SourceObject,
   type SourceObjectCatalogRequest,
   type SourceObjectCatalogResponse,
   type TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,

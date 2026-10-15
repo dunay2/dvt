@@ -23,9 +23,19 @@ import {
 } from './Root.shellChrome.test.support';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
+import navigationStyles from './components/LeftNavigation.module.css';
 
 describe('RootShell chrome', () => {
+  let previousResizeObserver: typeof ResizeObserver | undefined;
+
   beforeEach(() => {
+    previousResizeObserver = globalThis.ResizeObserver;
+    // DOM capability double only: jsdom cannot observe Tooltip arrow geometry.
+    globalThis.ResizeObserver = class implements ResizeObserver {
+      disconnect(): void {}
+      observe(): void {}
+      unobserve(): void {}
+    };
     localStorage.clear();
     resetRootShellStores();
     resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
@@ -34,6 +44,44 @@ describe('RootShell chrome', () => {
   afterEach(() => {
     resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
     vi.useRealTimers();
+    if (previousResizeObserver === undefined) Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    else globalThis.ResizeObserver = previousResizeObserver;
+  });
+
+  it('preserves owned rail styles, labels and keyboard focus on a global route', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/'])
+    );
+    try {
+      await waitForHealthyShellChrome(mounted);
+      const rail = mounted.container.querySelector('[data-slot="left-navigation-rail"]');
+      const nav = rail?.querySelector('[data-slot="left-navigation-nav"]');
+      const admin = nav?.querySelector<HTMLAnchorElement>(
+        '[data-slot="left-navigation-link"][href="/admin"]'
+      );
+      const runs = nav?.querySelector<HTMLAnchorElement>(
+        '[data-slot="left-navigation-link"][href="/runs"]'
+      );
+      expect(rail?.className).toBe(navigationStyles.rail);
+      expect(nav?.className).toBe(navigationStyles.nav);
+      expect(admin?.classList).toContain(navigationStyles.link);
+      expect(admin?.classList).toContain(navigationStyles.linkInteractive);
+      expect(admin?.classList).not.toContain(navigationStyles.linkActive);
+      expect(admin?.querySelector('[data-slot="left-navigation-caption"]')?.className).toBe(
+        navigationStyles.caption
+      );
+      expect(admin?.textContent).toContain('Admin');
+      expect(runs?.classList).not.toContain(navigationStyles.linkActive);
+      await act(async () => admin!.focus());
+      expect(document.activeElement).toBe(admin);
+      await act(async () => fireEvent.click(runs!));
+      await waitFor(() => {
+        expect(mounted.container.textContent).toContain('Runs route');
+        expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      });
+    } finally {
+      await mounted.cleanup();
+    }
   });
 
   it('renders Canvas workbench chrome without the permanent left navigation rail', async () => {
@@ -47,7 +95,7 @@ describe('RootShell chrome', () => {
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
       await act(async () => {
         fireEvent.pointerDown(
-          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+          mounted.container.querySelector('[data-slot="shell-app-menu-trigger"]')!
         );
       });
 
@@ -79,7 +127,7 @@ describe('RootShell chrome', () => {
     }
   });
 
-  it('navigates from the Canvas workspace menu to Runs', async () => {
+  it('navigates from the Raven application menu to Runs', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
     );
@@ -88,7 +136,7 @@ describe('RootShell chrome', () => {
       await waitForHealthyShellChrome(mounted);
       await act(async () => {
         fireEvent.pointerDown(
-          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+          mounted.container.querySelector('[data-slot="shell-app-menu-trigger"]')!
         );
       });
 

@@ -32,7 +32,7 @@ import {
   installWorkspaceScopeHarness,
   setWorkspaceScope,
 } from './workspaceScope.test.harness';
-import { httpErrorResponse, jsonResponse } from './workspaceApiClient.test.harness';
+import { jsonResponse } from './workspaceApiClient.test.harness';
 
 type ApiWorkspacePorts = ReturnType<typeof createApiWorkspacePortHarness>;
 

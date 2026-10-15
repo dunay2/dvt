@@ -9,9 +9,62 @@ import { useCanvasNodePresentations } from './useCanvasNodePresentations';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { projectCanvasNodeColumnInteraction } from './canvasNodeColumnInteraction';
 import { pendingCanvasNodePresentation } from './canvasNodePresentationBase';
+import {
+  createModelOutputDependencyFixture,
+  selectModelDependencyOutputs,
+} from './canvasModelOutputDependency.test-support';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 afterEach(() => vi.restoreAllMocks());
 describe('pending field presentation', () => {
+  it('allows exact Input recovery targets without publishing unavailable Output ports', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);
+    const nodes = graph.nodes.map((node) => (node.id === producer.id ? producer : node));
+    const truth = await projectCanvasNodePresentationTruth({
+      node: graph.consumer,
+      nodes,
+      edges: graph.edges,
+    });
+    const command = vi.fn();
+    const projected = projectCanvasNodeColumnInteraction(
+      {
+        id: graph.consumer.id,
+        position: { x: 0, y: 0 },
+        data: {
+          presentationTruth: truth,
+          onMapCanvasInput: command,
+          onColumnPortActivate: command,
+          onToggleCanvasColumnOutput: command,
+        },
+      },
+      {
+        canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+        columnFunctionEdges: graph.edges,
+        readOnlyColumnLineageNodeIds: new Set(),
+      }
+    );
+    expect(projected.data.onMapCanvasInput).toBe(command);
+    expect(projected.data.onColumnPortActivate).toBe(command);
+    expect(projected.data.columnPortDirections).toEqual(['target']);
+    expect(projected.data.onToggleCanvasColumnOutput).toBeUndefined();
+    const pending = projectCanvasNodeColumnInteraction(
+      {
+        ...projected,
+        data: {
+          ...projected.data,
+          presentationTruth: { ...truth, columns: { ...truth.columns, state: 'pending' } },
+        },
+      },
+      {
+        canonicalNodesById: new Map(nodes.map((node) => [node.id, node])),
+        columnFunctionEdges: graph.edges,
+        readOnlyColumnLineageNodeIds: new Set(),
+      }
+    );
+    expect(pending.data.onMapCanvasInput).toBeUndefined();
+    expect(pending.data.columnPortDirections).toEqual([]);
+  });
   it.each(['pending', 'unavailable'] as const)(
     'blocks column commands and ports while fields are %s',
     (state) => {

@@ -31,7 +31,8 @@ describe('shell navigation disposition architecture', () => {
   it('keeps global routes reachable through the shell menu when workbench routes hide the rail', () => {
     const rootSource = readAppSource('Root.tsx');
     const topBarSource = readAppSource('components/TopAppBar.tsx');
-    const menuSource = readAppSource('components/shell/ShellMenu.tsx');
+    const menuSource = readAppSource('components/shell/ShellAppMenu.tsx');
+    const entriesSource = readAppSource('components/shell/ShellMenu.templates.tsx');
     const componentDoc = readRepoSource(
       'docs/architecture/components/web/shell-navigation-disposition-component.md'
     );
@@ -41,9 +42,11 @@ describe('shell navigation disposition architecture', () => {
     );
     expect(rootSource).toContain('navigationModel={navigationModel}');
     expect(topBarSource).toContain('navigationModel');
-    expect(menuSource).toContain('shell-menu-navigation-link');
-    expect(menuSource).toContain('navigationModel.primaryItems');
-    expect(menuSource).toContain('navigationModel.footerItems');
+    expect(menuSource).toContain('ShellNavigationEntriesTemplate');
+    expect(menuSource).toContain('useNavigate');
+    expect(entriesSource).toContain('shell-menu-navigation-link');
+    expect(entriesSource).toContain('navigationModel.primaryItems');
+    expect(entriesSource).toContain('navigationModel.footerItems');
     expect(componentDoc).toContain('Public API');
     expect(componentDoc).toContain('Invariants');
     expect(componentDoc).toContain('Transitions');

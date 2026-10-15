@@ -324,7 +324,8 @@ The existing command plan represents three distinct runtime obligations:
 
 - Controlled API consumers execute once through the native browser runner.
 - Available LIVE consumers execute the exact admitted spec list in one Cypress
-  invocation and one protected runtime bootstrap. Each spec owns its suite and
+  invocation and one protected runtime bootstrap locally, or once per disjoint
+  CI shard as specified below. Each spec owns its suite and
   preparation; no spec imports another spec to register its cases. The terminal
   retains its own cases and exclusive helpers. This restores spec isolation
   without repeating PostgreSQL, API, Temporal or outbox startup for every file.
@@ -357,12 +358,176 @@ not introduce a generic GET recorder or global fixture repair.
 
 Admission requires measuring each complete job critical path, including setup,
 builds, selected runtime, result validation and cleanup, against its unchanged
-25-minute budget. All four matrix jobs must satisfy the existing required
+25-minute budget. All capability/shard matrix jobs must satisfy the existing required
 aggregate. The partition preserves the 119 controlled, 53 existing available
 and one unavailable cases; first authoring adds one available case. This does
 not prove that a stalled case is fixed. Individual
 test durations or results from the previous serial layout cannot establish the
 new bound. No new workflow, timeout increase or evidence waiver is admitted.
+
+### Available Browser Budget Partition — GH-3656
+
+The existing `RouteChangedWebVitestSuites` query and `RunWebCypressNative`
+command retain their application ports, browser catalog and authorization
+boundary. PR #3627 run `38614237742` exhausted the available job's 25-minute
+budget after 15 of 32 specs passed, while starting spec 16. Other capabilities
+passed. This is incomplete execution evidence, not a passing product result.
+
+```text
+Before: complete admitted plan -> available [32 specs] -> 25-minute cancellation
+After:  complete admitted plan -> available 1/3 -> exact result validation
+                              -> available 2/3 -> exact result validation
+                              -> available 3/3 -> exact result validation
+All three producers -> existing required Test Suite matrix aggregate
+```
+
+The existing browser policy partitions its ordered available spec list by
+zero-based index modulo three. Every spec belongs to exactly one shard; the
+union equals the unpartitioned catalog. Reuse the existing command builder,
+protected runtime and strict expected-spec result validator. Do not duplicate
+the catalog in YAML, parse command strings, add another runner or alter cases.
+
+The adapter accepts `--browser-shard=1/3`, `2/3` or `3/3` only together with
+`--phase=browser --browser-capability=available`. Omission preserves the complete
+local invocation. Complete plan admission and physical-path validation precede
+shard selection, including in `--plan` mode. Invalid, repeated, out-of-phase
+or out-of-capability selectors reject before provisioning. A selected shard
+cannot silently admit an empty consumer list.
+
+The existing workflow creates all three available producers for PR and full
+baseline execution. Container ownership, Turbo cache variant and screenshot
+artifact identities include the shard. Provider setup occurs only when the
+selected plan requires it. The unchanged 25-minute deadline and fail-fast-false
+policy apply to each producer; a failed, cancelled or missing shard blocks the
+existing required aggregate. Controlled, unavailable and Vitest ownership do
+not change. Three bootstraps replace one for this capability; lower total CPU
+is not claimed.
+
+Separate focused policy/adapter tests prove disjoint complete coverage,
+unchanged runtime arguments, selector rejection and validation-before-filtering.
+Workflow contracts prove every shard is scheduled with unique resource names
+and identical planning/execution selectors. Each complete CI critical path,
+including preparation and cleanup, must pass within 25 minutes. Delivery and
+measured evidence belong to [issue 3656](https://github.com/dunay2/dvt/issues/3656).
+
+| Scenario                                  | Opportunity    | Fowler pattern                          | DDD owner                   | Command/query rail                               | Implementation surfaces                                                              | Unit or package test                                                        | Architecture test                                                                                     | User-flow test                                                  | Out of scope                                                                      |
+| ----------------------------------------- | -------------- | --------------------------------------- | --------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Available evidence exceeds one job budget | Boundary drift | Policy separated from execution adapter | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites; RunWebCypressNative | Existing browser policy, changed-suite adapter, Test Suite workflow and their guards | Disjoint complete partition; invalid selectors; validation before filtering | Workflow schedules every shard with identical plan/execution selection and unique resource identities | All existing available specs through the real protected runtime | Product behavior, new catalogs/runners, timeout increases, total CPU optimization |
+
+### Compiled Client For Real-Provider Browser Proof — GH-3656
+
+The available provider group failed twice while loading development URLs such
+as `/src/app/views/Canvas.tsx` and `/src/app/views/RunsView.tsx`. Other failures
+showed a page reload that removed an import or Preview dialog. The API remained
+available. These observations identify unstable client asset delivery in the
+proof; they do not establish its low-level network cause.
+
+```mermaid
+flowchart LR
+  Current[Live proof starts Vite development server] --> Dynamic[Transform and serve modules during the journey]
+  Dynamic --> Observed[Observed module load errors or lost dialog after reload]
+  Existing[Existing build e2e command] --> Assets[Compiled client assets]
+  Assets --> Preview[Vite preview with the same proof profile]
+  Preview --> Browser[Existing Cypress specs and result guard]
+  Browser --> Providers[Real protected API and disposable providers]
+```
+
+The existing `RunWebCypressNative` command and selected-closure runner retain
+their spec selection, provider allocation, authentication and cleanup. An
+internal Web runtime adapter uses the existing `build:e2e` command once with
+the proof's Web environment, then serves those assets through Vite preview.
+Build and preview receive the same API URL, authentication and workspace
+profile. The bundle remains stable for the complete invocation.
+
+The adapter owns only build/start/readiness sequencing. It reuses the runner's
+process launcher and HTTP readiness port; both child handles remain in the
+existing cleanup collection. A failed or signaled build prevents preview from
+starting. Preview is ready only when its root returns HTTP 200; missing assets,
+early process exit or readiness failure retain the failing proof result.
+
+The canonical repository command catalog must admit this exact lifecycle
+adapter as `test-tooling`, alongside the existing browser child and process
+adapters. It remains relevant to changed-file validation without product
+runtime fan-out. Neighboring unregistered helper paths remain `unknown`, and
+the existing discovery/coverage guard must continue to reject them. Catalog
+admission does not alter runtime implementation or browser obligations.
+
+| Concern             | Existing owner / proof                                                            |
+| ------------------- | --------------------------------------------------------------------------------- |
+| Rail and allocation | `RunWebCypressNative`, selected-closure runner                                    |
+| Profile and build   | Existing `build:e2e`, identical build/preview environment                         |
+| Lifecycle           | Focused adapter tests: ordering, rejected build and readiness, owned handles      |
+| Routing             | Existing changed-file catalog selects real provider consumers for adapter changes |
+| Acceptance          | All admitted provider specs, unchanged assertions and CI budget                   |
+
+This changes the proof's client serving mode; it adds no product behavior,
+command rail, browser retry, exception suppression or fake provider. Runtime
+policy tests stay separate from the larger provider-composition test file.
+
+#### Browser Transport Observation
+
+The compiled client still encountered transport failures on two Linux CI
+attempts. Session or write requests could fail after a successful API preflight;
+the later attempt failed on different calls. Authentication denial, application
+mutation, and a vendor-version defect are not established by those observations.
+Another identical retry is not the diagnostic owner.
+
+```mermaid
+flowchart LR
+  Browser[Real Chromium requests] --> Proxy[Cypress transport]
+  Proxy --> API[Real protected API]
+  Browser --> Capture[Opt-in Chromium net-log]
+  Capture --> Projection[Allowlisted metadata projection]
+  Projection --> Evidence[Sanitized error and CORS event evidence]
+  Capture --> Completion[Native Cypress process completes]
+  Completion --> Cleanup[Exact owned raw-file cleanup]
+```
+
+`RunWebCypressNative` retains the same literal scenarios, authentication,
+providers, assertions and budget. The existing Cypress Node event adapter
+optionally captures Chromium net-log for available group 1 only. The pure
+projection and Node lifecycle have separate owners. Exported JSON contains
+event/source identifiers, event kinds, numeric network errors, method and safe
+loopback route groups only. Headers, bodies, cookies, URL queries, userinfo and
+arbitrary raw parameters are omitted. Raw capture is outside artifact
+publication and its exact temporary files are removed by their owner.
+
+The native parent owns the capture lease and finalization after the Cypress
+binary completes. Cypress `after:run` is not the close boundary: a real Windows
+proof passed its journey but that hook still saw the Chrome file locked. Node
+plugin launch hooks receive only the owned lease through scoped process
+environment; that environment is restored on success or failure.
+
+The real capture can end before its JSON footer when Cypress terminates Chrome.
+The maintained `jsonc-parser` development dependency decodes complete observed
+records, with `captureState=terminated` explicitly distinguishing this from a
+complete capture. Only EOF closing-array/object errors and a trailing comma are
+admitted; malformed headers, middle syntax or unfinished event bodies reject.
+No record, footer or successful outcome is fabricated. This Node-only consumer
+does not add a production application dependency.
+
+Disabled diagnostics register no launch hooks. Enabled diagnostics reject a
+missing or malformed capture and preserve the failing browser result. The
+observer adds no request interception, synthetic response, retry, timeout or
+security override; recording evidence is not a claim that integration or the
+transport defect is complete. Paired projection and lifecycle tests remain
+separate from scenario files and register in the existing local gate.
+
+The native runner contract now reaches the optional package-backed loader through
+its existing shared proof import. Its exact CI-tool test belongs to the installed
+executable partition, not the package-free static partition. The all-mode union,
+fail-closed dependency guard and assertions remain unchanged; removing that exact
+registration is a negative test, not an exemption from coverage.
+
+Sanitized network reports publish independently of failure screenshots and only
+when a report exists. An empty routed group produces neither a capture nor a
+synthetic artifact. Artifact admission has its own focused CI contract; malformed
+captures and incomplete browser results still reject at their existing owners.
+
+The Cypress config and its two exact Node diagnostic imports are admitted browser
+support boundaries for controlled, available and unavailable capabilities. Their
+module-load failures affect every capability even when capture is disabled. This
+retains complete evidence; unknown configuration and Node neighbors still reject.
 
 ### Execution Selection Consumer Closure — GH-3610
 
@@ -482,6 +647,41 @@ scope returned by creation, retain absent-draft and unchanged-revision proofs
 in that scope, and leave other consumers' drafts intact. This reuses the
 existing `liveProjectAuthoring.ts` owner; no random scope, cleanup of another
 spec's graph or separate project-creation implementation is admitted.
+
+### Retained Shell Menu Consumers — GH-3622
+
+Menu responsibility changes retain two previously unadmitted browser consumers.
+Their runtime is determined by their actual preparation, not by the route name:
+
+| Consumer                                   | Runtime    | Existing evidence owner                                                |
+| ------------------------------------------ | ---------- | ---------------------------------------------------------------------- |
+| `templates/templates-workbench.cy.ts`      | Controlled | Native browser runner; explicitly controlled bootstrap responses       |
+| `shell/active-project-creation-live.cy.ts` | Available  | Protected provider runner; granted live session and real CreateProject |
+
+```mermaid
+flowchart LR
+  Diff[Retained menu consumers] --> Catalog[Exact existing browser admission]
+  Catalog --> Templates[Templates: controlled bootstrap]
+  Catalog --> Project[Project creation: granted live session]
+  Templates --> Native[Existing native browser command]
+  Project --> Live[Existing available provider command]
+  Native --> Result[Strict complete-result validation]
+  Live --> Result
+```
+
+The project-creation consumer reuses `visitWithLiveWorkspaceSession` to initialize
+the existing granted scope and requires the existing protected-runtime identity.
+It must not rely on a separate manual enable flag. Its original single POST,
+empty created workspace, A-to-B scope switching and reload assertions remain
+intact. Templates retains its existing controlled responses and both selection
+and parameter-validation cases.
+
+Add only these two literal paths. Unknown consumers remain rejected; runtime
+policy changes retain all three existing capability obligations. No new runner,
+deadline, stubbed project response, product behavior or skipped-result waiver is
+introduced. The available inventory becomes 32 specs; the controlled inventory
+gains the single Templates consumer. Delivery evidence belongs to
+[issue 3622](https://github.com/dunay2/dvt/issues/3622).
 
 <a id="section-web-vitest-changed-suite-router-user-stories"></a>
 

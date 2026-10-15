@@ -73,7 +73,7 @@ describe('Canvas Project Code working-tree synchronization', () => {
       .invoke('attr', 'style')
       .then((viewportStyle) => cy.wrap(viewportStyle).as('graphViewportStyle'));
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
     waitForE2eApiCall('/workspace/files', 'GET');
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');

@@ -1,4 +1,5 @@
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
+import { resolveCopyLanguage } from '../../copyLanguage';
 import type { CanvasViewCopy, CanvasViewLanguage } from './canvasCopy.types';
 import { canvasViewAuthoringCopyByKey } from './canvasCopyCatalog.authoring';
 import { canvasViewAuthoringCopyEs } from './canvasCopyCatalog.authoring.es';
@@ -27,22 +28,12 @@ const LOCALIZED_COPY_BY_LANGUAGE: Record<CanvasViewLanguage, CanvasViewCopy | nu
   } satisfies CanvasViewCopy,
 };
 
-function resolveCanvasViewLanguage(locale?: string): CanvasViewLanguage {
-  const normalizedLocale = locale?.trim().toLowerCase();
-
-  if (normalizedLocale?.startsWith('es')) {
-    return 'es';
-  }
-
-  return 'en';
-}
-
 export function detectCanvasViewLocale(): string {
   return getApplicationLanguage();
 }
 
 export function resolveCanvasViewCopy(locale: string = detectCanvasViewLocale()): CanvasViewCopy {
-  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCanvasViewLanguage(locale)];
+  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCopyLanguage(locale)];
   if (localizedCopy) {
     return localizedCopy;
   }

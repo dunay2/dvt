@@ -163,6 +163,14 @@ describe('Internal operation card execution', () => {
         .should('be.visible')
         .click();
       cy.get(`${data} table`).should('contain.text', 'C-001');
+      cy.get(data).should('not.have.descendants', 'header, h2');
+      cy.get(`${data} [data-slot="data-grid-toolbar"] [data-slot="canvas-model-preview"]`).should(
+        'be.visible'
+      );
+      cy.get(`${data} [data-slot="data-sample-summary"]`)
+        .parent()
+        .find('[data-slot="live-preview-facts"]')
+        .should('be.visible');
       cy.get(data)
         .should('have.css', 'min-height', '0px')
         .and('have.css', 'min-width', '0px')

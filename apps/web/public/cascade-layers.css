@@ -1,0 +1,6 @@
+/*
+ * Owned concern: register the canonical cascade before split application styles.
+ * Reason: the first public HTML stylesheet stays separate from bundle ordering,
+ * preserving vendor/global appearance priority without another style authority.
+ */
+@layer properties, theme, base, components, utilities;

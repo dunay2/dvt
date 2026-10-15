@@ -4,6 +4,10 @@ import React, { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import * as analysis from './canvasRelationalAnalysis';
+import {
+  createModelOutputDependencyFixture,
+  selectModelDependencyOutputs,
+} from './canvasModelOutputDependency.test-support';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import {
@@ -18,6 +22,30 @@ import {
 
 describe('Canvas relational-tree Workbench ', () => {
   setupWorkbenchTest();
+  it('shows the retained tree and precise recovery guidance without enabling semantic editing', async () => {
+    const graph = await createModelOutputDependencyFixture();
+    const producer = await selectModelDependencyOutputs(graph.producer, ['customer']);
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
+    act(() =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          transformNode={graph.consumer}
+          nodes={graph.nodes.map((node) => (node.id === producer.id ? producer : node))}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft }}
+        />
+      )
+    );
+    expect(
+      container.querySelector('[data-slot="canvas-producer-input-recovery"]')?.textContent
+    ).toBe(COPY.relationalTreeProducerFieldsUnavailableMessage);
+    expect(
+      container.querySelector('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+    ).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-relational-tree-unavailable"]')).toBeNull();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
   it('reuses semantic analysis during selection, disclosure, focus and viewport controls', () => {
     const fixture = buildSemanticWorkbenchFixture();
     const analyze = vi.spyOn(analysis, 'analyzeCanvasRelations');

@@ -947,6 +947,19 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.relationalTree.inputIdentityUnavailableMessage',
     fallback: 'A connected Source has no stable identity.',
   },
+  relationalTreeProducerFieldsUnavailableMessage: {
+    key: 'canvas.relationalTree.producerFieldsUnavailableMessage',
+    fallback:
+      'Some input fields are no longer published. On Canvas, connect each unavailable Input slot to a compatible field from the same model. Preview remains unavailable until the inputs are repaired.',
+  },
+  modelOutputRequiredTemplate: {
+    key: 'canvas.modelOutput.requiredTemplate',
+    fallback: '{model} uses output fields {fields}. Keep them or update that model first.',
+  },
+  modelOutputDependencyUnavailableMessage: {
+    key: 'canvas.modelOutput.dependencyUnavailableMessage',
+    fallback: 'Output dependencies could not be verified. No changes were applied.',
+  },
   relationalTreeSelectFirstSourceMessage: {
     key: 'canvas.relationalTree.selectFirstSourceMessage',
     fallback: 'Select the first Source.',

@@ -16,6 +16,7 @@ import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { GraphNodeColumnChildren } from './GraphNodeColumnChildren';
 import { useGraphColumnOutputFocus } from './useGraphColumnOutputFocus';
 import { writeGraphColumnTransfer } from './graphColumnTransfer';
+import styles from './GraphNodeColumnPiece.module.css';
 
 export type GraphNodeColumnCopy = ReturnType<typeof resolveGraphNodeCardCopy>;
 
@@ -57,10 +58,13 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
       showSourceName === true && column.sourceNodeName != null
         ? `${column.sourceNodeName}.${column.name}`
         : column.name;
+    const unavailableInput = view === 'input' && column.inputState === 'unresolved';
     const accessibleLabel = (
       view !== 'input' && isOutput
         ? copy.columnOutputAriaLabelTemplate
-        : copy.columnAvailableInputAriaLabelTemplate
+        : unavailableInput
+          ? copy.columnUnavailableInputAriaLabelTemplate
+          : copy.columnAvailableInputAriaLabelTemplate
     ).replace('{column}', displayedName);
     const outputFocus = useGraphColumnOutputFocus();
 
@@ -72,6 +76,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         data-slot="graph-node-column-piece"
         data-column-name={column.name}
         data-field-id={column.id}
+        data-input-state={view === 'input' ? column.inputState : undefined}
         data-output={view === 'input' ? undefined : String(isOutput)}
         tabIndex={0}
         aria-label={accessibleLabel}
@@ -90,7 +95,7 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
         className={graphNodeColumnClasses.piece}
       >
         {column.sourceFieldName != null && column.sourceFieldName !== column.name ? (
-          <span data-slot="graph-node-column-alias" className="flex min-w-0 items-center gap-1.5">
+          <span data-slot="graph-node-column-alias" className={styles.alias}>
             <span className={graphNodeColumnClasses.sourceName}>
               {showSourceName === true && column.sourceNodeName != null
                 ? `${column.sourceNodeName}.${column.sourceFieldName}`
@@ -107,7 +112,9 @@ export const GraphNodeColumnPiece = forwardRef<HTMLDivElement, GraphNodeColumnPi
           <span className={graphNodeColumnClasses.name}>{displayedName}</span>
         )}
         <span className={graphNodeColumnClasses.metadata}>
-          <span className={graphNodeColumnClasses.type}>{column.type}</span>
+          <span className={graphNodeColumnClasses.type}>
+            {unavailableInput ? copy.outputStateLabels.unavailable : column.type}
+          </span>
           {column.primaryKey === true ? (
             <span className={graphNodeColumnClasses.constraint}>PK</span>
           ) : null}

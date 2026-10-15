@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
-import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
 
 describe('GraphNodeColumnSection', () => {
   const EIGHT_COLUMNS = [

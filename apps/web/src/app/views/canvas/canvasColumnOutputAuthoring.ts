@@ -78,7 +78,10 @@ export function reorderCanvasColumnOutput(
   });
   return result.outcome === 'applied'
     ? result
-    : { outcome: 'rejected', reason: 'mapping_not_found' };
+    : result.reason === 'model_output_required' ||
+        result.reason === 'model_output_dependency_unavailable'
+      ? result
+      : { outcome: 'rejected', reason: 'mapping_not_found' };
 }
 
 export function setCanvasColumnOutputIncluded(
@@ -136,5 +139,8 @@ export function setCanvasColumnOutputIncluded(
   });
   return result.outcome === 'applied'
     ? result
-    : { outcome: 'rejected', reason: 'mapping_not_found' };
+    : result.reason === 'model_output_required' ||
+        result.reason === 'model_output_dependency_unavailable'
+      ? result
+      : { outcome: 'rejected', reason: 'mapping_not_found' };
 }

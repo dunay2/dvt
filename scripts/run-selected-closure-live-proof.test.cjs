@@ -78,7 +78,7 @@ test('selected closure explicitly prepares an available worker before starting t
   );
   const startOutbox = source.indexOf('await startLiveProofOutboxWorker(apiEnv, processHandles);');
   assert.ok(startOutbox > source.indexOf("'API db/ready'"));
-  assert.ok(startOutbox < source.indexOf('const webHandle = spawnProcess('));
+  assert.ok(startOutbox < source.indexOf('await startCompiledLiveProofWeb('));
 });
 
 test('outbox composition uses only the proof database, topology, archive and real local sink', () => {

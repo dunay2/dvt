@@ -17,6 +17,7 @@ import { useOperationalDrawerContributionStore } from './shell/operationalDrawer
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './shell/copy';
+import { topAppBarClasses } from './shell/chrome';
 import ShellTopBar from './TopAppBar';
 
 const TEST_NAVIGATION_MODEL = buildShellNavigationModel([]);
@@ -170,6 +171,9 @@ describe('ShellTopBar workspace context', () => {
       expect(workspaceMenuTrigger).not.toBeNull();
       expect(workspaceMenuTrigger?.textContent).toContain('Project');
       expect(workspaceMenuTrigger?.textContent).toContain('dbt-analytics');
+      expect(topBar?.querySelector('[data-slot="shell-file-menu-trigger"]')?.textContent).toContain(
+        'File'
+      );
       expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
 
       await act(async () => {
@@ -187,9 +191,7 @@ describe('ShellTopBar workspace context', () => {
 
       await act(async () => {
         fireEvent.keyDown(document, { key: 'Escape' });
-        fireEvent.pointerDown(
-          container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
-        );
+        fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
       });
 
       await waitFor(() => {
@@ -200,6 +202,23 @@ describe('ShellTopBar workspace context', () => {
         ];
 
         expect(menuLinks.map((link) => link.getAttribute('href'))).toEqual(['/plugins', '/admin']);
+        expect(
+          document.body.querySelector('[data-slot="shell-menu-workspace-context"]')
+        ).toBeNull();
+        expect(document.body.querySelector('[data-slot="shell-new-project-command"]')).toBeNull();
+      });
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: 'Escape' });
+        fireEvent.pointerDown(
+          container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+        );
+      });
+
+      await waitFor(() => {
+        expect(
+          document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
+        ).toHaveLength(0);
         expect(document.body.textContent).toContain('Workspace context');
         expect(document.body.textContent).toContain('dbt-analytics');
         expect(document.body.textContent).toContain('dev');
@@ -209,7 +228,10 @@ describe('ShellTopBar workspace context', () => {
         expect(document.body.textContent).toContain(
           'No other project is available in this session.'
         );
-        expect(document.body.textContent).toContain('New project…');
+        expect(document.body.querySelector('[data-slot="shell-new-project-command"]')).toBeNull();
+        expect(
+          document.body.querySelector('[data-slot="canvas-workspace-open-project-code-command"]')
+        ).toBeNull();
         expect(document.body.querySelector('[data-slot="shell-menu-git-context"]')).toBeNull();
       });
     }
@@ -283,16 +305,11 @@ describe('ShellTopBar workspace context', () => {
     expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('transformation-canvas');
     expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
     expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
-    expect(topBar?.className).toContain('flex-wrap');
-    expect(
-      topBar?.querySelector('[data-slot="shell-top-bar-context-cluster"]')?.className
-    ).toContain('w-full');
-    expect(
-      topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]')?.className
-    ).toContain('w-full');
-    expect(
-      topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]')?.className
-    ).toContain('flex-wrap');
+    const contextCluster = topBar?.querySelector('[data-slot="shell-top-bar-context-cluster"]');
+    const commandCluster = topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]');
+    expect(topBar?.className).toBe(topAppBarClasses.shellBar);
+    expect(contextCluster?.className).toBe(topAppBarClasses.contextCluster);
+    expect(commandCluster?.className).toBe(topAppBarClasses.commandCluster);
   });
 
   it('renders Canvas run readiness as compact top-bar status without restoring Plan chrome', async () => {
@@ -390,7 +407,7 @@ describe('ShellTopBar workspace context', () => {
     expect(onStartRun).toHaveBeenCalledTimes(1);
   });
 
-  it('exposes workspace navigation when focus mode hides the global route rail', async () => {
+  it('exposes Raven navigation when focus mode hides the global route rail', async () => {
     useUiLayoutStore.setState({ focusMode: true });
 
     await act(async () => {
@@ -404,7 +421,7 @@ describe('ShellTopBar workspace context', () => {
     expect(workspaceMenuTrigger).not.toBeNull();
 
     await act(async () => {
-      fireEvent.pointerDown(workspaceMenuTrigger!);
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
     });
 
     await waitFor(() => {
@@ -422,6 +439,7 @@ describe('ShellTopBar workspace context', () => {
     expect(resolveShellTopBarCopy('es-ES')).toMatchObject({
       shell: 'Vista',
       workspaceMenu: 'Espacio de trabajo',
+      fileMenu: 'Archivo',
       globalNavigation: 'Navegación',
       workspaceContext: 'Contexto del proyecto',
       projectScope: 'Proyecto',
@@ -434,7 +452,7 @@ describe('ShellTopBar workspace context', () => {
     });
   });
 
-  it('opens the localized new-project dialog from the active Project menu and cancels cleanly', async () => {
+  it('opens the localized new-project dialog from File and returns focus without changing scope', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     vi.stubGlobal(
       'fetch',
@@ -455,7 +473,7 @@ describe('ShellTopBar workspace context', () => {
     });
 
     const projectMenuTrigger = container.querySelector<HTMLElement>(
-      '[data-slot="shell-workspace-menu-trigger"]'
+      '[data-slot="shell-file-menu-trigger"]'
     );
     await act(async () => {
       fireEvent.pointerDown(projectMenuTrigger!);
@@ -524,12 +542,15 @@ describe('ShellTopBar workspace context', () => {
     expect(container.querySelector('[data-slot="shell-menu-trigger"]')?.textContent).toContain(
       'Vista'
     );
+    expect(container.querySelector('[data-slot="shell-file-menu-trigger"]')?.textContent).toContain(
+      'Archivo'
+    );
     await waitFor(() => {
       expect(document.body.querySelector('[data-slot="shell-language-menu"]')).toBeNull();
     });
   });
 
-  it('dismisses the Workspace menu when keyboard selection opens project code', async () => {
+  it('dismisses File when keyboard selection opens project code without stealing editor focus', async () => {
     const onOpenProjectCode = vi.fn();
     useCanvasWorkspaceMenuContributionStore.setState({
       contribution: {
@@ -546,7 +567,7 @@ describe('ShellTopBar workspace context', () => {
       root.render(renderShellTopBar('/canvas'));
     });
     const workspaceMenuTrigger = container.querySelector<HTMLElement>(
-      '[data-slot="shell-workspace-menu-trigger"]'
+      '[data-slot="shell-file-menu-trigger"]'
     );
     await act(async () => {
       fireEvent.pointerDown(workspaceMenuTrigger!);
@@ -573,6 +594,105 @@ describe('ShellTopBar workspace context', () => {
       ).toBeNull();
     });
     expect(document.activeElement).not.toBe(workspaceMenuTrigger);
+  });
+
+  it('keeps unavailable File commands disabled and never dispatches them', async () => {
+    const rejectedCommand = vi.fn();
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        canExportProjectSnapshot: false,
+        canImportProjectSnapshot: false,
+        canImportDbtProject: false,
+        canOpenProjectCode: false,
+        canOpenProjectExplorer: false,
+        onExportProjectSnapshot: rejectedCommand,
+        onImportProjectSnapshotFile: rejectedCommand,
+        onImportDbtProject: rejectedCommand,
+        onOpenProjectCode: rejectedCommand,
+        onOpenProjectExplorer: rejectedCommand,
+      },
+    });
+    await act(async () => root.render(renderShellTopBar('/canvas')));
+    await act(async () => {
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-file-menu-trigger"]')!);
+    });
+    const commands = await waitFor(() => {
+      const entries = document.body.querySelectorAll<HTMLElement>(
+        '[data-slot^="canvas-workspace-"][role="menuitem"]'
+      );
+      expect(entries).toHaveLength(5);
+      return [...entries];
+    });
+    for (const command of commands) {
+      expect(command.getAttribute('aria-disabled')).toBe('true');
+      await act(async () => fireEvent.click(command));
+    }
+    expect(rejectedCommand).not.toHaveBeenCalled();
+  });
+
+  it('retains the snapshot receiver until selection, then closes File and restores focus', async () => {
+    const onImportProjectSnapshotFile = vi.fn();
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        canExportProjectSnapshot: false,
+        canImportProjectSnapshot: true,
+        onImportProjectSnapshotFile,
+      },
+    });
+    await act(async () => root.render(renderShellTopBar('/canvas')));
+    const fileTrigger = container.querySelector<HTMLElement>(
+      '[data-slot="shell-file-menu-trigger"]'
+    )!;
+    await act(async () => {
+      fireEvent.pointerDown(fileTrigger);
+    });
+    const input = await waitFor(() => {
+      const receiver = document.querySelector<HTMLInputElement>(
+        '[data-slot="canvas-workspace-import-input"]'
+      );
+      expect(receiver).not.toBeNull();
+      return receiver!;
+    });
+    const openPicker = vi.spyOn(input, 'click').mockImplementation(() => undefined);
+    const command = document.querySelector<HTMLElement>(
+      '[data-slot="canvas-workspace-import-command"]'
+    )!;
+    await act(async () => {
+      command.focus();
+      fireEvent.keyDown(command, { key: 'Enter', code: 'Enter' });
+    });
+    expect(openPicker).toHaveBeenCalledTimes(1);
+    expect(input.isConnected).toBe(true);
+    expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
+    await act(async () => fireEvent.change(input, { target: { files: [] } }));
+    expect(input.isConnected).toBe(true);
+    expect(fileTrigger.getAttribute('data-state')).toBe('open');
+    expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
+    const file = new File(['{}'], 'project.json', { type: 'application/json' });
+    await act(async () => fireEvent.change(input, { target: { files: [file] } }));
+    expect(onImportProjectSnapshotFile).toHaveBeenCalledExactlyOnceWith(file);
+    expect(input.value).toBe('');
+    openPicker.mockRestore();
+    await waitFor(() => {
+      expect(input.isConnected).toBe(false);
+      expect(fileTrigger.getAttribute('data-state')).toBe('closed');
+      expect(document.activeElement).toBe(fileTrigger);
+    });
+    await act(async () => fireEvent.pointerDown(fileTrigger));
+    const reopenedInput = await waitFor(() => {
+      const receiver = document.querySelector<HTMLInputElement>(
+        '[data-slot="canvas-workspace-import-input"]'
+      );
+      expect(receiver).not.toBeNull();
+      return receiver!;
+    });
+    await act(async () => fireEvent.change(reopenedInput, { target: { files: [file] } }));
+    expect(onImportProjectSnapshotFile).toHaveBeenCalledTimes(2);
+    expect(onImportProjectSnapshotFile).toHaveBeenLastCalledWith(file);
+    await waitFor(() => {
+      expect(reopenedInput.isConnected).toBe(false);
+      expect(document.activeElement).toBe(fileTrigger);
+    });
   });
 
   it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {
@@ -615,6 +735,7 @@ describe('ShellTopBar workspace context', () => {
 
     await waitFor(() => {
       expect(document.body.querySelector('[data-slot="shell-about-dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(appMenu);
     });
   });
 });

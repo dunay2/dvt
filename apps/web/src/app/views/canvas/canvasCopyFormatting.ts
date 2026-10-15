@@ -3,6 +3,20 @@ import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthori
 import type { TransformationGraphValidationSummaryCode } from './transformationGraphValidation';
 import type { CanvasDisabledCapability, CanvasViewCopy } from './canvasCopy.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
+
+export function formatCanvasModelOutputDependencyRejection(
+  rejection: CanvasModelOutputDependencyRejection,
+  locale?: string
+): string {
+  const copy = resolveCanvasViewCopy(locale);
+  if (rejection.reason === 'model_output_dependency_unavailable')
+    return copy.modelOutputDependencyUnavailableMessage;
+  return formatCanvasCopyTemplate(copy.modelOutputRequiredTemplate, {
+    model: rejection.consumer.name,
+    fields: rejection.fields.map((field) => field.name).join(', '),
+  });
+}
 
 export function formatCanvasCopyTemplate(
   template: string,

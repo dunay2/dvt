@@ -1,6 +1,7 @@
 /** Owned concern: resolve locale-aware copy for the root route error boundary. */
 import { resolveString, type LocalizableString } from './plugins/contracts/PluginManifest';
-import { detectRouteBootstrapLocale } from './bootstrap/routeBootstrapErrorCopy';
+import { detectBrowserLocale } from './browserLocale';
+import { resolveCopyLanguage } from './copyLanguage';
 
 export type AppRouteErrorBoundaryLanguage = 'en' | 'es';
 
@@ -53,20 +54,10 @@ const LOCALIZED_COPY_BY_LANGUAGE: Record<
   es: SPANISH_COPY,
 };
 
-function resolveAppRouteErrorBoundaryLanguage(locale?: string): AppRouteErrorBoundaryLanguage {
-  const normalizedLocale = locale?.trim().toLowerCase();
-
-  if (normalizedLocale?.startsWith('es')) {
-    return 'es';
-  }
-
-  return 'en';
-}
-
 export function resolveAppRouteErrorBoundaryCopy(
-  locale: string = detectRouteBootstrapLocale()
+  locale: string = detectBrowserLocale()
 ): AppRouteErrorBoundaryCopy {
-  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveAppRouteErrorBoundaryLanguage(locale)];
+  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCopyLanguage(locale)];
   if (localizedCopy) {
     return localizedCopy;
   }

@@ -1,7 +1,5 @@
 import {
-  STRING_DATA_TYPES,
   TIMESTAMPTZ_DATA_TYPES,
-  normalizeProjectionDataType,
   invocationArgumentRange,
   admitsCompleteArgumentCount,
   resolveDvtSubstraitColumnFunctions,
@@ -43,7 +41,6 @@ import {
   ConnectedSourceRefSchema,
   DVT_SUBSTRAIT_AUTHORING_SIDECAR_SCHEMA_VERSION,
   DVT_SUBSTRAIT_CAPABILITY_CATALOG_V1,
-  DVT_SUBSTRAIT_PROFILE_REF_V1,
   DvtSemanticFieldNameV1Schema,
   allocateDvtFieldId,
   allocateDvtRelationId,

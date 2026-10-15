@@ -1,9 +1,16 @@
-/** Configure Input provenance only; semantic operations and published Output never mutate here. */
+/**
+ * Owned concern: configure Input provenance and repair explicitly selected missing producer identities.
+ * @baseline ADR-0064 / GH-3628: consumer operations and published Output retain their identities.
+ * @decision Compose a type-checked semantic binding and dependency-edge update atomically.
+ * @consequence Normal consumed rewiring rejects; partial repair never grants execution readiness.
+ * @version 1.1.0
+ */
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasColumnMappingResult,
   CanvasColumnMappingSource,
+  CanvasColumnMappingRejection,
 } from './canvasColumnMappingModel';
 import {
   canvasInputSlotId,
@@ -17,6 +24,13 @@ import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import { resolveCanvasEdgeCreationTransaction } from './canvasEdgeAdmissionTransaction';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { resolveCanvasProducerDocument } from './canvasProducerDocument';
+import { repairCanvasProducerInput } from './canvasProducerInputRepair';
 
 type InputCommand = Readonly<{
   draftSession: CanvasDraftSession;
@@ -25,9 +39,10 @@ type InputCommand = Readonly<{
   editable?: boolean;
   signal?: AbortSignal;
 }>;
-const rejected = (
-  reason: Extract<CanvasColumnMappingResult, { outcome: 'rejected' }>['reason']
-): CanvasColumnMappingResult => ({ outcome: 'rejected', reason });
+const rejected = (reason: CanvasColumnMappingRejection): CanvasColumnMappingResult => ({
+  outcome: 'rejected',
+  reason,
+});
 
 async function readInputs(args: InputCommand) {
   const nodes = new Map(args.canonicalNodesById);
@@ -40,7 +55,7 @@ async function readInputs(args: InputCommand) {
     isDbtCompatibleModel(consumer)
   )
     return null;
-  readDvtTransformAuthoringAuthority(consumer);
+  const authority = readDvtTransformAuthoringAuthority(consumer);
   const edges = args.draftSession.workingSet.visibleEdges;
   const sourceIds = new Set(
     edges.filter((edge) => edge.targetId === consumer.id).map((edge) => edge.sourceId)
@@ -65,8 +80,37 @@ async function readInputs(args: InputCommand) {
     nodes,
     consumer,
     producers,
-    inputs: projectCanvasInputBindings({ targetNodeId: consumer.id, edges, producers }),
+    inputs: projectCanvasInputBindings({
+      targetNodeId: consumer.id,
+      edges,
+      producers,
+      retainedSidecar: authority?.semanticDocument.sidecar,
+    }),
   };
+}
+
+function repairConsumedInput(
+  context: NonNullable<Awaited<ReturnType<typeof readInputs>>>,
+  previous: CanvasInputBinding,
+  replacementFieldId: string
+): CanonicalNode {
+  const authority = readDvtTransformAuthoringAuthority(context.consumer)!;
+  const producer = context.nodes.get(previous.source.nodeId)!;
+  const producerDocument = resolveCanvasProducerDocument(producer, [...context.nodes.values()]);
+  if (producerDocument == null) throw new Error('Producer publication is unavailable.');
+  const repaired = repairCanvasProducerInput(
+    decodeDvtSubstraitSemanticDocument(authority.semanticDocument),
+    {
+      producerNodeId: previous.source.nodeId,
+      previousFieldId: previous.source.columnId,
+      replacementFieldId,
+      producerDocument,
+    }
+  );
+  return applyDvtSubstraitSemanticDocument(
+    context.consumer,
+    encodeDvtSubstraitSemanticDocument(repaired)
+  );
 }
 
 function persistInputs(
@@ -156,22 +200,36 @@ export async function bindCanvasInputField(
       previous.source.columnId === field.columnId
     )
       return { outcome: 'applied', draftSession: args.draftSession };
-    if (
+    const consumed =
       previous != null &&
       canvasInputBindingIsConsumed(
         previous,
         context.consumer,
         context.nodes.get(previous.source.nodeId)
-      )
-    )
-      return rejected('input_in_use');
+      );
+    if (consumed) {
+      if (previous.state !== 'unresolved' || previous.source.nodeId !== args.source.nodeId)
+        return rejected('input_in_use');
+    }
+    const repairedConsumer = consumed
+      ? repairConsumedInput(context, previous, field.columnId)
+      : undefined;
+    const duplicates = context.inputs.filter(
+      (input) =>
+        input.inputId !== inputId &&
+        input.source.nodeId === args.source.nodeId &&
+        input.source.columnId === field.columnId
+    );
     if (
-      context.inputs.some(
-        (input) =>
-          input.inputId !== inputId &&
-          input.source.nodeId === args.source.nodeId &&
-          input.source.columnId === field.columnId
-      )
+      duplicates.length > 0 &&
+      (repairedConsumer == null ||
+        duplicates.some((input) =>
+          canvasInputBindingIsConsumed(
+            input,
+            context.consumer,
+            context.nodes.get(input.source.nodeId)
+          )
+        ))
     )
       return rejected('mapping_not_found');
     const next: CanvasInputBinding = {
@@ -182,13 +240,23 @@ export async function bindCanvasInputField(
       state: 'available',
     };
     args.signal?.throwIfAborted();
-    return persistInputs(
+    const existing = context.inputs.filter((input) => !duplicates.includes(input));
+    const result = persistInputs(
       args,
       previous == null
-        ? [...context.inputs, next]
-        : context.inputs.map((input) => (input.inputId === inputId ? next : input)),
+        ? [...existing, next]
+        : existing.map((input) => (input.inputId === inputId ? next : input)),
       new Set([args.source.nodeId, ...(previous == null ? [] : [previous.source.nodeId])])
     );
+    return repairedConsumer != null && result.outcome === 'applied'
+      ? {
+          ...result,
+          draftSession: canvasDraftSession.workingSet.updateNodeDefinition(
+            result.draftSession,
+            repairedConsumer
+          ),
+        }
+      : result;
   } catch (error) {
     args.signal?.throwIfAborted();
     return rejected('invalid_input_bindings');

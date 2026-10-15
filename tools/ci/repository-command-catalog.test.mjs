@@ -14,16 +14,32 @@ import {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
+test('classifies the exact-duplicate guard without admitting arbitrary web helpers', () => {
+  const classification = classifyScriptFilePath('scripts/web-code-duplication.cjs');
+  assert.equal(classification.domain, 'ci-tooling');
+  assert.equal(classification.sensitivity, 'ci-policy');
+  assert.equal(classification.runtimeFanout, false);
+  assert.equal(classification.changedFileValidationRelevant, true);
+  assert.equal(classifyScriptFilePath('scripts/web-unadmitted-helper.cjs').domain, 'unknown');
+});
+
 test('admitted browser child and process lifecycle remain test tooling, without widening unknown admission', () => {
   for (const file of [
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
+    'scripts/live-proof-web-runtime.cjs',
   ]) {
     const classification = classifyScriptFilePath(file);
     assert.equal(classification.domain, 'test-tooling', file);
+    assert.equal(classification.sensitivity, 'test-contract', file);
     assert.equal(classification.runtimeFanout, false, file);
+    assert.equal(classification.changedFileValidationRelevant, true, file);
   }
   assert.equal(classifyScriptFilePath('scripts/unadmitted-proof-runner.cjs').domain, 'unknown');
+  assert.equal(
+    classifyScriptFilePath('scripts/live-proof-web-runtime-extra.cjs').domain,
+    'unknown'
+  );
 });
 
 test('classifies planning and governance database aliases as planning-db commands', () => {

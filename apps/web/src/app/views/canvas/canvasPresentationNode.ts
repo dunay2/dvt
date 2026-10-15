@@ -1,4 +1,10 @@
-/** Project fields from the shared asynchronous Substrait analysis, never from shape-specific readers. */
+/**
+ * Owned concern: project fields and interaction posture from the owning relational read.
+ * @baseline ADR-0064: retained inspection is distinct from resolved publication.
+ * @decision Reuse the document and publication already classified for this snapshot.
+ * @consequence Rejected recovery cannot become ready Output or implicit Input repair.
+ * @version 1.1.0
+ */
 import type {
   CanvasNodePresentationColumn,
   CanvasNodePresentationTruth,
@@ -10,7 +16,12 @@ import {
 } from './canvasNodePresentationBase';
 import { canvasColumnTruth, projectSourceSelection } from './canvasPresentationColumns';
 import { presentCanvasSubstraitFields } from './canvasSubstraitFieldPresentation';
-import { resolveCanvasRelationalCompositionTruth } from './canvasRelationalCompositionTruth';
+import {
+  projectCanvasRelationalComposition,
+  resolveCanvasRelationalCompositionTruth,
+} from './canvasRelationalCompositionTruth';
+import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 import { resolveCanvasPresentationInputs } from './canvasPresentationInputs';
 import type { CanonicalNode } from '../../types/canonical';
@@ -19,8 +30,6 @@ import { presentCanvasFilterSummary } from './canvasPresentationFilterSummary';
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { projectCanvasInputBindings } from './canvasInputBindings';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
-import { deriveSubstraitPublication } from '@dvt/substrait-analysis';
-import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
 
 export async function projectCanvasPresentationNode(
   args: CanvasPresentationQuery,
@@ -60,14 +69,19 @@ export async function projectCanvasPresentationNode(
       }));
   });
   signal?.throwIfAborted();
-  const composition = resolveCanvasRelationalCompositionTruth(args);
   const nativeModel =
     args.node.pluginId === 'dvt' &&
     args.node.kind === 'dvt:transform' &&
     !isDbtCompatibleModel(args.node);
+  const structural = nativeModel ? analyzeCanvasRelations(args) : null;
+  const composition =
+    structural == null
+      ? resolveCanvasRelationalCompositionTruth(args)
+      : projectCanvasRelationalComposition(structural);
   const inputBindings = nativeModel
     ? projectCanvasInputBindings({
         targetNodeId: args.node.id,
+        retainedSidecar: structural?.semantic?.document.sidecar,
         edges: args.edges,
         producers: new Map(
           inputs.map((producer) => [
@@ -87,11 +101,30 @@ export async function projectCanvasPresentationNode(
         ),
       })
     : undefined;
-  const truth = {
+  const truth: CanvasNodePresentationTruth = {
     ...base,
+    ...(nativeModel ? { inputBindingPosture: 'unavailable' } : {}),
     ...(inputBindings == null ? {} : { inputBindings }),
     ...(composition == null ? {} : { relationalComposition: composition }),
   };
+  const retained = structural?.semantic?.state === 'retained';
+  const rejected =
+    structural?.failure != null && structural.failure !== 'missing-semantic-authority';
+  if (retained || rejected)
+    return {
+      ...truth,
+      inputBindingPosture: retained ? 'repair-only' : 'unavailable',
+      code: { kind: 'unavailable', reason: 'invalid-canonical-substrait-document' },
+      columns: {
+        ...canvasColumnTruth([], retained ? inherited : [], []),
+        state: 'unavailable',
+        diagnostic: retained
+          ? resolveCanvasViewCopy().relationalTreeProducerFieldsUnavailableMessage
+          : structural?.failure === 'input-identity-unavailable'
+            ? resolveCanvasViewCopy().relationalTreeInputIdentityUnavailableMessage
+            : resolveCanvasViewCopy().relationalTreeInvalidMessage,
+      },
+    };
   const semanticNode =
     nativeModel ||
     (args.node.kind === 'dvt:source' &&
@@ -105,14 +138,16 @@ export async function projectCanvasPresentationNode(
           : canvasColumnTruth(base.columns.declared, inherited),
     };
   try {
-    const resolved =
-      args.node.role === 'transform' && args.node.metadata?.transformAuthoring != null
+    const resolved = nativeModel
+      ? structural?.semantic?.document
+      : args.node.role === 'transform' && args.node.metadata?.transformAuthoring != null
         ? resolveCanvasProducerDocument(args.node, args.nodes)
         : undefined;
     const semantic = await analysis.query(args.node, signal, resolved);
     if (semantic == null)
       return {
         ...truth,
+        ...(nativeModel ? { inputBindingPosture: 'current' } : {}),
         columns:
           args.node.role === 'input'
             ? { ...base.columns, state: 'ready' }
@@ -151,20 +186,9 @@ export async function projectCanvasPresentationNode(
       args.node.role === 'input'
         ? projectSourceSelection(base.columns.declared, declared)
         : await presentRelationOutputSelection(semantic, declared, fieldInputs, sources, signal);
-    const denied = nativeModel
-      ? resolveUnmappedCanvasReadFields({
-          ...args,
-          nodeId: args.node.id,
-          document: semantic.document,
-        })
-      : new Set<string>();
-    const unavailable =
-      denied.size === 0
-        ? new Set<string>()
-        : new Set(
-            deriveSubstraitPublication(semantic.document, denied).get(semantic.index.rootId)
-              ?.unavailableFieldIds
-          );
+    const unavailable = new Set(
+      structural?.semantic?.publication?.get(semantic.index.rootId)?.unavailableFieldIds
+    );
     const columns =
       unavailable.size === 0
         ? rawColumns
@@ -177,6 +201,7 @@ export async function projectCanvasPresentationNode(
       args.node.role === 'input' ? undefined : await presentCanvasFilterSummary(semantic, signal);
     return {
       ...truth,
+      ...(nativeModel ? { inputBindingPosture: 'current' } : {}),
       code,
       ...(filterSummary == null ? {} : { filterSummary }),
       columns: {

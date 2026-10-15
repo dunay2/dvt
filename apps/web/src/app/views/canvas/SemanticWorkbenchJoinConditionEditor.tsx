@@ -1,4 +1,10 @@
-/** Compose canonical condition presentation with a controlled, discardable edit. */
+/**
+Owned concern: compose canonical condition presentation with a controlled, discardable edit.
+@baseline GH-3623: formula handoff consumes the same current typed comparison as Save.
+@decision Inject the optional formula action; keep command execution outside this form.
+@consequence Existing consumers keep simple editing without a second semantic implementation.
+@version 1.0.0
+ */
 import { Plus } from 'lucide-react';
 import { useMemo, useRef, type Dispatch, type SetStateAction, type ReactNode } from 'react';
 import { Button } from '../../components/ui/button';
@@ -22,6 +28,7 @@ import {
 } from './join-condition/conditionDraft';
 import { JoinConditionForm } from './join-condition/JoinConditionForm';
 import { JoinConditionList } from './join-condition/JoinConditionList';
+import styles from './SemanticWorkbenchJoinConditionEditor.module.css';
 
 type ConditionEdit = Readonly<{
   conditionKey: string | null;
@@ -29,6 +36,8 @@ type ConditionEdit = Readonly<{
   groupWithPrevious: boolean;
 }>;
 type Props = Readonly<{
+  saveBlocked?: boolean;
+  renderFormulaAction?: (edit: ConditionEdit) => ReactNode;
   renderExpression?: (
     edit: ConditionEdit | null,
     onSelect: (index: number, operand?: 'left' | 'right') => void
@@ -73,13 +82,7 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
     if (saved) setDraft((current) => (current === draft ? null : current));
   };
   return (
-    <div
-      className={
-        props.renderExpression == null
-          ? undefined
-          : 'canvas-operation-editors grid min-h-0 min-w-0 gap-3'
-      }
-    >
+    <div className={props.renderExpression == null ? undefined : styles.editor}>
       {props.renderExpression?.(
         draft == null
           ? null
@@ -109,10 +112,10 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
       <div
         ref={editorRef}
         data-slot="semantic-workbench-join-condition-list"
-        className="mt-1 min-h-0 overflow-auto pr-1"
+        className={styles.conditionList}
       >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-(--text-muted)">CONDICIONES DEL JOIN</span>
+        <div className={styles.header}>
+          <span className={styles.heading}>CONDICIONES DEL JOIN</span>
           <Button
             type="button"
             variant="ghost"
@@ -139,7 +142,12 @@ export function SemanticWorkbenchJoinConditionEditor(props: Props) {
             draft={draft}
             fields={props.fields}
             hasConditions={props.conditions.length > 0}
-            canApply={condition != null}
+            canApply={condition != null && !props.saveBlocked}
+            formulaAction={props.renderFormulaAction?.({
+              conditionKey: draft.conditionKey,
+              condition,
+              groupWithPrevious: draft.groupWithPrevious,
+            })}
             onChange={setDraft}
             onClose={() => setDraft(null)}
             onSave={() => {

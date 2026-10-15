@@ -1,0 +1,71 @@
+/*
+ * Owned concern: relational edit-session action bar, controls and fallback placement.
+ * @baseline GH-3629: external appearance must retain the existing utility cascade.
+ * @decision Preserve spacing, palette, disabled posture and hover in semantic classes.
+ * @consequence JSX contains no presentation values or additional focus/command policy.
+ */
+@layer utilities {
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: 0.25rem;
+    background-color: var(--surface-panel);
+    padding: 0.125rem;
+  }
+
+  .rejection {
+    max-width: 18rem;
+    padding-inline: 0.5rem;
+    color: var(--color-rose-300);
+    font-size: 11px;
+  }
+
+  .draft {
+    padding-inline: 0.5rem;
+    color: var(--color-amber-200);
+    font-size: 11px;
+  }
+
+  .fallback {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    z-index: 20;
+  }
+
+  .applyButton,
+  .cancelButton {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 0.25rem;
+  }
+
+  .applyButton {
+    color: var(--color-emerald-300);
+  }
+
+  .cancelButton {
+    color: var(--text-muted);
+  }
+
+  .applyButton:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  @media (hover: hover) {
+    .applyButton:hover,
+    .cancelButton:hover {
+      background-color: var(--surface-selected);
+    }
+  }
+}

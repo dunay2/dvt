@@ -16,8 +16,10 @@ import { CanvasRelationalExplorer } from './explorer/CanvasRelationalExplorer';
 import { useCanvasRelationEditNavigation } from './useCanvasRelationEditNavigation';
 import { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { useCanvasWorkbenchFocusRecovery } from './useCanvasWorkbenchFocus';
+import { useCanvasRelationalTreeSessionActions } from './useCanvasRelationalTreeSessionActions';
 import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
 import { CanvasOperationInspectorTabs } from './CanvasRelationalTreeEditorFrame';
+import styles from './CanvasRelationalTreeWorkbench.module.css';
 import {
   useCanvasRelationalTreeWorkbenchHandle,
   type CanvasRelationalTreeWorkbenchHandle,
@@ -62,6 +64,12 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     session: sessionHandle,
     onSelect: model.selectRelation,
   });
+  const sessionActions = useCanvasRelationalTreeSessionActions({
+    active: model.session.active,
+    session: sessionHandle,
+    navigation,
+    copy,
+  });
   return (
     <CanvasOperationPreviewProvider
       ports={preview}
@@ -88,15 +96,9 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
             event.preventDefault();
             event.stopPropagation();
           }}
-          className="relative h-full min-h-0 min-w-0 w-full overflow-hidden bg-(--surface-panel)"
+          className={styles.workbench}
         >
-          <CanvasRelationalTreeSessionActions
-            active={model.session.active}
-            session={sessionHandle}
-            copy={copy}
-            host={actionsHost}
-            navigation={navigation}
-          />
+          <CanvasRelationalTreeSessionActions {...sessionActions} host={actionsHost} />
           <CanvasRelationalExplorer
             model={model}
             copy={copy}

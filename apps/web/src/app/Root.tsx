@@ -30,7 +30,7 @@ import {
   getPublishedRouteBootstrapPresentation,
   subscribeRouteBootstrapPresentations,
 } from './bootstrap/routeBootstrapRegistry';
-import { detectRouteBootstrapLocale } from './bootstrap/routeBootstrapErrorCopy';
+import { detectBrowserLocale } from './browserLocale';
 import { RouteBootstrapActiveRegistrationMissingError } from './bootstrap/routeBootstrapErrors';
 import {
   createInitialRouteBootstrapStartupReadinessState,
@@ -84,7 +84,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
-  const bootstrapLocale = applicationLanguage || detectRouteBootstrapLocale();
+  const bootstrapLocale = applicationLanguage || detectBrowserLocale();
   const shellCopy = useMemo(() => resolveShellTopBarCopy(bootstrapLocale), [bootstrapLocale]);
   const appBootstrapCopy = useMemo(
     () => resolveAppBootstrapCopy(bootstrapLocale),

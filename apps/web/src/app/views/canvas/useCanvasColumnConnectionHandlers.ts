@@ -36,7 +36,7 @@ export function useCanvasColumnConnectionHandlers(
         return;
       }
       void columnAuthoringCommandRunner.mapInput(identity, pluginPortMap).then((result) => {
-        if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result.reason));
+        if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result));
         else {
           setPendingSource(null);
           toast.success(canvasViewCopy.columnMappingAddedMessage);
@@ -78,7 +78,7 @@ export function useCanvasColumnConnectionHandlers(
       }
       void columnAuthoringCommandRunner.toggleOutput(identity).then((result) => {
         if (result.outcome === 'rejected') {
-          toast.error(formatColumnMappingRejection(result.reason));
+          toast.error(formatColumnMappingRejection(result));
         }
       });
     },
@@ -93,7 +93,7 @@ export function useCanvasColumnConnectionHandlers(
       }
       void columnAuthoringCommandRunner.reorderOutput(identity).then((result) => {
         if (result.outcome === 'rejected') {
-          toast.error(formatColumnMappingRejection(result.reason));
+          toast.error(formatColumnMappingRejection(result));
         }
       });
     },
@@ -107,7 +107,7 @@ export function useCanvasColumnConnectionHandlers(
         return;
       }
       void columnAuthoringCommandRunner.removeInput(identity).then((result) => {
-        if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result.reason));
+        if (result.outcome === 'rejected') toast.error(formatColumnMappingRejection(result));
         else toast.success(canvasViewCopy.columnMappingRemovedMessage);
       });
     },

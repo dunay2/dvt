@@ -43,6 +43,15 @@ export function projectCanvasRelationalComposition(
       : { state: 'single-input', connectedInputCount };
   const operation = compositionOperation(analysis);
   const canonicalOperation = operation == null ? {} : { canonicalOperation: operation };
+  if (analysis.semantic.state === 'retained')
+    return {
+      state: 'incomplete',
+      connectedInputCount,
+      missingInputCount: new Set(
+        analysis.semantic.missingProducerFields.map((field) => field.producerNodeId)
+      ).size,
+      ...canonicalOperation,
+    };
   // Physical dependencies are counted once; the tree retains all distinct occurrences.
   const missingInputCount = new Set(
     analysis.projectedInputs

@@ -3,7 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { toast } from 'sonner';
 import { vi } from 'vitest';
 
-import type { Edge, Node } from '@xyflow/react';
+import { ReactFlowProvider, type Edge, type Node, type ReactFlowInstance } from '@xyflow/react';
 
 import type { ConnectionRuleResult, PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { RuntimeCapabilities } from '../../plugins/registry';
@@ -12,6 +12,9 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
+  screenToFlowPosition: vi.fn<ReactFlowInstance<Node, Edge>['screenToFlowPosition']>(
+    (position) => position
+  ),
   evaluateConnection: vi.fn<
     (
       source: CanonicalNode,
@@ -21,6 +24,20 @@ const graphHandlersTestDoubles = vi.hoisted(() => ({
     ) => ConnectionRuleResult
   >(() => ({ allowed: true })),
 }));
+
+// This double proves delegation only; the live source-import proof owns viewport geometry.
+vi.mock('@xyflow/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@xyflow/react')>();
+  return {
+    ...actual,
+    useReactFlow: () => ({
+      ...actual.useReactFlow(),
+      screenToFlowPosition: graphHandlersTestDoubles.screenToFlowPosition,
+    }),
+  };
+});
+
+export const graphHandlerScreenToFlowPosition = graphHandlersTestDoubles.screenToFlowPosition;
 
 vi.mock('../../plugins/contracts/ConnectionRules', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../plugins/contracts/ConnectionRules')>();
@@ -212,7 +229,11 @@ export function renderGraphHandlersHook({
     render: async (nextNodes) => {
       if (nextNodes != null) currentNodes = nextNodes;
       await act(async () => {
-        root.render(<HookHost />);
+        root.render(
+          <ReactFlowProvider>
+            <HookHost />
+          </ReactFlowProvider>
+        );
       });
     },
     cleanup: () => {
@@ -237,6 +258,8 @@ export function resetGraphHandlersTestDoubles() {
   ).IS_REACT_ACT_ENVIRONMENT = true;
   graphHandlersTestDoubles.evaluateConnection.mockReset();
   graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
+  graphHandlersTestDoubles.screenToFlowPosition.mockReset();
+  graphHandlersTestDoubles.screenToFlowPosition.mockImplementation((position) => position);
   toastState.error.mockReset();
   toastState.success.mockReset();
   toastState.info.mockReset();

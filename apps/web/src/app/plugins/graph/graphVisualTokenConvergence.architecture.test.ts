@@ -29,6 +29,14 @@ const GRAPH_CARD_VIEW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'GraphNodeCardView.tsx'
 );
+const GRAPH_NESTED_COLUMNS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeColumnChildren.tsx'
+);
+const GRAPH_NESTED_COLUMN_STYLES = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeColumnChildren.module.css'
+);
 const GRAPH_METRIC_ROW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'GraphNodeMetricRow.tsx'
@@ -113,6 +121,26 @@ const GRAPH_CARD_PRESENTATION_SOURCES = [
 ] as const;
 
 describe('React Flow visual token convergence architecture', () => {
+  it('keeps nested field appearance and drop-state styling in its own stylesheet', () => {
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain("from './GraphNodeColumnChildren.module.css'");
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).not.toMatch(
+      /\bstyle\s*=|className\s*=\s*['"]|text-\[|data-\[drop-placement/
+    );
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain('className={styles.children}');
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain('className={styles.field}');
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain('data-drop-placement=');
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain(
+      'data-slot="graph-node-nested-column-drag-handle"'
+    );
+    expect(GRAPH_NESTED_COLUMNS_SOURCE).toContain('tabIndex={0}');
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain('@layer utilities');
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain(".field[data-drop-placement='before']");
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain(".field[data-drop-placement='after']");
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain('border-top-width: 2px');
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain('border-bottom-width: 2px');
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain('var(--color-blue-400)');
+    expect(GRAPH_NESTED_COLUMN_STYLES).toContain('var(--font-mono)');
+  });
   it('keeps primary graph-node copy at a readable source size before viewport scaling', () => {
     const primaryCopyClasses = [
       graphNodeCardSurfaceClasses.root,

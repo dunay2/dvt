@@ -36,6 +36,21 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
 const DRAFT_AWARE_PR_TYPES =
   'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
 
+test('changed-file CI builds its canonical hash dependency before loading the checker', () => {
+  const workflow = yaml.load(readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8'));
+  const steps = workflow.jobs['pr-checks'].steps;
+  const checkerIndex = steps.findIndex((step) =>
+    step.run?.includes('node scripts/check-changed.cjs')
+  );
+  const setupIndex = steps.findIndex((step) => step.uses === './.github/actions/setup-node-pnpm');
+  assert.ok(setupIndex >= 0 && setupIndex < checkerIndex);
+  assert.deepEqual(
+    steps[checkerIndex].run.trim().split(/\s*&&\s*/u),
+    ['pnpm --filter @dvt/crypto build', 'node scripts/check-changed.cjs'],
+    'the checker must not run if its workspace dependency build fails'
+  );
+});
+
 test('every scope consumer acquires its committed diff once through the shared entrypoint', () => {
   for (const name of ['ci', 'test', 'contracts', 'pr-quality-gate', 'codeql']) {
     const source = readFileSync(`.github/workflows/${name}.yml`, 'utf8');
@@ -311,7 +326,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   );
   const lintStep = yaml
     .load(prQualityGate)
-    .jobs['pr-checks'].steps.find((step) => step.run === 'node scripts/check-changed.cjs');
+    .jobs['pr-checks'].steps.find((step) => step.run?.includes('node scripts/check-changed.cjs'));
   assert.ok(
     lintStep.if.includes(
       'fromJSON(steps.scope.outputs.workflow_scope).changed_file_validation_relevant == true'
@@ -321,7 +336,6 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     lintStep.if.includes('fromJSON(steps.scope.outputs.workflow_scope).docs_changed == true')
   );
   assertWorkflowContains(prQualityGate, 'run: pnpm lint:md:changed');
-  assertWorkflowContains(prQualityGate, 'run: node scripts/check-changed.cjs');
   assertWorkflowContains(prQualityGate, 'run: pnpm verify:changed --committed-tests');
   assertWorkflowExcludes(prQualityGate, 'run: pnpm verify:changed -- --committed-tests');
   assertWorkflowContains(

@@ -2,7 +2,6 @@
 import type {
   CanvasContextMenuCanvasAction,
   CanvasContextMenuCatalogAction,
-  CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';

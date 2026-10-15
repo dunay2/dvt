@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
 
 const warehouseSource: CanonicalNode = {

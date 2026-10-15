@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth.contract';
+import { selectGraphNodeCardColumns } from '../../views/canvas/canvasGraphNodeColumnProjection';
 import { resolveCanvasViewCopy } from '../../views/canvas/canvasCopyCatalog';
 import { buildCanvasNodePresentationCopy } from '../../views/canvas/canvasNodePresentationCopy';
 import { buildNodePropertiesReadModel } from './nodePropertiesReadModel';
@@ -17,6 +19,82 @@ const presentationCopy = {
   generatedCodeDetailTemplate: 'Generated code at {path}.',
   codeUnavailableMessage: 'No code.',
 } as const;
+
+describe('native Model Output inspection parity', () => {
+  const declared = ['customer', 'amount', 'client_id'].map((name) => ({
+    name,
+    type: 'text',
+    provenance: 'declared' as const,
+    selected: true,
+  }));
+  const available = ['country', 'order_id', 'client_id_2'].map((name) => ({
+    name,
+    type: 'text',
+    provenance: 'inherited' as const,
+    selected: false,
+  }));
+  const node: CanonicalNode = {
+    id: 'native-model',
+    name: 'Model 1',
+    pluginId: 'dvt',
+    kind: 'dvt:transform',
+    role: 'transform',
+    status: 'idle',
+    tags: [],
+    metadata: { columns: [...declared, ...available] },
+  };
+  function inspect(
+    state: CanvasNodePresentationTruth['columns']['state'],
+    output = declared
+  ): Readonly<{
+    section: NodePropertySection;
+    card: ReturnType<typeof selectGraphNodeCardColumns>;
+  }> {
+    const truth: CanvasNodePresentationTruth = {
+      inputBindings: [],
+      columns: {
+        state,
+        declared: output,
+        inherited: available,
+        visible: [...output, ...available],
+        declaredCount: output.length,
+        inheritedCount: available.length,
+        visibleCount: output.length + available.length,
+        visibleProvenance: 'mixed',
+      },
+      code: { kind: 'unavailable' },
+    };
+    const section = buildNodePropertiesReadModel({
+      node,
+      nodes: [node],
+      edges: [],
+      presentationCopy,
+      presentationTruth: truth,
+    }).sections.find(({ id }) => id === 'columns')!;
+    return { section, card: selectGraphNodeCardColumns(truth) };
+  }
+  it('lists the same three ordered canonical outputs as the card, not available inputs', () => {
+    const { section, card } = inspect('ready');
+    expect(section.tableRows.map(({ cells }) => cells.name)).toEqual(card.map(({ name }) => name));
+    expect(section.tableRows).toHaveLength(3);
+    expect(section.description).toBe('Inherited: 0 · Declared: 3');
+  });
+  it.each(['pending', 'unavailable', 'unconfigured'] as const)(
+    'never resurrects stale metadata when Output is %s',
+    (state) => {
+      const { section, card } = inspect(state);
+      expect(card).toEqual([]);
+      expect(section.tableRows).toEqual([]);
+      expect(section.description).toBe('Inherited: 0 · Declared: 0');
+    }
+  );
+  it('keeps an explicitly empty ready output empty despite physical metadata', () => {
+    const { section, card } = inspect('ready', []);
+    expect(card).toEqual([]);
+    expect(section.tableRows).toEqual([]);
+    expect(section.description).toBe('Inherited: 0 · Declared: 0');
+  });
+});
 
 const expectedSectionIds = [
   'general',

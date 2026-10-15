@@ -1,14 +1,18 @@
 /**
  * Owned concern: present Input and Output through one template with independent list identity.
  * @baseline GH-3578: local Input order must not override published Output order.
- * @decision Scope section state by view; retain caller-owned disclosure and canonical columns.
- * @consequence Switching tabs cannot reconcile unrelated input slots and output FieldIds.
- * @version 1.0.0
+ * @baseline ADR-0064 / GH-3628: view selection cannot grant owner-denied column interaction.
+ * @decision Scope section state by view and intersect its direction with caller-owned ports.
+ * @consequence Switching tabs preserves independent identities and explicit port denial.
+ * @version 1.1.0
  */
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
-import type { GraphNodeColumnSectionProps } from './graphNodeColumnContracts';
+import type {
+  GraphNodeColumnPortDirection,
+  GraphNodeColumnSectionProps,
+} from './graphNodeColumnContracts';
 import { GraphNodeColumnSection } from './GraphNodeColumnSection';
 import { graphNodeColumnClasses } from './graphColumnVisualTokens';
 import { graphColumnTransferTarget } from './graphColumnTransfer';
@@ -23,6 +27,11 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
   if (props.inputColumns == null) return <GraphNodeColumnSection {...props} />;
   const output = props.columns.filter((column) => column.output !== false);
   const columns = view === 'input' ? props.inputColumns : output;
+  const viewDirection: GraphNodeColumnPortDirection = view === 'input' ? 'target' : 'source';
+  const portDirections =
+    props.portDirections == null || props.portDirections.includes(viewDirection)
+      ? [viewDirection]
+      : [];
   const status =
     props.outputState != null && props.outputState !== 'ready'
       ? copy.outputStateLabels[props.outputState]
@@ -70,7 +79,7 @@ export function GraphNodeColumnViews(props: GraphNodeColumnSectionProps) {
             inputColumns={undefined}
             view={view === 'input' ? 'input' : 'output'}
             showSourceName={view === 'input'}
-            portDirections={view === 'input' ? ['target'] : ['source']}
+            portDirections={portDirections}
             onColumnOutputToggle={undefined}
             onColumnReorder={undefined}
             onCalculatedColumnAdd={undefined}

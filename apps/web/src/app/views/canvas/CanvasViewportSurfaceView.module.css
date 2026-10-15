@@ -1,0 +1,30 @@
+/*
+ * Owned concern: Canvas viewport sizing, surface, minimap and keyboard focus appearance.
+ * @baseline GH-3629: the actual viewport remains the menu and flex-sizing boundary.
+ * @decision Preserve existing visual values through semantic stylesheet classes.
+ * @consequence Appearance changes no longer require edits to the viewport JSX.
+ * @version 1.0.0
+ */
+.viewport {
+  position: relative;
+  flex: 1 1 0%;
+  overflow: hidden;
+}
+
+.contextSurface {
+  height: 100%;
+  width: 100%;
+  outline-style: none;
+}
+
+.contextSurface:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--focus-ring);
+}
+
+.flow {
+  background-color: var(--canvas-surface);
+}
+
+.minimap {
+  border-radius: var(--radius-lg);
+}

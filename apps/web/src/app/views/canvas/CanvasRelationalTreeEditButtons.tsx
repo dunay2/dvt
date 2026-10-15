@@ -1,37 +1,43 @@
-/** Present Apply/Cancel controls; the owning edit session keeps all command authority. */
+/** Owned concern: render projected Apply/Cancel controls without transaction admission or state. */
 import { Check, X } from 'lucide-react';
-import type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
-import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
+import type {
+  CanvasRelationalTreeSessionActionsBinding,
+  CanvasRelationalTreeSessionActionsModel,
+} from './canvasRelationalTreeSessionActionsModel';
+import styles from './CanvasRelationalTreeSessionActions.module.css';
 
 export function CanvasRelationalTreeEditButtons({
-  session,
-  copy,
+  model,
+  binding,
 }: Readonly<{
-  session: CanvasRelationalTreeWorkbenchHandle;
-  copy: CanvasRelationalTreeWorkbenchCopy;
+  model: Pick<
+    Extract<CanvasRelationalTreeSessionActionsModel, { kind: 'active' }>,
+    'applyLabel' | 'cancelLabel' | 'applyDisabled'
+  >;
+  binding: Pick<CanvasRelationalTreeSessionActionsBinding, 'onApply' | 'onCancel'>;
 }>): JSX.Element {
   return (
     <>
       <button
         type="button"
         data-slot="canvas-relational-tree-apply"
-        aria-label={copy.inspectorDvtRelationalApply}
-        title={copy.inspectorDvtRelationalApply}
-        disabled={!session.canApply || !session.hasUnappliedChanges}
-        onClick={session.apply}
-        className="grid size-8 place-items-center rounded text-emerald-300 hover:bg-(--surface-selected) disabled:cursor-not-allowed disabled:opacity-40"
+        aria-label={model.applyLabel}
+        title={model.applyLabel}
+        disabled={model.applyDisabled}
+        onClick={binding.onApply}
+        className={styles.applyButton}
       >
-        <Check aria-hidden="true" className="size-4" />
+        <Check aria-hidden="true" className={styles.icon} />
       </button>
       <button
         type="button"
         data-slot="canvas-relational-tree-cancel"
-        aria-label={copy.inspectorDvtRelationalCancel}
-        title={copy.inspectorDvtRelationalCancel}
-        onClick={session.cancel}
-        className="grid size-8 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected)"
+        aria-label={model.cancelLabel}
+        title={model.cancelLabel}
+        onClick={binding.onCancel}
+        className={styles.cancelButton}
       >
-        <X aria-hidden="true" className="size-4" />
+        <X aria-hidden="true" className={styles.icon} />
       </button>
     </>
   );

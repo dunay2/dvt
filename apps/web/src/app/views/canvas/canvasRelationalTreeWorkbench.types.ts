@@ -97,6 +97,7 @@ export type CanvasRelationalTreeWorkbenchCopy = Pick<
   | 'relationalTreeDropSourceMessage'
   | 'relationalTreePendingInputsMessage'
   | 'relationalTreeInputIdentityUnavailableMessage'
+  | 'relationalTreeProducerFieldsUnavailableMessage'
   | 'relationalTreeInvalidMessage'
   | 'relationalTreeLabel'
   | 'relationalTreeValidMessage'

@@ -15,6 +15,7 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
 const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
+const { startCompiledLiveProofWeb } = require('./live-proof-web-runtime.cjs');
 const { validateCypressProofSpecs } = require('./run-selected-closure-cypress.cjs');
 const {
   allocateDisposablePostgresDatabase,
@@ -809,43 +810,29 @@ async function main() {
       console.log('[selected-closure-live] Temporal worker intentionally unavailable');
     }
 
-    const webHandle = spawnProcess(
-      'web-live-proof',
-      [
-        '--filter',
-        '@dvt/web',
-        'exec',
-        'vite',
-        '--host',
-        WEB_BIND_HOST,
-        '--port',
-        String(DEFAULT_WEB_PORT),
-        '--strictPort',
-      ],
+    await startCompiledLiveProofWeb(
       {
-        VITE_API_BASE_URL: `http://${
-          cypressRuntime === 'native' ? '127.0.0.1' : 'host.docker.internal'
-        }:${DEFAULT_API_PORT}`,
-        ...localProtectedRuntimeAuth.webEnv,
-        VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,
-        VITE_DEFAULT_PROJECT_ID: localProtectedRuntimeAuth.workspaceScope.projectId,
-        VITE_DEFAULT_ENVIRONMENT_ID: localProtectedRuntimeAuth.workspaceScope.environmentId,
-        VITE_GIT_BRANCH: 'main',
-        VITE_GIT_SHA: 'local',
-        VITE_GIT_REPO: 'dunay2/dvt',
-        VITE_GRAPH_ARTIFACT_PATH: 'pipelines/sales_pipeline.yaml',
-        VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
-      }
-    );
-    processHandles.push(webHandle);
-
-    await waitForUrlOrProcessExit(
-      `http://127.0.0.1:${DEFAULT_WEB_PORT}/`,
-      (response) => (response.statusCode ?? 500) < 500,
-      DEFAULT_READY_TIMEOUT_MS,
-      DEFAULT_POLL_INTERVAL_MS,
-      'Web dev server',
-      webHandle
+        host: WEB_BIND_HOST,
+        port: DEFAULT_WEB_PORT,
+        timeout: DEFAULT_READY_TIMEOUT_MS,
+        interval: DEFAULT_POLL_INTERVAL_MS,
+        environment: {
+          VITE_API_BASE_URL: `http://${
+            cypressRuntime === 'native' ? '127.0.0.1' : 'host.docker.internal'
+          }:${DEFAULT_API_PORT}`,
+          ...localProtectedRuntimeAuth.webEnv,
+          VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,
+          VITE_DEFAULT_PROJECT_ID: localProtectedRuntimeAuth.workspaceScope.projectId,
+          VITE_DEFAULT_ENVIRONMENT_ID: localProtectedRuntimeAuth.workspaceScope.environmentId,
+          VITE_GIT_BRANCH: 'main',
+          VITE_GIT_SHA: 'local',
+          VITE_GIT_REPO: 'dunay2/dvt',
+          VITE_GRAPH_ARTIFACT_PATH: 'pipelines/sales_pipeline.yaml',
+          VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
+        },
+      },
+      processHandles,
+      { spawnProcess, waitForUrlOrProcessExit }
     );
 
     const sourceProof = spawnProcess(

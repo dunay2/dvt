@@ -1,4 +1,10 @@
-/** Owned concern: render and reorder nested field members inside one structured column piece. */
+/**
+ * Owned concern: render and reorder nested field members with their own context-menu boundary.
+ * @baseline GH-3629: stopping propagation alone leaves the browser context default uncancelled.
+ * @decision Cancel that default only without a field menu; let the existing Radix trigger own it otherwise.
+ * @consequence Nested inspection cannot leak a native menu or trigger a parent command.
+ * @version 1.1.0
+ */
 import { GripVertical } from 'lucide-react';
 import { useState, type DragEvent, type KeyboardEvent, type ReactElement } from 'react';
 
@@ -16,6 +22,7 @@ import {
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { GraphNodeColumn, GraphNodeColumnReorderIdentity } from './graphNodeColumnContracts';
 import { resolveGraphNodeStructuredFieldCopy } from './graphNodeStructuredFieldCopy';
+import styles from './GraphNodeColumnChildren.module.css';
 
 export function GraphNodeColumnChildren(props: {
   nodeId?: string;
@@ -43,10 +50,7 @@ export function GraphNodeColumnChildren(props: {
   };
 
   return (
-    <div
-      data-slot="graph-node-column-children"
-      className="ml-2 basis-full space-y-1 border-l border-blue-500/40 pl-2"
-    >
+    <div data-slot="graph-node-column-children" className={styles.children}>
       {props.children.map((child, index) => {
         const previous = props.children[index - 1];
         const next = props.children[index + 1];
@@ -114,8 +118,11 @@ export function GraphNodeColumnChildren(props: {
             }
             draggable={canReorder && child.id != null}
             tabIndex={0}
-            className="relative flex min-w-0 items-center gap-1 rounded px-1 text-[11px] data-[drop-placement=after]:border-b-2 data-[drop-placement=before]:border-t-2 data-[drop-placement]:border-blue-400"
-            onContextMenu={(event) => event.stopPropagation()}
+            className={styles.field}
+            onContextMenu={(event) => {
+              event.stopPropagation();
+              if (menuModel == null) event.preventDefault();
+            }}
             onDragStart={(event) => {
               if (child.id == null) return;
               event.stopPropagation();
@@ -159,13 +166,11 @@ export function GraphNodeColumnChildren(props: {
               <GripVertical
                 data-slot="graph-node-nested-column-drag-handle"
                 aria-hidden="true"
-                className="size-3 shrink-0 text-slate-500"
+                className={styles.dragHandle}
               />
             ) : null}
-            <span className="truncate font-mono text-slate-200">{child.name}</span>
-            <span className="ml-auto rounded bg-slate-800 px-1.5 py-0.5 text-[9px] text-slate-400">
-              {child.type}
-            </span>
+            <span className={styles.name}>{child.name}</span>
+            <span className={styles.type}>{child.type}</span>
             {child.children == null ? null : (
               <GraphNodeColumnChildren
                 nodeId={props.nodeId}

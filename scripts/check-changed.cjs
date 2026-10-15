@@ -7,6 +7,7 @@ const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { listLocalChangedFiles } = require('./git-local-changes.cjs');
+const { reportChangedWebDuplication } = require('./web-code-duplication.cjs');
 
 const DEFAULT_BATCH_SIZE = 40;
 const repoRoot = path.resolve(__dirname, '..');
@@ -149,6 +150,9 @@ async function main() {
     const status = await runEslint(existingEslintFiles);
     if (status !== 0) return status;
   }
+
+  const duplicationStatus = reportChangedWebDuplication(changed);
+  if (duplicationStatus !== 0) return duplicationStatus;
 
   console.log('Changed-file checks passed.');
   return 0;

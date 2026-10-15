@@ -1,3 +1,8 @@
+/**
+ * Owned concern: mount the application and report its initial hydration step.
+ * Reason: HTML owns cascade registration; global overrides remain after App
+ * so vendor styling keeps its existing priority.
+ */
 import { createRoot } from 'react-dom/client';
 
 import App from './app/App.tsx';

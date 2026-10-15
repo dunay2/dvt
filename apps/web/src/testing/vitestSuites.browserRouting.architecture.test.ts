@@ -349,6 +349,21 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('admits retained shell menu consumers in their actual independent runtimes', () => {
+    const controlled = 'apps/web/cypress/e2e/templates/templates-workbench.cy.ts';
+    const available = 'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts';
+    const controlledPlan = resolveWebVitestChangedSuitePlan([controlled]);
+    expect(controlledPlan.browserCommands).toMatchObject([
+      { capability: 'controlled', specPaths: [controlled] },
+    ]);
+    expect(resolveWebVitestChangedSuitePlan([available]).browserCommands).toEqual([liveCommand]);
+    const body = browserModules.get(resolve(available.slice('apps/web/'.length)))!.getText();
+    expect(body).toContain('visitWithLiveWorkspaceSession');
+    expect(body).toContain('hasLiveProtectedRuntimeEnv');
+    expect(body).not.toContain('liveProjectCreation');
+    expect(body).not.toContain('this.skip');
+  });
+
   it('admits every exact selection-helper consumer in its real runtime', () => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
@@ -527,6 +542,8 @@ describe('governed browser evidence routing', () => {
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
     const registered = Object.values(WEB_CYPRESS_SPECS).flat();
     const uiOnlyConsumers = [
+      'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
+      'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
       'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
@@ -552,8 +569,8 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(31);
-    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(48);
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(32);
+    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(50);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
 
@@ -591,6 +608,33 @@ describe('governed browser evidence routing', () => {
     expect(isolated.browserCommands[0]!.specPaths).toEqual([path]);
     expect(resolveWebVitestChangedSuitePlan([path, fixture]).browserCommands[0]!.specPaths).toEqual(
       WEB_CYPRESS_SPECS.controlled
+    );
+  });
+
+  it.each([
+    'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
+    'apps/web/cypress/support/startupReadiness.ts',
+  ])('admits exact startup evidence at the controlled runtime for %s', (path) => {
+    const plan = resolveWebVitestChangedSuitePlan([path]);
+    expect(plan.browserCommands.map(({ capability }) => capability)).toEqual(['controlled']);
+    expect(plan.browserCommands[0]!.specPaths).toEqual(
+      path.endsWith('.cy.ts') ? [path] : WEB_CYPRESS_SPECS.controlled
+    );
+  });
+
+  it('keeps the pending-capabilities setup scoped to its two real browser consumers', () => {
+    const graph = new Map(
+      [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
+    );
+    const target = resolve('cypress/support/startupReadiness.ts');
+    const consumers = [...browserModules.keys()]
+      .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .sort();
+    expect(consumers).toEqual(
+      [
+        resolve('cypress/e2e/shell/startup-route-readiness.cy.ts'),
+        resolve('cypress/e2e/shell/startup-stylesheet-loading.cy.ts'),
+      ].sort()
     );
   });
 
@@ -657,7 +701,7 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(31);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(32);
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);
@@ -761,12 +805,22 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/support/e2e.ts',
     'apps/web/cypress/support/unregisteredRuntime.ts',
     'apps/web/cypress/fixtures/new.json',
-    'apps/web/cypress.config.ts',
     'apps/web/cypress.live.config.ts',
-    'cypress.config.ts',
+    'apps/web/cypress/node/unregisteredDiagnostic.ts',
   ])('rejects browser surfaces without admitted consumer evidence: %s', (file) => {
     expect(() => resolveWebVitestChangedSuitePlan([file])).toThrow(file);
     expect(() => resolveWebVitestChangedSuitePlan([spec, file], { full: true })).toThrow(file);
+  });
+
+  it.each([
+    'apps/web/cypress.config.ts',
+    'cypress.config.ts',
+    'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
+    'apps/web/cypress/node/chromiumNetworkProjection.ts',
+  ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
+    expect(
+      resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['controlled', 'available', 'unavailable']);
   });
 
   it.each([
@@ -792,6 +846,14 @@ describe('governed browser evidence routing', () => {
       )
     ).toEqual(['controlled', 'available', 'unavailable']);
     expect(resolveWebVitestChangedSuitePlan([]).browserCommands).toEqual([]);
+  });
+
+  it('compiled provider runtime changes retain both real obligations without allocating controlled providers', () => {
+    expect(
+      resolveWebVitestChangedSuitePlan(['scripts/live-proof-web-runtime.cjs']).browserCommands.map(
+        ({ capability }) => capability
+      )
+    ).toEqual(['available', 'unavailable']);
   });
 
   it.each([

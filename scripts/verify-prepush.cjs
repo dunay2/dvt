@@ -236,6 +236,7 @@
       full: args.full,
       repoRootPath: root,
       stateFingerprint: options.stateFingerprint,
+      validationFingerprint: options.validationFingerprint,
     });
     const readStamp = options.readPrepushStamp || readPrepushStamp;
     const writeStamp = options.writePrepushStamp || writePrepushStamp;

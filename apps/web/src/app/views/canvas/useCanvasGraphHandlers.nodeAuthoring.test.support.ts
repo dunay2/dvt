@@ -14,15 +14,15 @@ export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
 }
 
 export function buildCanonicalDropEvent(
-  canonicalNode: ReturnType<typeof buildCanonicalNode>
+  canonicalNode: ReturnType<typeof buildCanonicalNode>,
+  screenPosition = { x: 120, y: 80 },
+  target: HTMLElement = document.createElement('div')
 ): React.DragEvent<HTMLDivElement> {
   return {
     preventDefault: vi.fn(),
-    target: {
-      getBoundingClientRect: () => ({ left: 0, top: 0 }),
-    },
-    clientX: 120,
-    clientY: 80,
+    target,
+    clientX: screenPosition.x,
+    clientY: screenPosition.y,
     dataTransfer: {
       getData: vi.fn(() => JSON.stringify(canonicalNode)),
     },

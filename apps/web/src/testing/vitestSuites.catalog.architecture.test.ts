@@ -162,12 +162,12 @@ describe('web Vitest suite catalog', () => {
     expect(workflow).toContain('run: ${{ matrix.command }}');
     expect(workflow).toContain('pnpm test:web:ci');
     expect(workflow).toContain('web-frontend-tests:');
-    expect(workflow).toContain('name: Web Frontend Tests');
     const webJob = (
       load(workflow) as {
         jobs: Record<
           string,
           {
+            name: string;
             env?: Record<string, string>;
             steps: Array<{
               run?: string;
@@ -178,6 +178,7 @@ describe('web Vitest suite catalog', () => {
       }
     ).jobs['web-frontend-tests'];
     if (!webJob) throw new Error('Missing governed Web test job');
+    expect(webJob.name).toMatch(/^Web Frontend Tests \(/);
     const executionSteps = webJob.steps.filter(
       (step) => step.run?.includes('pnpm test:web:') && !step.run.includes('--plan')
     );
@@ -186,14 +187,14 @@ describe('web Vitest suite catalog', () => {
       executionSteps.some(
         (step) =>
           step.run?.trim() ===
-          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }}"
+          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
       )
     ).toBe(true);
     expect(
       executionSteps.some(
         (step) =>
           step.run?.trim() ===
-          'pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}'
+          "pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
       )
     ).toBe(true);
     for (const step of executionSteps) {

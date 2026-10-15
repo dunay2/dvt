@@ -19,38 +19,16 @@ import {
   type CanvasGraphFilterPresentationMode,
 } from './canvasGraphFilter.contract';
 import { filterCanvasGraph } from './canvasGraphFilter';
+import type {
+  CanvasGraphFilterControlBinding,
+  CanvasGraphFilterOptionGroup,
+} from './canvasGraphFilterControl.binding';
 
-export type CanvasGraphFilterOptionGroup = Readonly<{
-  dimension: CanvasGraphFilterDimension;
-  values: readonly string[];
-}>;
-
-export type CanvasGraphFilterControlModel = Readonly<{
-  open: boolean;
-  predicates: readonly CanvasGraphFilterPredicate[];
-  composition: CanvasGraphFilterComposition;
-  presentation: CanvasGraphFilterPresentationMode;
-  status: 'idle' | 'matched' | 'no-match';
-  matchCount: number;
-  totalCount: number;
-  draftDimension: CanvasGraphFilterDimension;
-  draftValue: string;
-  optionGroups: readonly CanvasGraphFilterOptionGroup[];
-}>;
-
-export type CanvasGraphFilterController = Readonly<{
-  model: CanvasGraphFilterControlModel;
-  result: ReturnType<typeof filterCanvasGraph>;
-  setOpen: (open: boolean) => void;
-  selectDimension: (dimension: CanvasGraphFilterDimension) => void;
-  selectValue: (value: string) => void;
-  addDraftPredicate: () => void;
-  filterByTag: (tag: string) => void;
-  removePredicate: (predicate: CanvasGraphFilterPredicate) => void;
-  setComposition: (composition: CanvasGraphFilterComposition) => void;
-  setPresentation: (presentation: CanvasGraphFilterPresentationMode) => void;
-  clear: () => void;
-}>;
+export type CanvasGraphFilterController = CanvasGraphFilterControlBinding &
+  Readonly<{
+    result: ReturnType<typeof filterCanvasGraph>;
+    filterByTag: (tag: string) => void;
+  }>;
 
 function canvasGraphFilterInputsEqual(left: readonly Node[], right: readonly Node[]): boolean {
   return (

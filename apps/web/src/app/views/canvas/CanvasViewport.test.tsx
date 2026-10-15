@@ -12,6 +12,7 @@ vi.mock(
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';
+import styles from './CanvasViewportSurfaceView.module.css';
 import {
   buildCanvasViewportProps,
   createCanvasViewportHarness,
@@ -99,7 +100,7 @@ describe('CanvasViewport', () => {
       fitView: true,
       fitViewOptions: { padding: 0.32, maxZoom: 0.82 },
       minZoom: 0.35,
-      className: 'bg-(--canvas-surface)',
+      className: styles.flow,
       nodesDraggable: true,
       nodesConnectable: true,
       snapToGrid: false,
@@ -113,7 +114,7 @@ describe('CanvasViewport', () => {
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
-    expect(xyflowState.miniMapClassName).toBe('rounded-lg');
+    expect(xyflowState.miniMapClassName).toBe(styles.minimap);
     const minimapDataset = (
       container.querySelector('[data-testid="minimap"]') as HTMLDivElement | null
     )?.dataset;

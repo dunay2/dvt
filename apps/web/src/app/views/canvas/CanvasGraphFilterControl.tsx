@@ -1,4 +1,10 @@
-/** Owned concern: render the Canvas graph filter control and emit user intents only. */
+/**
+ * Owned concern: render Canvas graph filters from their UI binding and emit existing intents only.
+ * @baseline GH-3634: control-owned appearance belongs to its stylesheet, not JSX utility strings.
+ * @decision Keep semantic CSS classes separate from bindings and shared primitive behavior.
+ * @consequence Filter interaction remains unchanged while its presentation has one owner.
+ * @version 1.0.0
+ */
 import { ListFilter, Plus, X } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
@@ -12,59 +18,42 @@ import {
 import type {
   CanvasGraphFilterComposition,
   CanvasGraphFilterDimension,
-  CanvasGraphFilterPredicate,
   CanvasGraphFilterPresentationMode,
 } from './canvasGraphFilter.contract';
 import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import type { CanvasGraphFilterControlModel } from './useCanvasGraphFilterController';
+import type { CanvasGraphFilterControlBinding } from './canvasGraphFilterControl.binding';
+import styles from './CanvasGraphFilterControl.module.css';
 
 type CanvasGraphFilterControlProps = Readonly<{
-  model: CanvasGraphFilterControlModel;
+  binding: CanvasGraphFilterControlBinding;
   copy: CanvasViewCopy;
-  onOpenChange: (open: boolean) => void;
-  onSelectDimension: (dimension: CanvasGraphFilterDimension) => void;
-  onSelectValue: (value: string) => void;
-  onAddPredicate: () => void;
-  onRemovePredicate: (predicate: CanvasGraphFilterPredicate) => void;
-  onSetComposition: (composition: CanvasGraphFilterComposition) => void;
-  onSetPresentation: (presentation: CanvasGraphFilterPresentationMode) => void;
-  onClear: () => void;
 }>;
 
 export function CanvasGraphFilterControl({
-  model,
+  binding,
   copy,
-  onOpenChange,
-  onSelectDimension,
-  onSelectValue,
-  onAddPredicate,
-  onRemovePredicate,
-  onSetComposition,
-  onSetPresentation,
-  onClear,
 }: CanvasGraphFilterControlProps): JSX.Element {
+  const { model } = binding;
   const activeCount = model.predicates.length;
   const selectedOptions =
     model.optionGroups.find((group) => group.dimension === model.draftDimension)?.values ?? [];
 
   return (
     <TooltipProvider delayDuration={250}>
-      <Popover open={model.open} onOpenChange={onOpenChange}>
+      <Popover open={model.open} onOpenChange={binding.setOpen}>
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="absolute top-3 right-3 z-20 inline-flex">
+            <span className={styles.triggerFrame}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
                   aria-label={copy.canvasGraphFilterLabel}
-                  className="bg-popover text-popover-foreground border-border hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 relative inline-flex size-9 cursor-pointer items-center justify-center rounded-md border shadow-lg outline-none focus-visible:ring-[3px]"
+                  className={styles.triggerButton}
                 >
-                  <ListFilter className="size-4" aria-hidden="true" />
+                  <ListFilter className={styles.triggerIcon} aria-hidden="true" />
                   {activeCount === 0 ? null : (
-                    <span className="bg-primary text-primary-foreground absolute -top-1 -right-1 min-w-4 rounded-full px-1 text-[10px] leading-4 tabular-nums">
-                      {activeCount}
-                    </span>
+                    <span className={styles.activeCount}>{activeCount}</span>
                   )}
                 </button>
               </PopoverTrigger>
@@ -77,11 +66,11 @@ export function CanvasGraphFilterControl({
           data-slot="canvas-graph-filter-control"
           align="end"
           sideOffset={8}
-          className="w-80 space-y-4 p-4"
+          className={styles.content}
         >
           <header>
-            <h2 className="text-sm font-semibold">{copy.canvasGraphFilterTitle}</h2>
-            <p className="text-muted-foreground mt-1 text-xs" aria-live="polite">
+            <h2 className={styles.title}>{copy.canvasGraphFilterTitle}</h2>
+            <p className={styles.matchSummary} aria-live="polite">
               {formatCanvasCopyTemplate(copy.canvasGraphFilterMatchSummaryTemplate, {
                 matching: String(model.matchCount),
                 total: String(model.totalCount),
@@ -96,7 +85,7 @@ export function CanvasGraphFilterControl({
               { value: 'or', label: copy.canvasGraphFilterOrLabel },
             ]}
             selected={model.composition}
-            onSelect={(value) => onSetComposition(value as CanvasGraphFilterComposition)}
+            onSelect={(value) => binding.setComposition(value as CanvasGraphFilterComposition)}
           />
           <FilterChoiceGroup
             label={copy.canvasGraphFilterPresentationLabel}
@@ -105,18 +94,20 @@ export function CanvasGraphFilterControl({
               { value: 'hide', label: copy.canvasGraphFilterHideLabel },
             ]}
             selected={model.presentation}
-            onSelect={(value) => onSetPresentation(value as CanvasGraphFilterPresentationMode)}
+            onSelect={(value) =>
+              binding.setPresentation(value as CanvasGraphFilterPresentationMode)
+            }
           />
 
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-            <label className="space-y-1 text-xs">
-              <span className="text-muted-foreground">{copy.canvasGraphFilterDimensionLabel}</span>
+          <div className={styles.draftGrid}>
+            <label className={styles.fieldLabel}>
+              <span className={styles.mutedLabel}>{copy.canvasGraphFilterDimensionLabel}</span>
               <select
                 aria-label={copy.canvasGraphFilterDimensionLabel}
                 value={model.draftDimension}
-                className="border-input bg-input-background h-8 w-full rounded-md border px-2"
+                className={styles.select}
                 onChange={(event) =>
-                  onSelectDimension(event.currentTarget.value as CanvasGraphFilterDimension)
+                  binding.selectDimension(event.currentTarget.value as CanvasGraphFilterDimension)
                 }
               >
                 {model.optionGroups.map((group) => (
@@ -126,13 +117,13 @@ export function CanvasGraphFilterControl({
                 ))}
               </select>
             </label>
-            <label className="space-y-1 text-xs">
-              <span className="text-muted-foreground">{copy.canvasGraphFilterValueLabel}</span>
+            <label className={styles.fieldLabel}>
+              <span className={styles.mutedLabel}>{copy.canvasGraphFilterValueLabel}</span>
               <select
                 aria-label={copy.canvasGraphFilterValueLabel}
                 value={model.draftValue}
-                className="border-input bg-input-background h-8 w-full rounded-md border px-2"
-                onChange={(event) => onSelectValue(event.currentTarget.value)}
+                className={styles.select}
+                onChange={(event) => binding.selectValue(event.currentTarget.value)}
               >
                 {selectedOptions.map((value) => (
                   <option key={value} value={value}>
@@ -145,32 +136,32 @@ export function CanvasGraphFilterControl({
               type="button"
               size="icon"
               variant="outline"
-              className="mt-5 size-8"
+              className={styles.addButton}
               aria-label={copy.canvasGraphFilterAddLabel}
               disabled={model.draftValue.length === 0}
-              onClick={onAddPredicate}
+              onClick={binding.addDraftPredicate}
             >
               <Plus aria-hidden="true" />
             </Button>
           </div>
 
-          <div className="space-y-2">
+          <div className={styles.predicateList}>
             {activeCount === 0 ? (
-              <p className="text-muted-foreground text-xs">{copy.canvasGraphFilterEmptyLabel}</p>
+              <p className={styles.empty}>{copy.canvasGraphFilterEmptyLabel}</p>
             ) : (
               model.predicates.map((predicate) => (
                 <div
                   key={`${predicate.dimension}:${predicate.value}`}
-                  className="border-border bg-muted/30 flex items-center justify-between gap-2 rounded-md border px-2 py-1.5 text-xs"
+                  className={styles.predicateRow}
                 >
-                  <span className="min-w-0 truncate">
+                  <span className={styles.predicateText}>
                     {resolveDimensionLabel(copy, predicate.dimension)}: {predicate.value}
                   </span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-6 shrink-0"
+                    className={styles.removeButton}
                     aria-label={formatCanvasCopyTemplate(
                       copy.canvasGraphFilterRemoveLabelTemplate,
                       {
@@ -178,7 +169,7 @@ export function CanvasGraphFilterControl({
                         value: predicate.value,
                       }
                     )}
-                    onClick={() => onRemovePredicate(predicate)}
+                    onClick={() => binding.removePredicate(predicate)}
                   >
                     <X aria-hidden="true" />
                   </Button>
@@ -191,10 +182,10 @@ export function CanvasGraphFilterControl({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full"
+            className={styles.clearButton}
             aria-label={copy.canvasGraphFilterClearLabel}
             disabled={activeCount === 0}
-            onClick={onClear}
+            onClick={binding.clear}
           >
             {copy.canvasGraphFilterClearLabel}
           </Button>
@@ -217,8 +208,8 @@ function FilterChoiceGroup({
 }>): JSX.Element {
   return (
     <fieldset>
-      <legend className="text-muted-foreground mb-1 text-xs">{label}</legend>
-      <div className="grid grid-cols-2 gap-1">
+      <legend className={styles.choiceLegend}>{label}</legend>
+      <div className={styles.choiceGrid}>
         {choices.map((choice) => (
           <Button
             key={choice.value}

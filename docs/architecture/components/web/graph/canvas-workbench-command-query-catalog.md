@@ -313,6 +313,26 @@ closing without selection performs no command. Pointer and keyboard entries keep
 the same action owner. Neither entry may repair a leaked modal lock by rewriting
 global pointer styles or disabling modal behavior.
 
+### Canvas context-menu event ownership
+
+Issue [#3629](https://github.com/dunay2/dvt/issues/3629) refines the existing
+`ResolveCanvasContextMenu` query and shared Radix trigger over the actual graph
+viewport, including its frame and sibling overlays. Background targets open one
+application menu. Nodes, edges and fields retain their specific menu owners;
+controls do not become background command targets.
+
+An accepted menu cancels the native browser default when its existing trigger
+opens. Excluded controls and nested fields without menu identity cancel that
+default without opening background actions or performing a mutation. Do not
+blanket-call `preventDefault` in capture before Radix handles an accepted target,
+intercept `document` globally, or add a second pane route for the same intent.
+
+Evidence starts with the application menu closed and dispatches a real cancelable
+context event. It asserts both the single rendered application menu and
+`defaultPrevented`, including close and reopen; default cancellation alone does
+not prove that the intended menu opened. Inspection and menu opening dispatch no
+command until an admitted action is selected.
+
 ## Retired Rail Disposition
 
 `ResolveLegacyCanvasRouteIntent` is retired by RED1.3. It previously translated
@@ -387,6 +407,53 @@ flowchart TD
 ```
 
 ## Producer Input And Published Output Boundary
+
+### Cross-model dependency admission and explicit repair
+
+Issue [#3628](https://github.com/dunay2/dvt/issues/3628) refines the existing
+`ConfigureCanvasDvtNode` command, not graph persistence or provider execution.
+Before committing an Output candidate, compare published stable FieldIds and
+inspect the connected consumers' canonical producer references. Reject removal
+of an identity required by a published field, row condition or retained hidden
+expression. The rejection identifies the consumer and required fields; the
+aggregate remains unchanged. Alias changes and reordering preserve identity.
+Disconnected retained configuration is not an active dependency.
+
+An already incomplete consumer retains its own semantic document. The existing
+`ProjectCanvasRelationalTree` and `ProjectGraphNodeCardReadModel` queries may
+inspect a structurally valid retained tree whose connected producer no longer
+publishes referenced FieldIds. They mark the exact local Read fields denied;
+this inspection is not successful producer resolution or execution admission.
+Malformed authority, cycles, foreign producers and incompatible present types
+do not qualify. Missing Input slots remain visible even on implicit edges.
+
+The owning query classifies retained required producer references before normal
+schema refresh: `not-needed`, `retained` or `rejected`. A rejected recovery never
+falls through as a healthy read. Missing required fields combined with an
+incompatible still-published type cannot silently prune the consumer Output.
+The connected publication catalog retains valid producer documents even when
+stale explicit Input bindings make an Input unusable. Classification reuses
+that catalog, and presentation reuses the resulting document and publication.
+The read model exposes Input interaction posture explicitly; adapters do not
+infer repair admission from Output, composition and slot symptoms or reparse
+semantic authority. Normal healthy schema refresh, permissions and CAS remain
+owned by their existing rails.
+
+Recovery reuses the existing exact Input-slot mapping gesture and serialized
+draft command. Only an unresolved slot may be explicitly rebound to a compatible
+published field of the same producer. Validate its complete retained TypeSchema,
+including nullability, and atomically update the canonical `producerRef` and
+edge provenance. Preserve the consumer's Read, operation, field and Output
+identities, expressions and semantic plan. Do not match names, restore removed
+publication IDs or choose replacements automatically. An available consumed
+slot still rejects rewiring. Partial repair remains incomplete; Preview and Run
+stay unavailable until their real canonical admission succeeds.
+
+Negative evidence covers required/hidden dependencies, unconsumed removals,
+implicit and explicit unresolved slots, type/producer mismatch, duplicate
+consumed slots, read-only/stale commands and atomic failure. Repair/save/reload
+must retain consumer semantics and pass strict producer resolution; displaying
+the retained tree alone is not completion evidence.
 
 The Canvas model card has two read models, not two transformation editors.
 `Input` receives bindings from connected producers. `Output` passively publishes
@@ -588,6 +655,58 @@ flowchart LR
 ```
 
 ## Exhaustiveness Rule
+
+### Inspector and bounded preview presentation parity
+
+For native Models, the outer Inspector Columns section and card Output consume
+the same selected canonical output projection, including its order and types.
+Available producer fields remain an Input/editor catalogue, not extra published
+columns. Counts describe the fields actually listed. Empty, pending, unavailable
+and unconfigured output never fall back to stale physical metadata. Sources keep
+their existing physical-schema inspection; this is not a global catalogue filter.
+
+Source and operation previews share the bounded grid presentation: search and
+refresh in one toolbar, rows filling the available height, and identity, counts,
+LIVE/provider/query-time facts in its footer. Accessible captions and bounded-read
+disclosures remain; operation previews do not repeat them above the grid. Query
+admission, limits, request identity, stale/error handling and revision fences are
+unchanged. The noncompact Model data view retains its existing context header.
+
+The simple JOIN condition editor exposes an explicit formula handoff beside its
+save action. Only a valid, current simple draft may transfer. Compose its update
+or append with every other canonical condition through the existing condition
+helpers, then derive the full predicate formula through the shared decompiler.
+Switching editors performs no semantic command. Keep the simple draft while the
+formula is open; Cancel restores it, and only an accepted formula save clears it.
+Invalid, stale, read-only, busy or unavailable-provider handoffs preserve both
+draft and canonical predicate. Function admission and boolean ON validation stay
+in the existing formula compiler and revision-bound command, with no second AST.
+
+```text
+Canonical native Output -> shared projection -> card and Inspector Columns
+Protected sample -> existing grid toolbar / rows / provenance footer
+Valid simple JOIN draft -> all clauses -> shared full-predicate formula
+                       -> Cancel restores draft / accepted save clears draft
+```
+
+### Controlled Inspector edit evidence
+
+Common metadata edits on an unsupported but valid canonical operation reuse the
+existing Inspector configuration and protected draft save rails. Inspection
+alone must not write or replace its stored semantic document.
+
+The browser proof verifies the initial Name, ends the clear action, re-queries
+the current input to verify it is empty, then types and re-queries to verify the
+exact new Name before Apply. Persistence assertions still require that exact
+name and the unchanged canonical semantic document. A previously observed PUT
+does not establish the outcome of a later edit.
+
+This observable sequence prevents a concatenated name from being misdiagnosed
+as an absent save. It does not attribute the internal cause to hydration or
+change product behavior. No direct DOM value injection, forced interaction,
+fixed delay, timeout increase or weakened persistence assertion is permitted.
+If an edit transition fails, diagnose it at that transition rather than retrying
+the action until green.
 
 Every externally observable Canvas workbench behavior must map to one rail in
 this catalog before implementation. This includes route entries, toolbar

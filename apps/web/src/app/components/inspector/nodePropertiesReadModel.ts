@@ -1,6 +1,9 @@
 /** Compose the Inspector read model from independently owned property projections. */
 import { buildDbtTestRows } from './dbtTestRowsReadModel';
-import { buildCanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth';
+import {
+  buildCanvasNodePresentationTruth,
+  selectCanvasNodeOutputColumns,
+} from '../canvas/canvasNodePresentationTruth';
 import type {
   BuildNodePropertiesReadModelArgs,
   NodePropertiesReadModel,
@@ -37,15 +40,17 @@ export function buildNodePropertiesReadModel({
   const columns = readColumns(metadata.columns);
   const truth = suppliedTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
   const columnRows =
-    node.pluginId === 'dvt' && node.kind === 'dvt:transform'
-      ? buildDvtTransformColumnRows(truth.columns.visible, columns)
-      : truth.columns.visibleProvenance === 'declared'
-        ? buildColumnRows(columns)
-        : buildInheritedColumnRows(
-            truth.columns.visibleProvenance === 'mixed'
-              ? truth.columns.visible
-              : truth.columns.inherited
-          );
+    truth.inputBindings != null
+      ? buildDvtTransformColumnRows(selectCanvasNodeOutputColumns(truth), columns)
+      : node.pluginId === 'dvt' && node.kind === 'dvt:transform'
+        ? buildDvtTransformColumnRows(truth.columns.visible, columns)
+        : truth.columns.visibleProvenance === 'declared'
+          ? buildColumnRows(columns)
+          : buildInheritedColumnRows(
+              truth.columns.visibleProvenance === 'mixed'
+                ? truth.columns.visible
+                : truth.columns.inherited
+            );
 
   return {
     nodeId: node.id,

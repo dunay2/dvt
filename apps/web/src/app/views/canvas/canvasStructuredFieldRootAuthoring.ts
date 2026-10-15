@@ -12,6 +12,8 @@ import {
 } from './canvasStructuredFieldAuthoring';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import { modelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
+import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 
 export function reorderCanvasStructuredFieldRoots(args: {
   draftSession: CanvasDraftSession;
@@ -72,6 +74,13 @@ export function setCanvasStructuredRootOutputIncluded(args: {
       resolved.target,
       encodeDvtSubstraitStructuredFieldDocument(changed)
     );
+    const dependencyRejection = modelOutputDependencyRejection({
+      node: resolved.target,
+      candidate: node,
+      nodes: resolveCanvasDraftNodes(args.draftSession, args.canonicalNodesById),
+      edges: args.draftSession.workingSet.visibleEdges,
+    });
+    if (dependencyRejection != null) return dependencyRejection;
     return {
       outcome: 'applied',
       draftSession: canvasDraftSession.workingSet.upsertNode(args.draftSession, node),

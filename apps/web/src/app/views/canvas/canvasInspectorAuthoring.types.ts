@@ -20,6 +20,7 @@ import type {
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
+import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -47,6 +48,7 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
 }>;
 
 export type CanvasInspectorNodeDraftApplyResult =
+  | CanvasModelOutputDependencyRejection
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
   | Readonly<{ outcome: 'no_changes' }>
   | Readonly<{

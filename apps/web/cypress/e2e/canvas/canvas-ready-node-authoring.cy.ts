@@ -1,14 +1,15 @@
 /**
  * Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser.
- * @baseline GH-3610: the Sources dock and inspector retain the user's viewport.
- * @decision Fit the graph before Model inspection after closing Source and Sink configuration.
- * @consequence Ordinary context-menu guards and canonical roundtrip assertions remain intact.
- * @version 1.0.0
+ * @baseline GH-3628: manual connection configuration does not establish a physical Source identity.
+ * @decision Keep unresolved Model Code unavailable and compare retained documents on saves and reload.
+ * @consequence Source/Sink configuration roundtrips without fabricating code or canonical identity.
+ * @version 1.0.1
  */
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
 
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
@@ -22,7 +23,12 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
-import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  installE2eApiFetchStub,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
@@ -142,6 +148,82 @@ function visitReadyCanvas(path = '/canvas'): void {
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
+function readRegisteredCssLayers(document: Document): string[] {
+  const layers = new Set<string>();
+  for (const stylesheet of Array.from(document.styleSheets)) {
+    for (const rule of Array.from(stylesheet.cssRules)) {
+      const names = rule.cssText.match(/^@layer\s+([^;{]+)/u)?.[1];
+      for (const name of names?.split(',') ?? []) layers.add(name.trim());
+    }
+  }
+  return Array.from(layers);
+}
+
+function resolveComputedPaletteColor(value: string): string {
+  if (!/^#[\da-f]{6}$/iu.test(value)) return value;
+  const channels = [1, 3, 5].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16));
+  return `rgb(${channels.join(', ')})`;
+}
+
+function assertCanvasComputedAppearance(): void {
+  const sourceCard = '.react-flow__node[data-id="src_orders"] [data-slot="graph-node-card"]';
+  cy.get(sourceCard)
+    .should('be.visible')
+    .and('have.css', 'font-size', '14px')
+    .and('have.css', 'border-top-width', '1px')
+    .and('have.css', 'border-top-style', 'solid');
+  cy.get(sourceCard)
+    .children()
+    .first()
+    .should('have.css', 'padding-left', '16px')
+    .and('have.css', 'padding-right', '16px')
+    .and('have.css', 'padding-top', '12px')
+    .and('have.css', 'padding-bottom', '12px');
+  cy.get(sourceCard)
+    .find('[data-slot="graph-node-card-title"], [data-slot="graph-node-source-identity-trigger"]')
+    .should('have.length', 1)
+    .and('have.css', 'font-size', '14px')
+    .and('have.css', 'font-weight', '600');
+  cy.get(sourceCard)
+    .find('[data-slot="graph-node-tag"]')
+    .first()
+    .should('have.css', 'font-size', '12px')
+    .and('have.css', 'padding-left', '8px')
+    .and('have.css', 'padding-top', '2px')
+    .and('have.css', 'border-top-width', '1px');
+  cy.get('[data-testid="canvas-viewport"]').should(($viewport) => {
+    const viewport = $viewport.get(0);
+    const window = viewport.ownerDocument.defaultView!;
+    const palette = window.getComputedStyle(viewport);
+    for (const [selector, property, token] of [
+      ['.react-flow__controls', 'background-color', '--canvas-controls-surface'],
+      ['.react-flow__controls-button', 'background-color', '--canvas-controls-button-surface'],
+      ['.react-flow__controls-button', 'color', '--canvas-controls-foreground'],
+      ['.react-flow__minimap', 'background-color', '--canvas-minimap-surface'],
+      ['.react-flow__minimap', 'border-top-color', '--canvas-minimap-border'],
+    ] as const) {
+      const surface = viewport.querySelector(selector);
+      expect(surface, selector).not.to.be.null;
+      const expectedColor = palette.getPropertyValue(token).trim();
+      expect(expectedColor, token).not.to.equal('');
+      expect(
+        window.getComputedStyle(surface!).getPropertyValue(property),
+        `${selector} ${property}`
+      ).to.equal(resolveComputedPaletteColor(expectedColor));
+    }
+  });
+  cy.document().should((document) => {
+    expect(readRegisteredCssLayers(document), 'actual browser cascade-layer order').to.deep.equal([
+      'properties',
+      'theme',
+      'base',
+      'components',
+      'utilities',
+    ]);
+  });
+  cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+}
+
 function waitForDraftSaveCount(expectedCount: number): void {
   cy.wrap(null).should(() => {
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(expectedCount);
@@ -204,9 +286,76 @@ function openNodeProperties(nodeId: string): void {
   cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
 }
 
+function assertModelSemanticDocumentUnchanged(
+  draft: CanvasDraftSaveRequestBody['draft'],
+  originalDocument: unknown
+): void {
+  const model = draft.nodes.find((node) => node.id === 'dvt-transform-1');
+  const authoring = model?.metadata?.transformAuthoring as
+    { semanticDocument?: unknown } | undefined;
+  expect(authoring?.semanticDocument, 'retained canonical Model document').to.deep.equal(
+    originalDocument
+  );
+}
+
+function assertUnresolvedModelCodeUnavailable(): void {
+  cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('contain.text', 'RECONNECT INPUT');
+  openNodeProperties('dvt-transform-1');
+  cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+    .click()
+    .should('have.attr', 'aria-selected', 'true');
+  cy.get('[data-slot="canvas-node-workbench-code-section"]').should('be.visible');
+  cy.get('[data-slot="canvas-open-semantic-editor"]').should('be.visible');
+  cy.get('[data-slot="dvt-transform-output-view-selector"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+}
+
+function assertReloadedModelSemanticDocumentUnchanged(originalDocument: unknown): void {
+  cy.window().then(async (window) => {
+    const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT');
+    expect(saves, 'persisted Source and Sink configurations').not.to.be.empty;
+    for (const save of saves) {
+      assertModelSemanticDocumentUnchanged(
+        (save.body as CanvasDraftSaveRequestBody).draft,
+        originalDocument
+      );
+    }
+    const read = getE2eApiCalls('/workspace/graph/draft', 'GET').at(-1);
+    expect(read, 'observed scoped draft query after reload').not.to.be.undefined;
+    const response = await window.fetch(read!.url.href, { method: 'GET', headers: read!.headers });
+    expect(response.status, 'persisted draft read status').to.equal(200);
+    const body = (await response.json()) as {
+      kind: string;
+      record: { draft: CanvasDraftSaveRequestBody['draft'] };
+    };
+    expect(body.kind, 'persisted draft query result').to.equal('ok');
+    assertModelSemanticDocumentUnchanged(body.record.draft, originalDocument);
+    expect(
+      getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+      'read-only document proof'
+    ).to.have.length(saves.length);
+  });
+}
+
 describe('Canvas ready node authoring', () => {
   beforeEach(() => {
     stubRuntimeCapabilities();
+  });
+
+  it('preserves computed card styles and Canvas palettes on cold load and reload without writing', () => {
+    const draft = stubStatefulCanvasDraftAuthoring();
+    Object.assign(draft, normalizeProjectCanvasDraft(draft));
+
+    visitReadyCanvas();
+    assertCanvasComputedAppearance();
+
+    cy.on('window:before:load', installE2eApiFetchStub);
+    revisitWorkbenchCanvas(() => {
+      cy.reload();
+    });
+    assertCanvasComputedAppearance();
   });
 
   it('persists business tags while semantic tags stay protected and directly filterable', () => {
@@ -405,22 +554,66 @@ describe('Canvas ready node authoring', () => {
     );
   });
 
-  it('keeps the canvas context menu visible after a real browser right-click gesture', () => {
-    stubCanvasDraftRead();
-    stubCanvasDraftSave();
+  describe('native context-menu boundary', () => {
+    let removeContextMenuObserver: (() => void) | undefined;
 
-    visitReadyCanvas();
+    afterEach(() => {
+      removeContextMenuObserver?.();
+      removeContextMenuObserver = undefined;
+    });
 
-    cy.get('.react-flow__pane').should('be.visible').rightclick(320, 260, { force: true });
+    for (const emptyCanvas of [true, false]) {
+      it(`owns real context gestures on the ${emptyCanvas ? 'empty' : 'populated'} Canvas without writing`, () => {
+        const draft = stubStatefulCanvasDraftAuthoring({ emptyCanvas });
+        Object.assign(draft, normalizeProjectCanvasDraft(draft));
+        const contextEvents: Event[] = [];
 
-    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    cy.wait(1_500);
-    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    cy.contains(
-      '[data-slot="canvas-context-menu"] [role="menuitem"]',
-      /^(Add|Anadir)\.\.\.$/
-    ).should('be.visible');
-    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Explore project');
+        visitReadyCanvas();
+        if (emptyCanvas) cy.get('.react-flow__node').should('not.exist');
+        else cy.get('.react-flow__node').should('have.length', draft.nodes.length);
+        cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+        cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+        cy.window().then((window) => {
+          const observeContextMenu = (event: Event): void => {
+            contextEvents.push(event);
+          };
+          window.addEventListener('contextmenu', observeContextMenu, true);
+          removeContextMenuObserver = () =>
+            window.removeEventListener('contextmenu', observeContextMenu, true);
+        });
+
+        for (const expectedEventCount of [1, 2]) {
+          cy.get('[data-testid="canvas-viewport"]').should('be.visible').rightclick(8, 8);
+          cy.get('[data-slot="canvas-context-menu"]').should('have.length', 1).and('be.visible');
+          cy.contains(
+            '[data-slot="canvas-context-menu"] [role="menuitem"]',
+            /^(Add|Anadir)\.\.\.$/
+          ).should('be.visible');
+          cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Explore project');
+          cy.wrap(null).should(() => {
+            expect(contextEvents).to.have.length(expectedEventCount);
+            expect(
+              contextEvents.at(-1)?.defaultPrevented,
+              'native context menu cancelled'
+            ).to.equal(true);
+            expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+          });
+          cy.press(Cypress.Keyboard.Keys.ESC);
+          cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+        }
+
+        cy.get('button[aria-label="Filter graph"]').should('be.visible').rightclick();
+        cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+        cy.get('[data-slot="canvas-graph-filter-control"]').should('not.exist');
+        cy.wrap(null).should(() => {
+          expect(contextEvents).to.have.length(3);
+          expect(contextEvents.at(-1)?.defaultPrevented, 'control native menu cancelled').to.equal(
+            true
+          );
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+        });
+      });
+    }
   });
 
   it('projects semantic health borders without a visible status chip', () => {
@@ -623,11 +816,15 @@ describe('Canvas ready node authoring', () => {
     cy.contains('[data-slot="canvas-node-workbench-panel"]', 'raw_orders').should('be.visible');
   });
 
-  it('roundtrips Source and Sink properties while Model semantics stay canonical', () => {
+  it('roundtrips manual Source and Sink properties without exposing unresolved Model Code', () => {
     const draft = stubStatefulCanvasDraftAuthoring({
       authoringGenerated: true,
       title: 'DVT properties roundtrip',
     });
+    const modelAuthoring = draft.nodes.find((node) => node.id === 'dvt-transform-1')!.metadata!
+      .transformAuthoring as { semanticDocument: unknown };
+    const originalSemanticDocument = structuredClone(modelAuthoring.semanticDocument);
+    expect(originalSemanticDocument, 'initial canonical Model document').not.to.be.undefined;
     const sourceMetadata = draft.nodes.find((node) => node.id === 'source-1')!.metadata!;
     delete sourceMetadata.connectedSourceRef;
     sourceMetadata.connectionRef = {
@@ -649,8 +846,8 @@ describe('Canvas ready node authoring', () => {
     cy.wrap(null).should(() => {
       const savedSource = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'source-1'))
-        .find((node) => {
+        .find((body) => {
+          const node = body.draft.nodes.find((candidate) => candidate.id === 'source-1');
           const config = node?.metadata?.config as
             { alias?: string; database?: string; schema?: string; table?: string } | undefined;
           return (
@@ -663,6 +860,7 @@ describe('Canvas ready node authoring', () => {
           );
         });
       expect(savedSource, 'saved Source properties').to.not.be.undefined;
+      assertModelSemanticDocumentUnchanged(savedSource!.draft, originalSemanticDocument);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
@@ -678,8 +876,8 @@ describe('Canvas ready node authoring', () => {
     cy.wrap(null).should(() => {
       const savedSink = getE2eApiCalls('/workspace/graph/draft', 'PUT')
         .map((call) => call.body as CanvasDraftSaveRequestBody)
-        .map((body) => body.draft.nodes.find((candidate) => candidate.id === 'sink-1'))
-        .find((node) => {
+        .find((body) => {
+          const node = body.draft.nodes.find((candidate) => candidate.id === 'sink-1');
           const config = node?.metadata?.config as
             | {
                 database?: string;
@@ -700,20 +898,12 @@ describe('Canvas ready node authoring', () => {
           );
         });
       expect(savedSink, 'saved Sink properties').to.not.be.undefined;
+      assertModelSemanticDocumentUnchanged(savedSink!.draft, originalSemanticDocument);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__controls-fitview').click();
-    openNodeProperties('dvt-transform-1');
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    cy.get('[data-slot="canvas-node-workbench-tab-code"]').should(
-      'have.attr',
-      'aria-selected',
-      'true'
-    );
-    cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
-    cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    assertUnresolvedModelCodeUnavailable();
 
     visitReadyCanvas();
 
@@ -731,6 +921,10 @@ describe('Canvas ready node authoring', () => {
     cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
     cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+
+    cy.get('.react-flow__controls-fitview').click();
+    assertUnresolvedModelCodeUnavailable();
+    assertReloadedModelSemanticDocumentUnchanged(originalSemanticDocument);
   });
   it('does not present failed draft saves as persisted after reload', () => {
     stubCanvasDraftRead();

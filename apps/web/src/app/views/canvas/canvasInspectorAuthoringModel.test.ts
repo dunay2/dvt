@@ -22,12 +22,9 @@ import {
   readDvtTransformAuthoringAuthority,
 } from './canvasDvtTransformAuthoringAuthority';
 import { resolveDvtSubstraitFilterCapabilities } from './canvasFilterCapabilities';
-import { inspectDvtSubstraitFilter } from './canvasDvtSubstraitFilter';
 import {
   createDvtSubstraitProjectionDraft,
-  decodeDvtSubstraitProjectionDocument,
   encodeDvtSubstraitProjectionDocument,
-  inspectDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';

@@ -85,7 +85,7 @@ describe('Contextual project Code workflow files', () => {
 
     visitWithE2eWorkspaceSession('/canvas');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
 
     waitForE2eApiCall('/workspace/files', 'GET');

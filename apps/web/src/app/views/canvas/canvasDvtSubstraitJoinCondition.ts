@@ -27,10 +27,6 @@ export {
   reduceDvtSubstraitJoinConditions,
 } from '@dvt/postgres-projection';
 /** Owned concern: represent and traverse recursive boolean JOIN conditions. */
-import type {
-  DvtSubstraitJoinOperand,
-  DvtSubstraitJoinPredicateOperand,
-} from './canvasDvtSubstraitJoinOperand';
 
 export function dvtSubstraitJoinConditionOperands<Operand>(
   condition: DvtSubstraitJoinComparisonCondition<Operand>

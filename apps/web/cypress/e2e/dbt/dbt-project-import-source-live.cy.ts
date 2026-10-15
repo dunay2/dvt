@@ -124,7 +124,7 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
     });
     visitCanvas(session);
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 30_000 })
+    cy.get('[data-slot="shell-file-menu-trigger"]', { timeout: 30_000 })
       .should('be.visible')
       .should('be.enabled')
       .click();

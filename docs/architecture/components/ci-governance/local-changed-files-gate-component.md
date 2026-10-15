@@ -180,6 +180,31 @@ line is not a safe substitute for process reuse because command length is
 bounded. The adapter must report any lint warning or error and fail closed if
 ESLint cannot initialize or lint a file.
 
+The web source and test scope inherits the canonical TypeScript unused-declaration
+rule. It must not disable that rule locally or maintain a second unused-symbol
+scanner. Its architecture test submits valid and invalid source to the actual
+ESLint configuration: unused local values and imports are rejected, while used
+public exports and effectful calls remain admitted. This is declaration-level
+evidence, not proof that every exported module is reachable at runtime. Dynamic
+registries and side-effect-only imports require dependency and behavior review.
+
+The static gate separately rejects exact-body duplication candidates for changed
+production web files. It reuses the code-symbol inventory over current Git contents,
+including untracked files supplied by `ListLocalChangedFiles`, without refreshing
+Planning DB. Compiler tokens and their syntax-kind nesting preserve literal contents
+and statement boundaries while ignoring formatting and comments. Only bodies with
+two or more statements and counterparts in another
+production file are reported; test/support files and trivial wrappers are excluded.
+
+Each reported group identifies all counterpart locations. Any group rejects the
+static gate with a nonzero exit status; there is no warning-only mode or allowlist.
+Identical syntax does not prove semantic interchangeability, so rejection does not
+authorize automatic refactoring across unrelated responsibilities. Source acquisition
+and syntax failures also reject validation. A successful scan is not a repository-wide duplicate-free or
+dead-code-free assertion. Styles and unused declarations retain their independent
+blocking checks. The focused duplicate-report and symbol-inventory tests are routed
+by the existing local-verification plan.
+
 ```mermaid
 flowchart LR
   Files[LocalChangedFileSet] --> Format[Prettier: all eligible files]

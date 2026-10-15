@@ -11,7 +11,9 @@ const aggregate = workflow.jobs['test-suite-required'];
 const webMatrix = [
   { phase: 'vitest', capability: '' },
   { phase: 'browser', capability: 'controlled' },
-  { phase: 'browser', capability: 'available' },
+  { phase: 'browser', capability: 'available', shard: 1 },
+  { phase: 'browser', capability: 'available', shard: 2 },
+  { phase: 'browser', capability: 'available', shard: 3 },
   { phase: 'browser', capability: 'unavailable' },
 ];
 const lanes = [
@@ -114,9 +116,12 @@ test('PostgreSQL integration files run once in the full suite with the real data
   }
 });
 
-test('Web keeps four independent bounded obligations with isolated cache producers', () => {
+test('Web keeps every bounded obligation with disjoint available shard producers', () => {
   const web = workflow.jobs['web-frontend-tests'];
-  assert.equal(web.name, 'Web Frontend Tests (${{ matrix.capability || matrix.phase }})');
+  assert.equal(
+    web.name,
+    "Web Frontend Tests (${{ matrix.capability || matrix.phase }}${{ matrix.shard && format(' {0}/3', matrix.shard) || '' }})"
+  );
   assert.deepEqual(web.strategy, {
     'fail-fast': false,
     matrix: { include: webMatrix },
@@ -124,10 +129,13 @@ test('Web keeps four independent bounded obligations with isolated cache produce
   assert.equal(web['timeout-minutes'], 25);
   assert.notEqual(web['continue-on-error'], true);
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
-  assert.equal(install.with['turbo-cache-variant'], '${{ matrix.capability || matrix.phase }}');
+  assert.equal(
+    install.with['turbo-cache-variant'],
+    '${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}'
+  );
   assert.equal(
     web.env.PROOF_OWNER,
-    '${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}'
+    '${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}'
   );
 });
 
@@ -140,12 +148,12 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
   const changed = web.steps.find(
     (step) =>
       step.run ===
-      "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }}"
+      "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
   );
   const browser = web.steps.find(
     (step) =>
       step.run ===
-      'pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }}'
+      "pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
   );
   assert.ok(primary && changed && browser);
   const executions = web.steps.filter(
@@ -159,7 +167,7 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
     ['workflow_dispatch', false, true],
   ]) {
     for (const matrix of webMatrix) {
-      const { phase, capability } = matrix;
+      const { phase, capability, shard } = matrix;
       const context = {
         matrix,
         format: (template, value) => template.replace('{0}', value),
@@ -173,7 +181,7 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
       );
       assert.equal(
         planned.trim().replace(/ +/gu, ' '),
-        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${full ? ' --full' : ''}`
+        `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/3` : ''}${full ? ' --full' : ''}`
       );
       const expected = full ? (phase === 'vitest' ? primary : browser) : changed;
       assert.deepEqual(
@@ -182,6 +190,23 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
         `${event}: root=${root}, phase=${phase}, capability=${capability}`
       );
       assert.notEqual(expected['continue-on-error'], true);
+      if (expected !== primary) {
+        const executed = expected.run
+          .replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
+            String(runInNewContext(expression, context))
+          )
+          .trim()
+          .split(/\s+/u)
+          .sort();
+        assert.deepEqual(
+          executed,
+          planned
+            .trim()
+            .split(/\s+/u)
+            .filter((arg) => arg !== '--plan')
+            .sort()
+        );
+      }
     }
   }
 });
@@ -263,10 +288,17 @@ test('Web proof allocation and cleanup are bounded to the container created by t
       containerId !== ''
     );
   }
-  const artifacts = web.steps.filter((step) => step.uses?.startsWith('actions/upload-artifact@'));
+  const artifacts = web.steps.filter(
+    (step) =>
+      step.uses?.startsWith('actions/upload-artifact@') &&
+      step.with.path === '.dvt/evidence/selected-closure/screenshots'
+  );
   assert.equal(artifacts.length, 1);
   const artifact = artifacts[0];
-  assert.equal(artifact.with.name, 'web-live-proof-screenshots-${{ matrix.capability }}');
+  assert.equal(
+    artifact.with.name,
+    'web-live-proof-screenshots-${{ matrix.capability }}-${{ matrix.shard || 0 }}'
+  );
   assert.equal(artifact.with.path, '.dvt/evidence/selected-closure/screenshots');
   assert.equal(artifact.with['include-hidden-files'], true);
   for (const [phase, required, outcome, expected] of [

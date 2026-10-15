@@ -1,3 +1,10 @@
+/**
+ * Owned concern: project independent Input repair and Output publication interactions.
+ * @baseline ADR-0064 / GH-3628: unavailable Output must not erase exact retained Input targets.
+ * @decision Project the owning query's Input posture without parsing semantic authority.
+ * @consequence Repair reuses existing authorization/CAS, without exposing unavailable Output sources.
+ * @version 1.0.0
+ */
 import type { Node } from '@xyflow/react';
 import type { CanonicalNode, CanonicalEdge } from '../../types/canonical';
 import {
@@ -6,13 +13,12 @@ import {
 } from './canvasColumnProjectionAuthority';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import { isDvtSourceOutputProjectionNode } from './canvasDvtSourceSemanticAuthoring';
-import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import {
   projectInteractiveCanvasColumns,
   projectGraphNodeCardInputs,
 } from './canvasGraphNodeColumnProjection';
 import { resolveCanvasColumnPortDirections } from './canvasColumnHandleIdentity';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 
 type ColumnInteractionContext = {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
@@ -28,27 +34,31 @@ export function projectCanvasNodeColumnInteraction(
   }: ColumnInteractionContext
 ): Node {
   const canonicalNode = canonicalNodesById.get(node.id);
-  const presentation = node.data.presentationTruth as CanvasNodePresentationTruth | undefined;
+  const presentation = isCanvasNodePresentationTruth(node.data.presentationTruth)
+    ? node.data.presentationTruth
+    : undefined;
   const columnsCurrent =
-    presentation?.columns.state !== 'pending' && presentation?.columns.state !== 'unavailable';
+    presentation != null &&
+    presentation.columns.state !== 'pending' &&
+    presentation.columns.state !== 'unavailable';
   if (
     canonicalNode?.pluginId === 'dvt' &&
     canonicalNode.kind === 'dvt:transform' &&
     !isDbtCompatibleModel(canonicalNode)
   ) {
-    let inputsCurrent = columnsCurrent;
-    try {
-      readDvtTransformAuthoringAuthority(canonicalNode);
-    } catch {
-      inputsCurrent = false;
-    }
+    const posture = presentation?.inputBindingPosture;
+    const inputsCurrent = posture === 'current' || posture === 'repair-only';
     return {
       ...node,
       data: {
         ...node.data,
         columns: projectInteractiveCanvasColumns(node, canonicalNodesById),
         inputColumns: presentation == null ? [] : projectGraphNodeCardInputs(presentation, node.id),
-        columnPortDirections: inputsCurrent ? ['target', 'source'] : [],
+        columnPortDirections: inputsCurrent
+          ? posture === 'current'
+            ? ['target', 'source']
+            : ['target']
+          : [],
         expressionInputColumns: [],
         onMapCanvasInput: inputsCurrent ? node.data.onMapCanvasInput : undefined,
         onRemoveCanvasInput: inputsCurrent ? node.data.onRemoveCanvasInput : undefined,

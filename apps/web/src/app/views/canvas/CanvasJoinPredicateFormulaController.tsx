@@ -15,12 +15,14 @@ import {
   compileJoinPredicateFormula,
   joinPredicateFormulaScope,
   JoinPredicateFormulaError,
+  describeJoinConditionFormula,
 } from './canvasJoinPredicateFormula';
 import { CanvasJoinPredicateFormulaTemplate } from './CanvasJoinPredicateFormulaTemplate';
 import { replaceSelectedJoinConditions } from './canvasSelectedJoinPredicate';
 import type { SelectedJoin } from './canvasSelectedJoin';
 import { useRelationCommand } from './useRelationCommand';
 import { SubstraitAnalysisError, type SubstraitDocument } from '@dvt/substrait-analysis';
+import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
 
 export type JoinPredicateFormulaDraft = Readonly<{
   relationId: string;
@@ -34,6 +36,8 @@ export function CanvasJoinPredicateFormula({
   onDraftChange,
   onChange,
   disabled,
+  editBlocked = false,
+  onAccepted,
   children,
 }: Readonly<{
   selected: SelectedJoin;
@@ -41,7 +45,12 @@ export function CanvasJoinPredicateFormula({
   onDraftChange: (draft: JoinPredicateFormulaDraft | null) => void;
   onChange: (document: SubstraitDocument) => void;
   disabled: boolean;
-  children: ReactNode;
+  editBlocked?: boolean;
+  onAccepted?: () => void;
+  children: (
+    onEdit: (conditions: readonly DvtSubstraitJoinPredicateCondition[]) => void,
+    disabled: boolean
+  ) => ReactNode;
 }>) {
   const analysis = useContext(CanvasRelationAnalysisContext);
   const language = useApplicationLanguageStore((state) => state.language);
@@ -88,25 +97,39 @@ export function CanvasJoinPredicateFormula({
         throw new SubstraitAnalysisError('stale_document', 'Stale JOIN formula draft.');
       return replaceSelectedJoinConditions(session, { ...request, formula: draft.formula });
     });
-    if (result) onDraftChange(null);
-    else setError(copy.joinFormula.failed);
+    if (result) {
+      onAccepted?.();
+      onDraftChange(null);
+    } else setError(copy.joinFormula.failed);
+  };
+  const editDisabled =
+    disabled || busy || provider == null || analysis?.session.revision !== selected.revision;
+  const openFormula = (conditions?: readonly DvtSubstraitJoinPredicateCondition[]) => {
+    if (editDisabled) return;
+    try {
+      const formula =
+        conditions == null
+          ? (scope.formula ?? '')
+          : describeJoinConditionFormula(selected, conditions);
+      if (formula == null) {
+        setError(copy.joinFormula.invalid);
+        return;
+      }
+      setError(null);
+      onDraftChange({ relationId: selected.relationId, revision: selected.revision, formula });
+    } catch {
+      setError(copy.joinFormula.invalid);
+    }
   };
   return (
     <CanvasJoinPredicateFormulaTemplate
       copy={copy.joinFormula}
       editing={draft != null}
       busy={busy}
-      editDisabled={disabled || provider == null}
+      editDisabled={editDisabled || editBlocked}
       saveDisabled={saveDisabled}
       error={stale ? copy.derivedOutput.stale : (error ?? diagnostic)}
-      onEdit={() => {
-        setError(null);
-        onDraftChange({
-          relationId: selected.relationId,
-          revision: selected.revision,
-          formula: scope.formula ?? '',
-        });
-      }}
+      onEdit={() => openFormula()}
       onCancel={() => {
         setError(null);
         onDraftChange(null);
@@ -134,7 +157,8 @@ export function CanvasJoinPredicateFormula({
         )
       }
     >
-      {children}
+      {draft == null && error != null ? <p role="alert">{error}</p> : null}
+      {children(openFormula, editDisabled)}
     </CanvasJoinPredicateFormulaTemplate>
   );
 }

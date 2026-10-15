@@ -77,10 +77,6 @@ export function buildDvtTransformColumnRows(
   columns: readonly CanvasNodePresentationColumn[],
   declaredColumns: readonly InspectorColumn[]
 ): readonly NodePropertyTableRow[] {
-  if (columns.length === 0) {
-    return buildColumnRows(declaredColumns);
-  }
-
   const declaredByName = new Map(declaredColumns.map((column) => [column.name, column]));
   return flattenStructuredColumns(columns).map(({ column, path }) => {
     const declared = declaredByName.get(column.name);

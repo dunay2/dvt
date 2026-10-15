@@ -338,7 +338,6 @@ module.exports = [
       // UI app: relajar reglas estrictas que generan miles de warnings/errores sin valor
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
       'import/order': 'off',
       'no-undef': 'off',
       'no-console': 'off',

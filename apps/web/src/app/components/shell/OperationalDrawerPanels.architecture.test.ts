@@ -64,10 +64,6 @@ describe('Operational drawer architecture', () => {
       __dirname,
       'OperationalDrawerPanels.test.tsx'
     );
-    const logModelTestSource = readArchitectureSiblingSource(
-      __dirname,
-      'bottomOperationalDrawerLogModel.test.ts'
-    );
 
     expect(drawerTestSource).not.toContain('bottom-operational-problem-severity');
     expect(drawerTestSource).not.toContain('bottom-operational-preview-blocker');

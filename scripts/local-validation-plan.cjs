@@ -41,6 +41,14 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/run-selected-closure-cypress.test.cjs': 'scripts/run-selected-closure-cypress.test.cjs',
   'scripts/live-proof-process.cjs': 'scripts/live-proof-process.test.cjs',
   'scripts/live-proof-process.test.cjs': 'scripts/live-proof-process.test.cjs',
+  'scripts/live-proof-web-runtime.cjs': 'scripts/live-proof-web-runtime.test.cjs',
+  'scripts/live-proof-web-runtime.test.cjs': 'scripts/live-proof-web-runtime.test.cjs',
+  'apps/web/cypress/node/chromiumNetworkProjection.ts':
+    'scripts/chromium-network-projection.test.cjs',
+  'scripts/chromium-network-projection.test.cjs': 'scripts/chromium-network-projection.test.cjs',
+  'apps/web/cypress/node/chromiumNetworkDiagnostics.ts':
+    'scripts/chromium-network-diagnostics.test.cjs',
+  'scripts/chromium-network-diagnostics.test.cjs': 'scripts/chromium-network-diagnostics.test.cjs',
   'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
@@ -352,6 +360,7 @@ function hasWebChange(changedFiles) {
         'scripts/run-selected-closure-live-proof.cjs',
         'scripts/run-selected-closure-cypress.cjs',
         'scripts/live-proof-process.cjs',
+        'scripts/live-proof-web-runtime.cjs',
         'tools/ci/run-web-cypress-native.mjs',
       ].includes(filePath)
   );
@@ -452,6 +461,36 @@ function buildVerifyChangedPlan(files) {
 function buildFocusedChangedTestPlan(files) {
   const changedFiles = normalizeChangedFiles(files);
   const plan = [];
+  if (
+    changedFiles.some((file) =>
+      [
+        'scripts/web-code-duplication.cjs',
+        'scripts/web-code-duplication.test.cjs',
+        'scripts/check-changed.cjs',
+        'scripts/planning-db/code-symbol-inventory.cjs',
+        'scripts/planning-db/code-symbol-inventory.test.cjs',
+      ].includes(file)
+    )
+  ) {
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-web-code-duplication',
+        'node',
+        '--test',
+        'scripts/web-code-duplication.test.cjs'
+      )
+    );
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-code-symbol-inventory',
+        'node',
+        '--test',
+        'scripts/planning-db/code-symbol-inventory.test.cjs'
+      )
+    );
+  }
   if (
     changedFiles.includes('scripts/check-changed.cjs') ||
     changedFiles.includes('scripts/check-changed.test.cjs')

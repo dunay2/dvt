@@ -24,6 +24,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { dvtGraphNodeCardStrategy } from '../../plugins/dvt/dvtGraphNodeCardStrategy';
 import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/sharedSourceModelGraphNodeCardStrategy';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
+import styles from './CanvasShell.module.css';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -415,15 +416,14 @@ describe('CanvasShell graph base surface', () => {
     expect(container.textContent).not.toContain(canvasViewCopy.draftSyncedLabel);
   });
 
-  it('keeps the graph workbench fluid instead of forcing horizontal overflow on narrow viewports', async () => {
+  it('attaches the shell stylesheet to the stable horizontal panel group', async () => {
     await renderShell();
 
     const shellPanelGroup = container.querySelector('[data-slot="canvas-shell-panel-group"]');
 
     expect(shellPanelGroup).not.toBeNull();
     expect(shellPanelGroup?.getAttribute('id')).toBe('canvas-shell-horizontal-panels');
-    expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-0');
-    expect(shellPanelGroup?.getAttribute('class')).not.toContain('min-w-[960px]');
+    expect(Array.from(shellPanelGroup?.classList ?? [])).toContain(styles.workspace);
   });
 
   it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useMatches } from 'react-router';
 
-import { detectRouteBootstrapLocale } from './routeBootstrapErrorCopy';
+import { detectBrowserLocale } from '../browserLocale';
 import { useHasDataRouterContext } from './routeBootstrapDataRouterContext';
 import { RouteBootstrapDataRouterContextError } from './routeBootstrapErrors';
 import { getRouteBootstrapRegistration } from './routeBootstrapRegistration';
@@ -39,7 +39,7 @@ export function useActiveRouteBootstrapRegistration(
   routeId?: string,
   options: UseActiveRouteBootstrapRegistrationOptions = {}
 ) {
-  const locale = options.locale ?? detectRouteBootstrapLocale();
+  const locale = options.locale ?? detectBrowserLocale();
   const matches = useMatchesSafely({
     allowMissingDataRouterContext: options.allowMissingDataRouterContext ?? false,
     locale,

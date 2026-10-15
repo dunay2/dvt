@@ -330,7 +330,7 @@ describe('dbt YAML description edit live vertical', () => {
     );
     closeModelWorkbench();
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
       .scrollIntoView()
       .should('be.visible')

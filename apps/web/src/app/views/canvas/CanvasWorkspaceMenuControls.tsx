@@ -1,4 +1,10 @@
-/** Owned concern: render Canvas project commands inside the shell Workspace menu. */
+/**
+ * Owned concern: render existing Canvas project commands inside the shell File menu.
+ * @baseline GH-3622: disabled entries must not dispatch; selecting a file is asynchronous.
+ * @decision Retain the native picker receiver; notify its menu owner only after capturing a file.
+ * @consequence Cancellation retains the receiver; file selection closes File before existing dispatch.
+ * @version 1.0.0
+ */
 import { Code2, Download, FolderInput, FolderOpen, Upload } from 'lucide-react';
 import { useEffect, useMemo, useRef } from 'react';
 
@@ -12,6 +18,7 @@ import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuCo
 import { canvasViewCopy } from './copy';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasWorkspaceModelTabs } from './CanvasWorkspaceModelTabs';
+import styles from './CanvasWorkspaceMenuControls.module.css';
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
@@ -99,10 +106,12 @@ export function CanvasWorkspaceMenuContributionRegistrar(
 
 type CanvasWorkspaceMenuControlsProps = Readonly<{
   onProjectCodeSelected?: () => void;
+  onSnapshotFileSelected?: () => void;
 }>;
 
 export function CanvasWorkspaceMenuControls({
   onProjectCodeSelected,
+  onSnapshotFileSelected,
 }: CanvasWorkspaceMenuControlsProps = {}): JSX.Element | null {
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
   useApplicationLanguageStore((state) => state.language);
@@ -119,9 +128,9 @@ export function CanvasWorkspaceMenuControls({
       <DropdownMenuItem
         data-slot="canvas-workspace-import-dbt-project-command"
         disabled={!contribution.canImportDbtProject || contribution.onImportDbtProject == null}
-        onClick={contribution.onImportDbtProject}
+        onSelect={() => contribution.onImportDbtProject?.()}
       >
-        <FolderInput className="mr-2 size-4" />
+        <FolderInput className={styles.menuIcon} />
         {canvasViewCopy.workspaceImportDbtProjectLabel}
       </DropdownMenuItem>
       <DropdownMenuItem
@@ -129,9 +138,9 @@ export function CanvasWorkspaceMenuControls({
         disabled={
           !contribution.canOpenProjectExplorer || contribution.onOpenProjectExplorer == null
         }
-        onClick={contribution.onOpenProjectExplorer}
+        onSelect={() => contribution.onOpenProjectExplorer?.()}
       >
-        <FolderOpen className="mr-2 size-4" />
+        <FolderOpen className={styles.menuIcon} />
         {canvasViewCopy.workspaceExploreProjectLabel}
       </DropdownMenuItem>
       <DropdownMenuItem
@@ -143,7 +152,7 @@ export function CanvasWorkspaceMenuControls({
           contribution.onOpenProjectCode?.();
         }}
       >
-        <Code2 className="mr-2 size-4" />
+        <Code2 className={styles.menuIcon} />
         {canvasViewCopy.workspaceOpenProjectCodeLabel}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
@@ -153,9 +162,9 @@ export function CanvasWorkspaceMenuControls({
         disabled={
           !contribution.canExportProjectSnapshot || contribution.onExportProjectSnapshot == null
         }
-        onClick={contribution.onExportProjectSnapshot}
+        onSelect={() => contribution.onExportProjectSnapshot?.()}
       >
-        <Download className="mr-2 size-4" />
+        <Download className={styles.menuIcon} />
         {canvasViewCopy.toolbarExportSnapshotLabel}
       </DropdownMenuItem>
       <DropdownMenuItem
@@ -163,9 +172,12 @@ export function CanvasWorkspaceMenuControls({
         disabled={
           !contribution.canImportProjectSnapshot || contribution.onImportProjectSnapshotFile == null
         }
-        onClick={() => importInputRef.current?.click()}
+        onSelect={(event) => {
+          event.preventDefault();
+          importInputRef.current?.click();
+        }}
       >
-        <Upload className="mr-2 size-4" />
+        <Upload className={styles.menuIcon} />
         {canvasViewCopy.toolbarImportSnapshotLabel}
       </DropdownMenuItem>
       <input
@@ -173,12 +185,13 @@ export function CanvasWorkspaceMenuControls({
         type="file"
         accept="application/json,.json"
         data-slot="canvas-workspace-import-input"
-        className="hidden"
+        className={styles.fileInput}
         aria-label={canvasViewCopy.toolbarImportSnapshotLabel}
         onChange={(event) => {
           const file = event.currentTarget.files?.[0];
           event.currentTarget.value = '';
           if (file != null) {
+            onSnapshotFileSelected?.();
             contribution.onImportProjectSnapshotFile?.(file);
           }
         }}
@@ -203,7 +216,7 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       data-slot="shell-active-canvas-identity"
       data-canvas-id={activeCanvas.id}
       data-kind={activeCanvas.kind}
-      className="flex min-w-0 items-center self-stretch"
+      className={styles.identity}
       aria-label={canvasViewCopy.workspaceActiveCanvasLabelTemplate.replace(
         '{title}',
         activeCanvas.title

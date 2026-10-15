@@ -1,0 +1,27 @@
+.editor {
+  composes: canvas-operation-editors from global;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  gap: 0.75rem;
+}
+
+.conditionList {
+  margin-top: 0.25rem;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 0.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heading {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}

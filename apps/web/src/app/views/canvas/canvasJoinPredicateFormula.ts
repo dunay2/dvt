@@ -15,6 +15,8 @@ import {
 import { derivedOutputDataType } from './canvasDerivedOutputExpression';
 import { sourceFieldType } from './canvasSourceRelation';
 import { dvtSubstraitExpression } from './canvasDvtSubstraitExpression';
+import { buildSelectedJoinExpression } from './canvasSelectedJoinExpression';
+import type { DvtSubstraitJoinPredicateCondition } from './canvasDvtSubstraitJoinCondition';
 
 export const JOIN_PREDICATE_FORMULA_REJECTION = {
   invalid: 'invalid',
@@ -80,4 +82,20 @@ export function compileJoinPredicateFormula(
   if (result.dataType !== 'boolean')
     throw new JoinPredicateFormulaError(JOIN_PREDICATE_FORMULA_REJECTION.booleanRequired);
   return { plan, expression: result.expression };
+}
+
+export function describeJoinConditionFormula(
+  selected: SelectedJoin,
+  conditions: readonly DvtSubstraitJoinPredicateCondition[]
+): string | null {
+  const { plan, expression } = buildSelectedJoinExpression(
+    { ...selected, plan: selected.target.plan },
+    conditions
+  );
+  const scope = joinPredicateFormulaScope(selected);
+  const names: string[] = [];
+  selected.fields.forEach((field, index) => {
+    names[field.ordinal] = scope.fields[index]!.name;
+  });
+  return describeDerivedOutputFormula(plan, expression, names);
 }

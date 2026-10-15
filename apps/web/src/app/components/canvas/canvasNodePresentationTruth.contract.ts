@@ -1,4 +1,11 @@
-/** Owned concern: define the provenance-preserving presentation DTO shared by Canvas consumers. */
+/**
+ * Owned concern: define the provenance-preserving presentation DTO shared by Canvas consumers.
+ * @baseline ADR-0044: diagnostic prose is not a semantic contract.
+ * @baseline ADR-0064: cards project canonical semantics without a parallel semantic model.
+ * @decision GH-3628 read-model ownership supplies posture; validate its structural consistency.
+ * @consequence Legacy Source/DBT truth remains valid; posture never grants command authorization.
+ * @version 1.1.0
+ */
 export type CanvasNodePresentationColumnProvenance = 'declared' | 'inherited';
 
 export type CanvasNodePresentationColumn = Readonly<{
@@ -112,7 +119,10 @@ export type CanvasRelationalCompositionTruth =
       reason: 'input-identity-unavailable' | 'semantic-authority-invalid';
     }>;
 
+export type CanvasInputBindingPosture = 'current' | 'repair-only' | 'unavailable';
+
 export type CanvasNodePresentationTruth = Readonly<{
+  inputBindingPosture?: CanvasInputBindingPosture;
   inputBindings?: readonly CanvasInputBindingPresentation[];
   columns: CanvasNodeColumnTruth;
   code: CanvasNodeCodeTruth;
@@ -130,6 +140,55 @@ export type CanvasInputBindingPresentation = Readonly<{
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isInputBindingPresentation(value: unknown): value is CanvasInputBindingPresentation {
+  if (!isRecord(value) || !isRecord(value.source)) return false;
+  const fields = [
+    value.inputId,
+    value.name,
+    value.type,
+    value.source.nodeId,
+    value.source.columnId,
+  ];
+  return (
+    fields.every((field) => typeof field === 'string' && field.trim().length > 0) &&
+    (value.state === 'available' || value.state === 'unresolved')
+  );
+}
+
+function isInputBindings(value: unknown): value is readonly CanvasInputBindingPresentation[] {
+  if (!Array.isArray(value)) return false;
+  for (const input of value) {
+    if (!isInputBindingPresentation(input)) return false;
+  }
+  return true;
+}
+
+function hasConsistentInputBindingPosture(
+  value: Record<string, unknown>,
+  columns: Record<string, unknown>
+): boolean {
+  if (value.inputBindingPosture === undefined) return true;
+  const inputBindings = value.inputBindings;
+  if (inputBindings !== undefined && !isInputBindings(inputBindings)) return false;
+
+  switch (value.inputBindingPosture) {
+    case 'current':
+      return columns.state === 'ready' || columns.state === 'unconfigured';
+    case 'unavailable':
+      return columns.state === 'pending' || columns.state === 'unavailable';
+    case 'repair-only':
+      return (
+        columns.state === 'unavailable' &&
+        isRecord(value.relationalComposition) &&
+        value.relationalComposition.state === 'incomplete' &&
+        inputBindings !== undefined &&
+        inputBindings.some((input) => input.state === 'unresolved')
+      );
+    default:
+      return false;
+  }
 }
 
 export function isCanvasNodePresentationTruth(
@@ -162,6 +221,7 @@ export function isCanvasNodePresentationTruth(
       value.code.kind === 'generated' ||
       value.code.kind === 'canonical' ||
       value.code.kind === 'unavailable') &&
-    hasValidRelationalComposition
+    hasValidRelationalComposition &&
+    hasConsistentInputBindingPosture(value, value.columns)
   );
 }

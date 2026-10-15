@@ -20,6 +20,17 @@ const NODE_ADMISSION_COMMAND_RUNNER_SOURCE = readArchitectureSiblingSource(
 );
 
 describe('useCanvasNodeAuthoringHandlers architecture', () => {
+  it('delegates screen coordinates to the viewport without reading nested target bounds', () => {
+    expect(NODE_DROP_HANDLERS_SOURCE).toContain('useReactFlow');
+    expect(NODE_DROP_HANDLERS_SOURCE).toContain('screenToFlowPosition(');
+    expect(NODE_DROP_HANDLERS_SOURCE).toContain('snapToGrid: false');
+    expect(NODE_DROP_HANDLERS_SOURCE).not.toContain('getBoundingClientRect');
+    expect(NODE_DROP_HANDLERS_SOURCE).not.toContain('event.target');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).not.toContain('getBoundingClientRect');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).not.toContain('useReactFlow');
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).not.toContain('screenToFlowPosition');
+  });
+
   it('stays as a composition seam over node creation, duplicate, drop, and removal handlers', () => {
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasNodeDropHandlers');
     expect(NODE_AUTHORING_HANDLERS_SOURCE).toContain('useCanvasAuthoringNodeCreationHandlers');
@@ -41,19 +52,14 @@ describe('useCanvasNodeAuthoringHandlers architecture', () => {
   });
 
   it('keeps node creation and drop React handlers outside state-updater side effects', () => {
-    for (const source of [
-      NODE_DROP_HANDLERS_SOURCE,
-      AUTHORING_NODE_CREATION_HANDLERS_SOURCE,
-    ]) {
+    for (const source of [NODE_DROP_HANDLERS_SOURCE, AUTHORING_NODE_CREATION_HANDLERS_SOURCE]) {
       expect(source).toContain('useCanvasNodeAdmissionCommandRunner');
       expect(source).not.toContain('resolveCanvasNodeAdmissionTransaction');
       expect(source).not.toContain('setNodes((');
       expect(source).not.toContain('setDraftSession((');
     }
 
-    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(
-      'resolveCanvasNodeAdmissionTransaction'
-    );
+    expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('resolveCanvasNodeAdmissionTransaction');
     expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestNodesRef');
     expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain('latestDraftSessionRef');
     expect(NODE_ADMISSION_COMMAND_RUNNER_SOURCE).toContain(

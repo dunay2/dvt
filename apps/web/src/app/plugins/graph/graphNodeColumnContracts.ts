@@ -16,6 +16,8 @@ export type GraphNodeColumn = Readonly<{
   id?: string;
   name: string;
   type: string;
+  /** Retained Input availability is presentation truth, not execution admission. */
+  inputState?: 'available' | 'unresolved';
   nullable?: boolean;
   primaryKey?: boolean;
   output?: boolean;
