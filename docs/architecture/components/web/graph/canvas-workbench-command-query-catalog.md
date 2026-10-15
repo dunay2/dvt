@@ -645,6 +645,18 @@ the same visibility intent. Explicit Close remains closed; Cancel retains its
 existing discard semantics, and rejected Apply does not discard the edit.
 Keeping a panel open must not keep an obsolete draft active or issue another save.
 
+Local relation navigation consumes one explicit decision at a time. Its pure
+state machine owns only idle, awaiting-decision and resolving states; the current
+session continues to own dirty state, Apply eligibility and command validation.
+Replacing the destination invalidates the previous decision binding. Apply and
+Discard consume their decision before invoking the existing transaction, so
+duplicate or reentrant delivery cannot repeat effects. Rejected Apply preserves
+the draft and allows a fresh decision. Model/selection changes, leaving the edit
+lifetime and unmount invalidate obsolete decisions and their outcomes. Read-only
+Apply is inert while Stay and local Discard remain available. Equivalent session
+wrapper refreshes do not cancel a decision. These transitions neither execute
+Preview nor change viewport, inspector visibility or tab ownership.
+
 ```mermaid
 flowchart LR
   A[Source instance A] -->|one consumer| J[JOIN Input L]

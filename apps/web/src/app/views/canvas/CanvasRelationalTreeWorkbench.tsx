@@ -59,6 +59,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     }
   );
   const navigation = useCanvasRelationEditNavigation({
+    modelId: transformNode.id,
     editing: model.session.active,
     selectedRelationId: model.selectedRelationId,
     session: sessionHandle,
