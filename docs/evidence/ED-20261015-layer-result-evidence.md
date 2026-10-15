@@ -8,11 +8,15 @@ arc_level: ARC-2
 breaking: true
 code_refs:
   - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.layerResults.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.lifecycle.ts
   - packages/@dvt/adapter-temporal/test/runPlanWorkflow.layerResults.test.ts
+  - packages/@dvt/adapter-temporal/test/runPlanWorkflow.failureFallback.test.ts
   - packages/@dvt/adapter-temporal/test/helpers/integration/layerResultEvidenceCases.ts
+  - packages/@dvt/adapter-temporal/test/helpers/integration/layerPublicationFailureCases.ts
   - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
 evidence:
   tests:
+    - pnpm traceability:adr0
     - pnpm --filter @dvt/adapter-temporal test --maxWorkers=1 --no-file-parallelism
     - pnpm --filter @dvt/adapter-temporal typecheck
     - pnpm exec eslint packages/@dvt/adapter-temporal/src packages/@dvt/adapter-temporal/test
@@ -37,6 +41,10 @@ still supplies the global diagnostic. No later layer runs after that failure.
 Successful sibling evidence remains on StepCompleted; a failed Run does not gain
 the success-only global materialization field.
 
+If canonical event publication fails, the provider failure propagates without a
+substitute RunFailed over an incomplete event history. This is not recovery of
+the unacknowledged events or a claim that the canonical Run has completed.
+
 The [preimplementation plan](https://github.com/dunay2/dvt/issues/3207#issuecomment-6194952698)
 contains the current/solution diagrams, Fowler rationale, negative cases and
 allowed surfaces. Planning DB design `GH-3207-COMPLETE-LAYER-RESULTS-V2` references
@@ -44,6 +52,9 @@ StartRun, without creating a parallel command. Its source documents are
 ADR-0003, ADR-0004, ADR-0047, ExecutionSemantics.v1, RunEvents.v1 and the
 [Temporal component guide](../architecture/components/engine/adapters/temporal/temporal-planref-workflow-boundary.md).
 Command/query rail governance and Fowler opportunity planning govern the slice.
+The [review amendment](https://github.com/dunay2/dvt/issues/3207#issuecomment-6195943732)
+and Planning DB design `GH-3207-EVENT-PUBLICATION-FAILURE` admit the workflow-root
+failure case before its RED tests and implementation.
 
 ## Root Cause And Change
 
@@ -51,6 +62,11 @@ The layer executor had already collected the activities' results, but the result
 applier returned on the first failure. Later confirmed successes and failures
 therefore disappeared from the canonical event log. Recording a step outcome and
 settling global failure now happen separately, within the existing applier.
+
+Review found a second path: an outcome append rejection escaped the applier but
+the workflow's general catch still attempted RunFailed. The existing lifecycle
+failure policy now distinguishes Temporal's typed emitEvent ActivityFailure;
+it does not infer failure identity from text or duplicate publication state.
 
 No new result store, service, scheduler, publication mechanism or aggregate is
 introduced. The latest-result field remains a summary, not a collection.
@@ -65,9 +81,16 @@ entry point only registers the new cases.
   were reproduced. A fixture setup error was corrected before this RED result.
 - After the change, all eight focused cases pass, including append rejection,
   multiple failures, counters, retained gateway facts and empty layers.
-- The complete adapter unit suite passes: 29 files, 252 tests. Type checking
+- Review RED reproduced a substitute terminal in one unit case and both real
+  workflow cases: permanent append rejection and exhaustion of three attempts.
+  The complete workflow boundary is exercised, not just the result helper.
+  GREEN passes all 11 focused unit cases and both real workflow/replay cases.
+- The complete adapter unit suite passes: 30 files, 255 tests. Type checking
   includes production and test TypeScript. Scoped ESLint, architecture dependency
   checks and both determinism checks pass.
+- ADR-0000 traceability passes after adding the required baselines, decisions and
+  versions to the new test surfaces. Its initial CI rejection is corrected, not
+  suppressed or added to a regression baseline.
 - Explicit integration preparation passes. The focused real Temporal command
   (`vitest run test/integration.time-skipping.test.ts -t 'confirmed layer evidence'
 --maxWorkers=1 --no-file-parallelism`) passes three cases. Each injects a failure
@@ -76,7 +99,8 @@ entry point only registers the new cases.
 - The separate transformation integration suite passes both success and permanent
   failure cases. These use the existing controlled executor; they do not publish
   real PostgreSQL tables.
-- On Windows the complete integration command passes 16 tests, but fails the pre-existing
+- Before the review amendment, the Windows complete integration command passes
+  16 tests, but fails the pre-existing
   full-server retained-identity suite before its two assertions: Windows denies
   downloading its ephemeral server executable. This is an environment failure,
   not a passing suite. The time-skipping file passes all 12 cases and the
@@ -89,9 +113,17 @@ entry point only registers the new cases.
 - After full installation and canonical preparation, the complete integration
   command passes all three files and 18 tests in Linux, with no skipped tests.
   This includes the two retained-identity assertions blocked on Windows. The
-  tested code snapshot is `dfe05df0b`; subsequent changes are evidence and indexes.
+  tested initial code snapshot was `dfe05df0b`.
   The existing time-skipping service's heartbeat-capability warning is not a
   heartbeat-conformance claim.
+- With the review amendment, all 14 time-skipping cases and both transformation
+  integration cases pass on Windows, including native cancellation, signal
+  cancellation, continue-as-new and worker restart. The retained-identity cases
+  still require the isolated Linux environment noted above.
+- The full Linux integration suite was rerun after updating its snapshot to the
+  hook-normalized runtime and tests in `0faee0f06`: all three files and 20 tests
+  pass, with zero skipped tests. This fresh run covers the amendment, including
+  both rejected-publication histories, retained identity and retransmission.
 - Contract fixture validation passes 25 checks. It reports an existing missing
   glossary source, which is not validated. Golden validation matches three
   implemented paths, preserves two deprecated baselines and skips the existing

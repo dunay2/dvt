@@ -32,6 +32,9 @@ assumption of replay compatibility. New-history replay is narrower evidence.
   must not fabricate an acknowledgement or completion counter.
 - Verify mixed outcomes at every failure position and replay the resulting real
   Temporal histories. Preserve existing cancellation and recovery coverage.
+- Verify permanent and exhausted canonical append failures through the workflow
+  root. An incomplete canonical history must not receive a substitute terminal;
+  the provider failure remains visible and is not automatic recovery evidence.
 
 ## Evidence And Residual Scope
 
