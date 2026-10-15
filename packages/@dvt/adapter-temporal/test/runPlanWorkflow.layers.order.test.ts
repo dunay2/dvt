@@ -67,7 +67,6 @@ vi.mock('../src/workflows/runPlanWorkflow.layerResults.js', () => ({
 }));
 
 vi.mock('../src/workflows/runPlanWorkflow.stepExecution.js', () => ({
-  emitStepStartedForLayer: vi.fn(),
   executeLayerSteps: vi.fn(),
 }));
 

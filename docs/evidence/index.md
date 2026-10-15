@@ -29,6 +29,7 @@ Evidence documents that justify or validate relevant changes.
 - [Ed 20260522 Ar D5 Tenant Retention Policy](ed-20260522-ar-d5-tenant-retention-policy.md)
 - [ED 20260903 Source Filter Capability Admission](ED-20260903-source-filter-capability-admission.md)
 - [ED-20260419 RC-G1-C owner-package migration](ED-20260419-rc-g1-c-owner-package-migration.md)
+- [Effective Plan-Wide Concurrency In Temporal](ED-20261015-plan-concurrency.md)
 - [Exclusive Start Ownership And Observation-Only Reconciliation](ED-20261001-start-ownership-observation.md)
 - [GH-2173 bounded lazy source catalog evidence](ED-20260907-gh-2173-lazy-source-catalog.md)
 - [INTERSECT ALL and EXCEPT ALL end to end](ED-20260920-intersect-except-all-end-to-end.md)

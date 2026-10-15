@@ -29,6 +29,8 @@ import { loadTemporalAdapterConfig, TemporalAdapter } from '../src/index.js';
 import { createExecutionPlan } from './helpers/contractFixtures.js';
 import { registerLayerPublicationFailureCases } from './helpers/integration/layerPublicationFailureCases.js';
 import { registerLayerResultEvidenceCases } from './helpers/integration/layerResultEvidenceCases.js';
+import { registerPlanConcurrencyCases } from './helpers/integration/planConcurrencyCases.js';
+import { registerPlanConcurrencyControlCases } from './helpers/integration/planConcurrencyControlCases.js';
 import {
   assertWorkflowArtifactPresentInCi,
   createDbtActivityDeps,
@@ -55,6 +57,8 @@ import {
 assertWorkflowArtifactPresentInCi();
 registerLayerResultEvidenceCases();
 registerLayerPublicationFailureCases();
+registerPlanConcurrencyCases();
+registerPlanConcurrencyControlCases();
 
 async function waitForTerminalStatus(
   adapter: TemporalAdapter,
