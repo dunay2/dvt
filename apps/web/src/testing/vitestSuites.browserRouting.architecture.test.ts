@@ -805,12 +805,22 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/support/e2e.ts',
     'apps/web/cypress/support/unregisteredRuntime.ts',
     'apps/web/cypress/fixtures/new.json',
-    'apps/web/cypress.config.ts',
     'apps/web/cypress.live.config.ts',
-    'cypress.config.ts',
+    'apps/web/cypress/node/unregisteredDiagnostic.ts',
   ])('rejects browser surfaces without admitted consumer evidence: %s', (file) => {
     expect(() => resolveWebVitestChangedSuitePlan([file])).toThrow(file);
     expect(() => resolveWebVitestChangedSuitePlan([spec, file], { full: true })).toThrow(file);
+  });
+
+  it.each([
+    'apps/web/cypress.config.ts',
+    'cypress.config.ts',
+    'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
+    'apps/web/cypress/node/chromiumNetworkProjection.ts',
+  ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
+    expect(
+      resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['controlled', 'available', 'unavailable']);
   });
 
   it.each([

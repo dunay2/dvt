@@ -524,6 +524,11 @@ when a report exists. An empty routed group produces neither a capture nor a
 synthetic artifact. Artifact admission has its own focused CI contract; malformed
 captures and incomplete browser results still reject at their existing owners.
 
+The Cypress config and its two exact Node diagnostic imports are admitted browser
+support boundaries for controlled, available and unavailable capabilities. Their
+module-load failures affect every capability even when capture is disabled. This
+retains complete evidence; unknown configuration and Node neighbors still reject.
+
 ### Execution Selection Consumer Closure — GH-3610
 
 The shared `cypress/support/canvasExecutionSelection.ts` helper is not an

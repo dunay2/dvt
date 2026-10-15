@@ -104,6 +104,9 @@ export const WEB_CYPRESS_SPECS = {
 } as const;
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
+  'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/chromiumNetworkDiagnostics.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/chromiumNetworkProjection.ts': ['controlled', 'available', 'unavailable'],
   'scripts/live-proof-web-runtime.cjs': ['available', 'unavailable'],
   'apps/web/cypress/support/canvasExecutionSelection.ts': [
     'controlled',
