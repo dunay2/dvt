@@ -120,6 +120,11 @@ intermediate table, executor, command, query, wire version or dependency.
 - Browser-routing architecture passes 100 cases after explicitly admitting the
   new LIVE spec and shared helper. No capability partition or fail-closed rule is
   relaxed; the retained JOIN proof and the Sink proof are both required consumers.
+- Full presentation validation exposed two retained provenance assertions tied
+  to the last `code` element instead of the connection selector. Reconciled tests
+  observe the named control: common connections are offered but not selected,
+  conflicting provenance offers no candidate, and neither edge order mutates the
+  draft. Existing explicit-destination preservation assertions remain unchanged.
 - Golden contract fixtures pass 25 checks and architecture dependencies pass.
   JSON schemas compile with the same draft/strict settings as CI. An exploratory
   broad Cypress ESLint-project TypeScript invocation exposed existing test-chain
