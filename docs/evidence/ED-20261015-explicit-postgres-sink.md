@@ -136,7 +136,7 @@ record does not infer those results from the earlier focused checks.
 
 The existing environment is development/test data, but this cut needs no reset.
 Integration is not worker activation. Native plural workloads remain on #3207;
-broader result dispositions/publications and integral acceptance remain on
-#3115/#2524/#2599. No new debt, stub, fake executor, rule relaxation or bypassed
+broader result dispositions/publications and integral acceptance remain on issues
+3115, 2524 and 2599. No new debt, stub, fake executor, rule relaxation or bypassed
 hook is accepted. See the
 [rollout risk](../risk-register/explicit-postgres-sink-20261015.md).
