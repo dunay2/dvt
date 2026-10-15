@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   idleRelationNavigation,
-  transitionRelationNavigation,
+  transitionRelationEditNavigation,
   type RelationNavigationState,
   type RelationNavigationRequest,
 } from './canvasRelationEditNavigationMachine';
@@ -11,7 +11,7 @@ function request(
   relationId: string | null = 'destination',
   requiresDecision = true
 ): RelationNavigationState {
-  return transitionRelationNavigation(idleRelationNavigation, {
+  return transitionRelationEditNavigation(idleRelationNavigation, {
     type: 'select',
     relationId,
     selectedRelationId: 'origin',
@@ -27,7 +27,7 @@ function pendingRequest(state: RelationNavigationState): RelationNavigationReque
 describe('relation navigation decision machine', () => {
   it('ignores the selected relation and admits clean navigation directly', () => {
     expect(
-      transitionRelationNavigation(idleRelationNavigation, {
+      transitionRelationEditNavigation(idleRelationNavigation, {
         type: 'select',
         relationId: 'origin',
         selectedRelationId: 'origin',
@@ -46,7 +46,7 @@ describe('relation navigation decision machine', () => {
     (decision) => {
       const state = request();
       const token = pendingRequest(state);
-      const next = transitionRelationNavigation(state, {
+      const next = transitionRelationEditNavigation(state, {
         type: 'decide',
         request: token,
         decision,
@@ -54,7 +54,7 @@ describe('relation navigation decision machine', () => {
       });
       expect(next.kind).toBe(decision === 'stay' ? 'idle' : 'resolving');
       expect(
-        transitionRelationNavigation(next, {
+        transitionRelationEditNavigation(next, {
           type: 'decide',
           request: token,
           decision,
@@ -67,7 +67,7 @@ describe('relation navigation decision machine', () => {
   it('keeps denied Apply pending without consuming the decision', () => {
     const state = request();
     expect(
-      transitionRelationNavigation(state, {
+      transitionRelationEditNavigation(state, {
         type: 'decide',
         request: pendingRequest(state),
         decision: 'apply',
@@ -78,7 +78,7 @@ describe('relation navigation decision machine', () => {
 
   it('rejects every old binding after replacing the destination', () => {
     const state = request();
-    const replacement = transitionRelationNavigation(state, {
+    const replacement = transitionRelationEditNavigation(state, {
       type: 'select',
       relationId: 'replacement',
       selectedRelationId: 'origin',
@@ -86,7 +86,7 @@ describe('relation navigation decision machine', () => {
     });
     for (const decision of ['stay', 'discard', 'apply'] as const) {
       expect(
-        transitionRelationNavigation(replacement, {
+        transitionRelationEditNavigation(replacement, {
           type: 'decide',
           request: pendingRequest(state),
           decision,
@@ -99,21 +99,21 @@ describe('relation navigation decision machine', () => {
   it('blocks reentrant selection and renews a rejected request for an intentional retry', () => {
     const pending = request();
     const token = pendingRequest(pending);
-    const resolving = transitionRelationNavigation(pending, {
+    const resolving = transitionRelationEditNavigation(pending, {
       type: 'decide',
       request: token,
       decision: 'apply',
       canApply: true,
     });
     expect(
-      transitionRelationNavigation(resolving, {
+      transitionRelationEditNavigation(resolving, {
         type: 'select',
         relationId: 'other',
         selectedRelationId: 'origin',
         requiresDecision: true,
       })
     ).toBe(resolving);
-    const rejected = transitionRelationNavigation(resolving, {
+    const rejected = transitionRelationEditNavigation(resolving, {
       type: 'settle',
       request: token,
       accepted: false,
@@ -124,7 +124,7 @@ describe('relation navigation decision machine', () => {
     });
     expect(pendingRequest(rejected)).not.toBe(token);
     expect(
-      transitionRelationNavigation(rejected, {
+      transitionRelationEditNavigation(rejected, {
         type: 'decide',
         request: token,
         decision: 'apply',
@@ -135,17 +135,17 @@ describe('relation navigation decision machine', () => {
 
   it('ignores obsolete settlements after reset, even for the same destination', () => {
     const old = request('destination', false);
-    expect(transitionRelationNavigation(old, { type: 'reset' })).toBe(idleRelationNavigation);
+    expect(transitionRelationEditNavigation(old, { type: 'reset' })).toBe(idleRelationNavigation);
     const current = request('destination', false);
     expect(
-      transitionRelationNavigation(current, {
+      transitionRelationEditNavigation(current, {
         type: 'settle',
         request: pendingRequest(old),
         accepted: true,
       })
     ).toBe(current);
     expect(
-      transitionRelationNavigation(current, {
+      transitionRelationEditNavigation(current, {
         type: 'settle',
         request: pendingRequest(current),
         accepted: true,

@@ -3,7 +3,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CanvasRelationalTreeApplyResult } from './canvasRelationalTreeWorkbench.types';
 import {
   idleRelationNavigation,
-  transitionRelationNavigation,
+  transitionRelationEditNavigation,
   type RelationNavigationEvent,
   type RelationNavigationState,
   type RelationNavigationDecision,
@@ -36,7 +36,7 @@ export function useCanvasRelationEditNavigation(context: NavigationContext) {
 
   useLayoutEffect(() => {
     if (committed.current?.scope !== scope) {
-      current.current = transitionRelationNavigation(current.current, { type: 'reset' });
+      current.current = transitionRelationEditNavigation(current.current, { type: 'reset' });
       publish(current.current);
     }
     committed.current = { scope, context };
@@ -50,7 +50,7 @@ export function useCanvasRelationEditNavigation(context: NavigationContext) {
   );
 
   const transition = (event: RelationNavigationEvent) => {
-    const next = transitionRelationNavigation(current.current, event);
+    const next = transitionRelationEditNavigation(current.current, event);
     current.current = next;
     publish(next);
     return next;

@@ -29,7 +29,7 @@ export type RelationNavigationEvent =
 
 export const idleRelationNavigation: RelationNavigationState = { kind: 'idle' };
 
-export function transitionRelationNavigation(
+export function transitionRelationEditNavigation(
   state: RelationNavigationState,
   event: RelationNavigationEvent
 ): RelationNavigationState {
