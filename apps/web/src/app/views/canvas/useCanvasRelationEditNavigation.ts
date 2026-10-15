@@ -34,10 +34,15 @@ export function useCanvasRelationEditNavigation(context: NavigationContext) {
   const current = useRef(idleRelationNavigation);
   const [snapshot, publish] = useState(idleRelationNavigation);
 
+  const transition = (event: RelationNavigationEvent) => {
+    const next = transitionRelationEditNavigation(current.current, event);
+    current.current = next;
+    publish(next);
+    return next;
+  };
   useLayoutEffect(() => {
     if (committed.current?.scope !== scope) {
-      current.current = transitionRelationEditNavigation(current.current, { type: 'reset' });
-      publish(current.current);
+      transition({ type: 'reset' });
     }
     committed.current = { scope, context };
   });
@@ -49,12 +54,6 @@ export function useCanvasRelationEditNavigation(context: NavigationContext) {
     []
   );
 
-  const transition = (event: RelationNavigationEvent) => {
-    const next = transitionRelationEditNavigation(current.current, event);
-    current.current = next;
-    publish(next);
-    return next;
-  };
   const execute = (state: RelationNavigationState) => {
     const active = committed.current;
     if (state.kind !== 'resolving' || active?.scope !== scope) return;
