@@ -1,6 +1,6 @@
 ---
 title: One explicit PostgreSQL Sink publication
-status: Active
+status: final
 date: 2026-10-15
 owners:
   - Contracts
