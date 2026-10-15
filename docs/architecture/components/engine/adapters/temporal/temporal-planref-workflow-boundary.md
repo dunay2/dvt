@@ -28,6 +28,12 @@ Use this guide with:
 
 ## Owned concern
 
+Canonical event publication failures are not execution failures: when Temporal
+reports an `ActivityFailure` from `emitEvent`, the general failure fallback must
+not append a substitute `RunFailed` over incomplete publication. The original
+provider failure propagates unchanged. Native cancellation retains its separate
+governed path; this rule does not add retry or recovery automation.
+
 The component owns one concern:
 
 - run the Temporal interpreter workflow from an immutable `PlanRef`, a resolved

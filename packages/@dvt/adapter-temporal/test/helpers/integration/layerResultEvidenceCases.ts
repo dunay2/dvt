@@ -1,4 +1,10 @@
-/** Owned concern: real Temporal recording and replay of mixed layer outcomes. */
+/**
+ * @ownedConcern Real Temporal recording and replay of mixed layer outcomes.
+ * @baseline ADR-0001: Temporal Integration Test Policy
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @decision Reuse the real Temporal harness with controlled step outcomes and verify canonical events before replay.
+ * @version 1.0.0
+ */
 import type { MaterializationEvidence } from '@dvt/contracts';
 import { Worker } from '@temporalio/worker';
 import { afterEach, describe, expect, it } from 'vitest';

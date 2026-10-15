@@ -9,7 +9,7 @@
  * @version 1.2.0
  */
 import type { StepResultEvidence, TransformationExecutor } from '@dvt/contracts';
-import { continueAsNew, sleep } from '@temporalio/workflow';
+import { ActivityFailure, continueAsNew, sleep } from '@temporalio/workflow';
 
 import { eventActivities } from './runPlanWorkflow.activities.js';
 import { finalizeCancellationIfRequested } from './runPlanWorkflow.cancellation.js';
@@ -99,6 +99,10 @@ export async function markWorkflowFailedIfNeeded(
   runtimeExecutor?: TransformationExecutor,
   error?: unknown
 ): Promise<void> {
+  // A substitute terminal cannot repair an unacknowledged canonical event.
+  if (error instanceof ActivityFailure && error.activityType === 'emitEvent') {
+    return;
+  }
   if (state.status === 'CANCELLED' || state.status === 'FAILED') {
     return;
   }

@@ -1,4 +1,8 @@
-/** Owned concern: complete layer outcome recording before global failure settlement. */
+/**
+ * @ownedConcern Complete layer outcome recording before global failure settlement.
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0004: Event Sourcing Strategy
+ */
 import type { MaterializationEvidence } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
