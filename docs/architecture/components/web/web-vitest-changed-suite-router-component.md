@@ -464,6 +464,61 @@ This changes the proof's client serving mode; it adds no product behavior,
 command rail, browser retry, exception suppression or fake provider. Runtime
 policy tests stay separate from the larger provider-composition test file.
 
+#### Browser Transport Observation
+
+The compiled client still encountered transport failures on two Linux CI
+attempts. Session or write requests could fail after a successful API preflight;
+the later attempt failed on different calls. Authentication denial, application
+mutation, and a vendor-version defect are not established by those observations.
+Another identical retry is not the diagnostic owner.
+
+```mermaid
+flowchart LR
+  Browser[Real Chromium requests] --> Proxy[Cypress transport]
+  Proxy --> API[Real protected API]
+  Browser --> Capture[Opt-in Chromium net-log]
+  Capture --> Projection[Allowlisted metadata projection]
+  Projection --> Evidence[Sanitized error and CORS event evidence]
+  Capture --> Completion[Native Cypress process completes]
+  Completion --> Cleanup[Exact owned raw-file cleanup]
+```
+
+`RunWebCypressNative` retains the same literal scenarios, authentication,
+providers, assertions and budget. The existing Cypress Node event adapter
+optionally captures Chromium net-log for available group 1 only. The pure
+projection and Node lifecycle have separate owners. Exported JSON contains
+event/source identifiers, event kinds, numeric network errors, method and safe
+loopback route groups only. Headers, bodies, cookies, URL queries, userinfo and
+arbitrary raw parameters are omitted. Raw capture is outside artifact
+publication and its exact temporary files are removed by their owner.
+
+The native parent owns the capture lease and finalization after the Cypress
+binary completes. Cypress `after:run` is not the close boundary: a real Windows
+proof passed its journey but that hook still saw the Chrome file locked. Node
+plugin launch hooks receive only the owned lease through scoped process
+environment; that environment is restored on success or failure.
+
+The real capture can end before its JSON footer when Cypress terminates Chrome.
+The maintained `jsonc-parser` development dependency decodes complete observed
+records, with `captureState=terminated` explicitly distinguishing this from a
+complete capture. Only EOF closing-array/object errors and a trailing comma are
+admitted; malformed headers, middle syntax or unfinished event bodies reject.
+No record, footer or successful outcome is fabricated. This Node-only consumer
+does not add a production application dependency.
+
+Disabled diagnostics register no launch hooks. Enabled diagnostics reject a
+missing or malformed capture and preserve the failing browser result. The
+observer adds no request interception, synthetic response, retry, timeout or
+security override; recording evidence is not a claim that integration or the
+transport defect is complete. Paired projection and lifecycle tests remain
+separate from scenario files and register in the existing local gate.
+
+The native runner contract now reaches the optional package-backed loader through
+its existing shared proof import. Its exact CI-tool test belongs to the installed
+executable partition, not the package-free static partition. The all-mode union,
+fail-closed dependency guard and assertions remain unchanged; removing that exact
+registration is a negative test, not an exemption from coverage.
+
 ### Execution Selection Consumer Closure — GH-3610
 
 The shared `cypress/support/canvasExecutionSelection.ts` helper is not an

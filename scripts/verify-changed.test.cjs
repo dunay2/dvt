@@ -89,6 +89,23 @@ test('runtime runner source and test changes select their isolated contract exac
   }
 });
 
+test('Chromium diagnostic source and paired tests retain one focused Node obligation', () => {
+  for (const [source, contract] of [
+    [
+      'apps/web/cypress/node/chromiumNetworkProjection.ts',
+      'scripts/chromium-network-projection.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
+      'scripts/chromium-network-diagnostics.test.cjs',
+    ],
+  ]) {
+    for (const files of [[source], [contract], [source, contract]]) {
+      assert.deepEqual(focusedLabelsFor(files), [`node --test ${contract}`]);
+    }
+  }
+});
+
 test('live browser runtime inputs select the existing Web router without broad API routing', () => {
   const files = [
     'apps/api/test/integration/sourceLivePreviewPostgres.proof.ts',

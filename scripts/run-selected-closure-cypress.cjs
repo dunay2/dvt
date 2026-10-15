@@ -7,6 +7,7 @@
  * @version 1.0.0
  */
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 function validateCypressProofSpecs(specs) {
   if (
@@ -99,18 +100,32 @@ async function main(argv = process.argv.slice(2), deps = {}) {
     ((options) => require(require.resolve('cypress', { paths: [project] })).run(options));
   let result;
   try {
-    result = await run({
-      project,
-      configFile: path.join(project, 'cypress.config.ts'),
-      config: {
-        screenshotsFolder: path.join(evidenceRoot, 'screenshots'),
-        downloadsFolder: path.join(evidenceRoot, 'downloads'),
-        videosFolder: path.join(evidenceRoot, 'videos'),
-      },
-      spec: specs.map((spec) => path.resolve(project, spec)).join(','),
-      browser: 'chrome',
-      headed: argv.includes('--headed'),
-    });
+    const execute = () =>
+      run({
+        project,
+        configFile: path.join(project, 'cypress.config.ts'),
+        config: {
+          screenshotsFolder: path.join(evidenceRoot, 'screenshots'),
+          downloadsFolder: path.join(evidenceRoot, 'downloads'),
+          videosFolder: path.join(evidenceRoot, 'videos'),
+        },
+        spec: specs.map((spec) => path.resolve(project, spec)).join(','),
+        browser: 'chrome',
+        headed: argv.includes('--headed'),
+      });
+    if (process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS) {
+      const { tsImport } = await import('tsx/esm/api');
+      const diagnostics = await tsImport(
+        '../apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
+        pathToFileURL(__filename).href
+      );
+      result = await diagnostics.withChromiumNetworkDiagnostics(
+        path.resolve(project, '../..'),
+        execute
+      );
+    } else {
+      result = await execute();
+    }
   } catch {
     // Cypress configuration includes credentials; never dump its result or exception payload.
     throw new Error('Cypress native execution failed');

@@ -258,3 +258,53 @@ test('native adapter rejects broad or malformed inputs before browser execution'
     );
   }
 });
+
+test('opt-in native diagnostics finalize after execution without weakening failed proof', async () => {
+  require('tsx/cjs');
+  const fs = require('node:fs');
+  const {
+    configureChromiumNetworkDiagnostics,
+  } = require('../apps/web/cypress/node/chromiumNetworkDiagnostics.ts');
+  const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  const previousCapture = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  let capture;
+  let report;
+  try {
+    await assert.rejects(
+      main(['--spec', spec], {
+        run: async () => {
+          const directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+          configureChromiumNetworkDiagnostics((event, handler) => {
+            assert.equal(event, 'before:browser:launch');
+            const launch = handler({ family: 'chromium' }, { args: [] });
+            capture = launch.args[0].slice('--log-net-log='.length);
+          }, {});
+          fs.writeFileSync(
+            capture,
+            JSON.stringify({
+              constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+              events: [{ type: 1, source: { id: 3 } }],
+            })
+          );
+          report = path.resolve(
+            __dirname,
+            '../.dvt/evidence/chromium-network',
+            `${path.basename(directory)}-${path.basename(path.dirname(capture))}.json`
+          );
+          assert.equal(fs.existsSync(capture), true);
+          throw new Error('private native failure');
+        },
+      }),
+      /^Error: Cypress native execution failed$/
+    );
+    assert.equal(fs.existsSync(capture), false);
+    assert.equal(fs.existsSync(path.dirname(path.dirname(capture))), false);
+    assert.equal(JSON.parse(fs.readFileSync(report, 'utf8')).captureState, 'complete');
+    assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, previousCapture);
+  } finally {
+    if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
+    if (report !== undefined && fs.existsSync(report)) fs.unlinkSync(report);
+  }
+});

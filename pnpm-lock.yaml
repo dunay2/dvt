@@ -676,6 +676,9 @@ importers:
       jsdom:
         specifier: ^29.1.0
         version: 29.1.0(@noble/hashes@2.3.0)
+      jsonc-parser:
+        specifier: 3.3.1
+        version: 3.3.1
       start-server-and-test:
         specifier: ^2.0.11
         version: 2.1.5

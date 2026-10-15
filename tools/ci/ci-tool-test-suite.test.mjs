@@ -47,6 +47,18 @@ test('sync docs status policy runs in the executable CI tool partition', () => {
   assert.ok(EXECUTABLE_CI_TOOL_TESTS.includes('tools/ci/sync-docs-status-policy.test.mjs'));
 });
 
+test('native proof diagnostics retain the package-backed contract in the executable partition', () => {
+  const contract = 'tools/ci/run-web-cypress-native.test.mjs';
+  assert.ok(EXECUTABLE_CI_TOOL_TESTS.includes(contract));
+  assert.throws(
+    () =>
+      assertCiToolTestPartition(discoverCiToolTests(), {
+        executableTests: EXECUTABLE_CI_TOOL_TESTS.filter((file) => file !== contract),
+      }),
+    /Package-backed CI tool tests must run in the executable partition: .*run-web-cypress-native\.test\.mjs/
+  );
+});
+
 test('CI tool test partition fails closed when an executable test path is missing', () => {
   assert.throws(
     () => assertCiToolTestPartition(['tools/ci/workflow-pattern-parity.test.mjs']),
