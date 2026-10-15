@@ -12,6 +12,7 @@ import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
 
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
 import { projectDvtPostgresTransform } from './dvtPostgresTransformProjection.js';
+import { resolveDvtWorkloadPublication } from './dvtWorkloadPublication.js';
 import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 const SQL_MEDIA_TYPE = 'application/sql; charset=utf-8';
@@ -42,6 +43,8 @@ export class DvtPostgresTargetProjectionPublisher {
     input: DvtPostgresTargetProjectionPublishInput
   ): Promise<DvtTerminalTransformProjectionBinding> {
     const closure = resolveDvtTerminalTransformClosure(input);
+    const publication = resolveDvtWorkloadPublication(closure);
+    if (!publication.ok) throw new Error(publication.cause);
     const semanticDocument = closure.authority.semanticDocument;
     const projected = await projectDvtPostgresTransform(closure);
     const sql = projected.sql;

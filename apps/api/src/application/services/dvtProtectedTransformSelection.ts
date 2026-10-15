@@ -18,6 +18,7 @@ type ProtectedTransformSelection = Readonly<{
   sources: Readonly<WorkspaceGraphAuthoringDraft['nodes']>;
   transforms: Readonly<WorkspaceGraphAuthoringDraft['nodes']>;
   transform: WorkspaceGraphAuthoringDraft['nodes'][number];
+  sink?: WorkspaceGraphAuthoringDraft['nodes'][number];
   edges: Readonly<WorkspaceGraphAuthoringDraft['edges']>;
 }>;
 
@@ -40,6 +41,13 @@ export function selectProtectedDvtTransforms(
   const transforms = nodes.filter(
     (node) => node.pluginId === 'dvt' && node.kind === 'transform' && node.role === 'transform'
   );
+  const sinks = nodes.filter(
+    (node) => node.pluginId === 'dvt' && node.kind === 'dvt:sink' && node.role === 'output'
+  );
+  if (sinks.length > 1 || (input.previewTargetId != null && sinks.length > 0)) {
+    throw new Error('Operational selection admits at most one explicit Sink.');
+  }
+  const sink = sinks[0];
   if (input.previewTargetId == null && transforms.length !== 1) {
     throw new Error('Operational workloads require exactly one Transform authority.');
   }
@@ -50,7 +58,7 @@ export function selectProtectedDvtTransforms(
   if (
     sources.length === 0 ||
     transform == null ||
-    nodes.length !== sources.length + transforms.length
+    nodes.length !== sources.length + transforms.length + sinks.length
   ) {
     throw new Error('Selection must contain DVT Sources and one rooted consumer closure.');
   }
@@ -58,14 +66,23 @@ export function selectProtectedDvtTransforms(
     input.previewTargetId == null &&
     draft.edges.some(
       (edge) =>
-        edge.sourceId === transform.id && isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge)
+        isWorkspaceGraphAuthoringEdgeEffectivelyExecutable(edge) &&
+        (edge.sourceId === (sink?.id ?? transform.id) ||
+          (sink !== undefined && edge.sourceId === transform.id && edge.targetId !== sink.id))
     )
   ) {
-    throw new Error('Selected DVT Transform must be terminal in the protected Canvas.');
+    throw new Error('Selected DVT publication must be terminal in the protected Canvas.');
   }
 
-  const producerIds = new Set(nodes.map((node) => node.id));
-  const consumerIds = new Set(transforms.map((node) => node.id));
+  if (sink !== undefined) {
+    const inputs = edges.filter((edge) => edge.targetId === sink.id);
+    if (inputs.length !== 1 || inputs[0]!.sourceId !== transform.id) {
+      throw new Error('Sink requires exactly one edge from its semantic Transform.');
+    }
+  }
+
+  const producerIds = new Set([...sources, ...transforms].map((node) => node.id));
+  const consumerIds = new Set([...transforms, ...sinks].map((node) => node.id));
   const selectedEdgeIds = new Set(input.selectedEdgeIds);
   if (
     new Set(edges.map((edge) => JSON.stringify([edge.sourceId, edge.targetId]))).size !==
@@ -86,7 +103,7 @@ export function selectProtectedDvtTransforms(
   ) {
     throw new Error('Selection must contain every effective producer dependency exactly once.');
   }
-  return { draft, sources, transforms, transform, edges };
+  return { draft, sources, transforms, transform, edges, ...(sink === undefined ? {} : { sink }) };
 }
 
 function selectExact<T extends { readonly id: string }>(

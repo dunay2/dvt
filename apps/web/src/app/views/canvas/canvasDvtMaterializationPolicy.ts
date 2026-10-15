@@ -1,8 +1,9 @@
 /** Native Transform materialization admission, shared by command and presentation. */
 import type { CanonicalNode } from '../../types/canonical';
+import { DVT_TRANSFORM_MATERIALIZATIONS } from '@dvt/contracts';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 
-export const DVT_TRANSFORM_MATERIALIZATIONS = ['view', 'table'] as const;
+export { DVT_TRANSFORM_MATERIALIZATIONS };
 export type DvtTransformMaterialization = (typeof DVT_TRANSFORM_MATERIALIZATIONS)[number];
 
 export function isDvtTransformMaterialization(

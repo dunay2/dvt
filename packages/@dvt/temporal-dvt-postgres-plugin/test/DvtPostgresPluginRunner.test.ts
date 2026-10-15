@@ -2,6 +2,7 @@ import { TextEncoder } from 'node:util';
 
 import { PostgresDvtPublicationRejectedError } from '@dvt/adapter-postgres';
 import { ArtifactReadError } from '@dvt/artifacts';
+import { resolveDvtPostgresPublication } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -46,7 +47,7 @@ describe('DvtPostgresPluginRunner', () => {
     expect(resolveCredential).toHaveBeenCalledWith('env:DVT_POSTGRES_URL');
     expect(publish).toHaveBeenCalledWith({
       sql: 'select 1',
-      target: input.config.output.target,
+      target: resolveDvtPostgresPublication(input.config).target,
       expectedSchemaDigestSha256: SHA.schema,
       publicationToken: SHA.publication,
       expectedPredecessorToken: SHA.predecessor,

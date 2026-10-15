@@ -7,6 +7,7 @@ import type { ConnectionRef, DvtTransformResultTargetV1 } from '@dvt/contracts';
 
 import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields';
 import { canvasViewCopy } from './copy';
+import { createDvtDestinationBinding } from './dvtDestinationBinding';
 
 const connectionRef: ConnectionRef = {
   schemaVersion: 'connection-ref.v1',
@@ -25,10 +26,22 @@ function Harness({
   value = target;
   return (
     <DvtTransformResultTargetFields
-      target={target}
-      connection={connection ?? undefined}
-      disabled={disabled}
-      onChange={setTarget}
+      binding={createDvtDestinationBinding({
+        target,
+        connection: connection ?? undefined,
+        disabled,
+        onChange: (next) =>
+          setTarget(
+            next?.connectionRef?.provider === 'postgres'
+              ? {
+                  ...next,
+                  schemaVersion: 'dvt-transform-result-target.v1',
+                  connectionRef: { ...next.connectionRef, provider: 'postgres' },
+                }
+              : null
+          ),
+      })}
+      copy={canvasViewCopy}
     />
   );
 }

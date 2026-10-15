@@ -50,6 +50,7 @@ export type DvtSubstraitTransformAuthoringMetadata = Readonly<{
 
 export type DvtSinkAuthoringMetadata = Readonly<{
   kind: 'sink';
+  connectionRef?: ConnectionRef | null;
   schema: string;
   table: string;
   materialization: string;

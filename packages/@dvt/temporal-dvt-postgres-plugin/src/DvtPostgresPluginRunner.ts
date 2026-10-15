@@ -19,7 +19,11 @@ import {
   readVerifiedArtifactBytes,
   type ArtifactReadRuntimeOptions,
 } from '@dvt/artifacts';
-import { ArtifactStoreError, DvtPostgresPublicationEvidenceSchema } from '@dvt/contracts';
+import {
+  ArtifactStoreError,
+  DvtPostgresPublicationEvidenceSchema,
+  resolveDvtPostgresPublication,
+} from '@dvt/contracts';
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
 import { DvtPostgresExecutionRejectedError } from './dvtPostgresPluginErrors.js';
@@ -56,6 +60,7 @@ export class DvtPostgresPluginRunner implements DvtPostgresPluginRunnerPort {
   }
 
   public async execute(input: DvtPostgresPluginExecutionInput): Promise<StepResult> {
+    const publication = resolveDvtPostgresPublication(input.config);
     const signal = this.getCancellationSignal();
     assertNotAborted(signal);
     const startedAt = this.now();
@@ -72,7 +77,7 @@ export class DvtPostgresPluginRunner implements DvtPostgresPluginRunnerPort {
     try {
       published = await capability.publish({
         sql,
-        target: input.config.output.target,
+        target: publication.target,
         expectedSchemaDigestSha256: input.config.targetProjection.schemaDigestSha256,
         publicationToken: input.pluginContext.publicationToken,
         expectedPredecessorToken:
@@ -119,7 +124,7 @@ export class DvtPostgresPluginRunner implements DvtPostgresPluginRunnerPort {
           },
         },
         target: {
-          connectionRef: input.config.output.target.connectionRef,
+          connectionRef: publication.target.connectionRef,
           schema: published.targetSchema,
           relation: published.targetRelation,
         },

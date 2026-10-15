@@ -124,6 +124,8 @@ export function validateDvtTransformAuthoringMetadata(
     ? {}
     : { materialization: 'dvt_materialization_invalid' };
   if (metadata.resultTarget != null) {
+    if (metadata.materialized === 'ephemeral')
+      errors.materialization = 'dvt_materialization_invalid';
     const target = DvtTransformResultTargetV1Schema.safeParse(metadata.resultTarget);
     if (!target.success) {
       for (const issue of target.error.issues) {

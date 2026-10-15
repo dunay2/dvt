@@ -1,5 +1,5 @@
 /** Owns DVT sink configuration, validation, and persistence. */
-import { PostgresIdentifierV1Schema } from '@dvt/contracts';
+import { DvtPostgresRelationTargetV1Schema, PostgresIdentifierV1Schema } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
 import type {
@@ -19,31 +19,24 @@ const DEFAULT_WRITE_MODE = 'replace';
 const VALID_MATERIALIZATIONS = new Set(['table', 'view']);
 const VALID_WRITE_MODES = new Set(['replace', 'append']);
 
-function normalizeEnum(
-  value: string | undefined,
-  fallback: string,
-  allowed: ReadonlySet<string>
-): string {
-  const normalized = normalizeDvtIdentifier(value, fallback);
-  return allowed.has(normalized) ? normalized : fallback;
-}
-
 export function createDvtSinkAuthoringMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
   const config = readDvtNodeConfig(node);
   return {
     kind: 'sink',
     schema: readDvtString(config.schema) ?? DEFAULT_SCHEMA_NAME,
     table: normalizeDvtIdentifier(readDvtString(config.table) ?? node.name, 'sink_table'),
-    materialization: normalizeEnum(
-      readDvtString(config.materialization) ?? readDvtString(config.materialized),
+    materialization:
+      readDvtString(config.materialization) ??
+      readDvtString(config.materialized) ??
       DEFAULT_MATERIALIZATION,
-      VALID_MATERIALIZATIONS
-    ),
-    writeMode: normalizeEnum(
-      readDvtString(config.writeMode),
-      DEFAULT_WRITE_MODE,
-      VALID_WRITE_MODES
-    ),
+    writeMode: readDvtString(config.writeMode) ?? DEFAULT_WRITE_MODE,
+    ...(config.connectionRef === undefined
+      ? {}
+      : {
+          connectionRef: DvtPostgresRelationTargetV1Schema.shape.connectionRef.parse(
+            config.connectionRef
+          ),
+        }),
   };
 }
 
@@ -53,6 +46,10 @@ export function validateDvtSinkAuthoringMetadata(
   const schema = metadata.schema;
   const table = metadata.table;
   return {
+    ...(metadata.connectionRef == null ||
+    DvtPostgresRelationTargetV1Schema.shape.connectionRef.safeParse(metadata.connectionRef).success
+      ? {}
+      : { connectionRef: 'dvt_connection_required' as const }),
     ...(schema.trim()
       ? schema !== schema.trim()
         ? { schema: 'dvt_identifier_whitespace' as const }
@@ -84,21 +81,15 @@ export function applyDvtSinkAuthoringMetadata(
   const table = metadata.table;
   const materialization = metadata.materialization.trim();
   const writeMode = metadata.writeMode.trim();
-  if (
-    schema !== schema.trim() ||
-    !PostgresIdentifierV1Schema.safeParse(schema).success ||
-    table !== table.trim() ||
-    !PostgresIdentifierV1Schema.safeParse(table).success ||
-    !VALID_MATERIALIZATIONS.has(materialization) ||
-    !VALID_WRITE_MODES.has(writeMode)
-  ) {
-    return node;
-  }
-  return withDvtConfig(node, {
+  if (Object.keys(validateDvtSinkAuthoringMetadata(metadata)).length > 0) return node;
+  const config = {
     ...readDvtNodeConfig(node),
     schema,
     table,
     materialization,
     writeMode,
-  });
+  } as Record<string, unknown>;
+  if (metadata.connectionRef === null) delete config.connectionRef;
+  else if (metadata.connectionRef !== undefined) config.connectionRef = metadata.connectionRef;
+  return withDvtConfig(node, config);
 }

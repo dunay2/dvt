@@ -364,6 +364,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtPartitionStrategyLabel: 'Estrategia de partición',
   inspectorDvtMaterializationTableLabel: 'tabla',
   inspectorDvtMaterializationViewLabel: 'vista',
+  inspectorDvtMaterializationEphemeralLabel: 'efímero (publicar mediante Sink)',
   inspectorDvtWriteModeReplaceLabel: 'reemplazar',
   inspectorDvtWriteModeAppendLabel: 'añadir',
   dvtFlowGuideTitle: 'Flujo DVT profesional',

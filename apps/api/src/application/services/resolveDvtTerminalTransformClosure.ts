@@ -33,6 +33,7 @@ export type DvtTerminalTransformClosure = {
   readonly draft: WorkspaceGraphAuthoringDraft;
   readonly sources: readonly { node: WorkspaceGraphAuthoringNode; ref: ConnectedSourceRef }[];
   readonly transform: WorkspaceGraphAuthoringNode;
+  readonly sink?: WorkspaceGraphAuthoringNode;
   readonly edges: readonly WorkspaceGraphAuthoringEdge[];
   readonly connectionRef: ConnectionRef;
   readonly profileId:
@@ -106,6 +107,7 @@ export function resolveDvtTerminalTransformClosure(
     draft,
     sources,
     transform,
+    ...(selection.sink === undefined ? {} : { sink: selection.sink }),
     edges,
     connectionRef,
     authority,

@@ -2,7 +2,7 @@
 title: DVT Transform Result Target v1
 status: Accepted
 owner: Contracts / Web / DVT authoring
-last_reviewed: 2026-09-14
+last_reviewed: 2026-10-15
 ---
 
 # DVT Transform Result Target v1
@@ -12,8 +12,10 @@ last_reviewed: 2026-09-14
 [Issue #3115](https://github.com/dunay2/dvt/issues/3115) distinguishes a Transform's
 result disposition from an optional Sink publication boundary. The existing
 `metadata.config.materialized` remains the sole native disposition setting
-(`table` or `view` today). A durable Transform result also needs an explicit
-destination, which the current authoring contract does not provide.
+(`table`, `view` or `ephemeral`). A durable Transform result also needs an explicit
+destination. An ephemeral Transform has no `resultTarget`; a terminal Sink can
+own its publication destination instead. Run admission currently supports table
+results or one ephemeral result with one explicit table/replace Sink, not views.
 
 `ConfigureCanvasDvtNode` owns this authoring intent. Protected Graph Draft
 save/read and compare-and-swap remain unchanged. This is not a new execution,
@@ -52,7 +54,7 @@ Non-lineage edges do not confer connection authority. Traversal is iterative and
 performs no provider I/O or draft mutation. A Source is a terminal authority
 boundary; incoming lineage on a Source is invalid, including cycles through it.
 
-The same read model supplies the terminal Sink's inherited-connection display
+The same read model supplies the terminal Sink's connection-confirmation candidate
 and Transform Inputs/Outputs context. A proven common connection is shown on
 every lineage input, never attributed to one arbitrary branch. An unresolved
 graph shows no inherited connection. This does not invalidate, rewrite or replace
@@ -63,9 +65,9 @@ target leaves an existing target untouched during unrelated semantic edits.
 Neither null nor undefined is serialized as a persisted target value.
 
 Saving this reference does not authorize access to its connection and does not
-execute SQL. Future Run admission must resolve it within the authenticated
-tenant/project/environment, reject unavailable or unsupported destinations,
-and bind the exact target, disposition, graph, semantic and SQL identities.
+execute SQL. Run admission resolves it within the authenticated
+tenant/project/environment, rejects unavailable or unsupported destinations,
+and binds the exact target, disposition, graph, semantic and SQL identities.
 Preview remains non-destructive and does not mutate the configured target.
 
 ## Sequence and boundaries
@@ -73,14 +75,28 @@ Preview remains non-destructive and does not mutate the configured target.
 ```text
 Explicit target form -> shared target value object -> protected Graph Draft CAS
                                                       |
-                        future #2524 exact Run workload -> #2723 execution
+                        #2524 exact Run workload -> PostgreSQL execution
 ```
 
-The first provider-effects vertical remains a terminal Transform with a table
-result and no required Sink. Stable-table publication is governed by
+The terminal Transform table path remains valid without a required Sink. The
+additional admitted path is an ephemeral Transform connected to exactly one
+terminal Sink. The Sink persists an explicitly confirmed `connectionRef`,
+`schema`, `table`, `materialization: table` and `writeMode: replace`. Incomplete
+Sink drafts remain editable but cannot become a Run. Unsupported saved modes are
+not silently rewritten into supported intent.
+
+The common `DvtPostgresRelationTargetV1` owns connection/schema/relation validation;
+the versioned Transform target extends it. A Sink target is not mislabeled as a
+Transform result. UI destination bindings share connection and name behavior;
+passive views do not authorize connections or select publication policy.
+Selecting `ephemeral` explicitly removes any Transform target in the same draft
+update. Persisting both is invalid, not a second publication route.
+
+Stable-table publication is governed by
 [ADR-0066](../../adr/ADR-0066-postgresql-stable-table-publication.md), not by this
-authoring value object. This contract does not add a worker capability, imply
-support for view execution, or reinterpret the Preview-only workload v1.
+authoring value object. Both paths reuse the existing publisher and the
+[explicit-intent workload V1](./dvt-operational-workload-v1.md); this contract does
+not imply support for view execution or multiple publications.
 
 ## Compatibility and proof
 

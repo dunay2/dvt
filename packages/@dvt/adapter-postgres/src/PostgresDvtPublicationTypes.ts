@@ -5,7 +5,7 @@
  * @consequence Runtime plugins depend on one bounded PostgreSQL capability.
  * @version 1.0.0
  */
-import type { DvtTransformResultTargetV1 } from '@dvt/contracts';
+import type { DvtPostgresRelationTargetV1 } from '@dvt/contracts';
 
 export const POSTGRES_DVT_PUBLICATION_ERROR_CODE = {
   stale: 'STALE_PUBLICATION',
@@ -26,7 +26,7 @@ export class PostgresDvtPublicationRejectedError extends Error {
 
 export interface PostgresDvtStableTablePublishInput {
   readonly sql: string;
-  readonly target: DvtTransformResultTargetV1;
+  readonly target: DvtPostgresRelationTargetV1;
   readonly expectedSchemaDigestSha256: string;
   readonly publicationToken: string;
   readonly expectedPredecessorToken: string | null;

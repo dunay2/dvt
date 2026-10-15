@@ -24,7 +24,11 @@ describe('DVT materialization authoring', () => {
     ) as HTMLSelectElement | null;
 
     expect(select?.value).toBe('table');
-    expect([...select!.options].map((option) => option.value)).toEqual(['view', 'table']);
+    expect([...select!.options].map((option) => option.value)).toEqual([
+      'view',
+      'table',
+      'ephemeral',
+    ]);
     expect(view.draftJson()).not.toContain('"dbt"');
 
     act(() => {

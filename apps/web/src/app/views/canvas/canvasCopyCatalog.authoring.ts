@@ -1260,6 +1260,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtMaterializationViewLabel',
     fallback: 'view',
   },
+  inspectorDvtMaterializationEphemeralLabel: {
+    key: 'canvas.inspector.authoring.dvtMaterializationEphemeralLabel',
+    fallback: 'ephemeral (publish through Sink)',
+  },
   inspectorDvtWriteModeReplaceLabel: {
     key: 'canvas.inspector.authoring.dvtWriteModeReplaceLabel',
     fallback: 'replace',

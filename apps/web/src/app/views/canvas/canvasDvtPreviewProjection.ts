@@ -31,21 +31,28 @@ export type ProtectedDvtPreviewProjection =
     };
 
 type TerminalProjectionClosure = {
+  readonly root: CanonicalNode;
   readonly sources: readonly CanonicalNode[];
   readonly transform: CanonicalNode;
   readonly edges: readonly CanonicalEdge[];
 };
 
 function resolveTerminalProjectionClosure(
-  transform: CanonicalNode,
+  root: CanonicalNode,
   nodesById: ReadonlyMap<string, CanonicalNode>,
   edges: readonly CanonicalEdge[]
 ): TerminalProjectionClosure | null {
+  if (edges.some((edge) => edge.sourceId === root.id)) return null;
+  const isSink = root.pluginId === 'dvt' && root.kind === 'dvt:sink' && root.role === 'output';
+  const sinkEdges = isSink ? edges.filter((edge) => edge.targetId === root.id) : [];
+  if (isSink && (sinkEdges.length !== 1 || sinkEdges[0]?.relation !== 'lineage')) return null;
+  const transform = isSink ? nodesById.get(sinkEdges[0]!.sourceId) : root;
   if (
+    transform === undefined ||
     transform.pluginId !== 'dvt' ||
     transform.kind !== 'dvt:transform' ||
     transform.role !== 'transform' ||
-    edges.some((edge) => edge.sourceId === transform.id)
+    edges.some((edge) => edge.sourceId === transform.id && edge.id !== sinkEdges[0]?.id)
   ) {
     return null;
   }
@@ -89,7 +96,12 @@ function resolveTerminalProjectionClosure(
     return null;
   }
 
-  return { sources, transform, edges: incoming };
+  return {
+    sources,
+    transform,
+    root,
+    edges: [...incoming, ...sinkEdges].sort((a, b) => a.id.localeCompare(b.id)),
+  };
 }
 
 function buildDraftSignature(
@@ -101,9 +113,11 @@ function buildDraftSignature(
     toCanvasAuthoringSerializableValue({
       canvasId,
       selection,
-      nodes: [...closure.sources, closure.transform].sort((left, right) =>
-        left.id.localeCompare(right.id)
-      ),
+      nodes: [
+        ...closure.sources,
+        closure.transform,
+        ...(closure.root === closure.transform ? [] : [closure.root]),
+      ].sort((left, right) => left.id.localeCompare(right.id)),
       edges: closure.edges,
     })
   );
@@ -140,7 +154,11 @@ export function buildProtectedDvtPreviewProjection(args: {
             (node): node is CanonicalNode => node !== undefined
           )
         : []
-      : nodes.filter((node) => node.kind === 'dvt:transform' && node.role === 'transform');
+      : nodes.filter(
+          (node) =>
+            (node.kind === 'dvt:transform' && node.role === 'transform') ||
+            (node.kind === 'dvt:sink' && node.role === 'output')
+        );
   const closures = candidates
     .map((candidate) => resolveTerminalProjectionClosure(candidate, nodesById, edges))
     .filter((closure): closure is TerminalProjectionClosure => closure !== null);
@@ -161,15 +179,19 @@ export function buildProtectedDvtPreviewProjection(args: {
   }
   const selection = parseExecutionSelection({
     mode: 'upstream',
-    nodeIds: [closure.transform.id],
+    nodeIds: [closure.root.id],
   });
+  const dependencies = [
+    ...closure.sources.map((source) => source.id),
+    ...(closure.root === closure.transform ? [] : [closure.transform.id]),
+  ].sort();
   return {
     ok: true,
     selection,
     selectionMode: 'explicit',
-    requestedRootNodeIds: [closure.transform.id],
-    derivedDependencyNodeIds: closure.sources.map((source) => source.id),
-    scopedNodeIds: [...closure.sources.map((source) => source.id), closure.transform.id].sort(),
+    requestedRootNodeIds: [closure.root.id],
+    derivedDependencyNodeIds: dependencies,
+    scopedNodeIds: [...dependencies, closure.root.id].sort(),
     draftSignature: buildDraftSignature(args.canvasId, closure, selection),
   };
 }
