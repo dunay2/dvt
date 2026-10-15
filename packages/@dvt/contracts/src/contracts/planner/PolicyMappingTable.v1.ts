@@ -110,12 +110,13 @@ export interface AdapterPolicyMappingTable {
  * All other adapter packages MUST export an equivalent table.
  *
  * Matches the runtime behavior implemented in
- * `@dvt/adapter-temporal/src/TemporalPolicyMapper.ts`.
+ * `@dvt/adapter-temporal/src/TemporalPolicyMapper.ts` and the plan-wide
+ * admission bound in `workflows/runPlanWorkflow.stepExecution.ts`.
  */
 export const TEMPORAL_POLICY_MAPPING_TABLE: AdapterPolicyMappingTable = {
   adapterId: 'temporal',
-  adapterVersion: '1.0.0',
-  lastReviewedDate: '2026-03-18',
+  adapterVersion: '1.1.0',
+  lastReviewedDate: '2026-10-15',
   entries: [
     // ── Retry ────────────────────────────────────────────────────────────
     {
@@ -160,21 +161,24 @@ export const TEMPORAL_POLICY_MAPPING_TABLE: AdapterPolicyMappingTable = {
       policyKind: 'sequential',
       canHonor: true,
       runtimeEnforcement:
-        'maxConcurrentActivityTaskExecutions: 1, maxConcurrentWorkflowTaskExecutions: 1',
-      notes: 'Worker-level limit; does not prevent inter-workflow concurrency on the same worker.',
+        'RunPlanWorkflow admits at most one logical step activity per plan at a time.',
+      notes: 'Worker capacity hints are separate operational limits, not per-plan enforcement.',
     },
     {
       policyCategory: 'concurrency',
       policyKind: 'bounded',
       canHonor: true,
       runtimeEnforcement:
-        'maxConcurrentActivityTaskExecutions: maxParallel, maxConcurrentWorkflowTaskExecutions: maxParallel',
+        'RunPlanWorkflow admits at most maxParallel logical step activities per plan at a time.',
+      notes:
+        'One uniform maxInFlight is resolved from all steps before execution; mixed policies are rejected.',
     },
     {
       policyCategory: 'concurrency',
       policyKind: 'unbounded',
       canHonor: true,
-      runtimeEnforcement: 'No concurrency limit set on worker options.',
+      runtimeEnforcement:
+        'No semantic per-plan admission limit; layer dependencies and worker capacity still apply.',
     },
   ],
 } as const;

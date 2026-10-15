@@ -26,29 +26,57 @@ import type {
 import { formatUnknownError } from './workflowErrorHelpers.js';
 import { buildGatewayContext } from './workflowGatewayHelpers.js';
 
-export async function emitStepStartedForLayer(
-  ctx: WorkflowCtx,
-  planRef: WorkflowPlanRef,
-  layer: ReadonlyArray<WorkflowStep>
-): Promise<void> {
-  for (const step of layer) {
-    await eventActivities.emitEvent({
-      ctx,
-      planRef,
-      eventType: 'StepStarted',
-      stepId: step.stepId,
-    });
-  }
-}
-
 export async function executeLayerSteps(args: {
   layer: ReadonlyArray<WorkflowStep>;
+  maxInFlight?: number;
+  planRef: WorkflowPlanRef;
   downstreamStepIdsByGatewayStepId: Record<string, string[]>;
   ctx: WorkflowCtx;
   state: RuntimeWorkflowState;
   runtime: LayerRuntimeState;
 }): Promise<LayerStepExecution[]> {
-  return Promise.all(args.layer.map((step) => executeLayerStep({ ...args, step })));
+  const limit = args.maxInFlight ?? args.layer.length;
+  const results: LayerStepExecution[] = [];
+  const active = new Set<Promise<void>>();
+  let failure: { error: unknown } | undefined;
+  let next = 0;
+
+  try {
+    while (next < args.layer.length && !args.state.cancelRequested && failure === undefined) {
+      if (active.size >= limit) {
+        await Promise.race(active);
+        continue;
+      }
+      const index = next++;
+      const step = args.layer[index]!;
+      // Admission reserves a slot before publishing; queued work has no StepStarted.
+      await eventActivities.emitEvent({
+        ctx: args.ctx,
+        planRef: args.planRef,
+        eventType: 'StepStarted',
+        stepId: step.stepId,
+      });
+      const execution = executeLayerStep({ ...args, step })
+        .then(
+          (result) => {
+            results[index] = result;
+          },
+          (error: unknown) => {
+            failure ??= { error };
+          }
+        )
+        .finally(() => {
+          active.delete(execution);
+        });
+      active.add(execution);
+    }
+  } catch (error) {
+    failure ??= { error };
+  }
+  // Never let a publication failure or cancellation abandon admitted activities.
+  await Promise.all(active);
+  if (failure !== undefined) throw failure.error;
+  return results;
 }
 
 async function executeLayerStep(args: {

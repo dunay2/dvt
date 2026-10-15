@@ -30,7 +30,8 @@ import type { ExecutabilityValidationResult } from './PlanExecutabilityValidatio
 //    and coefficient values.
 //  - `maxInFlight` / numeric concurrency maps to `concurrency.kind='bounded',
 //    maxParallel = maxInFlight`.
-//  - Omitting a class means no constraint is applied for that dimension.
+//  - Omitting a class uses the planner's governed default for that dimension.
+//    Explicit `unbounded` removes the corresponding limit where supported.
 //
 // The removed schema artifacts are:
 //  - PlannerPoliciesSchema (use PlannerPolicyClassSetSchema)

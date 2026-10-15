@@ -135,6 +135,56 @@ It does **not** own:
 
 ## Transitions
 
+### Plan-wide concurrency admission
+
+`StartRun` retains the existing execution rail. The planner materializes its
+resolved policy in every step: default `256`, sequential `1`, bounded
+`maxParallel`, or absence for explicit unbounded execution. Segment resolution
+validates the complete immutable plan with the common step concurrency schema.
+All steps must agree, including absence; malformed or mixed policies fail before
+any `StepStarted`. Empty plans have no work to constrain. Runtime does not invent
+a second default or select an incidental step as policy authority.
+
+Each segment carries the optional `maxInFlight` resolved from that same verified
+plan. Continue-as-new re-resolves it; neither full plans nor redundant policy
+state enter the compact cursor. Worker capacity hints remain operational limits,
+not the enforcement of per-plan concurrency.
+
+The existing layer executor admits at most K logical step activities at a time.
+A slot covers `StepStarted` publication and activity completion, including
+technical retries. Completion frees the slot immediately, without a batch
+barrier. `StepStarted` records runtime admission, not physical worker CPU time.
+Results remain in plan order regardless of completion order.
+
+- Ordinary step failure does not suppress pending siblings in the same layer;
+  all confirmed outcomes precede the single failure terminal. No later layer runs.
+- Cooperative cancellation stops new admission and drains admitted work. Native
+  cancellation preserves activity cleanup acknowledgement before the terminal.
+- Fatal admission/publication failure stops new admission, drains active work,
+  and propagates without inventing a successful append or replacement terminal.
+- Pause remains a layer boundary. Gateways, skip propagation and rollover keep
+  their existing layer semantics; rollover never abandons active slots.
+
+This scheduling change uses the development hard cut approved in
+[#2819](https://github.com/dunay2/dvt/issues/2819#issuecomment-6198119194).
+The drained-cutover runbook still governs activation; integration neither resets
+data nor restarts shared workers. New-history replay is not old-history support.
+
+```mermaid
+flowchart LR
+  Plan["Complete verified plan"] --> Policy{"Uniform valid concurrency?"}
+  Policy -->|no| Reject["Reject before step admission"]
+  Policy -->|yes| Segment["Layer plus K"]
+  Segment --> Slots["At most K active slots"]
+  Slots --> Start["StepStarted then executeStep"]
+  Start --> Result["Result at plan index"]
+  Result --> Slots
+  Slots --> Drain["Drain admitted work"]
+  Drain --> Apply["Ordered outcomes and existing lifecycle"]
+```
+
+### Workflow lifecycle
+
 1. Engine validates executable plan bytes, metadata, and canonical `planId`.
 2. Engine dispatches `TemporalAdapter.startRun(planRef, ctx)`.
 3. Adapter starts `runPlanWorkflow` with explicit payload and rollover budgets.
@@ -169,6 +219,7 @@ It does **not** own:
 | `runPlanWorkflow.state.ts`                | Workflow control input parsing and cursor hydration                                  |
 | `workflowCursorHelpers.ts`                | Compact continue-as-new cursor construction and payload guard                        |
 | `executionSegmentResolver.ts`             | PlanRef execution-segment projection from canonical plans                            |
+| `workflowPlanConcurrency.ts`              | Plan-wide concurrency resolution from canonical step configuration                   |
 | `runPlanWorkflow.layers.ts`               | Deterministic workflow layer-loop orchestration                                      |
 | `runPlanWorkflow.layerHelpers.ts`         | Layer selection and continue-as-new decision helpers                                 |
 | `runPlanWorkflow.layerResults.ts`         | Layer result application and gateway fact retention                                  |

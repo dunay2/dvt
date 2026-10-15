@@ -19,7 +19,7 @@ import {
   selectExecutableLayer,
 } from './runPlanWorkflow.layerHelpers.js';
 import { applyLayerResults } from './runPlanWorkflow.layerResults.js';
-import { emitStepStartedForLayer, executeLayerSteps } from './runPlanWorkflow.stepExecution.js';
+import { executeLayerSteps } from './runPlanWorkflow.stepExecution.js';
 import type {
   ExecutePlanLayersArgs,
   LayerLoopOutcome,
@@ -118,10 +118,10 @@ async function executeExecutableLayer(
   args: ProcessLayerArgs,
   executableLayer: ReadonlyArray<WorkflowStep>
 ): Promise<RunPlanWorkflowResult | null> {
-  await emitStepStartedForLayer(args.ctx, args.planRef, executableLayer);
-
   const layerResults = await executeLayerSteps({
     layer: executableLayer,
+    maxInFlight: args.segment.maxInFlight,
+    planRef: args.planRef,
     downstreamStepIdsByGatewayStepId: args.segment.downstreamStepIdsByGatewayStepId,
     ctx: args.ctx,
     state: args.state,

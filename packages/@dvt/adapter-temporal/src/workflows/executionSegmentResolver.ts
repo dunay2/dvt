@@ -12,11 +12,13 @@ import { collectDownstreamStepIds, planExecutionLayers } from '@dvt/plan-interpr
 
 import { resolveTransformationExecutor } from './workflowArtifactHelpers.js';
 import { normalizeDependsOn, validateGatewayDependencies } from './workflowGatewayHelpers.js';
+import { resolvePlanMaxInFlight } from './workflowPlanConcurrency.js';
 
 export interface ResolvedExecutionSegment {
   layerIndex: number;
   totalLayerCount: number;
   runtimeExecutor?: TransformationExecutor;
+  maxInFlight?: number;
   steps: ExecutionStep[];
   downstreamStepIdsByGatewayStepId: Record<string, string[]>;
   retainedGatewayDependencyStepIds: string[];
@@ -27,6 +29,7 @@ export function resolveExecutionSegmentFromPlan(
   plan: ExecutionPlan,
   layerIndex: number
 ): ResolvedExecutionSegment {
+  const maxInFlight = resolvePlanMaxInFlight(plan.steps);
   validateGatewayDependencies(plan.steps);
   const executionLayers = planExecutionLayers<ExecutionStep>(plan.steps);
   const runtimeExecutor = resolveTransformationExecutor(plan);
@@ -46,6 +49,7 @@ export function resolveExecutionSegmentFromPlan(
     layerIndex,
     totalLayerCount: executionLayers.length,
     runtimeExecutor,
+    ...(maxInFlight === undefined ? {} : { maxInFlight }),
     steps: [...layer],
     downstreamStepIdsByGatewayStepId: buildGatewayDownstreamMap(plan.steps, layer),
     retainedGatewayDependencyStepIds: resolveRetainedGatewayDependencyStepIds(

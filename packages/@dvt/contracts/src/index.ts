@@ -199,6 +199,7 @@ export * from './contracts/planner/StepKindRegistry.v1.js';
 export * from './errorContract.js';
 export * from './errors.js';
 export * from './schemas.js';
+export { CommonStepTypeConfigSchema } from './step-registry/CommonStepTypeConfig.js';
 export * from './step-registry/StepTypeRegistry.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';
