@@ -16,6 +16,7 @@ Evidence documents that justify or validate relevant changes.
 - [Algebraic derived output evidence](ED-20260908-algebraic-derived-output.md)
 - [Authoritative Transform output sample](ED-20260915-authoritative-transform-output-sample.md)
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
+- [Confirmed Layer Outcomes Before Run Failure](ED-20261015-layer-result-evidence.md)
 - [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)
 - [ED 20260410 Contract Mapper Boundary Option A](ED-20260410-contract-mapper-boundary-option-a.md)
 - [ED 20260410 Temporal Native Cancel Semantics](ED-20260410-temporal-native-cancel-semantics.md)
