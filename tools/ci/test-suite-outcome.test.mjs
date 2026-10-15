@@ -288,7 +288,11 @@ test('Web proof allocation and cleanup are bounded to the container created by t
       containerId !== ''
     );
   }
-  const artifacts = web.steps.filter((step) => step.uses?.startsWith('actions/upload-artifact@'));
+  const artifacts = web.steps.filter(
+    (step) =>
+      step.uses?.startsWith('actions/upload-artifact@') &&
+      step.with.path === '.dvt/evidence/selected-closure/screenshots'
+  );
   assert.equal(artifacts.length, 1);
   const artifact = artifacts[0];
   assert.equal(

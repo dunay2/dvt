@@ -270,7 +270,9 @@ jobs:
           ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}
 
       - name: Upload sanitized Chromium network diagnostics
-        if: always() && matrix.capability == 'available' && matrix.shard == 1
+        if: >-
+          always() && matrix.capability == 'available' && matrix.shard == 1 &&
+          hashFiles('.dvt/evidence/chromium-network/*.json') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: web-network-diagnostics-${{ github.run_attempt }}-${{ matrix.shard }}
