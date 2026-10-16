@@ -166,6 +166,22 @@ class ProcessProtocolTest(unittest.TestCase):
         event = ledger.exit({"pid": 23, "tid": 23, "timestampNs": 20, "waitStatus": 9, "parentNotification": 17})
         self.assertEqual(event["role"], "network-service")
 
+    def test_proc_read_of_a_reused_pid_does_not_erase_an_older_queued_exit(self):
+        ledger = protocol.OwnedProcesses(10)
+        ledger.fork(10, 21, 2)
+        ledger.identify(21, 210, "browser")
+        ledger.fork(21, 23, 4)
+        ledger.identify(23, 230, "network")
+        ledger.identify(23, 999, "other")
+        event = ledger.exit({"pid": 23, "tid": 23, "timestampNs": 20, "waitStatus": 9, "parentNotification": 17})
+        self.assertEqual(event["role"], "network-service")
+        self.assertEqual(event["birthtimeTicks"], 230)
+        self.assertEqual(event["signal"], 9)
+        ledger.fork(21, 23, 30)
+        event = ledger.exit({"pid": 23, "tid": 23, "timestampNs": 40, "waitStatus": 0, "parentNotification": 17})
+        self.assertEqual(event["role"], "owned-child-unknown")
+        self.assertIsNone(event["birthtimeTicks"])
+
     def test_oom_requires_an_owned_browser_lifetime(self):
         ledger = protocol.OwnedProcesses(10)
         self.assertIsNone(ledger.oom({"victimPid": 99, "timestampNs": 10}))

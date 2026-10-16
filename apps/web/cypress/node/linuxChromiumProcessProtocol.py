@@ -118,8 +118,8 @@ class OwnedProcesses:
         if record is None or record["endedNs"] is not None:
             return
         if record["birthtimeTicks"] not in (None, birthtime):
-            record["role"] = "unknown"
-            record["endedNs"] = record["startedNs"]
+            # /proc may already expose a reused PID while the older EXIT is
+            # queued. Only process events retire or replace the admitted life.
             return
         record["birthtimeTicks"] = birthtime
         if role != "unknown":
