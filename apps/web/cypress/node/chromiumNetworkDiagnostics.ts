@@ -40,7 +40,7 @@ export function createChromiumNetworkDiagnostics(
   return {
     directory,
     beforeBrowserLaunch(browser: Cypress.Browser, launch: Cypress.BeforeBrowserLaunchOptions) {
-      return attachChromiumCapture(directory, browser, launch);
+      return attachChromiumCapture(directory, browser, launch).launch;
     },
     afterRun() {
       const captures = browserCaptures(directory);
@@ -66,8 +66,8 @@ function attachChromiumCapture(
   directory: string,
   browser: Cypress.Browser,
   launch: Cypress.BeforeBrowserLaunchOptions
-): Cypress.BeforeBrowserLaunchOptions {
-  if (browser.family !== 'chromium') return launch;
+): Readonly<{ captureDirectory: string | null; launch: Cypress.BeforeBrowserLaunchOptions }> {
+  if (browser.family !== 'chromium') return { captureDirectory: null, launch };
   const capture = mkdtempSync(join(directory, 'chrome-'));
   launch.args.push(
     `--log-net-log=${join(capture, 'netlog.json')}`,
@@ -75,7 +75,7 @@ function attachChromiumCapture(
     '--enable-logging',
     `--log-file=${join(capture, 'process.log')}`
   );
-  return launch;
+  return { captureDirectory: capture, launch };
 }
 
 export async function withChromiumNetworkDiagnostics<T>(
@@ -111,22 +111,20 @@ export function configureChromiumNetworkDiagnostics(
       !existsSync(directory)
     )
       throw new Error('Missing owned Chromium capture lease');
-    on('before:browser:launch', (browser, launch) =>
-      attachChromiumCapture(directory, browser, launch)
-    );
+    let activeCapture: string | null = null;
+    on('before:browser:launch', (browser, launch) => {
+      const attached = attachChromiumCapture(directory, browser, launch);
+      activeCapture = attached.captureDirectory;
+      return attached.launch;
+    });
     let sequence = 0;
     on('after:spec', (spec, results) => {
       if (results === undefined || results.stats.failures === 0) return;
       try {
         const relative = spec.relative.replace(/\\/gu, '/');
-        const captures = browserCaptures(directory);
-        if (captures.length === 0) throw new Error('Missing Chromium capture');
+        if (activeCapture === null) throw new Error('Missing Chromium capture');
         sequence += 1;
-        for (const capture of captures)
-          stageChromiumObservation(capture, {
-            sequence,
-            spec: relative,
-          });
+        stageChromiumObservation(activeCapture, { sequence, spec: relative });
       } catch {
         throw new Error('Chromium network snapshot failed');
       }

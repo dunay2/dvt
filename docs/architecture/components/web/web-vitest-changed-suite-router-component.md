@@ -507,6 +507,10 @@ finalized report. The `after:spec` hook retains a private, validated observation
 for each failed spec before later browser activity can overwrite it. Successful
 specs add no observation. The hook does not publish, close or modify Chrome's
 capture. Only native completion publishes evidence and removes exact owned files.
+Each launch returns its capture identity to the hook adapter. A failed spec is
+observed only against the active launch, never against older retained capture
+directories. A non-Chromium launch clears that identity. The native lifetime
+owner, not the per-spec hook, enumerates all launches for finalization and cleanup.
 
 ```mermaid
 flowchart LR

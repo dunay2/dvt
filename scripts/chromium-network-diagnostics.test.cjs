@@ -217,6 +217,57 @@ test('failed-spec snapshot survives raw overwrite without snapshotting successfu
   }
 });
 
+test('failed specs bind only to the current Chromium launch, never earlier captures', async () => {
+  const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-launch-test-'));
+  const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  try {
+    await withChromiumNetworkDiagnostics(workspaceRoot, async () => {
+      const hooks = new Map();
+      configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {});
+      const failed = { stats: { failures: 1 } };
+      const afterSpec = hooks.get('after:spec');
+      assert.throws(
+        () => afterSpec({ relative: 'cypress/e2e/first.cy.ts' }, failed),
+        /snapshot failed/
+      );
+      for (const [id, spec] of [
+        [3, 'first'],
+        [9, 'second'],
+      ]) {
+        const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+        fs.writeFileSync(
+          launch.args[0].slice('--log-net-log='.length),
+          JSON.stringify({
+            constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+            events: [{ type: 1, source: { id } }],
+          })
+        );
+        afterSpec({ relative: `cypress/e2e/${spec}.cy.ts` }, failed);
+      }
+      hooks.get('before:browser:launch')({ family: 'firefox' }, { args: [] });
+      assert.throws(
+        () => afterSpec({ relative: 'cypress/e2e/third.cy.ts' }, failed),
+        /snapshot failed/
+      );
+    });
+    const evidence = path.join(workspaceRoot, '.dvt/evidence/chromium-network');
+    const reports = fs
+      .readdirSync(evidence)
+      .filter((name) => name.includes('-failure-'))
+      .map((name) => JSON.parse(fs.readFileSync(path.join(evidence, name), 'utf8')));
+    assert.deepEqual(reports.map((report) => [report.spec, report.events[0].sourceId]).sort(), [
+      ['cypress/e2e/first.cy.ts', 3],
+      ['cypress/e2e/second.cy.ts', 9],
+    ]);
+  } finally {
+    if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
+    assert.ok(path.resolve(workspaceRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(workspaceRoot, { recursive: true });
+  }
+});
+
 for (const closed of [true, false])
   test(`native completion includes delayed records (closed document: ${closed})`, async () => {
     const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-delayed-test-'));
