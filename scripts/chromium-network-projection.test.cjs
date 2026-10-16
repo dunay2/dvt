@@ -105,6 +105,14 @@ test('invalid correlation values cannot publish arbitrary strings or non-integra
   }
 });
 
+test('normalizes the safe integer clock offset emitted by current Chromium', () => {
+  const input = netlog();
+  input.constants.timeTickOffset = 1789123456000;
+  assert.equal(projectChromiumNetworkLog(input).timeTickOffset, '1789123456000');
+  input.constants.timeTickOffset = Number.MAX_SAFE_INTEGER + 1;
+  assert.equal(projectChromiumNetworkLog(input).timeTickOffset, undefined);
+});
+
 test('terminated footer is explicit and retains only complete observed records', () => {
   const complete = JSON.stringify(netlog());
   const result = projectChromiumNetworkCapture(complete.slice(0, -2) + ',\n');

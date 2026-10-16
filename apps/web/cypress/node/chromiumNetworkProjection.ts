@@ -119,11 +119,14 @@ export function projectChromiumNetworkLog(
       ...(status === undefined ? {} : { statusCode: Number(status) }),
     });
   }
+  const offset = constants?.timeTickOffset;
+  const timeTickOffset =
+    typeof offset === 'number' && Number.isSafeInteger(offset) ? String(offset) : offset;
   return {
     schemaVersion: 1,
     events,
-    ...(typeof constants?.timeTickOffset === 'string' && /^-?\d+$/u.test(constants.timeTickOffset)
-      ? { timeTickOffset: constants.timeTickOffset }
+    ...(typeof timeTickOffset === 'string' && /^-?\d+$/u.test(timeTickOffset)
+      ? { timeTickOffset }
       : {}),
   };
 }
