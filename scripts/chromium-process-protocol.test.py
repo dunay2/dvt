@@ -82,6 +82,12 @@ class ProcessProtocolTest(unittest.TestCase):
         self.assertEqual(protocol.classify_arguments(browser.replace(b"owned/", b"unowned/"), root), "other")
         self.assertEqual(protocol.classify_arguments(browser.replace(b"chrome-Ab12/", b"../"), root), "other")
 
+    def test_typed_children_never_become_browser_roots_even_with_the_lease(self):
+        root = "/tmp/dvt-chromium-network-owned"
+        args = b"chrome\0--log-net-log=/tmp/dvt-chromium-network-owned/chrome-Ab12/netlog.json\0--type=utility\0"
+        self.assertEqual(protocol.classify_arguments(args, root), "other")
+        self.assertEqual(protocol.classify_arguments(args + b"--utility-sub-type=network.mojom.NetworkService\0", root), "network")
+
     def test_network_identity_is_exact_and_truncated_arguments_are_unknown(self):
         args = b"chrome\0--utility-sub-type=network.mojom.NetworkService\0--private=secret\0"
         self.assertEqual(protocol.classify_arguments(args, "/tmp/owned"), "network")

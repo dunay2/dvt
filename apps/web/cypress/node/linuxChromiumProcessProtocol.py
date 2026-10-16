@@ -56,6 +56,10 @@ def classify_arguments(arguments, capture_root):
     if not arguments or not arguments.endswith(b"\0") or len(arguments) >= 131072:
         return "unknown"
     values = arguments.split(b"\0")
+    if b"--utility-sub-type=network.mojom.NetworkService" in values:
+        return "network"
+    if any(value == b"--type" or value.startswith(b"--type=") for value in values):
+        return "other"
     for value in values:
         if not value.startswith(b"--log-net-log="):
             continue
@@ -66,8 +70,6 @@ def classify_arguments(arguments, capture_root):
             continue
         if len(relative.parts) == 2 and re.fullmatch(r"chrome-[A-Za-z0-9]+", relative.parts[0]) and relative.name == "netlog.json":
             return "browser"
-    if b"--utility-sub-type=network.mojom.NetworkService" in values:
-        return "network"
     return "other"
 
 
