@@ -1,4 +1,5 @@
 import {
+  DVT_REJECTIONS,
   parseExecutionSelection,
   type DvtOperationalWorkloadV1,
   type DvtProtectedWorkspaceGraphProvenance,
@@ -15,6 +16,9 @@ import type { AuthorizedCommandExecutionContext } from '../../../src/application
 import type { DvtOperationalWorkloadProjectionResult } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
 import { ResolveAuthorizedDvtPreviewSelectionService } from '../../../src/application/services/resolveAuthorizedDvtPreviewSelection.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { buildDvtJoinPreviewDraft } from '../../fixtures/dvtJoinPreviewFixture.js';
+import { publicationHarness } from '../../fixtures/dvtProjectionPublicationHarness.js';
+import { buildDvtSinkPublicationDraft } from '../../fixtures/dvtSinkPublicationFixture.js';
 
 const provenance: DvtProtectedWorkspaceGraphProvenance = {
   kind: 'dvt-protected-workspace-graph',
@@ -106,7 +110,7 @@ function dependencies(): {
       authorizedDraft: { revision: 'revision-7', draft },
     },
   }));
-  const publish = vi.fn(async () => targetProjection);
+  const publish = vi.fn(async () => ({ ok: true, value: targetProjection }));
   const project = vi.fn((): DvtOperationalWorkloadProjectionResult => ({ ok: true, graphSource }));
 
   return {
@@ -122,6 +126,65 @@ function dependencies(): {
 }
 
 describe('ResolveAuthorizedDvtPreviewSelectionService', () => {
+  it.each([
+    ['terminal view', false, DVT_REJECTIONS.runDispositionUnsupported],
+    ['Sink view', true, DVT_REJECTIONS.runTargetInvalid],
+  ] as const)(
+    'preserves %s admission across the real publisher without writes',
+    async (_name, sink, rejection) => {
+      const source = sink ? buildDvtSinkPublicationDraft() : buildDvtJoinPreviewDraft(2);
+      const node = source.nodes.find(
+        (candidate) => candidate.role === (sink ? 'output' : 'transform')
+      )!;
+      node.metadata!.config = sink
+        ? { materialization: 'view', writeMode: 'replace' }
+        : { materialized: 'view' };
+      const harness = publicationHarness(source);
+      const deps = dependencies();
+      const selection = parseExecutionSelection({ mode: 'upstream', nodeIds: [node.id] });
+      deps.executeWithAuthorizedDraft.mockResolvedValue({
+        ok: true,
+        value: {
+          selection,
+          nodeIds: source.nodeIds,
+          edgeIds: source.edges.map((edge) => edge.id),
+          authorizedDraft: { revision: 'revision-admission', draft: source },
+        },
+      });
+      deps.publish.mockImplementation((input) => harness.publisher.publish(input));
+
+      await expect(
+        deps.service.execute(
+          {
+            selection,
+            provenance: { ...provenance, canvasId: source.canvas.id! },
+          },
+          context()
+        )
+      ).resolves.toMatchObject({ ok: false, rejection });
+      expect(harness.publish).not.toHaveBeenCalled();
+      expect(deps.project).not.toHaveBeenCalled();
+    }
+  );
+
+  it('does not interpret an unexpected exception message as an admission result', async () => {
+    const deps = dependencies();
+    deps.publish.mockRejectedValue(new Error(DVT_REJECTIONS.runDispositionUnsupported.cause));
+    await expect(
+      deps.service.execute(
+        {
+          selection: parseExecutionSelection({ mode: 'upstream', nodeIds: ['transform-a'] }),
+          provenance,
+        },
+        context()
+      )
+    ).resolves.toEqual({
+      ok: false,
+      rejection: DVT_REJECTIONS.previewTargetProjectionFailed,
+    });
+    expect(deps.project).not.toHaveBeenCalled();
+  });
+
   it('uses one protected snapshot to publish and lower a terminal Transform workload', async () => {
     const deps = dependencies();
     const selection = parseExecutionSelection({ mode: 'upstream', nodeIds: ['transform-a'] });

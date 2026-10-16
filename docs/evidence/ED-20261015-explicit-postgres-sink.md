@@ -45,7 +45,7 @@ records current/solution diagrams, alternatives, Fowler analysis, negative paths
 and allowed surfaces. Planning DB designs `GH-3115-EXPLICIT-SINK`,
 `GH-3115-SINK-CONSUMERS`, `GH-3115-SINK-EVIDENCE`, `GH-3115-SINK-PERSISTENCE`,
 `GH-3115-SINK-BROWSER-ADMISSION`, `GH-3115-SINK-CLOSEOUT-V2` and
-`GH-3115-MATERIALIZATION-INTENT` admit the implementation and the subsequent
+`GH-3115-MATERIALIZATION-INTENT` and `GH-3115-PUBLICATION-REJECTION-V2` admit the implementation and the subsequent
 consumer, persistence, materialization and browser-catalog corrections
 before those edits. The local feature references existing ConfigureCanvasDvtNode,
 PreviewPlan and StartRun authorities; persistence retains SaveWorkspaceGraphDraft.
@@ -151,6 +151,20 @@ intermediate table, executor, command, query, wire version or dependency.
   binding/copy cases pass; no runtime admission or timeout was relaxed.
 
 ## Integration Boundary
+
+The complete LIVE catalog subsequently exercised 69 cases: 68 passed and one
+exposed lost admission metadata on an unsupported terminal view. The early
+publication policy correctly prevented artifact writes but threw its cause as an
+ordinary exception, which the selection service mapped to a generic projection
+failure. Two real publisher-to-selection composition tests reproduced that loss
+for terminal and Sink dispositions. Publication now returns an explicit typed
+success/rejection result, preserving the existing rejection vocabulary; unexpected
+projection/store exceptions retain the generic sanitized response. Direct test
+consumers narrow the result without losing their semantic assertions. The terminal
+browser assertion retains the exact cause and zero StartRun requirement, with the
+already admitted table-or-Sink localized guidance. This is not a new execution
+mode or a relaxed negative check. Final validation is recorded by SHA below the
+issue/PR journal, not inferred from this correction.
 
 The complete committed implementation diff was classified ARC-2 by
 `tools/ci/arc-check.mjs`: evidence/risk plus lint, test, schema and golden checks.

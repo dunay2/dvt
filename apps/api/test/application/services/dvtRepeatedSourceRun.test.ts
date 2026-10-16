@@ -22,7 +22,9 @@ describe('repeated source Run workload', () => {
       },
     };
     const { publisher } = publisherHarness();
-    const targetProjection = await publisher.publish(input);
+    const publication = await publisher.publish(input);
+    if (!publication.ok) throw new Error(publication.cause);
+    const targetProjection = publication.value;
     const projector = new DvtOperationalWorkloadProjector();
     const request = {
       ...input,
