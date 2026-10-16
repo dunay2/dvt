@@ -485,10 +485,12 @@ flowchart LR
 
 `RunWebCypressNative` retains the same literal scenarios, authentication,
 providers, assertions and budget. The existing Cypress Node event adapter
-optionally captures Chromium net-log for available group 1 only. The pure
+optionally captures Chromium net-log for every available group. The pure
 projection and Node lifecycle have separate owners. Exported JSON contains
-event/source identifiers, event kinds, numeric network errors, method and safe
-loopback route groups only. Headers, bodies, cookies, URL queries, userinfo and
+event/source identifiers, numeric source dependency links, event kinds, numeric
+network errors, method, numeric HTTP status and safe loopback route groups only.
+The numeric time-tick offset permits correlation with API wall-clock logs.
+Headers, bodies, cookies, URL queries, userinfo and
 arbitrary raw parameters are omitted. Raw capture is outside artifact
 publication and its exact temporary files are removed by their owner.
 
@@ -497,6 +499,16 @@ binary completes. Cypress `after:run` is not the close boundary: a real Windows
 proof passed its journey but that hook still saw the Chrome file locked. Node
 plugin launch hooks receive only the owned lease through scoped process
 environment; that environment is restored on success or failure.
+
+GH-3604 retains a separate safe snapshot at `after:spec` for each failed spec,
+before later browser activity can overwrite the raw file. Successful specs add
+no snapshot. Only the literal relative spec identity and observation timestamp
+accompany the same strict projection; test errors and result payloads are never
+serialized. Snapshot reading does not close, delete or modify Chrome's raw file.
+Malformed or unreadable snapshots fail explicitly; they do not become successful
+evidence. Native completion still owns the final projection and exact cleanup.
+`captureState=complete` describes a closed JSON document, not whole-run coverage.
+This closes an observed evidence gap, not a demonstrated transport root cause.
 
 The real capture can end before its JSON footer when Cypress terminates Chrome.
 The maintained `jsonc-parser` development dependency decodes complete observed

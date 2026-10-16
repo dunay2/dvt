@@ -9,12 +9,14 @@ import {
 type NetworkEvent = Readonly<{
   kind: string;
   sourceId: number;
+  dependencySourceId?: number;
   time?: string;
   phase?: number;
   netError?: number;
   method?: string;
   origin?: string;
   route?: string;
+  statusCode?: number;
 }>;
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -54,16 +56,17 @@ function safeRoute(value: unknown): Readonly<{ origin: string; route: string }> 
 
 export function projectChromiumNetworkLog(
   value: unknown
-): Readonly<{ schemaVersion: 1; events: readonly NetworkEvent[] }> {
+): Readonly<{ schemaVersion: 1; events: readonly NetworkEvent[]; timeTickOffset?: string }> {
   const input = record(value);
-  const kinds = record(record(input?.constants)?.logEventTypes);
+  const constants = record(input?.constants);
+  const kinds = record(constants?.logEventTypes);
   if (kinds === null || !Array.isArray(input?.events) || input.events.length === 0)
     throw new Error('Invalid Chromium network log');
   const names = new Map(
     Object.entries(kinds).flatMap(([kind, code]) =>
       typeof code === 'number' &&
       Number.isSafeInteger(code) &&
-      /^(CORS_|URL_REQUEST_|HTTP_TRANSACTION_|SOCKET_|TCP_CONNECT|SSL_CONNECT)[A-Z0-9_]*$/u.test(
+      /^(CORS_|URL_REQUEST_|HTTP_TRANSACTION_|HTTP_STREAM_|CONNECT_JOB_|TRANSPORT_CONNECT_JOB_|SOCKET_|TCP_CONNECT|SSL_CONNECT)[A-Z0-9_]*$/u.test(
         kind
       )
         ? [[code, kind] as const]
@@ -90,9 +93,18 @@ export function projectChromiumNetworkLog(
         ? params.method
         : undefined;
     const route = safeRoute(params?.url);
+    const dependency = record(params?.source_dependency)?.id;
+    const statusLine = Array.isArray(params?.headers) ? params.headers[0] : undefined;
+    const status =
+      typeof statusLine === 'string'
+        ? /^HTTP\/(?:1\.[01]|2|3) ([1-5]\d{2})(?: |$)/u.exec(statusLine)?.[1]
+        : undefined;
     events.push({
       kind,
       sourceId: source.id,
+      ...(typeof dependency === 'number' && Number.isSafeInteger(dependency) && dependency >= 0
+        ? { dependencySourceId: dependency }
+        : {}),
       ...(typeof event.time === 'string' && /^\d+(?:\.\d+)?$/u.test(event.time)
         ? { time: event.time }
         : {}),
@@ -104,9 +116,16 @@ export function projectChromiumNetworkLog(
         : {}),
       ...(method === undefined ? {} : { method }),
       ...(route ?? {}),
+      ...(status === undefined ? {} : { statusCode: Number(status) }),
     });
   }
-  return { schemaVersion: 1, events };
+  return {
+    schemaVersion: 1,
+    events,
+    ...(typeof constants?.timeTickOffset === 'string' && /^-?\d+$/u.test(constants.timeTickOffset)
+      ? { timeTickOffset: constants.timeTickOffset }
+      : {}),
+  };
 }
 
 export function projectChromiumNetworkCapture(

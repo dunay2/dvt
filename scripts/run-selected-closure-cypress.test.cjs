@@ -275,11 +275,15 @@ test('opt-in native diagnostics finalize after execution without weakening faile
       main(['--spec', spec], {
         run: async () => {
           const directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
-          configureChromiumNetworkDiagnostics((event, handler) => {
-            assert.equal(event, 'before:browser:launch');
-            const launch = handler({ family: 'chromium' }, { args: [] });
-            capture = launch.args[0].slice('--log-net-log='.length);
-          }, {});
+          const hooks = new Map();
+          configureChromiumNetworkDiagnostics(
+            (event, handler) => {
+              hooks.set(event, handler);
+            },
+            { projectRoot: path.resolve(__dirname, '../apps/web') }
+          );
+          const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+          capture = launch.args[0].slice('--log-net-log='.length);
           fs.writeFileSync(
             capture,
             JSON.stringify({

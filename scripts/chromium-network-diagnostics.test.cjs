@@ -151,3 +151,58 @@ test('native completion owns finalization and restores scoped process environmen
     fs.rmSync(workspaceRoot, { recursive: true });
   }
 });
+
+test('failed-spec snapshot survives raw overwrite without snapshotting successful or interactive specs', async () => {
+  const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-snapshot-test-'));
+  const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  const evidence = path.join(workspaceRoot, '.dvt/evidence/chromium-network');
+  const spec = { relative: 'cypress/e2e/canvas/example.cy.ts' };
+  try {
+    await withChromiumNetworkDiagnostics(workspaceRoot, async () => {
+      const hooks = new Map();
+      configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {
+        projectRoot: path.join(workspaceRoot, 'apps/web'),
+      });
+      const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+      const raw = launch.args[0].slice('--log-net-log='.length);
+      const afterSpec = hooks.get('after:spec');
+      assert.equal(typeof afterSpec, 'function');
+      afterSpec(spec, undefined);
+      afterSpec(spec, { stats: { failures: 0 } });
+      assert.equal(fs.existsSync(evidence), false);
+      const failed = { stats: { failures: 1 }, error: 'private failure' };
+      assert.throws(() => afterSpec(spec, failed), /^Error: Chromium network snapshot failed$/);
+      fs.writeFileSync(raw, 'private malformed capture');
+      assert.throws(() => afterSpec(spec, failed), /^Error: Chromium network snapshot failed$/);
+      const capture = {
+        constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+        events: [{ type: 1, source: { id: 3 }, params: { headers: ['private'], body: 'private' } }],
+      };
+      fs.writeFileSync(raw, JSON.stringify(capture));
+      assert.throws(
+        () => afterSpec({ relative: '../private' }, failed),
+        /^Error: Chromium network snapshot failed$/
+      );
+      afterSpec(spec, failed);
+      assert.equal(fs.existsSync(raw), true);
+      capture.events[0].source.id = 9;
+      fs.writeFileSync(raw, JSON.stringify(capture));
+    });
+    const reports = fs.readdirSync(evidence);
+    assert.equal(reports.length, 2);
+    const read = (name) => JSON.parse(fs.readFileSync(path.join(evidence, name), 'utf8'));
+    const snapshot = read(reports.find((name) => name.includes('-failure-')));
+    const final = read(reports.find((name) => !name.includes('-failure-')));
+    assert.equal(snapshot.spec, spec.relative);
+    assert.ok(Number.isFinite(Date.parse(snapshot.observedAt)));
+    assert.equal(snapshot.events[0].sourceId, 3);
+    assert.equal(final.events[0].sourceId, 9);
+    assert.doesNotMatch(JSON.stringify(snapshot), /private|error|headers|body/);
+  } finally {
+    if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
+    assert.ok(path.resolve(workspaceRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(workspaceRoot, { recursive: true });
+  }
+});

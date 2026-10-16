@@ -33,6 +33,37 @@ function diagnosticsEnabled(): boolean {
   return flag === '1';
 }
 
+function browserCaptures(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).map((capture) => {
+    if (!capture.isDirectory() || !/^chrome-[A-Za-z0-9]+$/u.test(capture.name))
+      throw new Error('Unexpected Chromium capture entry');
+    return join(directory, capture.name);
+  });
+}
+
+function publishCapture(
+  browserDirectory: string,
+  workspaceRoot: string,
+  snapshot?: Readonly<{ sequence: number; spec: string }>
+): void {
+  const report = projectChromiumNetworkCapture(
+    readFileSync(join(browserDirectory, 'netlog.json'), 'utf8')
+  );
+  const evidence = resolve(workspaceRoot, '.dvt/evidence/chromium-network');
+  const captureId = `${basename(resolve(browserDirectory, '..'))}-${basename(browserDirectory)}`;
+  const suffix = snapshot === undefined ? '' : `-failure-${snapshot.sequence}`;
+  mkdirSync(evidence, { recursive: true });
+  writeFileSync(
+    join(evidence, `${captureId}${suffix}.json`),
+    JSON.stringify({
+      ...report,
+      ...(snapshot === undefined
+        ? {}
+        : { spec: snapshot.spec, observedAt: new Date().toISOString() }),
+    })
+  );
+}
+
 export function createChromiumNetworkDiagnostics(
   options: Readonly<{ enabled: boolean; workspaceRoot: string }>
 ): ChromiumNetworkDiagnosticsBinding | null {
@@ -44,21 +75,12 @@ export function createChromiumNetworkDiagnostics(
       return attachChromiumCapture(directory, browser, launch);
     },
     afterRun() {
-      const captures = readdirSync(directory, { withFileTypes: true });
+      const captures = browserCaptures(directory);
       let failed = captures.length === 0;
-      for (const capture of captures) {
-        if (!capture.isDirectory() || !/^chrome-[A-Za-z0-9]+$/u.test(capture.name))
-          throw new Error('Unexpected Chromium capture entry');
-        const browserDirectory = join(directory, capture.name);
+      for (const browserDirectory of captures) {
         const file = join(browserDirectory, 'netlog.json');
         try {
-          const report = projectChromiumNetworkCapture(readFileSync(file, 'utf8'));
-          const evidence = resolve(options.workspaceRoot, '.dvt/evidence/chromium-network');
-          mkdirSync(evidence, { recursive: true });
-          writeFileSync(
-            join(evidence, `${basename(directory)}-${capture.name}.json`),
-            JSON.stringify(report)
-          );
+          publishCapture(browserDirectory, options.workspaceRoot);
         } catch {
           failed = true;
         } finally {
@@ -122,6 +144,25 @@ export function configureChromiumNetworkDiagnostics(
     on('before:browser:launch', (browser, launch) =>
       attachChromiumCapture(directory, browser, launch)
     );
+    let sequence = 0;
+    on('after:spec', (spec, results) => {
+      if (results === undefined || results.stats.failures === 0) return;
+      try {
+        const relative = spec.relative.replace(/\\/gu, '/');
+        if (!/^cypress\/e2e\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_.-]+\.cy\.ts$/u.test(relative))
+          throw new Error('Invalid diagnostic spec');
+        const captures = browserCaptures(directory);
+        if (captures.length === 0) throw new Error('Missing Chromium capture');
+        sequence += 1;
+        for (const capture of captures)
+          publishCapture(capture, resolve(config.projectRoot, '../..'), {
+            sequence,
+            spec: relative,
+          });
+      } catch {
+        throw new Error('Chromium network snapshot failed');
+      }
+    });
   }
   return config;
 }

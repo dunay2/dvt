@@ -79,6 +79,32 @@ test('missing or malformed capture rejects without including raw input', () => {
   }
 });
 
+test('correlates the request clock, dependent socket and status without raw headers', () => {
+  const input = netlog();
+  input.constants.timeTickOffset = '1789123456000';
+  input.events[0].params.source_dependency = { id: 42, type: 9, private: 'secret' };
+  input.events[0].params.headers = ['HTTP/1.1 204 No Content', 'Set-Cookie: private'];
+  const result = projectChromiumNetworkLog(input);
+  assert.equal(result.timeTickOffset, '1789123456000');
+  assert.equal(result.events[0].dependencySourceId, 42);
+  assert.equal(result.events[0].statusCode, 204);
+  assert.doesNotMatch(JSON.stringify(result), /secret|private|Set-Cookie|No Content/);
+});
+
+test('invalid correlation values cannot publish arbitrary strings or non-integral IDs', () => {
+  for (const value of ['private', null, {}, 1.5, Infinity]) {
+    const input = netlog();
+    input.constants.timeTickOffset = value;
+    input.events[0].params.source_dependency = { id: value };
+    input.events[0].params.headers = [value, 'HTTP/1.1 200 private'];
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.timeTickOffset, undefined);
+    assert.equal(result.events[0].dependencySourceId, undefined);
+    assert.equal(result.events[0].statusCode, undefined);
+    assert.doesNotMatch(JSON.stringify(result), /private/);
+  }
+});
+
 test('terminated footer is explicit and retains only complete observed records', () => {
   const complete = JSON.stringify(netlog());
   const result = projectChromiumNetworkCapture(complete.slice(0, -2) + ',\n');
