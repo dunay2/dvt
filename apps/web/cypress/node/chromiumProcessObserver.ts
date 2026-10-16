@@ -37,11 +37,23 @@ const message = z.union([
     coreDumped: z.boolean(),
     exitCode: z.never().optional(),
   }),
-  z.object({ ...identity, kind: z.literal('oom-victim') }),
+  z.object({
+    kind: z.literal('kernel-oom-victim'),
+    victimPid: integer.positive(),
+    timestampNs: z.string().regex(/^\d+$/u),
+    clock: z.literal('kernel-log'),
+    correlation: z.literal('pid-only'),
+  }),
   z.object({
     kind: z.literal('coverage-gap'),
     source: z.enum(['process-events', 'kernel-oom']),
-    reason: z.enum(['sequence-gap', 'records-lost', 'drain-limit', 'browser-not-observed']),
+    reason: z.enum([
+      'sequence-gap',
+      'records-lost',
+      'drain-limit',
+      'browser-not-observed',
+      'network-service-not-observed',
+    ]),
   }),
   z.object({
     kind: z.literal('unavailable'),

@@ -52,23 +52,41 @@ def decode_process_events(packet):
     return events
 
 
-def classify_arguments(arguments, capture_root):
+def classify_arguments(arguments, capture_root, executable):
     if not arguments or not arguments.endswith(b"\0") or len(arguments) >= 131072:
         return "unknown"
-    values = arguments.split(b"\0")
-    if b"--utility-sub-type=network.mojom.NetworkService" in values:
-        return "network"
-    if any(value == b"--type" or value.startswith(b"--type=") for value in values):
+    if PurePosixPath(executable).name not in ("chrome", "chromium", "chromium-browser"):
         return "other"
-    for value in values:
-        if not value.startswith(b"--log-net-log="):
-            continue
-        target = PurePosixPath(os.fsdecode(value[len(b"--log-net-log="):]))
+    values = arguments.rstrip(b"\0").split(b"\0")
+    if len(values) == 1 and b" " in values[0]:
+        prefix = os.fsencode(executable) + b" "
+        if not values[0].startswith(prefix):
+            return "unknown"
+        title = values[0][len(prefix):]
+        # Chromium's title is lossy, not shell argv. Keep quoted spans opaque;
+        # never interpret escapes or quoted markers as process identity.
+        values = re.findall(rb"(?:[^\s\"'\\]+|'[^'\\]*'|\"[^\"\\]*\")+", title)
+        if b" ".join(values) != title:
+            return "unknown"
+    markers = {}
+    for key in (b"--type", b"--utility-sub-type", b"--log-net-log"):
+        matches = [value for value in values if value == key or value.startswith(key + b"=")]
+        if len(matches) > 1 or any(value == key or any(char in value for char in (b"'", b'"', b"\\")) for value in matches):
+            return "unknown"
+        markers[key] = matches[0][len(key) + 1:] if matches else None
+    if markers[b"--type"] == b"utility" and markers[b"--utility-sub-type"] == b"network.mojom.NetworkService":
+        return "network"
+    if markers[b"--type"] is not None or markers[b"--utility-sub-type"] is not None:
+        return "other"
+    target_value = markers[b"--log-net-log"]
+    if target_value is not None:
+        target = PurePosixPath(os.fsdecode(target_value))
         try:
             relative = target.relative_to(PurePosixPath(capture_root))
         except ValueError:
-            continue
-        if len(relative.parts) == 2 and re.fullmatch(r"chrome-[A-Za-z0-9]+", relative.parts[0]) and relative.name == "netlog.json":
+            return "other"
+        if (os.fsencode(str(target)) == target_value and len(relative.parts) == 2
+                and re.fullmatch(r"chrome-[A-Za-z0-9]+", relative.parts[0]) and relative.name == "netlog.json"):
             return "browser"
     return "other"
 
@@ -99,11 +117,12 @@ class OwnedProcesses:
 
     def __init__(self, root_pid):
         self.processes = {root_pid: self._lifetime(root_pid, 0, None)}
+        self.confirmed_roles = set()
 
     @staticmethod
     def _lifetime(pid, timestamp, parent):
         return {"pid": pid, "startedNs": timestamp, "endedNs": None,
-                "birthtimeTicks": None, "role": "unknown", "parent": parent}
+                "birthtimeTicks": None, "role": "unknown", "observedNs": None, "parent": parent}
 
     def fork(self, parent_pid, pid, timestamp):
         parent = self.processes.get(parent_pid)
@@ -113,7 +132,7 @@ class OwnedProcesses:
                 and (parent["endedNs"] is None or timestamp <= parent["endedNs"])):
             self.processes[pid] = self._lifetime(pid, timestamp, parent)
 
-    def identify(self, pid, birthtime, role):
+    def identify(self, pid, birthtime, role, observed_ns):
         record = self.processes.get(pid)
         if record is None or record["endedNs"] is not None:
             return
@@ -122,8 +141,19 @@ class OwnedProcesses:
             # queued. Only process events retire or replace the admitted life.
             return
         record["birthtimeTicks"] = birthtime
-        if role != "unknown":
+        if role != "unknown" and record["role"] != role:
             record["role"] = role
+            record["observedNs"] = observed_ns
+
+    @staticmethod
+    def _browser(record, timestamp):
+        ancestor = record
+        browser = None
+        while ancestor is not None:
+            if ancestor["role"] == "browser":
+                browser = ancestor
+            ancestor = ancestor["parent"]
+        return browser if browser is not None and (timestamp is None or browser["observedNs"] <= timestamp) else None
 
     def _identity(self, pid, timestamp):
         record = self.processes.get(pid)
@@ -131,14 +161,19 @@ class OwnedProcesses:
             return None
         if record["endedNs"] is not None and timestamp > record["endedNs"]:
             return None
-        ancestor = record
-        while ancestor is not None and ancestor["role"] != "browser":
-            ancestor = ancestor["parent"]
-        if ancestor is None:
+        browser = self._browser(record, timestamp)
+        if browser is None:
             return None
-        role = {"browser": "browser", "network": "network-service", "other": "owned-child"}.get(record["role"], "owned-child-unknown")
-        return {"pid": pid, "browserPid": ancestor["pid"], "role": role,
-                "birthtimeTicks": record["birthtimeTicks"], "timestampNs": timestamp}
+        known = record["observedNs"] is not None and record["observedNs"] <= timestamp
+        role = {"browser": "browser", "network": "network-service", "other": "owned-child"}.get(record["role"] if known else "unknown", "owned-child-unknown")
+        if role == "browser" and browser is not record:
+            role = "owned-child"
+        return {"pid": pid, "browserPid": browser["pid"], "role": role,
+                "birthtimeTicks": record["birthtimeTicks"] if known else None, "timestampNs": timestamp}
+
+    def observed_roles(self, now_ns):
+        return self.confirmed_roles | {identity["role"] for record in self.processes.values()
+                if record["endedNs"] is None and (identity := self._identity(record["pid"], now_ns)) is not None}
 
     def exit(self, event):
         identity = self._identity(event["pid"], event["timestampNs"])
@@ -147,6 +182,7 @@ class OwnedProcesses:
             record["endedNs"] = event["timestampNs"]
         if identity is None:
             return None
+        self.confirmed_roles.update(("browser", identity["role"]))
         # Retain the process leader and abnormal thread exits; normal worker-thread
         # completion is not termination of the network service.
         if event["tid"] != event["pid"] and event["waitStatus"] == 0:
@@ -156,5 +192,8 @@ class OwnedProcesses:
                 **decode_wait_status(event["waitStatus"])}
 
     def oom(self, event):
-        identity = self._identity(event.get("victimPid"), event["timestampNs"])
-        return None if identity is None else {**identity, "kind": "oom-victim"}
+        record = self.processes.get(event.get("victimPid"))
+        if self._browser(record, None) is None:
+            return None
+        return {"kind": "kernel-oom-victim", "victimPid": event["victimPid"],
+                "timestampNs": event["timestampNs"], "clock": "kernel-log", "correlation": "pid-only"}

@@ -611,6 +611,46 @@ the notification sent to the parent. SIGKILL alone is not proof of OOM. Read OOM
 records independently from the start boundary, retaining only owned victim PIDs
 and numeric times; absent evidence means not observed, never ruled out.
 
+Hosted run `38962033365` exposed a Linux identity mismatch: Chromium rewrites
+`/proc/PID/cmdline` as a single space-separated process title. NUL-only argv
+classification loses the actual browser and network service; a short-lived
+launcher carrying the same flags must not satisfy coverage. Read the executable
+symlink transiently inside the same birthtime check and admit native Chromium
+only. Distinguish NUL argv from a rewritten title with its exact executable
+prefix; recognize only complete, unique owned-lease/type/subtype markers. Quoted
+or escaped marker values and truncated representations remain unknown. Unrelated
+quoted values are opaque, including Cypress's existing date flag. Do not use
+shell parsing to pretend the original argv can be reconstructed: flattening is
+lossy, so title classification is restricted evidence of this controlled launch,
+not an authentication boundary. Preserve kernel-owned ancestry, never promote a
+nested browser root, and require an observed owned network-service identity
+before declaring coverage complete. No raw executable path or title is retained.
+The primary mechanism is documented in Chromium's
+[process-title construction](https://chromium.googlesource.com/chromium/src/+/HEAD/base/process/set_process_title.cc)
+and [Linux implementation](https://chromium.googlesource.com/chromium/src/+/HEAD/base/process/set_process_title_linux.cc).
+
+PID birth ticks alone cannot correlate a first `/proc` read with a queued old
+EXIT. Timestamp the completed stable snapshot using the process-event monotonic
+clock; require the initial time namespace and check alignment with the capability
+probe. An exit event preceding
+that observation cannot inherit its role or birthtime; this also applies to the
+browser ancestor. Preserve historical coverage only from temporally confirmed
+exits, and evaluate remaining lifetimes after draining queued events. A snapshot
+that races with termination conservatively loses identity rather than assigning
+another process's identity. Do not compare `/proc` boot-clock ticks directly to
+CN_PROC monotonic timestamps.
+
+Kernel-log OOM observations retain their own clock domain. `printk` uses
+`local_clock()`, which does not guarantee the same cross-CPU clock base as
+CN_PROC. Project only a `kernel-oom-victim` with numeric victim PID, kernel-log
+timestamp and explicit `pid-only` correlation when the PID matches the owned
+ledger. Do not attach a browser identity, birthtime or network-service role to
+that candidate. PID reuse means it is supporting evidence, not proof that the
+observed network-service lifetime was killed by OOM. No unrelated kernel text
+is published. See the kernel's
+[printk timestamp source](https://github.com/torvalds/linux/blob/v6.8/kernel/printk/printk.c#L2047)
+and [scheduler clock contract](https://github.com/torvalds/linux/blob/v6.8/kernel/sched/clock.c#L15-L29).
+
 Pure protocol/ownership tests and adapter lifecycle tests have separate owners.
 The existing real Linux invocation provides the capability smoke and unchanged
 journey evidence. Assertions, retries, browser, spec selection, workflow and

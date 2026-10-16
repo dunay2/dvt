@@ -37,17 +37,21 @@ def await_event(stream, predicate):
 
 
 def prove_connector(stream):
+    if os.stat("/proc/self/ns/time").st_ino != os.stat("/proc/1/ns/time").st_ino:
+        raise ValueError("Process timestamp namespace mismatch")
     subscription(stream, 1)
     acknowledgement = await_event(stream, lambda event: event["kind"] == 0)
     if acknowledgement["ackError"] != 0:
         raise OSError(acknowledgement["ackError"], "Process subscription denied")
+    started_ns = time.monotonic_ns()
     probe = subprocess.Popen([sys.executable, "-I", "-B", "-c", "raise SystemExit(23)"],
                              stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL, env={"PATH": "/usr/bin:/bin"})
     try:
         observed = await_event(stream, lambda event: event["kind"] == 0x80000000
                                and event["pid"] == probe.pid and event["tid"] == probe.pid)
-        if observed["waitStatus"] != 23 << 8 or probe.wait(timeout=3) != 23:
+        if (observed["waitStatus"] != 23 << 8 or probe.wait(timeout=3) != 23
+                or not started_ns <= observed["timestampNs"] <= time.monotonic_ns()):
             raise ValueError("Process capability exit mismatch")
     finally:
         if probe.poll() is None:
@@ -59,10 +63,12 @@ def identity(pid, capture_root):
     try:
         directory = Path("/proc") / str(pid)
         before = parse_birthtime((directory / "stat").read_text())
+        executable = os.readlink(directory / "exe")
         with (directory / "cmdline").open("rb") as source:
-            role = classify_arguments(source.read(131072), capture_root)
+            role = classify_arguments(source.read(131072), capture_root, executable)
+        same_executable = executable == os.readlink(directory / "exe")
         after = parse_birthtime((directory / "stat").read_text())
-        return (before, role) if before == after else None
+        return (before, role, time.monotonic_ns()) if before == after and same_executable else None
     except (OSError, ValueError):
         return None
 
@@ -112,8 +118,11 @@ class Observation:
             emit(projected)
 
     def finish(self):
-        if not any(record["role"] == "browser" for record in self.ledger.processes.values()):
+        roles = self.ledger.observed_roles(time.monotonic_ns())
+        if "browser" not in roles:
             self.gap("process-events", "browser-not-observed")
+        elif "network-service" not in roles:
+            self.gap("process-events", "network-service-not-observed")
         emit({"kind": "complete", "incomplete": self.incomplete})
         return 1 if self.incomplete else 0
 

@@ -92,10 +92,26 @@ test('readiness precedes use, EOF owns cleanup and only projected records publis
       environment: { TOKEN: 'private secret' },
     });
     item.child.stderr.write('private stderr');
+    item.send({
+      kind: 'kernel-oom-victim',
+      victimPid: 23,
+      timestampNs: '124',
+      clock: 'kernel-log',
+      correlation: 'pid-only',
+      role: 'network-service',
+      browserPid: 21,
+    });
     await binding.stop();
     const report = item.report();
     assert.equal(report.state, 'complete');
     assert.equal(report.records[1].signal, 9);
+    assert.deepEqual(report.records[2], {
+      kind: 'kernel-oom-victim',
+      victimPid: 23,
+      timestampNs: '124',
+      clock: 'kernel-log',
+      correlation: 'pid-only',
+    });
     assert.doesNotMatch(JSON.stringify(report), /private|argv|environment|TOKEN/);
   } finally {
     item.cleanup();
@@ -147,6 +163,24 @@ test('an unterminated final record makes evidence incomplete', async () => {
     await assert.rejects(binding.stop(), /diagnostics incomplete/);
     assert.equal(item.report().state, 'incomplete');
     assert.doesNotMatch(JSON.stringify(item.report()), /private/);
+  } finally {
+    item.cleanup();
+  }
+});
+
+test('missing network identity remains an explicit coverage gap in the artifact', async () => {
+  const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+  try {
+    const binding = await startChromiumProcessObserver(item.options, item.port);
+    const gap = {
+      kind: 'coverage-gap',
+      source: 'process-events',
+      reason: 'network-service-not-observed',
+    };
+    item.send(gap);
+    await assert.rejects(binding.stop(), /diagnostics incomplete/);
+    assert.equal(item.report().state, 'incomplete');
+    assert.deepEqual(item.report().records[1], gap);
   } finally {
     item.cleanup();
   }
