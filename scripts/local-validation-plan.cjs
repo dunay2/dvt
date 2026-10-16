@@ -48,6 +48,8 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/chromium-network-projection.test.cjs': 'scripts/chromium-network-projection.test.cjs',
   'apps/web/cypress/node/chromiumNetworkDiagnostics.ts':
     'scripts/chromium-network-diagnostics.test.cjs',
+  'apps/web/cypress/node/chromiumNetworkEvidence.ts':
+    'scripts/chromium-network-diagnostics.test.cjs',
   'scripts/chromium-network-diagnostics.test.cjs': 'scripts/chromium-network-diagnostics.test.cjs',
   'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',

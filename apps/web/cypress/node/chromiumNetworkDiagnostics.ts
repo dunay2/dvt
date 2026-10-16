@@ -1,21 +1,12 @@
 /// <reference types="node" />
 /** Owned concern: own opt-in Chromium capture lifecycle and publish only its safe projection. */
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  readdirSync,
-  rmdirSync,
-  unlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, isAbsolute, join, resolve } from 'node:path';
+import { basename, isAbsolute, join } from 'node:path';
 
 import type {} from 'cypress';
 
-import { projectChromiumNetworkCapture } from './chromiumNetworkProjection';
+import { finalizeChromiumCapture, stageChromiumObservation } from './chromiumNetworkEvidence';
 
 type ChromiumNetworkDiagnosticsBinding = Readonly<{
   directory: string;
@@ -41,29 +32,6 @@ function browserCaptures(directory: string): string[] {
   });
 }
 
-function publishCapture(
-  browserDirectory: string,
-  workspaceRoot: string,
-  snapshot?: Readonly<{ sequence: number; spec: string }>
-): void {
-  const report = projectChromiumNetworkCapture(
-    readFileSync(join(browserDirectory, 'netlog.json'), 'utf8')
-  );
-  const evidence = resolve(workspaceRoot, '.dvt/evidence/chromium-network');
-  const captureId = `${basename(resolve(browserDirectory, '..'))}-${basename(browserDirectory)}`;
-  const suffix = snapshot === undefined ? '' : `-failure-${snapshot.sequence}`;
-  mkdirSync(evidence, { recursive: true });
-  writeFileSync(
-    join(evidence, `${captureId}${suffix}.json`),
-    JSON.stringify({
-      ...report,
-      ...(snapshot === undefined
-        ? {}
-        : { spec: snapshot.spec, observedAt: new Date().toISOString() }),
-    })
-  );
-}
-
 export function createChromiumNetworkDiagnostics(
   options: Readonly<{ enabled: boolean; workspaceRoot: string }>
 ): ChromiumNetworkDiagnosticsBinding | null {
@@ -78,17 +46,17 @@ export function createChromiumNetworkDiagnostics(
       const captures = browserCaptures(directory);
       let failed = captures.length === 0;
       for (const browserDirectory of captures) {
-        const file = join(browserDirectory, 'netlog.json');
         try {
-          publishCapture(browserDirectory, options.workspaceRoot);
+          finalizeChromiumCapture(browserDirectory, options.workspaceRoot);
         } catch {
           failed = true;
-        } finally {
-          if (existsSync(file)) unlinkSync(file);
-          rmdirSync(browserDirectory);
         }
       }
-      rmdirSync(directory);
+      try {
+        rmdirSync(directory);
+      } catch {
+        failed = true;
+      }
       if (failed) throw new Error('Chromium network diagnostics failed');
     },
   };
@@ -103,7 +71,9 @@ function attachChromiumCapture(
   const capture = mkdtempSync(join(directory, 'chrome-'));
   launch.args.push(
     `--log-net-log=${join(capture, 'netlog.json')}`,
-    '--net-log-capture-mode=Default'
+    '--net-log-capture-mode=Default',
+    '--enable-logging',
+    `--log-file=${join(capture, 'process.log')}`
   );
   return launch;
 }
@@ -149,13 +119,11 @@ export function configureChromiumNetworkDiagnostics(
       if (results === undefined || results.stats.failures === 0) return;
       try {
         const relative = spec.relative.replace(/\\/gu, '/');
-        if (!/^cypress\/e2e\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_.-]+\.cy\.ts$/u.test(relative))
-          throw new Error('Invalid diagnostic spec');
         const captures = browserCaptures(directory);
         if (captures.length === 0) throw new Error('Missing Chromium capture');
         sequence += 1;
         for (const capture of captures)
-          publishCapture(capture, resolve(config.projectRoot, '../..'), {
+          stageChromiumObservation(capture, {
             sequence,
             spec: relative,
           });

@@ -19,6 +19,35 @@ type NetworkEvent = Readonly<{
   statusCode?: number;
 }>;
 
+export function projectChromiumProcessLog(
+  text: string | undefined
+):
+  | Readonly<{ state: 'unavailable' }>
+  | Readonly<{
+      state: 'observed';
+      networkServiceRestarts: readonly Readonly<{
+        processId: number;
+        threadId: number;
+        time: string;
+      }>[];
+    }> {
+  if (text === undefined) return { state: 'unavailable' };
+  const networkServiceRestarts = text.split(/\r?\n/u).flatMap((line) => {
+    const match =
+      /^\[(\d+):(\d+):(\d{4}\/\d{6}\.\d{6}):ERROR:(?:[A-Za-z0-9_./\\-]*[/\\])?network_service_instance_impl\.cc(?::\d+|\(\d+\))\] Network service crashed or was terminated, restarting service\.$/u.exec(
+        line
+      );
+    if (
+      match === null ||
+      !Number.isSafeInteger(Number(match[1])) ||
+      !Number.isSafeInteger(Number(match[2]))
+    )
+      return [];
+    return [{ processId: Number(match[1]), threadId: Number(match[2]), time: match[3] }];
+  });
+  return { state: 'observed', networkServiceRestarts };
+}
+
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)

@@ -5,7 +5,36 @@ const assert = require('node:assert/strict');
 const {
   projectChromiumNetworkLog,
   projectChromiumNetworkCapture,
+  projectChromiumProcessLog,
 } = require('../apps/web/cypress/node/chromiumNetworkProjection.ts');
+
+test('process log admits only the exact restart signal, never raw diagnostics or lookalikes', () => {
+  const line =
+    '[21:34:1016/093012.123456:ERROR:content/browser/network_service_instance_impl.cc:608] Network service crashed or was terminated, restarting service.';
+  assert.deepEqual(
+    projectChromiumProcessLog(
+      [
+        line,
+        line.replace(':608]', '(608)]'),
+        line + ' private',
+        line.replace('network_service_instance_impl.cc', 'private.cc'),
+        'private Authorization: Bearer secret https://private.invalid/?token=secret',
+      ].join('\n')
+    ),
+    {
+      state: 'observed',
+      networkServiceRestarts: [
+        { processId: 21, threadId: 34, time: '1016/093012.123456' },
+        { processId: 21, threadId: 34, time: '1016/093012.123456' },
+      ],
+    }
+  );
+  assert.deepEqual(projectChromiumProcessLog(undefined), { state: 'unavailable' });
+  assert.deepEqual(projectChromiumProcessLog(''), {
+    state: 'observed',
+    networkServiceRestarts: [],
+  });
+});
 
 function netlog(url = 'http://user:secret@127.0.0.1:3300/workspace/graph/draft?token=private') {
   return {
