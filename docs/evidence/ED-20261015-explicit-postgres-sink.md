@@ -130,6 +130,15 @@ intermediate table, executor, command, query, wire version or dependency.
   broad Cypress ESLint-project TypeScript invocation exposed existing test-chain
   typing failures; it is not presented as a passing package typecheck. The
   canonical Web typecheck and production build pass separately.
+- The committed presentation suite subsequently passed all 1,015 cases in 228
+  files. The full unit suite passed 3,062 cases but exposed an obsolete two-mode
+  card-menu expectation. Reviewing that consumer found a real transition gap:
+  the card retained an existing terminal target on `ephemeral`, unlike Properties.
+  A focused command test reproduced rejection before correction. Both consumers
+  now delegate the explicit change to one pure materialization policy; invalid
+  imported combinations still reject. The LIVE Sink flow now authors a terminal
+  target through Properties, switches to ephemeral from the card, reloads and
+  executes the explicit Sink. Final results are recorded on the PR and issue.
 
 ## Integration Boundary
 

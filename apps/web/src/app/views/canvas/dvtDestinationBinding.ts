@@ -13,6 +13,7 @@ import type {
 } from './canvasDvtAuthoringTypes';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
+import { withDvtTransformMaterialization } from './canvasDvtMaterializationPolicy';
 
 type DestinationDraft = Readonly<{
   connectionRef?: ConnectionRef;
@@ -126,11 +127,7 @@ export function createDvtTransformMaterializationBinding(
           ? current
           : {
               ...current,
-              dvt: {
-                ...current.dvt,
-                materialized: value,
-                ...(value === 'ephemeral' ? { resultTarget: null } : {}),
-              },
+              dvt: withDvtTransformMaterialization(current.dvt, value),
             }
       );
     },

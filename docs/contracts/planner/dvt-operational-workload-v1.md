@@ -50,6 +50,11 @@ the same DVT output. One contract-owned kind catalog governs protected selection
 metadata validation and SQL field-budget projection; neither spelling bypasses
 field validation or changes the required `dvt` plugin and `output` role.
 
+Properties and the model-card menu use the same explicit disposition transition.
+Selecting `ephemeral` removes the terminal Transform target atomically; selecting
+`table` later does not resurrect it. This is an authoring intent, not a repair on
+read: imported or persisted ephemeral-plus-target combinations still reject.
+
 Reject table-plus-Sink, ephemeral Run without Sink, multiple Sinks, missing or
 extra effective dependencies, non-terminal Sink, unsupported write modes,
 mixed connections and stale identities before dispatch. Unsupported selections

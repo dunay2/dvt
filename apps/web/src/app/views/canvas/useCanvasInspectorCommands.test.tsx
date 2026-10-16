@@ -111,6 +111,56 @@ describe('useCanvasInspectorCommands', () => {
     expect(latest!.session).toBe(baseline);
   });
 
+  it('removes a terminal target on explicit ephemeral selection without restoring it later', () => {
+    const configured: CanonicalNode = {
+      ...model,
+      metadata: {
+        config: {
+          materialized: 'table',
+          resultTarget: {
+            schemaVersion: 'dvt-transform-result-target.v1',
+            connectionRef: {
+              schemaVersion: 'connection-ref.v1',
+              provider: 'postgres',
+              connectionId: 'warehouse',
+            },
+            schema: 'analytics',
+            relation: 'orders',
+          },
+        },
+      },
+    };
+    act(() => root.render(<Harness node={configured} />));
+    act(() =>
+      latest!.setSession(
+        canvasDraftSession.machine.bootstrap({
+          remoteDraft: null,
+          canonicalNodeIds: [model.id],
+          canonicalEdges: [],
+        })
+      )
+    );
+    act(() => {
+      expect(latest!.commands.setNodeMaterialization(model.id, 'ephemeral').outcome).toBe(
+        'applied'
+      );
+    });
+    expect(latest!.session.localNodeCatalog![model.id]).toMatchObject({
+      name: model.name,
+      metadata: { config: { materialized: 'ephemeral' } },
+    });
+    expect(latest!.session.localNodeCatalog![model.id]!.metadata!.config).not.toHaveProperty(
+      'resultTarget'
+    );
+    act(() => {
+      expect(latest!.commands.setNodeMaterialization(model.id, 'table').outcome).toBe('applied');
+    });
+    expect(latest!.session.localNodeCatalog![model.id]!.metadata!.config).not.toHaveProperty(
+      'resultTarget'
+    );
+    expect(configured.metadata!.config).toHaveProperty('resultTarget');
+  });
+
   it.each([{ authority: 'dbt-project-files' }, { dbt: {} }])(
     'rejects file-owned/compatible model mutation: %o',
     (metadata) => {

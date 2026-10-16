@@ -39,10 +39,25 @@ describe('Explicit PostgreSQL Sink live', () => {
     createPublicationWorkspace('Explicit Sink').then((workspace) => {
       ({ scope, modelId, connectionId } = workspace);
       openWorkbenchProperties(modelId);
-      cy.get('select[name="dvt-transform-materialization"]').select('ephemeral');
-      cy.get('[data-slot="dvt-transform-result-target"]').should('not.exist');
+      cy.get('select[name="dvt-transform-materialization"]').select('table');
+      cy.get('select[name="dvt-transform-result-connection"]').select(connectionId);
+      cy.get('input[name="dvt-transform-result-schema"]').clear().type(schema);
+      cy.get('input[name="dvt-transform-result-relation"]')
+        .clear()
+        .type(`${relation}_intermediate`);
       cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
+      waitForPublicationConfig(scope, modelId, {
+        materialized: 'table',
+        resultTarget: { relation: `${relation}_intermediate` },
+      });
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      getVisibleCanvasNodeByCardTitle('Model 1')
+        .find('[data-slot="graph-node-materialization"]')
+        .click();
+      cy.contains('[role="menuitemradio"]', /^ephemeral$/).click();
       waitForPublicationConfig(scope, modelId, { materialized: 'ephemeral' });
+      openWorkbenchProperties(modelId);
+      cy.get('[data-slot="dvt-transform-result-target"]').should('not.exist');
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
     });
     openCanvasContextMenuAt(1050, 700);

@@ -825,6 +825,12 @@ describe('Canvas ready node authoring', () => {
       .transformAuthoring as { semanticDocument: unknown };
     const originalSemanticDocument = structuredClone(modelAuthoring.semanticDocument);
     expect(originalSemanticDocument, 'initial canonical Model document').not.to.be.undefined;
+    const sinkConfig = draft.nodes.find((node) => node.id === 'sink-1')!.metadata!.config as {
+      materialization: string;
+      writeMode: string;
+    };
+    sinkConfig.materialization = 'view';
+    sinkConfig.writeMode = 'append';
     const sourceMetadata = draft.nodes.find((node) => node.id === 'source-1')!.metadata!;
     delete sourceMetadata.connectedSourceRef;
     sourceMetadata.connectionRef = {
@@ -870,8 +876,10 @@ describe('Canvas ready node authoring', () => {
     cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
     cy.get('input[name="dvt-sink-schema"]').clear().type('published');
     cy.get('input[name="dvt-sink-table"]').clear().type('orders_monthly');
-    cy.get('select[name="dvt-sink-materialization"]').select('view');
-    cy.get('select[name="dvt-sink-write-mode"]').select('append');
+    cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
+    cy.get('select[name="dvt-sink-materialization"] option[value="view"]').should('be.disabled');
+    cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
+    cy.get('select[name="dvt-sink-write-mode"] option[value="append"]').should('be.disabled');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
       const savedSink = getE2eApiCalls('/workspace/graph/draft', 'PUT')
