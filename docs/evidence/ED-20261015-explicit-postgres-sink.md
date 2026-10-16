@@ -43,9 +43,10 @@ evidence:
 [preimplementation design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6202986156)
 records current/solution diagrams, alternatives, Fowler analysis, negative paths
 and allowed surfaces. Planning DB designs `GH-3115-EXPLICIT-SINK`,
-`GH-3115-SINK-CONSUMERS`, `GH-3115-SINK-EVIDENCE`, `GH-3115-SINK-PERSISTENCE`
-`GH-3115-SINK-BROWSER-ADMISSION` and `GH-3115-SINK-CLOSEOUT` admit the implementation and the subsequent
-consumer, persistence and browser-catalog corrections
+`GH-3115-SINK-CONSUMERS`, `GH-3115-SINK-EVIDENCE`, `GH-3115-SINK-PERSISTENCE`,
+`GH-3115-SINK-BROWSER-ADMISSION`, `GH-3115-SINK-CLOSEOUT-V2` and
+`GH-3115-MATERIALIZATION-INTENT` admit the implementation and the subsequent
+consumer, persistence, materialization and browser-catalog corrections
 before those edits. The local feature references existing ConfigureCanvasDvtNode,
 PreviewPlan and StartRun authorities; persistence retains SaveWorkspaceGraphDraft.
 
