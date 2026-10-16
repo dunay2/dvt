@@ -40,6 +40,15 @@ publication target using one shared contract policy, not array position or a
 fallback Transform target. There is no extra Transform activity or durable
 intermediate table; the publisher retains its existing temporary candidate.
 
+Completed PostgreSQL evidence retains the selected publication identity in
+required `publication.nodeId`: the Sink ID for explicit publication, or the
+terminal Transform ID for its own table result. GetRunStatus and its Web decoder
+preserve that identity. Canvas attributes a completed publication to a Sink only
+when its graph ID and explicit connection, schema and relation match the evidence.
+Names, relation suffixes and legacy materialization without a node identity do
+not establish ownership. Missing identity is rejected under the coordinated
+development hard cut; no historical evidence is rewritten or guessed.
+
 Authoring explicitly selects `materialized: ephemeral` on the Transform without
 `resultTarget`. The Sink confirms `connectionRef` and supplies `schema`, `table`,
 `materialization: table`, and `writeMode: replace`. Its connection must equal the

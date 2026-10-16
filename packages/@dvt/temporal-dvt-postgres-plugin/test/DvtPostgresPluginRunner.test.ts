@@ -62,6 +62,7 @@ describe('DvtPostgresPluginRunner', () => {
         semanticPlanSha256: SHA.semantic,
         target: { schema: 'analytics', relation: 'orders_result' },
         publication: {
+          nodeId: 'transform-a',
           token: SHA.publication,
           predecessorToken: SHA.predecessor,
           outcome: 'replaced',

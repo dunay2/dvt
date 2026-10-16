@@ -150,6 +150,7 @@ export interface DvtPostgresPublicationEvidence {
     relation: NonBlankString;
   };
   publication: {
+    nodeId: NonBlankString;
     token: Sha256HexString;
     predecessorToken: Sha256HexString | null;
     outcome: 'created' | 'replaced' | 'verified-existing';

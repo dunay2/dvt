@@ -129,6 +129,7 @@ export class DvtPostgresPluginRunner implements DvtPostgresPluginRunnerPort {
           relation: published.targetRelation,
         },
         publication: {
+          nodeId: publication.nodeId,
           token: published.publicationToken,
           predecessorToken: published.predecessorToken,
           outcome: published.publicationOutcome,

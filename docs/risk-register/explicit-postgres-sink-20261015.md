@@ -20,6 +20,8 @@ a Sink, silently select an inherited connection, or dispatch the semantic node
 instead of the publication boundary. A producer-only rollout could emit a new
 Run shape to an old worker. TypeScript-only validation can also hide a divergent
 PostgreSQL draft constraint and prevent saving an otherwise admitted graph.
+Dropping the publication node from execution evidence can leave the Sink without
+metrics or attribute them to another card that happens to share its table.
 
 ## Mitigation
 
@@ -40,6 +42,11 @@ PostgreSQL draft constraint and prevent saving an otherwise admitted graph.
 - Deploy API/contracts/worker together. Old consumers reject the added V1 shape;
   rollback restores the matching producer/consumer set and recreates affected
   plans. Integration does not authorize a shared worker restart or data reset.
+- Preserve required `publication.nodeId` through the existing strict evidence
+  contract and Run read model. Match the graph ID and explicit physical target
+  before displaying completed Sink metrics; reject relation-only attribution.
+  Old evidence without this member is not upgraded or guessed. This required
+  member reinforces the coordinated development cutover obligation.
 
 ## Evidence And Limits
 

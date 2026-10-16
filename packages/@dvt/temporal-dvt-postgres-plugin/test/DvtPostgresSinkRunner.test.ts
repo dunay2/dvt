@@ -49,6 +49,7 @@ describe('Explicit Sink activity and publication', () => {
       stepId: 'sink-a',
       status: 'COMPLETED',
       resultEvidence: {
+        publication: { nodeId: 'sink-a' },
         target: { schema: 'analytics', relation: 'explicit_sink' },
         workloadSha256: sha256HexUtf8(jcsCanonicalize(workload)),
         rowsWritten: 3,

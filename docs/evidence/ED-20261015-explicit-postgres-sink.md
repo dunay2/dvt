@@ -8,7 +8,7 @@ owners:
   - Web
   - PostgreSQL publication
 arc_level: ARC-2
-breaking: false
+breaking: true
 code_refs:
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalWorkload.v1.ts
   - packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresPublicationBoundary.v1.ts
@@ -165,6 +165,23 @@ browser assertion retains the exact cause and zero StartRun requirement, with th
 already admitted table-or-Sink localized guidance. This is not a new execution
 mode or a relaxed negative check. Final validation is recorded by SHA below the
 issue/PR journal, not inferred from this correction.
+
+Review then identified a missing publication-node identity in emitted evidence.
+The preimplementation rationale and scope are recorded in
+[the review admission](https://github.com/dunay2/dvt/issues/3115#issuecomment-6208329866)
+and Planning DB design `GH-3115-PUBLICATION-NODE-EVIDENCE`. The existing strict
+evidence contract now requires `publication.nodeId` for both terminal and Sink
+publication. The plugin obtains it from the existing publication selector;
+GetRunStatus and Web preserve it. Canvas checks the graph ID and contract-validated
+explicit destination instead of guessing ownership from legacy relation names.
+This removes the relation normalization/fallback code, adds no view responsibility,
+and rejects unattributable evidence. The required member is a coordinated
+development hard cut, not a compatibility fallback or data rewrite. Separate
+contract, producer, API, decoder and pure Canvas tests cover the boundary; the
+existing Sink LIVE flow also returns to Canvas to check its published row metric.
+Current-head gates and the independent CI transport failures remain in the issue
+and PR journal; this evidence document does not turn earlier green checks into
+proof of the changed candidate.
 
 The complete committed implementation diff was classified ARC-2 by
 `tools/ci/arc-check.mjs`: evidence/risk plus lint, test, schema and golden checks.

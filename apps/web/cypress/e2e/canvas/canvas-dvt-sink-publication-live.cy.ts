@@ -116,10 +116,17 @@ describe('Explicit PostgreSQL Sink live', () => {
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
     });
     cy.intercept('GET', '**/source-data-sample?*').as('publicationSample');
-    cy.then(() => runPublicationModel(sinkId, scope)).then(({ evidence }) => {
+    cy.then(() => runPublicationModel(sinkId, scope)).then(({ runId, evidence }) => {
       expect(evidence.target).to.deep.include({ schema, relation });
+      expect(evidence.publication.nodeId).to.equal(sinkId);
       expect(evidence.publication.outcome).to.equal('created');
       loadPublicationRows(evidence.publication.token, publicationRows);
+      cy.contains('[data-slot="run-detail-tabs"] [role="tab"]', /^Summary$/).click();
+      cy.get(`a[href="/canvas?runId=${encodeURIComponent(runId)}"]`).click();
+      cy.get(`.react-flow__node[data-id="${sinkId}"]`, { timeout: 30_000 })
+        .contains('[data-slot="graph-node-operational-metric"]', 'Rows')
+        .find('[data-slot="graph-node-metric-hotspot"]')
+        .should('have.text', String(evidence.rowsWritten));
     });
   });
 });
