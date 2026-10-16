@@ -876,9 +876,9 @@ describe('Canvas ready node authoring', () => {
     cy.contains('label', 'Schema').scrollIntoView().should('be.visible');
     cy.get('input[name="dvt-sink-schema"]').clear().type('published');
     cy.get('input[name="dvt-sink-table"]').clear().type('orders_monthly');
-    cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
+    cy.get('select[name="dvt-sink-materialization"]').should('have.prop', 'value', 'view');
     cy.get('select[name="dvt-sink-materialization"] option[value="view"]').should('be.disabled');
-    cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
+    cy.get('select[name="dvt-sink-write-mode"]').should('have.prop', 'value', 'append');
     cy.get('select[name="dvt-sink-write-mode"] option[value="append"]').should('be.disabled');
     cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^Apply$/).click();
     cy.wrap(null).should(() => {
@@ -926,8 +926,8 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
     cy.get('input[name="dvt-sink-schema"]').should('have.value', 'published');
     cy.get('input[name="dvt-sink-table"]').should('have.value', 'orders_monthly');
-    cy.get('select[name="dvt-sink-materialization"]').should('have.value', 'view');
-    cy.get('select[name="dvt-sink-write-mode"]').should('have.value', 'append');
+    cy.get('select[name="dvt-sink-materialization"]').should('have.prop', 'value', 'view');
+    cy.get('select[name="dvt-sink-write-mode"]').should('have.prop', 'value', 'append');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     cy.get('.react-flow__controls-fitview').click();
