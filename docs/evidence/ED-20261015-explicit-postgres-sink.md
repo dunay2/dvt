@@ -140,6 +140,15 @@ intermediate table, executor, command, query, wire version or dependency.
   imported combinations still reject. The LIVE Sink flow now authors a terminal
   target through Properties, switches to ephemeral from the card, reloads and
   executes the explicit Sink. Final results are recorded on the PR and issue.
+- Full controlled-browser validation exposed one further retained connection
+  consumer that still required the retired inherited-connection label. Its
+  replacement preserves manual Source persistence/reload and checks the unselected
+  Sink candidate, no implicit writes, EN/ES and accessibility in one locale loop.
+  The focused browser proof passes. The unused label was removed from types,
+  catalogs and assertions. A separate binding RED reproduced a lost Spanish
+  translation for retained `view/append` values; shared binding labels now preserve
+  that translation while keeping unsupported choices disabled. All 22 focused
+  binding/copy cases pass; no runtime admission or timeout was relaxed.
 
 ## Integration Boundary
 

@@ -199,7 +199,6 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtConnectionTestLabel: 'Probar conexión',
   inspectorDvtConnectionTestPassedMessage: 'Conexión disponible.',
   inspectorDvtConnectionTestFailedMessage: 'Conexión no disponible.',
-  inspectorDvtInheritedConnectionLabel: 'Conexión heredada',
   inspectorDvtSqlTransformTitle: 'Transform DVT',
   inspectorDvtFilterTitle: 'Filtrar filas',
   inspectorDvtFilterFieldLabel: 'Campo',

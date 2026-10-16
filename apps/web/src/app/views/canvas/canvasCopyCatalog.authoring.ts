@@ -627,10 +627,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtConnectionTestFailedMessage',
     fallback: 'Connection unavailable.',
   },
-  inspectorDvtInheritedConnectionLabel: {
-    key: 'canvas.inspector.authoring.dvtInheritedConnectionLabel',
-    fallback: 'Inherited connection',
-  },
   inspectorDvtSqlTransformTitle: {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
     fallback: 'DVT Transform',

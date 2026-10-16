@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   createDvtDestinationBinding,
+  createDvtSinkAuthoringBinding,
   createDvtTransformMaterializationBinding,
 } from './dvtDestinationBinding';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
-import { canvasViewCopy } from './copy';
+import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
 
 const connection = {
   schemaVersion: 'connection-ref.v1',
@@ -13,6 +14,39 @@ const connection = {
 } as const;
 
 describe('Destination bindings', () => {
+  it.each(['en', 'es'] as const)(
+    'preserves translated unsupported Sink values without enabling edits (%s)',
+    (language) => {
+      const copy = resolveCanvasViewCopy(language);
+      const onChange = vi.fn();
+      const binding = createDvtSinkAuthoringBinding({
+        draft: {
+          kind: 'sink',
+          schema: 'analytics',
+          table: 'orders',
+          materialization: 'view',
+          writeMode: 'append',
+        },
+        connection,
+        disabled: false,
+        copy,
+        onChange,
+      });
+      expect(binding.materialization.value).toBe('view');
+      expect(binding.materialization.options).toEqual([
+        { value: 'table', label: copy.inspectorDvtMaterializationTableLabel },
+        { value: 'view', label: copy.inspectorDvtMaterializationViewLabel, disabled: true },
+      ]);
+      expect(binding.writeMode.value).toBe('append');
+      expect(binding.writeMode.options).toEqual([
+        { value: 'replace', label: copy.inspectorDvtWriteModeReplaceLabel },
+        { value: 'append', label: copy.inspectorDvtWriteModeAppendLabel, disabled: true },
+      ]);
+      binding.materialization.setValue('view');
+      binding.writeMode.setValue('append');
+      expect(onChange).not.toHaveBeenCalled();
+    }
+  );
   it('offers but never confirms a candidate automatically', () => {
     const onChange = vi.fn();
     const binding = createDvtDestinationBinding({

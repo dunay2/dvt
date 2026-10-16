@@ -181,16 +181,22 @@ export function createDvtSinkAuthoringBinding(
   const choice = (
     field: 'materialization' | 'writeMode',
     value: string,
-    label: string
+    labels: Readonly<Record<string, string>>
   ): DvtDestinationChoiceBinding => ({
     value: args.draft[field],
     disabled: args.disabled,
     error: args.errors?.[field],
     options: [
-      { value, label },
+      { value, label: labels[value] ?? value },
       ...(args.draft[field] === value
         ? []
-        : [{ value: args.draft[field], label: args.draft[field], disabled: true }]),
+        : [
+            {
+              value: args.draft[field],
+              label: labels[args.draft[field]] ?? args.draft[field],
+              disabled: true,
+            },
+          ]),
     ],
     setValue: (selected) => {
       if (!args.disabled && selected === value) update({ [field]: selected });
@@ -214,11 +220,13 @@ export function createDvtSinkAuthoringBinding(
             : { connectionRef: target.connectionRef, schema: target.schema, table: target.relation }
         ),
     }),
-    materialization: choice(
-      'materialization',
-      'table',
-      args.copy.inspectorDvtMaterializationTableLabel
-    ),
-    writeMode: choice('writeMode', 'replace', args.copy.inspectorDvtWriteModeReplaceLabel),
+    materialization: choice('materialization', 'table', {
+      table: args.copy.inspectorDvtMaterializationTableLabel,
+      view: args.copy.inspectorDvtMaterializationViewLabel,
+    }),
+    writeMode: choice('writeMode', 'replace', {
+      replace: args.copy.inspectorDvtWriteModeReplaceLabel,
+      append: args.copy.inspectorDvtWriteModeAppendLabel,
+    }),
   };
 }
