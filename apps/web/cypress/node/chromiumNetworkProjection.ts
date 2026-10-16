@@ -19,9 +19,7 @@ type NetworkEvent = Readonly<{
   statusCode?: number;
 }>;
 
-export function projectChromiumProcessLog(
-  text: string | undefined
-):
+export function projectChromiumProcessLog(text: string | undefined):
   | Readonly<{ state: 'unavailable' }>
   | Readonly<{
       state: 'observed';
