@@ -103,6 +103,19 @@ test('Chromium diagnostic source and paired tests retain one focused Node obliga
       'apps/web/cypress/node/chromiumNetworkEvidence.ts',
       'scripts/chromium-network-diagnostics.test.cjs',
     ],
+    [
+      'apps/web/cypress/node/chromiumProcessObserver.ts',
+      'scripts/chromium-process-observer.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/linuxChromiumProcessObserver.py',
+      'scripts/chromium-process-protocol.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/linuxChromiumProcessProtocol.py',
+      'scripts/chromium-process-protocol.test.cjs',
+    ],
+    ['scripts/chromium-process-protocol.test.py', 'scripts/chromium-process-protocol.test.cjs'],
   ]) {
     for (const files of [[source], [contract], [source, contract]]) {
       assert.deepEqual(focusedLabelsFor(files), [`node --test ${contract}`]);

@@ -121,7 +121,8 @@ async function main(argv = process.argv.slice(2), deps = {}) {
       );
       result = await diagnostics.withChromiumNetworkDiagnostics(
         path.resolve(project, '../..'),
-        execute
+        execute,
+        deps.observeProcesses
       );
     } else {
       result = await execute();

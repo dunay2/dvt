@@ -575,6 +575,47 @@ support boundaries for controlled, available and unavailable capabilities. Their
 module-load failures affect every capability even when capture is disabled. This
 retains complete evidence; unknown configuration and Node neighbors still reject.
 
+#### Owned Linux Process Exit Evidence — GH-3604
+
+Planning DB design `GH-3604-LINUX-PROCESS-EXIT-EVIDENCE-V2` extends only the existing
+opt-in `RunWebCypressNative` diagnostic boundary. A generic Chromium restart is
+not an exit cause. Utility histograms cannot join a service identity to an exit
+code and do not cover every killed-process path; process polling can miss exits.
+
+```mermaid
+flowchart LR
+  Before[Network utility disappears] --> Restart[Generic restart; cause unknown]
+  Observer[Linux observer] --> Probe[Subscription ACK and known owned-child exit]
+  Probe --> Cypress[Unchanged native Cypress invocation]
+  Cypress --> Chrome[Exact owned Chrome capture lease]
+  Chrome --> Exit[CN_PROC wait status for owned descendants]
+  Chrome --> OOM[Independent kernel OOM observation]
+  Exit --> Projection[Allowlisted evidence; unknown stays unknown]
+  OOM --> Projection
+  Projection --> Close[Native completion; owned observer cleanup]
+```
+
+The Linux adapter receives the native runner PID and private capture root, not
+application credentials. Only Chrome launched with that exact owned net-log
+lease admits a browser subtree; Electron/Cypress utility processes are not that
+browser. Transient command-line inspection compares the complete network-service
+subtype argument and verifies PID birthtime before and after. Arguments,
+environment, command text and raw kernel records never enter published evidence.
+
+The observer proves capability on the actual runner before the browser starts.
+An unavailable namespace, denied source, lost event, malformed record or unstable
+identity remains explicit. WSL's noninitial PID namespace is negative capability
+evidence, not hosted acceptance. No privileged browser or sandbox change is used.
+Decode the terminating signal from the kernel wait status: `exit_signal` is only
+the notification sent to the parent. SIGKILL alone is not proof of OOM. Read OOM
+records independently from the start boundary, retaining only owned victim PIDs
+and numeric times; absent evidence means not observed, never ruled out.
+
+Pure protocol/ownership tests and adapter lifecycle tests have separate owners.
+The existing real Linux invocation provides the capability smoke and unchanged
+journey evidence. Assertions, retries, browser, spec selection, workflow and
+product behavior remain unchanged. No synthetic successful capture is admitted.
+
 ### Execution Selection Consumer Closure — GH-3610
 
 The shared `cypress/support/canvasExecutionSelection.ts` helper is not an

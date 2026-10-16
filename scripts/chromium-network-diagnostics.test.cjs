@@ -7,9 +7,13 @@ const os = require('node:os');
 const path = require('node:path');
 const {
   createChromiumNetworkDiagnostics,
-  withChromiumNetworkDiagnostics,
+  withChromiumNetworkDiagnostics: withObservedChromiumNetworkDiagnostics,
   configureChromiumNetworkDiagnostics,
 } = require('../apps/web/cypress/node/chromiumNetworkDiagnostics.ts');
+
+// This suite owns the capture lifecycle; the process observer has its own port tests.
+const withChromiumNetworkDiagnostics = (root, operation) =>
+  withObservedChromiumNetworkDiagnostics(root, operation, async () => null);
 
 function fixture(enabled = true) {
   const projectRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-test-'));
@@ -124,40 +128,89 @@ test('malformed capture remains a failure and its raw file is removed', () => {
   }
 });
 
-test('native completion owns finalization and restores scoped process environment', async () => {
-  const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-parent-test-'));
-  const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
-  const previousCapture = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
-  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
-  process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = 'outer-owned-context';
-  let directory;
-  try {
-    const result = await withChromiumNetworkDiagnostics(workspaceRoot, async () => {
-      directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
-      assert.notEqual(directory, 'outer-owned-context');
-      const browser = fs.mkdtempSync(path.join(directory, 'chrome-'));
-      fs.writeFileSync(
-        path.join(browser, 'netlog.json'),
-        JSON.stringify({
-          constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
-          events: [{ type: 1, source: { id: 3 }, params: { net_error: -2 } }],
-        })
+for (const scenario of [
+  'success',
+  'operation-failure',
+  'observer-unavailable',
+  'observer-stop-failure',
+  'both-fail',
+]) {
+  test(`native completion finalizes and restores scoped environment: ${scenario}`, async () => {
+    const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-parent-test-'));
+    const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    const previousCapture = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+    process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+    process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = 'outer-owned-context';
+    let directory;
+    const operationError = new Error('Operation failed');
+    const observerError = new Error('Observer failed');
+    const events = [];
+    try {
+      const result = withObservedChromiumNetworkDiagnostics(
+        workspaceRoot,
+        async () => {
+          events.push('operation');
+          assert.notEqual(directory, 'outer-owned-context');
+          const browser = fs.mkdtempSync(path.join(directory, 'chrome-'));
+          fs.writeFileSync(
+            path.join(browser, 'netlog.json'),
+            JSON.stringify({
+              constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+              events: [{ type: 1, source: { id: 3 }, params: { net_error: -2 } }],
+            })
+          );
+          assert.equal(fs.existsSync(browser), true);
+          if (scenario === 'operation-failure' || scenario === 'both-fail') throw operationError;
+          return 'completed';
+        },
+        async ({ captureRoot }) => {
+          directory = captureRoot;
+          events.push('start');
+          if (scenario === 'observer-unavailable') throw observerError;
+          return {
+            async stop() {
+              events.push('stop');
+              if (scenario === 'observer-stop-failure' || scenario === 'both-fail')
+                throw observerError;
+            },
+          };
+        }
       );
-      assert.equal(fs.existsSync(browser), true);
-      return 'completed';
-    });
-    assert.equal(result, 'completed');
-    assert.equal(fs.existsSync(directory), false);
-    assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, 'outer-owned-context');
-  } finally {
-    if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
-    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
-    if (previousCapture === undefined) delete process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
-    else process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = previousCapture;
-    assert.ok(path.resolve(workspaceRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
-    fs.rmSync(workspaceRoot, { recursive: true });
-  }
-});
+      if (scenario === 'success') assert.equal(await result, 'completed');
+      else
+        await assert.rejects(result, (error) => {
+          if (scenario === 'both-fail')
+            return (
+              error instanceof AggregateError &&
+              error.errors.length === 2 &&
+              error.errors[0] === operationError &&
+              error.errors[1] === observerError
+            );
+          if (scenario === 'observer-unavailable')
+            return (
+              error instanceof AggregateError &&
+              error.errors.length === 2 &&
+              error.errors[0] === observerError &&
+              error.errors[1].message === 'Chromium network diagnostics failed'
+            );
+          return error === (scenario === 'operation-failure' ? operationError : observerError);
+        });
+      assert.deepEqual(
+        events,
+        scenario === 'observer-unavailable' ? ['start'] : ['start', 'operation', 'stop']
+      );
+      assert.equal(fs.existsSync(directory), false);
+      assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, 'outer-owned-context');
+    } finally {
+      if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+      else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
+      if (previousCapture === undefined) delete process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+      else process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = previousCapture;
+      assert.ok(path.resolve(workspaceRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+      fs.rmSync(workspaceRoot, { recursive: true });
+    }
+  });
+}
 
 test('failed-spec snapshot survives raw overwrite without snapshotting successful or interactive specs', async () => {
   const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-network-snapshot-test-'));

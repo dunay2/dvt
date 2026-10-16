@@ -825,10 +825,20 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
     'apps/web/cypress/node/chromiumNetworkProjection.ts',
     'apps/web/cypress/node/chromiumNetworkEvidence.ts',
+    'apps/web/cypress/node/chromiumProcessObserver.ts',
   ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
     expect(
       resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
     ).toEqual(['controlled', 'available', 'unavailable']);
+  });
+
+  it.each([
+    'apps/web/cypress/node/linuxChromiumProcessObserver.py',
+    'apps/web/cypress/node/linuxChromiumProcessProtocol.py',
+  ])('Linux observer changes retain the real LIVE execution obligation: %s', (file) => {
+    expect(
+      resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['available']);
   });
 
   it.each([

@@ -7,6 +7,10 @@ import { basename, isAbsolute, join } from 'node:path';
 import type {} from 'cypress';
 
 import { finalizeChromiumCapture, stageChromiumObservation } from './chromiumNetworkEvidence';
+import {
+  startChromiumProcessObserver,
+  type ChromiumProcessObserverBinding,
+} from './chromiumProcessObserver';
 
 type ChromiumNetworkDiagnosticsBinding = Readonly<{
   directory: string;
@@ -80,7 +84,8 @@ function attachChromiumCapture(
 
 export async function withChromiumNetworkDiagnostics<T>(
   workspaceRoot: string,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
+  observeProcesses: typeof startChromiumProcessObserver = startChromiumProcessObserver
 ): Promise<T> {
   const binding = createChromiumNetworkDiagnostics({
     enabled: diagnosticsEnabled(),
@@ -89,12 +94,30 @@ export async function withChromiumNetworkDiagnostics<T>(
   if (binding === null) return operation();
   const previous = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
   process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = binding.directory;
+  let observer: ChromiumProcessObserverBinding | null = null;
   try {
-    return await operation();
+    const [completion] = await Promise.allSettled([
+      (async () => {
+        observer = await observeProcesses({ workspaceRoot, captureRoot: binding.directory });
+        return operation();
+      })(),
+    ]);
+    const cleanup = await Promise.allSettled([
+      Promise.resolve().then(() => observer?.stop()),
+      Promise.resolve().then(() => binding.afterRun()),
+    ]);
+    const failures: unknown[] = cleanup
+      .filter((outcome) => outcome.status === 'rejected')
+      .map((outcome): unknown => outcome.reason);
+    if (completion.status === 'rejected') failures.unshift(completion.reason);
+    if (failures.length > 1)
+      throw new AggregateError(failures, 'Chromium diagnostics completion failed');
+    if (failures.length === 1) throw failures[0];
+    if (completion.status === 'fulfilled') return completion.value;
+    throw completion.reason;
   } finally {
     if (previous === undefined) delete process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
     else process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = previous;
-    binding.afterRun();
   }
 }
 

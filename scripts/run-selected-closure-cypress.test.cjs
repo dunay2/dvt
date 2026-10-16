@@ -273,6 +273,7 @@ test('opt-in native diagnostics finalize after execution without weakening faile
   try {
     await assert.rejects(
       main(['--spec', spec], {
+        observeProcesses: async () => null,
         run: async () => {
           const directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
           const hooks = new Map();

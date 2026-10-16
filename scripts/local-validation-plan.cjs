@@ -51,6 +51,14 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'apps/web/cypress/node/chromiumNetworkEvidence.ts':
     'scripts/chromium-network-diagnostics.test.cjs',
   'scripts/chromium-network-diagnostics.test.cjs': 'scripts/chromium-network-diagnostics.test.cjs',
+  'apps/web/cypress/node/chromiumProcessObserver.ts': 'scripts/chromium-process-observer.test.cjs',
+  'scripts/chromium-process-observer.test.cjs': 'scripts/chromium-process-observer.test.cjs',
+  'apps/web/cypress/node/linuxChromiumProcessObserver.py':
+    'scripts/chromium-process-protocol.test.cjs',
+  'apps/web/cypress/node/linuxChromiumProcessProtocol.py':
+    'scripts/chromium-process-protocol.test.cjs',
+  'scripts/chromium-process-protocol.test.py': 'scripts/chromium-process-protocol.test.cjs',
+  'scripts/chromium-process-protocol.test.cjs': 'scripts/chromium-process-protocol.test.cjs',
   'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
