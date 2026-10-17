@@ -171,6 +171,7 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
 ] as const;
 
 const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
+  'src/testing/vitestSuites.browserNightly.architecture.test.ts',
   'src/testing/vitestSuites.browserRouting.architecture.test.ts',
   'src/testing/vitestSuites.browserShards.architecture.test.ts',
   'src/testing/vitestSuites.architecture.test.ts',
