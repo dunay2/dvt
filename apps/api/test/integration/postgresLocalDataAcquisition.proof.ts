@@ -12,7 +12,7 @@ import path from 'node:path';
 
 import { parsePostgresDvtPublicationMarker } from '@dvt/adapter-postgres';
 import { buildRelationalSourceObjectId, createLocalDataCaptureIdV1, createLocalDatasetIdV1,
-  createLocalDataRequestFingerprintV1, createLocalDataSchemaDigestV1, type LocalDataAcquisitionRequestV1 } from '@dvt/contracts';
+  type LocalDataAcquisitionPolicyV1 } from '@dvt/contracts';
 import { Client } from 'pg';
 import Cursor from 'pg-cursor';
 import { afterAll, afterEach, beforeAll, it, vi } from 'vitest';
@@ -22,6 +22,15 @@ import { DuckDbLocalDataRuntime } from '../../src/infrastructure/duckdb/DuckDbLo
 import { PostgresRemoteDatasetReader } from '../../src/infrastructure/postgres/PostgresRemoteDatasetReader.js';
 import type { PostgresDatasetCursor } from '../../src/infrastructure/postgres/PostgresRemoteDatasetCursor.js';
 import { WorkspaceWarehouseConnectionProbe } from '../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
+import { AUTHORIZATION_ACTION_NAME } from '../../src/application/ports/accessDecision.js';
+import type { AuthAuditEvent } from '../../src/application/ports/auth.js';
+import type { IRemoteDatasetReader, LocalDataCaptureLimits, LocalDataCaptureWriterFactory } from '../../src/application/ports/localDataAcquisition.js';
+import type { PrincipalGrantSnapshot } from '../../src/application/ports/principalGrantRepository.js';
+import { AuthorizeCommandScopeService } from '../../src/application/services/authorizeCommandScopeService.js';
+import { CaptureLocalDatasetUseCase } from '../../src/application/services/captureLocalDatasetUseCase.js';
+import { EmbeddedAccessDecisionService } from '../../src/infrastructure/auth/embeddedAccessDecisionService.js';
+import { WorkspaceWarehouseConnectionCatalog, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH } from '../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+import { LocalWorkspaceMetadataFileRepository } from '../../src/infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.js';
 import type { LocalDataAuthorizationLease } from '../../src/application/services/localDataAuthorizationLease.js';
 import type { LocalDataConfiguration } from '../../src/plugins/localDataEnv.js';
 
@@ -100,35 +109,60 @@ async function assertSourceClosed() {
   assert.equal(connections.rows[0].n,0);
 }
 
-it('captures 2053 actual rows with sequential backpressure, then promotes and reopens native DuckDB', async()=>{
-  const relation=await table('bulk',2053);
-  const nativeReads=vi.spyOn(Cursor.prototype,'read');
-  const localDatasetId=createLocalDatasetIdV1(), captureId=createLocalDataCaptureIdV1();
-  const outcome=await reader.withCursor({target:target('bulk'),access:access(),limits,timeoutMs:20000},async c=>{
-    const request:LocalDataAcquisitionRequestV1={schemaVersion:'local-data-acquisition-request.v1',
-      sourceRef:{schemaVersion:'connected-source-ref.v1',connectionRef:{schemaVersion:'connection-ref.v1',connectionId:'pg-proof',provider:'postgres'},sourceObjectId:target('bulk').objectId},
-      policy:{kind:'full'},providerContextSha256:'a'.repeat(64),schema:c.schema};
-    const stage=await store.begin({localDatasetId,captureId,request,expectedHeadGenerationId:null});
-    let rows=0, bytes=0, reads=0;
-    while(true){
-      const batch=await c.read(1024); reads++;
-      assert.equal(nativeReads.mock.calls.length,reads);
-      if(batch.rows.length)await store.append(captureId,batch.rows);
-      // The source has not issued a speculative pull while the destination confirmed its batch.
-      assert.equal(nativeReads.mock.calls.length,reads);
-      rows+=batch.rows.length;bytes+=batch.logicalBytes;
-      assert.equal(await store.readHead(localDatasetId),null);
-      if(batch.endOfSource)break;
-    }
-    assert.equal(reads,3);assert.equal(rows,2053);
-    return {request,stage,rows,bytes,observedAt:c.observedAt};
+/** Real catalog, policy, reader and writer; grant/audit repositories remain explicit test fixtures. */
+async function governed(name: string, budget: LocalDataCaptureLimits = limits) {
+  const metadata = new LocalWorkspaceMetadataFileRepository({ root: config.workspaceFilesRoot });
+  const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: metadata });
+  const connection = await catalog.createConnection(scope, {
+    name: `Capture ${name}`, type: 'postgres', database: 'dvt_test', credentialRef: 'postgres:proof', sourceObjects: [],
   });
+  const principal = { principalId: 'capture-proof', principalType: 'user' as const, subjectId: 'sub',
+    issuer: 'proof', audience: 'dvt', expiresAt: new Date(Date.now() + 60_000), rawScopes: [],
+    assertedTenantIds: ['proof'], assertedProjectIds: ['proof'] };
+  const state = { grants: {
+    principal, suspended: false, tenantAccess: [{ tenantId: 'proof', allowedActions: [], projectAccess: [{
+      projectId: 'proof', allowedActions: [], environmentAccess: [{ environmentId: 'test', allowedActions: [
+        AUTHORIZATION_ACTION_NAME.workspaceLocalDataCapture, AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
+      ] }],
+    }] }],
+  } as PrincipalGrantSnapshot | null, audit: [] as AuthAuditEvent[] };
+  const authorizer = new AuthorizeCommandScopeService(new EmbeddedAccessDecisionService({
+    migrate: async () => undefined, load: async () => state.grants,
+  }), { record: async event => { state.audit.push(event); } }, () => new Date());
+  const deps = { catalog, authorizer, reader, clock: () => new Date(), limits: budget, batchRows: 1024, timeoutMs: 20000,
+    createWriter: ((boundScope, gate, caps) => new DuckDbGenerationStore(runtime, boundScope, gate, caps)) satisfies LocalDataCaptureWriterFactory };
+  const command = { localDatasetId: createLocalDatasetIdV1(), captureId: createLocalDataCaptureIdV1(),
+    sourceRef: { schemaVersion: 'connected-source-ref.v1' as const,
+      connectionRef: { schemaVersion: 'connection-ref.v1' as const, connectionId: connection.id, provider: 'postgres' },
+      sourceObjectId: target(name).objectId }, policy: { kind: 'full' as const }, expectedHeadGenerationId: null };
+  return { deps, command, context: { scope, principal, requestId: `capture-${name}` }, state, metadata, connection,
+    useCase: new CaptureLocalDatasetUseCase(deps) };
+}
+
+it('captures 2053 actual rows through governed application ports, then reopens native DuckDB', async()=>{
+  const relation=await table('bulk',2053);
+  const f = await governed('bulk');
+  const { localDatasetId, captureId } = f.command;
+  const nativeReads=vi.spyOn(Cursor.prototype,'read');
+  const originalAppend = DuckDbGenerationStore.prototype.append;
+  let batches = 0;
+  vi.spyOn(DuckDbGenerationStore.prototype, 'append').mockImplementation(async function(this: DuckDbGenerationStore, id, rows) {
+    const before = nativeReads.mock.calls.length;
+    await originalAppend.call(this, id, rows); batches++;
+    assert.equal(nativeReads.mock.calls.length, before, 'no speculative native read during append');
+    assert.equal(before, batches);
+    assert.equal(await store.readHead(localDatasetId), null, 'staging is never READY');
+  });
+  const originalPromote = DuckDbGenerationStore.prototype.promote;
+  vi.spyOn(DuckDbGenerationStore.prototype, 'promote').mockImplementation(async function(this: DuckDbGenerationStore, manifest) {
+    await assertSourceClosed();
+    return originalPromote.call(this, manifest);
+  });
+  const { generation: manifest } = await f.useCase.execute(f.command, f.context);
+  assert.equal(manifest.rowCount, '2053'); assert.equal(batches, 3); assert.equal(nativeReads.mock.calls.length, 3);
+  assert.ok(f.state.audit.length > 0);
+  assert.equal(JSON.stringify(manifest).includes('postgres:proof'), false, 'no credential reference in receipt');
   await assertSourceClosed();
-  const manifest={schemaVersion:'local-data-generation.v1',localDatasetId,captureId,generationId:outcome.stage.generationId,
-    request:outcome.request,requestFingerprint:createLocalDataRequestFingerprintV1(outcome.request),schemaSha256:createLocalDataSchemaDigestV1(outcome.request.schema),
-    coverage:{kind:'full',eofObserved:true},completionReason:'source-exhausted',rowCount:String(outcome.rows),logicalByteCount:String(outcome.bytes),
-    sourceObservation:{observedAt:outcome.observedAt},createdAt:new Date().toISOString()} as const;
-  await store.promote(manifest);
   await runtime.close();runtime=new DuckDbLocalDataRuntime(config);store=new DuckDbGenerationStore(runtime,scope,access(),limits);
   await store.initialize();assert.deepEqual(await store.readHead(localDatasetId),manifest);
   const actual=await runtime.withSession(scope,async c=>{
@@ -138,7 +172,7 @@ it('captures 2053 actual rows with sequential backpressure, then promotes and re
   });
   const expected=await admin.query({text:`SELECT * FROM ${relation} ORDER BY id`,rowMode:'array'});
   assert.deepEqual(actual,expected.rows.map(row=>[BigInt(row[0]),row[1],row[2]]));
-  console.log('DVT_LOCAL_CAPTURE_PROOF rows=2053 batches=3 bigintExact=true reopened=true sourceClosed=true');
+  console.log('DVT_LOCAL_CAPTURE_PROOF rows=2053 batches=3 bigintExact=true reopened=true sourceClosed=true governed=true');
 },25000);
 
 it('keeps one source snapshot while another connection commits new rows',async()=>{
@@ -240,4 +274,68 @@ it('preserves the real Preview contract after extracting its relation guard',asy
   const result=await probe.previewSourceObjectRows({...target('preview'),limit:2});
   assert.equal(result.rows.length,2);assert.equal(result.truncated,true);
   assert.equal(result.navigation,'bounded-first-page');assert.equal(typeof result.rows[0]!.values[0],'string');
+});
+
+
+it.each([7, 50])('governed FIRST %s preserves sample coverage and actual completion reason', async requested => {
+  const name = `governed_sample_${requested}`; await table(name, 10);
+  const f = await governed(name); const policy: LocalDataAcquisitionPolicyV1 = { kind: 'sample', method: 'first', requestedRows: String(requested) };
+  const result = await f.useCase.execute({ ...f.command, policy }, f.context);
+  assert.deepEqual(result.generation.coverage, { kind: 'sample' });
+  assert.equal(result.generation.rowCount, String(Math.min(10, requested)));
+  assert.equal(result.generation.completionReason, requested === 7 ? 'sample-target-reached' : 'source-exhausted');
+  await assertSourceClosed();
+});
+it('governed FULL budget exhaustion preserves the previously published head', async () => {
+  await table('governed_budget', 3); const f = await governed('governed_budget');
+  const before = await f.useCase.execute(f.command, f.context);
+  const limited = new CaptureLocalDatasetUseCase({ ...f.deps, limits: { ...limits, maxRows: 2 } });
+  const captureId = createLocalDataCaptureIdV1();
+  await assert.rejects(limited.execute({ ...f.command, captureId, expectedHeadGenerationId: before.generation.generationId }, f.context), /READ_BUDGET|CAPTURE_BUDGET/u);
+  assert.deepEqual(await store.readHead(f.command.localDatasetId), before.generation);
+  assert.equal(await store.readCapture(f.command.localDatasetId, captureId), null);
+  await assertSourceClosed();
+});
+it.each(['abort', 'revoke'])('governed %s after a committed batch leaves only unpublished staging', async kind => {
+  const name = `governed_${kind}`; await table(name, 3); const f = await governed(name);
+  const controller = new AbortController(); const original = DuckDbGenerationStore.prototype.append;
+  vi.spyOn(DuckDbGenerationStore.prototype, 'append').mockImplementation(async function(this: DuckDbGenerationStore, id, rows) {
+    await original.call(this, id, rows);
+    if (kind === 'abort') controller.abort(); else f.state.grants = null;
+  });
+  await assert.rejects(f.useCase.execute(f.command, f.context, controller.signal));
+  assert.equal(await store.readHead(f.command.localDatasetId), null);
+  assert.equal(await store.readCapture(f.command.localDatasetId, f.command.captureId), null);
+  await assertSourceClosed();
+});
+it.each(['failure', 'revoke', 'binding'])('governed post-close %s prevents READY publication', async kind => {
+  const name = `governed_close_${kind}`; await table(name, 3); const f = await governed(name);
+  const scoped: IRemoteDatasetReader = { async withCursor(input, consume) {
+    const result = await reader.withCursor(input, consume);
+    await assertSourceClosed();
+    if (kind === 'failure') throw new Error('failed close confirmation');
+    if (kind === 'revoke') f.state.grants = null;
+    if (kind === 'binding') {
+      const file = await f.metadata.getFileContent(scope, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH);
+      const catalogFile = JSON.parse(file.content) as { connections: { id: string; credentialRef: string }[] };
+      const entry = catalogFile.connections.find(connection => connection.id === f.connection.id); assert(entry);
+      entry.credentialRef = 'postgres:changed';
+      const saved = await f.metadata.saveFileContent(scope, { path: WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        content: JSON.stringify(catalogFile), expectedRevision: { kind: 'content_sha256', value: file.contentSha256 } });
+      assert.notEqual(saved.kind, 'conflict');
+    }
+    return result;
+  } };
+  const useCase = new CaptureLocalDatasetUseCase({ ...f.deps, reader: scoped });
+  await assert.rejects(useCase.execute(f.command, f.context));
+  assert.equal(await store.readHead(f.command.localDatasetId), null);
+  assert.equal(await store.readCapture(f.command.localDatasetId, f.command.captureId), null);
+});
+it('governed empty FULL is complete and a stale initial-head CAS cannot replace it', async () => {
+  await table('governed_empty', 0); const f = await governed('governed_empty');
+  const before = await f.useCase.execute(f.command, f.context);
+  assert.equal(before.generation.rowCount, '0'); assert.deepEqual(before.generation.coverage, { kind: 'full', eofObserved: true });
+  await assert.rejects(f.useCase.execute({ ...f.command, captureId: createLocalDataCaptureIdV1() }, f.context), /HEAD_CONFLICT/u);
+  assert.deepEqual(await store.readHead(f.command.localDatasetId), before.generation);
+  await assertSourceClosed();
 });
