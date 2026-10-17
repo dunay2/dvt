@@ -16,6 +16,8 @@ export const AUTHORIZATION_ACTION_NAME = {
   workspaceSourceConnectionTest: 'workspace:source-connection:test',
   workspaceSourceImportImport: 'workspace:source-import:import',
   workspaceSourceImportRebind: 'workspace:source-import:rebind',
+  workspaceLocalDataCapture: 'workspace:local-data:capture',
+  workspaceLocalDataDelete: 'workspace:local-data:delete',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
   runList: 'run:list',
@@ -24,6 +26,7 @@ export const AUTHORIZATION_ACTION_NAME = {
   workspaceFilesView: 'workspace:files:view',
   workspaceDiffView: 'workspace:diff:view',
   workspaceSourceImportView: 'workspace:source-import:view',
+  workspaceLocalDataView: 'workspace:local-data:view',
   workspacePluginsView: 'workspace:plugins:view',
 } as const;
 
@@ -40,6 +43,8 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceLocalDataCapture
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceLocalDataDelete
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
 export type QueryAuthorizationActionName =
@@ -50,6 +55,7 @@ export type QueryAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceDiffView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportView
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceLocalDataView
   | typeof AUTHORIZATION_ACTION_NAME.workspacePluginsView;
 
 export type AuthorizationAction =
@@ -115,6 +121,14 @@ export const AUTHORIZATION_ACTION = {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportRebind,
   },
+  workspaceLocalDataCapture: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceLocalDataCapture,
+  },
+  workspaceLocalDataDelete: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceLocalDataDelete,
+  },
   adminRebuildSnapshot: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot,
@@ -146,6 +160,10 @@ export const AUTHORIZATION_ACTION = {
   workspaceSourceImportView: {
     kind: 'query',
     name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
+  },
+  workspaceLocalDataView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspaceLocalDataView,
   },
   workspacePluginsView: {
     kind: 'query',
