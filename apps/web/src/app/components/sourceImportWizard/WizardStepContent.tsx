@@ -6,6 +6,7 @@ import { ReviewStep } from './ReviewStep';
 import { SelectionStep } from './SelectionStep';
 import { SourceImportMetadataPanel } from './SourceImportMetadataPanel';
 import type { SourceImportWizardController } from './useSourceImportWizard';
+import styles from './WizardStepContent.module.css';
 
 interface WizardStepContentProps {
   controller: SourceImportWizardController;
@@ -43,8 +44,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             isLoadingConnections={state.isLoadingConnections}
             isCreatingConnection={state.isCreatingConnection}
             isRenamingConnection={state.isRenamingConnection}
-            isTestingConnection={state.isTestingConnection}
-            connectionTestResult={state.connectionTestResult}
+            testBinding={controller.connectionTest}
             loadError={loadError}
             createConnectionError={createConnectionError}
             createConnectionErrorCode={state.createConnectionError?.code ?? null}
@@ -59,9 +59,6 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             onRenameConnectionNameChange={controller.setRenameConnectionName}
             onCreateConnection={() => {
               void controller.handleCreateConnection();
-            }}
-            onTestConnection={() => {
-              void controller.handleTestConnection();
             }}
             onRenameConnection={() => {
               void controller.handleRenameConnection();
@@ -86,7 +83,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             activeSourceObjectKey={state.activeSourceObjectKey}
             sourceObjectSearchQuery={state.sourceObjectSearchQuery}
             isLoadingSourceObjects={state.isLoadingSourceObjects}
-            loadError={loadError}
+            loadError={resolveSourceImportFailureMessage(copy, controller.cataloguePageFailure)}
             onSourceObjectSearchQueryChange={controller.setSourceObjectSearchQuery}
             onActivateSourceObject={controller.activateSourceObject}
             onExpandSchema={(schema) => {
@@ -123,12 +120,8 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
       );
     case 'review':
       return (
-        <div id="source-import-section-selected" className="space-y-4">
-          {loadError ? (
-            <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200">
-              {loadError}
-            </Card>
-          ) : null}
+        <div id="source-import-section-selected" className={styles.review}>
+          {loadError ? <Card className={styles.error}>{loadError}</Card> : null}
           <ReviewStep
             sourceObjects={state.sourceObjects}
             selectedCount={controller.selectedCount}

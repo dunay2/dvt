@@ -1,0 +1,14 @@
+.recovery {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--status-danger);
+  border-radius: 0.375rem;
+  color: var(--text-default);
+  background: var(--surface-shell);
+  font-size: 0.75rem;
+}

@@ -6,6 +6,9 @@
  * @version 1.0.2
  */
 export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
+export const WEB_CYPRESS_NIGHTLY_SPECS: readonly string[] = [
+  'apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts',
+];
 export type WebCypressCommand = Readonly<{
   capability: WebCypressCapability;
   command: string;
@@ -146,6 +149,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/canvasDrafts/warehouse.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDraftAuthoring.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/startupReadiness.ts': ['controlled'],
+  'apps/web/cypress/support/canvasReadyAuthoring.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
@@ -295,6 +299,14 @@ export function resolveWebCypressChangedPlan(
   const retiredFiles = new Set<string>();
   for (const filePath of filePaths) {
     const path = repositoryPath(filePath);
+    if (
+      WEB_CYPRESS_NIGHTLY_SPECS.includes(path) ||
+      path === '.github/workflows/web-canvas-nightly.yml'
+    ) {
+      WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
+      vitestFiles.add('apps/web/src/testing/vitestSuites.browserNightly.architecture.test.ts');
+      continue;
+    }
     const retired = RETIRED_SPEC_CAPABILITIES[path];
     if (retired) {
       retiredFiles.add(path);

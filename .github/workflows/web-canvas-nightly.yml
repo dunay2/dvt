@@ -1,0 +1,80 @@
+name: Web Canvas Nightly
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: web-canvas-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canvas-large-graph:
+    name: Canvas large-graph controlled proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DVT_CI: '1'
+      NODE_OPTIONS: --max-old-space-size=4096
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup pnpm, cache and dependencies
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+          turbo-cache-variant: canvas-large-graph-nightly
+        env:
+          CYPRESS_INSTALL_BINARY: '0'
+
+      - name: Build web dependency graph
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
+
+      - name: Install native browser dependencies
+        run: |
+          pnpm --filter @dvt/web exec cypress install
+          pnpm --filter @dvt/web exec cypress verify
+
+      - name: Build and prove the canonical large Canvas
+        run: >-
+          pnpm --filter @dvt/web test:e2e:native --browser chrome --spec
+          cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts
+
+      - name: Upload failure screenshots
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web-canvas-nightly-screenshots
+          path: .dvt/evidence/selected-closure/screenshots
+          include-hidden-files: true
+          if-no-files-found: ignore
+
+      - name: Notify nightly failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NIGHTLY_ISSUE_TITLE: Web Canvas Nightly failed
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          body="Nightly Canvas large-graph proof failed.
+
+          Run: ${RUN_URL}
+          Commit: ${GITHUB_SHA}
+          Workflow: ${GITHUB_WORKFLOW}"
+          issue_number="$(gh issue list --state open --search "${NIGHTLY_ISSUE_TITLE} in:title" --json number --jq '.[0].number // ""')"
+          if [[ -n "${issue_number}" ]]; then
+            gh issue comment "${issue_number}" --body "${body}"
+          else
+            gh issue create --title "${NIGHTLY_ISSUE_TITLE}" --body "${body}"
+          fi

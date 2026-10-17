@@ -43,6 +43,7 @@ const EN_COPY = {
   selectAtLeastOneObjectError: 'Select at least one importable source object.',
   loadConnectionsError: 'Failed to load warehouse connections.',
   loadSourceObjectsError: 'Failed to load source objects.',
+  retryCatalogueAction: 'Retry catalogue',
   matchDbtSourceTablesError:
     'This connection does not expose every table declared by the imported dbt sources.',
   importSuccess: 'Sources attached successfully',
@@ -271,6 +272,7 @@ const ES_COPY = {
   selectAtLeastOneObjectError: 'Selecciona al menos un objeto de origen importable.',
   loadConnectionsError: 'No se pudieron cargar las conexiones del warehouse.',
   loadSourceObjectsError: 'No se pudieron cargar los objetos de origen.',
+  retryCatalogueAction: 'Reintentar catálogo',
   matchDbtSourceTablesError:
     'Esta conexión no expone todas las tablas declaradas por los orígenes dbt importados.',
   importSuccess: 'Orígenes adjuntados correctamente',

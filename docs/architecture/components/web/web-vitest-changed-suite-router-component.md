@@ -178,6 +178,78 @@ flowchart LR
 
 ## Browser Evidence Boundary — GH-3540
 
+### Large-graph browser cadence — GH-3604
+
+Issue #3604 admits a bounded cadence change under design
+`GH-3604-CANVAS-LARGE-GRAPH-NIGHTLY-V2` (superseding the initial scope to
+include the existing CI workflow guard). The last case in
+`canvas-ready-node-authoring.cy.ts` renders the canonical 1,000-node,
+1,920-edge fixture. Its measured cost was 336,824 ms in the reconciled local
+prepush and 130,494 ms in CI run 38998175192. The other thirteen cases are
+functional authoring checks, not scale tests. Keeping these concerns in one
+spec makes every affected controlled batch pay the stress cost.
+
+```mermaid
+flowchart LR
+  Before[Shared authoring spec] --> Functional[13 functional cases]
+  Before --> Stress[1000-node interaction case]
+  Change[Changed-file or full browser baseline] --> Before
+  After[Existing browser catalog] --> PR[Functional controlled specs]
+  After --> Nightly[Explicit nightly stress spec]
+  Schedule[Scheduled or manual workflow] --> Nightly
+  PR --> Native[RunWebCypressNative]
+  Nightly --> Native
+  Native --> Build[Fresh build:e2e and owned preview]
+  Build --> Proof[Exact executed-spec evidence]
+```
+
+The existing `RouteChangedWebVitestSuites` query owns cadence admission in
+`cypress.changed.ts`; cadence is not a fourth runtime capability. Its nightly
+inventory is disjoint from the ordinary controlled/available/unavailable
+inventory. A changed nightly spec selects its focused cadence guard and must
+exist; it does not silently become an unknown file or execute the stress case
+in prepush. Unknown browser paths and deleted admitted files still reject.
+Ordinary and `--full` browser plans retain all functional specs, but exclude
+only this separately scheduled stress case.
+
+The explicit manual `pnpm test:web:e2e` Docker command still means all specs
+matching the Cypress configuration, including the nightly case. It is not used
+by prepush or the PR/main browser matrix. This intentional operator opt-in does
+not change the scheduled cadence of the governed changed/full browser plans.
+
+`web-canvas-nightly.yml` runs the literal nightly spec on schedule and manual
+dispatch through the unchanged controlled native runner. The runner builds
+the application, owns preview startup/cleanup and rejects missing, skipped,
+pending or failed Cypress evidence. The workflow uses the existing dependency
+setup and explicitly builds `@dvt/web^...` through the canonical
+`run-turbo-workspace-task.cjs build` owner before the native runner. The
+`test:deps` convenience script is not a preparation authority in CI: its
+`DVT_CI=1` short circuit assumes the dependency graph was already built.
+The workflow also uses pinned actions, isolated concurrency, failure artifacts and an actionable
+failure notification; it does not provision live providers. The thirteen
+functional authoring cases, geometry cases at 10/30/60 nodes and inexpensive
+large-graph unit tests remain in PR routing. Shared ready-authoring browser
+setup has two actual consumers rather than a copied fixture or new runner.
+Workflow-only diffs retain the existing CI-tool parity guard, because they do
+not activate Web runtime jobs. That guard checks the native command and nightly
+trigger, while the focused Web guard verifies cadence ownership and the complete
+workflow structure. The CI guard executes the declared build owner's argument
+and dispatch path with `DVT_CI=1`, intercepting only process creation, to prove
+the cold-runner preparation cannot silently skip. No additional PR matrix is introduced.
+
+| Scenario                              | Opportunity             | Fowler pattern                                 | DDD owner                          | Command/query rail          | Implementation surfaces                                       | Unit or package test                    | Architecture test                                                  | User-flow test                                                    | Out of scope                                            |
+| ------------------------------------- | ----------------------- | ---------------------------------------------- | ---------------------------------- | --------------------------- | ------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------- |
+| Stress runs with functional authoring | Responsibility overload | Separate cadence policy from runtime adapter   | WebVitestChangedSuiteRouter        | RouteChangedWebVitestSuites | Existing browser catalog and nightly guard                    | Changed/full plan excludes only nightly | Disjoint fixture consumer admission; missing/unknown files reject  | Retained 13 functional cases and extracted nightly stress         | Other scale thresholds or PR coverage reductions        |
+| Extraction would duplicate bootstrap  | Duplicate semantics     | Extract shared infrastructure harness          | Controlled ready-authoring session | RunWebCypressNative         | canvasReadyAuthoring support and the two specs                | Existing fixture contract               | Both consumers reuse setup                                         | Byte-identical stress actions and unchanged functional assertions | New fixture, runner or product behavior                 |
+| Scheduled evidence could disappear    | Hidden authority        | Explicit workflow adapter and failure evidence | Browser proof runtime              | RunWebCypressNative         | web-canvas-nightly workflow and existing workflow parity test | Native runner contracts                 | Exact spec, schedule/manual triggers, pinned actions and reporting | Real isolated native proof with fresh build and owned preview     | Live provider setup, new PR matrix or timeout increases |
+
+No product behavior, timeout, assertion, worker count, required PR check or live
+runtime admission changes. This is not a claim that Canvas meets a latency SLA:
+the retained stress scenario proves interaction operability. Other CI costs
+remain outside this cut. Validation includes the focused cadence and existing
+browser-routing guards, the native runner contracts, a real isolated nightly
+execution, relevant lint/typecheck, and the normal final prepush and CI gates.
+
 This section specifies the next implementation of the existing
 `RouteChangedWebVitestSuites` query and `RunWebCypressNative` command. GitHub
 [#3540](https://github.com/dunay2/dvt/issues/3540) owns delivery status; this

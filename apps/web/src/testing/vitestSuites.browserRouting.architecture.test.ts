@@ -12,7 +12,7 @@ import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
+import { WEB_CYPRESS_NIGHTLY_SPECS, WEB_CYPRESS_SPECS } from '../../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
 import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 
@@ -545,7 +545,7 @@ describe('governed browser evidence routing', () => {
     const specs = [...browserModules.keys()].filter((path) => path.endsWith('.cy.ts'));
     const target = resolve('cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts');
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
-    const registered = Object.values(WEB_CYPRESS_SPECS).flat();
+    const registered = [...Object.values(WEB_CYPRESS_SPECS).flat(), ...WEB_CYPRESS_NIGHTLY_SPECS];
     const uiOnlyConsumers = [
       'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
       'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
@@ -734,7 +734,7 @@ describe('governed browser evidence routing', () => {
     async (phase) => {
       const { existsSync: originalExists } =
         await vi.importActual<typeof import('node:fs')>('node:fs');
-      for (const missing of [spec, helper]) {
+      for (const missing of [spec, helper, ...WEB_CYPRESS_NIGHTLY_SPECS]) {
         vi.mocked(existsSync).mockImplementation(
           (path) =>
             resolve(String(path)) !== resolve(missing.slice('apps/web/'.length)) &&
@@ -1164,6 +1164,7 @@ describe('governed browser evidence routing', () => {
         resolve('cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-predicate-reopen.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts'),
+        resolve('cypress/support/canvasReadyAuthoring.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-set-persistence.cy.ts'),

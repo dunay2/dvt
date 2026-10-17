@@ -996,6 +996,50 @@ test('setup-node consumers stay on one pinned action version', () => {
   assert.equal(new Set(setupNodePins.map(({ version }) => version)).size, 1);
 });
 
+test('Canvas nightly explicitly builds its dependency graph before native proof even under DVT_CI', () => {
+  const workflow = yaml.load(readFileSync('.github/workflows/web-canvas-nightly.yml', 'utf8'));
+  const job = workflow.jobs['canvas-large-graph'];
+  const buildOwner = 'scripts/run-turbo-workspace-task.cjs';
+  const buildIndex = job.steps.findIndex(({ run }) => run?.startsWith(`node ${buildOwner} `));
+  const proofIndex = job.steps.findIndex(({ run }) => run?.includes('test:e2e:native'));
+  assert.ok(
+    buildIndex >= 0 && buildIndex < proofIndex,
+    'explicit dependency build precedes native proof'
+  );
+  const build = job.steps[buildIndex];
+  assert.equal(build.if, undefined);
+  assert.notEqual(build['continue-on-error'], true);
+  assert.equal(job.env.DVT_CI, '1');
+  const canonical = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
+  assert.ok(
+    Object.values(canonical.jobs).some(({ steps }) => steps?.some(({ run }) => run === build.run))
+  );
+
+  const calls = [];
+  const module = { exports: {} };
+  runInNewContext(readFileSync(buildOwner, 'utf8'), {
+    module,
+    console,
+    require(specifier) {
+      assert.equal(specifier, 'node:child_process');
+      return {
+        spawnSync(command, args, options) {
+          calls.push({ command, args: Array.from(args), env: options.env });
+          return { status: 0 };
+        },
+      };
+    },
+  });
+  assert.equal(module.exports.main(build.run.trim().split(/\s+/u).slice(2), job.env), 0);
+  assert.deepEqual(calls, [
+    {
+      command: 'pnpm',
+      args: ['exec', 'turbo', 'run', 'build', '--filter=@dvt/web^...'],
+      env: job.env,
+    },
+  ]);
+});
+
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
   const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
   const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
@@ -1007,6 +1051,20 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     'utf8'
   );
   const setupNodePnpm = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
+  const canvasNightly = readFileSync('.github/workflows/web-canvas-nightly.yml', 'utf8');
+
+  assertWorkflowContains(canvasNightly, 'schedule:');
+  assertWorkflowContains(canvasNightly, 'workflow_dispatch:');
+  assert.doesNotMatch(canvasNightly, /^ {2}(pull_request|push):/mu);
+  assertWorkflowContains(
+    canvasNightly,
+    'pnpm --filter @dvt/web test:e2e:native --browser chrome --spec cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts'
+  );
+  assertWorkflowContains(canvasNightly, 'name: Notify nightly failure');
+  assertWorkflowContains(canvasNightly, 'if: failure()');
+  assertWorkflowContains(canvasNightly, 'gh issue create --title "${NIGHTLY_ISSUE_TITLE}"');
+  assert.equal(pinnedActionReferences(canvasNightly, 'actions/checkout').length, 1);
+  assert.equal(pinnedActionReferences(canvasNightly, 'actions/upload-artifact').length, 1);
 
   assert.equal(
     pinnedActionReferences(dependencyReview, 'actions/dependency-review-action').length,
