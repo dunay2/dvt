@@ -24,6 +24,37 @@ def packet(kind, fields, sequence=4):
 
 
 class ProcessProtocolTest(unittest.TestCase):
+    def test_catchable_cancellation_unwinds_owned_resources(self):
+        trace = MagicMock()
+        with self.assertRaises(InterruptedError), trace:
+            observer.cancel_observer(15, None)
+        trace.__exit__.assert_called_once()
+
+    def test_signal_projection_retains_only_owned_pid_candidates(self):
+        observation = observer.Observation(10, "/tmp/owned")
+        observation.ledger.fork(10, 21, 2)
+        observation.ledger.identify(21, 210, "browser", 3)
+        observation.ledger.fork(21, 23, 4)
+        event = {"targetTid": 23, "generatorTid": 99, "timestampNs": 5000, "signal": 9}
+        with patch.object(observer, "emit") as emit, patch.object(observer, "generator_snapshot", return_value={"generatorCategory": "unknown", "generatorCorrelation": "unavailable"}):
+            observation.signals([{**event, "targetTid": 55}, event])
+            emit.assert_called_once()
+            self.assertEqual(emit.call_args.args[0]["correlation"], "pid-only")
+            self.assertNotIn("browserPid", emit.call_args.args[0])
+
+    def test_fatal_signal_to_owned_thread_retains_its_process_candidate(self):
+        observation = observer.Observation(10, "/tmp/owned")
+        observation.ledger.fork(10, 21, 2)
+        observation.ledger.identify(21, 210, "browser", 3)
+        observation.ledger.fork(21, 23, 4)
+        observation.processes(packet(1, [23, 23, 24, 23]))
+        with patch.object(observer, "emit") as emit, patch.object(observer, "generator_snapshot", return_value={}):
+            observation.signals([{"targetTid": 24, "generatorTid": 99, "timestampNs": 124000}])
+            self.assertEqual(emit.call_args.args[0]["targetProcessCandidatePid"], 23)
+            self.assertIn(23, observation.signal_targets)
+        observation.processes(packet(1, [99, 99, 24, 24], sequence=5))
+        self.assertIsNone(observation.ledger.candidate_process_pid(24))
+
     def test_capability_rejects_time_namespace_or_probe_clock_mismatch(self):
         with patch.object(observer.os, "stat", side_effect=[SimpleNamespace(st_ino=1), SimpleNamespace(st_ino=2)]):
             with self.assertRaisesRegex(ValueError, "namespace mismatch"):

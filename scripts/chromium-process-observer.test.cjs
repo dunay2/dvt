@@ -209,3 +209,75 @@ test('an exit cannot report both a terminating signal and a normal exit code', a
     item.cleanup();
   }
 });
+
+test('signal generation and OOM reports retain uncertainty and drop raw data', async () => {
+  const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+  try {
+    const binding = await startChromiumProcessObserver(item.options, item.port);
+    item.send({
+      kind: 'signal-generation',
+      targetTid: 23,
+      targetProcessCandidatePid: 23,
+      generatorTid: 21,
+      timestampNs: '123000',
+      precisionNs: 1000,
+      signal: 9,
+      signalCode: 0,
+      signalErrno: 0,
+      group: true,
+      result: 0,
+      correlation: 'pid-only',
+      generatorCategory: 'chromium',
+      generatorCorrelation: 'pid-only-after-event',
+      generatorSnapshotPid: 20,
+      generatorSnapshotBirthtimeTicks: 5,
+      raw: 'secret args',
+    });
+    item.send({
+      kind: 'userspace-oom-report',
+      daemon: 'systemd-oomd',
+      daemonPid: 12,
+      timestampNs: '124000',
+      action: 'cgroup-kill-report',
+      correlation: 'runner-interval-only',
+      MESSAGE: 'secret cgroup',
+    });
+    item.send({
+      kind: 'userspace-oom-coverage',
+      entriesRead: 1,
+      reportsRetained: 1,
+      scope: 'systemd-oomd-and-earlyoom',
+      startedNs: '100000',
+      endedNs: '200000',
+    });
+    await binding.stop();
+    const report = item.report();
+    assert.equal(report.state, 'complete');
+    assert.equal(report.records[1].generatorCorrelation, 'pid-only-after-event');
+    assert.equal(report.records[2].correlation, 'runner-interval-only');
+    assert.doesNotMatch(JSON.stringify(report), /secret|MESSAGE|raw/);
+  } finally {
+    item.cleanup();
+  }
+});
+
+test('contradictory OOM attribution cannot become successful evidence', async () => {
+  const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+  try {
+    const binding = await startChromiumProcessObserver(item.options, item.port);
+    item.send({
+      kind: 'userspace-oom-report',
+      daemon: 'systemd-oomd',
+      daemonPid: 12,
+      timestampNs: '124000',
+      action: 'signal-attempt',
+      correlation: 'pid-only',
+      victimPid: 23,
+      signal: 9,
+    });
+    await assert.rejects(binding.stop(), /incomplete/);
+    assert.equal(item.report().state, 'incomplete');
+  } finally {
+    item.cleanup();
+  }
+});

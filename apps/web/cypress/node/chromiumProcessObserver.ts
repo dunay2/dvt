@@ -1,4 +1,4 @@
-/** Owned concern: own a read-only Linux observer and publish only its validated metadata. */
+/** Owned concern: own a bounded Linux observer and publish only its validated metadata. */
 import {
   spawn,
   type ChildProcessWithoutNullStreams,
@@ -44,20 +44,98 @@ const message = z.union([
     clock: z.literal('kernel-log'),
     correlation: z.literal('pid-only'),
   }),
+  z
+    .object({
+      kind: z.literal('signal-generation'),
+      targetTid: integer.positive(),
+      targetProcessCandidatePid: integer.positive(),
+      generatorTid: integer,
+      timestampNs: z.string().regex(/^\d+$/u),
+      precisionNs: z.union([z.literal(1), z.literal(1000)]),
+      signal: z.literal(9),
+      signalCode: z.number().int(),
+      signalErrno: z.number().int(),
+      group: z.boolean(),
+      result: integer.max(4),
+      correlation: z.literal('pid-only'),
+    })
+    .and(
+      z.discriminatedUnion('generatorCorrelation', [
+        z.object({
+          generatorCorrelation: z.literal('pid-only-after-event'),
+          generatorCategory: z.enum([
+            'chromium',
+            'cypress',
+            'node',
+            'systemd-oomd',
+            'earlyoom',
+            'systemd',
+            'other',
+          ]),
+          generatorSnapshotPid: integer.positive(),
+          generatorSnapshotBirthtimeTicks: integer,
+        }),
+        z.object({
+          generatorCorrelation: z.literal('unavailable'),
+          generatorCategory: z.literal('unknown'),
+          generatorSnapshotPid: z.never().optional(),
+          generatorSnapshotBirthtimeTicks: z.never().optional(),
+        }),
+      ])
+    ),
+  z
+    .object({
+      kind: z.literal('userspace-oom-report'),
+      daemonPid: integer.positive(),
+      timestampNs: z.string().regex(/^\d+$/u),
+    })
+    .and(
+      z.discriminatedUnion('daemon', [
+        z.object({
+          daemon: z.literal('systemd-oomd'),
+          action: z.literal('cgroup-kill-report'),
+          correlation: z.literal('runner-interval-only'),
+          signal: z.never().optional(),
+          victimPid: z.never().optional(),
+        }),
+        z.object({
+          daemon: z.literal('earlyoom'),
+          action: z.literal('signal-attempt'),
+          correlation: z.literal('pid-only'),
+          signal: z.union([z.literal(9), z.literal(15)]),
+          victimPid: integer.positive(),
+        }),
+      ])
+    ),
+  z.object({
+    kind: z.literal('userspace-oom-coverage'),
+    entriesRead: integer.max(200),
+    reportsRetained: integer.max(200),
+    scope: z.literal('systemd-oomd-and-earlyoom'),
+    startedNs: z.string().regex(/^\d+$/u),
+    endedNs: z.string().regex(/^\d+$/u),
+  }),
   z.object({
     kind: z.literal('coverage-gap'),
-    source: z.enum(['process-events', 'kernel-oom']),
+    source: z.enum(['process-events', 'kernel-oom', 'signal-generation', 'userspace-oom']),
     reason: z.enum([
       'sequence-gap',
       'records-lost',
       'drain-limit',
       'browser-not-observed',
       'network-service-not-observed',
+      'signal-not-observed',
     ]),
   }),
   z.object({
     kind: z.literal('unavailable'),
-    source: z.enum(['process-events', 'kernel-oom', 'observation']),
+    source: z.enum([
+      'process-events',
+      'kernel-oom',
+      'signal-generation',
+      'userspace-oom',
+      'observation',
+    ]),
   }),
   z.object({ kind: z.literal('complete'), incomplete: z.boolean() }),
 ]);

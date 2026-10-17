@@ -1,9 +1,10 @@
-"""Owned concern: observe one native Cypress process tree through read-only Linux sources."""
+"""Owned concern: observe one native Cypress tree with bounded Linux diagnostics."""
 import errno
 import json
 import os
 from pathlib import Path
 import selectors
+import signal
 import socket
 import struct
 import subprocess
@@ -13,6 +14,8 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from linuxChromiumProcessProtocol import (OwnedProcesses, classify_arguments,
     decode_kernel_record, decode_process_events, parse_birthtime)
+from linuxChromiumSignalTrace import SignalTrace, generator_snapshot
+from linuxChromiumOomJournal import OomJournal
 
 
 def emit(record):
@@ -80,6 +83,8 @@ class Observation:
         self.cpu_sequences = {}
         self.kernel_sequence = None
         self.incomplete = False
+        self.killed_network_pids = set()
+        self.signal_targets = set()
 
     def gap(self, source, reason):
         self.incomplete = True
@@ -101,12 +106,18 @@ class Observation:
             self.cpu_sequences[cpu] = event["sequence"]
             if event["kind"] == 0:
                 continue
-            if event["kind"] == 1 and event["pid"] == event["tid"]:
-                self.ledger.fork(event["parentPid"], event["pid"], event["timestampNs"])
+            if event["kind"] == 1:
+                if event["pid"] == event["tid"]:
+                    self.ledger.fork(event["parentPid"], event["pid"], event["timestampNs"])
+                else:
+                    self.ledger.thread(event["pid"], event["tid"])
             elif event["kind"] == 0x80000000:
                 projected = self.ledger.exit(event)
                 if projected is not None:
                     emit(projected)
+                    if (projected["role"] == "network-service" and projected.get("signal") == 9
+                            and projected["pid"] == projected["tid"]):
+                        self.killed_network_pids.add(projected["pid"])
 
     def kernel(self, packet):
         event = decode_kernel_record(packet)
@@ -117,22 +128,34 @@ class Observation:
         if projected is not None:
             emit(projected)
 
+    def signals(self, events):
+        for event in events:
+            candidate = self.ledger.candidate_process_pid(event["targetTid"])
+            if candidate is not None:
+                self.signal_targets.add(candidate)
+                emit({**event, "kind": "signal-generation", "correlation": "pid-only",
+                      "targetProcessCandidatePid": candidate,
+                      **generator_snapshot(event["generatorTid"])})
+
     def finish(self):
         roles = self.ledger.observed_roles(time.monotonic_ns())
         if "browser" not in roles:
             self.gap("process-events", "browser-not-observed")
         elif "network-service" not in roles:
             self.gap("process-events", "network-service-not-observed")
+        if self.killed_network_pids - self.signal_targets:
+            self.gap("signal-generation", "signal-not-observed")
         emit({"kind": "complete", "incomplete": self.incomplete})
         return 1 if self.incomplete else 0
 
 
-def observe(stream, kernel, root_pid, capture_root):
+def observe(stream, kernel, root_pid, capture_root, trace, journal):
     observation = Observation(root_pid, capture_root)
     stream.setblocking(False)
     with selectors.DefaultSelector() as selection:
         selection.register(stream, selectors.EVENT_READ, "process-events")
         selection.register(kernel, selectors.EVENT_READ, "kernel-oom")
+        selection.register(trace.fd, selectors.EVENT_READ, "signal-generation")
         selection.register(sys.stdin, selectors.EVENT_READ, "lifetime")
         emit({"kind": "ready", "rootPid": root_pid})
         finished = False
@@ -147,6 +170,8 @@ def observe(stream, kernel, root_pid, capture_root):
                 try:
                     if key.data == "process-events":
                         observation.processes(stream.recv(65536))
+                    elif key.data == "signal-generation":
+                        observation.signals(trace.read())
                     else:
                         observation.kernel(os.read(kernel, 65536))
                 except OSError as error:
@@ -171,7 +196,20 @@ def observe(stream, kernel, root_pid, capture_root):
                     break
             else:
                 observation.gap(source, "drain-limit")
+        try:
+            observation.signals(trace.finish())
+        except (OSError, ValueError):
+            observation.gap("signal-generation", "records-lost")
+        try:
+            for record in journal.finish(observation.ledger.owns_candidate):
+                emit(record)
+        except (OSError, ValueError, subprocess.SubprocessError):
+            observation.gap("userspace-oom", "records-lost")
         return observation.finish()
+
+
+def cancel_observer(_signal, _frame):
+    raise InterruptedError("Observer cancelled")
 
 
 def main():
@@ -190,16 +228,21 @@ def main():
                 source = "kernel-oom"
                 kernel = os.open("/dev/kmsg", os.O_RDONLY | os.O_NONBLOCK)
                 os.lseek(kernel, 0, os.SEEK_END)
-                source = "observation"
-                return observe(stream, kernel, root_pid, str(capture_root))
+                source = "signal-generation"
+                with SignalTrace() as trace:
+                    source = "userspace-oom"
+                    journal = OomJournal()
+                    source = "observation"
+                    return observe(stream, kernel, root_pid, str(capture_root), trace, journal)
             finally:
                 if kernel is not None:
                     os.close(kernel)
                 subscription(stream, 2)
-    except (OSError, ValueError, IndexError):
+    except (OSError, ValueError, IndexError, subprocess.SubprocessError):
         emit({"kind": "unavailable", "source": source})
         return 1
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, cancel_observer)
     sys.exit(main())

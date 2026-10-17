@@ -835,6 +835,8 @@ describe('governed browser evidence routing', () => {
   it.each([
     'apps/web/cypress/node/linuxChromiumProcessObserver.py',
     'apps/web/cypress/node/linuxChromiumProcessProtocol.py',
+    'apps/web/cypress/node/linuxChromiumSignalTrace.py',
+    'apps/web/cypress/node/linuxChromiumOomJournal.py',
   ])('Linux observer changes retain the real LIVE execution obligation: %s', (file) => {
     expect(
       resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)

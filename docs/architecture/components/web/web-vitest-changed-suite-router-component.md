@@ -656,6 +656,70 @@ The existing real Linux invocation provides the capability smoke and unchanged
 journey evidence. Assertions, retries, browser, spec selection, workflow and
 product behavior remain unchanged. No synthetic successful capture is admitted.
 
+#### SIGKILL Generation And Userspace OOM Evidence — GH-3604
+
+Design `GH-3604-LINUX-SIGNAL-ORIGIN` extends the same native observer after run
+`38972536656` recorded nine network-service SIGKILL exits without an observed
+kernel OOM victim. That evidence establishes termination, not its initiator.
+
+```mermaid
+flowchart LR
+  Previous[Owned SIGKILL exit; initiator unknown] --> Trace[Private signal_generate trace instance]
+  Trace --> Probe[Known observer-owned child probe]
+  Probe --> Browser[Unchanged native browser proof]
+  Browser --> Signal[Owned target; generator context and signal result]
+  Browser --> Journal[Independent bounded OOM-daemon journal]
+  Signal --> Projection[Allowlisted evidence; uncertain attribution explicit]
+  Journal --> Projection
+  Projection --> Close[Drain; close private sources; publish through existing owner]
+```
+
+Use an already-mounted tracefs instance with only `signal:signal_generate`,
+filtered to SIGKILL and the monotonic clock. No installation, mount, global
+trace-option mutation, syscall tracing, stacks or browser instrumentation is
+admitted. A known observer-owned child proves the actual event path before
+Cypress starts. The instance and its bounded buffer are closed and removed by
+their owner on normal completion, rejection and catchable cancellation. The
+instance-local `disable_on_free` option and a noninherited `free_buffer` descriptor
+stop tracing when the observer loses its descriptors, including SIGKILL. An
+uncatchable termination cannot remove the instance directory; no such guarantee is claimed.
+Loss or unsupported capability is explicit.
+
+The kernel event names a target **TID** and current generator context, not an
+unconditional sender `si_pid`. Preserve signal code, group and result: generation
+does not prove delivery. Track forked threads as well as process leaders so a
+fatal signal to a nonleader retains its owning process candidate, without
+inheriting that association after PID reuse. Publish only targets matching the owned browser ledger,
+with explicit PID-only correlation. Independent streams can be read out of order,
+and formatted trace timestamps can have microsecond precision; do not require an
+invented total ordering. A stable generator `/proc`
+snapshot is separately marked observed-after-event and PID-only. Export only its
+numeric identifiers and an allowlisted executable category, never raw paths,
+arguments, comm or trace text. Unknown and reused identities remain uncertain.
+
+Read current-boot journal entries from the exact `systemd-oomd.service` and
+`earlyoom.service` units after the initial cursor, requiring matching process
+metadata within the observer interval, with bounded output and time. Journal
+timestamps denote receipt, not an exact signal-generation time. Recognized actions retain only
+daemon category/PID, numeric monotonic timestamp and, for an owned earlyoom
+candidate, victim PID. A systemd cgroup kill report is runner-interval evidence,
+not per-process attribution. Raw journal messages, cgroup names and command lines
+never leave the mapper. Empty results mean not observed, not OOM excluded;
+unavailable sources, malformed records and truncation cannot claim full coverage.
+
+Trace capture, journal capture, process ownership and artifact validation have
+separate owners and focused negative tests. Existing routing guards admit exact
+new support paths. Browser selection, retries, assertions, provider allocation,
+workflow and product behavior do not change. The governing planning matrix and
+allowed surfaces are recorded in
+[the issue design](https://github.com/dunay2/dvt/issues/3604#issuecomment-6227215039).
+Primary contracts are the kernel's
+[signal tracepoint](https://github.com/torvalds/linux/blob/v6.8/include/trace/events/signal.h),
+[signal generation order](https://github.com/torvalds/linux/blob/v6.8/kernel/signal.c),
+[tracefs interface](https://www.kernel.org/doc/html/v6.8/trace/ftrace.html),
+[systemd OOM reports](https://github.com/systemd/systemd/blob/v255/src/oom/oomd-manager.c)
+and [earlyoom signal reports](https://github.com/rfjakob/earlyoom/blob/v1.8/kill.c).
+
 ### Execution Selection Consumer Closure — GH-3610
 
 The shared `cypress/support/canvasExecutionSelection.ts` helper is not an

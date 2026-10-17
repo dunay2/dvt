@@ -118,6 +118,7 @@ class OwnedProcesses:
     def __init__(self, root_pid):
         self.processes = {root_pid: self._lifetime(root_pid, 0, None)}
         self.confirmed_roles = set()
+        self.threads = {}
 
     @staticmethod
     def _lifetime(pid, timestamp, parent):
@@ -128,9 +129,17 @@ class OwnedProcesses:
         parent = self.processes.get(parent_pid)
         # A fork replaces the old PID lifetime even when the new tree is unowned.
         self.processes.pop(pid, None)
+        self.threads.pop(pid, None)
         if (parent is not None and parent["startedNs"] <= timestamp
                 and (parent["endedNs"] is None or timestamp <= parent["endedNs"])):
             self.processes[pid] = self._lifetime(pid, timestamp, parent)
+
+    def thread(self, pid, tid):
+        self.threads.pop(tid, None)
+        self.processes.pop(tid, None)
+        owner = self.processes.get(pid)
+        if owner is not None and owner["endedNs"] is None:
+            self.threads[tid] = owner
 
     def identify(self, pid, birthtime, role, observed_ns):
         record = self.processes.get(pid)
@@ -192,8 +201,18 @@ class OwnedProcesses:
                 **decode_wait_status(event["waitStatus"])}
 
     def oom(self, event):
-        record = self.processes.get(event.get("victimPid"))
-        if self._browser(record, None) is None:
+        if not self.owns_candidate(event.get("victimPid")):
             return None
         return {"kind": "kernel-oom-victim", "victimPid": event["victimPid"],
                 "timestampNs": event["timestampNs"], "clock": "kernel-log", "correlation": "pid-only"}
+
+    def owns_candidate(self, pid):
+        """PID-only evidence scope, deliberately not a lifetime attribution."""
+        return self.candidate_process_pid(pid) is not None
+
+    def candidate_process_pid(self, tid):
+        record = self.processes.get(tid) or self.threads.get(tid)
+        if (record is not None and self.processes.get(record["pid"]) is record
+                and self._browser(record, None) is not None):
+            return record["pid"]
+        return None
