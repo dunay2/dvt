@@ -56,29 +56,27 @@ describe('source import connection test lifetime', () => {
     await harness.clickTab('Connections');
     await harness.clickButtonContaining('Test connection');
     await act(async () => {
-      if (outcome === 'failure') pending.get(1)!.reject(new Error('obsolete failure'));
+      const initialRequest = pending.get(1)!;
+      if (outcome === 'failure') initialRequest.reject(new Error('obsolete failure'));
       else
-        pending
-          .get(1)!
-          .resolve({
-            connectionId: 'A',
-            status: 'passed',
-            checkedAt: '2026-10-17T00:00:00Z',
-            objectCount: 999,
-          });
+        initialRequest.resolve({
+          connectionId: 'A',
+          status: 'passed',
+          checkedAt: '2026-10-17T00:00:00Z',
+          objectCount: 999,
+        });
     });
     expect(harness.findButtonContaining('Testing')?.disabled).toBe(true);
     expect(document.body.textContent).not.toContain('999');
     expect(document.body.textContent).not.toContain('Failed to test connection');
     await act(async () => {
-      pending
-        .get(2)!
-        .resolve({
-          connectionId: 'A',
-          status: 'passed',
-          checkedAt: '2026-10-17T00:00:00Z',
-          objectCount: 51,
-        });
+      const latestRequest = pending.get(2)!;
+      latestRequest.resolve({
+        connectionId: 'A',
+        status: 'passed',
+        checkedAt: '2026-10-17T00:00:00Z',
+        objectCount: 51,
+      });
     });
     expect(document.body.textContent).toContain('51 objects reachable');
   });
