@@ -13,6 +13,7 @@ import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
+import { WEB_CYPRESS_CATALOG_PATH } from '../../cypress.catalog';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
 import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 
@@ -349,6 +350,56 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('pins one Git comparison before discovery even if an alias moves before catalog reads', async () => {
+    const childProcess = await import('node:child_process');
+    const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+    const previous = {
+      ...WEB_CYPRESS_SPECS,
+      controlled: WEB_CYPRESS_SPECS.controlled.slice(0, -1),
+    };
+    const calls: string[][] = [];
+    let discovered = false;
+    vi.stubEnv('GIT_BASE', 'base-alias');
+    vi.stubEnv('GIT_HEAD', 'head-alias');
+    vi.spyOn(childProcess, 'execFileSync').mockImplementation((_command, args) => {
+      const command = args as string[];
+      calls.push(command);
+      if (command[0] === 'rev-parse') {
+        const ref = command.at(-1)!.replace(/\^\{commit\}$/, '');
+        return `${ref === 'base-alias' ? (discovered ? 'advanced-base' : 'base-sha') : ref === 'head-alias' ? 'head-sha' : ref}\n`;
+      }
+      if (
+        command[0] === 'diff' &&
+        command.includes('--no-renames') &&
+        !command.includes('--cached') &&
+        command.length > 4
+      ) {
+        discovered = true;
+        return `${WEB_CYPRESS_CATALOG_PATH}\0`;
+      }
+      if (command[0] === 'ls-tree') return `${WEB_CYPRESS_CATALOG_PATH}\0`;
+      if (command[0] === 'show')
+        return JSON.stringify(command[1]!.startsWith('base-sha:') ? previous : WEB_CYPRESS_SPECS);
+      return '';
+    });
+
+    main(['--plan', '--phase=browser', '--browser-capability=controlled']);
+    const plan = JSON.parse(String(output.mock.calls[0]![0]));
+    expect(plan.browserCommands).toMatchObject([
+      { capability: 'controlled', specPaths: [WEB_CYPRESS_SPECS.controlled.at(-1)] },
+    ]);
+    expect(calls).toContainEqual([
+      'diff',
+      '--name-only',
+      '--no-renames',
+      '-z',
+      'base-sha',
+      'head-sha',
+    ]);
+    expect(calls.filter((args) => args.includes('base-alias^{commit}'))).toHaveLength(1);
+    expect(spawnSync).not.toHaveBeenCalled();
+  });
+
   it('admits retained shell menu consumers in their actual independent runtimes', () => {
     const controlled = 'apps/web/cypress/e2e/templates/templates-workbench.cy.ts';
     const available = 'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts';

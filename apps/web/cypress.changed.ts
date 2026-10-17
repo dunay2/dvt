@@ -5,103 +5,22 @@
  * @consequence Unknown ownership rejects; CI shards preserve complete, disjoint spec execution.
  * @version 1.0.2
  */
-export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
+import {
+  resolveControlledCatalogAdditions,
+  WEB_CYPRESS_CATALOG_PATH,
+  WEB_CYPRESS_CAPABILITIES as CAPABILITIES,
+  WEB_CYPRESS_SPECS,
+  type WebCypressCatalogSnapshots,
+  type WebCypressCapability,
+} from './cypress.catalog';
+
+export { WEB_CYPRESS_SPECS, type WebCypressCapability } from './cypress.catalog';
 export type WebCypressCommand = Readonly<{
   capability: WebCypressCapability;
   command: string;
   env: Readonly<Record<string, string | undefined>>;
   specPaths: readonly string[];
 }>;
-
-export const WEB_CYPRESS_SPECS = {
-  controlled: [
-    'apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-authoring-field-budgets.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-calculated-column-authoring.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-card-field-lifecycle.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-card-output-save-race.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-connection-provenance.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-connection-valve.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dbt-source-connection-binding.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-draft-access-posture.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dvt-postgres-connection-binding.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-formula-lineage.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-geometry-performance.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-happy-path-draggable.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-join-consumers.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-join-output-policies.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-measure-pipeline.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-model-card-materialization.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-model-session.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-pending-read-coverage.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-predicate-reopen.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-project-snapshot-roundtrip.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-card-cancellation.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-card-detail.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-card-movement.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-layout-persistence.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-operation-chooser.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-operation-menu.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-append.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-pending-join.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-predicates.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-set-persistence.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-source-filter-authoring.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-source-inspector-order.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-transform-chain.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-transform-result-target.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-unary-lifecycle.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-unsupported-substrait-inspection.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-withdrawn-input-publication.cy.ts',
-    'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
-    'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
-    'apps/web/cypress/e2e/shell/project-onboarding.cy.ts',
-    'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
-    'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
-    'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
-    'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
-    'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
-  ],
-  available: [
-    'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
-    'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-transform-stage.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-operation-execution.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-chain-persistence.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-cross.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-tree-workbench.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-union.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-removal.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-relational-workbench-viewport.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-sort-fetch-data-navigation.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dvt-start-run-boundaries-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-formula-lineage-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-selected-filter-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-semantic-unsupported-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-transform-data-sample-live.cy.ts',
-    'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts',
-    'apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts',
-    'apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
-    'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
-    'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
-  ],
-  unavailable: ['apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts'],
-} as const;
 
 const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapability[]>> = {
   'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
@@ -166,6 +85,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
 
 const EXECUTION_BOUNDARIES = [
   'apps/web/cypress.changed.ts',
+  'apps/web/cypress.catalog.ts',
   'apps/web/vitest.suites.ts',
   'apps/web/scripts/run-vitest-changed-suites.ts',
   '.github/workflows/test.yml',
@@ -196,7 +116,6 @@ const RETIRED_SPEC_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapa
   'apps/web/cypress/fixtures/het2-fixture-key.pem': ['available'],
 };
 
-const CAPABILITIES = ['controlled', 'available', 'unavailable'] as const;
 const FIXTURE_CONTRACTS = [
   'apps/web/src/app/views/canvas/canvasDraftScenarioFixtures.test.ts',
   'apps/web/src/app/views/canvas/canvasDraftScenarioFixtures.architecture.test.ts',
@@ -261,7 +180,8 @@ function browserCapabilities(path: string): readonly WebCypressCapability[] {
 
 export function resolveWebCypressChangedPlan(
   filePaths: readonly string[],
-  full = false
+  full = false,
+  catalogSnapshots?: WebCypressCatalogSnapshots
 ): {
   vitestFiles: string[];
   commands: WebCypressCommand[];
@@ -287,6 +207,19 @@ export function resolveWebCypressChangedPlan(
   const retiredFiles = new Set<string>();
   for (const filePath of filePaths) {
     const path = repositoryPath(filePath);
+    if (path === WEB_CYPRESS_CATALOG_PATH) {
+      const additions = resolveControlledCatalogAdditions(WEB_CYPRESS_SPECS, catalogSnapshots);
+      if (additions === null) requireCapabilities(CAPABILITIES);
+      else additions.forEach((spec) => requireCapabilities(['controlled'], spec));
+      requiredFiles.add(path);
+      vitestFiles.add(path);
+      continue;
+    }
+    if (EXECUTION_BOUNDARIES.includes(path)) {
+      requireCapabilities(CAPABILITIES);
+      vitestFiles.add(filePath);
+      continue;
+    }
     const retired = RETIRED_SPEC_CAPABILITIES[path];
     if (retired) {
       retiredFiles.add(path);
@@ -311,12 +244,20 @@ export function resolveWebCypressChangedPlan(
       }
       continue;
     }
-    if (EXECUTION_BOUNDARIES.includes(path)) requireCapabilities(CAPABILITIES);
+    if (requiresSessionBrowserEvidence(path)) {
+      WEB_CYPRESS_SPECS.controlled
+        .filter((spec) => spec.startsWith('apps/web/cypress/e2e/shell/'))
+        .forEach((spec) => requireCapabilities(['controlled'], spec));
+      requireCapabilities(['available', 'unavailable']);
+    }
     vitestFiles.add(filePath);
   }
+  const orderedControlledSpecs = WEB_CYPRESS_SPECS.controlled.filter((path) =>
+    controlledSpecs.has(path)
+  );
   const capabilities = CAPABILITIES.filter((capability) => selected.has(capability));
   capabilities.forEach((capability) =>
-    (capability === 'controlled' ? [...controlledSpecs] : WEB_CYPRESS_SPECS[capability]).forEach(
+    (capability === 'controlled' ? orderedControlledSpecs : WEB_CYPRESS_SPECS[capability]).forEach(
       (path) => requiredFiles.add(path)
     )
   );
@@ -325,10 +266,23 @@ export function resolveWebCypressChangedPlan(
     commands: capabilities.map((capability) =>
       buildBrowserCommand(
         capability,
-        capability === 'controlled' ? [...controlledSpecs] : WEB_CYPRESS_SPECS[capability]
+        capability === 'controlled' ? orderedControlledSpecs : WEB_CYPRESS_SPECS[capability]
       )
     ),
     requiredFiles: [...requiredFiles],
     retiredFiles: [...retiredFiles],
   };
+}
+
+function requiresSessionBrowserEvidence(path: string): boolean {
+  const source = path.replace(/^apps\/web\//, '');
+  if (/\.(?:test|spec)(?:\.|$)|\.testSupport\./.test(source)) return false;
+  return (
+    source.startsWith('src/app/bootstrap/') ||
+    source.startsWith('src/app/services/session/') ||
+    source.startsWith('src/app/services/projectOnboarding/') ||
+    source.startsWith('src/app/views/projectAdmission/') ||
+    source === 'src/app/views/ProjectOnboardingView.tsx' ||
+    source === 'src/app/views/ProjectOnboardingView.module.css'
+  );
 }

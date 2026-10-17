@@ -10,6 +10,7 @@ import { appendFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { WEB_CYPRESS_CATALOG_PATH, type WebCypressCatalogSnapshots } from '../cypress.catalog';
 import { selectWebCypressShard, type WebCypressCapability } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
@@ -121,6 +122,51 @@ export function readChangedFiles(
   return [...files].sort((left, right) => left.localeCompare(right));
 }
 
+export function readBrowserCatalogSnapshots(
+  repoRoot: string,
+  options: ReadChangedFilesOptions = {}
+): WebCypressCatalogSnapshots | undefined {
+  const runGit = options.gitOutput ?? gitOutput;
+  const { GIT_BASE: base, GIT_HEAD: head } = readGitComparison(repoRoot, options);
+  const dirtyQueries = [
+    ['diff', '--name-only', '-z', '--cached', '--', WEB_CYPRESS_CATALOG_PATH],
+    ['diff', '--name-only', '-z', '--', WEB_CYPRESS_CATALOG_PATH],
+    ['ls-files', '--others', '--exclude-standard', '-z', '--', WEB_CYPRESS_CATALOG_PATH],
+  ];
+  if (dirtyQueries.some((args) => runGit(args, repoRoot).length > 0)) return undefined;
+
+  function readSnapshot(commit: string): unknown {
+    const paths = runGit(
+      ['ls-tree', '--name-only', '-z', commit, '--', WEB_CYPRESS_CATALOG_PATH],
+      repoRoot
+    );
+    if (!paths.includes(WEB_CYPRESS_CATALOG_PATH)) return null;
+    const source = runGit(['show', `${commit}:${WEB_CYPRESS_CATALOG_PATH}`], repoRoot).join('\0');
+    try {
+      return JSON.parse(source) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  return { base: readSnapshot(base), head: readSnapshot(head) };
+}
+
+function readGitComparison(
+  repoRoot: string,
+  options: ReadChangedFilesOptions = {}
+): Readonly<{ GIT_BASE: string; GIT_HEAD: string }> {
+  const runGit = options.gitOutput ?? gitOutput;
+  const env = options.env ?? process.env;
+  const resolveCommit = (ref: string): string =>
+    runGit(['rev-parse', '--verify', '--end-of-options', `${ref}^{commit}`], repoRoot)
+      .join('')
+      .trim();
+  const base = resolveCommit(env.GIT_BASE || 'origin/main');
+  const head = resolveCommit(env.GIT_HEAD || 'HEAD');
+  if (!base || !head) throw new Error('Browser evidence requires verified Git references.');
+  return { GIT_BASE: base, GIT_HEAD: head };
+}
+
 function runCommand(command: string, cwd: string, env = process.env): void {
   const result = spawnSync(command, {
     cwd,
@@ -194,8 +240,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
   }
 
   const args = parseChangedSuiteArgs(argv);
-  const changedFiles = args.files.length > 0 ? args.files : readChangedFiles(repoRoot);
-  const plan = resolveWebVitestChangedSuitePlan(changedFiles, { full: args.full });
+  const comparison = args.files.length > 0 ? undefined : readGitComparison(repoRoot);
+  const changedFiles =
+    args.files.length > 0 ? args.files : readChangedFiles(repoRoot, { env: comparison });
+  const catalogChanged = changedFiles.some((path) => {
+    const normalized = path.replaceAll('\\', '/').replace(/^\.\//, '');
+    return normalized === WEB_CYPRESS_CATALOG_PATH || normalized === 'cypress.catalog.json';
+  });
+  const plan = resolveWebVitestChangedSuitePlan(changedFiles, {
+    full: args.full,
+    catalogSnapshots:
+      !args.full && catalogChanged
+        ? readBrowserCatalogSnapshots(repoRoot, { env: comparison })
+        : undefined,
+  });
   for (const path of plan.browserFiles) {
     if (!existsSync(resolve(repoRoot, path))) {
       throw new Error(`Browser evidence requires an existing consumer or helper: ${path}`);

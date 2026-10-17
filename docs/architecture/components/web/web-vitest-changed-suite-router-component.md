@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-12
+last_reviewed: 2026-10-18
 planning_type: architecture
 ---
 
@@ -177,6 +177,70 @@ flowchart LR
 - Do not make source files under `apps/web/src/testing/**` production services.
 
 ## Browser Evidence Boundary — GH-3540
+
+### Additive Browser Catalog Selection — GH-2931
+
+The browser registry currently shares a TypeScript module with execution policy.
+Adding one controlled spec therefore invalidates every browser capability. The
+registry change is not a policy change; product changes must independently name
+their evidence instead of relying on that incidental widening.
+
+```mermaid
+flowchart LR
+  Before[Spec registration in policy module] --> All[All browser capabilities]
+  Git[Existing Git adapter] --> Snapshots[Base and executed catalog snapshots]
+  Snapshots --> Policy[Existing changed-suite query]
+  Policy --> Exact[Proven controlled additions]
+  Policy --> Broad[Unproved delta or policy change: complete baseline]
+  Source[Session or admission source change] --> Obligations[Shell controlled and both provider capabilities]
+  Exact --> Union[Union of independent obligations]
+  Broad --> Union
+  Obligations --> Union
+  Union --> Runner[Existing runners and strict result validation]
+```
+
+One `apps/web/cypress.catalog.json` replaces the spec arrays; it does not create
+a parallel registry. A focused pure catalog module validates its shape and
+classifies base/head changes. It accepts exactly the three capability keys,
+nonempty capability lists, canonical literal spec paths, and unique disjoint
+membership. Unknown keys, duplicates, traversal, globs or malformed current data
+reject before execution.
+
+Only additions to `controlled` can narrow catalog-triggered evidence. Existing
+controlled membership and relative order, and both provider arrays, must remain
+unchanged. Every addition runs even if its spec file was already present. The
+executed catalog must equal the verified HEAD snapshot; staged or working-tree
+catalog divergence falls back to the complete baseline. A missing base catalog
+(including the first extraction), removal, reclassification or unproved delta
+also selects the complete baseline. An unreadable Git reference is an error.
+The existing adapter owns snapshot reads; the policy owns classification. The
+adapter pins one immutable base/head pair for automatic diff discovery and
+catalog snapshots, so a moving branch reference cannot hide a catalog addition.
+
+Product changes to session/bootstrap, project onboarding and project admission
+retain independent browser obligations: all cataloged controlled shell journeys
+and the complete available/unavailable provider capabilities. Test-only changes
+do not acquire that product obligation. Shell journeys are derived from the
+single catalog, so later session regressions join this obligation automatically.
+This preserves real-provider auth evidence and existing shard ownership without
+repeating unrelated controlled Canvas journeys, including the stress case.
+
+Policy, runner, shared support and `--full` obligations remain unchanged. The
+catalog selects every existing router guard. Unknown consumers and missing
+physical paths reject before phase/capability selection. No cache hit, previous
+log, receipt or successful test is inferred by this selection policy.
+
+| Scenario                    | Opportunity             | Fowler pattern                        | DDD owner                   | Command/query rail                               | Implementation surfaces                                                | Unit or package test                                                                             | Architecture test                                                            | User-flow test                                         | Out of scope                                                |
+| --------------------------- | ----------------------- | ------------------------------------- | --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| Controlled catalog addition | Responsibility overload | Separate declarative data from policy | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites                      | Catalog JSON/parser, browser policy, suite composition and Git adapter | Additive delta; invalid shape; reordered/removed/reclassified paths; dirty and missing snapshots | Single registry; full baseline retained; all guards selected                 | Existing exact native spec command and result contract | New runner, general import graph, provider subset selection |
+| Session source change       | Hidden authority        | Explicit evidence obligation          | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites; RunWebCypressNative | Existing browser policy and focused routing guards                     | Source-only, test-only and mixed catalog/source cases                                            | Shell journeys plus complete provider capabilities; union without duplicates | Existing shell and protected-runtime journeys          | Auth behavior, changing assertions or deadlines             |
+
+Delivery is a bounded slice of [#2931](https://github.com/dunay2/dvt/issues/2931),
+not completion of its repository-wide tier migration. The next independent
+slice may add per-obligation local receipts; it must first prove input identity,
+complete successful execution and before/after stability. This slice neither
+reuses historical logs nor changes the existing receipt contract. Nightly work
+already present on a pending branch must be reconciled, not reimplemented.
 
 This section specifies the next implementation of the existing
 `RouteChangedWebVitestSuites` query and `RunWebCypressNative` command. GitHub
