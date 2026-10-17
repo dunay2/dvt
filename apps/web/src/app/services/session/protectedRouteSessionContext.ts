@@ -102,12 +102,10 @@ export async function resolveProtectedRouteSessionContext(
     // the two projections; a synchronous subscriber may start the next query,
     // but must not leave this already-admitted publication half written.
     publication.assertCurrent();
-    useAuthorizationStore
-      .getState()
-      .setUserPermissions({
-        ...DEFAULT_USER_PERMISSIONS,
-        ...projectPermissionsFromSession(session),
-      });
+    useAuthorizationStore.getState().setUserPermissions({
+      ...DEFAULT_USER_PERMISSIONS,
+      ...projectPermissionsFromSession(session),
+    });
     useSessionStore.getState().setWorkspaceScopeSelectionContext({
       selectedScope: {
         tenantId: asNonBlankString(resolvedWorkspaceContext.selectedScope.tenantId),
