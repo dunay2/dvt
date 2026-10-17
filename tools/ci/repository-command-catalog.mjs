@@ -129,6 +129,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/run-turbo-workspace-task\.cjs$/u, 'runtime-root'],
   [/^scripts\/skip-pre(build|test)-if-.+\.cjs$/u, 'runtime-root'],
   [/^scripts\/db-migrate\.cjs$/u, 'runtime-capability'],
+  [/^scripts\/local-data-private-creation\.cjs$/u, 'runtime-capability'],
   [/^scripts\/provision-postgres-app-role\.cjs$/u, 'runtime-capability'],
   [/^scripts\/run-local-postgres(\.test)?\.cjs$/u, 'dev-local'],
   [/^scripts\/compare-hashes\.cjs$/u, 'contracts'],
