@@ -1,5 +1,9 @@
 /** @ownedConcern Exercise pull state and terminal failures without claiming provider integration. */
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+import ts from 'typescript';
 
 import type { FieldDef } from 'pg';
 import { describe, it } from 'vitest';
@@ -79,7 +83,7 @@ describe('scoped PostgreSQL pull state', () => {
   });
   it('checks logical byte budget before delivering a batch', async () => {
     const c = new PostgresPullCursor({ codec, fields:[field], observedAt:'2026-10-17T00:00:00.000Z',
-      limits:{maxRows:10,maxLogicalBytes:7},checkpoint:async()=>undefined,readNative:async()=>({rows:[['1']]}),
+      limits:{maxRows:10,maxLogicalBytes:7},checkpoint:async()=>undefined,readNative:async()=>packet([['1']]),
     });
     await assert.rejects(c.read(1),/READ_BUDGET/u);
     await assert.rejects(c.finish(),/READ_BUDGET/u);
@@ -89,5 +93,128 @@ describe('scoped PostgreSQL pull state', () => {
     assert.deepEqual((await f.cursor.read(1)).rows,[[9007199254740993n]]);
     await assert.rejects(f.cursor.read(1),/INVALID_POSTGRES_BATCH/u);
     await assert.rejects(f.cursor.finish(),/INVALID_POSTGRES_BATCH/u);
+  });
+});
+
+/** A complete driver response; safety tests remove metadata intentionally below. */
+function packet(rows: unknown[][], fields: FieldDef[] = [{ ...field }]) {
+  return { rows, result: { command: 'SELECT', rowCount: rows.length, oid: 0, fields, rows } };
+}
+function safetyOptions() {
+  return {
+    codec,
+    fields: [{ ...field }],
+    observedAt: '2026-10-17T00:00:00.000Z',
+    limits: { maxRows: 10, maxLogicalBytes: 100 },
+    checkpoint: async (): Promise<void> => undefined,
+    readNative: async (_count: number) => packet([['1']]),
+  };
+}
+
+describe('cursor cleanup and immutable read boundary', () => {
+  it.each([0, 1])('rejects missing metadata even for %s rows; no fabricated EOF', async (count) => {
+    const c = new PostgresPullCursor({ ...safetyOptions(),
+      readNative: async () => ({ rows: count ? [['1']] : [] }),
+    });
+    await assert.rejects(c.read(2), /SCHEMA_CHANGED/u);
+    await assert.rejects(c.finish(), /SCHEMA_CHANGED/u);
+  });
+
+  it('shares one completion and does not repeat authorization for repeated finish', async () => {
+    let checks = 0;
+    const c = new PostgresPullCursor({ ...safetyOptions(), checkpoint: async () => { checks++; } });
+    const first = c.finish();
+    const second = c.finish();
+    await Promise.all([first, second]);
+    assert.equal(first, second);
+    assert.equal(c.finish(), first);
+    assert.equal(checks, 1);
+    await assert.rejects(c.read(1), /CURSOR_CLOSED/u);
+  });
+
+  it('cannot turn a rejected final checkpoint into a later successful close', async () => {
+    let checks = 0;
+    const denied = new Error('authorization rejected');
+    const c = new PostgresPullCursor({ ...safetyOptions(), checkpoint: async () => {
+      checks++;
+      if (checks === 1) throw denied;
+    } });
+    await assert.rejects(c.finish(), (error) => error === denied);
+    await assert.rejects(c.finish(), (error) => error === denied);
+    assert.equal(checks, 1);
+  });
+
+  it('closes the boundary before invoking a reentrant checkpoint', async () => {
+    let cursor: PostgresPullCursor;
+    let checks = 0;
+    cursor = new PostgresPullCursor({ ...safetyOptions(), checkpoint: async () => {
+      checks++;
+      await assert.rejects(cursor.read(1), /CURSOR_CLOSED/u);
+    } });
+    await cursor.finish();
+    assert.equal(checks, 1);
+  });
+
+  it('does not let closing an outstanding read deliver a batch or retry authorization', async () => {
+    const c = new PostgresPullCursor(safetyOptions());
+    const pending = c.read(1);
+    const closing = c.finish();
+    const outcomes = await Promise.allSettled([pending, closing]);
+    assert.ok(outcomes.every(outcome => outcome.status === 'rejected'));
+    await assert.rejects(c.finish(), /READ_IN_PROGRESS/u);
+  });
+
+  it.each(['field', 'array'])('pins expected metadata independently of the borrowed %s', async (kind) => {
+    const options = safetyOptions();
+    options.readNative = async () => packet([['1']], [{ ...field, name: 'changed' }]);
+    const c = new PostgresPullCursor(options);
+    if (kind === 'field') options.fields[0]!.name = 'changed';
+    else options.fields[0] = { ...field, name: 'changed' };
+    await assert.rejects(c.read(1), /SCHEMA_CHANGED/u);
+    await assert.rejects(c.finish(), /SCHEMA_CHANGED/u);
+  });
+
+  it.each(['maxRows', 'maxLogicalBytes'] as const)('does not accept a caller mutation of %s', async (key) => {
+    const options = safetyOptions();
+    options.limits = key === 'maxRows'
+      ? { maxRows: 1, maxLogicalBytes: 100 }
+      : { maxRows: 10, maxLogicalBytes: 8 };
+    const c = new PostgresPullCursor(options);
+    await c.read(1);
+    options.limits[key] = 100;
+    await assert.rejects(c.read(1), /READ_BUDGET/u);
+    await assert.rejects(c.finish(), /READ_BUDGET/u);
+  });
+
+  it('pins the callback rather than dispatching through a mutable options bag', async () => {
+    const options = safetyOptions();
+    const c = new PostgresPullCursor(options);
+    options.readNative = async () => { throw new Error('replaced callback'); };
+    assert.deepEqual((await c.read(1)).rows, [[1n]]);
+    await c.finish();
+  });
+
+  it('keeps adapter dependencies on narrow ports, not application implementations or Preview', () => {
+    const source = (file: string) => ts.createSourceFile(file,
+      readFileSync(path.resolve('src', file), 'utf8'), ts.ScriptTarget.Latest, true);
+    const imports = (file: string) => source(file).statements
+      .filter(ts.isImportDeclaration)
+      .map(statement => ({ specifier: (statement.moduleSpecifier as ts.StringLiteral).text,
+        bindings: statement.importClause?.getText() ?? '' }));
+    for (const file of ['infrastructure/postgres/PostgresRemoteDatasetReader.ts',
+      'infrastructure/duckdb/DuckDbGenerationStore.ts']) {
+      const dependencies = imports(file);
+      assert.ok(dependencies.every(dep => !dep.specifier.includes('/application/services/')), file);
+      assert.ok(dependencies.some(dep => dep.specifier.endsWith('/ports/localDataPlane.js') &&
+        dep.bindings.includes('ILocalDataOperationAccess')), file);
+      assert.ok(dependencies.every(dep => !dep.bindings.includes('WarehouseSourceDataSampleProbeTarget')), file);
+    }
+    assert.ok(imports('infrastructure/postgres/PostgresRemoteDatasetCursor.ts')
+      .every(dep => dep.specifier !== 'pg' && dep.specifier !== 'pg-cursor'));
+    const lease = source('application/services/localDataAuthorizationLease.ts');
+    assert.ok(lease.statements.filter(ts.isClassDeclaration).some(declaration =>
+      declaration.name?.text === 'LocalDataAuthorizationLease' &&
+      declaration.heritageClauses?.some(clause => clause.token === ts.SyntaxKind.ImplementsKeyword &&
+        clause.types.some(type => type.expression.getText() === 'ILocalDataOperationAccess'))));
   });
 });
