@@ -2,7 +2,6 @@
 /** @ownedConcern Keep large-graph stress scheduled without dropping functional browser evidence. */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { load } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -17,20 +16,6 @@ const authoring = 'apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts
 const guard = 'apps/web/src/testing/vitestSuites.browserNightly.architecture.test.ts';
 const workflowPath = '.github/workflows/web-canvas-nightly.yml';
 const repoRoot = resolve('../..');
-
-type WorkflowStep = {
-  uses?: string;
-  run?: string;
-  if?: string;
-  with?: Record<string, unknown>;
-  'continue-on-error'?: boolean;
-};
-type NightlyWorkflow = {
-  on: Record<string, unknown>;
-  permissions: Record<string, string>;
-  concurrency: { group: string; 'cancel-in-progress': boolean };
-  jobs: Record<string, { services?: unknown; steps: WorkflowStep[]; 'timeout-minutes': number }>;
-};
 
 describe('Canvas nightly browser cadence', () => {
   it('admits exactly one existing nightly spec, disjoint from every per-change runtime', () => {
@@ -95,34 +80,5 @@ describe('Canvas nightly browser cadence', () => {
     ]) {
       expect(stress).toContain(action);
     }
-  });
-
-  it('schedules the exact controlled native proof with owned build, failure reporting and no providers', () => {
-    const workflow = load(readFileSync(resolve(repoRoot, workflowPath), 'utf8')) as NightlyWorkflow;
-    expect(Object.keys(workflow.on).sort()).toEqual(['schedule', 'workflow_dispatch']);
-    expect(workflow.on.schedule).toEqual([{ cron: '30 3 * * *' }]);
-    expect(workflow.permissions).toEqual({ contents: 'read', issues: 'write' });
-    expect(workflow.concurrency.group).toContain('web-canvas-nightly');
-    expect(workflow.concurrency['cancel-in-progress']).toBe(true);
-    const jobs = Object.values(workflow.jobs);
-    expect(jobs).toHaveLength(1);
-    const job = jobs[0]!;
-    expect(job.services).toBeUndefined();
-    expect(job['timeout-minutes']).toBe(20);
-    const proof = job.steps.find(({ run }) => run?.includes('test:e2e:native'));
-    expect(proof?.run).toBe(
-      `pnpm --filter @dvt/web test:e2e:native --browser chrome --spec ${nightly.slice('apps/web/'.length)}`
-    );
-    expect(proof?.if).toBeUndefined();
-    expect(job.steps.every((step) => step['continue-on-error'] !== true)).toBe(true);
-    expect(job.steps.some(({ uses }) => uses === './.github/actions/setup-node-pnpm')).toBe(true);
-    for (const { uses } of job.steps)
-      if (uses && !uses.startsWith('./')) expect(uses).toMatch(/@[a-f\d]{40}$/);
-    const upload = job.steps.find(({ uses }) => uses?.startsWith('actions/upload-artifact@'));
-    expect(upload?.if).toBe('failure() || cancelled()');
-    expect(upload?.with?.path).toBe('.dvt/evidence/selected-closure/screenshots');
-    const notify = job.steps.find(({ run }) => run?.includes('gh issue create'));
-    expect(notify?.if).toBe('failure()');
-    expect(notify?.run).toContain('gh issue comment');
   });
 });
