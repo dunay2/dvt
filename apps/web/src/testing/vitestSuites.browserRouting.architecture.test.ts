@@ -654,6 +654,7 @@ describe('governed browser evidence routing', () => {
 
   it('runs only changed controlled specs but retains the complete set for their shared fixture', () => {
     const path = WEB_CYPRESS_SPECS.controlled[0];
+    if (!path) throw new Error('The controlled browser catalog must be nonempty.');
     const isolated = resolveWebVitestChangedSuitePlan([path, path]);
     expect(isolated.browserCommands).toHaveLength(1);
     expect(isolated.browserCommands[0]!.specPaths).toEqual([path]);
