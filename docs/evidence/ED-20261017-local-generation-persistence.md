@@ -72,3 +72,44 @@ The subcut B changes only the existing metadata owner, a native test and these
 component/evidence/risk documents. It does not add another registry or storage
 adapter, alter the admitted primitive profile, or enable LOCAL. Full lint,
 source/test typecheck, ARC/security, prepush and final review remain required.
+
+## Bounded bulk append and PostgreSQL codec (#3394-A)
+
+This subcut builds on #3676 at
+`28669388388a56f92374b1588521137ea8fc169a`, not main. Its API job
+[117466392167](https://github.com/dunay2/dvt/actions/runs/39056766589/job/117466392167)
+passed with 1567 unit tests (27 skipped) and nine integration tests (126 skipped).
+The overall run subsequently failed; it is not an accepted merge baseline.
+The design was recorded before code in
+[#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6238618039).
+
+The original append loop issued one row INSERT per record. The new test requires
+an actual DataChunk/Appender and rejects physical drift before any native cast.
+The exact PostgreSQL codec is pure and supports only raw-text int8/bool/text/varchar
+OIDs. No connection or source acquisition is part of this subcut.
+
+RED commit `3e4997dcf215249aac4070475f6c5cba216e7f35` was tested as technical merge
+`5051abb238f49299a9b0c8ba4b008c00b3355d60` in
+[39059481016 / API 117474354521](https://github.com/dunay2/dvt/actions/runs/39059481016/job/117474354521).
+Ubuntu 24.04.5, Node 22.23.3, TypeScript 5.9.3, Vitest 3.2.4 and DuckDB 1.5.6
+were used with the unchanged repository lockfile. Build: 20/20 tasks, four cached.
+The 12 new native tests produced six passes and six failures: three missing
+Appender/chunk/close observations and three missing schema-drift rejections.
+The codec passed 92/92 tests. Existing generation 19/19, catalog 9/9, SIGKILL 2/2
+and primitive profile 42/42 also passed. Unit totals: 1665 passed, six failed,
+27 skipped; integration did not execute after the expected RED failure.
+
+The correction replaces the row loop inside the existing Store and extracts its
+schema-only validator for reuse before append. Native flush/close precede the
+same counter update, authorization checkpoint and COMMIT. The 12 native and 92
+codec tests are unchanged between RED and the proposed GREEN implementation.
+The GREEN hosted result is pending when this correction is committed; record the
+exact SHA, job and outcomes in the issue/PR before claiming it passed.
+
+A local transpiled copy of the pure codec tests also passed 92/92 before a runtime
+reset; no retained local log is offered as native evidence. The hosted codec
+result above is the durable executable proof. Full repository source/test
+typecheck, lint/format, security/ARC, prepush and human review remain pending.
+No workflow, dependency, lockfile, permission, threshold or LOCAL flag changes
+are part of #3394-A. Raw-text fixtures and local native writes do not establish
+PostgreSQL cursor behavior, source privileges, EOF or end-to-end backpressure.

@@ -21,7 +21,7 @@ import type { LocalDataAuthorizationLease } from '../../application/services/loc
 import type { DuckDbLocalDataRuntime } from './DuckDbLocalDataRuntime.js';
 import {
   initializeGenerationMetadata, readGenerationStage, readStoredGeneration,
-  validateGenerationRelation, validateGenerationStorageIdentity,
+  validateGenerationRelation, validateGenerationRelationSchema, validateGenerationStorageIdentity,
 } from './duckDbGenerationMetadata.js';
 import {
   DuckDbGenerationError, generationColumnSql, internalGenerationRelation,
@@ -92,8 +92,28 @@ export class DuckDbGenerationStore {
           (stage.request.policy.kind === 'sample' && rowCount > BigInt(stage.request.policy.requestedRows))) {
         throw new DuckDbGenerationError('CAPTURE_BUDGET');
       }
-      const sql = `INSERT INTO ${internalGenerationRelation(stage.key)} VALUES (${stage.request.schema.columns.map((_, i) => `$${i + 1}`).join(',')})`;
-      for (const row of batch.rows) { this.checkAbort(); await c.run(sql, row); }
+      // Appenders may cast values: reject physical schema drift before any native write.
+      await validateGenerationRelationSchema(c, stage);
+      this.checkAbort();
+      const { DuckDBDataChunk, BIGINT, BOOLEAN, VARCHAR } = await import('@duckdb/node-api');
+      const types = stage.request.schema.columns.map(column => {
+        if (column.localType === 'BIGINT') return BIGINT;
+        if (column.localType === 'BOOLEAN') return BOOLEAN;
+        if (column.localType === 'VARCHAR') return VARCHAR;
+        throw new DuckDbGenerationError('UNSUPPORTED_SCHEMA');
+      });
+      const chunk = DuckDBDataChunk.create(types);
+      chunk.setRows(batch.rows);
+      const appender = await c.createAppender(stage.key, 'dvt_store');
+      try {
+        this.checkAbort();
+        appender.appendDataChunk(chunk);
+        appender.flushSync();
+      } finally {
+        // Close also flushes. Any failure reaches the enclosing transaction's rollback.
+        appender.closeSync();
+      }
+      this.checkAbort();
       // Updating this same capture row makes concurrent append/promotion conflict rather than race.
       await c.run('UPDATE dvt_meta.staged_captures SET row_count=$1, logical_bytes=$2 WHERE capture_id=$3', [rowCount, bytes, id.data]);
     });
