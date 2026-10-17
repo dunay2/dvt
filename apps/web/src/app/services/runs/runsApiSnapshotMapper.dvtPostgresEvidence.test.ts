@@ -32,6 +32,7 @@ const publication = {
     relation: 'orders_result',
   },
   publication: {
+    nodeId: 'sink-1',
     token: 'f'.repeat(64),
     predecessorToken: null,
     outcome: 'created',

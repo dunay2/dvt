@@ -12,7 +12,7 @@ import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
+import { WEB_CYPRESS_NIGHTLY_SPECS, WEB_CYPRESS_SPECS } from '../../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
 import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 
@@ -59,6 +59,7 @@ const formulaJourney = 'apps/web/cypress/support/relationalWorkbench/transformFo
 const treeJourney = 'apps/web/cypress/support/relationalWorkbench/transformTreeJourney.ts';
 const liveWorkloadConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
 ];
@@ -385,6 +386,7 @@ describe('governed browser evidence routing', () => {
         'canvas/canvas-dbt-author-code-run-live.cy.ts',
         'canvas/canvas-dbt-selection-recovery-live.cy.ts',
         'canvas/canvas-dvt-join-preview-live.cy.ts',
+        'canvas/canvas-dvt-sink-publication-live.cy.ts',
         'canvas/canvas-dvt-start-run-boundaries-live.cy.ts',
         'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
         'canvas/canvas-first-authoring-live.cy.ts',
@@ -440,6 +442,7 @@ describe('governed browser evidence routing', () => {
       .sort();
     const expected = [
       'canvas/canvas-dvt-join-preview-live.cy.ts',
+      'canvas/canvas-dvt-sink-publication-live.cy.ts',
       'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
       'canvas/canvas-formula-lineage-live.cy.ts',
       'canvas/canvas-source-identity-live.cy.ts',
@@ -474,6 +477,7 @@ describe('governed browser evidence routing', () => {
       available: [
         'canvas-column-lineage-mapping',
         'canvas-dvt-join-preview-live',
+        'canvas-dvt-sink-publication-live',
         'canvas-first-authoring-live',
       ],
     };
@@ -509,6 +513,7 @@ describe('governed browser evidence routing', () => {
       .sort();
     const expected = [
       'canvas-dvt-join-preview-live',
+      'canvas-dvt-sink-publication-live',
       'canvas-first-authoring-live',
       'canvas-graph-search-filter-live',
       'canvas-minimap-focus-live',
@@ -540,12 +545,13 @@ describe('governed browser evidence routing', () => {
     const specs = [...browserModules.keys()].filter((path) => path.endsWith('.cy.ts'));
     const target = resolve('cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts');
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
-    const registered = Object.values(WEB_CYPRESS_SPECS).flat();
+    const registered = [...Object.values(WEB_CYPRESS_SPECS).flat(), ...WEB_CYPRESS_NIGHTLY_SPECS];
     const uiOnlyConsumers = [
       'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
       'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
       'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
       'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
@@ -569,7 +575,7 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(32);
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(33);
     expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(50);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
@@ -701,7 +707,7 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(32);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(33);
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);
@@ -728,7 +734,7 @@ describe('governed browser evidence routing', () => {
     async (phase) => {
       const { existsSync: originalExists } =
         await vi.importActual<typeof import('node:fs')>('node:fs');
-      for (const missing of [spec, helper]) {
+      for (const missing of [spec, helper, ...WEB_CYPRESS_NIGHTLY_SPECS]) {
         vi.mocked(existsSync).mockImplementation(
           (path) =>
             resolve(String(path)) !== resolve(missing.slice('apps/web/'.length)) &&
@@ -752,6 +758,7 @@ describe('governed browser evidence routing', () => {
     transformStage,
     formulaJourney,
     treeJourney,
+    'apps/web/cypress/support/postgresPublicationFlow.ts',
     ...liveWorkloadConsumers,
     ...savedSampleConsumers,
     ...inspectorConsumers,
@@ -817,10 +824,23 @@ describe('governed browser evidence routing', () => {
     'cypress.config.ts',
     'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
     'apps/web/cypress/node/chromiumNetworkProjection.ts',
+    'apps/web/cypress/node/chromiumNetworkEvidence.ts',
+    'apps/web/cypress/node/chromiumProcessObserver.ts',
   ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
     expect(
       resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
     ).toEqual(['controlled', 'available', 'unavailable']);
+  });
+
+  it.each([
+    'apps/web/cypress/node/linuxChromiumProcessObserver.py',
+    'apps/web/cypress/node/linuxChromiumProcessProtocol.py',
+    'apps/web/cypress/node/linuxChromiumSignalTrace.py',
+    'apps/web/cypress/node/linuxChromiumOomJournal.py',
+  ])('Linux observer changes retain the real LIVE execution obligation: %s', (file) => {
+    expect(
+      resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['available']);
   });
 
   it.each([
@@ -1144,6 +1164,7 @@ describe('governed browser evidence routing', () => {
         resolve('cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-predicate-reopen.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts'),
+        resolve('cypress/support/canvasReadyAuthoring.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-set-persistence.cy.ts'),

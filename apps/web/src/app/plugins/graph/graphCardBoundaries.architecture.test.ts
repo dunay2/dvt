@@ -1,5 +1,6 @@
 /** Prevent the presentation/command coupling removed by the conservative card refactor. */
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 import { readArchitectureSiblingSource } from '../../views/architecture.test.support';
 import { graphNodeCardLayoutClasses } from './graphCardVisualTokens';
 import {
@@ -77,5 +78,42 @@ describe('card and Inspector responsibility boundaries', () => {
     expect(command).toContain('canConfigureNativeMaterialization');
     expect(command).toContain('applyCanvasInspectorNodeDraftToSession');
     expect(projection).not.toMatch(/toast|sonner|localStorage|runDraftSessionCommand/);
+  });
+
+  it('delegates card and Properties disposition changes to the same policy', () => {
+    for (const file of ['useCanvasInspectorCommands.ts', 'dvtDestinationBinding.ts']) {
+      const ast = ts.createSourceFile(
+        file,
+        source(`../../views/canvas/${file}`),
+        ts.ScriptTarget.Latest,
+        true
+      );
+      const imports = ast.statements.filter(ts.isImportDeclaration);
+      const policy = imports.find(
+        (entry) =>
+          ts.isStringLiteral(entry.moduleSpecifier) &&
+          entry.moduleSpecifier.text === './canvasDvtMaterializationPolicy'
+      )?.importClause?.namedBindings;
+      const binding =
+        policy != null && ts.isNamedImports(policy)
+          ? policy.elements.find(
+              (entry) =>
+                (entry.propertyName ?? entry.name).text === 'withDvtTransformMaterialization'
+            )?.name.text
+          : undefined;
+      expect(binding, `${file} imports the shared transition`).toBeDefined();
+      const calls: ts.CallExpression[] = [];
+      const visit = (node: ts.Node): void => {
+        if (
+          ts.isCallExpression(node) &&
+          ts.isIdentifier(node.expression) &&
+          node.expression.text === binding
+        )
+          calls.push(node);
+        ts.forEachChild(node, visit);
+      };
+      visit(ast);
+      expect(calls, `${file} delegates its disposition update`).toHaveLength(1);
+    }
   });
 });

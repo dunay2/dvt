@@ -58,7 +58,7 @@ export function projectCanvasShellNodes(
         codeKind === 'canonical');
     const canOpenNodeCode = data.canOpenNodeCode !== false && canInspectCode;
     const sample = projection.projectSample(node.id, data);
-    const sinkEvidence = resolveCanvasSinkRunEvidence(data, runSnapshot);
+    const sinkEvidence = resolveCanvasSinkRunEvidence(node.id, data, runSnapshot);
     const activeRunAt =
       runSnapshot?.completedAt ?? runSnapshot?.startedAt ?? runSnapshot?.createdAt;
     const projectedData: DbtNodeData = {

@@ -1,0 +1,291 @@
+/* Owned concern: preserve connection-step appearance independently of its request bindings. */
+.root > :not(:last-child) {
+  margin-bottom: 1rem;
+}
+
+.list > :not(:last-child),
+.feedback > :not(:last-child) {
+  margin-bottom: 0.5rem;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.description {
+  margin-bottom: 1rem;
+  color: var(--color-slate-300);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-color: var(--color-slate-600);
+  padding: 1rem;
+  color: var(--color-slate-300);
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.catalogControls {
+  border: 1px solid var(--color-slate-700);
+  border-radius: var(--radius);
+  background-color: color-mix(in oklab, var(--color-slate-950) 40%, transparent);
+  padding: 0.75rem;
+}
+
+.summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-slate-300);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.summaryText,
+.connectionText {
+  min-width: 0;
+}
+
+.catalogSource,
+.connectionName,
+.connectionId {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalogSource {
+  color: var(--color-slate-400);
+}
+
+.actions {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.action {
+  width: 100%;
+  min-width: 0;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-slate-700);
+  border-radius: calc(var(--radius) - 2px);
+  background-color: var(--color-slate-950);
+  padding: 0.5rem 0.75rem;
+}
+
+.searchIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--color-slate-400);
+}
+
+.searchInput {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background-color: transparent;
+  color: var(--color-slate-100);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--color-slate-500);
+}
+
+.empty {
+  border-color: var(--color-slate-700);
+  background-color: color-mix(in oklab, var(--color-slate-950) 40%, transparent);
+  padding: 1rem;
+  color: var(--color-slate-300);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.emptyTitle {
+  color: var(--color-slate-100);
+  font-weight: var(--font-weight-medium);
+}
+
+.emptyHint {
+  margin-top: 0.25rem;
+}
+
+.connectionOption {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-slate-600);
+  border-radius: calc(var(--radius) + 4px);
+  background-color: var(--card);
+  padding: 1rem;
+  color: var(--card-foreground);
+  text-align: left;
+  transition-property: all;
+  transition-duration: var(--default-transition-duration, 150ms);
+  transition-timing-function: var(
+    --default-transition-timing-function,
+    cubic-bezier(0.4, 0, 0.2, 1)
+  );
+}
+
+.connectionOption[aria-pressed='true'] {
+  border-color: var(--color-blue-500);
+  background-color: color-mix(in oklab, var(--color-blue-900) 20%, transparent);
+}
+
+.connectionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.connectionIdentity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.connectionIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  color: var(--color-blue-400);
+}
+
+.connectionName,
+.feedbackTitle {
+  font-weight: var(--font-weight-medium);
+}
+
+.connectionDetails {
+  color: var(--color-slate-300);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.connectionId {
+  margin-top: 0.25rem;
+  color: var(--color-slate-400);
+  font-size: 11px;
+}
+
+.loadError,
+.testFailure {
+  border-color: var(--color-red-700);
+  background-color: color-mix(in oklab, var(--color-red-950) 30%, transparent);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.loadError,
+.loadErrorDescription {
+  color: var(--color-red-200);
+}
+
+.testFailure {
+  color: var(--color-red-100);
+}
+
+.testFailureDescription {
+  color: color-mix(in oklab, var(--color-red-100) 85%, transparent);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.renameSuccess,
+.testSuccess {
+  border: 1px solid color-mix(in oklab, var(--color-emerald-800) 70%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+  background-color: color-mix(in oklab, var(--color-emerald-950) 20%, transparent);
+  padding: 0.5rem 0.75rem;
+  color: var(--color-emerald-200);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.testSuccess {
+  display: flex;
+  min-height: 2rem;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.25rem;
+}
+
+.successIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.reachableObjects {
+  color: color-mix(in oklab, var(--color-emerald-300) 80%, transparent);
+}
+
+@media (min-width: 40rem) {
+  .actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 48rem) {
+  .summary {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .actions {
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+@media (hover: hover) {
+  .connectionOption[aria-pressed='false']:hover {
+    border-color: var(--color-gray-600);
+  }
+}

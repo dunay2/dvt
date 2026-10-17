@@ -24,6 +24,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { dvtGraphNodeCardStrategy } from '../../plugins/dvt/dvtGraphNodeCardStrategy';
 import { sharedSourceModelGraphNodeCardStrategy } from '../../plugins/graph/sharedSourceModelGraphNodeCardStrategy';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
+import { createRunPublicationSnapshot } from '../runs/test/runPublicationFixture';
 import styles from './CanvasShell.module.css';
 
 describe('CanvasShell graph base surface', () => {
@@ -200,6 +201,8 @@ describe('CanvasShell graph base surface', () => {
   );
 
   it('projects persisted sink evidence without offering the retired row query', async () => {
+    const runSnapshot = createRunPublicationSnapshot({ runId: 'run-1' });
+    const { target } = runSnapshot.publication!;
     const sinkNodeData = {
       name: 'Sink 1',
       status: 'idle',
@@ -208,8 +211,9 @@ describe('CanvasShell graph base surface', () => {
       pluginKind: 'dvt:sink',
       metadata: {
         config: {
-          schema: 'public',
-          table: 'sink_1',
+          connectionRef: target.connectionRef,
+          schema: target.schema,
+          table: target.relation,
           materialization: 'table',
           writeMode: 'replace',
         },
@@ -241,19 +245,7 @@ describe('CanvasShell graph base surface', () => {
 
     await renderShell({
       panels: { activeRunId: 'run-1' },
-      runSnapshot: {
-        runId: 'run-1',
-        status: 'completed',
-        materialization: {
-          executor: 'postgres',
-          environmentId: 'dev',
-          sinkTable: 'public.sink_1',
-          rowsWritten: 118,
-          startedAt: '2026-08-18T10:00:00.000Z',
-          completedAt: '2026-08-18T10:00:01.500Z',
-          durationMs: 1_500,
-        },
-      },
+      runSnapshot,
       graph: {
         nodesWithImpact: [draftSinkNode],
       },
@@ -280,9 +272,9 @@ describe('CanvasShell graph base surface', () => {
     });
 
     expect(forwardedNode?.data).toMatchObject({
-      rows: 118,
-      durationMs: 1_500,
-      lastRunAt: '2026-08-18T10:00:01.500Z',
+      rows: 3,
+      durationMs: 1_000,
+      lastRunAt: '2026-09-15T10:00:02.000Z',
     });
     expect(forwardedNode?.data.runStatusByNodeId?.get('sink-1')).toBe('completed');
     expect(forwardedNode?.ariaLabel).toBe('Sink 1, Output, Completed');

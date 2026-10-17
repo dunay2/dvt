@@ -60,6 +60,7 @@ function publicationEvidence(
       relation,
     },
     publication: {
+      nodeId: 'sink-1',
       token: tokenCharacter.repeat(64),
       predecessorToken: null,
       outcome: 'created',

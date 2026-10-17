@@ -627,10 +627,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtConnectionTestFailedMessage',
     fallback: 'Connection unavailable.',
   },
-  inspectorDvtInheritedConnectionLabel: {
-    key: 'canvas.inspector.authoring.dvtInheritedConnectionLabel',
-    fallback: 'Inherited connection',
-  },
   inspectorDvtSqlTransformTitle: {
     key: 'canvas.inspector.authoring.dvtSqlTransformTitle',
     fallback: 'DVT Transform',
@@ -1259,6 +1255,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtMaterializationViewLabel: {
     key: 'canvas.inspector.authoring.dvtMaterializationViewLabel',
     fallback: 'view',
+  },
+  inspectorDvtMaterializationEphemeralLabel: {
+    key: 'canvas.inspector.authoring.dvtMaterializationEphemeralLabel',
+    fallback: 'ephemeral (publish through Sink)',
   },
   inspectorDvtWriteModeReplaceLabel: {
     key: 'canvas.inspector.authoring.dvtWriteModeReplaceLabel',

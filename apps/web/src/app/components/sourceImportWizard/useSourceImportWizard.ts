@@ -39,6 +39,7 @@ import {
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useSourceCatalogLoader } from './useSourceImportWizardDataLoaders';
+import { useSourceImportConnectionTest } from './useSourceImportConnectionTest';
 import {
   buildSourceImportFailure,
   type SourceImportDatabaseIdentity,
@@ -86,11 +87,8 @@ const initialState: SourceImportWizardState = {
   addFreshness: false,
   isProcessing: false,
   isLoadingConnections: false,
-  isLoadingSourceObjects: false,
   isCreatingConnection: false,
   isRenamingConnection: false,
-  isTestingConnection: false,
-  connectionTestResult: null,
   loadError: null,
   createConnectionError: null,
   renameConnectionError: null,
@@ -237,7 +235,19 @@ export function useSourceImportWizard({
   }, [dbtSourceBinding, dbtSourceTargetMatch, selectedSourceObjects]);
 
   useConnectionsLoader({ open, warehouseSourceImport, setState });
-  const { loadSchemaPage, loadMoreSchemas, loadSearchPage } = useSourceCatalogLoader({
+  const connectionTest = useSourceImportConnectionTest(
+    open,
+    state.selectedConnection,
+    initialSelection,
+    warehouseSourceImport
+  );
+  const {
+    loadSchemaPage,
+    loadMoreSchemas,
+    loadSearchPage,
+    catalogueRecovery,
+    cataloguePageFailure,
+  } = useSourceCatalogLoader({
     open,
     selectedConnection: state.selectedConnection,
     sourceObjectSearchQuery: state.sourceObjectSearchQuery,
@@ -291,8 +301,6 @@ export function useSourceImportWizard({
         selectedConnection === prev.selectedConnection ? prev.activeSourceObjectKey : null,
       sourceObjectSearchQuery:
         selectedConnection === prev.selectedConnection ? prev.sourceObjectSearchQuery : '',
-      connectionTestResult:
-        selectedConnection === prev.selectedConnection ? prev.connectionTestResult : null,
       importResult: null,
     }));
   const setGroupingStrategy = (groupingStrategy: SourceImportGroupingStrategy) =>
@@ -384,35 +392,6 @@ export function useSourceImportWizard({
 
   const handleBack = () => setCurrentStep(getPreviousStep(state.currentStep));
 
-  const handleTestConnection = async () => {
-    if (!state.selectedConnection) {
-      setState((prev) => ({
-        ...prev,
-        loadError: buildSourceImportFailure('select-connection'),
-      }));
-      return;
-    }
-
-    setState((prev) => ({
-      ...prev,
-      isTestingConnection: true,
-      connectionTestResult: null,
-      loadError: null,
-    }));
-    try {
-      const connectionTestResult = await warehouseSourceImport.testWarehouseConnection(
-        state.selectedConnection
-      );
-      setState((prev) => ({ ...prev, connectionTestResult }));
-    } catch (error) {
-      const failure = buildSourceImportFailure('test-connection', error);
-      setState((prev) => ({ ...prev, loadError: failure }));
-      toast.error(resolveSourceImportFailureMessage(copy, failure));
-    } finally {
-      setState((prev) => ({ ...prev, isTestingConnection: false }));
-    }
-  };
-
   const handleCreateConnection = async () => {
     const input = normalizeCreateConnectionInput(state.createConnectionForm);
     if (!isCreateConnectionInputComplete(input)) {
@@ -435,7 +414,6 @@ export function useSourceImportWizard({
       isCreatingConnection: true,
       createConnectionError: null,
       loadError: null,
-      connectionTestResult: null,
     }));
     try {
       const connection = await warehouseSourceImport.createWarehouseConnection(input);
@@ -454,7 +432,6 @@ export function useSourceImportWizard({
         sourceObjectSearchObjectIds: [],
         activeSourceObjectKey: null,
         sourceObjectSearchQuery: '',
-        connectionTestResult: null,
         importResult: null,
       }));
       toast.success(copy.connection.createSuccess);
@@ -534,6 +511,13 @@ export function useSourceImportWizard({
       }));
       return;
     }
+    if (
+      catalogueRecovery.model.status !== 'succeeded' ||
+      !dbtSourceBindingReady ||
+      selectedCount === 0 ||
+      state.isProcessing
+    )
+      return;
     setState((prev) => ({ ...prev, isProcessing: true, loadError: null }));
     try {
       const commandDraft = {
@@ -639,12 +623,19 @@ export function useSourceImportWizard({
   const canProceed = canProceedForStep(state.currentStep, state.selectedConnection, selectedCount);
   const canImport =
     state.selectedConnection != null &&
+    catalogueRecovery.model.status === 'succeeded' &&
     selectedCount > 0 &&
     dbtSourceBindingReady &&
     !state.isProcessing;
 
   return {
-    state,
+    state: {
+      ...state,
+      isLoadingSourceObjects: catalogueRecovery.model.status === 'loading',
+    },
+    connectionTest,
+    cataloguePageFailure,
+    catalogueRecovery,
     selectedCount,
     selectedSourceObjects,
     activeSourceObject,
@@ -683,7 +674,6 @@ export function useSourceImportWizard({
     handleBack,
     handleCreateConnection,
     handleRenameConnection,
-    handleTestConnection,
     handleImport,
     handleComplete,
     activateSourceObject,

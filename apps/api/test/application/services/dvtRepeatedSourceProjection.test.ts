@@ -15,7 +15,8 @@ describe('protected repeated-source projection', () => {
     const before = globalThis.structuredClone(input);
     const { publisher, publish } = publisherHarness();
     const result = await publisher.publish(input);
-    expect(result.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
+    if (!result.ok) throw new Error(result.cause);
+    expect(result.value.profileId).toBe(DVT_POSTGRES_JOIN_PROFILE_ID);
     expect(publish).toHaveBeenCalledTimes(1);
     const sql = Buffer.from(publish.mock.calls[0]![0].bytes).toString('utf8');
     expect(sql).toBe(

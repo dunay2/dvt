@@ -5,7 +5,7 @@
  * @consequence StartRun freezes compare-and-swap intent without exposing credential values.
  * @version 1.0.0
  */
-import type { DvtTransformResultTargetV1 } from '@dvt/contracts';
+import type { DvtPostgresRelationTargetV1 } from '@dvt/contracts';
 import { Pool, type QueryResult } from 'pg';
 
 import type { IPostgresCredentialBindingResolver } from './PostgresCredentialBindingResolver.js';
@@ -34,7 +34,7 @@ export class PostgresDvtPublicationPredecessorReader {
 
   public async observe(input: {
     readonly credentialRef: string;
-    readonly target: DvtTransformResultTargetV1;
+    readonly target: DvtPostgresRelationTargetV1;
     readonly schemaDigestSha256: string;
   }): Promise<DvtPublicationPredecessorObservation> {
     const connectionString = await this.config.credentialResolver.resolveCredential(

@@ -9,13 +9,85 @@ import {
 type NetworkEvent = Readonly<{
   kind: string;
   sourceId: number;
+  dependencySourceId?: number;
   time?: string;
   phase?: number;
   netError?: number;
   method?: string;
   origin?: string;
   route?: string;
+  statusCode?: number;
 }>;
+
+type ProcessLogLocation = Readonly<{ processId: number; threadId: number; time: string }>;
+
+// Chromium M155 validation_errors.cc; NONE is not failure evidence.
+const validationErrorCodes = [
+  'VALIDATION_ERROR_MISALIGNED_OBJECT',
+  'VALIDATION_ERROR_ILLEGAL_MEMORY_RANGE',
+  'VALIDATION_ERROR_UNEXPECTED_STRUCT_HEADER',
+  'VALIDATION_ERROR_UNEXPECTED_ARRAY_HEADER',
+  'VALIDATION_ERROR_ILLEGAL_HANDLE',
+  'VALIDATION_ERROR_UNEXPECTED_INVALID_HANDLE',
+  'VALIDATION_ERROR_ILLEGAL_POINTER',
+  'VALIDATION_ERROR_UNEXPECTED_NULL_POINTER',
+  'VALIDATION_ERROR_ILLEGAL_INTERFACE_ID',
+  'VALIDATION_ERROR_UNEXPECTED_INVALID_INTERFACE_ID',
+  'VALIDATION_ERROR_MESSAGE_HEADER_INVALID_FLAGS',
+  'VALIDATION_ERROR_MESSAGE_HEADER_MISSING_REQUEST_ID',
+  'VALIDATION_ERROR_MESSAGE_HEADER_UNKNOWN_METHOD',
+  'VALIDATION_ERROR_DIFFERENT_SIZED_ARRAYS_IN_MAP',
+  'VALIDATION_ERROR_UNKNOWN_UNION_TAG',
+  'VALIDATION_ERROR_UNKNOWN_ENUM_VALUE',
+  'VALIDATION_ERROR_DESERIALIZATION_FAILED',
+  'VALIDATION_ERROR_MAX_RECURSION_DEPTH',
+] as const;
+type ValidationError = ProcessLogLocation &
+  Readonly<{ code: (typeof validationErrorCodes)[number] }>;
+
+export function projectChromiumProcessLog(text: string | undefined):
+  | Readonly<{ state: 'unavailable' }>
+  | Readonly<{
+      state: 'observed';
+      networkServiceRestarts: readonly ProcessLogLocation[];
+      validationErrors: readonly ValidationError[];
+    }> {
+  if (text === undefined) return { state: 'unavailable' };
+  const networkServiceRestarts: ProcessLogLocation[] = [];
+  const validationErrors: ValidationError[] = [];
+  for (const line of text.split(/\r?\n/u)) {
+    const match =
+      /^\[(\d+):(\d+):(\d{4}\/\d{6}\.\d{6}):ERROR:([A-Za-z0-9_./\\-]+\.cc)(?::\d+|\(\d+\))\] (.*)$/u.exec(
+        line
+      );
+    if (
+      match === null ||
+      !Number.isSafeInteger(Number(match[1])) ||
+      !Number.isSafeInteger(Number(match[2])) ||
+      Number(match[1]) <= 0 ||
+      Number(match[2]) <= 0
+    )
+      continue;
+    const location = { processId: Number(match[1]), threadId: Number(match[2]), time: match[3] };
+    const source = match[4].replace(/\\/gu, '/');
+    if (
+      /^(?:[A-Za-z0-9_./-]*\/)?network_service_instance_impl\.cc$/u.test(source) &&
+      match[5] === 'Network service crashed or was terminated, restarting service.'
+    ) {
+      networkServiceRestarts.push(location);
+    } else if (
+      source === 'validation_errors.cc' ||
+      source === 'mojo/public/cpp/bindings/lib/validation_errors.cc'
+    ) {
+      const validation = /^Invalid message: (VALIDATION_ERROR_[A-Z_]+)(?: \([^\r\n]*\))?$/u.exec(
+        match[5]
+      );
+      const code = validationErrorCodes.find((candidate) => candidate === validation?.[1]);
+      if (code !== undefined) validationErrors.push({ ...location, code });
+    }
+  }
+  return { state: 'observed', networkServiceRestarts, validationErrors };
+}
 
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -54,16 +126,17 @@ function safeRoute(value: unknown): Readonly<{ origin: string; route: string }> 
 
 export function projectChromiumNetworkLog(
   value: unknown
-): Readonly<{ schemaVersion: 1; events: readonly NetworkEvent[] }> {
+): Readonly<{ schemaVersion: 1; events: readonly NetworkEvent[]; timeTickOffset?: string }> {
   const input = record(value);
-  const kinds = record(record(input?.constants)?.logEventTypes);
+  const constants = record(input?.constants);
+  const kinds = record(constants?.logEventTypes);
   if (kinds === null || !Array.isArray(input?.events) || input.events.length === 0)
     throw new Error('Invalid Chromium network log');
   const names = new Map(
     Object.entries(kinds).flatMap(([kind, code]) =>
       typeof code === 'number' &&
       Number.isSafeInteger(code) &&
-      /^(CORS_|URL_REQUEST_|HTTP_TRANSACTION_|SOCKET_|TCP_CONNECT|SSL_CONNECT)[A-Z0-9_]*$/u.test(
+      /^(CORS_|URL_REQUEST_|HTTP_TRANSACTION_|HTTP_STREAM_|CONNECT_JOB_|TRANSPORT_CONNECT_JOB_|SOCKET_|TCP_CONNECT|SSL_CONNECT)[A-Z0-9_]*$/u.test(
         kind
       )
         ? [[code, kind] as const]
@@ -90,9 +163,18 @@ export function projectChromiumNetworkLog(
         ? params.method
         : undefined;
     const route = safeRoute(params?.url);
+    const dependency = record(params?.source_dependency)?.id;
+    const statusLine = Array.isArray(params?.headers) ? params.headers[0] : undefined;
+    const status =
+      typeof statusLine === 'string'
+        ? /^HTTP\/(?:1\.[01]|2|3) ([1-5]\d{2})(?: |$)/u.exec(statusLine)?.[1]
+        : undefined;
     events.push({
       kind,
       sourceId: source.id,
+      ...(typeof dependency === 'number' && Number.isSafeInteger(dependency) && dependency >= 0
+        ? { dependencySourceId: dependency }
+        : {}),
       ...(typeof event.time === 'string' && /^\d+(?:\.\d+)?$/u.test(event.time)
         ? { time: event.time }
         : {}),
@@ -104,9 +186,19 @@ export function projectChromiumNetworkLog(
         : {}),
       ...(method === undefined ? {} : { method }),
       ...(route ?? {}),
+      ...(status === undefined ? {} : { statusCode: Number(status) }),
     });
   }
-  return { schemaVersion: 1, events };
+  const offset = constants?.timeTickOffset;
+  const timeTickOffset =
+    typeof offset === 'number' && Number.isSafeInteger(offset) ? String(offset) : offset;
+  return {
+    schemaVersion: 1,
+    events,
+    ...(typeof timeTickOffset === 'string' && /^-?\d+$/u.test(timeTickOffset)
+      ? { timeTickOffset }
+      : {}),
+  };
 }
 
 export function projectChromiumNetworkCapture(

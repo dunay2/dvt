@@ -1007,7 +1007,6 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     'utf8'
   );
   const setupNodePnpm = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
-
   assert.equal(
     pinnedActionReferences(dependencyReview, 'actions/dependency-review-action').length,
     1

@@ -1,228 +1,40 @@
-/** Owned concern: render DVT sink authoring fields. */
-import type { Dispatch, SetStateAction } from 'react';
-
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
+/** Passive explicit Sink destination and publication-policy presentation. */
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
-import type { CanonicalNode } from '../../types/canonical';
-import type { DvtSinkAuthoringMetadata } from './canvasDvtAuthoringModel';
-import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
-import type {
-  CanvasInspectorNodeDraft,
-  CanvasInspectorNodeDraftErrors,
-} from './canvasInspectorAuthoring.types';
-import { canvasViewCopy } from './copy';
+import type { DvtSinkAuthoringBinding } from './dvtDestinationBinding';
+import {
+  DvtPostgresDestinationFields,
+  DvtDestinationChoiceField,
+} from './DvtPostgresDestinationFields';
+import type { CanvasViewCopy } from './canvasCopy.types';
+import styles from './dvtDestinationFields.module.css';
 
 export function DvtSinkAuthoringSection({
-  node,
-  disabled,
-  draft,
-  errors,
-  destinationTarget,
-  inheritedConnectionId,
-  onChange,
-}: Readonly<{
-  node: CanonicalNode;
-  disabled: boolean;
-  draft: DvtSinkAuthoringMetadata;
-  errors: CanvasInspectorNodeDraftErrors['dvt'];
-  destinationTarget: string;
-  inheritedConnectionId?: string;
-  onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
-}>): JSX.Element {
-  const selectClassName = inspectorVisualClasses.inspectorSelectInput;
-  const materializationOptions = [
-    { value: 'table', label: canvasViewCopy.inspectorDvtMaterializationTableLabel },
-    { value: 'view', label: canvasViewCopy.inspectorDvtMaterializationViewLabel },
-  ] as const;
-  const writeModeOptions = [
-    { value: 'replace', label: canvasViewCopy.inspectorDvtWriteModeReplaceLabel },
-    { value: 'append', label: canvasViewCopy.inspectorDvtWriteModeAppendLabel },
-  ] as const;
-
+  binding,
+  copy,
+}: Readonly<{ binding: DvtSinkAuthoringBinding; copy: CanvasViewCopy }>): JSX.Element {
   return (
-    <div className={inspectorVisualClasses.inspectorDbtSection}>
+    <div className={styles.stack}>
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
-        {canvasViewCopy.inspectorDvtSinkTitle}
+        {copy.inspectorDvtSinkTitle}
       </h3>
-      <div className="mb-3 grid grid-cols-1 gap-2 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
-        <div>
-          <span className="block text-(--text-muted)">
-            {canvasViewCopy.inspectorDvtDestinationTargetLabel}
-          </span>
-          <code className="mt-1 block truncate text-(--text-default)">{destinationTarget}</code>
-        </div>
-        <div>
-          <span className="block text-(--text-muted)">
-            {canvasViewCopy.inspectorDvtInheritedConnectionLabel}
-          </span>
-          <code className="mt-1 block truncate text-(--text-default)">
-            {inheritedConnectionId ?? '-'}
-          </code>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
-            {draft.materialization}
-          </span>
-          <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
-            {draft.writeMode}
-          </span>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 gap-3">
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>
-            {canvasViewCopy.inspectorDvtSchemaLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-sink-schema-${node.id}`}
-            name="dvt-sink-schema"
-            value={draft.schema}
-            disabled={disabled}
-            aria-invalid={errors?.schema ? 'true' : undefined}
-            aria-describedby={
-              errors?.schema ? `inspector-dvt-sink-schema-error-${node.id}` : undefined
-            }
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'sink'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, schema: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
-          {errors?.schema ? (
-            <p
-              id={`inspector-dvt-sink-schema-error-${node.id}`}
-              className={inspectorVisualClasses.inspectorErrorText}
-              role="alert"
-            >
-              {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-table-${node.id}`}>
-            {canvasViewCopy.inspectorDvtTableLabel}
-          </Label>
-          <Input
-            id={`inspector-dvt-sink-table-${node.id}`}
-            name="dvt-sink-table"
-            value={draft.table}
-            disabled={disabled}
-            aria-invalid={errors?.table ? 'true' : undefined}
-            aria-describedby={
-              errors?.table ? `inspector-dvt-sink-table-error-${node.id}` : undefined
-            }
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'sink'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, table: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          />
-          {errors?.table ? (
-            <p
-              id={`inspector-dvt-sink-table-error-${node.id}`}
-              className={inspectorVisualClasses.inspectorErrorText}
-              role="alert"
-            >
-              {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-materialization-${node.id}`}>
-            {canvasViewCopy.inspectorDvtMaterializationLabel}
-          </Label>
-          <select
-            id={`inspector-dvt-sink-materialization-${node.id}`}
-            name="dvt-sink-materialization"
-            value={draft.materialization}
-            disabled={disabled}
-            className={selectClassName}
-            aria-invalid={errors?.materialization ? 'true' : undefined}
-            aria-describedby={
-              errors?.materialization
-                ? `inspector-dvt-sink-materialization-error-${node.id}`
-                : undefined
-            }
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'sink'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, materialization: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          >
-            {materializationOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {errors?.materialization ? (
-            <p
-              id={`inspector-dvt-sink-materialization-error-${node.id}`}
-              className={inspectorVisualClasses.inspectorErrorText}
-              role="alert"
-            >
-              {formatCanvasInspectorNodeDraftError(errors.materialization, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-write-mode-${node.id}`}>
-            {canvasViewCopy.inspectorDvtWriteModeLabel}
-          </Label>
-          <select
-            id={`inspector-dvt-sink-write-mode-${node.id}`}
-            name="dvt-sink-write-mode"
-            value={draft.writeMode}
-            disabled={disabled}
-            className={selectClassName}
-            aria-invalid={errors?.writeMode ? 'true' : undefined}
-            aria-describedby={
-              errors?.writeMode ? `inspector-dvt-sink-write-mode-error-${node.id}` : undefined
-            }
-            onChange={(event) =>
-              onChange((currentDraft) =>
-                currentDraft.dvt?.kind === 'sink'
-                  ? {
-                      ...currentDraft,
-                      dvt: { ...currentDraft.dvt, writeMode: event.target.value },
-                    }
-                  : currentDraft
-              )
-            }
-          >
-            {writeModeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {errors?.writeMode ? (
-            <p
-              id={`inspector-dvt-sink-write-mode-error-${node.id}`}
-              className={inspectorVisualClasses.inspectorErrorText}
-              role="alert"
-            >
-              {formatCanvasInspectorNodeDraftError(errors.writeMode, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
-      </div>
+      <code className={styles.target}>{binding.qualifiedTarget}</code>
+      <DvtPostgresDestinationFields
+        binding={binding.destination}
+        namespace="dvt-sink"
+        copy={copy}
+      />
+      <DvtDestinationChoiceField
+        binding={binding.materialization}
+        name="dvt-sink-materialization"
+        label={copy.inspectorDvtMaterializationLabel}
+        copy={copy}
+      />
+      <DvtDestinationChoiceField
+        binding={binding.writeMode}
+        name="dvt-sink-write-mode"
+        label={copy.inspectorDvtWriteModeLabel}
+        copy={copy}
+      />
     </div>
   );
 }

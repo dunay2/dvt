@@ -78,12 +78,14 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
 
     let targetProjection;
     try {
-      targetProjection = await this.deps.targetProjectionPublisher.publish({
+      const publication = await this.deps.targetProjectionPublisher.publish({
         scope,
         draft: authorizedDraft.draft,
         selectedNodeIds: resolved.value.nodeIds,
         selectedEdgeIds: resolved.value.edgeIds,
       });
+      if (!publication.ok) return reject(publication);
+      targetProjection = publication.value;
     } catch {
       return reject(DVT_REJECTIONS.previewTargetProjectionFailed);
     }

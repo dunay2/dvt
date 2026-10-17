@@ -14,6 +14,7 @@ import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTes
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import { ApiError } from '../services/api/createApiClient';
+import connectionStepStyles from './sourceImportWizard/ConnectionStep.module.css';
 
 describe('SourceImportWizard', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
@@ -349,7 +350,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain('raw connection test diagnostic');
 
     const commandFailureAlert = document.body.querySelector<HTMLElement>(
-      '[data-slot="source-import-connection-load-error"]'
+      '[data-slot="source-import-connection-test-failure"]'
     );
 
     expect(commandFailureAlert?.getAttribute('role')).toBe('alert');
@@ -638,19 +639,15 @@ describe('SourceImportWizard', () => {
 
     expect(dialog?.getAttribute('data-slot')).toBe('source-import-workspace');
     expect(dialog?.getAttribute('aria-modal')).not.toBe('true');
-    expect(connectionSummary?.className).toContain('flex-col');
-    expect(connectionSummary?.className).toContain('md:flex-row');
-    expect(connectionActions?.className).toContain('grid');
-    expect(connectionActions?.className).toContain('w-full');
-    expect(connectionActions?.className).toContain('sm:grid-cols-3');
+    expect(connectionSummary?.className).toContain(connectionStepStyles.summary);
+    expect(connectionActions?.className).toContain(connectionStepStyles.actions);
 
     const connectionActionButtons = Array.from(
       connectionActions?.querySelectorAll<HTMLButtonElement>('button') ?? []
     );
     expect(connectionActionButtons).toHaveLength(3);
     for (const action of connectionActionButtons) {
-      expect(action.className).toContain('min-w-0');
-      expect(action.className).toContain('w-full');
+      expect(action.className).toContain(connectionStepStyles.action);
     }
 
     const attachAction = harness.findButtonContaining('Add sources');
@@ -752,7 +749,7 @@ describe('SourceImportWizard', () => {
     expect(successStatus).not.toBeNull();
     expect(successStatus?.getAttribute('role')).toBe('status');
     expect(successStatus?.getAttribute('aria-live')).toBe('polite');
-    expect(successStatus?.className).toContain('text-xs');
+    expect(successStatus?.className).toContain(connectionStepStyles.testSuccess);
     expect(successStatus?.closest('[data-slot="card"]')).toBeNull();
     expect(successStatus?.parentElement?.getAttribute('data-slot')).toBe(
       'source-import-connection-feedback'
@@ -801,7 +798,7 @@ describe('SourceImportWizard', () => {
     expect(resultFailureAlert?.getAttribute('data-slot')).toBe(
       'source-import-connection-test-failure'
     );
-    expect(resultFailureAlert?.className).toContain('border-red-700');
+    expect(resultFailureAlert?.className).toContain(connectionStepStyles.testFailure);
     expect(document.body.textContent).not.toContain(
       'provider diagnostic that must not become product copy'
     );

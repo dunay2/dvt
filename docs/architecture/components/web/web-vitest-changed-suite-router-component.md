@@ -178,6 +178,91 @@ flowchart LR
 
 ## Browser Evidence Boundary — GH-3540
 
+### Large-graph browser cadence — GH-3604
+
+Issue #3604 admits a bounded cadence change under design
+`GH-3604-CANVAS-LARGE-GRAPH-NIGHTLY-V2` (superseding the initial scope to
+include the existing CI workflow guard). The last case in
+`canvas-ready-node-authoring.cy.ts` renders the canonical 1,000-node,
+1,920-edge fixture. Its measured cost was 336,824 ms in the reconciled local
+prepush and 130,494 ms in CI run 38998175192. The other thirteen cases are
+functional authoring checks, not scale tests. Keeping these concerns in one
+spec makes every affected controlled batch pay the stress cost.
+
+```mermaid
+flowchart LR
+  Before[Shared authoring spec] --> Functional[13 functional cases]
+  Before --> Stress[1000-node interaction case]
+  Change[Changed-file or full browser baseline] --> Before
+  After[Existing browser catalog] --> PR[Functional controlled specs]
+  After --> Nightly[Explicit nightly stress spec]
+  Schedule[Scheduled or manual workflow] --> Nightly
+  PR --> Native[RunWebCypressNative]
+  Nightly --> Native
+  Native --> Build[Fresh build:e2e and owned preview]
+  Build --> Proof[Exact executed-spec evidence]
+```
+
+The existing `RouteChangedWebVitestSuites` query owns cadence admission in
+`cypress.changed.ts`; cadence is not a fourth runtime capability. Its nightly
+inventory is disjoint from the ordinary controlled/available/unavailable
+inventory. A changed nightly spec selects its focused cadence guard and must
+exist; it does not silently become an unknown file or execute the stress case
+in prepush. Unknown browser paths and deleted admitted files still reject.
+Ordinary and `--full` browser plans retain all functional specs, but exclude
+only this separately scheduled stress case.
+
+The focused cadence guard is also a member of the existing complete governance
+guard registry in `vitest.suites.ts`. Global test configuration, the changed-suite
+adapter and this component guide must select it alongside every other current
+router guard. The existing discovery-based governance-routing regression owns
+that obligation; adding a cadence guard must not create a second registry or
+weaken the comparison with the actual test inventory.
+
+The explicit manual `pnpm test:web:e2e` Docker command still means all specs
+matching the Cypress configuration, including the nightly case. It is not used
+by prepush or the PR/main browser matrix. This intentional operator opt-in does
+not change the scheduled cadence of the governed changed/full browser plans.
+
+`web-canvas-nightly.yml` runs the literal nightly spec on schedule and manual
+dispatch through the unchanged controlled native runner. The runner builds
+the application, owns preview startup/cleanup and rejects missing, skipped,
+pending or failed Cypress evidence. The workflow uses the existing dependency
+setup and explicitly builds `@dvt/web^...` through the canonical
+`run-turbo-workspace-task.cjs build` owner before the native runner. The
+`test:deps` convenience script is not a preparation authority in CI: its
+`DVT_CI=1` short circuit assumes the dependency graph was already built.
+The workflow also uses pinned actions, isolated concurrency, failure artifacts and an actionable
+failure notification; it does not provision live providers. The thirteen
+functional authoring cases, geometry cases at 10/30/60 nodes and inexpensive
+large-graph unit tests remain in PR routing. Shared ready-authoring browser
+setup has two actual consumers rather than a copied fixture or new runner.
+Workflow-only diffs retain the canonical executable CI-tool test catalogue,
+because they do not activate Web runtime jobs. The focused
+`tools/ci/web-canvas-nightly.test.mjs` guard owns nightly workflow structure,
+native command and trigger validation. Web guards own cadence routing, not a
+second workflow validator. The CI guard interprets YAML scalars: equivalent
+one-line and folded commands pass; wrong specs, appended commands, literal shell
+newlines, missing proof and duplicate proof steps reject. Formatting must not
+change the verdict. The same CI guard executes the declared build owner's argument
+and dispatch path with `DVT_CI=1`, intercepting only process creation, to prove
+the cold-runner preparation cannot silently skip. No additional PR matrix is introduced.
+
+| Scenario                              | Opportunity                                  | Fowler pattern                                 | DDD owner                          | Command/query rail                          | Implementation surfaces                                                                           | Unit or package test                                                | Architecture test                                                         | User-flow test                                                     | Out of scope                                            |
+| ------------------------------------- | -------------------------------------------- | ---------------------------------------------- | ---------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
+| Stress runs with functional authoring | Responsibility overload                      | Separate cadence policy from runtime adapter   | WebVitestChangedSuiteRouter        | RouteChangedWebVitestSuites                 | Existing browser catalog and nightly guard                                                        | Changed/full plan excludes only nightly                             | Disjoint fixture consumer admission; missing/unknown files reject         | Retained 13 functional cases and extracted nightly stress          | Other scale thresholds or PR coverage reductions        |
+| Global test wiring changes            | Hidden authority                             | Complete existing governance registry          | WebVitestChangedSuiteRouter        | RouteChangedWebVitestSuites                 | Existing `vitest.suites.ts` guard registry                                                        | Global configuration selects all current guards                     | Discovery-based governance-routing regression remains unchanged           | Existing native functional and nightly proofs                      | Dynamic source discovery in production routing          |
+| Extraction would duplicate bootstrap  | Duplicate semantics                          | Extract shared infrastructure harness          | Controlled ready-authoring session | RunWebCypressNative                         | canvasReadyAuthoring support and the two specs                                                    | Existing fixture contract                                           | Both consumers reuse setup                                                | Byte-identical stress actions and unchanged functional assertions  | New fixture, runner or product behavior                 |
+| Scheduled evidence could disappear    | Hidden authority                             | Explicit workflow adapter and failure evidence | Browser proof runtime              | RunWebCypressNative                         | web-canvas-nightly workflow and focused CI nightly test                                           | Native runner contracts                                             | Exact spec, schedule/manual triggers, pinned actions and reporting        | Real isolated native proof with fresh build and owned preview      | Live provider setup, new PR matrix or timeout increases |
+| Equivalent YAML formatting changes    | Test-only confidence and duplicate semantics | One semantic workflow test owner               | Canvas nightly workflow read model | RunWebCypressNative (existing; no new rail) | Focused CI nightly test, existing CI executable-test catalogue, parity test and Web cadence guard | Equivalent scalars pass; wrong command and proof cardinality reject | Focused CI test is registered; Web does not duplicate workflow validation | Existing real native nightly proof, unchanged product and workflow | Other security workflow checks or new runtime behavior  |
+
+No product behavior, timeout, assertion, worker count, required PR check or live
+runtime admission changes. This is not a claim that Canvas meets a latency SLA:
+the retained stress scenario proves interaction operability. Other CI costs
+remain outside this cut. Validation includes the focused cadence and existing
+browser-routing guards, the native runner contracts, a real isolated nightly
+execution, relevant lint/typecheck, and the normal final prepush and CI gates.
+
 This section specifies the next implementation of the existing
 `RouteChangedWebVitestSuites` query and `RunWebCypressNative` command. GitHub
 [#3540](https://github.com/dunay2/dvt/issues/3540) owns delivery status; this
@@ -477,18 +562,22 @@ flowchart LR
   Browser[Real Chromium requests] --> Proxy[Cypress transport]
   Proxy --> API[Real protected API]
   Browser --> Capture[Opt-in Chromium net-log]
-  Capture --> Projection[Allowlisted metadata projection]
-  Projection --> Evidence[Sanitized error and CORS event evidence]
+  Capture --> Observation[Private failed-spec observation]
   Capture --> Completion[Native Cypress process completes]
-  Completion --> Cleanup[Exact owned raw-file cleanup]
+  Observation --> Completion
+  Completion --> Projection[Reconciled allowlisted metadata]
+  Projection --> Evidence[Sanitized network and lifecycle evidence]
+  Projection --> Cleanup[Exact owned raw-file cleanup]
 ```
 
 `RunWebCypressNative` retains the same literal scenarios, authentication,
 providers, assertions and budget. The existing Cypress Node event adapter
-optionally captures Chromium net-log for available group 1 only. The pure
+optionally captures Chromium net-log for every available group. The pure
 projection and Node lifecycle have separate owners. Exported JSON contains
-event/source identifiers, event kinds, numeric network errors, method and safe
-loopback route groups only. Headers, bodies, cookies, URL queries, userinfo and
+event/source identifiers, numeric source dependency links, event kinds, numeric
+network errors, method, numeric HTTP status and safe loopback route groups only.
+The numeric time-tick offset permits correlation with API wall-clock logs.
+Headers, bodies, cookies, URL queries, userinfo and
 arbitrary raw parameters are omitted. Raw capture is outside artifact
 publication and its exact temporary files are removed by their owner.
 
@@ -497,6 +586,76 @@ binary completes. Cypress `after:run` is not the close boundary: a real Windows
 proof passed its journey but that hook still saw the Chrome file locked. Node
 plugin launch hooks receive only the owned lease through scoped process
 environment; that environment is restored on success or failure.
+
+GH-3604's native-completion reconciliation separates an observation from a
+finalized report. The `after:spec` hook retains a private, validated observation
+for each failed spec before later browser activity can overwrite it. Successful
+specs add no observation. The hook does not publish, close or modify Chrome's
+capture. Only native completion publishes evidence and removes exact owned files.
+Each launch returns its capture identity to the hook adapter. A failed spec is
+observed only against the active launch, never against older retained capture
+directories. A non-Chromium launch clears that identity. The native lifetime
+owner, not the per-spec hook, enumerates all launches for finalization and cleanup.
+
+```mermaid
+flowchart LR
+  Hook[Failed spec] --> Observation[Private observation of open writer]
+  Completion[Native completion] --> Final[Final capture]
+  Observation --> Continuity[Exact byte-prefix comparison]
+  Final --> Continuity
+  Continuity --> Retained[Retained: include late-written events]
+  Continuity --> Replaced[Replaced: preserve partial observation and declare gap]
+  Retained --> Publish[Safe projection and exact private-file cleanup]
+  Replaced --> Publish
+```
+
+When the final capture retains the exact observed prefix, the failed-spec report
+uses the final projection, including events written after the hook. Otherwise it
+retains the earlier observation with `continuity=replaced` and
+`observationBoundary=after:spec`. This cannot recover an unwritten queue from a
+replaced writer. No sleep or stable-size heuristic constitutes a flush
+acknowledgement. `captureState=complete` describes a closed JSON document, not
+whole-run coverage. The evidence assembler owns reconciliation; the Node adapter
+owns hooks and lifetime; the pure mapper owns disclosure policy.
+The spec timestamp is a correlation marker, not a claim that all retained events
+belong to that spec: the final projection may also contain subsequent activity.
+
+An additional private Chrome process log admits the exact network-service restart
+signal and known Mojo validation error codes with numeric process/thread identifiers
+and its timestamp. A missing process log is explicitly unavailable; empty observed
+arrays do not prove absence of a restart or validation failure. Raw text and
+arbitrary errors are never exported.
+Both raw logs and private observations remain outside artifact publication and
+are removed at native completion, including rejection paths. Malformed or
+unreadable captures still fail explicitly. Test error/result payloads are never
+serialized. This repairs evidence lifecycle, not a demonstrated transport cause.
+
+Design `GH-3604-CHROMIUM-VALIDATION-EVIDENCE` reuses this mapper and lifecycle:
+
+```mermaid
+flowchart LR
+  Log[Existing private Chromium process log] --> Mapper[Exact source and closed code allowlist]
+  Mapper --> Restarts[Existing restart records]
+  Mapper --> Validation[Validation code; PID; TID; time]
+  Restarts --> Artifact[Existing sanitized artifact]
+  Validation --> Artifact
+  Log --> Cleanup[Existing native-completion cleanup]
+```
+
+Only an `ERROR` from `validation_errors.cc` or its canonical
+`mojo/public/cpp/bindings/lib/validation_errors.cc` path with the complete
+`Invalid message` format admits a validation record. The allowlist is the 18
+non-`NONE` codes in Chromium M155's
+[validation error mapper](https://chromium.googlesource.com/chromium/src/+/refs/branch-heads/8059/mojo/public/cpp/bindings/lib/validation_errors.cc#112).
+Optional parenthesized descriptions are discarded, never captured as evidence.
+Unknown codes, partial matches, other files/severities and unsafe identifiers
+remain unrecognized. A record identifies the logging process, not the offending
+remote process or a proven cause of termination. Chromium's
+[known-dead status path](https://chromium.googlesource.com/chromium/src/+/refs/branch-heads/8059/base/process/kill_posix.cc#82)
+also sends SIGKILL; generation can follow an earlier disconnection. Absence of a
+validation record cannot exclude another bad-message path. This adds no flags,
+tracer, retry or alternate browser. The existing projection/privacy and native
+publication/cleanup tests own this additive artifact contract.
 
 The real capture can end before its JSON footer when Cypress terminates Chrome.
 The maintained `jsonc-parser` development dependency decodes complete observed
@@ -524,10 +683,155 @@ when a report exists. An empty routed group produces neither a capture nor a
 synthetic artifact. Artifact admission has its own focused CI contract; malformed
 captures and incomplete browser results still reject at their existing owners.
 
-The Cypress config and its two exact Node diagnostic imports are admitted browser
+The Cypress config and its three exact Node diagnostic modules are admitted browser
 support boundaries for controlled, available and unavailable capabilities. Their
 module-load failures affect every capability even when capture is disabled. This
 retains complete evidence; unknown configuration and Node neighbors still reject.
+
+#### Owned Linux Process Exit Evidence — GH-3604
+
+Planning DB design `GH-3604-LINUX-PROCESS-EXIT-EVIDENCE-V2` extends only the existing
+opt-in `RunWebCypressNative` diagnostic boundary. A generic Chromium restart is
+not an exit cause. Utility histograms cannot join a service identity to an exit
+code and do not cover every killed-process path; process polling can miss exits.
+
+```mermaid
+flowchart LR
+  Before[Network utility disappears] --> Restart[Generic restart; cause unknown]
+  Observer[Linux observer] --> Probe[Subscription ACK and known owned-child exit]
+  Probe --> Cypress[Unchanged native Cypress invocation]
+  Cypress --> Chrome[Exact owned Chrome capture lease]
+  Chrome --> Exit[CN_PROC wait status for owned descendants]
+  Chrome --> OOM[Independent kernel OOM observation]
+  Exit --> Projection[Allowlisted evidence; unknown stays unknown]
+  OOM --> Projection
+  Projection --> Close[Native completion; owned observer cleanup]
+```
+
+The Linux adapter receives the native runner PID and private capture root, not
+application credentials. Only Chrome launched with that exact owned net-log
+lease admits a browser subtree; Electron/Cypress utility processes are not that
+browser. Transient command-line inspection compares the complete network-service
+subtype argument and verifies PID birthtime before and after. Arguments,
+environment, command text and raw kernel records never enter published evidence.
+
+The observer proves capability on the actual runner before the browser starts.
+An unavailable namespace, denied source, lost event, malformed record or unstable
+identity remains explicit. WSL's noninitial PID namespace is negative capability
+evidence, not hosted acceptance. No privileged browser or sandbox change is used.
+Decode the terminating signal from the kernel wait status: `exit_signal` is only
+the notification sent to the parent. SIGKILL alone is not proof of OOM. Read OOM
+records independently from the start boundary, retaining only owned victim PIDs
+and numeric times; absent evidence means not observed, never ruled out.
+
+Hosted run `38962033365` exposed a Linux identity mismatch: Chromium rewrites
+`/proc/PID/cmdline` as a single space-separated process title. NUL-only argv
+classification loses the actual browser and network service; a short-lived
+launcher carrying the same flags must not satisfy coverage. Read the executable
+symlink transiently inside the same birthtime check and admit native Chromium
+only. Distinguish NUL argv from a rewritten title with its exact executable
+prefix; recognize only complete, unique owned-lease/type/subtype markers. Quoted
+or escaped marker values and truncated representations remain unknown. Unrelated
+quoted values are opaque, including Cypress's existing date flag. Do not use
+shell parsing to pretend the original argv can be reconstructed: flattening is
+lossy, so title classification is restricted evidence of this controlled launch,
+not an authentication boundary. Preserve kernel-owned ancestry, never promote a
+nested browser root, and require an observed owned network-service identity
+before declaring coverage complete. No raw executable path or title is retained.
+The primary mechanism is documented in Chromium's
+[process-title construction](https://chromium.googlesource.com/chromium/src/+/HEAD/base/process/set_process_title.cc)
+and [Linux implementation](https://chromium.googlesource.com/chromium/src/+/HEAD/base/process/set_process_title_linux.cc).
+
+PID birth ticks alone cannot correlate a first `/proc` read with a queued old
+EXIT. Timestamp the completed stable snapshot using the process-event monotonic
+clock; require the initial time namespace and check alignment with the capability
+probe. An exit event preceding
+that observation cannot inherit its role or birthtime; this also applies to the
+browser ancestor. Preserve historical coverage only from temporally confirmed
+exits, and evaluate remaining lifetimes after draining queued events. A snapshot
+that races with termination conservatively loses identity rather than assigning
+another process's identity. Do not compare `/proc` boot-clock ticks directly to
+CN_PROC monotonic timestamps.
+
+Kernel-log OOM observations retain their own clock domain. `printk` uses
+`local_clock()`, which does not guarantee the same cross-CPU clock base as
+CN_PROC. Project only a `kernel-oom-victim` with numeric victim PID, kernel-log
+timestamp and explicit `pid-only` correlation when the PID matches the owned
+ledger. Do not attach a browser identity, birthtime or network-service role to
+that candidate. PID reuse means it is supporting evidence, not proof that the
+observed network-service lifetime was killed by OOM. No unrelated kernel text
+is published. See the kernel's
+[printk timestamp source](https://github.com/torvalds/linux/blob/v6.8/kernel/printk/printk.c#L2047)
+and [scheduler clock contract](https://github.com/torvalds/linux/blob/v6.8/kernel/sched/clock.c#L15-L29).
+
+Pure protocol/ownership tests and adapter lifecycle tests have separate owners.
+The existing real Linux invocation provides the capability smoke and unchanged
+journey evidence. Assertions, retries, browser, spec selection, workflow and
+product behavior remain unchanged. No synthetic successful capture is admitted.
+
+#### SIGKILL Generation And Userspace OOM Evidence — GH-3604
+
+Design `GH-3604-LINUX-SIGNAL-ORIGIN` extends the same native observer after run
+`38972536656` recorded nine network-service SIGKILL exits without an observed
+kernel OOM victim. That evidence establishes termination, not its initiator.
+
+```mermaid
+flowchart LR
+  Previous[Owned SIGKILL exit; initiator unknown] --> Trace[Private signal_generate trace instance]
+  Trace --> Probe[Known observer-owned child probe]
+  Probe --> Browser[Unchanged native browser proof]
+  Browser --> Signal[Owned target; generator context and signal result]
+  Browser --> Journal[Independent bounded OOM-daemon journal]
+  Signal --> Projection[Allowlisted evidence; uncertain attribution explicit]
+  Journal --> Projection
+  Projection --> Close[Drain; close private sources; publish through existing owner]
+```
+
+Use an already-mounted tracefs instance with only `signal:signal_generate`,
+filtered to SIGKILL and the monotonic clock. No installation, mount, global
+trace-option mutation, syscall tracing, stacks or browser instrumentation is
+admitted. A known observer-owned child proves the actual event path before
+Cypress starts. The instance and its bounded buffer are closed and removed by
+their owner on normal completion, rejection and catchable cancellation. The
+instance-local `disable_on_free` option and a noninherited `free_buffer` descriptor
+stop tracing when the observer loses its descriptors, including SIGKILL. An
+uncatchable termination cannot remove the instance directory; no such guarantee is claimed.
+Loss or unsupported capability is explicit.
+
+The kernel event names a target **TID** and current generator context, not an
+unconditional sender `si_pid`. Preserve signal code, group and result: generation
+does not prove delivery. Track forked threads as well as process leaders so a
+fatal signal to a nonleader retains its owning process candidate, without
+inheriting that association after PID reuse. Publish only targets matching the owned browser ledger,
+with explicit PID-only correlation. Independent streams can be read out of order,
+and formatted trace timestamps can have microsecond precision; do not require an
+invented total ordering. A stable generator `/proc`
+snapshot is separately marked observed-after-event and PID-only. Export only its
+numeric identifiers and an allowlisted executable category, never raw paths,
+arguments, comm or trace text. Unknown and reused identities remain uncertain.
+
+Read current-boot journal entries from the exact `systemd-oomd.service` and
+`earlyoom.service` units after the initial cursor, requiring matching process
+metadata within the observer interval, with bounded output and time. Journal
+timestamps denote receipt, not an exact signal-generation time. Recognized actions retain only
+daemon category/PID, numeric monotonic timestamp and, for an owned earlyoom
+candidate, victim PID. A systemd cgroup kill report is runner-interval evidence,
+not per-process attribution. Raw journal messages, cgroup names and command lines
+never leave the mapper. Empty results mean not observed, not OOM excluded;
+unavailable sources, malformed records and truncation cannot claim full coverage.
+
+Trace capture, journal capture, process ownership and artifact validation have
+separate owners and focused negative tests. Existing routing guards admit exact
+new support paths. Browser selection, retries, assertions, provider allocation,
+workflow and product behavior do not change. The governing planning matrix and
+allowed surfaces are recorded in
+[the issue design](https://github.com/dunay2/dvt/issues/3604#issuecomment-6227215039).
+Primary contracts are the kernel's
+[signal tracepoint](https://github.com/torvalds/linux/blob/v6.8/include/trace/events/signal.h),
+[signal generation order](https://github.com/torvalds/linux/blob/v6.8/kernel/signal.c),
+[tracefs interface](https://www.kernel.org/doc/html/v6.8/trace/ftrace.html),
+[systemd OOM reports](https://github.com/systemd/systemd/blob/v255/src/oom/oomd-manager.c)
+and [earlyoom signal reports](https://github.com/rfjakob/earlyoom/blob/v1.8/kill.c).
 
 ### Execution Selection Consumer Closure — GH-3610
 

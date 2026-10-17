@@ -225,12 +225,10 @@ describe('canvas copy catalog', () => {
     expect(canvasViewCopy.inspectorDbtPackageLabel).toBe('Package');
     expect(canvasViewCopy.inspectorErrorDbtPackageRequired).toBe('Package is required.');
     expect(canvasViewCopy.inspectorDvtConnectionLabel).toBe('Connection');
-    expect(canvasViewCopy.inspectorDvtInheritedConnectionLabel).toBe('Inherited connection');
     expect(canvasViewCopy.inspectorDvtSqlTransformTitle).toBe('DVT Transform');
     expect(spanishCopy.inspectorDbtPackageLabel).toBe('Paquete');
     expect(spanishCopy.inspectorErrorDbtPackageRequired).toBe('El paquete es obligatorio.');
     expect(spanishCopy.inspectorDvtConnectionLabel).toBe('Conexión');
-    expect(spanishCopy.inspectorDvtInheritedConnectionLabel).toBe('Conexión heredada');
     expect(spanishCopy.inspectorDvtSqlTransformTitle).toBe('Transform DVT');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');
     expect(canvasViewCopy.inspectorErrorObjectFileSizeInvalid).toBe(
@@ -277,12 +275,9 @@ describe('canvas copy catalog', () => {
     );
 
     expect(
-      [
-        canvasViewCopy.inspectorDvtConnectionLabel,
-        canvasViewCopy.inspectorDvtInheritedConnectionLabel,
-        spanishCopy.inspectorDvtConnectionLabel,
-        spanishCopy.inspectorDvtInheritedConnectionLabel,
-      ].join(' ')
+      [canvasViewCopy.inspectorDvtConnectionLabel, spanishCopy.inspectorDvtConnectionLabel].join(
+        ' '
+      )
     ).not.toMatch(/PostgreSQL/iu);
   });
 

@@ -6,6 +6,9 @@
  * @version 1.0.2
  */
 export type WebCypressCapability = 'controlled' | 'available' | 'unavailable';
+export const WEB_CYPRESS_NIGHTLY_SPECS: readonly string[] = [
+  'apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts',
+];
 export type WebCypressCommand = Readonly<{
   capability: WebCypressCapability;
   command: string;
@@ -83,6 +86,7 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
+    'apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
     'apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
@@ -107,6 +111,12 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress.config.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/node/chromiumNetworkDiagnostics.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/node/chromiumNetworkProjection.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/chromiumNetworkEvidence.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/chromiumProcessObserver.ts': ['controlled', 'available', 'unavailable'],
+  'apps/web/cypress/node/linuxChromiumProcessObserver.py': ['available'],
+  'apps/web/cypress/node/linuxChromiumProcessProtocol.py': ['available'],
+  'apps/web/cypress/node/linuxChromiumSignalTrace.py': ['available'],
+  'apps/web/cypress/node/linuxChromiumOomJournal.py': ['available'],
   'scripts/live-proof-web-runtime.cjs': ['available', 'unavailable'],
   'apps/web/cypress/support/canvasExecutionSelection.ts': [
     'controlled',
@@ -139,6 +149,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/canvasDrafts/warehouse.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDraftAuthoring.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/startupReadiness.ts': ['controlled'],
+  'apps/web/cypress/support/canvasReadyAuthoring.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
@@ -157,6 +168,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/liveCanvasDraftAuthoring.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProjectAuthoring.ts': ['available'],
+  'apps/web/cypress/support/postgresPublicationFlow.ts': ['available'],
   'apps/web/cypress/support/liveWarehouseSourceImport.ts': ['available'],
   'apps/web/cypress/support/liveProtectedRuntime.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProtectedRequest.ts': ['available', 'unavailable'],
@@ -287,6 +299,14 @@ export function resolveWebCypressChangedPlan(
   const retiredFiles = new Set<string>();
   for (const filePath of filePaths) {
     const path = repositoryPath(filePath);
+    if (
+      WEB_CYPRESS_NIGHTLY_SPECS.includes(path) ||
+      path === '.github/workflows/web-canvas-nightly.yml'
+    ) {
+      WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
+      vitestFiles.add('apps/web/src/testing/vitestSuites.browserNightly.architecture.test.ts');
+      continue;
+    }
     const retired = RETIRED_SPEC_CAPABILITIES[path];
     if (retired) {
       retiredFiles.add(path);

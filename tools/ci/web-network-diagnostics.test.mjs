@@ -12,11 +12,13 @@ const workflow = yaml.load(
 const web = workflow.jobs['web-frontend-tests'];
 const reportPath = '.dvt/evidence/chromium-network/*.json';
 
-test('only the first available group enables native network diagnostics', () => {
+test('all available groups enable native network diagnostics without enabling other capabilities', () => {
   const expression = web.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS.replace(/^\$\{\{|\}\}$/gu, '');
   for (const [capability, shard, expected] of [
     ['available', 1, '1'],
-    ['available', 2, ''],
+    ['available', 2, '1'],
+    ['available', 3, '1'],
+    ['controlled', undefined, ''],
     ['unavailable', undefined, ''],
     [undefined, undefined, ''],
   ]) {
@@ -35,7 +37,9 @@ test('network evidence publishes only an existing sanitized report, including fa
   for (const [capability, shard, present, expected] of [
     ['available', 1, true, true],
     ['available', 1, false, false],
-    ['available', 2, true, false],
+    ['available', 2, true, true],
+    ['available', 3, true, true],
+    ['controlled', undefined, true, false],
     ['unavailable', 1, true, false],
     [undefined, undefined, true, false],
   ]) {

@@ -67,7 +67,9 @@ export function publicationHarness(
     selectedEdgeIds: draft.edges.map((edge) => edge.id),
   };
   async function execute(): Promise<PublishedWorkload> {
-    const binding = await publisher.publish(input);
+    const published = await publisher.publish(input);
+    if (!published.ok) throw new Error(published.cause);
+    const binding = published.value;
     const result = new DvtOperationalWorkloadProjector().project({
       ...input,
       draftRevision: 'revision-1',

@@ -125,10 +125,16 @@ describe('Canvas fan-in connection provenance', () => {
         cy.get('[data-slot="canvas-node-workbench-close"]').click();
         openProperties(sink.id);
         cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
-        cy.contains('Inherited connection')
-          .parent()
-          .find('code')
-          .should('have.text', conflicting ? '-' : connection.connectionId);
+        cy.get('select[name="dvt-sink-connection"]')
+          .should('have.value', '')
+          .and(conflicting ? 'be.disabled' : 'be.enabled');
+        cy.get<HTMLOptionElement>('select[name="dvt-sink-connection"] option').should(
+          ($options) => {
+            expect([...$options].map((option) => option.value)).to.deep.equal(
+              conflicting ? [''] : ['', connection.connectionId]
+            );
+          }
+        );
         cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
       });
     }

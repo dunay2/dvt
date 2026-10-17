@@ -10,7 +10,8 @@ import {
   DVT_POSTGRES_PLUGIN_CONTEXT_KEY,
   DvtOperationalRunWorkloadV1Schema,
   KNOWN_STEP_KINDS,
-  type DvtOperationalRunWorkloadV1,
+  resolveDvtPostgresPublication,
+  type DvtPostgresRelationTargetV1,
   type DvtOperationalRejection,
   type ExecutionPlan,
 } from '@dvt/contracts';
@@ -55,6 +56,7 @@ export class DvtPostgresRunExecutionContextPreparer implements IRunExecutionCont
       return { ok: false, ...DVT_REJECTIONS.runIntentRequired };
     }
     const workload = parsed.data;
+    const publication = resolveDvtPostgresPublication(workload);
     const { connectionRef } = workload;
 
     try {
@@ -77,7 +79,7 @@ export class DvtPostgresRunExecutionContextPreparer implements IRunExecutionCont
       }
       const predecessor = await this.deps.predecessorReader.observe({
         credentialRef: connection.credentialRef,
-        target: workload.output.target,
+        target: publication.target,
         schemaDigestSha256: workload.targetProjection.schemaDigestSha256,
       });
       if (!predecessor.ok) {
@@ -94,7 +96,7 @@ export class DvtPostgresRunExecutionContextPreparer implements IRunExecutionCont
           },
           workloadSha256,
           runId: input.runId,
-          target: workload.output.target,
+          target: publication.target,
         })
       );
       return {
@@ -118,7 +120,7 @@ export class DvtPostgresRunExecutionContextPreparer implements IRunExecutionCont
 export interface DvtPostgresPublicationPredecessorReader {
   observe(input: {
     readonly credentialRef: string;
-    readonly target: DvtOperationalRunWorkloadV1['output']['target'];
+    readonly target: DvtPostgresRelationTargetV1;
     readonly schemaDigestSha256: string;
   }): Promise<
     | { readonly ok: true; readonly predecessorToken: string | null }

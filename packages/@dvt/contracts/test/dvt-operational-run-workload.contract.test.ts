@@ -12,7 +12,11 @@ import {
 
 const SEMANTIC_DIGEST = 'a'.repeat(64);
 
-function buildWorkload(): DvtOperationalRunWorkloadV1 {
+type TableWorkload = DvtOperationalRunWorkloadV1 & {
+  output: Extract<DvtOperationalRunWorkloadV1['output'], { disposition: 'table' }>;
+};
+
+function buildWorkload(): TableWorkload {
   const schemaDigestSha256 = createDvtPostgresOutputSchemaDigestV1({
     schemaVersion: 'dvt-postgres-output-schema.v1',
     columns: [
@@ -170,7 +174,7 @@ describe('DVT operational Run intent under the single V1 contract', () => {
   it.each([
     [
       'a target on another connection',
-      (value: DvtOperationalRunWorkloadV1) => ({
+      (value: TableWorkload) => ({
         ...value,
         output: {
           ...value.output,

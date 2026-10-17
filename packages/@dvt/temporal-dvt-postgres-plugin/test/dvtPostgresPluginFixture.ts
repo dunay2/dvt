@@ -102,6 +102,32 @@ export function buildRunExecutionContext(): RunExecutionContext {
   });
 }
 
+export function buildDvtSinkWorkload(): DvtOperationalRunWorkloadV1 {
+  const table = buildDvtWorkload();
+  return DvtOperationalRunWorkloadV1Schema.parse({
+    ...table,
+    graph: {
+      ...table.graph,
+      selectedNodeIds: [...table.graph.selectedNodeIds, 'sink-a'],
+      selectedEdgeIds: [...table.graph.selectedEdgeIds, 'transform-sink'],
+    },
+    output: { kind: 'transform-result', nodeId: table.output.nodeId, disposition: 'ephemeral' },
+    publicationBoundaries: [
+      {
+        kind: 'sink',
+        nodeId: 'sink-a',
+        inputNodeId: table.output.nodeId,
+        target: {
+          connectionRef: table.connectionRef,
+          schema: 'analytics',
+          relation: 'explicit_sink',
+        },
+        publicationPolicy: 'postgres-stable-table-publication.v1',
+      },
+    ],
+  });
+}
+
 export function buildStep(config: unknown = buildDvtWorkload()): StepDefinition {
   return {
     stepId: 'transform-a',

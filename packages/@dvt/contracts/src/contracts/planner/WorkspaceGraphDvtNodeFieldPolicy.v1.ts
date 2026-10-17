@@ -9,7 +9,12 @@ import type { z } from 'zod';
 
 import { PostgresIdentifierV1Schema } from './CanvasAuthoringFieldPolicy.v1.js';
 import { DvtTransformResultTargetV1Schema } from './DvtTransformResultTarget.v1.js';
+import { DvtPostgresRelationTargetV1Schema } from './postgres/DvtPostgresRelationTarget.v1.js';
 import type { WorkspaceGraphAuthoringNode } from './WorkspaceGraphAuthoringDraft.v1.js';
+
+export const DVT_TRANSFORM_MATERIALIZATIONS = ['view', 'table', 'ephemeral'] as const;
+/** Persisted node commands use the local kind; Canvas projections use the qualified kind. */
+export const DVT_SINK_NODE_KINDS = ['sink', 'dvt:sink'] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -56,7 +61,7 @@ export function addDvtNodeFieldPolicyIssues(
   const isSource =
     node.kind === 'dvt:source' &&
     (node.pluginId === 'dvt' || node.pluginId === 'dvt.warehouse-source');
-  const isSink = node.kind === 'dvt:sink' && node.pluginId === 'dvt';
+  const isSink = node.pluginId === 'dvt' && DVT_SINK_NODE_KINDS.some((kind) => node.kind === kind);
   const isTransform =
     node.pluginId === 'dvt' && (node.kind === 'transform' || node.kind === 'dvt:transform');
   if (!isSource && !isSink && !isTransform) return;
@@ -78,6 +83,19 @@ export function addDvtNodeFieldPolicyIssues(
       }
     }
     if (isSink) {
+      if (Object.hasOwn(config, 'connectionRef')) {
+        const connection = DvtPostgresRelationTargetV1Schema.shape.connectionRef.safeParse(
+          config['connectionRef']
+        );
+        if (!connection.success) {
+          for (const issue of connection.error.issues) {
+            context.addIssue({
+              ...issue,
+              path: ['metadata', 'config', 'connectionRef', ...issue.path],
+            });
+          }
+        }
+      }
       addStringEnumMetadataIssue(
         config,
         'materialization',
@@ -95,6 +113,13 @@ export function addDvtNodeFieldPolicyIssues(
     }
     if (isTransform) {
       if (Object.hasOwn(config, 'resultTarget')) {
+        if (config['materialized'] === 'ephemeral') {
+          context.addIssue({
+            code: 'custom',
+            message: 'An ephemeral Transform cannot own a durable result target.',
+            path: ['metadata', 'config', 'resultTarget'],
+          });
+        }
         const target = DvtTransformResultTargetV1Schema.safeParse(config['resultTarget']);
         if (!target.success) {
           for (const issue of target.error.issues) {
@@ -108,7 +133,7 @@ export function addDvtNodeFieldPolicyIssues(
       addStringEnumMetadataIssue(
         config,
         'materialized',
-        ['table', 'view'],
+        DVT_TRANSFORM_MATERIALIZATIONS,
         ['metadata', 'config'],
         context
       );

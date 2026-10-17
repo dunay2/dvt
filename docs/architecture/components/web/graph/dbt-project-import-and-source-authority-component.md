@@ -86,6 +86,46 @@ warehouse object by database, schema, and table. The command enriches the same
 declared YAML table with non-secret `dvt_source_identity` metadata; it does not
 generate a parallel source file or a second logical source.
 
+## Source catalogue recovery
+
+| scenario                                         | opportunity                                     | Fowler pattern                                                       | DDD owner                     | command/query rail                                                                                | implementation surfaces                                                        | unit or package test                                            | architecture test                                       | user-flow test                                                                            | out of scope                                                                   |
+| ------------------------------------------------ | ----------------------------------------------- | -------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Discovery fails before a passing connection test | Responsibility overload and primitive obsession | Separate request state machines and Passive View with typed bindings | SourceImportDialog read model | Existing TestWarehouseConnection, ListWarehouseConnectionSourceObjects and ImportWarehouseSources | Source Import controller, loaders, bindings, view, owned CSS and focused tests | Recovery, current-request transition and request-lifetime tests | Source Import boundary guard and Web architecture suite | Existing real dbt project Source Import LIVE flow plus isolated failed-catalogue recovery | Transport retries, Chromium process termination, API contracts and credentials |
+
+SourceImportDialog owns two independent request state machines: connection testing
+and initial catalogue discovery. Both reuse the existing warehouse import port;
+neither introduces a new command/query rail. A passing TestWarehouseConnection
+does not establish that ListWarehouseConnectionSourceObjects succeeded.
+
+```text
+Before: catalogue fails -> shared error -> test succeeds -> error cleared, Selected: 0
+
+Connection test: idle -> loading -> succeeded | failed
+Catalogue:      idle -> loading -> succeeded | failed
+                                     ^          |
+                                     |-- retry -|
+```
+
+Each completion must belong to its current request and connection/session scope.
+Closing the dialog, changing connection or replacing the binding invalidates old
+requests. Catalogue pagination retains independent request identities per schema;
+search also invalidates earlier query generations. A stale completion cannot
+overwrite a newer attempt or emit a misleading notification.
+Failed search continuation pages retain their requested cursor so the existing
+Load more action can retry that page without changing the query or selection.
+
+Catalogue failure remains visible across wizard sections through a narrow typed
+recovery binding. Retry executes the same complete discovery path: schema list,
+dbt declaration search, matching and mandatory selection. Connection test success
+and catalogue failure may coexist. The view only renders the binding; state
+transitions and port effects remain outside presentation. Loading flags and test
+results supplied to legacy views are derived from the machines, not stored twice.
+
+Regression evidence must cover failed discovery followed by a successful test,
+explicit successful and failed recovery, and stale responses across connection,
+query and dialog-session changes. The real dbt Source Import LIVE flow remains
+required; controlled state tests do not replace transport evidence.
+
 ## Target Boundary
 
 ```mermaid

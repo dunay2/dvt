@@ -200,7 +200,7 @@ describe('Canvas authoring field policy v1', () => {
   describe.each(['transform', 'dvt:transform'])('%s materialization policy', (kind) => {
     const transform = { ...baseNode, kind, role: 'transform' as const };
 
-    it.each(['incremental', 'ephemeral', 'unknown', '', ' table ', null, 1, false])(
+    it.each(['incremental', 'unknown', '', ' table ', null, 1, false])(
       'rejects explicit unsupported materialized %j in nodes and commands',
       (materialized) => {
         const metadata = { config: { materialized } };
@@ -229,13 +229,22 @@ describe('Canvas authoring field policy v1', () => {
       }
     );
 
-    it.each([{}, { materialized: 'table' }, { materialized: 'view' }])(
-      'preserves admitted or unconfigured metadata %j',
-      (config) => {
-        const node = { ...transform, metadata: { config } };
-        expect(WorkspaceGraphAuthoringNodeSchema.parse(node)).toEqual(node);
-      }
-    );
+    it.each([
+      {},
+      { materialized: 'table' },
+      { materialized: 'view' },
+      { materialized: 'ephemeral' },
+    ])('preserves admitted or unconfigured metadata %j', (config) => {
+      const node = { ...transform, metadata: { config } };
+      expect(WorkspaceGraphAuthoringNodeSchema.parse(node)).toEqual(node);
+      expect(
+        WorkspaceGraphAuthoringCommandSchema.safeParse({
+          type: WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE.updateNode,
+          nodeId: transform.id,
+          patch: { pluginId: transform.pluginId, kind, metadata: node.metadata },
+        }).success
+      ).toBe(true);
+    });
 
     it('does not apply DVT materialization policy to a foreign plugin', () => {
       const node = {

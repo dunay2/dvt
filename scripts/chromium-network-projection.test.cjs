@@ -5,7 +5,109 @@ const assert = require('node:assert/strict');
 const {
   projectChromiumNetworkLog,
   projectChromiumNetworkCapture,
+  projectChromiumProcessLog,
 } = require('../apps/web/cypress/node/chromiumNetworkProjection.ts');
+
+test('process log admits only the exact restart signal, never raw diagnostics or lookalikes', () => {
+  const line =
+    '[21:34:1016/093012.123456:ERROR:content/browser/network_service_instance_impl.cc:608] Network service crashed or was terminated, restarting service.';
+  assert.deepEqual(
+    projectChromiumProcessLog(
+      [
+        line,
+        line.replace(':608]', '(608)]'),
+        line + ' private',
+        line.replace('network_service_instance_impl.cc', 'private.cc'),
+        'private Authorization: Bearer secret https://private.invalid/?token=secret',
+      ].join('\n')
+    ),
+    {
+      state: 'observed',
+      networkServiceRestarts: [
+        { processId: 21, threadId: 34, time: '1016/093012.123456' },
+        { processId: 21, threadId: 34, time: '1016/093012.123456' },
+      ],
+      validationErrors: [],
+    }
+  );
+  assert.deepEqual(projectChromiumProcessLog(undefined), { state: 'unavailable' });
+  assert.deepEqual(projectChromiumProcessLog(''), {
+    state: 'observed',
+    networkServiceRestarts: [],
+    validationErrors: [],
+  });
+});
+
+test('process log retains known Mojo codes without descriptions or raw log data', () => {
+  const codes = [
+    'MISALIGNED_OBJECT',
+    'ILLEGAL_MEMORY_RANGE',
+    'UNEXPECTED_STRUCT_HEADER',
+    'UNEXPECTED_ARRAY_HEADER',
+    'ILLEGAL_HANDLE',
+    'UNEXPECTED_INVALID_HANDLE',
+    'ILLEGAL_POINTER',
+    'UNEXPECTED_NULL_POINTER',
+    'ILLEGAL_INTERFACE_ID',
+    'UNEXPECTED_INVALID_INTERFACE_ID',
+    'MESSAGE_HEADER_INVALID_FLAGS',
+    'MESSAGE_HEADER_MISSING_REQUEST_ID',
+    'MESSAGE_HEADER_UNKNOWN_METHOD',
+    'DIFFERENT_SIZED_ARRAYS_IN_MAP',
+    'UNKNOWN_UNION_TAG',
+    'UNKNOWN_ENUM_VALUE',
+    'DESERIALIZATION_FAILED',
+    'MAX_RECURSION_DEPTH',
+  ].map((name) => `VALIDATION_ERROR_${name}`);
+  const header = '[21:34:1017/093012.123456:ERROR:validation_errors.cc(136)] ';
+  const secret = 'Authorization: Bearer private https://user:secret@private.invalid/?token=secret';
+  const result = projectChromiumProcessLog(
+    codes
+      .flatMap((code) => [
+        `${header}Invalid message: ${code}`,
+        `${header.replace('validation_errors.cc(136)', 'mojo/public/cpp/bindings/lib/validation_errors.cc:125')}Invalid message: ${code} (${secret})`,
+      ])
+      .join('\r\n')
+  );
+  assert.deepEqual(result, {
+    state: 'observed',
+    networkServiceRestarts: [],
+    validationErrors: codes.flatMap((code) => [
+      { processId: 21, threadId: 34, time: '1017/093012.123456', code },
+      { processId: 21, threadId: 34, time: '1017/093012.123456', code },
+    ]),
+  });
+  assert.doesNotMatch(JSON.stringify(result), /private|secret|Authorization|description|token/);
+});
+
+test('process log rejects unknown codes, malformed metadata and validation lookalikes', () => {
+  const line =
+    '[21:34:1017/093012.123456:ERROR:validation_errors.cc:136] Invalid message: VALIDATION_ERROR_ILLEGAL_POINTER';
+  for (const invalid of [
+    line.replace('ILLEGAL_POINTER', 'NONE'),
+    line.replace('ILLEGAL_POINTER', 'FUTURE_PRIVATE_CODE'),
+    line + '_PRIVATE',
+    line + ' private',
+    line + ' (unfinished',
+    'private ' + line,
+    line.replace('Invalid message:', 'Other message:'),
+    line.replace('ERROR:', 'WARNING:'),
+    line.replace('validation_errors.cc', 'other.cc'),
+    line.replace('validation_errors.cc', 'private/validation_errors.cc'),
+    line.replace('[21:', '[9007199254740992:'),
+    line.replace(':34:', ':9007199254740992:'),
+    line.replace('[21:', '[0:'),
+    line.replace(':34:', ':0:'),
+    line.replace('093012.123456', 'bad-time'),
+    line.replace(':136]', ':bad]'),
+  ]) {
+    assert.deepEqual(projectChromiumProcessLog(invalid), {
+      state: 'observed',
+      networkServiceRestarts: [],
+      validationErrors: [],
+    });
+  }
+});
 
 function netlog(url = 'http://user:secret@127.0.0.1:3300/workspace/graph/draft?token=private') {
   return {
@@ -77,6 +179,40 @@ test('missing or malformed capture rejects without including raw input', () => {
   ]) {
     assert.throws(() => projectChromiumNetworkLog(input), /Invalid Chromium network log/);
   }
+});
+
+test('correlates the request clock, dependent socket and status without raw headers', () => {
+  const input = netlog();
+  input.constants.timeTickOffset = '1789123456000';
+  input.events[0].params.source_dependency = { id: 42, type: 9, private: 'secret' };
+  input.events[0].params.headers = ['HTTP/1.1 204 No Content', 'Set-Cookie: private'];
+  const result = projectChromiumNetworkLog(input);
+  assert.equal(result.timeTickOffset, '1789123456000');
+  assert.equal(result.events[0].dependencySourceId, 42);
+  assert.equal(result.events[0].statusCode, 204);
+  assert.doesNotMatch(JSON.stringify(result), /secret|private|Set-Cookie|No Content/);
+});
+
+test('invalid correlation values cannot publish arbitrary strings or non-integral IDs', () => {
+  for (const value of ['private', null, {}, 1.5, Infinity]) {
+    const input = netlog();
+    input.constants.timeTickOffset = value;
+    input.events[0].params.source_dependency = { id: value };
+    input.events[0].params.headers = [value, 'HTTP/1.1 200 private'];
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.timeTickOffset, undefined);
+    assert.equal(result.events[0].dependencySourceId, undefined);
+    assert.equal(result.events[0].statusCode, undefined);
+    assert.doesNotMatch(JSON.stringify(result), /private/);
+  }
+});
+
+test('normalizes the safe integer clock offset emitted by current Chromium', () => {
+  const input = netlog();
+  input.constants.timeTickOffset = 1789123456000;
+  assert.equal(projectChromiumNetworkLog(input).timeTickOffset, '1789123456000');
+  input.constants.timeTickOffset = Number.MAX_SAFE_INTEGER + 1;
+  assert.equal(projectChromiumNetworkLog(input).timeTickOffset, undefined);
 });
 
 test('terminated footer is explicit and retains only complete observed records', () => {
