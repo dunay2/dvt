@@ -79,13 +79,18 @@ export async function readGenerationStage(c: DuckDBConnection, capture: string):
       key: String(key), rows: count, bytes, sealed };
   } catch { throw new DuckDbGenerationError('CORRUPT_METADATA'); }
 }
-export async function validateGenerationRelation(c: DuckDBConnection, stage: GenerationStage): Promise<void> {
-  const relation = internalGenerationRelation(stage.key);
+/** Check schema without rescanning all staged rows on every bounded append. */
+export async function validateGenerationRelationSchema(c: DuckDBConnection, stage: GenerationStage): Promise<void> {
+  internalGenerationRelation(stage.key);
   const columns = (await c.runAndReadAll(`SELECT column_name, data_type, is_nullable
     FROM information_schema.columns WHERE table_schema='dvt_store' AND table_name=$1 ORDER BY ordinal_position`,
     [stage.key])).getRows();
   const expected = stage.request.schema.columns.map(col => [`c${col.ordinal}`, col.localType, col.nullable ? 'YES' : 'NO']);
   if (JSON.stringify(columns) !== JSON.stringify(expected)) throw new DuckDbGenerationError('SCHEMA_MISMATCH');
+}
+export async function validateGenerationRelation(c: DuckDBConnection, stage: GenerationStage): Promise<void> {
+  await validateGenerationRelationSchema(c, stage);
+  const relation = internalGenerationRelation(stage.key);
   const count = (await c.runAndReadAll(`SELECT count(*) FROM ${relation}`)).getRows()[0]?.[0];
   if (count !== stage.rows) throw new DuckDbGenerationError('ROW_COUNT_MISMATCH');
 }

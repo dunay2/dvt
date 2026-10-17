@@ -1,6 +1,6 @@
 # Transactional LOCAL generations
 
-Owner: API local data infrastructure. Governing task: #3393; candidate subcuts A/B.
+Owner: API local data infrastructure. Governing tasks: #3393 A/B and #3394-A.
 This adapter is **not composed into a public route or enabled product capability**.
 It reuses `DuckDbLocalDataRuntime`, the #3391 generation contract and the #3392
 checkpoint vocabulary. It does not create another instance registry or data plane.
@@ -67,7 +67,8 @@ VARCHAR uses well-formed UTF-8 strings; NULL obeys the declared column nullabili
 All other types return `UNSUPPORTED_SCHEMA` until fidelity is demonstrated.
 Physical names use ordinals (`c0`, `c1`...), preserving duplicate logical names.
 The server generates relation locators and revalidates their exact hexadecimal
-shape before interpolation. All values and catalog keys are bound parameters.
+shape before interpolation. Metadata values and catalog keys are bound parameters;
+row values are passed through typed native DataChunks, never SQL interpolation.
 
 A batch is at most 1024 rows and 1 MiB logical bytes, with at most 32 columns.
 The caller supplies a finite capture limit, capped at 100000 rows / 16 MiB in this
@@ -76,6 +77,52 @@ they are not RSS, disk, source-wire bytes or a compression estimate. Aggregate
 workspace admission, spill, GC and disk quotas remain #3398 obligations before
 product enablement. Abort is cooperative between statements and before commit,
 not an interrupt/deadline guarantee for a native query already executing.
+
+## Bounded bulk ingestion and PostgreSQL codec (#3394-A)
+
+`DuckDbGenerationStore.append` validates the existing batch and capture budgets,
+then checks actual physical column order, names, types and nullability before
+creating the Appender. This prevents an implicit native cast from concealing
+schema drift. The schema-only check reuses the promotion validator without a
+full row-count scan on every append; full count validation remains at promotion.
+
+```text
+raw PostgreSQL text fixture / future cursor batch
+  -> positional exact codec
+  -> await existing Store.append
+       BEGIN + catalog/auth checks
+       schema + batch + budget checks
+       one DataChunk -> Appender -> flush -> close
+       update conflicting capture counters
+       authorization checkpoint -> COMMIT
+  -> next batch may be requested by the future reader
+```
+
+Flush and close happen on the same connection inside its current transaction,
+before updating counters and before COMMIT. The Appender is closed in `finally`;
+a native failure, denial or cooperative abort reaches the existing rollback.
+The method does not resolve until the transaction and session checks complete.
+No autonomous queue, second writer/store or per-row INSERT path is added.
+
+`postgresLocalDataBatchCodec` accepts raw-text OIDs 20 (int8), 16 (bool), 25 (text)
+and 1043 (varchar). Int8 uses canonical decimal and exact signed-64-bit bigint;
+bool accepts only `t`/`f`; text preserves Unicode and rejects NUL/unpaired
+surrogates. NULL follows trusted metadata. Names may repeat; positions govern.
+All other OIDs, including int2/int4, decimal, timestamps, arrays and unproven
+domains, are refused in this first profile instead of silently coerced.
+
+The future PostgreSQL reader must supply authorized, snapshot-consistent metadata,
+array rows and query-local raw-text parsers. Global pg parsers must not be changed.
+`decodedTextBytes` counts UTF-8 bytes of non-null decoded strings, not PostgreSQL
+wire bytes; it is capped separately at 1 MiB. Codec limits are checked after pg
+materialization and do not prove a network-level byte limit or bounded RSS.
+
+This subcut does NOT open PostgreSQL connections or implement a cursor, source
+privileges, trustworthy EOF, FULL acquisition, Preview or an exposed capability.
+The sequential `await append` is the sink boundary needed for backpressure;
+source-to-sink backpressure still requires the actual reader. Native chunk/flush
+calls are synchronous, so this is not an event-loop latency or timeout guarantee.
+No speedup claim is made without a comparable workload measurement.
 
 ## Failure and concurrency semantics
 
@@ -112,6 +159,13 @@ in isolated native fixtures and verifies rejection without reconstruction or los
 of retained BIGINT data. No failure hook or raw-SQL test backdoor exists in product
 code.
 
+`DuckDbGenerationStore.appender.test.ts` observes the real Appender methods and
+SQL calls without replacing their implementations. It requires one native chunk
+for 1024 fixture rows, zero row INSERTs, exact values after reopen, rollback after
+flush, native CHECK failure cleanup and pre-write schema refusal. Codec tests are
+pure; raw-text fixtures are not a real PostgreSQL extraction.
+
 Use the existing API build and `test:ci` scripts with the explicit private startup
 policy from #3675. Full repository prepush/security/ARC and human review remain
-required before integration. Lifecycle and evidence are tracked in GitHub #3393.
+required before integration. Lifecycle and exact evidence are tracked in GitHub
+#3393 and #3394.
