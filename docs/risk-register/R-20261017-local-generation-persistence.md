@@ -37,3 +37,15 @@ Native test execution, killed-process recovery, full API source/test typecheck,
 lint, security/ARC, prepush and final review are acceptance gates, not properties
 inferred from this document. No claim of disk-full, power-loss, spill, upgrade
 compatibility or performance validation is made by subcut A alone.
+
+## Catalog loss and incomplete bootstrap (subcut B)
+
+A zero metadata-table count is not proof of a new workspace. The adapter rejects
+partial reserved schemas and missing/extra/view-substituted metadata objects,
+without rebuilding metadata over retained data. The guard is applied to reads as
+well as initialization. Catalog repair and migrations require a separate design.
+
+Residual limit: deleting both reserved schemas removes the internal evidence of
+prior initialization. Detecting complete destruction requires an independent
+trusted authority not introduced here. Structure checks do not authenticate all
+contents/constraints, prove host integrity, or justify deleting orphan relations.

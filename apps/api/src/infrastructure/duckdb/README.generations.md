@@ -1,6 +1,6 @@
 # Transactional LOCAL generations
 
-Owner: API local data infrastructure. Governing task: #3393; candidate subcut A.
+Owner: API local data infrastructure. Governing task: #3393; candidate subcuts A/B.
 This adapter is **not composed into a public route or enabled product capability**.
 It reuses `DuckDbLocalDataRuntime`, the #3391 generation contract and the #3392
 checkpoint vocabulary. It does not create another instance registry or data plane.
@@ -25,7 +25,7 @@ manifests only; absent exact IDs return null, corruption/errors never do.
 ```text
 one workspace-owned instance
   short connection -> BEGIN
-    validate catalog version + scope
+    validate reserved schemas + base-table inventory + version + scope
     staged relation + capture (separate batch commits, no public visibility)
     manifest insert + sealed capture + expected-head CAS
     await beforePromotion, check abort
@@ -36,6 +36,29 @@ one workspace-owned instance
 Readers resolve the selected head and its manifest within one transaction.
 Historical generations are retained. No relation deletion, filesystem rename,
 whole-file hashing, second cache or application-owned native handle is introduced.
+
+## Catalog initialization and recovery boundary
+
+Initialization may create metadata only when BOTH reserved schemas, `dvt_meta`
+and `dvt_store`, are absent. If either is present, both must exist and the metadata
+inventory must contain exactly the four expected BASE TABLEs. Missing, extra or
+view-substituted entries reject with `CORRUPT_METADATA`. This structural check and
+the existing version/scope check run inside every store transaction, before an
+absent ID may be interpreted as null. They do not recreate or repair a catalog.
+
+```text
+both reserved schemas absent -> explicit transactional bootstrap
+complete catalog             -> validate version/scope, perform requested work
+partial/altered catalog       -> reject; no DDL, no empty-head substitution
+```
+
+Removing metadata while retaining physical generations must not hide those rows
+behind a newly initialized empty head. An operator must investigate the damaged
+store; automatic reconstruction, deletion and migration are out of scope.
+If both schemas and all their evidence are removed, this internal check cannot
+distinguish that state from first initialization. No external marker is added.
+Inventory checking is not full column/constraint attestation or cryptographic
+integrity; manifest and physical-row validation retain their separate duties.
 
 ## Admitted profile and resource boundaries
 
@@ -84,7 +107,10 @@ spawns an isolated process using the built adapter, waits at a pre/post-COMMIT
 barrier and kills only that test child to inspect WAL recovery. It needs the API
 build and runs only on admitted POSIX hosts; Windows crash cases are explicitly
 skipped, never counted as native evidence. The companion suite checks refusal.
-No failure hook or raw-SQL test backdoor exists in product code.
+`DuckDbGenerationStore.catalog.test.ts` removes or alters reserved catalog objects
+in isolated native fixtures and verifies rejection without reconstruction or loss
+of retained BIGINT data. No failure hook or raw-SQL test backdoor exists in product
+code.
 
 Use the existing API build and `test:ci` scripts with the explicit private startup
 policy from #3675. Full repository prepush/security/ARC and human review remain

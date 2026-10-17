@@ -21,11 +21,9 @@ export type GenerationStage = Readonly<{
   fingerprint: string; expected: string | null; key: string; rows: bigint; bytes: bigint; sealed: boolean;
 }>;
 export async function initializeGenerationMetadata(c: DuckDBConnection, scopeJson: string): Promise<void> {
-  const tables = (await c.runAndReadAll(
-    "SELECT table_name FROM information_schema.tables WHERE table_schema='dvt_meta' ORDER BY table_name"
-  )).getRows().map(r => r[0]);
-  if (tables.length === 0) {
-    await c.run('CREATE SCHEMA IF NOT EXISTS dvt_meta; CREATE SCHEMA IF NOT EXISTS dvt_store');
+  if (!(await hasCompleteGenerationCatalog(c))) {
+    // Only a genuinely absent reserved catalog may bootstrap. Never rebuild over retained data.
+    await c.run('CREATE SCHEMA dvt_meta; CREATE SCHEMA dvt_store');
     await c.run('CREATE TABLE dvt_meta.storage_info (singleton BOOLEAN PRIMARY KEY CHECK(singleton), version VARCHAR NOT NULL, scope_json VARCHAR NOT NULL)');
     await c.run('CREATE TABLE dvt_meta.dataset_heads (local_dataset_id VARCHAR PRIMARY KEY, generation_id VARCHAR NOT NULL)');
     await c.run(`CREATE TABLE dvt_meta.staged_captures (
@@ -37,12 +35,26 @@ export async function initializeGenerationMetadata(c: DuckDBConnection, scopeJso
       generation_id VARCHAR PRIMARY KEY, local_dataset_id VARCHAR NOT NULL, capture_id VARCHAR UNIQUE NOT NULL,
       request_fingerprint VARCHAR NOT NULL, relation_key VARCHAR UNIQUE NOT NULL, manifest_json VARCHAR NOT NULL)`);
     await c.run('INSERT INTO dvt_meta.storage_info VALUES (true, $1, $2)', [VERSION, scopeJson]);
-  } else if (JSON.stringify(tables) !== JSON.stringify(TABLES)) {
-    throw new DuckDbGenerationError('CORRUPT_METADATA');
   }
   await validateGenerationStorageIdentity(c, scopeJson);
 }
+/** Read inside the caller's transaction; partial or altered reserved catalogs are not empty stores. */
+async function hasCompleteGenerationCatalog(c: DuckDBConnection): Promise<boolean> {
+  const schemas = (await c.runAndReadAll(
+    "SELECT schema_name FROM information_schema.schemata WHERE schema_name IN ('dvt_meta','dvt_store') ORDER BY schema_name"
+  )).getRows();
+  const tables = (await c.runAndReadAll(
+    "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema='dvt_meta' ORDER BY table_name"
+  )).getRows();
+  if (schemas.length === 0 && tables.length === 0) return false;
+  if (JSON.stringify(schemas) !== JSON.stringify([['dvt_meta'], ['dvt_store']]) ||
+      JSON.stringify(tables) !== JSON.stringify(TABLES.map(name => [name, 'BASE TABLE']))) {
+    throw new DuckDbGenerationError('CORRUPT_METADATA');
+  }
+  return true;
+}
 export async function validateGenerationStorageIdentity(c: DuckDBConnection, scopeJson: string) {
+  if (!(await hasCompleteGenerationCatalog(c))) throw new DuckDbGenerationError('CORRUPT_METADATA');
   const rows = (await c.runAndReadAll('SELECT singleton, version, scope_json FROM dvt_meta.storage_info')).getRows();
   if (rows.length !== 1 || rows[0]![0] !== true || rows[0]![1] !== VERSION || rows[0]![2] !== scopeJson) {
     throw new DuckDbGenerationError('STORAGE_IDENTITY_MISMATCH');
