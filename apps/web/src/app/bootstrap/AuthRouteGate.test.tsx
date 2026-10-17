@@ -10,6 +10,7 @@ import { setBootstrapStepStatus, startBootstrapScreen } from './appBootstrapScre
 import type { CreateProjectResponse } from '../services/projectOnboarding/projectOnboardingService';
 import { activateProjectWorkspace } from '../services/projectOnboarding/activateProjectWorkspace';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
+import type { SessionContextPublication } from '../services/session/sessionContextPublication';
 import AuthRouteGate from './AuthRouteGate';
 
 vi.mock('../services/session/protectedRouteSessionContext', () => ({
@@ -24,26 +25,32 @@ vi.mock('../views/ProjectOnboardingView', () => ({
   default: ({
     onProjectCreated,
   }: {
-    onProjectCreated: (response: CreateProjectResponse) => Promise<void> | void;
+    onProjectCreated: (
+      response: CreateProjectResponse,
+      signal: AbortSignal
+    ) => Promise<void> | void;
   }) => (
     <button
       type="button"
       onClick={() => {
         void Promise.resolve(
-          onProjectCreated({
-            project: {
-              tenantId: 'tenant-1',
-              projectId: 'orders',
-              name: 'Orders',
-              environmentIds: ['dev'],
+          onProjectCreated(
+            {
+              project: {
+                tenantId: 'tenant-1',
+                projectId: 'orders',
+                name: 'Orders',
+                environmentIds: ['dev'],
+              },
+              defaultWorkspace: {
+                tenantId: 'tenant-1',
+                projectId: 'orders',
+                projectName: 'Orders',
+                environmentId: 'dev',
+              },
             },
-            defaultWorkspace: {
-              tenantId: 'tenant-1',
-              projectId: 'orders',
-              projectName: 'Orders',
-              environmentId: 'dev',
-            },
-          })
+            new AbortController().signal
+          )
         ).catch(() => undefined);
       }}
     >
@@ -82,7 +89,7 @@ describe('AuthRouteGate project onboarding recovery', () => {
     mounted = null;
     vi.mocked(resolveProtectedRouteSessionContext).mockReset();
     vi.mocked(activateProjectWorkspace).mockReset();
-    vi.mocked(activateProjectWorkspace).mockResolvedValue(undefined);
+    vi.mocked(activateProjectWorkspace).mockResolvedValue({ assertCurrent: vi.fn() });
   });
 
   afterEach(async () => {
@@ -96,7 +103,7 @@ describe('AuthRouteGate project onboarding recovery', () => {
   it('uses project onboarding instead of a terminal workspace-denied screen', async () => {
     vi.mocked(resolveProtectedRouteSessionContext)
       .mockRejectedValueOnce(workspaceContextDeniedError())
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce({ assertCurrent: vi.fn() });
 
     mounted = await withTestQueryClient(
       <MemoryRouter initialEntries={['/canvas']}>
@@ -166,7 +173,7 @@ describe('AuthRouteGate project onboarding recovery', () => {
     let rejectActivation: (reason: unknown) => void = () => undefined;
     vi.mocked(activateProjectWorkspace).mockImplementationOnce(
       () =>
-        new Promise<void>((_resolve, reject) => {
+        new Promise<SessionContextPublication>((_resolve, reject) => {
           rejectActivation = reject;
         })
     );

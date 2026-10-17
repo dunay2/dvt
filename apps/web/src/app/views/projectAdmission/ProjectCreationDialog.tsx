@@ -4,10 +4,7 @@ import type { RefObject } from 'react';
 
 import { useWorkspaceScopeSelection } from '../../services/AppServicesContext';
 import { activateProjectWorkspace } from '../../services/projectOnboarding/activateProjectWorkspace';
-import type {
-  CreateProjectResponse,
-  ProjectOnboardingService,
-} from '../../services/projectOnboarding/projectOnboardingService';
+import type { ProjectOnboardingService } from '../../services/projectOnboarding/projectOnboardingService';
 import {
   Dialog,
   DialogClose,
@@ -18,13 +15,18 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog';
 import { Button } from '../../components/ui/button';
-import { ProjectCreationForm, useProjectAdmissionController } from './ProjectCreationForm';
+import { ProjectCreationForm } from './ProjectCreationForm';
+import {
+  useProjectAdmissionController,
+  type ProjectAdmissionCallbacks,
+} from './useProjectAdmissionController';
+import styles from './ProjectCreationDialog.module.css';
 
 type ProjectCreationDialogProps = Readonly<{
   open: boolean;
   onOpenChange: (open: boolean) => void;
   service?: ProjectOnboardingService;
-  activateCreatedProject?: (response: CreateProjectResponse) => Promise<void>;
+  activateCreatedProject?: ProjectAdmissionCallbacks['onProjectCreated'];
   returnFocusRef?: RefObject<HTMLElement>;
 }>;
 
@@ -38,13 +40,18 @@ export function ProjectCreationDialog({
   const workspaceScopeSelection = useWorkspaceScopeSelection();
   const controller = useProjectAdmissionController({
     service,
-    onProjectCreated: async (response) => {
+    active: open,
+    onProjectCreated: async (response, signal) => {
       if (activateCreatedProject) {
-        await activateCreatedProject(response);
+        await activateCreatedProject(response, signal);
       } else {
-        await activateProjectWorkspace(response.defaultWorkspace, { workspaceScopeSelection });
+        const publication = await activateProjectWorkspace(response.defaultWorkspace, {
+          workspaceScopeSelection,
+          signal,
+        });
+        publication.assertCurrent();
       }
-      onOpenChange(false);
+      if (!signal.aborted) onOpenChange(false);
     },
   });
   const { copy } = controller;
@@ -52,7 +59,7 @@ export function ProjectCreationDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] gap-0 overflow-y-auto border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default) sm:max-w-lg"
+        className={styles.content}
         closeLabel={copy.closeProjectDialogLabel}
         data-slot="project-creation-dialog"
         onCloseAutoFocus={(event) => {
@@ -60,27 +67,21 @@ export function ProjectCreationDialog({
           returnFocusRef?.current?.focus();
         }}
       >
-        <DialogHeader className="flex-row items-start gap-3 border-b border-(--border-muted) px-6 py-5 pr-14 text-left">
-          <span
-            aria-hidden="true"
-            className="flex size-9 shrink-0 items-center justify-center rounded-md border border-(--border-default) bg-(--surface-elevated) text-primary"
-            data-slot="project-creation-icon"
-          >
-            <FolderPlus className="size-5" />
+        <DialogHeader className={styles.header}>
+          <span aria-hidden="true" className={styles.iconFrame} data-slot="project-creation-icon">
+            <FolderPlus className={styles.icon} />
           </span>
-          <div className="grid min-w-0 gap-1">
-            <DialogTitle className="leading-6 text-(--text-strong)">
-              {copy.newProjectDialogTitle}
-            </DialogTitle>
-            <DialogDescription className="leading-5 text-(--text-muted)">
+          <div className={styles.heading}>
+            <DialogTitle className={styles.title}>{copy.newProjectDialogTitle}</DialogTitle>
+            <DialogDescription className={styles.description}>
               {copy.newProjectDialogDescription}
             </DialogDescription>
           </div>
         </DialogHeader>
         <ProjectCreationForm
           autoFocusProjectName
-          className="grid gap-0"
-          contentClassName="grid gap-4 px-6 py-5"
+          className={styles.form}
+          contentClassName={styles.fields}
           controller={controller}
           dataSlot="project-creation-form"
           leadingAction={
@@ -91,9 +92,7 @@ export function ProjectCreationDialog({
             </DialogClose>
           }
           renderActions={(actions) => (
-            <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4">
-              {actions}
-            </DialogFooter>
+            <DialogFooter className={styles.footer}>{actions}</DialogFooter>
           )}
           showCatalogStatus
           showProjectNameHelp

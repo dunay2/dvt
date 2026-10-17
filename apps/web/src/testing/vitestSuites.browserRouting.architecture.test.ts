@@ -570,7 +570,7 @@ describe('governed browser evidence routing', () => {
       ).toEqual([owner]);
     }
     expect(WEB_CYPRESS_SPECS.available).toHaveLength(32);
-    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(50);
+    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(51);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
 
@@ -612,9 +612,10 @@ describe('governed browser evidence routing', () => {
   });
 
   it.each([
+    'apps/web/cypress/e2e/shell/session-publication-lifecycle.cy.ts',
     'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
     'apps/web/cypress/support/startupReadiness.ts',
-  ])('admits exact startup evidence at the controlled runtime for %s', (path) => {
+  ])('admits exact shell evidence at the controlled runtime for %s', (path) => {
     const plan = resolveWebVitestChangedSuitePlan([path]);
     expect(plan.browserCommands.map(({ capability }) => capability)).toEqual(['controlled']);
     expect(plan.browserCommands[0]!.specPaths).toEqual(
