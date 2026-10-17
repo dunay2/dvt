@@ -19,31 +19,74 @@ type NetworkEvent = Readonly<{
   statusCode?: number;
 }>;
 
+type ProcessLogLocation = Readonly<{ processId: number; threadId: number; time: string }>;
+
+// Chromium M155 validation_errors.cc; NONE is not failure evidence.
+const validationErrorCodes = [
+  'VALIDATION_ERROR_MISALIGNED_OBJECT',
+  'VALIDATION_ERROR_ILLEGAL_MEMORY_RANGE',
+  'VALIDATION_ERROR_UNEXPECTED_STRUCT_HEADER',
+  'VALIDATION_ERROR_UNEXPECTED_ARRAY_HEADER',
+  'VALIDATION_ERROR_ILLEGAL_HANDLE',
+  'VALIDATION_ERROR_UNEXPECTED_INVALID_HANDLE',
+  'VALIDATION_ERROR_ILLEGAL_POINTER',
+  'VALIDATION_ERROR_UNEXPECTED_NULL_POINTER',
+  'VALIDATION_ERROR_ILLEGAL_INTERFACE_ID',
+  'VALIDATION_ERROR_UNEXPECTED_INVALID_INTERFACE_ID',
+  'VALIDATION_ERROR_MESSAGE_HEADER_INVALID_FLAGS',
+  'VALIDATION_ERROR_MESSAGE_HEADER_MISSING_REQUEST_ID',
+  'VALIDATION_ERROR_MESSAGE_HEADER_UNKNOWN_METHOD',
+  'VALIDATION_ERROR_DIFFERENT_SIZED_ARRAYS_IN_MAP',
+  'VALIDATION_ERROR_UNKNOWN_UNION_TAG',
+  'VALIDATION_ERROR_UNKNOWN_ENUM_VALUE',
+  'VALIDATION_ERROR_DESERIALIZATION_FAILED',
+  'VALIDATION_ERROR_MAX_RECURSION_DEPTH',
+] as const;
+type ValidationError = ProcessLogLocation &
+  Readonly<{ code: (typeof validationErrorCodes)[number] }>;
+
 export function projectChromiumProcessLog(text: string | undefined):
   | Readonly<{ state: 'unavailable' }>
   | Readonly<{
       state: 'observed';
-      networkServiceRestarts: readonly Readonly<{
-        processId: number;
-        threadId: number;
-        time: string;
-      }>[];
+      networkServiceRestarts: readonly ProcessLogLocation[];
+      validationErrors: readonly ValidationError[];
     }> {
   if (text === undefined) return { state: 'unavailable' };
-  const networkServiceRestarts = text.split(/\r?\n/u).flatMap((line) => {
+  const networkServiceRestarts: ProcessLogLocation[] = [];
+  const validationErrors: ValidationError[] = [];
+  for (const line of text.split(/\r?\n/u)) {
     const match =
-      /^\[(\d+):(\d+):(\d{4}\/\d{6}\.\d{6}):ERROR:(?:[A-Za-z0-9_./\\-]*[/\\])?network_service_instance_impl\.cc(?::\d+|\(\d+\))\] Network service crashed or was terminated, restarting service\.$/u.exec(
+      /^\[(\d+):(\d+):(\d{4}\/\d{6}\.\d{6}):ERROR:([A-Za-z0-9_./\\-]+\.cc)(?::\d+|\(\d+\))\] (.*)$/u.exec(
         line
       );
     if (
       match === null ||
       !Number.isSafeInteger(Number(match[1])) ||
-      !Number.isSafeInteger(Number(match[2]))
+      !Number.isSafeInteger(Number(match[2])) ||
+      Number(match[1]) <= 0 ||
+      Number(match[2]) <= 0
     )
-      return [];
-    return [{ processId: Number(match[1]), threadId: Number(match[2]), time: match[3] }];
-  });
-  return { state: 'observed', networkServiceRestarts };
+      continue;
+    const location = { processId: Number(match[1]), threadId: Number(match[2]), time: match[3] };
+    const source = match[4].replace(/\\/gu, '/');
+    if (
+      /^(?:[A-Za-z0-9_./-]*\/)?network_service_instance_impl\.cc$/u.test(source) &&
+      match[5] === 'Network service crashed or was terminated, restarting service.'
+    ) {
+      networkServiceRestarts.push(location);
+    } else if (
+      source === 'validation_errors.cc' ||
+      source === 'mojo/public/cpp/bindings/lib/validation_errors.cc'
+    ) {
+      const validation = /^Invalid message: (VALIDATION_ERROR_[A-Z_]+)(?: \([^\r\n]*\))?$/u.exec(
+        match[5]
+      );
+      const code = validationErrorCodes.find((candidate) => candidate === validation?.[1]);
+      if (code !== undefined) validationErrors.push({ ...location, code });
+    }
+  }
+  return { state: 'observed', networkServiceRestarts, validationErrors };
 }
 
 function record(value: unknown): Record<string, unknown> | null {

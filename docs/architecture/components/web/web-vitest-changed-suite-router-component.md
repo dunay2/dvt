@@ -535,14 +535,42 @@ owns hooks and lifetime; the pure mapper owns disclosure policy.
 The spec timestamp is a correlation marker, not a claim that all retained events
 belong to that spec: the final projection may also contain subsequent activity.
 
-An additional private Chrome process log admits only the exact network-service
-restart signal with numeric process/thread identifiers and its timestamp. A
-missing process log is explicitly unavailable; absence of a matched signal does
-not prove absence of a restart. Raw text and arbitrary errors are never exported.
+An additional private Chrome process log admits the exact network-service restart
+signal and known Mojo validation error codes with numeric process/thread identifiers
+and its timestamp. A missing process log is explicitly unavailable; empty observed
+arrays do not prove absence of a restart or validation failure. Raw text and
+arbitrary errors are never exported.
 Both raw logs and private observations remain outside artifact publication and
 are removed at native completion, including rejection paths. Malformed or
 unreadable captures still fail explicitly. Test error/result payloads are never
 serialized. This repairs evidence lifecycle, not a demonstrated transport cause.
+
+Design `GH-3604-CHROMIUM-VALIDATION-EVIDENCE` reuses this mapper and lifecycle:
+
+```mermaid
+flowchart LR
+  Log[Existing private Chromium process log] --> Mapper[Exact source and closed code allowlist]
+  Mapper --> Restarts[Existing restart records]
+  Mapper --> Validation[Validation code; PID; TID; time]
+  Restarts --> Artifact[Existing sanitized artifact]
+  Validation --> Artifact
+  Log --> Cleanup[Existing native-completion cleanup]
+```
+
+Only an `ERROR` from `validation_errors.cc` or its canonical
+`mojo/public/cpp/bindings/lib/validation_errors.cc` path with the complete
+`Invalid message` format admits a validation record. The allowlist is the 18
+non-`NONE` codes in Chromium M155's
+[validation error mapper](https://chromium.googlesource.com/chromium/src/+/refs/branch-heads/8059/mojo/public/cpp/bindings/lib/validation_errors.cc#112).
+Optional parenthesized descriptions are discarded, never captured as evidence.
+Unknown codes, partial matches, other files/severities and unsafe identifiers
+remain unrecognized. A record identifies the logging process, not the offending
+remote process or a proven cause of termination. Chromium's
+[known-dead status path](https://chromium.googlesource.com/chromium/src/+/refs/branch-heads/8059/base/process/kill_posix.cc#82)
+also sends SIGKILL; generation can follow an earlier disconnection. Absence of a
+validation record cannot exclude another bad-message path. This adds no flags,
+tracer, retry or alternate browser. The existing projection/privacy and native
+publication/cleanup tests own this additive artifact contract.
 
 The real capture can end before its JSON footer when Cypress terminates Chrome.
 The maintained `jsonc-parser` development dependency decodes complete observed

@@ -95,6 +95,11 @@ test('exports projected evidence and removes only its own capture', () => {
       events: [{ type: 1, source: { id: 3 }, params: { net_error: -2, body: 'private' } }],
     })
   );
+  const processLog = path.join(path.dirname(raw), 'process.log');
+  fs.writeFileSync(
+    processLog,
+    '[21:34:1017/093012.123456:ERROR:validation_errors.cc(125)] Invalid message: VALIDATION_ERROR_UNKNOWN_ENUM_VALUE (Authorization: Bearer private)\n'
+  );
   try {
     item.binding.afterRun();
     assert.equal(fs.existsSync(raw), false);
@@ -103,6 +108,15 @@ test('exports projected evidence and removes only its own capture', () => {
     const report = fs.readFileSync(path.join(evidence, fs.readdirSync(evidence)[0]), 'utf8');
     assert.doesNotMatch(report, /private|body/);
     assert.equal(JSON.parse(report).events[0].netError, -2);
+    assert.deepEqual(JSON.parse(report).processLog.validationErrors, [
+      {
+        processId: 21,
+        threadId: 34,
+        time: '1017/093012.123456',
+        code: 'VALIDATION_ERROR_UNKNOWN_ENUM_VALUE',
+      },
+    ]);
+    assert.equal(fs.existsSync(processLog), false);
   } finally {
     assert.ok(path.resolve(item.projectRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
     fs.rmSync(item.projectRoot, { recursive: true });
