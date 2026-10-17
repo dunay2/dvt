@@ -16,7 +16,7 @@ import {
 import { jcsCanonicalize } from '@dvt/crypto';
 
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
-import type { LocalDataAuthorizationLease } from '../../application/services/localDataAuthorizationLease.js';
+import type { ILocalDataOperationAccess } from '../../application/ports/localDataPlane.js';
 
 import type { DuckDbLocalDataRuntime } from './DuckDbLocalDataRuntime.js';
 import {
@@ -29,7 +29,6 @@ import {
   type GenerationFailure, type GenerationLimits,
 } from './duckDbGenerationProfile.js';
 
-type Access = Pick<LocalDataAuthorizationLease, 'checkpoint' | 'beforePromotion' | 'signal'>;
 type BeginInput = Readonly<{ localDatasetId: string; captureId: string; request: unknown; expectedHeadGenerationId: string | null }>;
 type Receipt = Readonly<{ disposition: 'published' | 'already_published'; generation: LocalDataGenerationManifestV1 }>;
 
@@ -37,11 +36,11 @@ type Receipt = Readonly<{ disposition: 'published' | 'already_published'; genera
 export class DuckDbGenerationStore {
   private readonly scope: WorkspaceStorageScope;
   private readonly scopeJson: string;
-  private readonly access: Access;
+  private readonly access: ILocalDataOperationAccess;
   private readonly limits: GenerationLimits;
 
   public constructor(private readonly runtime: DuckDbLocalDataRuntime, scope: WorkspaceStorageScope,
-                     access: Access, limits: GenerationLimits) {
+                     access: ILocalDataOperationAccess, limits: GenerationLimits) {
     if ([scope.tenantId, scope.projectId, scope.environmentId].some(v => typeof v !== 'string' || !v.length || v !== v.trim())) {
       throw new DuckDbGenerationError('INVALID_INPUT');
     }

@@ -20,3 +20,14 @@ export interface ILocalDataGenerationReader {
     selection: Extract<DataAccessSelection, { mode: 'local' }>
   ): Promise<LocalDataGenerationManifestV1 | null>;
 }
+
+/**
+ * Narrow application-owned checkpoint port shared by the source and local store.
+ * Implementations revalidate the current operation; beforePromotion additionally
+ * requires capture permission. This is not a grant, token or commit certificate.
+ */
+export interface ILocalDataOperationAccess {
+  readonly signal: AbortSignal;
+  checkpoint(): Promise<void>;
+  beforePromotion(): Promise<void>;
+}

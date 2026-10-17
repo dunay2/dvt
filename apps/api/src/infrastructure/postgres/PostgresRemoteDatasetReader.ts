@@ -10,8 +10,8 @@ import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import { Client, type QueryResult } from 'pg';
 import Cursor from 'pg-cursor';
 
-import type { WarehouseSourceDataSampleProbeTarget } from '../../application/ports/warehouseSourceImport.js';
-import type { LocalDataAuthorizationLease } from '../../application/services/localDataAuthorizationLease.js';
+import type { WarehouseSourceObjectProbeTarget } from '../../application/ports/warehouseSourceImport.js';
+import type { ILocalDataOperationAccess } from '../../application/ports/localDataPlane.js';
 import { validateGenerationLimits, type GenerationLimits } from '../duckdb/duckDbGenerationProfile.js';
 import { assertPostgresWarehouseDatabase } from '../warehouseSourceImport/assertPostgresWarehouseDatabase.js';
 
@@ -23,9 +23,7 @@ import {
 import { createPostgresLocalDataBatchCodec } from './postgresLocalDataBatchCodec.js';
 import { PostgresDatasetReadError, PostgresPullCursor, type PostgresDatasetCursor } from './PostgresRemoteDatasetCursor.js';
 
-type Target = Omit<WarehouseSourceDataSampleProbeTarget, 'limit'>;
-type Access = Pick<LocalDataAuthorizationLease, 'beforePromotion' | 'checkpoint' | 'signal'>;
-type Input = Readonly<{ target: Target; access: Access; limits: GenerationLimits; timeoutMs: number }>;
+type Input = Readonly<{ target: WarehouseSourceObjectProbeTarget; access: ILocalDataOperationAccess; limits: GenerationLimits; timeoutMs: number }>;
 type Column = { attnum: number; name: string; oid: number; nullable: boolean };
 
 export class PostgresRemoteDatasetReader {

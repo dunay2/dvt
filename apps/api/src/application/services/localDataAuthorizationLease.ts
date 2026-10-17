@@ -18,6 +18,8 @@ import {
   type RequestedScope,
 } from '../ports/accessDecision.js';
 
+import type { ILocalDataOperationAccess } from '../ports/localDataPlane.js';
+
 import type { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
 
 export type LocalDataOperation = 'view' | 'capture' | 'delete';
@@ -58,7 +60,7 @@ const ACTIONS = Object.freeze({
 });
 
 /** Server-owned in-memory guard, not an authorization token or a serializable grant. */
-export class LocalDataAuthorizationLease {
+export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
   readonly #principal: AuthenticatedPrincipal;
   readonly #scope: EnvironmentAccessScope;
   readonly #requestId: string;
