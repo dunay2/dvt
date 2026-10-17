@@ -21,7 +21,6 @@ import {
   type WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
-import { z } from 'zod';
 
 import { EnvironmentId, ProjectId, TenantId, type AuthenticatedPrincipal } from '../../domain/auth/types.js';
 import { buildEnvironmentAccessScope } from '../ports/accessDecision.js';
@@ -40,15 +39,32 @@ import type { IWarehouseConnectionCatalog, WarehouseSourceObjectProbeTarget } fr
 import type { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
 import { LocalDataAuthorizationLease } from './localDataAuthorizationLease.js';
 
-const CommandSchema = z.object({
-  localDatasetId: LocalDatasetIdV1Schema,
-  captureId: LocalDataCaptureIdV1Schema,
-  sourceRef: ConnectedSourceRefSchema,
-  policy: LocalDataAcquisitionPolicyV1Schema,
-  expectedHeadGenerationId: LocalDataGenerationIdV1Schema.nullable(),
-  expectedPublicationToken: z.string().regex(/^[0-9a-f]{64}$/u).optional(),
-}).strict();
-type Command = z.infer<typeof CommandSchema>;
+// Compose public validators by their parse boundary, not by mixing package-local Zod majors.
+function parseCommand(input: unknown) {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    throw new LocalDataCaptureError('INVALID_INPUT');
+  }
+  const value = input as Record<string, unknown>;
+  const fields = ['localDatasetId', 'captureId', 'sourceRef', 'policy', 'expectedHeadGenerationId', 'expectedPublicationToken'];
+  if (Object.keys(value).some(key => !fields.includes(key))) throw new LocalDataCaptureError('INVALID_INPUT');
+  const token = value.expectedPublicationToken;
+  if (token !== undefined && (typeof token !== 'string' || !/^[0-9a-f]{64}$/u.test(token))) {
+    throw new LocalDataCaptureError('INVALID_INPUT');
+  }
+  try {
+    return {
+      localDatasetId: LocalDatasetIdV1Schema.parse(value.localDatasetId),
+      captureId: LocalDataCaptureIdV1Schema.parse(value.captureId),
+      sourceRef: ConnectedSourceRefSchema.parse(value.sourceRef),
+      policy: LocalDataAcquisitionPolicyV1Schema.parse(value.policy),
+      expectedHeadGenerationId: LocalDataGenerationIdV1Schema.nullable().parse(value.expectedHeadGenerationId),
+      ...(token === undefined ? {} : { expectedPublicationToken: token }),
+    };
+  } catch {
+    throw new LocalDataCaptureError('INVALID_INPUT');
+  }
+}
+type Command = ReturnType<typeof parseCommand>;
 type Context = Readonly<{ principal: AuthenticatedPrincipal; scope: WorkspaceGraphDraftScope; requestId: string }>;
 type Dependencies = Readonly<{
   authorizer: Pick<AuthorizeCommandScopeService, 'authorizeMany'>;
@@ -90,12 +106,11 @@ export class CaptureLocalDatasetUseCase {
   }
 
   public async execute(input: unknown, context: Context, callerSignal?: AbortSignal): Promise<LocalDataCaptureReceipt> {
-    const parsed = CommandSchema.safeParse(input);
+    const command = parseCommand(input);
     const parsedScope = WorkspaceGraphDraftScopeSchema.safeParse(context.scope);
-    if (!parsed.success || !parsedScope.success || typeof context.requestId !== 'string' || !context.requestId.trim()) {
+    if (!parsedScope.success || typeof context.requestId !== 'string' || !context.requestId.trim()) {
       throw new LocalDataCaptureError('INVALID_INPUT');
     }
-    const command = parsed.data;
     const scope = Object.freeze(parsedScope.data);
     if (command.policy.kind === 'sample' && BigInt(command.policy.requestedRows) > BigInt(this.deps.limits.maxRows)) {
       throw new LocalDataCaptureError('CAPTURE_BUDGET');
