@@ -372,6 +372,19 @@ jobs:
       - name: Run adapter-postgres full suite
         run: pnpm test:adapter-postgres
 
+      - name: Build LOCAL source acquisition proof dependencies
+        run: node scripts/run-turbo-workspace-task.cjs build --filter=dvt-api
+
+      - name: Prove PostgreSQL cursor to native DuckDB acquisition
+        working-directory: apps/api
+        run: >-
+          node --require ../../scripts/local-data-private-creation.cjs
+          ../../node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts
+          test/integration/postgresLocalDataAcquisition.proof.ts
+        env:
+          DVT_LOCAL_DATA_TEST_ADMIN_URL: ${{ env.DVT_PG_ADMIN_URL }}
+          DVT_LOCAL_DATA_TEST_READ_URL: ${{ env.DVT_PG_RLS_URL }}
+
   coverage:
     name: Engine Coverage Gate
     runs-on: ubuntu-latest

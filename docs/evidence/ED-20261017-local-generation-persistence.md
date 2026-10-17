@@ -113,3 +113,35 @@ typecheck, lint/format, security/ARC, prepush and human review remain pending.
 No workflow, dependency, lockfile, permission, threshold or LOCAL flag changes
 are part of #3394-A. Raw-text fixtures and local native writes do not establish
 PostgreSQL cursor behavior, source privileges, EOF or end-to-end backpressure.
+
+## #3394-B source boundary candidate
+
+Base `79c63c035840d2b3ca16f353017c4dbd41a86b93`, issue design
+[#3394 comment](https://github.com/dunay2/dvt/issues/3394#issuecomment-6241155973).
+The source reader, sequential state and shared relation helper extend the
+existing bulk codec and Store. No public capture route is composed.
+
+Pinned `pg-cursor@2.15.3` and `@types/pg-cursor@2.7.2` were generated with normal
+pnpm commands in [preparation run 39070207147](https://github.com/dunay2/dvt/actions/runs/39070207147).
+Existing native-package libc metadata was preserved, the parsed original lock
+was compared after excluding only the two added dependencies, and a frozen
+install left the resulting lock hash unchanged. The preparation workflow lives
+only on its isolated auxiliary branch and is not in this product candidate.
+
+Local: five new TypeScript files transpiled without syntax diagnostics using
+TypeScript 5.8.3; 15 pure pull-state tests passed using transpiled copies and
+node:test. These are not semantic typecheck, Vitest, PostgreSQL or DuckDB proof.
+
+The added real proof uses the existing CI PostgreSQL service, an independently
+verified non-superuser/non-BYPASSRLS reader, and native DuckDB private storage.
+It fails without explicit loopback `dvt_test` URLs. The test creates and drops
+only its uniquely named fixture schema. Cases cover 2053 rows, exact bigint,
+RLS/SELECT/token, snapshot mutation, EOF/target/budgets, close/error/abort, source
+timeout, identifier quoting, and unchanged real Preview. Publication occurs
+only after source closure in the fixture. The capture lease/revision fingerprint
+in that fixture is not production command composition or external grant proof.
+
+Hosted results for this candidate are pending at publication; tests omitted by
+the ordinary API integration profile cannot be counted as executed. Record
+exact head, technical merge SHA and job URLs in the PR and governing issue.
+Full CI, source/test typecheck, lint, security, ARC and prepush remain required.

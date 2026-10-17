@@ -169,3 +169,50 @@ Use the existing API build and `test:ci` scripts with the explicit private start
 policy from #3675. Full repository prepush/security/ARC and human review remain
 required before integration. Lifecycle and exact evidence are tracked in GitHub
 #3393 and #3394.
+
+## PostgreSQL scoped cursor (#3394-B candidate)
+
+`PostgresRemoteDatasetReader.withCursor` is an internal adapter, not a new HTTP
+command or Preview transport. Trusted composition must bind the connection
+reference, object, principal, scope and capture lease. `beforePromotion` admits
+only a capture lease; the existing shared relation helper additionally verifies
+PostgreSQL SELECT and any expected publication token. Preview reuses that same
+helper without changing its query, limit or display-safe serialization.
+
+```text
+trusted binding + capture lease
+ -> read-only REPEATABLE READ transaction
+ -> ACCESS SHARE relation lock -> catalog/OID/type preflight
+ -> pg-cursor (positional raw text, query-local parsers)
+ -> read one bounded batch -> existing exact codec -> await Store.append
+ -> next pull or explicit caller target
+ -> close cursor -> commit/rollback source -> close client
+ -> only then construct verified completion and promote READY
+```
+
+The first source profile is one ordinary, non-partitioned PostgreSQL table with
+no descendants, selected with ONLY. OIDs int8/bool/text/varchar map to the
+existing BIGINT/BOOLEAN/VARCHAR staging profile. Unsupported types and physical
+metadata drift fail before delivering values; no Date/Number/Preview round trip.
+Schema names and columns come from resolved catalog metadata and use quoted
+identifiers. No arbitrary SQL, cursor handles or secrets reach the consumer.
+
+A single pull is allowed at a time. Any invalid, concurrent, failed or abandoned
+pull prevents successful closure even if its caller catches the error. Short
+fetches prove EOF relative to the transaction's visible rows. A full-sized batch
+does not prove EOF. At the safety row ceiling one non-persisted sentinel can
+distinguish exhaustion from budget failure. FIRST N can stop early without a
+COUNT or further fetch; it is never relabeled FULL.
+
+RLS is enforced by the actual source role. A full visible scan does not prove
+completeness outside that role's policy or cross-system temporal consistency.
+`observedAt` is the reader's observation timestamp, not a global snapshot token.
+The callback must await destination writes; the adapter does not itself publish
+a generation or retry ambiguous writes. Closing a failed source cannot undo
+already committed staging batches, which must remain unpublished.
+
+Cancellation/revalidation is cooperative at batch/await checkpoints, with
+server statement/lock/idle-transaction timeouts and a finite connection timeout.
+This is not a hard deadline on a hung callback/authorizer or native DuckDB call.
+Caps after decoding limit accepted batches, not a single oversized PostgreSQL
+value or total process RSS. Workspace admission/retention remains #3398.

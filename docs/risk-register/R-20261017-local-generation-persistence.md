@@ -76,3 +76,23 @@ by treating fixture-to-DuckDB tests as PostgreSQL end-to-end tests.
 Existing per-capture budgets and READY/CAS semantics remain unchanged. Scope and
 principal binding still require the protected composition root. The Draft API
 job and any skipped security/provider checks do not establish merge acceptance.
+
+## #3394-B PostgreSQL reader residual risks
+
+- Internal composition must bind source credentials and scope to the capture
+  authorization lease. A structural checkpoint fixture is not an authorization
+  token. PostgreSQL role policy and DVT permissions are different authorities.
+- Lock + read-only REPEATABLE READ stabilizes one admitted relation's source
+  transaction; it does not provide a global snapshot or unrestricted RLS coverage.
+- A long snapshot may retain source row versions. Duration is bounded at known
+  checkpoints and by server statement/idle limits, not by a hard watchdog on
+  arbitrary consumer/authorizer promises. Mid-query abort is cooperative.
+- Row/byte limits apply to accepted decoded data, not to PostgreSQL wire buffers,
+  one huge field, DuckDB RSS or workspace disk. Host quotas remain #3398.
+- Only int8/bool/text/varchar are admitted. Other tables fail explicitly; this
+  is not a general production connector or full #3394 acceptance.
+- Source cleanup failure prevents successful completion. Staging written before
+  that failure remains unpublished and must be reconciled/cleaned by its owner.
+- The native integration fixture does not establish a public capture command,
+  provider EOF attestation across crashes, reauthorization/COMMIT atomicity,
+  Preview LOCAL, or a hard real-time interruption guarantee.
