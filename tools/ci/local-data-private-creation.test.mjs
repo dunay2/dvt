@@ -7,6 +7,12 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import {
+  assertRepositoryCommandCatalogCoverage,
+  buildRepositoryCommandCatalog,
+  classifyScriptFilePath,
+} from './repository-command-catalog.mjs';
+
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const preload = path.join(root, 'scripts/local-data-private-creation.cjs');
 const api = JSON.parse(readFileSync(path.join(root, 'apps/api/package.json'), 'utf8'));
@@ -117,4 +123,26 @@ test('the preload has no read/reset umask, filesystem repairs, configuration, or
   assert.match(source, /if \(process\.platform !== 'win32' && isMainThread\)/u);
   assert.match(source, /process\.umask\(0o077\)/u);
   assert.doesNotMatch(source, /process\.umask\(\s*\)|chmod|unlink|rmSync|process\.env\.|@duckdb|@dvt/u);
+});
+
+
+test('only the explicit LOCAL bootstrap receives runtime capability classification', () => {
+  const admitted = 'scripts/local-data-private-creation.cjs';
+  const classification = classifyScriptFilePath(admitted);
+  assert.equal(classification.domain, 'runtime-capability');
+  assert.equal(classification.sensitivity, 'capability');
+  assert.equal(classification.changedFileValidationRelevant, true);
+  assert.doesNotThrow(() =>
+    assertRepositoryCommandCatalogCoverage(buildRepositoryCommandCatalog({}, [admitted]))
+  );
+  for (const unknown of [
+    'scripts/local-data-private-creation-copy.cjs',
+    'scripts/local-data-private-creation.js',
+    'scripts/unclassified-bootstrap.cjs',
+  ]) {
+    assert.equal(classifyScriptFilePath(unknown).domain, 'unknown');
+    assert.throws(() =>
+      assertRepositoryCommandCatalogCoverage(buildRepositoryCommandCatalog({}, [unknown]))
+    );
+  }
 });
