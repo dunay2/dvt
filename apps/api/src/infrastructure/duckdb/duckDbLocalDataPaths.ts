@@ -54,7 +54,7 @@ async function inspectDirectory(directory: string, privateDirectory = false): Pr
   const entry = await lstat(directory);
   if (entry.isSymbolicLink()) throw new LocalDataStorageBoundaryError('symlink_unsupported');
   if (!entry.isDirectory()) throw new LocalDataStorageBoundaryError('not_directory');
-  if (privateDirectory && (entry.uid !== process.geteuid!() || (entry.mode & 0o777) !== 0o700)) {
+  if (privateDirectory && (entry.uid !== process.geteuid!() || (entry.mode & 0o7777) !== 0o700)) {
     throw new LocalDataStorageBoundaryError('permissions_unsafe');
   }
   return entry;
@@ -119,15 +119,20 @@ async function ensurePrivateDirectory(directory: string): Promise<void> {
   }
 }
 
-async function inspectDatabaseEntry(filename: string): Promise<void> {
+async function inspectDatabaseEntry(filename: string, required = false): Promise<Stats | undefined> {
   try {
     const entry = await lstat(filename);
     if (entry.isSymbolicLink()) throw new LocalDataStorageBoundaryError('symlink_unsupported');
     if (!entry.isFile() || entry.nlink !== 1 || entry.uid !== process.geteuid!()) {
       throw new LocalDataStorageBoundaryError('unsafe_file');
     }
+    if ((entry.mode & 0o7777) !== 0o600) {
+      throw new LocalDataStorageBoundaryError('permissions_unsafe');
+    }
+    return entry;
   } catch (error) {
-    if (!hasCode(error, 'ENOENT')) throw error;
+    if (required || !hasCode(error, 'ENOENT')) throw error;
+    return undefined;
   }
 }
 
@@ -157,5 +162,78 @@ export async function prepareDuckDbWorkspacePaths(
     return Object.freeze({ directory, database, temporary });
   } catch (error) {
     rejectIo(error);
+  }
+}
+
+type FileIdentity = Readonly<{ device: number; inode: number }>;
+
+/** Infrastructure-only physical identity; never an authorization or generation token. */
+export type DuckDbWorkspaceIdentity = Readonly<{
+  directory: string;
+  root: FileIdentity;
+  namespace: FileIdentity;
+  workspace: FileIdentity;
+  database: FileIdentity;
+  temporary: FileIdentity;
+}>;
+
+function fileIdentity(entry: Stats): FileIdentity {
+  return Object.freeze({ device: entry.dev, inode: entry.ino });
+}
+
+/** Verify an already-open workspace without mkdir, chmod, unlink or native access. */
+export async function readDuckDbWorkspaceIdentity(
+  configuration: Extract<LocalDataConfiguration, { kind: 'configured' }>,
+  scope: WorkspaceStorageScope
+): Promise<DuckDbWorkspaceIdentity> {
+  let directory: string;
+  try {
+    directory = resolveWorkspaceScopeStorageRoot(configuration.root, scope);
+  } catch {
+    throw new LocalDataStorageBoundaryError('invalid_scope');
+  }
+  await validateDuckDbLocalDataRoots(configuration);
+  try {
+    const root = await inspectDirectory(configuration.root, true);
+    const namespace = await inspectDirectory(path.dirname(directory), true);
+    const workspace = await inspectDirectory(directory, true);
+    const temporary = await inspectDirectory(path.join(directory, 'temp'), true);
+    if ((await realpath(directory)) !== directory) {
+      throw new LocalDataStorageBoundaryError('unsafe_path');
+    }
+    const databasePath = path.join(directory, 'workspace.duckdb');
+    const database = await inspectDatabaseEntry(databasePath, true);
+    if (database === undefined) throw new LocalDataStorageBoundaryError('not_found');
+    // WAL may appear/disappear with writes/checkpoints. Validate it if present, but never pin its inode.
+    await inspectDatabaseEntry(`${databasePath}.wal`);
+    return Object.freeze({
+      directory,
+      root: fileIdentity(root),
+      namespace: fileIdentity(namespace),
+      workspace: fileIdentity(workspace),
+      database: fileIdentity(database),
+      temporary: fileIdentity(temporary),
+    });
+  } catch (error) {
+    rejectIo(error);
+  }
+}
+
+/** Detect replacement at session boundaries; pathname checks are not an atomic native-open sandbox. */
+export async function validateDuckDbWorkspaceIdentity(
+  configuration: Extract<LocalDataConfiguration, { kind: 'configured' }>,
+  scope: WorkspaceStorageScope,
+  expected: DuckDbWorkspaceIdentity
+): Promise<void> {
+  const actual = await readDuckDbWorkspaceIdentity(configuration, scope);
+  const roles = ['root', 'namespace', 'workspace', 'database', 'temporary'] as const;
+  if (
+    actual.directory !== expected.directory ||
+    roles.some(
+      (role) =>
+        actual[role].device !== expected[role].device || actual[role].inode !== expected[role].inode
+    )
+  ) {
+    throw new LocalDataStorageBoundaryError('unsafe_file');
   }
 }
