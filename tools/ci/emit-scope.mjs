@@ -8,6 +8,7 @@ import {
   setGitHubOutput,
 } from './scope-config.mjs';
 import { buildCiScopeOutputs } from './ci-scope-outputs.mjs';
+import { parseScopeArguments } from './scope-arguments.mjs';
 
 function ensureGitCommitAvailable(ref) {
   if (!ref) return;
@@ -25,9 +26,9 @@ function ensureGitCommitAvailable(ref) {
 }
 
 export async function main() {
-  if (process.argv.length > 2) throw new TypeError('SCOPE_ARGUMENTS_NOT_SUPPORTED');
+  const { full: requestedFull } = parseScopeArguments(process.argv.slice(2));
   const eventName = process.env.GITHUB_EVENT_NAME ?? '';
-  const full = !isPullRequestEvent(eventName);
+  const full = requestedFull || !isPullRequestEvent(eventName);
   let changedFiles = [];
   let scopeContext = {};
   if (!full) {

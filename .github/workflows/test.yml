@@ -2,7 +2,8 @@ name: Test Suite
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+    types:
+      [opened, synchronize, reopened, ready_for_review, converted_to_draft, labeled, unlabeled]
   push:
     branches: [main]
   workflow_dispatch:
@@ -21,7 +22,11 @@ jobs:
     name: Detect package test matrix
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
+    if: >-
+      !(github.event_name == 'pull_request' && github.event.pull_request.draft) ||
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == true &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'ci:validate-draft'))
     outputs:
       any_tests: ${{ steps.scope.outputs.any_tests }}
       matrix: ${{ steps.scope.outputs.test_matrix }}
@@ -47,7 +52,11 @@ jobs:
 
       - name: Emit test scope outputs
         id: scope
-        run: node tools/ci/emit-scope.mjs
+        run: >-
+          node tools/ci/emit-scope.mjs ${{ github.event_name == 'pull_request' &&
+          github.event.pull_request.draft == true &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          contains(github.event.pull_request.labels.*.name, 'ci:validate-draft') && '--full' || '' }}
         env:
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
@@ -90,7 +99,10 @@ jobs:
     timeout-minutes: 20
     needs: [detect_test_matrix]
     if: >-
-      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (!(github.event_name == 'pull_request' && github.event.pull_request.draft) ||
+       (github.event_name == 'pull_request' && github.event.pull_request.draft == true &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'ci:validate-draft'))) &&
       (github.event_name != 'pull_request' ||
        needs.detect_test_matrix.outputs.adapter_temporal == 'true' ||
        needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
@@ -124,7 +136,10 @@ jobs:
     timeout-minutes: 25
     needs: [detect_test_matrix]
     if: >-
-      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (!(github.event_name == 'pull_request' && github.event.pull_request.draft) ||
+       (github.event_name == 'pull_request' && github.event.pull_request.draft == true &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'ci:validate-draft'))) &&
       (github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.web == 'true' ||
        needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
     strategy:
@@ -363,7 +378,10 @@ jobs:
     timeout-minutes: 15
     needs: [detect_test_matrix]
     if: >-
-      !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
+      (!(github.event_name == 'pull_request' && github.event.pull_request.draft) ||
+       (github.event_name == 'pull_request' && github.event.pull_request.draft == true &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(github.event.pull_request.labels.*.name, 'ci:validate-draft'))) &&
       (github.event_name != 'pull_request' ||
        needs.detect_test_matrix.outputs.coverage_relevant == 'true')
     steps:
@@ -419,26 +437,34 @@ jobs:
             const failures = [];
             const isPr = context.eventName === 'pull_request';
             const draft = isPr && context.payload.pull_request?.draft === true;
-            const full = ['push', 'workflow_dispatch'].includes(context.eventName);
+            const repository = context.payload.repository?.full_name;
+            const labels = context.payload.pull_request?.labels;
+            const validateDraft = draft && typeof repository === 'string' && repository.length > 0 &&
+              context.payload.pull_request?.head?.repo?.full_name?.toLowerCase() === repository.toLowerCase() &&
+              Array.isArray(labels) && labels.some((label) =>
+                typeof label?.name === 'string' && label.name.toLowerCase() === 'ci:validate-draft');
+            const skipDraft = draft && !validateDraft;
+            const full = validateDraft || ['push', 'workflow_dispatch'].includes(context.eventName);
             if (!isPr && !full) failures.push(`Unsupported event: ${context.eventName}`);
             if (isPr && typeof context.payload.pull_request?.draft !== 'boolean') {
               failures.push('Missing pull-request draft posture');
             }
             const scope = jobs.detect_test_matrix?.outputs ?? {};
-            if (!draft) {
+            if (!skipDraft) {
               for (const key of ['any_tests', 'adapter_temporal', 'web',
                 'root_build_sensitive', 'postgres_capability_changed', 'coverage_relevant']) {
                 if (!['true', 'false'].includes(scope[key])) failures.push(`Invalid scope: ${key}`);
+                if (validateDraft && scope[key] !== 'true') failures.push(`Incomplete full scope: ${key}`);
               }
             }
             const root = scope.root_build_sensitive === 'true';
             const required = {
-              detect_test_matrix: !draft,
-              'package-tests': !draft && (full || scope.any_tests === 'true'),
-              'adapter-temporal': !draft && (full || root || scope.adapter_temporal === 'true'),
-              'web-frontend-tests': !draft && (full || root || scope.web === 'true'),
-              'adapter-postgres': !draft && (full || scope.postgres_capability_changed === 'true'),
-              coverage: !draft && (full || scope.coverage_relevant === 'true'),
+              detect_test_matrix: !skipDraft,
+              'package-tests': !skipDraft && (full || scope.any_tests === 'true'),
+              'adapter-temporal': !skipDraft && (full || root || scope.adapter_temporal === 'true'),
+              'web-frontend-tests': !skipDraft && (full || root || scope.web === 'true'),
+              'adapter-postgres': !skipDraft && (full || scope.postgres_capability_changed === 'true'),
+              coverage: !skipDraft && (full || scope.coverage_relevant === 'true'),
             };
             for (const [name, selected] of Object.entries(required)) {
               const expected = selected ? 'success' : 'skipped';
