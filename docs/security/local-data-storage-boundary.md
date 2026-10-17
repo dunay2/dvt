@@ -52,6 +52,55 @@ future consumers must authorize before lookup and obey cancellation. This cut
 adds no product route, acquisition, generation persistence, user SQL or LOCAL flag.
 The native external-access/extension/secret configuration is not widened.
 
+## Explicit private creation entrypoint — candidate 3392-D
+
+The integrated run of #3674 (`997e60f2286d`) failed sixteen native tests after
+DB creation: the existing guard correctly rejected non-0600 files. DuckDB
+v1.5.6's POSIX file opener requests mode 0666 unless the private-file flag is set.
+This slice makes the process-start creation policy explicit; it does not weaken
+the storage guard or infer a permission option from the Node API.
+
+For the already-built API, use `pnpm --dir apps/api start:local` with the normal
+LOCAL configuration. This invokes Node with
+`--require ../../scripts/local-data-private-creation.cjs` **before** application
+modules are loaded. The preload sets 0077 once on the main thread; worker threads
+and child processes inherit it. It is never an application/session import, never
+a temporary mask switch, and never restores a permissive mask. It does not call
+the deprecated no-argument `process.umask()` getter. Failure to set the mask fails
+startup; Windows still relies on the existing enabled-LOCAL rejection, not a
+claim that this verifies ACLs.
+
+```text
+explicit private entrypoint -> set 0077 before application/native load
+                           -> existing DuckDB create -> exact 0600/0700 checks
+                           -> existing per-session physical validation
+```
+
+The ordinary `start` and `dev` commands and the feature's default OFF remain
+unchanged. Custom launchers must provide an equivalent policy before starting
+the process (for example an operator-configured service `UMask=0077`). This is a
+precondition, not automatic repair of already-permissive DB/WAL or native files.
+Default/inherited directory ACLs and mount policy still require operator review;
+the runtime continues to check the actual resulting modes, owner and containment.
+
+**Compatibility:** the selected policy applies to ALL newly created files,
+directories and child processes of this API, including logs and workspace
+artifacts, not just DuckDB. Deployments that require shared group-readable
+artifacts must reconcile that requirement before choosing this entrypoint.
+No mode of any existing file is changed and LOCAL is not enabled by the command.
+The API unit and integration runners explicitly choose this same launch policy;
+assertions requiring unsafe existing modes must establish and verify those modes,
+not assume that a requested creation mode overrides a private mask.
+
+`DuckDbFileCreationPolicy.test.ts` measures actual native DB/WAL modes in isolated
+processes for inherited 0022, inherited 0077, and 0022 plus this preload. It checks
+reopening the same database. It neither pre-creates a fake DB nor substitutes the
+addon. Native creation/reopen is not proof of real spill or snapshot consistency.
+
+References: [Node process mask](https://nodejs.org/api/process.html#processumask),
+[DuckDB v1.5.6 POSIX open](https://github.com/duckdb/duckdb/blob/v1.5.6/src/common/local_file_system.cpp#L360-L378),
+[design and risk before code](https://github.com/dunay2/dvt/issues/3392#issuecomment-6235741005).
+
 ## Limits and failure handling
 
 Pathname lstat/realpath checks are not an atomic openat/O_NOFOLLOW boundary for
