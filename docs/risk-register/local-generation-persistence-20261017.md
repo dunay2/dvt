@@ -8,7 +8,7 @@ last_reviewed: 2026-10-17
 # LOCAL generation persistence admission risks
 
 Related: #3393, #3392, #3398, #3394. Component:
-[Transactional LOCAL generations](../../apps/api/src/infrastructure/duckdb/README.generations.md).
+[Transactional LOCAL generations](../../apps/api/README.md#transactional-local-generations).
 
 ## Risk and current posture
 
