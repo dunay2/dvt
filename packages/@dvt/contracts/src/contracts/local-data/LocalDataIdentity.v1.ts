@@ -9,7 +9,7 @@ import { randomUuidV7 } from '@dvt/crypto';
 import { z } from 'zod';
 
 const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
-function identitySchema(prefix: string) {
+function identitySchema(prefix: string): z.ZodString {
   return z
     .string()
     .length(prefix.length + 36)
