@@ -115,7 +115,17 @@ test('test matrix routes API package tests through the CI lifecycle bypass', () 
     apiPackage?.scripts?.pretest,
     'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "dvt-api^..." build'
   );
-  assert.equal(apiPackage?.scripts?.test, 'vitest run --config vitest.config.ts');
+  const privateRunner =
+    'node --require ../../scripts/local-data-private-creation.cjs ../../node_modules/vitest/vitest.mjs';
+  assert.equal(apiPackage?.scripts?.test, 'pnpm test:unit');
+  assert.equal(
+    apiPackage?.scripts?.['test:unit'],
+    `${privateRunner} run --config vitest.config.ts`
+  );
+  assert.equal(
+    apiPackage?.scripts?.['test:integration:ci'],
+    `${privateRunner} run --config vitest.integration.config.ts`
+  );
   assert.equal(apiPackage?.scripts?.['test:ci'], 'pnpm test:unit && pnpm test:integration:ci');
   assert.deepEqual(matrix.include, [
     {

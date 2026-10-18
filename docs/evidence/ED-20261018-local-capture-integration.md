@@ -246,3 +246,32 @@ design was recorded before that move in
 and Planning DB GH-3394-LOCAL-CAPTURE-GUIDE-CONVERGENCE. Both rails use the API
 README for internal persistence guidance; the metadata query also retains its
 existing normative metadata and data-access contract guides.
+
+## Published CI execution-contract reconciliation
+
+Candidate 5ebb1421a was published to #3680 using the user's expressly authorized
+single-push exception. Repository hook configuration was unchanged; the first
+process-variable attempt entered the direct hook and was stopped before tests,
+then a command-local hook-directory override performed the authorized push. That
+exception is consumed. Full local prepush remains incomplete and the baseline
+global dependency audit remains failed; hosted gates are still required.
+
+The ready-for-review candidate passes hosted API package tests, CodeQL and
+Dependency Review. The API job includes environment-routed integration skips;
+it is not a claim that those skipped provider cases ran. The explicit 29-case
+local PostgreSQL/DuckDB proof remains separately attributed.
+
+CI executable contracts reported 213 passing tests and one real failure:
+package-test-matrix.test.mjs still expected the old direct Vitest API script.
+The actual API now delegates through its existing private-creation unit runner.
+The root cause, bounded matrix and admission were recorded before correction in
+[#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6254469847), design
+GH-3394-PRIVATE-BOOTSTRAP-CI-CONTRACT. The existing matrix/lifecycle assertions are
+preserved; exact Node preload and unit/integration configuration assertions are
+added. No production runner, routing, policy or skip is changed.
+
+The isolated existing case reproduces RED (one failure, 225 ms total). Running
+only node --test tools/ci/package-test-matrix.test.mjs after the correction gives
+14/14 PASS, zero skipped, 10.34 seconds on the Windows host. The normal helper and
+pre-commit hook remain enabled for this follow-up. A further publication requires
+its own authorization if it would omit the broad hook; no authorization is assumed.
