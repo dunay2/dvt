@@ -18,6 +18,7 @@ import type { AuthAuditEvent } from '../../../src/application/ports/auth.js';
 import type {
   ILocalDataCaptureWriter,
   IRemoteDatasetCursor,
+  IRemoteDatasetReader,
   RemoteDatasetReadInput,
 } from '../../../src/application/ports/localDataAcquisition.js';
 import type { ILocalDataOperationAccess } from '../../../src/application/ports/localDataPlane.js';
@@ -241,5 +242,73 @@ describe('CaptureLocalDataset application coordination', () => {
     assert.doesNotMatch(text, /from\s+['"][^'"]*(?:infrastructure|@duckdb|pg-cursor|\/postgres\/)/u);
     assert.doesNotMatch(text, /SourceDataSample|DuckDbGenerationStore|PostgresRemoteDatasetReader/u);
     assert.match(text, /localDataAcquisition/u);
+  });
+});
+
+
+/** Expose borrowed adapter arrays deliberately; the coordinator must own its evidence. */
+async function borrowedBatchFixture() {
+  const f = await fixture();
+  let borrowed: { rows: unknown[][]; logicalBytes: number; endOfSource: boolean } | undefined;
+  const appended: unknown[][] = [];
+  const reader: IRemoteDatasetReader = {
+    async withCursor(input, consume) {
+      return f.deps.reader.withCursor(input, cursor => consume({
+        schema: cursor.schema,
+        observedAt: cursor.observedAt,
+        async read(requested) {
+          const batch = await cursor.read(requested);
+          borrowed = { rows: batch.rows.map(row => [...row]), logicalBytes: batch.logicalBytes,
+            endOfSource: batch.endOfSource };
+          return borrowed;
+        },
+      }));
+    },
+  };
+  const useCase = new f.CaptureLocalDatasetUseCase({ ...f.deps, reader,
+    createWriter: (actual, access) => {
+      const writer = f.deps.createWriter(actual, access);
+      return { ...writer, async append(id, rows) {
+        await writer.append(id, rows);
+        appended.push(...rows.map(row => [...row]));
+      } };
+    },
+  });
+  return { f, appended, borrowed: () => borrowed,
+    execute: () => useCase.execute(f.command, f.context) };
+}
+
+describe('captured batch evidence is owned before asynchronous checkpoints', () => {
+  for (const phase of ['catalog', 'append'] as const) {
+    it.each(['eof', 'bytes', 'outerRows', 'cell'] as const)(`pins %s against mutation during ${phase}`, async kind => {
+      const b = await borrowedBatchFixture(); let mutated = false;
+      b.f.state.hook = current => {
+        const batch = b.borrowed();
+        if (current !== phase || !batch || mutated) return;
+        mutated = true;
+        if (kind === 'eof') batch.endOfSource = true;
+        if (kind === 'bytes') batch.logicalBytes = 9999;
+        if (kind === 'outerRows') batch.rows.push([999n]);
+        if (kind === 'cell') batch.rows[0]![0] = 999n;
+      };
+      const result = await b.execute();
+      assert.equal(mutated, true);
+      assert.equal(result.generation.rowCount, '5');
+      assert.equal(result.generation.logicalByteCount, '40');
+      assert.equal(result.generation.completionReason, 'source-exhausted');
+      assert.deepEqual(b.appended, [[1n], [2n], [3n], [4n], [5n]]);
+      assert.deepEqual(b.f.state.pulls, [2, 2, 2]);
+    });
+  }
+  it('rejects invalid initial evidence before a checkpoint can repair it', async () => {
+    const b = await borrowedBatchFixture();
+    b.f.state.badBatch = { rows: [], logicalBytes: 0, endOfSource: false };
+    b.f.state.hook = phase => {
+      const batch = b.borrowed();
+      if (phase === 'catalog' && batch) batch.endOfSource = true;
+    };
+    await assert.rejects(b.execute(), /INVALID_BATCH/u);
+    assert.equal(b.f.state.events.includes('append'), false);
+    assert.equal(b.f.state.events.includes('promote'), false);
   });
 });
