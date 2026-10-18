@@ -1,4 +1,10 @@
-/** Shared validation primitives internal to the LOCAL metadata contracts. */
+/**
+ * Owned concern: share strict primitives within the LOCAL metadata contract family.
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @decision Reuse canonical contract primitives and keep LOCAL boundary refinements internal.
+ * @consequence Public schemas apply consistent counters, digests, timestamps and labels.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { isIsoUtcString, isSha256HexString } from '../../utils/contractPrimitives.js';

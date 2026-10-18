@@ -1,4 +1,10 @@
-/** Pure refinements for LOCAL metadata. Inputs are structurally parsed by their schema owner. */
+/**
+ * Owned concern: refine the consistency of parsed LOCAL generation metadata.
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @decision Keep pure boundary refinements beside the shared schemas that own structural parsing.
+ * @consequence These checks validate declared metadata, not provider facts or runtime authorization.
+ * @version 1.0.0
+ */
 export type LocalDataContractIssue = Readonly<{
   path: readonly (string | number)[];
   message: string;

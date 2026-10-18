@@ -1,4 +1,10 @@
-/** Public LOCAL metadata contracts; implementation-only refinements stay private. */
+/**
+ * Owned concern: publish the shared LOCAL generation metadata contracts.
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @decision Export serializable contracts and their boundary parsers through one shared-kernel surface.
+ * @consequence Implementation-only refinements remain private to this contract family.
+ * @version 1.0.0
+ */
 export {
   LocalDatasetIdV1Schema,
   LocalDataCaptureIdV1Schema,
