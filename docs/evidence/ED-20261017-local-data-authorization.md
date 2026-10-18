@@ -27,6 +27,14 @@ principal, scope, authorizer/audit and embedded-policy owners. The user authoriz
 continuation without the blocking Planning DB consultation for this conversation;
 that is not permission to claim unexecuted gates or to merge into main.
 
+## Current integration attribution
+
+This document retains the original proposal's evidence and failures at their
+original revisions. Current internal consumers, actual provider/native acceptance
+and remaining prepush/security limits are recorded in
+[the integration evidence](ED-20261018-local-capture-integration.md) and #3680.
+Historical results below are not reruns of the integrated head.
+
 ## Actual changes
 
 Three explicit LOCAL actions, an in-memory lease delegating to the existing
@@ -34,19 +42,19 @@ AuthorizeCommandScopeService, a focused test suite, a real-policy composition
 test suite for the full checkout, and security/rollout/compatibility/risk notes.
 No new grants or grant migration, dependency, route, native runtime, persistent
 credentials, database files, data reads or storage implementation. #3392-B and
-#3393/#3394 remain necessary; there is no activated LOCAL product consumer.
+Tasks #3393/#3394 remain necessary; there is no activated LOCAL product consumer.
 
 ## Executed in this environment
 
-| Check | Actual result and limit |
-| --- | --- |
-| Baseline provenance | 8 selected existing API files match GitHub Git-blob SHA byte-for-byte. Only action vocabulary is changed in this cut. |
-| RED | Missing new module/actions before implementation. Initial missing Node types was an environment error, corrected before retaining the availability RED. This is not reproduction of a production data leak. |
-| Strict selected-graph TypeScript | PASS with TS 5.8.3, Node 22.16.0 and real @types/node 25.1.0. strict, exactOptionalPropertyTypes, noUncheckedIndexedAccess, verbatimModuleSyntax, noEmitOnError. skipLibCheck only skips library .d.ts checking. Not full API typecheck. |
-| Focused execution | 57/57 PASS, 0 skipped. The same test bodies and actual AuthorizeCommandScopeService/domain/actions/scopes/audit types run with only Vitest runner import replaced by node:test in a temporary copy. |
-| Controlled dependencies | Grant decisions and audit persistence are explicit in-memory test ports. No fake implementation is added to product. This does not test PostgreSQL grant persistence, OIDC signature verification, or production EmbeddedAccessDecisionService. |
-| Mutation sensitivity | 8/8 deliberately broken compiled copies detected; each had failing assertions, not merely compile errors. Original compiled file restored and 57/57 PASS repeated. |
-| Mutation boundaries | Missing source-view, ignored expiry, missing post-await check, ignored tenant mismatch, late approval after close, caller-mutable principal, skipped prepromotion check, ignored policy denial. |
+| Check                            | Actual result and limit                                                                                                                                                                                                                         |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Baseline provenance              | 8 selected existing API files match GitHub Git-blob SHA byte-for-byte. Only action vocabulary is changed in this cut.                                                                                                                           |
+| RED                              | Missing new module/actions before implementation. Initial missing Node types was an environment error, corrected before retaining the availability RED. This is not reproduction of a production data leak.                                     |
+| Strict selected-graph TypeScript | PASS with TS 5.8.3, Node 22.16.0 and real @types/node 25.1.0. strict, exactOptionalPropertyTypes, noUncheckedIndexedAccess, verbatimModuleSyntax, noEmitOnError. skipLibCheck only skips library .d.ts checking. Not full API typecheck.        |
+| Focused execution                | 57/57 PASS, 0 skipped. The same test bodies and actual AuthorizeCommandScopeService/domain/actions/scopes/audit types run with only Vitest runner import replaced by node:test in a temporary copy.                                             |
+| Controlled dependencies          | Grant decisions and audit persistence are explicit in-memory test ports. No fake implementation is added to product. This does not test PostgreSQL grant persistence, OIDC signature verification, or production EmbeddedAccessDecisionService. |
+| Mutation sensitivity             | 8/8 deliberately broken compiled copies detected; each had failing assertions, not merely compile errors. Original compiled file restored and 57/57 PASS repeated.                                                                              |
+| Mutation boundaries              | Missing source-view, ignored expiry, missing post-await check, ignored tenant mismatch, late approval after close, caller-mutable principal, skipped prepromotion check, ignored policy denial.                                                 |
 
 The reproduction package delivered in the conversation contains byte-verified
 baseline sources, candidate sources, `validation/run-native.mjs`, mutation script,

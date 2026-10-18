@@ -60,9 +60,7 @@ type Options = Readonly<{
   observedAt: string;
   limits: GenerationLimits;
   checkpoint: () => Promise<void>;
-  readNative: (
-    maxRows: number
-  ) => Promise<
+  readNative: (maxRows: number) => Promise<
     Readonly<{
       rows: unknown[][];
       result?: Readonly<{ fields: readonly PostgresFieldSignature[] }>;

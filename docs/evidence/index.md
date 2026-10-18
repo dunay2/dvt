@@ -33,6 +33,7 @@ Evidence documents that justify or validate relevant changes.
 - [Effective Plan-Wide Concurrency In Temporal](ED-20261015-plan-concurrency.md)
 - [Exclusive Start Ownership And Observation-Only Reconciliation](ED-20261001-start-ownership-observation.md)
 - [GH-2173 bounded lazy source catalog evidence](ED-20260907-gh-2173-lazy-source-catalog.md)
+- [Internally composed LOCAL capture and exact generation reads](ED-20261018-local-capture-integration.md)
 - [INTERSECT ALL and EXCEPT ALL end to end](ED-20260920-intersect-except-all-end-to-end.md)
 - [INTERSECT and EXCEPT DISTINCT end to end](ED-20260920-intersect-except-distinct-end-to-end.md)
 - [JOIN unary null predicate admission](ED-20260913-join-null-predicates.md)

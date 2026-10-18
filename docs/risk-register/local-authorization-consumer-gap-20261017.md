@@ -21,12 +21,12 @@ No public data path or default grant is introduced by this cut.
 
 The approved topology uses one API-owned workspace instance and shared spill.
 The historical per-run spill and separate active/staging databases in older
-#3392 prose are not implementation instructions. Physical validation belongs to
+Tasks #3392 prose are not implementation instructions. Physical validation belongs to
 the native runtime; current evidence is in ED-20261018-local-capture-integration.md.
 
 ## Mandatory mitigation / next owner
 
-#3393/#3394 must consume current authentication and exact environment scope,
+Tasks #3393/#3394 must consume current authentication and exact environment scope,
 verify generation/source bindings, await authorization before lookup and before
 promotion, define checkpoint cadence, and route abort to real resource cleanup.
 They must not persist/replay this lease or an approval as permission. Tests must

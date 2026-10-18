@@ -53,7 +53,7 @@ lease; concurrent checks are rejected, not deduplicated or silently joined.
 `beforePromotion` is capture-only and always performs a fresh check. It does not
 execute a commit or assert atomicity between two independent persistence systems.
 Grant changes AFTER a successful check cannot be eliminated by another precheck;
-#3393/#3394 must define their point-in-time authorization/promotion semantics and
+Tasks #3393/#3394 must define their point-in-time authorization/promotion semantics and
 record known committed outcomes. The lease cannot roll back already-read bytes.
 
 Checkpoint scheduling, remote-resource cancellation and final commit are owned

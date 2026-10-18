@@ -119,7 +119,10 @@ async function ensurePrivateDirectory(directory: string): Promise<void> {
   }
 }
 
-async function inspectDatabaseEntry(filename: string, required = false): Promise<Stats | undefined> {
+async function inspectDatabaseEntry(
+  filename: string,
+  required = false
+): Promise<Stats | undefined> {
   try {
     const entry = await lstat(filename);
     if (entry.isSymbolicLink()) throw new LocalDataStorageBoundaryError('symlink_unsupported');

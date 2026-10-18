@@ -26,6 +26,14 @@ evidence:
 
 # LOCAL storage boundary candidate evidence
 
+## Current integration attribution
+
+This document retains the original proposal's evidence and failures at their
+original revisions. Current internal consumers, actual provider/native acceptance
+and remaining prepush/security limits are recorded in
+[the integration evidence](ED-20261018-local-capture-integration.md) and #3680.
+Historical results below are not reruns of the integrated head.
+
 ## Follow-up 3392-D: creation policy, not a permission downgrade
 
 Base: #3674 `997e60f2286d587f45195f43e7d47cd68c8f70de`. The original
@@ -64,7 +72,7 @@ installed and no permission guard was removed.
 
 ## Original 3392-B scope and base
 
-#3392-B on proposal #3672, exact base
+Tasks #3392-B on proposal #3672, exact base
 `678705b7b1271f81674a5fd89154df5344f40f99`. This is not a completed
 security cut or permission to merge. ARC-3 is expected from the existing
 `docs/security/**` policy; the actual ARC evaluator has not been run here.

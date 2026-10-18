@@ -48,9 +48,7 @@ const sourceRef = {
   }),
 };
 
-async function fixture(
-  values = [1n, 2n, 3n, 4n, 5n]
-): Promise<{
+async function fixture(values = [1n, 2n, 3n, 4n, 5n]): Promise<{
   state: {
     connection: WarehouseConnectionCatalogEntry;
     grants: PrincipalGrantSnapshot | null;

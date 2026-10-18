@@ -101,9 +101,7 @@ async function sql(
 ): Promise<import('@duckdb/node-api').DuckDBValue[][]> {
   return runtime.withSession(scope, async (c) => (await c.runAndReadAll(text, values)).getRows());
 }
-async function begin(
-  selectedRequest = request
-): Promise<{
+async function begin(selectedRequest = request): Promise<{
   localDatasetId: ReturnType<typeof import('@dvt/contracts').createLocalDatasetIdV1>;
   key: string;
   captureId: ReturnType<typeof import('@dvt/contracts').createLocalDataCaptureIdV1>;

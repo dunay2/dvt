@@ -40,8 +40,8 @@ and negative scenarios were recorded before checkout corrections in
 [the owning issue](https://github.com/dunay2/dvt/issues/3394#issuecomment-6253672162).
 Planning DB design `GH-3394-COMPOSED-LOCAL-CAPTURE` admits the bounded correction.
 `CaptureLocalDataset` is a command; the existing
-`ReadLocalDataGenerationMetadata` query is reused. Their runtime status remains
-planned until actual implementation acceptance. No earlier admission of the
+`ReadLocalDataGenerationMetadata` query is reused. Their internal runtime implementation is recorded in Planning DB;
+review/merge acceptance remains a separate gate. No earlier admission of the
 offline proposal is claimed and no Planning DB import/rebuild is performed.
 
 ```mermaid
@@ -138,6 +138,80 @@ The first lab invocation had no test bodies: its source overlay omitted the
 already committed shared batch module. The complete source overlay corrected
 that lab assembly error before the passing run. No product check was relaxed.
 
+## Complete affected validation
+
+Implementation checkpoint: 334adba98. The normal configured lint-staged tasks
+were also applied to the complete historical proposal diff, since inherited
+unformatted files and a second formatter pass on expanded helper types remained.
+The ordinary commit helper and hooks stay enabled.
+
+The complete acquisition proof (same command above without the -t filter) passes
+**29/29, 9.01 seconds**. This adds real SELECT denial, RLS, unsupported-type,
+snapshot and Preview guard regressions to the four requested acceptance families.
+
+The explicit affected unit command uses the private preload, vitest.config.ts,
+--maxWorkers 2 and exactly these test paths:
+
+```text
+test/application/services/captureLocalDatasetUseCase.test.ts
+test/application/services/localDataAuthorizationLease.test.ts
+test/application/services/localDataAuthorizationPolicy.test.ts
+test/application/services/readLocalDataGenerationMetadataUseCase.test.ts
+test/architecture/duckDbLocalDataRuntime.architecture.test.ts
+test/architecture/localDataCaptureComposition.architecture.test.ts
+test/infrastructure/DuckDbFileCreationPolicy.test.ts
+test/infrastructure/duckDbGenerationProfile.test.ts
+test/infrastructure/DuckDbGenerationStore.appender.test.ts
+test/infrastructure/DuckDbGenerationStore.catalog.test.ts
+test/infrastructure/DuckDbGenerationStore.recovery.test.ts
+test/infrastructure/DuckDbGenerationStore.test.ts
+test/infrastructure/DuckDbLocalDataRuntime.storage.test.ts
+test/infrastructure/duckDbLocalDataStorageBoundary.test.ts
+test/infrastructure/localDataAcquisition.boundaries.test.ts
+test/infrastructure/postgresLocalDataBatchCodec.test.ts
+test/infrastructure/PostgresRemoteDatasetCursor.reentrancy.test.ts
+test/infrastructure/PostgresRemoteDatasetCursor.test.ts
+test/infrastructure/PostgresRemoteDatasetReader.lifecycle.test.ts
+test/modules/localDataCaptureRuntime.test.ts
+test/testExecutionManifest.test.ts
+```
+
+It returned 433 PASS / 2 setup failures in 25.19 seconds. Recovery subprocesses
+required the actual API dist binary. After pnpm exec tsc -p tsconfig.json built
+that binary, repeating only DuckDbGenerationStore.recovery.test.ts returned
+2/2 PASS in 4.44 seconds. All 435 affected assertions now have passing evidence;
+the earlier incomplete invocation is retained explicitly, not called a pass.
+
+| Command / boundary                                             | Actual result                                                                      |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| pnpm exec turbo run build --filter=dvt-api^... --concurrency=2 | 19/19 dependency builds PASS                                                       |
+| API pnpm exec tsc -p tsconfig.json --noEmit                    | PASS                                                                               |
+| API pnpm exec tsc -p test/tsconfig.json --noEmit               | PASS                                                                               |
+| pnpm arch:deps                                                 | PASS; no new unreachable production owner or native public-type leak               |
+| pnpm docs:feature-mechanization:implementation                 | PASS, 591 DB manifests; no import/rebuild                                          |
+| pnpm --filter @dvt/contracts schema:verify                     | PASS, 25 assertions                                                                |
+| pnpm golden:validate                                           | 5 PASS, 0 failed, 1 existing deprecated retry path skipped by its canonical runner |
+| pnpm docs:status:generate --code-state-only                    | PASS, DB-free/untracked code-state output                                          |
+| pnpm docs:sync; pnpm governance:refresh                        | PASS; coverage 5694/5694, no drift                                                 |
+| pnpm audit --prod --json                                       | FAIL: 4 low, 20 moderate, 31 high, 1 critical findings                             |
+
+The audit findings all name package versions already present in accepted main's
+lockfile. Its only added package versions are pg-cursor@2.15.3 and
+@types/pg-cursor@2.7.2; neither is named by the returned advisories. This comparison
+does not convert the failed whole-repository scan into a pass or clear unrelated
+security findings. No dependency/security rule is relaxed or unrelated upgrade
+bundled into this integration.
+
+The complete local prepush route selects broad browser evidence solely from
+apps/api/package.json and the API integration configuration. Its plan was inspected
+with pnpm verify:prepush --plan, node scripts/verify-changed.cjs --dry-run and
+pnpm test:web:changed --plan. The user explicitly limited local validation to
+affected tests. That broad browser battery was not started: full prepush remains
+INCOMPLETE under that limit. The previous one-push hook exception belongs to
+Tasks #3681 and is not reused. Publishing this candidate needs a separately explicit
+exception if the hook still selects that broad route. Required hosted checks
+remain required before merge.
+
 ## Validation attribution
 
 Status is draft. The commands above and the native matrix are required evidence,
@@ -146,3 +220,20 @@ runs remain attributed to their own comparisons in the existing evidence and
 issue journal. Final exact commands, results, host/runtime versions, limitations,
 security checks, ARC classification and fresh base/head DB acceptance will be
 recorded here and on #3680 before readiness is claimed.
+
+## Closeout boundaries
+
+The exact affected lint/format command node scripts/check-changed.cjs passes.
+The 47 changed API TypeScript files in the tested lab and normalized checkout
+have identical emitted executable ASTs under TypeScript 5.9.3 (positions, comments
+and redundant expression parentheses excluded); formatter-only changes therefore
+did not trigger another complete test run. This is source attribution, not an
+additional claim about untested behavior.
+Compatibility/bootstrap/catalog tooling passes 26/26 on the isolated POSIX lab;
+the host Windows invocation passed 17 and explicitly skipped nine POSIX cases.
+During local implementation, no rule, required check, hook or assertion was
+disabled or relaxed; no stub, fake
+adapter, unfinished production branch or new debt entry was added. Existing risks
+remain open with current evidence. The prior failed hook and lab invocations are
+recorded above. Full local prepush and whole-repository security-scan PASS are
+not claimed. Hosted gates must evaluate the published exact candidate before merge.

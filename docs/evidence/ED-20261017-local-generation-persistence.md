@@ -3,6 +3,22 @@ title: LOCAL generation persistence candidate evidence
 status: Draft
 owner: API / Data Infrastructure
 last_reviewed: 2026-10-17
+date: 2026-10-17
+owners:
+  - API / Data Infrastructure
+arc_level: ARC-3
+breaking: false
+code_refs:
+  - apps/api/src/infrastructure/duckdb/DuckDbGenerationStore.ts
+  - apps/api/src/infrastructure/duckdb/duckDbGenerationMetadata.ts
+  - apps/api/src/infrastructure/duckdb/duckDbGenerationProfile.ts
+  - apps/api/test/infrastructure/DuckDbGenerationStore.recovery.test.ts
+evidence:
+  tests:
+    - apps/api/test/infrastructure/DuckDbGenerationStore.test.ts
+    - apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts
+    - apps/api/test/infrastructure/DuckDbGenerationStore.appender.test.ts
+    - apps/api/test/infrastructure/DuckDbGenerationStore.recovery.test.ts
 ---
 
 # LOCAL generation persistence candidate evidence
@@ -11,6 +27,14 @@ Task: #3393-A. Parent candidate: #3675 at
 `0bb123374936f5026f6d2d86760883d33c45ca79`; not main.
 Pre-implementation design is recorded in
 [#3393](https://github.com/dunay2/dvt/issues/3393#issuecomment-6237253632).
+
+## Current integration attribution
+
+This document retains the original proposal's evidence and failures at their
+original revisions. Current internal consumers, actual provider/native acceptance
+and remaining prepush/security limits are recorded in
+[the integration evidence](ED-20261018-local-capture-integration.md) and #3680.
+Historical results below are not reruns of the integrated head.
 
 ## Proven baseline versus this candidate
 

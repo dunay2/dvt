@@ -407,13 +407,11 @@ it('captures 2053 actual rows through governed application ports, then reopens n
   await store.initialize();
   assert.deepEqual(await store.readHead(localDatasetId), manifest);
   assert.deepEqual(
-    await f
-      .createModule()
-      .readLocalDataGenerationMetadata.readGeneration(f.context, {
-        mode: 'local',
-        localDatasetId,
-        generationId: manifest.generationId,
-      }),
+    await f.createModule().readLocalDataGenerationMetadata.readGeneration(f.context, {
+      mode: 'local',
+      localDatasetId,
+      generationId: manifest.generationId,
+    }),
     manifest
   );
   const actual = await runtime.withSession(scope, async (c) => {

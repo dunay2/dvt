@@ -21,8 +21,14 @@ import {
 import type { RemoteDatasetBatch } from '../ports/localDataAcquisition.js';
 
 type CaptureFailure =
-  | 'INVALID_INPUT' | 'SOURCE_REJECTED' | 'SOURCE_BINDING_CHANGED' | 'CANCELLED'
-  | 'CAPTURE_BUDGET' | 'CAPTURE_TIMEOUT' | 'INVALID_BATCH' | 'INVALID_EVIDENCE';
+  | 'INVALID_INPUT'
+  | 'SOURCE_REJECTED'
+  | 'SOURCE_BINDING_CHANGED'
+  | 'CANCELLED'
+  | 'CAPTURE_BUDGET'
+  | 'CAPTURE_TIMEOUT'
+  | 'INVALID_BATCH'
+  | 'INVALID_EVIDENCE';
 
 export class LocalDataCaptureError extends Error {
   public constructor(readonly code: CaptureFailure) {
@@ -37,8 +43,14 @@ export function parseCaptureCommand(input: unknown) {
     throw new LocalDataCaptureError('INVALID_INPUT');
   }
   const value = input as Record<string, unknown>;
-  const fields = ['localDatasetId', 'captureId', 'sourceRef', 'policy',
-    'expectedHeadGenerationId', 'expectedPublicationToken'];
+  const fields = [
+    'localDatasetId',
+    'captureId',
+    'sourceRef',
+    'policy',
+    'expectedHeadGenerationId',
+    'expectedPublicationToken',
+  ];
   if (Object.keys(value).some((key) => !fields.includes(key))) {
     throw new LocalDataCaptureError('INVALID_INPUT');
   }
@@ -55,7 +67,9 @@ export function parseCaptureCommand(input: unknown) {
       captureId: LocalDataCaptureIdV1Schema.parse(value.captureId),
       sourceRef,
       policy: Object.freeze(LocalDataAcquisitionPolicyV1Schema.parse(value.policy)),
-      expectedHeadGenerationId: LocalDataGenerationIdV1Schema.nullable().parse(value.expectedHeadGenerationId),
+      expectedHeadGenerationId: LocalDataGenerationIdV1Schema.nullable().parse(
+        value.expectedHeadGenerationId
+      ),
       ...(token === undefined ? {} : { expectedPublicationToken: token }),
     });
   } catch {
@@ -73,11 +87,16 @@ export type CaptureEvidence = Readonly<{
 }>;
 
 export function createCaptureRequest(
-  command: CaptureCommand, schema: LocalDataSchemaV1, providerContextSha256: string
+  command: CaptureCommand,
+  schema: LocalDataSchemaV1,
+  providerContextSha256: string
 ): LocalDataAcquisitionRequestV1 {
   const request = LocalDataAcquisitionRequestV1Schema.parse({
-    schemaVersion: 'local-data-acquisition-request.v1', sourceRef: command.sourceRef,
-    policy: command.policy, schema, providerContextSha256,
+    schemaVersion: 'local-data-acquisition-request.v1',
+    sourceRef: command.sourceRef,
+    policy: command.policy,
+    schema,
+    providerContextSha256,
   });
   Object.freeze(request.sourceRef.connectionRef);
   Object.freeze(request.sourceRef);
@@ -90,13 +109,20 @@ export function createCaptureRequest(
 
 /** Own row containers and primitive evidence before any callback; adapters still validate cell types. */
 export function snapshotCaptureBatch(
-  input: RemoteDatasetBatch, requested: number, columnCount: number
+  input: RemoteDatasetBatch,
+  requested: number,
+  columnCount: number
 ): RemoteDatasetBatch {
   if (!input) throw new LocalDataCaptureError('INVALID_BATCH');
   const { rows, logicalBytes, endOfSource } = input;
-  if (!Array.isArray(rows) || rows.length > requested || typeof endOfSource !== 'boolean' ||
-      !Number.isSafeInteger(logicalBytes) || logicalBytes < 0 ||
-      (rows.length === 0 && (!endOfSource || logicalBytes !== 0))) {
+  if (
+    !Array.isArray(rows) ||
+    rows.length > requested ||
+    typeof endOfSource !== 'boolean' ||
+    !Number.isSafeInteger(logicalBytes) ||
+    logicalBytes < 0 ||
+    (rows.length === 0 && (!endOfSource || logicalBytes !== 0))
+  ) {
     throw new LocalDataCaptureError('INVALID_BATCH');
   }
   const ownedRows = Array.from(rows, (row) => {
@@ -109,19 +135,27 @@ export function snapshotCaptureBatch(
 }
 
 export function createCaptureManifest(
-  command: CaptureCommand, evidence: CaptureEvidence, createdAt: string
+  command: CaptureCommand,
+  evidence: CaptureEvidence,
+  createdAt: string
 ) {
   if (command.policy.kind === 'full' && !evidence.eof) {
     throw new LocalDataCaptureError('INVALID_EVIDENCE');
   }
   return LocalDataGenerationManifestV1Schema.parse({
-    schemaVersion: 'local-data-generation.v1', localDatasetId: command.localDatasetId,
-    captureId: command.captureId, generationId: evidence.generationId,
-    request: evidence.request, requestFingerprint: createLocalDataRequestFingerprintV1(evidence.request),
+    schemaVersion: 'local-data-generation.v1',
+    localDatasetId: command.localDatasetId,
+    captureId: command.captureId,
+    generationId: evidence.generationId,
+    request: evidence.request,
+    requestFingerprint: createLocalDataRequestFingerprintV1(evidence.request),
     schemaSha256: createLocalDataSchemaDigestV1(evidence.request.schema),
-    coverage: command.policy.kind === 'full' ? { kind: 'full', eofObserved: true } : { kind: 'sample' },
+    coverage:
+      command.policy.kind === 'full' ? { kind: 'full', eofObserved: true } : { kind: 'sample' },
     completionReason: evidence.eof ? 'source-exhausted' : 'sample-target-reached',
-    rowCount: evidence.rows.toString(), logicalByteCount: evidence.bytes.toString(),
-    sourceObservation: { observedAt: evidence.observedAt }, createdAt,
+    rowCount: evidence.rows.toString(),
+    logicalByteCount: evidence.bytes.toString(),
+    sourceObservation: { observedAt: evidence.observedAt },
+    createdAt,
   });
 }
