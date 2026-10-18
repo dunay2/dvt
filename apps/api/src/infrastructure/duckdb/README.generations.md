@@ -216,3 +216,48 @@ server statement/lock/idle-transaction timeouts and a finite connection timeout.
 This is not a hard deadline on a hung callback/authorizer or native DuckDB call.
 Caps after decoding limit accepted batches, not a single oversized PostgreSQL
 value or total process RSS. Workspace admission/retention remains #3398.
+
+## Shared values and scoped resource ownership
+
+The acquisition and storage cuts share `domain/localDataBatch.ts`: admitted
+primitive values, ordinal/nullability rules and finite row/byte budgets. It has
+no SQL, driver, credential or storage dependency. PostgreSQL translates its OIDs
+and raw text into those values; DuckDB generates its own DDL and translates
+profile errors into its existing error vocabulary. PostgreSQL must not import
+DuckDB infrastructure merely to validate a batch or copy a limit.
+
+```text
+PostgresRemoteDatasetReader   -> relation/permission/schema preflight
+  PostgresReadSession         -> client + transaction + portal + cleanup
+  PostgresPullCursor          -> one admitted read + terminal state + EOF
+  postgresLocalDataBatchCodec -> raw text/OIDs to exact primitive values
+                     \       / 
+                      localDataBatch (domain invariants)
+                             |
+  DuckDbGenerationStore      -> staging, Appender, counters and READY/head CAS
+  duckDbGenerationProfile    -> DDL and DuckDB error translation only
+```
+
+The native session bracket resolves a result only after portal close, transaction
+completion and client close. It owns neither application authorization nor
+promotion. Its cleanup failures remain errors and cannot publish READY.
+The Reader does not construct a driver client or duplicate the cleanup state.
+No new generic resource framework or cross-database transaction is introduced.
+
+The pull cursor installs its active-read boundary before any authorization
+callback can reenter it. Concurrent or reentrant reads, and completion during an
+outstanding read, become terminal failures before further provider I/O. Repeated
+completion retains its first promise and never retries a rejected authorization.
+Per-batch authorization remains fresh; immutable metadata is not cached access.
+
+Schema validation visits every ordinal, including sparse array slots. Missing
+columns and absent budgets fail with typed profile errors instead of accidental
+TypeError or partial DDL. Row validation no longer builds SQL and discards it;
+defensive primitive row copies and both adapter-boundary checks remain necessary.
+No measured throughput, zero-copy or hard memory/deadline claim is made.
+
+`localDataAcquisition.boundaries.test.ts` protects these input and import
+boundaries. `PostgresRemoteDatasetReader.lifecycle.test.ts` characterizes cleanup
+with controlled driver ports; it is not provider integration. The existing native
+PostgreSQL-to-DuckDB proof, Store/Appender, corruption and crash suites must still
+pass unchanged. Exact RED/GREEN commits and gate status belong to #3394/#3679.

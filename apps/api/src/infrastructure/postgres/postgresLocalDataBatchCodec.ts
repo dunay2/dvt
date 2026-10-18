@@ -9,9 +9,10 @@ import type { LocalDataSchemaV1 } from '@dvt/contracts';
 import {
   MAX_BATCH_BYTES,
   MAX_BATCH_ROWS,
-  validateGenerationBatch,
+  MAX_BATCH_COLUMNS,
+  validateLocalDataBatch,
   type GenerationCell,
-} from '../duckdb/duckDbGenerationProfile.js';
+} from '../../domain/localDataBatch.js';
 
 type CodecFailure = 'UNSUPPORTED_POSTGRES_SCHEMA' | 'INVALID_POSTGRES_BATCH';
 export class PostgresLocalDataCodecError extends Error {
@@ -79,7 +80,7 @@ function decodeCell(type: string, value: unknown, nullable: boolean): Generation
 export function createPostgresLocalDataBatchCodec(
   fields: readonly PostgresLocalDataField[]
 ): PostgresLocalDataBatchCodec {
-  if (!Array.isArray(fields) || fields.length < 1 || fields.length > 32) {
+  if (!Array.isArray(fields) || fields.length < 1 || fields.length > MAX_BATCH_COLUMNS) {
     throw new PostgresLocalDataCodecError('UNSUPPORTED_POSTGRES_SCHEMA');
   }
   const columns: LocalDataSchemaV1['columns'] = Array.from(fields, (field, ordinal) => {
@@ -119,7 +120,7 @@ export function createPostgresLocalDataBatchCodec(
         rows.push(decoded);
       }
       try {
-        const batch = validateGenerationBatch(columns, rows);
+        const batch = validateLocalDataBatch(columns, rows);
         return { ...batch, decodedTextBytes };
       } catch {
         throw new PostgresLocalDataCodecError('INVALID_POSTGRES_BATCH');

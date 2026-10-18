@@ -15,6 +15,8 @@ import {
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 
+import { MAX_BATCH_ROWS, MAX_BATCH_COLUMNS, type GenerationLimits } from '../../domain/localDataBatch.js';
+
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
 import type { ILocalDataOperationAccess } from '../../application/ports/localDataPlane.js';
 
@@ -26,7 +28,7 @@ import {
 import {
   DuckDbGenerationError, generationColumnSql, internalGenerationRelation,
   validateGenerationBatch, validateGenerationLimits,
-  type GenerationFailure, type GenerationLimits,
+  type GenerationFailure,
 } from './duckDbGenerationProfile.js';
 
 type BeginInput = Readonly<{ localDatasetId: string; captureId: string; request: unknown; expectedHeadGenerationId: string | null }>;
@@ -79,9 +81,9 @@ export class DuckDbGenerationStore {
   }
   public async append(captureId: string, input: readonly (readonly unknown[])[]): Promise<void> {
     const id = LocalDataCaptureIdV1Schema.safeParse(captureId);
-    if (!id.success || !Array.isArray(input) || input.length > 1024) throw new DuckDbGenerationError('INVALID_INPUT');
+    if (!id.success || !Array.isArray(input) || input.length > MAX_BATCH_ROWS) throw new DuckDbGenerationError('INVALID_INPUT');
     // Copy a bounded outer shape before the first await; values must later be immutable primitives.
-    const rows = input.map(row => { if (!Array.isArray(row) || row.length > 32) throw new DuckDbGenerationError('INVALID_BATCH'); return [...row]; });
+    const rows = input.map(row => { if (!Array.isArray(row) || row.length > MAX_BATCH_COLUMNS) throw new DuckDbGenerationError('INVALID_BATCH'); return [...row]; });
     await this.transaction(true, async c => {
       const stage = await readGenerationStage(c, id.data);
       if (stage.sealed) throw new DuckDbGenerationError('CAPTURE_SEALED');

@@ -7,13 +7,10 @@
 import { performance } from 'node:perf_hooks';
 
 import type { IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
-import { Client, type QueryResult } from 'pg';
-import Cursor from 'pg-cursor';
 
 import type { WarehouseSourceObjectProbeTarget } from '../../application/ports/warehouseSourceImport.js';
 import type { ILocalDataOperationAccess } from '../../application/ports/localDataPlane.js';
-import { validateGenerationLimits, type GenerationLimits } from '../duckdb/duckDbGenerationProfile.js';
-import { assertPostgresWarehouseDatabase } from '../warehouseSourceImport/assertPostgresWarehouseDatabase.js';
+import type { GenerationLimits } from '../../domain/localDataBatch.js';
 
 import {
   authorizePostgresSourceObject,
@@ -21,7 +18,9 @@ import {
   quotePostgresIdentifier,
 } from './postgresAuthorizedSourceObject.js';
 import { createPostgresLocalDataBatchCodec } from './postgresLocalDataBatchCodec.js';
-import { PostgresDatasetReadError, PostgresPullCursor, type PostgresDatasetCursor } from './PostgresRemoteDatasetCursor.js';
+import { PostgresDatasetReadError, PostgresPullCursor, validatePostgresReadLimits, type PostgresDatasetCursor } from './PostgresRemoteDatasetCursor.js';
+
+import { POSTGRES_RAW_TEXT_TYPES, postgresReadOperation as provider, withPostgresReadSession } from './PostgresReadSession.js';
 
 type Input = Readonly<{ target: WarehouseSourceObjectProbeTarget; access: ILocalDataOperationAccess; limits: GenerationLimits; timeoutMs: number }>;
 type Column = { attnum: number; name: string; oid: number; nullable: boolean };
@@ -37,7 +36,7 @@ export class PostgresRemoteDatasetReader {
     const access = Object.freeze({ signal: input.access.signal,
       checkpoint: input.access.checkpoint.bind(input.access),
       beforePromotion: input.access.beforePromotion.bind(input.access) });
-    const limits = validateGenerationLimits(input.limits);
+    const limits = validatePostgresReadLimits(input.limits);
     const timeoutMs = input.timeoutMs;
     if (target.type !== 'postgres' || typeof target.objectId !== 'string' ||
         typeof target.database !== 'string' || typeof target.credentialRef !== 'string' ||
@@ -65,24 +64,8 @@ export class PostgresRemoteDatasetReader {
     const connectionString = await provider(() => this.credentials.resolveCredential(target.credentialRef));
     if (!connectionString?.trim()) throw new PostgresDatasetReadError('SOURCE_REJECTED');
     assertOpen();
-    const client = await provider(async () => new Client({ connectionString, application_name: 'dvt-local-capture', connectionTimeoutMillis: Math.min(timeoutMs, 5000) }));
-    let transaction = false;
-    let native: Cursor<unknown[]> | undefined;
-    let pull: PostgresPullCursor | undefined;
-    let success = false;
-    let connectionError = false;
-    const onError = () => { connectionError = true; };
-    client.on('error', onError);
-    try {
-      await provider(() => client.connect());
-      await provider(() => assertPostgresWarehouseDatabase(client, target.database));
-      await provider(() => client.query('BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY'));
-      transaction = true;
-      await provider(() => client.query(
-        `SET LOCAL statement_timeout = '${Math.min(timeoutMs, 5000)}ms';
-         SET LOCAL lock_timeout = '${Math.min(timeoutMs, 5000)}ms';
-         SET LOCAL idle_in_transaction_session_timeout = '${timeoutMs}ms'`
-      ));
+    return withPostgresReadSession({ connectionString, database: target.database, timeoutMs }, async session => {
+      const { client } = session;
       const relation = `${quotePostgresIdentifier(locator.schema)}.${quotePostgresIdentifier(locator.name)}`;
       // Acquire the relation lock before reading its metadata; ONLY avoids implicitly locking descendants.
       await provider(() => client.query(`LOCK TABLE ONLY ${relation} IN ACCESS SHARE MODE`));
@@ -106,9 +89,8 @@ export class PostgresRemoteDatasetReader {
       })));
       const selected = columns.rows.map(column => quotePostgresIdentifier(column.name)).join(',');
       const text = `SELECT ${selected} FROM ONLY ${relation}`;
-      const rawTypes = { getTypeParser: () => (value: string) => value };
       const metadata = await provider(() => client.query<unknown[]>({
-        text: `${text} LIMIT 0`, rowMode: 'array', types: rawTypes,
+        text: `${text} LIMIT 0`, rowMode: 'array', types: POSTGRES_RAW_TEXT_TYPES,
       }));
       if (metadata.fields.length !== columns.rows.length || metadata.fields.some((field, i) => {
         const column = columns.rows[i]!;
@@ -116,43 +98,22 @@ export class PostgresRemoteDatasetReader {
           field.columnID !== column.attnum || field.dataTypeID !== column.oid || field.format !== 'text';
       })) throw new PostgresDatasetReadError('SCHEMA_CHANGED');
       await checkpoint();
-      native = client.query(new Cursor<unknown[]>(text, [], { rowMode: 'array', types: rawTypes }));
-      const cursor = native;
-      const readNative = (maxRows: number) => provider(() => new Promise<{ rows: unknown[][]; result?: QueryResult }>((resolve, reject) => {
-        cursor.read(maxRows, (error, rows, result) => error ? reject(error) : resolve({ rows, ...(result ? { result } : {}) }));
-      }));
+      const readNative = session.openCursor(text);
       const check = async () => {
-        if (connectionError) throw new PostgresDatasetReadError('PROVIDER_FAILED');
+        session.assertHealthy();
         await checkpoint();
       };
-      pull = new PostgresPullCursor({ codec, limits, fields: metadata.fields, observedAt: new Date().toISOString(), checkpoint: check, readNative });
-      const value = await consume(Object.freeze({ schema: pull.schema, observedAt: pull.observedAt, read: pull.read.bind(pull) }));
+      const pull = new PostgresPullCursor({ codec, limits, fields: metadata.fields, observedAt: new Date().toISOString(), checkpoint: check, readNative });
+      let value: T;
+      try {
+        value = await consume(Object.freeze({ schema: pull.schema, observedAt: pull.observedAt, read: pull.read.bind(pull) }));
+      } catch (error) {
+        // Settle abandoned pulls before the native session closes; preserve the consumer failure.
+        try { await pull.finish(); } catch { /* The terminal failure still causes rollback. */ }
+        throw error;
+      }
       await pull.finish();
-      success = true;
       return value;
-    } finally {
-      let cleanupFailed = false;
-      if (pull && !success) {
-        try { await pull.finish(); } catch { /* The consumer/read failure still causes rollback. */ }
-      }
-      if (native && !connectionError) {
-        try { await native.close(); } catch { cleanupFailed = true; }
-      }
-      if (transaction && !connectionError) {
-        try { await client.query(success && !cleanupFailed ? 'COMMIT' : 'ROLLBACK'); }
-        catch { cleanupFailed = true; }
-      }
-      try { await client.end(); } catch { cleanupFailed = true; }
-      client.removeListener('error', onError);
-      if (cleanupFailed || (success && connectionError)) throw new PostgresDatasetReadError('CLEANUP_FAILED');
-    }
-  }
-}
-
-async function provider<T>(operation: () => Promise<T>): Promise<T> {
-  try { return await operation(); }
-  catch (error) {
-    const code = error !== null && typeof error === 'object' && 'code' in error ? error.code : undefined;
-    throw new PostgresDatasetReadError(code === '57014' ? 'READ_TIMEOUT' : 'PROVIDER_FAILED');
+    });
   }
 }

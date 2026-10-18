@@ -6,7 +6,7 @@
  */
 import type { LocalDataSchemaV1 } from '@dvt/contracts';
 
-import { MAX_BATCH_ROWS, validateGenerationLimits, type GenerationLimits } from '../duckdb/duckDbGenerationProfile.js';
+import { MAX_BATCH_ROWS, validateLocalDataLimits, type GenerationLimits } from '../../domain/localDataBatch.js';
 
 import type { PostgresLocalDataBatchCodec } from './postgresLocalDataBatchCodec.js';
 
@@ -77,7 +77,7 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
       codec: options.codec,
       observedAt: options.observedAt,
       fields: Object.freeze(options.fields.map(copyFieldSignature)),
-      limits: validateGenerationLimits(options.limits),
+      limits: validatePostgresReadLimits(options.limits),
       checkpoint: options.checkpoint,
       readNative: options.readNative,
     });
@@ -90,7 +90,8 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
     if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > MAX_BATCH_ROWS) {
       return this.reject('INVALID_INPUT');
     }
-    const pending = this.pull(maxRows);
+    // Install active before a checkpoint can synchronously reenter read or finish.
+    const pending = Promise.resolve().then(() => this.pull(maxRows));
     this.active = pending;
     // Observe abandoned/caught operations too; a consumer cannot turn failure into successful closure.
     void pending.then(
@@ -180,4 +181,10 @@ function copyFieldSignature(field: PostgresFieldSignature): PostgresFieldSignatu
 
 function asReadError(error: unknown): Error {
   return error instanceof Error ? error : new PostgresDatasetReadError('PROVIDER_FAILED');
+}
+
+/** Translate value-policy errors at the PostgreSQL boundary, not through DuckDB. */
+export function validatePostgresReadLimits(limits: GenerationLimits): GenerationLimits {
+  try { return validateLocalDataLimits(limits); }
+  catch { throw new PostgresDatasetReadError('INVALID_INPUT'); }
 }
