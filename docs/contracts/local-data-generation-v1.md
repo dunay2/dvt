@@ -104,7 +104,7 @@ not a claim of global multi-source consistency.
 
 The row-free ILocalDataGenerationReader receives WorkspaceGraphDraftScope
 separately from DataAccessSelection. The application authorizes before lookup;
-#3392 owns reauthorization and revocation. A missing authorized generation may
+Task [#3392](https://github.com/dunay2/dvt/issues/3392) owns reauthorization and revocation. A missing authorized generation may
 return null; corruption or adapter failure must not masquerade as absence.
 There is no implementation, new endpoint, scheduled job or runtime registration
 in this slice. Exact ID matching never authorizes cross-scope reuse.

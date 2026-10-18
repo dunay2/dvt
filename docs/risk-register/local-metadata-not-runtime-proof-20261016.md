@@ -28,9 +28,9 @@ row payloads and credentials are not contract fields.
 
 ## Required follow-up evidence
 
-#3392 must verify current authorization, scope isolation and revocation.
-#3393 must prove atomic generation publication and pinned-reader behavior.
-#3394/#3395 must prove actual type fidelity, completion/EOF, budgets, cancellation
+Task [#3392](https://github.com/dunay2/dvt/issues/3392) must verify current authorization, scope isolation and revocation.
+Task [#3393](https://github.com/dunay2/dvt/issues/3393) must prove atomic generation publication and pinned-reader behavior.
+Tasks [#3394](https://github.com/dunay2/dvt/issues/3394) and [#3395](https://github.com/dunay2/dvt/issues/3395) must prove actual type fidelity, completion/EOF, budgets, cancellation
 and storage failures with real providers/engines. #3391 itself still requires
 its real dependency-backed contract/build/lint/prepush gates.
 
