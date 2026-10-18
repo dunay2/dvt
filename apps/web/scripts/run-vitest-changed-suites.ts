@@ -127,7 +127,7 @@ export function readChangedFiles(
 export function readBrowserCatalogSnapshots(
   repoRoot: string,
   options: ReadChangedFilesOptions = {}
-): WebCypressCatalogSnapshots | undefined {
+): WebCypressCatalogSnapshots {
   const runGit = options.gitOutput ?? gitOutput;
   const { GIT_BASE: base, GIT_HEAD: head } = readGitComparison(repoRoot, options);
   const dirtyQueries = [
@@ -135,7 +135,7 @@ export function readBrowserCatalogSnapshots(
     ['diff', '--name-only', '-z', '--', WEB_CYPRESS_CATALOG_PATH],
     ['ls-files', '--others', '--exclude-standard', '-z', '--', WEB_CYPRESS_CATALOG_PATH],
   ];
-  if (dirtyQueries.some((args) => runGit(args, repoRoot).length > 0)) return undefined;
+  const dirty = dirtyQueries.some((args) => runGit(args, repoRoot).length > 0);
 
   function readSnapshot(commit: string): unknown {
     const paths = runGit(
@@ -150,7 +150,7 @@ export function readBrowserCatalogSnapshots(
       return null;
     }
   }
-  return { base: readSnapshot(base), head: readSnapshot(head) };
+  return { base: readSnapshot(base), head: readSnapshot(head), ...(dirty ? { dirty: true } : {}) };
 }
 
 function readGitComparison(
@@ -251,10 +251,9 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
   });
   const plan = resolveWebVitestChangedSuitePlan(changedFiles, {
     full: args.full,
-    catalogSnapshots:
-      !args.full && catalogChanged
-        ? readBrowserCatalogSnapshots(repoRoot, { env: comparison })
-        : undefined,
+    catalogSnapshots: catalogChanged
+      ? readBrowserCatalogSnapshots(repoRoot, { env: comparison })
+      : undefined,
   });
   for (const path of plan.browserFiles) {
     if (!existsSync(resolve(repoRoot, path))) {

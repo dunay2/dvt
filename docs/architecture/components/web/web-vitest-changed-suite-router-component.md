@@ -276,7 +276,8 @@ flowchart LR
   Git[Existing Git adapter] --> Snapshots[Base and executed catalog snapshots]
   Snapshots --> Policy[Existing changed-suite query]
   Policy --> Exact[Proven controlled additions]
-  Policy --> Broad[Unproved delta or policy change: complete baseline]
+  Policy --> Reject[Removed or reclassified base member: reject]
+  Policy --> Broad[Retained membership with unproved delta or policy change: complete baseline]
   Source[Session or admission source change] --> Obligations[Shell controlled and both provider capabilities]
   Exact --> Union[Union of independent obligations]
   Broad --> Union
@@ -294,10 +295,19 @@ reject before execution.
 Only additions to `controlled` can narrow catalog-triggered evidence. Existing
 controlled membership and relative order, both provider arrays and the nightly list must remain
 unchanged. Every addition runs even if its spec file was already present. The
-executed catalog must equal the verified HEAD snapshot; staged or working-tree
-catalog divergence falls back to the complete baseline. A missing base catalog
-(including the first extraction), removal, reclassification or unproved delta
-also selects the complete baseline. An unreadable Git reference is an error.
+executed catalog must equal the verified HEAD snapshot before narrowing. A valid
+base is also a retention witness: every prior member must remain in its original
+capability or nightly cadence in both the executed catalog and any valid HEAD
+snapshot. Members added in HEAD must also remain in the executed catalog.
+Removal or reclassification rejects before any command is selected;
+running only the remaining HEAD inventory would silently lose prior evidence.
+This applies in full mode and with staged or working-tree divergence. The Git
+adapter keeps both immutable witnesses and reports local catalog divergence
+explicitly rather than discarding retention evidence. A missing or malformed base (including the first extraction),
+reordering, additive provider changes or another unproved but nondestructive
+delta selects the complete ordinary baseline. An unreadable Git reference is an
+error. Legitimate retirement or cadence migration needs an explicitly governed
+policy change, not a data-only catalog deletion or an implicit stress rerun.
 The existing adapter owns snapshot reads; the policy owns classification. The
 adapter pins one immutable base/head pair for automatic diff discovery and
 catalog snapshots, so a moving branch reference cannot hide a catalog addition.

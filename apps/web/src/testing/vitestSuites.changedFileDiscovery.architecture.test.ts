@@ -120,6 +120,7 @@ describe('Browser catalog Git snapshots', () => {
     'cannot narrow with a dirty %s catalog',
     (dirty) => {
       const result = readBrowserCatalogSnapshots('/repo', {
+        env: { GIT_BASE: 'base', GIT_HEAD: 'head' },
         gitOutput(args) {
           if (
             (dirty === 'index' && args.includes('--cached')) ||
@@ -130,7 +131,8 @@ describe('Browser catalog Git snapshots', () => {
           return gitOutput(args);
         },
       });
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ base, head: WEB_CYPRESS_CATALOG, dirty: true });
+      expect(resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, result)).toBeNull();
     }
   );
 
@@ -213,7 +215,9 @@ describe('Browser catalog Git snapshots', () => {
       writeCatalog(base);
       runGit(['add', '--', WEB_CYPRESS_CATALOG_PATH]);
       writeCatalog(WEB_CYPRESS_CATALOG);
-      expect(readBrowserCatalogSnapshots(root, options)).toBeUndefined();
+      const dirty = readBrowserCatalogSnapshots(root, options);
+      expect(dirty).toEqual({ base, head: WEB_CYPRESS_CATALOG, dirty: true });
+      expect(resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, dirty)).toBeNull();
       expect(runGit(['rev-parse', 'HEAD']).trim()).toBe(headSha);
     } finally {
       rmSync(root, { recursive: true, force: true });

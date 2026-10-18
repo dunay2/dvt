@@ -2,7 +2,7 @@
  * Owned concern: validate the single browser inventory and prove additive controlled deltas.
  * @baseline GH-2931: catalog data must not imply execution-policy changes.
  * @decision Narrow only valid, execution-identical snapshots with unchanged prior membership.
- * @consequence Missing or incompatible evidence retains the complete browser baseline.
+ * @consequence Withdrawn membership rejects; nondestructive uncertainty retains the complete baseline.
  */
 import catalog from './cypress.catalog.json';
 
@@ -13,7 +13,11 @@ const CATALOG_GROUPS = [...WEB_CYPRESS_CAPABILITIES, 'nightly'] as const;
 export type WebCypressCatalog = Readonly<
   Record<(typeof CATALOG_GROUPS)[number], readonly string[]>
 >;
-export type WebCypressCatalogSnapshots = Readonly<{ base: unknown; head: unknown }>;
+export type WebCypressCatalogSnapshots = Readonly<{
+  base: unknown;
+  head: unknown;
+  dirty?: boolean;
+}>;
 
 export function parseWebCypressCatalog(value: unknown): WebCypressCatalog {
   if (
@@ -49,19 +53,38 @@ export function parseWebCypressCatalog(value: unknown): WebCypressCatalog {
 export const WEB_CYPRESS_CATALOG = parseWebCypressCatalog(catalog);
 export const { nightly: WEB_CYPRESS_NIGHTLY_SPECS, ...WEB_CYPRESS_SPECS } = WEB_CYPRESS_CATALOG;
 
+function parseCatalogWitness(value: unknown): WebCypressCatalog | null {
+  try {
+    return parseWebCypressCatalog(value);
+  } catch {
+    return null;
+  }
+}
+
+function requireCatalogRetention(
+  previous: WebCypressCatalog | null,
+  next: WebCypressCatalog | null
+): void {
+  if (!previous || !next) return;
+  for (const group of CATALOG_GROUPS) {
+    const retained = new Set(next[group]);
+    const removed = previous[group].find((path) => !retained.has(path));
+    if (removed)
+      throw new Error(`Browser catalog cannot remove or reclassify ${removed} from ${group}.`);
+  }
+}
+
 export function resolveControlledCatalogAdditions(
   executed: WebCypressCatalog,
   snapshots?: WebCypressCatalogSnapshots
 ): readonly string[] | null {
   if (!snapshots) return null;
-  let base: WebCypressCatalog;
-  let head: WebCypressCatalog;
-  try {
-    base = parseWebCypressCatalog(snapshots.base);
-    head = parseWebCypressCatalog(snapshots.head);
-  } catch {
-    return null;
-  }
+  const base = parseCatalogWitness(snapshots.base);
+  const head = parseCatalogWitness(snapshots.head);
+  requireCatalogRetention(base, head);
+  requireCatalogRetention(base, executed);
+  requireCatalogRetention(head, executed);
+  if (!base || !head || snapshots.dirty) return null;
   const equal = (left: readonly string[], right: readonly string[]): boolean =>
     left.length === right.length && left.every((path, index) => path === right[index]);
   if (CATALOG_GROUPS.some((key) => !equal(executed[key], head[key]))) return null;

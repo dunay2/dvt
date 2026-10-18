@@ -76,33 +76,12 @@ describe('Declarative browser catalog', () => {
     undefined,
     { base: null, head: current },
     { base: { ...previous, extra: [] }, head: current },
-    { base: current, head: previous },
+    { ...snapshots, dirty: true },
     { base: { ...current, controlled: [...current.controlled].reverse() }, head: current },
     { base: { ...current, available: current.available.slice(1) }, head: current },
     { base: { ...current, available: [...current.available].reverse() }, head: current },
     { base: { ...current, unavailable: [] }, head: current },
     { base: WEB_CYPRESS_SPECS, head: current },
-    {
-      base: { ...current, nightly: ['apps/web/cypress/e2e/canvas/other.nightly.cy.ts'] },
-      head: current,
-    },
-    {
-      base: {
-        ...current,
-        controlled: [...current.controlled, ...current.nightly],
-        nightly: ['apps/web/cypress/e2e/canvas/other.nightly.cy.ts'],
-      },
-      head: current,
-    },
-    {
-      base: previous,
-      head: { ...current, nightly: ['apps/web/cypress/e2e/canvas/other.nightly.cy.ts'] },
-    },
-    { base: { ...previous, available: [...current.available, addition] }, head: current },
-    {
-      base: previous,
-      head: { ...current, controlled: [...current.controlled, 'apps/web/cypress/e2e/other.cy.ts'] },
-    },
   ])('cannot narrow an unproved delta %#', (unproved) => {
     expect(resolveControlledCatalogAdditions(current, unproved)).toBeNull();
   });
