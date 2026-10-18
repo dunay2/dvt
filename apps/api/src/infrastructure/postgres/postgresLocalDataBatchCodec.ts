@@ -9,9 +9,10 @@ import type { LocalDataSchemaV1 } from '@dvt/contracts';
 import {
   MAX_BATCH_BYTES,
   MAX_BATCH_ROWS,
-  validateGenerationBatch,
+  MAX_BATCH_COLUMNS,
+  validateLocalDataBatch,
   type GenerationCell,
-} from '../duckdb/duckDbGenerationProfile.js';
+} from '../../domain/localDataBatch.js';
 
 type CodecFailure = 'UNSUPPORTED_POSTGRES_SCHEMA' | 'INVALID_POSTGRES_BATCH';
 export class PostgresLocalDataCodecError extends Error {
@@ -39,11 +40,16 @@ export type PostgresLocalDataBatchCodec = Readonly<{
 
 function typeForOid(oid: number): Readonly<{ sourceType: string; localType: string }> {
   switch (oid) {
-    case 20: return { sourceType: 'int8', localType: 'BIGINT' };
-    case 16: return { sourceType: 'bool', localType: 'BOOLEAN' };
-    case 25: return { sourceType: 'text', localType: 'VARCHAR' };
-    case 1043: return { sourceType: 'varchar', localType: 'VARCHAR' };
-    default: throw new PostgresLocalDataCodecError('UNSUPPORTED_POSTGRES_SCHEMA');
+    case 20:
+      return { sourceType: 'int8', localType: 'BIGINT' };
+    case 16:
+      return { sourceType: 'bool', localType: 'BOOLEAN' };
+    case 25:
+      return { sourceType: 'text', localType: 'VARCHAR' };
+    case 1043:
+      return { sourceType: 'varchar', localType: 'VARCHAR' };
+    default:
+      throw new PostgresLocalDataCodecError('UNSUPPORTED_POSTGRES_SCHEMA');
   }
 }
 
@@ -58,7 +64,7 @@ function decodeCell(type: string, value: unknown, nullable: boolean): Generation
       throw new PostgresLocalDataCodecError('INVALID_POSTGRES_BATCH');
     }
     const integer = BigInt(value);
-    if (integer < -(1n << 63n) || integer >= (1n << 63n)) {
+    if (integer < -(1n << 63n) || integer >= 1n << 63n) {
       throw new PostgresLocalDataCodecError('INVALID_POSTGRES_BATCH');
     }
     return integer;
@@ -79,20 +85,34 @@ function decodeCell(type: string, value: unknown, nullable: boolean): Generation
 export function createPostgresLocalDataBatchCodec(
   fields: readonly PostgresLocalDataField[]
 ): PostgresLocalDataBatchCodec {
-  if (!Array.isArray(fields) || fields.length < 1 || fields.length > 32) {
+  if (!Array.isArray(fields) || fields.length < 1 || fields.length > MAX_BATCH_COLUMNS) {
     throw new PostgresLocalDataCodecError('UNSUPPORTED_POSTGRES_SCHEMA');
   }
   const columns: LocalDataSchemaV1['columns'] = Array.from(fields, (field, ordinal) => {
-    if (!field || field.ordinal !== ordinal || typeof field.nullable !== 'boolean' ||
-        typeof field.name !== 'string' || !field.name.length || field.name.length > 256 ||
-        field.name.includes('\0') || /[\uD800-\uDFFF]/u.test(field.name)) {
+    if (
+      !field ||
+      field.ordinal !== ordinal ||
+      typeof field.nullable !== 'boolean' ||
+      typeof field.name !== 'string' ||
+      !field.name.length ||
+      field.name.length > 256 ||
+      field.name.includes('\0') ||
+      /[\uD800-\uDFFF]/u.test(field.name)
+    ) {
       throw new PostgresLocalDataCodecError('UNSUPPORTED_POSTGRES_SCHEMA');
     }
-    return Object.freeze({ ordinal, name: field.name, nullable: field.nullable,
-      ...typeForOid(field.dataTypeID) });
+    return Object.freeze({
+      ordinal,
+      name: field.name,
+      nullable: field.nullable,
+      ...typeForOid(field.dataTypeID),
+    });
   });
   Object.freeze(columns);
-  const schema: LocalDataSchemaV1 = Object.freeze({ schemaVersion: 'local-data-schema.v1', columns });
+  const schema: LocalDataSchemaV1 = Object.freeze({
+    schemaVersion: 'local-data-schema.v1',
+    columns,
+  });
   return Object.freeze({
     schema,
     decode(input: readonly (readonly unknown[])[]) {
@@ -119,7 +139,7 @@ export function createPostgresLocalDataBatchCodec(
         rows.push(decoded);
       }
       try {
-        const batch = validateGenerationBatch(columns, rows);
+        const batch = validateLocalDataBatch(columns, rows);
         return { ...batch, decodedTextBytes };
       } catch {
         throw new PostgresLocalDataCodecError('INVALID_POSTGRES_BATCH');

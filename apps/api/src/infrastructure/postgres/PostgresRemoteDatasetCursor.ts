@@ -6,7 +6,11 @@
  */
 import type { LocalDataSchemaV1 } from '@dvt/contracts';
 
-import { MAX_BATCH_ROWS, validateGenerationLimits, type GenerationLimits } from '../duckdb/duckDbGenerationProfile.js';
+import {
+  MAX_BATCH_ROWS,
+  validateLocalDataLimits,
+  type GenerationLimits,
+} from '../../domain/localDataBatch.js';
 
 import type { PostgresLocalDataBatchCodec } from './postgresLocalDataBatchCodec.js';
 
@@ -56,7 +60,14 @@ type Options = Readonly<{
   observedAt: string;
   limits: GenerationLimits;
   checkpoint: () => Promise<void>;
-  readNative: (maxRows: number) => Promise<Readonly<{ rows: unknown[][]; result?: Readonly<{ fields: readonly PostgresFieldSignature[] }> }>>;
+  readNative: (
+    maxRows: number
+  ) => Promise<
+    Readonly<{
+      rows: unknown[][];
+      result?: Readonly<{ fields: readonly PostgresFieldSignature[] }>;
+    }>
+  >;
 }>;
 
 export class PostgresPullCursor implements PostgresDatasetCursor {
@@ -77,7 +88,7 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
       codec: options.codec,
       observedAt: options.observedAt,
       fields: Object.freeze(options.fields.map(copyFieldSignature)),
-      limits: validateGenerationLimits(options.limits),
+      limits: validatePostgresReadLimits(options.limits),
       checkpoint: options.checkpoint,
       readNative: options.readNative,
     });
@@ -90,12 +101,14 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
     if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > MAX_BATCH_ROWS) {
       return this.reject('INVALID_INPUT');
     }
-    // Install active before invoking any injected, potentially reentrant callback.
+    // Install active before a checkpoint can synchronously reenter read or finish.
     const pending = Promise.resolve().then(() => this.pull(maxRows));
     this.active = pending;
     // Observe abandoned/caught operations too; a consumer cannot turn failure into successful closure.
     void pending.then(
-      () => { this.active = undefined; },
+      () => {
+        this.active = undefined;
+      },
       (error: unknown) => {
         this.failure ??= asReadError(error);
         this.active = undefined;
@@ -117,7 +130,11 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
 
   private async finishOnce(pending: Promise<PostgresDatasetBatch> | undefined): Promise<void> {
     if (pending) {
-      try { await pending; } catch { /* The terminal failure is retained below. */ }
+      try {
+        await pending;
+      } catch {
+        /* The terminal failure is retained below. */
+      }
     }
     if (this.failure) throw this.failure;
     try {
@@ -149,9 +166,10 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
       throw new PostgresDatasetReadError('SCHEMA_CHANGED');
     }
     if (batch.rows.length > remaining) throw new PostgresDatasetReadError('READ_BUDGET');
-    const decoded = batch.rows.length === 0
-      ? { rows: [], logicalBytes: 0, decodedTextBytes: 0 }
-      : this.options.codec.decode(batch.rows);
+    const decoded =
+      batch.rows.length === 0
+        ? { rows: [], logicalBytes: 0, decodedTextBytes: 0 }
+        : this.options.codec.decode(batch.rows);
     const eof = batch.rows.length < requested;
     await this.options.checkpoint();
     if (this.failure) throw this.failure;
@@ -170,19 +188,44 @@ function sameFields(
   actual: readonly PostgresFieldSignature[] | undefined
 ): boolean {
   if (!Array.isArray(actual)) return false;
-  return expected.length === actual.length && expected.every((field, i) => {
-    const other = actual[i];
-    return other !== null && typeof other === 'object' && field.name === other.name && field.dataTypeID === other.dataTypeID &&
-      field.tableID === other.tableID && field.columnID === other.columnID &&
-      field.dataTypeModifier === other.dataTypeModifier && other.format === 'text';
-  });
+  return (
+    expected.length === actual.length &&
+    expected.every((field, i) => {
+      const other = actual[i];
+      return (
+        other !== null &&
+        typeof other === 'object' &&
+        field.name === other.name &&
+        field.dataTypeID === other.dataTypeID &&
+        field.tableID === other.tableID &&
+        field.columnID === other.columnID &&
+        field.dataTypeModifier === other.dataTypeModifier &&
+        other.format === 'text'
+      );
+    })
+  );
 }
 
 function copyFieldSignature(field: PostgresFieldSignature): PostgresFieldSignature {
-  return Object.freeze({ name: field.name, dataTypeID: field.dataTypeID, tableID: field.tableID,
-    columnID: field.columnID, dataTypeModifier: field.dataTypeModifier, format: field.format });
+  return Object.freeze({
+    name: field.name,
+    dataTypeID: field.dataTypeID,
+    tableID: field.tableID,
+    columnID: field.columnID,
+    dataTypeModifier: field.dataTypeModifier,
+    format: field.format,
+  });
 }
 
 function asReadError(error: unknown): Error {
   return error instanceof Error ? error : new PostgresDatasetReadError('PROVIDER_FAILED');
+}
+
+/** Translate value-policy errors at the PostgreSQL boundary, not through DuckDB. */
+export function validatePostgresReadLimits(limits: GenerationLimits): GenerationLimits {
+  try {
+    return validateLocalDataLimits(limits);
+  } catch {
+    throw new PostgresDatasetReadError('INVALID_INPUT');
+  }
 }
