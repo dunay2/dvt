@@ -102,12 +102,14 @@ not a claim of global multi-source consistency.
 
 ## Scope, consumers and compatibility
 
-The row-free ILocalDataGenerationReader receives WorkspaceGraphDraftScope
+The planned row-free ILocalDataGenerationReader will receive WorkspaceGraphDraftScope
 separately from DataAccessSelection. The application authorizes before lookup;
 Task [#3392](https://github.com/dunay2/dvt/issues/3392) owns reauthorization and revocation. A missing authorized generation may
 return null; corruption or adapter failure must not masquerade as absence.
-There is no implementation, new endpoint, scheduled job or runtime registration
-in this slice. Exact ID matching never authorizes cross-scope reuse.
+The API source port will be introduced with its real consumers in the dependent
+implementation, rather than as unreachable source in this metadata-only slice.
+There is no new endpoint, scheduled job or runtime registration here. Exact ID
+matching never authorizes cross-scope reuse.
 
 ### Planned query contract
 
@@ -126,7 +128,7 @@ it does not claim that database admission preceded that proposal.
 | Negative proof               | Wrong ID families, missing/mismatched selection IDs, stale digests, unsafe counters, false FULL and terminal capture resurrection are rejected by the contract tests |
 
 The metadata schemas and pure helpers implement value-object invariants of
-this planned read contract. The port remains an interface. These declarations
+this planned read contract. The port signature remains a design declaration. These declarations
 do not claim an implemented, authorized storage query or actual type conversion.
 
 Existing contracts and their tests remain unchanged. The public barrel gains

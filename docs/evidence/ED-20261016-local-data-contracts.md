@@ -12,7 +12,6 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/local-data/index.ts
   - packages/@dvt/contracts/src/contracts/local-data/localDataInvariants.ts
   - packages/@dvt/contracts/src/contracts/local-data/LocalDataGeneration.v1.ts
-  - apps/api/src/application/ports/localDataPlane.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test test/local-data
@@ -31,8 +30,9 @@ No production capability is enabled by this metadata contract.
 ## Actual local work
 
 Add strict Zod metadata contracts, UUIDv7 IDs using @dvt/crypto, acquisition and
-schema digests, generation/selection checks, capture transitions and a row-free
-API read port. Reuse ConnectedSourceRef, WorkingDataCoverage and
+schema digests, generation/selection checks and capture transitions. The planned
+row-free API query is documented; its source port belongs with real consumers
+in the dependent implementation. Reuse ConnectedSourceRef, WorkingDataCoverage and
 DataAccessSelection; no replacement of DataAccess.v1, no DuckDB implementation.
 The contract rationale and matrix were written before implementation.
 
@@ -110,15 +110,26 @@ contracts tests or contracts build.
   missing glossary source and optional result fixture; those omissions are not
   claimed as exercised golden cases. The two affected metadata digest golden
   assertions ran in the 149-test dependency-backed suite.
-- `pnpm arch:deps`: PASS. The reachability report identifies the uncomposed
-  `ILocalDataGenerationReader` as an orphan/unused-export candidate, consistent
-  with its planned, type-only boundary; no runtime consumer is claimed.
+- The initial unscoped `pnpm arch:deps` returned PASS while reporting the
+  uncomposed `ILocalDataGenerationReader` as an orphan/unused-export candidate.
+  That run did not prove changed-file reachability. CI and the local explicit
+  main/head reproduction correctly rejected the file as new orphan source.
+  The unused API interface was removed from this metadata-only cut; its
+  signature remains planned in the contract until real consumers implement it.
+  No fake consumer, test-only import or reachability exemption was added.
 - The exact-base/head Planning DB implementation baseline initially failed
   on 48 undeclared proposal symbols. Audited `CreateArchitectureDesign` and
   `RecordFeatureMechanizationRail` operations reconciled that specific scope
   before checkout corrections. No import/rebuild or fabricated earlier
   admission. Design `GH-3391-LOCAL-GENERATION-METADATA` is in review; the
   row-free storage query remains planned and has no runtime adapter.
+
+The boundary correction was admitted before editing under design
+`GH-3391-METADATA-CONTRACT-BOUNDARY`, with provenance at
+https://github.com/dunay2/dvt/issues/3391#issuecomment-6252338125. The audited
+feature revision replaces the implemented symbol set with the same 47 metadata
+symbols, excluding the unimplemented API interface. The original 48-symbol
+proposal admission and its history are retained; no earlier approval is claimed.
 
 The admission and its Fowler/DDD scope, negative matrix and validation boundary
 are recorded at https://github.com/dunay2/dvt/issues/3391#issuecomment-6251920732.
