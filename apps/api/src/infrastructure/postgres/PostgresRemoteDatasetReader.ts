@@ -15,16 +15,11 @@ import type { ILocalDataOperationAccess } from '../../application/ports/localDat
 import { validateGenerationLimits, type GenerationLimits } from '../duckdb/duckDbGenerationProfile.js';
 import { assertPostgresWarehouseDatabase } from '../warehouseSourceImport/assertPostgresWarehouseDatabase.js';
 
-import {
-  authorizePostgresSourceObject,
-  parseRelationalSourceObjectId,
-  quotePostgresIdentifier,
-} from './postgresAuthorizedSourceObject.js';
-import { createPostgresLocalDataBatchCodec } from './postgresLocalDataBatchCodec.js';
+import { parseRelationalSourceObjectId } from './postgresAuthorizedSourceObject.js';
+import { preparePostgresDatasetSnapshot, provider } from './postgresDatasetSnapshot.js';
 import { PostgresDatasetReadError, PostgresPullCursor, type PostgresDatasetCursor } from './PostgresRemoteDatasetCursor.js';
 
 type Input = Readonly<{ target: WarehouseSourceObjectProbeTarget; access: ILocalDataOperationAccess; limits: GenerationLimits; timeoutMs: number }>;
-type Column = { attnum: number; name: string; oid: number; nullable: boolean };
 
 export class PostgresRemoteDatasetReader {
   public constructor(private readonly credentials: IPostgresCredentialBindingResolver) {}
@@ -83,40 +78,9 @@ export class PostgresRemoteDatasetReader {
          SET LOCAL lock_timeout = '${Math.min(timeoutMs, 5000)}ms';
          SET LOCAL idle_in_transaction_session_timeout = '${timeoutMs}ms'`
       ));
-      const relation = `${quotePostgresIdentifier(locator.schema)}.${quotePostgresIdentifier(locator.name)}`;
-      // Acquire the relation lock before reading its metadata; ONLY avoids implicitly locking descendants.
-      await provider(() => client.query(`LOCK TABLE ONLY ${relation} IN ACCESS SHARE MODE`));
-      const authorized = await provider(() => authorizePostgresSourceObject(client, locator, target.objectId, target.expectedPublicationToken));
-      if (authorized.relation_kind !== 'r') throw new PostgresDatasetReadError('UNSUPPORTED_SOURCE');
-      const identity = await provider(() => client.query<{ oid: string; inherited: boolean; partitioned: boolean }>(
-        `SELECT c.oid::text AS oid, c.relhassubclass AS inherited, c.relispartition AS partitioned
-         FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-         WHERE n.nspname=$1 AND c.relname=$2 AND c.relkind='r'`, [locator.schema, locator.name]
-      ));
-      const id = identity.rows[0];
-      if (identity.rows.length !== 1 || !id || !/^[1-9][0-9]{0,9}$/u.test(id.oid) || Number(id.oid) > 4294967295 || id.inherited || id.partitioned) {
-        throw new PostgresDatasetReadError('UNSUPPORTED_SOURCE');
-      }
-      const columns = await provider(() => client.query<Column>(
-        `SELECT attnum::int AS attnum, attname AS name, atttypid::int AS oid, NOT attnotnull AS nullable
-         FROM pg_attribute WHERE attrelid=$1::oid AND attnum>0 AND NOT attisdropped ORDER BY attnum`, [id.oid]
-      ));
-      const codec = createPostgresLocalDataBatchCodec(columns.rows.map((column, ordinal) => ({
-        ordinal, name: column.name, dataTypeID: column.oid, nullable: column.nullable,
-      })));
-      const selected = columns.rows.map(column => quotePostgresIdentifier(column.name)).join(',');
-      const text = `SELECT ${selected} FROM ONLY ${relation}`;
-      const rawTypes = { getTypeParser: () => (value: string) => value };
-      const metadata = await provider(() => client.query<unknown[]>({
-        text: `${text} LIMIT 0`, rowMode: 'array', types: rawTypes,
-      }));
-      if (metadata.fields.length !== columns.rows.length || metadata.fields.some((field, i) => {
-        const column = columns.rows[i]!;
-        return field.name !== column.name || field.tableID !== Number(id.oid) ||
-          field.columnID !== column.attnum || field.dataTypeID !== column.oid || field.format !== 'text';
-      })) throw new PostgresDatasetReadError('SCHEMA_CHANGED');
+      const snapshot = await preparePostgresDatasetSnapshot(client, locator, target);
       await checkpoint();
-      native = client.query(new Cursor<unknown[]>(text, [], { rowMode: 'array', types: rawTypes }));
+      native = client.query(new Cursor<unknown[]>(snapshot.text, [], { rowMode: 'array', types: snapshot.types }));
       const cursor = native;
       const readNative = (maxRows: number) => provider(() => new Promise<{ rows: unknown[][]; result?: QueryResult }>((resolve, reject) => {
         cursor.read(maxRows, (error, rows, result) => error ? reject(error) : resolve({ rows, ...(result ? { result } : {}) }));
@@ -125,7 +89,7 @@ export class PostgresRemoteDatasetReader {
         if (connectionError) throw new PostgresDatasetReadError('PROVIDER_FAILED');
         await checkpoint();
       };
-      pull = new PostgresPullCursor({ codec, limits, fields: metadata.fields, observedAt: new Date().toISOString(), checkpoint: check, readNative });
+      pull = new PostgresPullCursor({ codec: snapshot.codec, limits, fields: snapshot.fields, observedAt: new Date().toISOString(), checkpoint: check, readNative });
       const value = await consume(Object.freeze({ schema: pull.schema, observedAt: pull.observedAt, read: pull.read.bind(pull) }));
       await pull.finish();
       success = true;
@@ -146,13 +110,5 @@ export class PostgresRemoteDatasetReader {
       client.removeListener('error', onError);
       if (cleanupFailed || (success && connectionError)) throw new PostgresDatasetReadError('CLEANUP_FAILED');
     }
-  }
-}
-
-async function provider<T>(operation: () => Promise<T>): Promise<T> {
-  try { return await operation(); }
-  catch (error) {
-    const code = error !== null && typeof error === 'object' && 'code' in error ? error.code : undefined;
-    throw new PostgresDatasetReadError(code === '57014' ? 'READ_TIMEOUT' : 'PROVIDER_FAILED');
   }
 }

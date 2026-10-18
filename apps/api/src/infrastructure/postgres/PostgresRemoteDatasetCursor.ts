@@ -90,7 +90,8 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
     if (!Number.isSafeInteger(maxRows) || maxRows < 1 || maxRows > MAX_BATCH_ROWS) {
       return this.reject('INVALID_INPUT');
     }
-    const pending = this.pull(maxRows);
+    // Install active before invoking any injected, potentially reentrant callback.
+    const pending = Promise.resolve().then(() => this.pull(maxRows));
     this.active = pending;
     // Observe abandoned/caught operations too; a consumer cannot turn failure into successful closure.
     void pending.then(
@@ -140,9 +141,10 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
     // At the safety ceiling one non-persisted sentinel distinguishes EOF from an incomplete FULL.
     const requested = Math.min(maxRows, remaining || 1);
     const batch = await this.options.readNative(requested);
-    await this.options.checkpoint();
-    if (this.failure) throw this.failure;
-    if (batch.rows.length > requested) throw new PostgresDatasetReadError('PROVIDER_FAILED');
+    // Validate and decode received data synchronously before another callback can mutate it.
+    if (!Array.isArray(batch.rows) || batch.rows.length > requested) {
+      throw new PostgresDatasetReadError('PROVIDER_FAILED');
+    }
     if (!sameFields(this.options.fields, batch.result?.fields)) {
       throw new PostgresDatasetReadError('SCHEMA_CHANGED');
     }
@@ -150,12 +152,15 @@ export class PostgresPullCursor implements PostgresDatasetCursor {
     const decoded = batch.rows.length === 0
       ? { rows: [], logicalBytes: 0, decodedTextBytes: 0 }
       : this.options.codec.decode(batch.rows);
+    const eof = batch.rows.length < requested;
+    await this.options.checkpoint();
+    if (this.failure) throw this.failure;
     if (this.bytes + decoded.logicalBytes > this.options.limits.maxLogicalBytes) {
       throw new PostgresDatasetReadError('READ_BUDGET');
     }
     this.rows += decoded.rows.length;
     this.bytes += decoded.logicalBytes;
-    this.eof = batch.rows.length < requested;
+    this.eof = eof;
     return { ...decoded, endOfSource: this.eof };
   }
 }
