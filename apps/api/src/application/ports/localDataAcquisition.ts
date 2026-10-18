@@ -11,7 +11,11 @@ import type {
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 
-import type { ILocalDataOperationAccess } from './localDataPlane.js';
+import type {
+  ILocalDataOperationAccess,
+  ILocalDataGenerationReader,
+  LocalDataOperationContext,
+} from './localDataPlane.js';
 import type { WarehouseSourceObjectProbeTarget } from './warehouseSourceImport.js';
 
 export type LocalDataCaptureLimits = Readonly<{ maxRows: number; maxLogicalBytes: number }>;
@@ -37,7 +41,10 @@ export type RemoteDatasetReadInput = Readonly<{
 
 export interface IRemoteDatasetReader {
   /** Closure failure rejects even when consume resolved. Consumers must await this before promotion. */
-  withCursor<T>(input: RemoteDatasetReadInput, consume: (cursor: IRemoteDatasetCursor) => Promise<T>): Promise<T>;
+  withCursor<T>(
+    input: RemoteDatasetReadInput,
+    consume: (cursor: IRemoteDatasetCursor) => Promise<T>
+  ): Promise<T>;
 }
 
 export type LocalDataCaptureReceipt = Readonly<{
@@ -48,12 +55,14 @@ export type LocalDataCaptureReceipt = Readonly<{
 /** Bound once to the authorized workspace/access/budget by the server-owned factory. */
 export interface ILocalDataCaptureWriter {
   initialize(): Promise<void>;
-  begin(input: Readonly<{
-    localDatasetId: string;
-    captureId: string;
-    request: LocalDataAcquisitionRequestV1;
-    expectedHeadGenerationId: string | null;
-  }>): Promise<Readonly<{ captureId: string; generationId: string }>>;
+  begin(
+    input: Readonly<{
+      localDatasetId: string;
+      captureId: string;
+      request: LocalDataAcquisitionRequestV1;
+      expectedHeadGenerationId: string | null;
+    }>
+  ): Promise<Readonly<{ captureId: string; generationId: string }>>;
   append(captureId: string, rows: readonly (readonly unknown[])[]): Promise<void>;
   /** Atomic promotion and final authorization belong to the writer, not this port. */
   promote(manifest: LocalDataGenerationManifestV1): Promise<LocalDataCaptureReceipt>;
@@ -64,3 +73,17 @@ export type LocalDataCaptureWriterFactory = (
   access: ILocalDataOperationAccess,
   limits: LocalDataCaptureLimits
 ) => ILocalDataCaptureWriter;
+
+export interface ICaptureLocalDataset {
+  execute(
+    input: unknown,
+    context: LocalDataOperationContext,
+    signal?: globalThis.AbortSignal
+  ): Promise<LocalDataCaptureReceipt>;
+}
+
+/** Internal application capabilities; neither native sessions nor raw-row queries cross this boundary. */
+export type LocalDataCaptureRuntime = Readonly<{
+  captureLocalDataset: ICaptureLocalDataset;
+  readLocalDataGenerationMetadata: ILocalDataGenerationReader;
+}>;

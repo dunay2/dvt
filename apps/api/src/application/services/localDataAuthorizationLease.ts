@@ -17,7 +17,6 @@ import {
   type EnvironmentAccessScope,
   type RequestedScope,
 } from '../ports/accessDecision.js';
-
 import type { ILocalDataOperationAccess } from '../ports/localDataPlane.js';
 
 import type { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
@@ -55,7 +54,10 @@ type LeaseDependencies = Readonly<{
 
 const ACTIONS = Object.freeze({
   view: [AUTHORIZATION_ACTION.workspaceLocalDataView],
-  capture: [AUTHORIZATION_ACTION.workspaceLocalDataCapture, AUTHORIZATION_ACTION.workspaceSourceImportView],
+  capture: [
+    AUTHORIZATION_ACTION.workspaceLocalDataCapture,
+    AUTHORIZATION_ACTION.workspaceSourceImportView,
+  ],
   delete: [AUTHORIZATION_ACTION.workspaceLocalDataDelete],
 });
 
@@ -68,7 +70,7 @@ export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
   readonly #actions: readonly AuthorizationAction[];
   readonly #authorizer: LeaseDependencies['authorizer'];
   readonly #clock: LeaseDependencies['clock'];
-  readonly #controller = new AbortController();
+  readonly #controller = new globalThis.AbortController();
   #failure: LocalDataAuthorizationError | undefined;
   #checking = false;
   #lastObservedAt = Number.NEGATIVE_INFINITY;
@@ -81,12 +83,17 @@ export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
     this.#scope = copyScope(input.scope);
     this.#requestId = nonBlank(input.requestId);
     this.#operation = input.operation;
-    this.#actions = Object.freeze(ACTIONS[input.operation].map((action) => Object.freeze({ ...action })));
+    this.#actions = Object.freeze(
+      ACTIONS[input.operation].map((action) => Object.freeze({ ...action }))
+    );
     this.#authorizer = deps.authorizer;
     this.#clock = deps.clock;
   }
 
-  public static async open(input: LeaseInput, deps: LeaseDependencies): Promise<LocalDataAuthorizationLease> {
+  public static async open(
+    input: LeaseInput,
+    deps: LeaseDependencies
+  ): Promise<LocalDataAuthorizationLease> {
     let lease: LocalDataAuthorizationLease;
     try {
       lease = new LocalDataAuthorizationLease(input, deps);
@@ -97,7 +104,7 @@ export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
     return lease;
   }
 
-  public get signal(): AbortSignal {
+  public get signal(): globalThis.AbortSignal {
     return this.#controller.signal;
   }
 
@@ -112,10 +119,13 @@ export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
         Object.freeze({ ...copyScope(this.#scope), action })
       );
       const outcomes = await this.#authorizer.authorizeMany(
-        copyPrincipal(this.#principal), scopes, this.#requestId
+        copyPrincipal(this.#principal),
+        scopes,
+        this.#requestId
       );
       this.#assertLifetime();
-      if (outcomes.length !== scopes.length) throw new LocalDataAuthorizationError('APPROVAL_MISMATCH');
+      if (outcomes.length !== scopes.length)
+        throw new LocalDataAuthorizationError('APPROVAL_MISMATCH');
       for (const [index, outcome] of outcomes.entries()) {
         if (!outcome.ok) throw new LocalDataAuthorizationError('ACCESS_DENIED');
         const context = outcome.context;
@@ -126,17 +136,21 @@ export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
           scope.tenantId.value !== this.#scope.tenantId.value ||
           scope.projectId.value !== this.#scope.projectId.value ||
           scope.environmentId.value !== this.#scope.environmentId.value ||
-          context.action.name !== expected.name || context.action.kind !== expected.kind ||
+          context.action.name !== expected.name ||
+          context.action.kind !== expected.kind ||
           context.requestId !== this.#requestId ||
           context.principal.principalId !== this.#principal.principalId ||
           context.principal.principalType !== this.#principal.principalType ||
           context.principal.subjectId !== this.#principal.subjectId ||
           context.principal.issuer !== this.#principal.issuer ||
           context.principal.audience !== this.#principal.audience
-        ) throw new LocalDataAuthorizationError('APPROVAL_MISMATCH');
+        )
+          throw new LocalDataAuthorizationError('APPROVAL_MISMATCH');
       }
     } catch (error) {
-      throw this.#invalidate(error instanceof LocalDataAuthorizationError ? error.code : 'AUTHORIZATION_UNAVAILABLE');
+      throw this.#invalidate(
+        error instanceof LocalDataAuthorizationError ? error.code : 'AUTHORIZATION_UNAVAILABLE'
+      );
     } finally {
       this.#checking = false;
     }
@@ -159,7 +173,8 @@ export class LocalDataAuthorizationLease implements ILocalDataOperationAccess {
     if (!Number.isFinite(now)) throw new LocalDataAuthorizationError('INVALID_CLOCK');
     if (now < this.#lastObservedAt) throw new LocalDataAuthorizationError('CLOCK_REGRESSED');
     this.#lastObservedAt = now;
-    if (now >= this.#principal.expiresAt.getTime()) throw new LocalDataAuthorizationError('ASSERTION_EXPIRED');
+    if (now >= this.#principal.expiresAt.getTime())
+      throw new LocalDataAuthorizationError('ASSERTION_EXPIRED');
   }
 
   #invalidate(code: LocalDataAuthorizationFailure): LocalDataAuthorizationError {
@@ -179,18 +194,23 @@ function nonBlank(value: string): string {
 }
 
 function copyScope(scope: EnvironmentAccessScope): EnvironmentAccessScope {
-  return Object.freeze(buildEnvironmentAccessScope(
-    Object.freeze(TenantId.unsafe(nonBlank(scope.tenantId.value))),
-    Object.freeze(ProjectId.unsafe(nonBlank(scope.projectId.value))),
-    Object.freeze(EnvironmentId.unsafe(nonBlank(scope.environmentId.value)))
-  ));
+  return Object.freeze(
+    buildEnvironmentAccessScope(
+      Object.freeze(TenantId.unsafe(nonBlank(scope.tenantId.value))),
+      Object.freeze(ProjectId.unsafe(nonBlank(scope.projectId.value))),
+      Object.freeze(EnvironmentId.unsafe(nonBlank(scope.environmentId.value)))
+    )
+  );
 }
 
 function copyPrincipal(principal: AuthenticatedPrincipal): AuthenticatedPrincipal {
   const expiresAt = principal.expiresAt.getTime();
   const issuedAt = principal.issuedAt?.getTime();
-  if (!Number.isFinite(expiresAt) || (issuedAt !== undefined && !Number.isFinite(issuedAt)) ||
-      (principal.principalType !== 'user' && principal.principalType !== 'service')) {
+  if (
+    !Number.isFinite(expiresAt) ||
+    (issuedAt !== undefined && !Number.isFinite(issuedAt)) ||
+    (principal.principalType !== 'user' && principal.principalType !== 'service')
+  ) {
     throw new LocalDataAuthorizationError('INVALID_INPUT');
   }
   const strings = (values: readonly string[]): readonly string[] => {
@@ -201,9 +221,12 @@ function copyPrincipal(principal: AuthenticatedPrincipal): AuthenticatedPrincipa
   };
   // Allowlist fields; never spread an incoming object that might contain bearer credentials.
   return Object.freeze({
-    principalId: nonBlank(principal.principalId), principalType: principal.principalType,
-    subjectId: nonBlank(principal.subjectId), issuer: nonBlank(principal.issuer),
-    audience: nonBlank(principal.audience), expiresAt: new Date(expiresAt),
+    principalId: nonBlank(principal.principalId),
+    principalType: principal.principalType,
+    subjectId: nonBlank(principal.subjectId),
+    issuer: nonBlank(principal.issuer),
+    audience: nonBlank(principal.audience),
+    expiresAt: new Date(expiresAt),
     ...(principal.tokenId === undefined ? {} : { tokenId: nonBlank(principal.tokenId) }),
     ...(issuedAt === undefined ? {} : { issuedAt: new Date(issuedAt) }),
     rawScopes: strings(principal.rawScopes),

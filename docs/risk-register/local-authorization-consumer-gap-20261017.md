@@ -15,14 +15,14 @@ related_issues:
 
 ## Risk and current exposure
 
-The proposed lease is not wired into a public LOCAL feature. Passing isolated
-permission checks must not be used to enable LOCAL or to claim all reads are
-authorized. No new public data path is introduced by this candidate.
+The protected runtime binds capture and exact-generation metadata to the current
+authorization lease. Those checks do not authorize every future LOCAL operation.
+No public data path or default grant is introduced by this cut.
 
 The approved topology uses one API-owned workspace instance and shared spill.
 The historical per-run spill and separate active/staging databases in older
-#3392 prose are not implementation instructions. Physical native validation
-remains the subsequent #3392-B responsibility.
+#3392 prose are not implementation instructions. Physical validation belongs to
+the native runtime; current evidence is in ED-20261018-local-capture-integration.md.
 
 ## Mandatory mitigation / next owner
 
@@ -43,12 +43,13 @@ permission check. Cross-store linearizability would require a separate design.
 Default action grants are unchanged. No initial LOCAL grant is inferred from
 catalog or creator permissions. No new automatic provider ACL revalidation,
 automatic capture, offline-client topology or native sandbox is promised.
-Keep inactive until parent contracts, full API tests, actual grant-policy tests,
-ARC-3 requirements, native checks and exact-candidate prepush/CI are completed.
+Keep default OFF. Acceptance requires affected API tests and grant-policy tests,
+ARC-3 requirements, native checks and exact-candidate prepush/CI.
 
 ## Evidence limitations
 
-57 focused tests use the actual API authorization service but controlled decision
-and audit ports. 9 real embedded-policy composition tests await full dependencies.
-There is no production authorization, storage or native-OS proof in this cut.
-The code, test evidence and Draft publication state must remain explicit.
+Lease tests use the actual authorization service with controlled decision and
+audit ports. Embedded-policy composition uses controlled grant persistence.
+Native proof uses the production capture/metadata factory with actual PostgreSQL
+and DuckDB; it does not prove production identity-provider/grant persistence.
+Current results and remaining gates are recorded in the integration evidence.

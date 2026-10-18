@@ -7,10 +7,18 @@
 import { PostgresCredentialRefSchema, type WorkspaceGraphDraftScope } from '@dvt/contracts';
 import { jcsCanonicalize, sha256HexUtf8 } from '@dvt/crypto';
 
-import { EnvironmentId, ProjectId, TenantId, type AuthenticatedPrincipal } from '../../domain/auth/types.js';
+import {
+  EnvironmentId,
+  ProjectId,
+  TenantId,
+  type AuthenticatedPrincipal,
+} from '../../domain/auth/types.js';
 import { buildEnvironmentAccessScope } from '../ports/accessDecision.js';
 import type { ILocalDataOperationAccess } from '../ports/localDataPlane.js';
-import type { IWarehouseConnectionCatalog, WarehouseSourceObjectProbeTarget } from '../ports/warehouseSourceImport.js';
+import type {
+  IWarehouseConnectionCatalog,
+  WarehouseSourceObjectProbeTarget,
+} from '../ports/warehouseSourceImport.js';
 
 import type { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
 import { LocalDataAuthorizationLease } from './localDataAuthorizationLease.js';
@@ -36,8 +44,11 @@ type BoundCaptureAccess = Readonly<{
 
 /** Scoped resource callback: completion or rejection closes the same lease exactly once. */
 export async function withCaptureSourceAccess<T>(
-  deps: CaptureAccessDependencies, command: CaptureCommand, context: CaptureAccessContext,
-  callerSignal: AbortSignal | undefined, consume: (bound: BoundCaptureAccess) => Promise<T>
+  deps: CaptureAccessDependencies,
+  command: CaptureCommand,
+  context: CaptureAccessContext,
+  callerSignal: globalThis.AbortSignal | undefined,
+  consume: (bound: BoundCaptureAccess) => Promise<T>
 ): Promise<T> {
   if (callerSignal?.aborted) throw new LocalDataCaptureError('CANCELLED');
   const startedAt = deps.clock().getTime();
@@ -45,20 +56,34 @@ export async function withCaptureSourceAccess<T>(
   const { scope, principal, requestId } = context;
   // No bearer/token/secret; capture the principal identity before the first await.
   const principalContext = {
-    principalId: principal.principalId, principalType: principal.principalType,
-    subjectId: principal.subjectId, issuer: principal.issuer, audience: principal.audience,
+    principalId: principal.principalId,
+    principalType: principal.principalType,
+    subjectId: principal.subjectId,
+    issuer: principal.issuer,
+    audience: principal.audience,
   };
-  const lease = await LocalDataAuthorizationLease.open({
-    principal, operation: 'capture', requestId,
-    scope: buildEnvironmentAccessScope(TenantId.unsafe(scope.tenantId),
-      ProjectId.unsafe(scope.projectId), EnvironmentId.unsafe(scope.environmentId)),
-  }, { authorizer: deps.authorizer, clock: deps.clock });
+  const lease = await LocalDataAuthorizationLease.open(
+    {
+      principal,
+      operation: 'capture',
+      requestId,
+      scope: buildEnvironmentAccessScope(
+        TenantId.unsafe(scope.tenantId),
+        ProjectId.unsafe(scope.projectId),
+        EnvironmentId.unsafe(scope.environmentId)
+      ),
+    },
+    { authorizer: deps.authorizer, clock: deps.clock }
+  );
   try {
-    const signal = callerSignal ? AbortSignal.any([lease.signal, callerSignal]) : lease.signal;
+    const signal = callerSignal
+      ? globalThis.AbortSignal.any([lease.signal, callerSignal])
+      : lease.signal;
     const assertActive = () => {
       if (signal.aborted) throw new LocalDataCaptureError('CANCELLED');
       const now = deps.clock().getTime();
-      if (!Number.isFinite(now) || now < startedAt) throw new LocalDataCaptureError('INVALID_EVIDENCE');
+      if (!Number.isFinite(now) || now < startedAt)
+        throw new LocalDataCaptureError('INVALID_EVIDENCE');
       if (now - startedAt >= deps.timeoutMs) throw new LocalDataCaptureError('CAPTURE_TIMEOUT');
     };
     assertActive();
@@ -71,7 +96,8 @@ export async function withCaptureSourceAccess<T>(
       assertActive();
       const current = await resolveCaptureTarget(deps.catalog, scope, command);
       assertActive();
-      if (jcsCanonicalize(current) !== binding) throw new LocalDataCaptureError('SOURCE_BINDING_CHANGED');
+      if (jcsCanonicalize(current) !== binding)
+        throw new LocalDataCaptureError('SOURCE_BINDING_CHANGED');
     };
     const access: ILocalDataOperationAccess = Object.freeze({
       signal,
@@ -79,9 +105,14 @@ export async function withCaptureSourceAccess<T>(
       beforePromotion: () => check(() => lease.beforePromotion()),
     });
     // Admission context only: not a credential version, grant or remote snapshot certificate.
-    const providerContextSha256 = sha256HexUtf8(jcsCanonicalize({
-      profile: 'local-capture-admission.v1', scope, principal: principalContext, target,
-    }));
+    const providerContextSha256 = sha256HexUtf8(
+      jcsCanonicalize({
+        profile: 'local-capture-admission.v1',
+        scope,
+        principal: principalContext,
+        target,
+      })
+    );
     return await consume({ access, target, providerContextSha256, startedAt });
   } finally {
     lease.close();
@@ -89,18 +120,32 @@ export async function withCaptureSourceAccess<T>(
 }
 
 async function resolveCaptureTarget(
-  catalog: CaptureAccessDependencies['catalog'], scope: WorkspaceGraphDraftScope, command: CaptureCommand
+  catalog: CaptureAccessDependencies['catalog'],
+  scope: WorkspaceGraphDraftScope,
+  command: CaptureCommand
 ): Promise<WarehouseSourceObjectProbeTarget> {
-  const connection = await catalog.getConnection(scope, command.sourceRef.connectionRef.connectionId);
+  const connection = await catalog.getConnection(
+    scope,
+    command.sourceRef.connectionRef.connectionId
+  );
   const credential = PostgresCredentialRefSchema.safeParse(connection.credentialRef);
-  if (connection.id !== command.sourceRef.connectionRef.connectionId ||
-      connection.type !== command.sourceRef.connectionRef.provider || connection.type !== 'postgres' ||
-      typeof connection.database !== 'string' || !connection.database.trim() || !credential.success) {
+  if (
+    connection.id !== command.sourceRef.connectionRef.connectionId ||
+    connection.type !== command.sourceRef.connectionRef.provider ||
+    connection.type !== 'postgres' ||
+    typeof connection.database !== 'string' ||
+    !connection.database.trim() ||
+    !credential.success
+  ) {
     throw new LocalDataCaptureError('SOURCE_REJECTED');
   }
   return Object.freeze({
-    type: connection.type, database: connection.database, credentialRef: credential.data,
+    type: connection.type,
+    database: connection.database,
+    credentialRef: credential.data,
     objectId: command.sourceRef.sourceObjectId,
-    ...(command.expectedPublicationToken === undefined ? {} : { expectedPublicationToken: command.expectedPublicationToken }),
+    ...(command.expectedPublicationToken === undefined
+      ? {}
+      : { expectedPublicationToken: command.expectedPublicationToken }),
   });
 }

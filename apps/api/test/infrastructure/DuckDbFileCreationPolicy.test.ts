@@ -7,9 +7,9 @@ import { promisify } from 'node:util';
 import { it } from 'vitest';
 
 const execute = promisify(execFile);
-const apiRoot = fileURLToPath(new URL('../../', import.meta.url));
+const apiRoot = fileURLToPath(new globalThis.URL('../../', import.meta.url));
 const preload = fileURLToPath(
-  new URL('../../../../scripts/local-data-private-creation.cjs', import.meta.url)
+  new globalThis.URL('../../../../scripts/local-data-private-creation.cjs', import.meta.url)
 );
 // Only fixture bytes and fixed SQL enter this child; it does not acquire a source or bypass DVT.
 const probe = `
@@ -43,7 +43,7 @@ const probe = `
     connection = await instance.connect();
     assert.deepEqual((await connection.runAndReadAll('SELECT value FROM proof')).getRows(), [[42]]);
     assert.equal((await lstat(database)).mode & 0o7777, dbMode);
-    console.log(JSON.stringify({ version, dbMode, walMode, reopened: true }));
+    process.stdout.write(JSON.stringify({ version, dbMode, walMode, reopened: true }));
   } finally {
     try { connection?.closeSync(); } finally {
       try { instance?.closeSync(); } finally { await rm(root, { recursive: true, force: true }); }
@@ -65,12 +65,22 @@ if (process.platform === 'win32') {
     it(`measures native DB/WAL: mask ${initialMask}, explicit preload ${usePreload}`, async () => {
       const nodeArgs = [
         ...(usePreload ? ['--require', preload] : []),
-        '--input-type=module', '-e', probe,
+        '--input-type=module',
+        '-e',
+        probe,
       ];
-      const { stdout } = await execute('/bin/sh', [
-        '-c', 'umask "$1"; shift; exec "$@"', 'dvt-native-proof',
-        initialMask, process.execPath, ...nodeArgs,
-      ], { cwd: apiRoot, timeout: 10000, maxBuffer: 1048576 });
+      const { stdout } = await execute(
+        '/bin/sh',
+        [
+          '-c',
+          'umask "$1"; shift; exec "$@"',
+          'dvt-native-proof',
+          initialMask,
+          process.execPath,
+          ...nodeArgs,
+        ],
+        { cwd: apiRoot, timeout: 10000, maxBuffer: 1048576 }
+      );
       const observed: unknown = JSON.parse(stdout.trim());
       assert.ok(observed !== null && typeof observed === 'object');
       const result = observed as Record<string, unknown>;
@@ -79,7 +89,9 @@ if (process.platform === 'win32') {
       assert.equal(result.reopened, true);
       assert.equal(typeof result.version, 'string');
       // This is non-sensitive native evidence: modes/version only; no file paths or row values.
-      console.info('DVT_NATIVE_CREATION_PROOF', JSON.stringify({ initialMask, usePreload, ...result }));
+      process.stdout.write(
+        `DVT_NATIVE_CREATION_PROOF ${JSON.stringify({ initialMask, usePreload, ...result })}\n`
+      );
     }, 15000);
   }
 }

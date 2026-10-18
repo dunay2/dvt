@@ -20,6 +20,7 @@ import type { IRunExecutionContextBindingPolicy } from '@dvt/engine';
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
+import type { LocalDataCaptureRuntime } from '../application/ports/localDataAcquisition.js';
 import type { IRunExecutionContextInheritanceWriter } from '../application/ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
 import type { IStartRunLatencyTelemetry } from '../application/ports/StartRunSlaTelemetry.js';
@@ -42,6 +43,7 @@ import type { ContentAddressedArtifactRuntime } from './protectedRuntime/buildPr
 import type { StateStoreRoleBindings } from './stateStoreRoles.js';
 
 export interface ProtectedRuntimeModule {
+  localData?: LocalDataCaptureRuntime;
   startRunUseCase: IStartRunUseCase;
   startRunTelemetry: IStartRunLatencyTelemetry;
   authenticator: IAuthenticator;

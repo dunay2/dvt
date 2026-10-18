@@ -65,8 +65,21 @@ ACL privacy. Do not enable it there as a way to obtain LOCAL Preview.
 Use [`.env.example`](.env.example) to supply explicit positive memory, thread,
 spill, open-workspace and concurrent-session budgets before enabling the
 option. Memory and spill settings apply per instance, not per session or as
-hard RSS limits; retain process/container memory and disk limits. This lazy
-infrastructure setup does not make LOCAL execution or Preview available.
+hard RSS limits; retain process/container memory and disk limits.
+
+The protected runtime composes internal capture and exact-generation metadata
+ports with the current authorization service, catalog and credential resolver.
+Capture is capped at 100000 rows, 16 MiB logical bytes, 1024 rows per pull and
+60000 ms. PostgreSQL bigint, boolean and text/varchar (including nullable values)
+are admitted; other types fail closed. No HTTP trigger, LOCAL analytical execution
+or Preview is exposed. Disabled configuration exposes neither capability.
+
+For the built service, pnpm --dir apps/api start:local selects the private-creation
+preload before native modules load and sets process umask 0077. This affects ALL
+newly created API files and children, including logs and authoring artifacts.
+Custom launchers need equivalent private creation policy. Existing files are
+never chmodded or repaired. Reconcile shared-artifact requirements and inherited
+ACLs before selecting this entrypoint.
 
 The native driver is pinned in `package.json` and the generated lockfile.
 Driver upgrades require dependency review and rerunning the actual native

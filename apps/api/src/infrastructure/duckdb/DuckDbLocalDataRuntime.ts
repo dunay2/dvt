@@ -14,6 +14,7 @@ import { resolveWorkspaceScopeStorageRoot } from '../workspaceFiles/workspaceSco
 import {
   LocalDataStorageBoundaryError,
   prepareDuckDbWorkspacePaths,
+  validateDuckDbLocalDataRoots,
   readDuckDbWorkspaceIdentity,
   validateDuckDbWorkspaceIdentity,
   type DuckDbWorkspaceIdentity,
@@ -108,6 +109,21 @@ export class DuckDbLocalDataRuntime {
     // Set the admission barrier before any asynchronous drain can yield.
     this.closing ??= Promise.resolve().then(() => this.drainAndClose());
     return this.closing;
+  }
+
+  /** Authorized infrastructure preflight: absent workspaces must not be created by metadata queries. */
+  public async hasWorkspaceDatabase(scope: WorkspaceStorageScope): Promise<boolean> {
+    if (this.closing !== undefined) throw new LocalDataRuntimeError('closed');
+    if (this.configuration.kind === 'disabled') throw new LocalDataRuntimeError('disabled');
+    await validateDuckDbLocalDataRoots(this.configuration);
+    try {
+      await readDuckDbWorkspaceIdentity(this.configuration, scope);
+      return true;
+    } catch (error) {
+      if (error instanceof LocalDataStorageBoundaryError && error.reason === 'not_found')
+        return false;
+      throw error;
+    }
   }
 
   private instanceForScope(

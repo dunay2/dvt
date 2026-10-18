@@ -1,9 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /** Owned concern: verify warehouse connection metadata with server-resolved credentials. */
-import {
-  type IPostgresCredentialBindingResolver,
-} from '@dvt/adapter-postgres';
+import { type IPostgresCredentialBindingResolver } from '@dvt/adapter-postgres';
 import {
   buildRelationalSourceObjectId,
   SourceObjectConstraintSchema,
@@ -36,15 +34,14 @@ import {
   WarehouseSourcePublicationChangedError,
 } from '../../application/ports/warehouseSourceImport.js';
 import {
-  postgresTypeNameFromDataTypeId,
-  serializePostgresSampleCell,
-} from '../postgres/postgresDataSampleSerialization.js';
-
-import {
   authorizePostgresSourceObject,
   parseRelationalSourceObjectId,
   quotePostgresIdentifier,
 } from '../postgres/postgresAuthorizedSourceObject.js';
+import {
+  postgresTypeNameFromDataTypeId,
+  serializePostgresSampleCell,
+} from '../postgres/postgresDataSampleSerialization.js';
 
 import { assertPostgresWarehouseDatabase } from './assertPostgresWarehouseDatabase.js';
 import {
@@ -238,7 +235,10 @@ export class WorkspaceWarehouseConnectionProbe
       transactionStarted = true;
       await client.query(`set local statement_timeout = '${SOURCE_DATA_SAMPLE_TIMEOUT_MS}ms'`);
       await authorizePostgresSourceObject(
-        client, locator, input.objectId, input.expectedPublicationToken
+        client,
+        locator,
+        input.objectId,
+        input.expectedPublicationToken
       );
 
       const result = (await client.query(

@@ -13,6 +13,7 @@ Evidence documents that justify or validate relevant changes.
 
 - [Critical](critical/index.md)
 - [Supporting](supporting/index.md)
+- [#3392-A evidence — candidate, not security acceptance](ED-20261017-local-data-authorization.md)
 - [Algebraic derived output evidence](ED-20260908-algebraic-derived-output.md)
 - [Authoritative Transform output sample](ED-20260915-authoritative-transform-output-sample.md)
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
@@ -37,6 +38,8 @@ Evidence documents that justify or validate relevant changes.
 - [JOIN unary null predicate admission](ED-20260913-join-null-predicates.md)
 - [LEFT JOIN end to end](ED-20260919-left-join-end-to-end.md)
 - [LOCAL generation metadata contract evidence](ED-20261016-local-data-contracts.md)
+- [LOCAL generation persistence candidate evidence](ED-20261017-local-generation-persistence.md)
+- [LOCAL storage boundary candidate evidence](ED-20261017-local-data-storage-boundary.md)
 - [Ordered UNION inputs and bounded composition concerns](ED-20261004-union-inputs-composition-concerns.md)
 - [Producer Input and passive Output boundary](ED-20260926-producer-consumer-input-boundary.md)
 - [RIGHT and FULL OUTER JOIN end to end](ED-20260919-right-full-join-end-to-end.md)

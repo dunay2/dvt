@@ -12,10 +12,10 @@ Related: #3393, #3392, #3398, #3394. Component:
 
 ## Risk and current posture
 
-The persistence candidate remains uncomposed and LOCAL stays off. A catalog
+Persistence is internally composed and LOCAL stays off by default. A catalog
 manifest is not proof of provider EOF, temporal consistency or authority over
-remote rows. The composition root must bind lease/principal/scope and route every
-operation through the protected application boundary before product enablement.
+remote rows. The composition root binds lease/principal/scope for capture and
+exact metadata reads. Future operations must retain that application boundary.
 
 Transaction commit and grant revocation are separate authorities. Checkpoints are
 revalidated before work and before commit, but cannot make remote revocation

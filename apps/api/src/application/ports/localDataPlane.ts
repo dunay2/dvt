@@ -1,7 +1,9 @@
 /**
  * Owned concern: describe an authorized, row-free read of one LOCAL generation.
- * Authorization remains with the API use case, not an ID, hash or this port.
- * No implementation is composed by #3391; #3392/#3393 own authorization/persistence.
+ * @baseline ADR-0058: Warehouse Source Import Rails
+ * @decision Current principal/workspace authorization belongs to the application query.
+ * @consequence No ID, hash, stored manifest or checkpoint can act as an authorization token.
+ * @version 1.0.0
  */
 import type {
   DataAccessSelection,
@@ -9,14 +11,22 @@ import type {
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 
+import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
+
+export type LocalDataOperationContext = Readonly<{
+  principal: AuthenticatedPrincipal;
+  scope: WorkspaceGraphDraftScope;
+  requestId: string;
+}>;
+
 export interface ILocalDataGenerationReader {
   /**
-   * Call only after current scope/action authorization. Recheck as required by #3392.
+   * The application query authorizes context before lookup and rechecks before returning.
    * null means absent within that authorized scope; adapter failures must not return null.
    * The returned manifest must match both selection IDs; no fallback to the latest head.
    */
   readGeneration(
-    scope: WorkspaceGraphDraftScope,
+    context: LocalDataOperationContext,
     selection: Extract<DataAccessSelection, { mode: 'local' }>
   ): Promise<LocalDataGenerationManifestV1 | null>;
 }
@@ -27,7 +37,7 @@ export interface ILocalDataGenerationReader {
  * requires capture permission. This is not a grant, token or commit certificate.
  */
 export interface ILocalDataOperationAccess {
-  readonly signal: AbortSignal;
+  readonly signal: globalThis.AbortSignal;
   checkpoint(): Promise<void>;
   beforePromotion(): Promise<void>;
 }

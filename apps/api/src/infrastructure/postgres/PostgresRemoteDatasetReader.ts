@@ -42,7 +42,9 @@ export class PostgresRemoteDatasetReader {
       database: input.target.database,
       objectId: input.target.objectId,
       credentialRef: input.target.credentialRef,
-      expectedPublicationToken: input.target.expectedPublicationToken,
+      ...(input.target.expectedPublicationToken !== undefined
+        ? { expectedPublicationToken: input.target.expectedPublicationToken }
+        : {}),
     });
     const access = Object.freeze({
       signal: input.access.signal,

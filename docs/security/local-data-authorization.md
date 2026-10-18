@@ -7,11 +7,11 @@ date: 2026-10-17
 
 # Local data authorization — #3392-A candidate
 
-Base: proposal #3671, `0e63c6b5fcc6cdfbf2f13c3f3206f82287ad1330`.
-This cut introduces the missing action vocabulary and an in-memory enforcement
-boundary; it does not grant new privileges, activate LOCAL, or close #3392.
-The user waived blocking Planning DB consultation for this conversation only.
-No architectural acceptance is inferred, and no database is rebuilt.
+Integrated scope: #3394 / #3680, on accepted metadata #3671. Planning DB design
+GH-3394-COMPOSED-LOCAL-CAPTURE owns composition. The current protected runtime binds
+capture and exact-generation metadata consumers to this lease. No default grants,
+public trigger or LOCAL analytical execution is introduced; #3392 remains open
+for its broader product obligations. No Planning DB import/rebuild is performed.
 
 ## Existing and proposed responsibility
 
@@ -30,11 +30,11 @@ Authenticated principal + environment scope + explicit operation
   -> checkpoint during capture, or beforePromotion immediately before commit
 ```
 
-| Operation | Required current DVT grants |
-| --- | --- |
-| view | workspace:local-data:view |
-| capture | workspace:local-data:capture AND workspace:source-import:view |
-| delete | workspace:local-data:delete |
+| Operation | Required current DVT grants                                   |
+| --------- | ------------------------------------------------------------- |
+| view      | workspace:local-data:view                                     |
+| capture   | workspace:local-data:capture AND workspace:source-import:view |
+| delete    | workspace:local-data:delete                                   |
 
 No grants are added to onboarding, compatibility rules, development defaults or
 wildcards. Source object SELECT/credential permissions remain the acquisition
@@ -74,13 +74,13 @@ fixtures, not evidence of real grant persistence or end-to-end authorization.
 
 ## Remaining #3392 responsibility
 
-No current HTTP route consumes this helper. No claim that every LOCAL operation
-is wired. Follow-on consumers must await the check before lookup and at bounded
-capture checkpoints, connect its AbortSignal to real provider cleanup, and verify
-requested generation/scope using #3391 metadata and the current reader.
-Native DB/WAL modes, symlinks, shared-instance settings and spill protection need
-real POSIX/DuckDB tests in the next security sub-cut. Keep the implemented one-file,
-one-instance workspace topology; no old active/staging/run-spill directories.
+No HTTP route consumes this helper. The internal capture consumer awaits checks
+before lookup, at batch boundaries and before promotion; provider resources close
+before READY. The exact-generation reader checks view permission before lookup
+and result publication. No claim is made that delete, analytical queries or all
+future LOCAL operations are wired. Native isolation retains the one-file,
+one-instance workspace topology, not active/staging/run-spill directories.
+Current native proof and explicit limitations live in the integration evidence.
 
 ## Compatibility and rollout
 

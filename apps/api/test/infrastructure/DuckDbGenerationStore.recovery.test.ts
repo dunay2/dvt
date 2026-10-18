@@ -12,27 +12,57 @@ import { DuckDbGenerationStore } from '../../src/infrastructure/duckdb/DuckDbGen
 import { DuckDbLocalDataRuntime } from '../../src/infrastructure/duckdb/DuckDbLocalDataRuntime.js';
 
 const scope = { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' };
-const preload = fileURLToPath(new URL('../../../../scripts/local-data-private-creation.cjs', import.meta.url));
-const runtimeUrl = new URL('../../dist/infrastructure/duckdb/DuckDbLocalDataRuntime.js', import.meta.url).href;
-const storeUrl = new URL('../../dist/infrastructure/duckdb/DuckDbGenerationStore.js', import.meta.url).href;
+const preload = fileURLToPath(
+  new globalThis.URL('../../../../scripts/local-data-private-creation.cjs', import.meta.url)
+);
+const runtimeUrl = new globalThis.URL(
+  '../../dist/infrastructure/duckdb/DuckDbLocalDataRuntime.js',
+  import.meta.url
+).href;
+const storeUrl = new globalThis.URL(
+  '../../dist/infrastructure/duckdb/DuckDbGenerationStore.js',
+  import.meta.url
+).href;
 
 type Marker = { dataset: string; first: string; second: string; capture: string };
 async function killedWriter(program: string): Promise<Marker> {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['--require', preload, '--input-type=module', '-e', program],
-      { cwd: fileURLToPath(new URL('../../', import.meta.url)), stdio: ['ignore', 'pipe', 'pipe'] });
-    let output = ''; let stderr = ''; let marker: Marker | undefined;
-    const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('Writer did not reach the publication boundary')); }, 12000);
-    child.stderr.on('data', data => { stderr = (stderr + String(data)).slice(-4000); });
-    child.stdout.on('data', data => {
-      output += String(data);
-      const lines = output.split('\n'); lines.pop(); // Do not parse a partial pipe chunk.
-      const line = lines.find(value => value.startsWith('KILL_POINT '));
-      if (!line || marker) return;
-      try { marker = JSON.parse(line.slice(11)) as Marker; child.kill('SIGKILL'); }
-      catch (error) { child.kill('SIGKILL'); reject(error); }
+    const child = spawn(
+      process.execPath,
+      ['--require', preload, '--input-type=module', '-e', program],
+      {
+        cwd: fileURLToPath(new globalThis.URL('../../', import.meta.url)),
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }
+    );
+    let output = '';
+    let stderr = '';
+    let marker: Marker | undefined;
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error('Writer did not reach the publication boundary'));
+    }, 12000);
+    child.stderr.on('data', (data) => {
+      stderr = (stderr + String(data)).slice(-4000);
     });
-    child.once('error', error => { clearTimeout(timer); reject(error); });
+    child.stdout.on('data', (data) => {
+      output += String(data);
+      const lines = output.split('\n');
+      lines.pop(); // Do not parse a partial pipe chunk.
+      const line = lines.find((value) => value.startsWith('KILL_POINT '));
+      if (!line || marker) return;
+      try {
+        marker = JSON.parse(line.slice(11)) as Marker;
+        child.kill('SIGKILL');
+      } catch (error) {
+        child.kill('SIGKILL');
+        reject(error);
+      }
+    });
+    child.once('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
     child.once('close', (code, signal) => {
       clearTimeout(timer);
       if (signal === 'SIGKILL' && marker) resolve(marker);
@@ -41,16 +71,27 @@ async function killedWriter(program: string): Promise<Marker> {
   });
 }
 for (const boundary of ['before-commit', 'after-commit'] as const) {
-  it.skipIf(process.platform === 'win32')(`recovers a writer killed ${boundary} without a partial READY/head`, async () => {
-    const sandbox = await realpath(await mkdtemp(path.join(tmpdir(), 'dvt-generation-crash-')));
-    const root = path.join(sandbox, 'local'); const authoring = path.join(sandbox, 'authoring');
-    await mkdir(root, { mode: 0o700 }); await mkdir(authoring, { mode: 0o700 });
-    const config = { kind: 'configured' as const, root, workspaceFilesRoot: authoring,
-      memoryLimitBytes: 134217728, threads: 1, maxTempBytes: 268435456,
-      maxOpenWorkspaces: 2, maxConcurrentSessions: 2 };
-    let runtime: DuckDbLocalDataRuntime | undefined;
-    try {
-      const marker = await killedWriter(`
+  it.skipIf(process.platform === 'win32')(
+    `recovers a writer killed ${boundary} without a partial READY/head`,
+    async () => {
+      const sandbox = await realpath(await mkdtemp(path.join(tmpdir(), 'dvt-generation-crash-')));
+      const root = path.join(sandbox, 'local');
+      const authoring = path.join(sandbox, 'authoring');
+      await mkdir(root, { mode: 0o700 });
+      await mkdir(authoring, { mode: 0o700 });
+      const config = {
+        kind: 'configured' as const,
+        root,
+        workspaceFilesRoot: authoring,
+        memoryLimitBytes: 134217728,
+        threads: 1,
+        maxTempBytes: 268435456,
+        maxOpenWorkspaces: 2,
+        maxConcurrentSessions: 2,
+      };
+      let runtime: DuckDbLocalDataRuntime | undefined;
+      try {
+        const marker = await killedWriter(`
         import { DuckDbLocalDataRuntime } from ${JSON.stringify(runtimeUrl)};
         import { DuckDbGenerationStore } from ${JSON.stringify(storeUrl)};
         import { createLocalDatasetIdV1, createLocalDataCaptureIdV1,
@@ -92,21 +133,42 @@ for (const boundary of ['before-commit', 'after-commit'] as const) {
         armed = true; await store.promote(second);
         await hold();
       `);
-      runtime = new DuckDbLocalDataRuntime(config);
-      const controller = new AbortController();
-      const store = new DuckDbGenerationStore(runtime, scope, {
-        signal: controller.signal, checkpoint: async () => {}, beforePromotion: async () => {},
-      }, { maxRows: 100, maxLogicalBytes: 4096 });
-      await store.initialize();
-      const expected = boundary === 'before-commit' ? marker.first : marker.second;
-      assert.equal((await store.readHead(marker.dataset))?.generationId, expected);
-      assert.equal((await store.readGeneration(marker.dataset, marker.first))?.generationId, marker.first);
-      const second = await store.readCapture(marker.dataset, marker.capture);
-      assert.equal(second?.generationId ?? null, boundary === 'before-commit' ? null : marker.second);
-      const count = await runtime.withSession(scope, async c => (await c.runAndReadAll('SELECT count(*) FROM dvt_meta.generation_manifests')).getRows());
-      assert.deepEqual(count, [[boundary === 'before-commit' ? 1n : 2n]]);
-    } finally {
-      try { await runtime?.close(); } finally { await rm(sandbox, { recursive: true, force: true }); }
-    }
-  }, 20000);
+        runtime = new DuckDbLocalDataRuntime(config);
+        const controller = new globalThis.AbortController();
+        const store = new DuckDbGenerationStore(
+          runtime,
+          scope,
+          {
+            signal: controller.signal,
+            checkpoint: async () => {},
+            beforePromotion: async () => {},
+          },
+          { maxRows: 100, maxLogicalBytes: 4096 }
+        );
+        await store.initialize();
+        const expected = boundary === 'before-commit' ? marker.first : marker.second;
+        assert.equal((await store.readHead(marker.dataset))?.generationId, expected);
+        assert.equal(
+          (await store.readGeneration(marker.dataset, marker.first))?.generationId,
+          marker.first
+        );
+        const second = await store.readCapture(marker.dataset, marker.capture);
+        assert.equal(
+          second?.generationId ?? null,
+          boundary === 'before-commit' ? null : marker.second
+        );
+        const count = await runtime.withSession(scope, async (c) =>
+          (await c.runAndReadAll('SELECT count(*) FROM dvt_meta.generation_manifests')).getRows()
+        );
+        assert.deepEqual(count, [[boundary === 'before-commit' ? 1n : 2n]]);
+      } finally {
+        try {
+          await runtime?.close();
+        } finally {
+          await rm(sandbox, { recursive: true, force: true });
+        }
+      }
+    },
+    20000
+  );
 }

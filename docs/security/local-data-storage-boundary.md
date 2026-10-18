@@ -9,10 +9,9 @@ planning_type: security
 
 # LOCAL storage permissions and physical identity
 
-Candidate subcut #3392-B, stacked on #3672 at
-`678705b7b1271f81674a5fd89154df5344f40f99`. The user waived the blocking
-Planning DB consultation for this conversation, not security or merge validation.
-No architectural acceptance or completed #3392 is asserted.
+Integrated security boundary in #3394 / #3680 under Planning DB design
+GH-3394-COMPOSED-LOCAL-CAPTURE. #3392 remains open for its broader product scope.
+No Planning DB import/rebuild or process-wide request-time policy change occurs.
 
 ## Existing boundary and verified gap
 
@@ -47,9 +46,9 @@ scoped bootstrap -> prepare private paths -> native open and lock
 session -> verify-only -> connect -> internal callback -> close -> verify-only
 ```
 
-These are physical checks, not access grants. #3392-A still owns reauthorization;
-future consumers must authorize before lookup and obey cancellation. This cut
-adds no product route, acquisition, generation persistence, user SQL or LOCAL flag.
+These physical checks do not grant access. The composed capture and metadata
+query authorize before lookup and obey their lease lifecycle. Native persistence
+and acquisition remain internal; no public route, user SQL or new LOCAL flag is added.
 The native external-access/extension/secret configuration is not widened.
 
 ## Explicit private creation entrypoint — candidate 3392-D
