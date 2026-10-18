@@ -209,7 +209,7 @@ describe('CaptureLocalDataset application coordination', () => {
     { rows: [], logicalBytes: 1, endOfSource: true },
     { logicalBytes: -1 }, { logicalBytes: Number.NaN }, { logicalBytes: 1.2 }, { logicalBytes: 1001 },
     { rows: [[1n], [2n], [3n]] }, { endOfSource: undefined },
-  ])('rejects malformed/budget-breaking evidence %j', async badBatch => {
+  ])('rejects malformed/budget-breaking evidence case %#', async badBatch => {
     const f = await fixture(); f.state.badBatch = badBatch;
     await assert.rejects(f.execute(), /INVALID_BATCH|CAPTURE_BUDGET/u);
     assert.equal(f.state.events.includes('append'), false); assert.equal(f.state.events.includes('promote'), false);
