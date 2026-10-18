@@ -24,9 +24,13 @@ import {
 } from '../../support/canvasExecutionSelection';
 import { connectCanvasNodes } from '../../support/canvasGraphAuthoring';
 import {
+  openNodeProperties,
+  stubRuntimeCapabilities,
+  visitReadyCanvas,
+} from '../../support/canvasReadyAuthoring';
+import {
   getE2eApiCalls,
   installE2eApiFetchStub,
-  stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
@@ -37,11 +41,6 @@ import {
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import { semanticDocumentFromWrite } from '../../support/relationalWorkbench/persistence';
-import {
-  E2E_PROJECT_WORKSPACE,
-  stubShellBootstrapApis,
-  visitWithE2eWorkspaceSession,
-} from '../../support/workspaceSession';
 
 type CanvasDraftSaveRequestBody = {
   draft: {
@@ -62,44 +61,6 @@ type CanvasDraftStatusCopyKey = keyof Pick<
   CanvasViewCopy,
   'draftSyncedLabel' | 'draftSavedLabel' | 'draftSaveFailedLabel'
 >;
-
-function stubRuntimeCapabilities(): void {
-  stubShellBootstrapApis({
-    scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save', 'run:start'],
-  });
-  stubE2eJsonApi('GET', '/workspace/context', {
-    defaultWorkspace: E2E_PROJECT_WORKSPACE,
-    availableWorkspaces: [E2E_PROJECT_WORKSPACE],
-  });
-  stubE2eJsonApi('GET', '/capabilities', {
-    apiVersion: '1.0.0',
-    minFrontendVersion: '0.0.1',
-    plugins: {
-      dbt: { available: true },
-      dvt: { available: true },
-    },
-  });
-  stubE2eJsonApi('GET', '/workspace/warehouse/connections', [
-    {
-      id: 'warehouse-a',
-      name: 'Warehouse A',
-      type: 'postgres',
-      database: 'analytics_a',
-    },
-    {
-      id: 'warehouse-b',
-      name: 'Warehouse B',
-      type: 'postgres',
-      database: 'analytics_b',
-    },
-  ]);
-  stubE2eJsonApi('POST', '/workspace/warehouse/connections/warehouse-b/test', {
-    connectionId: 'warehouse-b',
-    status: 'passed',
-    checkedAt: '2026-08-13T00:00:00.000Z',
-    objectCount: 1,
-  });
-}
 
 function assertNoSeriousAccessibilityViolations(context: string): void {
   cy.get(context).should('be.visible');
@@ -130,22 +91,6 @@ function assertNoSeriousAccessibilityViolations(context: string): void {
       );
     }
   );
-}
-
-function visitReadyCanvas(path = '/canvas'): void {
-  revisitWorkbenchCanvas(() =>
-    visitWithE2eWorkspaceSession(path, {
-      onBeforeLoad(window) {
-        window.localStorage.setItem(
-          'dvt-web-application-language',
-          JSON.stringify({ state: { language: 'en' }, version: 0 })
-        );
-      },
-    })
-  );
-  waitForE2eApiCall('/healthz', 'GET');
-  waitForE2eApiCall('/capabilities', 'GET');
-  waitForE2eApiCall('/workspace/graph/draft', 'GET');
 }
 
 function readRegisteredCssLayers(document: Document): string[] {
@@ -278,12 +223,6 @@ function addSqlTransformNode(): void {
 function removeCanvasNode(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Delete').click();
-}
-
-function openNodeProperties(nodeId: string): void {
-  cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="canvas-node-shell"]`).rightclick();
-  cy.contains('[data-slot="canvas-node-context-menu-item"]', /^Properties$/).click();
-  cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
 }
 
 function assertModelSemanticDocumentUnchanged(
@@ -969,75 +908,4 @@ describe('Canvas ready node authoring', () => {
       expect(createdNode, 'no model created through the read-only surface').to.be.undefined;
     });
   });
-
-  it(
-    'keeps critical Canvas interactions operable on the canonical 1,000-node graph',
-    { defaultCommandTimeout: 30_000 },
-    () => {
-      stubStatefulCanvasDraftAuthoring({ largeGraph: true });
-
-      visitReadyCanvas();
-
-      cy.contains('Large Canvas regression fixture').should('be.visible');
-      cy.get('.react-flow__node[data-id="large-node-00-00"]')
-        .should('exist')
-        .click({ force: true });
-      cy.get('.react-flow__node[data-id="large-node-00-00"]').should('have.class', 'selected');
-      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
-
-      cy.get('.react-flow__node[data-id="large-node-01-00"]')
-        .should('exist')
-        .click({ force: true });
-      cy.get('.react-flow__node[data-id="large-node-01-00"]').should('have.class', 'selected');
-      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
-
-      cy.get('.react-flow__viewport')
-        .invoke('attr', 'style')
-        .then((initialTransform) => {
-          cy.get('.react-flow__controls-zoomin').click({ force: true });
-          cy.get('.react-flow__viewport').should(($viewport) => {
-            expect($viewport.attr('style')).not.to.equal(initialTransform);
-          });
-        });
-
-      cy.get('.react-flow__viewport')
-        .invoke('attr', 'style')
-        .then((zoomedTransform) => {
-          cy.window().then((browserWindow) => {
-            cy.get('.react-flow__pane')
-              .trigger('mousedown', {
-                button: 0,
-                clientX: 520,
-                clientY: 360,
-                force: true,
-                view: browserWindow,
-              })
-              .trigger('mousemove', {
-                buttons: 1,
-                clientX: 620,
-                clientY: 420,
-                force: true,
-                view: browserWindow,
-              })
-              .trigger('mouseup', {
-                button: 0,
-                clientX: 620,
-                clientY: 420,
-                force: true,
-                view: browserWindow,
-              });
-          });
-          cy.get('.react-flow__viewport').should(($viewport) => {
-            expect($viewport.attr('style')).not.to.equal(zoomedTransform);
-          });
-        });
-
-      openNodeProperties('large-node-01-00');
-      cy.get('[data-slot="canvas-node-workbench-panel"]')
-        .should('be.visible')
-        .and('contain.text', 'large-node-01-00');
-      cy.get('[data-slot="canvas-node-workbench-close"]').click();
-      cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
-    }
-  );
 });

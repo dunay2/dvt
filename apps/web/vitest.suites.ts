@@ -4,6 +4,7 @@
  */
 import type { UserConfig } from 'vitest/config';
 
+import type { WebCypressCatalogSnapshots } from './cypress.catalog';
 import { resolveWebCypressChangedPlan, type WebCypressCommand } from './cypress.changed';
 
 export const WEB_VITEST_PRIMARY_SUITE_NAMES = ['unit', 'presentation', 'architecture'] as const;
@@ -171,6 +172,9 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
 ] as const;
 
 const WEB_VITEST_GOVERNANCE_TEST_PATHS = [
+  'src/testing/vitestSuites.browserNightly.architecture.test.ts',
+  'src/testing/vitestSuites.browserCatalog.architecture.test.ts',
+  'src/testing/vitestSuites.catalogRetention.architecture.test.ts',
   'src/testing/vitestSuites.browserRouting.architecture.test.ts',
   'src/testing/vitestSuites.browserShards.architecture.test.ts',
   'src/testing/vitestSuites.architecture.test.ts',
@@ -358,7 +362,7 @@ function quoteShellArg(value: string): string {
 
 export function resolveWebVitestChangedSuitePlan(
   filePaths: readonly string[],
-  options: Readonly<{ full?: boolean }> = {}
+  options: Readonly<{ full?: boolean; catalogSnapshots?: WebCypressCatalogSnapshots }> = {}
 ): {
   suites: WebVitestChangedSuiteName[];
   commands: string[];
@@ -368,7 +372,7 @@ export function resolveWebVitestChangedSuitePlan(
   browserFiles: string[];
   retiredBrowserFiles: string[];
 } {
-  const browser = resolveWebCypressChangedPlan(filePaths, options.full);
+  const browser = resolveWebCypressChangedPlan(filePaths, options.full, options.catalogSnapshots);
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
   const exactTestPaths = new Map<WebVitestChangedSuiteName, Set<string>>();
   const changedWebPaths = new Set(
@@ -577,6 +581,7 @@ function isWebVitestGovernancePath(filePath: string): boolean {
   return (
     normalizedPath === 'apps/web/cypress.changed.ts' ||
     normalizedPath === 'cypress.changed.ts' ||
+    /^((apps\/web\/)?)cypress\.catalog\.(json|ts)$/.test(normalizedPath) ||
     /^apps\/web\/vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     /^vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     normalizedPath === 'apps/web/scripts/run-vitest-changed-suites.ts' ||
@@ -585,8 +590,6 @@ function isWebVitestGovernancePath(filePath: string): boolean {
     normalizedPath === 'package.json' ||
     normalizedPath === '.github/workflows/test.yml' ||
     normalizedPath === 'docs/architecture/components/web/frontend-test-governance-component.md' ||
-    normalizedPath ===
-      'docs/architecture/components/web/web-vitest-changed-suite-router-component.md' ||
     normalizedPath ===
       'docs/architecture/components/web/web-vitest-changed-suite-router-component.md'
   );

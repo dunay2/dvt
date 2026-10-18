@@ -36,6 +36,8 @@ describe('web Vitest governance-test routing', () => {
   });
 
   it.each([
+    'apps/web/cypress.catalog.json',
+    'apps/web/cypress.catalog.ts',
     'apps/web/vitest.suites.ts',
     'apps/web/scripts/run-vitest-changed-suites.ts',
     'apps/web/vitest.canvas-unit.config.ts',
