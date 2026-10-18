@@ -243,5 +243,6 @@ current content was consolidated into the existing API README and its old file
 and references retired, rather than adding a validator exception. The corrective
 design was recorded before that move in
 [the owning issue](https://github.com/dunay2/dvt/issues/3394#issuecomment-6254161153)
-and Planning DB GH-3394-LOCAL-CAPTURE-GUIDE-CONVERGENCE. The two existing rails now
-use only apps/api/README.md as their component guide.
+and Planning DB GH-3394-LOCAL-CAPTURE-GUIDE-CONVERGENCE. Both rails use the API
+README for internal persistence guidance; the metadata query also retains its
+existing normative metadata and data-access contract guides.
