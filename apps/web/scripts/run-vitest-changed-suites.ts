@@ -10,7 +10,11 @@ import { appendFileSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { WEB_CYPRESS_CATALOG_PATH, type WebCypressCatalogSnapshots } from '../cypress.catalog';
+import {
+  WEB_CYPRESS_CATALOG_PATH,
+  WEB_CYPRESS_CAPABILITIES,
+  type WebCypressCatalogSnapshots,
+} from '../cypress.catalog';
 import { selectWebCypressShard, type WebCypressCapability } from '../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
@@ -30,11 +34,9 @@ const WEB_EVIDENCE_PHASES: ReadonlyMap<string, WebEvidencePhase> = new Map([
   ['--phase=vitest', 'vitest'],
   ['--phase=browser', 'browser'],
 ]);
-const WEB_BROWSER_CAPABILITIES: ReadonlyMap<string, WebCypressCapability> = new Map([
-  ['--browser-capability=controlled', 'controlled'],
-  ['--browser-capability=available', 'available'],
-  ['--browser-capability=unavailable', 'unavailable'],
-]);
+const WEB_BROWSER_CAPABILITIES: ReadonlyMap<string, WebCypressCapability> = new Map(
+  WEB_CYPRESS_CAPABILITIES.map((capability) => [`--browser-capability=${capability}`, capability])
+);
 
 type ReadChangedFilesOptions = Readonly<{
   env?: Readonly<Record<string, string | undefined>>;

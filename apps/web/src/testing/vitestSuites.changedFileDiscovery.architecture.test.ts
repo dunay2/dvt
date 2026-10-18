@@ -14,7 +14,7 @@ import {
   readChangedFiles,
   resolveRepositoryRoot,
 } from '../../scripts/run-vitest-changed-suites';
-import { WEB_CYPRESS_CATALOG_PATH, WEB_CYPRESS_SPECS } from '../../cypress.catalog';
+import { WEB_CYPRESS_CATALOG_PATH, WEB_CYPRESS_CATALOG } from '../../cypress.catalog';
 import { resolveControlledCatalogAdditions } from '../../cypress.catalog';
 
 describe('web Vitest changed-file discovery', () => {
@@ -92,12 +92,12 @@ describe('web Vitest changed-file discovery', () => {
 });
 
 describe('Browser catalog Git snapshots', () => {
-  const base = { ...WEB_CYPRESS_SPECS, controlled: WEB_CYPRESS_SPECS.controlled.slice(0, -1) };
+  const base = { ...WEB_CYPRESS_CATALOG, controlled: WEB_CYPRESS_CATALOG.controlled.slice(0, -1) };
   function gitOutput(args: readonly string[]): string[] {
     if (args[0] === 'rev-parse') return [args.at(-1) === 'base^{commit}' ? 'base-sha' : 'head-sha'];
     if (args[0] === 'ls-tree') return [WEB_CYPRESS_CATALOG_PATH];
     if (args[0] === 'show')
-      return [JSON.stringify(args[1]!.startsWith('base-sha:') ? base : WEB_CYPRESS_SPECS)];
+      return [JSON.stringify(args[1]!.startsWith('base-sha:') ? base : WEB_CYPRESS_CATALOG)];
     return [];
   }
 
@@ -111,7 +111,7 @@ describe('Browser catalog Git snapshots', () => {
         return gitOutput(args);
       },
     });
-    expect(result).toEqual({ base, head: WEB_CYPRESS_SPECS });
+    expect(result).toEqual({ base, head: WEB_CYPRESS_CATALOG });
     expect(calls).toContainEqual(['show', `base-sha:${WEB_CYPRESS_CATALOG_PATH}`]);
     expect(calls).toContainEqual(['show', `head-sha:${WEB_CYPRESS_CATALOG_PATH}`]);
   });
@@ -142,7 +142,7 @@ describe('Browser catalog Git snapshots', () => {
           return args[0] === 'ls-tree' && args.includes('base-sha') ? [] : gitOutput(args);
         },
       })
-    ).toEqual({ base: null, head: WEB_CYPRESS_SPECS });
+    ).toEqual({ base: null, head: WEB_CYPRESS_CATALOG });
   });
 
   it.each(['rev-parse', 'diff', 'ls-tree', 'show'])(
@@ -202,17 +202,17 @@ describe('Browser catalog Git snapshots', () => {
       mkdirSync(resolve(root, 'apps/web'), { recursive: true });
       writeCatalog(base);
       const baseSha = commit();
-      writeCatalog(WEB_CYPRESS_SPECS);
+      writeCatalog(WEB_CYPRESS_CATALOG);
       const headSha = commit(baseSha);
       const options = { env: { GIT_BASE: baseSha, GIT_HEAD: headSha }, gitOutput: runGitPaths };
       const snapshots = readBrowserCatalogSnapshots(root, options);
-      expect(snapshots).toEqual({ base, head: WEB_CYPRESS_SPECS });
-      expect(resolveControlledCatalogAdditions(WEB_CYPRESS_SPECS, snapshots)).toEqual([
-        WEB_CYPRESS_SPECS.controlled.at(-1),
+      expect(snapshots).toEqual({ base, head: WEB_CYPRESS_CATALOG });
+      expect(resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, snapshots)).toEqual([
+        WEB_CYPRESS_CATALOG.controlled.at(-1),
       ]);
       writeCatalog(base);
       runGit(['add', '--', WEB_CYPRESS_CATALOG_PATH]);
-      writeCatalog(WEB_CYPRESS_SPECS);
+      writeCatalog(WEB_CYPRESS_CATALOG);
       expect(readBrowserCatalogSnapshots(root, options)).toBeUndefined();
       expect(runGit(['rev-parse', 'HEAD']).trim()).toBe(headSha);
     } finally {

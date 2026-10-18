@@ -87,5 +87,6 @@
   ],
   "unavailable": [
     "apps/web/cypress/e2e/canvas/canvas-dvt-runtime-unavailable-live.cy.ts"
-  ]
+  ],
+  "nightly": ["apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts"]
 }

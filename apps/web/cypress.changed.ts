@@ -7,14 +7,20 @@
  */
 import {
   resolveControlledCatalogAdditions,
+  WEB_CYPRESS_CATALOG,
   WEB_CYPRESS_CATALOG_PATH,
   WEB_CYPRESS_CAPABILITIES as CAPABILITIES,
+  WEB_CYPRESS_NIGHTLY_SPECS,
   WEB_CYPRESS_SPECS,
   type WebCypressCatalogSnapshots,
   type WebCypressCapability,
 } from './cypress.catalog';
 
-export { WEB_CYPRESS_SPECS, type WebCypressCapability } from './cypress.catalog';
+export {
+  WEB_CYPRESS_NIGHTLY_SPECS,
+  WEB_CYPRESS_SPECS,
+  type WebCypressCapability,
+} from './cypress.catalog';
 export type WebCypressCommand = Readonly<{
   capability: WebCypressCapability;
   command: string;
@@ -58,6 +64,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/canvasDrafts/warehouse.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/canvasDraftAuthoring.ts': ['controlled', 'available', 'unavailable'],
   'apps/web/cypress/support/startupReadiness.ts': ['controlled'],
+  'apps/web/cypress/support/canvasReadyAuthoring.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/scenario.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/operatorEditor.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/navigation.ts': ['controlled', 'available'],
@@ -169,9 +176,7 @@ export function selectWebCypressShard(
 function browserCapabilities(path: string): readonly WebCypressCapability[] {
   const support = SUPPORT_CAPABILITIES[path];
   if (support) return support;
-  const capability = CAPABILITIES.find((key) =>
-    (WEB_CYPRESS_SPECS[key] as readonly string[]).includes(path)
-  );
+  const capability = CAPABILITIES.find((key) => WEB_CYPRESS_SPECS[key].includes(path));
   if (capability) return [capability];
   throw new Error(
     `Browser evidence is not admitted for ${path}; declare every affected spec and its real runtime.`
@@ -195,9 +200,7 @@ export function resolveWebCypressChangedPlan(
       selected.add(capability);
       if (capability !== 'controlled') continue;
       const paths =
-        path && (WEB_CYPRESS_SPECS.controlled as readonly string[]).includes(path)
-          ? [path]
-          : WEB_CYPRESS_SPECS.controlled;
+        path && WEB_CYPRESS_SPECS.controlled.includes(path) ? [path] : WEB_CYPRESS_SPECS.controlled;
       paths.forEach((spec) => controlledSpecs.add(spec));
     }
   }
@@ -208,16 +211,25 @@ export function resolveWebCypressChangedPlan(
   for (const filePath of filePaths) {
     const path = repositoryPath(filePath);
     if (path === WEB_CYPRESS_CATALOG_PATH) {
-      const additions = resolveControlledCatalogAdditions(WEB_CYPRESS_SPECS, catalogSnapshots);
+      const additions = resolveControlledCatalogAdditions(WEB_CYPRESS_CATALOG, catalogSnapshots);
       if (additions === null) requireCapabilities(CAPABILITIES);
       else additions.forEach((spec) => requireCapabilities(['controlled'], spec));
       requiredFiles.add(path);
+      WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
       vitestFiles.add(path);
       continue;
     }
     if (EXECUTION_BOUNDARIES.includes(path)) {
       requireCapabilities(CAPABILITIES);
       vitestFiles.add(filePath);
+      continue;
+    }
+    if (
+      WEB_CYPRESS_NIGHTLY_SPECS.includes(path) ||
+      path === '.github/workflows/web-canvas-nightly.yml'
+    ) {
+      WEB_CYPRESS_NIGHTLY_SPECS.forEach((spec) => requiredFiles.add(spec));
+      vitestFiles.add('apps/web/src/testing/vitestSuites.browserNightly.architecture.test.ts');
       continue;
     }
     const retired = RETIRED_SPEC_CAPABILITIES[path];
@@ -230,7 +242,7 @@ export function resolveWebCypressChangedPlan(
     if (
       Object.hasOwn(SUPPORT_CAPABILITIES, path) ||
       path.startsWith('apps/web/cypress/') ||
-      (path.startsWith('apps/web/cypress.') && path !== 'apps/web/cypress.changed.ts')
+      path.startsWith('apps/web/cypress.')
     ) {
       requireCapabilities(browserCapabilities(path), path);
       requiredFiles.add(path);

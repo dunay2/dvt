@@ -4,18 +4,29 @@ import { describe, expect, it } from 'vitest';
 import {
   parseWebCypressCatalog,
   resolveControlledCatalogAdditions,
+  WEB_CYPRESS_CATALOG,
+  WEB_CYPRESS_CAPABILITIES,
   WEB_CYPRESS_CATALOG_PATH,
 } from '../../cypress.catalog';
 import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
 
-const current = WEB_CYPRESS_SPECS;
+const current = WEB_CYPRESS_CATALOG;
 const addition = current.controlled.at(-1)!;
 const previous = { ...current, controlled: current.controlled.slice(0, -1) };
 const snapshots = { base: previous, head: current };
-const allSpecs = Object.values(current).flat();
+const allSpecs = Object.values(WEB_CYPRESS_SPECS).flat();
 
 describe('Declarative browser catalog', () => {
+  it('admits nightly as a disjoint cadence, not a runtime capability', () => {
+    expect(parseWebCypressCatalog(current)).toEqual(current);
+    expect(WEB_CYPRESS_CAPABILITIES).toEqual(['controlled', 'available', 'unavailable']);
+    expect(Object.keys(WEB_CYPRESS_SPECS)).toEqual(WEB_CYPRESS_CAPABILITIES);
+    expect(current.nightly).toEqual([
+      'apps/web/cypress/e2e/canvas/canvas-large-graph.nightly.cy.ts',
+    ]);
+  });
+
   it('accepts the existing disjoint catalog without changing spec order', () => {
     expect(parseWebCypressCatalog(current)).toEqual(current);
     expect(
@@ -35,6 +46,9 @@ describe('Declarative browser catalog', () => {
     { ...current, controlled: [] },
     { ...current, available: [] },
     { ...current, unavailable: [] },
+    { ...current, nightly: [] },
+    { ...current, nightly: [addition] },
+    WEB_CYPRESS_SPECS,
     { ...current, controlled: [addition, addition] },
     { ...current, available: [addition] },
     ...[
@@ -67,6 +81,23 @@ describe('Declarative browser catalog', () => {
     { base: { ...current, available: current.available.slice(1) }, head: current },
     { base: { ...current, available: [...current.available].reverse() }, head: current },
     { base: { ...current, unavailable: [] }, head: current },
+    { base: WEB_CYPRESS_SPECS, head: current },
+    {
+      base: { ...current, nightly: ['apps/web/cypress/e2e/canvas/other.nightly.cy.ts'] },
+      head: current,
+    },
+    {
+      base: {
+        ...current,
+        controlled: [...current.controlled, ...current.nightly],
+        nightly: ['apps/web/cypress/e2e/canvas/other.nightly.cy.ts'],
+      },
+      head: current,
+    },
+    {
+      base: previous,
+      head: { ...current, nightly: ['apps/web/cypress/e2e/canvas/other.nightly.cy.ts'] },
+    },
     { base: { ...previous, available: [...current.available, addition] }, head: current },
     {
       base: previous,
@@ -85,8 +116,19 @@ describe('Independent browser obligations', () => {
     expect(plan.browserCommands).toMatchObject([
       { capability: 'controlled', specPaths: [addition] },
     ]);
-    expect(plan.browserFiles).toEqual(expect.arrayContaining([WEB_CYPRESS_CATALOG_PATH, addition]));
+    expect(plan.browserFiles).toEqual(
+      expect.arrayContaining([WEB_CYPRESS_CATALOG_PATH, addition, ...current.nightly])
+    );
     expect(plan.suites).toEqual(['architecture']);
+    expect(plan.commandPlan).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          filePaths: expect.arrayContaining([
+            'src/testing/vitestSuites.browserNightly.architecture.test.ts',
+          ]),
+        }),
+      ])
+    );
   });
 
   it.each([
