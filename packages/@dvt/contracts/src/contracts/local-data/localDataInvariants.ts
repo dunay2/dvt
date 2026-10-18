@@ -1,4 +1,10 @@
-/** Pure refinements for LOCAL metadata. Inputs are structurally parsed by their schema owner. */
+/**
+ * Owned concern: refine the consistency of parsed LOCAL generation metadata.
+ * @baseline ADR-0018: Shared Kernel Ownership Governance
+ * @decision Keep pure boundary refinements beside the shared schemas that own structural parsing.
+ * @consequence These checks validate declared metadata, not provider facts or runtime authorization.
+ * @version 1.0.0
+ */
 export type LocalDataContractIssue = Readonly<{
   path: readonly (string | number)[];
   message: string;
@@ -16,8 +22,7 @@ export function isLocalDataCount(value: unknown): value is string {
 }
 
 type AcquisitionPolicy =
-  | Readonly<{ kind: 'full' }>
-  | Readonly<{ kind: 'sample'; method: 'first'; requestedRows: string }>;
+  Readonly<{ kind: 'full' }> | Readonly<{ kind: 'sample'; method: 'first'; requestedRows: string }>;
 type Coverage = Readonly<{ kind: 'sample' }> | Readonly<{ kind: 'full'; eofObserved: true }>;
 
 export function localDataCoverageErrors(
@@ -28,29 +33,47 @@ export function localDataCoverageErrors(
 ): readonly LocalDataContractIssue[] {
   const issues: LocalDataContractIssue[] = [];
   if (coverage.kind !== policy.kind) {
-    issues.push({ path: ['coverage', 'kind'], message: 'Coverage must preserve the requested policy.' });
+    issues.push({
+      path: ['coverage', 'kind'],
+      message: 'Coverage must preserve the requested policy.',
+    });
   }
   if (!isLocalDataCount(rowCount)) {
-    issues.push({ path: ['rowCount'], message: 'Row count must be a canonical uint64 decimal string.' });
+    issues.push({
+      path: ['rowCount'],
+      message: 'Row count must be a canonical uint64 decimal string.',
+    });
     return issues;
   }
   if (policy.kind === 'full') {
     if (completionReason !== 'source-exhausted') {
-      issues.push({ path: ['completionReason'], message: 'FULL requires source exhaustion, not a budget stop.' });
+      issues.push({
+        path: ['completionReason'],
+        message: 'FULL requires source exhaustion, not a budget stop.',
+      });
     }
     return issues;
   }
   if (!isLocalDataCount(policy.requestedRows) || policy.requestedRows === '0') {
-    issues.push({ path: ['request', 'policy', 'requestedRows'], message: 'FIRST N requires a positive uint64 target.' });
+    issues.push({
+      path: ['request', 'policy', 'requestedRows'],
+      message: 'FIRST N requires a positive uint64 target.',
+    });
     return issues;
   }
   const actual = BigInt(rowCount);
   const target = BigInt(policy.requestedRows);
   if (actual > target) {
-    issues.push({ path: ['rowCount'], message: 'A FIRST N capture cannot exceed its requested target.' });
+    issues.push({
+      path: ['rowCount'],
+      message: 'A FIRST N capture cannot exceed its requested target.',
+    });
   }
   if (completionReason === 'sample-target-reached' && actual !== target) {
-    issues.push({ path: ['rowCount'], message: 'A short sample requires source exhaustion; a safety stop is not completion.' });
+    issues.push({
+      path: ['rowCount'],
+      message: 'A short sample requires source exhaustion; a safety stop is not completion.',
+    });
   }
   return issues;
 }
@@ -61,12 +84,21 @@ export function localDataOrdinalErrors<Column extends Readonly<{ ordinal: number
   return columns.flatMap((column, index) =>
     column.ordinal === index
       ? []
-      : [{ path: ['columns', index, 'ordinal'], message: 'Column ordinal must equal its array position.' }]
+      : [
+          {
+            path: ['columns', index, 'ordinal'],
+            message: 'Column ordinal must equal its array position.',
+          },
+        ]
   );
 }
 
 export const LOCAL_DATA_CAPTURE_STATUSES = [
-  'requested', 'capturing', 'completed', 'failed', 'cancelled',
+  'requested',
+  'capturing',
+  'completed',
+  'failed',
+  'cancelled',
 ] as const;
 
 type CaptureFacts = Readonly<{
@@ -91,13 +123,18 @@ export function localDataCaptureTransition(before: CaptureFacts, after: CaptureF
     (after.status === 'completed'
       ? after.generationId === undefined || after.generationId.length === 0
       : after.generationId !== undefined)
-  ) return false;
+  )
+    return false;
 
   if (before.status === 'requested') {
-    return after.status === 'capturing' || after.status === 'failed' || after.status === 'cancelled';
+    return (
+      after.status === 'capturing' || after.status === 'failed' || after.status === 'cancelled'
+    );
   }
-  return before.status === 'capturing' &&
-    (after.status === 'completed' || after.status === 'failed' || after.status === 'cancelled');
+  return (
+    before.status === 'capturing' &&
+    (after.status === 'completed' || after.status === 'failed' || after.status === 'cancelled')
+  );
 }
 
 type GenerationFacts = Readonly<{
@@ -110,13 +147,18 @@ type GenerationFacts = Readonly<{
 }>;
 
 /** Metadata correspondence, NOT proof of a database commit, source EOF or authorization. */
-export function localDataCompletionMatches(capture: CaptureFacts, generation: GenerationFacts): boolean {
-  return capture.status === 'completed' &&
+export function localDataCompletionMatches(
+  capture: CaptureFacts,
+  generation: GenerationFacts
+): boolean {
+  return (
+    capture.status === 'completed' &&
     capture.localDatasetId === generation.localDatasetId &&
     capture.captureId === generation.captureId &&
     capture.generationId === generation.generationId &&
     capture.requestFingerprint === generation.requestFingerprint &&
     capture.requestedAt <= generation.sourceObservation.observedAt &&
     generation.sourceObservation.observedAt <= generation.createdAt &&
-    generation.createdAt <= capture.updatedAt;
+    generation.createdAt <= capture.updatedAt
+  );
 }

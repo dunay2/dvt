@@ -9,13 +9,18 @@ import { randomUuidV7 } from '@dvt/crypto';
 import { z } from 'zod';
 
 const UUID_V7 = '[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
-function identitySchema(prefix: string) {
-  return z.string().length(prefix.length + 36).regex(new RegExp(`^${prefix}${UUID_V7}$`, 'u'));
+function identitySchema(prefix: string): z.ZodString {
+  return z
+    .string()
+    .length(prefix.length + 36)
+    .regex(new RegExp(`^${prefix}${UUID_V7}$`, 'u'));
 }
 
 export const LocalDatasetIdV1Schema = identitySchema('dvt_lds_').brand<'LocalDatasetIdV1'>();
-export const LocalDataCaptureIdV1Schema = identitySchema('dvt_cap_').brand<'LocalDataCaptureIdV1'>();
-export const LocalDataGenerationIdV1Schema = identitySchema('dvt_gen_').brand<'LocalDataGenerationIdV1'>();
+export const LocalDataCaptureIdV1Schema =
+  identitySchema('dvt_cap_').brand<'LocalDataCaptureIdV1'>();
+export const LocalDataGenerationIdV1Schema =
+  identitySchema('dvt_gen_').brand<'LocalDataGenerationIdV1'>();
 export type LocalDatasetIdV1 = z.infer<typeof LocalDatasetIdV1Schema>;
 export type LocalDataCaptureIdV1 = z.infer<typeof LocalDataCaptureIdV1Schema>;
 export type LocalDataGenerationIdV1 = z.infer<typeof LocalDataGenerationIdV1Schema>;

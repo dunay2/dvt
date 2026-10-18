@@ -1,14 +1,14 @@
 ---
 title: LOCAL acquisition and generation metadata v1
-status: Draft
+status: Active
 owner: Contracts / Local Data
-last_reviewed: 2026-10-16
+last_reviewed: 2026-10-18
 ---
 
 # LOCAL acquisition and generation metadata v1
 
-Candidate for [#3391](https://github.com/dunay2/dvt/issues/3391), based on
-`8d8c241d3c1ee35c03971a5380f963a58aa8131f`. This is a contracts-only addition.
+Metadata contract for [#3391](https://github.com/dunay2/dvt/issues/3391).
+This is a contracts-only addition.
 It does not enable LOCAL, implement a provider or publish captured rows.
 
 The existing [LIVE/LOCAL boundary](data-access-modes.md), ConnectedSourceRef,
@@ -42,14 +42,14 @@ The manifest reuses WorkingDataCoverage. FIRST N stores its positive target in
 the request policy and its persisted count in rowCount. No second Sample model
 or generic sampling strategy registry is introduced.
 
-| Request | Completion fact | Admitted metadata |
-| --- | --- | --- |
-| FULL | Source exhausted | full + eofObserved=true; zero rows allowed |
-| FULL | Budget/time/byte stop | Not a successful generation |
-| FIRST N | Exactly N rows | sample + sample-target-reached |
-| FIRST N | Fewer than N and EOF | sample + source-exhausted |
-| FIRST N | Fewer than N without EOF | Not a successful generation |
-| FIRST N | More than N rows | Rejected |
+| Request | Completion fact          | Admitted metadata                          |
+| ------- | ------------------------ | ------------------------------------------ |
+| FULL    | Source exhausted         | full + eofObserved=true; zero rows allowed |
+| FULL    | Budget/time/byte stop    | Not a successful generation                |
+| FIRST N | Exactly N rows           | sample + sample-target-reached             |
+| FIRST N | Fewer than N and EOF     | sample + source-exhausted                  |
+| FIRST N | Fewer than N without EOF | Not a successful generation                |
+| FIRST N | More than N rows         | Rejected                                   |
 
 The parser validates declarations, not their factual truth. #3394 must prove
 source EOF or completion of the sample target. #3393 must validate and commit
@@ -102,12 +102,34 @@ not a claim of global multi-source consistency.
 
 ## Scope, consumers and compatibility
 
-The row-free ILocalDataGenerationReader receives WorkspaceGraphDraftScope
+The planned row-free ILocalDataGenerationReader will receive WorkspaceGraphDraftScope
 separately from DataAccessSelection. The application authorizes before lookup;
-#3392 owns reauthorization and revocation. A missing authorized generation may
+Task [#3392](https://github.com/dunay2/dvt/issues/3392) owns reauthorization and revocation. A missing authorized generation may
 return null; corruption or adapter failure must not masquerade as absence.
-There is no implementation, new endpoint, scheduled job or runtime registration
-in this slice. Exact ID matching never authorizes cross-scope reuse.
+The API source port will be introduced with its real consumers in the dependent
+implementation, rather than as unreachable source in this metadata-only slice.
+There is no new endpoint, scheduled job or runtime registration here. Exact ID
+matching never authorizes cross-scope reuse.
+
+### Planned query contract
+
+Planning DB design `GH-3391-LOCAL-GENERATION-METADATA` governs this contract cut.
+Its source admission records reconciliation of the earlier offline proposal;
+it does not claim that database admission preceded that proposal.
+
+| Field                        | Declaration                                                                                                                                                          |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rail / status                | `ReadLocalDataGenerationMetadata`, query, planned                                                                                                                    |
+| Bounded context / read model | Local Data / `LocalDataGenerationManifestV1`                                                                                                                         |
+| Application port             | `ILocalDataGenerationReader.readGeneration(scope, selection)`                                                                                                        |
+| Adapter / activation         | No composed adapter, public transport or runtime consumer in this cut                                                                                                |
+| Scope / authorization        | Explicit `WorkspaceGraphDraftScope`; current application authorization before lookup belongs to #3392/#3393                                                          |
+| Selection / consistency      | Exact dataset and generation IDs; immutable metadata; no latest-generation substitution or freshness inferred from a fingerprint                                     |
+| Negative proof               | Wrong ID families, missing/mismatched selection IDs, stale digests, unsafe counters, false FULL and terminal capture resurrection are rejected by the contract tests |
+
+The metadata schemas and pure helpers implement value-object invariants of
+this planned read contract. The port signature remains a design declaration. These declarations
+do not claim an implemented, authorized storage query or actual type conversion.
 
 Existing contracts and their tests remain unchanged. The public barrel gains
 one additive export. Native DuckDB handles, local paths, SQL, raw rows and
@@ -115,8 +137,9 @@ credentials are excluded. No arbitrary extension or external access is enabled.
 
 ## Validation and delivery boundary
 
-The pure refinement suite has local Node-based evidence; Zod/crypto/Vitest,
-full build, consumers, lint, docs sync, ARC and prepush remain required in a
-complete checkout. See the candidate evidence record; it must not be presented
-as a completed release. The user waived the Planning DB consultation gate for
-this conversation only; no Planning DB import/rebuild or acceptance is claimed.
+The checkout integration uses the pinned repository toolchain and actual
+Zod/crypto/Vitest. Its validation results and the earlier offline evidence are
+recorded separately in `ED-20261016-local-data-contracts.md` and PR #3671.
+Runtime acquisition, authorization, type conversion and storage publication
+retain their separate acceptance criteria. No Planning DB import or rebuild
+is part of this reconciliation.
