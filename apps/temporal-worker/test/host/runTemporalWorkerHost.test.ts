@@ -492,6 +492,8 @@ describeIfLinuxPg('runTemporalWorkerHost signal canary', () => {
               logicalAttemptId: 1,
               originRunId: runId,
             },
+            maxContinueAsNewPayloadBytes: 500_000,
+            continueAsNewAfterLayerCount: 100,
           },
         ],
       });
