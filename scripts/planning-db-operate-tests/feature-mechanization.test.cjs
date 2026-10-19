@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  assertFeatureMechanizationRailIdempotentReplayMatches,
   assertFeatureMechanizationReferenceAuthority,
   parseArgs,
   planFeatureMechanizationRailRecordOperation,
@@ -12,6 +13,9 @@ const { validateFeatureMechanizationManifest } = require('../check-feature-mecha
 function featureMechanizationRecordArgs(options = {}) {
   const implementationRefs = options.implementationRefs || [
     'scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand',
+  ];
+  const documentationRefs = options.documentationRefs || [
+    'docs/architecture/command-query-rail-governance.md',
   ];
   const args = [
     'feature-mechanization',
@@ -42,8 +46,6 @@ function featureMechanizationRecordArgs(options = {}) {
     'docs/architecture/command-query-rail-governance.md',
     '--user-story',
     'docs/architecture/components/ci-governance/component-engineering-record-component.md',
-    '--documentation-ref',
-    'docs/architecture/command-query-rail-governance.md',
     '--governing-source',
     'docs/architecture/command-query-rail-governance.md',
     '--governing-source',
@@ -86,6 +88,9 @@ function featureMechanizationRecordArgs(options = {}) {
 
   for (const implementationRef of implementationRefs) {
     args.push('--implementation-ref', implementationRef);
+  }
+  for (const documentationRef of documentationRefs) {
+    args.push('--documentation-ref', documentationRef);
   }
 
   return [...args, ...(options.extraArgs || [])];
@@ -693,6 +698,204 @@ test('feature mechanization rail planner extends existing evidence without resto
     false
   );
   assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, []);
+});
+
+for (const [label, extraArgs, expected] of [
+  ['omitted', [], false],
+  ['true', ['--replace-documentation-refs', 'true'], true],
+  ['false', ['--replace-documentation-refs', 'false'], false],
+]) {
+  test(`parseArgs accepts ${label} documentation reference replacement`, () => {
+    const command = parseArgs(featureMechanizationRecordArgs({ extraArgs }));
+    assert.equal(command.replaceDocumentationRefs, expected);
+  });
+}
+
+test('parseArgs rejects invalid documentation reference replacement values', () => {
+  for (const value of ['yes', '0']) {
+    assert.throws(
+      () =>
+        parseArgs(
+          featureMechanizationRecordArgs({
+            extraArgs: ['--replace-documentation-refs', value],
+          })
+        ),
+      /Invalid --replace-documentation-refs.*Expected true or false/
+    );
+  }
+});
+
+test('documentation replacement rejects missing or empty documentary references', () => {
+  for (const documentationRefs of [[], ['']]) {
+    assert.throws(
+      () =>
+        parseArgs(
+          featureMechanizationRecordArgs({
+            documentationRefs,
+            extraArgs: ['--replace-documentation-refs', 'true'],
+          })
+        ),
+      /Missing required --documentation-ref/
+    );
+  }
+});
+
+test('explicit documentation replacement changes only documentary refs while default and false keep union', () => {
+  const now = new Date('2026-10-19T18:00:00.000Z');
+  const authorityRef = 'docs/architecture/command-query-rail-governance.md';
+  const original = planFeatureMechanizationRailRecordOperation({
+    command: parseArgs(
+      featureMechanizationRecordArgs({
+        extraArgs: ['--reference-only', 'true', '--authority-ref', authorityRef],
+      })
+    ),
+    existingRail: null,
+    operationId: 'create',
+    now,
+  }).rail;
+  const existingRail = {
+    ...original,
+    revision: 4,
+    documentationRefs: ['docs/retired-component.md', authorityRef],
+    rawRail: { ...original.rawRail, purpose: 'Retained authority metadata' },
+    rawManifest: {
+      ...original.rawManifest,
+      retainedEvidence: { source: 'docs/retained-evidence.md', accepted: true },
+    },
+  };
+  const plan = (extraArgs) =>
+    planFeatureMechanizationRailRecordOperation({
+      command: parseArgs(
+        featureMechanizationRecordArgs({
+          documentationRefs: [authorityRef, 'docs/new-component.md', 'docs/new-component.md'],
+          extraArgs: ['--expected-revision', '4', ...extraArgs],
+        })
+      ),
+      existingRail,
+      operationId: 'replace-docs',
+      now,
+    });
+  const additive = plan([]);
+  const explicitFalse = plan(['--replace-documentation-refs', 'false']);
+  const replacement = plan(['--replace-documentation-refs', 'true']);
+
+  assert.deepEqual(additive.rail.documentationRefs, [
+    'docs/retired-component.md',
+    authorityRef,
+    'docs/new-component.md',
+  ]);
+  assert.deepEqual(explicitFalse, additive);
+  assert.deepEqual(replacement.rail, {
+    ...additive.rail,
+    documentationRefs: [authorityRef, 'docs/new-component.md'],
+  });
+  assert.equal(replacement.rail.rawRail.referenceOnly, true);
+  assert.equal(replacement.rail.rawRail.authorityRef, authorityRef);
+  assert.deepEqual(replacement.rail.rawManifest.retainedEvidence, {
+    source: 'docs/retained-evidence.md',
+    accepted: true,
+  });
+  assert.equal(replacement.audit.previousRevision, 4);
+  assert.equal(replacement.audit.resultingRevision, 5);
+  assert.equal(replacement.audit.payload.replaceDocumentationRefs, true);
+});
+
+test('documentation replacement preserves legacy payload and replay identities unless explicitly true', () => {
+  const additive = parseArgs(featureMechanizationRecordArgs());
+  const explicitFalse = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: ['--replace-documentation-refs', 'false'] })
+  );
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: ['--replace-documentation-refs', 'true'] })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command: additive,
+    existingRail: null,
+    operationId: 'legacy-operation',
+    now: new Date('2026-10-19T18:00:00.000Z'),
+  });
+  const existingOperation = {
+    operation_type: additive.kind,
+    actor: additive.actor,
+    rail_id: additive.railId,
+    expected_revision: additive.expectedRevision,
+    source_content_sha256: additive.sourceContentSha256,
+    payload: planned.audit.payload,
+  };
+
+  assert.equal(Object.hasOwn(planned.audit.payload, 'replaceDocumentationRefs'), false);
+  assert.equal(
+    additive.idempotencyKey,
+    'feature_mechanization_rail_record:codex:FM-DB-FIRST-WRITER:command:recordfeaturemechanizationrail:latest:1e071cf49444f335'
+  );
+  assert.equal(explicitFalse.idempotencyKey, additive.idempotencyKey);
+  assert.notEqual(replacement.idempotencyKey, additive.idempotencyKey);
+  assert.doesNotThrow(() =>
+    assertFeatureMechanizationRailIdempotentReplayMatches(existingOperation, additive)
+  );
+  assert.doesNotThrow(() =>
+    assertFeatureMechanizationRailIdempotentReplayMatches(existingOperation, explicitFalse)
+  );
+  assert.throws(
+    () =>
+      assertFeatureMechanizationRailIdempotentReplayMatches(existingOperation, {
+        ...replacement,
+        idempotencyKey: additive.idempotencyKey,
+      }),
+    /FEATURE-MECHANIZATION-IDEMPOTENCY-MISMATCH/
+  );
+});
+
+test('documentation replacement requires an explicit revision for an existing rail', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: ['--replace-documentation-refs', 'true'] })
+  );
+  for (const revision of [0, 4, null]) {
+    assert.throws(
+      () =>
+        planFeatureMechanizationRailRecordOperation({
+          command,
+          existingRail: { railId: command.railId, revision },
+          operationId: 'missing-revision',
+          now: new Date('2026-10-19T18:00:00.000Z'),
+        }),
+      /--replace-documentation-refs requires --expected-revision for an existing rail/
+    );
+  }
+});
+
+test('documentation replacement rejects a stale explicit revision', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--replace-documentation-refs', 'true', '--expected-revision', '3'],
+    })
+  );
+  assert.throws(
+    () =>
+      planFeatureMechanizationRailRecordOperation({
+        command,
+        existingRail: { railId: command.railId, revision: 4 },
+        operationId: 'stale-revision',
+        now: new Date('2026-10-19T18:00:00.000Z'),
+      }),
+    /expected revision 3, but current revision is 4/
+  );
+});
+
+test('documentation replacement permits a new rail without an existing revision', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: ['--replace-documentation-refs', 'true'] })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail: null,
+    operationId: 'create-with-explicit-docs',
+    now: new Date('2026-10-19T18:00:00.000Z'),
+  });
+
+  assert.equal(planned.rail.revision, 0);
+  assert.deepEqual(planned.rail.documentationRefs, command.documentationRefs);
+  assert.equal(planned.audit.payload.replaceDocumentationRefs, true);
 });
 
 test('feature mechanization rail planner replaces inherited implementation authority on explicit hard cut', () => {
