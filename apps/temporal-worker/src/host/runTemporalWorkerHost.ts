@@ -1,3 +1,4 @@
+import type { TemporalWorkerRunResult } from '@dvt/adapter-temporal';
 import type { Logger } from 'pino';
 
 import type { OperationalServerHandle } from '../ops/OperationalServer.js';
@@ -29,29 +30,33 @@ export async function runTemporalWorkerHost(options: RunTemporalWorkerHostOption
   let runtime: RuntimeHandle | null = null;
   let primaryError: Error | null = null;
   let cleanupError: Error | null = null;
+  let terminalResultObserved = false;
+
+  function observeRunResult(result: TemporalWorkerRunResult | null): void {
+    if (result === null || terminalResultObserved) return;
+    terminalResultObserved = true;
+    if (result.status === 'failed') {
+      const error = toThrowableError(result.error);
+      primaryError =
+        primaryError === null
+          ? error
+          : new AggregateError([primaryError, error], 'temporal worker failed');
+      options.monitor.onError(error);
+    }
+  }
 
   try {
     await options.operationalServer.start();
-    if (options.shutdownSignal.aborted) {
-      return;
+    if (!options.shutdownSignal.aborted) {
+      runtime = await createRuntime(options.env, options.logger);
+      const runtimeHandle = runtime;
+      options.monitor.setRunStateCircuitSnapshotProvider(() =>
+        runtimeHandle.getRunStateCircuitSnapshot()
+      );
+      if (!options.shutdownSignal.aborted) {
+        observeRunResult(await startAndWait(runtime, options.monitor, options.shutdownSignal));
+      }
     }
-
-    runtime = await createRuntime(options.env, options.logger);
-    const runtimeHandle = runtime;
-    options.monitor.setRunStateCircuitSnapshotProvider(() =>
-      runtimeHandle.getRunStateCircuitSnapshot()
-    );
-    if (options.shutdownSignal.aborted) {
-      return;
-    }
-
-    await runtime.start(options.shutdownSignal);
-    if (options.shutdownSignal.aborted) {
-      return;
-    }
-
-    options.monitor.onStarted();
-    await waitForAbort(options.shutdownSignal);
   } catch (error) {
     primaryError = toThrowableError(error);
     if (!(options.shutdownSignal.aborted && isAbortError(primaryError))) {
@@ -68,6 +73,10 @@ export async function runTemporalWorkerHost(options: RunTemporalWorkerHostOption
       } catch (error) {
         cleanupError = toThrowableError(error);
       }
+      // Startup may be cancelled after the SDK run began. Stop joins that run;
+      // a failed stop must not make us wait indefinitely for an unsettled run.
+      const completion = runtime.getRunCompletion();
+      if (completion !== null) observeRunResult(await getSettledRunResult(completion));
     }
 
     try {
@@ -92,18 +101,43 @@ export async function runTemporalWorkerHost(options: RunTemporalWorkerHostOption
   }
 }
 
-async function waitForAbort(signal: globalThis.AbortSignal): Promise<void> {
+async function startAndWait(
+  runtime: RuntimeHandle,
+  monitor: TemporalWorkerMonitor,
+  signal: globalThis.AbortSignal
+): Promise<TemporalWorkerRunResult | null> {
+  await runtime.start(signal);
+  const completion = runtime.getRunCompletion();
+  if (completion === null) throw new Error('TEMPORAL_WORKER_RUN_NOT_STARTED');
+  const settledResult = await getSettledRunResult(completion);
+  if (settledResult !== null) return settledResult;
+  if (signal.aborted) return null;
+  monitor.onStarted();
+  return waitForRunOrAbort(completion, signal);
+}
+
+async function getSettledRunResult(
+  completion: Promise<TemporalWorkerRunResult>
+): Promise<TemporalWorkerRunResult | null> {
+  return Promise.race([completion, Promise.resolve(null)]);
+}
+
+async function waitForRunOrAbort(
+  completion: Promise<TemporalWorkerRunResult>,
+  signal: globalThis.AbortSignal
+): Promise<TemporalWorkerRunResult | null> {
   if (signal.aborted) {
-    return;
+    return null;
   }
 
-  await new Promise<void>((resolve) => {
-    const onAbort = (): void => {
+  return new Promise<TemporalWorkerRunResult | null>((resolve) => {
+    const settle = (result: TemporalWorkerRunResult | null): void => {
       signal.removeEventListener('abort', onAbort);
-      resolve();
+      resolve(result);
     };
-
+    const onAbort = (): void => settle(null);
     signal.addEventListener('abort', onAbort, { once: true });
+    void completion.then(settle);
     if (signal.aborted) {
       onAbort();
     }

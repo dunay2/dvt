@@ -49,7 +49,7 @@ export {
 } from './WorkflowMapper.js';
 
 // PR-2: WorkerHost
-export type { TemporalWorkerHostConfig } from './TemporalWorkerHost.js';
+export type { TemporalWorkerHostConfig, TemporalWorkerRunResult } from './TemporalWorkerHost.js';
 export { TemporalWorkerHost } from './TemporalWorkerHost.js';
 export type {
   TemporalActivityTimeoutConfig,
