@@ -30,6 +30,7 @@ describe('activateProjectWorkspace', () => {
     const calls: string[] = [];
     const resolveSessionContext = vi.fn(async () => {
       calls.push('refresh');
+      return { assertCurrent: vi.fn() };
     });
     const selectWorkspaceScope = vi.fn((workspace: WorkspaceScopeIdentity) => {
       calls.push('select');
@@ -82,7 +83,7 @@ describe('activateProjectWorkspace', () => {
     await expect(
       activateProjectWorkspace(CREATED_WORKSPACE, {
         apiClient: { getJson: vi.fn() },
-        resolveSessionContext: vi.fn().mockResolvedValue(undefined),
+        resolveSessionContext: vi.fn().mockResolvedValue({ assertCurrent: vi.fn() }),
         workspaceScopeSelection: buildSelectionPort(selectWorkspaceScope),
       })
     ).rejects.toThrow('workspace_scope_unavailable');

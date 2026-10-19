@@ -61,6 +61,7 @@ export const WEB_CYPRESS_SPECS = {
     'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
     'apps/web/cypress/e2e/shell/project-onboarding.cy.ts',
     'apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts',
+    'apps/web/cypress/e2e/shell/session-publication-lifecycle.cy.ts',
     'apps/web/cypress/e2e/shell/shell-layout-contract.cy.ts',
     'apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts',
     'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',

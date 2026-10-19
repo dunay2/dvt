@@ -11,6 +11,8 @@ import type { ProjectOnboardingService } from '../../services/projectOnboarding/
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { ProjectCreationDialog } from './ProjectCreationDialog';
+import styles from './ProjectCreationDialog.module.css';
+import formStyles from './ProjectCreationForm.module.css';
 
 function buildProjectOnboardingService(
   overrides: Partial<ProjectOnboardingService> = {}
@@ -110,25 +112,19 @@ describe('ProjectCreationDialog', () => {
     const projectNameHelpId = projectNameInput?.getAttribute('aria-describedby');
     const projectNameHelp = projectNameHelpId ? document.getElementById(projectNameHelpId) : null;
     const submitButton = dialogContent?.querySelector<HTMLButtonElement>('button[type="submit"]');
-    expect(dialogContent?.classList).toContain('gap-0');
-    expect(dialogContent?.classList).toContain('p-0');
-    expect(dialogContent?.classList).toContain('sm:max-w-lg');
-    expect(dialogHeader?.classList).toContain('py-5');
-    expect(dialogHeader?.classList).toContain('flex-row');
-    expect(dialogHeader?.classList).toContain('gap-3');
+    expect(dialogContent?.classList).toContain(styles.content);
+    expect(dialogHeader?.classList).toContain(styles.header);
     expect(projectIcon?.getAttribute('aria-hidden')).toBe('true');
-    expect(formBody?.classList).toContain('gap-4');
-    expect(formBody?.classList).toContain('py-5');
+    expect(formBody?.classList).toContain(styles.fields);
     expect(projectNameHelp?.textContent).toBe('Usa un nombre claro y reconocible.');
     expect(projectNameHelp?.getAttribute('data-slot')).toBe('project-name-help');
     expect(getByRole(document.body, 'textbox', { name: 'Nombre del proyecto' })).toBe(
       projectNameInput
     );
     expect(projectNameInput?.closest('label')).toBeNull();
-    expect(submitButton?.classList).toContain('disabled:bg-(--surface-elevated)');
+    expect(submitButton?.classList).toContain(formStyles.submit);
     expect(submitButton?.disabled).toBe(true);
-    expect(dialogFooter?.classList).toContain('border-t');
-    expect(dialogFooter?.classList).toContain('py-4');
+    expect(dialogFooter?.classList).toContain(styles.footer);
     expect(dialogContent?.querySelector('[data-slot="label"]')).not.toBeNull();
     expect(dialogContent?.querySelector('[data-slot="input"]')).not.toBeNull();
     expect(dialogContent?.querySelector('[data-slot="button"]')).not.toBeNull();
@@ -155,7 +151,8 @@ describe('ProjectCreationDialog', () => {
       name: 'Ventas',
     });
     expect(activateCreatedProject).toHaveBeenCalledWith(
-      expect.objectContaining({ project: expect.objectContaining({ name: 'Ventas' }) })
+      expect.objectContaining({ project: expect.objectContaining({ name: 'Ventas' }) }),
+      expect.any(AbortSignal)
     );
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
