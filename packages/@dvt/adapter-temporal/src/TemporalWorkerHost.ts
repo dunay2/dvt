@@ -136,7 +136,9 @@ export class TemporalWorkerHost {
       durationName: 'dvt.temporal.worker.shutdown.duration_ms',
       metricOperation: 'shutdown',
       run: async () => {
-        currentWorker.shutdown();
+        if (currentWorker.getState() === 'RUNNING') {
+          currentWorker.shutdown();
+        }
         try {
           await currentRun.promise;
           if (currentRun.exitResult === 'ok') {

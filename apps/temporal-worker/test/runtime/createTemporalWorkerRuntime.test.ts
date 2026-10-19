@@ -91,6 +91,57 @@ describe('createTemporalWorkerRuntime', () => {
     expect(fixture.hostStart).toHaveBeenCalledWith(fixture.connection);
   });
 
+  it('joins concurrent stops and closes owned resources once after the host drains', async () => {
+    const fixture = createRuntimeFixture();
+    const closeOrder: string[] = [];
+    let releaseDrain!: () => void;
+    const drained = new Promise<void>((resolve) => {
+      releaseDrain = resolve;
+    });
+    const shutdownEntered = new Promise<void>((resolve) => {
+      fixture.hostShutdown.mockImplementation(async () => {
+        resolve();
+        await drained;
+        closeOrder.push('host');
+      });
+    });
+    fixture.connection.close.mockImplementation(async () => {
+      closeOrder.push('connection');
+    });
+    fixture.closeStateStore.mockImplementation(async () => {
+      closeOrder.push('stateStore');
+    });
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv(),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        connectionFactory: async () => fixture.connection,
+        hostFactory: () => fixture.host,
+      }
+    );
+    await runtime.start();
+
+    const settled = vi.fn();
+    const firstStop = runtime.stop().then(settled);
+    const secondStop = runtime.stop().then(settled);
+    await shutdownEntered;
+
+    expect(fixture.hostShutdown).toHaveBeenCalledTimes(1);
+    expect(fixture.connection.close).not.toHaveBeenCalled();
+    expect(fixture.closeStateStore).not.toHaveBeenCalled();
+    expect(settled).not.toHaveBeenCalled();
+
+    releaseDrain();
+    await Promise.all([firstStop, secondStop]);
+
+    expect(settled).toHaveBeenCalledTimes(2);
+    expect(fixture.hostShutdown).toHaveBeenCalledTimes(1);
+    expect(fixture.connection.close).toHaveBeenCalledTimes(1);
+    expect(fixture.closeStateStore).toHaveBeenCalledTimes(1);
+    expect(closeOrder).toEqual(['host', 'connection', 'stateStore']);
+  });
+
   it('connects with the canonical nested Temporal address when no connection factory is provided', async () => {
     const fixture = createRuntimeFixture();
     mockNativeConnectionConnect.mockResolvedValue(fixture.connection);

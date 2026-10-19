@@ -68,6 +68,78 @@ flowchart TD
 | `TF-C3-D` | run DBT through an adapter-owned CLI host behind `DbtPluginRunner`                   | `8pt`  | Landed         |
 | `TF-C3-E` | rollout/runbook/acceptance hardening and truth-surface closure                       | `3pt`  | In progress    |
 
+## Generic Worker Lifecycle
+
+`TF-C3-C` owns the process lifetime of the standalone worker independently of
+its configured step plugins. `StopTemporalWorkerRuntime` names the existing
+operational command implemented by `RuntimeHandle.stop(): Promise<void>`.
+Recording that existing command does not assert that every shutdown defect is
+fixed; [#3591](https://github.com/dunay2/dvt/issues/3591) owns the drain correction
+and its acceptance evidence.
+
+| Catalog field           | Contract                                                                                                            |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Type and owner          | Command; Temporal worker runtime composition; `RuntimeHandle` lifecycle policy                                      |
+| Intent and input        | Stop this process-owned runtime instance; no caller-selected tenant, run or resource target                         |
+| Application port        | `RuntimeHandle.stop(): Promise<void>`                                                                               |
+| Inbound adapter         | Process signal to `AbortSignal` to `runTemporalWorkerHost`                                                          |
+| Outbound boundary       | `TemporalWorkerHost.shutdown()` owns the Temporal SDK transition and run completion                                 |
+| Output                  | Completion of owned cleanup, or a genuine shutdown/cleanup failure                                                  |
+| Scope and authorization | Process-owner operational control over resources created by this runtime; no new HTTP route or tenant authorization |
+| Concurrency             | Existing `stopPromise` coalesces repeated runtime stop requests                                                     |
+| Ordering                | Startup settles, worker run completes, then connection, state store, artifact reader and step resources close       |
+| Negative evidence       | Already-draining and finalizing worker, concurrent stop, never-started host, genuine run/shutdown/cleanup failures  |
+
+### Drain Authority And Error Policy
+
+The SDK and the process composition can both receive the same shutdown signal.
+The gateway must distinguish requesting shutdown from joining an already
+requested shutdown. The SDK gateway calls `Worker.shutdown()` only when
+`Worker.getState()` is `RUNNING`, with no asynchronous gap between those calls.
+It then waits for the captured `run()` promise in every SDK state. In particular,
+`STOPPED` or `FAILED` is not proof that native finalization and workflow-runtime
+destruction have completed. Dependent resources belong to the composition and
+cannot close before that run promise settles.
+
+The signal adapter does not interpret SDK states. The existing runtime handle
+continues to coalesce stop; there is no second shutdown coordinator and no
+global override of SDK shutdown signals.
+
+The existing adapter error contract is preserved: failed runs are logged and
+counted, without a successful `run_exit` metric. This drain correction does not
+introduce a new rejection contract for those already-recorded run failures.
+Genuine synchronous shutdown and resource-cleanup failures remain failures;
+message matching, silent catches and fabricated success are not recovery.
+
+Current failure and intended ownership:
+
+```mermaid
+flowchart TD
+  Signal[Process signal] --> SDK[SDK starts draining]
+  Signal --> Composition[Composition requests stop]
+  SDK --> Existing[Existing gateway requests shutdown again]
+  Composition --> Existing
+  Existing --> Error[IllegalStateError skips run await]
+  Error --> Early[Dependent resources can close too early]
+  Composition --> Gateway[Corrected gateway reads SDK state]
+  Gateway --> Initiate[Initiate only from RUNNING]
+  Initiate --> Join[Always await captured run promise]
+  Join --> Close[Composition closes owned resources once]
+```
+
+### Bounded Fowler And Validation Matrix
+
+| scenario                                      | opportunity                            | Fowler pattern                                        | DDD owner                      | command/query rail          | implementation surfaces                        | unit or package test                                                                                                     | architecture test                                              | user-flow test                                                                                      | out of scope                                                          |
+| --------------------------------------------- | -------------------------------------- | ----------------------------------------------------- | ------------------------------ | --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| SDK has already begun shutdown                | Boundary drift and duplicate semantics | Gateway; separate shutdown initiation from completion | Temporal SDK gateway           | `StopTemporalWorkerRuntime` | `TemporalWorkerHost.ts` and its lifecycle test | RUNNING initiates; STOPPING/DRAINING/DRAINED/STOPPED/FAILED wait for run without another request; preserve error metrics | Existing runtime SRP guard keeps SDK decisions in the adapter  | Existing composed worker lifecycle with an actual signal                                            | Global SDK signal configuration; readiness policy; workload execution |
+| Owned resources depend on the draining worker | Test-only confidence                   | Composition Root; explicit resource ownership         | RuntimeHandle lifecycle policy | `StopTemporalWorkerRuntime` | Existing runtime and host tests                | Deferred run blocks closers; repeated runtime stop closes once in order; genuine failures remain visible                 | Existing runtime SRP guard and semantic composition assertions | Existing host/integration proof observes drain and resource release, not only process disappearance | New browser journey, retry policy, shutdown framework                 |
+
+Validation starts with these exact files, using `pnpm --filter <package> exec
+vitest run <file>` and the existing package configuration. Real Temporal
+integration must run its canonical runtime dependency preparation before the
+selected test. Broad browser suites are not evidence for this SDK transition.
+Required ARC artifacts and repository gates still apply to the complete diff.
+
 ## Feature Mechanization
 
 ```feature-mechanization
