@@ -29,11 +29,15 @@ evidence:
 
 [#3591](https://github.com/dunay2/dvt/issues/3591) owns the correction to the
 existing `StopTemporalWorkerRuntime` command. Planning DB design
-`GH-3591-TEMPORAL-SHUTDOWN-DRAIN-V2` is in `review`; the same
-`TF-C3-C-TEMPORAL-WORKER-LIFECYCLE` rail is retained at native revision 1.
+`GH-3591-TEMPORAL-SHUTDOWN-DRAIN-V3` is in `review`; the same
+`TF-C3-C-TEMPORAL-WORKER-LIFECYCLE` rail is retained at native revision 2.
 The [original admission](https://github.com/dunay2/dvt/issues/3591#issuecomment-6277641733)
 and [ARC artifact extension](https://github.com/dunay2/dvt/issues/3591#issuecomment-6278501955)
 bound this work to the existing runtime intent and its required evidence.
+The [filename reconciliation](https://github.com/dunay2/dvt/issues/3591#issuecomment-6279245094)
+reuses the same risk identity and replaces its documentary reference through
+the audited command introduced by #3692. The earlier pre-push rejected the
+uppercase risk filename; the naming rule remains unchanged.
 
 Governing sources are `AGENTS.md`, the governance-document-rule inventory,
 ADR-0001, command/query rail governance, Fowler opportunity governance, and the
@@ -157,7 +161,7 @@ production stub, fake provider, or success placeholder is added. Validation is
 deliberately bounded to the affected lifecycle and native signal path.
 Fatal worker exit propagation/readiness and cleanup-error loss through early
 startup-abort returns remain existing defects outside this drain correction;
-the [Temporal operational risk](../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
+the [Temporal operational risk](../risk-register/adapters/r-20260308-temporal-operational-hardening-residuals.md)
 continues to record them. This is the final focused test report, not a claim of
 complete lifecycle hardening. Publication and integration require the separate
 committed-candidate receipts in #3591.
