@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { TemporalWorkerHost } from '@dvt/adapter-temporal';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -15,7 +16,9 @@ import {
   type ExecutionPlan,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
+import { Context } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
+import { NativeConnection, Worker } from '@temporalio/worker';
 import { c as createTarball } from 'tar';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -23,6 +26,8 @@ import { runTemporalWorkerHost } from '../../src/host/runTemporalWorkerHost.js';
 import { createOperationalServer } from '../../src/ops/OperationalServer.js';
 import { TemporalWorkerMonitor } from '../../src/ops/TemporalWorkerMonitor.js';
 import { loadEnv } from '../../src/plugins/env.js';
+import { createTemporalWorkerRuntime } from '../../src/runtime/createTemporalWorkerRuntime.js';
+import { createTemporalWorkerStores } from '../../src/runtime/temporalWorkerStores.js';
 import {
   bootstrapRunMetadata,
   storeValidPlanArtifact,
@@ -315,6 +320,222 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       await temporalEnv?.teardown();
       await rm(canaryRoot, { recursive: true, force: true });
     }
+  }, 120_000);
+});
+
+const describeIfLinuxPg =
+  process.platform === 'linux' && process.env['DVT_PG_INTEGRATION'] === '1'
+    ? describe
+    : describe.skip;
+
+describeIfLinuxPg('runTemporalWorkerHost signal canary', () => {
+  it('drains an in-flight SDK activity after SIGTERM before closing runtime resources', async () => {
+    const connectionString =
+      process.env['DVT_PG_URL'] ??
+      process.env['DATABASE_URL'] ??
+      'postgresql://dvt:dvt@localhost:5432/dvt';
+    const runId = `run-worker-drain-${Date.now()}`;
+    const taskQueue = `worker-drain-${Date.now()}`;
+    const ownership = { tenantId: 't-it', projectId: 'p-it', environmentId: 'test', runId };
+    const shutdown = new globalThis.AbortController();
+    const receipt: string[] = [];
+    const cleanupResources: Array<() => Promise<void>> = [];
+    let activityEntered = false;
+    let activityCancellation: globalThis.AbortSignal | undefined;
+    let nativeRunSettled = false;
+    let hostShutdownState: string | undefined;
+    let releaseActivity: (() => void) | undefined;
+    const activityRelease = new Promise<void>((resolve) => {
+      releaseActivity = resolve;
+    });
+    let temporalEnv: TestWorkflowEnvironment | undefined;
+    let nativeRun: Promise<void> | undefined;
+    let hostCompletion: Promise<{ error?: unknown }> | undefined;
+    let operationalServer: ReturnType<typeof createOperationalServer> | undefined;
+    let testFailure: { error: unknown } | undefined;
+    let cleanupErrors: unknown[];
+    const onSignal = (): void => {
+      // The SDK queues its own callback. Exercise the already-draining ordering.
+      globalThis.queueMicrotask(() => shutdown.abort());
+    };
+
+    const observeClose = (name: string, resource: { close?: () => Promise<void> }): void => {
+      const original = resource.close;
+      if (original === undefined) throw new Error(`CANARY_CLOSE_MISSING:${name}`);
+      let closed = false;
+      resource.close = async () => {
+        expect(nativeRunSettled, `${name} must wait for the native run`).toBe(true);
+        await original.call(resource);
+        closed = true;
+        receipt.push(name);
+      };
+      cleanupResources.push(async () => {
+        resource.close = original;
+        if (!closed) await original.call(resource);
+      });
+    };
+
+    try {
+      const planRef = await storeValidPlanArtifact({
+        connectionString,
+        schema: 'dvt',
+        plan: createDbtExecutionPlan(ownership),
+        ...ownership,
+      });
+      await bootstrapRunMetadata({
+        connectionString,
+        schema: 'dvt',
+        namespace: 'default',
+        taskQueue,
+        planRef,
+        ...ownership,
+      });
+      temporalEnv = await TestWorkflowEnvironment.createLocal();
+      const env = {
+        ...createEnv(),
+        DATABASE_URL: connectionString,
+        TEMPORAL_ADDRESS: temporalEnv.address,
+        TEMPORAL_TASK_QUEUE: taskQueue,
+        DVT_TEMPORAL_WORKER_RUN_MIGRATIONS: true,
+        DVT_TEMPORAL_ADMIN_PORT: 0,
+      };
+      const stores = createTemporalWorkerStores(env, {}, true);
+      observeClose('state-store.close', stores.stateStore);
+      observeClose('plan-reader.close', stores.planArtifactReader);
+      const monitor = createMonitor();
+      operationalServer = createOperationalServer({
+        host: '127.0.0.1',
+        port: 0,
+        logger: { info() {} },
+        monitor,
+      });
+      const server = operationalServer;
+      const createWorker = Worker.create.bind(Worker);
+      let nativeWorker: Worker | undefined;
+      vi.spyOn(Worker, 'create').mockImplementation(async (options) => {
+        const worker = await createWorker(options);
+        nativeWorker = worker;
+        const run = worker.run.bind(worker);
+        vi.spyOn(worker, 'run').mockImplementation(() => {
+          nativeRun = run().finally(() => {
+            nativeRunSettled = true;
+            receipt.push('worker.run');
+          });
+          return nativeRun;
+        });
+        return worker;
+      });
+      hostCompletion = runTemporalWorkerHost({
+        env,
+        logger: { info() {}, error() {} },
+        monitor,
+        shutdownSignal: shutdown.signal,
+        operationalServer: {
+          start: () => server.start(),
+          stop: async () => {
+            await server.stop();
+            receipt.push('operational-server.stop');
+          },
+        },
+        createRuntime: (runtimeEnv, logger) =>
+          createTemporalWorkerRuntime(runtimeEnv, logger, {
+            stateStoreFactory: () => stores.stateStore,
+            planArtifactReaderFactory: () => stores.planArtifactReader,
+            connectionFactory: async (config) => {
+              const connection = await NativeConnection.connect({
+                address: config.connection.address,
+              });
+              observeClose('connection.close', connection);
+              return connection;
+            },
+            hostFactory: (config) => {
+              const host = new TemporalWorkerHost({
+                ...config,
+                // Explicit activity fixture: hold native in-flight work, then propagate
+                // its actual cancellation. This is not a DBT execution success proof.
+                stepExecutors: [
+                  {
+                    canExecute: () => true,
+                    execute: async () => {
+                      const cancellation = Context.current().cancellationSignal;
+                      activityCancellation = cancellation;
+                      activityEntered = true;
+                      await activityRelease;
+                      if (!cancellation.aborted) throw new Error('CANARY_ACTIVITY_NOT_CANCELLED');
+                      throw cancellation.reason;
+                    },
+                  },
+                ],
+              });
+              const stop = host.shutdown.bind(host);
+              vi.spyOn(host, 'shutdown').mockImplementation(() => {
+                hostShutdownState = nativeWorker?.getState();
+                return stop();
+              });
+              return host;
+            },
+          }),
+      }).then(
+        () => ({}),
+        (error: unknown) => ({ error })
+      );
+      await waitForAsync(async () => monitor.getHealthSnapshot().ready);
+      await temporalEnv.client.workflow.start(RUN_PLAN_WORKFLOW, {
+        taskQueue,
+        workflowId: runId,
+        args: [
+          {
+            planRef,
+            ctx: {
+              ...ownership,
+              targetAdapter: 'temporal',
+              logicalAttemptId: 1,
+              originRunId: runId,
+            },
+          },
+        ],
+      });
+      await waitFor(() => activityEntered, 30_000);
+      process.once('SIGTERM', onSignal);
+      process.kill(process.pid, 'SIGTERM');
+      await waitFor(() => hostShutdownState !== undefined, 5_000);
+      await waitFor(() => activityCancellation?.aborted === true, 5_000);
+      expect(['DRAINING', 'DRAINED']).toContain(hostShutdownState);
+      expect(nativeRunSettled).toBe(false);
+      expect(receipt).toEqual([]);
+      releaseActivity?.();
+      expect(await hostCompletion).toEqual({});
+      expect(receipt).toEqual([
+        'worker.run',
+        'connection.close',
+        'state-store.close',
+        'plan-reader.close',
+        'operational-server.stop',
+      ]);
+    } catch (error) {
+      testFailure = { error };
+    } finally {
+      process.off('SIGTERM', onSignal);
+      shutdown.abort();
+      releaseActivity?.();
+      const joins = await Promise.allSettled([hostCompletion, nativeRun]);
+      const cleanup = await Promise.allSettled(cleanupResources.map((close) => close()));
+      vi.restoreAllMocks();
+      const teardown = await Promise.allSettled([
+        operationalServer?.stop(),
+        temporalEnv?.teardown(),
+      ]);
+      cleanupErrors = [...joins, ...cleanup, ...teardown]
+        .filter((result) => result.status === 'rejected')
+        .map((result) => result.reason);
+    }
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [...(testFailure === undefined ? [] : [testFailure.error]), ...cleanupErrors],
+        'canary cleanup failed'
+      );
+    }
+    if (testFailure !== undefined) throw testFailure.error;
   }, 120_000);
 });
 
