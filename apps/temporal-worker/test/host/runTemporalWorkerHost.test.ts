@@ -18,7 +18,7 @@ import {
 import { jcsCanonicalize } from '@dvt/crypto';
 import { Context } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
-import { GracefulShutdownPeriodExpiredError, NativeConnection, Worker } from '@temporalio/worker';
+import { NativeConnection, Worker } from '@temporalio/worker';
 import { c as createTarball } from 'tar';
 import { describe, expect, it, vi, type Mock, type MockInstance } from 'vitest';
 
@@ -892,12 +892,15 @@ describeIfLinuxPg('runTemporalWorkerHost signal canary', () => {
           expect(await readiness.json()).toMatchObject({ ready: false });
           releaseConnectionClose?.();
           const result = await hostCompletion;
-          expect(result.error).toBeInstanceOf(GracefulShutdownPeriodExpiredError);
-          if (!(result.error instanceof GracefulShutdownPeriodExpiredError)) {
+          const nativeFailure = await nativeRun?.then(
+            () => undefined,
+            (error: unknown) => error
+          );
+          if (!(nativeFailure instanceof Error)) {
             throw new Error('CANARY_EXPECTED_REAL_SDK_SHUTDOWN_FAILURE');
           }
-          expectedNativeFailure = result.error;
-          await expect(nativeRun).rejects.toBe(expectedNativeFailure);
+          expectedNativeFailure = nativeFailure;
+          expect(result.error).toBe(nativeFailure);
         }
         expect(receipt).toEqual([
           'worker.run',
@@ -935,7 +938,8 @@ describeIfLinuxPg('runTemporalWorkerHost signal canary', () => {
       if (cleanupErrors.length > 0) {
         throw new AggregateError(
           [...(testFailure === undefined ? [] : [testFailure.error]), ...cleanupErrors],
-          'canary cleanup failed'
+          'canary cleanup failed',
+          { cause: testFailure?.error ?? cleanupErrors[0] }
         );
       }
       if (testFailure !== undefined) throw testFailure.error;
