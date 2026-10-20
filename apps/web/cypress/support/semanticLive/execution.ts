@@ -63,33 +63,34 @@ export function executePersistedModel(
     expect(planSha).to.match(/^[a-f0-9]{64}$/);
   });
   cy.get('[data-slot="plan-preview-start-run"]').should('be.enabled').click();
-  cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
-  cy.location('pathname').then((pathname) => {
-    const runId = pathname.split('/').pop()!;
-    waitForCompletedRun(runId);
-    readLiveRunEvents(runId).then((response) => {
-      expect(response.status).to.equal(200);
-      const events = response.body as {
-        items: Array<{
-          eventType: string;
-          payload?: {
-            resultEvidence?: {
-              evidenceType?: string;
-              plan?: { sha256?: string };
-              rowsWritten?: number;
+  cy.location('pathname', { timeout: 20_000 })
+    .should('match', /^\/runs\/[^/]+$/)
+    .then((pathname) => {
+      const runId = pathname.split('/').pop()!;
+      waitForCompletedRun(runId);
+      readLiveRunEvents(runId).then((response) => {
+        expect(response.status).to.equal(200);
+        const events = response.body as {
+          items: Array<{
+            eventType: string;
+            payload?: {
+              resultEvidence?: {
+                evidenceType?: string;
+                plan?: { sha256?: string };
+                rowsWritten?: number;
+              };
             };
-          };
-        }>;
-      };
-      const completed = events.items.filter((event) => event.eventType === 'StepCompleted');
-      expect(completed).to.have.length(1);
-      expect(completed[0]?.payload?.resultEvidence).to.deep.include({
-        evidenceType: 'dvt-postgres-publication',
-        rowsWritten: expected.rows.length,
+          }>;
+        };
+        const completed = events.items.filter((event) => event.eventType === 'StepCompleted');
+        expect(completed).to.have.length(1);
+        expect(completed[0]?.payload?.resultEvidence).to.deep.include({
+          evidenceType: 'dvt-postgres-publication',
+          rowsWritten: expected.rows.length,
+        });
+        expect(completed[0]?.payload?.resultEvidence?.plan?.sha256).to.equal(planSha);
       });
-      expect(completed[0]?.payload?.resultEvidence?.plan?.sha256).to.equal(planSha);
     });
-  });
   cy.get('[data-slot="run-result-tab"]').click();
   cy.get('[data-slot="run-dvt-postgres-publication-card"]', { timeout: 30_000 }).should(
     'contain.text',
