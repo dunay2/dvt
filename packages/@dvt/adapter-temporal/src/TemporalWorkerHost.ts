@@ -55,7 +55,12 @@ export interface TemporalWorkerHostConfig {
 }
 
 export type TemporalWorkerRunResult =
-  { readonly status: 'completed' } | { readonly status: 'failed'; readonly error: unknown };
+  | { readonly status: 'completed' }
+  | {
+      readonly status: 'failed';
+      readonly error: unknown;
+      readonly diagnosticError?: unknown;
+    };
 
 type WorkerLogAttributes = Attributes;
 
@@ -246,7 +251,11 @@ export class TemporalWorkerHost {
       .then<TemporalWorkerRunResult, TemporalWorkerRunResult>(
         () => ({ status: 'completed' }),
         (error: unknown) => {
-          this.recordWorkerRunExitError(context, error);
+          try {
+            this.recordWorkerRunExitError(context, error);
+          } catch (diagnosticError) {
+            return { status: 'failed', error, diagnosticError };
+          }
           return { status: 'failed', error };
         }
       )

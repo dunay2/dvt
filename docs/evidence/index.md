@@ -53,6 +53,7 @@ Evidence documents that justify or validate relevant changes.
 - [Temporal Retained Start Identity Rejection](ED-20260930-temporal-start-identity.md)
 - [Temporal Retransmission Profile Admission Evidence](ED-20261001-temporal-redispatch-profile-admission.md)
 - [Temporal Worker Shutdown Drain Evidence](ED-20261019-temporal-worker-shutdown-drain.md)
+- [Temporal Worker Terminal Outcome And Cleanup Evidence](ED-20261020-temporal-worker-termination.md)
 - [Timestamp column function evidence](ED-20260910-timestamp-column-function.md)
 - [Transform bigint DIVIDE evidence](ED-20260928-transform-bigint-divide.md)
 - [Transform function alias authoring evidence](ED-20260902-transform-function-alias-authoring.md)

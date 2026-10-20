@@ -117,6 +117,37 @@ describe('runTemporalWorkerHost', () => {
 });
 
 describe('worker termination propagation', () => {
+  it.each([new Error('diagnostic sink failed'), undefined])(
+    'reports SDK and diagnostic errors while closing resources: %s',
+    async (diagnosticError) => {
+      const fixture = createHostLifecycleFixture();
+      const fatal = new Error('native SDK failed');
+      fixture.completion.resolve({ status: 'failed', error: fatal, diagnosticError });
+      fixture.releaseStop.resolve();
+      const error = await runTemporalWorkerHost(fixture.options).catch(
+        (failure: unknown) => failure
+      );
+      expect(error).toBeInstanceOf(AggregateError);
+      expect((error as AggregateError).errors).toEqual([
+        fatal,
+        diagnosticError === undefined ? new Error('UnknownError') : diagnosticError,
+      ]);
+      expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+      expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('closes resources when a completion provider violates its fulfilled-result contract', async () => {
+    const fixture = createHostLifecycleFixture();
+    const violation = new Error('completion provider rejected');
+    fixture.runtime.getRunCompletion.mockReturnValue(Promise.reject(violation));
+    fixture.releaseStop.resolve();
+    const result = runTemporalWorkerHost(fixture.options).catch((error: unknown) => error);
+    expect(await withDeadline(result)).toBe(violation);
+    expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+    expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+  });
+
   it.each(['completed', 'failed', 'immediate-failure', 'abort-and-failure'] as const)(
     'withdraws real HTTP readiness and joins cleanup on %s',
     async (scenario) => {

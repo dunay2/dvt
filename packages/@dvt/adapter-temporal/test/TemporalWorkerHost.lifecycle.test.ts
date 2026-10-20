@@ -362,22 +362,63 @@ describe('TemporalWorkerHost lifecycle', () => {
     }
   );
 
-  it('does not create an unhandled rejection for start and shutdown only consumers', async () => {
-    const unhandledRejection = vi.fn();
-    process.on('unhandledRejection', unhandledRejection);
-    const host = makeWorkerHost();
-    try {
+  it.each([
+    { name: 'logger Error', sink: 'logger', diagnosticError: new Error('LOG_SINK_FAILED') },
+    { name: 'counter Error', sink: 'counter', diagnosticError: new Error('METRIC_SINK_FAILED') },
+    { name: 'logger undefined', sink: 'logger', diagnosticError: undefined },
+    { name: 'counter null', sink: 'counter', diagnosticError: null },
+  ])(
+    'retains the SDK failure and diagnostic failure from $name',
+    async ({ sink, diagnosticError }) => {
+      const { observability, logs, metrics } = makeTrackingObservability();
+      const host = makeWorkerHost({ observability });
+      const error = new Error('ORIGINAL_WORKER_FAILURE');
       await host.start({} as never);
-      rejectWorkerRun(new Error('UNOBSERVED_WORKER_RUN_FAILURE'));
-      await new Promise<void>((resolve) => setImmediate(resolve));
+      const failingSink = sink === 'logger' ? logs.error : metrics.counter;
+      failingSink.mockImplementationOnce(() => {
+        throw diagnosticError;
+      });
+      const completion = host.getRunCompletion();
+      rejectWorkerRun(error);
 
+      await expect(completion).resolves.toEqual({ status: 'failed', error, diagnosticError });
+      const result = await completion;
+      if (result?.status !== 'failed') throw new Error('Expected a failed SDK run');
+      expect(result.error).toBe(error);
+      expect(Object.hasOwn(result, 'diagnosticError')).toBe(true);
+      expect(result.diagnosticError).toBe(diagnosticError);
       expect(host.isRunning()).toBe(false);
-      expect(unhandledRejection).not.toHaveBeenCalled();
       await expect(host.shutdown()).resolves.toBeUndefined();
-    } finally {
-      process.off('unhandledRejection', unhandledRejection);
+      expect(host.getRunCompletion()).toBe(completion);
     }
-  });
+  );
+
+  it.each(['none', 'logger', 'counter'] as const)(
+    'does not create an unhandled rejection for start and shutdown only consumers with %s diagnostic failure',
+    async (sink) => {
+      const unhandledRejection = vi.fn();
+      process.on('unhandledRejection', unhandledRejection);
+      const { observability, logs, metrics } = makeTrackingObservability();
+      const host = makeWorkerHost({ observability });
+      try {
+        await host.start({} as never);
+        if (sink !== 'none') {
+          const failingSink = sink === 'logger' ? logs.error : metrics.counter;
+          failingSink.mockImplementationOnce(() => {
+            throw new Error('UNOBSERVED_DIAGNOSTIC_FAILURE');
+          });
+        }
+        rejectWorkerRun(new Error('UNOBSERVED_WORKER_RUN_FAILURE'));
+        await new Promise<void>((resolve) => setImmediate(resolve));
+
+        expect(host.isRunning()).toBe(false);
+        expect(unhandledRejection).not.toHaveBeenCalled();
+        await expect(host.shutdown()).resolves.toBeUndefined();
+      } finally {
+        process.off('unhandledRejection', unhandledRejection);
+      }
+    }
+  );
 
   it('keeps each explicitly restarted SDK run associated with its own completion', async () => {
     const host = makeWorkerHost();

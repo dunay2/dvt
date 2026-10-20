@@ -3,7 +3,7 @@ id: R-20260308-TEMPORAL-OPERATIONS-01
 title: Temporal lifecycle still has failure propagation and operational evidence gaps
 status: Mitigating
 date: 2026-03-08
-last_reviewed: 2026-10-19
+last_reviewed: 2026-10-20
 owners:
   - adapter-temporal
   - observability
@@ -38,7 +38,8 @@ The drain correction in [#3591](https://github.com/dunay2/dvt/issues/3591) preve
 a second SDK shutdown request from bypassing the wait for an already-draining
 worker. Its focused tests and native Linux SIGTERM canary pass; prepush, exact
 base/head acceptance, and PR checks are recorded in the issue's candidate and
-merge receipts. That correction does not resolve these separately observed paths:
+merge receipts. The separately admitted
+[#3694](https://github.com/dunay2/dvt/issues/3694) addresses these observed paths:
 
 - A fatal `Worker.run()` rejection is recorded by the adapter, but the composed
   host waits for process abort rather than observing that terminal worker result.
@@ -46,14 +47,31 @@ merge receipts. That correction does not resolve these separately observed paths
 - Early startup-abort returns in `runTemporalWorkerHost()` execute cleanup in
   `finally`, but can bypass the later `cleanupError` throw and lose a genuine
   cleanup failure at the caller boundary.
+- A terminal error recorder can itself throw through an injected logger or
+  counter, masking the original SDK failure unless both values are retained.
+
+The #3694 implementation exposes the retained SDK outcome, withdraws readiness
+through the existing monitor, preserves startup-abort cleanup errors, and rejects
+startup after runtime stop begins. Focused lifecycle tests pass for those paths,
+including the additional diagnostic-failure regressions. Final candidate gates
+and native graceful/forced-shutdown proof remain under verification in its
+evidence record.
+This is mitigation in review, not an integrated-production acceptance claim.
+
+Two existing boundaries remain outside that correction:
+
 - Worker defaults and client timeout behavior still need sustained-load and
   production-like network evidence beyond unit and time-skipping tests.
+- Direct concurrent calls to adapter `start()` while native worker creation is
+  pending are not coordinated by this slice. The composed runtime coalesces its
+  admitted startup calls, but that does not establish the same guarantee for
+  direct adapter callers.
 
 These are existing operational risks, not new debt introduced by the bounded
-drain repair. Consequences include traffic directed to a process with no running
-worker, an apparently successful stop despite failed cleanup, and incomplete
-incident telemetry. This risk remains `Mitigating`; #3591 does not close the
-entire lifecycle or certify production-load behavior.
+lifecycle repair. Consequences include traffic directed to a process with no
+running worker, hidden cleanup or diagnostic failures, and unverified behavior
+outside the exercised startup and workload boundaries. This risk remains
+`Mitigating`; neither lifecycle correction certifies production-load behavior.
 
 ## Mitigation
 
@@ -71,9 +89,15 @@ entire lifecycle or certify production-load behavior.
   runtime stops, ordered closers, and genuine shutdown/run-error observability.
   Use the native Linux signal canary for the in-flight activity path; its explicit
   fixture is not a claim of real DBT workload completion.
-- Reconcile fatal worker exit with composed host readiness and preserve cleanup
-  failures on early startup abort through separately admitted lifecycle work.
-  Those changes are not implemented or accepted by this drain evidence.
+- Retain one fulfilled SDK completion result and propagate its original failure
+  through the composed host, including an abort/fatal race. Preserve a separate
+  diagnostic failure when recording also throws; never replace the SDK cause.
+- Route every startup-abort checkpoint through the same cleanup owner and error
+  epilogue. Reject startup on a runtime handle once stop begins, while retaining
+  the existing coalescing of admitted starts.
+- Require the #3694 native graceful/forced-shutdown receipts and final candidate
+  gates before accepting that termination correction. Its activity fixture does
+  not certify DBT workload completion or direct adapter concurrent startup.
 - Collect production-like telemetry evidence in a follow-up pass before
   treating Temporal worker defaults as fully validated under load.
 
@@ -81,6 +105,8 @@ entire lifecycle or certify production-load behavior.
 
 - `docs/evidence/critical/ED-20260308-temporal-operational-close-out.md`
 - [Temporal worker shutdown drain evidence](../../evidence/ED-20261019-temporal-worker-shutdown-drain.md)
+- [Temporal worker terminal outcome and cleanup evidence](../../evidence/ED-20261020-temporal-worker-termination.md)
+- [#3694 lifecycle admission](https://github.com/dunay2/dvt/issues/3694#issuecomment-6279831471)
 - [#3591 ARC-2 admission](https://github.com/dunay2/dvt/issues/3591#issuecomment-6278501955)
 - [Lifecycle review findings](https://github.com/dunay2/dvt/issues/3604#issuecomment-6276147618)
 - `packages/@dvt/adapter-temporal/src/TemporalAdapter.ts`

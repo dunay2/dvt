@@ -36,7 +36,13 @@ export async function runTemporalWorkerHost(options: RunTemporalWorkerHostOption
     if (result === null || terminalResultObserved) return;
     terminalResultObserved = true;
     if (result.status === 'failed') {
-      const error = toThrowableError(result.error);
+      const error =
+        'diagnosticError' in result
+          ? new AggregateError(
+              [toThrowableError(result.error), toThrowableError(result.diagnosticError)],
+              'temporal worker and terminal diagnostics failed'
+            )
+          : toThrowableError(result.error);
       primaryError =
         primaryError === null
           ? error
@@ -119,7 +125,9 @@ async function startAndWait(
 async function getSettledRunResult(
   completion: Promise<TemporalWorkerRunResult>
 ): Promise<TemporalWorkerRunResult | null> {
-  return Promise.race([completion, Promise.resolve(null)]);
+  return Promise.race([completion, Promise.resolve(null)]).catch(
+    (error: unknown): TemporalWorkerRunResult => ({ status: 'failed', error })
+  );
 }
 
 async function waitForRunOrAbort(
@@ -137,7 +145,7 @@ async function waitForRunOrAbort(
     };
     const onAbort = (): void => settle(null);
     signal.addEventListener('abort', onAbort, { once: true });
-    void completion.then(settle);
+    void completion.then(settle, (error: unknown) => settle({ status: 'failed', error }));
     if (signal.aborted) {
       onAbort();
     }
