@@ -41,6 +41,9 @@ authenticated users who have tenant scope but no effective project/workspace.
 
 - No product route may render tenant/project graph data before authentication
   and granted workspace context resolve.
+- Each requested pathname, search and hash owns its admission lifetime. Changing
+  that identity starts a fresh checking boundary before protected child effects
+  run; navigating to the identical identity retains the current boundary.
 - `/session` resolves before `/workspace/context`; workspace context is scoped by
   the authenticated principal.
 - Recovery distinguishes recognized denials and a missing session route from
@@ -130,6 +133,12 @@ sequenceDiagram
 This is a publication policy inside the existing application service, not a new
 session store, authentication authority, global lifecycle manager, or retry
 mechanism. Genuine current failures retain the recovery vocabulary above.
+
+The synchronous pair guarantees completion of an admitted publication, not a
+general atomic transaction across two stores. Existing query consumers observe
+workspace changes through the session context port, after the permission
+projection has been written. Cross-store observation requirements must be proven
+at the consuming port before replacing this publication boundary.
 
 ## Consumers
 

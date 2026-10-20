@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 /** Owned concern: prove route cleanup protects real session projections, not only component state. */
 import { fireEvent } from '@testing-library/dom';
-import { act, StrictMode } from 'react';
-import { Link, MemoryRouter, Route, Routes } from 'react-router';
+import { act, StrictMode, useLayoutEffect } from 'react';
+import { Link, MemoryRouter, Outlet, Route, Routes, useLocation } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { withTestQueryClient } from '../../testing/reactQueryHarness';
 import { DEFAULT_USER_PERMISSIONS, useAuthorizationStore } from '../stores/authorizationStore';
@@ -19,21 +19,40 @@ vi.mock('../services/api/createApiClient', async (loadOriginal) => ({
   createApiClient: () => api,
 }));
 
-function RoutesUnderTest(): JSX.Element {
+function ProtectedWorkspaceProbe({
+  onCommit,
+}: Readonly<{ onCommit?: (route: string) => void }>): JSX.Element {
+  const location = useLocation();
+  const route = `${location.pathname}${location.search}${location.hash}`;
+  useLayoutEffect(() => {
+    onCommit?.(route);
+  }, [onCommit, route]);
+  return <p>Protected workspace</p>;
+}
+
+function RoutesUnderTest({
+  target = '/canvas?next',
+  onProtectedCommit,
+}: Readonly<{ target?: string; onProtectedCommit?: (route: string) => void }> = {}): JSX.Element {
   return (
     <MemoryRouter initialEntries={['/canvas']}>
       <Link to="/login">Public route</Link>
-      <Link to="/canvas?next">Next protected route</Link>
+      <Link to={target}>Next protected route</Link>
       <Routes>
         <Route path="/login" element={<p>Login recovery</p>} />
         <Route
-          path="/canvas"
           element={
             <AuthRouteGate>
-              <p>Protected workspace</p>
+              <Outlet />
             </AuthRouteGate>
           }
-        />
+        >
+          <Route
+            path="/canvas"
+            element={<ProtectedWorkspaceProbe onCommit={onProtectedCommit} />}
+          />
+          <Route path="/runs" element={<ProtectedWorkspaceProbe onCommit={onProtectedCommit} />} />
+        </Route>
       </Routes>
     </MemoryRouter>
   );
@@ -129,5 +148,64 @@ describe('AuthRouteGate publication lifetime', () => {
     expect(transport.requests).toHaveLength(3);
     expect(useSessionStore.getState().projectId).toBe('current');
     expect(useAuthorizationStore.getState().userPermissions.canRun).toBe(false);
+  });
+
+  for (const target of ['/runs', '/canvas?next', '/canvas#next']) {
+    it.each(['allowed', 'denied'] as const)(
+      `keeps the requested ${target} from committing before its %s admission completes`,
+      async (outcome) => {
+        const committedRoutes: string[] = [];
+        mounted = await withTestQueryClient(
+          <RoutesUnderTest
+            target={target}
+            onProtectedCommit={(route) => committedRoutes.push(route)}
+          />
+        );
+        await act(async () => {
+          transport.requests[0]!.resolve({});
+        });
+        await act(async () => {
+          transport.requests[1]!.resolve(workspaceResponse('initial'));
+        });
+        expect(committedRoutes).toEqual(['/canvas']);
+        await act(async () => {
+          fireEvent.click(mounted!.container.querySelectorAll('a')[1]!);
+        });
+        expect(transport.requests[2]!.endpoint).toBe('/session');
+        expect(committedRoutes).not.toContain(target);
+        expect(mounted.container.textContent).toContain('Checking session...');
+        await act(async () => {
+          transport.requests[2]!.resolve({});
+        });
+        expect(committedRoutes).not.toContain(target);
+        await act(async () => {
+          if (outcome === 'allowed') transport.requests[3]!.resolve(workspaceResponse('current'));
+          else transport.requests[3]!.reject({ statusCode: 401, endpoint: '/workspace/context' });
+        });
+        if (outcome === 'allowed') {
+          expect(committedRoutes).toEqual(['/canvas', target]);
+          expect(useSessionStore.getState().projectId).toBe('current');
+        } else {
+          expect(committedRoutes).toEqual(['/canvas']);
+          expect(mounted.container.textContent).toContain('Login recovery');
+        }
+      }
+    );
+  }
+
+  it('retains current admission for an identical requested route', async () => {
+    mounted = await withTestQueryClient(<RoutesUnderTest target="/canvas" />);
+    await act(async () => {
+      transport.requests[0]!.resolve({});
+    });
+    await act(async () => {
+      transport.requests[1]!.resolve(workspaceResponse('current'));
+    });
+    await act(async () => {
+      fireEvent.click(mounted!.container.querySelectorAll('a')[1]!);
+    });
+    expect(transport.requests).toHaveLength(2);
+    expect(mounted.container.textContent).toContain('Protected workspace');
+    expect(useSessionStore.getState().projectId).toBe('current');
   });
 });

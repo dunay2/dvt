@@ -60,6 +60,17 @@ export default function AuthRouteGate({
   children,
 }: Readonly<{ children: React.ReactNode }>): JSX.Element {
   const location = useLocation();
+  return (
+    <ProtectedRouteSessionAdmission key={`${location.pathname}${location.search}${location.hash}`}>
+      {children}
+    </ProtectedRouteSessionAdmission>
+  );
+}
+
+function ProtectedRouteSessionAdmission({
+  children,
+}: Readonly<{ children: React.ReactNode }>): JSX.Element {
+  const location = useLocation();
   const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
 
   function handleProjectCreated(

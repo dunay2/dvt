@@ -36,6 +36,10 @@ authorization. It maps runtime outcomes to route-level recovery vocabulary.
   is returned.
 - No local dev flag can convert unauthorized responses into allowed posture.
 - Session and workspace context ownership stays in API rails.
+- Admission belongs to the requested pathname, search and hash. A changed route
+  begins in `checking` before its protected children can commit; it cannot reuse
+  the previous route's `allowed` state until a passive effect resets it.
+- Navigating to the identical route identity retains the current admission.
 - Unknown failures use `session_check_failed`. An HTTP server response, invalid
   workspace schema, request-preparation error or local exception must not be
   labelled as a proven transport failure. Recovery copy never exposes raw
@@ -47,6 +51,7 @@ authorization. It maps runtime outcomes to route-level recovery vocabulary.
 stateDiagram-v2
   [*] --> checking
   checking --> allowed: session + workspace context resolve
+  allowed --> checking: requested pathname, search or hash changes before child commit
   checking --> denied_workspace: workspace_context_not_granted
   checking --> denied_login: unauthenticated | runtime_unavailable | session_check_failed
   denied_login --> checking: retry protected route

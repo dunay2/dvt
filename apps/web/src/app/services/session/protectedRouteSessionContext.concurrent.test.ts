@@ -4,6 +4,7 @@ import { waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DEFAULT_USER_PERMISSIONS, useAuthorizationStore } from '../../stores/authorizationStore';
 import { useSessionStore } from '../../stores/sessionStore';
+import { createSessionContextPort } from './sessionContextPort';
 import { resolveProtectedRouteSessionContext } from './protectedRouteSessionContext';
 import {
   controlledSessionClient,
@@ -37,6 +38,29 @@ describe('session publication ordering', () => {
     expect(useSessionStore.getState().projectId).toBe('current');
     expect(useAuthorizationStore.getState().userPermissions.canRun).toBe(false);
   });
+
+  it.each([true, false])(
+    'publishes coherent scope and canRun=%s to real session-port subscribers',
+    async (canRun) => {
+      useAuthorizationStore
+        .getState()
+        .setUserPermissions({ ...DEFAULT_USER_PERMISSIONS, canRun: !canRun });
+      const port = createSessionContextPort();
+      const observed: Array<{ projectId: string; canRun: boolean }> = [];
+      const unsubscribe = port.subscribeWorkspaceScope(() => {
+        observed.push({
+          projectId: port.getWorkspaceScopeSnapshot().projectId,
+          canRun: useAuthorizationStore.getState().userPermissions.canRun,
+        });
+      });
+      try {
+        await resolveProtectedRouteSessionContext(grantedSessionClient('current', canRun));
+        expect(observed).toEqual([{ projectId: 'current', canRun }]);
+      } finally {
+        unsubscribe();
+      }
+    }
+  );
 
   it('does not revive an older success when the newer request is denied', async () => {
     const old = controlledSessionClient();
