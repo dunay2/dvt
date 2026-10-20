@@ -1,6 +1,6 @@
 ---
 title: Temporal worker terminal outcome and cleanup evidence
-status: review
+status: final
 date: 2026-10-20
 owners:
   - '@dvt/adapter-temporal'
@@ -179,5 +179,5 @@ stub introduced. The
 [existing operational risk](../risk-register/adapters/r-20260308-temporal-operational-hardening-residuals.md)
 continues to cover production-like load/network evidence and direct adapter
 concurrent startup outside the composed runtime's coalescing boundary. This
-review records completed checks and their limits; it does not yet declare the
-candidate ready for integration.
+evidence records completed local checks and their limits. Exact-candidate
+pre-push and CI acceptance are recorded in the governing issue's merge receipts.
