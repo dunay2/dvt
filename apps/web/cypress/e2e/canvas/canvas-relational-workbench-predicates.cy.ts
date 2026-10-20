@@ -30,8 +30,25 @@ describe('Workbench predicates', () => {
     cy.get(cards).last().click();
     cy.get('[role="alertdialog"]').should('be.visible');
     cy.contains('[role="alertdialog"] button', 'Seguir editando').click();
+    cy.get('[role="alertdialog"]').should('not.exist');
+    cy.get('[data-slot="canvas-operation-properties-tab"]:visible').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('have.value', 'not_equal');
+    cy.get(cards).last().click();
+    cy.get('[role="alertdialog"] [data-slot="canvas-draft-discard"]').click();
+    cy.get('[role="alertdialog"]').should('not.exist');
+    cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('not.exist');
+    cy.then(() => expect(semanticWrites('join-transform')).to.have.length(1));
+    cy.get(cards).first().click();
+    cy.get('[data-slot="canvas-relational-edit"]:visible').click();
+    cy.get(`${editor} [aria-label="Editar condición"]`).first().click();
+    cy.get(`${editor} [aria-label="Comparador de la condición"]`)
+      .should('have.value', 'equal')
+      .select('not_equal');
     cy.get(`${editor} [aria-label^="Añadir función"]`).should('not.exist');
     cy.get(`${editor} [data-slot="semantic-operand-function-tree"]`).should('not.exist');
     cy.get('[data-slot="canvas-operation-tree-tab"]:visible').click();

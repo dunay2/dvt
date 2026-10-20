@@ -2,6 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 import SessionActionsSource from './CanvasRelationalTreeSessionActions.tsx?raw';
 import EditButtonsSource from './CanvasRelationalTreeEditButtons.tsx?raw';
 import SessionActionsModelSource from './canvasRelationalTreeSessionActionsModel.ts?raw';
@@ -36,6 +37,23 @@ describe('Relational session-action presentation ownership', () => {
     const source = readFileSync(join(__dirname, 'useCanvasRelationEditNavigation.ts'), 'utf8');
     expect(source).not.toContain('CanvasRelationalTreeWorkbenchHandle');
     expect(source).toContain('session: CanvasRelationEditNavigationSession');
+  });
+
+  it('keeps the decision machine independent of React, session and infrastructure', () => {
+    const filename = join(__dirname, 'canvasRelationEditNavigationMachine.ts');
+    const source = ts.createSourceFile(
+      filename,
+      readFileSync(filename, 'utf8'),
+      ts.ScriptTarget.Latest,
+      true
+    );
+    const dependencies = source.statements.filter(
+      (statement) =>
+        ts.isImportDeclaration(statement) ||
+        ts.isImportEqualsDeclaration(statement) ||
+        (ts.isExportDeclaration(statement) && statement.moduleSpecifier != null)
+    );
+    expect(dependencies).toEqual([]);
   });
 
   it('keeps the presentation model free of runtime, command and dependency policy ownership', () => {

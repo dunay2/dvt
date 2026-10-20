@@ -869,6 +869,40 @@ positional tuples directly.
   readiness segments, and build metadata instead of a decorative hero image or
   a misleading percentage bar.
 
+### Deferred Route Module Settlement
+
+`createDeferredView` owns the shared module load and localized pending surface
+for Canvas, Templates, Runs and Cost. Every mounted consumer must observe module
+settlement even if another consumer started the import and then unmounted.
+Reading a mutable module cache in a passive effect can lose that notification:
+the second consumer rendered pending, the import settled before its effect, and
+the effect returned without updating React. The route then never mounted its
+readiness publisher, leaving `Preparing canvas route` visible indefinitely.
+
+```mermaid
+sequenceDiagram
+  participant A as Previous route instance
+  participant Module as Shared module import
+  participant B as Current route instance
+  A->>Module: Start import
+  A->>A: Unmount
+  B->>B: Render pending
+  Module-->>B: Settle before commit/effect
+  B->>B: Observe settlement through React suspension
+  B->>B: Mount route readiness publisher
+```
+
+Reuse React's `lazy` and `Suspense` lifecycle rather than maintaining a second
+cache/subscription protocol. Keep the existing loading slot, language binding,
+live-region semantics and error-boundary propagation. Styles belong to the
+loader's CSS module. No route-readiness state, authentication authority, global
+timeout, retry or new command/query is introduced. A diagnosed import race is
+not proof that every CI transport or CSS-load failure has this cause.
+
+| Scenario                                                   | Opportunity                                        | Fowler pattern                                               | DDD owner                                             | Command/query rail                | Implementation surfaces                      | Unit or package test                                                          | Architecture test                                    | User-flow test                                                   | Out of scope                                                   |
+| ---------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------ | ----------------------------------------------------- | --------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------- |
+| Import settles between a replacement render and its effect | Hidden authority and duplicate lifecycle semantics | Replace manual cache notifications with framework suspension | Deferred route module adapter feeding route readiness | ObserveAppBootstrapRouteReadiness | createDeferredView, its tests and CSS module | Controlled settlement, replacement consumers, cached load and rejected import | Existing plugin/bootstrap ownership and style guards | Existing startup readiness and route navigation browser journeys | Transport recovery, global deadlines and authorization changes |
+
 ### Transitions
 
 ```mermaid

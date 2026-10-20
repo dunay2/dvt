@@ -28,6 +28,17 @@ Use this guide with:
 
 ## Owned concern
 
+Canonical event publication failures are not execution failures: when Temporal
+reports an `ActivityFailure` from `emitEvent`, the general failure fallback must
+not append a substitute `RunFailed` over incomplete publication. The original
+provider failure propagates unchanged. Native cancellation retains its separate
+governed path; this rule does not add retry or recovery automation.
+
+Within a completed layer, the first recorded step failure supplies both the
+terminal diagnostic and the shared run-domain failure summary. Later sibling
+failures retain their step transitions and events without replacing that summary.
+The existing new-StepStarted reset boundary, including retry, remains unchanged.
+
 The component owns one concern:
 
 - run the Temporal interpreter workflow from an immutable `PlanRef`, a resolved
@@ -97,6 +108,18 @@ It does **not** own:
   overflow are reported as `CURSOR_OVERFLOW`.
 - Workflow code remains deterministic; all provider side effects and StateStore
   writes go through activities.
+- A resolved layer records every confirmed step outcome in plan order before
+  settling a run-level failure. A failed sibling must not hide later completed
+  or failed siblings. The first failure in plan order supplies the existing
+  run-failure diagnostic; only one `RunFailed` is emitted and no later layer
+  executes.
+- Step evidence remains on `StepCompleted` events. `latestResultEvidence` is a
+  compact success summary, not a collection of publications, and failed runs
+  do not gain success-only global materialization evidence.
+- Changing layer event order requires the existing drained-cutover procedure.
+  Replay of new histories does not prove old and new worker lines can consume
+  the same active histories. Integration does not authorize a service restart,
+  data reset, or an undrained deployment.
 - Gateway dependency facts must be present when future gateway decisions depend
   on them; missing facts fail closed instead of inventing provider state.
 - `continueAsNewAfterLayerCount > 0` with pending layers triggers rollover
@@ -111,6 +134,56 @@ It does **not** own:
   the core activity registry.
 
 ## Transitions
+
+### Plan-wide concurrency admission
+
+`StartRun` retains the existing execution rail. The planner materializes its
+resolved policy in every step: default `256`, sequential `1`, bounded
+`maxParallel`, or absence for explicit unbounded execution. Segment resolution
+validates the complete immutable plan with the common step concurrency schema.
+All steps must agree, including absence; malformed or mixed policies fail before
+any `StepStarted`. Empty plans have no work to constrain. Runtime does not invent
+a second default or select an incidental step as policy authority.
+
+Each segment carries the optional `maxInFlight` resolved from that same verified
+plan. Continue-as-new re-resolves it; neither full plans nor redundant policy
+state enter the compact cursor. Worker capacity hints remain operational limits,
+not the enforcement of per-plan concurrency.
+
+The existing layer executor admits at most K logical step activities at a time.
+A slot covers `StepStarted` publication and activity completion, including
+technical retries. Completion frees the slot immediately, without a batch
+barrier. `StepStarted` records runtime admission, not physical worker CPU time.
+Results remain in plan order regardless of completion order.
+
+- Ordinary step failure does not suppress pending siblings in the same layer;
+  all confirmed outcomes precede the single failure terminal. No later layer runs.
+- Cooperative cancellation stops new admission and drains admitted work. Native
+  cancellation preserves activity cleanup acknowledgement before the terminal.
+- Fatal admission/publication failure stops new admission, drains active work,
+  and propagates without inventing a successful append or replacement terminal.
+- Pause remains a layer boundary. Gateways, skip propagation and rollover keep
+  their existing layer semantics; rollover never abandons active slots.
+
+This scheduling change uses the development hard cut approved in
+[#2819](https://github.com/dunay2/dvt/issues/2819#issuecomment-6198119194).
+The drained-cutover runbook still governs activation; integration neither resets
+data nor restarts shared workers. New-history replay is not old-history support.
+
+```mermaid
+flowchart LR
+  Plan["Complete verified plan"] --> Policy{"Uniform valid concurrency?"}
+  Policy -->|no| Reject["Reject before step admission"]
+  Policy -->|yes| Segment["Layer plus K"]
+  Segment --> Slots["At most K active slots"]
+  Slots --> Start["StepStarted then executeStep"]
+  Start --> Result["Result at plan index"]
+  Result --> Slots
+  Slots --> Drain["Drain admitted work"]
+  Drain --> Apply["Ordered outcomes and existing lifecycle"]
+```
+
+### Workflow lifecycle
 
 1. Engine validates executable plan bytes, metadata, and canonical `planId`.
 2. Engine dispatches `TemporalAdapter.startRun(planRef, ctx)`.
@@ -146,6 +219,7 @@ It does **not** own:
 | `runPlanWorkflow.state.ts`                | Workflow control input parsing and cursor hydration                                  |
 | `workflowCursorHelpers.ts`                | Compact continue-as-new cursor construction and payload guard                        |
 | `executionSegmentResolver.ts`             | PlanRef execution-segment projection from canonical plans                            |
+| `workflowPlanConcurrency.ts`              | Plan-wide concurrency resolution from canonical step configuration                   |
 | `runPlanWorkflow.layers.ts`               | Deterministic workflow layer-loop orchestration                                      |
 | `runPlanWorkflow.layerHelpers.ts`         | Layer selection and continue-as-new decision helpers                                 |
 | `runPlanWorkflow.layerResults.ts`         | Layer result application and gateway fact retention                                  |

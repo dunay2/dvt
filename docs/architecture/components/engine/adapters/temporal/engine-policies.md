@@ -307,7 +307,7 @@ For broader policy context, see [determinism-tooling.md](../../dev/determinism-t
 - Evidence:
   [ED-20260308 - Temporal adapter operational close-out](../../../../../evidence/critical/ED-20260308-temporal-operational-close-out.md)
 - Residual risk:
-  [R-20260308 - Temporal runtime hardening residuals](../../../../../risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md)
+  [R-20260308 - Temporal runtime hardening residuals](../../../../../risk-register/adapters/r-20260308-temporal-operational-hardening-residuals.md)
 - Test capability guide:
   [Testing and CI Capabilities](../../../../../guides/testing-and-ci-capabilities.md)
 

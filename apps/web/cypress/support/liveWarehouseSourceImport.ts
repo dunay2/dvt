@@ -103,21 +103,41 @@ export function importLivePostgresSource(
   cy.get('[role="dialog"][data-state="open"]')
     .last()
     .within(() => {
-      cy.get(`[data-source-import-object="${sourceObjectId}"]`, {
-        timeout: 20_000,
-      })
-        .scrollIntoView()
-        .within(() => {
-          cy.get('button[aria-label^="Inspect source object"]')
-            .scrollIntoView()
-            .should('be.visible')
-            .click();
+      for (const resizeKey of [null, Cypress.Keyboard.Keys.HOME, Cypress.Keyboard.Keys.END]) {
+        if (resizeKey !== null) {
+          cy.get('[role="separator"][aria-label="Resize catalogue and object details"]')
+            .focus()
+            .then(($separator) => {
+              const previousSize = $separator.attr('aria-valuenow');
+              cy.press(resizeKey);
+              cy.wrap($separator).should('not.have.attr', 'aria-valuenow', previousSize);
+            });
+        }
+        cy.get(`[data-source-import-object="${sourceObjectId}"]`, {
+          timeout: 20_000,
+        })
+          .scrollIntoView()
+          .within(() => {
+            cy.get('button[aria-label^="Inspect source object"]')
+              .scrollIntoView()
+              .should('be.visible')
+              .click();
+          });
+        cy.get<HTMLElement>(
+          '[data-source-import-catalog-scroll] [data-slot="scroll-area-viewport"]'
+        ).should(($viewport) => {
+          const viewport = $viewport[0]!;
+          expect(
+            viewport.scrollWidth,
+            'catalog content fits without horizontal scrolling'
+          ).to.be.at.most(viewport.clientWidth);
         });
-      cy.get(`[data-source-import-object-select="${sourceObjectId}"]`, {
-        timeout: 20_000,
-      })
-        .scrollIntoView()
-        .should('be.visible');
+        cy.get(`[data-source-import-object-select="${sourceObjectId}"]`, {
+          timeout: 20_000,
+        })
+          .scrollIntoView()
+          .should('be.visible');
+      }
       cy.get(`[data-source-import-object="${sourceObjectId}"]`)
         .dblclick()
         .find(`[data-source-import-object-select="${sourceObjectId}"]`)

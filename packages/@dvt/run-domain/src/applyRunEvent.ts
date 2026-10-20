@@ -201,7 +201,7 @@ function setFailureEvidence(
   const execution = ensureExecutionEvidence(snap);
   delete execution.activeStepId;
   delete execution.materialization;
-  execution.failure = failure;
+  execution.failure ??= failure;
 }
 
 function setMaterializationEvidence(

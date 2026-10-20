@@ -1,3 +1,6 @@
+import { setImmediate } from 'node:timers';
+
+import type { State } from '@temporalio/worker';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -15,25 +18,39 @@ const {
   mockWorkerRun,
   mockWorkerShutdown,
   getLastCreateArgs,
+  setWorkerState,
+  completeWorkerRun,
   rejectWorkerRun,
   resetWorkerRunPromise,
 } = vi.hoisted(() => {
   let lastCreateArgs: unknown = null;
   let resolveRun: (() => void) | null = null;
   let rejectRun: ((error?: unknown) => void) | null = null;
+  let workerState: State = 'INITIALIZED';
+
+  const completeWorkerRun = (): void => {
+    workerState = 'STOPPED';
+    resolveRun?.();
+  };
 
   const resetWorkerRunPromise = (): void => {
     resolveRun = null;
     rejectRun = null;
+    workerState = 'INITIALIZED';
     mockWorkerRun.mockImplementation(
       () =>
         new Promise<void>((resolve, reject) => {
+          workerState = 'RUNNING';
           resolveRun = resolve;
           rejectRun = reject;
         })
     );
     mockWorkerShutdown.mockImplementation(() => {
-      resolveRun?.();
+      if (workerState !== 'RUNNING') {
+        throw new Error(`Not running. Current state: ${workerState}`);
+      }
+      workerState = 'STOPPING';
+      completeWorkerRun();
     });
   };
 
@@ -44,6 +61,7 @@ const {
     return {
       run: mockWorkerRun,
       shutdown: mockWorkerShutdown,
+      getState: () => workerState,
     };
   });
 
@@ -54,7 +72,14 @@ const {
     mockWorkerRun,
     mockWorkerShutdown,
     getLastCreateArgs: () => lastCreateArgs,
-    rejectWorkerRun: (error?: unknown) => rejectRun?.(error),
+    setWorkerState: (state: State) => {
+      workerState = state;
+    },
+    completeWorkerRun,
+    rejectWorkerRun: (error?: unknown) => {
+      workerState = 'FAILED';
+      rejectRun?.(error);
+    },
     resetWorkerRunPromise,
   };
 });
@@ -291,18 +316,159 @@ describe('TemporalWorkerHost lifecycle', () => {
     await host.shutdown();
   });
 
+  it('has no run completion before an SDK run starts', async () => {
+    const host = makeWorkerHost();
+
+    expect(host.getRunCompletion()).toBeNull();
+    await host.shutdown();
+    expect(host.getRunCompletion()).toBeNull();
+  });
+
+  it('keeps completion pending until the SDK run settles and retains the completed result', async () => {
+    const host = makeWorkerHost();
+    await host.start({} as never);
+    const completion = host.getRunCompletion();
+    expect(completion).not.toBeNull();
+    const settled = vi.fn();
+    void completion?.then(settled);
+    await Promise.resolve();
+
+    expect(settled).not.toHaveBeenCalled();
+    expect(host.getRunCompletion()).toBe(completion);
+    completeWorkerRun();
+
+    await expect(completion).resolves.toEqual({ status: 'completed' });
+    expect(host.isRunning()).toBe(false);
+    await host.shutdown();
+    expect(host.getRunCompletion()).toBe(completion);
+    expect(mockWorkerShutdown).not.toHaveBeenCalled();
+  });
+
+  it.each([new Error('WORKER_TERMINAL_FAILURE'), { code: 'NATIVE_FAILURE' }])(
+    'retains the original failed run outcome after clearing the active worker: %j',
+    async (error) => {
+      const host = makeWorkerHost();
+      await host.start({} as never);
+      const completion = host.getRunCompletion();
+      rejectWorkerRun(error);
+
+      await expect(completion).resolves.toEqual({ status: 'failed', error });
+      const result = await completion;
+      if (result?.status !== 'failed') throw new Error('Expected a failed SDK run');
+      expect(result.error).toBe(error);
+      expect(host.isRunning()).toBe(false);
+      await expect(host.shutdown()).resolves.toBeUndefined();
+      expect(host.getRunCompletion()).toBe(completion);
+    }
+  );
+
+  it.each([
+    { name: 'logger Error', sink: 'logger', diagnosticError: new Error('LOG_SINK_FAILED') },
+    { name: 'counter Error', sink: 'counter', diagnosticError: new Error('METRIC_SINK_FAILED') },
+    { name: 'logger undefined', sink: 'logger', diagnosticError: undefined },
+    { name: 'counter null', sink: 'counter', diagnosticError: null },
+  ])(
+    'retains the SDK failure and diagnostic failure from $name',
+    async ({ sink, diagnosticError }) => {
+      const { observability, logs, metrics } = makeTrackingObservability();
+      const host = makeWorkerHost({ observability });
+      const error = new Error('ORIGINAL_WORKER_FAILURE');
+      await host.start({} as never);
+      const failingSink = sink === 'logger' ? logs.error : metrics.counter;
+      failingSink.mockImplementationOnce(() => {
+        throw diagnosticError;
+      });
+      const completion = host.getRunCompletion();
+      rejectWorkerRun(error);
+
+      await expect(completion).resolves.toEqual({ status: 'failed', error, diagnosticError });
+      const result = await completion;
+      if (result?.status !== 'failed') throw new Error('Expected a failed SDK run');
+      expect(result.error).toBe(error);
+      expect(Object.hasOwn(result, 'diagnosticError')).toBe(true);
+      expect(result.diagnosticError).toBe(diagnosticError);
+      expect(host.isRunning()).toBe(false);
+      await expect(host.shutdown()).resolves.toBeUndefined();
+      expect(host.getRunCompletion()).toBe(completion);
+    }
+  );
+
+  it.each(['none', 'logger', 'counter'] as const)(
+    'does not create an unhandled rejection for start and shutdown only consumers with %s diagnostic failure',
+    async (sink) => {
+      const unhandledRejection = vi.fn();
+      process.on('unhandledRejection', unhandledRejection);
+      const { observability, logs, metrics } = makeTrackingObservability();
+      const host = makeWorkerHost({ observability });
+      try {
+        await host.start({} as never);
+        if (sink !== 'none') {
+          const failingSink = sink === 'logger' ? logs.error : metrics.counter;
+          failingSink.mockImplementationOnce(() => {
+            throw new Error('UNOBSERVED_DIAGNOSTIC_FAILURE');
+          });
+        }
+        rejectWorkerRun(new Error('UNOBSERVED_WORKER_RUN_FAILURE'));
+        await new Promise<void>((resolve) => setImmediate(resolve));
+
+        expect(host.isRunning()).toBe(false);
+        expect(unhandledRejection).not.toHaveBeenCalled();
+        await expect(host.shutdown()).resolves.toBeUndefined();
+      } finally {
+        process.off('unhandledRejection', unhandledRejection);
+      }
+    }
+  );
+
+  it('keeps each explicitly restarted SDK run associated with its own completion', async () => {
+    const host = makeWorkerHost();
+    await host.start({} as never);
+    const firstCompletion = host.getRunCompletion();
+    completeWorkerRun();
+    await expect(firstCompletion).resolves.toEqual({ status: 'completed' });
+
+    resetWorkerRunPromise();
+    await host.start({} as never);
+    const secondCompletion = host.getRunCompletion();
+    expect(secondCompletion).not.toBe(firstCompletion);
+    const error = new Error('SECOND_RUN_FAILED');
+    rejectWorkerRun(error);
+
+    await expect(secondCompletion).resolves.toEqual({ status: 'failed', error });
+    await expect(firstCompletion).resolves.toEqual({ status: 'completed' });
+    expect(host.getRunCompletion()).toBe(secondCompletion);
+  });
+
+  it('does not expose the previous run outcome after a later worker creation fails', async () => {
+    const host = makeWorkerHost();
+    await host.start({} as never);
+    const previousCompletion = host.getRunCompletion();
+    completeWorkerRun();
+    await previousCompletion;
+    const error = new Error('WORKER_CREATE_FAILED');
+    mockWorkerCreate.mockRejectedValueOnce(error);
+
+    await expect(host.start({} as never)).rejects.toBe(error);
+    expect(host.getRunCompletion()).toBeNull();
+    expect(host.isRunning()).toBe(false);
+    await expect(previousCompletion).resolves.toEqual({ status: 'completed' });
+  });
+
   it('clears internal state and logs when worker run rejects before shutdown', async () => {
+    const error = new Error('WORKER_RUN_FAILED');
     mockWorkerRun.mockImplementationOnce(async () => {
-      throw new Error('WORKER_RUN_FAILED');
+      throw error;
     });
 
     const { observability, logs, metrics } = makeTrackingObservability();
     const host = makeWorkerHost({ observability });
 
     await host.start({} as never);
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise<void>((resolve) => setImmediate(resolve));
 
     expect(host.isRunning()).toBe(false);
+    const completion = host.getRunCompletion();
+    await expect(completion).resolves.toEqual({ status: 'failed', error });
     expect(logs.error).toHaveBeenCalled();
     expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.worker.run_exit_total', {
       adapter: 'temporal',
@@ -334,6 +500,110 @@ describe('TemporalWorkerHost lifecycle', () => {
       operation: 'runExit',
       result: 'ok',
     });
+  });
+
+  it.each(['STOPPING', 'DRAINING', 'DRAINED', 'STOPPED'] as const)(
+    'waits for run finalization from %s without requesting shutdown again',
+    async (state) => {
+      const host = makeWorkerHost();
+      await host.start({} as never);
+      setWorkerState(state);
+
+      const settled = vi.fn();
+      const shutdown = host.shutdown();
+      void shutdown.then(settled, settled);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(mockWorkerShutdown).not.toHaveBeenCalled();
+      expect(settled).not.toHaveBeenCalled();
+      expect(host.isRunning()).toBe(true);
+
+      completeWorkerRun();
+      await expect(shutdown).resolves.toBeUndefined();
+      expect(host.isRunning()).toBe(false);
+      await host.shutdown();
+      expect(mockWorkerShutdown).not.toHaveBeenCalled();
+    }
+  );
+
+  it('waits for FAILED run finalization and preserves the recorded run error', async () => {
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const host = makeWorkerHost({ observability });
+    const runError = new Error('WORKER_RUN_FAILED_DURING_FINALIZATION');
+    await host.start({} as never);
+    setWorkerState('FAILED');
+
+    const settled = vi.fn();
+    const shutdown = host.shutdown();
+    void shutdown.then(settled, settled);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mockWorkerShutdown).not.toHaveBeenCalled();
+    expect(settled).not.toHaveBeenCalled();
+
+    rejectWorkerRun(runError);
+    await expect(shutdown).resolves.toBeUndefined();
+    expect(host.isRunning()).toBe(false);
+    expect(logs.error).toHaveBeenCalledWith(
+      expect.objectContaining({ msg: 'Temporal worker exited with error', err: runError })
+    );
+    expect(metrics.counter).toHaveBeenCalledWith('dvt.temporal.worker.run_exit_total', {
+      adapter: 'temporal',
+      operation: 'runExit',
+      result: 'error',
+    });
+    expect(metrics.counter).not.toHaveBeenCalledWith('dvt.temporal.worker.run_exit_total', {
+      adapter: 'temporal',
+      operation: 'runExit',
+      result: 'ok',
+    });
+  });
+
+  it('requests shutdown once while concurrent callers wait for the same run', async () => {
+    mockWorkerShutdown.mockImplementation(() => {
+      setWorkerState('DRAINING');
+    });
+    const host = makeWorkerHost();
+    await host.start({} as never);
+
+    const settled = vi.fn();
+    const firstShutdown = host.shutdown();
+    const secondShutdown = host.shutdown();
+    void firstShutdown.then(settled, settled);
+    void secondShutdown.then(settled, settled);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(mockWorkerShutdown).toHaveBeenCalledTimes(1);
+    expect(settled).not.toHaveBeenCalled();
+
+    completeWorkerRun();
+    await Promise.all([firstShutdown, secondShutdown]);
+    expect(settled).toHaveBeenCalledTimes(2);
+    expect(host.isRunning()).toBe(false);
+  });
+
+  it('propagates genuine shutdown errors without reporting successful shutdown', async () => {
+    const shutdownError = new Error('NATIVE_SHUTDOWN_FAILED');
+    mockWorkerShutdown.mockImplementationOnce(() => {
+      throw shutdownError;
+    });
+    const { observability, logs, metrics } = makeTrackingObservability();
+    const host = makeWorkerHost({ observability });
+    await host.start({} as never);
+
+    await expect(host.shutdown()).rejects.toBe(shutdownError);
+
+    expect(host.isRunning()).toBe(true);
+    expect(logs.error).toHaveBeenCalledWith(
+      expect.objectContaining({ msg: 'Temporal worker host shutdown failed', err: shutdownError })
+    );
+    expect(metrics.counter).not.toHaveBeenCalledWith('dvt.temporal.worker.shutdown_total', {
+      adapter: 'temporal',
+      operation: 'shutdown',
+      result: 'ok',
+    });
+    await host.shutdown();
+    expect(host.isRunning()).toBe(false);
   });
 
   it('is no-op on shutdown when never started', async () => {
