@@ -30,6 +30,9 @@ export function createTemporalWorkerRuntimeHandle(
 
   return {
     start: async (signal?: globalThis.AbortSignal) => {
+      if (stopPromise !== null) {
+        throw new Error('TEMPORAL_WORKER_RUNTIME_STOPPED');
+      }
       if (started) {
         return;
       }
@@ -81,6 +84,7 @@ export function createTemporalWorkerRuntimeHandle(
       });
       await stopPromise;
     },
+    getRunCompletion: () => host.getRunCompletion(),
     getRunStateCircuitSnapshot: () => resources.runStateCircuit.getSnapshot(),
   };
 }

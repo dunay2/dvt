@@ -1,7 +1,7 @@
 ---
 title: ED-20260308 - Temporal adapter operational close-out
 status: Final
-date: 2026-03-08T00:00:00.000Z
+date: 2026-03-08
 owners: Engine / Runtime
 arc_level: ARC-2
 breaking: false
@@ -66,7 +66,7 @@ This evidence closes the remaining Phase 1 hardening work for the Temporal adapt
 
 - Sustained load evidence for Temporal worker defaults should be gathered from integration or production-like telemetry, not from unit tests.
 - Cross-adapter timeout harmonization can proceed as a separate consistency pass; it no longer blocks the Temporal adapter itself.
-- Residual operational risk is tracked in `docs/risk-register/adapters/R-20260308-temporal-operational-hardening-residuals.md`.
+- Residual operational risk is tracked in `docs/risk-register/adapters/r-20260308-temporal-operational-hardening-residuals.md`.
 
 ## Closure Decision
 

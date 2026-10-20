@@ -1578,6 +1578,7 @@ function operationPayload(command) {
       greenTest: command.greenTest,
       replaceImplementationRefs: command.replaceImplementationRefs,
       replaceArchitectureGuards: command.replaceArchitectureGuards,
+      ...(command.replaceDocumentationRefs === true ? { replaceDocumentationRefs: true } : {}),
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -3357,6 +3358,8 @@ function parseFeatureMechanizationCommand(action, args) {
       parseBooleanOption(options.replaceImplementationRefs, 'replace-implementation-refs') ?? false,
     replaceArchitectureGuards:
       parseBooleanOption(options.replaceArchitectureGuards, 'replace-architecture-guards') ?? false,
+    replaceDocumentationRefs:
+      parseBooleanOption(options.replaceDocumentationRefs, 'replace-documentation-refs') ?? false,
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -5296,6 +5299,11 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   if (command.redGreenCycle !== undefined) validateFeatureMechanizationRecordCommand(command);
   const previous = normalizeFeatureMechanizationRail(existingRail);
   const previousRevision = previous ? previous.revision : null;
+  if (command.replaceDocumentationRefs === true && previous && command.expectedRevision == null) {
+    throw new Error(
+      '--replace-documentation-refs requires --expected-revision for an existing rail.'
+    );
+  }
   if (
     command.expectedRevision !== null &&
     command.expectedRevision !== undefined &&
@@ -5394,7 +5402,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     implementationRefs: retained(
       mergeUniqueValues(previousImplementationRefs, command.implementationRefs)
     ),
-    documentationRefs: mergeUniqueValues(previous?.documentationRefs, command.documentationRefs),
+    documentationRefs: mergeUniqueValues(
+      command.replaceDocumentationRefs === true ? [] : previous?.documentationRefs,
+      command.documentationRefs
+    ),
     governingSources: mergeUniqueValues(previous?.governingSources, command.governingSources),
     allowedImplementationSurfaces: retained(
       mergeUniqueValues(
