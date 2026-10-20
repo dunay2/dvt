@@ -18,7 +18,10 @@ type AuthGateState =
   { kind: 'checking' } | { kind: 'allowed' } | { kind: 'denied'; reason: AuthGateDeniedReason };
 
 type AuthGateDeniedReason =
-  'unauthenticated' | 'workspace_context_not_granted' | 'runtime_unavailable' | 'transport_error';
+  | 'unauthenticated'
+  | 'workspace_context_not_granted'
+  | 'runtime_unavailable'
+  | 'session_check_failed';
 
 const sessionApiClient = createApiClient();
 
@@ -50,7 +53,7 @@ export function classifyProtectedRouteSessionError(error: unknown): AuthGateDeni
     return 'unauthenticated';
   }
 
-  return 'transport_error';
+  return 'session_check_failed';
 }
 
 export default function AuthRouteGate({

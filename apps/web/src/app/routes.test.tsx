@@ -215,6 +215,62 @@ describe('app routes', () => {
     expect(container.textContent).toContain('Login required');
   });
 
+  it.each(['server', 'schema', 'local'] as const)(
+    'keeps %s session failure recovery neutral through the real query and route boundaries',
+    async (failure) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (input: RequestInfo | URL) => {
+          const url = String(input);
+          if (url.endsWith('/session') && failure === 'server') return buildEmptyJsonResponse(500);
+          if (url.endsWith('/session') && failure === 'local') {
+            throw new Error('Private diagnostic detail');
+          }
+          if (url.endsWith('/workspace/context') && failure === 'schema') {
+            return buildEmptyJsonResponse();
+          }
+          return buildAuthenticatedRouteResponse(url) ?? buildEmptyJsonResponse();
+        })
+      );
+      const router = createMemoryRouter(createAppRoutes(), { initialEntries: ['/canvas'] });
+      const queryClient = createTestQueryClient();
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        );
+      });
+      await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
+        description: `${failure} admission recovery`,
+      });
+      expect(router.state.location.state).toEqual({ reason: 'session_check_failed' });
+      expect(container.textContent).toContain('Session check failed. Retry the protected route.');
+      expect(container.textContent).not.toContain('transport error');
+      expect(container.textContent).not.toContain('Private diagnostic detail');
+      expect(container.querySelector('[data-slot="app-shell-frame"]')).toBeNull();
+      expect(container.querySelector('a')?.getAttribute('href')).toBe('/canvas');
+    }
+  );
+
+  it('uses neutral recovery for an older transport_error browser-history entry', async () => {
+    const router = createMemoryRouter(createAppRoutes(), {
+      initialEntries: [
+        { pathname: '/login', search: '?returnTo=%2Fcanvas', state: { reason: 'transport_error' } },
+      ],
+    });
+    const queryClient = createTestQueryClient();
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      );
+    });
+    expect(container.textContent).toContain('Session check failed. Retry the protected route.');
+    expect(container.textContent).not.toContain('transport error');
+  });
+
   it('shows protected runtime unavailable guidance when session route is not mounted', async () => {
     stubMissingSessionRouteFetch();
     const router = createMemoryRouter(createAppRoutes(), {

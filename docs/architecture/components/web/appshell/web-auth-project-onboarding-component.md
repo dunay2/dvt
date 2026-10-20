@@ -43,6 +43,9 @@ authenticated users who have tenant scope but no effective project/workspace.
   and granted workspace context resolve.
 - `/session` resolves before `/workspace/context`; workspace context is scoped by
   the authenticated principal.
+- Recovery distinguishes recognized denials and a missing session route from
+  `session_check_failed`. The latter includes unknown query, validation and local
+  errors without claiming a transport cause or exposing raw exception data.
 - The session resolver owns publication eligibility across all of its callers,
   including project activation. Only the latest non-cancelled attempt may update
   browser workspace and permission projections. A newer denial also supersedes
@@ -78,7 +81,7 @@ stateDiagram-v2
   [*] --> SessionChecking: protected route
   PublicLogin --> SessionChecking: product login or local dev-session recovery completed with return route
   SessionChecking --> WorkspaceContextChecking: GetSessionProfile succeeds
-  SessionChecking --> PublicLogin: unauthenticated | transport_error | runtime_unavailable
+  SessionChecking --> PublicLogin: unauthenticated | session_check_failed | runtime_unavailable
   WorkspaceContextChecking --> ProjectOnboarding: no granted project or manifest empty
   WorkspaceContextChecking --> WorkspaceDenied: workspace_context_not_granted
   WorkspaceContextChecking --> WorkspaceOpen: granted tenant/project/workspace

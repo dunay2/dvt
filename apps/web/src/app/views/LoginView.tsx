@@ -37,9 +37,9 @@ export default function LoginView(): JSX.Element {
         <p className="mt-2 text-sm text-slate-300">
           This route requires an authenticated API bearer session.
         </p>
-        {reason === 'transport_error' ? (
+        {reason === 'session_check_failed' || reason === 'transport_error' ? (
           <p className="mt-3 text-xs text-amber-300">
-            Session check failed due to transport error. Verify API availability.
+            Session check failed. Retry the protected route.
           </p>
         ) : null}
         {reason === 'runtime_unavailable' ? (
