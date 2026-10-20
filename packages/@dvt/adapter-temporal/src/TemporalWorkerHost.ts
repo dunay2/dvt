@@ -54,10 +54,13 @@ export interface TemporalWorkerHostConfig {
   activityHeartbeat?: ActivityHeartbeat;
 }
 
-interface WorkerRunState {
-  promise: Promise<void>;
-  exitResult: 'pending' | 'ok' | 'error';
-}
+export type TemporalWorkerRunResult =
+  | { readonly status: 'completed' }
+  | {
+      readonly status: 'failed';
+      readonly error: unknown;
+      readonly diagnosticError?: unknown;
+    };
 
 type WorkerLogAttributes = Attributes;
 
@@ -71,7 +74,7 @@ function resolveDefaultWorkflowsPath(): string {
 
 export class TemporalWorkerHost {
   private worker: Worker | null = null;
-  private runningState: WorkerRunState | null = null;
+  private runCompletion: Promise<TemporalWorkerRunResult> | null = null;
   private readonly observability: IObservability;
 
   constructor(private readonly config: TemporalWorkerHostConfig) {
@@ -86,6 +89,7 @@ export class TemporalWorkerHost {
     if (this.worker) {
       throw new Error('TEMPORAL_WORKER_ALREADY_STARTED');
     }
+    this.runCompletion = null;
 
     const context = buildTemporalContext(this.config.temporalConfig);
     const activities = this.createConfiguredActivities();
@@ -107,7 +111,7 @@ export class TemporalWorkerHost {
         logAttributes: attributes,
       }),
       onError: (error) => {
-        this.clearRunningState();
+        this.clearWorker();
         return {
           result: 'error',
           logMessage: 'Temporal worker host failed to start',
@@ -121,7 +125,7 @@ export class TemporalWorkerHost {
   /** Gracefully drain in-flight work and stop polling. */
   async shutdown(): Promise<void> {
     const currentWorker = this.worker;
-    const currentRun = this.runningState;
+    const currentRun = this.runCompletion;
     if (!currentWorker || !currentRun) return;
 
     const context = buildTemporalContext(this.config.temporalConfig);
@@ -140,8 +144,8 @@ export class TemporalWorkerHost {
           currentWorker.shutdown();
         }
         try {
-          await currentRun.promise;
-          if (currentRun.exitResult === 'ok') {
+          const result = await currentRun;
+          if (result.status === 'completed') {
             this.observability.metrics
               .counter(
                 'dvt.temporal.worker.run_exit_total',
@@ -150,7 +154,7 @@ export class TemporalWorkerHost {
               .add(1);
           }
         } finally {
-          this.clearRunningState(currentRun);
+          this.clearWorker(currentRun);
         }
       },
       onSuccess: () => ({
@@ -172,12 +176,15 @@ export class TemporalWorkerHost {
     return this.worker !== null;
   }
 
-  private clearRunningState(expectedRun?: WorkerRunState): void {
-    if (expectedRun !== undefined && this.runningState !== expectedRun) {
+  getRunCompletion(): Promise<TemporalWorkerRunResult> | null {
+    return this.runCompletion;
+  }
+
+  private clearWorker(expectedRun?: Promise<TemporalWorkerRunResult>): void {
+    if (expectedRun !== undefined && this.runCompletion !== expectedRun) {
       return;
     }
     this.worker = null;
-    this.runningState = null;
   }
 
   private createConfiguredActivities(): ReturnType<typeof createActivities> {
@@ -215,7 +222,7 @@ export class TemporalWorkerHost {
       attributes,
     });
     this.worker = await this.createWorker(connection, activities);
-    this.runningState = this.createWorkerRunState(this.worker, context);
+    this.runCompletion = this.createWorkerRunCompletion(this.worker, context);
   }
 
   private createWorker(
@@ -235,29 +242,28 @@ export class TemporalWorkerHost {
     });
   }
 
-  private createWorkerRunState(
+  private createWorkerRunCompletion(
     worker: Worker,
     context: ReturnType<typeof buildTemporalContext>
-  ): WorkerRunState {
-    const runState: WorkerRunState = {
-      promise: Promise.resolve(),
-      exitResult: 'pending',
-    };
-
-    runState.promise = worker
+  ): Promise<TemporalWorkerRunResult> {
+    const completion = worker
       .run()
-      .then(() => {
-        runState.exitResult = 'ok';
-      })
-      .catch((error) => {
-        runState.exitResult = 'error';
-        this.recordWorkerRunExitError(context, error);
-      })
+      .then<TemporalWorkerRunResult, TemporalWorkerRunResult>(
+        () => ({ status: 'completed' }),
+        (error: unknown) => {
+          try {
+            this.recordWorkerRunExitError(context, error);
+          } catch (diagnosticError) {
+            return { status: 'failed', error, diagnosticError };
+          }
+          return { status: 'failed', error };
+        }
+      )
       .finally(() => {
-        this.clearRunningState(runState);
+        this.clearWorker(completion);
       });
 
-    return runState;
+    return completion;
   }
 
   private recordWorkerRunExitError(

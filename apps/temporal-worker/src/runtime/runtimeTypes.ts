@@ -7,6 +7,7 @@ import type {
   TemporalAdapterConfig,
   TemporalPlanArtifactReader,
   TemporalWorkerHostConfig,
+  TemporalWorkerRunResult,
 } from '@dvt/adapter-temporal';
 import type {
   IContentAddressedArtifactStore,
@@ -26,6 +27,7 @@ import type { Env } from '../plugins/env.js';
 export interface RuntimeHandle {
   start(signal?: globalThis.AbortSignal): Promise<void>;
   stop(): Promise<void>;
+  getRunCompletion(): Promise<TemporalWorkerRunResult> | null;
   getRunStateCircuitSnapshot(): RunStateCommandCircuitSnapshot;
 }
 
@@ -44,6 +46,7 @@ export interface TemporalConnectionLike {
 export interface TemporalWorkerHostLike {
   start(connection: TemporalConnectionLike): Promise<void>;
   shutdown(): Promise<void>;
+  getRunCompletion(): Promise<TemporalWorkerRunResult> | null;
 }
 
 export interface CreateTemporalWorkerRuntimeOptions {

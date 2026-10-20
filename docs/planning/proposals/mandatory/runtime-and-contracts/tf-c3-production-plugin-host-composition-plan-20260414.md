@@ -2,7 +2,7 @@
 title: TF-C3 Production Plugin Host Composition Plan 2026-04-14
 status: Review
 owner: Runtime / Adapters / API / Docs
-last_reviewed: 2026-09-11
+last_reviewed: 2026-10-20
 planning_type: proposal
 task_id: TF-C3
 ---
@@ -111,7 +111,7 @@ introduce a new rejection contract for those already-recorded run failures.
 Genuine synchronous shutdown and resource-cleanup failures remain failures;
 message matching, silent catches and fabricated success are not recovery.
 
-Current failure and intended ownership:
+The failure corrected by #3591 and its retained ownership boundary:
 
 ```mermaid
 flowchart TD
@@ -133,6 +133,122 @@ flowchart TD
 | --------------------------------------------- | -------------------------------------- | ----------------------------------------------------- | ------------------------------ | --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | SDK has already begun shutdown                | Boundary drift and duplicate semantics | Gateway; separate shutdown initiation from completion | Temporal SDK gateway           | `StopTemporalWorkerRuntime` | `TemporalWorkerHost.ts` and its lifecycle test | RUNNING initiates; STOPPING/DRAINING/DRAINED/STOPPED/FAILED wait for run without another request; preserve error metrics | Existing runtime SRP guard keeps SDK decisions in the adapter  | Existing composed worker lifecycle with an actual signal                                            | Global SDK signal configuration; readiness policy; workload execution |
 | Owned resources depend on the draining worker | Test-only confidence                   | Composition Root; explicit resource ownership         | RuntimeHandle lifecycle policy | `StopTemporalWorkerRuntime` | Existing runtime and host tests                | Deferred run blocks closers; repeated runtime stop closes once in order; genuine failures remain visible                 | Existing runtime SRP guard and semantic composition assertions | Existing host/integration proof observes drain and resource release, not only process disappearance | New browser journey, retry policy, shutdown framework                 |
+
+### Terminal Outcome And Startup Failure Contract
+
+[#3694](https://github.com/dunay2/dvt/issues/3694) is implementing the
+[admitted termination design](https://github.com/dunay2/dvt/issues/3694#issuecomment-6279831471)
+under Planning DB design `GH-3694-TEMPORAL-TERMINATION`. The contract below
+defines that implementation; it does not claim passing regression tests or
+completed integration. The #3591 drain boundary remains required.
+
+The current gap is a lost result across the gateway: the adapter records an SDK
+run failure and clears its active state, while the process host waits only for
+an abort signal. The existing monitor consequently receives no failure and can
+keep reporting readiness. Separately, early startup-abort returns from the
+host's outer `try` execute cleanup but bypass its error-propagation epilogue.
+
+The adapter owns one retained terminal outcome from the original `Worker.run()`:
+
+```ts
+type TemporalWorkerRunResult =
+  | { readonly status: 'completed' }
+  | {
+      readonly status: 'failed';
+      readonly error: unknown;
+      readonly diagnosticError?: unknown;
+    };
+
+getRunCompletion(): Promise<TemporalWorkerRunResult> | null;
+```
+
+The promise fulfills with the SDK outcome after native run finalization. A
+failed result retains the original error; it is not successful completion.
+Clearing the active worker must not erase that result. `null` means no SDK run
+was started, and successful runtime startup with a null completion is an
+invariant failure. The required runtime port delegates this same promise; it
+does not synthesize pending work, add a callback channel, poll SDK state, or
+maintain a second state machine.
+
+Terminal diagnostics are fallible dependencies. If recording the SDK failure
+throws, completion must still fulfill with the original SDK error by identity
+and an additional `diagnosticError`. Property presence records that diagnostic
+failure even when its thrown value is `undefined` or `null`; consumers must not
+test its truthiness. The host reports both values with `AggregateError` in
+SDK-then-diagnostic order, applying its existing process-boundary normalization
+to unknown values. Neither failure may replace or silently hide the other, and
+the adapter must not retry through the failed diagnostic sink. The completed
+outcome and shutdown drain contract are unchanged.
+
+The process host observes the terminal outcome alongside process abort. A
+normal SDK completion ends the host normally even when it precedes the
+application's signal handler. A failed outcome removes readiness through the
+existing monitor and becomes the primary process failure. If abort wins the
+race, the host still preserves any failed run outcome that settles during
+cleanup. The error's name alone, including `AbortError`, cannot turn a fatal SDK
+outcome into expected startup cancellation.
+
+One outer cleanup owner attempts runtime stop and operational-server stop, then
+propagates primary and cleanup failures. Every startup-abort checkpoint must
+reach that epilogue. The adapter's existing shutdown contract remains: it joins
+the run and does not report an already-recorded run failure again as a cleanup
+failure. Genuine shutdown and cleanup failures still reject. The host removes
+the losing abort listener when SDK completion ends its wait.
+
+Startup and stop use the existing runtime handle. Once `stopPromise` exists,
+`start()` rejects before its already-started shortcut, including stop-before-start,
+stop in progress, and successful or failed stop. An already-admitted start may
+settle before the existing stop owner drains it; concurrent admitted starts
+continue to share `startPromise`. This is a handle admission invariant, not a
+new restart coordinator.
+
+| Rail                                         | Existing owner and port                                                       | Required boundary                                                                                            |
+| -------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `StartTemporalWorkerRuntime`                 | RuntimeHandle lifecycle policy; `RuntimeHandle.start(signal?)`                | Catalog the existing startup intent; reject startup after stop begins and preserve real startup failures     |
+| `StopTemporalWorkerRuntime`                  | RuntimeHandle lifecycle policy; `RuntimeHandle.stop()`                        | Retain drain ordering and propagate real cleanup failures through every startup-abort path                   |
+| `DescribeTemporalWorkerOperationalReadiness` | `TemporalWorkerOperationalReadModel`; existing monitor snapshot and `/readyz` | Reflect worker termination through the existing projection; add no route, topology model or capability facts |
+
+All three retain process-owner scope over this runtime instance. The completion
+getter is an internal observation port supporting these rails, not another
+catalog intent. The existing server entrypoint already exits unsuccessfully
+when the process host rejects; the monitor and HTTP serialization need no new
+states or failure channel.
+
+```mermaid
+flowchart TD
+  SDK[Original Worker.run settles] --> Result[Gateway retains completed or failed outcome]
+  Diagnostic[Terminal diagnostic throws] --> Result
+  Result --> Runtime[Runtime delegates completion promise]
+  Runtime --> Host[Host observes completion or process abort]
+  Abort[Process abort] --> Host
+  Host --> Monitor[Existing monitor removes readiness]
+  Monitor --> Cleanup[Single owner attempts all ordered cleanup]
+  Cleanup --> Preserve[Preserve terminal result and cleanup failures]
+  Preserve --> Success[Resolve normal termination]
+  Preserve --> Failure[Reject genuine failure through existing process entrypoint]
+```
+
+The Fowler rationale is to expose the result at its owning Gateway and keep
+process policy at the Composition Root. Extracting the startup/wait control
+flow removes the premature-return path without introducing another cleanup
+service. An explicit discriminated result avoids both an unobserved rejecting
+background promise and external callback exception semantics.
+The same gateway retains diagnostic transport failure as additional evidence;
+it does not change the native outcome or create another observation owner.
+
+| scenario                                          | opportunity                          | Fowler pattern                             | DDD owner                     | command/query rail                                                    | implementation surfaces                                 | unit or package test                                                                                             | architecture test                                           | user-flow test                                              | out of scope                                   |
+| ------------------------------------------------- | ------------------------------------ | ------------------------------------------ | ----------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| Worker ends while the process still appears ready | Boundary drift; lost result          | Gateway; explicit result; Composition Root | SDK gateway and RuntimeHandle | StopTemporalWorkerRuntime; DescribeTemporalWorkerOperationalReadiness | Adapter host/export, runtime ports/handle, process host | Immediate failure, late observation, normal completion and abort/fatal race                                      | Existing runtime SRP guard and direct completion delegation | Existing composed host with actual SDK and operational HTTP | Boot UI, topology, capacity, retry policy      |
+| Recording a terminal failure also throws          | Diagnostic dependency can mask cause | Gateway; explicit result                   | SDK gateway and process host  | StopTemporalWorkerRuntime; DescribeTemporalWorkerOperationalReadiness | Existing adapter host and process host                  | Logger/counter throw, unknown diagnostic values, retained SDK identity, no orphan rejection, ordered aggregation | Same completion delegation and cleanup ownership guards     | Same real SDK termination boundary                          | Observability package changes, retry framework |
+| Startup abort loses cleanup failure               | Control flow bypasses failure policy | Extract Function; one cleanup owner        | Process host lifecycle policy | StartTemporalWorkerRuntime; StopTemporalWorkerRuntime                 | Existing process host                                   | Each startup-abort checkpoint, runtime/server cleanup failures, primary plus cleanup aggregation                 | Existing lifecycle ownership guard                          | Existing host test with operational server                  | New cleanup framework, plugin changes          |
+| Startup follows terminal stop                     | Invalid lifecycle admission          | Enforce invariant at existing boundary     | RuntimeHandle                 | StartTemporalWorkerRuntime                                            | Existing runtime handle                                 | Stop-before-start, stopping and successful/failed stop; concurrent start                                         | Existing runtime SRP guard                                  | Same composed host proof                                    | Generic restart support, another state machine |
+
+The real-provider failure proof must preserve the original SDK run and state
+transitions. A forced-shutdown fixture, if used, must identify the SDK timeout
+policy and its teardown limits; a fabricated rejected `Worker.run()` promise is
+only unit evidence. The existing successful Linux SIGTERM canary remains the
+regression proof for normal SDK signal ordering. Required RED/GREEN and native
+results belong in the issue and admitted evidence after execution.
 
 Validation starts with these exact files, using `pnpm --filter <package> exec
 vitest run <file>` and the existing package configuration. Real Temporal
