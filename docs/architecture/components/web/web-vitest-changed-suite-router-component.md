@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-12
+last_reviewed: 2026-10-18
 planning_type: architecture
 ---
 
@@ -177,6 +177,169 @@ flowchart LR
 - Do not make source files under `apps/web/src/testing/**` production services.
 
 ## Browser Evidence Boundary — GH-3540
+
+### Large-graph browser cadence — GH-3604
+
+Issue #3604 admits a bounded cadence change under design
+`GH-3604-CANVAS-LARGE-GRAPH-NIGHTLY-V2` (superseding the initial scope to
+include the existing CI workflow guard). The last case in
+`canvas-ready-node-authoring.cy.ts` renders the canonical 1,000-node,
+1,920-edge fixture. Its measured cost was 336,824 ms in the reconciled local
+prepush and 130,494 ms in CI run 38998175192. The other thirteen cases are
+functional authoring checks, not scale tests. Keeping these concerns in one
+spec makes every affected controlled batch pay the stress cost.
+
+```mermaid
+flowchart LR
+  Before[Shared authoring spec] --> Functional[13 functional cases]
+  Before --> Stress[1000-node interaction case]
+  Change[Changed-file or full browser baseline] --> Before
+  After[Existing browser catalog] --> PR[Functional controlled specs]
+  After --> Nightly[Explicit nightly stress spec]
+  Schedule[Scheduled or manual workflow] --> Nightly
+  PR --> Native[RunWebCypressNative]
+  Nightly --> Native
+  Native --> Build[Fresh build:e2e and owned preview]
+  Build --> Proof[Exact executed-spec evidence]
+```
+
+The existing `RouteChangedWebVitestSuites` query owns cadence admission in
+`cypress.changed.ts`; cadence is not a fourth runtime capability. Its nightly
+inventory is disjoint from the ordinary controlled/available/unavailable
+inventory. A changed nightly spec selects its focused cadence guard and must
+exist; it does not silently become an unknown file or execute the stress case
+in prepush. Unknown browser paths and deleted admitted files still reject.
+Ordinary and `--full` browser plans retain all functional specs, but exclude
+only this separately scheduled stress case.
+
+The focused cadence guard is also a member of the existing complete governance
+guard registry in `vitest.suites.ts`. Global test configuration, the changed-suite
+adapter and this component guide must select it alongside every other current
+router guard. The existing discovery-based governance-routing regression owns
+that obligation; adding a cadence guard must not create a second registry or
+weaken the comparison with the actual test inventory.
+
+The explicit manual `pnpm test:web:e2e` Docker command still means all specs
+matching the Cypress configuration, including the nightly case. It is not used
+by prepush or the PR/main browser matrix. This intentional operator opt-in does
+not change the scheduled cadence of the governed changed/full browser plans.
+
+`web-canvas-nightly.yml` runs the literal nightly spec on schedule and manual
+dispatch through the unchanged controlled native runner. The runner builds
+the application, owns preview startup/cleanup and rejects missing, skipped,
+pending or failed Cypress evidence. The workflow uses the existing dependency
+setup and explicitly builds `@dvt/web^...` through the canonical
+`run-turbo-workspace-task.cjs build` owner before the native runner. The
+`test:deps` convenience script is not a preparation authority in CI: its
+`DVT_CI=1` short circuit assumes the dependency graph was already built.
+The workflow also uses pinned actions, isolated concurrency, failure artifacts and an actionable
+failure notification; it does not provision live providers. The thirteen
+functional authoring cases, geometry cases at 10/30/60 nodes and inexpensive
+large-graph unit tests remain in PR routing. Shared ready-authoring browser
+setup has two actual consumers rather than a copied fixture or new runner.
+Workflow-only diffs retain the canonical executable CI-tool test catalogue,
+because they do not activate Web runtime jobs. The focused
+`tools/ci/web-canvas-nightly.test.mjs` guard owns nightly workflow structure,
+native command and trigger validation. Web guards own cadence routing, not a
+second workflow validator. The CI guard interprets YAML scalars: equivalent
+one-line and folded commands pass; wrong specs, appended commands, literal shell
+newlines, missing proof and duplicate proof steps reject. Formatting must not
+change the verdict. The same CI guard executes the declared build owner's argument
+and dispatch path with `DVT_CI=1`, intercepting only process creation, to prove
+the cold-runner preparation cannot silently skip. No additional PR matrix is introduced.
+
+| Scenario                              | Opportunity                                  | Fowler pattern                                 | DDD owner                          | Command/query rail                          | Implementation surfaces                                                                           | Unit or package test                                                | Architecture test                                                         | User-flow test                                                     | Out of scope                                            |
+| ------------------------------------- | -------------------------------------------- | ---------------------------------------------- | ---------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------- |
+| Stress runs with functional authoring | Responsibility overload                      | Separate cadence policy from runtime adapter   | WebVitestChangedSuiteRouter        | RouteChangedWebVitestSuites                 | Existing browser catalog and nightly guard                                                        | Changed/full plan excludes only nightly                             | Disjoint fixture consumer admission; missing/unknown files reject         | Retained 13 functional cases and extracted nightly stress          | Other scale thresholds or PR coverage reductions        |
+| Global test wiring changes            | Hidden authority                             | Complete existing governance registry          | WebVitestChangedSuiteRouter        | RouteChangedWebVitestSuites                 | Existing `vitest.suites.ts` guard registry                                                        | Global configuration selects all current guards                     | Discovery-based governance-routing regression remains unchanged           | Existing native functional and nightly proofs                      | Dynamic source discovery in production routing          |
+| Extraction would duplicate bootstrap  | Duplicate semantics                          | Extract shared infrastructure harness          | Controlled ready-authoring session | RunWebCypressNative                         | canvasReadyAuthoring support and the two specs                                                    | Existing fixture contract                                           | Both consumers reuse setup                                                | Byte-identical stress actions and unchanged functional assertions  | New fixture, runner or product behavior                 |
+| Scheduled evidence could disappear    | Hidden authority                             | Explicit workflow adapter and failure evidence | Browser proof runtime              | RunWebCypressNative                         | web-canvas-nightly workflow and focused CI nightly test                                           | Native runner contracts                                             | Exact spec, schedule/manual triggers, pinned actions and reporting        | Real isolated native proof with fresh build and owned preview      | Live provider setup, new PR matrix or timeout increases |
+| Equivalent YAML formatting changes    | Test-only confidence and duplicate semantics | One semantic workflow test owner               | Canvas nightly workflow read model | RunWebCypressNative (existing; no new rail) | Focused CI nightly test, existing CI executable-test catalogue, parity test and Web cadence guard | Equivalent scalars pass; wrong command and proof cardinality reject | Focused CI test is registered; Web does not duplicate workflow validation | Existing real native nightly proof, unchanged product and workflow | Other security workflow checks or new runtime behavior  |
+
+No product behavior, timeout, assertion, worker count, required PR check or live
+runtime admission changes. This is not a claim that Canvas meets a latency SLA:
+the retained stress scenario proves interaction operability. Other CI costs
+remain outside this cut. Validation includes the focused cadence and existing
+browser-routing guards, the native runner contracts, a real isolated nightly
+execution, relevant lint/typecheck, and the normal final prepush and CI gates.
+
+### Additive Browser Catalog Selection — GH-2931
+
+The browser registry currently shares a TypeScript module with execution policy.
+Adding one controlled spec therefore invalidates every browser capability. The
+registry change is not a policy change; product changes must independently name
+their evidence instead of relying on that incidental widening.
+
+```mermaid
+flowchart LR
+  Before[Spec registration in policy module] --> All[All browser capabilities]
+  Git[Existing Git adapter] --> Snapshots[Base and executed catalog snapshots]
+  Snapshots --> Policy[Existing changed-suite query]
+  Policy --> Exact[Proven controlled additions]
+  Policy --> Reject[Removed or reclassified base member: reject]
+  Policy --> Broad[Retained membership with unproved delta or policy change: complete baseline]
+  Source[Session or admission source change] --> Obligations[Shell controlled and both provider capabilities]
+  Exact --> Union[Union of independent obligations]
+  Broad --> Union
+  Obligations --> Union
+  Union --> Runner[Existing runners and strict result validation]
+```
+
+One `apps/web/cypress.catalog.json` replaces the spec arrays; it does not create
+a parallel registry. A focused pure catalog module validates its shape and
+classifies base/head changes. It accepts the three capability keys plus the
+separate `nightly` cadence list, nonempty lists, canonical literal spec paths, and unique disjoint
+membership. Unknown keys, duplicates, traversal, globs or malformed current data
+reject before execution.
+
+Only additions to `controlled` can narrow catalog-triggered evidence. Existing
+controlled membership and relative order, both provider arrays and the nightly list must remain
+unchanged. Every addition runs even if its spec file was already present. The
+executed catalog must equal the verified HEAD snapshot before narrowing. A valid
+base is also a retention witness: every prior member must remain in its original
+capability or nightly cadence in both the executed catalog and any valid HEAD
+snapshot. Members added in HEAD must also remain in the executed catalog.
+Removal or reclassification rejects before any command is selected;
+running only the remaining HEAD inventory would silently lose prior evidence.
+This applies in full mode and with staged or working-tree divergence. The Git
+adapter keeps both immutable witnesses and reports local catalog divergence
+explicitly rather than discarding retention evidence. A missing or malformed base (including the first extraction),
+reordering, additive provider changes or another unproved but nondestructive
+delta selects the complete ordinary baseline. An unreadable Git reference is an
+error. Legitimate retirement or cadence migration needs an explicitly governed
+policy change, not a data-only catalog deletion or an implicit stress rerun.
+The existing adapter owns snapshot reads; the policy owns classification. The
+adapter pins one immutable base/head pair for automatic diff discovery and
+catalog snapshots, so a moving branch reference cannot hide a catalog addition.
+
+Product changes to session/bootstrap, project onboarding and project admission
+retain independent browser obligations: all cataloged controlled shell journeys
+and the complete available/unavailable provider capabilities. Test-only changes
+do not acquire that product obligation. Shell journeys are derived from the
+single catalog, so later session regressions join this obligation automatically.
+This preserves real-provider auth evidence and existing shard ownership without
+repeating unrelated controlled Canvas journeys. The stress case is excluded from
+every ordinary browser plan, including full and policy-triggered plans.
+
+Policy, runner, shared support and `--full` retain the complete ordinary baseline. The
+catalog selects every existing router guard. Unknown consumers and missing
+physical paths reject before phase/capability selection. No cache hit, previous
+log, receipt or successful test is inferred by this selection policy.
+
+| Scenario                    | Opportunity             | Fowler pattern                        | DDD owner                   | Command/query rail                               | Implementation surfaces                                                | Unit or package test                                                                             | Architecture test                                                            | User-flow test                                         | Out of scope                                                |
+| --------------------------- | ----------------------- | ------------------------------------- | --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| Controlled catalog addition | Responsibility overload | Separate declarative data from policy | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites                      | Catalog JSON/parser, browser policy, suite composition and Git adapter | Additive delta; invalid shape; reordered/removed/reclassified paths; dirty and missing snapshots | Single registry; full baseline retained; all guards selected                 | Existing exact native spec command and result contract | New runner, general import graph, provider subset selection |
+| Session source change       | Hidden authority        | Explicit evidence obligation          | WebVitestChangedSuiteRouter | RouteChangedWebVitestSuites; RunWebCypressNative | Existing browser policy and focused routing guards                     | Source-only, test-only and mixed catalog/source cases                                            | Shell journeys plus complete provider capabilities; union without duplicates | Existing shell and protected-runtime journeys          | Auth behavior, changing assertions or deadlines             |
+
+Delivery is a bounded slice of [#2931](https://github.com/dunay2/dvt/issues/2931),
+not completion of its repository-wide tier migration. The next independent
+slice may reuse the existing task cache; it must first resolve #3667 and prove input identity,
+complete successful execution and before/after stability. This slice neither
+reuses historical logs nor changes the existing receipt contract or adds another
+receipt subsystem. The existing GH-3604 nightly extraction is incorporated here,
+without importing unrelated Sink, Source Import or transport changes. The catalog
+parser and its focused guard own cadence shape/disjunction, while the existing
+nightly guard owns selection and the CI-tool guard alone validates the workflow.
 
 This section specifies the next implementation of the existing
 `RouteChangedWebVitestSuites` query and `RunWebCypressNative` command. GitHub

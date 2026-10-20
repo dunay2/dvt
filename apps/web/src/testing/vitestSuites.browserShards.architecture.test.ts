@@ -101,6 +101,7 @@ describe('Changed-suite shard adapter', () => {
 
   it('validates consumers excluded from the shard before planning or executing', () => {
     const excluded = WEB_CYPRESS_SPECS.available[1];
+    if (!excluded) throw new Error('The available browser catalog must cover multiple shards.');
     vi.mocked(existsSync).mockImplementation(
       (path) => !String(path).replaceAll('\\', '/').endsWith(excluded)
     );
