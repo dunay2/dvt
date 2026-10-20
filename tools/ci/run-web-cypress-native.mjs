@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /**
  * Owned concern: provision the controlled Web preview and require complete Cypress evidence.
- * @baseline GH-3578: browser exit zero alone cannot prove the requested specs ran.
- * @decision Reuse the Module API and shared validator; keep interactive open outside evidence.
- * @consequence Exact batches reject omissions and always restore environment and preview ownership.
- * @version 1.0.0
+ * @baseline GH-3578/GH-3696: complete browser evidence includes retirement of the owned preview.
+ * @decision Reuse strict result validation and the existing process-tree lifetime owner.
+ * @consequence Acceptance follows awaited cleanup; cancellation and cleanup failures stay visible.
+ * @version 1.0.1
  */
 import http from 'node:http';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { setTimeout as delay } from 'node:timers/promises';
+import {
+  spawnLiveProofProcess,
+  terminateLiveProofProcess,
+} from '../../scripts/live-proof-process.cjs';
 import {
   validateCypressProofSpecs,
   validateCypressProofResult,
@@ -60,20 +64,27 @@ async function readCypressProofOptions(cypress, args) {
   return { options, specs };
 }
 
-export async function runCypressProof(cypress, options, specs) {
+export async function runCypressProof(cypress, options, specs, signal) {
   const keys = ['ELECTRON_RUN_AS_NODE', ...Object.keys(evidenceEnv)];
   const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
   const clean = createCypressProcessEnv();
   let result;
   try {
+    signal?.throwIfAborted();
     for (const key of keys) {
       if (clean[key] === undefined) delete process.env[key];
       else process.env[key] = clean[key];
     }
-    result = await cypress.run(options);
-  } catch {
-    // Module results and exceptions may include credentials; export bounded evidence only.
-    throw new Error('Cypress native execution failed');
+    const execution = Promise.resolve().then(async () => {
+      signal?.throwIfAborted();
+      try {
+        return await cypress.run(options);
+      } catch {
+        // Module exceptions may include credentials; cancellation retains its own reason.
+        throw new Error('Cypress native execution failed');
+      }
+    });
+    result = await awaitWithSignal(execution, signal);
   } finally {
     for (const [key, value] of Object.entries(previous)) {
       if (value === undefined) delete process.env[key];
@@ -87,6 +98,13 @@ function resolvePnpmCommand(platform = process.platform) {
   return platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 }
 
+class NativeCommandExitError extends Error {
+  constructor(command, exitCode) {
+    super(`${command} exited with code ${exitCode}`);
+    this.exitCode = exitCode;
+  }
+}
+
 export function buildSpawnOptions(options = {}, platform = process.platform) {
   return {
     stdio: 'inherit',
@@ -95,67 +113,52 @@ export function buildSpawnOptions(options = {}, platform = process.platform) {
   };
 }
 
-function runCommand(command, args, options = {}) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, buildSpawnOptions(options));
+async function awaitWithSignal(operation, signal) {
+  if (!signal) return operation;
+  let onAbort;
+  const interrupted = new Promise((_resolve, reject) => {
+    onAbort = () => reject(signal.reason);
+    if (signal.aborted) onAbort();
+    else signal.addEventListener('abort', onAbort, { once: true });
+  });
+  try {
+    return await Promise.race([interrupted, operation]);
+  } finally {
+    signal.removeEventListener('abort', onAbort);
+  }
+}
 
-    child.on('error', reject);
-    child.on('exit', (code, signal) => {
-      if (signal) {
-        reject(new Error(`${command} exited from signal ${signal}`));
-        return;
-      }
-
-      resolve(code ?? 1);
-    });
+async function runOwnedCommand(name, command, args, spawnOptions, options, runtime) {
+  options.signal?.throwIfAborted();
+  const handle = runtime.spawnLiveProofProcess(
+    name,
+    command,
+    args,
+    buildSpawnOptions(spawnOptions, options.platform),
+    { platform: options.platform }
+  );
+  return withOwnedProcess(handle, options, runtime, async () => {
+    const { code, signal } = await awaitWithSignal(handle.completion, options.signal);
+    if (signal) throw new Error(`${command} exited from signal ${signal}`);
+    if (code !== 0) throw new NativeCommandExitError(command, code ?? 1);
+    return 0;
   });
 }
 
-function waitForPreview(url, options = {}) {
+async function waitForPreview(url, options = {}) {
   const timeoutMs = options.timeoutMs ?? 60_000;
   const intervalMs = options.intervalMs ?? 250;
   const deadline = Date.now() + timeoutMs;
 
-  return new Promise((resolve, reject) => {
-    const poll = () => {
-      const request = http.get(url, (response) => {
-        response.resume();
-
-        if (
-          response.statusCode !== undefined &&
-          response.statusCode >= 200 &&
-          response.statusCode < 500
-        ) {
-          resolve();
-          return;
-        }
-
-        scheduleNext();
-      });
-
-      request.on('error', scheduleNext);
-      request.setTimeout(intervalMs, () => {
-        request.destroy();
-        scheduleNext();
-      });
-    };
-
-    const scheduleNext = () => {
-      if (Date.now() >= deadline) {
-        reject(new Error(`Timed out waiting for ${url}`));
-        return;
-      }
-
-      setTimeout(poll, intervalMs);
-    };
-
-    poll();
-  });
+  while (!(await isPreviewReachable(url, intervalMs, options.signal))) {
+    if (Date.now() >= deadline) throw new Error(`Timed out waiting for ${url}`);
+    await delay(intervalMs, undefined, { signal: options.signal });
+  }
 }
 
-function isPreviewReachable(url, timeoutMs = 500) {
-  return new Promise((resolve) => {
-    const request = http.get(url, (response) => {
+function isPreviewReachable(url, timeoutMs = 500, signal) {
+  return new Promise((resolve, reject) => {
+    const request = http.get(url, { signal }, (response) => {
       response.resume();
       resolve(
         response.statusCode !== undefined && response.statusCode >= 200 && response.statusCode < 500
@@ -163,7 +166,8 @@ function isPreviewReachable(url, timeoutMs = 500) {
     });
 
     request.on('error', () => {
-      resolve(false);
+      if (signal?.aborted) reject(signal.reason);
+      else resolve(false);
     });
 
     request.setTimeout(timeoutMs, () => {
@@ -173,29 +177,84 @@ function isPreviewReachable(url, timeoutMs = 500) {
   });
 }
 
-export function buildWindowsProcessTreeKillInvocation(pid) {
-  return {
-    command: 'taskkill',
-    args: ['/PID', String(pid), '/T', '/F'],
-  };
+async function withOwnedPreview(preview, options, runtime, work) {
+  const lifetime = new AbortController();
+  const signal = options.signal
+    ? AbortSignal.any([options.signal, lifetime.signal])
+    : lifetime.signal;
+  let observing = true;
+  void preview.completion.then(
+    ({ code, signal: exitSignal }) => {
+      if (observing)
+        lifetime.abort(
+          new Error(`Native preview exited before completion: exit ${code}, signal ${exitSignal}`)
+        );
+    },
+    (error) => {
+      if (observing) lifetime.abort(error);
+    }
+  );
+  return withOwnedProcess(preview, options, runtime, async () => {
+    try {
+      signal.throwIfAborted();
+      const result = await work(signal);
+      signal.throwIfAborted();
+      return result;
+    } finally {
+      observing = false;
+      lifetime.abort();
+    }
+  });
 }
 
-function stopPreview(child, platform = process.platform) {
-  if (child.exitCode !== null || child.signalCode !== null) {
-    return;
+async function withOwnedProcess(handle, options, runtime, work) {
+  let outcome;
+  try {
+    options.signal?.throwIfAborted();
+    outcome = { ok: true, value: await work() };
+  } catch (error) {
+    outcome = { ok: false, error };
   }
-
-  if (platform === 'win32' && child.pid !== undefined) {
-    const invocation = buildWindowsProcessTreeKillInvocation(child.pid);
-    spawnSync(invocation.command, invocation.args, { stdio: 'ignore' });
-    return;
+  let cleanup;
+  try {
+    await runtime.terminateLiveProofProcess(handle, { platform: options.platform });
+    cleanup = { ok: true };
+  } catch (error) {
+    cleanup = { ok: false, error };
   }
-
-  child.kill();
+  if (outcome.ok && options.signal?.aborted) {
+    outcome = { ok: false, error: options.signal.reason };
+  }
+  if (!cleanup.ok) {
+    if (!outcome.ok) {
+      throw new AggregateError(
+        [outcome.error, cleanup.error],
+        'Native operation and process cleanup failed'
+      );
+    }
+    throw cleanup.error;
+  }
+  if (!outcome.ok) throw outcome.error;
+  return outcome.value;
 }
 
 export async function runWebCypressNative(options = {}, deps = {}) {
-  const runtime = { runCommand, spawn, isPreviewReachable, waitForPreview, stopPreview, ...deps };
+  try {
+    return await executeNativeCypress(options, deps);
+  } catch (error) {
+    if (error instanceof NativeCommandExitError) return error.exitCode;
+    throw error;
+  }
+}
+
+async function executeNativeCypress(options, deps) {
+  const runtime = {
+    spawnLiveProofProcess,
+    terminateLiveProofProcess,
+    isPreviewReachable,
+    waitForPreview,
+    ...deps,
+  };
   const webDir = options.webDir ?? defaultWebDir;
   const previewUrl = options.previewUrl ?? defaultPreviewUrl;
   const pnpmCommand = resolvePnpmCommand(options.platform);
@@ -207,29 +266,45 @@ export async function runWebCypressNative(options = {}, deps = {}) {
       : null;
   const proof = cypress === null ? null : await readCypressProofOptions(cypress, parsed.extraArgs);
 
-  const buildExitCode = await runtime.runCommand(pnpmCommand, ['build:e2e'], { cwd: webDir });
-  if (buildExitCode !== 0) {
-    return buildExitCode;
-  }
+  options.signal?.throwIfAborted();
+  await runOwnedCommand(
+    'native-web-build',
+    pnpmCommand,
+    ['build:e2e'],
+    { cwd: webDir },
+    options,
+    runtime
+  );
+  options.signal?.throwIfAborted();
 
-  if (await runtime.isPreviewReachable(previewUrl)) {
+  if (await runtime.isPreviewReachable(previewUrl, 500, options.signal)) {
     throw new Error(
       `Preview URL ${previewUrl} already responds before this runner started. Stop the stale preview process and rerun Cypress.`
     );
   }
 
-  const preview = runtime.spawn(pnpmCommand, ['preview:e2e'], {
-    ...buildSpawnOptions({ cwd: webDir }),
-  });
+  options.signal?.throwIfAborted();
+  const preview = runtime.spawnLiveProofProcess(
+    'native-web-preview',
+    pnpmCommand,
+    ['preview:e2e'],
+    buildSpawnOptions({ cwd: webDir }, options.platform),
+    { platform: options.platform }
+  );
 
-  try {
-    await runtime.waitForPreview(previewUrl);
+  const result = await withOwnedPreview(preview, options, runtime, async (signal) => {
+    await awaitWithSignal(runtime.waitForPreview(previewUrl, { signal }), signal);
+    signal.throwIfAborted();
     if (proof === null) {
-      return await runtime.runCommand(
+      const code = await runOwnedCommand(
+        'native-web-open',
         pnpmCommand,
         ['exec', 'cypress', 'open', '--config-file', 'cypress.config.ts', ...parsed.extraArgs],
-        { cwd: webDir, env: createCypressProcessEnv() }
+        { cwd: webDir, env: createCypressProcessEnv() },
+        { ...options, signal },
+        runtime
       );
+      return { code };
     }
     const evidence = await runCypressProof(
       cypress,
@@ -239,24 +314,40 @@ export async function runWebCypressNative(options = {}, deps = {}) {
         configFile: path.join(webDir, 'cypress.config.ts'),
         spec: proof.specs.map((spec) => path.resolve(webDir, spec)).join(','),
       },
-      proof.specs
+      proof.specs,
+      signal
     );
+    return { code: 0, evidence };
+  });
+  options.signal?.throwIfAborted();
+  if (result.evidence) {
     (deps.log ?? console.log)(
-      `[web-cypress-native] Cypress proof: ${evidence.passed} passed (${evidence.specs.join(',')})`
+      `[web-cypress-native] Cypress proof: ${result.evidence.passed} passed (${result.evidence.specs.join(',')})`
     );
-    return 0;
-  } finally {
-    runtime.stopPreview(preview, options.platform);
   }
+  return result.code;
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  runWebCypressNative()
+  const lifetime = new AbortController();
+  const interrupt = (signal, exitCode) =>
+    lifetime.abort(
+      Object.assign(new Error(`Native Cypress interrupted by ${signal}`), { exitCode })
+    );
+  const onSigint = () => interrupt('SIGINT', 130);
+  const onSigterm = () => interrupt('SIGTERM', 143);
+  process.on('SIGINT', onSigint);
+  process.on('SIGTERM', onSigterm);
+  runWebCypressNative({ signal: lifetime.signal })
+    .finally(() => {
+      process.off('SIGINT', onSigint);
+      process.off('SIGTERM', onSigterm);
+    })
     .then((code) => {
       process.exit(code);
     })
     .catch((error) => {
       console.error(error);
-      process.exit(1);
+      process.exit(error?.exitCode ?? 1);
     });
 }

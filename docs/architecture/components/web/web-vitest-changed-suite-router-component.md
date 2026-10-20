@@ -267,8 +267,25 @@ flowchart LR
   child adapter over the installed Cypress module API; it validates the real
   result counters and every expected spec exactly once. Credentials stay in environment
   variables, never CLI arguments. Process lifecycle belongs to
-  `live-proof-process.cjs`, shared only by this live runner and its browser child;
-  this keeps teardown out of selection policy and result validation.
+  `live-proof-process.cjs`, shared by this live runner, its browser child and the
+  native controlled-preview runner. Each consumer must create and terminate the
+  same owned handle; killing a pnpm wrapper alone does not retire its preview
+  descendants. This keeps teardown out of selection policy and result validation.
+  The native controlled runner owns its build, preview and interactive Cypress
+  command lifetimes through that same process owner. It awaits their termination
+  before reporting acceptance or settling its result, including readiness and
+  browser failures. Cancellation during a pending build or interactive command
+  must retire that owned tree without waiting for ordinary command completion.
+  A cleanup failure rejects acceptance; if execution also failed, both errors
+  remain observable. Its CLI forwards SIGINT and SIGTERM through the same
+  owned lifetime, and interrupted or late browser results cannot publish success.
+  Scoped Cypress environment changes are restored before returning control;
+  late module completion cannot overwrite subsequent caller environment changes.
+  Module cancellation invalidates its pending result; it does not claim a
+  cancellation API for processes internal to the Cypress module.
+  An already responding preview is not owned by the runner and must not be
+  terminated. GH-3696 records the demonstrated orphaned-preview failure and its
+  bounded lifecycle regression evidence.
   The admitted route explicitly selects native execution. The pre-existing
   manual Docker utility is not admitted CI evidence and is not certified by
   this cut.
