@@ -6,8 +6,18 @@ import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const consumers = [
-  'cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
-  'cypress/support/semanticLive/execution.ts',
+  {
+    file: 'cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+    expectedKinds: ['snapshot', 'events'],
+  },
+  {
+    file: 'cypress/support/semanticLive/execution.ts',
+    expectedKinds: ['completion', 'events'],
+  },
+  {
+    file: 'cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
+    expectedKinds: ['completion'],
+  },
 ] as const;
 
 function readLocationConsumer(file: string): string {
@@ -60,6 +70,7 @@ function exerciseConsumer(
     readLiveRunSnapshot: observeRequest('snapshot'),
     readLiveRunEvents: observeRequest('events'),
     waitForCompletedRun: observeRequest('completion'),
+    waitForCompletedDbtRun: observeRequest('completion'),
     cy: {
       location(key: string) {
         expect(key).toBe('pathname');
@@ -88,20 +99,19 @@ function exerciseConsumer(
   return { requests, run: () => queue.forEach((command) => command()) };
 }
 
-describe.each(consumers)('%s run-location consumption', (file) => {
+describe.each(consumers)('$file run-location consumption', ({ file, expectedKinds }) => {
   it('retains the validated run identity when navigation changes before consumption', () => {
     const scenario = exerciseConsumer(file, '/runs/accepted-run', '/login');
     scenario.run();
-    expect(scenario.requests.map(({ runId }) => runId)).toEqual(['accepted-run', 'accepted-run']);
+    expect(scenario.requests).toEqual(
+      expectedKinds.map((kind) => ({ kind, runId: 'accepted-run' }))
+    );
   });
 
   it('reads snapshot/completion and events for an unchanged valid route', () => {
     const scenario = exerciseConsumer(file, '/runs/stable-run');
     scenario.run();
-    expect(scenario.requests).toEqual([
-      { kind: file.includes('semanticLive') ? 'completion' : 'snapshot', runId: 'stable-run' },
-      { kind: 'events', runId: 'stable-run' },
-    ]);
+    expect(scenario.requests).toEqual(expectedKinds.map((kind) => ({ kind, runId: 'stable-run' })));
   });
 
   it('rejects login before issuing any run-evidence request', () => {

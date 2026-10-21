@@ -296,39 +296,41 @@ describe('dbt project file Preview and Run live vertical', () => {
 
     clickButtonNatively('Start Run');
 
-    cy.location('pathname', { timeout: 30_000 }).should('match', /^\/runs\/[^/]+$/);
-    cy.location('pathname').then((pathname) => {
-      const runId = pathname.split('/').pop();
-      expect(runId).to.be.a('string').and.not.to.equal('');
+    cy.location('pathname', { timeout: 30_000 })
+      .should('match', /^\/runs\/[^/]+$/)
+      .then((pathname) => {
+        const runId = pathname.split('/').pop();
+        expect(runId).to.be.a('string').and.not.to.equal('');
 
-      return waitForCompletedDbtRun(runId!).then((snapshot) => {
-        expect(snapshot.status.toLowerCase()).to.equal('completed');
-        expect(snapshot.provenance?.persistedPlan?.sourceRef).to.match(/^dvt-plan:\/\//);
+        return waitForCompletedDbtRun(runId!).then((snapshot) => {
+          expect(snapshot.status.toLowerCase()).to.equal('completed');
+          expect(snapshot.provenance?.persistedPlan?.sourceRef).to.match(/^dvt-plan:\/\//);
 
-        return readLiveRunEvents(runId!).then((eventsResponse) => {
-          expect(eventsResponse.status).to.equal(200);
-          const events = (eventsResponse.body as LiveRunEvents).items ?? [];
-          const eventTypes = events.map(({ eventType }) => eventType);
-          expect(eventTypes).to.include.members([
-            'RunQueued',
-            'RunStarted',
-            'StepCompleted',
-            'RunCompleted',
-          ]);
-          expect(
-            events.some(
-              ({ eventType, stepId }) => eventType === 'StepCompleted' && stepId === MODEL_UNIQUE_ID
-            )
-          ).to.equal(true);
-          expect(
-            events.some(
-              ({ eventType, stepId }) =>
-                eventType === 'StepCompleted' && stepId === SUMMARY_MODEL_UNIQUE_ID
-            )
-          ).to.equal(true);
+          return readLiveRunEvents(runId!).then((eventsResponse) => {
+            expect(eventsResponse.status).to.equal(200);
+            const events = (eventsResponse.body as LiveRunEvents).items ?? [];
+            const eventTypes = events.map(({ eventType }) => eventType);
+            expect(eventTypes).to.include.members([
+              'RunQueued',
+              'RunStarted',
+              'StepCompleted',
+              'RunCompleted',
+            ]);
+            expect(
+              events.some(
+                ({ eventType, stepId }) =>
+                  eventType === 'StepCompleted' && stepId === MODEL_UNIQUE_ID
+              )
+            ).to.equal(true);
+            expect(
+              events.some(
+                ({ eventType, stepId }) =>
+                  eventType === 'StepCompleted' && stepId === SUMMARY_MODEL_UNIQUE_ID
+              )
+            ).to.equal(true);
+          });
         });
       });
-    });
 
     cy.reload();
     cy.contains('Runtime snapshot', { timeout: 30_000 }).should('be.visible');
