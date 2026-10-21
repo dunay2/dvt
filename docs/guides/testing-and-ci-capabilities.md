@@ -966,8 +966,11 @@ aborts startup; a previous local build is not a runtime prerequisite.
   fallback when they are not running under `turbo`.
 - `pnpm ci:code` routes workspace tests through `turbo run test`. This is the
   canonical fresh CI baseline for package tests because `DVT_CI=1` disables
-  package-local pretest build fallbacks and Turbo's `test -> ^build` contract
-  must create upstream `dist/**` surfaces before tests import workspace exports.
+  package-local pretest build fallbacks. The default `test -> ^build` contract
+  creates upstream `dist/**` surfaces before tests import workspace exports.
+  `dvt-api#test` additionally requires its own `build`: native recovery tests
+  launch a Node child that imports the compiled API modules. The API build owns
+  its dependency builds, so a cold test run needs no pre-existing API output.
 - `pnpm ci:affected:build`, `pnpm ci:affected:lint`,
   `pnpm ci:affected:typecheck`, and `pnpm ci:affected:test` route through
   `node scripts/run-turbo-workspace-task.cjs` so affected local preflight and
