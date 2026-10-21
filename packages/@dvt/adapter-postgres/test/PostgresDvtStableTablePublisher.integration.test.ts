@@ -139,7 +139,6 @@ function input(
   return {
     sql,
     target: {
-      schemaVersion: 'dvt-transform-result-target.v1',
       connectionRef: {
         schemaVersion: 'connection-ref.v1',
         connectionId: 'warehouse-a',

@@ -43,7 +43,7 @@ export const DvtOperationalPostgresConnectionRefSchema = ConnectionRefSchema.ext
   provider: z.literal('postgres'),
 }).strict();
 
-export const DvtOperationalRunOutputSchema = z
+const DvtOperationalTableOutputSchema = z
   .object({
     kind: z.literal('transform-result'),
     nodeId: z.string().min(1),
@@ -53,15 +53,28 @@ export const DvtOperationalRunOutputSchema = z
   })
   .strict();
 
+export const DvtOperationalRunOutputSchema = z.discriminatedUnion('disposition', [
+  DvtOperationalTableOutputSchema,
+  z
+    .object({
+      kind: z.literal('transform-result'),
+      nodeId: z.string().min(1),
+      disposition: z.literal('ephemeral'),
+    })
+    .strict(),
+]);
+
 export function addDvtPostgresWorkloadProfileIssues(
   workload: {
     readonly graph: z.infer<typeof DvtOperationalWorkloadGraphRefSchema>;
     readonly targetProjection: { readonly profileId: string };
+    readonly publicationBoundaries?: readonly unknown[];
   },
   context: z.RefinementCtx
 ): void {
-  const nodeCount = workload.graph.selectedNodeIds.length;
-  const edgeCount = workload.graph.selectedEdgeIds.length;
+  const publicationCount = workload.publicationBoundaries?.length ?? 0;
+  const nodeCount = workload.graph.selectedNodeIds.length - publicationCount;
+  const edgeCount = workload.graph.selectedEdgeIds.length - publicationCount;
   // JOIN operands may be distinct occurrences of one physical source.
   const minimumNodes = workload.targetProjection.profileId === DVT_POSTGRES_JOIN_PROFILE_ID ? 2 : 3;
   const cardinalityMatches =

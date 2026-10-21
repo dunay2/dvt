@@ -70,7 +70,9 @@ describe('DvtPostgresTargetProjectionPublisher with canonical documents', () => 
   it('publishes exact projected bytes and fingerprints the semantic output schema', async () => {
     const request = input(true);
     const { publisher, publish } = harness();
-    const binding = await publisher.publish(request);
+    const result = await publisher.publish(request);
+    if (!result.ok) throw new Error(result.cause);
+    const binding = result.value;
     expect(publish).toHaveBeenCalledOnce();
     const artifact = publish.mock.calls[0]![0];
     const schema = projectDvtPostgresOutputSchemaV1([
@@ -94,8 +96,9 @@ describe('DvtPostgresTargetProjectionPublisher with canonical documents', () => 
 
   it('preserves SQL publication for an explicitly unbound semantic type without inventing a fingerprint', async () => {
     const { publisher, publish } = harness();
-    const binding = await publisher.publish(input(false));
-    expect(binding.schemaDigestSha256).toBeUndefined();
+    const result = await publisher.publish(input(false));
+    if (!result.ok) throw new Error(result.cause);
+    expect(result.value.schemaDigestSha256).toBeUndefined();
     expect(publish).toHaveBeenCalledOnce();
   });
 

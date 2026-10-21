@@ -7,7 +7,7 @@ import type { CanonicalEdge } from '../../types/canonical';
 describe('DVT authoring consumes complete connection provenance', () => {
   const view = useAuthoringFieldsHarness();
   it.each(['warehouse-main', 'other'])(
-    'only inherits a common Sink connection: %s',
+    'only offers a common Sink connection for explicit confirmation: %s',
     (connectionId) => {
       const sink = buildDvtNode('dvt:sink');
       const source = buildJoinWarehouseSourceNode({ id: 'a', table: 'a', columns: ['id'] });
@@ -25,8 +25,14 @@ describe('DVT authoring consumes complete connection provenance', () => {
       }));
       for (const ordered of [edges, [...edges].reverse()]) {
         view.renderFields(sink, undefined, undefined, [source, other, sink], ordered, 'general');
-        const codes = [...view.container.querySelectorAll('code')].map((code) => code.textContent);
-        expect(codes.at(-1)).toBe(connectionId === 'warehouse-main' ? 'warehouse-main' : '-');
+        const select = view.container.querySelector<HTMLSelectElement>(
+          'select[name="dvt-sink-connection"]'
+        )!;
+        expect(select.value).toBe('');
+        expect(select.disabled).toBe(connectionId !== 'warehouse-main');
+        expect([...select.options].map((option) => option.value)).toEqual(
+          connectionId === 'warehouse-main' ? ['', 'warehouse-main'] : ['']
+        );
         expect(view.draftJson()).not.toContain('connectionRef');
       }
     }

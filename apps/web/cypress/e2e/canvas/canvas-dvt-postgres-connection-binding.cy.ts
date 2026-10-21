@@ -1,8 +1,8 @@
 /**
- * Owned concern: prove DVT PostgreSQL connection authoring, persistence, and inheritance.
+ * Owned concern: prove DVT PostgreSQL connection authoring, persistence, and confirmation.
  * @baseline GH-3578: the current inspector owns provider-neutral translated labels.
  * @decision Bind an ordinary manual source; imported source authority is independently guarded.
- * @consequence The persisted Source→Model→Sink chain proves inheritance at the current Sink UI.
+ * @consequence Source→Model→Sink provenance offers a candidate without confirming the destination.
  * @version 1.0.0
  */
 import {
@@ -107,7 +107,7 @@ function assertNoSeriousAccessibilityViolations(): void {
 }
 
 describe('DVT PostgreSQL connection authority', () => {
-  it('binds a manual source, tests, persists, reloads, and shows inheritance in EN and ES', () => {
+  it('persists a manual Source binding and offers unconfirmed Sink provenance in EN and ES', () => {
     const english = resolveCanvasViewCopy('en');
     const spanish = resolveCanvasViewCopy('es');
     stubDvtConnectionAuthoring();
@@ -152,24 +152,40 @@ describe('DVT PostgreSQL connection authority', () => {
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     revisitWorkbenchCanvas(visitDvtCanvas);
 
-    openNode('src_orders');
-    cy.get('select[name="dvt-source-connection"]').should('have.value', CONNECTION_ID);
-    assertNoSeriousAccessibilityViolations();
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.then(() => getE2eApiCalls('/workspace/graph/draft', 'PUT').length).then((writesBefore) => {
+      for (const { language, copy } of [
+        { language: 'en', copy: english },
+        { language: 'es', copy: spanish },
+      ] as const) {
+        if (language === 'es') {
+          cy.get('[data-slot="shell-menu-trigger"]').click();
+          cy.get('[data-slot="shell-language-option-es"]').click();
+        }
+        cy.get('html').should('have.attr', 'lang', language);
+        openNode('src_orders');
+        cy.contains('label', copy.inspectorDvtConnectionLabel)
+          .scrollIntoView()
+          .should('be.visible');
+        cy.get('select[name="dvt-source-connection"]').should('have.value', CONNECTION_ID);
+        cy.contains('button', copy.inspectorDvtConnectionTestLabel).should('be.visible');
+        assertNoSeriousAccessibilityViolations();
+        cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
-    openNode('orders_dashboard');
-    cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
-    cy.contains(english.inspectorDvtInheritedConnectionLabel).scrollIntoView().should('be.visible');
-    cy.contains('code', CONNECTION_ID).should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-
-    cy.get('[data-slot="shell-menu-trigger"]').click();
-    cy.get('[data-slot="shell-language-option-es"]').click();
-    cy.get('html').should('have.attr', 'lang', 'es');
-    openNode('src_orders');
-    cy.contains('label', spanish.inspectorDvtConnectionLabel).scrollIntoView().should('be.visible');
-    cy.get('select[name="dvt-source-connection"]').should('have.value', CONNECTION_ID);
-    cy.contains('button', spanish.inspectorDvtConnectionTestLabel).should('be.visible');
-    assertNoSeriousAccessibilityViolations();
+        openNode('orders_dashboard');
+        cy.get('[data-slot="canvas-node-workbench-tab-sink"]').click();
+        cy.contains('label', copy.inspectorDvtConnectionLabel)
+          .scrollIntoView()
+          .should('be.visible');
+        cy.get('select[name="dvt-sink-connection"]').should('have.value', '').and('be.enabled');
+        cy.get<HTMLOptionElement>('select[name="dvt-sink-connection"] option').should((options) => {
+          expect([...options].map((option) => option.value)).to.deep.equal(['', CONNECTION_ID]);
+        });
+        assertNoSeriousAccessibilityViolations();
+        cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      }
+      cy.then(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBefore);
+      });
+    });
   });
 });

@@ -53,12 +53,13 @@ describe('protected SortRel/FetchRel projection', () => {
       selectedEdgeIds: draft.edges.map((edge) => edge.id),
     };
 
-    const binding = await publisher.publish(input);
+    const publication = await publisher.publish(input);
+    if (!publication.ok) throw new Error(publication.cause);
     const result = new DvtOperationalWorkloadProjector().project({
       ...input,
       draftRevision: 'revision-sort-fetch-run',
       canvasId: draft.canvas.id!,
-      targetProjection: binding,
+      targetProjection: publication.value,
     });
 
     if (!result.ok) throw new Error(result.cause);

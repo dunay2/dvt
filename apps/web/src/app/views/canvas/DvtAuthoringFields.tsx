@@ -11,6 +11,13 @@ import { DvtSinkAuthoringSection } from './DvtSinkAuthoringSection';
 import { DvtTransformResultTargetFields } from './DvtTransformResultTargetFields';
 import { DvtSourceAuthoringSection } from './DvtSourceAuthoringSection';
 import { DvtTransformMaterializationField } from './DvtTransformMaterializationField';
+import {
+  createDvtSinkAuthoringBinding,
+  createDvtTransformDestinationBinding,
+  createDvtTransformMaterializationBinding,
+} from './dvtDestinationBinding';
+import { canvasViewCopy } from './copy';
+import styles from './dvtDestinationFields.module.css';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -58,45 +65,47 @@ export function DvtAuthoringFields({
   if (draft.dvt.kind === 'transform') {
     if (section !== 'all' && section !== 'general') return null;
     const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
-    const materializationField = (
-      <div className="space-y-4">
+    return (
+      <div className={styles.stack}>
         <DvtTransformMaterializationField
-          disabled={disabled}
-          draft={draft.dvt}
-          errors={errors.dvt}
-          onChange={onChange}
+          binding={createDvtTransformMaterializationBinding({
+            draft: draft.dvt,
+            disabled,
+            errors: errors.dvt,
+            onChange,
+            copy: canvasViewCopy,
+          })}
+          copy={canvasViewCopy}
         />
-        <DvtTransformResultTargetFields
-          target={draft.dvt.resultTarget}
-          connection={provenance.kind === 'resolved' ? provenance.connectionRef : undefined}
-          disabled={disabled}
-          errors={errors.dvt}
-          onChange={(resultTarget) =>
-            onChange((current) =>
-              current.dvt?.kind === 'transform'
-                ? { ...current, dvt: { ...current.dvt, resultTarget } }
-                : current
-            )
-          }
-        />
+        {draft.dvt.materialized === 'ephemeral' ? null : (
+          <DvtTransformResultTargetFields
+            binding={createDvtTransformDestinationBinding({
+              draft: draft.dvt,
+              disabled,
+              errors: errors.dvt,
+              onChange,
+              connection: provenance.kind === 'resolved' ? provenance.connectionRef : undefined,
+            })}
+            copy={canvasViewCopy}
+          />
+        )}
       </div>
     );
-    return materializationField;
   }
 
   if (section !== 'all' && section !== 'general') return null;
   const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
   return (
     <DvtSinkAuthoringSection
-      node={node}
-      disabled={disabled}
-      draft={draft.dvt}
-      errors={errors.dvt}
-      destinationTarget={formatQualifiedTarget([draft.dvt.schema, draft.dvt.table]) || '-'}
-      inheritedConnectionId={
-        provenance.kind === 'resolved' ? provenance.connectionRef.connectionId : undefined
-      }
-      onChange={onChange}
+      binding={createDvtSinkAuthoringBinding({
+        draft: draft.dvt,
+        disabled,
+        errors: errors.dvt,
+        onChange,
+        copy: canvasViewCopy,
+        connection: provenance.kind === 'resolved' ? provenance.connectionRef : undefined,
+      })}
+      copy={canvasViewCopy}
     />
   );
 }

@@ -42,7 +42,7 @@ const COPY: Record<
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'The model configuration is invalid. Review its properties.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
-      'Run currently requires a table output. Change the output type.',
+      'Use a table result, or an ephemeral model connected to one table Sink. Do not configure both destinations.',
     [DVT_REJECTIONS.runTargetInvalid.messageKey]:
       'Configure a valid output connection, schema and table before Run.',
     unknown: 'This model cannot run. Review its configuration and preview again.',
@@ -77,7 +77,7 @@ const COPY: Record<
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'La configuración del modelo no es válida. Revisa sus propiedades.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
-      'La ejecución requiere una salida de tipo tabla. Cambia el tipo de salida.',
+      'Usa un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla. No configures ambos destinos.',
     [DVT_REJECTIONS.runTargetInvalid.messageKey]:
       'Configura una conexión, un esquema y una tabla de salida válidos antes de ejecutar.',
     unknown: 'No se puede ejecutar este modelo. Revisa su configuración y repite la vista previa.',

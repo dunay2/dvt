@@ -1,7 +1,15 @@
-/** Project persisted Sink execution evidence; never query current destination rows. */
+/**
+ * Project persisted publication evidence only onto its exact configured Sink.
+ * @baseline GH-3115: relation-only materialization cannot establish node ownership.
+ * @decision Match immutable publication node ID and the contract-validated physical target.
+ * @consequence No legacy/name fallback, destination query or cross-card metric attribution.
+ * @version 2.0.0
+ */
+import { DvtPostgresRelationTargetV1Schema } from '@dvt/contracts';
+
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { RunSnapshot } from '../../ports/runs';
-import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import { isRecord } from '../../types/canonicalGuards';
 
 export type CanvasSinkRunEvidence = Readonly<{
   runId: string;
@@ -12,66 +20,41 @@ export type CanvasSinkRunEvidence = Readonly<{
   status: 'completed';
 }>;
 
-function normalizeRelationPath(value: string): readonly string[] {
-  return value
-    .split('.')
-    .map((part) => {
-      const normalized = part.trim().toLowerCase();
-      const withoutOpening = ['"', '`', '['].includes(normalized[0] ?? '')
-        ? normalized.slice(1)
-        : normalized;
-      return ['"', '`', ']'].includes(withoutOpening.at(-1) ?? '')
-        ? withoutOpening.slice(0, -1)
-        : withoutOpening;
-    })
-    .filter(Boolean);
-}
-
-function relationsMatch(nodeRelation: string, materializedRelation: string): boolean {
-  const nodeParts = normalizeRelationPath(nodeRelation);
-  const materializedParts = normalizeRelationPath(materializedRelation);
-  if (nodeParts.length < 2 || materializedParts.length < 2) {
-    return false;
-  }
-
-  const shorterLength = Math.min(nodeParts.length, materializedParts.length);
-  return (
-    nodeParts.slice(-shorterLength).join('.') === materializedParts.slice(-shorterLength).join('.')
-  );
-}
-
 export function resolveCanvasSinkRunEvidence(
+  nodeId: string,
   data: DbtNodeData,
   snapshot: RunSnapshot | null | undefined
 ): CanvasSinkRunEvidence | null {
-  const materialization = snapshot?.materialization ?? snapshot?.execution?.materialization;
-  const sinkMetadata = createDvtNodeAuthoringMetadata({
-    id: data.name,
-    name: data.name,
-    pluginId: 'dvt',
-    kind: 'dvt:sink',
-    role: 'output',
-    status: 'idle',
-    tags: ['authoring'],
-    metadata: data.metadata,
-  });
+  const evidence = snapshot?.publication;
+  const config = data.metadata?.config;
   if (
     data.role !== 'output' ||
     data.pluginKind !== 'dvt:sink' ||
-    sinkMetadata?.kind !== 'sink' ||
     snapshot?.status !== 'completed' ||
-    materialization == null ||
-    !relationsMatch(`${sinkMetadata.schema}.${sinkMetadata.table}`, materialization.sinkTable)
-  ) {
+    evidence?.publication.nodeId !== nodeId ||
+    !isRecord(config)
+  )
     return null;
-  }
+
+  const target = DvtPostgresRelationTargetV1Schema.safeParse({
+    connectionRef: config.connectionRef,
+    schema: config.schema,
+    relation: config.table,
+  });
+  if (
+    !target.success ||
+    target.data.connectionRef.connectionId !== evidence.target.connectionRef.connectionId ||
+    target.data.schema !== evidence.target.schema ||
+    target.data.relation !== evidence.target.relation
+  )
+    return null;
 
   return {
     runId: snapshot.runId,
     nodeName: data.name,
-    rowsWritten: materialization.rowsWritten,
-    completedAt: materialization.completedAt,
-    durationMs: materialization.durationMs,
+    rowsWritten: evidence.rowsWritten,
+    completedAt: evidence.completedAt,
+    durationMs: evidence.durationMs,
     status: 'completed',
   };
 }
