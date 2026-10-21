@@ -2,7 +2,7 @@
 title: LOCAL generation persistence admission risks
 status: Open
 owner: API / Data Infrastructure
-last_reviewed: 2026-10-17
+last_reviewed: 2026-10-21
 ---
 
 # LOCAL generation persistence admission risks
@@ -32,6 +32,16 @@ metadata. Native transaction failures remain explicit. A post-COMMIT connection
 or storage error is an ambiguous result, not evidence of rollback; resolve the
 persisted capture before retrying. Corrupt/foreign version or scope is rejected,
 not repaired or replaced with an empty store.
+
+The internal `ReadLocalDataGenerationMetadata.readCapture` selector now resolves
+an exact committed outcome using the caller's dataset/capture IDs, with current
+view authorization before lookup and publication. It creates no cold database,
+does not expose unpublished staging and never reacquires source rows. Focused
+native proof covers a real commit followed by an injected lost acknowledgement,
+denial, reopen and exact metadata recovery. This closes the application lookup
+gap; it does not make commit and acknowledgement atomic or authorize automatic
+command retry. New acquisition attempts still use a new capture ID. See the
+existing integration evidence and design `GH-3394-CAPTURE-COMMIT-RECOVERY`.
 
 Native test execution, killed-process recovery, full API source/test typecheck,
 lint, security/ARC, prepush and final review are acceptance gates, not properties

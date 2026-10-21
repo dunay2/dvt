@@ -765,6 +765,43 @@ it('governed native source close failure cannot replace a published generation',
   assert.equal(await store.readCapture(f.command.localDatasetId, captureId), null);
   await assertSourceClosed();
 });
+it('governed committed capture is recoverable after its promotion acknowledgement is lost', async () => {
+  await table('governed_lost_ack', 3);
+  const f = await governed('governed_lost_ack');
+  const originalPromote = DuckDbGenerationStore.prototype.promote;
+  vi.spyOn(DuckDbGenerationStore.prototype, 'promote').mockImplementationOnce(async function (
+    this: DuckDbGenerationStore,
+    input
+  ) {
+    await originalPromote.call(this, input);
+    throw new Error('controlled lost promotion acknowledgement');
+  });
+  await assert.rejects(f.useCase.execute(f.command, f.context), /lost promotion acknowledgement/u);
+  await assertSourceClosed();
+  const pulls = vi.spyOn(Cursor.prototype, 'read');
+  const selected = { localDatasetId: f.command.localDatasetId, captureId: f.command.captureId };
+  const recovered = await f.module.readLocalDataGenerationMetadata.readCapture(f.context, selected);
+  assert(recovered);
+  assert.equal(recovered.captureId, f.command.captureId);
+  assert.equal(recovered.rowCount, '3');
+  assert.deepEqual(recovered, await store.readHead(f.command.localDatasetId));
+  assert.equal(pulls.mock.calls.length, 0, 'outcome recovery never reacquires remote rows');
+  const grants = f.state.grants;
+  f.state.grants = null;
+  await assert.rejects(
+    f.module.readLocalDataGenerationMetadata.readCapture(f.context, selected),
+    /ACCESS_DENIED/u
+  );
+  f.state.grants = grants;
+  await runtime.close();
+  runtime = new DuckDbLocalDataRuntime(config);
+  assert.deepEqual(
+    await f.createModule().readLocalDataGenerationMetadata.readCapture(f.context, selected),
+    recovered
+  );
+  assert.equal(pulls.mock.calls.length, 0);
+});
+
 it('governed authorized metadata absence creates no workspace database', async () => {
   await table('governed_cold_read', 0);
   const f = await governed('governed_cold_read');
@@ -801,6 +838,13 @@ it('governed authorized metadata absence creates no workspace database', async (
         localDatasetId: createLocalDatasetIdV1(),
         generationId: createLocalDataGenerationIdV1(),
       }
+    ),
+    null
+  );
+  assert.equal(
+    await f.module.readLocalDataGenerationMetadata.readCapture(
+      { ...f.context, scope: coldScope },
+      { localDatasetId: createLocalDatasetIdV1(), captureId: createLocalDataCaptureIdV1() }
     ),
     null
   );

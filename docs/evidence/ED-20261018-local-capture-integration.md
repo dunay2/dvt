@@ -23,6 +23,71 @@ evidence:
 
 # Internally composed LOCAL capture and exact generation reads
 
+## Capture outcome recovery admission
+
+Review of #3680 found that a native commit followed by an acknowledgement failure
+could leave the caller without a generation ID. The store's exact capture lookup
+was not exposed by the application composition. The preimplementation plan,
+current/target diagrams, Service Layer/Gateway rationale and bounded test matrix
+are recorded in [#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6315358301)
+and Planning DB design `GH-3394-CAPTURE-COMMIT-RECOVERY`.
+
+The correction reuses `ReadLocalDataGenerationMetadata` with an exact
+dataset/capture selector, the existing immutable manifest and current scoped view
+authorization. It shares the existing validation/authorization/publication
+boundary, without automatic acquisition retry or a new transport/query intent.
+Required proof includes denial/revocation, invalid or mismatched identities,
+failure versus absence, a real committed-but-unacknowledged capture recovered
+through production composition, and a cold lookup that creates no database.
+These are admission requirements; passing execution evidence is recorded only
+after those focused checks actually run.
+
+### Focused recovery execution
+
+The deterministic read-query file first returned **8 new failures / 7 existing
+passes**, all new paths missing `readCapture` (3.34 seconds). The first production
+attempt mixed API Zod 3 object construction with contract Zod 4 members and failed
+with `keyValidator._parse is not a function`; the existing public-parser boundary
+was restored, without dependency changes. The corrected explicit command:
+
+```text
+pnpm --filter dvt-api exec vitest run test/application/services/readLocalDataGenerationMetadataUseCase.test.ts test/architecture/localDataCaptureComposition.architecture.test.ts test/modules/localDataCaptureRuntime.test.ts --maxWorkers 1
+```
+
+passes **18/18**, three files, 11.28 seconds. It retains the original generation
+selector and proves current view authorization, denial/revocation, strict input
+and ID families, dataset/capture mismatch, storage failure versus absence, and
+owned selector/result snapshots across asynchronous authorization. API source/test
+typecheck passes with its normal dependency-build prehook.
+
+The isolated supported POSIX proof uses full c489618a source plus the explicitly
+hashed worktree overlay, the existing dependency cache and actual builds of all
+19 API dependency workspaces (72.49 seconds). The exact selected command from
+apps/api is:
+
+```bash
+node --require ../../scripts/local-data-private-creation.cjs \
+  ../../node_modules/vitest/vitest.mjs run --config vitest.integration.config.ts \
+  test/integration/postgresLocalDataAcquisition.proof.ts \
+  -t 'governed committed capture|governed authorized metadata absence' --maxWorkers 1
+```
+
+Result: **2 PASS / 28 deliberately filtered cases**, 8.94 seconds. PostgreSQL is
+actually **15.19** on this reused private lab host, rather than the earlier
+29-case proof's PostgreSQL 16. The role is non-superuser/non-RLS-bypass. A real
+three-row production-composition capture commits; controlled acknowledgement
+loss rejects the caller; exact capture lookup recovers its committed manifest,
+denies revoked access and survives native close/reopen without another cursor
+read. The second case proves authorized cold capture absence creates no database.
+The acknowledgement failure is an explicit injection after a successful native
+promotion, not a claim of induced disk failure or a cross-store transaction.
+
+Two earlier lab preparations executed no test bodies: the reused database host
+had no dvt_test database, then the source-only archive lacked compiled workspace
+entry points. A fresh private proof database/role and the real dependency build
+corrected those setup failures; the disposable database and role were removed
+after execution. No fake adapter, source substitution or assertion relaxation.
+
 Owner: [#3394](https://github.com/dunay2/dvt/issues/3394), under #3388.
 One review surface: #3680, incorporating the two unique #3679 commits.
 The accepted metadata baseline is main `c584133835da031b37e70862e312ca726b32dca3`.

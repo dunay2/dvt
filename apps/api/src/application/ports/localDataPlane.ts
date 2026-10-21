@@ -19,6 +19,12 @@ export type LocalDataOperationContext = Readonly<{
   requestId: string;
 }>;
 
+/** An exact committed outcome selector; it never requests another acquisition. */
+export type LocalDataCaptureSelection = Readonly<{
+  localDatasetId: string;
+  captureId: string;
+}>;
+
 export interface ILocalDataGenerationReader {
   /**
    * The application query authorizes context before lookup and rechecks before returning.
@@ -28,6 +34,11 @@ export interface ILocalDataGenerationReader {
   readGeneration(
     context: LocalDataOperationContext,
     selection: Extract<DataAccessSelection, { mode: 'local' }>
+  ): Promise<LocalDataGenerationManifestV1 | null>;
+  /** Same current view authorization; unpublished stages are not committed generations. */
+  readCapture(
+    context: LocalDataOperationContext,
+    selection: LocalDataCaptureSelection
   ): Promise<LocalDataGenerationManifestV1 | null>;
 }
 

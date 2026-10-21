@@ -63,6 +63,13 @@ export function buildLocalDataCaptureRuntime(
           generationId
         );
       },
+      readCapture: async (datasetId, captureId) => {
+        if (!(await deps.runtime.hasWorkspaceDatabase(scope))) return null;
+        return new DuckDbGenerationStore(deps.runtime, scope, access, limits).readCapture(
+          datasetId,
+          captureId
+        );
+      },
     }),
   });
   return Object.freeze({ captureLocalDataset, readLocalDataGenerationMetadata });

@@ -102,7 +102,7 @@ describe('authorized exact LOCAL generation metadata', () => {
     const reader = vi
       .fn<(dataset: string, generation: string) => Promise<LocalDataGenerationManifestV1 | null>>()
       .mockResolvedValue(manifest);
-    const createReader = vi.fn(() => ({ readGeneration: reader }));
+    const createReader = vi.fn(() => ({ readGeneration: reader, readCapture: reader }));
     return {
       state,
       reader,
@@ -186,5 +186,97 @@ describe('authorized exact LOCAL generation metadata', () => {
       );
     }
     assert.equal(f.createReader.mock.calls.length, 0);
+  });
+
+  const captureSelection = {
+    localDatasetId: manifest.localDatasetId,
+    captureId: manifest.captureId,
+  };
+
+  it('resolves an exact committed capture using current view authorization', async () => {
+    const f = make();
+    assert.deepEqual(await f.useCase.readCapture(context, captureSelection), manifest);
+    assert.deepEqual(f.reader.mock.calls, [[manifest.localDatasetId, manifest.captureId]]);
+    assert.deepEqual(f.createReader.mock.calls[0]?.[0], scope);
+    assert.ok(f.actions.length >= 2);
+    assert.ok(
+      f.actions.every((action) => action === AUTHORIZATION_ACTION_NAME.workspaceLocalDataView)
+    );
+  });
+
+  it('does not disclose capture existence or construct storage when view access is denied', async () => {
+    const f = make();
+    f.state.allowed = false;
+    await assert.rejects(f.useCase.readCapture(context, captureSelection), /ACCESS_DENIED/u);
+    assert.equal(f.createReader.mock.calls.length, 0);
+  });
+
+  it('rejects a capture result if view authorization is revoked during lookup', async () => {
+    const f = make();
+    f.reader.mockImplementation(async () => {
+      f.state.allowed = false;
+      return manifest;
+    });
+    await assert.rejects(f.useCase.readCapture(context, captureSelection), /ACCESS_DENIED/u);
+  });
+
+  it.each([
+    { ...manifest, localDatasetId: createLocalDatasetIdV1() },
+    { ...manifest, captureId: createLocalDataCaptureIdV1() },
+  ])('rejects a committed capture with a different identity: %j', async (other) => {
+    const f = make();
+    f.reader.mockResolvedValue(other);
+    await assert.rejects(f.useCase.readCapture(context, captureSelection), /GENERATION_MISMATCH/u);
+  });
+
+  it('distinguishes authorized capture absence from a failed storage read', async () => {
+    const f = make();
+    f.reader.mockResolvedValue(null);
+    assert.equal(await f.useCase.readCapture(context, captureSelection), null);
+    f.reader.mockRejectedValue(new Error('/private/native/database'));
+    await assert.rejects(
+      f.useCase.readCapture(context, captureSelection),
+      (error: unknown) =>
+        error instanceof Error &&
+        error.message.includes('READ_FAILED') &&
+        !error.message.includes('/private')
+    );
+  });
+
+  it('validates capture selectors and workspace scope before authorization or storage', async () => {
+    const f = make();
+    for (const invalid of [
+      {},
+      { ...captureSelection, captureId: manifest.generationId },
+      { ...captureSelection, localDatasetId: manifest.captureId },
+      { ...captureSelection, unexpected: true },
+    ]) {
+      await assert.rejects(
+        f.useCase.readCapture(context, invalid as typeof captureSelection),
+        /INVALID_INPUT/u
+      );
+    }
+    await assert.rejects(
+      f.useCase.readCapture({ ...context, scope: { ...scope, tenantId: '' } }, captureSelection),
+      /INVALID_INPUT/u
+    );
+    assert.equal(f.actions.length, 0);
+    assert.equal(f.createReader.mock.calls.length, 0);
+  });
+
+  it('owns the capture selector and manifest across the final authorization check', async () => {
+    const f = make();
+    const wanted = { ...captureSelection };
+    const borrowed = globalThis.structuredClone(manifest);
+    f.reader.mockImplementation(async () => {
+      f.state.beforeDecision = (): void => {
+        wanted.captureId = createLocalDataCaptureIdV1();
+        borrowed.captureId = createLocalDataCaptureIdV1();
+      };
+      return borrowed;
+    });
+    assert.deepEqual(await f.useCase.readCapture(context, wanted), manifest);
+    assert.notEqual(wanted.captureId, manifest.captureId);
+    assert.notEqual(borrowed.captureId, manifest.captureId);
   });
 });

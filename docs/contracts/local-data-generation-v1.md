@@ -117,15 +117,34 @@ Planning DB design `GH-3391-LOCAL-GENERATION-METADATA` governs this contract cut
 Its source admission records reconciliation of the earlier offline proposal;
 it does not claim that database admission preceded that proposal.
 
-| Field                        | Declaration                                                                                                                                                          |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rail / status                | `ReadLocalDataGenerationMetadata`, query, internally implemented                                                                                                     |
-| Bounded context / read model | Local Data / `LocalDataGenerationManifestV1`                                                                                                                         |
-| Application port             | `ILocalDataGenerationReader.readGeneration(context, selection)`                                                                                                      |
-| Adapter / activation         | Protected runtime, authorized application query and workspace DuckDB store; no public transport                                                                      |
-| Scope / authorization        | Explicit `WorkspaceGraphDraftScope`; current application authorization before lookup belongs to #3392/#3393                                                          |
-| Selection / consistency      | Exact dataset and generation IDs; immutable metadata; no latest-generation substitution or freshness inferred from a fingerprint                                     |
-| Negative proof               | Wrong ID families, missing/mismatched selection IDs, stale digests, unsafe counters, false FULL and terminal capture resurrection are rejected by the contract tests |
+| Field                        | Declaration                                                                                                                                                             |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Rail / status                | `ReadLocalDataGenerationMetadata`, query, internally implemented                                                                                                        |
+| Bounded context / read model | Local Data / `LocalDataGenerationManifestV1`                                                                                                                            |
+| Application port             | `ILocalDataGenerationReader.readGeneration(context, selection)` or `readCapture(context, { localDatasetId, captureId })`                                                |
+| Adapter / activation         | Protected runtime, authorized application query and workspace DuckDB store; no public transport                                                                         |
+| Scope / authorization        | Explicit `WorkspaceGraphDraftScope`; current application authorization before lookup belongs to #3392/#3393                                                             |
+| Selection / consistency      | Exact dataset plus generation ID, or dataset plus capture ID resolving that capture's committed generation; no latest-head substitution or fingerprint-based freshness  |
+| Negative proof               | Wrong ID families/scope, mismatched capture/generation, denial/revocation, adapter failure as absence, stale digests, unsafe counters and terminal capture resurrection |
+
+### Resolving an ambiguous capture outcome
+
+Native commit may succeed before a later connection-close or filesystem-identity
+check rejects its acknowledgement. The caller retains its dataset and capture
+IDs even when it never received the generation ID. The existing metadata query
+therefore accepts an exact capture selector through `readCapture`; this returns
+only that capture's committed immutable generation manifest, or authorized
+absence. An unpublished stage is not a committed generation. Storage corruption
+or lookup failure must not be reported as absence.
+
+This selector uses the same current `workspaceLocalDataView` authorization before
+lookup and before returning a result. IDs grant no permission, and the returned
+manifest must match both requested dataset and capture IDs. A cold authorized
+lookup creates no workspace database. No provider read, capture command retry,
+raw-row access, latest-head fallback or public transport is introduced.
+Reading an uncertain outcome does not change the lifecycle rule: an actual new
+acquisition attempt still needs a new capture ID. Design
+`GH-3394-CAPTURE-COMMIT-RECOVERY` records the bounded application correction.
 
 The metadata schemas and pure helpers implement value-object invariants.
 The internal query implements current view authorization and exact generation
