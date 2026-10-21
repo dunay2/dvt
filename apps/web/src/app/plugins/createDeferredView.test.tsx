@@ -1,11 +1,32 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { waitFor } from '@testing-library/dom';
 import React, { act, StrictMode, Suspense } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { createMemoryRouter, RouterProvider } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  createDbReadyDto,
+  createHealthzDto,
+  createReadyzDto,
+  createVersionDto,
+} from '../../capabilities/platform-health/testing/platformHealthHttpHarness';
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { createTestQueryClient, withTestQueryClient } from '../../testing/reactQueryHarness';
+import AppProviders from '../AppProviders';
+import { setBootstrapStepStatus, startBootstrapScreen } from '../bootstrap/appBootstrapScreen';
+import { createCompleteRouteBootstrapPresentation } from '../bootstrap/routeBootstrapContract';
+import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
+import { queryKeys } from '../queries/queryKeys';
+import { resetRootShellStores } from '../Root.test.support';
+import { createAppRoutes } from '../routes';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import { createDeferredView } from './createDeferredView';
 import { PluginContributionBoundary } from './PluginContributionBoundary';
+import * as pluginRegistry from './registry';
 
 type RouteModule = Readonly<{ default: React.ComponentType }>;
 
@@ -175,5 +196,215 @@ describe('createDeferredView', () => {
 
     expect(container.textContent).toBe('Route unavailable');
     expect(container.querySelector('[data-slot="plugin-route-module-loading"]')).toBeNull();
+  });
+});
+
+describe('deferred route bootstrap composition', () => {
+  const cssFailureMessage = 'Unable to preload CSS for /assets/RunsView-Dcs-ZTu0.css';
+  const readyPresentation = createCompleteRouteBootstrapPresentation('Deferred run route is ready');
+  let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
+  let router: ReturnType<typeof createMemoryRouter> | undefined;
+  let screen: HTMLElement;
+  let unexpectedRequests: string[];
+
+  function ReadyRunRoute(): JSX.Element {
+    usePublishedRouteBootstrap('monitoring.run-detail', readyPresentation);
+    return <main data-testid="deferred-run-ready">Deferred run route</main>;
+  }
+
+  async function mountDeferredRoute(
+    pendingModule: ReturnType<typeof createPendingModule>,
+    initialEntry = '/runs/bootstrap-proof'
+  ): Promise<void> {
+    const routeViews = pluginRegistry.getRouteViews();
+    const DeferredView = createDeferredView(() => pendingModule.promise);
+    expect(routeViews.some((view) => view.id === 'monitoring.run-detail')).toBe(true);
+    vi.spyOn(pluginRegistry, 'getRouteViews').mockReturnValue(
+      routeViews.map((view) =>
+        view.id === 'monitoring.run-detail' ? { ...view, component: DeferredView } : view
+      )
+    );
+    router = createMemoryRouter(createAppRoutes(), { initialEntries: [initialEntry] });
+    const queryClient = createTestQueryClient();
+    mounted = await withTestQueryClient(
+      <AppProviders
+        queryClient={queryClient}
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort: {
+            loadCapabilities: vi.fn().mockResolvedValue({
+              apiVersion: '1.0.0',
+              minFrontendVersion: '1.0.0',
+              plugins: {},
+            }),
+          },
+        }}
+      >
+        <RouterProvider router={router} />
+      </AppProviders>,
+      queryClient
+    );
+  }
+
+  beforeEach(() => {
+    localStorage.clear();
+    resetRootShellStores();
+    useApplicationLanguageStore.setState({ language: 'en' });
+    const indexHtml = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../../../index.html'),
+      'utf8'
+    );
+    const sourceScreen = new DOMParser()
+      .parseFromString(indexHtml, 'text/html')
+      .getElementById('app-loading-screen');
+    if (!sourceScreen) throw new Error('Production startup DOM is missing');
+    screen = document.importNode(sourceScreen, true);
+    document.body.appendChild(screen);
+    startBootstrapScreen();
+    setBootstrapStepStatus({ step: 'hydrate', status: 'complete' });
+    unexpectedRequests = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL) => {
+        const pathname = new URL(String(input), 'http://localhost').pathname;
+        const workspace = {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          projectName: 'Analytics',
+          environmentId: 'dev',
+        };
+        if (pathname === '/session') {
+          return Response.json({ authenticated: true, permissions: {} });
+        }
+        if (pathname === '/workspace/context') {
+          return Response.json({
+            defaultWorkspace: workspace,
+            availableWorkspaces: [workspace],
+            deploymentScope: { targetAdapter: 'temporal', availableTargetAdapters: ['temporal'] },
+          });
+        }
+        if (pathname === '/healthz') return Response.json(createHealthzDto());
+        if (pathname === '/readyz') return Response.json(createReadyzDto());
+        if (pathname === '/version') return Response.json(createVersionDto());
+        if (pathname === '/db/ready') return Response.json(createDbReadyDto());
+        unexpectedRequests.push(pathname);
+        throw new Error(`Unexpected request in route composition proof: ${pathname}`);
+      })
+    );
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+
+  afterEach(async () => {
+    await mounted?.cleanup();
+    router?.dispose();
+    mounted = undefined;
+    router = undefined;
+    screen?.remove();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    expect(unexpectedRequests).toEqual([]);
+  });
+
+  it('keeps the actual startup screen pending until the imported route publishes readiness', async () => {
+    const pendingModule = createPendingModule();
+    await mountDeferredRoute(pendingModule);
+
+    await waitFor(() => {
+      expect(
+        mounted?.container.querySelector('[data-slot="plugin-route-module-loading"]')
+      ).not.toBeNull();
+      expect(
+        screen.querySelector('[data-bootstrap-step="health"]')?.getAttribute('data-status')
+      ).toBe('complete');
+      expect(screen.textContent).toContain('4/5 startup checks settled');
+    });
+    expect(screen.dataset.state).toBe('loading');
+    expect(screen.querySelector('[data-bootstrap-step="route"]')?.getAttribute('data-status')).toBe(
+      'pending'
+    );
+
+    await act(async () => {
+      pendingModule.resolve({ default: ReadyRunRoute });
+      await pendingModule.promise;
+    });
+
+    await waitFor(() => {
+      expect(screen.dataset.state).toBe('complete');
+      expect(mounted?.container.querySelector('[data-testid="deferred-run-ready"]')).not.toBeNull();
+    });
+    expect(screen.querySelector('[data-bootstrap-step="route"]')?.textContent).toContain(
+      readyPresentation.detail
+    );
+    expect(mounted?.container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
+  });
+
+  it('preserves a rejected CSS import as a visible startup error through later capability settlement', async () => {
+    const pendingModule = createPendingModule();
+    await mountDeferredRoute(pendingModule);
+    await waitFor(() => {
+      expect(
+        mounted?.container.querySelector('[data-slot="plugin-route-module-loading"]')
+      ).not.toBeNull();
+    });
+
+    await act(async () => {
+      pendingModule.reject(new Error(cssFailureMessage));
+      await pendingModule.promise.catch(() => undefined);
+    });
+
+    await waitFor(() => expect(screen.dataset.state).toBe('error'));
+    expect(screen.querySelector('#app-loading-message')?.textContent).toBe(cssFailureMessage);
+    expect(screen.querySelector('[data-bootstrap-step="route"]')?.getAttribute('data-status')).toBe(
+      'error'
+    );
+
+    await act(async () => {
+      mounted?.queryClient.setQueryData(queryKeys.shell.capabilities(), {
+        apiVersion: '1.0.0',
+        minFrontendVersion: '1.0.1',
+        plugins: {},
+      });
+    });
+
+    expect(screen.dataset.state).toBe('error');
+    expect(screen.querySelector('#app-loading-message')?.textContent).toBe(cssFailureMessage);
+    expect(
+      mounted?.container.querySelector('[data-slot="plugin-route-module-loading"]')
+    ).toBeNull();
+  });
+
+  it('exposes the original CSS error and recovery controls when an import fails after startup', async () => {
+    const pendingModule = createPendingModule();
+    await mountDeferredRoute(pendingModule, '/plugins');
+    await waitFor(() => expect(document.getElementById('app-loading-screen')).toBeNull());
+
+    await act(async () => {
+      await router?.navigate('/runs/bootstrap-proof');
+    });
+    await waitFor(() => {
+      expect(
+        mounted?.container.querySelector('[data-slot="plugin-route-module-loading"]')
+      ).not.toBeNull();
+    });
+    await act(async () => {
+      pendingModule.reject(new Error(cssFailureMessage));
+      await pendingModule.promise.catch(() => undefined);
+    });
+
+    await waitFor(() => {
+      expect(
+        mounted?.container.querySelector('[data-slot="app-route-error-boundary"]')?.textContent
+      ).toContain(cssFailureMessage);
+    });
+    expect(mounted?.container.querySelector('[data-slot="app-route-error-reload"]')).toBeInstanceOf(
+      HTMLButtonElement
+    );
+    expect(
+      mounted?.container.querySelector('[data-slot="app-route-error-home"]')?.getAttribute('href')
+    ).toBe('/');
+    expect(mounted?.container.querySelector('[data-slot="app-shell-frame"]')).not.toBeNull();
+    expect(
+      mounted?.container.querySelector('[data-slot="plugin-route-module-loading"]')
+    ).toBeNull();
   });
 });

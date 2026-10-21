@@ -9,13 +9,43 @@ import {
 type NetworkEvent = Readonly<{
   kind: string;
   sourceId: number;
+  dependencySourceId?: number;
   time?: string;
   phase?: number;
   netError?: number;
+  statusCode?: number;
   method?: string;
   origin?: string;
   route?: string;
 }>;
+
+export function projectChromiumProcessLog(text: string | undefined):
+  | Readonly<{ state: 'unavailable' }>
+  | Readonly<{
+      state: 'observed';
+      networkServiceRestarts: readonly Readonly<{
+        processId: number;
+        threadId: number;
+        time: string;
+      }>[];
+    }> {
+  if (text === undefined) return { state: 'unavailable' };
+  const networkServiceRestarts = text.split(/\r?\n/u).flatMap((line) => {
+    const match =
+      /^\[(\d+):(\d+):(\d{4}\/\d{6}\.\d{6}):ERROR:(?:[A-Za-z0-9_./\\-]*[/\\])?network_service_instance_impl\.cc(?::\d+|\(\d+\))\] Network service crashed or was terminated, restarting service\.$/u.exec(
+        line
+      );
+    if (
+      match === null ||
+      typeof match[3] !== 'string' ||
+      !Number.isSafeInteger(Number(match[1])) ||
+      !Number.isSafeInteger(Number(match[2]))
+    )
+      return [];
+    return [{ processId: Number(match[1]), threadId: Number(match[2]), time: match[3] }];
+  });
+  return { state: 'observed', networkServiceRestarts };
+}
 
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -39,31 +69,47 @@ function safeRoute(value: unknown): Readonly<{ origin: string; route: string }> 
       '/workspace/context',
       '/workspace/graph/draft',
     ];
-    const route = exact.includes(url.pathname)
-      ? url.pathname
-      : url.pathname.startsWith('/workspace/files/')
-        ? '/workspace/files/:path'
-        : url.pathname.startsWith('/workspace/dbt/')
-          ? '/workspace/dbt/:operation'
-          : '/other';
+    const compiledCss = /^\/assets\/(?:index|Canvas|RunsView)-[A-Za-z0-9_-]{8}\.css$/u.test(
+      url.pathname
+    );
+    const route =
+      exact.includes(url.pathname) || compiledCss
+        ? url.pathname
+        : url.pathname.startsWith('/workspace/files/')
+          ? '/workspace/files/:path'
+          : url.pathname.startsWith('/workspace/dbt/')
+            ? '/workspace/dbt/:operation'
+            : '/other';
     return { origin: url.origin, route };
   } catch {
     return null;
   }
 }
 
+function readResponseStatus(kind: string, headers: unknown): number | undefined {
+  if (
+    kind !== 'HTTP_TRANSACTION_READ_RESPONSE_HEADERS' ||
+    !Array.isArray(headers) ||
+    typeof headers[0] !== 'string'
+  )
+    return;
+  const status = /^HTTP\/(?:1\.[01]|2|3) ([1-5]\d{2})(?: |$)/u.exec(headers[0]);
+  return status ? Number(status[1]) : undefined;
+}
+
 export function projectChromiumNetworkLog(
   value: unknown
-): Readonly<{ schemaVersion: 1; events: readonly NetworkEvent[] }> {
+): Readonly<{ schemaVersion: 1; events: readonly NetworkEvent[]; timeTickOffset?: string }> {
   const input = record(value);
-  const kinds = record(record(input?.constants)?.logEventTypes);
+  const constants = record(input?.constants);
+  const kinds = record(constants?.logEventTypes);
   if (kinds === null || !Array.isArray(input?.events) || input.events.length === 0)
     throw new Error('Invalid Chromium network log');
   const names = new Map(
     Object.entries(kinds).flatMap(([kind, code]) =>
       typeof code === 'number' &&
       Number.isSafeInteger(code) &&
-      /^(CORS_|URL_REQUEST_|HTTP_TRANSACTION_|SOCKET_|TCP_CONNECT|SSL_CONNECT)[A-Z0-9_]*$/u.test(
+      /^(CORS_|URL_REQUEST_|HTTP_TRANSACTION_|HTTP_STREAM_|CONNECT_JOB_|TRANSPORT_CONNECT_JOB_|SOCKET_|TCP_CONNECT|SSL_CONNECT)[A-Z0-9_]*$/u.test(
         kind
       )
         ? [[code, kind] as const]
@@ -90,9 +136,14 @@ export function projectChromiumNetworkLog(
         ? params.method
         : undefined;
     const route = safeRoute(params?.url);
+    const statusCode = readResponseStatus(kind, params?.headers);
+    const dependency = record(params?.source_dependency)?.id;
     events.push({
       kind,
       sourceId: source.id,
+      ...(typeof dependency === 'number' && Number.isSafeInteger(dependency) && dependency >= 0
+        ? { dependencySourceId: dependency }
+        : {}),
       ...(typeof event.time === 'string' && /^\d+(?:\.\d+)?$/u.test(event.time)
         ? { time: event.time }
         : {}),
@@ -103,10 +154,20 @@ export function projectChromiumNetworkLog(
         ? { netError: params.net_error }
         : {}),
       ...(method === undefined ? {} : { method }),
+      ...(statusCode === undefined ? {} : { statusCode }),
       ...(route ?? {}),
     });
   }
-  return { schemaVersion: 1, events };
+  const offset = constants?.timeTickOffset;
+  const timeTickOffset =
+    typeof offset === 'number' && Number.isSafeInteger(offset) ? String(offset) : offset;
+  return {
+    schemaVersion: 1,
+    events,
+    ...(typeof timeTickOffset === 'string' && /^-?\d+$/u.test(timeTickOffset)
+      ? { timeTickOffset }
+      : {}),
+  };
 }
 
 export function projectChromiumNetworkCapture(

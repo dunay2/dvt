@@ -90,7 +90,7 @@ after execution. No fake adapter, source substitution or assertion relaxation.
 
 ## Direct process launch for creation evidence
 
-Open CodeQL alerts 48/49 identify shell execution in the existing API native-mode
+The previous CodeQL alerts 48/49 identified shell execution in the API native-mode
 probe and bootstrap test. The plan, process-order diagrams and preservation matrix
 were recorded before edits in
 [#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6315748620), design
@@ -117,10 +117,43 @@ test/infrastructure/DuckDbFileCreationPolicy.test.ts --maxWorkers 1`:
   skips**, 185 ms. It does not establish Windows ACL or POSIX-native evidence.
 
 These are real unchanged behavioral probes, not new tests mirroring the launch
-implementation. The existing hosted CodeQL findings are the static failing
-evidence. Local process proof is not hosted scanner clearance: the notices stay
-open until an exact-head analysis establishes their resolution. The earlier
-dependency-audit failure and c489 browser failure are not cleared by this cut.
+implementation. The existing hosted CodeQL findings were the static failing
+evidence; local process proof alone did not establish scanner clearance.
+
+The subsequent hosted analysis **1996420810**, associated with published Capture
+`2d200099ff87a7eba3378825e961a4c7a9f5f2b9` through its exact PR merge commit
+`1ef9cfe723d3e7c929bcb458f94ef377e14c4714`, reports zero JavaScript/TypeScript
+results. Notices 48/49 were fixed for that PR merge and all three review threads
+were resolved with their execution evidence. The exact-head result, including
+the still-failed browser acceptance, is recorded in
+[#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6316480846).
+This is historical clearance for those notices, not scanner acceptance of a new
+unpublished candidate. The earlier dependency-audit failure remains failed.
+
+## Reconciliation with accepted session and native lifetimes
+
+The next ordinary reconciliation incorporates main
+`8f3dbfee28287420ae7b9f5cf8bf856984246cff`, the accepted #3689 squash. Its tree
+exactly matches candidate `0f9e01191273a661cd6569d14a5700a68be0abb8`, whose seven
+required contexts passed. It includes current-route publication, neutral session
+recovery, response-body failure preservation and owned native process cleanup.
+The admitted convergence plan and source-attribution matrix precede this merge
+in [#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6317741777).
+
+That accepted head executed 5,599 passing Vitest cases across four suites and
+197 passing browser cases (128 controlled, 68 available LIVE, one unavailable).
+Those are attributed executions, not fresh Capture-native proof or disjoint
+Vitest identities. The passing 22-case group also recorded a Chromium
+network-service restart signal, so that signal alone does not diagnose the
+historical session redirections. #3604 remains open; no retry, browser pin or
+speculative transport remedy is introduced by this reconciliation.
+
+Capture API and private-creation probes retain their already-tested source;
+Web and native evidence owners come from accepted main. Source identity, the
+existing focused query/composition checks and exact-base/head governance must be
+verified on the composed candidate. New hosted mandatory checks remain required
+before merge. A passing predecessor or preserved source does not convert the
+previous Capture browser failure or full local prepush into a pass.
 
 Owner: [#3394](https://github.com/dunay2/dvt/issues/3394), under #3388.
 One review surface: #3680, incorporating the two unique #3679 commits.

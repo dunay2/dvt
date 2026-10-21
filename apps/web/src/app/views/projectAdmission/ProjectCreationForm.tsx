@@ -1,242 +1,16 @@
-/** Owned concern: share governed project admission state and creation presentation. */
+/** Owned concern: present project creation using its admission binding. */
 import { FolderPlus, LoaderCircle } from 'lucide-react';
-import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 
-import {
-  createProjectOnboardingService,
-  type CreateProjectResponse,
-  type EffectiveProjectWorkspaceContext,
-  type ProjectDescriptor,
-  type ProjectOnboardingCatalog,
-  type ProjectOnboardingService,
-} from '../../services/projectOnboarding/projectOnboardingService';
-import { ApiError } from '../../services/api/createApiClient';
-import {
-  getApplicationLanguage,
-  useApplicationLanguageStore,
-} from '../../stores/applicationLanguageStore';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { resolveProjectOnboardingCopy, type ProjectOnboardingCopy } from '../projectOnboardingCopy';
-
-export type ProjectCatalogState =
-  | { readonly kind: 'loading' }
-  | { readonly kind: 'ready'; readonly catalog: ProjectOnboardingCatalog }
-  | { readonly kind: 'failed'; readonly message: string };
-
-type SubmissionState = 'idle' | 'submitting' | 'created';
-
-type ProjectAdmissionControllerOptions = Readonly<{
-  service?: ProjectOnboardingService;
-  onProjectCreated: (response: CreateProjectResponse) => Promise<void> | void;
-  onProjectSelected?: (selection: EffectiveProjectWorkspaceContext) => Promise<void> | void;
-}>;
-
-function readableErrorMessage(
-  error: unknown,
-  fallback: string,
-  projectCreationCopy?: ProjectOnboardingCopy
-): string {
-  if (error instanceof ApiError && projectCreationCopy !== undefined) {
-    let reason: string | null = null;
-    if (error.responseBody != null && typeof error.responseBody === 'object') {
-      const envelope = error.responseBody as { readonly error?: unknown };
-      if (envelope.error != null && typeof envelope.error === 'object') {
-        const candidateReason = (envelope.error as { readonly reason?: unknown }).reason;
-        reason = typeof candidateReason === 'string' ? candidateReason : null;
-      }
-    }
-
-    switch (reason) {
-      case 'duplicate_project_name':
-        return projectCreationCopy.duplicateProjectNameMessage;
-      case 'idempotency_conflict':
-        return projectCreationCopy.projectCreationConflictMessage;
-      default:
-        return projectCreationCopy.projectCreationFailureMessage;
-    }
-  }
-
-  if (error instanceof Error && error.message.length > 0) {
-    return error.message;
-  }
-
-  return fallback;
-}
-
-function resolveInitialTenantId(catalog: ProjectOnboardingCatalog): string {
-  return (
-    catalog.tenants.find((tenant) => tenant.canCreateProject)?.tenantId ??
-    catalog.tenants[0]?.tenantId ??
-    ''
-  );
-}
-
-function resolveDefaultEnvironment(project: ProjectDescriptor): string {
-  return project.environmentIds[0] ?? 'dev';
-}
-
-export function useProjectAdmissionController({
-  service,
-  onProjectCreated,
-  onProjectSelected,
-}: ProjectAdmissionControllerOptions) {
-  const projectOnboardingService = useMemo(
-    () => service ?? createProjectOnboardingService(),
-    [service]
-  );
-  const language = useApplicationLanguageStore((state) => state.language);
-  const copy = resolveProjectOnboardingCopy(language);
-  const [catalogState, setCatalogState] = useState<ProjectCatalogState>({ kind: 'loading' });
-  const [selectedTenantId, setSelectedTenantId] = useState('');
-  const [projectName, setProjectName] = useState('');
-  const [submissionState, setSubmissionState] = useState<SubmissionState>('idle');
-  const [formError, setFormError] = useState<string | null>(null);
-  const submissionLockedRef = useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    setCatalogState({ kind: 'loading' });
-    setFormError(null);
-
-    projectOnboardingService
-      .listProjects()
-      .then((catalog) => {
-        if (cancelled) {
-          return;
-        }
-
-        setCatalogState({ kind: 'ready', catalog });
-        setSelectedTenantId(resolveInitialTenantId(catalog));
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setCatalogState({
-            kind: 'failed',
-            message: readableErrorMessage(
-              error,
-              resolveProjectOnboardingCopy(getApplicationLanguage()).failureMessage
-            ),
-          });
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [projectOnboardingService]);
-
-  async function refreshCatalog(): Promise<void> {
-    setCatalogState({ kind: 'loading' });
-    setFormError(null);
-    try {
-      const catalog = await projectOnboardingService.listProjects();
-      setCatalogState({ kind: 'ready', catalog });
-      setSelectedTenantId(resolveInitialTenantId(catalog));
-    } catch (error) {
-      setCatalogState({
-        kind: 'failed',
-        message: readableErrorMessage(error, copy.failureMessage),
-      });
-    }
-  }
-
-  async function createProject(event: FormEvent<HTMLFormElement>): Promise<void> {
-    event.preventDefault();
-    const trimmedName = projectName.trim();
-    if (
-      submissionLockedRef.current ||
-      submissionState !== 'idle' ||
-      catalogState.kind !== 'ready' ||
-      trimmedName.length === 0 ||
-      selectedTenantId.length === 0
-    ) {
-      return;
-    }
-
-    submissionLockedRef.current = true;
-    setSubmissionState('submitting');
-    setFormError(null);
-    let response: CreateProjectResponse;
-    try {
-      response = await projectOnboardingService.createProject({
-        tenantId: selectedTenantId,
-        name: trimmedName,
-      });
-    } catch (error) {
-      setFormError(readableErrorMessage(error, copy.projectCreationFailureMessage, copy));
-      submissionLockedRef.current = false;
-      setSubmissionState('idle');
-      return;
-    }
-
-    setSubmissionState('created');
-    try {
-      await onProjectCreated(response);
-    } catch {
-      setFormError(copy.projectActivationFailureMessage);
-    } finally {
-      submissionLockedRef.current = false;
-    }
-  }
-
-  async function selectProject(project: ProjectDescriptor): Promise<void> {
-    if (!onProjectSelected || submissionLockedRef.current) {
-      return;
-    }
-
-    submissionLockedRef.current = true;
-    setFormError(null);
-    setSubmissionState('submitting');
-    try {
-      await onProjectSelected({
-        tenantId: project.tenantId,
-        projectId: project.projectId,
-        projectName: project.name,
-        environmentId: resolveDefaultEnvironment(project),
-      });
-    } catch (error) {
-      setFormError(readableErrorMessage(error, copy.failureMessage));
-    } finally {
-      submissionLockedRef.current = false;
-      setSubmissionState('idle');
-    }
-  }
-
-  const catalog = catalogState.kind === 'ready' ? catalogState.catalog : null;
-  const selectedTenant = catalog?.tenants.find((tenant) => tenant.tenantId === selectedTenantId);
-  const hasMultipleOrganizations = (catalog?.tenants.length ?? 0) > 1;
-  const canCreateProject = selectedTenant?.canCreateProject === true;
-  const canSubmit =
-    catalogState.kind === 'ready' &&
-    canCreateProject &&
-    projectName.trim().length > 0 &&
-    submissionState === 'idle';
-
-  return {
-    catalog,
-    catalogState,
-    copy,
-    selectedTenantId,
-    setSelectedTenantId,
-    projectName,
-    setProjectName,
-    submissionState,
-    formError,
-    hasMultipleOrganizations,
-    canCreateProject,
-    canSubmit,
-    refreshCatalog,
-    createProject,
-    selectProject,
-  } as const;
-}
-
-export type ProjectAdmissionController = ReturnType<typeof useProjectAdmissionController>;
+import type { ProjectOnboardingCopy } from '../projectOnboardingCopy';
+import type { ProjectAdmissionBinding } from './useProjectAdmissionController';
+import styles from './ProjectCreationForm.module.css';
 
 type ProjectCreationFormProps = Readonly<{
-  controller: ProjectAdmissionController;
+  controller: Omit<ProjectAdmissionBinding, 'catalog' | 'refreshCatalog' | 'selectProject'>;
   copy?: ProjectOnboardingCopy;
   className?: string;
   contentClassName?: string;
@@ -249,15 +23,11 @@ type ProjectCreationFormProps = Readonly<{
   renderActions?: (actions: ReactNode) => ReactNode;
 }>;
 
-function resolveTenantDisplayName(tenant: ProjectOnboardingCatalog['tenants'][number]): string {
-  return tenant.tenantId;
-}
-
 export function ProjectCreationForm({
   controller,
   copy = controller.copy,
   className,
-  contentClassName = 'space-y-4',
+  contentClassName = styles.fields,
   dataSlot = 'project-onboarding-form',
   showCatalogStatus = false,
   showProjectNameHelp = false,
@@ -271,15 +41,11 @@ export function ProjectCreationForm({
   const actions = (
     <>
       {leadingAction}
-      <Button
-        className="disabled:border disabled:border-(--border-default) disabled:bg-(--surface-elevated) disabled:text-(--text-disabled)"
-        disabled={!controller.canSubmit}
-        type="submit"
-      >
+      <Button className={styles.submit} disabled={!controller.canSubmit} type="submit">
         {controller.submissionState === 'submitting' ? (
-          <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+          <LoaderCircle className={styles.spinner} aria-hidden="true" />
         ) : (
-          <FolderPlus className="size-4" aria-hidden="true" />
+          <FolderPlus className={styles.icon} aria-hidden="true" />
         )}
         {copy.createProjectLabel}
       </Button>
@@ -293,30 +59,25 @@ export function ProjectCreationForm({
       onSubmit={(event) => void controller.createProject(event)}
     >
       <div className={contentClassName} data-slot="project-creation-fields">
-        {showTitle ? (
-          <h2 className="text-sm font-semibold text-(--text-strong)">{copy.createProjectTitle}</h2>
-        ) : null}
+        {showTitle ? <h2 className={styles.title}>{copy.createProjectTitle}</h2> : null}
         {showCatalogStatus && controller.catalogState.kind === 'loading' ? (
-          <div className="flex items-center gap-2 text-sm text-(--text-muted)" role="status">
-            <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+          <div className={styles.status} role="status">
+            <LoaderCircle className={styles.spinner} aria-hidden="true" />
             {copy.loadingMessage}
           </div>
         ) : null}
         {showCatalogStatus && controller.catalogState.kind === 'failed' ? (
-          <div
-            className="rounded-md border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-100"
-            role="alert"
-          >
+          <div className={styles.error} role="alert">
             {controller.catalogState.message}
           </div>
         ) : null}
         {controller.catalogState.kind === 'ready' ? (
           <>
             {controller.hasMultipleOrganizations ? (
-              <Label className="grid gap-2 text-(--text-default)">
+              <Label className={styles.field}>
                 <span>{copy.organizationLabel}</span>
                 <select
-                  className="h-9 w-full rounded-md border border-(--border-default) bg-(--surface-route) px-3 text-sm text-(--text-default) outline-none focus:border-(--focus-ring)"
+                  className={styles.organization}
                   name="tenantId"
                   disabled={controller.submissionState !== 'idle'}
                   onChange={(event) => controller.setSelectedTenantId(event.target.value)}
@@ -324,18 +85,18 @@ export function ProjectCreationForm({
                 >
                   {controller.catalogState.catalog.tenants.map((tenant) => (
                     <option key={tenant.tenantId} value={tenant.tenantId}>
-                      {resolveTenantDisplayName(tenant)}
+                      {tenant.tenantId}
                     </option>
                   ))}
                 </select>
               </Label>
             ) : null}
-            <div className="grid gap-2 text-(--text-default)">
+            <div className={styles.field}>
               <Label htmlFor={projectNameInputId}>{copy.projectNameLabel}</Label>
               <Input
                 aria-describedby={showProjectNameHelp ? projectNameHelpId : undefined}
                 autoFocus={autoFocusProjectName}
-                className="bg-(--surface-route) text-(--text-default) placeholder:text-(--text-disabled)"
+                className={styles.input}
                 id={projectNameInputId}
                 name="projectName"
                 disabled={controller.submissionState !== 'idle'}
@@ -344,28 +105,18 @@ export function ProjectCreationForm({
                 value={controller.projectName}
               />
               {showProjectNameHelp ? (
-                <span
-                  className="text-xs leading-5 font-normal text-(--text-muted)"
-                  data-slot="project-name-help"
-                  id={projectNameHelpId}
-                >
+                <span className={styles.help} data-slot="project-name-help" id={projectNameHelpId}>
                   {copy.projectNameHelpText}
                 </span>
               ) : null}
             </div>
             {!controller.canCreateProject ? (
-              <div
-                className="rounded-md border border-amber-500/40 bg-amber-950/30 px-3 py-2 text-sm text-amber-100"
-                role="alert"
-              >
+              <div className={styles.warning} role="alert">
                 {copy.creationUnavailableMessage}
               </div>
             ) : null}
             {controller.formError ? (
-              <div
-                className="rounded-md border border-red-500/40 bg-red-950/30 px-3 py-2 text-sm text-red-100"
-                role="alert"
-              >
+              <div className={styles.error} role="alert">
                 {controller.formError}
               </div>
             ) : null}
@@ -376,10 +127,7 @@ export function ProjectCreationForm({
         renderActions ? (
           renderActions(actions)
         ) : (
-          <div
-            className="mt-4 flex flex-wrap justify-end gap-2"
-            data-slot="project-creation-actions"
-          >
+          <div className={styles.actions} data-slot="project-creation-actions">
             {actions}
           </div>
         )

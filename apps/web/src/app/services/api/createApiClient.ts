@@ -3,7 +3,8 @@
 import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
 import { canRefreshApiBearerToken, resolveApiBearerTokenForRequest } from './apiAuthConfig';
 
-export type ApiErrorCategory = 'network' | 'unauthorized' | 'forbidden' | 'client' | 'server';
+export type ApiErrorCategory =
+  'network' | 'response' | 'unauthorized' | 'forbidden' | 'client' | 'server';
 
 export class ApiError extends Error {
   readonly endpoint: string;
@@ -115,19 +116,11 @@ function categorizeStatus(statusCode: number | null): ApiErrorCategory {
 async function parseBody(response: Response): Promise<unknown> {
   const contentType = response.headers.get('content-type');
   if (contentType?.includes('application/json')) {
-    try {
-      return await response.json();
-    } catch {
-      return null;
-    }
+    return await response.json();
   }
 
-  try {
-    const textBody = await response.text();
-    return textBody.length > 0 ? textBody : null;
-  } catch {
-    return null;
-  }
+  const textBody = await response.text();
+  return textBody.length > 0 ? textBody : null;
 }
 
 function toApiError(params: {
@@ -250,19 +243,34 @@ export function createApiClient(baseUrl = resolveApiBaseUrl()): ApiClient {
   ): Promise<TResponse> {
     const response = await requestRaw(endpoint, init);
 
-    if (!response.ok) {
-      throw toApiError({
-        endpoint,
-        statusCode: response.status,
-        responseBody: await parseBody(response),
-      });
-    }
-
     if (response.status === 204) {
       return undefined as TResponse;
     }
 
-    const parsedBody = await parseBody(response);
+    let parsedBody: unknown;
+    try {
+      parsedBody = await parseBody(response);
+    } catch (cause) {
+      if (!response.ok) {
+        throw toApiError({ endpoint, statusCode: response.status, cause });
+      }
+      throw new ApiError({
+        message: `Response from ${endpoint} could not be read (${response.status})`,
+        endpoint,
+        statusCode: response.status,
+        category: 'response',
+        cause,
+      });
+    }
+
+    if (!response.ok) {
+      throw toApiError({
+        endpoint,
+        statusCode: response.status,
+        responseBody: parsedBody,
+      });
+    }
+
     return parsedBody as TResponse;
   }
 

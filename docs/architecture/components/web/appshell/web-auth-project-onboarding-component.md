@@ -27,22 +27,44 @@ authenticated users who have tenant scope but no effective project/workspace.
 
 ## Public API
 
-| API                                   | Kind               | Owned concern                                                                  |
-| ------------------------------------- | ------------------ | ------------------------------------------------------------------------------ |
-| `/login`                              | public route       | Public recovery surface for unauthenticated product navigation.                |
-| `RecoverLocalApiBearerSession`        | command            | Dev-only local session recovery through the API auth component.                |
-| `AuthRouteGate`                       | route gate         | Admit protected shell routes only after session and workspace context resolve. |
-| `resolveProtectedRouteSessionContext` | query orchestrator | Query `/session`, then `/workspace/context`, then update browser projections.  |
-| `classifyProtectedRouteSessionError`  | mapper             | Convert API failures to source-owned route recovery vocabulary.                |
-| `sessionStore.setSessionContext`      | projection command | Store granted workspace scope as projection, not independent authority.        |
-| `useAuthorizationStore`               | projection command | Store granted UI permissions from the authenticated session profile.           |
+| API                                              | Kind               | Owned concern                                                                  |
+| ------------------------------------------------ | ------------------ | ------------------------------------------------------------------------------ |
+| `/login`                                         | public route       | Public recovery surface for unauthenticated product navigation.                |
+| `RecoverLocalApiBearerSession`                   | command            | Dev-only local session recovery through the API auth component.                |
+| `AuthRouteGate`                                  | route gate         | Admit protected shell routes only after session and workspace context resolve. |
+| `resolveProtectedRouteSessionContext`            | query orchestrator | Query `/session`, then `/workspace/context`, then update browser projections.  |
+| `classifyProtectedRouteSessionError`             | mapper             | Convert API failures to source-owned route recovery vocabulary.                |
+| `sessionStore.setWorkspaceScopeSelectionContext` | projection command | Store granted workspace scope as projection, not independent authority.        |
+| `useAuthorizationStore`                          | projection command | Store granted UI permissions from the authenticated session profile.           |
 
 ## Invariants
 
 - No product route may render tenant/project graph data before authentication
   and granted workspace context resolve.
+- Each requested pathname, search and hash owns its admission lifetime. Changing
+  that identity starts a fresh checking boundary before protected child effects
+  run; navigating to the identical identity retains the current boundary.
 - `/session` resolves before `/workspace/context`; workspace context is scoped by
   the authenticated principal.
+- Recovery distinguishes recognized denials and a missing session route from
+  `session_check_failed`. The latter includes unknown query, validation and local
+  errors without claiming a transport cause or exposing raw exception data.
+- The session resolver owns publication eligibility across all of its callers,
+  including project activation. Only the latest non-cancelled attempt may update
+  browser workspace and permission projections. A newer denial also supersedes
+  older successes; transport cancellation is not the publication guarantee.
+- Publication is admitted once for the complete synchronous workspace/permission
+  snapshot. A subscriber starting a new query during publication cannot leave
+  that snapshot half-written. The receipt is checked again afterward, so the
+  superseded caller cannot continue route admission or project activation.
+- Route and project-admission lifetimes invalidate their pending queries on
+  cleanup. A cancelled or superseded attempt cannot admit route children or
+  select a workspace. Callers recheck the resolver's currentness receipt before
+  continuing after an asynchronous boundary.
+- Project creation and browser activation are distinct: a server-created project
+  remains real after its initiating view closes, but its late response must not
+  activate a workspace in the abandoned view. Lifetime is captured before the
+  creation request, not when its response arrives.
 - sessionStore is a projection of backend-granted scope; it is not
   the authority for tenant, project, environment, or authorization.
 - Browser `localStorage` and `dvt-web-session` may hydrate selector convenience
@@ -62,7 +84,7 @@ stateDiagram-v2
   [*] --> SessionChecking: protected route
   PublicLogin --> SessionChecking: product login or local dev-session recovery completed with return route
   SessionChecking --> WorkspaceContextChecking: GetSessionProfile succeeds
-  SessionChecking --> PublicLogin: unauthenticated | transport_error | runtime_unavailable
+  SessionChecking --> PublicLogin: unauthenticated | session_check_failed | runtime_unavailable
   WorkspaceContextChecking --> ProjectOnboarding: no granted project or manifest empty
   WorkspaceContextChecking --> WorkspaceDenied: workspace_context_not_granted
   WorkspaceContextChecking --> WorkspaceOpen: granted tenant/project/workspace
@@ -92,6 +114,31 @@ sequenceDiagram
   Gate-->>Route: render shell children
   Route->>Canvas: load workspace manifest and draft only after admission
 ```
+
+### Publication Ordering
+
+```mermaid
+sequenceDiagram
+  participant Old as Previous route or activation
+  participant Current as Current route or activation
+  participant Resolver as Session resolver
+  participant Projection as Browser projections
+  Old->>Resolver: Resolve A with caller lifetime
+  Current->>Resolver: Resolve B, superseding A
+  Resolver->>Projection: Publish B only while B remains current
+  Old-->>Resolver: A completes late, even if transport ignored abort
+  Resolver-->>Old: Discarded, without publication or route admission
+```
+
+This is a publication policy inside the existing application service, not a new
+session store, authentication authority, global lifecycle manager, or retry
+mechanism. Genuine current failures retain the recovery vocabulary above.
+
+The synchronous pair guarantees completion of an admitted publication, not a
+general atomic transaction across two stores. Existing query consumers observe
+workspace changes through the session context port, after the permission
+projection has been written. Cross-store observation requirements must be proven
+at the consuming port before replacing this publication boundary.
 
 ## Consumers
 
@@ -129,6 +176,9 @@ sequenceDiagram
   boundary instead of a route-level transaction script.
 - Pattern improved: browser stores are projections, matching Fowler's
   separation between domain authority and presentation state.
+- Pattern improved: the Application Service owns asynchronous publication
+  ordering; route and project-admission controllers supply their lifetime and
+  passive views do not decide freshness or grant authority.
 - Anti-pattern resisted: Active Record style route components that fetch,
   authorize, mutate browser state, and decide product seed data inline.
 - Anti-pattern resisted: fixture data promoted to product truth.

@@ -12,7 +12,8 @@ import { dirname, resolve } from 'node:path';
 import ts from 'typescript';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { WEB_CYPRESS_SPECS } from '../../cypress.changed';
+import { WEB_CYPRESS_NIGHTLY_SPECS, WEB_CYPRESS_SPECS } from '../../cypress.changed';
+import { WEB_CYPRESS_CATALOG, WEB_CYPRESS_CATALOG_PATH } from '../../cypress.catalog';
 import { resolveWebVitestChangedSuitePlan } from '../../vitest.suites';
 import { main, parseChangedSuiteArgs } from '../../scripts/run-vitest-changed-suites';
 
@@ -349,6 +350,56 @@ function reachesModule(
 }
 
 describe('governed browser evidence routing', () => {
+  it('pins one Git comparison before discovery even if an alias moves before catalog reads', async () => {
+    const childProcess = await import('node:child_process');
+    const output = vi.spyOn(process.stdout, 'write').mockReturnValue(true);
+    const previous = {
+      ...WEB_CYPRESS_CATALOG,
+      controlled: WEB_CYPRESS_SPECS.controlled.slice(0, -1),
+    };
+    const calls: string[][] = [];
+    let discovered = false;
+    vi.stubEnv('GIT_BASE', 'base-alias');
+    vi.stubEnv('GIT_HEAD', 'head-alias');
+    vi.spyOn(childProcess, 'execFileSync').mockImplementation((_command, args) => {
+      const command = args as string[];
+      calls.push(command);
+      if (command[0] === 'rev-parse') {
+        const ref = command.at(-1)!.replace(/\^\{commit\}$/, '');
+        return `${ref === 'base-alias' ? (discovered ? 'advanced-base' : 'base-sha') : ref === 'head-alias' ? 'head-sha' : ref}\n`;
+      }
+      if (
+        command[0] === 'diff' &&
+        command.includes('--no-renames') &&
+        !command.includes('--cached') &&
+        command.length > 4
+      ) {
+        discovered = true;
+        return `${WEB_CYPRESS_CATALOG_PATH}\0`;
+      }
+      if (command[0] === 'ls-tree') return `${WEB_CYPRESS_CATALOG_PATH}\0`;
+      if (command[0] === 'show')
+        return JSON.stringify(command[1]!.startsWith('base-sha:') ? previous : WEB_CYPRESS_CATALOG);
+      return '';
+    });
+
+    main(['--plan', '--phase=browser', '--browser-capability=controlled']);
+    const plan = JSON.parse(String(output.mock.calls[0]![0]));
+    expect(plan.browserCommands).toMatchObject([
+      { capability: 'controlled', specPaths: [WEB_CYPRESS_SPECS.controlled.at(-1)] },
+    ]);
+    expect(calls).toContainEqual([
+      'diff',
+      '--name-only',
+      '--no-renames',
+      '-z',
+      'base-sha',
+      'head-sha',
+    ]);
+    expect(calls.filter((args) => args.includes('base-alias^{commit}'))).toHaveLength(1);
+    expect(spawnSync).not.toHaveBeenCalled();
+  });
+
   it('admits retained shell menu consumers in their actual independent runtimes', () => {
     const controlled = 'apps/web/cypress/e2e/templates/templates-workbench.cy.ts';
     const available = 'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts';
@@ -540,7 +591,7 @@ describe('governed browser evidence routing', () => {
     const specs = [...browserModules.keys()].filter((path) => path.endsWith('.cy.ts'));
     const target = resolve('cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts');
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
-    const registered = Object.values(WEB_CYPRESS_SPECS).flat();
+    const registered = [...Object.values(WEB_CYPRESS_SPECS).flat(), ...WEB_CYPRESS_NIGHTLY_SPECS];
     const uiOnlyConsumers = [
       'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
       'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
@@ -570,7 +621,7 @@ describe('governed browser evidence routing', () => {
       ).toEqual([owner]);
     }
     expect(WEB_CYPRESS_SPECS.available).toHaveLength(32);
-    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(50);
+    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(51);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
 
@@ -603,6 +654,7 @@ describe('governed browser evidence routing', () => {
 
   it('runs only changed controlled specs but retains the complete set for their shared fixture', () => {
     const path = WEB_CYPRESS_SPECS.controlled[0];
+    if (!path) throw new Error('The controlled browser catalog must be nonempty.');
     const isolated = resolveWebVitestChangedSuitePlan([path, path]);
     expect(isolated.browserCommands).toHaveLength(1);
     expect(isolated.browserCommands[0]!.specPaths).toEqual([path]);
@@ -612,9 +664,10 @@ describe('governed browser evidence routing', () => {
   });
 
   it.each([
+    'apps/web/cypress/e2e/shell/session-publication-lifecycle.cy.ts',
     'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
     'apps/web/cypress/support/startupReadiness.ts',
-  ])('admits exact startup evidence at the controlled runtime for %s', (path) => {
+  ])('admits exact shell evidence at the controlled runtime for %s', (path) => {
     const plan = resolveWebVitestChangedSuitePlan([path]);
     expect(plan.browserCommands.map(({ capability }) => capability)).toEqual(['controlled']);
     expect(plan.browserCommands[0]!.specPaths).toEqual(
@@ -728,7 +781,7 @@ describe('governed browser evidence routing', () => {
     async (phase) => {
       const { existsSync: originalExists } =
         await vi.importActual<typeof import('node:fs')>('node:fs');
-      for (const missing of [spec, helper]) {
+      for (const missing of [spec, helper, ...WEB_CYPRESS_NIGHTLY_SPECS]) {
         vi.mocked(existsSync).mockImplementation(
           (path) =>
             resolve(String(path)) !== resolve(missing.slice('apps/web/'.length)) &&
@@ -817,6 +870,7 @@ describe('governed browser evidence routing', () => {
     'cypress.config.ts',
     'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
     'apps/web/cypress/node/chromiumNetworkProjection.ts',
+    'apps/web/cypress/node/chromiumNetworkEvidence.ts',
   ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
     expect(
       resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
@@ -1144,6 +1198,7 @@ describe('governed browser evidence routing', () => {
         resolve('cypress/e2e/canvas/canvas-model-output-toggle.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-predicate-reopen.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts'),
+        resolve('cypress/support/canvasReadyAuthoring.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-filter.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-selected-relation-sort-fetch.cy.ts'),
         resolve('cypress/e2e/canvas/canvas-set-persistence.cy.ts'),

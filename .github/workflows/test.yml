@@ -152,7 +152,7 @@ jobs:
       DVT_SELECTED_CLOSURE_CYPRESS_RUNTIME: native
       DVT_SELECTED_CLOSURE_TEMPORAL_WORKER_RUNTIME: available
       DVT_CYPRESS_NETWORK_DIAGNOSTICS:
-        ${{ matrix.capability == 'available' && matrix.shard == 1 && '1' || '' }}
+        ${{ matrix.phase == 'browser' && matrix.capability == 'available' && '1' || '' }}
       GIT_BASE: >-
         ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
         github.event_name == 'push' && github.event.before || github.sha }}
@@ -271,7 +271,7 @@ jobs:
 
       - name: Upload sanitized Chromium network diagnostics
         if: >-
-          always() && matrix.capability == 'available' && matrix.shard == 1 &&
+          always() && env.DVT_CYPRESS_NETWORK_DIAGNOSTICS == '1' &&
           hashFiles('.dvt/evidence/chromium-network/*.json') != ''
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

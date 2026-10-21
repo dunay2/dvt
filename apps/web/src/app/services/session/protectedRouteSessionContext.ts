@@ -11,6 +11,10 @@ import {
 } from '../../stores/authorizationStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import {
+  beginSessionContextPublication,
+  type SessionContextPublication,
+} from './sessionContextPublication';
+import {
   resolveSelectedWorkspaceScope,
   sameWorkspaceScopeIdentity,
 } from './workspaceScopeSelectionPort';
@@ -69,44 +73,61 @@ function projectPermissionsFromSession(session: SessionResponse): UserPermission
   };
 }
 
-export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiClient, 'getJson'>) {
-  const session = await apiClient.getJson<SessionResponse>('/session', {
-    includeSessionHeaders: false,
-  });
+export async function resolveProtectedRouteSessionContext(
+  apiClient: Pick<ApiClient, 'getJson'>,
+  options: Readonly<{ signal?: AbortSignal }> = {}
+): Promise<SessionContextPublication> {
+  const publication = beginSessionContextPublication(options.signal);
+  try {
+    const requestInit = { ...options, includeSessionHeaders: false };
+    const session = await apiClient.getJson<SessionResponse>('/session', requestInit);
+    publication.assertCurrent();
 
-  const workspaceContext = WorkspaceContextResponseSchema.parse(
-    await apiClient.getJson<unknown>('/workspace/context', {
-      includeSessionHeaders: false,
-    })
-  );
+    const workspaceContext = WorkspaceContextResponseSchema.parse(
+      await apiClient.getJson<unknown>('/workspace/context', requestInit)
+    );
+    publication.assertCurrent();
 
-  const selectedWorkspaceContext = resolveRouteWorkspaceContext(
-    useSessionStore.getState(),
-    workspaceContext
-  );
-  const resolvedWorkspaceContext = resolveSelectedWorkspaceScope({
-    currentScope: selectedWorkspaceContext,
-    defaultWorkspace: workspaceContext.defaultWorkspace,
-    availableWorkspaces: workspaceContext.availableWorkspaces,
-  });
+    const selectedWorkspaceContext = resolveRouteWorkspaceContext(
+      useSessionStore.getState(),
+      workspaceContext
+    );
+    const resolvedWorkspaceContext = resolveSelectedWorkspaceScope({
+      currentScope: selectedWorkspaceContext,
+      defaultWorkspace: workspaceContext.defaultWorkspace,
+      availableWorkspaces: workspaceContext.availableWorkspaces,
+    });
 
-  useAuthorizationStore
-    .getState()
-    .setUserPermissions({ ...DEFAULT_USER_PERMISSIONS, ...projectPermissionsFromSession(session) });
-  useSessionStore.getState().setWorkspaceScopeSelectionContext({
-    selectedScope: {
-      tenantId: asNonBlankString(resolvedWorkspaceContext.selectedScope.tenantId),
-      projectId: asNonBlankString(resolvedWorkspaceContext.selectedScope.projectId),
-      projectName: resolvedWorkspaceContext.selectedScope.projectName,
-      environmentId: asNonBlankString(resolvedWorkspaceContext.selectedScope.environmentId),
-    },
-    targetAdapter: workspaceContext.deploymentScope.targetAdapter,
-    availableTargetAdapters: workspaceContext.deploymentScope.availableTargetAdapters,
-    availableWorkspaces: resolvedWorkspaceContext.availableWorkspaces.map((workspace) => ({
-      tenantId: asNonBlankString(workspace.tenantId),
-      projectId: asNonBlankString(workspace.projectId),
-      projectName: workspace.projectName,
-      environmentId: asNonBlankString(workspace.environmentId),
-    })),
-  });
+    // Admit the complete snapshot once. There is no asynchronous boundary between
+    // the two projections; a synchronous subscriber may start the next query,
+    // but must not leave this already-admitted publication half written.
+    publication.assertCurrent();
+    useAuthorizationStore.getState().setUserPermissions({
+      ...DEFAULT_USER_PERMISSIONS,
+      ...projectPermissionsFromSession(session),
+    });
+    useSessionStore.getState().setWorkspaceScopeSelectionContext({
+      selectedScope: {
+        tenantId: asNonBlankString(resolvedWorkspaceContext.selectedScope.tenantId),
+        projectId: asNonBlankString(resolvedWorkspaceContext.selectedScope.projectId),
+        projectName: resolvedWorkspaceContext.selectedScope.projectName,
+        environmentId: asNonBlankString(resolvedWorkspaceContext.selectedScope.environmentId),
+      },
+      targetAdapter: workspaceContext.deploymentScope.targetAdapter,
+      availableTargetAdapters: workspaceContext.deploymentScope.availableTargetAdapters,
+      availableWorkspaces: resolvedWorkspaceContext.availableWorkspaces.map((workspace) => ({
+        tenantId: asNonBlankString(workspace.tenantId),
+        projectId: asNonBlankString(workspace.projectId),
+        projectName: workspace.projectName,
+        environmentId: asNonBlankString(workspace.environmentId),
+      })),
+    });
+    publication.assertCurrent();
+    return publication;
+  } catch (error) {
+    // A transport may ignore abort or normalize it as a network failure.
+    // Obsolete errors cannot drive the current route's recovery either.
+    publication.assertCurrent();
+    throw error;
+  }
 }
