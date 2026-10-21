@@ -232,6 +232,14 @@ JOIN, Transform and unary editors. Missing producers and mixed connections
 produce an explicit unavailable state; opening an editor never invents a
 provider, performs a provider request or writes semantic state.
 
+Reporting pending form edits does not create a new analysis authority. The shared
+analysis hook retains its published context when the document, session, accepted
+revision, field-eligibility contents and error state are unchanged, even when the
+graph query allocates equivalent sets. The pending editor must retain its typed
+values, DOM identity and keyboard focus. Actual permission, connection, document
+or error changes still publish through the existing session and invalidate stale
+operand queries; the form cannot cache an older grant to preserve its contents.
+
 The expanded #3612 request covers composable aggregate/window inputs and
 existence predicates through the existing relational operators, not SQL text
 embedded in the formula. An AggregateRel or window ProjectRel computes the
