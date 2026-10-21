@@ -132,7 +132,7 @@ unpublished candidate. The earlier dependency-audit failure remains failed.
 
 ## Reconciliation with accepted session and native lifetimes
 
-The next ordinary reconciliation incorporates main
+The first ordinary reconciliation incorporates main
 `8f3dbfee28287420ae7b9f5cf8bf856984246cff`, the accepted #3689 squash. Its tree
 exactly matches candidate `0f9e01191273a661cd6569d14a5700a68be0abb8`, whose seven
 required contexts passed. It includes current-route publication, neutral session
@@ -147,6 +147,24 @@ Vitest identities. The passing 22-case group also recorded a Chromium
 network-service restart signal, so that signal alone does not diagnose the
 historical session redirections. #3604 remains open; no retry, browser pin or
 speculative transport remedy is introduced by this reconciliation.
+
+The subsequent reconciliation incorporates main
+`bb4befe7edc25464b150dfa6e837cc3cb1f16a3d`, the accepted #3702 squash. It adds only
+the two existing Web test files that retain the validated dbt Run pathname and
+extend its source-executing architecture guard. Accepted head
+`49a1313dd174ba9262d2af0d295e90d8a07c6fe4` passed all seven required contexts,
+9 focused architecture cases and 68 LIVE cases. Its complete tree matches that
+main squash. The incremental plan and source attribution precede this merge in
+[#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6319859414).
+These are predecessor results, not new Capture acceptance. Main's subsequent
+automatic CI failed before the unavailable case reached Canvas, showing Login
+recovery after a session request marked HTTP 200. Its remaining phases were
+stopped after retaining the failed log and screenshot. The original session
+exception remains unobserved; neither transport nor an HTTP rejection is proved.
+That failed/interrupted run is recorded in
+[#3604](https://github.com/dunay2/dvt/issues/3604#issuecomment-6319938613).
+The earlier failures and preexisting supplemental Cypress typing diagnostics
+also remain explicitly recorded; this reconciliation does not clear them.
 
 Capture API and private-creation probes retain their already-tested source;
 Web and native evidence owners come from accepted main. Source identity, the
