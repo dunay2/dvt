@@ -17,15 +17,25 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 const preload = path.join(root, 'scripts/local-data-private-creation.cjs');
 const api = JSON.parse(readFileSync(path.join(root, 'apps/api/package.json'), 'utf8'));
 
+// Keep mask changes in a one-shot process, outside the Node test worker.
+const launchWithMask = `
+  process.umask(Number.parseInt(process.argv[1], 8));
+  const child = require('node:child_process').spawnSync(process.execPath, process.argv.slice(2), {
+    stdio: 'inherit', timeout: 9000, killSignal: 'SIGKILL'
+  });
+  if (child.error) throw child.error;
+  if (child.signal || child.status === null) throw new Error('Creation probe terminated');
+  process.exitCode = child.status;
+`;
+
 function isolated(initialMask, source, args = []) {
   const result = spawnSync(
-    '/bin/sh',
+    process.execPath,
     [
-      '-c',
-      'umask "$1"; shift; exec "$@"',
-      'dvt-creation-proof',
+      '--input-type=commonjs',
+      '-e',
+      launchWithMask,
       initialMask,
-      process.execPath,
       '--require',
       preload,
       '--input-type=commonjs',

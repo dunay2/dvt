@@ -11,6 +11,16 @@ const apiRoot = fileURLToPath(new globalThis.URL('../../', import.meta.url));
 const preload = fileURLToPath(
   new globalThis.URL('../../../../scripts/local-data-private-creation.cjs', import.meta.url)
 );
+// Isolate the inherited mask from the test worker; preserve the real child --require posture.
+const launchWithMask = `
+  process.umask(Number.parseInt(process.argv[1], 8));
+  const child = require('node:child_process').spawnSync(process.execPath, process.argv.slice(2), {
+    stdio: 'inherit', timeout: 9000, killSignal: 'SIGKILL'
+  });
+  if (child.error) throw child.error;
+  if (child.signal || child.status === null) throw new Error('Creation probe terminated');
+  process.exitCode = child.status;
+`;
 // Only fixture bytes and fixed SQL enter this child; it does not acquire a source or bypass DVT.
 const probe = `
   import assert from 'node:assert/strict';
@@ -70,15 +80,8 @@ if (process.platform === 'win32') {
         probe,
       ];
       const { stdout } = await execute(
-        '/bin/sh',
-        [
-          '-c',
-          'umask "$1"; shift; exec "$@"',
-          'dvt-native-proof',
-          initialMask,
-          process.execPath,
-          ...nodeArgs,
-        ],
+        process.execPath,
+        ['--input-type=commonjs', '-e', launchWithMask, initialMask, ...nodeArgs],
         { cwd: apiRoot, timeout: 10000, maxBuffer: 1048576 }
       );
       const observed: unknown = JSON.parse(stdout.trim());

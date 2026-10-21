@@ -88,6 +88,40 @@ entry points. A fresh private proof database/role and the real dependency build
 corrected those setup failures; the disposable database and role were removed
 after execution. No fake adapter, source substitution or assertion relaxation.
 
+## Direct process launch for creation evidence
+
+Open CodeQL alerts 48/49 identify shell execution in the existing API native-mode
+probe and bootstrap test. The plan, process-order diagrams and preservation matrix
+were recorded before edits in
+[#3394](https://github.com/dunay2/dvt/issues/3394#issuecomment-6315748620), design
+`GH-3394-PRIVATE-PROBE-NODE-LAUNCH`. Both standalone probes now launch a fixed Node
+bootstrap directly, passing mask/child arguments without shell interpretation.
+Only that isolated bootstrap sets umask; the pooled test worker never does.
+The actual child retains its optional Node --require preload and has a nine-second
+timeout inside the existing ten-second outer timeout. Errors, signals and nonzero
+exit remain failures. Production startup, preload, permissions and assertions
+are unchanged.
+
+The exact 5efa372e9 source archive plus hash-verified two-file overlay ran on the
+existing isolated Linux dependency/native host, Node 22.19.0:
+
+- `node --test tools/ci/local-data-private-creation.test.mjs`: **12/12 PASS**,
+  zero skips, 1.13 seconds.
+- From apps/api, `node --require ../../scripts/local-data-private-creation.cjs
+../../node_modules/vitest/vitest.mjs run
+test/infrastructure/DuckDbFileCreationPolicy.test.ts --maxWorkers 1`:
+  **3/3 PASS**, 1.72 seconds. Actual DuckDB v1.5.6 DB/WAL modes remain 0644
+  for inherited 0022 without preload, and 0600 for 0077 or explicit preload;
+  each actual database closes and reopens successfully.
+- The Windows startup file separately returns **3 PASS / 9 intentional POSIX
+  skips**, 185 ms. It does not establish Windows ACL or POSIX-native evidence.
+
+These are real unchanged behavioral probes, not new tests mirroring the launch
+implementation. The existing hosted CodeQL findings are the static failing
+evidence. Local process proof is not hosted scanner clearance: the notices stay
+open until an exact-head analysis establishes their resolution. The earlier
+dependency-audit failure and c489 browser failure are not cleared by this cut.
+
 Owner: [#3394](https://github.com/dunay2/dvt/issues/3394), under #3388.
 One review surface: #3680, incorporating the two unique #3679 commits.
 The accepted metadata baseline is main `c584133835da031b37e70862e312ca726b32dca3`.
