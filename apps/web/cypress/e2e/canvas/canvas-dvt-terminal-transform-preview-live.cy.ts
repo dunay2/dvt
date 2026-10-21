@@ -361,7 +361,10 @@ describe('DVT terminal Transform Preview and Run live', () => {
     });
     cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 })
       .should('be.visible')
-      .and('contain.text', 'Run currently requires a table output. Change the output type.')
+      .and(
+        'contain.text',
+        'Use a table result, or an ephemeral model connected to one table Sink. Do not configure both destinations.'
+      )
       .and('not.contain.text', DVT_REJECTIONS.runDispositionUnsupported.reason);
     cy.get('[data-slot="plan-preview-start-run"]').should('not.exist');
     cy.get('[data-slot="shell-run-command"]').should('be.disabled');

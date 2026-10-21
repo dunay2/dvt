@@ -5,6 +5,7 @@
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
   createDvtPostgresOutputSchemaDigestV1,
+  type DvtOperationalRejection,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
@@ -12,9 +13,14 @@ import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
 
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
 import { projectDvtPostgresTransform } from './dvtPostgresTransformProjection.js';
+import { resolveDvtWorkloadPublication } from './dvtWorkloadPublication.js';
 import { resolveDvtTerminalTransformClosure } from './resolveDvtTerminalTransformClosure.js';
 
 const SQL_MEDIA_TYPE = 'application/sql; charset=utf-8';
+
+export type DvtPostgresTargetProjectionPublishResult =
+  | { readonly ok: true; readonly value: DvtTerminalTransformProjectionBinding }
+  | ({ readonly ok: false } & DvtOperationalRejection);
 
 export type DvtPostgresTargetProjectionPublishInput = {
   readonly scope: {
@@ -40,8 +46,10 @@ export class DvtPostgresTargetProjectionPublisher {
 
   public async publish(
     input: DvtPostgresTargetProjectionPublishInput
-  ): Promise<DvtTerminalTransformProjectionBinding> {
+  ): Promise<DvtPostgresTargetProjectionPublishResult> {
     const closure = resolveDvtTerminalTransformClosure(input);
+    const publication = resolveDvtWorkloadPublication(closure);
+    if (!publication.ok) return publication;
     const semanticDocument = closure.authority.semanticDocument;
     const projected = await projectDvtPostgresTransform(closure);
     const sql = projected.sql;
@@ -70,19 +78,22 @@ export class DvtPostgresTargetProjectionPublisher {
     }
 
     return {
-      outputNodeId: closure.transform.id,
-      semanticPlanSha256: semanticDocument.semanticPlan.sha256,
-      ...(outputSchema == null
-        ? {}
-        : { schemaDigestSha256: createDvtPostgresOutputSchemaDigestV1(outputSchema) }),
-      connectionRef: closure.connectionRef,
-      profileId: closure.profileId,
-      artifact: {
-        artifactKind: 'compiled-sql',
-        sha256: published.sha256,
-        storageUri: published.storageUri,
-        sizeBytes: published.sizeBytes,
-        encoding: 'utf-8',
+      ok: true,
+      value: {
+        outputNodeId: closure.transform.id,
+        semanticPlanSha256: semanticDocument.semanticPlan.sha256,
+        ...(outputSchema == null
+          ? {}
+          : { schemaDigestSha256: createDvtPostgresOutputSchemaDigestV1(outputSchema) }),
+        connectionRef: closure.connectionRef,
+        profileId: closure.profileId,
+        artifact: {
+          artifactKind: 'compiled-sql',
+          sha256: published.sha256,
+          storageUri: published.storageUri,
+          sizeBytes: published.sizeBytes,
+          encoding: 'utf-8',
+        },
       },
     };
   }

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RunSnapshot } from '../ports/runs';
 import type { CanvasController } from './Canvas.test.controller';
+import { createRunPublicationSnapshot } from './runs/test/runPublicationFixture';
 
 import {
   createCanvasRouteHarness,
@@ -93,23 +94,10 @@ describe('Canvas persisted run reference', () => {
   });
 
   it('restores the exact completed sink result from the run referenced by the route', async () => {
+    const runSnapshot = createRunPublicationSnapshot({ runId: 'run-returned' });
+    const { target } = runSnapshot.publication!;
     runsQueryMocks.useRunSnapshotQuery.mockImplementation((_workspaceLayoutKey, runId) => ({
-      data:
-        runId === 'run-returned'
-          ? {
-              runId,
-              status: 'completed',
-              materialization: {
-                executor: 'postgres',
-                environmentId: 'dev',
-                sinkTable: 'public.sink_1',
-                rowsWritten: 3,
-                startedAt: '2026-08-18T17:35:00.000Z',
-                completedAt: '2026-08-18T17:35:00.016Z',
-                durationMs: 16,
-              },
-            }
-          : null,
+      data: runId === 'run-returned' ? runSnapshot : null,
     }));
 
     await renderCanvasRouteWithController(
@@ -126,7 +114,16 @@ describe('Canvas persisted run reference', () => {
               status: 'idle',
               role: 'output',
               pluginKind: 'dvt:sink',
-              metadata: { typeLabel: 'Sink' },
+              metadata: {
+                typeLabel: 'Sink',
+                config: {
+                  connectionRef: target.connectionRef,
+                  schema: target.schema,
+                  table: target.relation,
+                  materialization: 'table',
+                  writeMode: 'replace',
+                },
+              },
             },
           },
         ] as unknown as CanvasController['nodesWithImpact'],
@@ -140,8 +137,8 @@ describe('Canvas persisted run reference', () => {
     );
     const sink = (
       currentCanvasRouteState().viewportProps?.nodesWithImpact as
-        Array<{ data?: { rows?: number } }> | undefined
-    )?.find((node) => node.data?.rows === 3);
+        Array<{ id: string; data?: { rows?: number } }> | undefined
+    )?.find((node) => node.id === 'sink-1');
     expect(sink?.data?.rows).toBe(3);
   });
 });

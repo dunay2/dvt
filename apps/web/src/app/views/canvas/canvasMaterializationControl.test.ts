@@ -17,7 +17,7 @@ describe('native materialization presentation', () => {
     const change = vi.fn();
     const control = projectCanvasMaterializationControl({ node, label: 'Materialization', change });
     expect(control).toMatchObject({ value: 'view', disabled: false });
-    expect(control?.options.map((option) => option.value)).toEqual(['view', 'table']);
+    expect(control?.options.map((option) => option.value)).toEqual(['view', 'table', 'ephemeral']);
     control?.onChange('table');
     expect(change).toHaveBeenCalledExactlyOnceWith('model', 'table');
     expect(node.metadata).toBeUndefined();

@@ -9,14 +9,28 @@ const consumers = [
   {
     file: 'cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
     expectedKinds: ['snapshot', 'events'],
+    expectedUiChecks: [],
   },
   {
     file: 'cypress/support/semanticLive/execution.ts',
     expectedKinds: ['completion', 'events'],
+    expectedUiChecks: [],
   },
   {
     file: 'cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
     expectedKinds: ['completion'],
+    expectedUiChecks: [],
+  },
+  {
+    file: 'cypress/support/postgresPublicationFlow.ts',
+    expectedKinds: ['publication'],
+    expectedUiChecks: [
+      {
+        selector: '[data-slot="run-itinerary-card"]',
+        chainer: 'contain.text',
+        expected: 'completed',
+      },
+    ],
   },
 ] as const;
 
@@ -30,17 +44,53 @@ function readLocationConsumer(file: string): string {
   const matches: string[] = [];
   function visit(node: ts.Node): void {
     if (ts.isBlock(node)) {
-      const isLocation = (statement: ts.Statement): boolean =>
-        ts.isExpressionStatement(statement) &&
-        statement.getText(source).startsWith("cy.location('pathname'");
+      const isLocation = (statement: ts.Statement): boolean => {
+        let expression =
+          ts.isExpressionStatement(statement) || ts.isReturnStatement(statement)
+            ? statement.expression
+            : undefined;
+        while (
+          expression !== undefined &&
+          ts.isCallExpression(expression) &&
+          ts.isPropertyAccessExpression(expression.expression)
+        ) {
+          const call = expression.expression;
+          const argument = expression.arguments[0];
+          if (
+            ts.isIdentifier(call.expression) &&
+            call.expression.text === 'cy' &&
+            call.name.text === 'location' &&
+            argument !== undefined &&
+            ts.isStringLiteral(argument) &&
+            argument.text === 'pathname'
+          ) {
+            return true;
+          }
+          expression = call.expression;
+        }
+        return false;
+      };
       const index = node.statements.findIndex(
         (statement) => isLocation(statement) && statement.getText(source).includes('.should(')
       );
       if (index !== -1) {
-        const statements = [node.statements[index]!];
-        const next = node.statements[index + 1];
-        if (next && isLocation(next)) statements.push(next);
-        matches.push(statements.map((statement) => statement.getText(source)).join('\n'));
+        let end = index;
+        if (!node.statements[index]!.getText(source).includes('.then(')) {
+          const next = node.statements
+            .slice(index + 1)
+            .findIndex((statement) => isLocation(statement));
+          if (next !== -1) end = index + 1 + next;
+        }
+        matches.push(
+          node.statements
+            .slice(index, end + 1)
+            .map((statement) =>
+              ts.isReturnStatement(statement)
+                ? `${statement.expression!.getText(source)};`
+                : statement.getText(source)
+            )
+            .join('\n')
+        );
       }
     }
     ts.forEachChild(node, visit);
@@ -56,10 +106,15 @@ function exerciseConsumer(
   file: string,
   initialPathname: string,
   nextPathname?: string
-): Readonly<{ requests: Array<{ kind: string; runId: string }>; run: () => void }> {
+): Readonly<{
+  requests: Array<{ kind: string; runId: string }>;
+  uiChecks: Array<{ selector: string; chainer: string; expected: unknown }>;
+  run: () => void;
+}> {
   let pathname = initialPathname;
   const queue: Array<() => void> = [];
   const requests: Array<{ kind: string; runId: string }> = [];
+  const uiChecks: Array<{ selector: string; chainer: string; expected: unknown }> = [];
   const observeRequest = (kind: string) => (runId: string) => {
     requests.push({ kind, runId });
     // Observe call arguments only: no synthetic HTTP response or successful run.
@@ -71,7 +126,24 @@ function exerciseConsumer(
     readLiveRunEvents: observeRequest('events'),
     waitForCompletedRun: observeRequest('completion'),
     waitForCompletedDbtRun: observeRequest('completion'),
+    URLSearchParams,
+    scope: { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' },
+    Cypress: {
+      env: (key: string) =>
+        key === 'apiBaseUrl' ? 'https://run-identity.invalid' : 'request-observer-only',
+    },
     cy: {
+      get(selector: string) {
+        return {
+          should(chainer: string, expected: unknown) {
+            // Record the assertion command; do not synthesize any completed DOM state.
+            queue.push(() => uiChecks.push({ selector, chainer, expected }));
+          },
+        };
+      },
+      request({ url }: { url: string }) {
+        return observeRequest('publication')(new URL(url).pathname.split('/').pop()!);
+      },
       location(key: string) {
         expect(key).toBe('pathname');
         let subject: string;
@@ -96,27 +168,41 @@ function exerciseConsumer(
       },
     },
   });
-  return { requests, run: () => queue.forEach((command) => command()) };
+  return {
+    requests,
+    uiChecks,
+    run() {
+      while (queue.length > 0) queue.shift()!();
+    },
+  };
 }
 
-describe.each(consumers)('$file run-location consumption', ({ file, expectedKinds }) => {
-  it('retains the validated run identity when navigation changes before consumption', () => {
-    const scenario = exerciseConsumer(file, '/runs/accepted-run', '/login');
-    scenario.run();
-    expect(scenario.requests).toEqual(
-      expectedKinds.map((kind) => ({ kind, runId: 'accepted-run' }))
-    );
-  });
+describe.each(consumers)(
+  '$file run-location consumption',
+  ({ file, expectedKinds, expectedUiChecks }) => {
+    it('retains the validated run identity when navigation changes before consumption', () => {
+      const scenario = exerciseConsumer(file, '/runs/accepted-run', '/login');
+      scenario.run();
+      expect(scenario.requests).toEqual(
+        expectedKinds.map((kind) => ({ kind, runId: 'accepted-run' }))
+      );
+      expect(scenario.uiChecks).toEqual(expectedUiChecks);
+    });
 
-  it('reads snapshot/completion and events for an unchanged valid route', () => {
-    const scenario = exerciseConsumer(file, '/runs/stable-run');
-    scenario.run();
-    expect(scenario.requests).toEqual(expectedKinds.map((kind) => ({ kind, runId: 'stable-run' })));
-  });
+    it('reads the expected Run evidence for an unchanged valid route', () => {
+      const scenario = exerciseConsumer(file, '/runs/stable-run');
+      scenario.run();
+      expect(scenario.requests).toEqual(
+        expectedKinds.map((kind) => ({ kind, runId: 'stable-run' }))
+      );
+      expect(scenario.uiChecks).toEqual(expectedUiChecks);
+    });
 
-  it('rejects login before issuing any run-evidence request', () => {
-    const scenario = exerciseConsumer(file, '/login');
-    expect(() => scenario.run()).toThrow();
-    expect(scenario.requests).toEqual([]);
-  });
-});
+    it('rejects login before issuing any run-evidence request', () => {
+      const scenario = exerciseConsumer(file, '/login');
+      expect(() => scenario.run()).toThrow();
+      expect(scenario.requests).toEqual([]);
+      expect(scenario.uiChecks).toEqual([]);
+    });
+  }
+);

@@ -42,7 +42,12 @@ export function createRunPublicationSnapshot(overrides?: Partial<RunSnapshot>): 
         schema: 'dvt',
         relation: 'orders_result',
       },
-      publication: { token: 'f'.repeat(64), predecessorToken: null, outcome: 'created' },
+      publication: {
+        nodeId: 'sink-1',
+        token: 'f'.repeat(64),
+        predecessorToken: null,
+        outcome: 'created',
+      },
       rowsWritten: 3,
       startedAt: '2026-09-15T10:00:01.000Z',
       completedAt: '2026-09-15T10:00:02.000Z',

@@ -193,6 +193,7 @@ export function ShellViewMenuTemplate({
   onToggleBottomDrawer,
   onToggleFocusMode,
   onLanguageSelected,
+  onCloseAutoFocus,
 }: MenuLifecycle &
   Readonly<{
     copy: ShellTopBarCopy;
@@ -203,6 +204,7 @@ export function ShellViewMenuTemplate({
     onToggleBottomDrawer: () => void;
     onToggleFocusMode: () => void;
     onLanguageSelected: (language: string) => void;
+    onCloseAutoFocus: (event: Event) => void;
   }>) {
   return (
     <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
@@ -217,7 +219,11 @@ export function ShellViewMenuTemplate({
           {copy.shell}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className={topAppBarClasses.contextMenuContent}>
+      <DropdownMenuContent
+        align="end"
+        className={topAppBarClasses.contextMenuContent}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
         <CanvasExplorerViewMenu />
         {viewControls.showBottomDrawerToggle ? (

@@ -37,7 +37,9 @@ describe('Available browser partition policy', () => {
     const union = shards.flatMap((shard) => shard.specPaths);
     expect([...union].sort()).toEqual([...WEB_CYPRESS_SPECS.available].sort());
     expect(new Set(union).size).toBe(union.length);
-    expect(shards.map((shard) => shard.specPaths.length)).toEqual([11, 11, 10]);
+    const sizes = shards.map((shard) => shard.specPaths.length);
+    expect(Math.min(...sizes)).toBeGreaterThan(0);
+    expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
     for (const [index, shard] of shards.entries()) {
       expect(shard.specPaths).toEqual(available.specPaths.filter((_, i) => i % 3 === index));
       expect(shard.command).toBe(

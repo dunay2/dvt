@@ -4,6 +4,7 @@ import process from 'node:process';
 
 import {
   CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  DVT_TRANSFORM_MATERIALIZATIONS,
   decodeDvtSubstraitPlanV1,
   encodeDvtSubstraitPlanV1,
   type DvtSubstraitSemanticDocumentV1,
@@ -14,6 +15,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { PostgresCanvasAuthoringAuthorityStore } from '../../src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
+import { buildDvtSinkPublicationDraft } from '../fixtures/dvtSinkPublicationFixture.js';
 import {
   TEST_WORKSPACE_SCOPE,
   buildCanonicalSemanticDocument,
@@ -142,15 +144,19 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
     });
   });
 
-  it.each(['transform', 'dvt:transform'])(
-    'preserves admitted %s disposition and rejects invalid SQL writes without changing the draft',
-    async (kind) => {
+  it.each(
+    ['transform', 'dvt:transform'].flatMap((kind) =>
+      DVT_TRANSFORM_MATERIALIZATIONS.map((materialized) => ({ kind, materialized }))
+    )
+  )(
+    'preserves $kind $materialized and rejects invalid SQL writes without changing the draft',
+    async ({ kind, materialized }) => {
       const base = buildCanonicalSemanticWorkspaceGraphDraft();
       const draft = {
         ...base,
         nodes: base.nodes.map((node) =>
           node.role === 'transform'
-            ? { ...node, kind, metadata: { ...node.metadata, config: { materialized: 'table' } } }
+            ? { ...node, kind, metadata: { ...node.metadata, config: { materialized } } }
             : node
         ),
       };
@@ -165,11 +171,11 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
       if (before.response.kind !== 'ok') throw new Error('Expected a persisted draft.');
       expect(
         before.response.record.draft.nodes.find((node) => node.role === 'transform')?.metadata
-      ).toMatchObject({ config: { materialized: 'table' } });
+      ).toMatchObject({ config: { materialized } });
 
       for (const config of [
         { materialized: 'incremental' },
-        { materialized: 'ephemeral' },
+        { materialized: 'ephemeral', resultTarget: {} },
         { materialized: null },
         { materialized: 1 },
         { materialized: ' table ' },
@@ -221,6 +227,33 @@ describeWithPostgres('workspace graph canonical semantic persistence', () => {
         constraint: 'workspace_graph_drafts_field_budget_check',
       });
       expect((await get.execute(writableSemanticDecision())).response).toEqual(before.response);
+    }
+  );
+
+  it.each(['sink', 'dvt:sink'])(
+    'enforces the SQL field budget for persisted %s nodes',
+    async (kind) => {
+      const draft = buildDvtSinkPublicationDraft();
+      const sink = draft.nodes.find((node) => node.role === 'output')!;
+      sink.kind = kind;
+      const validConfig = sink.metadata!.config;
+      for (const [config, accepted] of [
+        [validConfig, true],
+        [
+          { table: 'x'.repeat(CANVAS_AUTHORING_FIELD_LIMITS_V1.postgresIdentifierUtf8Bytes + 1) },
+          false,
+        ],
+        [{ materialization: 'invalid' }, false],
+        [{ writeMode: 'invalid' }, false],
+        [null, false],
+      ] as const) {
+        sink.metadata = { config };
+        const result = await pool!.query<{ accepted: boolean }>(
+          `SELECT "${schema}".workspace_graph_draft_fields_within_budget($1::jsonb) AS accepted`,
+          [JSON.stringify(draft)]
+        );
+        expect(result.rows[0]?.accepted, JSON.stringify({ kind, config })).toBe(accepted);
+      }
     }
   );
 

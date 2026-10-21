@@ -1,4 +1,9 @@
-import { CANVAS_AUTHORING_FIELD_LIMITS_V1, type WorkspaceGraphDraftScope } from '@dvt/contracts';
+import {
+  CANVAS_AUTHORING_FIELD_LIMITS_V1,
+  DVT_TRANSFORM_MATERIALIZATIONS,
+  DVT_SINK_NODE_KINDS,
+  type WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
 import type { Pool, PoolClient, QueryConfig, QueryResultRow } from 'pg';
 
 import { serializeCanvasAuthoringAuthorityKey } from '../../application/ports/canvasAuthoringAuthority.js';
@@ -195,7 +200,7 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
             )
             OR (
               node_item ->> 'pluginId' = 'dvt'
-              AND node_item ->> 'kind' = 'dvt:sink'
+              AND node_item ->> 'kind' IN (${DVT_SINK_NODE_KINDS.map((kind) => `'${kind}'`).join(', ')})
             )
           THEN
             config_item := node_item #> '{metadata,config}';
@@ -226,7 +231,7 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
               THEN RETURN FALSE;
               END IF;
             END IF;
-            IF node_item ->> 'kind' = 'dvt:sink' THEN
+            IF node_item ->> 'kind' IN (${DVT_SINK_NODE_KINDS.map((kind) => `'${kind}'`).join(', ')}) THEN
               IF config_item ? 'materialization'
                 AND (jsonb_typeof(config_item -> 'materialization') <> 'string'
                   OR config_item ->> 'materialization' NOT IN ('table', 'view'))
@@ -249,7 +254,10 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
             END IF;
             IF config_item #> '{materialized}' IS NOT NULL
               AND (jsonb_typeof(config_item #> '{materialized}') <> 'string'
-                OR config_item #>> '{materialized}' NOT IN ('table', 'view'))
+                OR config_item #>> '{materialized}' NOT IN (${DVT_TRANSFORM_MATERIALIZATIONS.map((value) => `'${value}'`).join(', ')}))
+            THEN RETURN FALSE;
+            END IF;
+            IF config_item ->> 'materialized' = 'ephemeral' AND config_item ? 'resultTarget'
             THEN RETURN FALSE;
             END IF;
           END IF;

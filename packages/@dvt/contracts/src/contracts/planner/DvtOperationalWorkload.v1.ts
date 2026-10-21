@@ -19,6 +19,10 @@ import {
 } from './DvtOperationalWorkload.shared.js';
 import type { PlanOwnership } from './ExecutionPlan.v1.js';
 import {
+  DvtPostgresSinkPublicationV1Schema,
+  resolveDvtPostgresPublication,
+} from './postgres/DvtPostgresPublicationBoundary.v1.js';
+import {
   DvtOperationalPostgresConnectionRefSchema,
   DvtOperationalRunTargetProjectionRefSchema,
   DvtOperationalTargetProjectionRefSchema,
@@ -69,13 +73,37 @@ export const DvtOperationalRunWorkloadV1Schema = DvtOperationalWorkloadEnvelopeS
   executionIntent: z.literal('run'),
   targetProjection: DvtOperationalRunTargetProjectionRefSchema,
   output: DvtOperationalRunOutputSchema,
-  publicationBoundaries: z.tuple([]),
+  publicationBoundaries: z.array(DvtPostgresSinkPublicationV1Schema).max(1),
 })
   .strict()
   .superRefine((workload, context) => {
     addDvtOperationalWorkloadIdentityIssues(workload, context);
     addDvtPostgresWorkloadProfileIssues(workload, context);
-    const target = workload.output.target.connectionRef;
+    const sink = workload.publicationBoundaries[0];
+    if ((workload.output.disposition === 'ephemeral') !== (sink !== undefined)) {
+      context.addIssue({
+        code: 'custom',
+        path: ['publicationBoundaries'],
+        message:
+          'Run requires either a table result or one Sink for an ephemeral result, never both.',
+      });
+      return;
+    }
+    if (
+      sink !== undefined &&
+      (sink.inputNodeId !== workload.output.nodeId ||
+        sink.nodeId === workload.output.nodeId ||
+        !workload.graph.selectedNodeIds.includes(sink.nodeId))
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['publicationBoundaries', 0],
+        message:
+          'Sink must identify a distinct selected node and the exact semantic Transform input.',
+      });
+    }
+    if (workload.publicationBoundaries.length > 1) return;
+    const target = resolveDvtPostgresPublication(workload).target.connectionRef;
     if (
       target.schemaVersion !== workload.connectionRef.schemaVersion ||
       target.connectionId !== workload.connectionRef.connectionId ||
@@ -83,8 +111,11 @@ export const DvtOperationalRunWorkloadV1Schema = DvtOperationalWorkloadEnvelopeS
     ) {
       context.addIssue({
         code: 'custom',
-        path: ['output', 'target', 'connectionRef'],
-        message: 'Transform result target must use the workload connection.',
+        path:
+          sink === undefined
+            ? ['output', 'target', 'connectionRef']
+            : ['publicationBoundaries', 0, 'target', 'connectionRef'],
+        message: 'Publication target must use the workload connection.',
       });
     }
   });

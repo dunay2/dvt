@@ -3,7 +3,10 @@ import { useCallback } from 'react';
 
 import { applyCanvasInspectorNodeDraftToSession } from './canvasInspectorAuthoringCommand';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
-import { canConfigureNativeMaterialization } from './canvasDvtMaterializationPolicy';
+import {
+  canConfigureNativeMaterialization,
+  withDvtTransformMaterialization,
+} from './canvasDvtMaterializationPolicy';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftApplyResult,
@@ -70,7 +73,7 @@ export function useCanvasInspectorCommands({
           draftSession: currentSession,
           node,
           workspaceScope,
-          draft: { ...draft, dvt: { ...draft.dvt, materialized } },
+          draft: { ...draft, dvt: withDvtTransformMaterialization(draft.dvt, materialized) },
         });
       }),
     [canEditNode, canonicalNodesById, runDraftSessionCommand, workspaceScope]

@@ -69,6 +69,7 @@
     "apps/web/cypress/e2e/canvas/canvas-model-chain-fields.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-column-lineage-mapping.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts",
+    "apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts",

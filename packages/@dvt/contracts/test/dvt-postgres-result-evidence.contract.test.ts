@@ -32,6 +32,7 @@ const EVIDENCE = {
     relation: 'orders_result',
   },
   publication: {
+    nodeId: 'sink-a',
     token: 'f'.repeat(64),
     predecessorToken: null,
     outcome: 'created',
@@ -51,5 +52,19 @@ describe('DVT PostgreSQL result evidence', () => {
     const { workloadSha256: _workloadSha256, ...incomplete } = EVIDENCE;
 
     expect(StepResultEvidenceSchema.safeParse(incomplete).success).toBe(false);
+  });
+
+  it.each([undefined, '', '   '])('rejects publication without a usable node ID: %s', (nodeId) => {
+    expect(
+      StepResultEvidenceSchema.safeParse({
+        ...EVIDENCE,
+        publication: { ...EVIDENCE.publication, nodeId },
+      }).success
+    ).toBe(false);
+  });
+
+  it('rejects old evidence that has no publication identity member', () => {
+    const { nodeId: _nodeId, ...publication } = EVIDENCE.publication;
+    expect(StepResultEvidenceSchema.safeParse({ ...EVIDENCE, publication }).success).toBe(false);
   });
 });

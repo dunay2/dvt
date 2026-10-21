@@ -66,7 +66,7 @@ export const DVT_REJECTIONS = Object.freeze({
   ),
   runDispositionUnsupported: defineOperationalRejection(
     'dvt_run_disposition_unsupported',
-    'Configured Run supports only table result disposition.'
+    'Configured Run requires a table result or an ephemeral Transform feeding one explicit table Sink.'
   ),
   runTargetInvalid: defineOperationalRejection(
     'dvt_run_target_invalid',

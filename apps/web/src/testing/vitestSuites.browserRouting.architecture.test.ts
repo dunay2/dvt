@@ -60,6 +60,7 @@ const formulaJourney = 'apps/web/cypress/support/relationalWorkbench/transformFo
 const treeJourney = 'apps/web/cypress/support/relationalWorkbench/transformTreeJourney.ts';
 const liveWorkloadConsumers = [
   'apps/web/cypress/e2e/canvas/canvas-dvt-join-preview-live.cy.ts',
+  'apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-semantic-persistence-run-live.cy.ts',
   'apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
 ];
@@ -436,6 +437,7 @@ describe('governed browser evidence routing', () => {
         'canvas/canvas-dbt-author-code-run-live.cy.ts',
         'canvas/canvas-dbt-selection-recovery-live.cy.ts',
         'canvas/canvas-dvt-join-preview-live.cy.ts',
+        'canvas/canvas-dvt-sink-publication-live.cy.ts',
         'canvas/canvas-dvt-start-run-boundaries-live.cy.ts',
         'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
         'canvas/canvas-first-authoring-live.cy.ts',
@@ -491,6 +493,7 @@ describe('governed browser evidence routing', () => {
       .sort();
     const expected = [
       'canvas/canvas-dvt-join-preview-live.cy.ts',
+      'canvas/canvas-dvt-sink-publication-live.cy.ts',
       'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
       'canvas/canvas-formula-lineage-live.cy.ts',
       'canvas/canvas-source-identity-live.cy.ts',
@@ -525,6 +528,7 @@ describe('governed browser evidence routing', () => {
       available: [
         'canvas-column-lineage-mapping',
         'canvas-dvt-join-preview-live',
+        'canvas-dvt-sink-publication-live',
         'canvas-first-authoring-live',
       ],
     };
@@ -560,6 +564,7 @@ describe('governed browser evidence routing', () => {
       .sort();
     const expected = [
       'canvas-dvt-join-preview-live',
+      'canvas-dvt-sink-publication-live',
       'canvas-first-authoring-live',
       'canvas-graph-search-filter-live',
       'canvas-minimap-focus-live',
@@ -597,6 +602,7 @@ describe('governed browser evidence routing', () => {
       'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
       'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
+      'apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
       'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
       'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
@@ -620,7 +626,7 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(32);
+    expect(WEB_CYPRESS_SPECS.available).toHaveLength(33);
     expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(51);
     expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
@@ -754,7 +760,7 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(32);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(33);
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);
@@ -805,6 +811,7 @@ describe('governed browser evidence routing', () => {
     transformStage,
     formulaJourney,
     treeJourney,
+    'apps/web/cypress/support/postgresPublicationFlow.ts',
     ...liveWorkloadConsumers,
     ...savedSampleConsumers,
     ...inspectorConsumers,

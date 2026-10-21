@@ -84,6 +84,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/liveCanvasDraftAuthoring.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProjectAuthoring.ts': ['available'],
+  'apps/web/cypress/support/postgresPublicationFlow.ts': ['available'],
   'apps/web/cypress/support/liveWarehouseSourceImport.ts': ['available'],
   'apps/web/cypress/support/liveProtectedRuntime.ts': ['available', 'unavailable'],
   'apps/web/cypress/support/liveProtectedRequest.ts': ['available', 'unavailable'],

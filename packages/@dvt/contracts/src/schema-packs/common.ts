@@ -214,6 +214,7 @@ export const DvtPostgresPublicationEvidenceSchema = z
       .strict(),
     publication: z
       .object({
+        nodeId: NonBlankStringSchema,
         token: Sha256HexStringSchema,
         predecessorToken: Sha256HexStringSchema.nullable(),
         outcome: z.enum(['created', 'replaced', 'verified-existing']),

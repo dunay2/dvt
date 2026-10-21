@@ -278,12 +278,12 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     [
       'en-US',
       DVT_REJECTIONS.runDispositionUnsupported.cause,
-      'Run currently requires a table output. Change the output type.',
+      'Use a table result, or an ephemeral model connected to one table Sink. Do not configure both destinations.',
     ],
     [
       'es-ES',
       DVT_REJECTIONS.runDispositionUnsupported.cause,
-      'La ejecución requiere una salida de tipo tabla. Cambia el tipo de salida.',
+      'Usa un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla. No configures ambos destinos.',
     ],
     [
       'es',
