@@ -1,4 +1,5 @@
 /** Route a selected staged operation to its specific property editor. */
+import { useMemo, type ReactElement } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasStagedCompositionInspector } from './CanvasStagedCompositionInspector';
@@ -15,8 +16,14 @@ import { resolveCanvasRelationalOperationPresentation } from './canvasRelational
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import styles from './CanvasStagedOperationInspector.module.css';
 import { canvasRelationalInputPortLabel } from './canvasRelationalInputPorts';
+import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
+import {
+  CanvasStagedAnalysisProvider,
+  type CanvasStagedAnalysisBinding,
+} from './CanvasStagedAnalysisProvider';
 
 export function CanvasStagedOperationInspector({
+  binding,
   staged,
   editingDocument,
   producerDocument,
@@ -26,6 +33,7 @@ export function CanvasStagedOperationInspector({
   onPendingChange,
   onUpdate,
 }: Readonly<{
+  binding: CanvasStagedAnalysisBinding;
   staged: CanvasStagedOperation;
   editingDocument?: SubstraitDocument | null;
   producerDocument: SubstraitDocument | null;
@@ -38,11 +46,16 @@ export function CanvasStagedOperationInspector({
   ) => void | boolean;
 }>): JSX.Element {
   const editor = readCanvasStagedCompositionSignature(staged.operation).editor;
-  if (editor === 'composition' && staged.semanticDocument != null)
-    return (
+  const configured = useMemo(
+    () => editingDocument ?? decodeCanvasStagedOperation(staged),
+    [editingDocument, staged]
+  );
+  let content: ReactElement | null = null;
+  if (editor === 'composition' && staged.semanticDocument != null && configured != null)
+    content = (
       <CanvasStagedCompositionInspector
         staged={staged}
-        editingDocument={editingDocument}
+        document={configured}
         copy={copy}
         onChange={onUpdate}
         onPendingChange={onPendingChange}
@@ -50,23 +63,23 @@ export function CanvasStagedOperationInspector({
         transformNode={transformNode}
       />
     );
-  if (editor === 'transform' && staged.semanticDocument != null)
-    return (
+  else if (editor === 'transform' && staged.semanticDocument != null && configured != null)
+    content = (
       <CanvasStagedTransformInspector
         staged={staged}
-        editingDocument={editingDocument}
+        document={configured}
         transformNode={transformNode}
         onClose={onClose}
         onPendingChange={onPendingChange}
         onChange={(semanticDocument) => onUpdate({ operation: staged.operation, semanticDocument })}
       />
     );
-  if (editor === 'unary' && producerDocument != null)
-    return (
+  else if (editor === 'unary' && producerDocument != null)
+    content = (
       <CanvasStagedUnaryOperationInspector
         operation={staged.operation as ConfigurableStagedOperation}
         staged={staged}
-        editingDocument={editingDocument}
+        editingDocument={configured}
         producerDocument={producerDocument}
         transformNode={transformNode}
         copy={copy}
@@ -75,7 +88,17 @@ export function CanvasStagedOperationInspector({
         onChange={(semanticDocument) => onUpdate({ operation: staged.operation, semanticDocument })}
       />
     );
-  return <CanvasStagedOperationProperties staged={staged} copy={copy} />;
+  return content == null ? (
+    <CanvasStagedOperationProperties staged={staged} copy={copy} />
+  ) : (
+    <CanvasStagedAnalysisProvider
+      binding={binding}
+      document={configured ?? producerDocument}
+      scope={staged.id}
+    >
+      {content}
+    </CanvasStagedAnalysisProvider>
+  );
 }
 
 function CanvasStagedOperationProperties({

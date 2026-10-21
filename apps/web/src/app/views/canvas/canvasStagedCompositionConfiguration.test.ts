@@ -5,7 +5,8 @@ import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { createSourceDocument } from './canvasSourceDocument';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { graphJoin } from './canvasRelationGraph.test-support';
+import { graphJoin, graphSource } from './canvasRelationGraph.test-support';
+import { resolveCanvasDvtCompositionInputs } from './canvasDvtCompositionInputCatalog';
 import { source } from './canvasRelationalOperator.test-support';
 import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
 import {
@@ -450,17 +451,15 @@ describe('staged composition configuration', () => {
     'configures a transformed producer on port %i without flattening its tree',
     async (richPort) => {
       const rich = graphJoin();
-      const next = source('next');
-      const nextInput: CanvasDvtCompositionInput = {
-        ...next,
-        fields: next.fields.map((field) => ({
-          name: field.name,
-          dataType: field.type,
-          joinDataType: field.type,
-        })),
-      };
+      const connectedSources = [...rich.sources, graphSource('next')];
+      const inputs = resolveCanvasDvtCompositionInputs({
+        targetNodeId: 'model',
+        nodes: connectedSources,
+        edges: connectedSources.map((node) => ({ sourceId: node.id, targetId: 'model' })),
+      });
+      expect(inputs.map((candidate) => candidate.nodeId)).toEqual(['left', 'right', 'next']);
+      const nextInput = inputs.find((candidate) => candidate.nodeId === 'next')!;
       const pending = createPendingSourceOccurrence(nextInput);
-      const inputs = [nextInput];
       const operation = {
         id: `pending-operation:composed-${richPort}`,
         operation: 'inner_join' as const,
@@ -483,6 +482,15 @@ describe('staged composition configuration', () => {
         document?.sidecar.relations.some((relation) => relation.relationId === rich.session.rootId)
       ).toBe(true);
       expect(document?.sidecar.relations).toHaveLength(rich.document.sidecar.relations.length + 2);
+      const unadmitted = configureCanvasStagedComposition(
+        operation,
+        [nextInput],
+        [pending],
+        [operation],
+        rich.document
+      );
+      expect(unadmitted).toBe(operation);
+      expect(unadmitted.semanticDocument).toBeUndefined();
       rich.session.dispose();
     }
   );

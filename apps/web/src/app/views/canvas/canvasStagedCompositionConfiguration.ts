@@ -5,8 +5,7 @@
  * @consequence Rejected configuration preserves the pending operation without partial semantics.
  * @version 1.0.0
  */
-import { hasSameConnectionRef } from '@dvt/postgres-projection';
-import { SubstraitAnalysisError, type SubstraitDocument } from '@dvt/substrait-analysis';
+import { type SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { createCanonicalComposition } from './canvasCanonicalComposition';
 import { mergeCanvasCompositionOperands } from './canvasCompositionOperands';
@@ -14,7 +13,7 @@ import { resolveCanvasDvtJoinFieldPair } from './canvasDvtJoinTypeAdmission';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { joinConditionFields } from './canvasSelectedJoin';
 import { createSourceDocument } from './canvasSourceDocument';
-import { canvasInputConnection } from './canvasSourceRelation';
+import { resolveCanvasCompositionConnection } from './canvasCompositionConnection';
 import {
   canvasStagedOperationAppliedOperation,
   deriveCanvasStagedCompositionState,
@@ -24,30 +23,6 @@ import {
 import { resolveCanvasStagedProducerDocument } from './canvasStagedOperationDocument';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { rebindCanvasUnionComposition } from './canvasRetainedUnionComposition';
-
-function compositionConnection(
-  documents: readonly SubstraitDocument[],
-  inputs: readonly CanvasDvtCompositionInput[]
-): boolean {
-  const connections = documents.flatMap((document) =>
-    document.sidecar.relations.flatMap((binding) => {
-      if (binding.sourceRef != null) return [binding.sourceRef.connectionRef];
-      if (binding.producerRef == null) return [];
-      const input = inputs.find((candidate) => candidate.nodeId === binding.producerRef?.nodeId);
-      if (input == null)
-        throw new SubstraitAnalysisError(
-          'invalid_binding',
-          'Unavailable producer connection.',
-          binding.relationId
-        );
-      return [canvasInputConnection(input)];
-    })
-  );
-  return (
-    connections.length > 0 &&
-    connections.every((connection) => hasSameConnectionRef(connection, connections[0]!))
-  );
-}
 
 function compositionPredicate(
   operands: ReturnType<typeof mergeCanvasCompositionOperands>['operands']
@@ -92,7 +67,8 @@ export function configureCanvasStagedComposition(
     );
     if (documents.some((document) => document == null)) return operation;
     const resolved = documents.filter((document) => document != null);
-    if (!compositionConnection(resolved, inputs)) return operation;
+    if (resolveCanvasCompositionConnection(resolved, inputs).state !== 'available')
+      return operation;
     const merged = mergeCanvasCompositionOperands(resolved);
     const { plan, operands, nextAnchor } = merged;
     const root =

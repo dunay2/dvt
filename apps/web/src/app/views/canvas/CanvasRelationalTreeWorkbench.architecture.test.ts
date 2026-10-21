@@ -80,6 +80,29 @@ import JoinOperandDraftSource from './join-condition/operandDraft.ts?raw';
 import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
 import PresentationNodeSource from './canvasPresentationNode.ts?raw';
 
+describe('staged editor analysis ownership', () => {
+  it('shares execution context and eligibility through one analysis boundary', () => {
+    const source = (name: string): string =>
+      readArchitectureSiblingSource(import.meta.dirname, name);
+    const boundary = source('CanvasStagedAnalysisProvider.tsx');
+    expect(boundary).toContain('useCanvasRelationAnalysisSession(');
+    expect(boundary).toContain('resolveCanvasCompositionConnection(');
+    expect(boundary).toContain('binding.readFieldEligibility(document)');
+    expect(source('CanvasStagedOperationInspector.tsx')).toContain('<CanvasStagedAnalysisProvider');
+    expect(source('canvasStagedCompositionConfiguration.ts')).toContain(
+      'resolveCanvasCompositionConnection('
+    );
+    for (const inspector of [
+      'CanvasStagedCompositionInspector.tsx',
+      'CanvasStagedTransformInspector.tsx',
+      'CanvasStagedUnaryOperationInspector.tsx',
+    ]) {
+      expect(source(inspector)).not.toContain('useCanvasRelationAnalysisSession');
+      expect(source(inspector)).not.toContain('CanvasRelationAnalysisContext.Provider');
+    }
+  });
+});
+
 const ModelDataPanelStyles = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasModelDataPanel.module.css'

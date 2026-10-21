@@ -6,6 +6,14 @@ import {
 } from './TransformDependencyError';
 
 const en = {
+  stagedAnalysis: {
+    'missing-input':
+      'This operation has an unavailable input. Reconnect its Source or Model before editing.',
+    'mixed-connections':
+      'These inputs use different execution connections. Use inputs from the same connection.',
+    'missing-connection':
+      'The execution connection is unavailable for this operation. Check its inputs.',
+  },
   joinFormula: {
     edit: 'Edit condition as formula',
     save: 'Save condition',
@@ -182,6 +190,14 @@ const en = {
   },
 };
 const es: typeof en = {
+  stagedAnalysis: {
+    'missing-input':
+      'Esta operación tiene una entrada no disponible. Reconecta su origen o modelo antes de editar.',
+    'mixed-connections':
+      'Estas entradas usan conexiones de ejecución distintas. Usa entradas de la misma conexión.',
+    'missing-connection':
+      'La conexión de ejecución no está disponible para esta operación. Revisa sus entradas.',
+  },
   joinFormula: {
     edit: 'Editar condición como fórmula',
     save: 'Guardar condición',
