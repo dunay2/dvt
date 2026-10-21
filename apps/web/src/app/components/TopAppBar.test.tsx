@@ -550,6 +550,40 @@ describe('ShellTopBar workspace context', () => {
     });
   });
 
+  it.each([false, true])(
+    'honors View close focus ownership when a newer control received focus: %s',
+    async (transferFocus) => {
+      await act(async () => root.render(renderShellTopBar('/canvas')));
+      const trigger = container.querySelector<HTMLButtonElement>(
+        '[data-slot="shell-menu-trigger"]'
+      )!;
+      const nextControl = document.createElement('button');
+      nextControl.textContent = 'Next workbench control';
+      document.body.appendChild(nextControl);
+      await act(async () => {
+        trigger.focus();
+        fireEvent.pointerDown(trigger);
+      });
+      const command = await waitFor(() => {
+        const item = document.body.querySelector<HTMLElement>(
+          '[data-slot="shell-language-option-es"]'
+        );
+        expect(item).not.toBeNull();
+        return item!;
+      });
+      await act(async () => {
+        fireEvent.click(command);
+        if (transferFocus) nextControl.focus();
+      });
+      await act(async () => {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      });
+      expect(useApplicationLanguageStore.getState().language).toBe('es');
+      expect(document.body.querySelector('[data-slot="shell-language-menu"]')).toBeNull();
+      expect(document.activeElement).toBe(transferFocus ? nextControl : trigger);
+    }
+  );
+
   it('dismisses File when keyboard selection opens project code without stealing editor focus', async () => {
     const onOpenProjectCode = vi.fn();
     useCanvasWorkspaceMenuContributionStore.setState({

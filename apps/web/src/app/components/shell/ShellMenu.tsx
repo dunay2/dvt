@@ -31,6 +31,18 @@ export function ShellMenu(props: ShellMenuProps) {
     configureApplicationLanguage(language);
     setOpen(false);
   }
+  function preserveTransferredFocus(event: Event) {
+    const closingMenu = event.currentTarget;
+    if (!(closingMenu instanceof HTMLElement)) return;
+    const activeElement = closingMenu.ownerDocument.activeElement;
+    if (
+      activeElement !== null &&
+      activeElement !== closingMenu.ownerDocument.body &&
+      !closingMenu.contains(activeElement)
+    ) {
+      event.preventDefault();
+    }
+  }
   return (
     <ShellViewMenuTemplate
       {...props}
@@ -38,6 +50,7 @@ export function ShellMenu(props: ShellMenuProps) {
       onOpenChange={setOpen}
       applicationLanguage={applicationLanguage}
       onLanguageSelected={selectLanguage}
+      onCloseAutoFocus={preserveTransferredFocus}
       onToggleBottomDrawer={props.toggleBottomDrawer}
       onToggleFocusMode={props.toggleFocusMode}
     />
