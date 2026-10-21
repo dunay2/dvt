@@ -105,7 +105,7 @@ describe('useCanvasController canvas document contract', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const root = createRoot(container);
-    const renderSurface = async () => {
+    const renderSurface = async (): Promise<void> => {
       const controller = harness.getLatestResult();
       if (controller == null) throw new Error('Real Canvas controller was not rendered.');
       await act(async () => {
@@ -119,7 +119,7 @@ describe('useCanvasController canvas document contract', () => {
         );
       });
     };
-    const clickCreate = async () => {
+    const clickCreate = async (): Promise<void> => {
       const button = container.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-playground-template-choice"]'
       );
