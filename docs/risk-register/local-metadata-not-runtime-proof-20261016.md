@@ -21,8 +21,10 @@ captured, durably committed READY dataset. These facts are distinct.
 
 Strict schemas reject unknown fields, swapped identities, stale digests,
 inconsistent counts, terminal resurrection and conflicting completion metadata.
-The row-free read port passes scope separately and documents current
-application authorization. No runtime consumer or public route is enabled.
+The row-free reader receives explicit principal/request/workspace context and
+selection. #3394 composes current application authorization and exact metadata
+lookup internally; no public route is enabled. Current native evidence is in
+ED-20261018-local-capture-integration.md and does not establish all type mappings.
 Source coverage and timestamps have explicit meanings; arbitrary SQL, paths,
 row payloads and credentials are not contract fields.
 
@@ -31,8 +33,8 @@ row payloads and credentials are not contract fields.
 Task [#3392](https://github.com/dunay2/dvt/issues/3392) must verify current authorization, scope isolation and revocation.
 Task [#3393](https://github.com/dunay2/dvt/issues/3393) must prove atomic generation publication and pinned-reader behavior.
 Tasks [#3394](https://github.com/dunay2/dvt/issues/3394) and [#3395](https://github.com/dunay2/dvt/issues/3395) must prove actual type fidelity, completion/EOF, budgets, cancellation
-and storage failures with real providers/engines. #3391 itself still requires
-its real dependency-backed contract/build/lint/prepush gates.
+and storage failures with real providers/engines. #3671 passed its metadata-only
+contract/build/lint/prepush gates; that acceptance does not replace consumer proof.
 
 ## Exit criterion
 

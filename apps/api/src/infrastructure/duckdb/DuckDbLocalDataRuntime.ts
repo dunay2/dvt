@@ -5,8 +5,6 @@
  * @consequence No SQL/native application port, LOCAL readiness claim, shared-temp deletion or host RSS guarantee.
  * @version 1.0.0
  */
-import { lstat } from 'node:fs/promises';
-
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
 
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
@@ -16,6 +14,10 @@ import { resolveWorkspaceScopeStorageRoot } from '../workspaceFiles/workspaceSco
 import {
   LocalDataStorageBoundaryError,
   prepareDuckDbWorkspacePaths,
+  validateDuckDbLocalDataRoots,
+  readDuckDbWorkspaceIdentity,
+  validateDuckDbWorkspaceIdentity,
+  type DuckDbWorkspaceIdentity,
 } from './duckDbLocalDataPaths.js';
 
 type RuntimeFailure =
@@ -29,9 +31,7 @@ type RuntimeFailure =
 type Configuration = Extract<LocalDataConfiguration, { kind: 'configured' }>;
 type InstanceLease = Readonly<{
   instance: DuckDBInstance;
-  database: string;
-  device: number;
-  inode: number;
+  storage: DuckDbWorkspaceIdentity;
 }>;
 
 export class LocalDataRuntimeError extends Error {
@@ -111,6 +111,21 @@ export class DuckDbLocalDataRuntime {
     return this.closing;
   }
 
+  /** Authorized infrastructure preflight: absent workspaces must not be created by metadata queries. */
+  public async hasWorkspaceDatabase(scope: WorkspaceStorageScope): Promise<boolean> {
+    if (this.closing !== undefined) throw new LocalDataRuntimeError('closed');
+    if (this.configuration.kind === 'disabled') throw new LocalDataRuntimeError('disabled');
+    await validateDuckDbLocalDataRoots(this.configuration);
+    try {
+      await readDuckDbWorkspaceIdentity(this.configuration, scope);
+      return true;
+    } catch (error) {
+      if (error instanceof LocalDataStorageBoundaryError && error.reason === 'not_found')
+        return false;
+      throw error;
+    }
+  }
+
   private instanceForScope(
     scope: WorkspaceStorageScope,
     configuration: Configuration
@@ -149,9 +164,8 @@ export class DuckDbLocalDataRuntime {
         instanceSettings(configuration, paths.temporary)
       );
       await lockInstanceConfiguration(instance);
-      await prepareDuckDbWorkspacePaths(configuration, scope);
-      const entry = await lstat(paths.database);
-      return { instance, database: paths.database, device: entry.dev, inode: entry.ino };
+      const storage = await readDuckDbWorkspaceIdentity(configuration, scope);
+      return { instance, storage };
     } catch (error) {
       try {
         instance?.closeSync();
@@ -169,17 +183,8 @@ export class DuckDbLocalDataRuntime {
     configuration: Configuration
   ): Promise<T> {
     const lease = await this.instanceForScope(scope, configuration);
-    // Reuse does not cache filesystem preflight as a permission or lease.
-    try {
-      await prepareDuckDbWorkspacePaths(configuration, scope);
-      const current = await lstat(lease.database);
-      if (current.dev !== lease.device || current.ino !== lease.inode) {
-        throw new LocalDataStorageBoundaryError('unsafe_file');
-      }
-    } catch (error) {
-      if (error instanceof LocalDataStorageBoundaryError) throw error;
-      throw new LocalDataStorageBoundaryError('io_unavailable');
-    }
+    // Never recreate a disappeared workspace/spill directory while an instance still owns it.
+    await validateDuckDbWorkspaceIdentity(configuration, scope, lease.storage);
     let connection: DuckDBConnection | undefined;
     try {
       connection = await lease.instance.connect();
@@ -188,7 +193,12 @@ export class DuckDbLocalDataRuntime {
       // Native diagnostics can embed SQL, paths or row values. The public error is structural and sanitized.
       throw new LocalDataRuntimeError('session_failed');
     } finally {
-      closeConnection(connection);
+      try {
+        closeConnection(connection);
+      } finally {
+        // Check new WAL/mode changes even after callback/close failure; this does not roll back effects.
+        await validateDuckDbWorkspaceIdentity(configuration, scope, lease.storage);
+      }
     }
   }
 

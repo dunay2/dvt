@@ -32,11 +32,14 @@ describe('API test execution manifests', () => {
       scripts?: Record<string, string>;
     };
 
-    expect(packageJson.scripts?.['test:unit']).toBe('vitest run --config vitest.config.ts');
+    const runner =
+      'node --require ../../scripts/local-data-private-creation.cjs ../../node_modules/vitest/vitest.mjs';
+    expect(packageJson.scripts?.['test:unit']).toBe(`${runner} run --config vitest.config.ts`);
     expect(packageJson.scripts?.['test:integration:ci']).toBe(
-      'vitest run --config vitest.integration.config.ts'
+      `${runner} run --config vitest.integration.config.ts`
     );
-    expect(packageJson.scripts?.test).toBe('vitest run --config vitest.config.ts');
+    expect(packageJson.scripts?.test).toBe('pnpm test:unit');
+    expect(packageJson.scripts?.['test:integration']).toBe('pnpm test:integration:ci');
     expect(packageJson.scripts?.['test:ci']).toBe('pnpm test:unit && pnpm test:integration:ci');
     expect(packageJson.scripts?.['test:full']).toBe('pnpm test:unit && pnpm test:integration:ci');
   });

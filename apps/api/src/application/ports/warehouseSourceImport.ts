@@ -136,10 +136,14 @@ export type PreviewWarehouseSourceObjectRowsInput = SourceDataSampleRequest & {
   readonly scope: WorkspaceGraphDraftScope;
 };
 
-export type WarehouseSourceDataSampleProbeTarget = WarehouseConnectionProbeTarget & {
+/** Relation identity shared by discovery/Preview and bulk acquisition, not a display window. */
+export type WarehouseSourceObjectProbeTarget = WarehouseConnectionProbeTarget & {
   readonly objectId: string;
-  readonly limit: number;
   readonly expectedPublicationToken?: string;
+};
+
+export type WarehouseSourceDataSampleProbeTarget = WarehouseSourceObjectProbeTarget & {
+  readonly limit: number;
 };
 
 export type WarehouseSourceDataSampleProbeResult = Pick<

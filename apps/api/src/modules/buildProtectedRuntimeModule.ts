@@ -10,6 +10,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
+import { MAX_BATCH_ROWS } from '../domain/localDataBatch.js';
 import { ArtifactBackedRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/ArtifactBackedRunExecutionContextInheritanceWriter.js';
 import { ArtifactBackedRunExecutionContextReferenceReader } from '../infrastructure/dbt/ArtifactBackedRunExecutionContextReferenceReader.js';
 import { ConfiguredDbtExecutionConnectionBindingVerifier } from '../infrastructure/dbt/ConfiguredDbtExecutionConnectionBindingVerifier.js';
@@ -23,6 +24,7 @@ import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
 import { buildDbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
+import { buildLocalDataCaptureRuntime } from './localData/buildLocalDataCaptureRuntime.js';
 import { buildProtectedAdmissionRuntime } from './protectedRuntime/buildProtectedAdmissionRuntime.js';
 import { buildProtectedExecutionCapacityPort } from './protectedRuntime/buildProtectedExecutionCapacityPort.js';
 import { buildProtectedExecutionRuntime } from './protectedRuntime/buildProtectedExecutionRuntime.js';
@@ -194,7 +196,21 @@ export async function buildProtectedRuntimeModule(
   // Construct only after the other assembly steps succeed; no native handle is opened until an
   // authorized infrastructure consumer acquires a session. Keep the gateway out of public ports.
   const localDataRuntime = new DuckDbLocalDataRuntime(env.localData);
+  const localData = buildLocalDataCaptureRuntime({
+    configuration: env.localData,
+    runtime: localDataRuntime,
+    authorizer: securityRuntime.commandAuthorizer,
+    catalog: storageRuntime.warehouseConnectionCatalog,
+    credentials: storageRuntime.postgresCredentialResolver,
+    clock: () => new Date(),
+    capture: {
+      limits: { maxRows: 100000, maxLogicalBytes: 16777216 },
+      batchRows: MAX_BATCH_ROWS,
+      timeoutMs: 60000,
+    },
+  });
   return {
+    ...(localData === undefined ? {} : { localData }),
     startRunUseCase: startRunRuntime.startRunUseCase,
     startRunTelemetry: startRunRuntime.startRunTelemetry,
     authenticator: securityRuntime.authenticator,

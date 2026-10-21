@@ -202,6 +202,9 @@ importers:
       pg:
         specifier: ^8.12.0
         version: 8.18.0
+      pg-cursor:
+        specifier: 2.15.3
+        version: 2.15.3(pg@8.18.0)
       pgsql-deparser:
         specifier: 16.1.1
         version: 16.1.1
@@ -233,6 +236,9 @@ importers:
       '@types/pg':
         specifier: ^8.11.10
         version: 8.16.0
+      '@types/pg-cursor':
+        specifier: 2.7.2
+        version: 2.7.2
       tsx:
         specifier: ^4.0.0
         version: 4.21.0
@@ -4974,6 +4980,9 @@ packages:
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
+  '@types/pg-cursor@2.7.2':
+    resolution: {integrity: sha512-m3xT8bVFCvx98LuzbvXyuCdT/Hjdd/v8ml4jL4K1QF70Y8clOfCFdgoaEB1FWdcSwcpoFYZTJQaMD9/GQ27efQ==}
+
   '@types/pg@8.16.0':
     resolution: {integrity: sha512-RmhMd/wD+CF8Dfo+cVIy3RR5cl8CyfXQ0tGgW6XBL8L4LM/UTEbNXYRbLwU6w+CgrKBNbrQWt4FUtTfaU5jSYQ==}
 
@@ -7736,6 +7745,11 @@ packages:
 
   pg-connection-string@2.11.0:
     resolution: {integrity: sha512-kecgoJwhOpxYU21rZjULrmrBJ698U2RxXofKVzOn5UDj61BPj/qMb7diYUR1nLScCDbrztQFl1TaQZT0t1EtzQ==}
+
+  pg-cursor@2.15.3:
+    resolution: {integrity: sha512-eHw63TsiGtFEfAd7tOTZ+TLy+i/2ePKS20H84qCQ+aQ60pve05Okon9tKMC+YN3j6XyeFoHnaim7Lt9WVafQsA==}
+    peerDependencies:
+      pg: ^8
 
   pg-int8@1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
@@ -13078,6 +13092,11 @@ snapshots:
 
   '@types/parse-json@4.0.2': {}
 
+  '@types/pg-cursor@2.7.2':
+    dependencies:
+      '@types/node': 26.6.2
+      '@types/pg': 8.16.0
+
   '@types/pg@8.16.0':
     dependencies:
       '@types/node': 26.6.2
@@ -16128,6 +16147,10 @@ snapshots:
     optional: true
 
   pg-connection-string@2.11.0: {}
+
+  pg-cursor@2.15.3(pg@8.18.0):
+    dependencies:
+      pg: 8.18.0
 
   pg-int8@1.0.1: {}
 
