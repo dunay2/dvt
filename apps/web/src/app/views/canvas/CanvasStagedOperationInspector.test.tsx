@@ -27,6 +27,10 @@ describe('CanvasStagedOperationInspector', () => {
     act(() => {
       root.render(
         <CanvasStagedOperationInspector
+          binding={{
+            inputs: [],
+            readFieldEligibility: () => ({ denied: new Set(), disconnected: new Set() }),
+          }}
           staged={{
             id: 'pending-operation:join',
             operation: 'inner_join',

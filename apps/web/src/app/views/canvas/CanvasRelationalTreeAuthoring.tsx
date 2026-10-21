@@ -37,13 +37,9 @@ export function CanvasRelationalTreeAuthoring({
   sourceOutputFieldsByRelationId: ReadonlyMap<string, readonly string[]>;
   authoring?: CanvasRelationalTreeAuthoringContract;
 }>): JSX.Element {
-  const { selectedRelationId, transformNode } = data;
-  const pending = data.pendingSources.find(
-    (item) => item.read.binding.relationId === data.selectedPendingId
-  );
-  const staged = data.stagedOperations.find(
-    (operation) => operation.id === data.selectedStagedOperationId
-  );
+  const { selectedPendingId: pendingId, selectedStagedOperationId: stagedId } = data;
+  const pending = data.pendingSources.find((item) => item.read.binding.relationId === pendingId);
+  const staged = data.stagedOperations.find((operation) => operation.id === stagedId);
   const { editingDocument, producerDocument } = useMemo(
     () => ({
       editingDocument:
@@ -83,10 +79,11 @@ export function CanvasRelationalTreeAuthoring({
       inspector={
         staged != null ? (
           <CanvasStagedOperationInspector
+            binding={data.analysisBinding}
             staged={staged}
             editingDocument={editingDocument}
             producerDocument={producerDocument}
-            transformNode={transformNode}
+            transformNode={data.transformNode}
             copy={copy}
             onClose={actions.clearStagedOperationSelection}
             onPendingChange={onPendingConditionChange}
@@ -100,7 +97,7 @@ export function CanvasRelationalTreeAuthoring({
             publishedFieldNames={
               sourceOutputFieldsByRelationId.get(pending.read.binding.relationId) ?? []
             }
-            consumerNodeId={transformNode.id}
+            consumerNodeId={data.transformNode.id}
             onMapInput={authoring?.onMapInput}
             onRemoveInput={authoring?.onRemoveInput}
             occupied={
@@ -126,8 +123,8 @@ export function CanvasRelationalTreeAuthoring({
             onChangeJoinDraft={actions.changeDraft}
             onSelectRelation={actions.reconcileSelection}
             onPendingConditionChange={onPendingConditionChange}
-            selectedRelationId={selectedRelationId}
-            transformNode={transformNode}
+            selectedRelationId={data.selectedRelationId}
+            transformNode={data.transformNode}
             expanded={expanded}
             onClose={() => onExpandedChange(false)}
           />

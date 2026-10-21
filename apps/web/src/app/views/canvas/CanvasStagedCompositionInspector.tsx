@@ -5,18 +5,14 @@
  * @consequence No UNION-specific inspector, copied semantic state or parallel save rail is added.
  * @version 1.0.0
  */
-import { useMemo } from 'react';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
-import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalTreeOperationEditor } from './CanvasRelationalTreeOperationEditor';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
-import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { canvasJoinOperationForType, isCanvasJoinOperation } from './canvasRelationalTreeJoinType';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
-import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
@@ -34,7 +30,7 @@ function operationFor(document: SubstraitDocument, staged: CanvasStagedOperation
 
 export function CanvasStagedCompositionInspector({
   staged,
-  editingDocument,
+  document,
   copy,
   onChange,
   onPendingChange,
@@ -42,7 +38,7 @@ export function CanvasStagedCompositionInspector({
   transformNode,
 }: Readonly<{
   staged: CanvasStagedOperation;
-  editingDocument?: SubstraitDocument | null;
+  document: SubstraitDocument;
   copy: CanvasRelationalTreeWorkbenchCopy;
   onChange: (
     update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
@@ -51,46 +47,38 @@ export function CanvasStagedCompositionInspector({
   onClose: () => void;
   transformNode: CanonicalNode;
 }>): JSX.Element | null {
-  const document = useMemo(
-    () => editingDocument ?? decodeCanvasStagedOperation(staged),
-    [editingDocument, staged.semanticDocument]
-  );
-  const analysis = useCanvasRelationAnalysisSession(document, staged.id);
   const [setPropertiesPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
-  if (document == null) return null;
   const change = (next: SubstraitDocument) => {
     const operation = operationFor(next, staged);
     if (operation == null) return;
     return onChange({ operation, semanticDocument: encodeDvtSubstraitSemanticDocument(next) });
   };
   return (
-    <CanvasRelationAnalysisContext.Provider value={analysis}>
-      <CanvasRelationalTreeEditorFrame
-        dataSlot="canvas-staged-operation-inspector"
-        operation={staged.operation as CanvasRelationalOperation}
-        relationId={staged.id}
-        hasExpression={isCanvasJoinOperation(staged.operation)}
-        onClose={onClose}
-        output={
-          <CanvasRelationOutputs
-            relationId={staged.id}
-            disabled={false}
-            onChange={change}
-            onPendingChange={setOutputsPending}
-          />
-        }
-      >
-        <CanvasRelationalTreeOperationEditor
-          copy={copy}
-          draft={document}
-          transformNode={transformNode}
-          selectedRelationId={staged.id}
-          cross={staged.operation === 'cross_join'}
-          set={!isCanvasJoinOperation(staged.operation) && staged.operation !== 'cross_join'}
-          onPendingConditionChange={setPropertiesPending}
-          onChangeJoinDraft={change}
+    <CanvasRelationalTreeEditorFrame
+      dataSlot="canvas-staged-operation-inspector"
+      operation={staged.operation as CanvasRelationalOperation}
+      relationId={staged.id}
+      hasExpression={isCanvasJoinOperation(staged.operation)}
+      onClose={onClose}
+      output={
+        <CanvasRelationOutputs
+          relationId={staged.id}
+          disabled={false}
+          onChange={change}
+          onPendingChange={setOutputsPending}
         />
-      </CanvasRelationalTreeEditorFrame>
-    </CanvasRelationAnalysisContext.Provider>
+      }
+    >
+      <CanvasRelationalTreeOperationEditor
+        copy={copy}
+        draft={document}
+        transformNode={transformNode}
+        selectedRelationId={staged.id}
+        cross={staged.operation === 'cross_join'}
+        set={!isCanvasJoinOperation(staged.operation) && staged.operation !== 'cross_join'}
+        onPendingConditionChange={setPropertiesPending}
+        onChangeJoinDraft={change}
+      />
+    </CanvasRelationalTreeEditorFrame>
   );
 }

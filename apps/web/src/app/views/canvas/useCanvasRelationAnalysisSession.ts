@@ -45,7 +45,17 @@ export function useCanvasRelationAnalysisSession(
     );
     try {
       session.receive(document, deniedInputs, disconnectedInputs);
-      setReady({ document, session, revision: session.revision, permissionIdentity, error: null });
+      const revision = session.revision;
+      setReady((current) =>
+        current != null &&
+        current.document === document &&
+        current.session === session &&
+        current.revision === revision &&
+        current.permissionIdentity === permissionIdentity &&
+        current.error === null
+          ? current
+          : { document, session, revision, permissionIdentity, error: null }
+      );
     } catch (error) {
       session.dispose();
       setReady({ document, session, revision: session.revision, permissionIdentity, error });
