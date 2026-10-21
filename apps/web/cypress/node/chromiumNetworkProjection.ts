@@ -12,6 +12,7 @@ type NetworkEvent = Readonly<{
   time?: string;
   phase?: number;
   netError?: number;
+  statusCode?: number;
   method?: string;
   origin?: string;
   route?: string;
@@ -39,17 +40,31 @@ function safeRoute(value: unknown): Readonly<{ origin: string; route: string }> 
       '/workspace/context',
       '/workspace/graph/draft',
     ];
-    const route = exact.includes(url.pathname)
-      ? url.pathname
-      : url.pathname.startsWith('/workspace/files/')
-        ? '/workspace/files/:path'
-        : url.pathname.startsWith('/workspace/dbt/')
-          ? '/workspace/dbt/:operation'
-          : '/other';
+    const compiledCss = /^\/assets\/(?:index|Canvas|RunsView)-[A-Za-z0-9_-]{8}\.css$/u.test(
+      url.pathname
+    );
+    const route =
+      exact.includes(url.pathname) || compiledCss
+        ? url.pathname
+        : url.pathname.startsWith('/workspace/files/')
+          ? '/workspace/files/:path'
+          : url.pathname.startsWith('/workspace/dbt/')
+            ? '/workspace/dbt/:operation'
+            : '/other';
     return { origin: url.origin, route };
   } catch {
     return null;
   }
+}
+
+function readResponseStatus(kind: string, headers: unknown): number | undefined {
+  if (kind !== 'HTTP_TRANSACTION_READ_RESPONSE_HEADERS' || !Array.isArray(headers)) return;
+  for (const header of headers) {
+    if (typeof header !== 'string') continue;
+    const status = /^HTTP\/\d(?:\.\d)? ([1-5]\d{2})(?: |$)/u.exec(header);
+    if (status) return Number(status[1]);
+  }
+  return undefined;
 }
 
 export function projectChromiumNetworkLog(
@@ -90,6 +105,7 @@ export function projectChromiumNetworkLog(
         ? params.method
         : undefined;
     const route = safeRoute(params?.url);
+    const statusCode = readResponseStatus(kind, params?.headers);
     events.push({
       kind,
       sourceId: source.id,
@@ -103,6 +119,7 @@ export function projectChromiumNetworkLog(
         ? { netError: params.net_error }
         : {}),
       ...(method === undefined ? {} : { method }),
+      ...(statusCode === undefined ? {} : { statusCode }),
       ...(route ?? {}),
     });
   }

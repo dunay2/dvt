@@ -12,15 +12,18 @@ const workflow = yaml.load(
 const web = workflow.jobs['web-frontend-tests'];
 const reportPath = '.dvt/evidence/chromium-network/*.json';
 
-test('only the first available group enables native network diagnostics', () => {
+test('each available browser group enables its own network diagnostics', () => {
   const expression = web.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS.replace(/^\$\{\{|\}\}$/gu, '');
-  for (const [capability, shard, expected] of [
-    ['available', 1, '1'],
-    ['available', 2, ''],
-    ['unavailable', undefined, ''],
-    [undefined, undefined, ''],
+  for (const [phase, capability, shard, expected] of [
+    ['browser', 'available', 1, '1'],
+    ['browser', 'available', 2, '1'],
+    ['browser', 'available', 3, '1'],
+    ['browser', 'unavailable', undefined, ''],
+    ['browser', undefined, undefined, ''],
+    ['vitest', 'available', 1, ''],
+    ['vitest', undefined, undefined, ''],
   ]) {
-    assert.equal(runInNewContext(expression, { matrix: { capability, shard } }), expected);
+    assert.equal(runInNewContext(expression, { matrix: { phase, capability, shard } }), expected);
   }
 });
 
@@ -32,16 +35,20 @@ test('network evidence publishes only an existing sanitized report, including fa
   assert.equal(artifact.with.path, reportPath);
   assert.equal(artifact.with['include-hidden-files'], true);
   assert.equal(artifact.with['if-no-files-found'], 'error');
-  for (const [capability, shard, present, expected] of [
-    ['available', 1, true, true],
-    ['available', 1, false, false],
-    ['available', 2, true, false],
-    ['unavailable', 1, true, false],
-    [undefined, undefined, true, false],
+  for (const [capability, shard, enabled, present, expected] of [
+    ['available', 1, '1', true, true],
+    ['available', 2, '1', true, true],
+    ['available', 3, '1', true, true],
+    ['available', 1, '1', false, false],
+    ['available', 2, '1', false, false],
+    ['available', 1, '', true, false],
+    ['unavailable', 1, '', true, false],
+    [undefined, undefined, '', true, false],
   ]) {
     assert.equal(
       runInNewContext(artifact.if, {
         matrix: { capability, shard },
+        env: { DVT_CYPRESS_NETWORK_DIAGNOSTICS: enabled },
         always: () => true,
         hashFiles: (pattern) => {
           assert.equal(pattern, reportPath);

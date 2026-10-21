@@ -665,12 +665,26 @@ flowchart LR
 
 `RunWebCypressNative` retains the same literal scenarios, authentication,
 providers, assertions and budget. The existing Cypress Node event adapter
-optionally captures Chromium net-log for available group 1 only. The pure
+optionally captures Chromium net-log for each admitted available group. A failure
+in group 2 or 3 must retain evidence from that same group; group 1's capture does
+not establish another group's request outcome. The pure
 projection and Node lifecycle have separate owners. Exported JSON contains
 event/source identifiers, event kinds, numeric network errors, method and safe
-loopback route groups only. Headers, bodies, cookies, URL queries, userinfo and
+loopback route groups only. Known compiled `index`, `Canvas` and `RunsView` CSS
+asset paths retain their ASCII basename and hash so a request can be correlated
+with its source ID. A recognized response status line contributes only its
+derived numeric HTTP status; absent response headers do not imply an HTTP result.
+Headers, bodies, cookies, URL queries, userinfo and
 arbitrary raw parameters are omitted. Raw capture is outside artifact
 publication and its exact temporary files are removed by their owner.
+
+```mermaid
+flowchart LR
+  Shards[Existing available groups 1, 2 and 3] --> Capture[Existing capture lease]
+  Capture --> Identity[Safe CSS asset path and source ID]
+  Identity --> Outcome[Observed HTTP status or numeric network error]
+  Outcome --> Artifact[Report owned by the same group]
+```
 
 The native parent owns the capture lease and finalization after the Cypress
 binary completes. Cypress `after:run` is not the close boundary: a real Windows
@@ -699,7 +713,8 @@ executable partition, not the package-free static partition. The all-mode union,
 fail-closed dependency guard and assertions remain unchanged; removing that exact
 registration is a negative test, not an exemption from coverage.
 
-Sanitized network reports publish independently of failure screenshots and only
+Sanitized network reports publish for the enabled available group, independently
+of failure screenshots and only
 when a report exists. An empty routed group produces neither a capture nor a
 synthetic artifact. Artifact admission has its own focused CI contract; malformed
 captures and incomplete browser results still reject at their existing owners.

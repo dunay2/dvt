@@ -68,6 +68,57 @@ test('projects CORS event kind and numeric error without arbitrary failure param
   assert.doesNotMatch(JSON.stringify(result), /private|cookie|failed_parameter/);
 });
 
+test('correlates known compiled CSS assets with observed HTTP status without exporting headers', () => {
+  for (const asset of ['index-Cq5vnsls', 'Canvas-Dqu6Pn90', 'RunsView-Dcs-ZTu0']) {
+    const input = netlog(`http://user:secret@127.0.0.1:4173/assets/${asset}.css?token=private`);
+    input.constants.logEventTypes.HTTP_TRANSACTION_READ_RESPONSE_HEADERS = 3;
+    input.events.push({
+      type: 3,
+      source: { id: 7, type: 1 },
+      params: { headers: ['HTTP/1.1 404 Not Found', 'Set-Cookie: private', 'X-Token: private'] },
+    });
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.events[0].route, `/assets/${asset}.css`);
+    assert.equal(result.events[1].sourceId, result.events[0].sourceId);
+    assert.equal(result.events[1].statusCode, 404);
+    assert.doesNotMatch(JSON.stringify(result), /private|secret|Cookie|headers|Token/);
+  }
+});
+
+test('only recognized response status lines supply an HTTP outcome', () => {
+  for (const [headers, statusCode] of [
+    [['HTTP/1.1 200 OK'], 200],
+    [['HTTP/2 503 Unavailable'], 503],
+    [['Authorization: HTTP/1.1 200 private'], undefined],
+    [['HTTP/1.1 999 private'], undefined],
+    [['HTTP/1.1 099 private'], undefined],
+    [[null, 'X-Private: secret'], undefined],
+    [undefined, undefined],
+  ]) {
+    const input = netlog();
+    input.constants.logEventTypes.HTTP_TRANSACTION_READ_RESPONSE_HEADERS = 3;
+    input.events[0].type = 3;
+    input.events[0].params = { headers, net_error: -101 };
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.events[0].statusCode, statusCode);
+    assert.equal(result.events[0].netError, -101);
+    assert.doesNotMatch(JSON.stringify(result), /private|secret|headers|Authorization/);
+  }
+});
+
+test('arbitrary CSS names and non-loopback assets retain the existing redaction boundary', () => {
+  for (const url of [
+    'http://127.0.0.1:4173/assets/customer-secret.css',
+    'http://127.0.0.1:4173/assets/RunsView-private.css',
+    'http://127.0.0.1:4173/assets/RunsView-private/path.css',
+    'https://secret.example/assets/RunsView-Dcs-ZTu0.css',
+  ]) {
+    const result = projectChromiumNetworkLog(netlog(url));
+    assert.ok(result.events[0].route === '/other' || result.events[0].route === undefined);
+    assert.doesNotMatch(JSON.stringify(result), /customer|secret|private|example|RunsView/);
+  }
+});
+
 test('missing or malformed capture rejects without including raw input', () => {
   for (const input of [
     null,
