@@ -18,6 +18,7 @@ test('each available browser group enables its own network diagnostics', () => {
     ['browser', 'available', 1, '1'],
     ['browser', 'available', 2, '1'],
     ['browser', 'available', 3, '1'],
+    ['browser', 'controlled', undefined, ''],
     ['browser', 'unavailable', undefined, ''],
     ['browser', undefined, undefined, ''],
     ['vitest', 'available', 1, ''],
@@ -42,6 +43,7 @@ test('network evidence publishes only an existing sanitized report, including fa
     ['available', 1, '1', false, false],
     ['available', 2, '1', false, false],
     ['available', 1, '', true, false],
+    ['controlled', undefined, '', true, false],
     ['unavailable', 1, '', true, false],
     [undefined, undefined, '', true, false],
   ]) {

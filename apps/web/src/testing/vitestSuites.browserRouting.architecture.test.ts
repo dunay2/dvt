@@ -870,6 +870,7 @@ describe('governed browser evidence routing', () => {
     'cypress.config.ts',
     'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
     'apps/web/cypress/node/chromiumNetworkProjection.ts',
+    'apps/web/cypress/node/chromiumNetworkEvidence.ts',
   ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
     expect(
       resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)

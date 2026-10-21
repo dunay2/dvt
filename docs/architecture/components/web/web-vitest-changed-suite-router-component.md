@@ -657,10 +657,12 @@ flowchart LR
   Browser[Real Chromium requests] --> Proxy[Cypress transport]
   Proxy --> API[Real protected API]
   Browser --> Capture[Opt-in Chromium net-log]
-  Capture --> Projection[Allowlisted metadata projection]
-  Projection --> Evidence[Sanitized error and CORS event evidence]
+  Capture --> Observation[Private failed-spec observation]
   Capture --> Completion[Native Cypress process completes]
-  Completion --> Cleanup[Exact owned raw-file cleanup]
+  Observation --> Completion
+  Completion --> Projection[Reconciled allowlisted metadata]
+  Projection --> Evidence[Sanitized network and lifecycle evidence]
+  Projection --> Cleanup[Exact owned raw-file cleanup]
 ```
 
 `RunWebCypressNative` retains the same literal scenarios, authentication,
@@ -669,8 +671,10 @@ optionally captures Chromium net-log for each admitted available group. A failur
 in group 2 or 3 must retain evidence from that same group; group 1's capture does
 not establish another group's request outcome. The pure
 projection and Node lifecycle have separate owners. Exported JSON contains
-event/source identifiers, event kinds, numeric network errors, method and safe
-loopback route groups only. Known compiled `index`, `Canvas` and `RunsView` CSS
+event/source identifiers, numeric source dependency links, event kinds, numeric
+network errors, method, numeric HTTP status and safe loopback route groups only.
+The numeric time-tick offset permits correlation with API wall-clock logs.
+Known compiled `index`, `Canvas` and `RunsView` CSS
 asset paths retain their ASCII basename and hash so a request can be correlated
 with its source ID. A recognized response status line contributes only its
 derived numeric HTTP status; absent response headers do not imply an HTTP result.
@@ -691,6 +695,48 @@ binary completes. Cypress `after:run` is not the close boundary: a real Windows
 proof passed its journey but that hook still saw the Chrome file locked. Node
 plugin launch hooks receive only the owned lease through scoped process
 environment; that environment is restored on success or failure.
+
+GH-3604's native-completion reconciliation separates an observation from a
+finalized report. The `after:spec` hook retains a private, validated observation
+for each failed spec before later browser activity can overwrite it. Successful
+specs add no observation. The hook does not publish, close or modify Chrome's
+capture. Only native completion publishes evidence and removes exact owned files.
+Each launch returns its capture identity to the hook adapter. A failed spec is
+observed only against the active launch, never against older retained capture
+directories. A non-Chromium launch clears that identity. The native lifetime
+owner, not the per-spec hook, enumerates all launches for finalization and cleanup.
+
+```mermaid
+flowchart LR
+  Hook[Failed spec] --> Observation[Private observation of open writer]
+  Completion[Native completion] --> Final[Final capture]
+  Observation --> Continuity[Exact byte-prefix comparison]
+  Final --> Continuity
+  Continuity --> Retained[Retained: include late-written events]
+  Continuity --> Replaced[Replaced: preserve partial observation and declare gap]
+  Retained --> Publish[Safe projection and exact private-file cleanup]
+  Replaced --> Publish
+```
+
+When the final capture retains the exact observed prefix, the failed-spec report
+uses the final projection, including events written after the hook. Otherwise it
+retains the earlier observation with `continuity=replaced` and
+`observationBoundary=after:spec`. This cannot recover an unwritten queue from a
+replaced writer. No sleep or stable-size heuristic constitutes a flush
+acknowledgement. `captureState=complete` describes a closed JSON document, not
+whole-run coverage. The evidence assembler owns reconciliation; the Node adapter
+owns hooks and lifetime; the pure mapper owns disclosure policy.
+The spec timestamp is a correlation marker, not a claim that all retained events
+belong to that spec: the final projection may also contain subsequent activity.
+
+An additional private Chrome process log admits only the exact network-service
+restart signal with numeric process/thread identifiers and its timestamp. A
+missing process log is explicitly unavailable; absence of a matched signal does
+not prove absence of a restart. Raw text and arbitrary errors are never exported.
+Both raw logs and private observations remain outside artifact publication and
+are removed at native completion, including rejection paths. Malformed or
+unreadable captures still fail explicitly. Test error/result payloads are never
+serialized. This repairs evidence lifecycle, not a demonstrated transport cause.
 
 The real capture can end before its JSON footer when Cypress terminates Chrome.
 The maintained `jsonc-parser` development dependency decodes complete observed
@@ -719,7 +765,7 @@ when a report exists. An empty routed group produces neither a capture nor a
 synthetic artifact. Artifact admission has its own focused CI contract; malformed
 captures and incomplete browser results still reject at their existing owners.
 
-The Cypress config and its two exact Node diagnostic imports are admitted browser
+The Cypress config and its three exact Node diagnostic modules are admitted browser
 support boundaries for controlled, available and unavailable capabilities. Their
 module-load failures affect every capability even when capture is disabled. This
 retains complete evidence; unknown configuration and Node neighbors still reject.
