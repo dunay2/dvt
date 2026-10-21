@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSessionStore } from '../../stores/sessionStore';
-import { createApiClient, resolveApiBaseUrl } from './createApiClient';
+import { ApiError, createApiClient, resolveApiBaseUrl } from './createApiClient';
 
 function encodeJwtSegment(payload: unknown): string {
   return btoa(JSON.stringify(payload)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
@@ -260,6 +260,159 @@ describe('createApiClient', () => {
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
+    });
+  });
+
+  it('rejects unreadable successful JSON with its received HTTP status and original cause', async () => {
+    const response = new Response('{private invalid body', {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+    const fetchMock = vi.fn(async () => response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    const error = await createApiClient('http://api.example')
+      .getJson('/session')
+      .catch((cause: unknown) => cause);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      endpoint: '/session',
+      statusCode: 200,
+      category: 'response',
+      responseBody: null,
+      cause: expect.any(SyntaxError),
+    });
+    expect((error as ApiError).message).not.toContain('private');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['application/json', new TypeError('Private stream failure')],
+    ['application/json', new DOMException('Private stream abort', 'AbortError')],
+    ['text/plain', new TypeError('Private text stream failure')],
+  ])(
+    'preserves a %s response stream failure without dispatching another request',
+    async (contentType, cause) => {
+      const response = new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.error(cause);
+          },
+        }),
+        {
+          status: 200,
+          headers: { 'content-type': contentType },
+        }
+      );
+      const fetchMock = vi.fn(async () => response);
+      vi.stubGlobal('fetch', fetchMock);
+
+      const error = await createApiClient('http://api.example')
+        .getJson('/session')
+        .catch((failure: unknown) => failure);
+
+      expect(error).toBeInstanceOf(ApiError);
+      expect(error).toMatchObject({
+        endpoint: '/session',
+        statusCode: 200,
+        category: 'response',
+        responseBody: null,
+      });
+      expect((error as ApiError).cause).toBe(cause);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it.each([
+    [401, 'unauthorized'],
+    [403, 'forbidden'],
+    [500, 'server'],
+  ])('retains HTTP %s when its error envelope cannot be decoded', async (status, category) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response('{invalid', {
+            status,
+            headers: { 'content-type': 'application/json' },
+          })
+      )
+    );
+
+    const error = await createApiClient('http://api.example')
+      .getJson('/session')
+      .catch((failure: unknown) => failure);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({
+      endpoint: '/session',
+      statusCode: status,
+      category,
+      responseBody: null,
+      cause: expect.any(SyntaxError),
+    });
+  });
+
+  it.each([
+    ['null', 'application/json', 200, null],
+    ['{"value":1}', 'application/json', 200, { value: 1 }],
+    ['', 'text/plain', 200, null],
+    ['plain response', 'text/plain', 200, 'plain response'],
+    [null, 'application/json', 204, undefined],
+  ])(
+    'retains decoded %s with content type %s and status %s',
+    async (body, contentType, status, expected) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          async () =>
+            new Response(body, {
+              status,
+              headers: { 'content-type': contentType },
+            })
+        )
+      );
+
+      await expect(createApiClient('http://api.example').getJson('/session')).resolves.toEqual(
+        expected
+      );
+    }
+  );
+
+  it('leaves a raw response body with its caller', async () => {
+    const response = new Response('{not decoded by requestRaw', {
+      headers: { 'content-type': 'application/json' },
+    });
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => response)
+    );
+
+    await expect(createApiClient('http://api.example').requestRaw('/session')).resolves.toBe(
+      response
+    );
+    expect(response.bodyUsed).toBe(false);
+  });
+
+  it('keeps a dispatch rejection distinct from a received response failure', async () => {
+    const cause = new TypeError('Failed to fetch');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw cause;
+      })
+    );
+
+    const error = await createApiClient('http://api.example')
+      .getJson('/session')
+      .catch((failure: unknown) => failure);
+
+    expect(error).toMatchObject({
+      endpoint: '/session',
+      statusCode: null,
+      category: 'network',
+      cause,
     });
   });
 

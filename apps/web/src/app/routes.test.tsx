@@ -253,6 +253,54 @@ describe('app routes', () => {
     }
   );
 
+  it.each(['json', 'stream'] as const)(
+    'stops at an unreadable %s session body through the real route boundary',
+    async (failure) => {
+      const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.endsWith('/session')) {
+          return new Response(
+            failure === 'json'
+              ? '{Private invalid session'
+              : new ReadableStream({
+                  start(controller) {
+                    controller.error(new TypeError('Private stream failure'));
+                  },
+                }),
+            {
+              status: 200,
+              headers: jsonHeaders,
+            }
+          );
+        }
+        return buildAuthenticatedRouteResponse(url) ?? buildEmptyJsonResponse();
+      });
+      vi.stubGlobal('fetch', fetchMock);
+      const router = createMemoryRouter(createAppRoutes(), { initialEntries: ['/canvas'] });
+      const queryClient = createTestQueryClient();
+
+      await act(async () => {
+        root.render(
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        );
+      });
+      await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
+        description: 'unreadable session body recovery',
+      });
+
+      expect(
+        fetchMock.mock.calls.some(([input]) => String(input).endsWith('/workspace/context'))
+      ).toBe(false);
+      expect(router.state.location.state).toEqual({ reason: 'session_check_failed' });
+      expect(container.textContent).toContain('Session check failed. Retry the protected route.');
+      expect(container.textContent).not.toContain('Private');
+      expect(container.querySelector('[data-slot="app-shell-frame"]')).toBeNull();
+      expect(container.querySelector('a')?.getAttribute('href')).toBe('/canvas');
+    }
+  );
+
   it('uses neutral recovery for an older transport_error browser-history entry', async () => {
     const router = createMemoryRouter(createAppRoutes(), {
       initialEntries: [
