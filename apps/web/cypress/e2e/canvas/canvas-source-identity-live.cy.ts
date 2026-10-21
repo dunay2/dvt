@@ -1,6 +1,7 @@
 /** Owned concern: prove imported logical Source identity through the real shared Canvas and API. */
 import type { WorkspaceGraphAuthoringNode } from '@dvt/contracts';
 
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   clickCanvasAddCatalogAction,
   clickCanvasContextMenuAction,
@@ -108,5 +109,51 @@ describe('Shared Canvas imported Source identity', () => {
         cy.get('.react-flow__node[data-id="' + id + '"]', { timeout: 20_000 }).should('be.visible');
       }
     });
+  });
+  it('shows a rejected first-canvas save and persists only after an explicit retry', () => {
+    let session = resolveLiveWorkspaceSession();
+    cy.visit('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.clear();
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+        seedE2eWorkspaceSession(window, session);
+      },
+    });
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
+    createLiveProjectThroughUi(`Canvas create failure ${Date.now()}`).then((scope) => {
+      session = scope;
+      return readLiveGraphDraft(scope, { failOnStatusCode: false }).its('status').should('eq', 404);
+    });
+    cy.intercept(
+      { method: 'POST', pathname: '/workspace/graph/draft', times: 1 },
+      {
+        statusCode: 503,
+        body: { error: { type: 'internal_error', reason: 'draft_save_failed' } },
+      }
+    ).as('rejectedCanvasCreate');
+    cy.get('[data-slot="canvas-playground-template-choice"]').should('be.enabled').click();
+    cy.wait('@rejectedCanvasCreate').its('response.statusCode').should('eq', 503);
+    cy.get('[data-slot="canvas-playground-template-unavailable"]')
+      .should('be.visible')
+      .and('contain.text', resolveCanvasViewCopy('en').draftSaveFailedLabel);
+    cy.get('[data-testid="canvas-viewport"]').should('not.exist');
+    cy.then(() => readLiveGraphDraft(session, { failOnStatusCode: false }))
+      .its('status')
+      .should('eq', 404);
+
+    cy.get('[data-slot="canvas-playground-template-choice"]').should('be.enabled').click();
+    cy.get('[data-testid="canvas-viewport"]', { timeout: 20_000 }).should('be.visible');
+    cy.then(() => readLiveGraphDraft(session)).then((response) => {
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property('kind', 'ok');
+      expect(response.body.record.draft.canvas).to.include({
+        kind: 'transformation',
+        title: 'Canvas',
+      });
+    });
+    cy.get('[data-slot="canvas-playground-template-unavailable"]').should('not.exist');
   });
 });

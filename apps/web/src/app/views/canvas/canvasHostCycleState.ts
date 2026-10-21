@@ -28,6 +28,23 @@ function canCreateFirstCanvasDocument(
   return args.canCreateCanvasDocument && args.draftSaveStatus !== 'saving';
 }
 
+function resolveFirstCanvasUnavailableMessage(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'canCreateCanvasDocument' | 'draftSaveStatus'>
+): string | null {
+  if (!args.canCreateCanvasDocument) {
+    return canvasViewCopy.routeNeedsCanvasReadOnlyMessage;
+  }
+
+  switch (args.draftSaveStatus) {
+    case 'saving':
+      return canvasViewCopy.mutationUnavailableMessage;
+    case 'failed':
+      return canvasViewCopy.draftSaveFailedLabel;
+    default:
+      return null;
+  }
+}
+
 export function deriveCanvasHostCycleState(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
@@ -57,11 +74,10 @@ export function deriveCanvasHostCycleState(
       kind: 'needs_canvas',
       availableCanvasKinds,
       onCreateCanvasDocument: canCreateCanvas ? onCreateCanvasDocument : undefined,
-      unavailableMessage: canCreateCanvas
-        ? null
-        : canCreateCanvasDocument
-          ? canvasViewCopy.mutationUnavailableMessage
-          : canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
+      unavailableMessage: resolveFirstCanvasUnavailableMessage({
+        canCreateCanvasDocument,
+        draftSaveStatus: args.draftSaveStatus,
+      }),
     };
   }
 

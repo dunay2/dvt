@@ -66,21 +66,46 @@ describe('canvasCreateCanvasDocumentCommand guards', () => {
     }
   );
 
-  it('returns to idle when authoritative save throws', async () => {
-    const { args, draftQueryCache, setDraftSession, setDraftSaveStatus } = buildCommandArgs({
-      draftRepository: {
-        readGraphDraftState: vi.fn(),
-        readGraphDraft: vi.fn(),
-        saveGraphDraft: vi.fn(async () => {
-          throw new Error('write failed');
-        }),
-      },
-    });
+  it.each([new Error('write failed'), new TypeError('Failed to fetch')])(
+    'retains failed posture when authoritative save rejects with %s',
+    async (failure) => {
+      const { args, draftQueryCache, setDraftSession, setDraftSaveStatus } = buildCommandArgs({
+        draftRepository: {
+          readGraphDraftState: vi.fn(),
+          readGraphDraft: vi.fn(),
+          saveGraphDraft: vi.fn(async () => {
+            throw failure;
+          }),
+        },
+      });
+
+      await executeCreateCanvasDocumentCommand(args);
+
+      expect(setDraftSaveStatus.mock.calls).toEqual([['saving'], ['failed']]);
+      expect(draftQueryCache.replaceRemoteDraftState).not.toHaveBeenCalled();
+      expect(setDraftSession).not.toHaveBeenCalled();
+      expect(args.lastSavedSignatureRef.current).toBeNull();
+      expect(args.draftRepository.saveGraphDraft).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('retries only on another explicit command and publishes its authoritative success', async () => {
+    const { args, draftRepository, draftQueryCache, setDraftSession, setDraftSaveStatus } =
+      buildCommandArgs();
+    draftRepository.saveGraphDraft.mockRejectedValueOnce(new Error('write failed'));
 
     await executeCreateCanvasDocumentCommand(args);
 
-    expect(setDraftSaveStatus.mock.calls).toEqual([['saving'], ['idle']]);
+    expect(draftRepository.saveGraphDraft).toHaveBeenCalledTimes(1);
+    expect(setDraftSaveStatus.mock.calls).toEqual([['saving'], ['failed']]);
     expect(draftQueryCache.replaceRemoteDraftState).not.toHaveBeenCalled();
     expect(setDraftSession).not.toHaveBeenCalled();
+
+    await executeCreateCanvasDocumentCommand(args);
+
+    expect(draftRepository.saveGraphDraft).toHaveBeenCalledTimes(2);
+    expect(setDraftSaveStatus.mock.calls).toEqual([['saving'], ['failed'], ['saving'], ['saved']]);
+    expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
   });
 });
