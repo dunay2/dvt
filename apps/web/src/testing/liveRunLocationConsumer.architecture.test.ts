@@ -45,11 +45,30 @@ function readLocationConsumer(file: string): string {
   function visit(node: ts.Node): void {
     if (ts.isBlock(node)) {
       const isLocation = (statement: ts.Statement): boolean => {
-        const expression =
+        let expression =
           ts.isExpressionStatement(statement) || ts.isReturnStatement(statement)
             ? statement.expression
             : undefined;
-        return expression?.getText(source).startsWith("cy.location('pathname'") ?? false;
+        while (
+          expression !== undefined &&
+          ts.isCallExpression(expression) &&
+          ts.isPropertyAccessExpression(expression.expression)
+        ) {
+          const call = expression.expression;
+          const argument = expression.arguments[0];
+          if (
+            ts.isIdentifier(call.expression) &&
+            call.expression.text === 'cy' &&
+            call.name.text === 'location' &&
+            argument !== undefined &&
+            ts.isStringLiteral(argument) &&
+            argument.text === 'pathname'
+          ) {
+            return true;
+          }
+          expression = call.expression;
+        }
+        return false;
       };
       const index = node.statements.findIndex(
         (statement) => isLocation(statement) && statement.getText(source).includes('.should(')
