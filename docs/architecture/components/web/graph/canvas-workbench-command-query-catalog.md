@@ -222,6 +222,16 @@ execution provider. Foreign, unmapped, ambiguous and stale references reject
 atomically. Read-only, revision, authorization,
 input identities, JOIN type, output selection and pending-edit guards remain.
 
+Configured pending operations retain the execution connection admitted for their
+exact input catalogue. Physical Reads carry `sourceRef`; Model Reads carry
+`producerRef`, so a local inspector cannot derive its provider solely from the
+physical Reads embedded in its document. Composition configuration and the
+shared staged-analysis boundary use the same connection resolver. The boundary
+passes the validated `ConnectionRef` into its revisioned analysis session for
+JOIN, Transform and unary editors. Missing producers and mixed connections
+produce an explicit unavailable state; opening an editor never invents a
+provider, performs a provider request or writes semantic state.
+
 The expanded #3612 request covers composable aggregate/window inputs and
 existence predicates through the existing relational operators, not SQL text
 embedded in the formula. An AggregateRel or window ProjectRel computes the
