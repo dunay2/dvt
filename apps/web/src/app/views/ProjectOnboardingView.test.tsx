@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import type { ProjectOnboardingService } from '../services/projectOnboarding/projectOnboardingService';
 import ProjectOnboardingView from './ProjectOnboardingView';
+import styles from './ProjectOnboardingView.module.css';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 function buildProjectOnboardingService(
@@ -86,20 +87,23 @@ describe('ProjectOnboardingView', () => {
       description: 'project creation callback',
     });
     expect(createProject).toHaveBeenCalledWith({ tenantId: 'tenant-1', name: 'Orders' });
-    expect(onProjectCreated).toHaveBeenCalledWith({
-      project: {
-        tenantId: 'tenant-1',
-        projectId: 'orders',
-        name: 'Orders',
-        environmentIds: ['dev'],
+    expect(onProjectCreated).toHaveBeenCalledWith(
+      {
+        project: {
+          tenantId: 'tenant-1',
+          projectId: 'orders',
+          name: 'Orders',
+          environmentIds: ['dev'],
+        },
+        defaultWorkspace: {
+          tenantId: 'tenant-1',
+          projectId: 'orders',
+          projectName: 'Orders',
+          environmentId: 'dev',
+        },
       },
-      defaultWorkspace: {
-        tenantId: 'tenant-1',
-        projectId: 'orders',
-        projectName: 'Orders',
-        environmentId: 'dev',
-      },
-    });
+      expect.any(AbortSignal)
+    );
   });
 
   it('presents existing projects before creation with explicit, localized actions', async () => {
@@ -139,15 +143,11 @@ describe('ProjectOnboardingView', () => {
     expect(mounted.container.textContent).not.toContain('Tenant');
     expect(mounted.container.querySelector('select[name="tenantId"]')).toBeNull();
     expect(
-      mounted.container
-        .querySelector('[data-slot="project-onboarding-title"]')
-        ?.className.includes('text-xl')
-    ).toBe(true);
+      mounted.container.querySelector('[data-slot="project-onboarding-title"]')?.classList
+    ).toContain(styles.title);
     expect(
-      mounted.container
-        .querySelector('[data-slot="project-onboarding-root"]')
-        ?.className.includes('bg-(--surface-app)')
-    ).toBe(true);
+      mounted.container.querySelector('[data-slot="project-onboarding-root"]')?.classList
+    ).toContain(styles.root);
   });
 
   it('changes presentation language without refetching the authorized project catalog', async () => {

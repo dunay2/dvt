@@ -1,0 +1,154 @@
+/* Owned concern: first-use project admission page layout. */
+.root {
+  min-height: 100vh;
+  background: var(--surface-app);
+  color: var(--text-default);
+}
+.layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  max-width: 56rem;
+  margin-inline: auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem 1.25rem;
+}
+.header {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1.25rem;
+}
+.header > :not(:last-child),
+.projectList > :not(:last-child) {
+  margin-bottom: 0.5rem;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+}
+.label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.75rem;
+  color: var(--text-strong);
+}
+.description,
+.empty {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--text-muted);
+}
+.description {
+  max-width: 42rem;
+}
+.columns {
+  display: grid;
+  gap: 1rem;
+}
+.catalog,
+.creation {
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border-default);
+  background: var(--surface-panel);
+  padding: 1rem;
+}
+.creation > :not(:last-child) {
+  margin-bottom: 1rem;
+}
+.catalogHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.refresh,
+.openProject {
+  display: inline-flex;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border-default);
+  padding-inline: 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.refresh {
+  color: var(--text-muted);
+}
+.openProject {
+  color: var(--text-default);
+}
+.refresh:hover,
+.openProject:hover {
+  background: var(--surface-elevated);
+}
+.refresh:hover {
+  color: var(--text-strong);
+}
+.refresh:focus-visible,
+.openProject:focus-visible {
+  outline: 2px solid var(--focus-ring);
+}
+.openProject:disabled {
+  cursor: not-allowed;
+  color: var(--text-disabled);
+}
+.refreshIcon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+.project {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-route);
+  padding: 0.625rem 0.75rem;
+}
+.projectIdentity {
+  min-width: 0;
+}
+.projectName,
+.projectId {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.projectName {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+.projectId {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--text-subtle);
+}
+@media (min-width: 640px) {
+  .layout {
+    padding-inline: 2rem;
+  }
+}
+@media (min-width: 768px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  }
+}

@@ -22,11 +22,11 @@ authorization. It maps runtime outcomes to route-level recovery vocabulary.
 
 ## Public API
 
-| API                                   | Kind               | Owned concern                                                                                                     |
-| ------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `resolveProtectedRouteSessionContext` | query orchestrator | Load `/session` and `/workspace/context` in canonical order.                                                      |
-| `classifyProtectedRouteSessionError`  | mapper             | Map API failures to `unauthenticated`, `workspace_context_not_granted`, `runtime_unavailable`, `transport_error`. |
-| `AuthRouteGate`                       | route gate         | Allow protected route render or route to login/workspace-denied posture.                                          |
+| API                                   | Kind               | Owned concern                                                                                              |
+| ------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `resolveProtectedRouteSessionContext` | query orchestrator | Load `/session` and `/workspace/context` in canonical order.                                               |
+| `classifyProtectedRouteSessionError`  | mapper             | Map recognized denials and missing runtime routes explicitly; other exceptions use `session_check_failed`. |
+| `AuthRouteGate`                       | route gate         | Allow protected route render or route to login/workspace-denied posture.                                   |
 
 ## Invariants
 
@@ -36,6 +36,24 @@ authorization. It maps runtime outcomes to route-level recovery vocabulary.
   is returned.
 - No local dev flag can convert unauthorized responses into allowed posture.
 - Session and workspace context ownership stays in API rails.
+- Admission belongs to the requested pathname, search and hash. A changed route
+  begins in `checking` before its protected children can commit; it cannot reuse
+  the previous route's `allowed` state until a passive effect resets it.
+- Navigating to the identical route identity retains the current admission.
+- Unknown failures use `session_check_failed`. An HTTP server response, invalid
+  workspace schema, request-preparation error or local exception must not be
+  labelled as a proven transport failure. Recovery copy never exposes raw
+  exceptions or response data.
+- A received HTTP response with an unreadable successful body is a failed query,
+  never a successful `null` result. The existing API adapter retains its endpoint,
+  received status and original read exception in an `ApiError` with category
+  `response`. It does not infer whether the cause was malformed JSON, an aborted
+  stream or a browser fault. An unreadable error envelope retains the original
+  HTTP denial/server category and read cause. Valid JSON `null`, empty text, `204`
+  and caller-owned raw responses keep their existing decoding semantics.
+- An unreadable `/session` body stops resolution before `/workspace/context` or
+  either browser projection can be updated. The existing currentness policy and
+  neutral recovery remain authoritative; no automatic retry is added.
 
 ## Transitions
 
@@ -43,8 +61,9 @@ authorization. It maps runtime outcomes to route-level recovery vocabulary.
 stateDiagram-v2
   [*] --> checking
   checking --> allowed: session + workspace context resolve
+  allowed --> checking: requested pathname, search or hash changes before child commit
   checking --> denied_workspace: workspace_context_not_granted
-  checking --> denied_login: unauthenticated | runtime_unavailable | transport_error
+  checking --> denied_login: unauthenticated | runtime_unavailable | session_check_failed
   denied_login --> checking: retry protected route
 ```
 
@@ -54,8 +73,37 @@ stateDiagram-v2
 | ------------------------------------------ | ------------------ | ------------------------------- |
 | `/session` returns `401` or `403`          | `denied_login`     | `unauthenticated`               |
 | `/session` returns `404`                   | `denied_login`     | `runtime_unavailable`           |
-| network/transport failure                  | `denied_login`     | `transport_error`               |
+| other query, validation or local failure   | `denied_login`     | `session_check_failed`          |
 | `/workspace/context` returns denied reason | `denied_workspace` | `workspace_context_not_granted` |
+
+`session_check_failed` describes the failed operation, not its unproven cause.
+The login view offers the existing deep-link retry. Older browser-history
+entries with `transport_error` use the same neutral copy; the gate no longer
+produces that label. This recovery mapping does not diagnose the historical
+intermittent browser failure or turn a failed query into admission.
+
+### Response Body Boundary
+
+```mermaid
+sequenceDiagram
+  participant Resolver as Existing session resolver
+  participant Client as Existing API client
+  participant Response as Received HTTP response
+  participant Gate as Existing route gate
+  Resolver->>Client: Read /session
+  Client->>Response: Read body
+  Response-->>Client: Read or decode exception
+  Client-->>Resolver: ApiError with endpoint, received status and original cause
+  Resolver-->>Gate: Current query failed before workspace read/publication
+  Gate-->>Gate: Existing neutral recovery
+```
+
+The HTTP adapter owns this decoding policy for its existing consumers; the
+session service does not add a second parser or endpoint. Keeping the original
+exception and received status avoids replacing a body-read failure with a later
+null-property exception. This repairs deterministic failure provenance, not the
+unproven cause of historical browser redirections. Error causes and response
+contents are not rendered in recovery copy.
 
 ## Plan/Run Readiness Rail Mapping
 

@@ -5,7 +5,36 @@ const assert = require('node:assert/strict');
 const {
   projectChromiumNetworkLog,
   projectChromiumNetworkCapture,
+  projectChromiumProcessLog,
 } = require('../apps/web/cypress/node/chromiumNetworkProjection.ts');
+
+test('process log admits only the exact restart signal, never raw diagnostics or lookalikes', () => {
+  const line =
+    '[21:34:1016/093012.123456:ERROR:content/browser/network_service_instance_impl.cc:608] Network service crashed or was terminated, restarting service.';
+  assert.deepEqual(
+    projectChromiumProcessLog(
+      [
+        line,
+        line.replace(':608]', '(608)]'),
+        line + ' private',
+        line.replace('network_service_instance_impl.cc', 'private.cc'),
+        'private Authorization: Bearer secret https://private.invalid/?token=secret',
+      ].join('\n')
+    ),
+    {
+      state: 'observed',
+      networkServiceRestarts: [
+        { processId: 21, threadId: 34, time: '1016/093012.123456' },
+        { processId: 21, threadId: 34, time: '1016/093012.123456' },
+      ],
+    }
+  );
+  assert.deepEqual(projectChromiumProcessLog(undefined), { state: 'unavailable' });
+  assert.deepEqual(projectChromiumProcessLog(''), {
+    state: 'observed',
+    networkServiceRestarts: [],
+  });
+});
 
 function netlog(url = 'http://user:secret@127.0.0.1:3300/workspace/graph/draft?token=private') {
   return {
@@ -68,6 +97,58 @@ test('projects CORS event kind and numeric error without arbitrary failure param
   assert.doesNotMatch(JSON.stringify(result), /private|cookie|failed_parameter/);
 });
 
+test('correlates known compiled CSS assets with observed HTTP status without exporting headers', () => {
+  for (const asset of ['index-Cq5vnsls', 'Canvas-Dqu6Pn90', 'RunsView-Dcs-ZTu0']) {
+    const input = netlog(`http://user:secret@127.0.0.1:4173/assets/${asset}.css?token=private`);
+    input.constants.logEventTypes.HTTP_TRANSACTION_READ_RESPONSE_HEADERS = 3;
+    input.events.push({
+      type: 3,
+      source: { id: 7, type: 1 },
+      params: { headers: ['HTTP/1.1 404 Not Found', 'Set-Cookie: private', 'X-Token: private'] },
+    });
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.events[0].route, `/assets/${asset}.css`);
+    assert.equal(result.events[1].sourceId, result.events[0].sourceId);
+    assert.equal(result.events[1].statusCode, 404);
+    assert.doesNotMatch(JSON.stringify(result), /private|secret|Cookie|headers|Token/);
+  }
+});
+
+test('only recognized response status lines supply an HTTP outcome', () => {
+  for (const [headers, statusCode] of [
+    [['HTTP/1.1 200 OK'], 200],
+    [['HTTP/2 503 Unavailable'], 503],
+    [['HTTP/9 200 Unknown'], undefined],
+    [['Authorization: HTTP/1.1 200 private'], undefined],
+    [['HTTP/1.1 999 private'], undefined],
+    [['HTTP/1.1 099 private'], undefined],
+    [[null, 'X-Private: secret'], undefined],
+    [undefined, undefined],
+  ]) {
+    const input = netlog();
+    input.constants.logEventTypes.HTTP_TRANSACTION_READ_RESPONSE_HEADERS = 3;
+    input.events[0].type = 3;
+    input.events[0].params = { headers, net_error: -101 };
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.events[0].statusCode, statusCode);
+    assert.equal(result.events[0].netError, -101);
+    assert.doesNotMatch(JSON.stringify(result), /private|secret|headers|Authorization/);
+  }
+});
+
+test('arbitrary CSS names and non-loopback assets retain the existing redaction boundary', () => {
+  for (const url of [
+    'http://127.0.0.1:4173/assets/customer-secret.css',
+    'http://127.0.0.1:4173/assets/RunsView-private.css',
+    'http://127.0.0.1:4173/assets/RunsView-private/path.css',
+    'https://secret.example/assets/RunsView-Dcs-ZTu0.css',
+  ]) {
+    const result = projectChromiumNetworkLog(netlog(url));
+    assert.ok(result.events[0].route === '/other' || result.events[0].route === undefined);
+    assert.doesNotMatch(JSON.stringify(result), /customer|secret|private|example|RunsView/);
+  }
+});
+
 test('missing or malformed capture rejects without including raw input', () => {
   for (const input of [
     null,
@@ -77,6 +158,44 @@ test('missing or malformed capture rejects without including raw input', () => {
   ]) {
     assert.throws(() => projectChromiumNetworkLog(input), /Invalid Chromium network log/);
   }
+});
+
+test('correlates the request clock, dependent socket and status without raw headers', () => {
+  const input = netlog();
+  input.constants.logEventTypes.HTTP_TRANSACTION_READ_RESPONSE_HEADERS = 3;
+  input.events[0].type = 3;
+  input.constants.timeTickOffset = '1789123456000';
+  input.events[0].params.source_dependency = { id: 42, type: 9, private: 'secret' };
+  input.events[0].params.headers = ['HTTP/1.1 204 No Content', 'Set-Cookie: private'];
+  const result = projectChromiumNetworkLog(input);
+  assert.equal(result.timeTickOffset, '1789123456000');
+  assert.equal(result.events[0].dependencySourceId, 42);
+  assert.equal(result.events[0].statusCode, 204);
+  assert.doesNotMatch(JSON.stringify(result), /secret|private|Set-Cookie|No Content/);
+});
+
+test('invalid correlation values cannot publish arbitrary strings or non-integral IDs', () => {
+  for (const value of ['private', null, {}, 1.5, Infinity]) {
+    const input = netlog();
+    input.constants.logEventTypes.HTTP_TRANSACTION_READ_RESPONSE_HEADERS = 3;
+    input.events[0].type = 3;
+    input.constants.timeTickOffset = value;
+    input.events[0].params.source_dependency = { id: value };
+    input.events[0].params.headers = [value, 'HTTP/1.1 200 private'];
+    const result = projectChromiumNetworkLog(input);
+    assert.equal(result.timeTickOffset, undefined);
+    assert.equal(result.events[0].dependencySourceId, undefined);
+    assert.equal(result.events[0].statusCode, undefined);
+    assert.doesNotMatch(JSON.stringify(result), /private/);
+  }
+});
+
+test('normalizes the safe integer clock offset emitted by current Chromium', () => {
+  const input = netlog();
+  input.constants.timeTickOffset = 1789123456000;
+  assert.equal(projectChromiumNetworkLog(input).timeTickOffset, '1789123456000');
+  input.constants.timeTickOffset = Number.MAX_SAFE_INTEGER + 1;
+  assert.equal(projectChromiumNetworkLog(input).timeTickOffset, undefined);
 });
 
 test('terminated footer is explicit and retains only complete observed records', () => {

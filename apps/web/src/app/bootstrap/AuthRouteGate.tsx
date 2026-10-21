@@ -10,13 +10,18 @@ import type {
 } from '../services/projectOnboarding/projectOnboardingService';
 import { activateProjectWorkspace } from '../services/projectOnboarding/activateProjectWorkspace';
 import { resolveProtectedRouteSessionContext } from '../services/session/protectedRouteSessionContext';
+import { SessionContextDiscardedError } from '../services/session/sessionContextPublication';
 import ProjectOnboardingView from '../views/ProjectOnboardingView';
+import styles from './AuthRouteGate.module.css';
 
 type AuthGateState =
   { kind: 'checking' } | { kind: 'allowed' } | { kind: 'denied'; reason: AuthGateDeniedReason };
 
 type AuthGateDeniedReason =
-  'unauthenticated' | 'workspace_context_not_granted' | 'runtime_unavailable' | 'transport_error';
+  | 'unauthenticated'
+  | 'workspace_context_not_granted'
+  | 'runtime_unavailable'
+  | 'session_check_failed';
 
 const sessionApiClient = createApiClient();
 
@@ -48,36 +53,55 @@ export function classifyProtectedRouteSessionError(error: unknown): AuthGateDeni
     return 'unauthenticated';
   }
 
-  return 'transport_error';
+  return 'session_check_failed';
 }
 
 export default function AuthRouteGate({
   children,
 }: Readonly<{ children: React.ReactNode }>): JSX.Element {
   const location = useLocation();
+  return (
+    <ProtectedRouteSessionAdmission key={`${location.pathname}${location.search}${location.hash}`}>
+      {children}
+    </ProtectedRouteSessionAdmission>
+  );
+}
+
+function ProtectedRouteSessionAdmission({
+  children,
+}: Readonly<{ children: React.ReactNode }>): JSX.Element {
+  const location = useLocation();
   const [state, setState] = useState<AuthGateState>({ kind: 'checking' });
 
-  async function handleProjectCreated(response: CreateProjectResponse): Promise<void> {
-    await activateProjectWorkspace(response.defaultWorkspace, { apiClient: sessionApiClient });
-    setState({ kind: 'allowed' });
+  function handleProjectCreated(
+    response: CreateProjectResponse,
+    signal: AbortSignal
+  ): Promise<void> {
+    return handleProjectSelected(response.defaultWorkspace, signal);
   }
 
-  async function handleProjectSelected(selection: EffectiveProjectWorkspaceContext): Promise<void> {
-    await activateProjectWorkspace(selection, { apiClient: sessionApiClient });
+  async function handleProjectSelected(
+    selection: EffectiveProjectWorkspaceContext,
+    signal: AbortSignal
+  ): Promise<void> {
+    const publication = await activateProjectWorkspace(selection, {
+      apiClient: sessionApiClient,
+      signal,
+    });
+    publication.assertCurrent();
     setState({ kind: 'allowed' });
   }
 
   useEffect(() => {
-    let cancelled = false;
+    const lifetime = new AbortController();
     setState({ kind: 'checking' });
-    resolveProtectedRouteSessionContext(sessionApiClient)
-      .then(() => {
-        if (!cancelled) {
-          setState({ kind: 'allowed' });
-        }
+    resolveProtectedRouteSessionContext(sessionApiClient, { signal: lifetime.signal })
+      .then((publication) => {
+        publication.assertCurrent();
+        setState({ kind: 'allowed' });
       })
       .catch((error: unknown) => {
-        if (cancelled) {
+        if (lifetime.signal.aborted || error instanceof SessionContextDiscardedError) {
           return;
         }
 
@@ -85,7 +109,7 @@ export default function AuthRouteGate({
       });
 
     return () => {
-      cancelled = true;
+      lifetime.abort();
     };
   }, [location.pathname, location.search, location.hash]);
 
@@ -113,11 +137,7 @@ export default function AuthRouteGate({
   }, [state]);
 
   if (state.kind === 'checking') {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-950 text-slate-200">
-        Checking session...
-      </div>
-    );
+    return <div className={styles.checking}>Checking session...</div>;
   }
 
   if (state.kind === 'denied') {

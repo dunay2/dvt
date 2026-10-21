@@ -227,20 +227,21 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
     clickCommandSlotNatively('shell-run-command');
 
-    cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
-    cy.location('pathname').then((pathname) => {
-      const runId = pathname.split('/').pop();
-      expect(runId).to.be.a('string').and.not.to.equal('');
+    cy.location('pathname', { timeout: 20_000 })
+      .should('match', /^\/runs\/[^/]+$/)
+      .then((pathname) => {
+        const runId = pathname.split('/').pop();
+        expect(runId).to.be.a('string').and.not.to.equal('');
 
-      readLiveRunSnapshot(runId!).then((snapshotResponse) => {
-        expect(snapshotResponse.status).to.equal(200);
-        expect((snapshotResponse.body as { runId: string }).runId).to.equal(runId);
-      });
+        readLiveRunSnapshot(runId!).then((snapshotResponse) => {
+          expect(snapshotResponse.status).to.equal(200);
+          expect((snapshotResponse.body as { runId: string }).runId).to.equal(runId);
+        });
 
-      readLiveRunEvents(runId!).then((eventsResponse) => {
-        expect(eventsResponse.status).to.equal(200);
+        readLiveRunEvents(runId!).then((eventsResponse) => {
+          expect(eventsResponse.status).to.equal(200);
+        });
       });
-    });
 
     cy.get('[data-slot="run-detail-tabs"]', { timeout: 20_000 }).should('exist');
 

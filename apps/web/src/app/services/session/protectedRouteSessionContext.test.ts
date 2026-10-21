@@ -300,6 +300,17 @@ describe('resolveProtectedRouteSessionContext', () => {
     });
   });
 
+  it.each([
+    { source: 'HTTP server response', error: { endpoint: '/session', statusCode: 500 } },
+    { source: 'schema validation', error: new Error('Invalid workspace schema') },
+    { source: 'local projection', error: new TypeError('Cannot read session permissions') },
+    { source: 'request preparation', error: { category: 'network', cause: new Error('Headers') } },
+    { source: 'missing exception', error: undefined },
+    { source: 'null exception', error: null },
+  ])('uses neutral recovery for $source without claiming a transport cause', ({ error }) => {
+    expect(classifyProtectedRouteSessionError(error)).toBe('session_check_failed');
+  });
+
   it('classifies missing workspace grants as workspace denial instead of login recovery', () => {
     expect(
       classifyProtectedRouteSessionError({
