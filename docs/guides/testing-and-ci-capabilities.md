@@ -115,6 +115,25 @@ containers, which start before action steps. Their lifecycle remains unchanged.
 The executable cache contract is `node --test tools/ci/prepare-cached-image.test.mjs`;
 GitHub Actions cache transport is additionally checked in the actual workflow.
 
+## Native Provider Browser Prerequisites
+
+The three `available` Web browser shards use Ubuntu 22.04, Node 22.23.3 and
+Chrome stable 155.0.8059.39. The existing Test Suite workflow verifies the
+official Chrome package SHA256 and actual Cypress browser discovery before
+running provider-backed evidence. Chrome preparation runs only when the
+governed Web plan requires a browser. Other matrix phases retain their existing
+runner and Node selection.
+
+This declares an observed execution environment at the existing native runner
+boundary. In the [exact-product hosted comparison](https://github.com/dunay2/dvt/actions/runs/39682022844),
+Ubuntu 22 passed both selected real flows; Ubuntu 24 failed Source Import after
+session admission redirected to Login. Both provider preflights passed. That
+single trial also used different image/provisioner versions and regions; it does
+not prove OS causation or close the intermittent failure in
+[#3604](https://github.com/dunay2/dvt/issues/3604#issuecomment-6327499315).
+All existing browser scenarios, assertions, budgets, provider cleanup and seven
+mandatory merge checks remain required.
+
 ## Package Test Runner Groups
 
 `Test Suite` keeps package selection in `computeTestPackageMatrix`; the matrix
