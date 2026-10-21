@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { TemporalWorkerHost, type TemporalWorkerRunResult } from '@dvt/adapter-temporal';
 import {
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
@@ -15,14 +16,21 @@ import {
   type ExecutionPlan,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
+import { Context } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
+import { NativeConnection, Worker } from '@temporalio/worker';
 import { c as createTarball } from 'tar';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, type Mock, type MockInstance } from 'vitest';
 
 import { runTemporalWorkerHost } from '../../src/host/runTemporalWorkerHost.js';
 import { createOperationalServer } from '../../src/ops/OperationalServer.js';
 import { TemporalWorkerMonitor } from '../../src/ops/TemporalWorkerMonitor.js';
 import { loadEnv } from '../../src/plugins/env.js';
+import {
+  createTemporalWorkerRuntime,
+  type RuntimeHandle,
+} from '../../src/runtime/createTemporalWorkerRuntime.js';
+import { createTemporalWorkerStores } from '../../src/runtime/temporalWorkerStores.js';
 import {
   bootstrapRunMetadata,
   storeValidPlanArtifact,
@@ -31,8 +39,11 @@ import {
 
 describe('runTemporalWorkerHost', () => {
   it('starts runtime, waits for abort, and stops cleanly', async () => {
+    const completion = deferred<TemporalWorkerRunResult>();
     const start = vi.fn(async () => undefined);
-    const stop = vi.fn(async () => undefined);
+    const stop = vi.fn(async () => {
+      completion.resolve({ status: 'completed' });
+    });
     const operationalServer = {
       start: vi.fn(async () => undefined),
       stop: vi.fn(async () => undefined),
@@ -53,6 +64,7 @@ describe('runTemporalWorkerHost', () => {
           await start();
         },
         stop,
+        getRunCompletion: () => completion.promise,
         getRunStateCircuitSnapshot: () => ({
           state: 'closed',
           consecutiveFailures: 0,
@@ -103,6 +115,313 @@ describe('runTemporalWorkerHost', () => {
     expect(monitor.getHealthSnapshot().state).toBe('stopped');
   });
 });
+
+describe('worker termination propagation', () => {
+  it.each([new Error('diagnostic sink failed'), undefined])(
+    'reports SDK and diagnostic errors while closing resources: %s',
+    async (diagnosticError) => {
+      const fixture = createHostLifecycleFixture();
+      const fatal = new Error('native SDK failed');
+      fixture.completion.resolve({ status: 'failed', error: fatal, diagnosticError });
+      fixture.releaseStop.resolve();
+      const error = await runTemporalWorkerHost(fixture.options).catch(
+        (failure: unknown) => failure
+      );
+      expect(error).toBeInstanceOf(AggregateError);
+      expect((error as AggregateError).errors).toEqual([
+        fatal,
+        diagnosticError === undefined ? new Error('UnknownError') : diagnosticError,
+      ]);
+      expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+      expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('closes resources when a completion provider violates its fulfilled-result contract', async () => {
+    const fixture = createHostLifecycleFixture();
+    const violation = new Error('completion provider rejected');
+    fixture.runtime.getRunCompletion.mockReturnValue(Promise.reject(violation));
+    fixture.releaseStop.resolve();
+    const result = runTemporalWorkerHost(fixture.options).catch((error: unknown) => error);
+    expect(await withDeadline(result)).toBe(violation);
+    expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+    expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['completed', 'failed', 'immediate-failure', 'abort-and-failure'] as const)(
+    'withdraws real HTTP readiness and joins cleanup on %s',
+    async (scenario) => {
+      const fixture = createHostLifecycleFixture();
+      const fatal = new Error('native worker failed');
+      const outcome: TemporalWorkerRunResult =
+        scenario === 'completed' ? { status: 'completed' } : { status: 'failed', error: fatal };
+      if (scenario === 'immediate-failure') fixture.completion.resolve(outcome);
+      const server = createOperationalServer({
+        host: '127.0.0.1',
+        port: 0,
+        logger: { info() {} },
+        monitor: fixture.monitor,
+      });
+      const serverStop = vi.spyOn(server, 'stop');
+      const host = runTemporalWorkerHost({ ...fixture.options, operationalServer: server });
+      const result = host.then(
+        () => null,
+        (error: unknown) => error
+      );
+      try {
+        if (scenario !== 'immediate-failure') {
+          await withDeadline(fixture.ready.promise);
+          const address = server.getAddress();
+          if (address === null) throw new Error('Operational server not listening');
+          expect((await getOperationalJson(address.port, '/readyz')).status).toBe(200);
+          if (scenario === 'abort-and-failure') fixture.shutdown.abort();
+          fixture.completion.resolve(outcome);
+        }
+        await withDeadline(fixture.stopping.promise);
+        const address = server.getAddress();
+        if (address === null) throw new Error('Operational server not listening');
+        const health = await getOperationalJson(address.port, '/readyz');
+        expect(health.status).toBe(503);
+        expect(health.body.ready).toBe(false);
+        expect(serverStop).not.toHaveBeenCalled();
+        fixture.releaseStop.resolve();
+        expect(await withDeadline(result)).toBe(scenario === 'completed' ? null : fatal);
+        expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+        expect(serverStop).toHaveBeenCalledTimes(1);
+        if (scenario !== 'completed') {
+          expect(fixture.monitor.getHealthSnapshot().lastErrorMessage).toBe(fatal.message);
+        }
+        if (scenario === 'immediate-failure') expect(fixture.onStarted).not.toHaveBeenCalled();
+      } finally {
+        fixture.shutdown.abort();
+        fixture.completion.resolve(outcome);
+        fixture.releaseStop.resolve();
+        await result;
+        await server.stop();
+      }
+    }
+  );
+
+  it.each(['ops', 'create', 'start'] as const)(
+    'preserves both cleanup failures after abort at %s',
+    async (checkpoint) => {
+      const fixture = createHostLifecycleFixture();
+      const runtimeFailure = new Error('runtime cleanup failed');
+      const serverFailure = new Error('server cleanup failed');
+      fixture.runtime.stop.mockImplementation(async () => {
+        throw runtimeFailure;
+      });
+      fixture.operationalServer.stop.mockImplementation(async () => {
+        throw serverFailure;
+      });
+      fixture.completion.resolve({ status: 'completed' });
+      fixture.operationalServer.start.mockImplementation(async () => {
+        if (checkpoint === 'ops') fixture.shutdown.abort();
+      });
+      fixture.runtime.start.mockImplementation(async () => {
+        if (checkpoint === 'start') fixture.shutdown.abort();
+      });
+      const host = runTemporalWorkerHost({
+        ...fixture.options,
+        createRuntime: async () => {
+          if (checkpoint === 'create') fixture.shutdown.abort();
+          return fixture.runtime;
+        },
+      });
+      const error = await host.then(
+        () => null,
+        (failure: unknown) => failure
+      );
+      if (checkpoint === 'ops') {
+        expect(error).toBe(serverFailure);
+        expect(fixture.runtime.stop).not.toHaveBeenCalled();
+      } else {
+        expect(error).toBeInstanceOf(AggregateError);
+        expect((error as AggregateError).errors).toEqual([runtimeFailure, serverFailure]);
+        expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+      }
+      expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('retains fatal AbortError and cleanup failure when shutdown races termination', async () => {
+    const fixture = createHostLifecycleFixture();
+    const fatal = new Error('fatal SDK abort');
+    fatal.name = 'AbortError';
+    const cleanupFailure = new Error('cleanup failed');
+    fixture.runtime.stop.mockImplementation(async () => {
+      throw cleanupFailure;
+    });
+    const host = runTemporalWorkerHost(fixture.options);
+    const result = host.then(
+      () => null,
+      (error: unknown) => error
+    );
+    await withDeadline(fixture.ready.promise);
+    fixture.shutdown.abort();
+    fixture.completion.resolve({ status: 'failed', error: fatal });
+    const error = await withDeadline(result);
+    expect(error).toBeInstanceOf(AggregateError);
+    expect((error as AggregateError).errors).toEqual([fatal, cleanupFailure]);
+    expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves native failure when startup throws AbortError after beginning a run', async () => {
+    const fixture = createHostLifecycleFixture();
+    const fatal = new Error('native run failed during startup');
+    fixture.runtime.start.mockImplementation(async () => {
+      fixture.completion.resolve({ status: 'failed', error: fatal });
+      fixture.shutdown.abort();
+      throw Object.assign(new Error('startup cancelled'), { name: 'AbortError' });
+    });
+    fixture.releaseStop.resolve();
+    await expect(runTemporalWorkerHost(fixture.options)).rejects.toBe(fatal);
+    expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+    expect(fixture.operationalServer.stop).toHaveBeenCalledTimes(1);
+    expect(fixture.monitor.getHealthSnapshot().lastErrorMessage).toBe(fatal.message);
+  });
+
+  it('removes the abort listener when native completion wins', async () => {
+    const fixture = createHostLifecycleFixture();
+    const add = vi.spyOn(fixture.shutdown.signal, 'addEventListener');
+    const remove = vi.spyOn(fixture.shutdown.signal, 'removeEventListener');
+    fixture.releaseStop.resolve();
+    const host = runTemporalWorkerHost(fixture.options);
+    try {
+      await withDeadline(fixture.ready.promise);
+      fixture.completion.resolve({ status: 'completed' });
+      await withDeadline(host);
+      const subscription = add.mock.calls.find(([event]) => event === 'abort');
+      expect(subscription).toBeDefined();
+      expect(remove).toHaveBeenCalledWith('abort', subscription?.[1]);
+    } finally {
+      fixture.shutdown.abort();
+      fixture.completion.resolve({ status: 'completed' });
+      await host;
+    }
+  });
+
+  it('rejects a successful startup without a native run and still closes resources', async () => {
+    const fixture = createHostLifecycleFixture();
+    fixture.runtime.getRunCompletion.mockReturnValue(null);
+    fixture.releaseStop.resolve();
+    const host = runTemporalWorkerHost(fixture.options);
+    const result = host.then(
+      () => null,
+      (error: unknown) => error
+    );
+    try {
+      const error = await withDeadline(result);
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('TEMPORAL_WORKER_RUN_NOT_STARTED');
+      expect(fixture.onStarted).not.toHaveBeenCalled();
+      expect(fixture.runtime.stop).toHaveBeenCalledTimes(1);
+    } finally {
+      fixture.shutdown.abort();
+      fixture.completion.resolve({ status: 'completed' });
+      await result;
+    }
+  });
+});
+
+interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+}
+
+function deferred<T = void>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((accept) => {
+    resolve = accept;
+  });
+  return { promise, resolve };
+}
+
+async function withDeadline<T>(promise: Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Lifecycle barrier was not reached')), 1000);
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+type HostTestRuntime = { [Key in keyof RuntimeHandle]: Mock<RuntimeHandle[Key]> };
+interface HostLifecycleFixture {
+  completion: Deferred<TemporalWorkerRunResult>;
+  ready: Deferred<void>;
+  stopping: Deferred<void>;
+  releaseStop: Deferred<void>;
+  shutdown: globalThis.AbortController;
+  monitor: TemporalWorkerMonitor;
+  onStarted: MockInstance<TemporalWorkerMonitor['onStarted']>;
+  runtime: HostTestRuntime;
+  operationalServer: { start: Mock<() => Promise<void>>; stop: Mock<() => Promise<void>> };
+  options: Parameters<typeof runTemporalWorkerHost>[0];
+}
+
+function createHostLifecycleFixture(): HostLifecycleFixture {
+  const completion = deferred<TemporalWorkerRunResult>();
+  const ready = deferred();
+  const stopping = deferred();
+  const releaseStop = deferred();
+  const shutdown = new globalThis.AbortController();
+  const monitor = createMonitor();
+  const onStartedOriginal = monitor.onStarted.bind(monitor);
+  const onStarted = vi.spyOn(monitor, 'onStarted').mockImplementation(() => {
+    onStartedOriginal();
+    ready.resolve();
+  });
+  const runtime = {
+    start: vi.fn(async (_signal?: globalThis.AbortSignal) => undefined),
+    stop: vi.fn(async () => {
+      stopping.resolve();
+      await releaseStop.promise;
+    }),
+    getRunCompletion: vi.fn<() => Promise<TemporalWorkerRunResult> | null>(
+      () => completion.promise
+    ),
+    getRunStateCircuitSnapshot: vi.fn(() => ({
+      state: 'closed' as const,
+      consecutiveFailures: 0,
+      openUntilEpochMs: null,
+      tripCount: 0,
+      rejectionCount: 0,
+      failureCount: 0,
+      timeoutCount: 0,
+      halfOpenProbeCount: 0,
+    })),
+  };
+  const operationalServer = {
+    start: vi.fn(async () => undefined),
+    stop: vi.fn(async () => undefined),
+  };
+  const options = {
+    env: createEnv(),
+    logger: { info() {}, error() {} },
+    monitor,
+    operationalServer,
+    shutdownSignal: shutdown.signal,
+    createRuntime: async () => runtime,
+  };
+  return {
+    completion,
+    ready,
+    stopping,
+    releaseStop,
+    shutdown,
+    monitor,
+    onStarted,
+    runtime,
+    operationalServer,
+    options,
+  };
+}
 
 const describeIfPg = process.env['DVT_PG_INTEGRATION'] === '1' ? describe : describe.skip;
 
@@ -316,6 +635,317 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       await rm(canaryRoot, { recursive: true, force: true });
     }
   }, 120_000);
+});
+
+const describeIfLinuxPg =
+  process.platform === 'linux' && process.env['DVT_PG_INTEGRATION'] === '1'
+    ? describe
+    : describe.skip;
+
+describeIfLinuxPg('runTemporalWorkerHost signal canary', () => {
+  it.each([
+    {
+      kind: 'graceful',
+      title: 'drains an in-flight SDK activity after SIGTERM before closing runtime resources',
+    },
+    {
+      kind: 'forced',
+      title: 'propagates a real SDK forced shutdown failure and withdraws readiness',
+    },
+  ] as const)(
+    '$title',
+    async ({ kind }) => {
+      const connectionString =
+        process.env['DVT_PG_URL'] ??
+        process.env['DATABASE_URL'] ??
+        'postgresql://dvt:dvt@localhost:5432/dvt';
+      const runId = `run-worker-drain-${Date.now()}`;
+      const taskQueue = `worker-drain-${Date.now()}`;
+      const ownership = { tenantId: 't-it', projectId: 'p-it', environmentId: 'test', runId };
+      const shutdown = new globalThis.AbortController();
+      const receipt: string[] = [];
+      const cleanupResources: Array<() => Promise<void>> = [];
+      let activityEntered = false;
+      let activityCancellation: globalThis.AbortSignal | undefined;
+      let nativeRunSettled = false;
+      let connectionCloseEntered = false;
+      let expectedNativeFailure: Error | undefined;
+      let releaseConnectionClose: (() => void) | undefined;
+      const connectionCloseRelease = new Promise<void>((resolve) => {
+        releaseConnectionClose = resolve;
+      });
+      let hostShutdownState: string | undefined;
+      let releaseActivity: (() => void) | undefined;
+      const activityRelease = new Promise<void>((resolve) => {
+        releaseActivity = resolve;
+      });
+      let temporalEnv: TestWorkflowEnvironment | undefined;
+      let nativeRun: Promise<void> | undefined;
+      let hostCompletion: Promise<{ error?: unknown }> | undefined;
+      let operationalServer: ReturnType<typeof createOperationalServer> | undefined;
+      let testFailure: { error: unknown } | undefined;
+      let cleanupErrors: unknown[];
+      const onSignal = (): void => {
+        // The SDK queues its own callback. Exercise the already-draining ordering.
+        globalThis.queueMicrotask(() => shutdown.abort());
+      };
+
+      const settleCleanup = async (
+        phase: string,
+        operations: readonly (Promise<unknown> | undefined)[]
+      ): Promise<PromiseSettledResult<unknown>[]> => {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          return await Promise.race([
+            Promise.allSettled(operations.map((operation) => Promise.resolve(operation))),
+            new Promise<PromiseSettledResult<unknown>[]>((resolve) => {
+              timer = setTimeout(
+                () =>
+                  resolve([
+                    { status: 'rejected', reason: new Error(`CANARY_CLEANUP_TIMEOUT:${phase}`) },
+                  ]),
+                10_000
+              );
+            }),
+          ]);
+        } finally {
+          if (timer !== undefined) clearTimeout(timer);
+        }
+      };
+
+      const observeClose = (name: string, resource: { close?: () => Promise<void> }): void => {
+        const original = resource.close;
+        if (original === undefined) throw new Error(`CANARY_CLOSE_MISSING:${name}`);
+        let closed = false;
+        resource.close = async () => {
+          expect(nativeRunSettled, `${name} must wait for the native run`).toBe(true);
+          if (kind === 'forced' && name === 'connection.close') {
+            connectionCloseEntered = true;
+            await connectionCloseRelease;
+          }
+          await original.call(resource);
+          closed = true;
+          receipt.push(name);
+        };
+        cleanupResources.push(async () => {
+          resource.close = original;
+          if (!closed) await original.call(resource);
+        });
+      };
+
+      try {
+        const planRef = await storeValidPlanArtifact({
+          connectionString,
+          schema: 'dvt',
+          plan: createDbtExecutionPlan(ownership),
+          ...ownership,
+        });
+        await bootstrapRunMetadata({
+          connectionString,
+          schema: 'dvt',
+          namespace: 'default',
+          taskQueue,
+          planRef,
+          ...ownership,
+        });
+        temporalEnv = await TestWorkflowEnvironment.createLocal();
+        const env = {
+          ...createEnv(),
+          DATABASE_URL: connectionString,
+          TEMPORAL_ADDRESS: temporalEnv.address,
+          TEMPORAL_TASK_QUEUE: taskQueue,
+          DVT_TEMPORAL_WORKER_RUN_MIGRATIONS: true,
+          DVT_TEMPORAL_ADMIN_PORT: 0,
+        };
+        const stores = createTemporalWorkerStores(env, {}, true);
+        observeClose('state-store.close', stores.stateStore);
+        observeClose('plan-reader.close', stores.planArtifactReader);
+        const monitor = createMonitor();
+        operationalServer = createOperationalServer({
+          host: '127.0.0.1',
+          port: 0,
+          logger: { info() {} },
+          monitor,
+        });
+        const server = operationalServer;
+        const createWorker = Worker.create.bind(Worker);
+        let nativeWorker: Worker | undefined;
+        vi.spyOn(Worker, 'create').mockImplementation(async (options) => {
+          // Only the explicit fixture changes the SDK's documented shutdown deadline.
+          const worker = await createWorker({
+            ...options,
+            ...(kind === 'forced' ? { shutdownForceTime: '1s' } : {}),
+          });
+          nativeWorker = worker;
+          const run = worker.run.bind(worker);
+          vi.spyOn(worker, 'run').mockImplementation(() => {
+            nativeRun = run().finally(() => {
+              nativeRunSettled = true;
+              receipt.push('worker.run');
+            });
+            return nativeRun;
+          });
+          return worker;
+        });
+        hostCompletion = runTemporalWorkerHost({
+          env,
+          logger: { info() {}, error() {} },
+          monitor,
+          shutdownSignal: shutdown.signal,
+          operationalServer: {
+            start: () => server.start(),
+            stop: async () => {
+              await server.stop();
+              receipt.push('operational-server.stop');
+            },
+          },
+          createRuntime: (runtimeEnv, logger) =>
+            createTemporalWorkerRuntime(runtimeEnv, logger, {
+              stateStoreFactory: () => stores.stateStore,
+              planArtifactReaderFactory: () => stores.planArtifactReader,
+              connectionFactory: async (config) => {
+                const connection = await NativeConnection.connect({
+                  address: config.connection.address,
+                });
+                observeClose('connection.close', connection);
+                return connection;
+              },
+              hostFactory: (config) => {
+                const host = new TemporalWorkerHost({
+                  ...config,
+                  // Explicit activity fixture: hold native in-flight work, then propagate
+                  // its actual cancellation. This is not a DBT execution success proof.
+                  stepExecutors: [
+                    {
+                      canExecute: () => true,
+                      execute: async () => {
+                        const cancellation = Context.current().cancellationSignal;
+                        activityCancellation = cancellation;
+                        activityEntered = true;
+                        await activityRelease;
+                        if (!cancellation.aborted) throw new Error('CANARY_ACTIVITY_NOT_CANCELLED');
+                        throw cancellation.reason;
+                      },
+                    },
+                  ],
+                });
+                const stop = host.shutdown.bind(host);
+                vi.spyOn(host, 'shutdown').mockImplementation(() => {
+                  hostShutdownState = nativeWorker?.getState();
+                  return stop();
+                });
+                return host;
+              },
+            }),
+        }).then(
+          () => ({}),
+          (error: unknown) => ({ error })
+        );
+        await waitForAsync(async () => monitor.getHealthSnapshot().ready);
+        await temporalEnv.client.workflow.start(RUN_PLAN_WORKFLOW, {
+          taskQueue,
+          workflowId: runId,
+          args: [
+            {
+              planRef,
+              ctx: {
+                ...ownership,
+                targetAdapter: 'temporal',
+                logicalAttemptId: 1,
+                originRunId: runId,
+              },
+              maxContinueAsNewPayloadBytes: 500_000,
+              continueAsNewAfterLayerCount: 100,
+            },
+          ],
+        });
+        await waitFor(() => activityEntered, 30_000);
+        if (kind === 'graceful') {
+          process.once('SIGTERM', onSignal);
+          process.kill(process.pid, 'SIGTERM');
+          await waitFor(() => hostShutdownState !== undefined, 5_000);
+          await waitFor(() => activityCancellation?.aborted === true, 5_000);
+          expect(['DRAINING', 'DRAINED']).toContain(hostShutdownState);
+          expect(nativeRunSettled).toBe(false);
+          expect(receipt).toEqual([]);
+          releaseActivity?.();
+          expect(await hostCompletion).toEqual({});
+        } else {
+          if (nativeWorker === undefined) throw new Error('CANARY_WORKER_MISSING');
+          // Exercise original SDK failure independently of the application AbortSignal.
+          nativeWorker.shutdown();
+          await waitFor(() => nativeWorker?.getState() === 'FAILED', 5_000);
+          expect(activityCancellation?.aborted).toBe(true);
+          // The real SDK deadline has fired; release the fixture so leftover activity work
+          // cannot outlive the test's native resources. Worker.run remains untouched.
+          releaseActivity?.();
+          await waitFor(() => connectionCloseEntered, 10_000);
+          expect(shutdown.signal.aborted).toBe(false);
+          expect(nativeRunSettled).toBe(true);
+          expect(hostShutdownState).toBe('FAILED');
+          expect(receipt).toEqual(['worker.run']);
+          expect(monitor.getHealthSnapshot().ready).toBe(false);
+          const address = server.getAddress();
+          if (address === null) throw new Error('CANARY_OPERATIONAL_SERVER_MISSING');
+          const readiness = await globalThis.fetch('http://127.0.0.1:' + address.port + '/readyz');
+          expect(readiness.status).toBe(503);
+          expect(await readiness.json()).toMatchObject({ ready: false });
+          releaseConnectionClose?.();
+          const result = await hostCompletion;
+          const nativeFailure = await nativeRun?.then(
+            () => undefined,
+            (error: unknown) => error
+          );
+          if (!(nativeFailure instanceof Error)) {
+            throw new Error('CANARY_EXPECTED_REAL_SDK_SHUTDOWN_FAILURE');
+          }
+          expectedNativeFailure = nativeFailure;
+          expect(result.error).toBe(nativeFailure);
+        }
+        expect(receipt).toEqual([
+          'worker.run',
+          'connection.close',
+          'state-store.close',
+          'plan-reader.close',
+          'operational-server.stop',
+        ]);
+      } catch (error) {
+        testFailure = { error };
+      } finally {
+        process.off('SIGTERM', onSignal);
+        releaseConnectionClose?.();
+        shutdown.abort();
+        releaseActivity?.();
+        const joins = await settleCleanup('host-and-native-run', [
+          hostCompletion,
+          nativeRun?.catch((error: unknown) => {
+            if (expectedNativeFailure === undefined || error !== expectedNativeFailure) throw error;
+          }),
+        ]);
+        const cleanup = await settleCleanup(
+          'owned-resources',
+          cleanupResources.map((close) => Promise.resolve().then(close))
+        );
+        vi.restoreAllMocks();
+        const teardown = await settleCleanup('operational-and-temporal-servers', [
+          operationalServer?.stop(),
+          temporalEnv?.teardown(),
+        ]);
+        cleanupErrors = [...joins, ...cleanup, ...teardown]
+          .filter((result) => result.status === 'rejected')
+          .map((result) => result.reason);
+      }
+      if (cleanupErrors.length > 0) {
+        throw new AggregateError(
+          [...(testFailure === undefined ? [] : [testFailure.error]), ...cleanupErrors],
+          'canary cleanup failed',
+          { cause: testFailure?.error ?? cleanupErrors[0] }
+        );
+      }
+      if (testFailure !== undefined) throw testFailure.error;
+    },
+    120_000
+  );
 });
 
 async function waitFor(predicate: () => boolean, timeoutMs = 100): Promise<void> {

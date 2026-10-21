@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import type { TemporalWorkerHostConfig } from '@dvt/adapter-temporal';
+import type { TemporalWorkerHostConfig, TemporalWorkerRunResult } from '@dvt/adapter-temporal';
 import { LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -21,6 +21,68 @@ describe('createTemporalWorkerRuntime', () => {
   beforeEach(() => {
     mockNativeConnectionConnect.mockReset();
   });
+
+  it('delegates the exact native completion without inventing a runtime outcome', async () => {
+    const fixture = createRuntimeFixture();
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv(),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        hostFactory: () => fixture.host,
+        connectionFactory: async () => fixture.connection,
+      }
+    );
+    expect(runtime.getRunCompletion()).toBeNull();
+    const failure = new Error('native terminal failure');
+    const completion = Promise.resolve<TemporalWorkerRunResult>({
+      status: 'failed',
+      error: failure,
+    });
+    fixture.host.getRunCompletion.mockReturnValue(completion);
+    await runtime.start();
+    expect(runtime.getRunCompletion()).toBe(completion);
+    await runtime.stop();
+    expect(runtime.getRunCompletion()).toBe(completion);
+    expect(await completion).toEqual({ status: 'failed', error: failure });
+  });
+
+  it.each(['before-start', 'after-start', 'failed-stop', 'stopping'] as const)(
+    'rejects start once stop begins: %s',
+    async (scenario) => {
+      const fixture = createRuntimeFixture();
+      const runtime = await createTemporalWorkerRuntime(
+        createEnv(),
+        { info() {}, error() {} },
+        {
+          stateStoreFactory: () => fixture.stateStore,
+          hostFactory: () => fixture.host,
+          connectionFactory: async () => fixture.connection,
+        }
+      );
+      let releaseStop!: () => void;
+      const stopped = new Promise<void>((resolve) => {
+        releaseStop = resolve;
+      });
+      const stopFailure = new Error('stop failed');
+      if (scenario !== 'before-start') await runtime.start();
+      if (scenario === 'failed-stop') fixture.hostShutdown.mockRejectedValue(stopFailure);
+      if (scenario === 'stopping') fixture.hostShutdown.mockImplementation(async () => stopped);
+      const stop = runtime.stop().then(
+        () => null,
+        (error: unknown) => error
+      );
+      try {
+        if (scenario !== 'stopping') await stop;
+        await expect(runtime.start()).rejects.toThrow('TEMPORAL_WORKER_RUNTIME_STOPPED');
+        expect(fixture.hostStart).toHaveBeenCalledTimes(scenario === 'before-start' ? 0 : 1);
+      } finally {
+        releaseStop();
+        await stop;
+      }
+      expect(fixture.closeStateStore).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it('wires reader, runner, host, and connection when DBT is enabled', async () => {
     const fixture = createRuntimeFixture();
@@ -89,6 +151,57 @@ describe('createTemporalWorkerRuntime', () => {
 
     expect(fixture.migrate).not.toHaveBeenCalled();
     expect(fixture.hostStart).toHaveBeenCalledWith(fixture.connection);
+  });
+
+  it('joins concurrent stops and closes owned resources once after the host drains', async () => {
+    const fixture = createRuntimeFixture();
+    const closeOrder: string[] = [];
+    let releaseDrain!: () => void;
+    const drained = new Promise<void>((resolve) => {
+      releaseDrain = resolve;
+    });
+    const shutdownEntered = new Promise<void>((resolve) => {
+      fixture.hostShutdown.mockImplementation(async () => {
+        resolve();
+        await drained;
+        closeOrder.push('host');
+      });
+    });
+    fixture.connection.close.mockImplementation(async () => {
+      closeOrder.push('connection');
+    });
+    fixture.closeStateStore.mockImplementation(async () => {
+      closeOrder.push('stateStore');
+    });
+    const runtime = await createTemporalWorkerRuntime(
+      createEnv(),
+      { info() {}, error() {} },
+      {
+        stateStoreFactory: () => fixture.stateStore,
+        connectionFactory: async () => fixture.connection,
+        hostFactory: () => fixture.host,
+      }
+    );
+    await runtime.start();
+
+    const settled = vi.fn();
+    const firstStop = runtime.stop().then(settled);
+    const secondStop = runtime.stop().then(settled);
+    await shutdownEntered;
+
+    expect(fixture.hostShutdown).toHaveBeenCalledTimes(1);
+    expect(fixture.connection.close).not.toHaveBeenCalled();
+    expect(fixture.closeStateStore).not.toHaveBeenCalled();
+    expect(settled).not.toHaveBeenCalled();
+
+    releaseDrain();
+    await Promise.all([firstStop, secondStop]);
+
+    expect(settled).toHaveBeenCalledTimes(2);
+    expect(fixture.hostShutdown).toHaveBeenCalledTimes(1);
+    expect(fixture.connection.close).toHaveBeenCalledTimes(1);
+    expect(fixture.closeStateStore).toHaveBeenCalledTimes(1);
+    expect(closeOrder).toEqual(['host', 'connection', 'stateStore']);
   });
 
   it('connects with the canonical nested Temporal address when no connection factory is provided', async () => {
@@ -434,6 +547,7 @@ function createRuntimeFixture(): {
   host: {
     start: ReturnType<typeof vi.fn>;
     shutdown: ReturnType<typeof vi.fn>;
+    getRunCompletion: ReturnType<typeof vi.fn<() => Promise<TemporalWorkerRunResult> | null>>;
   };
   hostShutdown: ReturnType<typeof vi.fn>;
   hostStart: ReturnType<typeof vi.fn>;
@@ -462,6 +576,7 @@ function createRuntimeFixture(): {
   const host = {
     start: hostStart,
     shutdown: hostShutdown,
+    getRunCompletion: vi.fn<() => Promise<TemporalWorkerRunResult> | null>(() => null),
   };
 
   return {
