@@ -128,7 +128,7 @@ describe('Shared Canvas imported Source identity', () => {
       return readLiveGraphDraft(scope, { failOnStatusCode: false }).its('status').should('eq', 404);
     });
     cy.intercept(
-      { method: 'POST', pathname: '/workspace/graph/draft', times: 1 },
+      { method: 'PUT', pathname: '/workspace/graph/draft', times: 1 },
       {
         statusCode: 503,
         body: { error: { type: 'internal_error', reason: 'draft_save_failed' } },
