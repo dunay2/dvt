@@ -7,12 +7,15 @@ import type { PendingSourceOccurrence } from './relational-source-occurrence/pen
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import type { CanvasStagedOperationActions } from './canvasStagedOperationActions';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
+import type { CanvasStagedAnalysisBinding } from './CanvasStagedAnalysisProvider';
+import { resolveCanvasReadFieldEligibility } from './canvasInputFieldEligibility';
 
 export type CanvasRelationalTreeAuthoringDto = Readonly<{
   transformNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   inputs: readonly CanvasDvtCompositionInput[];
+  analysisBinding: CanvasStagedAnalysisBinding;
   draft: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
   selectedInputIds: readonly string[];
@@ -67,6 +70,16 @@ export function projectCanvasRelationalTreeAuthoringView(
       nodes,
       edges,
       inputs: model.inputs,
+      analysisBinding: {
+        inputs: model.inputs,
+        readFieldEligibility: (document) =>
+          resolveCanvasReadFieldEligibility({
+            document,
+            nodeId: transformNode.id,
+            nodes,
+            edges,
+          }),
+      },
       draft: session.joinDraft,
       operation: session.operation,
       selectedInputIds: session.selectedInputIds,

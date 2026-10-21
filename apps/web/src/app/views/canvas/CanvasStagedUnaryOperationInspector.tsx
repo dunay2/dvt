@@ -1,18 +1,12 @@
 /** Configure a staged unary operation without removing it from the graph. */
-import { useMemo } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { CanvasRelationalTreeOperatorForm } from './CanvasRelationalTreeOperatorForm';
 import type { CanvasStagedOperation } from './canvasStagedOperation';
-import {
-  assignCanvasStagedRoot,
-  decodeCanvasStagedOperation,
-} from './canvasStagedOperationDocument';
+import { assignCanvasStagedRoot } from './canvasStagedOperationDocument';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
 import type { CanvasRelationalOperatorTool } from './relational-operator-form/OperatorTool';
-import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { useSelectedRelationTool } from './useSelectedRelationTool';
 import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
 import type { CanonicalNode } from '../../types/canonical';
@@ -41,16 +35,12 @@ export function CanvasStagedUnaryOperationInspector({
   onClose: () => void;
   onPendingChange: (pending: boolean) => void;
 }>): JSX.Element | null {
-  const configured = useMemo(
-    () => editingDocument ?? decodeCanvasStagedOperation(staged),
-    [editingDocument, staged.semanticDocument]
-  );
+  const configured = editingDocument;
   const document = configured ?? producerDocument;
-  const analysis = useCanvasRelationAnalysisSession(document, staged.id);
   const targetRelationId = configured == null ? (staged.inputs[0] ?? null) : staged.id;
-  if (document == null || analysis == null || targetRelationId == null) return null;
+  if (document == null || targetRelationId == null) return null;
   return (
-    <CanvasRelationAnalysisContext.Provider value={analysis}>
+    <>
       {configured != null ? (
         <CanvasSelectedUnaryEditor
           draft={document}
@@ -73,7 +63,7 @@ export function CanvasStagedUnaryOperationInspector({
           onPendingChange={onPendingChange}
         />
       )}
-    </CanvasRelationAnalysisContext.Provider>
+    </>
   );
 }
 
