@@ -1,4 +1,27 @@
 /**
+ * @sourceResponsibilities v1
+ * @component SYS-API-INFRASTRUCTURE
+ * @responsibility RESP-LOCAL-NATIVE-DRAIN "Drain admitted sessions before closing native instances."
+ * @implements DuckDbLocalDataRuntime.close
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.test.ts"
+ * @responsibility RESP-LOCAL-NATIVE-SESSION-ADMISSION "Bound concurrent native sessions within the runtime lifetime."
+ * @implements DuckDbLocalDataRuntime.withSession
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.test.ts"
+ * @responsibility RESP-LOCAL-NATIVE-SESSION-LIFETIME "Own a native connection until its callback and storage checks finish."
+ * @implements DuckDbLocalDataRuntime.runSession
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.storage.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.test.ts"
+ * @responsibility RESP-LOCAL-NATIVE-WORKSPACE-INSTANCES "Own one bounded native instance per scoped workspace."
+ * @implements DuckDbLocalDataRuntime.instanceForScope
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.storage.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.test.ts"
+ * @responsibility RESP-LOCAL-WORKSPACE-EXISTENCE "Check workspace database existence without creating storage."
+ * @implements DuckDbLocalDataRuntime.hasWorkspaceDatabase
+ * @test "apps/api/test/architecture/localDataCaptureComposition.architecture.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbLocalDataRuntime.storage.test.ts"
+ * @test "apps/api/test/modules/localDataCaptureRuntime.test.ts"
+ */
+/**
  * Owned concern: bound native workspace instances and short-lived session ownership.
  * @baseline #3389: one API process owns each persistent scoped file; scope hashing is not authorization.
  * @decision Keep native callbacks infrastructure-only, lock instance budgets and drain sessions before close.

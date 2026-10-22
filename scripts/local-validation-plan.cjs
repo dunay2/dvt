@@ -14,6 +14,17 @@ const { classifyRepositoryChangedScope } = require('../tools/ci/repository-chang
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/lib/component-source-responsibilities.cjs':
+    'scripts/lib/component-source-responsibilities.test.cjs',
+  'scripts/lib/component-source-responsibilities.test.cjs':
+    'scripts/lib/component-source-responsibilities.test.cjs',
+  'scripts/lib/component-source-responsibilities-reader.cjs':
+    'scripts/lib/component-source-responsibilities-reader.test.cjs',
+  'scripts/lib/component-source-responsibilities-reader.test.cjs':
+    'scripts/lib/component-source-responsibilities-reader.test.cjs',
+  'scripts/sync-component-source-headers.cjs': 'scripts/sync-component-source-headers.test.cjs',
+  'scripts/sync-component-source-headers.test.cjs':
+    'scripts/sync-component-source-headers.test.cjs',
   'scripts/lib/git-repository-environment.cjs': 'scripts/lib/git-repository-environment.test.cjs',
   'scripts/lib/git-repository-environment.test.cjs':
     'scripts/lib/git-repository-environment.test.cjs',

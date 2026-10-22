@@ -38,6 +38,7 @@ const {
 } = require('./planning-db/governed-source-refresh-write-rail.cjs');
 const { parseCatalogReconciliation } = require('./planning-db/catalog-reconciliation.cjs');
 const { applyCatalogReconciliation } = require('./planning-db/catalog-reconciliation-write.cjs');
+const { validateResponsibilityBindings } = require('./lib/component-source-responsibilities.cjs');
 
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 const allowedFowlerAnalysisDispositionStatuses = new Set([
@@ -439,6 +440,7 @@ const operationHelp = Object.freeze({
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
       '--red-green-cycle <existing-id> reconciles one cycle with --expected-revision and explicit admitted --patch-surface evidence.',
+      "--responsibility-bindings <JSON-array> replaces this rail's current set; omission preserves it and [] clears it. Existing rails require --expected-revision.",
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'Referenced rails require the exact pair --reference-only true and --authority-ref <canonical-source>.',
       'record --catalog-reconciliation <json-file> performs explicitly scoped, atomic metadata repair without rebuilding declarations; no other CLI flags may be mixed into this mode.',
@@ -1579,6 +1581,13 @@ function operationPayload(command) {
       replaceImplementationRefs: command.replaceImplementationRefs,
       replaceArchitectureGuards: command.replaceArchitectureGuards,
       ...(command.replaceDocumentationRefs === true ? { replaceDocumentationRefs: true } : {}),
+      ...(command.responsibilityBindings === undefined
+        ? {}
+        : {
+            responsibilityBindings: requireFeatureResponsibilityBindings(
+              command.responsibilityBindings
+            ),
+          }),
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -3315,6 +3324,20 @@ function parseFeatureMechanizationCommand(action, args) {
     );
   }
 
+  let responsibilityBindings;
+  if (options.responsibilityBindings !== undefined) {
+    let parsedBindings;
+    try {
+      parsedBindings = JSON.parse(options.responsibilityBindings);
+    } catch {
+      throw new Error('--responsibility-bindings requires a valid JSON array.');
+    }
+    responsibilityBindings = requireFeatureResponsibilityBindings(parsedBindings, {
+      forbiddenSurfaces: normalizeListOption(options.forbiddenSurface),
+      railStatus: options.railStatus,
+    });
+  }
+
   const command = {
     kind: 'feature_mechanization_rail_record',
     featureId,
@@ -3360,6 +3383,7 @@ function parseFeatureMechanizationCommand(action, args) {
       parseBooleanOption(options.replaceArchitectureGuards, 'replace-architecture-guards') ?? false,
     replaceDocumentationRefs:
       parseBooleanOption(options.replaceDocumentationRefs, 'replace-documentation-refs') ?? false,
+    ...(responsibilityBindings === undefined ? {} : { responsibilityBindings }),
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -5208,10 +5232,32 @@ function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
   return value;
 }
 
+function requireFeatureResponsibilityBindings(value, { forbiddenSurfaces = [], railStatus } = {}) {
+  const result = validateResponsibilityBindings(value);
+  if (result.errors.length > 0) {
+    throw new Error(`Invalid --responsibility-bindings: ${result.errors.join('; ')}`);
+  }
+  if (result.bindings.length > 0 && ['retired', 'deprecated'].includes(railStatus)) {
+    throw new Error(
+      'Responsibility bindings must be empty for retired or deprecated rails; record --responsibility-bindings [] with --expected-revision first.'
+    );
+  }
+  for (const binding of result.bindings) {
+    for (const path of [binding.path, ...binding.testPaths]) {
+      if (excludesFeatureMechanizationSurface(path, forbiddenSurfaces)) {
+        throw new Error(`Responsibility binding path ${path} is forbidden.`);
+      }
+    }
+  }
+  return result.bindings;
+}
+
 function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
+  const { responsibilityBindings: existingResponsibilityBindings, ...existingFields } =
+    existingManifest || {};
   const existing = command.replaceArchitectureGuards
-    ? { ...(existingManifest || {}), architectureGuards: [] }
-    : existingManifest || {};
+    ? { ...existingFields, architectureGuards: [] }
+    : existingFields;
   const merged = pruneForbiddenFeatureMechanizationReferences(
     mergeFeatureMechanizationValue(existing, incomingManifest),
     command.forbiddenImplementationSurfaces
@@ -5264,12 +5310,24 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
         ),
     symbols,
   };
+  const responsibilityBindings =
+    command.responsibilityBindings === undefined
+      ? existingResponsibilityBindings
+      : command.responsibilityBindings;
   return {
     ...pruneForbiddenFeatureMechanizationReferences(
       reconciled,
       command.forbiddenImplementationSurfaces
     ),
     forbiddenImplementationSurfaces,
+    ...(responsibilityBindings === undefined
+      ? {}
+      : {
+          responsibilityBindings: requireFeatureResponsibilityBindings(responsibilityBindings, {
+            forbiddenSurfaces: forbiddenImplementationSurfaces,
+            railStatus: command.railStatus,
+          }),
+        }),
   };
 }
 
@@ -5299,6 +5357,13 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   if (command.redGreenCycle !== undefined) validateFeatureMechanizationRecordCommand(command);
   const previous = normalizeFeatureMechanizationRail(existingRail);
   const previousRevision = previous ? previous.revision : null;
+  if (
+    command.responsibilityBindings !== undefined &&
+    previous &&
+    command.expectedRevision == null
+  ) {
+    throw new Error('--responsibility-bindings requires --expected-revision for an existing rail.');
+  }
   if (command.replaceDocumentationRefs === true && previous && command.expectedRevision == null) {
     throw new Error(
       '--replace-documentation-refs requires --expected-revision for an existing rail.'
@@ -5469,6 +5534,11 @@ function planFeatureMechanizationRailRetireOperation({
     throw new Error(
       `FEATURE-MECHANIZATION-RETIRE-REVISION-CONFLICT: expected ${command.expectedRevision}, found ${previous.revision}.`
     );
+  }
+  if (previous.rawManifest.responsibilityBindings !== undefined) {
+    requireFeatureResponsibilityBindings(previous.rawManifest.responsibilityBindings, {
+      railStatus: 'retired',
+    });
   }
 
   const createdAt = toIso(now);

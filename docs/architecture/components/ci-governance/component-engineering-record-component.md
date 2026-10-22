@@ -2,7 +2,7 @@
 title: Component Engineering Record Component
 status: Review
 owner: Engineering / CI Governance / Architecture
-last_reviewed: 2026-10-22
+last_reviewed: 2026-10-23
 planning_type: architecture
 ---
 
@@ -61,6 +61,84 @@ Negative acceptance covers newly tracked files absent from imported inventory,
 deleted paths, excluded paths, ambiguous owners, invalid parent relations, and
 unavailable Git/DB evidence. A temporary Git repository exercises actual file
 changes; live DuckDB paths verify the operator query against the existing DB.
+
+## Atomic source responsibilities
+
+Source declarations connect concrete code to canonical responsibilities. The
+current model has component responsibilities and rail symbols, but neither
+association alone proves which responsibility a symbol implements.
+
+```mermaid
+flowchart LR
+  Responsibility[DB component responsibility] --> Binding[DB feature responsibility binding]
+  Binding --> Project[Shared header projection and validator]
+  Ownership[DB effective file ownership] --> Project
+  Git[Selected Git files and AST symbols] --> Project
+  Project --> Header[Marked source comment]
+  Project --> Gate[Implementation acceptance or explicit drift]
+```
+
+`responsibilityBindings` extends the existing feature manifest. Each binding
+contains `responsibilityId`, `componentId` (the file owner), `path`, `symbol`,
+`role`, and nonempty `testPaths`. The responsibility ID references
+`architecture.component_responsibility`; its action text and semantic owner
+are read there, never copied into a new semantic dictionary. Paths and qualified
+symbols reference the selected Git inventory. A binding is a current semantic
+association, not a stored copy of code, a physical inventory, or a history.
+
+Roles are `implements`, `delegates`, and `verifies`. An implementation must belong
+to the responsibility's owning component. Delegation or verification can cross
+that boundary explicitly. Several symbols may collaborate on one responsibility;
+sharing its ID is not itself proof of duplicated logic. Conversely, different IDs
+cannot prove different semantics: that remains a code review question.
+
+`RecordFeatureMechanizationRail` accepts `--responsibility-bindings` as a JSON
+array. Supplying it replaces that rail's complete current set; omission preserves
+the set. Updating an existing set requires the expected revision. An empty array
+explicitly removes it. Invalid shape, duplicate bindings and stale revisions
+fail before a write. There is no automatic import or backup catalog. Git retains
+source history; existing command audit is not a source inventory.
+
+The pilot covers five files: `buildLocalDataCaptureRuntime.ts`,
+`readLocalDataGenerationMetadataUseCase.ts`, `DuckDbGenerationStore.ts`,
+`duckDbGenerationMetadata.ts`, and `DuckDbLocalDataRuntime.ts`. It records their
+composition, authorization, capture/write, metadata integrity, and native
+lifecycle responsibilities, rather than declaring the metadata query to be
+their entire behavior. The component identities remain
+`SYS-API-RUNTIME-COMPOSITION`, `SYS-API-APPLICATION-SERVICES`, and
+`SYS-API-INFRASTRUCTURE`. Product rails and executable behavior are unchanged.
+
+The generated block uses `@component`, repeated `@responsibility` IDs and action
+text, role tags naming qualified symbols, and `@test` paths. The dedicated
+`@sourceResponsibilities` marker delimits the block; existing documentation and
+executable content are preserved. Tests are declared evidence references. Their
+presence does not claim execution, assertions, or semantic coverage.
+
+| Rail                                         | Kind / owner                                     | Application and adapter surface                                       | Scope and authorization                                                                             | Negative acceptance                                                                                                           |
+| -------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `RecordFeatureMechanizationRail`             | Command / PlanningDbFeatureMechanizationCatalog  | Existing `planning:db:operate feature-mechanization record`           | Repository operator, explicit actor and expected revision for replacement                           | Invalid binding, conflicting duplicate, stale revision                                                                        |
+| `SynchronizeComponentSourceHeaders`          | Command / ComponentEngineeringRecord             | `synchronizeComponentSourceHeaders`; `pnpm architecture:headers:sync` | Explicit repository-local write of admitted source comments; DB read only; no commit or publication | Missing authority, unknown responsibility, wrong owner, invalid symbol, unsafe path, malformed marker, concurrent file change |
+| `ValidateFeatureMechanizationImplementation` | Command / Repository feature mechanization guard | Existing `check-feature-mechanization.cjs --implementation`           | Read-only current candidate or explicit `GIT_HEAD`; existing local DB acceptance boundary           | Missing/deleted header, text drift, missing evidence path, ambiguous owner, unavailable DB/Git                                |
+
+The mandatory file set comes from DB bindings, not from discovering comments.
+Deleting the entire header therefore fails validation. AST resolution recognizes
+actual declarations, including qualified class methods, not names inside strings
+or comments. Missing or conflicting authority fails closed. Synchronization first
+validates the complete plan, then changes only marked comments; a second run has
+no changes. It must not repair malformed declarations by deleting unknown code.
+Read-only validation never synchronizes as a side effect.
+
+Pure contract tests run without DB in CI. Fresh acceptance against the existing
+DB remains local and records exact base/head, as required by the current
+single-team acceptance boundary. No CI artifact is a replacement DB authority.
+
+### Atomic responsibility planning matrix
+
+| Scenario                  | Opportunity          | Fowler pattern                     | DDD owner                              | Command/query rail                           | Implementation surfaces                                          | Unit or package test                                | Architecture test                                | User-flow test                           | Out of scope                                            |
+| ------------------------- | -------------------- | ---------------------------------- | -------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------- |
+| Admit current bindings    | Hidden authority     | Explicit domain association        | Feature mechanization catalog          | `RecordFeatureMechanizationRail`             | Existing writer and focused tests                                | Replacement, malformed input, revision rejection    | One canonical RESP definition                    | CLI integration against existing DB      | SQL engine migration, history, global reconciliation    |
+| Explain each pilot file   | Documentation drift  | Shared projection through gateways | ComponentEngineeringRecord             | `SynchronizeComponentSourceHeaders`          | Pure parser/projector, DB/Git reader, sync CLI, five TS comments | Qualified AST symbols, preservation and idempotence | Component and responsibility identity checks     | Real five-file sync and no-op second run | Product refactoring and repository-wide rollout         |
+| Reject stale declarations | Test-only confidence | Fail-closed policy                 | Repository feature mechanization guard | `ValidateFeatureMechanizationImplementation` | Existing checker, routing, focused tests                         | Deleted block, stale text, missing symbol/evidence  | Explicit SHA and unavailable-authority rejection | Local exact-candidate gate               | Browser suites or claiming semantic duplicate detection |
 
 ## Governing Sources
 

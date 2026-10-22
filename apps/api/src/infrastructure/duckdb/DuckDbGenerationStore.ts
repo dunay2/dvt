@@ -1,8 +1,41 @@
 /**
+ * @sourceResponsibilities v1
+ * @component SYS-API-INFRASTRUCTURE
+ * @responsibility RESP-LOCAL-CAPTURE-APPEND "Append a validated batch within capture budgets."
+ * @implements DuckDbGenerationStore.append
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.appender.test.ts"
+ * @responsibility RESP-LOCAL-CAPTURE-STAGING "Create a bounded capture staging relation with its request identity."
+ * @implements DuckDbGenerationStore.begin
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-BOOTSTRAP "Initialize only a genuinely absent generation metadata catalog."
+ * @delegates DuckDbGenerationStore.initialize
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-CONSISTENCY "Read a generation manifest only when its sealed capture and relation agree."
+ * @delegates DuckDbGenerationStore.readCapture
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-CONSISTENCY "Read a generation manifest only when its sealed capture and relation agree."
+ * @delegates DuckDbGenerationStore.readGeneration
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-CONSISTENCY "Read a generation manifest only when its sealed capture and relation agree."
+ * @delegates DuckDbGenerationStore.readHead
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-PUBLICATION "Publish a sealed generation and its expected head atomically."
+ * @implements DuckDbGenerationStore.promote
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.recovery.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-TRANSACTION "Keep generation operations within an authorized storage transaction."
+ * @implements DuckDbGenerationStore.transaction
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
+ * @test "apps/api/test/infrastructure/DuckDbGenerationStore.test.ts"
+ */
+/**
  * Owned concern: bounded staging and atomic READY/head publication inside one workspace DuckDB file.
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Reuse the native runtime, #3391 manifests and #3392 checkpoints; no file swap or new registry.
- * @consequence This uncomposed infrastructure adapter does not expose a capture/Preview API or certify source EOF.
+ * @consequence The composed infrastructure adapter does not expose a public capture/Preview API or certify source EOF.
  */
 import { randomUUID } from 'node:crypto';
 

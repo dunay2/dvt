@@ -1,4 +1,17 @@
 /**
+ * @sourceResponsibilities v1
+ * @component SYS-API-APPLICATION-SERVICES
+ * @responsibility RESP-LOCAL-AUTHORIZED-METADATA-READ "Enforce current authorization across an exact metadata read."
+ * @implements ReadLocalDataGenerationMetadataUseCase.read
+ * @test "apps/api/test/application/services/readLocalDataGenerationMetadataUseCase.test.ts"
+ * @responsibility RESP-LOCAL-CAPTURE-SELECTION "Validate an exact dataset and capture selector."
+ * @implements ReadLocalDataGenerationMetadataUseCase.readCapture
+ * @test "apps/api/test/application/services/readLocalDataGenerationMetadataUseCase.test.ts"
+ * @responsibility RESP-LOCAL-GENERATION-SELECTION "Validate an exact dataset and generation selector."
+ * @implements ReadLocalDataGenerationMetadataUseCase.readGeneration
+ * @test "apps/api/test/application/services/readLocalDataGenerationMetadataUseCase.test.ts"
+ */
+/**
  * Owned concern: authorize one exact, row-free LOCAL generation lookup.
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Revalidate current workspace access before storage and before publishing its result.

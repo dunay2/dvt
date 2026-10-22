@@ -15,6 +15,10 @@ const {
 const {
   readFeatureMechanizationManifestRowsFromDb,
 } = require('./lib/feature-mechanization-db-reader.cjs');
+const { validateResponsibilityBindings } = require('./lib/component-source-responsibilities.cjs');
+const {
+  validateComponentSourceResponsibilities,
+} = require('./lib/component-source-responsibilities-reader.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
@@ -640,6 +644,13 @@ function validateFeatureMechanizationManifest(manifest, sourcePath) {
   validateCommandQueryRails(manifest, sourcePath, errors);
   validateRedGreenCycles(manifest, sourcePath, errors);
   validateSymbols(manifest, sourcePath, errors);
+  if (Object.hasOwn(manifest, 'responsibilityBindings')) {
+    errors.push(
+      ...validateResponsibilityBindings(manifest.responsibilityBindings).errors.map(
+        (error) => `${sourcePath}: ${error}`
+      )
+    );
+  }
 
   return { errors };
 }
@@ -978,6 +989,14 @@ async function main() {
     );
 
     allErrors.push(...implementationResult.errors);
+    try {
+      const sourceResponsibilities = await validateComponentSourceResponsibilities({
+        baseRef: args.baseRef,
+      });
+      allErrors.push(...sourceResponsibilities.errors);
+    } catch (error) {
+      allErrors.push(`[source-responsibilities] ${error.message}`);
+    }
 
     if (allErrors.length > 0) {
       console.error('[docs:feature-mechanization] FAILED');

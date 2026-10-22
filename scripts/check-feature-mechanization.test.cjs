@@ -108,6 +108,26 @@ test('validateFeatureMechanizationManifest accepts a closed mechanical feature c
   assert.deepEqual(result.errors, []);
 });
 
+test('manifest validation rejects malformed responsibility bindings rather than ignoring them', () => {
+  for (const responsibilityBindings of [null, {}, [{ responsibilityId: 'RESP-TEST' }]]) {
+    const result = validateFeatureMechanizationManifest(
+      { ...validManifest, responsibilityBindings },
+      'plan.md'
+    );
+    assert.match(result.errors.join('\n'), /responsibility|binding/i);
+  }
+});
+
+test('manifest validation accepts an explicitly empty current binding set', () => {
+  assert.deepEqual(
+    validateFeatureMechanizationManifest(
+      { ...validManifest, responsibilityBindings: [] },
+      'plan.md'
+    ).errors,
+    []
+  );
+});
+
 test('validateFeatureMechanizationManifest accepts an explicit reference to an existing rail authority', () => {
   const result = validateFeatureMechanizationManifest(
     {
