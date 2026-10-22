@@ -118,7 +118,7 @@ GitHub Actions cache transport is additionally checked in the actual workflow.
 ## Native Provider Browser Prerequisites
 
 The three `available` Web browser shards use Ubuntu 22.04, Node 22.23.3 and
-Chrome stable 155.0.8059.39. The existing Test Suite workflow verifies the
+Chrome stable 155.0.8059.84. The existing Test Suite workflow verifies the
 official Chrome package SHA256 and actual Cypress browser discovery before
 running provider-backed evidence. Chrome preparation runs only when the
 governed Web plan requires a browser. Other matrix phases retain their existing
@@ -133,6 +133,15 @@ not prove OS causation or close the intermittent failure in
 [#3604](https://github.com/dunay2/dvt/issues/3604#issuecomment-6327499315).
 All existing browser scenarios, assertions, budgets, provider cleanup and seven
 mandatory merge checks remain required.
+
+The Chrome pin incorporates the corrected native request-collision handling
+investigated in #3604. The [Chrome .39 capture](https://github.com/dunay2/dvt/actions/runs/39771586384)
+recorded `DevTools: Duplicate request ID` and a NetworkService restart while
+Sink passed. The [same-product Chrome .84 comparison](https://github.com/dunay2/dvt/actions/runs/39776376070)
+also passed Sink, with a complete capture and no dumps or restart messages
+detected on the same runner image. This supports the browser correction; one
+observation does not establish that all intermittent failures are eliminated
+or replace the required acceptance checks.
 
 ## Package Test Runner Groups
 

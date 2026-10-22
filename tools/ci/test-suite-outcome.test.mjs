@@ -74,7 +74,7 @@ test('the admitted Chrome prerequisite checks actual discovery and preserves no-
       expected
     );
   }
-  assert.match(chrome.run, /c58aa0f2cd66179c9f050e062c882d27aa9b9f8c2b7c73fee3498560b5ed0b38/u);
+  assert.match(chrome.run, /8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de/u);
   assert.match(chrome.run, /sha256sum --check --status/u);
   assert.match(chrome.run, /google-chrome-stable --product-version/u);
   assert.match(chrome.run, /cypress info/u);
@@ -83,9 +83,9 @@ test('the admitted Chrome prerequisite checks actual discovery and preserves no-
   const directory = mkdtempSync(join(tmpdir(), 'dvt-native-browser-identity-'));
   try {
     for (const [version, expected] of [
-      ['155.0.8059.39', 0],
+      ['155.0.8059.84', 0],
       ['150.0.7871.114', 1],
-      ['155.0.8059.84', 1],
+      ['155.0.8059.39', 1],
       ['', 1],
     ]) {
       const info = version

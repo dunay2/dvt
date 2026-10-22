@@ -223,12 +223,12 @@ jobs:
           matrix.phase == 'browser' && matrix.capability == 'available' &&
           steps.web_plan.outputs.browser_required == 'true'
         run: |
-          version=155.0.8059.39
+          version=155.0.8059.84
           package="$RUNNER_TEMP/google-chrome-$version.deb"
           curl --fail --location --max-time 90 \
             "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${version}-1_amd64.deb" \
             --output "$package"
-          echo "c58aa0f2cd66179c9f050e062c882d27aa9b9f8c2b7c73fee3498560b5ed0b38  $package" | sha256sum --check --status
+          echo "8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de  $package" | sha256sum --check --status
           sudo dpkg --install "$package"
           test "$(google-chrome --product-version)" = "$version"
           test "$(google-chrome-stable --product-version)" = "$version"
@@ -237,7 +237,7 @@ jobs:
             import {readFileSync} from "node:fs";
             import assert from "node:assert/strict";
             const info = readFileSync(process.env.RUNNER_TEMP + "/dvt-native-browser-info.txt", "utf8").replace(/\x1b\[[0-9;]*m/g, "");
-            assert.match(info, /Name: chrome\r?\n\s*- Channel: stable\r?\n\s*- Version: 155\.0\.8059\.39\r?\n\s*- Executable: google-chrome\s/);
+            assert.match(info, /Name: chrome\r?\n\s*- Channel: stable\r?\n\s*- Version: 155\.0\.8059\.84\r?\n\s*- Executable: google-chrome\s/);
           '
 
       - name: Prepare browser proof image
