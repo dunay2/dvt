@@ -28,6 +28,9 @@ const {
 const { appendComponentPairFilter, appendFilter } = require('./planning-db/query-filter.cjs');
 const { parseLimit } = require('./planning-db/query-limit.cjs');
 const {
+  createCurrentComponentFilesReadModelComponent,
+} = require('./planning-db/queries/current-component-files-query.cjs');
+const {
   buildFrontendComponentFileRows,
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
@@ -1266,6 +1269,7 @@ function buildGovernanceFileRows(rows) {
     row.governance_state ?? row.governanceState,
     flagLabel(row.is_drift ?? row.isDrift, 'drift'),
     flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
+    ...(row.candidate_component_ids?.length ? [row.candidate_component_ids.join(',')] : []),
   ]);
 }
 
@@ -1403,6 +1407,14 @@ function buildComponentProfileRows(profile) {
       profile.component.governance_state ?? profile.component.governanceState ?? '-',
       profile.component.ddd_owner ?? profile.component.dddOwner ?? '-',
     ]);
+    if (profile.component.ambiguous_file_count) {
+      rows.push([
+        'ownership-gap',
+        componentId,
+        'ambiguous',
+        profile.component.ambiguous_file_count,
+      ]);
+    }
   }
 
   for (const child of profile.children || []) {
@@ -1869,22 +1881,6 @@ function docsDispositionActionSelect() {
       resolved_at,
       resolution_reason
     from ${schemaName}.doc_disposition_action_query`;
-}
-
-function governanceFileSelect() {
-  return `
-    select
-      file_path as path,
-      leaf_component_id as component_unit,
-      owning_unit,
-      root_unit,
-      domain_unit,
-      governance_state,
-      is_drift,
-      is_legacy,
-      ddd_owner,
-      cq_rails
-    from ${componentEngineeringSchemaName}.file_ownership_query`;
 }
 
 function governanceComponentSelect() {
@@ -2529,14 +2525,6 @@ async function readDocsDispositionRows(client, filters = {}) {
   return result.rows;
 }
 
-function appendGovernanceFileFilters(predicates, params, filters = {}) {
-  appendFilter(predicates, params, 'leaf_component_id', filters.component);
-  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
-  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
-  appendFilter(predicates, params, 'governance_state', filters.governanceState);
-  appendFilter(predicates, params, 'file_path', filters.path);
-}
-
 function appendGovernanceDriftFilters(predicates, params, filters = {}) {
   appendFilter(predicates, params, 'component_unit', filters.component);
   appendFilter(predicates, params, 'root_unit', filters.rootUnit);
@@ -2559,67 +2547,55 @@ function appendGovernanceUnitFilters(predicates, params, filters = {}) {
   appendFilter(predicates, params, 'governance_state', filters.governanceState);
 }
 
-async function readGovernanceFileRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendGovernanceFileFilters(predicates, params, filters);
-
+async function readGovernanceFileRows(client, filters = {}, options = {}) {
   const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${governanceFileSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by is_drift desc, component_unit, path
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
+  const { files, units } =
+    await createCurrentComponentFilesReadModelComponent(options).readCurrentComponentFiles(client);
+  const matches = (value, filter) =>
+    filter === undefined || filter === null || filter === '' || value === filter;
+  const matchesOwner = (file) => {
+    if (!file.candidate_component_ids?.length) {
+      return (
+        matches(file.component_unit, filters.component) &&
+        matches(file.root_unit, filters.rootUnit) &&
+        matches(file.domain_unit, filters.domainUnit)
+      );
+    }
+    return file.candidate_component_ids.some((id) => {
+      const unit = units.find((candidate) => candidate.id === id);
+      return (
+        unit &&
+        (matches(undefined, filters.component) || unit.unit_path.includes(filters.component)) &&
+        matches(unit.root_unit, filters.rootUnit) &&
+        matches(unit.domain_unit, filters.domainUnit)
+      );
+    });
+  };
+  return files
+    .filter(
+      (file) =>
+        matchesOwner(file) &&
+        matches(file.governance_state, filters.governanceState) &&
+        matches(file.path, filters.path)
+    )
+    .slice(0, limit);
 }
 
-async function readComponentProfileFileRows(client, filters = {}) {
+function readComponentProfileFileRows(snapshot, filters = {}) {
   const component = String(filters.component || '').trim();
-  if (!component) {
-    return [];
-  }
-
   const limit = parseLimit(filters.limit, 50);
-  const result = await client.query(
-    `with recursive component_scope(component_id, scope_depth, visited) as (
-       select $1::text, 0::integer, array[$1::text]::text[]
-       union all
-       select
-        tree.component_id,
-        component_scope.scope_depth + 1,
-        component_scope.visited || tree.component_id
-       from ${componentEngineeringSchemaName}.component_tree_query tree
-       join component_scope on tree.parent_component_id = component_scope.component_id
-       where not tree.component_id = any(component_scope.visited)
-     )
-     select
-       ownership.file_path as path,
-       ownership.leaf_component_id as component_unit,
-       ownership.owning_unit,
-       ownership.root_unit,
-       ownership.domain_unit,
-       ownership.governance_state,
-       ownership.is_drift,
-       ownership.is_legacy,
-       ownership.ddd_owner,
-       ownership.cq_rails
-     from ${schemaName}.component_engineering_file_ownership_projection ownership
-     where ownership.leaf_component_id in (select component_id from component_scope)
-        or ownership.owning_unit in (select component_id from component_scope)
-     order by is_drift desc, component_unit, path
-     limit $2`,
-    [component, limit]
-  );
-
-  return result.rows;
+  return snapshot.files
+    .filter(
+      (file) =>
+        file.unit_path.includes(component) ||
+        (file.candidate_component_ids || []).some((id) =>
+          snapshot.units.find((unit) => unit.id === id)?.unit_path.includes(component)
+        )
+    )
+    .slice(0, limit);
 }
 
-async function readFrontendComponentProfileRows(client, filters = {}) {
+async function readFrontendComponentProfileRows(client, filters = {}, options = {}) {
   const component = String(filters.component || '').trim();
   if (!component) {
     return null;
@@ -2634,9 +2610,12 @@ async function readFrontendComponentProfileRows(client, filters = {}) {
   if (!frontendComponent) {
     return null;
   }
-
-  const [files, rails, architectureDesigns] = await Promise.all([
-    readFrontendComponentFileRows(client, { component, limit }),
+  const currentPaths = new Set(
+    createCurrentComponentFilesReadModelComponent(options).readGitSourceInventory()
+  );
+  const [registeredFiles, rails, architectureDesigns] = await Promise.all([
+    // Read this component's complete registration before excluding deleted files and paging.
+    readFrontendComponentFileRows(client, { component, limit: Number.MAX_SAFE_INTEGER }),
     readFrontendComponentRailRows(client, { component, limit }),
     readArchitectureDesignScopeRows(client, {
       component,
@@ -2644,6 +2623,7 @@ async function readFrontendComponentProfileRows(client, filters = {}) {
       limit,
     }),
   ]);
+  const files = registeredFiles.filter((file) => currentPaths.has(file.file_path ?? file.filePath));
   const railNames = rails
     .map((rail) => rail.rail_name ?? rail.railName)
     .filter(Boolean)
@@ -2667,9 +2647,11 @@ async function readFrontendComponentProfileRows(client, filters = {}) {
         frontendComponent.packageName ??
         '-',
       cq_rails: railNames,
+      direct_file_count: files.length,
+      descendant_file_count: files.length,
     },
     children: [],
-    files: files.map((file) => ({
+    files: files.slice(0, limit).map((file) => ({
       path: file.file_path ?? file.filePath,
       component_unit: file.component_id ?? file.componentId,
       owning_unit: file.component_id ?? file.componentId,
@@ -2801,7 +2783,7 @@ async function readComponentEngineeringComponentMetadataRows(client, filters = {
   return result.rows;
 }
 
-async function readComponentProfileRows(client, filters = {}) {
+async function readComponentProfileRows(client, filters = {}, options = {}) {
   const component = String(filters.component || filters.filter || '').trim();
   if (!component) {
     throw new Error('component-profile requires --component <id>.');
@@ -2809,24 +2791,45 @@ async function readComponentProfileRows(client, filters = {}) {
 
   const limit = parseLimit(filters.limit, 50);
   const scopedFilters = { ...filters, component, limit };
-  const frontendProfile = await readFrontendComponentProfileRows(client, scopedFilters);
+  const frontendProfile = await readFrontendComponentProfileRows(client, scopedFilters, options);
   if (frontendProfile) {
     return frontendProfile;
   }
+  const snapshot =
+    await createCurrentComponentFilesReadModelComponent(options).readCurrentComponentFiles(client);
 
   const componentRows = await readComponentEngineeringComponentTreeRows(client, {
     ...scopedFilters,
     limit: 1,
   });
+  const children = await readComponentEngineeringComponentTreeRows(client, {
+    parentUnit: component,
+    limit,
+  });
+  const withCurrentFileCounts = (row) => {
+    if (!row) return null;
+    const id = row.component_id;
+    const descendants = readComponentProfileFileRows(snapshot, {
+      component: id,
+      limit: Number.MAX_SAFE_INTEGER,
+    });
+    return {
+      ...row,
+      direct_file_count: snapshot.files.filter((file) => file.owning_unit === id).length,
+      descendant_file_count: descendants.length,
+      ambiguous_file_count: descendants.filter((file) => file.governance_state === 'ambiguous')
+        .length,
+      test_file_count: descendants.filter((file) =>
+        /(^|\/)(test|tests|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/.test(file.path)
+      ).length,
+    };
+  };
 
   return {
     filters: { component },
-    component: componentRows[0] || null,
-    children: await readComponentEngineeringComponentTreeRows(client, {
-      parentUnit: component,
-      limit,
-    }),
-    files: await readComponentProfileFileRows(client, scopedFilters),
+    component: withCurrentFileCounts(componentRows[0]),
+    children: children.map(withCurrentFileCounts),
+    files: readComponentProfileFileRows(snapshot, scopedFilters),
     architectureComponents: await readArchitectureComponentRows(client, scopedFilters),
     responsibilities: await readArchitectureResponsibilityRows(client, scopedFilters),
     io: await readArchitectureIoRows(client, scopedFilters),

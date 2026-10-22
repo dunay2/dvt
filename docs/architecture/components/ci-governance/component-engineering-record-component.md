@@ -2,7 +2,7 @@
 title: Component Engineering Record Component
 status: Review
 owner: Engineering / CI Governance / Architecture
-last_reviewed: 2026-05-13
+last_reviewed: 2026-10-22
 planning_type: architecture
 ---
 
@@ -13,10 +13,54 @@ planning_type: architecture
 Owned concern: expose repository component structure as a falsifiable,
 DB-backed engineering record.
 
-This component turns the governance unit manifest, tracked repository files,
-generated local projections, and planning DB query views into one component
-engineering model. The model is recursive: a component may contain child
-components, and every tracked file must resolve to exactly one leaf component.
+This component combines current Git files with Planning DB component definitions
+and responsibilities. The model is recursive: a component may contain child
+components, and each file needs one unambiguous owner. An admitted feature or an
+old imported file row does not prove current file ownership.
+
+## Current file query
+
+`ReadComponentFiles` is the existing query rail in the component-engineering
+context. Its application surfaces are `planning:db:query files` and the file
+section of `component-profile`. It is a repository-local operator query; it
+does not expose tenant data or perform writes.
+
+```mermaid
+flowchart LR
+  Git[Current Git inventory] --> Resolve[Shared ownership resolution]
+  Authority[Planning DB effective definitions and owns/excludes] --> Resolve
+  Resolve --> Files[files]
+  Resolve --> Profile[component-profile files and file counts]
+  Resolve --> Gap[Missing or ambiguous ownership]
+```
+
+Git supplies physical existence through the existing candidate reader. An
+explicit `GIT_HEAD` selects that commit; otherwise the reader includes the
+current worktree, excluding deleted and ignored untracked paths. Planning DB
+supplies effective component definitions, parent relations, responsibilities,
+and ownership patterns, including local overrides. The existing ownership
+matcher interprets those patterns; local YAML is not an alternative authority.
+
+Both surfaces resolve the same inventory before filtering or limiting results.
+Files removed from the selected Git inventory disappear. A current file with no
+owner or multiple owners is reported explicitly, never silently omitted or
+assigned by an alphabetical tie-break. A matching descendant owns the file in
+preference to its ancestor; competing unrelated owners remain ambiguous. A
+component filter includes conflicts involving that component, with candidate
+identities visible. Missing Git or DB evidence rejects the query. Profile
+descendant counts include these unresolved files and expose a separate ambiguous
+count; direct ownership counts do not claim them as owned. Frontend
+profiles retain their explicit frontend identities while excluding absent files.
+
+This read does not import, rebuild, refresh or persist a file inventory. It does
+not certify the separate code-symbol query or complete semantic evidence merely
+because an ownership pattern matches. Component responsibility and evidence
+reconciliation remains a distinct operation through the existing DB commands.
+
+Negative acceptance covers newly tracked files absent from imported inventory,
+deleted paths, excluded paths, ambiguous owners, invalid parent relations, and
+unavailable Git/DB evidence. A temporary Git repository exercises actual file
+changes; live DuckDB paths verify the operator query against the existing DB.
 
 ## Governing Sources
 
@@ -95,27 +139,6 @@ determinism utilities, and architecture tests.
 
 Plan-ref policy files remain owned by `SYS-PLANSTORE-ENGINE-FETCH`, so the
 engine component tree reflects the cross-domain reality instead of hiding it.
-
-### 2026-05-27 Engine Mapping Pass
-
-The current Planning DB query state shows the engine pilot is mechanically
-mapped but not semantically complete.
-
-Evidence:
-
-- `pnpm planning:db:query component-tree` lists 16 child components below
-  `SYS-RUNTIME-ENGINE-CORE`.
-- `pnpm planning:db:query component-quality --component SYS-RUNTIME-ENGINE-CORE`
-  returns `pass`, 0 direct files, 199 descendant files, and 16 children.
-- `pnpm planning:db:query component-drift --component SYS-RUNTIME-ENGINE-CORE`
-  returns no drift rows.
-- `pnpm planning:db:query component-metadata --component SYS-RUNTIME-ENGINE-CORE`
-  still returns `incomplete`.
-
-That means the next engine component-engineering step is metadata enrichment,
-not a blind source refactor. The residual is tracked by
-`D-ENGINE-COMPONENT-METADATA-INDEX-1` and by the Fowler review at
-[Docs And Engine Component Reconciliation Fowler Review](https://github.com/dunay2/dvt/blob/6dab0fe76db1fac675744b9b1dbe3af1ad8f1de1/docs/planning/reviews/architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md).
 
 ## Topology
 
