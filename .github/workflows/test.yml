@@ -120,7 +120,9 @@ jobs:
     name:
       Web Frontend Tests (${{ matrix.capability || matrix.phase }}${{ matrix.shard && format('
       {0}/3', matrix.shard) || '' }})
-    runs-on: ubuntu-latest
+    runs-on: >-
+      ${{ matrix.phase == 'browser' && matrix.capability == 'available' && 'ubuntu-22.04' ||
+      'ubuntu-latest' }}
     timeout-minutes: 25
     needs: [detect_test_matrix]
     if: >-
@@ -179,7 +181,9 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
-          node-version: 22.x
+          node-version: >-
+            ${{ matrix.phase == 'browser' && matrix.capability == 'available' && '22.23.3' || '22.x'
+            }}
           turbo-cache-variant: ${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}
         env:
           CYPRESS_INSTALL_BINARY: '0'
@@ -212,6 +216,29 @@ jobs:
         run: |
           pnpm --filter @dvt/web exec cypress install
           pnpm --filter @dvt/web exec cypress verify
+
+      - name: Prepare admitted native browser
+        id: browser_chrome
+        if: >-
+          matrix.phase == 'browser' && matrix.capability == 'available' &&
+          steps.web_plan.outputs.browser_required == 'true'
+        run: |
+          version=155.0.8059.84
+          package="$RUNNER_TEMP/google-chrome-$version.deb"
+          curl --fail --location --max-time 90 \
+            "https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${version}-1_amd64.deb" \
+            --output "$package"
+          echo "8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de  $package" | sha256sum --check --status
+          sudo dpkg --install "$package"
+          test "$(google-chrome --product-version)" = "$version"
+          test "$(google-chrome-stable --product-version)" = "$version"
+          pnpm --filter @dvt/web exec cypress info | tee "$RUNNER_TEMP/dvt-native-browser-info.txt"
+          node --input-type=module -e '
+            import {readFileSync} from "node:fs";
+            import assert from "node:assert/strict";
+            const info = readFileSync(process.env.RUNNER_TEMP + "/dvt-native-browser-info.txt", "utf8").replace(/\x1b\[[0-9;]*m/g, "");
+            assert.match(info, /Name: chrome\r?\n\s*- Channel: stable\r?\n\s*- Version: 155\.0\.8059\.84\r?\n\s*- Executable: google-chrome\s/);
+          '
 
       - name: Prepare browser proof image
         id: browser_image

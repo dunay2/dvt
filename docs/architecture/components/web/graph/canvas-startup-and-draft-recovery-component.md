@@ -88,6 +88,12 @@ changes from `Proposed` to `Active`.
   orchestrator. CAS eligibility belongs in
   `canvasCreateCanvasDocumentCommandPolicy.ts`; cache/session effects belong in
   `canvasCreateCanvasDocumentSaveResult.ts`.
+- A rejected first-canvas write must retain the existing `failed` draft-save
+  posture rather than returning silently to `idle`. The host shows the failed
+  save while keeping the creation action available only when current permission
+  and draft admission still allow it. A retry requires another explicit user
+  action through the same command; a failed write must not publish a Canvas,
+  replace draft cache/session state, or schedule an automatic retry.
 - DBT node-type projection must remain a declarative rule table plus a matcher,
   not a growing sequence of branch-local `if` checks.
 - Canonical-to-viewport node projection must accept named argument objects for

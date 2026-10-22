@@ -115,6 +115,34 @@ containers, which start before action steps. Their lifecycle remains unchanged.
 The executable cache contract is `node --test tools/ci/prepare-cached-image.test.mjs`;
 GitHub Actions cache transport is additionally checked in the actual workflow.
 
+## Native Provider Browser Prerequisites
+
+The three `available` Web browser shards use Ubuntu 22.04, Node 22.23.3 and
+Chrome stable 155.0.8059.84. The existing Test Suite workflow verifies the
+official Chrome package SHA256 and actual Cypress browser discovery before
+running provider-backed evidence. Chrome preparation runs only when the
+governed Web plan requires a browser. Other matrix phases retain their existing
+runner and Node selection.
+
+This declares an observed execution environment at the existing native runner
+boundary. In the [exact-product hosted comparison](https://github.com/dunay2/dvt/actions/runs/39682022844),
+Ubuntu 22 passed both selected real flows; Ubuntu 24 failed Source Import after
+session admission redirected to Login. Both provider preflights passed. That
+single trial also used different image/provisioner versions and regions; it does
+not prove OS causation or close the intermittent failure in
+[#3604](https://github.com/dunay2/dvt/issues/3604#issuecomment-6327499315).
+All existing browser scenarios, assertions, budgets, provider cleanup and seven
+mandatory merge checks remain required.
+
+The Chrome pin incorporates the corrected native request-collision handling
+investigated in #3604. The [Chrome .39 capture](https://github.com/dunay2/dvt/actions/runs/39771586384)
+recorded `DevTools: Duplicate request ID` and a NetworkService restart while
+Sink passed. The [same-product Chrome .84 comparison](https://github.com/dunay2/dvt/actions/runs/39776376070)
+also passed Sink, with a complete capture and no dumps or restart messages
+detected on the same runner image. This supports the browser correction; one
+observation does not establish that all intermittent failures are eliminated
+or replace the required acceptance checks.
+
 ## Package Test Runner Groups
 
 `Test Suite` keeps package selection in `computeTestPackageMatrix`; the matrix
@@ -966,8 +994,11 @@ aborts startup; a previous local build is not a runtime prerequisite.
   fallback when they are not running under `turbo`.
 - `pnpm ci:code` routes workspace tests through `turbo run test`. This is the
   canonical fresh CI baseline for package tests because `DVT_CI=1` disables
-  package-local pretest build fallbacks and Turbo's `test -> ^build` contract
-  must create upstream `dist/**` surfaces before tests import workspace exports.
+  package-local pretest build fallbacks. The default `test -> ^build` contract
+  creates upstream `dist/**` surfaces before tests import workspace exports.
+  `dvt-api#test` additionally requires its own `build`: native recovery tests
+  launch a Node child that imports the compiled API modules. The API build owns
+  its dependency builds, so a cold test run needs no pre-existing API output.
 - `pnpm ci:affected:build`, `pnpm ci:affected:lint`,
   `pnpm ci:affected:typecheck`, and `pnpm ci:affected:test` route through
   `node scripts/run-turbo-workspace-task.cjs` so affected local preflight and

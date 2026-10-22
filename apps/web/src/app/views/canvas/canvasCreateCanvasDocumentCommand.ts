@@ -58,6 +58,6 @@ export async function executeCreateCanvasDocumentCommand({
       setDraftSaveStatus,
     });
   } catch {
-    setDraftSaveStatus('idle');
+    setDraftSaveStatus('failed');
   }
 }
