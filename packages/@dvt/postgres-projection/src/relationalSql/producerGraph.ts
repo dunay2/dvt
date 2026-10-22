@@ -5,8 +5,14 @@ import {
   type ProducerGraph,
 } from '@dvt/substrait-analysis';
 
+import { renderPostgresAst } from '../renderPostgresAst.js';
+
 import type { ProducerSqlBinding } from './producerRead.js';
-import { projectSubstraitToPostgresSql, type SubstraitPostgresProjection } from './project.js';
+import {
+  projectSubstraitToPostgresAst,
+  type SubstraitPostgresAstProjection,
+  type SubstraitPostgresProjection,
+} from './project.js';
 
 export async function projectSubstraitProducerGraph(
   args: ProducerGraph &
@@ -21,8 +27,8 @@ export async function projectSubstraitProducerGraph(
     documents.set(args.targetId, selectDvtSubstraitRelation(target, args.relationId));
   }
   const graph = resolveProducerGraph({ ...args, documents });
-  const results = new Map<string, SubstraitPostgresProjection>();
-  const project = async (nodeId: string): Promise<SubstraitPostgresProjection> => {
+  const results = new Map<string, SubstraitPostgresAstProjection>();
+  const project = (nodeId: string): SubstraitPostgresAstProjection => {
     const previous = results.get(nodeId);
     if (previous != null) return previous;
     const { document, index } = graph.get(nodeId)!;
@@ -30,15 +36,16 @@ export async function projectSubstraitProducerGraph(
     for (const entry of index.relations.values()) {
       const reference = entry.binding.producerRef;
       if (reference == null) continue;
-      const projection = await project(reference.nodeId);
+      const projection = project(reference.nodeId);
       producers.set(entry.binding.relationId, {
         document: graph.get(reference.nodeId)!.document,
         projection,
       });
     }
-    const result = await projectSubstraitToPostgresSql(document, producers);
+    const result = projectSubstraitToPostgresAst(document, producers);
     results.set(nodeId, result);
     return result;
   };
-  return project(args.targetId);
+  const result = project(args.targetId);
+  return { ...result, sql: await renderPostgresAst(result.ast) };
 }

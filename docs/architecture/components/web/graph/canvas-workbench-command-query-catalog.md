@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-10-03
+last_reviewed: 2026-10-22
 planning_type: architecture
 ---
 
@@ -94,6 +94,39 @@ flowchart LR
 ```
 
 ## C&Q Summary
+
+### Existing transform preview projection boundary
+
+`PreviewCanvasTransformRows` remains the existing `CanvasTransformDataSample`
+query declared by [GH-3237](https://github.com/dunay2/dvt/issues/3237). PostgreSQL
+producer composition is internal to that rail and its existing `PreviewPlan`,
+`CompilePlan`, and `StartRun` consumers; it introduces no new command, query,
+authorization path, or public package API.
+
+Producer composition builds AST and projection metadata first. Internal producer
+bindings carry AST, ordering, output, and source metadata without SQL text. SQL
+serialization occurs once for the requested target at the existing public async
+projection boundary, which still returns AST, SQL, ordering, and projection
+metadata. No optional or placeholder SQL value represents an intermediate result.
+The AST construction helper remains internal to the package.
+
+```mermaid
+flowchart LR
+  Admission[Existing scoped producer-closure admission] --> Producers[Compose producer AST and metadata]
+  Producers --> Target[Requested target AST and metadata]
+  Target --> Render[Existing PostgreSQL renderer once]
+  Render --> Result[Existing public projection result]
+```
+
+This Split Phase boundary preserves protected closure and source/connection
+admission, selected relation semantics, ordering, nullability, and error
+propagation. Shared producers retain the existing closure memoization. Package
+tests count calls through the real renderer, prove AST/SQL/metadata parity and
+input immutability, and retain renderer and invalid-closure failures. The existing
+API preview consumer proves that the query still executes its selected producer
+projection. No wall-clock speedup follows solely from reduced render counts.
+
+### Catalog
 
 | Rail                                  | Type    | Status   | Bounded context               | DDD owner                            |
 | ------------------------------------- | ------- | -------- | ----------------------------- | ------------------------------------ |

@@ -17,9 +17,8 @@ import { producerReadSql, type ProducerSqlBinding } from './producerRead.js';
 import { relationSql } from './relations.js';
 import { columnName, inputRange, selectAst, unsupported, type SqlInput } from './scope.js';
 
-export type SubstraitPostgresProjection = Readonly<{
+export type SubstraitPostgresAstProjection = Readonly<{
   ast: PostgresAstNode;
-  sql: string;
   orderBy: readonly DvtPostgresOrderKey[] | null;
   projection: Readonly<{
     inputs: readonly SqlSource[];
@@ -33,10 +32,21 @@ export type SubstraitPostgresProjection = Readonly<{
   }>;
 }>;
 
+export type SubstraitPostgresProjection = SubstraitPostgresAstProjection &
+  Readonly<{ sql: string }>;
+
 export async function projectSubstraitToPostgresSql(
   document: SubstraitDocument,
   producers: ReadonlyMap<string, ProducerSqlBinding> = new Map()
 ): Promise<SubstraitPostgresProjection> {
+  const result = projectSubstraitToPostgresAst(document, producers);
+  return { ...result, sql: await renderPostgresAst(result.ast) };
+}
+
+export function projectSubstraitToPostgresAst(
+  document: SubstraitDocument,
+  producers: ReadonlyMap<string, ProducerSqlBinding> = new Map()
+): SubstraitPostgresAstProjection {
   const analysis = deriveSubstraitSchemas(document);
   const sources = admitSqlSources(document, analysis, producers);
   const rendered = new Map<string, SqlInput>();
@@ -83,7 +93,6 @@ export async function projectSubstraitToPostgresSql(
   }));
   return {
     ast,
-    sql: await renderPostgresAst(ast),
     orderBy:
       publicOrder.length > 0 && publicOrder.every((key) => key.name != null)
         ? publicOrder.map((key) => ({ ...key, name: key.name! }))

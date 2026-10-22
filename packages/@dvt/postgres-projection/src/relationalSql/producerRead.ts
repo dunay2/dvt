@@ -8,12 +8,12 @@ import {
 
 import { pgQualifiedColumnRef, pgRangeSubselect } from '../postgresAst.js';
 
-import type { SubstraitPostgresProjection } from './project.js';
+import type { SubstraitPostgresAstProjection } from './project.js';
 import { columnName, selectAst, type SqlInput } from './scope.js';
 
 export type ProducerSqlBinding = Readonly<{
   document: SubstraitDocument;
-  projection: SubstraitPostgresProjection;
+  projection: SubstraitPostgresAstProjection;
 }>;
 
 export function producerReadSql(
