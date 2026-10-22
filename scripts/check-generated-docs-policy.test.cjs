@@ -111,6 +111,71 @@ test('generated docs policy checker exports validation helpers for tests', () =>
   assert.equal(typeof checker.validateArtifactSize, 'function');
 });
 
+function walkerEntry(name, directory = false) {
+  return { name, isDirectory: () => directory, isFile: () => !directory };
+}
+
+test('filesystem inventory excludes only the root auxiliary directory before reading it', (t) => {
+  const checker = loadChecker();
+  const directories = new Map([
+    [
+      repoRoot,
+      [
+        walkerEntry('.dvt', true),
+        walkerEntry('.generated-docs', true),
+        walkerEntry('nested', true),
+      ],
+    ],
+    [path.join(repoRoot, '.generated-docs'), [walkerEntry('root.md')]],
+    [
+      path.join(repoRoot, 'nested'),
+      [walkerEntry('.generated-docs', true), walkerEntry('.dvt', true)],
+    ],
+    [path.join(repoRoot, 'nested', '.generated-docs'), [walkerEntry('nested.md')]],
+    [path.join(repoRoot, 'nested', '.dvt'), [walkerEntry('owned.md')]],
+  ]);
+  t.mock.method(fs, 'existsSync', () => true);
+  t.mock.method(fs, 'readdirSync', (directory) => {
+    if (directory === path.join(repoRoot, '.dvt')) {
+      throw new Error('Auxiliary worktree directory was read');
+    }
+    assert.ok(directories.has(directory), `Unexpected directory read: ${directory}`);
+    return directories.get(directory);
+  });
+
+  assert.deepEqual(checker.walkFiles(repoRoot).sort(), [
+    '.generated-docs/root.md',
+    'nested/.dvt/owned.md',
+    'nested/.generated-docs/nested.md',
+  ]);
+});
+
+test('filesystem inventory propagates an unreadable governed directory', (t) => {
+  const checker = loadChecker();
+  const denied = Object.assign(new Error('Permission denied reading governed docs'), {
+    code: 'EACCES',
+  });
+  t.mock.method(fs, 'existsSync', () => true);
+  t.mock.method(fs, 'readdirSync', (directory) => {
+    if (directory === repoRoot) return [walkerEntry('docs', true)];
+    assert.equal(directory, path.join(repoRoot, 'docs'));
+    throw denied;
+  });
+
+  assert.throws(
+    () => checker.walkFiles(repoRoot),
+    (error) => error === denied
+  );
+});
+
+test('filesystem inventory preserves the absent-root result without reading it', (t) => {
+  const checker = loadChecker();
+  t.mock.method(fs, 'existsSync', () => false);
+  t.mock.method(fs, 'readdirSync', () => assert.fail('An absent root must not be read'));
+
+  assert.deepEqual(checker.walkFiles(repoRoot), []);
+});
+
 test('DB-backed governance file shards are exempt from maxBytes when projection metadata is valid', () => {
   const { artifactRoot, artifactRelPath } = makeOversizedArtifact();
   try {

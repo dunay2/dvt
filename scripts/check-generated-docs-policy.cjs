@@ -70,6 +70,10 @@ function walkFiles(dir) {
       continue;
     }
 
+    if (dir === repoRoot && entry.name === '.dvt' && entry.isDirectory()) {
+      continue;
+    }
+
     const abs = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       out.push(...walkFiles(abs));
@@ -411,4 +415,5 @@ module.exports = {
   validateArtifactSize,
   validateDbBackedArtifactGroups,
   validatePolicy,
+  walkFiles,
 };
