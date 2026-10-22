@@ -9,6 +9,7 @@ require('./planning-db-query-tests/governance-refresh.test.cjs');
 require('./planning-db-query-tests/canvas-component-registry-drift.test.cjs');
 require('./planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs');
 require('./planning-db-query-tests/source-drift.test.cjs');
+require('./planning-db-query-tests/current-component-files.test.cjs');
 
 const {
   buildDocsDispositionRows,
@@ -4024,35 +4025,51 @@ test('buildGovernanceFileRows formats DB-owned governance file rows', () => {
   ]);
 });
 
-test('readGovernanceFileRows queries effective DB file ownership', async () => {
+test('readGovernanceFileRows filters current Git files after resolving DB ownership', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
       captured.sql = sql;
       captured.params = params;
-      return { rows: [] };
+      return {
+        rows: [
+          {
+            id: 'SYS-DOCS-GOVERNANCE',
+            parent: null,
+            level: 'component',
+            status: 'drift',
+            owns: ['docs/**'],
+            excludes: [],
+            responsibilities: [],
+          },
+        ],
+      };
     },
   };
 
-  await readGovernanceFileRows(client, {
-    component: 'SYS-DOCS-GOVERNANCE',
-    governanceState: 'drift',
-    path: 'docs/planning/status/example.md',
-    limit: 5,
-  });
+  const rows = await readGovernanceFileRows(
+    client,
+    {
+      component: 'SYS-DOCS-GOVERNANCE',
+      governanceState: 'drift',
+      path: 'docs/planning/status/example.md',
+      limit: 5,
+    },
+    {
+      gitReader: {
+        resolveComparison() {},
+        readCurrentFiles: () => ['docs/planning/status/example.md', 'docs/second.md', 'unowned.ts'],
+      },
+    }
+  );
 
-  assert.match(captured.sql, /from component_engineering\.file_ownership_query/);
+  assert.deepEqual(
+    rows.map((row) => [row.path, row.component_unit, row.governance_state]),
+    [['docs/planning/status/example.md', 'SYS-DOCS-GOVERNANCE', 'drift']]
+  );
+  assert.match(captured.sql, /governance_component_definition_query/);
   assert.doesNotMatch(captured.sql, /system-governance-file-index\.files\.yaml/);
-  assert.match(captured.sql, /leaf_component_id = \$1/);
-  assert.match(captured.sql, /governance_state = \$2/);
-  assert.match(captured.sql, /file_path = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, [
-    'SYS-DOCS-GOVERNANCE',
-    'drift',
-    'docs/planning/status/example.md',
-    5,
-  ]);
+  assert.doesNotMatch(captured.sql, /file_ownership_projection|governance_files/);
 });
 
 test('readGovernanceComponentRows queries the DB governance component view', async () => {
@@ -4442,42 +4459,117 @@ test('readArchitectureComponentRows queries the DB architecture component view',
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 'module', 'application', 5]);
 });
 
-test('readComponentProfileRows reads files through the component descendant tree', async () => {
+test('readComponentProfileRows uses current descendant files and counts before paging', async () => {
   const capturedSql = [];
   const client = {
-    async query(sql) {
+    async query(sql, params) {
       capturedSql.push(sql);
+      if (sql.includes('governance_component_definition_query'))
+        return {
+          rows: [
+            {
+              id: 'SYS-RUNTIME-ENGINE-CORE',
+              parent: null,
+              level: 'component',
+              status: 'review',
+              owns: [],
+              excludes: [],
+            },
+            {
+              id: 'SYS-RUNTIME-ENGINE-APPLICATION',
+              parent: 'SYS-RUNTIME-ENGINE-CORE',
+              level: 'component',
+              status: 'review',
+              owns: ['src/**'],
+              excludes: [],
+            },
+          ],
+        };
+      if (sql.includes('component_tree_query'))
+        return {
+          rows: [
+            {
+              component_id: sql.includes('parent_component_id =')
+                ? 'SYS-RUNTIME-ENGINE-APPLICATION'
+                : params[0],
+              direct_file_count: 999,
+              descendant_file_count: 999,
+            },
+          ],
+        };
       return { rows: [] };
     },
   };
 
-  await readComponentProfileRows(client, {
-    component: 'SYS-RUNTIME-ENGINE-CORE',
-    limit: 5,
-  });
+  const profile = await readComponentProfileRows(
+    client,
+    {
+      component: 'SYS-RUNTIME-ENGINE-CORE',
+      limit: 1,
+    },
+    { gitReader: { resolveComparison() {}, readCurrentFiles: () => ['src/a.ts', 'src/b.ts'] } }
+  );
 
-  assert.match(
-    capturedSql.join('\n'),
-    /with recursive component_scope\(component_id, scope_depth, visited\) as/i
+  assert.deepEqual(
+    profile.files.map((file) => file.path),
+    ['src/a.ts']
   );
-  assert.match(capturedSql.join('\n'), /parent_component_id = component_scope\.component_id/);
-  assert.match(
-    capturedSql.join('\n'),
-    /from planning_query_store\.component_engineering_file_ownership_projection ownership/i
-  );
-  assert.match(
-    capturedSql.join('\n'),
-    /ownership\.leaf_component_id in \(select component_id from component_scope\)/
-  );
-  assert.doesNotMatch(capturedSql.join('\n'), /scoped_local_components as/i);
-  assert.doesNotMatch(capturedSql.join('\n'), /governance_component_local_metadata_query/i);
-  assert.doesNotMatch(capturedSql.join('\n'), /governance_component_local_ownership_patterns/i);
-  assert.doesNotMatch(capturedSql.join('\n'), /from component_engineering\.file_ownership_query/);
+  assert.equal(profile.component.direct_file_count, 0);
+  assert.equal(profile.component.descendant_file_count, 2);
+  assert.equal(profile.children[0].direct_file_count, 2);
+  assert.equal(profile.children[0].descendant_file_count, 2);
+  assert.match(capturedSql.join('\n'), /governance_component_definition_query/);
+  assert.doesNotMatch(capturedSql.join('\n'), /file_ownership_query|file_ownership_projection/);
   assert.match(capturedSql.join('\n'), /from architecture\.component_test/);
   assert.match(capturedSql.join('\n'), /from architecture\.component_observability/);
 });
 
-test('readComponentProfileRows uses frontend inventory for frontend components', async () => {
+test('readComponentProfileRows exposes ambiguous ownership consistently in files and counts', async () => {
+  const client = {
+    async query(sql) {
+      if (sql.includes('governance_component_definition_query'))
+        return {
+          rows: ['SYS-A', 'SYS-B'].map((id) => ({
+            id,
+            parent: null,
+            level: 'component',
+            status: 'review',
+            owns: ['*.ts'],
+            excludes: [],
+            root_unit: `ROOT-${id.slice(-1)}`,
+          })),
+        };
+      if (sql.includes('component_tree_query') && !sql.includes('parent_component_id =')) {
+        return {
+          rows: [{ component_id: 'SYS-A', direct_file_count: 99, descendant_file_count: 99 }],
+        };
+      }
+      return { rows: [] };
+    },
+  };
+  const options = { gitReader: { resolveComparison() {}, readCurrentFiles: () => ['model.ts'] } };
+  const profile = await readComponentProfileRows(client, { component: 'SYS-A' }, options);
+  assert.deepEqual(
+    profile.files.map((file) => file.governance_state),
+    ['ambiguous']
+  );
+  assert.equal(profile.component.direct_file_count, 0);
+  assert.equal(profile.component.descendant_file_count, 1);
+  assert.equal(profile.component.ambiguous_file_count, 1);
+  const files = await readGovernanceFileRows(client, { component: 'SYS-A' }, options);
+  assert.deepEqual(
+    files.map((file) => file.path),
+    ['model.ts']
+  );
+  const crossOwner = await readGovernanceFileRows(
+    client,
+    { component: 'SYS-A', rootUnit: 'ROOT-B' },
+    options
+  );
+  assert.deepEqual(crossOwner, []);
+});
+
+test('readComponentProfileRows retains frontend identity and filters deleted files before paging', async () => {
   const capturedSql = [];
   const client = {
     async query(sql) {
@@ -4500,6 +4592,7 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
       if (sql.includes('frontend_component_file_query')) {
         return {
           rows: [
+            { component_id: 'web.component.canvas.SourceImportDialog', file_path: 'retired.tsx' },
             {
               component_id: 'web.component.canvas.SourceImportDialog',
               file_path: 'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx',
@@ -4525,10 +4618,19 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
     },
   };
 
-  const profile = await readComponentProfileRows(client, {
-    component: 'web.component.canvas.SourceImportDialog',
-    limit: 5,
-  });
+  const profile = await readComponentProfileRows(
+    client,
+    {
+      component: 'web.component.canvas.SourceImportDialog',
+      limit: 1,
+    },
+    {
+      gitReader: {
+        resolveComparison() {},
+        readCurrentFiles: () => ['apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'],
+      },
+    }
+  );
 
   assert.equal(profile.component.component_id, 'web.component.canvas.SourceImportDialog');
   assert.equal(profile.component.parent_component_id, 'tools/planning-db/schema.sql');
@@ -4537,6 +4639,8 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
     'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'
   );
   assert.equal(profile.component.cq_rails, 'OpenCanvasSourceImportDialog');
+  assert.equal(profile.files.length, 1);
+  assert.equal(profile.component.direct_file_count, 1);
   assert.match(
     capturedSql.join('\n'),
     /from planning_query_store\.frontend_component_summary_query/
