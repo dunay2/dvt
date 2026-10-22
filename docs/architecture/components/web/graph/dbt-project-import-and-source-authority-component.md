@@ -88,6 +88,36 @@ generate a parallel source file or a second logical source.
 
 ## Target Boundary
 
+### Source Import Search Continuation Recovery
+
+The existing `ListWarehouseConnectionSourceObjects` query is presented through
+`IWarehouseSourceImportPort.listSourceObjectCatalog`. Search continuation failure
+must preserve the requested opaque cursor, loaded objects, and selection. The
+existing **Load more** action then retries that same page explicitly; it remains
+disabled while the request is pending. A failed initial search has no cursor and
+must not invent a continuation or start an automatic retry.
+
+Previously, the failure transition cleared the cursor and removed the retry
+action even though the query and first page were still available. Retaining the
+cursor in the existing loader corrects that transition without adding another
+request owner, command, or query. Existing connection scope and authorization
+continue to govern every request.
+
+```mermaid
+stateDiagram-v2
+  FirstPage --> LoadingContinuation: Load more with cursor
+  LoadingContinuation --> RetryAvailable: Failure retains cursor and objects
+  RetryAvailable --> LoadingContinuation: Explicit retry with same cursor
+  LoadingContinuation --> Complete: Final page appended without cursor
+```
+
+`SourceImportCatalogPages.recovery.test.tsx` covers the dialog's failed
+continuation, retry, retained selection, final-page completion, and initial-search
+failure without a fabricated cursor. Task-specific RED/GREEN evidence belongs to
+GitHub issue #3710.
+
+### Component Relationships
+
 ```mermaid
 flowchart LR
   Dialog[DbtProjectImportDialog]

@@ -396,7 +396,7 @@ export function useSourceCatalogLoader({
             : {
                 ...prev,
                 loadError: buildSourceImportFailure('load-source-objects', error),
-                sourceObjectSearchPage: { query, loading: false, nextCursor: null },
+                sourceObjectSearchPage: { query, loading: false, nextCursor: cursor ?? null },
               }
         );
       }
