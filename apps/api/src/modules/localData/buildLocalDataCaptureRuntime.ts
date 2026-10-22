@@ -1,16 +1,4 @@
 /**
- * @sourceResponsibilities v1
- * @component SYS-API-RUNTIME-COMPOSITION
- * @responsibility RESP-LOCAL-CAPTURE-COMPOSITION "Wire the LOCAL capture use case to protected source and storage dependencies."
- * @implements buildLocalDataCaptureRuntime
- * @test "apps/api/test/architecture/localDataCaptureComposition.architecture.test.ts"
- * @test "apps/api/test/modules/localDataCaptureRuntime.test.ts"
- * @responsibility RESP-LOCAL-METADATA-READER-COMPOSITION "Wire exact metadata reads without creating absent workspace storage."
- * @implements buildLocalDataCaptureRuntime
- * @test "apps/api/test/architecture/localDataCaptureComposition.architecture.test.ts"
- * @test "apps/api/test/modules/localDataCaptureRuntime.test.ts"
- */
-/**
  * Owned concern: bind the internal LOCAL command/query to existing protected infrastructure.
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Share one workspace runtime, current authorization, catalog and credential resolver.

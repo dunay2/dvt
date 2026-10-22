@@ -161,7 +161,6 @@
     "docs:gov:generated-policy": "node scripts/check-generated-docs-policy.cjs",
     "docs:governance:unit-coverage": "node scripts/check-governance-unit-coverage.cjs",
     "test:docs:governance:unit-coverage": "node --test scripts/check-governance-unit-coverage.test.cjs",
-    "architecture:headers:sync": "node scripts/sync-component-source-headers.cjs",
     "docs:feature-mechanization": "node scripts/check-feature-mechanization.cjs",
     "docs:feature-mechanization:tf-e2-m-b": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-B",
     "docs:feature-mechanization:tf-e2-m-c": "node scripts/check-feature-mechanization.cjs --feature TF-E2-M-C --implementation",

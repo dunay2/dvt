@@ -1,6 +1,8 @@
 /** Owned concern: prove source responsibility authority uses the selected Git candidate. */
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 const { repository } = require('./feature-mechanization-git-fixture.cjs');
 const {
@@ -73,11 +75,9 @@ test('reads every DB binding without requiring a source comment', async (t) => {
   const f = fixture(t);
   const result = await readComponentSourceResponsibilities(f.options());
   assert.deepEqual(result.errors, []);
-  assert.equal(result.files.length, 1);
-  assert.equal(result.files[0].path, 'model.ts');
-  assert.equal(result.files[0].content, 'export function model() { return 1; }\n');
-  assert.match(result.files[0].header, /RESP-MODEL/);
-  assert.match(result.files[0].header, /Publish the model/);
+  assert.deepEqual(result.files, [
+    { path: 'model.ts', content: 'export function model() { return 1; }\n' },
+  ]);
   assert.ok(f.client.calls.every(({ sql }) => !/\b(?:insert|update|delete|refresh)\b/i.test(sql)));
   assert.deepEqual(
     f.client.calls.find(({ sql }) => sql.includes('component_responsibility_query')).params,
@@ -85,17 +85,41 @@ test('reads every DB binding without requiring a source comment', async (t) => {
   );
 });
 
-test('missing header fails validation and the canonical header passes', async (t) => {
+test('plain source validates from DB references without writing its contents', async (t) => {
   const f = fixture(t);
-  const missing = await validateComponentSourceResponsibilities(f.options());
-  assert.equal(missing.fileCount, 1);
-  assert.ok(missing.errors.length > 0);
-  const { files } = await readComponentSourceResponsibilities(f.options());
-  f.repo.write('model.ts', `${files[0].header}\n${files[0].content}`);
+  const sourcePath = path.join(f.repo.root, 'model.ts');
+  const original = fs.readFileSync(sourcePath);
   assert.deepEqual(await validateComponentSourceResponsibilities(f.options()), {
     errors: [],
     fileCount: 1,
   });
+  assert.deepEqual(fs.readFileSync(sourcePath), original);
+});
+
+test('effective authority without pilot bindings has no mandatory source files', async (t) => {
+  const f = fixture(t);
+  delete f.rows[0].raw_manifest.responsibilityBindings;
+  assert.deepEqual(await validateComponentSourceResponsibilities(f.options()), {
+    errors: [],
+    fileCount: 0,
+  });
+  f.rows[0].raw_manifest.responsibilityBindings = [];
+  assert.deepEqual(await validateComponentSourceResponsibilities(f.options()), {
+    errors: [],
+    fileCount: 0,
+  });
+});
+
+test('renaming a bound symbol rejects without rewriting source', async (t) => {
+  const f = fixture(t);
+  f.repo.write('model.ts', 'export function renamed() { return 1; }\n');
+  const sourcePath = path.join(f.repo.root, 'model.ts');
+  const original = fs.readFileSync(sourcePath);
+  const result = await validateComponentSourceResponsibilities(f.options());
+  assert.ok(
+    result.errors.some((error) => error.includes('model.ts') && /symbol.*model/i.test(error))
+  );
+  assert.deepEqual(fs.readFileSync(sourcePath), original);
 });
 
 test('an explicit SHA reads its contents, test references and source hash despite another checkout', async (t) => {
@@ -197,57 +221,6 @@ for (const status of ['proposed', 'drift']) {
     );
   });
 }
-
-test('an empty binding set cannot hide an orphan marked source header', async (t) => {
-  const f = fixture(t);
-  const { files } = await readComponentSourceResponsibilities(f.options());
-  f.repo.write('model.ts', `${files[0].header}\n${files[0].content}`);
-  f.rows[0].raw_manifest.responsibilityBindings = [];
-  const result = await readComponentSourceResponsibilities(f.options());
-  assert.ok(
-    result.errors.some(
-      (error) => /orphan|binding|undeclared/i.test(error) && error.includes('model.ts')
-    )
-  );
-});
-
-test('marker text in a string is not an orphan declaration', async (t) => {
-  const f = fixture(t);
-  delete f.rows[0].raw_manifest.responsibilityBindings;
-  f.repo.write('model.ts', 'export const marker = "@sourceResponsibilities";\n');
-  assert.deepEqual(await readComponentSourceResponsibilities(f.options()), {
-    files: [],
-    errors: [],
-  });
-});
-
-test('orphan detection reads the explicit SHA even when the worktree removed the header', async (t) => {
-  const f = fixture(t);
-  const { files } = await readComponentSourceResponsibilities(f.options());
-  f.repo.write('model.ts', `${files[0].header}\n${files[0].content}`);
-  const markedHead = f.repo.commit(f.head);
-  f.repo.write('model.ts', files[0].content);
-  f.rows[0].raw_manifest.responsibilityBindings = [];
-  const result = await readComponentSourceResponsibilities(
-    f.options({ gitReader: f.repo.reader({ headRef: markedHead }) })
-  );
-  assert.ok(result.errors.some((error) => error.includes('Orphan') && error.includes('model.ts')));
-});
-
-test('a failed orphan search cannot be treated as no markers', async (t) => {
-  const f = fixture(t);
-  const gitReader = f.repo.reader();
-  const runGit = gitReader.runGit.bind(gitReader);
-  gitReader.runGit = (args) => {
-    if (args[0] === 'grep')
-      throw new Error('Git evidence unavailable: grep failed', { cause: { status: 2 } });
-    return runGit(args);
-  };
-  await assert.rejects(
-    readComponentSourceResponsibilities(f.options({ gitReader })),
-    /grep failed/
-  );
-});
 
 test('empty or malformed effective DB authority cannot succeed', async (t) => {
   const f = fixture(t);

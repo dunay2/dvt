@@ -12,8 +12,7 @@ const {
 } = require('../planning-db/queries/current-component-files-query.cjs');
 const {
   validateResponsibilityBindings,
-  projectSourceResponsibilityHeader,
-  validateSourceResponsibilityHeader,
+  validateSourceResponsibilityReferences,
 } = require('./component-source-responsibilities.cjs');
 
 function readCandidateSource(reader, sourcePath, currentPaths) {
@@ -59,41 +58,6 @@ function readRawResponsibilityBindings(rows, reader, currentPaths) {
   return { bindings: combined.bindings, errors: [...errors, ...combined.errors] };
 }
 
-function findMarkedSourcePaths(reader) {
-  const headSha = reader.resolveComparison().headSha;
-  let matches;
-  try {
-    matches = reader.runGit([
-      'grep',
-      '-l',
-      '-I',
-      '-z',
-      '-F',
-      ...(reader.includeWorktree ? ['--untracked', '--exclude-standard'] : []),
-      '-e',
-      '@sourceResponsibilities',
-      ...(!reader.includeWorktree ? [headSha] : []),
-      '--',
-      '*.ts',
-      '*.tsx',
-      '*.mts',
-      '*.cts',
-      '*.js',
-      '*.jsx',
-      '*.mjs',
-      '*.cjs',
-    ]);
-  } catch (error) {
-    // Git grep's documented status 1 means no matches; all evidence failures propagate.
-    if (error.cause?.status === 1) return [];
-    throw error;
-  }
-  return matches
-    .split('\0')
-    .filter(Boolean)
-    .map((name) => (reader.includeWorktree ? name : name.slice(headSha.length + 1)));
-}
-
 async function readSourceResponsibilitySnapshot(client, reader) {
   reader.resolveComparison();
   const { files: ownership } = await createCurrentComponentFilesReadModelComponent({
@@ -103,14 +67,6 @@ async function readSourceResponsibilitySnapshot(client, reader) {
   const rows = await readFeatureMechanizationManifestRowsFromDb({ client });
   const { bindings, errors } = readRawResponsibilityBindings(rows, reader, currentPaths);
   const boundPaths = new Set(bindings.map((binding) => binding.path));
-  for (const sourcePath of findMarkedSourcePaths(reader)) {
-    if (boundPaths.has(sourcePath)) continue;
-    const content = readCandidateSource(reader, sourcePath, currentPaths);
-    const orphan = validateSourceResponsibilityHeader(content, null);
-    errors.push(
-      ...orphan.errors.map((error) => `${sourcePath}: Orphan responsibility declaration: ${error}`)
-    );
-  }
   if (errors.length > 0 || bindings.length === 0) return { files: [], errors };
   const ids = [...new Set(bindings.map((binding) => binding.responsibilityId))].sort();
   const result = await client.query(
@@ -151,7 +107,7 @@ async function readSourceResponsibilitySnapshot(client, reader) {
       continue;
     }
     const content = readCandidateSource(reader, sourcePath, currentPaths);
-    const projection = projectSourceResponsibilityHeader({
+    const validation = validateSourceResponsibilityReferences({
       path: sourcePath,
       content,
       bindings: bindings.filter((binding) => binding.path === sourcePath),
@@ -159,9 +115,8 @@ async function readSourceResponsibilitySnapshot(client, reader) {
       responsibilities,
       currentPaths,
     });
-    errors.push(...projection.errors.map((error) => `${sourcePath}: ${error}`));
-    if (projection.header !== null)
-      files.push({ path: sourcePath, content, header: projection.header });
+    errors.push(...validation.errors.map((error) => `${sourcePath}: ${error}`));
+    if (validation.errors.length === 0) files.push({ path: sourcePath, content });
   }
   return { files, errors };
 }
@@ -190,13 +145,6 @@ async function readComponentSourceResponsibilities(options = {}) {
 
 async function validateComponentSourceResponsibilities(options = {}) {
   const { files, errors } = await readComponentSourceResponsibilities(options);
-  for (const file of files) {
-    errors.push(
-      ...validateSourceResponsibilityHeader(file.content, file.header).errors.map(
-        (error) => `${file.path}: ${error}`
-      )
-    );
-  }
   return { errors, fileCount: files.length };
 }
 

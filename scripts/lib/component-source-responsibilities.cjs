@@ -1,4 +1,4 @@
-/** Owned concern: project and validate DB-owned responsibilities as bounded source comments. */
+/** Owned concern: validate DB responsibility bindings against current source references. */
 const ts = require('typescript');
 
 function validateResponsibilityBindings(input) {
@@ -143,7 +143,7 @@ function extractQualifiedSourceSymbols({ path, content }) {
   return [...symbols].sort();
 }
 
-function projectSourceResponsibilityHeader({
+function validateSourceResponsibilityReferences({
   path,
   content,
   bindings,
@@ -211,164 +211,11 @@ function projectSourceResponsibilityHeader({
         errors.push(`Declared test path ${testPath} is absent from the selected Git inventory.`);
     }
   }
-  if (errors.length) return { header: null, errors };
-  const quote = (text) =>
-    JSON.stringify(text)
-      .replace(/\*\//g, '*\\/')
-      .replace(/\u2028/g, '\\u2028')
-      .replace(/\u2029/g, '\\u2029');
-  const lines = ['/**', ' * @sourceResponsibilities v1', ` * @component ${ownerComponentId}`];
-  for (const binding of selected) {
-    lines.push(
-      ` * @responsibility ${binding.responsibilityId} ${quote(canonical.get(binding.responsibilityId).description)}`
-    );
-    lines.push(` * @${binding.role} ${binding.symbol}`);
-    for (const testPath of binding.testPaths) lines.push(` * @test ${quote(testPath)}`);
-  }
-  lines.push(' */');
-  return { header: lines.join('\n'), errors: [] };
-}
-
-function parseSourceResponsibilityHeader(content) {
-  if (typeof content !== 'string')
-    throw new Error('Source responsibility header requires source text.');
-  const source = ts.createSourceFile('source.ts', content, ts.ScriptTarget.Latest, true);
-  const comments = new Map();
-  const collect = (ranges) => {
-    for (const range of ranges || []) {
-      if (content.slice(range.pos, range.end).includes('@sourceResponsibilities'))
-        comments.set(range.pos, range);
-    }
-  };
-  function visit(node) {
-    collect(ts.getLeadingCommentRanges(content, node.pos));
-    collect(ts.getTrailingCommentRanges(content, node.end));
-    ts.forEachChild(node, visit);
-  }
-  collect(ts.getLeadingCommentRanges(content, 0));
-  visit(source);
-  if (!comments.size) return null;
-  if (comments.size !== 1) throw new Error('Duplicate source responsibility header blocks.');
-  const range = [...comments.values()][0];
-  const fail = (reason) => {
-    throw new Error(`Invalid source responsibility header: ${reason}.`);
-  };
-  if (source.statements.length && range.pos > source.statements[0].getStart(source))
-    fail('marked block appears after executable content');
-  const raw = content.slice(range.pos, range.end);
-  const lines = raw.replace(/\r\n?/g, '\n').split('\n');
-  if (lines.shift() !== '/**' || lines.pop()?.trim() !== '*/') fail('malformed marked block');
-  const body = lines.map((line) => {
-    const match = /^ \* (.*)$/.exec(line);
-    if (!match) fail('malformed block line');
-    return match[1];
-  });
-  if (body.shift() !== '@sourceResponsibilities v1') fail('unknown marker or version');
-  const component = /^@component ([A-Za-z0-9_$][A-Za-z0-9_.$:-]*)$/.exec(body.shift() || '');
-  if (!component) fail('missing or invalid component');
-  const bindings = [];
-  let current;
-  const parseString = (value) => {
-    try {
-      const parsed = JSON.parse(value);
-      if (typeof parsed !== 'string' || !parsed.trim()) fail('empty or nonstring declaration');
-      return parsed;
-    } catch {
-      return fail('invalid JSON string');
-    }
-  };
-  for (const line of body) {
-    const responsibility = /^@responsibility (\S+) (".*")$/.exec(line);
-    if (responsibility) {
-      current = {
-        responsibilityId: responsibility[1],
-        description: parseString(responsibility[2]),
-        componentId: component[1],
-        testPaths: [],
-      };
-      bindings.push(current);
-      continue;
-    }
-    const role = /^@(implements|delegates|verifies) (\S+)$/.exec(line);
-    if (role) {
-      if (!current || current.role || current.testPaths.length)
-        fail('role outside its responsibility or duplicated');
-      current.role = role[1];
-      current.symbol = role[2];
-      continue;
-    }
-    const test = /^@test (".*")$/.exec(line);
-    if (!test || !current?.role) fail('unknown or misplaced declaration');
-    current.testPaths.push(parseString(test[1]));
-  }
-  if (!bindings.length) fail('empty responsibility block');
-  const shape = validateResponsibilityBindings(
-    bindings.map(({ responsibilityId, componentId, symbol, role, testPaths }) => ({
-      responsibilityId,
-      componentId,
-      symbol,
-      role,
-      testPaths,
-      path: 'header.ts',
-    }))
-  );
-  if (shape.errors.length) fail(shape.errors.join('; '));
-  return { start: range.pos, end: range.end, componentId: component[1], bindings };
-}
-
-function validateSourceResponsibilityHeader(content, expectedHeader) {
-  try {
-    const actual = parseSourceResponsibilityHeader(content);
-    if (expectedHeader === null)
-      return {
-        errors: actual ? ['Unexpected source responsibility header without DB bindings.'] : [],
-      };
-    const expected = parseSourceResponsibilityHeader(expectedHeader);
-    if (!expected || expected.start !== 0 || expected.end !== expectedHeader.length)
-      throw new Error('Expected responsibility header is invalid.');
-    if (!actual) return { errors: ['Missing source responsibility header.'] };
-    const normalize = (value) => value.replace(/\r\n?/g, '\n');
-    return {
-      errors:
-        normalize(content.slice(actual.start, actual.end)) === normalize(expectedHeader)
-          ? []
-          : ['Source responsibility header differs from canonical DB declarations.'],
-    };
-  } catch (error) {
-    return { errors: [error.message] };
-  }
-}
-
-function synchronizeSourceResponsibilityHeader(content, expectedHeader) {
-  const expected = parseSourceResponsibilityHeader(expectedHeader);
-  if (!expected || expected.start !== 0 || expected.end !== expectedHeader.length)
-    throw new Error('Expected responsibility header is invalid.');
-  const actual = parseSourceResponsibilityHeader(content);
-  const newline = content.match(/\r\n|\n|\r/)?.[0] || '\n';
-  const header = expectedHeader.replace(/\r\n?|\n/g, newline);
-  let updated;
-  if (actual) updated = content.slice(0, actual.start) + header + content.slice(actual.end);
-  else {
-    let insertion = content.startsWith('\ufeff') ? 1 : 0;
-    let separator = '';
-    if (content.startsWith('#!', insertion)) {
-      const lineEnd = /\r\n|\n|\r/.exec(content.slice(insertion));
-      if (lineEnd) insertion += lineEnd.index + lineEnd[0].length;
-      else {
-        insertion = content.length;
-        separator = newline;
-      }
-    }
-    updated = content.slice(0, insertion) + separator + header + newline + content.slice(insertion);
-  }
-  return { content: updated, changed: updated !== content };
+  return { errors };
 }
 
 module.exports = {
   validateResponsibilityBindings,
   extractQualifiedSourceSymbols,
-  projectSourceResponsibilityHeader,
-  parseSourceResponsibilityHeader,
-  validateSourceResponsibilityHeader,
-  synchronizeSourceResponsibilityHeader,
+  validateSourceResponsibilityReferences,
 };

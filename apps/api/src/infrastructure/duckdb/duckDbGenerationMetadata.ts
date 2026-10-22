@@ -1,29 +1,4 @@
 /**
- * @sourceResponsibilities v1
- * @component SYS-API-INFRASTRUCTURE
- * @responsibility RESP-LOCAL-CAPTURE-STAGE-DECODE "Decode a persisted capture stage without accepting corrupt fields."
- * @implements readGenerationStage
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.recovery.test.ts"
- * @responsibility RESP-LOCAL-GENERATION-BOOTSTRAP "Initialize only a genuinely absent generation metadata catalog."
- * @implements initializeGenerationMetadata
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
- * @responsibility RESP-LOCAL-GENERATION-CONSISTENCY "Read a generation manifest only when its sealed capture and relation agree."
- * @implements readStoredGeneration
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.recovery.test.ts"
- * @responsibility RESP-LOCAL-RELATION-ROW-COUNT "Verify stored relation rows against the recorded capture count."
- * @implements validateGenerationRelation
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
- * @responsibility RESP-LOCAL-RELATION-SCHEMA "Verify the physical relation schema against its capture schema."
- * @implements validateGenerationRelationSchema
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.appender.test.ts"
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
- * @responsibility RESP-LOCAL-STORAGE-IDENTITY "Verify generation storage version and workspace identity."
- * @implements validateGenerationStorageIdentity
- * @test "apps/api/test/infrastructure/DuckDbGenerationStore.catalog.test.ts"
- */
-/**
  * Owned concern: versioned, scoped DuckDB metadata and validation of internal generation locators.
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Keep staging outside READY; bind values and validate persisted contracts on every read.

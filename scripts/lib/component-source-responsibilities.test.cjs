@@ -1,13 +1,10 @@
-/** Owned concern: prove DB-derived source declarations preserve code and reject false bindings. */
+/** Owned concern: prove DB responsibility references match current code without rewriting it. */
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   validateResponsibilityBindings,
   extractQualifiedSourceSymbols,
-  projectSourceResponsibilityHeader,
-  parseSourceResponsibilityHeader,
-  validateSourceResponsibilityHeader,
-  synchronizeSourceResponsibilityHeader,
+  validateSourceResponsibilityReferences,
 } = require('./component-source-responsibilities.cjs');
 
 const binding = (changes = {}) => ({
@@ -20,8 +17,8 @@ const binding = (changes = {}) => ({
   ...changes,
 });
 const source = 'export class Model { private read() { return 1; } }\n';
-const projection = (changes = {}) =>
-  projectSourceResponsibilityHeader({
+const validateReferences = (changes = {}) =>
+  validateSourceResponsibilityReferences({
     path: 'src/model.ts',
     content: source,
     bindings: [binding()],
@@ -152,21 +149,34 @@ test('AST does not invent qualified identities inside anonymous callbacks or cla
   assert.deepEqual(symbols, ['Holder', 'outer']);
 });
 
-test('projection reads canonical description and escapes comment terminators and multiline text', () => {
-  const description = 'Read */ safely.\nKeep "quotes" and \\ paths.\u2028Done.';
-  const result = projection({
-    responsibilities: [{ responsibilityId: 'RESP-READ', componentId: 'SYS-OWNER', description }],
-  });
-  assert.deepEqual(result.errors, []);
-  assert.match(result.header, /@sourceResponsibilities v1/);
-  assert.equal((result.header.match(/\*\//g) || []).length, 1);
-  const parsed = parseSourceResponsibilityHeader(result.header);
-  assert.equal(parsed.componentId, 'SYS-OWNER');
-  assert.equal(parsed.bindings[0].description, description);
-  assert.equal(parsed.bindings[0].symbol, 'Model.read');
+test('valid references accept plain source and leave code and DB inputs unchanged', () => {
+  const input = {
+    content: source,
+    bindings: [binding()],
+    responsibilities: [
+      {
+        responsibilityId: 'RESP-READ',
+        componentId: 'SYS-OWNER',
+        description: 'Read the selected generation.',
+      },
+    ],
+    currentPaths: new Set(['src/model.ts', 'test/model.test.ts']),
+  };
+  const before = structuredClone(input);
+  assert.deepEqual(validateReferences(input), { errors: [] });
+  assert.deepEqual(input, before);
+  assert.deepEqual(
+    validateReferences({
+      ...input,
+      responsibilities: [
+        { ...input.responsibilities[0], description: 'Read revised canonical metadata.' },
+      ],
+    }),
+    { errors: [] }
+  );
 });
 
-test('projection rejects unknown responsibilities, wrong file owner and cross-owner implementations', () => {
+test('reference validation rejects unknown responsibilities, wrong file owner and cross-owner implementations', () => {
   for (const changes of [
     { responsibilities: [] },
     { ownerComponentId: 'AMBIGUOUS' },
@@ -177,40 +187,39 @@ test('projection rejects unknown responsibilities, wrong file owner and cross-ow
       ],
     },
   ]) {
-    const result = projection(changes);
+    const result = validateReferences(changes);
     assert.ok(result.errors.length > 0);
-    assert.equal(result.header, null);
+    assert.deepEqual(Object.keys(result), ['errors']);
   }
 });
 
 test('delegation and verification can reference a responsibility owned by another component', () => {
   for (const role of ['delegates', 'verifies']) {
-    const result = projection({
+    const result = validateReferences({
       content: 'export function check() { return true; }',
       bindings: [binding({ symbol: 'check', role })],
       responsibilities: [
         { responsibilityId: 'RESP-READ', componentId: 'SYS-OTHER', description: 'Read.' },
       ],
     });
-    assert.deepEqual(result.errors, []);
-    assert.match(result.header, new RegExp(`@${role} check`));
+    assert.deepEqual(result, { errors: [] });
   }
 });
 
-test('projection rejects missing symbols, wrong qualified owners and absent source or test paths', () => {
+test('reference validation rejects missing symbols, wrong qualified owners and absent source or test paths', () => {
   for (const changes of [
     { bindings: [binding({ symbol: 'Other.read' })] },
     { content: 'export class Model { renamed() {} }' },
     { currentPaths: new Set(['src/model.ts']) },
     { currentPaths: new Set(['test/model.test.ts']) },
   ]) {
-    const result = projection(changes);
+    const result = validateReferences(changes);
     assert.ok(result.errors.length > 0);
-    assert.equal(result.header, null);
+    assert.deepEqual(Object.keys(result), ['errors']);
   }
 });
 
-test('projection is deterministic for independent bindings and evidence ordering', () => {
+test('reference validation accepts collaborating symbols in either binding order', () => {
   const bindings = [
     binding({ symbol: 'second' }),
     binding({ symbol: 'first', testPaths: ['test/z.ts', 'test/model.test.ts'] }),
@@ -219,87 +228,31 @@ test('projection is deterministic for independent bindings and evidence ordering
     content: 'function first() {} function second() {}',
     currentPaths: new Set(['src/model.ts', 'test/z.ts', 'test/model.test.ts']),
   };
-  const first = projection({ ...changes, bindings });
-  const second = projection({ ...changes, bindings: [...bindings].reverse() });
-  assert.deepEqual(first.errors, []);
-  assert.equal(first.header, second.header);
-  assert.equal(parseSourceResponsibilityHeader(first.header).bindings.length, 2);
+  const first = validateReferences({ ...changes, bindings });
+  const second = validateReferences({ ...changes, bindings: [...bindings].reverse() });
+  assert.deepEqual(first, { errors: [] });
+  assert.deepEqual(second, first);
 });
 
-test('marked block parser ignores marker strings and rejects duplicates, malformed and misplaced blocks', () => {
-  const header = projection().header;
-  assert.equal(parseSourceResponsibilityHeader('const text = "@sourceResponsibilities v1";'), null);
-  for (const invalid of [
-    `${header}\n${header}\n${source}`,
-    header.replace('@sourceResponsibilities v1', '@sourceResponsibilities v2'),
-    header.replace(' * @implements Model.read\n', ''),
-    header.replace(' * @test "test/model.test.ts"\n', ''),
-    header.slice(0, -2),
-    `${source}${header}`,
+test('reference validation fails closed for missing, malformed or conflicting authority', () => {
+  for (const changes of [
+    { bindings: [] },
+    { currentPaths: undefined },
+    { ownerComponentId: undefined },
+    { responsibilities: undefined },
+    {
+      responsibilities: [
+        { responsibilityId: 'RESP-READ', componentId: 'SYS-OWNER', description: '' },
+      ],
+    },
+    {
+      responsibilities: [
+        { responsibilityId: 'RESP-READ', componentId: 'SYS-OWNER', description: 'Read.' },
+        { responsibilityId: 'RESP-READ', componentId: 'SYS-OTHER', description: 'Read.' },
+      ],
+    },
+    { content: 'class Model {' },
   ]) {
-    assert.throws(
-      () => parseSourceResponsibilityHeader(invalid),
-      /responsibilit|header|block|marker/i
-    );
+    assert.ok(validateReferences(changes).errors.length > 0);
   }
-});
-
-test('validation rejects deleted blocks and canonical text or symbol drift', () => {
-  const header = projection().header;
-  assert.deepEqual(validateSourceResponsibilityHeader(`${header}\n${source}`, header).errors, []);
-  for (const invalid of [
-    source,
-    `${header.replace('Read the selected generation.', 'Different text.')}\n${source}`,
-    `${header.replace('Model.read', 'Model.other')}\n${source}`,
-  ]) {
-    assert.ok(validateSourceResponsibilityHeader(invalid, header).errors.length > 0);
-  }
-});
-
-test('orphan validation distinguishes a real marked block from an example string', () => {
-  assert.deepEqual(
-    validateSourceResponsibilityHeader('const text = "@sourceResponsibilities v1";', null),
-    { errors: [] }
-  );
-  assert.match(
-    validateSourceResponsibilityHeader(projection().header, null).errors.join('\n'),
-    /unexpected/i
-  );
-});
-
-test('synchronization preserves comments and executable content and is idempotent', () => {
-  const original = '/** Existing human explanation. */\r\n' + source.replaceAll('\n', '\r\n');
-  const header = projection().header;
-  const first = synchronizeSourceResponsibilityHeader(original, header);
-  assert.equal(first.changed, true);
-  assert.ok(first.content.endsWith(original));
-  assert.deepEqual(synchronizeSourceResponsibilityHeader(first.content, header), {
-    content: first.content,
-    changed: false,
-  });
-  assert.deepEqual(validateSourceResponsibilityHeader(first.content, header).errors, []);
-  const nextHeader = projection({
-    responsibilities: [
-      {
-        responsibilityId: 'RESP-READ',
-        componentId: 'SYS-OWNER',
-        description: 'Read updated canonical text.',
-      },
-    ],
-  }).header;
-  const replaced = synchronizeSourceResponsibilityHeader(first.content, nextHeader);
-  assert.equal(replaced.changed, true);
-  assert.ok(replaced.content.endsWith(original));
-});
-
-test('synchronization preserves BOM and shebang and refuses malformed blocks', () => {
-  const original = '\ufeff#!/usr/bin/env node\n' + source;
-  const header = projection().header;
-  const result = synchronizeSourceResponsibilityHeader(original, header);
-  assert.ok(result.content.startsWith('\ufeff#!/usr/bin/env node\n'));
-  assert.ok(result.content.endsWith(source));
-  assert.throws(
-    () => synchronizeSourceResponsibilityHeader(header.replace(' v1', ' unknown'), header),
-    /header|marker|version/i
-  );
 });

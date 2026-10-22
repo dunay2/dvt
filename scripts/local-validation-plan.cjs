@@ -22,9 +22,6 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/lib/component-source-responsibilities-reader.test.cjs',
   'scripts/lib/component-source-responsibilities-reader.test.cjs':
     'scripts/lib/component-source-responsibilities-reader.test.cjs',
-  'scripts/sync-component-source-headers.cjs': 'scripts/sync-component-source-headers.test.cjs',
-  'scripts/sync-component-source-headers.test.cjs':
-    'scripts/sync-component-source-headers.test.cjs',
   'scripts/lib/git-repository-environment.cjs': 'scripts/lib/git-repository-environment.test.cjs',
   'scripts/lib/git-repository-environment.test.cjs':
     'scripts/lib/git-repository-environment.test.cjs',

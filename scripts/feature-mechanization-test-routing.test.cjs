@@ -12,7 +12,6 @@ for (const [source, suite] of [
     'scripts/lib/component-source-responsibilities-reader.cjs',
     'scripts/lib/component-source-responsibilities-reader.test.cjs',
   ],
-  ['scripts/sync-component-source-headers.cjs', 'scripts/sync-component-source-headers.test.cjs'],
   ['scripts/check-feature-mechanization.cjs', 'scripts/check-feature-mechanization.test.cjs'],
   [
     'scripts/lib/feature-mechanization-manifest.cjs',
