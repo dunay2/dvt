@@ -29,6 +29,11 @@
       "dependsOn": ["^build"],
       "outputs": [],
       "env": ["DVT_CI"]
+    },
+    "dvt-api#test": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "env": ["DVT_CI"]
     }
   }
 }

@@ -106,6 +106,13 @@ test('turbo.json declares governed build, lint, typecheck, and test task contrac
   assert.deepEqual(turbo.tasks.test.env, ['DVT_CI']);
 });
 
+test('API native recovery tests own their compiled consumer prerequisite', () => {
+  assert.ok(
+    turbo.tasks['dvt-api#test']?.dependsOn?.includes('build'),
+    'Native recovery children import API dist modules, so API tests must require the API build'
+  );
+});
+
 test('root affected commands and CI matrix lint/build/typecheck steps use the Turbo workspace wrapper', () => {
   assert.equal(
     rootPackage.scripts['ci:code'],

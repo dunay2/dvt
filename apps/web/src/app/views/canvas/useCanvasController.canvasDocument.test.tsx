@@ -1,4 +1,5 @@
 import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -9,6 +10,9 @@ import {
   setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
+import { renderCanvasCenterSurface } from './CanvasCenterSurface';
+import { deriveCanvasRouteViewState } from './canvasRouteViewState';
+import { canvasViewCopy } from './copy';
 
 describe('useCanvasController canvas document contract', () => {
   let harness: ReturnType<typeof setupCanvasControllerHarness>;
@@ -91,6 +95,80 @@ describe('useCanvasController canvas document contract', () => {
         canEditEdges: false,
       })
     );
+  });
+
+  it('shows a rejected first-canvas write and recovers only through another explicit host click', async () => {
+    harness.cleanup();
+    harness = await createRenderedHarness();
+    const save = vi.mocked(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft);
+    save.mockRejectedValueOnce(new Error('write failed'));
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    const renderSurface = async (): Promise<void> => {
+      const controller = harness.getLatestResult();
+      if (controller == null) throw new Error('Real Canvas controller was not rendered.');
+      await act(async () => {
+        root.render(
+          renderCanvasCenterSurface({
+            ...deriveCanvasRouteViewState(controller),
+            onCreateCanvasDocument: (command) => {
+              void controller.handleCreateCanvasDocument(command);
+            },
+          })
+        );
+      });
+    };
+    const clickCreate = async (): Promise<void> => {
+      const button = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-playground-template-choice"]'
+      );
+      expect(button).not.toBeNull();
+      expect(button?.disabled).toBe(false);
+      await act(async () => {
+        button?.click();
+      });
+      await harness.renderProbe();
+      await renderSurface();
+    };
+
+    try {
+      await renderSurface();
+      await clickCreate();
+
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(harness.getLatestResult()?.draftSaveStatus).toBe('failed');
+      expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+      expect(harness.state.remoteDraftRecord).toBeNull();
+      expect(
+        container.querySelector('[data-slot="canvas-playground-template-unavailable"]')?.textContent
+      ).toBe(canvasViewCopy.draftSaveFailedLabel);
+
+      await clickCreate();
+
+      expect(save).toHaveBeenCalledTimes(2);
+      expect(harness.getLatestResult()?.canvasDocument).toEqual(
+        expect.objectContaining({
+          kind: 'transformation',
+          title: 'Canvas',
+        })
+      );
+      expect(harness.state.remoteDraftRecord?.draft.canvas).toEqual(
+        expect.objectContaining({
+          kind: 'transformation',
+          title: 'Canvas',
+        })
+      );
+      expect(container.querySelector('[data-slot="canvas-playground-template-choice"]')).toBeNull();
+      expect(
+        container.querySelector('[data-slot="canvas-playground-template-unavailable"]')
+      ).toBeNull();
+    } finally {
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    }
   });
 
   it('adopts a saved first canvas after the canonical reread confirms its authority', async () => {

@@ -1,6 +1,9 @@
 /** @ownedConcern Require scope-complete evidence from the actual Test Suite workflow. */
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import { runInNewContext } from 'node:vm';
 
@@ -31,6 +34,75 @@ const scopeKeys = [
   'postgres_capability_changed',
   'coverage_relevant',
 ];
+
+test('only available native browser shards use the admitted hosted platform and Node', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const setup = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
+  const resolve = (value, matrix) =>
+    value.startsWith('${{') ? runInNewContext(value.slice(3, -2), { matrix }) : value;
+  for (const matrix of [...webMatrix, { phase: 'vitest', capability: 'available' }]) {
+    const available = matrix.phase === 'browser' && matrix.capability === 'available';
+    assert.equal(resolve(web['runs-on'], matrix), available ? 'ubuntu-22.04' : 'ubuntu-latest');
+    assert.equal(resolve(setup.with['node-version'], matrix), available ? '22.23.3' : '22.x');
+  }
+});
+
+test('the admitted Chrome prerequisite checks actual discovery and preserves no-browser planning', () => {
+  const web = workflow.jobs['web-frontend-tests'];
+  const chrome = web.steps.find((step) => step.id === 'browser_chrome');
+  assert.ok(chrome, 'Declare the browser prerequisite in the existing workflow adapter');
+  assert.ok(
+    web.steps.indexOf(chrome) > web.steps.findIndex((step) => step.id === 'browser_dependencies')
+  );
+  assert.ok(
+    web.steps.indexOf(chrome) < web.steps.findIndex((step) => step.id === 'browser_postgres')
+  );
+  assert.notEqual(chrome['continue-on-error'], true);
+  for (const [phase, capability, required, expected] of [
+    ['browser', 'available', 'true', true],
+    ['browser', 'available', 'false', false],
+    ['browser', 'available', undefined, false],
+    ['browser', 'controlled', 'true', false],
+    ['browser', 'unavailable', 'true', false],
+    ['vitest', 'available', 'true', false],
+  ]) {
+    assert.equal(
+      runInNewContext(chrome.if, {
+        matrix: { phase, capability },
+        steps: { web_plan: { outputs: { browser_required: required } } },
+      }),
+      expected
+    );
+  }
+  assert.match(chrome.run, /8fbd2ae69cdf7ee98b7513c3396a7b5e06f974f8625fdd590df3091dd0c3e9de/u);
+  assert.match(chrome.run, /sha256sum --check --status/u);
+  assert.match(chrome.run, /google-chrome-stable --product-version/u);
+  assert.match(chrome.run, /cypress info/u);
+  const script = /node --input-type=module -e '([\s\S]*?)'/u.exec(chrome.run)?.[1];
+  assert.ok(script, 'Execute the workflow discovery check, not a second browser validator');
+  const directory = mkdtempSync(join(tmpdir(), 'dvt-native-browser-identity-'));
+  try {
+    for (const [version, expected] of [
+      ['155.0.8059.84', 0],
+      ['150.0.7871.114', 1],
+      ['155.0.8059.39', 1],
+      ['', 1],
+    ]) {
+      const info = version
+        ? `1. Chrome\n - Name: chrome\n - Channel: stable\n - Version: ${version}\n - Executable: google-chrome\n`
+        : '';
+      writeFileSync(join(directory, 'dvt-native-browser-info.txt'), info);
+      const result = spawnSync(process.execPath, ['--input-type=module', '-e', script], {
+        env: { ...process.env, RUNNER_TEMP: directory },
+        encoding: 'utf8',
+      });
+      assert.ifError(result.error);
+      assert.equal(result.status, expected, `${version || 'missing'}: ${result.stderr}`);
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
 
 function fixture(eventName = 'pull_request', selected = [], draft = false) {
   const outputs = Object.fromEntries(scopeKeys.map((key) => [key, String(selected.includes(key))]));

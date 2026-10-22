@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { deriveCanvasHostCycleState } from './canvasHostCycleState';
 import type { CanvasWorkbenchSurfaceArgs } from './canvasCenterSurface.types';
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
+import { canvasViewCopy } from './copy';
 
 function buildCanvasKinds(): readonly CanvasKindRegistration[] {
   return [
@@ -78,6 +79,40 @@ describe('canvasHostCycleState', () => {
     expect(cycle).toMatchObject({
       kind: 'needs_canvas',
       onCreateCanvasDocument: undefined,
+    });
+  });
+
+  it('shows a failed first-canvas save while retaining an explicit permitted retry', () => {
+    const args = buildArgs({ draftSaveStatus: 'failed' });
+
+    expect(deriveCanvasHostCycleState(args)).toEqual({
+      kind: 'needs_canvas',
+      availableCanvasKinds: args.availableCanvasKinds,
+      onCreateCanvasDocument: args.onCreateCanvasDocument,
+      unavailableMessage: canvasViewCopy.draftSaveFailedLabel,
+    });
+  });
+
+  it('preserves permission denial ahead of a failed-save retry', () => {
+    expect(
+      deriveCanvasHostCycleState(
+        buildArgs({
+          draftSaveStatus: 'failed',
+          canCreateCanvasDocument: false,
+        })
+      )
+    ).toMatchObject({
+      kind: 'needs_canvas',
+      onCreateCanvasDocument: undefined,
+      unavailableMessage: canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
+    });
+  });
+
+  it('prevents another creation action while the first write is saving', () => {
+    expect(deriveCanvasHostCycleState(buildArgs({ draftSaveStatus: 'saving' }))).toMatchObject({
+      kind: 'needs_canvas',
+      onCreateCanvasDocument: undefined,
+      unavailableMessage: canvasViewCopy.mutationUnavailableMessage,
     });
   });
 
