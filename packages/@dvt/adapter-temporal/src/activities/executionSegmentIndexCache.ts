@@ -3,6 +3,7 @@
  * @baseline ADR-0052: PlanRef Continuation Safety
  * @decision Retain one digest-and-scope index after each request has fetched and verified its plan.
  * @consequence Eviction and worker restart rebuild derived data without retaining plans or authorization.
+ * @version 1.0.0
  */
 import type { ExecutionPlan, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 

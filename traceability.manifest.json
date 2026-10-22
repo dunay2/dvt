@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-10-18",
+  "generated": "2026-10-22",
   "repo": {
     "sha": "local"
   },
@@ -1136,13 +1136,17 @@
     {
       "number": "ADR-0052",
       "decisions": [
+        "Count real graph preparations while retaining real integrity and scope checks on every request.",
         "Evaluate continue-as-new, history, segment, payload, and retention budgets as explicit readiness evidence.",
         "Keep architecture tests coupled to semantic guide structure instead of duplicated string fixtures",
+        "Retain one digest-and-scope index after each request has fetched and verified its plan.",
         "Translate runtime error evidence into DVT RunFailed reasons at the workflow boundary"
       ],
       "implemented_by": [
+        "packages/@dvt/adapter-temporal/src/activities/executionSegmentIndexCache.ts",
         "packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts",
         "packages/@dvt/adapter-temporal/src/workflows/workflowFailureReasonPolicy.ts",
+        "packages/@dvt/adapter-temporal/test/activities.executionSegmentIndex.test.ts",
         "packages/@dvt/adapter-temporal/test/helpers/workflowComponentGuideSupport.ts",
         "packages/@dvt/adapter-temporal/test/temporalPlanRefCapacitySlaPolicy.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-component-semantics.architecture.test.ts"
@@ -1308,6 +1312,7 @@
         "Retain product gaps separately from standard semantic identities.",
         "Reuse unary, binary and repeated-input policies in one named operation mapping.",
         "Seed candidates only from pinned core and official extension identities.",
+        "Select the sole admitted publication from the validated Run workload.",
         "Share complete Read field coverage between persistence and schema derivation.",
         "Store occurrence identity, operation ports and layout as a versioned authoring DTO.",
         "Validate and serialize the capability read model deterministically.",
@@ -1341,6 +1346,7 @@
         "packages/@dvt/contracts/src/contracts/planner/DvtSubstraitSupportedCapabilities.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DvtTransformAuthoringAuthority.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresPublicationBoundary.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresWorkloadConstraints.ts",
         "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceRebindOperations.v1.ts",
@@ -1351,10 +1357,12 @@
     {
       "number": "ADR-0066",
       "decisions": [
-        "ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object."
+        "ADR-0066: Build a candidate before a target-scoped CAS transaction and preserve the target object.",
+        "Share physical target validation across result and Sink publication."
       ],
       "implemented_by": [
-        "packages/@dvt/adapter-postgres/src/PostgresDvtStableTablePublisher.ts"
+        "packages/@dvt/adapter-postgres/src/PostgresDvtStableTablePublisher.ts",
+        "packages/@dvt/contracts/src/contracts/planner/postgres/DvtPostgresRelationTarget.v1.ts"
       ],
       "title": "ADR-0066 - PostgreSQL Stable-Table Publication"
     },
