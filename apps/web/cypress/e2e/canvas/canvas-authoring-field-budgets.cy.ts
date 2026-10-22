@@ -162,6 +162,7 @@ describe('Canvas authoring field budgets', () => {
     cy.get('input[name="node-name"]').should('have.value', 'Orders 2026');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
+    cy.get('.react-flow__controls-fitview').click();
     openWorkbenchProperties('source-1');
     cy.get('input[name=dvt-source-alias]').clear();
     cy.get('input[name=dvt-source-alias]')
@@ -186,6 +187,7 @@ describe('Canvas authoring field budgets', () => {
     });
     cy.get('[data-slot=canvas-node-workbench-close]').click();
 
+    cy.get('.react-flow__controls-fitview').click();
     openWorkbenchProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
     cy.get('input[name=dvt-sink-schema]').clear();
@@ -215,6 +217,7 @@ describe('Canvas authoring field budgets', () => {
     openWorkbenchProperties('source-1');
     cy.get('input[name=dvt-source-alias]').should('have.value', 'orders_source_v2');
     cy.get('[data-slot=canvas-node-workbench-close]').click();
+    cy.get('.react-flow__controls-fitview').click();
     openWorkbenchProperties('sink-1');
     cy.get('[data-slot=canvas-node-workbench-tab-sink]').click();
     cy.get('input[name=dvt-sink-schema]').should('have.value', 'marts_v2');
