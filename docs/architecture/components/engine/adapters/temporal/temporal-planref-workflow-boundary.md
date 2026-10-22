@@ -2,7 +2,7 @@
 title: Temporal PlanRef workflow boundary component
 status: Active
 owner: Runtime / Temporal / Architecture
-last_reviewed: 2026-04-28
+last_reviewed: 2026-10-22
 domain: runtime
 ---
 
@@ -90,6 +90,41 @@ It does **not** own:
   retention budgets against the production capacity profile.
 
 ## Invariants
+
+Segment preparation follows the existing `StartRun` rail. The activity may reuse
+one derived execution index per `createActivities` instance only after every
+request has completed the existing authoritative artifact read and validation.
+The key is the verified digest plus explicit tenant, project, and environment
+identity. A different identity replaces the resident entry; another activity
+factory or worker prepares its own index. This is bounded local reuse, not a
+once-per-run or cross-worker guarantee.
+
+The index retains readonly layer step positions, completed-prefix counts, and
+derived concurrency/executor metadata. It retains neither the full plan nor step
+objects. Every returned segment uses the freshly verified plan and independent
+arrays. Expiry, absence, changed bytes, and wrong ownership must fail even when
+the requested identity is resident. Cache lookup does not replace or reorder
+those checks, and cannot alter gateway metadata, completed-step prefixes,
+`maxInFlight`, empty/out-of-range behavior, activity payloads, event order, or
+continue-as-new state.
+
+```mermaid
+flowchart LR
+  Request[Segment request] --> Verify[Fetch and verify current artifact]
+  Verify --> Key{Verified digest and scope resident?}
+  Key -->|yes| Index[Reuse derived positions and metadata]
+  Key -->|no| Prepare[Prepare and replace single index]
+  Prepare --> Index
+  Index --> Project[Project fresh plan into independent segment arrays]
+  Project --> Layer[Existing workflow layer consumer]
+```
+
+This Split Phase boundary removes repeated deterministic preparation while the
+plan remains resident. It does not cache authorization, skip artifact I/O, or
+change the interpreter's separate per-layer step scan. Focused activity tests
+must prove preparation count, A/B/A eviction, instance and mutation isolation,
+and warm-entry denial through the real artifact reader. Existing layer/order
+tests and the native continuation scenario retain execution-semantic proof.
 
 - The full `ExecutionPlan` MUST NOT cross the workflow-start or
   continue-as-new durable input boundary.

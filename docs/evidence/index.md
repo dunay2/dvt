@@ -16,6 +16,7 @@ Evidence documents that justify or validate relevant changes.
 - [#3392-A evidence — candidate, not security acceptance](ED-20261017-local-data-authorization.md)
 - [Algebraic derived output evidence](ED-20260908-algebraic-derived-output.md)
 - [Authoritative Transform output sample](ED-20260915-authoritative-transform-output-sample.md)
+- [Bounded Execution Index Reuse And Final SQL Serialization](ED-20261022-redundant-runtime-work.md)
 - [Canvas calculated-column Substrait authoring evidence](ED-20260902-canvas-calculated-column-authoring.md)
 - [Confirmed Layer Outcomes Before Run Failure](ED-20261015-layer-result-evidence.md)
 - [CROSS JOIN end to end](ED-20260919-cross-join-end-to-end.md)

@@ -25,38 +25,66 @@ export interface ResolvedExecutionSegment {
   completedStepCountBeforeLayer: number;
 }
 
-export function resolveExecutionSegmentFromPlan(
-  plan: ExecutionPlan,
-  layerIndex: number
-): ResolvedExecutionSegment {
+export interface ExecutionSegmentIndex {
+  readonly layerStepIndices: ReadonlyArray<ReadonlyArray<number>>;
+  readonly completedStepCountsBeforeLayer: ReadonlyArray<number>;
+  readonly maxInFlight: number | undefined;
+  readonly runtimeExecutor: TransformationExecutor | undefined;
+}
+
+export function prepareExecutionSegmentIndex(plan: ExecutionPlan): ExecutionSegmentIndex {
   const maxInFlight = resolvePlanMaxInFlight(plan.steps);
   validateGatewayDependencies(plan.steps);
   const executionLayers = planExecutionLayers<ExecutionStep>(plan.steps);
   const runtimeExecutor = resolveTransformationExecutor(plan);
+  const indexByStep = new Map(plan.steps.map((step, index) => [step, index]));
+  let completedSteps = 0;
+  const completedStepCountsBeforeLayer = executionLayers.map((layer) => {
+    const countBeforeLayer = completedSteps;
+    completedSteps += layer.length;
+    return countBeforeLayer;
+  });
 
-  assertLayerIndexInRange(layerIndex, executionLayers.length);
+  return {
+    layerStepIndices: executionLayers.map((layer) => layer.map((step) => indexByStep.get(step)!)),
+    completedStepCountsBeforeLayer,
+    maxInFlight,
+    runtimeExecutor,
+  };
+}
 
-  if (executionLayers.length === 0) {
+export function resolveExecutionSegmentFromPlan(
+  plan: ExecutionPlan,
+  layerIndex: number,
+  index: ExecutionSegmentIndex = prepareExecutionSegmentIndex(plan)
+): ResolvedExecutionSegment {
+  const { layerStepIndices, runtimeExecutor, maxInFlight } = index;
+
+  assertLayerIndexInRange(layerIndex, layerStepIndices.length);
+
+  if (layerStepIndices.length === 0) {
     return buildEmptyExecutionSegment(layerIndex, runtimeExecutor);
   }
 
-  const layer = executionLayers[layerIndex];
-  if (layer === undefined) {
+  const stepIndices = layerStepIndices[layerIndex];
+  if (stepIndices === undefined) {
     throw new TypeError('INVALID_WORKFLOW_STATE: nextLayerIndex_out_of_range');
   }
+  const layer = stepIndices.map((stepIndex) => plan.steps[stepIndex]!);
 
   return {
     layerIndex,
-    totalLayerCount: executionLayers.length,
+    totalLayerCount: layerStepIndices.length,
     runtimeExecutor,
     ...(maxInFlight === undefined ? {} : { maxInFlight }),
-    steps: [...layer],
+    steps: layer,
     downstreamStepIdsByGatewayStepId: buildGatewayDownstreamMap(plan.steps, layer),
     retainedGatewayDependencyStepIds: resolveRetainedGatewayDependencyStepIds(
-      executionLayers,
+      plan.steps,
+      layerStepIndices,
       layerIndex
     ),
-    completedStepCountBeforeLayer: countStepsBeforeLayer(executionLayers, layerIndex),
+    completedStepCountBeforeLayer: index.completedStepCountsBeforeLayer[layerIndex]!,
   };
 }
 
@@ -103,40 +131,27 @@ function buildGatewayDownstreamMap(
 }
 
 function resolveRetainedGatewayDependencyStepIds(
-  executionLayers: ReadonlyArray<ReadonlyArray<ExecutionStep>>,
+  planSteps: ReadonlyArray<ExecutionStep>,
+  layerStepIndices: ReadonlyArray<ReadonlyArray<number>>,
   layerIndex: number
 ): string[] {
   const retained = new Set<string>();
 
-  for (const futureLayer of executionLayers.slice(layerIndex + 1)) {
-    addGatewayDependencyStepIds(retained, futureLayer);
+  for (let index = layerIndex + 1; index < layerStepIndices.length; index += 1) {
+    for (const stepIndex of layerStepIndices[index]!) {
+      addGatewayDependencyStepIds(retained, planSteps[stepIndex]!);
+    }
   }
 
   return [...retained];
 }
 
-function addGatewayDependencyStepIds(
-  retained: Set<string>,
-  layer: ReadonlyArray<ExecutionStep>
-): void {
-  for (const step of layer) {
-    if (step.type !== 'gateway') {
-      continue;
-    }
-
-    for (const dependencyStepId of normalizeDependsOn(step.dependsOn)) {
-      retained.add(dependencyStepId);
-    }
+function addGatewayDependencyStepIds(retained: Set<string>, step: ExecutionStep): void {
+  if (step.type !== 'gateway') {
+    return;
   }
-}
 
-function countStepsBeforeLayer(
-  layers: ReadonlyArray<ReadonlyArray<ExecutionStep>>,
-  layerIndex: number
-): number {
-  let total = 0;
-  for (let index = 0; index < layerIndex; index += 1) {
-    total += layers[index]?.length ?? 0;
+  for (const dependencyStepId of normalizeDependsOn(step.dependsOn)) {
+    retained.add(dependencyStepId);
   }
-  return total;
 }

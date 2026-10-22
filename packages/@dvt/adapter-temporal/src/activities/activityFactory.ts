@@ -11,7 +11,6 @@ import { heartbeat as temporalActivityHeartbeat } from '@temporalio/activity';
 
 import type { EventInput } from '../engine-types.js';
 import type { ResolvedExecutionSegment } from '../workflows/executionSegmentResolver.js';
-import { resolveExecutionSegmentFromPlan } from '../workflows/executionSegmentResolver.js';
 
 import type {
   ActivityDeps,
@@ -21,6 +20,7 @@ import type {
   StepInput,
   StepResult,
 } from './activityTypes.js';
+import { ExecutionSegmentIndexCache } from './executionSegmentIndexCache.js';
 import { GatewayStepActivity } from './gatewayStepActivity.js';
 import {
   createDefaultStepActivityRegistry,
@@ -52,6 +52,7 @@ export function createActivities(
   }): Promise<ResolvedExecutionSegment>;
 } {
   assertSegmentResolverConfigured(deps);
+  const segmentIndexCache = new ExecutionSegmentIndexCache();
 
   const dispatcher = new StepActivityDispatcher(
     new GatewayStepActivity(),
@@ -125,7 +126,16 @@ export function createActivities(
         planRef: validatedPlanRef,
         ctx,
       });
-      return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
+      return segmentIndexCache.resolve(
+        plan,
+        {
+          sha256: validatedPlanRef.sha256,
+          tenantId: ctx.tenantId,
+          projectId: ctx.projectId,
+          environmentId: ctx.environmentId,
+        },
+        input.layerIndex
+      );
     },
   };
 }
