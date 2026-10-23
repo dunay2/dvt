@@ -1,5 +1,5 @@
 /** Owned concern: persist current component source associations within the component transaction. */
-const { createHash } = require('node:crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 const { validateResponsibilityBindings } = require('../lib/component-source-responsibilities.cjs');
 
 function requireBindings(values) {
@@ -9,9 +9,7 @@ function requireBindings(values) {
 }
 
 function bindingSetHash(values) {
-  return createHash('sha256')
-    .update(JSON.stringify(requireBindings(values)))
-    .digest('hex');
+  return sha256HexUtf8(JSON.stringify(requireBindings(values)));
 }
 
 function validateComponentBindings(componentId, values, responsibilities) {

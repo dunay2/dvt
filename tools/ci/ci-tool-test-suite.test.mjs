@@ -8,7 +8,31 @@ import {
   discoverCiToolTests,
   findPackageBackedCiToolTests,
   parseCiToolTestMode,
+  isToolingCryptoContractInput,
 } from './ci-tool-test-suite.mjs';
+
+test('tooling crypto inputs preserve the governed roots and normalize Git paths', () => {
+  for (const source of [
+    'scripts/new-helper.cjs',
+    './tools/docs/check.ts',
+    'tools\\ci\\check.mjs',
+    'packages/@dvt/cli/src/new-helper.ts',
+    'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
+    'package.json',
+    'packages/@dvt/cli/package.json',
+  ]) {
+    assert.equal(isToolingCryptoContractInput(source), true, source);
+  }
+  for (const source of [
+    'scripts/readme.md',
+    'tools/ci/policy.json',
+    'tools-other/test.mjs',
+    'packages/@dvt/crypto/src/sha256.ts',
+    'apps/api/src/main.ts',
+  ]) {
+    assert.equal(isToolingCryptoContractInput(source), false, source);
+  }
+});
 
 test('CI tool test partitions cover every discovered contract test exactly once', () => {
   const allTests = discoverCiToolTests();

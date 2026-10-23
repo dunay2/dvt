@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import ts from 'typescript';
+import { TOOLING_CRYPTO_CONTRACT, isToolingCryptoContractInput } from './ci-tool-test-suite.mjs';
 
 import {
   API_REACHABILITY_CLASSIFICATIONS,
@@ -1644,14 +1645,7 @@ test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
 
   const trackedFiles = spawnSync(
     'git',
-    [
-      'ls-files',
-      '--',
-      'scripts',
-      'tools',
-      'packages/@dvt/cli',
-      'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
-    ],
+    ['ls-files', '--', ...TOOLING_CRYPTO_CONTRACT.sourcePaths],
     { encoding: 'utf8' }
   );
   assert.equal(trackedFiles.stderr, '');
@@ -1659,7 +1653,11 @@ test('Cut 4 tooling crypto mechanics and duplicate runner stay retired', () => {
 
   const findings = [];
   for (const sourcePath of trackedFiles.stdout.split(/\r?\n/u).filter(Boolean)) {
-    if (!existsSync(sourcePath) || !/\.[cm]?[jt]sx?$/u.test(sourcePath)) {
+    if (
+      !existsSync(sourcePath) ||
+      !isToolingCryptoContractInput(sourcePath) ||
+      !/\.[cm]?[jt]sx?$/u.test(sourcePath)
+    ) {
       continue;
     }
 

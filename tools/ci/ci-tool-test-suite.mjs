@@ -8,10 +8,33 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../
 
 export const CI_TOOL_TEST_MODES = Object.freeze(['all', 'static', 'executable']);
 
+export const TOOLING_CRYPTO_CONTRACT = Object.freeze({
+  testPath: 'tools/ci/architecture-dependency-guard.test.mjs',
+  namePattern: 'tooling crypto mechanics',
+  sourcePaths: Object.freeze([
+    'scripts',
+    'tools',
+    'packages/@dvt/cli',
+    'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
+  ]),
+});
+
+export function isToolingCryptoContractInput(filePath) {
+  const file = normalizePath(filePath).replace(/^\.\//u, '');
+  return (
+    file === 'package.json' ||
+    file === 'packages/@dvt/cli/package.json' ||
+    (/\.[cm]?[jt]sx?$/u.test(file) &&
+      TOOLING_CRYPTO_CONTRACT.sourcePaths.some(
+        (root) => file === root || file.startsWith(root + '/')
+      ))
+  );
+}
+
 export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/adapter-postgres-import-alias-regression.test.mjs',
   'tools/ci/arc-policy-state-store.test.mjs',
-  'tools/ci/architecture-dependency-guard.test.mjs',
+  TOOLING_CRYPTO_CONTRACT.testPath,
   'tools/ci/contracts-package-governance.test.mjs',
   'tools/ci/docs-changed-governance-policy.test.mjs',
   'tools/ci/docs-disposition-canon.test.mjs',

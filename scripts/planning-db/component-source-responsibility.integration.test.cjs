@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const { randomUUID, createHash } = require('node:crypto');
+const { randomUuidV4, sha256HexUtf8 } = require('@dvt/crypto');
 const { Client } = require('pg');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
 const {
@@ -22,7 +22,7 @@ const {
 
 test('component binding command preserves authority, replaces atomically and rejects stale concurrent writers', async () => {
   const adminUrl = process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
-  const name = 'dvt_planning_test_bindings_' + randomUUID().replaceAll('-', '');
+  const name = 'dvt_planning_test_bindings_' + randomUuidV4().replaceAll('-', '');
   assert.match(name, /^dvt_planning_test_bindings_[a-f0-9]+$/u);
   const admin = new Client({ connectionString: adminUrl });
   await admin.connect();
@@ -74,9 +74,7 @@ test('component binding command preserves authority, replaces atomically and rej
     await applyArchitectureComponentRecordOperation(parseArgs(args), { databaseUrl });
     // Exercise the explicit addition path on this disposable database only.
     await client.query('drop table architecture.component_source_responsibility');
-    const schemaSha256 = createHash('sha256')
-      .update(fs.readFileSync(currentSchemaPath))
-      .digest('hex');
+    const schemaSha256 = sha256HexUtf8(fs.readFileSync(currentSchemaPath, 'utf8'));
     await client.query(
       'alter table architecture.component_responsibility rename to unavailable_responsibility'
     );

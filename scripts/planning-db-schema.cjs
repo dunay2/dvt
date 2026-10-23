@@ -6,7 +6,7 @@
  * @decision Planning DB is rebuilt from current truth and has no migration compatibility.
  */
 const fs = require('node:fs');
-const { createHash } = require('node:crypto');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 const path = require('node:path');
 const { Client } = require('pg');
 
@@ -139,7 +139,7 @@ async function addCurrentPlanningDbTable(options) {
   )
     throw new Error('Invalid current-schema table identity.');
   const schemaSql = assertCurrentPlanningDbSchema(fs.readFileSync(currentSchemaPath, 'utf8'));
-  const schemaSha256 = createHash('sha256').update(schemaSql).digest('hex');
+  const schemaSha256 = sha256HexUtf8(schemaSql);
   if (schemaSha256 !== expectedSchemaSha256)
     throw new Error('Reviewed schema digest does not match.');
   const escapedTable = table.replace('.', '\\.');

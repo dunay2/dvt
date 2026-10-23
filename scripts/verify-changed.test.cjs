@@ -8,6 +8,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const catalogTest = 'node --test tools/ci/repository-command-catalog.test.mjs';
+const cryptoTest =
+  'node --test --test-name-pattern=tooling crypto mechanics tools/ci/architecture-dependency-guard.test.mjs';
 
 const {
   buildFocusedChangedTestPlan,
@@ -33,6 +35,32 @@ function focusedLabelsFor(files) {
   return buildFocusedChangedTestPlan(files).map(commandLabel);
 }
 
+test('tooling crypto inputs select the bounded architecture contract once', () => {
+  const suite = 'tools/ci/architecture-dependency-guard.test.mjs';
+  for (const file of [
+    'scripts/planning-db-schema.cjs',
+    'scripts/planning-db/component-source-responsibility-store.cjs',
+    'scripts/planning-db/component-source-responsibility.integration.test.cjs',
+    'tools/docs/check-filenames.ts',
+    'packages/@dvt/cli/src/main.ts',
+    'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
+  ]) {
+    const plan = buildVerifyChangedPlan([file, file]);
+    const selected = plan.filter((step) => step.args.includes(suite));
+    assert.equal(selected.length, 1, file);
+    assert.ok(selected[0].args.includes('--test-name-pattern=tooling crypto mechanics'));
+    assert.ok(!plan.some((step) => step.args.includes('test:ci-tools')));
+  }
+  const full = buildVerifyChangedPlan(['scripts/planning-db-schema.cjs', suite]).filter((step) =>
+    step.args.includes(suite)
+  );
+  assert.equal(full.length, 1);
+  assert.deepEqual(full[0].args, ['--test', suite]);
+  for (const file of ['docs/guides/example.md', 'apps/api/src/example.ts']) {
+    assert.ok(!buildVerifyChangedPlan([file]).some((step) => step.args.includes(suite)));
+  }
+});
+
 test('buildFocusedChangedTestPlan retains adjacent script tests without duplicating general gates', () => {
   const labels = focusedLabelsFor([
     'docs/guides/testing-and-ci-capabilities.md',
@@ -44,6 +72,7 @@ test('buildFocusedChangedTestPlan retains adjacent script tests without duplicat
     'node --test scripts/git-local-changes.test.cjs',
     'node --test scripts/planning-db-query.test.cjs',
     catalogTest,
+    cryptoTest,
   ]);
   assert.ok(!labels.includes('pnpm lint:md:changed'));
   assert.ok(!labels.includes('pnpm test:web:changed'));
@@ -71,6 +100,7 @@ test('buildFocusedChangedTestPlan validates changes to the changed-file lint gat
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     catalogTest,
+    cryptoTest,
   ]);
 });
 
@@ -88,7 +118,7 @@ test('runtime runner source and test changes select their isolated contract exac
       const plan = buildFocusedChangedTestPlan(files);
       assert.deepEqual(
         plan.map(commandLabel),
-        [`node --test ${contract}`, catalogTest],
+        [`node --test ${contract}`, catalogTest, cryptoTest],
         files.join(', ')
       );
       assert.equal(plan[0].kind, 'test');
@@ -114,7 +144,7 @@ test('Chromium diagnostic source and paired tests retain one focused Node obliga
     for (const files of [[source], [contract], [source, contract]]) {
       assert.deepEqual(focusedLabelsFor(files), [
         `node --test ${contract}`,
-        ...(files.includes(contract) ? [catalogTest] : []),
+        ...(files.includes(contract) ? [catalogTest, cryptoTest] : []),
       ]);
     }
   }
@@ -166,6 +196,7 @@ test('unrelated script changes do not select runtime runner contracts', () => {
   assert.deepEqual(focusedLabelsFor(['scripts/ai-preflight.cjs']), [
     'node --test scripts/ai-preflight.test.cjs',
     catalogTest,
+    cryptoTest,
   ]);
 });
 
@@ -177,12 +208,17 @@ test('source drift and dashboard changes select the shared query contract once',
   ];
   const expected = 'node --test scripts/planning-db-query.test.cjs';
   for (const changed of [...files.map((file) => [file]), files]) {
-    assert.deepEqual(focusedLabelsFor(changed), [expected, catalogTest], changed.join(', '));
+    assert.deepEqual(
+      focusedLabelsFor(changed),
+      [expected, catalogTest, cryptoTest],
+      changed.join(', ')
+    );
   }
   assert.deepEqual(focusedLabelsFor([...files, 'scripts/planning-db-integrity-check.cjs']), [
     'node --test scripts/planning-db-integrity-check.test.cjs',
     expected,
     catalogTest,
+    cryptoTest,
   ]);
 });
 
@@ -470,6 +506,7 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     catalogTest,
+    cryptoTest,
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
     'node --test scripts/verify-prepush.test.cjs',
@@ -483,6 +520,7 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
     catalogTest,
+    cryptoTest,
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
     'node --test scripts/verify-prepush.test.cjs',
@@ -635,7 +673,11 @@ test('main runs focused tests from the exact committed diff without writing a lo
   });
 
   assert.equal(status, 0);
-  assert.deepEqual(calls, ['node --test scripts/planning-db-query.test.cjs', catalogTest]);
+  assert.deepEqual(calls, [
+    'node --test scripts/planning-db-query.test.cjs',
+    catalogTest,
+    cryptoTest,
+  ]);
   assert.deepEqual(stamps, []);
 });
 

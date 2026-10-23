@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const {
   addCurrentPlanningDbTable,
@@ -14,13 +15,12 @@ const {
 } = require('./planning-db-schema.cjs');
 
 test('explicit table addition uses the reviewed current definition without replacing schemas', async () => {
-  const crypto = require('node:crypto');
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
   const client = new RecordingClient();
   await addCurrentPlanningDbTable({
     client,
     table: 'architecture.component_source_responsibility',
-    expectedSchemaSha256: crypto.createHash('sha256').update(schemaSql).digest('hex'),
+    expectedSchemaSha256: sha256HexUtf8(schemaSql),
   });
   assert.ok(
     client.queries.some((sql) =>
@@ -32,9 +32,8 @@ test('explicit table addition uses the reviewed current definition without repla
 });
 
 test('table addition rejects unreviewed, unsafe and incomplete definitions before writing', async () => {
-  const crypto = require('node:crypto');
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
-  const expectedSchemaSha256 = crypto.createHash('sha256').update(schemaSql).digest('hex');
+  const expectedSchemaSha256 = sha256HexUtf8(schemaSql);
   for (const options of [
     { table: 'architecture.component_source_responsibility', expectedSchemaSha256: 'a'.repeat(64) },
     { table: 'architecture.component; drop schema architecture', expectedSchemaSha256 },
