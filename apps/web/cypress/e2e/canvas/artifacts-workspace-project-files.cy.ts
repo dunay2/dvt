@@ -179,6 +179,14 @@ function stubFailedCompilationPublicationApis(): void {
     canvasId: 'main-canvas',
     diagnostics: [{ code: 'dbt_compile_failed', message: 'Unsafe compiler detail' }],
   });
+  for (const path of ['/plans/preview', '/runs/start']) {
+    stubE2eJsonApi(
+      'POST',
+      path,
+      { error: 'Unexpected submission after compilation rejection' },
+      { statusCode: 500 }
+    );
+  }
 }
 
 describe('Contextual project Code workflow files', () => {
