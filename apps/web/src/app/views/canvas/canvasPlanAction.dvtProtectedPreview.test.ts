@@ -8,11 +8,8 @@
 import { DVT_REJECTIONS } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
-import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IPlansPort } from '../../ports/plans';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -130,16 +127,12 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
         canPlan,
         canonicalEdges: [lineage],
         canonicalNodes: [source, transform],
-        executionStrategy: strategy,
-        plansService: { previewPlan, importPlan: vi.fn() },
+        execution: strategy,
+        plansService: { previewPlan },
         selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
         sessionContext: sessionContext(),
         workspaceNodeIds: [source.id, transform.id],
         flushDraftForExecution,
-        workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-        graphDbtWorkspaceArtifactPublicationCommand:
-          {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
-        graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
       });
       expect(result).toEqual({
         ok: false,
@@ -157,26 +150,17 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       kind: 'accepted',
       plan: { ...plan, planRef: makePlanRef({ planId: plan.planId }) },
     });
-    const publish = vi.fn();
-    const compile = vi.fn();
 
     const result = await executeCanvasPlanAction({
       graphDraftCanvasId: 'canvas-main',
       canPlan: true,
       canonicalEdges: [lineage],
       canonicalNodes: [source, transform],
-      executionStrategy: strategy,
-      plansService: { previewPlan, importPlan: vi.fn() },
+      execution: strategy,
+      plansService: { previewPlan },
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       sessionContext: sessionContext(),
       workspaceNodeIds: [source.id, transform.id],
-      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand: {
-        publish,
-      } as unknown as IGraphDbtWorkspaceArtifactPublicationCommandPort,
-      graphDbtModelCompilationQuery: {
-        compile,
-      } as unknown as IGraphDbtModelCompilationQueryPort,
     });
 
     expect(result).toMatchObject({
@@ -209,8 +193,6 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       persist: true,
     });
     expect(request).not.toHaveProperty('graphSource');
-    expect(publish).not.toHaveBeenCalled();
-    expect(compile).not.toHaveBeenCalled();
   });
 
   it('rejects a non-terminal Transform before calling Preview', async () => {
@@ -240,15 +222,11 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
           tags: [],
         },
       ],
-      executionStrategy: strategy,
-      plansService: { previewPlan, importPlan: vi.fn() },
+      execution: strategy,
+      plansService: { previewPlan },
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       sessionContext: sessionContext(),
       workspaceNodeIds: [source.id, transform.id, 'sink-orders'],
-      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand:
-        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
-      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
     });
 
     expect(result).toEqual({

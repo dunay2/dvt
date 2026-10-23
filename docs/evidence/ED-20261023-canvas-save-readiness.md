@@ -207,6 +207,36 @@ frontend proof; it does not certify a live backend or native compiler.
 `SYS-WEB-CANVAS-PREVIEW` retains ownership of submission and presentation. Current
 source/test bindings are reconciled through the existing scoped writer with an
 expected binding hash, preserving unrelated Run and autosave responsibilities.
-Exact commands, results and committed base/head remain in #3115. Strategy
-dependency narrowing, readiness presentation extraction and tooling separation
-are independent subsequent cuts.
+Exact commands, results and committed base/head remain in #3115.
+
+## Preview Strategy Capability Boundary
+
+The [dependency design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6376999390)
+addresses unused publication capabilities required by every Preview invocation.
+`CanvasPlanExecution` reuses the existing strategy discriminator and adds the
+three publication/compilation ports only to `planner_generic_preview`.
+`CanvasPlanActionArgs` replaces the four flat strategy/port fields with that
+execution value. The common admission, graph identity, flush and receipt stay
+in the existing command. Its plan service requires only `previewPlan`; the
+session interface requires only its two consumed methods.
+
+The existing React handler owns `bindCanvasPlanExecution`. For protected,
+authoritative-file, unavailable and null strategies it returns the exact strategy
+without reading publication dependencies. Generic composition receives the three
+explicit existing adapters. This uses one command and one strategy vocabulary,
+without additional services, optional-port fallbacks or new modules.
+
+Five architecture cases first failed because that composition boundary did not
+exist. The semantic tests now exercise poisoned dependency access for all four
+non-generic postures and exact generic capability composition; type assertions
+also retain required and absent members. Existing protected/file command tests
+now omit the unused adapters rather than manufacturing casts or mocks. Generic
+receipt, flush and handler tests retain their original behavior assertions.
+The existing controlled Code browser spec proves the real frontend composition
+with publication followed by compilation failure; it does not certify a live
+compiler or backend. Exact commands, SHA boundaries and results remain on #3115.
+
+`SYS-WEB-CANVAS-PREVIEW` remains the owner. Its new composition function is bound
+to the existing presentation responsibility with its actual tests, preserving
+the unrelated Run bindings. Readiness evaluation/presentation and tooling
+separation remain subsequent cuts.

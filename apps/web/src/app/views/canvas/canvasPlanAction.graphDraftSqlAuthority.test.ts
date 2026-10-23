@@ -10,7 +10,7 @@ import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
-import { executeCanvasPlanAction } from './canvasPlanAction';
+import { executeCanvasPlanAction, type CanvasPlanExecution } from './canvasPlanAction';
 
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
@@ -46,9 +46,11 @@ const edge: CanonicalEdge = {
   relation: 'lineage',
 };
 
-function createGraphDraftPlanActionArgs(
-  divergentSql = false
-): Parameters<typeof executeCanvasPlanAction>[0] {
+function createGraphDraftPlanActionArgs(divergentSql = false): Parameters<
+  typeof executeCanvasPlanAction
+>[0] & {
+  execution: Extract<CanvasPlanExecution, { kind: 'planner_generic_preview' }>;
+} {
   const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
     async (request) => ({
       schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
@@ -112,16 +114,18 @@ function createGraphDraftPlanActionArgs(
     canPlan: true,
     canonicalEdges: [edge],
     canonicalNodes: [sourceNode, modelNode],
-    executionStrategy: strategy,
-    plansService: { previewPlan, importPlan: vi.fn() },
+    execution: {
+      ...strategy,
+      workspaceFilesQuery,
+      graphDbtWorkspaceArtifactPublicationCommand: { publish },
+      graphDbtModelCompilationQuery: {
+        compile: vi.fn<IGraphDbtModelCompilationQueryPort['compile']>(),
+      },
+    },
+    plansService: { previewPlan },
     selectionIntent: { mode: 'explicit', nodeIds: [modelNode.id] },
     sessionContext,
     workspaceNodeIds: [sourceNode.id, modelNode.id],
-    workspaceFilesQuery,
-    graphDbtWorkspaceArtifactPublicationCommand: { publish },
-    graphDbtModelCompilationQuery: {
-      compile: vi.fn<IGraphDbtModelCompilationQueryPort['compile']>(),
-    },
   };
 }
 
@@ -135,7 +139,9 @@ describe('Canvas graph-draft DBT publication receipts', () => {
       message: expect.stringContaining('models/orders.sql'),
       writtenArtifactPaths: [],
     });
-    expect(args.graphDbtWorkspaceArtifactPublicationCommand.publish).not.toHaveBeenCalled();
+    expect(
+      args.execution.graphDbtWorkspaceArtifactPublicationCommand.publish
+    ).not.toHaveBeenCalled();
     expect(args.plansService.previewPlan).not.toHaveBeenCalled();
   });
 
@@ -143,7 +149,7 @@ describe('Canvas graph-draft DBT publication receipts', () => {
     'retains acknowledged artifact paths when compilation returns %s',
     async (outcome) => {
       const args = createGraphDraftPlanActionArgs();
-      const compile = vi.mocked(args.graphDbtModelCompilationQuery.compile);
+      const compile = vi.mocked(args.execution.graphDbtModelCompilationQuery.compile);
       if (outcome === 'exception') compile.mockRejectedValue(new Error('Compiler unavailable'));
       else if (outcome === 'authority_refused')
         compile.mockResolvedValue({
@@ -162,8 +168,8 @@ describe('Canvas graph-draft DBT publication receipts', () => {
       const result = await executeCanvasPlanAction(args);
       const published: Awaited<
         ReturnType<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>
-      > = await vi.mocked(args.graphDbtWorkspaceArtifactPublicationCommand.publish).mock.results[0]!
-        .value;
+      > = await vi.mocked(args.execution.graphDbtWorkspaceArtifactPublicationCommand.publish).mock
+        .results[0]!.value;
       if (published.kind !== 'applied') throw new Error('Expected acknowledged publication.');
       expect(published.writes.length).toBeGreaterThan(0);
       expect(result).toMatchObject({
@@ -176,7 +182,7 @@ describe('Canvas graph-draft DBT publication receipts', () => {
 
   it('does not invent confirmed paths when publication itself rejects', async () => {
     const args = createGraphDraftPlanActionArgs();
-    vi.mocked(args.graphDbtWorkspaceArtifactPublicationCommand.publish).mockRejectedValue(
+    vi.mocked(args.execution.graphDbtWorkspaceArtifactPublicationCommand.publish).mockRejectedValue(
       new Error('Publication unacknowledged')
     );
     const result = await executeCanvasPlanAction(args);
@@ -185,7 +191,7 @@ describe('Canvas graph-draft DBT publication receipts', () => {
       message: 'Publication unacknowledged',
       writtenArtifactPaths: [],
     });
-    expect(args.graphDbtModelCompilationQuery.compile).not.toHaveBeenCalled();
+    expect(args.execution.graphDbtModelCompilationQuery.compile).not.toHaveBeenCalled();
     expect(args.plansService.previewPlan).not.toHaveBeenCalled();
   });
 
@@ -193,6 +199,8 @@ describe('Canvas graph-draft DBT publication receipts', () => {
     const args = createGraphDraftPlanActionArgs();
     const result = await executeCanvasPlanAction({ ...args, canPlan: false });
     expect(result).toMatchObject({ ok: false, writtenArtifactPaths: [] });
-    expect(args.graphDbtWorkspaceArtifactPublicationCommand.publish).not.toHaveBeenCalled();
+    expect(
+      args.execution.graphDbtWorkspaceArtifactPublicationCommand.publish
+    ).not.toHaveBeenCalled();
   });
 });

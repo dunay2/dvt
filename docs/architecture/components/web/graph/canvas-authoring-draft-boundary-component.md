@@ -249,6 +249,20 @@ open its success modal or start Run merely because publication succeeded. This
 uses the existing `PreviewPlan` command and compilation/query ports; it does not
 introduce a parallel command, compensating deletion or cross-service transaction.
 
+### Preview Strategy Capabilities
+
+`CanvasPlanExecution` reuses the registered strategy discriminator. Only
+`planner_generic_preview` requires the workspace-file query, artifact publication
+command and model compilation query. Protected DVT and authoritative project-file
+Preview retain their existing strategy shape without those adapters. Unavailable
+and null strategies retain their existing fail-closed result.
+
+The React handler binds these capabilities at its composition boundary and passes
+one execution value to the existing command. Shared permission, draft flush,
+selection and confirmed-effect receipt handling stay in `PreviewPlan`. The command
+consumes only `previewPlan` from the plan port and the two session methods it uses;
+it does not require plan import or session subscription capabilities.
+
 ## Transitions
 
 ```mermaid

@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IPlansPort } from '../../ports/plans';
-import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
-import type { IGraphDbtModelCompilationQueryPort } from '../../ports/graphDbtModelCompilation';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
@@ -118,18 +115,14 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       canPlan: true,
       canonicalEdges: [],
       canonicalNodes: [modelNode],
-      executionStrategy: strategy,
-      plansService: { previewPlan, importPlan: vi.fn() },
+      execution: strategy,
+      plansService: { previewPlan },
       selectionIntent: {
         mode: 'explicit',
         nodeIds: ['test.analytics.orders_not_null'],
       },
       sessionContext,
       workspaceNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
-      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand:
-        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
-      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
     });
 
     expect(result).toMatchObject({
@@ -221,15 +214,11 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       canPlan: true,
       canonicalEdges: [],
       canonicalNodes: [sourceNode, modelNode],
-      executionStrategy: strategy,
-      plansService: { previewPlan, importPlan: vi.fn() },
+      execution: strategy,
+      plansService: { previewPlan },
       selectionIntent: { mode: 'explicit', nodeIds: [sourceNode.id] },
       sessionContext,
       workspaceNodeIds: [sourceNode.id, modelNode.id],
-      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand:
-        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
-      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
     });
 
     expect(result).toEqual({
@@ -283,18 +272,14 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       canPlan: true,
       canonicalEdges: [],
       canonicalNodes: [sourceNode, modelNode],
-      executionStrategy: strategy,
-      plansService: { previewPlan, importPlan: vi.fn() },
+      execution: strategy,
+      plansService: { previewPlan },
       selectionIntent: {
         mode: 'explicit',
         nodeIds: [sourceNode.id, modelNode.id],
       },
       sessionContext,
       workspaceNodeIds: [sourceNode.id, modelNode.id],
-      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand:
-        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
-      graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
     });
 
     expect(result).toEqual({

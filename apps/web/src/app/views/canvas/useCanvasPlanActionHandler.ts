@@ -8,7 +8,7 @@ import type {
   SetPlanModalOpen,
   UseCanvasExecutionActionsParams,
 } from './canvasExecutionActions.types';
-import { executeCanvasPlanAction } from './canvasPlanAction';
+import { executeCanvasPlanAction, type CanvasPlanExecution } from './canvasPlanAction';
 import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
 
 type UseCanvasPlanActionHandlerArgs = Pick<
@@ -32,6 +32,24 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   setPlanModalOpen: SetPlanModalOpen;
   setPreviewAttempt: (attempt: CanvasPreviewAttempt) => void;
 };
+
+export function bindCanvasPlanExecution(
+  strategy: UseCanvasPlanActionHandlerArgs['executionStrategy'],
+  ports: Pick<
+    UseCanvasPlanActionHandlerArgs,
+    | 'workspaceFilesQuery'
+    | 'graphDbtWorkspaceArtifactPublicationCommand'
+    | 'graphDbtModelCompilationQuery'
+  >
+): CanvasPlanExecution | null {
+  if (strategy?.kind !== 'planner_generic_preview') return strategy;
+  return {
+    ...strategy,
+    workspaceFilesQuery: ports.workspaceFilesQuery,
+    graphDbtWorkspaceArtifactPublicationCommand: ports.graphDbtWorkspaceArtifactPublicationCommand,
+    graphDbtModelCompilationQuery: ports.graphDbtModelCompilationQuery,
+  };
+}
 
 export function useCanvasPlanActionHandler({
   graphDraftCanvasId,
@@ -63,14 +81,15 @@ export function useCanvasPlanActionHandler({
       canPlan,
       canonicalEdges,
       canonicalNodes,
-      executionStrategy,
+      execution: bindCanvasPlanExecution(executionStrategy, {
+        workspaceFilesQuery,
+        graphDbtWorkspaceArtifactPublicationCommand,
+        graphDbtModelCompilationQuery,
+      }),
       plansService,
       selectionIntent,
       sessionContext,
       workspaceNodeIds,
-      workspaceFilesQuery,
-      graphDbtWorkspaceArtifactPublicationCommand,
-      graphDbtModelCompilationQuery,
     });
 
     if (result.writtenArtifactPaths.length > 0) {

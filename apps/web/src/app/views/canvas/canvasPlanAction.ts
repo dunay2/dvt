@@ -18,6 +18,28 @@ import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecution
 import { publishGraphDbtWorkspaceArtifacts } from './dbtGraphWorkspaceArtifactPublisher';
 import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
 
+export type CanvasPlanExecution =
+  | (Extract<CanvasExecutionStrategy, { kind: 'planner_generic_preview' }> &
+      Readonly<{
+        workspaceFilesQuery: IWorkspaceFilesQueryPort;
+        graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+        graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
+      }>)
+  | Exclude<CanvasExecutionStrategy, { kind: 'planner_generic_preview' }>;
+
+export type CanvasPlanActionArgs = Readonly<{
+  graphDraftCanvasId: string | null;
+  canPlan: boolean;
+  canonicalEdges: readonly CanonicalEdge[];
+  canonicalNodes: readonly CanonicalNode[];
+  execution: CanvasPlanExecution | null;
+  plansService: Pick<IPlansPort, 'previewPlan'>;
+  selectionIntent: CanvasExecutionSelectionIntent;
+  sessionContext: Pick<SessionContextPort, 'buildRunContext' | 'getWorkspaceScopeSnapshot'>;
+  workspaceNodeIds: readonly string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
+}>;
+
 export type CanvasPlanActionResult = Readonly<{
   writtenArtifactPaths: readonly string[];
 }> &
@@ -72,30 +94,13 @@ export async function executeCanvasPlanAction({
   canPlan,
   canonicalEdges,
   canonicalNodes,
-  executionStrategy,
+  execution,
   plansService,
   selectionIntent,
   sessionContext,
   workspaceNodeIds,
-  workspaceFilesQuery,
-  graphDbtWorkspaceArtifactPublicationCommand,
-  graphDbtModelCompilationQuery,
   flushDraftForExecution,
-}: {
-  graphDraftCanvasId: string | null;
-  canPlan: boolean;
-  canonicalEdges: readonly CanonicalEdge[];
-  canonicalNodes: readonly CanonicalNode[];
-  executionStrategy: CanvasExecutionStrategy | null;
-  plansService: IPlansPort;
-  selectionIntent: CanvasExecutionSelectionIntent;
-  sessionContext: SessionContextPort;
-  workspaceNodeIds: readonly string[];
-  workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
-  graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
-  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
-}): Promise<CanvasPlanActionResult> {
+}: CanvasPlanActionArgs): Promise<CanvasPlanActionResult> {
   const writtenArtifactPaths: string[] = [];
   const fail = (message: string): CanvasPlanActionResult => ({
     ok: false,
@@ -107,7 +112,7 @@ export async function executeCanvasPlanAction({
     return fail(canvasViewCopy.planPermissionDeniedMessage);
   }
 
-  if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+  if (execution == null || execution.kind === 'not_executable') {
     return fail(canvasViewCopy.canvasExecutionUnavailableMessage);
   }
 
@@ -119,7 +124,7 @@ export async function executeCanvasPlanAction({
       canonicalEdges = flushedDraft.canonicalEdges;
       workspaceNodeIds = flushedDraft.workspaceNodeIds;
     }
-    if (executionStrategy.kind === 'dvt_protected_preview') {
+    if (execution.kind === 'dvt_protected_preview') {
       if (graphDraftCanvasId == null) {
         return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
       }
@@ -134,7 +139,7 @@ export async function executeCanvasPlanAction({
         return fail(dvtProjection.message);
       }
       const previewOutcome = await plansService.previewPlan({
-        previewProfile: executionStrategy.previewProfile,
+        previewProfile: execution.previewProfile,
         selection: dvtProjection.selection,
         context: sessionContext.buildRunContext('preview_context'),
         provenance: {
@@ -152,7 +157,7 @@ export async function executeCanvasPlanAction({
     }
 
     const plannerProjection = buildCanvasDbtExecutionProjection({
-      strategy: executionStrategy,
+      strategy: execution,
       canonicalNodes,
       canonicalEdges,
       selectionIntent,
@@ -164,7 +169,7 @@ export async function executeCanvasPlanAction({
     }
     const scopedNodeIds = plannerProjection.scopedNodeIds;
 
-    if (executionStrategy.kind === 'planner_generic_preview') {
+    if (execution.kind === 'planner_generic_preview') {
       if (graphDraftCanvasId == null) {
         return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
       }
@@ -180,8 +185,8 @@ export async function executeCanvasPlanAction({
       const publication = await publishGraphDbtWorkspaceArtifacts({
         canvasId: graphDraftCanvasId,
         artifacts: artifactProjection.artifacts,
-        workspaceFilesQuery,
-        publicationCommand: graphDbtWorkspaceArtifactPublicationCommand,
+        workspaceFilesQuery: execution.workspaceFilesQuery,
+        publicationCommand: execution.graphDbtWorkspaceArtifactPublicationCommand,
       });
       if (!publication.ok) {
         if (publication.kind === 'authority_refused') {
@@ -195,7 +200,7 @@ export async function executeCanvasPlanAction({
       }
       writtenArtifactPaths.push(...publication.writtenArtifactPaths);
 
-      const compilation = await graphDbtModelCompilationQuery.compile({
+      const compilation = await execution.graphDbtModelCompilationQuery.compile({
         canvasId: graphDraftCanvasId,
         selectors: [...artifactProjection.modelSelectors],
       });
@@ -209,14 +214,14 @@ export async function executeCanvasPlanAction({
     }
 
     const previewOutcome = await plansService.previewPlan({
-      previewProfile: executionStrategy.previewProfile,
+      previewProfile: execution.previewProfile,
       graphSource: plannerProjection.graphSource,
       selection: plannerProjection.selection,
       context: sessionContext.buildRunContext('preview_context'),
-      ...(executionStrategy.kind === 'dbt_project_file_preview'
+      ...(execution.kind === 'dbt_project_file_preview'
         ? {
             provenance: buildDbtProjectFilePreviewProvenance(
-              executionStrategy,
+              execution,
               plannerProjection.selection.nodeIds
             ),
           }
