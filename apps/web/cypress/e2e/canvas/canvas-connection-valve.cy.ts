@@ -1,4 +1,5 @@
 /** Owned concern: prove the persisted Canvas connection valve browser round trip. */
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 import { visitWithE2eWorkspaceSession } from '../../support/workspaceSession';
@@ -33,10 +34,33 @@ describe('Canvas connection valve', () => {
       });
     };
 
-    stubWorkbenchScenario('generated');
+    const draft = stubWorkbenchScenario('generated');
+    Object.assign(
+      draft,
+      normalizeProjectCanvasDraft({
+        ...draft,
+        nodePositions: {
+          'source-1': { x: 40, y: 40 },
+          'dvt-transform-1': { x: 600, y: 200 },
+          'sink-1': { x: 1160, y: 40 },
+        },
+      })
+    );
+    cy.viewport(1600, 900);
 
     visitCanvas(1);
+    cy.get('.react-flow__controls-fitview').click();
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    cy.get(`${edge} .react-flow__edge-path`)
+      .should('have.attr', 'd')
+      .and('match', /^M.*L/)
+      .and('include', 'Q')
+      .and('not.match', /[Cc]/);
+    cy.get(`${edge} [data-slot="canvas-dependency-direction-cue"]`)
+      .should('have.attr', 'refX', '8')
+      .and('have.attr', 'markerWidth', '8')
+      .and('have.attr', 'markerHeight', '8');
+    cy.get('.react-flow').screenshot('canvas-rounded-dependency', { overwrite: true });
     cy.get(closedGate).should('not.exist');
     toggleGate();
     cy.get(closedGate).should('exist');
