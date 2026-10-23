@@ -98,9 +98,10 @@ function draft(): WorkspaceGraphAuthoringDraft {
         sourceName: 'warehouse_prod_analytics_erp',
         tableName: 'orders',
         columns: [
-          { name: 'id', type: 'integer', nullable: false },
+          { name: 'id', type: 'integer', nullable: false, comment: 'Old field comment.' },
           { name: 'customer', type: 'text', nullable: true },
         ],
+        sourceComment: 'Old table comment.',
       },
     },
     {
@@ -276,6 +277,42 @@ const REQUEST = {
 };
 
 describe('RebindWarehouseSourceUseCase', () => {
+  it.each([true, false])(
+    'replaces or clears provider comments on rebind (present=%s)',
+    async (present) => {
+      const target = {
+        ...TARGET,
+        ...(present ? { comment: 'Recovery table.' } : {}),
+        columns: TARGET.columns!.map((column) => ({
+          ...column,
+          ...(present ? { comment: `Recovery ${column.name}.` } : {}),
+        })),
+      };
+      const initialDraft = draft();
+      initialDraft.nodes[0]!.description = 'DVT business documentation.';
+      const { service, draftStore } = useCase({ target, initialDraft });
+      await service.execute(REQUEST);
+      const saved = vi
+        .mocked(draftStore.save)
+        .mock.calls[0]![0].draft.nodes.find((node) => node.id === SOURCE_ID)!;
+      expect(saved.metadata?.sourceComment).toBe(present ? 'Recovery table.' : undefined);
+      expect(saved.description).toBe('DVT business documentation.');
+      expect(saved.metadata?.columns).toEqual([
+        {
+          name: 'id',
+          type: 'integer',
+          nullable: false,
+          ...(present ? { comment: 'Recovery id.' } : {}),
+        },
+        {
+          name: 'customer',
+          type: 'text',
+          nullable: true,
+          ...(present ? { comment: 'Recovery customer.' } : {}),
+        },
+      ]);
+    }
+  );
   it('rebinds the shared definition when requested through an instance', async () => {
     const initial = draft();
     const instance = {
@@ -326,7 +363,10 @@ describe('RebindWarehouseSourceUseCase', () => {
     expect(saved?.nodeIds).toEqual(draft().nodeIds);
     expect(saved?.edges).toEqual(draft().edges);
     expect(reboundSource?.id).toBe(SOURCE_ID);
-    expect(reboundSource?.metadata?.columns).toEqual(draft().nodes[0]?.metadata?.columns);
+    expect(reboundSource?.metadata?.columns).toEqual([
+      { name: 'id', type: 'integer', nullable: false },
+      { name: 'customer', type: 'text', nullable: true },
+    ]);
     expect(reboundSource?.metadata?.connectedSourceRef).toEqual(result.connectedSourceRef);
     expect(reboundSource?.metadata?.schema).toBe('recovery');
     expect(reboundSource?.metadata?.tableIdentifier).toBe('orders_v2');

@@ -300,6 +300,7 @@ function toSourceNode(
       schema: sourceObject.locator.schema,
       relationType: sourceObject.locator.relationType,
       sourceMetricEvidence: sourceObject.metricEvidence,
+      ...(sourceObject.comment === undefined ? {} : { sourceComment: sourceObject.comment }),
       columns: context.includeColumns ? sourceObject.columns : undefined,
       constraints: context.includeColumns ? sourceObject.constraints : undefined,
     },

@@ -241,6 +241,37 @@
   border-top: 1px solid var(--border-subtle);
   padding-top: 0.5rem;
 }
+.comment {
+  padding-top: 0.25rem;
+  font-size: 0.75rem;
+}
+.comment h4 {
+  margin: 0 0 0.25rem;
+  color: var(--text-muted);
+  font-size: inherit;
+  font-weight: 400;
+}
+.comment p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+}
+.comment[data-empty='true'] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.5rem;
+  padding-top: 0;
+}
+.comment[data-empty='true'] h4 {
+  margin: 0;
+}
+.commentIndicator {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
 .navigationButton {
   display: inline-flex;
   align-items: center;

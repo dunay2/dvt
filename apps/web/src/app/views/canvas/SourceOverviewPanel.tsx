@@ -1,5 +1,6 @@
 /** Owned concern: render the approved data-first Source Overview without duplicating mutation authority. */
 import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { SourceObjectSchema } from '@dvt/contracts';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -28,6 +29,7 @@ const SOURCE_OVERVIEW_COPY = {
     schema: 'Schema',
     table: 'Table',
     columns: 'Columns',
+    sourceComment: 'Database comment',
     dvtMetadata: 'DVT metadata',
     name: 'Name',
     tags: 'Tags',
@@ -47,6 +49,7 @@ const SOURCE_OVERVIEW_COPY = {
     schema: 'Esquema',
     table: 'Tabla',
     columns: 'Columnas',
+    sourceComment: 'Comentario de la base de datos',
     dvtMetadata: 'Metadatos DVT',
     name: 'Nombre',
     tags: 'Etiquetas',
@@ -183,41 +186,55 @@ export function SourceOverviewPanel({
   };
 
   const hasGeneralFacts = generalSection != null;
+  const sourceComment = SourceObjectSchema.shape.comment.safeParse(node.metadata?.sourceComment);
 
   return (
     <div
       data-slot="canvas-source-overview"
-      className="grid min-w-0 grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] divide-x divide-(--border-subtle) overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)"
+      className="min-w-0 divide-y divide-(--border-subtle) overflow-hidden rounded-lg border border-(--border-subtle) bg-(--surface-panel)"
     >
-      <section data-slot="canvas-source-overview-external" className="min-w-0 space-y-5 p-4">
+      <section data-slot="canvas-source-overview-external" className="min-w-0 space-y-2 p-3">
         <div className="flex items-center justify-between gap-3">
           <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{copy.sourceMetadata}</h3>
           <span className="text-xs text-(--status-readonly)">{copy.readOnly}</span>
         </div>
 
-        <dl className="grid grid-cols-[minmax(72px,0.38fr)_minmax(0,1fr)] gap-x-3 gap-y-3 text-sm">
+        <dl className="grid grid-cols-[96px_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
           <ExternalFact label={copy.kind} value={kind} />
           <ExternalFact label={copy.schema} value={schema} />
           <ExternalFact label={copy.table} value={table} />
           <ExternalFact label={copy.columns} value={columnCount} />
         </dl>
+        <div className="space-y-1 border-t border-(--border-subtle) pt-2">
+          <h4 className={inspectorVisualClasses.inspectorLabel}>{copy.sourceComment}</h4>
+          <p
+            data-slot="source-table-comment"
+            className="whitespace-pre-wrap text-xs text-(--text-primary) [overflow-wrap:anywhere]"
+          >
+            {sourceComment.success ? (sourceComment.data ?? copy.empty) : copy.empty}
+          </p>
+        </div>
 
         {!hasGeneralFacts ? (
           <p className={inspectorVisualClasses.inspectorSubtle}>{copy.empty}</p>
         ) : null}
       </section>
 
-      <section data-slot="canvas-source-overview-dvt" className="min-w-0 space-y-6 p-4">
+      <section data-slot="canvas-source-overview-dvt" className="min-w-0 space-y-2 p-3">
         <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{copy.dvtMetadata}</h3>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
+        <div
+          data-slot="source-dvt-name"
+          className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-x-3"
+        >
+          <div className="contents">
             <span className={inspectorVisualClasses.inspectorLabel}>{copy.name}</span>
             {authoring.canEditNode && editingField !== 'name' ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="col-start-3 row-start-1 h-7 px-2"
                 onClick={() => setEditingField('name')}
               >
                 {copy.edit}
@@ -226,6 +243,7 @@ export function SourceOverviewPanel({
           </div>
           {editingField === 'name' ? (
             <Input
+              className="col-start-2 row-start-1 h-7 min-w-0"
               autoFocus
               aria-label={copy.name}
               value={draft.name}
@@ -240,18 +258,21 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className="text-sm font-medium text-(--text-primary)">{draft.name}</p>
+            <p className="col-start-2 row-start-1 min-w-0 break-words text-xs font-medium text-(--text-primary)">
+              {draft.name}
+            </p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
+        <div className="grid grid-cols-[96px_minmax(0,1fr)_auto] items-center gap-x-3">
+          <div className="contents">
             <span className={inspectorVisualClasses.inspectorLabel}>{copy.tags}</span>
             {authoring.canEditNode && editingField !== 'tags' ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="col-start-3 row-start-1 h-7 px-2"
                 onClick={() => setEditingField('tags')}
               >
                 {copy.addTag}
@@ -260,6 +281,7 @@ export function SourceOverviewPanel({
           </div>
           {editingField === 'tags' ? (
             <Input
+              className="col-start-2 row-start-1 h-7 min-w-0"
               autoFocus
               aria-label={copy.tags}
               value={draftController.tagsText}
@@ -268,7 +290,7 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="col-start-2 row-start-1 flex min-w-0 flex-wrap gap-1">
               {businessTags.length > 0 ? (
                 businessTags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="font-normal">
@@ -290,6 +312,7 @@ export function SourceOverviewPanel({
                 type="button"
                 variant="ghost"
                 size="sm"
+                className="h-7 px-2"
                 onClick={() => setEditingField('description')}
               >
                 {copy.edit}
@@ -317,7 +340,7 @@ export function SourceOverviewPanel({
               onBlur={commitCurrentDraft}
             />
           ) : (
-            <p className={inspectorVisualClasses.inspectorBody}>
+            <p className="whitespace-pre-wrap text-xs text-(--text-primary) [overflow-wrap:anywhere]">
               {draft.description || copy.empty}
             </p>
           )}

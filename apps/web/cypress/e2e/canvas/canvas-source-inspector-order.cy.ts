@@ -42,8 +42,17 @@ function stubCanvas(): void {
               ...node,
               metadata: {
                 ...node.metadata,
+                sourceComment:
+                  'Sales orders from the warehouse.\nUpdated nightly by the ERP integration.',
                 columns: [
-                  ...(Array.isArray(node.metadata?.columns) ? node.metadata.columns : []),
+                  ...(Array.isArray(node.metadata?.columns)
+                    ? node.metadata.columns.map((column: { name: string }) => ({
+                        ...column,
+                        ...(column.name === 'order_id'
+                          ? { comment: 'External order identifier.\nPreserved from PostgreSQL.' }
+                          : {}),
+                      }))
+                    : []),
                   { name: longColumnName, type: longColumnType, nullable: true },
                 ],
               },
@@ -67,7 +76,7 @@ function visitCanvas(): void {
   cy.get('.react-flow__node[data-id="source-orders"]').should('be.visible');
 }
 
-function openSourceSection(sectionId: 'columns' | 'inputs-outputs'): void {
+function openSourceSection(sectionId: 'general' | 'columns' | 'inputs-outputs'): void {
   cy.get('.react-flow__node[data-id="source-orders"] [data-slot="canvas-node-shell"]')
     .should('be.visible')
     .rightclick();
@@ -106,7 +115,23 @@ describe('Canvas Source Inspector ordering', () => {
     cy.viewport(1440, 900);
     visitCanvas();
 
-    openSourceSection('columns');
+    openSourceSection('general');
+    cy.viewport(1100, 600);
+    cy.get('[data-slot="source-table-comment"]').should(
+      'contain.text',
+      'Sales orders from the warehouse.'
+    );
+    cy.get('[data-slot="canvas-source-overview-external"]').then(($external) => {
+      cy.get('[data-slot="canvas-source-overview-dvt"]').should(($dvt) => {
+        expect($dvt[0]!.getBoundingClientRect().left).to.equal(
+          $external[0]!.getBoundingClientRect().left
+        );
+      });
+    });
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-overview-comments');
+    cy.viewport(1440, 900);
+
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should(($panel) => {
       const panel = $panel[0]!;
       const viewport = panel.ownerDocument.defaultView!;
@@ -153,13 +178,19 @@ describe('Canvas Source Inspector ordering', () => {
     cy.get('[data-slot="source-column-detail"]').should(($detail) => {
       const element = $detail[0]!;
       expect(element.getBoundingClientRect().height).to.be.at.most(240);
-      const facts = element.querySelector('dl')!.getBoundingClientRect();
+      const documentation = element
+        .querySelector('[data-slot="source-column-comment"]')!
+        .parentElement!.getBoundingClientRect();
       const navigation = element.querySelector('nav')!.getBoundingClientRect();
-      expect(navigation.top - facts.bottom).to.be.within(0, 9);
+      expect(navigation.top - documentation.bottom).to.be.within(0, 9);
     });
     cy.get('[data-slot="source-column-previous"]').should('be.disabled');
     cy.get('[data-slot="source-column-next"]').click();
     cy.get('[data-slot="source-column-detail"] h3').should('have.text', 'order_id');
+    cy.get('[data-slot="source-column-comment"]').should(
+      'contain.text',
+      'External order identifier.'
+    );
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-detail');
     cy.get('[data-slot="source-columns-back"]').click();
     cy.get('[data-column-name="order_id"]').should('be.focused');

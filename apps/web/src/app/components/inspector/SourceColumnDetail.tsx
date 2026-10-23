@@ -82,6 +82,14 @@ export function SourceColumnDetail({
               </dd>
             </div>
           </dl>
+          <section
+            className={styles.comment}
+            data-empty={facts.column.comment == null}
+            aria-label={copy.comment}
+          >
+            <h4>{copy.comment}</h4>
+            <p data-slot="source-column-comment">{facts.column.comment ?? copy.none}</p>
+          </section>
         </>
       )}
       <nav className={styles.detailNavigation} aria-label={copy.listLabel}>

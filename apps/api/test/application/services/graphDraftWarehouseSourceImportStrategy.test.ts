@@ -37,6 +37,7 @@ const DVT_SOURCE_NODE_ID_PATTERN =
 const SOURCE_OBJECT: SourceObject = {
   objectId: 'relation/analytics/erp/orders',
   displayName: 'orders',
+  comment: 'Sales orders from the warehouse.\nRead only.',
   locator: {
     kind: 'relation',
     catalog: 'analytics',
@@ -44,7 +45,9 @@ const SOURCE_OBJECT: SourceObject = {
     name: 'orders',
     relationType: 'table',
   },
-  columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+  columns: [
+    { name: 'order_id', type: 'integer', nullable: false, comment: 'External order identifier.' },
+  ],
   metricEvidence: {
     observedAt: '2026-07-14T00:00:00.000Z',
     observationScope: { kind: 'snapshot' },
@@ -109,6 +112,7 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
                   sourceObjectId: SOURCE_OBJECT.objectId,
                 },
                 sourceMetricEvidence: SOURCE_OBJECT.metricEvidence,
+                sourceComment: SOURCE_OBJECT.comment,
                 columns: SOURCE_OBJECT.columns,
                 databaseUser: 'warehouse_reader',
               }),

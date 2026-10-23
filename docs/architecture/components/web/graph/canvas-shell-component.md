@@ -308,6 +308,25 @@ Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
+### Native Source Overview And Provider Comments
+
+The narrow Source Overview uses full-width stacked source and DVT sections,
+compact label/value facts, and activated inline editing. It retains readable
+font sizes rather than splitting the panel into two narrow columns. Table
+comments come only from the canonical imported `metadata.sourceComment` snapshot;
+column comments come from validated `SourceObjectColumn.comment` facts. A compact
+column-row indicator opens the existing detail containing the complete plain
+text comment. Missing comments render as an em dash in detail. Long text wraps
+without horizontal overflow. DVT descriptions remain independently authored.
+
+```mermaid
+flowchart LR
+    Provider[Authorized provider catalog] --> Snapshot[Import or rebind snapshot]
+    Snapshot --> Overview[Compact Source facts and read-only table comment]
+    Snapshot --> Detail[Column indicator and full detail comment]
+    Authoring[Existing DVT authoring rail] --> Description[DVT description]
+```
+
 ### Compact Header Reflow
 
 The real workbench viewport proof exposed a regression at 640 x 450 CSS pixels:

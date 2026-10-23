@@ -93,6 +93,30 @@ describe('SourceColumnsPanel', () => {
     );
   }
 
+  it('indicates a provider column comment and renders its complete escaped text in detail', () => {
+    render({
+      ...sourceNode,
+      metadata: {
+        columns: [
+          {
+            name: 'id',
+            type: 'integer',
+            nullable: false,
+            comment: 'External <script>id</script>.\n  Second line.',
+          },
+        ],
+      },
+    });
+    const row = container.querySelector<HTMLButtonElement>('[data-column-name="id"]')!;
+    expect(row.querySelector('[data-slot="source-column-comment-indicator"]')).not.toBeNull();
+    expect(row.textContent).not.toContain('Second line');
+    act(() => fireEvent.click(row));
+    expect(container.querySelector('[data-slot="source-column-comment"]')?.textContent).toBe(
+      'External <script>id</script>.\n  Second line.'
+    );
+    expect(container.querySelector('script')).toBeNull();
+  });
+
   it('transfers only the published dragged column by identity without selecting or mutating it', () => {
     const before = structuredClone(sourceNode);
     render(sourceNode, false, [{ id: 'actor_id', name: 'Actor alias', type: 'text' }]);

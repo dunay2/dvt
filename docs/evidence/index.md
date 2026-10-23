@@ -42,6 +42,7 @@ Evidence documents that justify or validate relevant changes.
 - [LOCAL generation metadata contract evidence](ED-20261016-local-data-contracts.md)
 - [LOCAL generation persistence candidate evidence](ED-20261017-local-generation-persistence.md)
 - [LOCAL storage boundary candidate evidence](ED-20261017-local-data-storage-boundary.md)
+- [Native Source Comments](ED-20261023-native-source-comments.md)
 - [One Explicit PostgreSQL Sink Publication](ED-20261015-explicit-postgres-sink.md)
 - [Ordered UNION inputs and bounded composition concerns](ED-20261004-union-inputs-composition-concerns.md)
 - [Producer Input and passive Output boundary](ED-20260926-producer-consumer-input-boundary.md)

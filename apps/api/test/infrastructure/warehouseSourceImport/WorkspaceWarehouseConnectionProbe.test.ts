@@ -212,6 +212,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
             table_catalog: 'dvt',
             table_schema: 'public',
             table_name: 'orders',
+            relation_comment: 'Sales orders.\n  External documentation.',
             database_user: 'warehouse_reader',
             relation_kind: 'r',
             row_count: '128',
@@ -233,6 +234,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
             table_schema: 'public',
             table_name: 'orders',
             column_name: 'order_id',
+            column_comment: 'Warehouse <order> identifier.',
             data_type: 'integer',
             is_nullable: 'NO',
           },
@@ -252,7 +254,13 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
 
     expect(result).toMatchObject({
       kind: 'object-page',
-      objects: [{ objectId: 'relation/dvt/public/orders' }],
+      objects: [
+        {
+          objectId: 'relation/dvt/public/orders',
+          comment: 'Sales orders.\n  External documentation.',
+          columns: [{ name: 'order_id', comment: 'Warehouse <order> identifier.' }],
+        },
+      ],
       truncated: true,
     });
     expect(pgMock.query.mock.calls[0]?.[0]).toContain(
@@ -261,6 +269,11 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     expect(pgMock.query.mock.calls[0]?.[1]).toEqual(['orders', '', '', 2]);
     expect(pgMock.query.mock.calls[1]?.[0]).toContain('selected_relations');
     expect(pgMock.query.mock.calls[1]?.[1]).toEqual([['dvt'], ['public'], ['orders']]);
+    expect(pgMock.query).toHaveBeenCalledTimes(3);
+    expect(pgMock.query.mock.calls[0]?.[0]).toContain("obj_description(relation.oid, 'pg_class')");
+    expect(pgMock.query.mock.calls[1]?.[0]).toContain(
+      'col_description(relation.oid, attribute.attnum)'
+    );
     expect(pgMock.query.mock.calls.some(([sql]) => sql.includes('orders_archive'))).toBe(false);
     const cursor = result.nextCursor;
     if (cursor === undefined) throw new Error('Expected a continuation cursor.');
@@ -571,7 +584,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('pg_total_relation_size(relation.oid)');
     expect(pgMock.query.mock.calls[0]?.[0]).toContain('pg_stat_get_live_tuples(relation.oid)');
     expect(pgMock.query.mock.calls[0]?.[0]).toContain('current_user as database_user');
-    expect(pgMock.query.mock.calls[1]?.[0]).toContain('with discovered_relations as');
+    expect(pgMock.query.mock.calls[1]?.[0]).toContain('with selected_relations as');
     expect(pgMock.query.mock.calls[0]?.[0]).not.toContain('limit ');
     expect(pgMock.query.mock.calls[1]?.[0]).not.toContain('limit ');
     expect(pgMock.query.mock.calls[2]?.[0]).toContain('pg_total_relation_size');

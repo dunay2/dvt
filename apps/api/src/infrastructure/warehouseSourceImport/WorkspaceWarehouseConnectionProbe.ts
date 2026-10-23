@@ -56,6 +56,7 @@ type PostgresTableDiscoveryRow = {
   readonly database_user?: string;
   readonly relation_kind: 'r' | 'p' | 'v' | 'm' | 'f';
   readonly row_count: number | string | null;
+  readonly relation_comment?: string | null;
 };
 
 type PostgresByteSizeRow = {
@@ -73,6 +74,7 @@ type PostgresColumnDiscoveryRow = {
   readonly column_name: string;
   readonly data_type: string;
   readonly is_nullable: 'YES' | 'NO';
+  readonly column_comment?: string | null;
   readonly constraints?: unknown;
 };
 
@@ -315,6 +317,7 @@ export class WorkspaceWarehouseConnectionProbe
       const result = await client.query<PostgresTableDiscoveryRow>(
         [
           'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
+          "obj_description(relation.oid, 'pg_class') as relation_comment,",
           "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
           'from pg_class relation',
           'join pg_namespace namespace on namespace.oid = relation.relnamespace',
@@ -324,7 +327,7 @@ export class WorkspaceWarehouseConnectionProbe
           'order by table_catalog, table_schema, table_name',
         ].join(' ')
       );
-      const columnRows = await loadPostgresCatalogColumns(client);
+      const columnRows = await loadPostgresCatalogColumnsForRelations(client, result.rows);
       const columnsByTable = groupPostgresColumnsByTable(columnRows);
       const constraintsByTable = groupPostgresConstraintsByTable(columnRows);
 
@@ -504,6 +507,7 @@ async function loadPostgresObjectCatalogPage(
   const sql = schemaPage
     ? [
         'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
+        "obj_description(relation.oid, 'pg_class') as relation_comment,",
         "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
         'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
         'where current_database() = $1 and namespace.nspname = $2 and relation.relname > $3',
@@ -514,6 +518,7 @@ async function loadPostgresObjectCatalogPage(
       ].join(' ')
     : [
         'select current_database() as table_catalog, current_user as database_user, namespace.nspname as table_schema, relation.relname as table_name, relation.relkind as relation_kind,',
+        "obj_description(relation.oid, 'pg_class') as relation_comment,",
         "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count",
         'from pg_class relation join pg_namespace namespace on namespace.oid = relation.relnamespace',
         'where position(lower($1) in lower(relation.relname)) > 0',
@@ -580,13 +585,17 @@ async function loadPostgresCatalogColumnsForRelations(
         "where constraints.constraint_type in ('PRIMARY KEY', 'UNIQUE')",
         'group by constraints.constraint_catalog, constraints.constraint_schema, constraints.table_name, constraints.constraint_name, constraints.constraint_type)',
         'select columns.table_catalog, columns.table_schema, columns.table_name, columns.column_name, columns.data_type, columns.is_nullable,',
+        'col_description(relation.oid, attribute.attnum) as column_comment,',
         "coalesce(jsonb_agg(distinct jsonb_build_object('name', constraints.constraint_name, 'kind', case when constraints.constraint_type = 'PRIMARY KEY' then 'primary-key' else 'unique' end, 'columns', constraints.column_names)) filter (where constraints.constraint_name is not null), '[]'::jsonb) as constraints",
         'from selected_relations selected join information_schema.columns columns',
         'on columns.table_catalog = selected.table_catalog and columns.table_schema = selected.table_schema and columns.table_name = selected.table_name',
+        'join pg_namespace namespace on namespace.nspname = columns.table_schema',
+        'join pg_class relation on relation.relnamespace = namespace.oid and relation.relname = columns.table_name',
+        'join pg_attribute attribute on attribute.attrelid = relation.oid and attribute.attname = columns.column_name and attribute.attnum > 0 and not attribute.attisdropped',
         'left join relation_constraints constraints on constraints.table_catalog = columns.table_catalog',
         'and constraints.table_schema = columns.table_schema and constraints.table_name = columns.table_name',
         'and columns.column_name = any(constraints.column_names)',
-        'group by columns.table_catalog, columns.table_schema, columns.table_name, columns.ordinal_position, columns.column_name, columns.data_type, columns.is_nullable',
+        'group by columns.table_catalog, columns.table_schema, columns.table_name, columns.ordinal_position, columns.column_name, columns.data_type, columns.is_nullable, relation.oid, attribute.attnum',
         'order by columns.table_catalog, columns.table_schema, columns.table_name, columns.ordinal_position',
       ].join(' '),
       [
@@ -675,64 +684,6 @@ function readCatalogCursor(
     );
   }
 }
-async function loadPostgresCatalogColumns(
-  client: Pick<Client, 'query'>
-): Promise<readonly PostgresColumnDiscoveryRow[]> {
-  try {
-    const columnResult = await client.query<PostgresColumnDiscoveryRow>(
-      [
-        'with discovered_relations as (',
-        'select current_database() as table_catalog, namespace.nspname as table_schema, relation.relname as table_name',
-        'from pg_class relation',
-        'join pg_namespace namespace on namespace.oid = relation.relnamespace',
-        "where namespace.nspname not in ('pg_catalog', 'information_schema')",
-        "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
-        "and has_table_privilege(relation.oid, 'SELECT')",
-        'order by table_catalog, table_schema, table_name',
-        ')',
-        ', relation_constraints as (',
-        'select constraints.constraint_catalog as table_catalog, constraints.constraint_schema as table_schema,',
-        'constraints.table_name, constraints.constraint_name, constraints.constraint_type,',
-        'array_agg(key_columns.column_name order by key_columns.ordinal_position) as column_names',
-        'from information_schema.table_constraints constraints',
-        'join information_schema.key_column_usage key_columns',
-        'on key_columns.constraint_catalog = constraints.constraint_catalog',
-        'and key_columns.constraint_schema = constraints.constraint_schema',
-        'and key_columns.constraint_name = constraints.constraint_name',
-        'and key_columns.table_schema = constraints.table_schema',
-        'and key_columns.table_name = constraints.table_name',
-        "where constraints.constraint_type in ('PRIMARY KEY', 'UNIQUE')",
-        'group by constraints.constraint_catalog, constraints.constraint_schema, constraints.table_name,',
-        'constraints.constraint_name, constraints.constraint_type',
-        ')',
-        'select column_info.table_catalog, column_info.table_schema, column_info.table_name,',
-        'column_info.column_name, column_info.data_type, column_info.is_nullable,',
-        "coalesce(jsonb_agg(distinct jsonb_build_object('name', constraint_info.constraint_name, 'kind', case when constraint_info.constraint_type = 'PRIMARY KEY' then 'primary-key' else 'unique' end, 'columns', constraint_info.column_names)) filter (where constraint_info.constraint_name is not null), '[]'::jsonb) as constraints",
-        'from discovered_relations discovered',
-        'join information_schema.columns column_info',
-        'on column_info.table_catalog = discovered.table_catalog',
-        'and column_info.table_schema = discovered.table_schema',
-        'and column_info.table_name = discovered.table_name',
-        'left join relation_constraints constraint_info',
-        'on constraint_info.table_catalog = column_info.table_catalog',
-        'and constraint_info.table_schema = column_info.table_schema',
-        'and constraint_info.table_name = column_info.table_name',
-        'and column_info.column_name = any(constraint_info.column_names)',
-        'group by column_info.table_catalog, column_info.table_schema, column_info.table_name,',
-        'column_info.ordinal_position, column_info.column_name, column_info.data_type, column_info.is_nullable',
-        'order by column_info.table_catalog, column_info.table_schema, column_info.table_name,',
-        'column_info.ordinal_position',
-      ].join(' ')
-    );
-    return columnResult.rows;
-  } catch (error) {
-    if (isPostgresPermissionError(error)) {
-      return [];
-    }
-    throw error;
-  }
-}
-
 async function toPostgresSourceObject(
   client: Pick<Client, 'query'>,
   row: PostgresTableDiscoveryRow,
@@ -768,6 +719,7 @@ async function toPostgresSourceObject(
   return {
     objectId: buildRelationalSourceObjectId(locator),
     displayName: row.table_name,
+    ...(row.relation_comment?.trim() ? { comment: row.relation_comment } : {}),
     locator,
     metricEvidence,
     ...(fallbackColumns.length > 0 ? { columns: [...fallbackColumns] } : {}),
@@ -907,6 +859,7 @@ function groupPostgresColumnsByTable(
       name: row.column_name,
       type: row.data_type,
       nullable: row.is_nullable === 'YES',
+      ...(row.column_comment?.trim() ? { comment: row.column_comment } : {}),
     });
     columnsByTable.set(key, columns);
   }
