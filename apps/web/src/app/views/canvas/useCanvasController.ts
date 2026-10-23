@@ -146,7 +146,7 @@ export function useCanvasController() {
     workspaceNodeIds: executionScope.workspaceNodeIds,
     flushDraftForExecution: authoringRuntime.flushDraftForExecution,
     canPlan: runtimePolicy.commands.canPlan,
-    canRun: runtimePolicy.commands.canRun,
+    runAdmission: runtimePolicy.commands.runAdmission,
     sessionContext,
     executionEnvironmentId: draftReadModel?.record?.draft.canvas.environmentId,
     shellFeedback,

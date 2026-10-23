@@ -9,7 +9,6 @@ import { executeCanvasRunStartAction } from './canvasRunStartAction';
 
 type UseCanvasRunStartHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
-  | 'canRun'
   | 'bottomDrawerVisible'
   | 'currentPlan'
   | 'onRunStarted'
@@ -19,6 +18,7 @@ type UseCanvasRunStartHandlerArgs = Pick<
   | 'shellFeedback'
   | 'toggleBottomDrawer'
 > & {
+  canRun: boolean;
   executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
   isCurrentPlanStale: boolean;

@@ -60,7 +60,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
   {
     name: 'keeps startRun unavailable when route permissions block run execution',
     canRun: false,
-    expectedSummary: canvasViewCopy.planStatusRunUnavailableMessage,
+    expectedSummary: canvasViewCopy.planStatusRunAuthorizationDeniedMessage,
     expectedError: canvasViewCopy.runPermissionDeniedMessage,
     expectedModalState: 'false',
     expectedBlocker: 'authorization_denied',

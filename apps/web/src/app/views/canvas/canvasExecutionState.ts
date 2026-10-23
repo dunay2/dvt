@@ -35,7 +35,7 @@ import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAutho
 
 type DeriveCanvasExecutionStateArgs = {
   graphDraftCanvasId?: string | null;
-  canRun: boolean;
+  runAdmission: import('./canvasRuntimePolicy').CanvasRunAdmission;
   executionStrategy: CanvasExecutionStrategy | null;
   currentPlan: PlanViewModel | null;
   lastPlannedDraftSignature: string | null;
@@ -53,6 +53,7 @@ export type CanvasExecutionState = {
   hasPersistedPlanForRun: boolean;
   persistedPreviewIdentityMismatch: boolean;
   isCurrentPlanStale: boolean;
+  isPreviewOutcomeStale: boolean;
   executableGraphFailureMessage: string | null;
   canPlanGraph: boolean;
   canStartRun: boolean;
@@ -74,12 +75,13 @@ function forceReadinessBlocker(
     blockers,
     status: 'blocked',
     summary,
+    diagnostic: { blocker, message: summary },
   };
 }
 
 export function deriveCanvasExecutionState({
   graphDraftCanvasId,
-  canRun,
+  runAdmission,
   executionStrategy,
   currentPlan,
   lastPlannedDraftSignature,
@@ -91,8 +93,6 @@ export function deriveCanvasExecutionState({
   executionScope,
   applicationLanguage,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
-  const previewOutcomeProjection =
-    latestPreviewOutcome == null ? null : projectCanvasPreviewOutcome(latestPreviewOutcome);
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
   const persistedPlanIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
   const transformationValidation = validateTransformationGraph({
@@ -130,6 +130,12 @@ export function deriveCanvasExecutionState({
       : dvtPreviewProjection?.ok === true
         ? dvtPreviewProjection.draftSignature
         : transformationValidation.draftSignature;
+  const isPreviewOutcomeStale =
+    lastPlannedDraftSignature != null && lastPlannedDraftSignature !== activeDraftSignature;
+  const previewOutcomeProjection =
+    latestPreviewOutcome == null || isPreviewOutcomeStale
+      ? null
+      : projectCanvasPreviewOutcome(latestPreviewOutcome);
   const isExecutableGraphReady = usesDbtPlanner
     ? dbtPlannerProjection?.ok === true
     : usesProtectedDvtPreview
@@ -155,7 +161,7 @@ export function deriveCanvasExecutionState({
     (dbtProjectFilePreviewIdentityMismatch ||
       (lastPlannedDraftSignature != null && lastPlannedDraftSignature !== activeDraftSignature));
   const canStartRun =
-    canRun &&
+    runAdmission.allowed &&
     executionStrategy != null &&
     executionStrategy.kind !== 'not_executable' &&
     currentPlan != null &&
@@ -178,7 +184,7 @@ export function deriveCanvasExecutionState({
             )
       : null;
   const planRunReadinessSource = observePlanRunReadiness({
-    canRun,
+    runAdmission,
     currentPlan,
     isCurrentPlanStale,
     persistedPreviewIdentityMismatch,
@@ -211,6 +217,7 @@ export function deriveCanvasExecutionState({
     hasPersistedPlanForRun,
     persistedPreviewIdentityMismatch,
     isCurrentPlanStale,
+    isPreviewOutcomeStale,
     executableGraphFailureMessage,
     canPlanGraph,
     canStartRun,

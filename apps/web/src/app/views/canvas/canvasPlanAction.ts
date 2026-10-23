@@ -16,6 +16,7 @@ import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionS
 import { canvasViewCopy, formatCanvasCopyTemplate } from './copy';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { publishGraphDbtWorkspaceArtifacts } from './dbtGraphWorkspaceArtifactPublisher';
+import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
 
 export type CanvasPlanActionResult =
   | { ok: false; kind?: 'failure'; message: string }
@@ -76,6 +77,7 @@ export async function executeCanvasPlanAction({
   workspaceFilesQuery,
   graphDbtWorkspaceArtifactPublicationCommand,
   graphDbtModelCompilationQuery,
+  flushDraftForExecution,
 }: {
   graphDraftCanvasId: string | null;
   canPlan: boolean;
@@ -89,6 +91,7 @@ export async function executeCanvasPlanAction({
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
@@ -102,6 +105,13 @@ export async function executeCanvasPlanAction({
   }
 
   try {
+    const flushedDraft = await flushDraftForExecution?.();
+    if (flushedDraft?.ok === false) return { ok: false, message: flushedDraft.message };
+    if (flushedDraft?.ok === true) {
+      canonicalNodes = flushedDraft.canonicalNodes;
+      canonicalEdges = flushedDraft.canonicalEdges;
+      workspaceNodeIds = flushedDraft.workspaceNodeIds;
+    }
     if (executionStrategy.kind === 'dvt_protected_preview') {
       if (graphDraftCanvasId == null) {
         return {

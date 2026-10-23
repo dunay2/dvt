@@ -63,12 +63,32 @@ export type CanvasRuntimeExecutionPolicy =
       kind: 'blocked';
     };
 
+export type CanvasRunBlocker =
+  'authorization_denied' | 'draft_saving' | 'draft_unavailable' | 'capability_mismatch';
+export type CanvasRunAdmission =
+  Readonly<{ allowed: true }> | Readonly<{ allowed: false; reason: CanvasRunBlocker }>;
+
+export function resolveCanvasRunAdmission(
+  args: Readonly<{
+    permissionGranted: boolean;
+    executionAvailable: boolean;
+    draftBarrier: 'saving' | 'unavailable' | null;
+  }>
+): CanvasRunAdmission {
+  if (!args.permissionGranted) return { allowed: false, reason: 'authorization_denied' };
+  if (!args.executionAvailable) return { allowed: false, reason: 'capability_mismatch' };
+  if (args.draftBarrier === 'saving') return { allowed: false, reason: 'draft_saving' };
+  if (args.draftBarrier === 'unavailable') return { allowed: false, reason: 'draft_unavailable' };
+  return { allowed: true };
+}
+
 export type CanvasRuntimeCommandPolicy = {
   canMutateGraph: boolean;
   canEditInspectorNode: boolean;
   canOpenSourceImport: boolean;
   canPlan: boolean;
   canRun: boolean;
+  runAdmission: CanvasRunAdmission;
   canReloadLatestDraft: boolean;
 };
 
@@ -90,7 +110,8 @@ export type ResolveCanvasRuntimePolicyArgs = {
   canMutateGraph: boolean;
   canOpenSourceImport: boolean;
   canPlan: boolean;
-  canRun: boolean;
+  runPermissionGranted: boolean;
+  draftExecutionBarrier: 'saving' | 'unavailable' | null;
   canReloadLatestDraft: boolean;
 };
 
@@ -201,13 +222,19 @@ function resolveRuntimeCommandPolicy(
   const hasReadyDocument = args.activeRuntime.kind === 'ready';
   const canMutateReadyGraph = hasReadyDocument && args.canMutateGraph;
   const canExecute = hasReadyDocument && execution.kind === 'executable';
+  const runAdmission = resolveCanvasRunAdmission({
+    permissionGranted: args.runPermissionGranted,
+    executionAvailable: canExecute,
+    draftBarrier: args.draftExecutionBarrier,
+  });
 
   return {
     canMutateGraph: canMutateReadyGraph,
     canEditInspectorNode: canMutateReadyGraph,
     canOpenSourceImport: canMutateReadyGraph && args.canOpenSourceImport,
     canPlan: canExecute && args.canPlan,
-    canRun: canExecute && args.canRun,
+    canRun: runAdmission.allowed,
+    runAdmission,
     canReloadLatestDraft: args.canReloadLatestDraft,
   };
 }

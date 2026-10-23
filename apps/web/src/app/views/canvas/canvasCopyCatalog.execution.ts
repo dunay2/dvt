@@ -444,9 +444,25 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.run.startedMessage',
     fallback: 'Run started',
   },
-  planStatusRunUnavailableMessage: {
-    key: 'canvas.planStatus.runUnavailableMessage',
-    fallback: 'Run start is unavailable in this context.',
+  planStatusRunAuthorizationDeniedMessage: {
+    key: 'canvas.planStatus.runAuthorizationDeniedMessage',
+    fallback: 'You do not have permission to execute in this workspace.',
+  },
+  planStatusDraftSavingMessage: {
+    key: 'canvas.planStatus.draftSavingMessage',
+    fallback: 'Waiting for changes to finish saving before execution.',
+  },
+  planStatusDraftUnavailableMessage: {
+    key: 'canvas.planStatus.draftUnavailableMessage',
+    fallback: 'Resolve the Canvas draft state before execution.',
+  },
+  operationalDrawerDraftSavingBlocker: {
+    key: 'canvas.operationalDrawer.draftSavingBlocker',
+    fallback: 'Saving changes',
+  },
+  operationalDrawerDraftUnavailableBlocker: {
+    key: 'canvas.operationalDrawer.draftUnavailableBlocker',
+    fallback: 'Draft unavailable',
   },
   planStatusPreviewRequiredMessage: {
     key: 'canvas.planStatus.previewRequiredMessage',

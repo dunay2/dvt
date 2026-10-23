@@ -1,16 +1,16 @@
 /** Owned concern: coordinate Canvas plan and run action handlers. */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { asNonBlankString } from '@dvt/contracts';
 
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
 import type {
+  CanvasPreviewAttempt,
   UseCanvasExecutionActionsParams,
   UseCanvasExecutionActionsResult,
 } from './canvasExecutionActions.types';
 import { useCanvasPlanActionHandler } from './useCanvasPlanActionHandler';
 import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
-import type { PlanPreviewOutcome } from '../../ports/plans';
 import { doesPreviewOutcomeOwnPlan } from './canvasPreviewOutcomeProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasPreviewExecutionStrategy } from './canvasPreviewExecutionStrategy';
@@ -48,17 +48,6 @@ function createCanvasExecutionSessionContext(args: {
   };
 }
 
-function useCanvasExecutionDraftSignatureSync(args: {
-  currentPlan: UseCanvasExecutionActionsParams['currentPlan'];
-  setLastPlannedDraftSignature: (signature: string | null) => void;
-}): void {
-  useEffect(() => {
-    if (args.currentPlan == null) {
-      args.setLastPlannedDraftSignature(null);
-    }
-  }, [args.currentPlan, args.setLastPlannedDraftSignature]);
-}
-
 export function useCanvasExecutionActions({
   graphDraftCanvasId,
   plansService,
@@ -73,7 +62,7 @@ export function useCanvasExecutionActions({
   workspaceNodeIds,
   flushDraftForExecution,
   canPlan,
-  canRun,
+  runAdmission,
   sessionContext,
   executionEnvironmentId,
   shellFeedback,
@@ -86,8 +75,11 @@ export function useCanvasExecutionActions({
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const [planModalOpen, setPlanModalOpen] = useState(false);
-  const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
-  const [latestPreviewOutcome, setLatestPreviewOutcome] = useState<PlanPreviewOutcome | null>(null);
+  const [previewAttempt, setPreviewAttempt] = useState<CanvasPreviewAttempt | null>(null);
+  const latestPreviewOutcome =
+    previewAttempt != null && doesPreviewOutcomeOwnPlan(previewAttempt.outcome, currentPlan)
+      ? previewAttempt.outcome
+      : null;
   const executionSessionContext = createCanvasExecutionSessionContext({
     sessionContext,
     executionEnvironmentId,
@@ -103,10 +95,10 @@ export function useCanvasExecutionActions({
   });
   const executionState = deriveCanvasExecutionState({
     graphDraftCanvasId,
-    canRun,
+    runAdmission,
     executionStrategy: resolvedExecutionStrategy,
     currentPlan,
-    lastPlannedDraftSignature,
+    lastPlannedDraftSignature: previewAttempt?.draftSignature ?? null,
     canonicalNodes,
     canonicalEdges,
     selectionIntent,
@@ -125,17 +117,6 @@ export function useCanvasExecutionActions({
     planStatusSummary,
   } = executionState;
 
-  useCanvasExecutionDraftSignatureSync({
-    currentPlan,
-    setLastPlannedDraftSignature,
-  });
-
-  useEffect(() => {
-    setLatestPreviewOutcome((outcome) =>
-      outcome == null || doesPreviewOutcomeOwnPlan(outcome, currentPlan) ? outcome : null
-    );
-  }, [currentPlan]);
-
   const planAction = useCanvasPlanActionHandler({
     graphDraftCanvasId,
     canPlan,
@@ -152,14 +133,13 @@ export function useCanvasExecutionActions({
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,
     setCurrentPlan,
-    setLastPlannedDraftSignature,
     setPlanModalOpen,
-    setLatestPreviewOutcome,
+    setPreviewAttempt,
   });
 
   const handleStartRun = useCanvasRunStartHandler({
     canRun:
-      canRun &&
+      runAdmission.allowed &&
       resolvedExecutionStrategy != null &&
       resolvedExecutionStrategy.kind !== 'not_executable',
     bottomDrawerVisible,
@@ -184,7 +164,7 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     planRunReadiness,
     planStatusSummary,
-    latestPreviewOutcome,
+    latestPreviewOutcome: executionState.isPreviewOutcomeStale ? null : latestPreviewOutcome,
     handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,
   };

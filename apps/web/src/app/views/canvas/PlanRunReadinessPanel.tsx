@@ -5,19 +5,15 @@ import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
-import type { PlanRunReadinessBlocker, PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import { canvasViewCopy } from './copy';
+import {
+  resolvePlanRunReadinessBlockerLabel,
+  type PlanRunReadinessReadModel,
+} from './canvasPlanReadiness';
 
 type PlanRunReadinessPanelProps = {
   readonly readiness: PlanRunReadinessReadModel;
   readonly density?: 'compact' | 'full';
-};
-
-const blockerLabels: Record<PlanRunReadinessBlocker, string> = {
-  adapter_degraded: 'Adapter degraded',
-  authorization_denied: 'Authorization denied',
-  backpressure: 'Backpressure',
-  capability_mismatch: 'Capability mismatch',
-  plan_integrity: 'Execution Preview integrity',
 };
 
 export function PlanRunReadinessPanel({
@@ -83,7 +79,7 @@ export function PlanRunReadinessPanel({
                 variant="outline"
                 className="gap-1 border-amber-400/40 px-2 py-0 text-[0.68rem] text-amber-50"
               >
-                <span>{blockerLabels[blocker]}</span>
+                <span>{resolvePlanRunReadinessBlockerLabel(blocker, canvasViewCopy)}</span>
                 <code className="font-mono text-[0.64rem] text-amber-100/80">{blocker}</code>
               </Badge>
             </li>

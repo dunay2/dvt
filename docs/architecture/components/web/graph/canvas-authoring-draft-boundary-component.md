@@ -2,7 +2,7 @@
 title: Canvas Authoring Draft Boundary Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-08-02
+last_reviewed: 2026-10-23
 planning_type: architecture
 task_id: TF-E2-A
 ---
@@ -11,23 +11,39 @@ task_id: TF-E2-A
 
 ## Purpose
 
-This component defines the target web-side boundary for `TF-E2-A`.
+Canvas persists `WorkspaceGraphAuthoringDraft` through the existing protected
+read/save port. `CanvasAuthoringDraftReadModel` preserves its revision,
+capability, audit and semantic graph; `CanvasDraftRepository` confirms save
+receipts against the canonical remote revision. Renderer projections remain
+disposable and are not the save payload.
 
-Canvas must use `WorkspaceGraphAuthoringDraft` as editable authoring truth. It
-must not treat route-local `WorkspaceGraphDraft` projections or
-compile-ready execution artifacts as the active save model.
-
-The protected contract and API already persist `WorkspaceGraphAuthoringDraft`.
-The remaining web drift is the active Canvas save path still passing through a
-route-local `WorkspaceGraphDraft` DTO that drops semantic node and edge records
-and then reconstructs an authoring draft from projections.
-
-The hard cut removes that route-local DTO entirely from `apps/web` authoring
-state. After this slice, `WorkspaceGraphDraft` remains only the protected
-contract/envelope name in `@dvt/contracts` and endpoint-facing authoring port
-names. Canvas presentation state must use Canvas-owned names.
+Planning DB owns the current component/file/responsibility associations. In the
+save/readiness slice, persistence scheduling, Preview coordination and execution
+readiness have separate owners. The Canvas controller composes them; the API
+continues to own protected publication admission. Saving a disposition and
+executing it are distinct operations.
 
 ## Owned Concern
+
+### Persistence And Execution Readiness
+
+Selecting a native model disposition updates the existing authoring aggregate and
+uses `SaveWorkspaceGraphDraft`. Saving `view`, `table` or `ephemeral` does not
+assert that the current execution profile admits it or that its destination is
+complete. Preview/Run rejection must not be presented as failure to save.
+
+Run readiness preserves the reason supplied by its owner: actual permission
+denial, pending draft persistence, unavailable/recovering draft, and Preview
+validity are distinct blockers. The operational drawer renders each blocker's
+message, not the same global summary for every row. A Preview rejection belongs
+to the exact draft signature that produced it and expires when that identity
+changes, including when no PlanRef was accepted.
+
+Autosave scheduling follows semantic draft identity and revision. Equivalent
+projection objects from unrelated renders must not postpone an authorized save
+indefinitely. Genuine edits restart the bounded debounce; a sent save still
+acknowledges only its own snapshot, and failed/scope-changed/unmounted attempts
+retain the existing guarded recovery behavior.
 
 Owned concern: keep Canvas authoring commands, protected draft reads, protected
 draft writes, and React Flow projections aligned with the
@@ -58,10 +74,10 @@ preserved:
 | Renderer projection     | `CanvasViewportGraphModel` projection                 | React Flow nodes and edges are derived and disposable.                        |
 | Compile projection      | `ExecutableSubgraph` read model                       | Preview/run derives compile input only from an explicit executable selection. |
 
-The current code is not yet DDD-complete because `WorkspaceGraphDraft`,
-`WorkspaceGraphDraftRecord`, and `WorkspaceGraphDraftSemanticGraph` still act as
-route-local data carriers. Those names must disappear from Canvas-owned state;
-only protected contract/port names may keep `WorkspaceGraphDraft`.
+Canvas-owned state uses `CanvasAuthoringDraftRecord` and
+`CanvasAuthoringDraftReadModel`. The former route-local projection DTO names are
+not current architecture; protected contract and port names still use
+`WorkspaceGraphDraft` intentionally.
 
 ## Governing Sources
 
@@ -74,7 +90,7 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
 - [Canonical API architecture authority](../../api/index.md)
 - [TF-E2-A authoring draft hard cut implementation plan](../../../../planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md)
 
-## Target Public API
+## Public API
 
 | API                                                       | Owner                | Behavior                                                                                                                   |
 | --------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -82,10 +98,8 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
 | `IWorkspaceGraphDraftAuthoringPort.saveGraphDraft(input)` | web composition port | Saves `WorkspaceGraphAuthoringDraft` with revision and idempotency key.                                                    |
 | `CanvasAuthoringDraftRecord`                              | this component       | Canvas-owned record containing revision, saved time, and `WorkspaceGraphAuthoringDraft`.                                   |
 | `CanvasAuthoringDraftReadModel`                           | this component       | Route-facing read model that keeps authoring draft, semantic graph, capability, audit, format, and revision data together. |
-| `CanvasAuthoringDraftSaveCommand`                         | this component       | Route command object for saving `WorkspaceGraphAuthoringDraft` without a projection detour.                                |
-| `CanvasAuthoringSemanticGraph`                            | this component       | Canvas-owned semantic projection derived from the authoring aggregate.                                                     |
-| `projectCanvasAuthoringDraftToViewportGraph()`            | this component       | Projects authoring truth into React Flow nodes and edges under Canvas-owned types.                                         |
-| `projectCanvasAuthoringDraftToCompileInput()`             | preview/run boundary | Derives compile-only input from selected executable subgraph, not from the entire authoring draft.                         |
+| `SaveCanvasDraftInput`                                    | draft repository     | Saves the aggregate with revision and idempotency identity.                                                                |
+| `CanvasDraftRepository`                                   | draft persistence    | Reads protected state and confirms saved/conflicting remote revisions.                                                     |
 
 ## Invariants
 
@@ -166,53 +180,30 @@ The semantic plan and physical provenance remain equivalent; the original node
 and its identities remain unchanged. Negative tests retain missing-source,
 read-only and duplicate-node admission rejection through the same aggregate.
 
-## Current-State Drift
+## Current Boundary
 
 ```mermaid
 flowchart LR
-  Read["IWorkspaceGraphDraftAuthoringPort.readGraphDraft"]
-  Projection["projectWorkspaceGraphAuthoringDraft"]
-  LocalDto["apps/web ports/workspace WorkspaceGraphDraft"]
-  ServiceBarrel["workspaceService.ts re-export"]
-  Builder["canvasDraftAuthoring.ts rebuilds authoring draft"]
-  Record["WorkspaceGraphDraftRecord in Canvas session/cache"]
-  Save["IWorkspaceGraphDraftAuthoringPort.saveGraphDraft"]
-
-  Read --> Projection
-  Projection --> LocalDto
-  LocalDto --> ServiceBarrel
-  LocalDto --> Builder
-  LocalDto --> Record
-  Builder --> Save
+  Read[GetWorkspaceGraphDraft] --> Model[CanvasAuthoringDraftReadModel]
+  Model --> Aggregate[WorkspaceGraphAuthoringDraft]
+  Commands[WorkspaceGraphAuthoringCommand] --> Aggregate
+  Aggregate --> Save[SaveWorkspaceGraphDraft]
+  Aggregate --> Viewport[React Flow projection]
+  Save --> Flush[Exact acknowledged draft]
+  Flush --> Preview[PreviewPlan coordinator]
+  Permission[Actual Run permission] --> Admission[Typed Run admission]
+  Save --> Barrier[Saving or unavailable barrier]
+  Barrier --> Admission
+  Preview --> Attempt[Outcome and attempted draft signature]
+  Attempt --> Readiness[ObservePlanRunReadiness]
+  Admission --> Readiness
+  Readiness --> Presentation[Shared blocker messages and labels]
 ```
 
-The detour above is the remaining drift. It makes a projection look like the
-editable aggregate and forces Canvas to reconstruct semantic nodes and edges
-from side-channel canonical graph arrays.
-
-## Target Boundary
-
-```mermaid
-flowchart LR
-  Read["GetWorkspaceGraphDraft"]
-  Model["CanvasAuthoringDraftReadModel"]
-  Record["CanvasAuthoringDraftRecord"]
-  Commands["WorkspaceGraphAuthoringCommand"]
-  Aggregate["WorkspaceGraphAuthoringDraft"]
-  Save["SaveWorkspaceGraphDraft"]
-  Viewport["React Flow projection"]
-  Selection["ExecutionSelection"]
-  Compile["ExecutableSubgraph -> canonical Substrait plan"]
-
-  Read --> Model
-  Model --> Record
-  Record --> Aggregate
-  Commands --> Aggregate
-  Aggregate --> Save
-  Aggregate --> Viewport
-  Aggregate --> Selection
-  Selection --> Compile
-```
+The Preview application command owns validation and the pre-submit flush. Its
+React adapter handles cache invalidation, feedback and modal presentation. The
+attempt stores outcome and draft signature together; editing expires its visible
+diagnostic synchronously without discarding the stale-plan identity guard.
 
 ## Transitions
 
@@ -236,14 +227,8 @@ stateDiagram-v2
 ## Consumers
 
 - `apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts`
-- `apps/web/src/app/ports/workspace.ts` until route-local draft exports are
-  deleted
-- `apps/web/src/app/services/workspace/workspaceService.ts` until route-local
-  draft re-exports are deleted
 - `apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.api.ts`
 - `apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.mock.ts`
-- `apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts` until
-  projection ownership moves to Canvas-named projection types
 - `apps/web/src/app/views/canvas/canvasActiveGraphStrategy.test.ts`
 - `apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts`
 - `apps/web/src/app/views/canvas/canvasAuthoringProjection.architecture.test.ts`

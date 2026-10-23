@@ -40,7 +40,7 @@ export type UseCanvasExecutionActionsParams = {
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
-  canRun: boolean;
+  runAdmission: import('./canvasRuntimePolicy').CanvasRunAdmission;
   sessionContext: SessionContextPort;
   executionEnvironmentId?: WorkspaceScope['environmentId'];
   shellFeedback: ShellFeedbackPort;
@@ -65,5 +65,8 @@ export type UseCanvasExecutionActionsResult = {
   handleStartRun: () => Promise<void>;
 };
 
-export type SetLastPlannedDraftSignature = Dispatch<SetStateAction<string | null>>;
+export type CanvasPreviewAttempt = Readonly<{
+  draftSignature: string;
+  outcome: PlanPreviewOutcome;
+}>;
 export type SetPlanModalOpen = Dispatch<SetStateAction<boolean>>;

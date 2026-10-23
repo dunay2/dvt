@@ -118,6 +118,38 @@ function persistedPlan(): PlanViewModel {
 }
 
 describe('executeCanvasPlanAction protected DVT branch', () => {
+  it.each([true, false])(
+    'flushes only authorized requests and stops before Preview when saving fails: %s',
+    async (canPlan) => {
+      const previewPlan = vi.fn<IPlansPort['previewPlan']>();
+      const flushDraftForExecution = vi
+        .fn()
+        .mockResolvedValue({ ok: false, message: 'Draft conflict' });
+      const result = await executeCanvasPlanAction({
+        graphDraftCanvasId: 'canvas-main',
+        canPlan,
+        canonicalEdges: [lineage],
+        canonicalNodes: [source, transform],
+        executionStrategy: strategy,
+        plansService: { previewPlan, importPlan: vi.fn() },
+        selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
+        sessionContext: sessionContext(),
+        workspaceNodeIds: [source.id, transform.id],
+        flushDraftForExecution,
+        workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
+        graphDbtWorkspaceArtifactPublicationCommand:
+          {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+        graphDbtModelCompilationQuery: {} as IGraphDbtModelCompilationQueryPort,
+      });
+      expect(result).toEqual({
+        ok: false,
+        message: canPlan ? 'Draft conflict' : canvasViewCopy.planPermissionDeniedMessage,
+      });
+      expect(flushDraftForExecution).toHaveBeenCalledTimes(canPlan ? 1 : 0);
+      expect(previewPlan).not.toHaveBeenCalled();
+    }
+  );
+
   it('requests one upstream terminal Transform without browser graph semantics', async () => {
     const plan = persistedPlan();
     const previewPlan = vi.fn<IPlansPort['previewPlan']>().mockResolvedValue({
@@ -231,7 +263,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
   ])('ignores an outgoing edge with %s when resolving terminality', (_label, metadata) => {
     const state = deriveCanvasExecutionState({
       graphDraftCanvasId: 'canvas-main',
-      canRun: true,
+      runAdmission: { allowed: true },
       executionStrategy: strategy,
       currentPlan: null,
       lastPlannedDraftSignature: null,
@@ -258,7 +290,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
   it('enables Preview readiness for the exact protected terminal closure', () => {
     const state = deriveCanvasExecutionState({
       graphDraftCanvasId: 'canvas-main',
-      canRun: true,
+      runAdmission: { allowed: true },
       executionStrategy: strategy,
       currentPlan: null,
       lastPlannedDraftSignature: null,
@@ -274,16 +306,38 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     expect(state.executableGraphFailureMessage).toBeNull();
   });
 
+  it('expires a rejected Preview when the authored graph signature changes', () => {
+    const state = deriveCanvasExecutionState({
+      graphDraftCanvasId: 'canvas-main',
+      runAdmission: { allowed: true },
+      executionStrategy: strategy,
+      currentPlan: null,
+      lastPlannedDraftSignature: 'previous-draft',
+      canonicalNodes: [source, transform],
+      canonicalEdges: [lineage],
+      selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
+      workspaceNodeIds: [source.id, transform.id],
+      latestPreviewOutcome: {
+        kind: 'selection-rejected',
+        rejection: DVT_REJECTIONS.runDispositionUnsupported,
+      },
+    });
+    expect(state.isPreviewOutcomeStale).toBe(true);
+    expect(state.planRunReadiness.diagnostic?.message).not.toContain('Do not configure both');
+    expect(state.planStatusSummary).toBe('Preview required before running.');
+    expect(state.canStartRun).toBe(false);
+  });
+
   it.each([
     [
       'en-US',
       DVT_REJECTIONS.runDispositionUnsupported.cause,
-      'Use a table result, or an ephemeral model connected to one table Sink. Do not configure both destinations.',
+      'This result type can be saved, but execution currently supports a table result or an ephemeral model connected to one table Sink.',
     ],
     [
       'es-ES',
       DVT_REJECTIONS.runDispositionUnsupported.cause,
-      'Usa un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla. No configures ambos destinos.',
+      'Este tipo de resultado se puede guardar; la ejecución admite actualmente un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla.',
     ],
     [
       'es',
@@ -299,7 +353,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     };
     const state = deriveCanvasExecutionState({
       graphDraftCanvasId: 'canvas-main',
-      canRun: true,
+      runAdmission: { allowed: true },
       executionStrategy: strategy,
       currentPlan: null,
       lastPlannedDraftSignature: null,

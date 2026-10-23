@@ -97,8 +97,6 @@ export function useCanvasControllerRuntime(environment: CanvasEnvironment) {
       canMutateGraph: canMutateGraph && hasResolvedGraphDraftAuthority,
       canPlan:
         store.userPermissions.canPlan && !isDraftRecoveryBlocked && hasResolvedGraphDraftAuthority,
-      canRun:
-        store.userPermissions.canRun && !isDraftRecoveryBlocked && hasResolvedGraphDraftAuthority,
       canReloadLatestDraft: authoringRuntime.draftStatusState.showReloadAction,
     });
 
@@ -107,7 +105,11 @@ export function useCanvasControllerRuntime(environment: CanvasEnvironment) {
       canMutateGraph: draftAdmission.canMutateGraph,
       canOpenSourceImport: hasAuthorizedSourceImportContribution,
       canPlan: draftAdmission.canPlan,
-      canRun: draftAdmission.canRun,
+      runPermissionGranted: store.userPermissions.canRun,
+      draftExecutionBarrier:
+        !hasResolvedGraphDraftAuthority || isDraftRecoveryBlocked
+          ? 'unavailable'
+          : draftAdmission.draftExecutionBarrier,
       canReloadLatestDraft: draftAdmission.canReloadLatestDraft,
     });
   }, [

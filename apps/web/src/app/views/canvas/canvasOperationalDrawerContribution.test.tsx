@@ -85,6 +85,10 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         action: null,
       }),
     ]);
+    expect(contribution.problems.items.map((problem) => problem.message)).toEqual([
+      'Preview required before running.',
+      resolveCanvasViewCopy('en').planStatusBackpressureMessage,
+    ]);
     expect(contribution.runs).toMatchObject({
       activeRunId: null,
       canStartRun: false,

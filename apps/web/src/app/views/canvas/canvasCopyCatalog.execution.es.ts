@@ -134,7 +134,6 @@ export const canvasViewExecutionCopyEs = {
   planPreviewDecisionBoundedSelectionReason:
     'El alcance de ejecución seleccionado incluye solo una parte del grafo.',
   runStartedMessage: 'Run arrancado',
-  planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
   planStatusPreviewRequiredMessage: 'Se requiere un preview antes de arrancar.',
   planStatusPreviewNotAlignedMessage:
     'Execution Preview no esta alineado con la referencia de Execution Preview activa. Previsualiza la ejecucion otra vez antes de arrancar.',
@@ -194,6 +193,14 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerCapabilityMismatchBlocker: 'Capacidad incompatible',
   operationalDrawerAdapterDegradedBlocker: 'Adaptador degradado',
   operationalDrawerAuthorizationDeniedBlocker: 'Autorización denegada',
+  operationalDrawerDraftSavingBlocker: 'Guardando cambios',
+  operationalDrawerDraftUnavailableBlocker: 'Borrador no disponible',
+  planStatusRunAuthorizationDeniedMessage:
+    'No tienes permiso para ejecutar en este espacio de trabajo.',
+  planStatusDraftSavingMessage:
+    'Esperando a que termine el guardado de los cambios antes de ejecutar.',
+  planStatusDraftUnavailableMessage:
+    'Resuelve el estado del borrador del Canvas antes de ejecutar.',
   planStatusBackpressureMessage:
     'La admisión del runtime está temporalmente saturada. Reinténtalo cuando se recupere la capacidad.',
   planStatusAdapterDegradedMessage:

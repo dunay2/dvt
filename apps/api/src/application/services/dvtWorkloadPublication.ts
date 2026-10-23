@@ -32,6 +32,9 @@ export function resolveDvtWorkloadPublication(
   if (!Object.hasOwn(config, 'materialized') && !Object.hasOwn(config, 'resultTarget')) {
     return { ok: true, intent: null };
   }
+  if (config['materialized'] === 'ephemeral') {
+    return { ok: false, ...DVT_REJECTIONS.runSinkRequired };
+  }
   if (config['materialized'] !== 'table') {
     return { ok: false, ...DVT_REJECTIONS.runDispositionUnsupported };
   }
@@ -60,11 +63,13 @@ function resolveSinkPublication(
   transformConfig: unknown
 ): PublicationResolution {
   if (
-    !isRecord(transformConfig) ||
-    transformConfig['materialized'] !== 'ephemeral' ||
-    Object.hasOwn(transformConfig, 'resultTarget')
+    isRecord(transformConfig) &&
+    (transformConfig['materialized'] === 'table' || Object.hasOwn(transformConfig, 'resultTarget'))
   ) {
-    return { ok: false, ...DVT_REJECTIONS.runDispositionUnsupported };
+    return { ok: false, ...DVT_REJECTIONS.runPublicationConflict };
+  }
+  if (!isRecord(transformConfig) || transformConfig['materialized'] !== 'ephemeral') {
+    return { ok: false, ...DVT_REJECTIONS.runSinkTransformDispositionInvalid };
   }
   const sink = closure.sink!;
   const config = sink.metadata?.['config'];

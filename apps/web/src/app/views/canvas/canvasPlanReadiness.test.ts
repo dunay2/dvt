@@ -74,6 +74,20 @@ describe('canvasPlanReadiness', () => {
     expect(hasPersistedPreviewIdentityMismatch(plan)).toBe(true);
   });
 
+  it('keeps saving distinct from authorization and reports the pending draft', () => {
+    const readiness = observePlanRunReadiness({
+      runAdmission: { allowed: false, reason: 'draft_saving' },
+      currentPlan: null,
+      isCurrentPlanStale: false,
+      persistedPreviewIdentityMismatch: false,
+      hasPersistedPlanForRun: false,
+      locale: 'es',
+    });
+    expect(readiness.blockers).toEqual(['draft_saving', 'plan_integrity']);
+    expect(readiness.summary).toContain('guardado');
+    expect(readiness.blockers).not.toContain('authorization_denied');
+  });
+
   it('publishes a ready ObservePlanRunReadiness read model when run inputs are admitted', () => {
     const plan = {
       ...mockExecutionPlan,
@@ -94,7 +108,7 @@ describe('canvasPlanReadiness', () => {
 
     expect(
       observePlanRunReadiness({
-        canRun: true,
+        runAdmission: { allowed: true },
         currentPlan: plan,
         isCurrentPlanStale: false,
         persistedPreviewIdentityMismatch: false,
@@ -110,7 +124,7 @@ describe('canvasPlanReadiness', () => {
 
   it('resolves the readiness summary from the requested application language', () => {
     const args = {
-      canRun: true,
+      runAdmission: { allowed: true },
       currentPlan: null,
       isCurrentPlanStale: false,
       persistedPreviewIdentityMismatch: false,
@@ -130,13 +144,16 @@ describe('canvasPlanReadiness', () => {
     ['backpressure', { backpressure: true }],
     ['capability_mismatch', { capabilityMismatch: true }],
     ['adapter_degraded', { adapterDegraded: true }],
-    ['authorization_denied', { canRun: false }],
+    [
+      'authorization_denied',
+      { runAdmission: { allowed: false, reason: 'authorization_denied' } as const },
+    ],
   ] as const)(
     'keeps %s explicit in the ObservePlanRunReadiness read model',
     (expectedBlocker, overrides) => {
       expect(
         observePlanRunReadiness({
-          canRun: true,
+          runAdmission: { allowed: true },
           currentPlan: {
             ...mockExecutionPlan,
             preview: {
@@ -196,7 +213,7 @@ describe('canvasPlanReadiness', () => {
     };
 
     const executionState = deriveCanvasExecutionState({
-      canRun: true,
+      runAdmission: { allowed: true },
       executionStrategy: {
         kind: 'dbt_project_file_preview',
         previewProfile: 'planner-generic-v1',
@@ -258,7 +275,7 @@ describe('canvasPlanReadiness', () => {
 
   it('blocks Preview when an explicit dbt selection has no executable resources', () => {
     const executionState = deriveCanvasExecutionState({
-      canRun: true,
+      runAdmission: { allowed: true },
       executionStrategy: {
         kind: 'dbt_project_file_preview',
         previewProfile: 'planner-generic-v1',

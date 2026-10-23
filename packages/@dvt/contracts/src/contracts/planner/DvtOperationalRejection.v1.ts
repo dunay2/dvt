@@ -68,6 +68,18 @@ export const DVT_REJECTIONS = Object.freeze({
     'dvt_run_disposition_unsupported',
     'Configured Run requires a table result or an ephemeral Transform feeding one explicit table Sink.'
   ),
+  runSinkRequired: defineOperationalRejection(
+    'dvt_run_sink_required',
+    'An ephemeral Transform requires one explicit table Sink for Run.'
+  ),
+  runSinkTransformDispositionInvalid: defineOperationalRejection(
+    'dvt_run_sink_transform_disposition_invalid',
+    'A table Sink requires an ephemeral input Transform.'
+  ),
+  runPublicationConflict: defineOperationalRejection(
+    'dvt_run_publication_conflict',
+    'A Transform result and a Sink cannot both publish the same selected output.'
+  ),
   runTargetInvalid: defineOperationalRejection(
     'dvt_run_target_invalid',
     'Configured Run requires one valid PostgreSQL result target.'

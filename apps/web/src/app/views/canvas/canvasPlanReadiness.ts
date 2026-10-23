@@ -5,19 +5,18 @@
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRef } from '../../types/engine';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import type { CanvasViewCopy } from './canvasCopy.types';
+import type { CanvasRunAdmission, CanvasRunBlocker } from './canvasRuntimePolicy';
 
 export type PlanRunReadinessBlocker =
-  | 'plan_integrity'
-  | 'backpressure'
-  | 'capability_mismatch'
-  | 'adapter_degraded'
-  | 'authorization_denied';
+  'plan_integrity' | 'backpressure' | 'adapter_degraded' | CanvasRunBlocker;
 
 export type PlanRunReadinessReadModel = {
   readonly rail: 'ObservePlanRunReadiness';
   readonly status: 'ready' | 'blocked';
   readonly blockers: readonly PlanRunReadinessBlocker[];
   readonly summary: string;
+  readonly diagnostic?: Readonly<{ blocker: PlanRunReadinessBlocker; message: string }>;
 };
 
 export function resolvePlanRefForStartRun(plan: PlanViewModel): PlanRef | null {
@@ -52,8 +51,8 @@ export function hasPersistedPreviewIdentityMismatch(plan: PlanViewModel | null):
   return persistedPlanRecordId !== plan.planId || plan.planRef.planId !== persistedPlanRecordId;
 }
 
-export function buildPlanStatusSummary(args: {
-  canRun: boolean;
+type PlanRunReadinessArgs = {
+  runAdmission: CanvasRunAdmission;
   currentPlan: PlanViewModel | null;
   isCurrentPlanStale: boolean;
   persistedPreviewIdentityMismatch: boolean;
@@ -62,26 +61,66 @@ export function buildPlanStatusSummary(args: {
   capabilityMismatch?: boolean;
   adapterDegraded?: boolean;
   locale?: string;
-}): string {
-  return observePlanRunReadiness(args).summary;
+};
+
+export function resolvePlanRunReadinessBlockerLabel(
+  blocker: PlanRunReadinessBlocker,
+  copy: CanvasViewCopy
+): string {
+  switch (blocker) {
+    case 'plan_integrity':
+      return copy.operationalDrawerPlanIntegrityBlocker;
+    case 'backpressure':
+      return copy.operationalDrawerBackpressureBlocker;
+    case 'capability_mismatch':
+      return copy.operationalDrawerCapabilityMismatchBlocker;
+    case 'adapter_degraded':
+      return copy.operationalDrawerAdapterDegradedBlocker;
+    case 'authorization_denied':
+      return copy.operationalDrawerAuthorizationDeniedBlocker;
+    case 'draft_saving':
+      return copy.operationalDrawerDraftSavingBlocker;
+    case 'draft_unavailable':
+      return copy.operationalDrawerDraftUnavailableBlocker;
+  }
 }
 
-export function observePlanRunReadiness(args: {
-  canRun: boolean;
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-  persistedPreviewIdentityMismatch: boolean;
-  hasPersistedPlanForRun: boolean;
-  backpressure?: boolean;
-  capabilityMismatch?: boolean;
-  adapterDegraded?: boolean;
-  locale?: string;
-}): PlanRunReadinessReadModel {
-  const blockers: PlanRunReadinessBlocker[] = [];
+function resolvePreviewReadinessMessage(args: PlanRunReadinessArgs, copy: CanvasViewCopy): string {
+  if (args.currentPlan == null) return copy.planStatusPreviewRequiredMessage;
+  if (args.isCurrentPlanStale) return copy.runPreviewStaleMessage;
+  if (!args.currentPlan.planRef) return copy.runPlanRefUnavailableMessage;
+  if (args.persistedPreviewIdentityMismatch) return copy.planStatusPreviewNotAlignedMessage;
+  if (!args.hasPersistedPlanForRun) return copy.planStatusPreviewNotPersistedMessage;
+  return copy.planStatusPreviewReadyMessage;
+}
 
-  if (!args.canRun) {
-    blockers.push('authorization_denied');
+export function resolvePlanRunReadinessBlockerMessage(
+  readiness: PlanRunReadinessReadModel,
+  blocker: PlanRunReadinessBlocker,
+  copy: CanvasViewCopy
+): string {
+  if (readiness.diagnostic?.blocker === blocker) return readiness.diagnostic.message;
+  switch (blocker) {
+    case 'authorization_denied':
+      return copy.planStatusRunAuthorizationDeniedMessage;
+    case 'draft_saving':
+      return copy.planStatusDraftSavingMessage;
+    case 'draft_unavailable':
+      return copy.planStatusDraftUnavailableMessage;
+    case 'backpressure':
+      return copy.planStatusBackpressureMessage;
+    case 'capability_mismatch':
+      return copy.canvasExecutionUnavailableMessage;
+    case 'adapter_degraded':
+      return copy.planStatusAdapterDegradedMessage;
+    case 'plan_integrity':
+      return copy.planStatusPreviewRequiredMessage;
   }
+}
+
+export function observePlanRunReadiness(args: PlanRunReadinessArgs): PlanRunReadinessReadModel {
+  const blockers: PlanRunReadinessBlocker[] = [];
+  if (!args.runAdmission.allowed) blockers.push(args.runAdmission.reason);
   if (
     args.currentPlan == null ||
     args.isCurrentPlanStale ||
@@ -91,65 +130,36 @@ export function observePlanRunReadiness(args: {
   ) {
     blockers.push('plan_integrity');
   }
-  if (args.backpressure === true) {
-    blockers.push('backpressure');
+  for (const [active, blocker] of [
+    [args.backpressure, 'backpressure'],
+    [args.capabilityMismatch, 'capability_mismatch'],
+    [args.adapterDegraded, 'adapter_degraded'],
+  ] as const) {
+    if (active && !blockers.includes(blocker)) blockers.push(blocker);
   }
-  if (args.capabilityMismatch === true) {
-    blockers.push('capability_mismatch');
-  }
-  if (args.adapterDegraded === true) {
-    blockers.push('adapter_degraded');
-  }
-
-  return {
+  const copy = resolveCanvasViewCopy(args.locale);
+  const previewSummary = resolvePreviewReadinessMessage(args, copy);
+  const readiness: PlanRunReadinessReadModel = {
     blockers,
     rail: 'ObservePlanRunReadiness',
     status: blockers.length === 0 ? 'ready' : 'blocked',
-    summary: buildPlanRunReadinessSummary(args),
+    summary: previewSummary,
+    ...(blockers.includes('plan_integrity')
+      ? { diagnostic: { blocker: 'plan_integrity' as const, message: previewSummary } }
+      : {}),
   };
-}
-
-function buildPlanRunReadinessSummary(args: {
-  canRun: boolean;
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-  persistedPreviewIdentityMismatch: boolean;
-  hasPersistedPlanForRun: boolean;
-  backpressure?: boolean;
-  capabilityMismatch?: boolean;
-  adapterDegraded?: boolean;
-  locale?: string;
-}): string {
-  const copy = resolveCanvasViewCopy(args.locale);
-
-  if (args.backpressure === true) {
-    return copy.planStatusBackpressureMessage;
-  }
-  if (args.adapterDegraded === true) {
-    return copy.planStatusAdapterDegradedMessage;
-  }
-  if (args.capabilityMismatch === true) {
-    return copy.canvasExecutionUnavailableMessage;
-  }
-  if (!args.canRun) {
-    return copy.planStatusRunUnavailableMessage;
-  }
-  if (args.currentPlan == null) {
-    return copy.planStatusPreviewRequiredMessage;
-  }
-  if (args.isCurrentPlanStale) {
-    return copy.runPreviewStaleMessage;
-  }
-  if (!args.currentPlan.planRef) {
-    return copy.runPlanRefUnavailableMessage;
-  }
-  if (args.persistedPreviewIdentityMismatch) {
-    return copy.planStatusPreviewNotAlignedMessage;
-  }
-  if (!args.hasPersistedPlanForRun) {
-    return copy.planStatusPreviewNotPersistedMessage;
-  }
-  return copy.planStatusPreviewReadyMessage;
+  const primary = args.backpressure
+    ? 'backpressure'
+    : args.adapterDegraded
+      ? 'adapter_degraded'
+      : args.capabilityMismatch
+        ? 'capability_mismatch'
+        : !args.runAdmission.allowed
+          ? args.runAdmission.reason
+          : null;
+  return primary == null
+    ? readiness
+    : { ...readiness, summary: resolvePlanRunReadinessBlockerMessage(readiness, primary, copy) };
 }
 
 function hasPersistedPreviewRecord(plan: PlanViewModel | null): boolean {

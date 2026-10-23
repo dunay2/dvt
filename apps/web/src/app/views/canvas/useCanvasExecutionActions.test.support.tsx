@@ -33,6 +33,7 @@ type ExecutionActionsHookViewProps = Readonly<{
 }>;
 
 type ExecutionActionsHookCommonProps = Readonly<{
+  runAdmission: import('./canvasRuntimePolicy').CanvasRunAdmission;
   graphDraftCanvasId: string | null;
   plansService: IPlansPort;
   runsService: IRunsPort;
@@ -49,7 +50,6 @@ type ExecutionActionsHookCommonProps = Readonly<{
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
-  canRun: boolean;
   bottomDrawerVisible: boolean;
   setBottomDrawerHeight: (height: number) => void;
   toggleBottomDrawer: () => void;
@@ -232,7 +232,9 @@ function resolveCommonHookProps(
       ? {}
       : { flushDraftForExecution: args.flushDraftForExecution }),
     canPlan: args.canPlan,
-    canRun: args.canRun,
+    runAdmission: args.canRun
+      ? { allowed: true }
+      : { allowed: false, reason: 'authorization_denied' },
     bottomDrawerVisible: args.bottomDrawerVisible,
     setBottomDrawerHeight: args.setBottomDrawerHeight,
     toggleBottomDrawer: args.toggleBottomDrawer,

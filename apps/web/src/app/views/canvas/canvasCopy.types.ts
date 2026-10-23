@@ -342,7 +342,9 @@ export type CanvasViewCopy = {
   readonly planPreviewDecisionOutsideClosureReason: string;
   readonly planPreviewDecisionBoundedSelectionReason: string;
   readonly runStartedMessage: string;
-  readonly planStatusRunUnavailableMessage: string;
+  readonly planStatusRunAuthorizationDeniedMessage: string;
+  readonly planStatusDraftSavingMessage: string;
+  readonly planStatusDraftUnavailableMessage: string;
   readonly planStatusPreviewRequiredMessage: string;
   readonly planStatusPreviewNotAlignedMessage: string;
   readonly planStatusPreviewNotPersistedMessage: string;
@@ -394,6 +396,8 @@ export type CanvasViewCopy = {
   readonly operationalDrawerCapabilityMismatchBlocker: string;
   readonly operationalDrawerAdapterDegradedBlocker: string;
   readonly operationalDrawerAuthorizationDeniedBlocker: string;
+  readonly operationalDrawerDraftSavingBlocker: string;
+  readonly operationalDrawerDraftUnavailableBlocker: string;
   readonly planStatusBackpressureMessage: string;
   readonly planStatusAdapterDegradedMessage: string;
   readonly selectionRecoveryTitle: string;
