@@ -27,6 +27,30 @@ test('shared syntax facts select each semantic consumer regression once', () => 
     );
 });
 
+test('command changes select canonical catalog coverage once and unrelated product files do not', () => {
+  const suite = 'tools/ci/repository-command-catalog.test.mjs';
+  for (const files of [
+    ['scripts/lib/source-code-facts.cjs'],
+    ['scripts/lib/unclassified.cjs'],
+    ['package.json'],
+    ['tools/docs/check-filenames.ts'],
+    ['scripts/lib/source-code-facts.cjs', suite, 'tools/ci/repository-command-catalog.mjs'],
+  ]) {
+    assert.equal(
+      buildVerifyChangedPlan(files).filter(
+        (step) => step.command === 'node' && step.args.includes(suite)
+      ).length,
+      1
+    );
+  }
+  assert.equal(
+    buildVerifyChangedPlan(['apps/api/src/application/service.ts']).filter(
+      (step) => step.command === 'node' && step.args.includes(suite)
+    ).length,
+    0
+  );
+});
+
 test('an affected aggregate runs its included responsibility shard once', () => {
   for (const [aggregate, source, shard] of [
     [

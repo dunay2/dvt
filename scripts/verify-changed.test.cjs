@@ -7,6 +7,7 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const catalogTest = 'node --test tools/ci/repository-command-catalog.test.mjs';
 
 const {
   buildFocusedChangedTestPlan,
@@ -42,6 +43,7 @@ test('buildFocusedChangedTestPlan retains adjacent script tests without duplicat
   assert.deepEqual(labels, [
     'node --test scripts/git-local-changes.test.cjs',
     'node --test scripts/planning-db-query.test.cjs',
+    catalogTest,
   ]);
   assert.ok(!labels.includes('pnpm lint:md:changed'));
   assert.ok(!labels.includes('pnpm test:web:changed'));
@@ -68,6 +70,7 @@ test('buildFocusedChangedTestPlan validates changes to the changed-file lint gat
     'node --test scripts/web-code-duplication.test.cjs',
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
+    catalogTest,
   ]);
 });
 
@@ -83,7 +86,11 @@ test('runtime runner source and test changes select their isolated contract exac
     const contract = `scripts/${name}.test.cjs`;
     for (const files of [[source], [contract], [source, contract]]) {
       const plan = buildFocusedChangedTestPlan(files);
-      assert.deepEqual(plan.map(commandLabel), [`node --test ${contract}`], files.join(', '));
+      assert.deepEqual(
+        plan.map(commandLabel),
+        [`node --test ${contract}`, catalogTest],
+        files.join(', ')
+      );
       assert.equal(plan[0].kind, 'test');
     }
   }
@@ -105,7 +112,10 @@ test('Chromium diagnostic source and paired tests retain one focused Node obliga
     ],
   ]) {
     for (const files of [[source], [contract], [source, contract]]) {
-      assert.deepEqual(focusedLabelsFor(files), [`node --test ${contract}`]);
+      assert.deepEqual(focusedLabelsFor(files), [
+        `node --test ${contract}`,
+        ...(files.includes(contract) ? [catalogTest] : []),
+      ]);
     }
   }
 });
@@ -155,6 +165,7 @@ test('runtime runner contracts retain mixed Web and adjacent script obligations'
 test('unrelated script changes do not select runtime runner contracts', () => {
   assert.deepEqual(focusedLabelsFor(['scripts/ai-preflight.cjs']), [
     'node --test scripts/ai-preflight.test.cjs',
+    catalogTest,
   ]);
 });
 
@@ -166,11 +177,12 @@ test('source drift and dashboard changes select the shared query contract once',
   ];
   const expected = 'node --test scripts/planning-db-query.test.cjs';
   for (const changed of [...files.map((file) => [file]), files]) {
-    assert.deepEqual(focusedLabelsFor(changed), [expected], changed.join(', '));
+    assert.deepEqual(focusedLabelsFor(changed), [expected, catalogTest], changed.join(', '));
   }
   assert.deepEqual(focusedLabelsFor([...files, 'scripts/planning-db-integrity-check.cjs']), [
     'node --test scripts/planning-db-integrity-check.test.cjs',
     expected,
+    catalogTest,
   ]);
 });
 
@@ -457,6 +469,7 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'node --test scripts/web-code-duplication.test.cjs',
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
+    catalogTest,
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
     'node --test scripts/verify-prepush.test.cjs',
@@ -469,6 +482,7 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'node --test scripts/web-code-duplication.test.cjs',
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
+    catalogTest,
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
     'node --test scripts/verify-prepush.test.cjs',
@@ -621,7 +635,7 @@ test('main runs focused tests from the exact committed diff without writing a lo
   });
 
   assert.equal(status, 0);
-  assert.deepEqual(calls, ['node --test scripts/planning-db-query.test.cjs']);
+  assert.deepEqual(calls, ['node --test scripts/planning-db-query.test.cjs', catalogTest]);
   assert.deepEqual(stamps, []);
 });
 

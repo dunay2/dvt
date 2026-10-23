@@ -185,6 +185,12 @@ selects comparable nonempty bodies. Source comments and strings cannot invent
 symbols. This does not claim that syntactically different code has different
 responsibilities or that matching bodies necessarily justify a refactor.
 
+The existing repository command catalog classifies the responsibility validator
+as documentation governance and shared syntax facts as CI tooling. Its coverage
+test runs once for changes to any command file recognized by the catalog's own
+path predicate, or to the package command declarations. Unknown tools still fail
+closed; this introduces neither a second classifier nor a blanket helper rule.
+
 Feature metadata updates preserve omitted fields, but explicit replacement of
 the current manifest must replace obsolete collections rather than union them
 back into existence. Replacement requires an expected revision and retains the

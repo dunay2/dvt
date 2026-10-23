@@ -11,6 +11,7 @@ const { spawnSync } = require('node:child_process');
 const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
 const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
+const { isRepositoryCommandFile } = require('../tools/ci/repository-command-catalog.mjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
@@ -340,12 +341,24 @@ function ciToolingTestPathFor(filePath) {
 }
 
 function ciToolingTestSteps(changedFiles) {
-  return changedFiles
+  const plan = changedFiles
     .map(ciToolingTestPathFor)
     .filter((testPath) => testPath !== null)
     .map((testPath) =>
       testStep(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
     );
+  if (changedFiles.some((file) => file === 'package.json' || isRepositoryCommandFile(file))) {
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-repository-command-catalog',
+        'node',
+        '--test',
+        'tools/ci/repository-command-catalog.test.mjs'
+      )
+    );
+  }
+  return plan;
 }
 
 function documentationPublicationTestSteps(changedFiles) {
