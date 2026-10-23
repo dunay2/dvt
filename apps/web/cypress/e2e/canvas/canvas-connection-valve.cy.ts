@@ -46,9 +46,17 @@ describe('Canvas connection valve', () => {
         },
       })
     );
-    cy.viewport(1600, 900);
+    cy.viewport(1100, 700);
 
     visitCanvas(1);
+    cy.get('.react-flow__node').should(($nodes) => {
+      expect($nodes).to.have.length(3);
+      for (const node of $nodes.toArray()) {
+        expect(node.ownerDocument.defaultView!.getComputedStyle(node).visibility).to.equal(
+          'visible'
+        );
+      }
+    });
     cy.get('.react-flow__controls-fitview').click();
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
     cy.get(`${edge} .react-flow__edge-path`)
@@ -60,7 +68,11 @@ describe('Canvas connection valve', () => {
       .should('have.attr', 'refX', '8')
       .and('have.attr', 'markerWidth', '8')
       .and('have.attr', 'markerHeight', '8');
-    cy.get('.react-flow').screenshot('canvas-rounded-dependency', { overwrite: true });
+    cy.screenshot('canvas-rounded-dependency', {
+      capture: 'viewport',
+      scale: true,
+      overwrite: true,
+    });
     cy.get(closedGate).should('not.exist');
     toggleGate();
     cy.get(closedGate).should('exist');
