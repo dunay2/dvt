@@ -2,7 +2,7 @@
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { SourceColumnFacts } from './sourceColumnFacts';
 import type { SourceColumnsCopy } from './sourceColumnsCopy';
-import { SourceColumnBadges, SourceColumnSummary } from './SourceColumnRow';
+import { SourceColumnBadges } from './SourceColumnRow';
 import styles from './SourceColumns.module.css';
 
 export function SourceColumnDetail({
@@ -53,7 +53,6 @@ export function SourceColumnDetail({
           <header className={styles.detailHeading}>
             <div className={styles.rowIdentity}>
               <h3>{facts.column.name}</h3>
-              <SourceColumnSummary facts={facts} copy={copy} />
             </div>
             <SourceColumnBadges facts={facts} copy={copy} />
           </header>

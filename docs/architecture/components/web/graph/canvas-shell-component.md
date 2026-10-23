@@ -476,6 +476,21 @@ sequenceDiagram
 
 No backend command/query rail changes are introduced by this component.
 
+### Source Column Inspection Density
+
+The existing contextual surface also presents `SourceColumnFacts` through passive
+column rows and a drill-in detail. Rows retain a minimum 44 px target and two
+readable lines, with reduced padding and a compact type cue. Detail height follows
+its content: navigation appears directly after the facts rather than below an
+artificial minimum-height area.
+
+The detail names the column once and renders physical type, nullability and
+constraint in one labelled definition list. A second summary does not repeat type
+or nullability. Unknown nullability remains unknown, and long physical types and
+column names remain fully readable in detail. The existing facts projection,
+filtered navigation, focus restoration, transfer and local ordering own their
+semantics; density changes do not issue provider requests or persist a draft.
+
 ### Source Catalogue Presentation
 
 The existing `RenderCanvasContextualGraphSurface` query presents registered

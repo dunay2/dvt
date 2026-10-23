@@ -156,6 +156,29 @@ describe('SourceColumnsPanel', () => {
     expect(container.textContent).not.toContain('unsupported-database-comment');
   });
 
+  it.each([false, true, undefined])(
+    'shows physical facts once in detail, with nullable=%s',
+    (nullable) => {
+      const type = 'numeric(38,12)';
+      render({
+        ...sourceNode,
+        metadata: { ...sourceNode.metadata, columns: [{ name: 'event_id', type, nullable }] },
+      });
+      act(() =>
+        container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!.click()
+      );
+      const detail = container.querySelector('[data-slot="source-column-detail"]')!;
+      expect(detail.querySelector('[data-slot="source-column-summary"]')).toBeNull();
+      expect(Array.from(detail.querySelectorAll('dl dd'), (value) => value.textContent)).toEqual([
+        type,
+        nullable == null ? 'Not available' : nullable ? 'Nullable' : 'Not null',
+        'Primary key',
+      ]);
+      expect(detail.querySelector('h3')?.textContent).toBe('event_id');
+      expect(detail.querySelectorAll('[data-slot="source-column-badge-pk"]')).toHaveLength(1);
+    }
+  );
+
   it('filters by column name and keeps the visible count authoritative', () => {
     render();
 
