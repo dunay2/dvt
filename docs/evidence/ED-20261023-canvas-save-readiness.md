@@ -115,3 +115,25 @@ checks keyboard focus and horizontal overflow, and retains save/readback/reload
 for table, view and ephemeral without starting Run. The issue records the final
 result and candidate SHA. No CSS-class snapshot or new style-specific unit suite
 is used as a substitute for the rendered proof.
+
+## Inspector Code Tab And Canonical Editor Height
+
+The [Code layout plan](https://github.com/dunay2/dvt/issues/3718#issuecomment-6375377411)
+keeps `RenderCanvasContextualGraphSurface` as the presentation authority. The
+existing section policy now places Code after the other supported primary tabs;
+Source's bounded tabs and explicit tab requests retain their behavior.
+
+The saved-JOIN browser scenario reproduced a 5px Monaco surface. Its intermediate
+output container was not a flex parent, so the output's remaining-height contract
+was ineffective. Repairing that existing layout link produced a 315px editor in
+the same viewport. A subsequent overflow assertion found the document digest
+extending 22px beyond its container; wrapping the existing description keeps the
+hash readable without changing the canonical content.
+
+The existing `canvas-relational-tree-workbench.cy.ts` checks real Monaco lines,
+minimum usable height, panel containment, two desktop widths, Code-last ordering,
+tab roundtrip, no graph writes and entry back into the semantic editor. The first
+probe used an unsupported document without canonical output; it did not prove
+the height failure and its added assertions were removed. Final acceptance and
+the exact candidate SHA are recorded on the governing issue. No fixed editor
+height, new resize effect, editor implementation or mutation rail is introduced.

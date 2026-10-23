@@ -28,6 +28,13 @@ Rendered acceptance checks form controls and read-only facts against the General
 tab at two widths, keyboard focus and overflow. Global UI primitives and control
 heights are preserved to keep this density change scoped to presentation.
 
+Canonical Code output must receive bounded remaining height through its existing
+flex parents. The saved-JOIN browser acceptance measures the actual Monaco
+surface at two widths and after a tab roundtrip, rather than checking CSS tokens.
+The section policy orders Code last without exposing unsupported sections or
+changing explicit tab requests. Long document digests wrap within the Inspector;
+the canonical document and editor implementation retain their existing owners.
+
 PostgreSQL's observed backend termination remains unexplained; it is not declared
 fixed by this product slice. Existing global component evidence warnings also
 remain open. Git preserves prior documentation; no historical copies or parallel

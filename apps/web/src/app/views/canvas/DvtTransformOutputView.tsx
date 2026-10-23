@@ -98,7 +98,7 @@ export function DvtTransformOutputView({
       </label>
 
       {canonicalDescription == null ? null : (
-        <p className={inspectorVisualClasses.contextPanelSectionDescription}>
+        <p className={cn(inspectorVisualClasses.contextPanelSectionDescription, 'break-words')}>
           {canonicalDescription}
         </p>
       )}

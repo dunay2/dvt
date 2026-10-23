@@ -308,6 +308,20 @@ Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
+### Inspector Code Placement And Height
+
+The existing node-workbench section policy places General first and Code after
+the other supported primary sections. Explicit tab requests remain authoritative;
+the More action retains overflow sections. Source keeps its bounded Overview,
+Columns and Inputs / Outputs order.
+
+Canonical Transform output uses the available Inspector height through the
+existing section, contribution and output flex columns. The output container
+must allocate remaining height to the shared read-only Monaco surface. Editor
+height is not a fixed pixel value and no JavaScript resize state is introduced.
+Rendered acceptance checks code lines, containment and resizing, while preserving
+the canonical document and existing semantic-editor entry action.
+
 ### Shared Inspector Form Typography
 
 The node authoring section applies the compact Inspector form typography from
