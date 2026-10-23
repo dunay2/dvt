@@ -310,6 +310,37 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 ### Inspector Code Placement And Height
 
+The current Inspector implementation has two ownership boundaries, recorded in
+Planning DB rather than source-file metadata headers:
+
+| Component                        | Owned concern                                                                                              | Delegated concerns                                                                 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `SYS-WEB-CANVAS-NODE-WORKBENCH`  | Compose node sections, contributions, tab requests and the passive property read model                     | Draft edits/persistence, code projection and shared editor implementation          |
+| `SYS-WEB-CANVAS-CODE-INSPECTION` | Present canonical output and request input-bound derived SQL through the existing graph projection adapter | Compiler semantics, graph edits, persistence, Run and shared Monaco implementation |
+
+The module entrypoints are `CanvasNodeWorkbenchPanel.tsx` and
+`DvtTransformCodeWorkbenchContent.tsx`. Their exact multi-file ownership,
+function responsibilities and required-test evidence remain in Planning DB;
+the shared Canvas folder is not a separate ownership claim for each module.
+
+Both use `RenderCanvasContextualGraphSurface`. Inspecting code returns a read
+model and updates local selection state; it does not write the draft, publish
+artifacts or execute SQL. Opening the semantic editor delegates its existing
+navigation callback. Mutations remain on the existing authoring command handlers.
+
+Derived SQL belongs to the exact transform, nodes and edges references supplied
+to its query. A pending query is reused for repeated selection of those inputs;
+a ready result is reused only for those inputs. Changed references invalidate
+the visible derived result and show canonical output until SQL is explicitly
+requested again. This conservative constant-time invalidation also covers
+layout-only reference changes and schedules no automatic compilation. Failures
+remain visible and a subsequent explicit selection can retry. Older completions
+cannot overwrite a newer request.
+
+Canonical JSON and ready SQL use one shared Monaco rendering path. The output
+view owns its flex growth directly; an extra height-distributing wrapper is not
+needed between it and the code contribution.
+
 The existing node-workbench section policy places General first and Code after
 the other supported primary sections. Explicit tab requests remain authoritative;
 the More action retains overflow sections. Source keeps its bounded Overview,

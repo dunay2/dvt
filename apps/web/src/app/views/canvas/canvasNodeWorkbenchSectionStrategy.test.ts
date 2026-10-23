@@ -181,4 +181,29 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     expect(result.sections.map(({ id }) => id)).toEqual(['general']);
     expect(result.primarySectionIds).toEqual(['general']);
   });
+
+  it.each([
+    { content: false, contribution: false, expected: ['general'] },
+    { content: true, contribution: false, expected: ['general', 'summary'] },
+    { content: false, contribution: true, expected: ['general', 'summary'] },
+  ])(
+    'uses the same content/contribution capability rule for Summary ($content, $contribution)',
+    ({ content, contribution, expected }) => {
+      const result = resolveCanvasNodeWorkbenchSectionModel({
+        nodeKind: 'dvt:transform',
+        canEditNode: true,
+        canOpenNodeCode: false,
+        strategySectionIds: ['properties'],
+        contributedSectionIds: new Set(contribution ? ['summary'] : []),
+        sections: [
+          section('general'),
+          section(
+            'summary',
+            content ? { rows: [{ id: 'tags', label: 'Tags', value: 'source' }] } : {}
+          ),
+        ],
+      });
+      expect(result.sections.map(({ id }) => id)).toEqual(expected);
+    }
+  );
 });

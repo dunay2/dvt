@@ -1,9 +1,7 @@
 /** Owned concern: present canonical Transform output and route semantic edits to the Model editor. */
 
 import { Button } from '../../components/ui/button';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { CanvasViewCopy } from './canvasCopy.types';
-import { DvtTransformOutputView } from './DvtTransformOutputView';
+import { DvtTransformOutputView, type DvtTransformOutputViewProps } from './DvtTransformOutputView';
 
 export function DvtTransformCodeWorkbenchContent({
   transformNode,
@@ -14,23 +12,12 @@ export function DvtTransformCodeWorkbenchContent({
   openSemanticEditorLabel,
   onOpenSemanticEditor,
   copy,
-}: Readonly<{
-  transformNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  canonicalContent?: string;
-  canonicalDescription?: string;
-  openSemanticEditorLabel: string;
-  onOpenSemanticEditor?: () => void;
-  copy: Pick<
-    CanvasViewCopy,
-    | 'inspectorTransformOutputViewLabel'
-    | 'inspectorTransformOutputSubstraitLabel'
-    | 'inspectorTransformOutputPostgresSqlLabel'
-    | 'inspectorTransformOutputLoadingMessage'
-    | 'inspectorTransformOutputErrorMessage'
-  >;
-}>): JSX.Element {
+}: Omit<DvtTransformOutputViewProps, 'canonicalContent'> &
+  Readonly<{
+    canonicalContent?: string;
+    openSemanticEditorLabel: string;
+    onOpenSemanticEditor?: () => void;
+  }>): JSX.Element {
   return (
     <div className="flex h-full min-h-0 flex-col gap-2">
       {onOpenSemanticEditor == null ? null : (
@@ -47,16 +34,14 @@ export function DvtTransformCodeWorkbenchContent({
         </div>
       )}
       {canonicalContent == null ? null : (
-        <div className="flex min-h-0 flex-1 flex-col">
-          <DvtTransformOutputView
-            transformNode={transformNode}
-            nodes={nodes}
-            edges={edges}
-            canonicalContent={canonicalContent}
-            canonicalDescription={canonicalDescription}
-            copy={copy}
-          />
-        </div>
+        <DvtTransformOutputView
+          transformNode={transformNode}
+          nodes={nodes}
+          edges={edges}
+          canonicalContent={canonicalContent}
+          canonicalDescription={canonicalDescription}
+          copy={copy}
+        />
       )}
     </div>
   );

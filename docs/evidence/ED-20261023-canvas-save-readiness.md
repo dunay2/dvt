@@ -137,3 +137,39 @@ probe used an unsupported document without canonical output; it did not prove
 the height failure and its added assertions were removed. Final acceptance and
 the exact candidate SHA are recorded on the governing issue. No fixed editor
 height, new resize effect, editor implementation or mutation rail is introduced.
+
+## Code Inspection Query And Ownership Review
+
+The [bounded CQS review](https://github.com/dunay2/dvt/issues/3718#issuecomment-6375658644)
+keeps the existing contextual presentation query and connected-graph projection
+adapter. Pending SQL selections now share the current query; pending and ready
+results carry their exact input references. A graph-context change exposes
+canonical output until an explicit fresh SQL request, without automatic graph
+hashing or compilation. Older request completions cannot replace a newer result.
+Failure and retry remain explicit. The view reuses the projection input type and
+the contribution reuses the output-view props rather than repeating DTO fields.
+
+The dedicated lifecycle test first failed five cases: duplicate pending work,
+stale output after each of the three projection inputs changed, and an obsolete
+completion scenario. After the fix, its eight cases pass. Existing connected-graph
+projection tests retain source-identity rejection. Canonical JSON and SQL now
+share one Monaco rendering path; the redundant exported SQL wrapper and the
+intermediate output div are removed. The existing section policy loses only an
+unreachable General branch and an equivalent Summary branch.
+
+Two precise existing implementation boundaries replace generic root ownership:
+`SYS-WEB-CANVAS-NODE-WORKBENCH` and `SYS-WEB-CANVAS-CODE-INSPECTION`. The current
+registry links eight production files and 21 named functions to eight atomic
+responsibilities, with exact tests and one directed composition relation. Both
+resolve to the existing SYS-WEB-ROOT parent; no duplicate architecture root or
+source metadata headers are added. The unchanged integrity gate identified
+overly broad initial entry paths and missing required-test catalog records.
+The [evidence refinement](https://github.com/dunay2/dvt/issues/3718#issuecomment-6375817198)
+corrects those records through the public operations, without baseline changes.
+
+Focused acceptance comprises the output lifecycle, existing workbench/content
+and property-model tests, section policy and projection tests, shared Monaco and
+composition guards, plus the same saved-JOIN browser spec. The latter selects
+derived SQL, verifies one real usable Monaco viewer, returns to canonical output
+and asserts no graph writes. Exact committed base/head and results remain in the
+governing issue; this review does not claim full-branch CI or prepush acceptance.

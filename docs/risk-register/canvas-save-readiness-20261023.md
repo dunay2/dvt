@@ -35,6 +35,15 @@ The section policy orders Code last without exposing unsupported sections or
 changing explicit tab requests. Long document digests wrap within the Inspector;
 the canonical document and editor implementation retain their existing owners.
 
+Code inspection binds both pending and ready SQL results to the exact projection
+input references and reuses pending work. Changed graph references, including
+layout-only identity changes, conservatively return the display to canonical
+output without starting a new query. Tests cover each input, stale completion,
+failure/retry and unmount. One shared viewer path retains the existing read-only
+contract. Explicit current component entrypoints, atomic source bindings and
+required-test records prevent generic folder ownership or absent evidence from
+being mistaken for complete architecture coverage.
+
 PostgreSQL's observed backend termination remains unexplained; it is not declared
 fixed by this product slice. Existing global component evidence warnings also
 remain open. Git preserves prior documentation; no historical copies or parallel

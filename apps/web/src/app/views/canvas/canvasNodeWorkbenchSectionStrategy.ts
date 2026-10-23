@@ -70,10 +70,6 @@ function isEditableSection(
     return false;
   }
 
-  if (sectionId === 'general') {
-    return true;
-  }
-
   if (nodeKind === 'dvt:transform') {
     return sectionId === 'code' || sectionId === 'columns';
   }
@@ -91,10 +87,6 @@ function isSupportedSection(
 ): boolean {
   if (section.id === 'general') {
     return true;
-  }
-
-  if (section.id === 'summary') {
-    return args.contributedSectionIds.has(section.id) || hasRecordedSectionContent(section);
   }
 
   if (args.contributedSectionIds.has(section.id)) {

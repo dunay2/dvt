@@ -161,7 +161,7 @@ describe('Workbench navigation', () => {
           expect(
             editor.querySelector('.view-lines')?.textContent,
             'rendered canonical code'
-          ).to.contain('{');
+          ).to.contain('schemaVersion');
         });
       cy.get('[data-slot="dvt-transform-output-view"]').should(($output) => {
         expect($output[0]!.scrollWidth, 'output has no horizontal overflow').to.be.at.most(
@@ -182,6 +182,25 @@ describe('Workbench navigation', () => {
       .and(($editor) => {
         expect($editor[0]!.getBoundingClientRect().height).to.be.at.least(160);
       });
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
+    cy.get('[data-slot="canvas-node-workbench-code-content"] [data-testid="monaco-code-viewer"]')
+      .should('have.length', 1)
+      .find('.view-lines')
+      .should(($lines) => {
+        expect($lines.text(), 'derived SQL uses the shared viewer').to.match(/\bselect\b/i);
+      });
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
+      expect(
+        $editor[0]!.getBoundingClientRect().height,
+        'SQL keeps the usable editor height'
+      ).to.be.at.least(160);
+    });
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('inspector-derived-sql');
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines').should(
+      'contain.text',
+      'schemaVersion'
+    );
     cy.then(() => {
       expect(
         getE2eApiCalls('/workspace/graph/draft', 'PUT'),

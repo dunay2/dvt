@@ -5,46 +5,31 @@ import { inspectorVisualClasses } from '../../components/inspector/inspectorVisu
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { monacoVisualClasses } from '../../components/monaco/monacoVisualTokens';
 import { cn } from '../../components/ui/utils';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import { projectDvtSubstraitTransformOutputToPostgresSql } from './canvasDvtSubstraitOutputProjection';
+import {
+  projectDvtSubstraitTransformOutputToPostgresSql,
+  type DvtSubstraitTransformOutputProjectionArgs,
+} from './canvasDvtSubstraitOutputProjection';
 
 type TransformOutputViewId = 'substrait' | 'postgres-sql';
 type DerivedSqlState =
-  | Readonly<{ status: 'idle' | 'loading' }>
-  | Readonly<{ status: 'ready'; sql: string }>
-  | Readonly<{ status: 'error' }>;
+  | Readonly<{ status: 'idle' }>
+  | Readonly<{ status: 'loading' | 'error'; input: DvtSubstraitTransformOutputProjectionArgs }>
+  | Readonly<{ status: 'ready'; sql: string; input: DvtSubstraitTransformOutputProjectionArgs }>;
 
-export function DvtTransformSqlOutputView({
-  value,
-  label,
-}: Readonly<{ value: string; label: string }>): JSX.Element {
-  return (
-    <MonacoCodeViewer
-      ariaLabel={label}
-      language="sql"
-      loadingLabel={label}
-      containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
-      value={value}
-    />
-  );
-}
-
-export type DvtTransformOutputViewProps = Readonly<{
-  transformNode: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-  canonicalContent: string;
-  canonicalDescription?: string;
-  copy: Pick<
-    CanvasViewCopy,
-    | 'inspectorTransformOutputViewLabel'
-    | 'inspectorTransformOutputSubstraitLabel'
-    | 'inspectorTransformOutputPostgresSqlLabel'
-    | 'inspectorTransformOutputLoadingMessage'
-    | 'inspectorTransformOutputErrorMessage'
-  >;
-}>;
+export type DvtTransformOutputViewProps = DvtSubstraitTransformOutputProjectionArgs &
+  Readonly<{
+    canonicalContent: string;
+    canonicalDescription?: string;
+    copy: Pick<
+      CanvasViewCopy,
+      | 'inspectorTransformOutputViewLabel'
+      | 'inspectorTransformOutputSubstraitLabel'
+      | 'inspectorTransformOutputPostgresSqlLabel'
+      | 'inspectorTransformOutputLoadingMessage'
+      | 'inspectorTransformOutputErrorMessage'
+    >;
+  }>;
 
 export function DvtTransformOutputView({
   transformNode,
@@ -57,6 +42,26 @@ export function DvtTransformOutputView({
   const [activeView, setActiveView] = useState<TransformOutputViewId>('substrait');
   const [derivedSql, setDerivedSql] = useState<DerivedSqlState>({ status: 'idle' });
   const requestId = useRef(0);
+  const isCurrentProjection =
+    derivedSql.status !== 'idle' &&
+    derivedSql.input.transformNode === transformNode &&
+    derivedSql.input.nodes === nodes &&
+    derivedSql.input.edges === edges;
+  const selectedView = isCurrentProjection ? activeView : 'substrait';
+  const displayedCode =
+    selectedView === 'substrait'
+      ? {
+          language: 'json',
+          label: copy.inspectorTransformOutputSubstraitLabel,
+          value: canonicalContent,
+        }
+      : derivedSql.status === 'ready'
+        ? {
+            language: 'sql',
+            label: copy.inspectorTransformOutputPostgresSqlLabel,
+            value: derivedSql.sql,
+          }
+        : null;
 
   useEffect(
     () => () => {
@@ -68,16 +73,21 @@ export function DvtTransformOutputView({
   const selectOutputView = (event: ChangeEvent<HTMLSelectElement>): void => {
     const nextView = event.currentTarget.value as TransformOutputViewId;
     setActiveView(nextView);
-    if (nextView === 'substrait' || derivedSql.status === 'ready') return;
+    if (
+      nextView === 'substrait' ||
+      (isCurrentProjection && (derivedSql.status === 'ready' || derivedSql.status === 'loading'))
+    )
+      return;
 
     const currentRequestId = ++requestId.current;
-    setDerivedSql({ status: 'loading' });
-    void projectDvtSubstraitTransformOutputToPostgresSql({ transformNode, nodes, edges }).then(
+    const input = { transformNode, nodes, edges };
+    setDerivedSql({ status: 'loading', input });
+    void projectDvtSubstraitTransformOutputToPostgresSql(input).then(
       (sql) => {
-        if (requestId.current === currentRequestId) setDerivedSql({ status: 'ready', sql });
+        if (requestId.current === currentRequestId) setDerivedSql({ status: 'ready', sql, input });
       },
       () => {
-        if (requestId.current === currentRequestId) setDerivedSql({ status: 'error' });
+        if (requestId.current === currentRequestId) setDerivedSql({ status: 'error', input });
       }
     );
   };
@@ -89,7 +99,7 @@ export function DvtTransformOutputView({
         <select
           data-slot="dvt-transform-output-view-selector"
           className={inspectorVisualClasses.inspectorSelectInput}
-          value={activeView}
+          value={selectedView}
           onChange={selectOutputView}
         >
           <option value="substrait">{copy.inspectorTransformOutputSubstraitLabel}</option>
@@ -103,18 +113,13 @@ export function DvtTransformOutputView({
         </p>
       )}
 
-      {activeView === 'substrait' ? (
+      {displayedCode != null ? (
         <MonacoCodeViewer
-          ariaLabel={copy.inspectorTransformOutputSubstraitLabel}
-          language="json"
-          loadingLabel={copy.inspectorTransformOutputSubstraitLabel}
+          ariaLabel={displayedCode.label}
+          language={displayedCode.language}
+          loadingLabel={displayedCode.label}
           containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
-          value={canonicalContent}
-        />
-      ) : derivedSql.status === 'ready' ? (
-        <DvtTransformSqlOutputView
-          label={copy.inspectorTransformOutputPostgresSqlLabel}
-          value={derivedSql.sql}
+          value={displayedCode.value}
         />
       ) : (
         <p
