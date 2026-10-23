@@ -107,6 +107,17 @@ describe('Canvas Source Inspector ordering', () => {
     visitCanvas();
 
     openSourceSection('columns');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should(($panel) => {
+      const panel = $panel[0]!;
+      const viewport = panel.ownerDocument.defaultView!;
+      const bounds = panel.getBoundingClientRect();
+      expect(bounds.left).to.be.at.least(0);
+      expect(bounds.right).to.be.at.most(viewport.innerWidth + 1);
+      expect(bounds.bottom).to.be.at.most(viewport.innerHeight + 1);
+    });
+    // Keep screenshots inside the native headless capture surface as well as
+    // the application's CSS viewport; the wide layout is checked above.
+    cy.viewport(1100, 600);
     cy.get('[data-slot="source-columns-search"]').should('have.css', 'font-size', '12px');
     cy.get('[data-slot="source-column-row"]').should('have.css', 'font-size', '12px');
     cy.get('[data-slot="source-column-row"]').each(($row) => {
@@ -168,6 +179,12 @@ describe('Canvas Source Inspector ordering', () => {
     cy.get('[data-slot="source-column-detail"] h3, [data-slot="source-column-detail"] dd').each(
       ($fact) => {
         expect($fact[0]!.scrollWidth).to.be.at.most($fact[0]!.clientWidth + 1);
+        const panel = $fact[0]!
+          .closest('[data-slot="canvas-node-workbench-panel"]')!
+          .getBoundingClientRect();
+        const bounds = $fact[0]!.getBoundingClientRect();
+        expect(bounds.left).to.be.at.least(panel.left);
+        expect(bounds.right).to.be.at.most(panel.right + 1);
       }
     );
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-long-detail');
