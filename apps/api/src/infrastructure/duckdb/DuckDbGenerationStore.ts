@@ -2,7 +2,7 @@
  * Owned concern: bounded staging and atomic READY/head publication inside one workspace DuckDB file.
  * @baseline ADR-0058: Warehouse Source Import Rails
  * @decision Reuse the native runtime, #3391 manifests and #3392 checkpoints; no file swap or new registry.
- * @consequence This uncomposed infrastructure adapter does not expose a capture/Preview API or certify source EOF.
+ * @consequence The composed infrastructure adapter does not expose a public capture/Preview API or certify source EOF.
  */
 import { randomUUID } from 'node:crypto';
 

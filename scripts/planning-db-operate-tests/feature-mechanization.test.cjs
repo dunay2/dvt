@@ -96,6 +96,47 @@ function featureMechanizationRecordArgs(options = {}) {
   return [...args, ...(options.extraArgs || [])];
 }
 
+function planCurrentFeatureRecord(command, existingRail = null) {
+  return planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'responsibility-binding-record',
+    now: new Date('2026-10-23T00:00:00.000Z'),
+  });
+}
+
+test('explicit current replacement removes obsolete collections and requires the current revision', () => {
+  const base = parseArgs(featureMechanizationRecordArgs());
+  const existing = planCurrentFeatureRecord(base).rail;
+  existing.rawManifest.cypressFlows.push('obsolete browser story');
+  existing.rawManifest.fowlerSignals.push('obsolete decision');
+  existing.rawManifest.obsoleteCustomMetadata = true;
+  existing.governingSources.push('obsolete.md');
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: ['--replace-current', 'true'] })
+  );
+  assert.throws(() => planCurrentFeatureRecord(replacement, existing), /expected-revision/u);
+  const current = planCurrentFeatureRecord({ ...replacement, expectedRevision: 0 }, existing);
+  assert.deepEqual(current.rail.rawManifest.cypressFlows, base.cypressFlows);
+  assert.deepEqual(current.rail.rawManifest.fowlerSignals, base.fowlerSignals);
+  assert.equal(current.rail.rawManifest.obsoleteCustomMetadata, undefined);
+  assert.deepEqual(current.rail.governingSources, base.governingSources);
+  assert.equal(current.audit.payload.replaceCurrent, true);
+  assert.notEqual(replacement.idempotencyKey, base.idempotencyKey);
+  assert.throws(
+    () => planCurrentFeatureRecord({ ...replacement, expectedRevision: 9 }, existing),
+    /expected revision/u
+  );
+});
+
+test('feature commands reject the retired source binding flag', () => {
+  assert.throws(
+    () =>
+      parseArgs(featureMechanizationRecordArgs({ extraArgs: ['--responsibility-bindings', '[]'] })),
+    /RecordArchitectureComponent/u
+  );
+});
+
 test('parseArgs builds a feature mechanization rail record command', () => {
   const command = parseArgs(
     featureMechanizationRecordArgs({
@@ -1016,6 +1057,14 @@ test('feature mechanization rail writer stores local rails without mutating impo
 
   assert.ok(queries.some((query) => query.sql.includes('feature_mechanization_local_rails')));
   assert.ok(queries.some((query) => query.sql.includes('feature_mechanization_local_operations')));
+  const railWrite = queries.find((query) =>
+    query.sql.includes('feature_mechanization_local_rails')
+  );
+  const auditWrite = queries.find((query) =>
+    query.sql.includes('feature_mechanization_local_operations')
+  );
+  assert.equal(Object.hasOwn(JSON.parse(railWrite.params[18]), 'responsibilityBindings'), false);
+  assert.equal(Object.hasOwn(JSON.parse(auditWrite.params[10]), 'responsibilityBindings'), false);
   assert.equal(
     queries.some((query) =>
       /insert into planning_query_store\.command_query_rails/.test(query.sql)

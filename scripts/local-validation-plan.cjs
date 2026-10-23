@@ -11,9 +11,27 @@ const { spawnSync } = require('node:child_process');
 const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
 const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
+const { isRepositoryCommandFile } = require('../tools/ci/repository-command-catalog.mjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/lib/component-source-responsibilities.cjs':
+    'scripts/lib/component-source-responsibilities.test.cjs',
+  'scripts/lib/component-source-responsibilities.test.cjs':
+    'scripts/lib/component-source-responsibilities.test.cjs',
+  'scripts/lib/source-code-facts.cjs': 'scripts/lib/source-code-facts.test.cjs',
+  'scripts/lib/source-code-facts.test.cjs': 'scripts/lib/source-code-facts.test.cjs',
+  'scripts/planning-db/component-source-responsibility-store.cjs':
+    'scripts/planning-db/component-source-responsibility-store.test.cjs',
+  'scripts/planning-db/component-source-responsibility-store.test.cjs':
+    'scripts/planning-db/component-source-responsibility-store.test.cjs',
+  'scripts/planning-db/feature-mechanization-policy.cjs':
+    'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+  'scripts/planning-db/queries/current-component-files-query.cjs':
+    'scripts/planning-db-query-tests/current-component-files.test.cjs',
+  'scripts/planning-db-query-tests/current-component-files.test.cjs':
+    'scripts/planning-db-query-tests/current-component-files.test.cjs',
+
   'scripts/lib/git-repository-environment.cjs': 'scripts/lib/git-repository-environment.test.cjs',
   'scripts/lib/git-repository-environment.test.cjs':
     'scripts/lib/git-repository-environment.test.cjs',
@@ -230,13 +248,6 @@ const PREPUSH_GROUPS = Object.freeze({
   featureMechanizationFull: Object.freeze([
     step('docs-feature-mechanization', 'pnpm', 'docs:feature-mechanization'),
   ]),
-  featureMechanizationChanged: Object.freeze([
-    step(
-      'docs-feature-mechanization-implementation',
-      'pnpm',
-      'docs:feature-mechanization:implementation'
-    ),
-  ]),
   traceability: Object.freeze([step('traceability-adr0', 'pnpm', 'traceability:adr0')]),
   codeValidation: Object.freeze([
     step('arch-deps', 'pnpm', 'arch:deps'),
@@ -298,12 +309,19 @@ function hasPlanningDbCurrentSchemaChange(changedFiles) {
 }
 
 function planningWorkflowTestSteps(changedFiles) {
-  return changedFiles
-    .filter((filePath) => Object.hasOwn(PLANNING_WORKFLOW_SCRIPT_TESTS, filePath))
-    .map((filePath) => {
-      const testPath = PLANNING_WORKFLOW_SCRIPT_TESTS[filePath];
-      return testStep(`test-${path.basename(testPath, '.test.cjs')}`, 'node', '--test', testPath);
-    });
+  const tests = new Set(
+    changedFiles
+      .filter((filePath) => Object.hasOwn(PLANNING_WORKFLOW_SCRIPT_TESTS, filePath))
+      .map((filePath) => PLANNING_WORKFLOW_SCRIPT_TESTS[filePath])
+  );
+  // These aggregate entrypoints require the shards; standalone routing is for narrow changes.
+  if (tests.has('scripts/planning-db-query.test.cjs'))
+    tests.delete('scripts/planning-db-query-tests/current-component-files.test.cjs');
+  if (tests.has('scripts/planning-db-operate.test.cjs'))
+    tests.delete('scripts/planning-db-operate-tests/feature-mechanization.test.cjs');
+  return [...tests].map((testPath) => {
+    return testStep(`test-${path.basename(testPath, '.test.cjs')}`, 'node', '--test', testPath);
+  });
 }
 
 function ciToolingTestPathFor(filePath) {
@@ -323,12 +341,24 @@ function ciToolingTestPathFor(filePath) {
 }
 
 function ciToolingTestSteps(changedFiles) {
-  return changedFiles
+  const plan = changedFiles
     .map(ciToolingTestPathFor)
     .filter((testPath) => testPath !== null)
     .map((testPath) =>
       testStep(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
     );
+  if (changedFiles.some((file) => file === 'package.json' || isRepositoryCommandFile(file))) {
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-repository-command-catalog',
+        'node',
+        '--test',
+        'tools/ci/repository-command-catalog.test.mjs'
+      )
+    );
+  }
+  return plan;
 }
 
 function documentationPublicationTestSteps(changedFiles) {
@@ -469,6 +499,7 @@ function buildFocusedChangedTestPlan(files) {
         'scripts/web-code-duplication.cjs',
         'scripts/web-code-duplication.test.cjs',
         'scripts/check-changed.cjs',
+        'scripts/lib/source-code-facts.cjs',
         'scripts/planning-db/code-symbol-inventory.cjs',
         'scripts/planning-db/code-symbol-inventory.test.cjs',
       ].includes(file)
@@ -502,7 +533,14 @@ function buildFocusedChangedTestPlan(files) {
       testStep('test-check-changed', 'node', '--test', 'scripts/check-changed.test.cjs')
     );
   }
-  const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
+  const affectedPlanningFiles = changedFiles.includes('scripts/lib/source-code-facts.cjs')
+    ? [
+        ...changedFiles,
+        'scripts/lib/component-source-responsibilities.cjs',
+        'scripts/check-feature-mechanization.cjs',
+      ]
+    : changedFiles;
+  const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(affectedPlanningFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));
   pushSteps(plan, documentationPublicationTestSteps(changedFiles));

@@ -14,6 +14,15 @@ const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-db-schema.cjs');
+const {
+  mergeUniqueValues,
+  mergeFeatureMechanizationValue,
+  mergeFeatureMechanizationManifest,
+  excludesFeatureMechanizationSurface,
+  surfaceMatchesPattern,
+} = require('./planning-db/feature-mechanization-policy.cjs').createFeatureMechanizationPolicy({
+  canonicalJson,
+});
 const componentEngineeringSchemaName = 'component_engineering';
 const { runArchitectureFitnessScan } = require('./planning-db/architecture-fitness/scan.cjs');
 
@@ -38,6 +47,10 @@ const {
 } = require('./planning-db/governed-source-refresh-write-rail.cjs');
 const { parseCatalogReconciliation } = require('./planning-db/catalog-reconciliation.cjs');
 const { applyCatalogReconciliation } = require('./planning-db/catalog-reconciliation-write.cjs');
+const {
+  requireBindings,
+  replaceComponentBindings,
+} = require('./planning-db/component-source-responsibility-store.cjs');
 
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 const allowedFowlerAnalysisDispositionStatuses = new Set([
@@ -354,6 +367,7 @@ const operationHelp = Object.freeze({
       'RecordArchitectureComponent adds a scoped component to an approved or review design authority.',
       'RetireArchitectureComponentResponsibility removes one stale responsibility through exact component update authority.',
       'Requires taxonomy fields --kind, --layer, --owner, --repo-path, --public-contract, and at least one --responsibility.',
+      '--source-bindings <JSON-array> replaces the component association set with --expected-bindings-hash; omission preserves it.',
     ],
   },
   'architecture-relation': {
@@ -439,6 +453,7 @@ const operationHelp = Object.freeze({
       'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Explicit replace flags hard-cut inherited implementation refs or architecture guards with audited idempotency.',
       '--red-green-cycle <existing-id> reconciles one cycle with --expected-revision and explicit admitted --patch-surface evidence.',
+      '--replace-current true replaces the complete current declaration, requires --expected-revision on existing rails, and removes obsolete metadata.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
       'Referenced rails require the exact pair --reference-only true and --authority-ref <canonical-source>.',
       'record --catalog-reconciliation <json-file> performs explicitly scoped, atomic metadata repair without rebuilding declarations; no other CLI flags may be mixed into this mode.',
@@ -1309,6 +1324,12 @@ function operationPayload(command) {
       status: command.status,
       parentComponentId: normalizeOptionalText(command.parentComponentId),
       responsibilities: command.responsibilities || [],
+      ...(command.sourceBindings === undefined
+        ? {}
+        : {
+            sourceBindings: command.sourceBindings,
+            expectedBindingsHash: command.expectedBindingsHash,
+          }),
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -1579,6 +1600,7 @@ function operationPayload(command) {
       replaceImplementationRefs: command.replaceImplementationRefs,
       replaceArchitectureGuards: command.replaceArchitectureGuards,
       ...(command.replaceDocumentationRefs === true ? { replaceDocumentationRefs: true } : {}),
+      ...(command.replaceCurrent === true ? { replaceCurrent: true } : {}),
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -2315,6 +2337,13 @@ function validateArchitectureResponsibilityId(value) {
 }
 
 function validateArchitectureComponentRecordCommand(command) {
+  if (command.sourceBindings !== undefined) {
+    requireBindings(command.sourceBindings);
+    if (!/^[a-f0-9]{64}$/u.test(command.expectedBindingsHash || ''))
+      throw new Error('--source-bindings requires --expected-bindings-hash.');
+  } else if (command.expectedBindingsHash !== undefined) {
+    throw new Error('--expected-bindings-hash requires --source-bindings.');
+  }
   const requiredTextFields = [
     ['name', command.name],
     ['owner', command.owner],
@@ -2389,6 +2418,12 @@ function parseArchitectureComponentCommand(action, args) {
       ? validateArchitectureComponentId(options.parent, 'parent')
       : null,
     responsibilities: parseArchitectureComponentResponsibilities(options.responsibility),
+    ...(options.sourceBindings === undefined
+      ? {}
+      : { sourceBindings: requireBindings(JSON.parse(options.sourceBindings)) }),
+    ...(options.expectedBindingsHash === undefined
+      ? {}
+      : { expectedBindingsHash: options.expectedBindingsHash }),
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -3315,6 +3350,11 @@ function parseFeatureMechanizationCommand(action, args) {
     );
   }
 
+  if (options.responsibilityBindings !== undefined)
+    throw new Error(
+      'Source responsibility bindings belong to RecordArchitectureComponent; use --source-bindings there.'
+    );
+
   const command = {
     kind: 'feature_mechanization_rail_record',
     featureId,
@@ -3360,6 +3400,7 @@ function parseFeatureMechanizationCommand(action, args) {
       parseBooleanOption(options.replaceArchitectureGuards, 'replace-architecture-guards') ?? false,
     replaceDocumentationRefs:
       parseBooleanOption(options.replaceDocumentationRefs, 'replace-documentation-refs') ?? false,
+    replaceCurrent: parseBooleanOption(options.replaceCurrent, 'replace-current') ?? false,
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -4060,7 +4101,17 @@ function planArchitectureComponentRecordOperation({
   }));
   const audit = architectureScopedAudit({ command, operationId, now });
 
-  return { component, responsibilities, audit };
+  return {
+    component,
+    responsibilities,
+    audit,
+    ...(command.sourceBindings === undefined
+      ? {}
+      : {
+          sourceBindings: command.sourceBindings,
+          expectedBindingsHash: command.expectedBindingsHash,
+        }),
+  };
 }
 
 function planArchitectureComponentResponsibilityRetireOperation({
@@ -5116,163 +5167,6 @@ function normalizeFeatureMechanizationRail(row) {
   };
 }
 
-function mergeUniqueValues(existing = [], incoming = []) {
-  const merged = new Map();
-  for (const value of [...existing, ...incoming]) {
-    merged.set(canonicalJson(value), value);
-  }
-  return [...merged.values()];
-}
-
-function mergeFeatureMechanizationValue(existing, incoming) {
-  if (Array.isArray(existing) && Array.isArray(incoming)) {
-    return mergeUniqueValues(existing, incoming);
-  }
-  if (
-    existing &&
-    incoming &&
-    typeof existing === 'object' &&
-    typeof incoming === 'object' &&
-    !Array.isArray(existing) &&
-    !Array.isArray(incoming)
-  ) {
-    return Object.fromEntries(
-      mergeUniqueValues(Object.keys(existing), Object.keys(incoming)).map((key) => [
-        key,
-        key in incoming
-          ? key in existing
-            ? mergeFeatureMechanizationValue(existing[key], incoming[key])
-            : incoming[key]
-          : existing[key],
-      ])
-    );
-  }
-  return incoming;
-}
-
-function mergeFeatureMechanizationObjectsByKey(existing, incoming, keyOf) {
-  const merged = new Map();
-  for (const value of existing) {
-    merged.set(keyOf(value), value);
-  }
-  for (const value of incoming) {
-    const key = keyOf(value);
-    merged.set(
-      key,
-      merged.has(key) ? mergeFeatureMechanizationValue(merged.get(key), value) : value
-    );
-  }
-  return [...merged.values()];
-}
-
-function featureMechanizationSurfacePath(value) {
-  return String(value || '')
-    .trim()
-    .split(/\s+/, 1)[0];
-}
-
-function surfaceMatchesPattern(surface, pattern) {
-  const normalizedSurface = featureMechanizationSurfacePath(surface);
-  const normalizedPattern = featureMechanizationSurfacePath(pattern);
-  if (normalizedSurface === normalizedPattern) {
-    return true;
-  }
-  if (normalizedPattern.endsWith('/**')) {
-    const prefix = normalizedPattern.slice(0, -3);
-    return normalizedSurface === prefix || normalizedSurface.startsWith(`${prefix}/`);
-  }
-  return false;
-}
-
-function excludesFeatureMechanizationSurface(reference, patterns) {
-  const surface = reference.split('#', 1)[0];
-  return patterns.some((pattern) => surfaceMatchesPattern(surface, pattern));
-}
-
-function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
-  if (typeof value === 'string') {
-    return excludesFeatureMechanizationSurface(value, patterns) ? undefined : value;
-  }
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => pruneForbiddenFeatureMechanizationReferences(item, patterns))
-      .filter((item) => item !== undefined);
-  }
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value)
-        .map(([key, item]) => [key, pruneForbiddenFeatureMechanizationReferences(item, patterns)])
-        .filter(([, item]) => item !== undefined)
-    );
-  }
-  return value;
-}
-
-function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
-  const existing = command.replaceArchitectureGuards
-    ? { ...(existingManifest || {}), architectureGuards: [] }
-    : existingManifest || {};
-  const merged = pruneForbiddenFeatureMechanizationReferences(
-    mergeFeatureMechanizationValue(existing, incomingManifest),
-    command.forbiddenImplementationSurfaces
-  );
-  const retainedForbidden = (existing.forbiddenImplementationSurfaces || []).filter(
-    (pattern) =>
-      !command.allowedImplementationSurfaces.some((surface) =>
-        surfaceMatchesPattern(surface, pattern)
-      )
-  );
-  const forbiddenImplementationSurfaces = mergeUniqueValues(
-    retainedForbidden,
-    command.forbiddenImplementationSurfaces
-  );
-  const symbols = mergeFeatureMechanizationObjectsByKey(
-    (command.replaceImplementationRefs ? [] : existing.symbols || []).filter(
-      (symbol) =>
-        !excludesFeatureMechanizationSurface(
-          `${symbol.path}#${symbol.name}`,
-          command.forbiddenImplementationSurfaces
-        )
-    ),
-    incomingManifest.symbols,
-    (symbol) => `${symbol.path}#${symbol.name}`
-  );
-
-  const reconciled = {
-    ...merged,
-    allowedImplementationSurfaces: mergeUniqueValues(
-      existing.allowedImplementationSurfaces || [],
-      incomingManifest.allowedImplementationSurfaces
-    ).filter(
-      (surface) =>
-        !excludesFeatureMechanizationSurface(surface, command.forbiddenImplementationSurfaces)
-    ),
-    forbiddenImplementationSurfaces,
-    commandQueryRails: mergeFeatureMechanizationObjectsByKey(
-      existing.commandQueryRails || [],
-      incomingManifest.commandQueryRails,
-      (rail) => `${rail.type}#${rail.name}`
-    ),
-    redGreenCycles: command.redGreenCycle
-      ? existing.redGreenCycles.map((cycle) =>
-          cycle.id === command.redGreenCycle ? incomingManifest.redGreenCycles[0] : cycle
-        )
-      : mergeFeatureMechanizationObjectsByKey(
-          existing.redGreenCycles || [],
-          incomingManifest.redGreenCycles,
-          (cycle) => cycle.id
-        ),
-    symbols,
-  };
-  return {
-    ...pruneForbiddenFeatureMechanizationReferences(
-      reconciled,
-      command.forbiddenImplementationSurfaces
-    ),
-    forbiddenImplementationSurfaces,
-  };
-}
-
 function buildFeatureMechanizationSymbols(command) {
   return command.implementationRefs
     .map((implementationRef) => {
@@ -5299,6 +5193,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   if (command.redGreenCycle !== undefined) validateFeatureMechanizationRecordCommand(command);
   const previous = normalizeFeatureMechanizationRail(existingRail);
   const previousRevision = previous ? previous.revision : null;
+  if (command.responsibilityBindings !== undefined)
+    throw new Error('Source responsibility bindings belong to RecordArchitectureComponent.');
+  if (command.replaceCurrent && previous && command.expectedRevision == null)
+    throw new Error('--replace-current requires --expected-revision for an existing rail.');
   if (command.replaceDocumentationRefs === true && previous && command.expectedRevision == null) {
     throw new Error(
       '--replace-documentation-refs requires --expected-revision for an existing rail.'
@@ -5334,7 +5232,8 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     command.referenceOnly === true
       ? { referenceOnly: true, authorityRef: command.authorityRef }
       : {};
-  const rawRail = mergeFeatureMechanizationValue(previous?.rawRail || {}, {
+  const retainedPrevious = command.replaceCurrent ? undefined : previous;
+  const rawRail = mergeFeatureMechanizationValue(retainedPrevious?.rawRail || {}, {
     name: command.railName,
     type: command.railType,
     dddOwner: command.dddOwner,
@@ -5378,7 +5277,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     symbols: buildFeatureMechanizationSymbols(command),
   };
   const rawManifest = mergeFeatureMechanizationManifest(
-    previous?.rawManifest,
+    retainedPrevious?.rawManifest,
     incomingManifest,
     mergeCommand
   );
@@ -5387,8 +5286,10 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
       (value) =>
         !excludesFeatureMechanizationSurface(value, command.forbiddenImplementationSurfaces)
     );
-  const previousSymbolRefs = replaceImplementationRefs ? [] : previous?.symbolRefs;
-  const previousImplementationRefs = replaceImplementationRefs ? [] : previous?.implementationRefs;
+  const previousSymbolRefs = replaceImplementationRefs ? [] : retainedPrevious?.symbolRefs;
+  const previousImplementationRefs = replaceImplementationRefs
+    ? []
+    : retainedPrevious?.implementationRefs;
   const rail = {
     railId: command.railId,
     featureId: command.featureId,
@@ -5403,21 +5304,24 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
       mergeUniqueValues(previousImplementationRefs, command.implementationRefs)
     ),
     documentationRefs: mergeUniqueValues(
-      command.replaceDocumentationRefs === true ? [] : previous?.documentationRefs,
+      command.replaceDocumentationRefs === true ? [] : retainedPrevious?.documentationRefs,
       command.documentationRefs
     ),
-    governingSources: mergeUniqueValues(previous?.governingSources, command.governingSources),
+    governingSources: mergeUniqueValues(
+      retainedPrevious?.governingSources,
+      command.governingSources
+    ),
     allowedImplementationSurfaces: retained(
       mergeUniqueValues(
-        previous?.allowedImplementationSurfaces,
+        retainedPrevious?.allowedImplementationSurfaces,
         command.allowedImplementationSurfaces
       )
     ),
     architectureGuards: mergeUniqueValues(
-      command.replaceArchitectureGuards ? [] : previous?.architectureGuards,
+      command.replaceArchitectureGuards ? [] : retainedPrevious?.architectureGuards,
       command.architectureGuards
     ),
-    completionGate: mergeUniqueValues(previous?.completionGate, command.completionGate),
+    completionGate: mergeUniqueValues(retainedPrevious?.completionGate, command.completionGate),
     sourcePath: command.sourceRef,
     sourceContentSha256: command.sourceContentSha256,
     rawRail,
@@ -6261,8 +6165,24 @@ async function writePlannedArchitectureComponentRecordOperation(client, planned)
         responsibility.createdAt,
       ]
     );
+    // The upsert holds the responsibility row lock before checking implementations.
+    // Concurrent binding writers hold FOR SHARE, so their committed bindings are visible here.
+    const conflicts = await client.query(
+      `select 1 from architecture.component_source_responsibility
+      where responsibility_id = $1 and role = 'implements' and component_id <> $2 limit 1`,
+      [responsibility.responsibilityId, responsibility.componentId]
+    );
+    if (conflicts.rows.length)
+      throw new Error(
+        'Cannot reassign a responsibility with implementations owned by another component.'
+      );
   }
 
+  await replaceComponentBindings(client, {
+    componentId: planned.component.componentId,
+    sourceBindings: planned.sourceBindings,
+    expectedBindingsHash: planned.expectedBindingsHash,
+  });
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
@@ -7375,6 +7295,10 @@ async function applyArchitectureComponentRecordOperation(command, options = {}) 
   try {
     await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
+    await client.query(
+      "select pg_advisory_xact_lock(hashtext('dvt:architecture-component'), hashtext($1))",
+      [command.componentId]
+    );
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
     if (existing) {

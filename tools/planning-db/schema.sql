@@ -10659,4 +10659,15 @@ ALTER TABLE ONLY planning_query_store.knowledge_proposals
 ALTER TABLE ONLY planning_query_store.risk_debt_items
     ADD CONSTRAINT risk_debt_items_source_path_fkey FOREIGN KEY (source_path) REFERENCES planning_query_store.governance_files(path) ON DELETE CASCADE;
 
+-- Current semantic associations. Git remains the physical inventory authority.
+CREATE TABLE architecture.component_source_responsibility (
+    component_id text NOT NULL REFERENCES architecture.component(component_id),
+    responsibility_id text NOT NULL REFERENCES architecture.component_responsibility(responsibility_id),
+    source_path text NOT NULL CHECK (btrim(source_path) <> ''),
+    qualified_symbol text NOT NULL CHECK (btrim(qualified_symbol) <> ''),
+    role text NOT NULL CHECK (role IN ('implements', 'delegates', 'verifies')),
+    test_paths text[] NOT NULL CHECK (cardinality(test_paths) > 0 AND array_position(test_paths, NULL) IS NULL),
+    PRIMARY KEY (responsibility_id, source_path, qualified_symbol)
+);
+
 -- End of Planning DB current declarative schema.

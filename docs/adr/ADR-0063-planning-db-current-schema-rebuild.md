@@ -55,6 +55,28 @@ Planning DB MUST NOT contain or expose:
 - compatibility logic for an older Planning DB instance; or
 - an implicit destructive rebuild during import, query, refresh, or closeout.
 
+### Explicit additions to the current schema
+
+An operator may add a previously absent table through `ApplyCurrentPlanningDbSchema`
+with an explicit table identity and the SHA-256 of the reviewed current schema.
+The command reads the complete table definition from `tools/planning-db/schema.sql`;
+it accepts no alternative SQL file or caller-supplied DDL. The addition must be
+self-contained, including its constraints. Existing objects, data and definitions
+remain untouched. Existing tables, missing dependencies, external table clauses,
+unknown identities and a mismatched schema digest reject the operation.
+
+The operation is transactional, takes the same schema lock as bootstrap, and is
+never invoked by queries, imports, governance refresh or validation. It records
+no applied-version ledger and supports no chain of older schemas. This narrow
+addition path preserves DB-authored authority while the current model gains a
+new relation. Changes to existing objects still require a separately governed
+decision; automatic schema reconciliation remains unsupported.
+
+The accepted GH-3699 scope uses this path for current component-to-source
+responsibility associations. Acceptance requires a real PostgreSQL test proving
+rollback, foreign-key enforcement, rejection of existing tables and preservation
+of unrelated architecture rows.
+
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
 DB-authored architecture and mechanization are read through governed queries;

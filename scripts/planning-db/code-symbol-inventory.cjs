@@ -3,6 +3,7 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const ts = require('typescript');
+const { readSourceCodeFacts } = require('../lib/source-code-facts.cjs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
@@ -96,67 +97,15 @@ function normalizeSyntaxTokens(node, source) {
 function extractCodeSymbolsFromFile(file, ownershipByPath) {
   const sourcePath = normalizeSourcePath(file.path || file.sourcePath || '');
   const content = String(file.content ?? '');
-  const source = ts.createSourceFile(sourcePath, content, ts.ScriptTarget.Latest, true);
-  const compilerOptions = { noLib: true, noResolve: true, jsx: ts.JsxEmit.Preserve, allowJs: true };
-  const host = ts.createCompilerHost(compilerOptions);
-  host.getSourceFile = (fileName) => (fileName === sourcePath ? source : undefined);
-  const program = ts.createProgram([sourcePath], compilerOptions, host);
-  const syntaxErrors = program.getSyntacticDiagnostics(source);
-  if (syntaxErrors.length > 0) {
-    throw new Error(
-      `Invalid code syntax in ${sourcePath}: ${ts.flattenDiagnosticMessageText(syntaxErrors[0].messageText, ' ')}`
-    );
-  }
+  const { source, declarations, importRefs } = readSourceCodeFacts({ path: sourcePath, content });
   const contentSha256 = sha256HexUtf8(content);
   const ownership = ownershipByPath.get(sourcePath) || {};
-  const importRefs = new Set();
-  const candidates = [];
-
-  function record(node, name, kind, exportOwner = node) {
-    if (node.body == null || !ts.isBlock(node.body) || node.body.statements.length === 0) return;
-    const modifiers = ts.canHaveModifiers(exportOwner) ? (ts.getModifiers(exportOwner) ?? []) : [];
-    candidates.push({
-      node,
-      name: name.getText(source),
-      kind,
-      start: (kind === 'arrow_function' ? node.parent : node).getStart(source),
-      exportKind: modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.DefaultKeyword)
-        ? 'default'
-        : modifiers.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
-          ? 'named'
-          : 'internal',
-    });
-  }
-
-  function visit(node) {
-    if ((ts.isFunctionDeclaration(node) || ts.isFunctionExpression(node)) && node.name) {
-      record(node, node.name, 'function');
-    } else if (
-      ts.isVariableDeclaration(node) &&
-      ts.isIdentifier(node.name) &&
-      node.initializer &&
-      ts.isArrowFunction(node.initializer)
-    ) {
-      record(node.initializer, node.name, 'arrow_function', node.parent.parent);
-    }
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteralLike(node.moduleSpecifier)
-    ) {
-      importRefs.add(node.moduleSpecifier.text);
-    } else if (
-      ts.isCallExpression(node) &&
-      (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-        (ts.isIdentifier(node.expression) && node.expression.text === 'require')) &&
-      node.arguments[0] &&
-      ts.isStringLiteralLike(node.arguments[0])
-    ) {
-      importRefs.add(node.arguments[0].text);
-    }
-    ts.forEachChild(node, visit);
-  }
-  visit(source);
+  const candidates = declarations
+    .filter(
+      (fact) =>
+        fact.implemented && fact.body && ts.isBlock(fact.body) && fact.body.statements.length > 0
+    )
+    .map((fact) => ({ ...fact, name: fact.qualifiedName }));
 
   return candidates
     .sort((left, right) => left.start - right.start)
@@ -187,7 +136,7 @@ function extractCodeSymbolsFromFile(file, ownershipByPath) {
         importRefs: [...importRefs].sort(),
         metadata: {
           sourceRoot: sourcePath.split('/')[0] || '',
-          importRefCount: importRefs.size,
+          importRefCount: importRefs.length,
           statementCount: node.body.statements.length,
         },
         rawSymbol: { signature, startLine, endLine },

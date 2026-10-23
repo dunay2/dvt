@@ -122,8 +122,33 @@ test('validation has no import dependency and the prepush entry uses the read-on
   assert.doesNotMatch(reader + entry, /planning-db-import|runPlanningImport/);
   assert.match(entry, /require\('\.\/lib\/feature-mechanization-db-reader\.cjs'\)/);
   assert.match(entry, /await readFeatureMechanizationManifestRowsFromDb\(/);
-  assert.match(
-    entry,
-    /await readFeatureMechanizationManifestsFromDb\(\{ baseRef: args\.baseRef \}\)/
+});
+
+test('a failed snapshot connection preserves the connection error without issuing rollback', async () => {
+  const { withPlanningDbClient } = require('./feature-mechanization-db-reader.cjs');
+  const calls = [];
+  await assert.rejects(
+    withPlanningDbClient(
+      {
+        readOnlySnapshot: true,
+        deps: {
+          Client: class {
+            async connect() {
+              throw new Error('connection denied');
+            }
+            async query(sql) {
+              calls.push(sql);
+              throw new Error('not connected');
+            }
+            async end() {
+              calls.push('end');
+            }
+          },
+        },
+      },
+      async () => assert.fail('must not read')
+    ),
+    /connection denied/u
   );
+  assert.deepEqual(calls, ['end']);
 });

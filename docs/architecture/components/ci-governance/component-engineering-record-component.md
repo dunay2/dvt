@@ -2,7 +2,7 @@
 title: Component Engineering Record Component
 status: Review
 owner: Engineering / CI Governance / Architecture
-last_reviewed: 2026-10-22
+last_reviewed: 2026-10-23
 planning_type: architecture
 ---
 
@@ -62,6 +62,154 @@ deleted paths, excluded paths, ambiguous owners, invalid parent relations, and
 unavailable Git/DB evidence. A temporary Git repository exercises actual file
 changes; live DuckDB paths verify the operator query against the existing DB.
 
+## Atomic source responsibilities
+
+DB bindings connect concrete code to canonical responsibilities. The
+current model has component responsibilities and rail symbols, but neither
+association alone proves which responsibility a symbol implements.
+
+```mermaid
+flowchart LR
+  Responsibility[DB component responsibility] --> Binding[DB component source responsibility]
+  Binding --> Validate[Read-only reference validation]
+  Ownership[DB effective file ownership] --> Validate
+  Git[Selected Git files and AST symbols] --> Validate
+  Validate --> Gate[Implementation acceptance or explicit drift]
+```
+
+`architecture.component_source_responsibility` holds the current associations,
+independently of feature manifests or validator lifecycle. Each binding
+contains `responsibilityId`, `componentId` (the file owner), `path`, `symbol`,
+`role`, and nonempty `testPaths`. The responsibility ID references
+`architecture.component_responsibility`; its action text and semantic owner
+are read there, never copied into a new semantic dictionary. Paths and qualified
+symbols reference the selected Git inventory. A binding is a current semantic
+association, not a stored copy of code, a physical inventory, or a history.
+
+Roles are `implements`, `delegates`, and `verifies`. An implementation must belong
+to the responsibility's owning component. Delegation or verification can cross
+that boundary explicitly. Several symbols may collaborate on one responsibility;
+sharing its ID is not itself proof of duplicated logic. Conversely, different IDs
+cannot prove different semantics: that remains a code review question.
+
+`RecordArchitectureComponent` accepts `--source-bindings` as a JSON array and
+`--expected-bindings-hash` for optimistic concurrency. Supplying it replaces that
+component's complete current set; omission preserves the set. An empty array
+explicitly removes it. The writer locks the component, checks the digest of the
+current normalized set and validates referenced responsibilities before replacing
+rows in the same transaction as the existing component command and audit.
+Foreign keys prevent orphaned component or responsibility references. The
+`implements` role requires the responsibility owner to match the file component.
+Delegation and verification may name another responsibility owner explicitly.
+No feature command owns these associations. Git retains source history; the
+existing command audit is not a source inventory.
+
+The pilot covers five files: `buildLocalDataCaptureRuntime.ts`,
+`readLocalDataGenerationMetadataUseCase.ts`, `DuckDbGenerationStore.ts`,
+`duckDbGenerationMetadata.ts`, and `DuckDbLocalDataRuntime.ts`. It records their
+composition, authorization, capture/write, metadata integrity, and native
+lifecycle responsibilities, rather than declaring the metadata query to be
+their entire behavior. The component identities remain
+`SYS-API-RUNTIME-COMPOSITION`, `SYS-API-APPLICATION-SERVICES`, and
+`SYS-API-INFRASTRUCTURE`. Product rails and executable behavior are unchanged.
+
+Responsibilities and evidence associations remain in the DB. Source files do
+not carry generated responsibility headers, IDs, descriptions, or test catalogs.
+There is no header generator, parser, or synchronization command. Ordinary code
+comments explain local decisions when useful. Test paths are declared evidence
+references; their presence does not claim execution, assertions, or semantic
+coverage.
+
+| Rail                                         | Kind / owner                                     | Application and adapter surface                              | Scope and authorization                                                                   | Negative acceptance                                                                          |
+| -------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `RecordArchitectureComponent`                | Command / Architecture component                 | Existing `planning:db:operate architecture-component record` | Repository operator, admitted design, actor and expected binding-set digest               | Invalid binding, wrong owner, unknown responsibility, stale digest, concurrent replacement   |
+| `ValidateFeatureMechanizationImplementation` | Command / Repository feature mechanization guard | Existing `check-feature-mechanization.cjs --implementation`  | Read-only current candidate or explicit `GIT_HEAD`; existing local DB acceptance boundary | Missing symbol or evidence path, unknown responsibility, ambiguous owner, unavailable DB/Git |
+
+The mandatory file set comes from DB bindings. A source file without any
+responsibility comment passes when its references are valid. AST resolution
+recognizes actual declarations, including qualified class methods, not names
+inside strings or comments. Deleting or renaming a referenced symbol, file, or
+test without reconciling the DB fails validation. Missing or conflicting
+authority fails closed. Validation never rewrites code or rebuilds the DB.
+
+Pure contract tests run without DB in CI. Fresh acceptance against the existing
+DB remains local and records exact base/head, as required by the current
+single-team acceptance boundary. No CI artifact is a replacement DB authority.
+
+### Atomic responsibility planning matrix
+
+| Scenario                  | Opportunity          | Fowler pattern              | DDD owner                              | Command/query rail                           | Implementation surfaces                                                           | Unit or package test                                     | Architecture test                                | User-flow test                      | Out of scope                                            |
+| ------------------------- | -------------------- | --------------------------- | -------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------ | ----------------------------------- | ------------------------------------------------------- |
+| Admit current bindings    | Hidden authority     | Explicit domain association | Architecture component                 | `RecordArchitectureComponent`                | Current schema, existing writer, binding policy and focused tests                 | Replacement, malformed input, digest rejection           | Foreign keys and one canonical RESP definition   | Real PostgreSQL command transaction | SQL engine migration, history, global reconciliation    |
+| Keep one semantic record  | Duplicate semantics  | Remove duplicated data      | ComponentEngineeringRecord             | `ValidateFeatureMechanizationImplementation` | Pure reference validator, DB/Git reader; remove header CLI and generated comments | Valid bindings pass without comments                     | Component and responsibility identity checks     | Real five-file read-only validation | Product refactoring and repository-wide rollout         |
+| Reject stale declarations | Test-only confidence | Fail-closed policy          | Repository feature mechanization guard | `ValidateFeatureMechanizationImplementation` | Existing checker, routing, focused tests                                          | Missing symbol or evidence; code unchanged by validation | Explicit SHA and unavailable-authority rejection | Local exact-candidate gate          | Browser suites or claiming semantic duplicate detection |
+
+### Shared evidence and simplification plan
+
+GH-3699 admits the following implementation order. The target boundary is:
+
+```mermaid
+flowchart TD
+  Component[Architecture component command] --> Bindings[Current source associations]
+  Git[Selected Git candidate] --> Facts[Shared syntax and symbol facts]
+  Definitions[DB ownership and responsibilities] --> Model[Current component files model]
+  Bindings --> Model
+  Facts --> Model
+  Model --> Files[files]
+  Model --> Profile[component-profile]
+  Model --> Gate[Implementation validation]
+  Manifests[One effective feature manifest read] --> Gate
+```
+
+`files` and the file section of `component-profile` expose the same typed
+`responsibility_bindings`, including canonical description, qualified symbol,
+role and declared test paths. Empty bindings mean no association has been
+declared; they do not certify complete semantic coverage. The model exposes
+reference errors, and the implementation gate rejects those errors. Missing DB
+authority is an error, not an empty successful result.
+The `files` query rejects invalid references before filtering or paging, so a
+deleted bound path cannot disappear behind an apparently successful empty result.
+The component profile retains the full diagnostic list for repair.
+
+One invocation resolves one Git candidate and shares its inventory and source
+contents. DB reads for implementation acceptance share one read-only,
+repeatable-read transaction and one effective manifest read. The current file
+model reads architecture associations directly; it does not read feature
+manifests. The gate owns orchestration, pure policies own validation, and DB
+adapters own SQL and connection lifetimes.
+
+Symbol consumers share parsing and qualified identities. Their selection
+policies remain explicit: feature admission selects changed declarations,
+responsibility validation selects implemented symbols, and duplicate detection
+selects comparable nonempty bodies. Source comments and strings cannot invent
+symbols. This does not claim that syntactically different code has different
+responsibilities or that matching bodies necessarily justify a refactor.
+
+The existing repository command catalog classifies the responsibility validator
+as documentation governance and shared syntax facts as CI tooling. Its coverage
+test runs once for changes to any command file recognized by the catalog's own
+path predicate, or to the package command declarations. Unknown tools still fail
+closed; this introduces neither a second classifier nor a blanket helper rule.
+
+Feature metadata updates preserve omitted fields, but explicit replacement of
+the current manifest must replace obsolete collections rather than union them
+back into existence. Replacement requires an expected revision and retains the
+existing validation, authorization and idempotency checks.
+
+| Scenario                             | Opportunity             | Fowler pattern       | DDD owner                     | Command/query rail                          | Implementation surfaces                                             | Unit or package test                                           | Architecture test                                  | User-flow test                                              | Out of scope                           |
+| ------------------------------------ | ----------------------- | -------------------- | ----------------------------- | ------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |
+| Decouple source associations from CI | Boundary drift          | Move field / Gateway | Architecture component        | `RecordArchitectureComponent`               | Current schema, schema command, component writer and binding policy | Hash conflict, duplicate, wrong owner, unknown reference       | SQL foreign keys and atomic replacement            | Real PostgreSQL transaction and preserved 24 pilot bindings | Product source behavior                |
+| Read one architecture model          | Duplicate semantics     | Shared read model    | ComponentEngineeringRecord    | `ReadComponentFiles`                        | Current file query, CLI rendering, implementation gate              | Same bindings in file/profile, absent and invalid evidence     | One Git candidate and one DB snapshot per gate     | Live pilot query                                            | DB engine replacement                  |
+| Derive one set of syntax facts       | Duplicate semantics     | Extract function     | Repository source model       | Existing validation and code-symbol queries | Shared AST module and the three consumers                           | Classes, methods, overloads, aliases, comments, invalid syntax | Consumer policies use shared identities            | Selected Git commit validation                              | Semantic equivalence inference         |
+| Replace obsolete feature metadata    | Responsibility overload | Extract policy       | Feature mechanization catalog | `RecordFeatureMechanizationRail`            | Existing writer, pure merge policy, focused tests                   | Replacement, omitted fields, stale revision, replay            | No second writer or SQL path                       | Existing command regression                                 | Rewrite of unrelated operator commands |
+| Route purposeful checks once         | Duplicate semantics     | Remove dead code     | Local validation plan         | `ValidateChangedFiles`                      | Existing routing and contract tests                                 | Affected consumer suites selected once                         | Retired modules and flags have no active consumers | Prepush and exact-base/head DB gate                         | Broad browser suites                   |
+
+Schema additions follow ADR-0063's explicit current-schema addition contract.
+The first cut moves the 24 current pilot associations in one transaction and
+removes their obsolete manifest field. No query or gate accepts a fallback to
+that old location after the cut. Subsequent retirement of a feature rail cannot
+erase component responsibility associations.
+
 ## Governing Sources
 
 - `AGENTS.md`
@@ -116,9 +264,9 @@ changes; live DuckDB paths verify the operator query against the existing DB.
 | Root component becomes composite  | Broad component owns unrelated implementation | Add child components, set root `childrenRequired: true`, rerun unit coverage |
 | Child component becomes canonical | Docs, tests, contracts, and owners agree      | Add semantic metadata and run governance refresh                             |
 | File moves between components     | Source/test/doc path is renamed or extracted  | Update owns/excludes and regenerate the Git-derived file index               |
-| Query reads a stale projection    | Governance source hash differs from DB        | Fail closed; reconstruct only through explicit bootstrap/recovery            |
+| Query reads stale authority       | Governance source hash differs from DB        | Fail closed; reconcile through its declared command with reviewed evidence   |
 | Drift is detected                 | DB view emits a drift row                     | Fix manifest, docs, tests, or component split before closeout                |
-| Query rail changes                | New DB view/query behavior is added           | Update DB surface inventory, tests, migration, and plan manifest             |
+| Query rail changes                | New DB view/query behavior is added           | Update DB surface inventory, tests, current schema and rail declaration      |
 
 ## Consumers
 
@@ -242,27 +390,27 @@ These stories cover the composite component hierarchy, leaf file ownership,
 semantic component metadata, and DB-first drift query rails introduced for the
 engine pilot.
 
-| ID         | Story                                                                   | Acceptance criteria                                                                                                                 | Negative case                                                                                   |
-| ---------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| US-CER-001 | As an architecture reviewer, I inspect the engine component tree.       | `pnpm planning:db:query component-tree --component SYS-RUNTIME-ENGINE-CORE` returns the root and child rows after migration/import. | Query fails if the tree view migration is missing.                                              |
-| US-CER-002 | As a repo agent, I move an engine file into a nested component.         | `docs:governance:file-component-index` assigns the file to the deepest component in its unit path.                                  | A file mapped to the parent assembly emits `file_without_leaf_component`.                       |
-| US-CER-003 | As a maintainer, I split a broad component into children.               | The parent may have `level: component` children, and unit coverage accepts the hierarchy.                                           | The guard rejects unresolved parents and invalid parent levels.                                 |
-| US-CER-004 | As a reviewer, I need component intent, not just filenames.             | Canonical components declare owned concern, public API, invariants, transitions, and consumers.                                     | A canonical component missing semantic metadata fails unit coverage.                            |
-| US-CER-005 | As an operator, I need drift through a query rail.                      | `pnpm planning:db:query component-drift --component <id>` returns DB drift rows.                                                    | Unknown query names and unparameterized filters fail in tests.                                  |
-| US-CER-006 | As an architect, I compare docs with implementation.                    | Component guide names public API, invariants, transitions, consumers, and diagrams.                                                 | Docs-only claims are not accepted without migration/query/test support.                         |
-| US-CER-007 | As a planner, I need feature scope to be governed.                      | Feature mechanization manifest lists changed scripts, docs, migrations, and guards.                                                 | Implementation files outside allowed surfaces fail `docs:feature-mechanization:implementation`. |
-| US-CER-008 | As a reviewer, I need cross-domain ownership to remain visible.         | Engine plan-ref files stay owned by `SYS-PLANSTORE-ENGINE-FETCH`.                                                                   | The engine root must not reclaim plan-store-owned plan-ref files through a broad glob.          |
-| US-CER-009 | As a CI maintainer, I need generated indexes to remain local artifacts. | `governance:refresh` regenerates/imports local projections without committing generated fan-out.                                    | Manual edits to generated `system-governance-*` files are not a valid fix.                      |
-| US-CER-010 | As a future component owner, I need a reusable local guide.             | New component splits reuse the same API/invariant/transition/consumer structure.                                                    | Creating component IDs as retroactive labels without planned ownership remains invalid.         |
+| ID         | Story                                                                   | Acceptance criteria                                                                                                                                | Negative case                                                                                   |
+| ---------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| US-CER-001 | As an architecture reviewer, I inspect the engine component tree.       | `pnpm planning:db:query component-tree --component SYS-RUNTIME-ENGINE-CORE` returns the root and child rows from the current schema and authority. | Query fails if the current tree view is missing.                                                |
+| US-CER-002 | As a repo agent, I move an engine file into a nested component.         | `docs:governance:file-component-index` assigns the file to the deepest component in its unit path.                                                 | A file mapped to the parent assembly emits `file_without_leaf_component`.                       |
+| US-CER-003 | As a maintainer, I split a broad component into children.               | The parent may have `level: component` children, and unit coverage accepts the hierarchy.                                                          | The guard rejects unresolved parents and invalid parent levels.                                 |
+| US-CER-004 | As a reviewer, I need component intent, not just filenames.             | Canonical components declare owned concern, public API, invariants, transitions, and consumers.                                                    | A canonical component missing semantic metadata fails unit coverage.                            |
+| US-CER-005 | As an operator, I need drift through a query rail.                      | `pnpm planning:db:query component-drift --component <id>` returns DB drift rows.                                                                   | Unknown query names and unparameterized filters fail in tests.                                  |
+| US-CER-006 | As an architect, I compare docs with implementation.                    | Component guide names public API, invariants, transitions, consumers, and diagrams.                                                                | Docs-only claims are not accepted without schema/query/test support.                            |
+| US-CER-007 | As a planner, I need feature scope to be governed.                      | Feature mechanization manifest lists changed scripts, docs, schema, and guards.                                                                    | Implementation files outside allowed surfaces fail `docs:feature-mechanization:implementation`. |
+| US-CER-008 | As a reviewer, I need cross-domain ownership to remain visible.         | Engine plan-ref files stay owned by `SYS-PLANSTORE-ENGINE-FETCH`.                                                                                  | The engine root must not reclaim plan-store-owned plan-ref files through a broad glob.          |
+| US-CER-009 | As a CI maintainer, I need generated indexes to remain local artifacts. | `governance:refresh` refreshes Git-derived local projections without importing or rebuilding Planning DB.                                          | Manual edits to generated `system-governance-*` files are not a valid fix.                      |
+| US-CER-010 | As a future component owner, I need a reusable local guide.             | New component splits reuse the same API/invariant/transition/consumer structure.                                                                   | Creating component IDs as retroactive labels without planned ownership remains invalid.         |
 
 ### TDD Coverage
 
-| Cycle          | Red signal                                                               | Green implementation                                                                           |
-| -------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Migration      | No `032_component_engineering_composite_hierarchy.sql` and missing views | Add component tree, file ownership, metadata, and drift views                                  |
-| Query rails    | `component-tree` and `component-drift` are unknown queries               | Add known query names, readers, builders, and CLI dispatch                                     |
-| Semantic guard | Component parent and missing metadata cases are not validated correctly  | Allow component-to-component parentage and require metadata for canonical components           |
-| Leaf ownership | Nested engine file resolves to parent component                          | Assign componentUnit to the last component in the unit path                                    |
-| Engine pilot   | Engine root owns all package files directly                              | Split `SYS-RUNTIME-ENGINE-CORE` into child components and keep plan-ref cross-domain ownership |
+| Cycle          | Red signal                                                              | Green implementation                                                                           |
+| -------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Current schema | Required component views or constraints are missing                     | Declare component tree, file ownership, metadata, and drift in the current schema              |
+| Query rails    | `component-tree` and `component-drift` are unknown queries              | Add known query names, readers, builders, and CLI dispatch                                     |
+| Semantic guard | Component parent and missing metadata cases are not validated correctly | Allow component-to-component parentage and require metadata for canonical components           |
+| Leaf ownership | Nested engine file resolves to parent component                         | Assign componentUnit to the last component in the unit path                                    |
+| Engine pilot   | Engine root owns all package files directly                             | Split `SYS-RUNTIME-ENGINE-CORE` into child components and keep plan-ref cross-domain ownership |
 
 > Acceptance scope status: Review. Owner: Engineering / CI Governance / Architecture.

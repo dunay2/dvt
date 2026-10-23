@@ -14,6 +14,17 @@ import {
 
 const packageJson = JSON.parse(readFileSync('package.json', 'utf8'));
 
+test('responsibility helpers have explicit purposes without admitting arbitrary helpers', () => {
+  for (const [file, domain] of [
+    ['scripts/lib/component-source-responsibilities.cjs', 'docs-governance'],
+    ['scripts/lib/source-code-facts.cjs', 'ci-tooling'],
+  ]) {
+    assert.equal(classifyScriptFilePath(file).domain, domain);
+    assert.equal(classifyScriptFilePath(file).runtimeFanout, false);
+  }
+  assert.equal(classifyScriptFilePath('scripts/lib/source-code-unknown.cjs').domain, 'unknown');
+});
+
 test('classifies the exact-duplicate guard without admitting arbitrary web helpers', () => {
   const classification = classifyScriptFilePath('scripts/web-code-duplication.cjs');
   assert.equal(classification.domain, 'ci-tooling');

@@ -11,6 +11,8 @@ class FeatureMechanizationGitDiffReader {
     this.repoRootPath = options.repoRootPath || path.resolve(__dirname, '../..');
     this.untrackedFiles = new Set();
     this.comparison = null;
+    this.currentFiles = null;
+    this.sourceContents = new Map();
   }
 
   resolveComparison() {
@@ -32,9 +34,7 @@ class FeatureMechanizationGitDiffReader {
     const current = new Set(currentFiles);
     const fileContentsByPath = {};
     for (const file of changedFiles.filter((name) => current.has(name))) {
-      fileContentsByPath[file] = this.includeWorktree
-        ? fs.readFileSync(path.join(this.repoRootPath, file), 'utf8')
-        : this.runGit(['show', `${headSha}:${file}`]);
+      fileContentsByPath[file] = this.readSource(file);
     }
     return {
       baseSha,
@@ -69,18 +69,40 @@ class FeatureMechanizationGitDiffReader {
   }
 
   readCurrentFiles() {
+    if (this.currentFiles) return [...this.currentFiles];
     if (!this.includeWorktree) {
-      return this.readGitPaths([
+      this.currentFiles = this.readGitPaths([
         'ls-tree',
         '-r',
         '--name-only',
         '-z',
         this.resolveComparison().headSha,
       ]).sort();
+    } else {
+      this.currentFiles = this.readGitPaths([
+        'ls-files',
+        '--cached',
+        '--others',
+        '--exclude-standard',
+        '-z',
+      ])
+        .filter((name) => fs.existsSync(path.join(this.repoRootPath, name)))
+        .sort();
     }
-    return this.readGitPaths(['ls-files', '--cached', '--others', '--exclude-standard', '-z'])
-      .filter((name) => fs.existsSync(path.join(this.repoRootPath, name)))
-      .sort();
+    return [...this.currentFiles];
+  }
+
+  readSource(sourcePath) {
+    if (!this.readCurrentFiles().includes(sourcePath))
+      throw new Error('Missing selected Git path: ' + sourcePath);
+    if (!this.sourceContents.has(sourcePath))
+      this.sourceContents.set(
+        sourcePath,
+        this.includeWorktree
+          ? fs.readFileSync(path.join(this.repoRootPath, sourcePath), 'utf8')
+          : this.runGit(['show', this.resolveComparison().headSha + ':' + sourcePath])
+      );
+    return this.sourceContents.get(sourcePath);
   }
 
   diffScopes() {

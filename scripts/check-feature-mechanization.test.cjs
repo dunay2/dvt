@@ -6,6 +6,7 @@ const {
   extractFeatureMechanizationManifests,
   normalizeDbFeatureMechanizationManifestRows,
   readFeatureMechanizationManifestsFromDb,
+  readImplementationEvidence,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationManifest,
   validateFeatureMechanizationDocs,
@@ -94,6 +95,41 @@ function markdownWithManifest(manifest = validManifest) {
   ].join('\n');
 }
 
+test('implementation evidence shares one Git inventory and one read-only DB snapshot', async (t) => {
+  const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+  const repo = repository(t);
+  const gitReader = repo.reader();
+  const runGit = gitReader.runGit.bind(gitReader);
+  let inventories = 0;
+  gitReader.runGit = (args) => {
+    if (args[0] === 'ls-files' && args.includes('--cached')) inventories++;
+    return runGit(args);
+  };
+  const calls = [];
+  const client = {
+    query: async (sql) => {
+      calls.push(sql);
+      if (sql.includes('ranked_manifest_rows'))
+        return {
+          rows: [{ source_path: 'https://example.invalid/design', raw_manifest: validManifest }],
+        };
+      if (sql.includes('governance_component_definition_query'))
+        return {
+          rows: [{ id: 'SYS-MODEL', level: 'component', status: 'canonical', owns: ['*.ts'] }],
+        };
+      return { rows: [] };
+    },
+  };
+  const result = await readImplementationEvidence({ client, gitReader });
+  assert.equal(result.manifestEntries.length, 1);
+  assert.deepEqual(result.sourceErrors, []);
+  assert.equal(inventories, 1);
+  assert.match(calls[0], /begin.*repeatable read.*read only/iu);
+  assert.equal(calls.filter((sql) => sql.includes('ranked_manifest_rows')).length, 1);
+  assert.equal(calls.filter((sql) => sql.includes('component_source_responsibility')).length, 1);
+  assert.equal(calls.at(-1), 'commit');
+});
+
 test('extractFeatureMechanizationManifests reads feature-mechanization fenced blocks', () => {
   const manifests = extractFeatureMechanizationManifests(markdownWithManifest(), 'plan.md');
 
@@ -106,6 +142,16 @@ test('validateFeatureMechanizationManifest accepts a closed mechanical feature c
   const result = validateFeatureMechanizationManifest(validManifest, 'plan.md');
 
   assert.deepEqual(result.errors, []);
+});
+
+test('manifest validation rejects malformed responsibility bindings rather than ignoring them', () => {
+  for (const responsibilityBindings of [[], null, {}, [{ responsibilityId: 'RESP-TEST' }]]) {
+    const result = validateFeatureMechanizationManifest(
+      { ...validManifest, responsibilityBindings },
+      'plan.md'
+    );
+    assert.match(result.errors.join('\n'), /responsibility|binding/i);
+  }
 });
 
 test('validateFeatureMechanizationManifest accepts an explicit reference to an existing rail authority', () => {
@@ -896,6 +942,24 @@ test('validateFeatureImplementationManifests does not require symbol declaration
     }
   );
 
+  assert.deepEqual(result.errors, []);
+});
+
+test('implementation admission does not parse documentation as executable syntax', () => {
+  const sourcePath = 'docs/guide.md';
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: { ...validManifest, allowedImplementationSurfaces: [sourcePath] },
+      },
+    ],
+    {
+      changedFiles: [sourcePath],
+      fileContentsByPath: { [sourcePath]: '# Architecture\n\nUse `class Store` in an example.' },
+      addedLinesByPath: { [sourcePath]: ['# Architecture'] },
+    }
+  );
   assert.deepEqual(result.errors, []);
 });
 
