@@ -226,6 +226,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
       graphDbtModelCompilationQuery: { compile },
     });
     await harness.render();
+    const invalidate = vi.spyOn(harness.queryClient, 'invalidateQueries');
     await harness.clickPlan();
 
     expect(compile).toHaveBeenCalledOnce();
@@ -236,7 +237,115 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     expect(harness.shellFeedback.error).not.toHaveBeenCalledWith(
       expect.stringContaining('Unsafe backend detail')
     );
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.fileTree('tenant::project::env'),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.artifacts('tenant::project::env'),
+    });
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.fileContent('tenant::project::env', 'models/orders_model.sql'),
+    });
+    expect(invalidate.mock.invocationCallOrder.at(-1)).toBeLessThan(
+      vi.mocked(harness.shellFeedback.error).mock.invocationCallOrder[0]!
+    );
+    expect(harness.text('current-plan-sha')).toBe('none');
+    expect(harness.text('can-start-run')).toBe('false');
+    expect(harness.text('plan-modal-state')).toBe('false');
+    expect(runsService.startRun).not.toHaveBeenCalled();
   });
+
+  it.each(['compile', 'preview'] as const)(
+    'refreshes confirmed files when %s throws after publication',
+    async (phase) => {
+      const plansService = createPlansServiceMock();
+      if (phase === 'preview')
+        vi.mocked(plansService.previewPlan).mockRejectedValue(new Error('Preview unavailable'));
+      harness = renderExecutionActionsHarness({
+        plansService,
+        runsService: createRunsServiceMock(),
+        initialPlan: null,
+        stateful: true,
+        canonicalNodes: buildDbtNodes(),
+        canonicalEdges: buildDbtEdges(),
+        executionStrategy: {
+          kind: 'planner_generic_preview',
+          previewProfile: 'planner-generic-v1',
+          sourceFamily: 'dbt',
+        },
+        selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
+        workspaceNodeIds: ['source-orders', 'model-orders'],
+      });
+      if (phase === 'compile')
+        vi.mocked(harness.graphDbtModelCompilationQuery.compile).mockRejectedValue(
+          new Error('Compilation unavailable')
+        );
+      await harness.render();
+      const invalidate = vi.spyOn(harness.queryClient, 'invalidateQueries');
+      await harness.clickPlan();
+      expect(invalidate).toHaveBeenCalledWith({
+        queryKey: queryKeys.workspace.fileContent(
+          'tenant::project::env',
+          'models/orders_model.sql'
+        ),
+      });
+      expect(harness.shellFeedback.error).toHaveBeenCalledOnce();
+      expect(harness.text('current-plan-sha')).toBe('none');
+      expect(harness.text('plan-modal-state')).toBe('false');
+      expect(harness.text('can-start-run')).toBe('false');
+    }
+  );
+
+  it.each(['authority_refused', 'unchanged'] as const)(
+    'does not invalidate workspace queries for %s publication',
+    async (kind) => {
+      const plansService = createPlansServiceMock();
+      harness = renderExecutionActionsHarness({
+        plansService,
+        runsService: createRunsServiceMock(),
+        initialPlan: null,
+        stateful: true,
+        canonicalNodes: buildDbtNodes(),
+        canonicalEdges: buildDbtEdges(),
+        executionStrategy: {
+          kind: 'planner_generic_preview',
+          previewProfile: 'planner-generic-v1',
+          sourceFamily: 'dbt',
+        },
+        selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
+        workspaceNodeIds: ['source-orders', 'model-orders'],
+      });
+      vi.mocked(harness.graphDbtWorkspaceArtifactPublicationCommand.publish).mockResolvedValue(
+        kind === 'authority_refused'
+          ? {
+              schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+              kind,
+              canvasId: 'test-canvas',
+              reason: 'missing_authority',
+            }
+          : {
+              schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+              kind: 'applied',
+              idempotencyKey: 'unchanged',
+              requestHash: 'e'.repeat(64),
+              deduplicated: true,
+              writes: [],
+            }
+      );
+      vi.mocked(harness.graphDbtModelCompilationQuery.compile).mockRejectedValue(
+        new Error('Compilation unavailable')
+      );
+      await harness.render();
+      const invalidate = vi.spyOn(harness.queryClient, 'invalidateQueries');
+      await harness.clickPlan();
+      expect(invalidate).not.toHaveBeenCalled();
+      expect(harness.shellFeedback.error).toHaveBeenCalledOnce();
+      expect(plansService.previewPlan).not.toHaveBeenCalled();
+      expect(harness.text('current-plan-sha')).toBe('none');
+      expect(harness.text('plan-modal-state')).toBe('false');
+      expect(harness.text('can-start-run')).toBe('false');
+    }
+  );
 
   it('keeps dbt preview executable when model code is generated by the dbt plugin projection', async () => {
     const plansService = createPlansServiceMock();

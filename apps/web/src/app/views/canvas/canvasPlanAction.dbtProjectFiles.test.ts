@@ -235,6 +235,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
     expect(result).toEqual({
       ok: false,
       message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
+      writtenArtifactPaths: [],
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });
@@ -299,6 +300,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
     expect(result).toEqual({
       ok: false,
       message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
+      writtenArtifactPaths: [],
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });

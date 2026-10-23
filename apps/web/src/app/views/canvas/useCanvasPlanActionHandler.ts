@@ -73,25 +73,25 @@ export function useCanvasPlanActionHandler({
       graphDbtModelCompilationQuery,
     });
 
-    if (!result.ok) {
-      shellFeedback.error(result.message);
-      return;
-    }
-
-    const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScopeSnapshot();
-    const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
     if (result.writtenArtifactPaths.length > 0) {
+      const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScopeSnapshot();
+      const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
       });
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspace.artifacts(workspaceLayoutKey),
       });
+      for (const artifactPath of result.writtenArtifactPaths) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, artifactPath),
+        });
+      }
     }
-    for (const artifactPath of result.writtenArtifactPaths) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, artifactPath),
-      });
+
+    if (!result.ok) {
+      shellFeedback.error(result.message);
+      return;
     }
 
     const projection = projectCanvasPreviewOutcome(result.previewOutcome);

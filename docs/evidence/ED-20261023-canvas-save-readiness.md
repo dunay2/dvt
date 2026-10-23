@@ -173,3 +173,40 @@ composition guards, plus the same saved-JOIN browser spec. The latter selects
 derived SQL, verifies one real usable Monaco viewer, returns to canonical output
 and asserts no graph writes. Exact committed base/head and results remain in the
 governing issue; this review does not claim full-branch CI or prepush acceptance.
+
+## Preview Publication Effects Survive Later Failure
+
+The existing `PreviewPlan` command can acknowledge atomic graph-derived dbt
+artifact publication before compilation or Preview fails. Previously, failure
+receipts omitted those writes and the presentation adapter returned before
+invalidating workspace queries. The
+[receipt design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6376120481)
+defines one per-attempt effect accumulator and a mandatory readonly
+`writtenArtifactPaths` field on both result variants. One failure constructor
+retains the confirmed paths across typed rejections and exceptions. Paths enter
+the receipt only after publication acknowledgement; the command does not infer
+writes from proposed artifacts or invent a cross-service rollback.
+
+The existing React adapter invalidates the scoped file tree, artifacts and exact
+written file-content keys before presenting the outcome. Failure retains its
+message and cannot install a new plan, open a success modal or enable Run.
+No-effect receipts cause no cache invalidations. The existing three strategies
+and application ports remain on their established rails.
+
+TDD first reproduced six missing-receipt failures and three missing-invalidation
+failures. Focused command, publisher, handler and composition tests cover typed
+compilation rejection/refusal, compiler and Preview exceptions, unacknowledged
+publication, authorization and zero-effect publication. Existing protected and
+file-backed strategy assertions now include empty receipts. One stale-Preview
+readiness test explicitly declares its expected language instead of inheriting
+the host locale. The existing contextual Code browser spec additionally primes
+the file tree, acknowledges publication, rejects compilation and checks visible
+files without reloading or submitting Preview/Run. This is a controlled HTTP
+frontend proof; it does not certify a live backend or native compiler.
+
+`SYS-WEB-CANVAS-PREVIEW` retains ownership of submission and presentation. Current
+source/test bindings are reconciled through the existing scoped writer with an
+expected binding hash, preserving unrelated Run and autosave responsibilities.
+Exact commands, results and committed base/head remain in #3115. Strategy
+dependency narrowing, readiness presentation extraction and tooling separation
+are independent subsequent cuts.

@@ -232,6 +232,23 @@ React adapter handles cache invalidation, feedback and modal presentation. The
 attempt stores outcome and draft signature together; editing expires its visible
 diagnostic synchronously without discarding the stale-plan identity guard.
 
+### Preview Receipts Preserve Confirmed Effects
+
+`CanvasPlanActionResult` carries readonly `writtenArtifactPaths` for both success
+and failure. Only paths acknowledged by the existing atomic graph-derived dbt
+publication command enter that receipt. Later compilation rejection, compilation
+exceptions or Preview exceptions do not erase those effects or imply rollback.
+Failures before publication acknowledgement carry an empty effect list; planned
+paths and unknown outcomes are not reported as confirmed writes.
+
+The Preview command owns the per-attempt effect accumulator and receipt. Its
+existing React adapter invalidates the affected workspace file tree, artifacts
+and exact file-content keys before presenting either success or failure. A failed
+attempt retains its failure message and cannot install a successful Preview,
+open its success modal or start Run merely because publication succeeded. This
+uses the existing `PreviewPlan` command and compilation/query ports; it does not
+introduce a parallel command, compensating deletion or cross-service transaction.
+
 ## Transitions
 
 ```mermaid

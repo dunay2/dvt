@@ -144,6 +144,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       expect(result).toEqual({
         ok: false,
         message: canPlan ? 'Draft conflict' : canvasViewCopy.planPermissionDeniedMessage,
+        writtenArtifactPaths: [],
       });
       expect(flushDraftForExecution).toHaveBeenCalledTimes(canPlan ? 1 : 0);
       expect(previewPlan).not.toHaveBeenCalled();
@@ -253,6 +254,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     expect(result).toEqual({
       ok: false,
       message: canvasViewCopy.previewProvenanceTransformPathRequiredMessage,
+      writtenArtifactPaths: [],
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });
@@ -308,6 +310,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
 
   it('expires a rejected Preview when the authored graph signature changes', () => {
     const state = deriveCanvasExecutionState({
+      applicationLanguage: 'en',
       graphDraftCanvasId: 'canvas-main',
       runAdmission: { allowed: true },
       executionStrategy: strategy,
