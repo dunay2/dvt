@@ -7,6 +7,7 @@ import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
+import { executeCanvasRunStartAction } from './canvasRunStartAction';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
@@ -14,6 +15,7 @@ import {
   buildRunnableExecutionPlan,
   createPlansServiceMock,
   createRunsServiceMock,
+  createSessionContext,
   renderExecutionActionsHarness,
   resetExecutionActionsTestDoubles,
   restoreExecutionActionsTestDoubles,
@@ -61,7 +63,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     name: 'keeps startRun unavailable when route permissions block run execution',
     canRun: false,
     expectedSummary: canvasViewCopy.planStatusRunAuthorizationDeniedMessage,
-    expectedError: canvasViewCopy.runPermissionDeniedMessage,
+    expectedError: canvasViewCopy.planStatusRunAuthorizationDeniedMessage,
     expectedModalState: 'false',
     expectedBlocker: 'authorization_denied',
   },
@@ -162,6 +164,33 @@ async function expectUnavailableRunStart(args: {
 }
 
 describe('useCanvasExecutionActions run start guards', () => {
+  it.each([
+    ['draft_saving', 'planStatusDraftSavingMessage'],
+    ['draft_unavailable', 'planStatusDraftUnavailableMessage'],
+    ['authorization_denied', 'planStatusRunAuthorizationDeniedMessage'],
+    ['capability_mismatch', 'canvasExecutionUnavailableMessage'],
+  ] as const)(
+    'preserves %s through the actual Run command without transport',
+    async (reason, messageKey) => {
+      const runsService = createRunsServiceMock();
+      const result = await executeCanvasRunStartAction({
+        runAdmission: { allowed: false, reason },
+        currentPlan: buildRunnableExecutionPlan(),
+        executableGraphFailureMessage: null,
+        hasPersistedPlanForRun: true,
+        isCurrentPlanStale: false,
+        runsService,
+        sessionContext: createSessionContext(),
+      });
+      expect(result).toEqual({
+        ok: false,
+        message: canvasViewCopy[messageKey],
+        shouldOpenPlanModal: false,
+      });
+      expect(runsService.startRun).not.toHaveBeenCalled();
+    }
+  );
+
   let harness: ExecutionActionsHarness | null = null;
 
   beforeEach(() => {

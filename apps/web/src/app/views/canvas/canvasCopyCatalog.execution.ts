@@ -50,10 +50,6 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.preview.workspaceFilesUnavailableMessage',
     fallback: 'Preview provenance could not be resolved from the workspace files.',
   },
-  runPermissionDeniedMessage: {
-    key: 'canvas.run.permissionDeniedMessage',
-    fallback: 'You do not have permission to start runs',
-  },
   runNoPlanMessage: {
     key: 'canvas.run.noPlanMessage',
     fallback: 'No Execution Preview available - preview execution first.',

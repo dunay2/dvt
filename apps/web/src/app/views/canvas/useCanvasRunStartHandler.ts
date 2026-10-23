@@ -13,12 +13,12 @@ type UseCanvasRunStartHandlerArgs = Pick<
   | 'currentPlan'
   | 'onRunStarted'
   | 'runsService'
+  | 'runAdmission'
   | 'sessionContext'
   | 'setBottomDrawerHeight'
   | 'shellFeedback'
   | 'toggleBottomDrawer'
 > & {
-  canRun: boolean;
   executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
   isCurrentPlanStale: boolean;
@@ -42,7 +42,7 @@ function revealStartedRunOperations({
 }
 
 export function useCanvasRunStartHandler({
-  canRun,
+  runAdmission,
   bottomDrawerVisible,
   currentPlan,
   executableGraphFailureMessage,
@@ -58,7 +58,7 @@ export function useCanvasRunStartHandler({
 }: UseCanvasRunStartHandlerArgs): () => Promise<void> {
   return useCallback(async () => {
     const result = await executeCanvasRunStartAction({
-      canRun,
+      runAdmission,
       currentPlan,
       executableGraphFailureMessage,
       hasPersistedPlanForRun,
@@ -83,7 +83,7 @@ export function useCanvasRunStartHandler({
     shellFeedback.success(canvasViewCopy.runStartedMessage);
     onRunStarted(result.runId);
   }, [
-    canRun,
+    runAdmission,
     bottomDrawerVisible,
     currentPlan,
     executableGraphFailureMessage,

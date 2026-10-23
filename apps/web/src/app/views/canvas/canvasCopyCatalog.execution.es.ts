@@ -19,7 +19,6 @@ export const canvasViewExecutionCopyEs = {
     'La provenance del preview requiere una rama y un commit Git explicitos antes de planificar.',
   previewProvenanceWorkspaceFilesUnavailableMessage:
     'No se ha podido resolver la provenance del preview a partir de los ficheros del workspace.',
-  runPermissionDeniedMessage: 'No tienes permisos para arrancar runs',
   runNoPlanMessage: 'No hay un Execution Preview disponible: previsualiza la ejecucion antes.',
   runPreviewStaleMessage:
     'Execution Preview esta obsoleto. Previsualiza la ejecucion otra vez antes de arrancar.',

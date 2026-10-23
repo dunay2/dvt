@@ -37,7 +37,10 @@ function changeAndReadSavedType(materialized: string): void {
   cy.get('[role="menuitemradio"]')
     .contains(new RegExp(`^${materialized}$`))
     .click();
-  cy.wait('@saveDraft', { timeout: 20_000 }).its('response.statusCode').should('eq', 200);
+  getVisibleCanvasNode('dvt-transform-1')
+    .find('[data-slot="graph-node-materialization"]')
+    .should('have.text', materialized);
+  cy.get('[data-slot="canvas-draft-save-status"]', { timeout: 20_000 }).should('not.exist');
   readLiveGraphDraft().then((response) => {
     expect(response.status).to.equal(200);
     const draft = (response.body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record
@@ -62,7 +65,6 @@ describe('Protected model save and readiness', () => {
       terminalTransformResultTarget: { schema: 'public', relation: 'save_readiness_proof' },
       title: 'Materialization save and current readiness',
     });
-    cy.intercept('PUT', '**/workspace/graph/draft').as('saveDraft');
     cy.intercept('POST', '**/plans/preview').as('preview');
     cy.intercept('POST', '**/runs/start', (request) => {
       startRequests += 1;

@@ -100,6 +100,13 @@ export function resolvePlanRunReadinessBlockerMessage(
   copy: CanvasViewCopy
 ): string {
   if (readiness.diagnostic?.blocker === blocker) return readiness.diagnostic.message;
+  return resolvePlanRunBlockerMessage(blocker, copy);
+}
+
+export function resolvePlanRunBlockerMessage(
+  blocker: PlanRunReadinessBlocker,
+  copy: CanvasViewCopy
+): string {
   switch (blocker) {
     case 'authorization_denied':
       return copy.planStatusRunAuthorizationDeniedMessage;

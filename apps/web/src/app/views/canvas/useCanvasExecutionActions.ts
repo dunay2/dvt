@@ -93,9 +93,14 @@ export function useCanvasExecutionActions({
     workspaceNodeIds,
     executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
   });
+  const effectiveRunAdmission =
+    runAdmission.allowed &&
+    (resolvedExecutionStrategy == null || resolvedExecutionStrategy.kind === 'not_executable')
+      ? ({ allowed: false, reason: 'capability_mismatch' } as const)
+      : runAdmission;
   const executionState = deriveCanvasExecutionState({
     graphDraftCanvasId,
-    runAdmission,
+    runAdmission: effectiveRunAdmission,
     executionStrategy: resolvedExecutionStrategy,
     currentPlan,
     lastPlannedDraftSignature: previewAttempt?.draftSignature ?? null,
@@ -138,10 +143,7 @@ export function useCanvasExecutionActions({
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    canRun:
-      runAdmission.allowed &&
-      resolvedExecutionStrategy != null &&
-      resolvedExecutionStrategy.kind !== 'not_executable',
+    runAdmission: effectiveRunAdmission,
     bottomDrawerVisible,
     currentPlan,
     executableGraphFailureMessage,

@@ -19,6 +19,7 @@ evidence:
   tests:
     - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasDraftAutosave.test.tsx src/app/views/canvas/canvasDraftAutosaveSnapshot.test.ts src/app/views/canvas/canvasDraftPersistenceRuntime.test.ts src/app/views/canvas/useCanvasDraftAutosave.architecture.test.ts
     - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasPlanReadiness.test.ts src/app/views/canvas/canvasRuntimePolicy.test.ts src/app/views/canvas/canvasOperationalDrawerContribution.test.tsx src/app/views/canvas/canvasPlanAction.dvtProtectedPreview.test.ts
+    - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts
     - pnpm --filter dvt-api test:unit test/application/services/resolveAuthorizedDvtPreviewSelection.test.ts
     - pnpm --filter @dvt/contracts exec vitest run test/operational-rejection.test.ts test/schema-sync.test.ts
     - pnpm validate:contracts
@@ -44,6 +45,8 @@ Runtime policy owns a discriminated Run admission value. Draft persistence
 supplies its barrier without interpreting Run permission. Readiness owns each
 blocker's message and label, shared by the panel and operational drawer. The old
 unused global unavailable summary and duplicated label map are removed.
+The same typed cause reaches the Run application command; direct invocations
+cannot misreport a pending save or unavailable capability as permission denial.
 
 Preview owns outcome and attempted draft signature as one value. Its visible
 diagnostic expires on a semantic edit even when the previous request accepted no

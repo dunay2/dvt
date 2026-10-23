@@ -244,7 +244,6 @@ export type CanvasViewCopy = {
   readonly previewProvenanceWorkspaceNotConfiguredMessage: string;
   readonly previewProvenanceExplicitGitRevisionRequiredMessage: string;
   readonly previewProvenanceWorkspaceFilesUnavailableMessage: string;
-  readonly runPermissionDeniedMessage: string;
   readonly runNoPlanMessage: string;
   readonly runPreviewStaleMessage: string;
   readonly runPlanRefUnavailableMessage: string;

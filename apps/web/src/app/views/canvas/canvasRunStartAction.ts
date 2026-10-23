@@ -6,7 +6,8 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { PlanViewModel } from '../../types/plans';
 
-import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
+import { resolvePlanRefForStartRun, resolvePlanRunBlockerMessage } from './canvasPlanReadiness';
+import type { CanvasRunAdmission } from './canvasRuntimePolicy';
 import { collectPlanSelection } from './canvasRunSelection';
 import { canvasViewCopy } from './copy';
 
@@ -24,7 +25,7 @@ type CanvasRunStartActionSuccess = {
 export type CanvasRunStartActionResult = CanvasRunStartActionFailure | CanvasRunStartActionSuccess;
 
 export async function executeCanvasRunStartAction({
-  canRun,
+  runAdmission,
   currentPlan,
   executableGraphFailureMessage,
   hasPersistedPlanForRun,
@@ -32,7 +33,7 @@ export async function executeCanvasRunStartAction({
   runsService,
   sessionContext,
 }: {
-  canRun: boolean;
+  runAdmission: CanvasRunAdmission;
   currentPlan: PlanViewModel | null;
   executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
@@ -40,10 +41,10 @@ export async function executeCanvasRunStartAction({
   runsService: IRunsPort;
   sessionContext: SessionContextPort;
 }): Promise<CanvasRunStartActionResult> {
-  if (!canRun) {
+  if (!runAdmission.allowed) {
     return {
       ok: false,
-      message: canvasViewCopy.runPermissionDeniedMessage,
+      message: resolvePlanRunBlockerMessage(runAdmission.reason, canvasViewCopy),
       shouldOpenPlanModal: false,
     };
   }
