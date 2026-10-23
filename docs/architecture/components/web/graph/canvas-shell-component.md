@@ -308,6 +308,21 @@ Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
+### Shared Inspector Form Typography
+
+The node authoring section applies the compact Inspector form typography from
+`inspectorVisualTokens`. Existing Input, Label, Textarea, native select and select
+trigger slots share the same `text-xs` scale as the Inspector tabs. Plugin fields
+and general name/tags/description fields inherit this one presentation boundary;
+individual fields do not duplicate font-size overrides. Read-only property facts
+use the same body scale in the Inspector and workbench variants. Global UI primitives,
+title hierarchy, control heights, code-editor typography and mutation handlers
+retain their existing owners.
+
+The rendered acceptance compares computed label/control font sizes with the
+General tab at two desktop widths, checks focus and form overflow, and retains
+the protected Model save flow. A matching class string is not visual evidence.
+
 ### Native Source Overview And Provider Comments
 
 The narrow Source Overview uses full-width stacked source and DVT sections,

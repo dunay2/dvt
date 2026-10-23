@@ -23,6 +23,11 @@ arc_level: ARC-2
 | A readiness query imports a command or concrete transport           | Root dependency-cruiser rejects reversed component import directions, including type imports        | Negative import fixtures, valid composition and real repository graph       |
 | Metadata correction overwrites unrelated authority                  | Preserve ownership and bindings; retain expected revision, design scope and audited semantic deltas | Stale/unknown-removal tests and unchanged binding digests                   |
 
+Compact Inspector typography uses the existing body scale through shared tokens.
+Rendered acceptance checks form controls and read-only facts against the General
+tab at two widths, keyboard focus and overflow. Global UI primitives and control
+heights are preserved to keep this density change scoped to presentation.
+
 PostgreSQL's observed backend termination remains unexplained; it is not declared
 fixed by this product slice. Existing global component evidence warnings also
 remain open. Git preserves prior documentation; no historical copies or parallel

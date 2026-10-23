@@ -51,6 +51,43 @@ function changeAndReadSavedType(materialized: string): void {
   });
 }
 
+function inspectModelFormTypography(): void {
+  getVisibleCanvasNode('dvt-transform-1').click('topLeft');
+  cy.get('[data-slot="canvas-node-workbench-tab-general"]').should('be.visible').click();
+  for (const width of [1600, 1200]) {
+    cy.viewport(width, 1000);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should(($panel) => {
+      const panel = $panel[0]!;
+      const view = panel.ownerDocument.defaultView!;
+      const tab = panel.querySelector('[data-slot="canvas-node-workbench-tab-general"]')!;
+      const referenceSize = view.getComputedStyle(tab).fontSize;
+      const form = panel.querySelector<HTMLElement>(
+        '[data-slot="node-inspector-editable-section"]'
+      )!;
+      const fields = form.querySelectorAll(
+        '[data-slot="label"], [data-slot="input"], [data-slot="textarea"], select'
+      );
+      expect(fields.length, 'rendered metadata and plugin controls').to.be.greaterThan(4);
+      const properties = panel.querySelectorAll('dl dt, dl dd');
+      expect(properties.length, 'rendered read-only facts').to.be.greaterThan(0);
+      for (const field of [...fields, ...properties]) {
+        expect(
+          view.getComputedStyle(field).fontSize,
+          `${field.tagName} matches Inspector scale`
+        ).to.equal(referenceSize);
+      }
+      expect(form.scrollWidth, 'form has no horizontal overflow').to.be.at.most(
+        form.clientWidth + 1
+      );
+    });
+    cy.get('input[name="node-name"]').focus().should('have.focus');
+    cy.screenshot(`model-inspector-shared-typography-${width}`);
+  }
+  cy.viewport(1600, 1000);
+  cy.get('[data-slot="canvas-node-workbench-close"]').click();
+  cy.get('.react-flow__controls-fitview').click();
+}
+
 describe('Protected model save and readiness', () => {
   it('saves every authored type, reloads it and replaces the previous rejection without starting Run', () => {
     if (!hasLiveProtectedRuntimeEnv())
@@ -71,6 +108,7 @@ describe('Protected model save and readiness', () => {
       request.continue();
     });
     visitSavedModel('table');
+    inspectModelFormTypography();
     changeAndReadSavedType('view');
     visitSavedModel('view');
     selectCanvasClosure(['dvt-transform-1']);

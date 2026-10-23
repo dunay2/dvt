@@ -99,3 +99,19 @@ Focused commands for this refinement are
 The issue records exact outcomes and committed base/head. This tooling and
 metadata refinement does not change product runtime behavior or repeat the
 previous browser acceptance.
+
+## Shared Inspector Typography
+
+The [presentation refinement](https://github.com/dunay2/dvt/issues/3718#issuecomment-6374119997)
+reuses the current presentation query and the existing protected save proof.
+Its first rendered regression observed 14px labels against the 12px General tab.
+One shared Inspector form token now applies the existing compact scale to labels,
+inputs, native selects, select triggers and textareas. Inspector/workbench property
+facts use that same body scale. Title hierarchy, global UI primitives, control
+heights and authoring handlers are preserved.
+
+The extended existing LIVE case compares computed typography at 1600 and 1200px,
+checks keyboard focus and horizontal overflow, and retains save/readback/reload
+for table, view and ephemeral without starting Run. The issue records the final
+result and candidate SHA. No CSS-class snapshot or new style-specific unit suite
+is used as a substitute for the rendered proof.
