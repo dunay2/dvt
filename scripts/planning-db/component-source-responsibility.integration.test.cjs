@@ -5,6 +5,10 @@ const fs = require('node:fs');
 const { randomUuidV4, sha256HexUtf8 } = require('@dvt/crypto');
 const { Client } = require('pg');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
+const { repository } = require('../lib/feature-mechanization-git-fixture.cjs');
+const {
+  createComponentIntegrityReadModelComponent,
+} = require('./queries/component-integrity-query.cjs');
 const {
   applyCurrentPlanningDbSchema,
   addCurrentPlanningDbTable,
@@ -20,7 +24,7 @@ const {
   replaceComponentBindings,
 } = require('./component-source-responsibility-store.cjs');
 
-test('component binding command preserves authority, replaces atomically and rejects stale concurrent writers', async () => {
+test('component binding command preserves authority, replaces atomically and rejects stale concurrent writers', async (t) => {
   const adminUrl = process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
   const name = 'dvt_planning_test_bindings_' + randomUuidV4().replaceAll('-', '');
   assert.match(name, /^dvt_planning_test_bindings_[a-f0-9]+$/u);
@@ -72,6 +76,35 @@ test('component binding command preserves authority, replaces atomically and rej
       'test',
     ];
     await applyArchitectureComponentRecordOperation(parseArgs(args), { databaseUrl });
+    // Populate the disposable database's empty projections, without importing any files.
+    for (const projection of [
+      'component_engineering_component_tree_projection',
+      'component_engineering_file_ownership_projection',
+      'component_engineering_rule_evaluation_projection',
+    ]) {
+      await client.query('refresh materialized view planning_query_store.' + projection);
+    }
+    const repo = repository(t);
+    const filter = { component: 'SYS-MODEL', kind: 'component_path_without_files' };
+    const readPathGaps = () =>
+      createComponentIntegrityReadModelComponent({
+        gitReader: repo.reader(),
+      }).readComponentIntegrityRows(client, filter);
+    assert.deepEqual(await readPathGaps(), [], 'current file exists without imported inventory');
+    repo.git('rm', '--quiet', 'model.ts');
+    assert.equal((await readPathGaps()).length, 1, 'deleted path must fail');
+    await client.query(
+      "update architecture.component set repo_path = 'folder' where component_id = 'SYS-MODEL'"
+    );
+    fs.mkdirSync(require('node:path').join(repo.root, 'folder-other'));
+    repo.write('folder-other/model.ts', 'export const other = true;\n');
+    assert.equal((await readPathGaps()).length, 1, 'sibling prefix is not a directory member');
+    fs.mkdirSync(require('node:path').join(repo.root, 'folder'));
+    repo.write('folder/model.ts', 'export const current = true;\n');
+    assert.deepEqual(await readPathGaps(), []);
+    await client.query(
+      "update architecture.component set repo_path = 'model.ts' where component_id = 'SYS-MODEL'"
+    );
     // Exercise the explicit addition path on this disposable database only.
     await client.query('drop table architecture.component_source_responsibility');
     const schemaSha256 = sha256HexUtf8(fs.readFileSync(currentSchemaPath, 'utf8'));

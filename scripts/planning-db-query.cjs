@@ -29,6 +29,7 @@ const { appendComponentPairFilter, appendFilter } = require('./planning-db/query
 const { parseLimit } = require('./planning-db/query-limit.cjs');
 const {
   createCurrentComponentFilesReadModelComponent,
+  selectCurrentComponentTreeRows,
 } = require('./planning-db/queries/current-component-files-query.cjs');
 const {
   buildFrontendComponentFileRows,
@@ -1943,29 +1944,6 @@ function governanceUnitSelect() {
     from ${schemaName}.governance_unit_query`;
 }
 
-function componentEngineeringComponentTreeSelect() {
-  return `
-    select
-      component_id,
-      name,
-      component_level,
-      parent_component_id,
-      root_unit,
-      domain_unit,
-      status,
-      governance_state,
-      children_required,
-      direct_file_count,
-      descendant_component_count,
-      descendant_file_count,
-      ddd_owner,
-      cq_rails,
-      is_materialized_component,
-      has_children,
-      is_leaf_component
-    from ${componentEngineeringSchemaName}.component_tree_query`;
-}
-
 function componentEngineeringComponentDriftSelect() {
   return `
     select
@@ -2731,27 +2709,12 @@ async function readGovernanceUnitRows(client, filters = {}) {
   return result.rows;
 }
 
-async function readComponentEngineeringComponentTreeRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'component_id', filters.component);
-  appendFilter(predicates, params, 'parent_component_id', filters.parentUnit);
-  appendFilter(predicates, params, 'governance_state', filters.governanceState);
-  appendFilter(predicates, params, 'root_unit', filters.rootUnit);
-  appendFilter(predicates, params, 'domain_unit', filters.domainUnit);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${componentEngineeringComponentTreeSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by component_id
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
+async function readComponentEngineeringComponentTreeRows(client, filters = {}, options = {}) {
+  const snapshot =
+    await createCurrentComponentFilesReadModelComponent(options).readCurrentComponentFiles(client);
+  if (snapshot.errors.length)
+    throw new Error('Invalid source responsibility references: ' + snapshot.errors.join('; '));
+  return selectCurrentComponentTreeRows(snapshot, filters);
 }
 
 async function readComponentEngineeringComponentDriftRows(client, filters = {}) {
@@ -2818,42 +2781,24 @@ async function readComponentProfileRows(client, filters = {}, options = {}) {
   const snapshot =
     await createCurrentComponentFilesReadModelComponent(options).readCurrentComponentFiles(client);
 
-  const componentRows = await readComponentEngineeringComponentTreeRows(client, {
+  const componentRows = selectCurrentComponentTreeRows(snapshot, {
     ...scopedFilters,
     limit: 1,
   });
-  const children = await readComponentEngineeringComponentTreeRows(client, {
+  const children = selectCurrentComponentTreeRows(snapshot, {
     parentUnit: component,
     limit,
   });
-  const withCurrentFileCounts = (row) => {
-    if (!row) return null;
-    const id = row.component_id;
-    const descendants = readComponentProfileFileRows(snapshot, {
-      component: id,
-      limit: Number.MAX_SAFE_INTEGER,
-    });
-    return {
-      ...row,
-      direct_file_count: snapshot.files.filter((file) => file.owning_unit === id).length,
-      descendant_file_count: descendants.length,
-      ambiguous_file_count: descendants.filter((file) => file.governance_state === 'ambiguous')
-        .length,
-      test_file_count: descendants.filter((file) =>
-        /(^|\/)(test|tests|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/.test(file.path)
-      ).length,
-    };
-  };
 
   return {
     filters: { component },
-    component: withCurrentFileCounts(componentRows[0]),
+    component: componentRows[0] || null,
     sourceBindingsHash:
       require('./planning-db/component-source-responsibility-store.cjs').bindingSetHash(
         snapshot.bindings.filter((binding) => binding.componentId === component)
       ),
     sourceResponsibilityErrors: snapshot.errors,
-    children: children.map(withCurrentFileCounts),
+    children,
     files: readComponentProfileFileRows(snapshot, scopedFilters),
     architectureComponents: await readArchitectureComponentRows(client, scopedFilters),
     responsibilities: await readArchitectureResponsibilityRows(client, scopedFilters),
@@ -3936,7 +3881,11 @@ async function runQuery(options = {}) {
     }
 
     if (queryName === 'component-tree') {
-      const rows = await readComponentEngineeringComponentTreeRows(client, options.filters || {});
+      const rows = await readComponentEngineeringComponentTreeRows(
+        client,
+        options.filters || {},
+        options
+      );
       const componentRows = buildComponentEngineeringComponentTreeRows(rows);
       if (options.print !== false) {
         printTaskRows(componentRows);

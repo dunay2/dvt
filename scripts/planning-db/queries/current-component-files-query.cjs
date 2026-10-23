@@ -12,6 +12,7 @@ const {
   FeatureMechanizationGitDiffReader,
 } = require('../../lib/feature-mechanization-git-diff.cjs');
 const { schemaName } = require('../../planning-db-schema.cjs');
+const { parseLimit } = require('../query-limit.cjs');
 const {
   readSourceResponsibilityAuthority,
 } = require('../component-source-responsibility-store.cjs');
@@ -131,6 +132,65 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
     };
   }
 
+  function buildCurrentComponentTree(units, files) {
+    const byId = new Map(units.map((unit) => [unit.id, unit]));
+    const rows = new Map(
+      units.map((unit) => {
+        const ancestors = unit.unit_path.map((id) => byId.get(id));
+        return [
+          unit.id,
+          {
+            component_id: unit.id,
+            name: unit.name,
+            component_level: unit.level,
+            parent_component_id: unit.parent,
+            root_unit:
+              unit.root_unit ||
+              ancestors.find((ancestor) => ancestor.level === 'system')?.id ||
+              null,
+            domain_unit:
+              unit.domain_unit ||
+              ancestors.find((ancestor) => ancestor.level === 'domain')?.id ||
+              null,
+            status: unit.status,
+            governance_state: deriveGovernanceSemantics(unit.status, unit.level).governanceState,
+            children_required: unit.children_required,
+            ddd_owner: unit.ddd_owner,
+            cq_rails: unit.cq_rails,
+            is_materialized_component: unit.level === 'component',
+            has_children: false,
+            is_leaf_component: true,
+            direct_file_count: 0,
+            descendant_component_count: 0,
+            descendant_file_count: 0,
+            ambiguous_file_count: 0,
+            test_file_count: 0,
+          },
+        ];
+      })
+    );
+    for (const unit of units) {
+      if (unit.parent) {
+        rows.get(unit.parent).has_children = true;
+        rows.get(unit.parent).is_leaf_component = false;
+      }
+      for (const id of unit.unit_path.slice(0, -1)) rows.get(id).descendant_component_count++;
+    }
+    for (const file of files) {
+      const owner = rows.get(file.owning_unit);
+      if (owner) owner.direct_file_count++;
+      const affected = new Set([...file.unit_path, ...(file.candidate_unit_paths || []).flat()]);
+      for (const id of affected) {
+        const row = rows.get(id);
+        row.descendant_file_count++;
+        if (file.governance_state === 'ambiguous') row.ambiguous_file_count++;
+        if (/(^|\/)(test|tests|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$/.test(file.path))
+          row.test_file_count++;
+      }
+    }
+    return [...rows.values()];
+  }
+
   async function readCurrentComponentFiles(client) {
     const reader = deps.gitReader || new FeatureMechanizationGitDiffReader();
     const currentFiles = readGitSourceInventory(reader);
@@ -220,13 +280,41 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
             }).errors;
       errors.push(...file.responsibility_errors.map((error) => file.path + ': ' + error));
     }
-    return { files, units, errors, bindings: shape.bindings };
+    return {
+      files,
+      units,
+      errors,
+      bindings: shape.bindings,
+      tree: buildCurrentComponentTree(units, files),
+    };
   }
 
   return { readCurrentComponentFiles, readGitSourceInventory };
 }
 
+function selectCurrentComponentTreeRows(snapshot, filters = {}) {
+  const fields = {
+    component: 'component_id',
+    parentUnit: 'parent_component_id',
+    governanceState: 'governance_state',
+    rootUnit: 'root_unit',
+    domainUnit: 'domain_unit',
+  };
+  return snapshot.tree
+    .filter((row) =>
+      Object.entries(fields).every(
+        ([filter, field]) =>
+          filters[filter] === undefined ||
+          filters[filter] === null ||
+          filters[filter] === '' ||
+          row[field] === filters[filter]
+      )
+    )
+    .slice(0, parseLimit(filters.limit, 50));
+}
+
 module.exports = {
   createCurrentComponentFilesReadModelComponent,
+  selectCurrentComponentTreeRows,
   ...createCurrentComponentFilesReadModelComponent(),
 };
