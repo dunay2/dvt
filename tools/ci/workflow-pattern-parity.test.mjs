@@ -731,8 +731,11 @@ test('PR quality gate prepares planning DB for its remaining DB-backed consumers
   assert.doesNotMatch(prQualityGate, /import-governance:/u);
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
   const cryptoBuildIndex = preparePlanningDbAction.indexOf('pnpm --filter @dvt/crypto build');
+  const schemaLoadIndex = preparePlanningDbAction.indexOf('node scripts/planning-db-schema.cjs');
   const planningImportIndex = preparePlanningDbAction.indexOf('pnpm planning:db:import');
   assert.notEqual(cryptoBuildIndex, -1);
+  assert.notEqual(schemaLoadIndex, -1);
+  assert.ok(cryptoBuildIndex < schemaLoadIndex, 'build crypto before its first schema consumer');
   assert.ok(cryptoBuildIndex < planningImportIndex);
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
   assert.equal(

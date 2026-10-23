@@ -2095,19 +2095,33 @@ test('runQuery does not refresh governance projections by default for database r
     async query(sql, params) {
       events.push(['query', sql, params]);
       return {
-        rows: [
-          {
-            component_id: 'SYS-RUNTIME-ENGINE-CORE',
-            name: 'Runtime engine core',
-            component_level: 'component',
-            parent_component_id: 'SYS-RUNTIME-ROOT',
-            governance_state: 'coverage-required',
-            direct_file_count: 0,
-            descendant_file_count: 189,
-            ddd_owner: 'AS',
-            is_leaf_component: false,
-          },
-        ],
+        rows: sql.includes('governance_unit_query')
+          ? [
+              {
+                id: 'SYS-RUNTIME-ROOT',
+                level: 'module',
+                status: 'canonical',
+                owns: [],
+                excludes: [],
+                responsibilities: [],
+              },
+              {
+                id: 'SYS-RUNTIME-ENGINE-CORE',
+                name: 'Runtime engine core',
+                level: 'component',
+                status: 'coverage-required',
+                owns: ['model.ts'],
+                excludes: [],
+                responsibilities: [],
+                parent: 'SYS-RUNTIME-ROOT',
+                governance_state: 'coverage-required',
+                direct_file_count: 0,
+                descendant_file_count: 189,
+                ddd_owner: 'AS',
+                is_leaf_component: false,
+              },
+            ]
+          : [],
       };
     },
   };
@@ -2118,6 +2132,7 @@ test('runQuery does not refresh governance projections by default for database r
     databaseUrl: 'postgresql://example/db',
     client,
     print: false,
+    gitReader: { resolveComparison() {}, readCurrentFiles: () => ['model.ts'] },
     runPlanningImport: async () => {
       throw new Error('database query must not import governance by default');
     },
@@ -2130,10 +2145,10 @@ test('runQuery does not refresh governance projections by default for database r
     'component',
     'SYS-RUNTIME-ROOT',
     'coverage-required',
-    0,
-    189,
+    1,
+    1,
     'AS',
-    'false',
+    'true',
   ]);
 });
 
@@ -2143,19 +2158,33 @@ test('runQuery refreshes stale governance projections only when explicitly reque
     async query(sql, params) {
       events.push(['query', sql, params]);
       return {
-        rows: [
-          {
-            component_id: 'SYS-RUNTIME-ENGINE-CORE',
-            name: 'Runtime engine core',
-            component_level: 'component',
-            parent_component_id: 'SYS-RUNTIME-ROOT',
-            governance_state: 'coverage-required',
-            direct_file_count: 0,
-            descendant_file_count: 189,
-            ddd_owner: 'AS',
-            is_leaf_component: false,
-          },
-        ],
+        rows: sql.includes('governance_unit_query')
+          ? [
+              {
+                id: 'SYS-RUNTIME-ROOT',
+                level: 'module',
+                status: 'canonical',
+                owns: [],
+                excludes: [],
+                responsibilities: [],
+              },
+              {
+                id: 'SYS-RUNTIME-ENGINE-CORE',
+                name: 'Runtime engine core',
+                level: 'component',
+                status: 'coverage-required',
+                owns: ['model.ts'],
+                excludes: [],
+                responsibilities: [],
+                parent: 'SYS-RUNTIME-ROOT',
+                governance_state: 'coverage-required',
+                direct_file_count: 0,
+                descendant_file_count: 189,
+                ddd_owner: 'AS',
+                is_leaf_component: false,
+              },
+            ]
+          : [],
       };
     },
   };
@@ -2168,6 +2197,7 @@ test('runQuery refreshes stale governance projections only when explicitly reque
     databaseUrl: 'postgresql://example/db',
     client,
     print: false,
+    gitReader: { resolveComparison() {}, readCurrentFiles: () => ['model.ts'] },
     logger: { error: (message) => importMessages.push(message) },
     runPlanningImport: async (options, deps) => {
       events.push(['import', options, Boolean(deps?.logger)]);
@@ -2194,10 +2224,10 @@ test('runQuery refreshes stale governance projections only when explicitly reque
     'component',
     'SYS-RUNTIME-ROOT',
     'coverage-required',
-    0,
-    189,
+    1,
+    1,
     'AS',
-    'false',
+    'true',
   ]);
   assert.deepEqual(importMessages, [
     '[planning:db:query] refreshed stale governance projection before component-tree',
@@ -4121,34 +4151,26 @@ test('readGovernanceUnitRows queries the DB governance unit tree view', async ()
   assert.deepEqual(captured.params, ['SYS-API-ROOT', 'SYS-API', 'coverage-required', 5]);
 });
 
-test('readComponentEngineeringComponentTreeRows queries the DB component tree view', async () => {
-  const captured = { sql: '', params: null };
+test('component tree rejects absent effective authority instead of trusting imported hierarchy', async () => {
+  const calls = [];
   const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
+    async query(sql) {
+      calls.push(sql);
       return { rows: [] };
     },
   };
-
-  await readComponentEngineeringComponentTreeRows(client, {
-    component: 'SYS-RUNTIME-ENGINE-CORE',
-    parentUnit: 'SYS-RUNTIME-ROOT',
-    governanceState: 'coverage-required',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from component_engineering\.component_tree_query/);
-  assert.match(captured.sql, /component_id = \$1/);
-  assert.match(captured.sql, /parent_component_id = \$2/);
-  assert.match(captured.sql, /governance_state = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, [
-    'SYS-RUNTIME-ENGINE-CORE',
-    'SYS-RUNTIME-ROOT',
-    'coverage-required',
-    5,
-  ]);
+  await assert.rejects(
+    readComponentEngineeringComponentTreeRows(
+      client,
+      {},
+      {
+        gitReader: { resolveComparison() {}, readCurrentFiles: () => [] },
+      }
+    ),
+    /Planning DB returned no unit authority/
+  );
+  assert.equal(calls.length, 1);
+  assert.match(calls[0], /governance_component_definition_query/);
 });
 
 test('readComponentEngineeringComponentMetadataRows queries the stable component metadata schema view', async () => {

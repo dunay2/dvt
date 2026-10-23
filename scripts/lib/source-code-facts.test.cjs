@@ -54,3 +54,20 @@ test('nested named scopes are qualified and anonymous callbacks cannot invent bi
   };
   assert.deepEqual(extractQualifiedSourceSymbols(file), ['outer', 'outer.inner']);
 });
+
+test('module references include literal imports and exclude quoted, commented and computed code', () => {
+  const facts = readSourceCodeFacts({
+    path: 'module.ts',
+    content: [
+      "import type { Model } from './model';",
+      "export { value } from './exported';",
+      "const fs = require('node:fs');",
+      "const pending = import('./dynamic');",
+      "const duplicate = require('node:fs');",
+      "const computed = import(prefix + '/computed');",
+      "// import commented from './commented';",
+      'const quoted = "require(\'./quoted\')";',
+    ].join('\n'),
+  });
+  assert.deepEqual(facts.importRefs, ['./dynamic', './exported', './model', 'node:fs']);
+});

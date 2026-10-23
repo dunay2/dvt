@@ -4,7 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { repository } = require('../lib/feature-mechanization-git-fixture.cjs');
-const { readGovernanceFileRows } = require('../planning-db-query.cjs');
+const {
+  readGovernanceFileRows,
+  readComponentEngineeringComponentTreeRows,
+  readComponentProfileRows,
+} = require('../planning-db-query.cjs');
 const {
   createCurrentComponentFilesReadModelComponent,
 } = require('../planning-db/queries/current-component-files-query.cjs');
@@ -141,6 +145,14 @@ for (const failure of [
         ),
         /responsibility/iu
       );
+      await assert.rejects(
+        readComponentEngineeringComponentTreeRows(
+          client,
+          { component: 'unrelated', limit: 1 },
+          { gitReader: repo.reader() }
+        ),
+        /responsibility/iu
+      );
     }
   });
 }
@@ -179,6 +191,96 @@ test('bound symbols and test references come from the selected SHA rather than t
 function readModel(repo, options = {}) {
   return createCurrentComponentFilesReadModelComponent({ gitReader: repo.reader(options) });
 }
+
+test('tree and profile include DB-created children without imported hierarchy rows', async (t) => {
+  const repo = repository(t);
+  repo.write('model.test.ts', 'export const proof = true;\n');
+  const client = authority([
+    unit('SYS-ROOT', { level: 'system', owns: [] }),
+    unit('SYS-PARENT', { parent: 'SYS-ROOT' }),
+    unit('SYS-NEW', { parent: 'SYS-PARENT', owns: ['model.ts', 'model.test.ts'] }),
+  ]);
+  const options = { gitReader: repo.reader() };
+  const tree = await readComponentEngineeringComponentTreeRows(
+    client,
+    { component: 'SYS-NEW' },
+    options
+  );
+  assert.equal(tree.length, 1);
+  assert.equal(tree[0].parent_component_id, 'SYS-PARENT');
+  assert.equal(tree[0].direct_file_count, 2);
+  assert.equal(tree[0].test_file_count, 1);
+  assert.equal(tree[0].is_leaf_component, true);
+  client.calls.length = 0;
+  const profile = await readComponentProfileRows(
+    client,
+    { component: 'SYS-PARENT', limit: 1 },
+    options
+  );
+  assert.equal(profile.component.component_id, 'SYS-PARENT');
+  assert.equal(profile.component.descendant_file_count, 3);
+  assert.equal(profile.component.direct_file_count, 1);
+  assert.equal(profile.component.cq_rails, 'ReadTest');
+  assert.equal(profile.children[0].component_id, 'SYS-NEW');
+  assert.equal(profile.files.length, 1, 'paging must not truncate counts');
+  assert.equal(
+    client.calls.filter((sql) => sql.includes('governance_component_definition_query')).length,
+    1
+  );
+  assert.ok(client.calls.every((sql) => !sql.includes('component_tree_query')));
+});
+
+test('tree filters effective ancestry and state before limiting', async (t) => {
+  const repo = repository(t);
+  const client = authority([
+    unit('SYS-ROOT', { level: 'system', owns: [] }),
+    unit('SYS-DOMAIN', { parent: 'SYS-ROOT', level: 'domain', owns: [] }),
+    unit('SYS-A', { parent: 'SYS-DOMAIN', owns: ['model.ts'] }),
+    unit('SYS-B', { parent: 'SYS-DOMAIN', status: 'review', owns: ['retired.ts'] }),
+  ]);
+  const rows = await readComponentEngineeringComponentTreeRows(
+    client,
+    {
+      parentUnit: 'SYS-DOMAIN',
+      rootUnit: 'SYS-ROOT',
+      domainUnit: 'SYS-DOMAIN',
+      governanceState: 'review',
+      limit: 1,
+    },
+    { gitReader: repo.reader() }
+  );
+  assert.deepEqual(
+    rows.map((row) => row.component_id),
+    ['SYS-B']
+  );
+  repo.git('rm', '--quiet', 'retired.ts');
+  const [deleted] = await readComponentEngineeringComponentTreeRows(
+    client,
+    { component: 'SYS-B' },
+    { gitReader: repo.reader() }
+  );
+  assert.equal(deleted.descendant_file_count, 0);
+});
+
+test('tree counts ambiguous files once per affected ancestor without claiming direct ownership', async (t) => {
+  const repo = repository(t);
+  const client = authority([
+    unit('SYS-ROOT', { level: 'system', owns: [] }),
+    unit('SYS-A', { parent: 'SYS-ROOT' }),
+    unit('SYS-B', { parent: 'SYS-ROOT' }),
+  ]);
+  const rows = await readComponentEngineeringComponentTreeRows(
+    client,
+    {},
+    { gitReader: repo.reader() }
+  );
+  assert.equal(rows.length, 3);
+  for (const row of rows) {
+    assert.equal(row.descendant_file_count, 2);
+    assert.equal(row.ambiguous_file_count, 2);
+    assert.equal(row.direct_file_count, 0);
+  }
+});
 
 test('files includes a newly tracked file absent from imported inventory', async (t) => {
   const repo = repository(t);

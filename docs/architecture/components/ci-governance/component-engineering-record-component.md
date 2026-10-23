@@ -25,6 +25,18 @@ context. Its application surfaces are `planning:db:query files` and the file
 section of `component-profile`. It is a repository-local operator query; it
 does not expose tenant data or perform writes.
 
+`component-tree` and the non-frontend profile header and children also consume
+that current snapshot. They must include DB-created components even when no
+imported hierarchy row exists. Counts are derived before filtering or paging;
+ambiguous files remain visible in every affected ancestor. The integrity adapter
+combines DB semantic findings with physical component paths checked against Git,
+replacing the imported snapshot's path-existence findings. A file path and a
+directory boundary are both valid; a missing path remains a finding.
+
+CI bootstrap must build `@dvt/crypto` before loading the schema command, its
+first consumer. This prerequisite belongs to the existing Planning DB action;
+each workflow caller consumes the same ordering.
+
 ```mermaid
 flowchart LR
   Git[Current Git inventory] --> Resolve[Shared ownership resolution]
@@ -217,6 +229,37 @@ removes their obsolete manifest field. No query or gate accepts a fallback to
 that old location after the cut. Subsequent retirement of a feature rail cannot
 erase component responsibility associations.
 
+### Governance mechanism ownership
+
+The mechanisms also use the current component model. Their owners are children
+of the existing CI governance grouping in the ownership tree:
+
+- `SYS-CI-COMPONENT-ASSOCIATIONS` owns association persistence and reference
+  policy. SQL changes and association invariants belong here.
+- `SYS-CI-CURRENT-COMPONENT-FILES` owns the current Git/DB file projection and
+  ownership resolution. It consumes association authority without writing it.
+- `SYS-CI-SOURCE-FACTS` owns shared syntax, declaration and module-reference
+  facts. Consumer-specific selection policies remain with their consumers.
+
+```mermaid
+flowchart LR
+  Files[Current component files] -->|bindings and reference policy| Associations[Component source associations]
+  Associations -->|implemented callable identities| Facts[Shared source syntax facts]
+```
+
+These boundaries describe existing implementations with different reasons to
+change. They do not introduce wrappers, move files, or add command/query rails.
+The exact files, callable responsibilities, test references and dependency
+relations remain in Planning DB. The API pilot retains its existing associations.
+The CI grouping is an ownership ancestor, not an invented executable module.
+
+Acceptance queries the real current file/profile models, preserves the API
+association digests and checks each declared source reference. Existing tests
+exercise ambiguous ownership, invalid bindings and transaction rejection. The
+source-facts test covers valid literal module references as well as quoted,
+commented and computed nonreferences. No query or syntax test certifies semantic
+uniqueness across the repository.
+
 ## Governing Sources
 
 - `AGENTS.md`
@@ -306,6 +349,7 @@ flowchart TB
   LocalInventory["Git-derived local component inventory"]
   ExplicitImport["explicit planning:db:import\nbootstrap or recovery"]
   PlanningDb[("Planning DB semantic authority")]
+  Current["Current Git and effective DB read model"]
   Tree["component_engineering_component_tree_query"]
   Files["component_engineering_file_ownership_query"]
   Metadata["component_engineering_component_metadata_query"]
@@ -322,11 +366,13 @@ flowchart TB
   ExplicitImport --> PlanningDb
   PlanningDb --> Tree
   PlanningDb --> Files
+  PlanningDb --> Current
+  GitFiles --> Current
   Tree --> Metadata
   Tree --> Drift
   Files --> Drift
   Drift --> Operator
-  Tree --> Operator
+  Current --> Operator
 ```
 
 ## Engine Component Tree
@@ -397,18 +443,18 @@ These stories cover the composite component hierarchy, leaf file ownership,
 semantic component metadata, and DB-first drift query rails introduced for the
 engine pilot.
 
-| ID         | Story                                                                   | Acceptance criteria                                                                                                                                | Negative case                                                                                   |
-| ---------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| US-CER-001 | As an architecture reviewer, I inspect the engine component tree.       | `pnpm planning:db:query component-tree --component SYS-RUNTIME-ENGINE-CORE` returns the root and child rows from the current schema and authority. | Query fails if the current tree view is missing.                                                |
-| US-CER-002 | As a repo agent, I move an engine file into a nested component.         | `docs:governance:file-component-index` assigns the file to the deepest component in its unit path.                                                 | A file mapped to the parent assembly emits `file_without_leaf_component`.                       |
-| US-CER-003 | As a maintainer, I split a broad component into children.               | The parent may have `level: component` children, and unit coverage accepts the hierarchy.                                                          | The guard rejects unresolved parents and invalid parent levels.                                 |
-| US-CER-004 | As a reviewer, I need component intent, not just filenames.             | Canonical components declare owned concern, public API, invariants, transitions, and consumers.                                                    | A canonical component missing semantic metadata fails unit coverage.                            |
-| US-CER-005 | As an operator, I need drift through a query rail.                      | `pnpm planning:db:query component-drift --component <id>` returns DB drift rows.                                                                   | Unknown query names and unparameterized filters fail in tests.                                  |
-| US-CER-006 | As an architect, I compare docs with implementation.                    | Component guide names public API, invariants, transitions, consumers, and diagrams.                                                                | Docs-only claims are not accepted without schema/query/test support.                            |
-| US-CER-007 | As a planner, I need feature scope to be governed.                      | Feature mechanization manifest lists changed scripts, docs, schema, and guards.                                                                    | Implementation files outside allowed surfaces fail `docs:feature-mechanization:implementation`. |
-| US-CER-008 | As a reviewer, I need cross-domain ownership to remain visible.         | Engine plan-ref files stay owned by `SYS-PLANSTORE-ENGINE-FETCH`.                                                                                  | The engine root must not reclaim plan-store-owned plan-ref files through a broad glob.          |
-| US-CER-009 | As a CI maintainer, I need generated indexes to remain local artifacts. | `governance:refresh` refreshes Git-derived local projections without importing or rebuilding Planning DB.                                          | Manual edits to generated `system-governance-*` files are not a valid fix.                      |
-| US-CER-010 | As a future component owner, I need a reusable local guide.             | New component splits reuse the same API/invariant/transition/consumer structure.                                                                   | Creating component IDs as retroactive labels without planned ownership remains invalid.         |
+| ID         | Story                                                                   | Acceptance criteria                                                                                                                                                                                   | Negative case                                                                                   |
+| ---------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| US-CER-001 | As an architecture reviewer, I inspect the engine component tree.       | `pnpm planning:db:query component-tree --component SYS-RUNTIME-ENGINE-CORE` returns the selected component; `--children-of` selects its children from effective DB definitions and current Git files. | Query fails if current Git evidence or effective DB authority is unavailable.                   |
+| US-CER-002 | As a repo agent, I move an engine file into a nested component.         | `docs:governance:file-component-index` assigns the file to the deepest component in its unit path.                                                                                                    | A file mapped to the parent assembly emits `file_without_leaf_component`.                       |
+| US-CER-003 | As a maintainer, I split a broad component into children.               | The parent may have `level: component` children, and unit coverage accepts the hierarchy.                                                                                                             | The guard rejects unresolved parents and invalid parent levels.                                 |
+| US-CER-004 | As a reviewer, I need component intent, not just filenames.             | Canonical components declare owned concern, public API, invariants, transitions, and consumers.                                                                                                       | A canonical component missing semantic metadata fails unit coverage.                            |
+| US-CER-005 | As an operator, I need drift through a query rail.                      | `pnpm planning:db:query component-drift --component <id>` returns DB drift rows.                                                                                                                      | Unknown query names and unparameterized filters fail in tests.                                  |
+| US-CER-006 | As an architect, I compare docs with implementation.                    | Component guide names public API, invariants, transitions, consumers, and diagrams.                                                                                                                   | Docs-only claims are not accepted without schema/query/test support.                            |
+| US-CER-007 | As a planner, I need feature scope to be governed.                      | Feature mechanization manifest lists changed scripts, docs, schema, and guards.                                                                                                                       | Implementation files outside allowed surfaces fail `docs:feature-mechanization:implementation`. |
+| US-CER-008 | As a reviewer, I need cross-domain ownership to remain visible.         | Engine plan-ref files stay owned by `SYS-PLANSTORE-ENGINE-FETCH`.                                                                                                                                     | The engine root must not reclaim plan-store-owned plan-ref files through a broad glob.          |
+| US-CER-009 | As a CI maintainer, I need generated indexes to remain local artifacts. | `governance:refresh` refreshes Git-derived local projections without importing or rebuilding Planning DB.                                                                                             | Manual edits to generated `system-governance-*` files are not a valid fix.                      |
+| US-CER-010 | As a future component owner, I need a reusable local guide.             | New component splits reuse the same API/invariant/transition/consumer structure.                                                                                                                      | Creating component IDs as retroactive labels without planned ownership remains invalid.         |
 
 ### TDD Coverage
 

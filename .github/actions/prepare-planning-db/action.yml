@@ -30,6 +30,6 @@ runs:
           sleep 2
         done
 
-        node scripts/planning-db-schema.cjs
         pnpm --filter @dvt/crypto build
+        node scripts/planning-db-schema.cjs
         pnpm planning:db:import

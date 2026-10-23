@@ -13,6 +13,9 @@ const {
 const {
   createCodeSymbolReadModelComponent,
 } = require('../planning-db/queries/code-symbol-query.cjs');
+const {
+  createComponentIntegrityReadModelComponent,
+} = require('../planning-db/queries/component-integrity-query.cjs');
 
 function sourceDriftGitFixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-source-drift-'));
@@ -107,6 +110,14 @@ test('invalid Git comparison rejects before asking the DB instead of reporting n
     });
     await assert.rejects(
       model.readSourceDriftRows({ query: () => assert.fail('Invalid Git evidence reached DB') })
+    );
+    const integrity = createComponentIntegrityReadModelComponent({
+      gitReader: repo.reader({ [option]: 'refs/heads/missing' }),
+    });
+    await assert.rejects(
+      integrity.readComponentIntegrityRows({
+        query: () => assert.fail('Invalid Git evidence reached integrity DB'),
+      })
     );
   }
 });
