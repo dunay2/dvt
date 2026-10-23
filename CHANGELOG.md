@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.20.0 (2026-10-23)
+
+## What's Changed
+* feat(api): Complete the bounded DuckDB native runtime foundation by @dunay2 in https://github.com/dunay2/dvt/pull/3619
+* docs(docs): Retire 100 obsolete documents and reconcile their consumers by @dunay2 in https://github.com/dunay2/dvt/pull/3633
+* docs(docs): Retire another 100 historical validation receipts by @dunay2 in https://github.com/dunay2/dvt/pull/3637
+* docs(docs): Retire a third batch of 100 historical documents by @dunay2 in https://github.com/dunay2/dvt/pull/3639
+* docs(docs): Retire a fourth batch of 100 historical documents by @dunay2 in https://github.com/dunay2/dvt/pull/3641
+* docs(docs): Consolidate 100 scenario and domain pages by @dunay2 in https://github.com/dunay2/dvt/pull/3649
+* docs(docs): Consolidate manuals and retire orphan visual evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3650
+* docs(docs): Colocate 100 independent risk records by @dunay2 in https://github.com/dunay2/dvt/pull/3651
+* docs(docs): Colocate 85 risks and 15 supporting architecture documents by @dunay2 in https://github.com/dunay2/dvt/pull/3653
+* feat(docs): Reconcile current document metadata without replacing evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3652
+* docs(docs): Retire obsolete maps and completed delivery documents only by @dunay2 in https://github.com/dunay2/dvt/pull/3654
+* docs(docs): Retire 21 completed documentary records by @dunay2 in https://github.com/dunay2/dvt/pull/3655
+* docs(docs): Retire 38 historical receipts and obsolete traceability stubs by @dunay2 in https://github.com/dunay2/dvt/pull/3657
+* docs(docs): Retire empty documentation navigation remnants by @dunay2 in https://github.com/dunay2/dvt/pull/3658
+* fix(web): Restore Canvas presentation and protect model dependencies by @dunay2 in https://github.com/dunay2/dvt/pull/3627
+* refactor(web): Centralize relational navigation decisions by @dunay2 in https://github.com/dunay2/dvt/pull/3663
+* fix(temporal): Preserve confirmed sibling outcomes on layer failure by @dunay2 in https://github.com/dunay2/dvt/pull/3664
+* fix(temporal): Enforce plan-wide concurrency at activity admission by @dunay2 in https://github.com/dunay2/dvt/pull/3665
+* chore(ci): Bump the codeql group across 1 directory with 2 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3427
+* feat(contracts): Define LOCAL generation metadata contracts by @dunay2 in https://github.com/dunay2/dvt/pull/3671
+* fix(web): Start deferred route imports before mount by @dunay2 in https://github.com/dunay2/dvt/pull/3687
+* chore(ci): Update CodeQL actions to v4.39.0 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/3686
+* fix(docs): Replace documentary references through the audited rail by @dunay2 in https://github.com/dunay2/dvt/pull/3692
+* fix(temporal): Drain worker before closing runtime resources by @dunay2 in https://github.com/dunay2/dvt/pull/3693
+* fix(temporal): Propagate worker termination and preserve cleanup failures by @dunay2 in https://github.com/dunay2/dvt/pull/3695
+* fix(web): Keep source catalog selection inside its viewport by @dunay2 in https://github.com/dunay2/dvt/pull/3688
+* fix(web): Preserve shared analysis and pending Canvas editors by @dunay2 in https://github.com/dunay2/dvt/pull/3701
+* fix(web): Reconcile session publication and browser execution lifecycles by @dunay2 in https://github.com/dunay2/dvt/pull/3689
+* test(web): Retain the validated run route in dbt browser evidence by @dunay2 in https://github.com/dunay2/dvt/pull/3702
+* feat(api): Compose governed PostgreSQL to LOCAL capture by @dunay2 in https://github.com/dunay2/dvt/pull/3680
+* feat(web): Integrate PostgreSQL Sink publication and preserve focus ownership by @dunay2 in https://github.com/dunay2/dvt/pull/3703
+* fix(web): Preserve Canvas creation failures and native test prerequisites by @dunay2 in https://github.com/dunay2/dvt/pull/3704
+* perf(planner): Avoid repeated graph preparation and intermediate SQL rendering by @dunay2 in https://github.com/dunay2/dvt/pull/3707
+* fix(ci): Exclude auxiliary worktrees from generated documentation scans by @dunay2 in https://github.com/dunay2/dvt/pull/3709
+* fix(web): Preserve retry after source search page failure by @dunay2 in https://github.com/dunay2/dvt/pull/3711
+* fix(docs): Resolve component files from current Git inventory by @dunay2 in https://github.com/dunay2/dvt/pull/3712
+* refactor(ci): Unify component responsibility ownership and validation by @dunay2 in https://github.com/dunay2/dvt/pull/3713
+* fix(ci): Reuse tooling crypto authority and validate its affected consumers by @dunay2 in https://github.com/dunay2/dvt/pull/3714
+* fix(ci): Reconcile current component reads and Planning DB bootstrap by @dunay2 in https://github.com/dunay2/dvt/pull/3715
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.19.0...v0.20.0
+
 ## 0.19.0 (2026-10-12)
 
 ## What's Changed
