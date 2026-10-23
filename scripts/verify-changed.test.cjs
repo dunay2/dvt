@@ -61,6 +61,21 @@ test('tooling crypto inputs select the bounded architecture contract once', () =
   }
 });
 
+test('scope configuration changes retain routing and package metadata regressions once', () => {
+  const suites = [
+    'tools/ci/ci-tool-routing.test.mjs',
+    'tools/ci/emit-scope.test.mjs',
+    'tools/ci/package-json-scope-classification.test.mjs',
+    'tools/ci/workflow-scope-classification.test.mjs',
+  ];
+  for (const files of [['tools/ci/scope-config.mjs'], ['tools/ci/scope-config.mjs', ...suites]]) {
+    const plan = buildVerifyChangedPlan(files);
+    for (const suite of suites)
+      assert.equal(plan.filter((step) => step.args.includes(suite)).length, 1, suite);
+    assert.ok(!plan.some((step) => step.args.includes('test:ci-tools')));
+  }
+});
+
 test('buildFocusedChangedTestPlan retains adjacent script tests without duplicating general gates', () => {
   const labels = focusedLabelsFor([
     'docs/guides/testing-and-ci-capabilities.md',

@@ -351,6 +351,16 @@ function ciToolingTestSteps(changedFiles) {
     .map((testPath) =>
       testStep(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
     );
+  if (changedFiles.includes('tools/ci/scope-config.mjs')) {
+    for (const suite of [
+      'ci-tool-routing',
+      'emit-scope',
+      'package-json-scope-classification',
+      'workflow-scope-classification',
+    ]) {
+      pushStepOnce(plan, testStep(`test-${suite}`, 'node', '--test', `tools/ci/${suite}.test.mjs`));
+    }
+  }
   if (changedFiles.some((file) => file === 'package.json' || isRepositoryCommandFile(file))) {
     pushStepOnce(
       plan,

@@ -854,7 +854,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
     ),
     ci_tool_executable_contracts_relevant: Boolean(
       scope.ci_tool_executable_contracts_relevant ||
-      changedFiles.some(isToolingCryptoContractInput) ||
+      buildFilesForPathPolicy(changedFiles, scopeContext).some(isToolingCryptoContractInput) ||
       packageJsonChange?.dependencySensitive ||
       packageJsonChange?.ciToolingSensitive ||
       packageJsonChange?.governanceToolingOnly
