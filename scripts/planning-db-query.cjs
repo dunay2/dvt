@@ -1270,6 +1270,8 @@ function buildGovernanceFileRows(rows) {
     flagLabel(row.is_drift ?? row.isDrift, 'drift'),
     flagLabel(row.is_legacy ?? row.isLegacy, 'legacy'),
     ...(row.candidate_component_ids?.length ? [row.candidate_component_ids.join(',')] : []),
+    ...(row.responsibility_bindings?.length ? [JSON.stringify(row.responsibility_bindings)] : []),
+    ...(row.responsibility_errors?.length ? [JSON.stringify(row.responsibility_errors)] : []),
   ]);
 }
 
@@ -1437,7 +1439,23 @@ function buildComponentProfileRows(profile) {
       file.owning_unit ?? file.owningUnit ?? '-',
       file.governance_state ?? file.governanceState ?? '-',
     ]);
+    for (const binding of file.responsibility_bindings || [])
+      rows.push([
+        'source-responsibility',
+        file.path,
+        binding.responsibilityId,
+        binding.symbol,
+        binding.role,
+        compactText(binding.description),
+        binding.testPaths.join(','),
+      ]);
+    for (const error of file.responsibility_errors || [])
+      rows.push(['source-responsibility-error', file.path, error]);
   }
+  if (profile.sourceBindingsHash)
+    rows.push(['source-bindings-hash', componentId, profile.sourceBindingsHash]);
+  for (const error of profile.sourceResponsibilityErrors || [])
+    rows.push(['source-responsibility-error', componentId, error]);
 
   for (const railName of normalizeListValue(
     profile.component?.cq_rails ?? profile.component?.cqRails
@@ -2549,8 +2567,10 @@ function appendGovernanceUnitFilters(predicates, params, filters = {}) {
 
 async function readGovernanceFileRows(client, filters = {}, options = {}) {
   const limit = parseLimit(filters.limit, 50);
-  const { files, units } =
+  const { files, units, errors } =
     await createCurrentComponentFilesReadModelComponent(options).readCurrentComponentFiles(client);
+  if (errors.length)
+    throw new Error('Invalid source responsibility references: ' + errors.join('; '));
   const matches = (value, filter) =>
     filter === undefined || filter === null || filter === '' || value === filter;
   const matchesOwner = (file) => {
@@ -2828,6 +2848,11 @@ async function readComponentProfileRows(client, filters = {}, options = {}) {
   return {
     filters: { component },
     component: withCurrentFileCounts(componentRows[0]),
+    sourceBindingsHash:
+      require('./planning-db/component-source-responsibility-store.cjs').bindingSetHash(
+        snapshot.bindings.filter((binding) => binding.componentId === component)
+      ),
+    sourceResponsibilityErrors: snapshot.errors,
     children: children.map(withCurrentFileCounts),
     files: readComponentProfileFileRows(snapshot, scopedFilters),
     architectureComponents: await readArchitectureComponentRows(client, scopedFilters),
@@ -3480,12 +3505,14 @@ async function runQuery(options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
+  const ownsSnapshot = ownsClient && ['files', 'component-profile'].includes(queryName);
 
   if (ownsClient) {
     await client.connect();
   }
 
   try {
+    if (ownsSnapshot) await client.query('begin isolation level repeatable read read only');
     if (queryName === 'summary') {
       const summary = await readSummary(client);
       if (options.print !== false) {
@@ -4203,8 +4230,10 @@ async function runQuery(options = {}) {
 
     throw new Error(`Unhandled planning DB query "${queryName}".`);
   } finally {
-    if (ownsClient) {
-      await client.end();
+    try {
+      if (ownsSnapshot) await client.query('rollback');
+    } finally {
+      if (ownsClient) await client.end();
     }
   }
 }

@@ -4029,6 +4029,7 @@ test('readGovernanceFileRows filters current Git files after resolving DB owners
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
+      if (sql.includes('architecture.component_source_responsibility')) return { rows: [] };
       captured.sql = sql;
       captured.params = params;
       return {

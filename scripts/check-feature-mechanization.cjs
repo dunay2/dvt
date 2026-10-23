@@ -6,6 +6,7 @@
  */
 
 const fs = require('node:fs');
+const { readSourceCodeFacts } = require('./lib/source-code-facts.cjs');
 const path = require('node:path');
 const { FeatureMechanizationGitDiffReader } = require('./lib/feature-mechanization-git-diff.cjs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
@@ -14,11 +15,12 @@ const {
 } = require('./lib/feature-mechanization-manifest.cjs');
 const {
   readFeatureMechanizationManifestRowsFromDb,
+  assertFeatureMechanizationAuthorityFresh,
+  withPlanningDbClient,
 } = require('./lib/feature-mechanization-db-reader.cjs');
-const { validateResponsibilityBindings } = require('./lib/component-source-responsibilities.cjs');
 const {
-  validateComponentSourceResponsibilities,
-} = require('./lib/component-source-responsibilities-reader.cjs');
+  createCurrentComponentFilesReadModelComponent,
+} = require('./planning-db/queries/current-component-files-query.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
@@ -148,11 +150,16 @@ class FeatureImplementationGuard {
     const declaredSymbols = this.collectDeclaredSymbols();
 
     for (const filePath of this.changedFiles) {
+      if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) continue;
       const addedLines = this.addedLinesByPath.get(filePath) || [];
       const fileContent = this.fileContentsByPath.get(filePath);
       const currentSymbols =
         typeof fileContent === 'string'
-          ? new Set(this.extractAddedCodeSymbols(filePath, fileContent.split(/\r?\n/)))
+          ? new Set(
+              readSourceCodeFacts({ path: filePath, content: fileContent })
+                .declarations.filter((fact) => fact.topLevel)
+                .map((fact) => fact.name)
+            )
           : null;
       for (const symbolName of this.extractAddedCodeSymbols(filePath, addedLines)) {
         if (currentSymbols && !currentSymbols.has(symbolName)) {
@@ -315,46 +322,15 @@ class FeatureImplementationGuard {
   }
 
   extractAddedCodeSymbols(filePath, addedLines) {
-    if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) {
-      return [];
-    }
-
-    const symbols = new Set();
-
-    for (const line of addedLines) {
-      if (/^\s/.test(line)) {
-        continue;
-      }
-
-      const declarationMatch = line.match(
-        /^(?:export\s+)?(?:async\s+)?(?:function|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)\b/
-      );
-      if (declarationMatch) {
-        symbols.add(declarationMatch[1]);
-        continue;
-      }
-
-      const constantMatch = line.match(/^(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\b/);
-      if (constantMatch) {
-        symbols.add(constantMatch[1]);
-        continue;
-      }
-
-      const namedExportMatch = line.match(/^export\s+\{\s*([^}]+)\s*\}/);
-      if (!namedExportMatch) {
-        continue;
-      }
-
-      for (const exportedSymbol of namedExportMatch[1].split(',')) {
-        const parts = exportedSymbol.trim().split(/\s+as\s+/);
-        const symbolName = parts[1] || parts[0];
-        if (/^[A-Za-z_$][\w$]*$/.test(symbolName)) {
-          symbols.add(symbolName);
-        }
-      }
-    }
-
-    return Array.from(symbols).sort();
+    if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) return [];
+    // Diff fragments select candidates; complete source facts confirm them in validateDeclaredSymbols.
+    return [
+      ...new Set(
+        readSourceCodeFacts({ path: filePath, content: addedLines.join('\n') }, { fragment: true })
+          .declarations.filter((fact) => fact.topLevel)
+          .map((fact) => fact.name)
+      ),
+    ].sort();
   }
 
   isCodeFile(filePath) {
@@ -644,13 +620,11 @@ function validateFeatureMechanizationManifest(manifest, sourcePath) {
   validateCommandQueryRails(manifest, sourcePath, errors);
   validateRedGreenCycles(manifest, sourcePath, errors);
   validateSymbols(manifest, sourcePath, errors);
-  if (Object.hasOwn(manifest, 'responsibilityBindings')) {
+  if (Object.hasOwn(manifest, 'responsibilityBindings'))
     errors.push(
-      ...validateResponsibilityBindings(manifest.responsibilityBindings).errors.map(
-        (error) => `${sourcePath}: ${error}`
-      )
+      sourcePath +
+        ': source responsibility bindings belong to architecture components, not feature manifests.'
     );
-  }
 
   return { errors };
 }
@@ -843,6 +817,34 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
   return normalizeDbFeatureMechanizationManifestRows(rows);
 }
 
+async function readImplementationEvidence(options = {}) {
+  const gitReader = options.gitReader || new FeatureMechanizationGitDiffReader(options);
+  const diff = gitReader.read();
+  return withPlanningDbClient({ ...options, readOnlySnapshot: true }, async (client) => {
+    const rows = await readFeatureMechanizationManifestRowsFromDb({ client });
+    const knownSources = new Set(rows.map((row) => row.source_path));
+    const hashes = new Map();
+    for (const file of diff.changedFiles) {
+      if (!diff.currentFiles.includes(file) || !file.endsWith('.md')) continue;
+      const content = gitReader.readSource(file);
+      if (
+        knownSources.has(file) ||
+        (isFeatureMechanizationSourcePath(file) && /```feature-mechanization\b/u.test(content))
+      )
+        hashes.set(file, sha256HexUtf8(content));
+    }
+    assertFeatureMechanizationAuthorityFresh(rows, hashes);
+    const model = await createCurrentComponentFilesReadModelComponent({
+      gitReader,
+    }).readCurrentComponentFiles(client);
+    return {
+      diff,
+      manifestEntries: normalizeDbFeatureMechanizationManifestRows(rows),
+      sourceErrors: model.errors,
+    };
+  });
+}
+
 function isFeatureMechanizationSourcePath(sourcePath) {
   const normalizedPath = toPosix(sourcePath);
   return (
@@ -954,8 +956,10 @@ async function main() {
     const requiredFeatureIds = new Set(args.requiredFeatureIds);
     let manifestEntries;
     let result;
+    let evidence;
     try {
-      manifestEntries = await readFeatureMechanizationManifestsFromDb({ baseRef: args.baseRef });
+      evidence = await readImplementationEvidence({ baseRef: args.baseRef });
+      manifestEntries = evidence.manifestEntries;
       result = validateFeatureMechanizationManifestEntries(manifestEntries, {
         requiredFeatureIds: args.requiredFeatureIds,
       });
@@ -974,7 +978,9 @@ async function main() {
         manifestCount: 0,
         features: [],
       };
-      manifestEntries = [];
+      console.error('[docs:feature-mechanization] FAILED: ' + result.errors.join('; '));
+      process.exitCode = 1;
+      return;
     }
 
     const allErrors = [...result.errors];
@@ -982,21 +988,14 @@ async function main() {
       requiredFeatureIds.size === 0
         ? manifestEntries
         : manifestEntries.filter((entry) => requiredFeatureIds.has(entry.manifest.featureId));
-    const diff = new FeatureMechanizationGitDiffReader({ baseRef: args.baseRef }).read();
+    const diff = evidence.diff;
     const implementationResult = validateFeatureImplementationManifests(
       selectedManifestEntries,
       diff
     );
 
     allErrors.push(...implementationResult.errors);
-    try {
-      const sourceResponsibilities = await validateComponentSourceResponsibilities({
-        baseRef: args.baseRef,
-      });
-      allErrors.push(...sourceResponsibilities.errors);
-    } catch (error) {
-      allErrors.push(`[source-responsibilities] ${error.message}`);
-    }
+    allErrors.push(...evidence.sourceErrors);
 
     if (allErrors.length > 0) {
       console.error('[docs:feature-mechanization] FAILED');
@@ -1045,6 +1044,7 @@ module.exports = {
   readChangedFeatureMechanizationSourcePaths,
   readFeatureMechanizationDocs,
   readFeatureMechanizationManifestsFromDb,
+  readImplementationEvidence,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationDocs,
   validateFeatureMechanizationManifestEntries,

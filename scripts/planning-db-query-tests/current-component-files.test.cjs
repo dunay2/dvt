@@ -34,6 +34,148 @@ function authority(rows = [unit()]) {
   };
 }
 
+test('file and profile consumers receive canonical atomic associations and evidence from one model', async (t) => {
+  const repo = repository(t);
+  repo.write('model.ts', 'export class Store { read() { return 1; } }\n');
+  repo.write('model.test.ts', 'export const proof = true;\n');
+  const client = authority();
+  const query = client.query.bind(client);
+  client.query = async (sql) =>
+    sql.includes('architecture.component_source_responsibility')
+      ? {
+          rows: [
+            {
+              componentId: 'SYS-TEST',
+              responsibilityId: 'RESP-READ',
+              path: 'model.ts',
+              symbol: 'Store.read',
+              role: 'implements',
+              testPaths: ['model.test.ts'],
+              responsibilityComponentId: 'SYS-TEST',
+              description: 'Read current model',
+              status: 'approved',
+            },
+          ],
+        }
+      : query(sql);
+  const result = await readModel(repo).readCurrentComponentFiles(client);
+  const model = result.files.find((file) => file.path === 'model.ts');
+  assert.equal(model.responsibility_bindings.length, 1);
+  assert.equal(model.responsibility_bindings[0].description, 'Read current model');
+  assert.equal(model.responsibility_bindings[0].symbol, 'Store.read');
+  const {
+    buildComponentProfileRows,
+    buildGovernanceFileRows,
+  } = require('../planning-db-query.cjs');
+  assert.ok(
+    buildComponentProfileRows({ files: [model] }).some(
+      (row) => row.includes('Store.read') && row.includes('RESP-READ')
+    )
+  );
+  assert.match(JSON.stringify(buildGovernanceFileRows([model])), /Store.read/u);
+  assert.deepEqual(result.errors, []);
+  const rows = await readGovernanceFileRows(
+    client,
+    { path: 'model.ts' },
+    { gitReader: repo.reader() }
+  );
+  assert.deepEqual(rows[0].responsibility_bindings, model.responsibility_bindings);
+  repo.write('model.ts', 'export class Store { renamed() {} }\n');
+  const invalid = await readModel(repo).readCurrentComponentFiles(client);
+  assert.ok(invalid.errors.some((error) => /Store.read/u.test(error)));
+});
+
+for (const failure of [
+  'source',
+  'test',
+  'owner',
+  'ambiguous',
+  'responsibility',
+  'status',
+  'duplicate',
+]) {
+  test('shared file model preserves negative responsibility evidence: ' + failure, async (t) => {
+    const repo = repository(t);
+    repo.write('model.ts', 'export function model() { return 1; }\n');
+    repo.write('model.test.ts', 'export const proof = true;\n');
+    const units = [unit()];
+    const binding = {
+      responsibilityId: 'RESP-MODEL',
+      componentId: 'SYS-TEST',
+      path: 'model.ts',
+      symbol: 'model',
+      role: 'implements',
+      testPaths: ['model.test.ts'],
+      description: 'Read model',
+      responsibilityComponentId: 'SYS-TEST',
+      status: 'approved',
+    };
+    const rows = [binding];
+    if (failure === 'source' || failure === 'test')
+      fs.unlinkSync(path.join(repo.root, failure === 'source' ? 'model.ts' : 'model.test.ts'));
+    if (failure === 'owner') units[0].owns = ['retired.ts'];
+    if (failure === 'ambiguous') units.push(unit('SYS-OTHER'));
+    if (failure === 'responsibility') binding.description = null;
+    if (failure === 'status') binding.status = 'proposed';
+    if (failure === 'duplicate') rows.push({ ...binding });
+    const client = {
+      query: async (sql) => ({
+        rows: sql.includes('component_source_responsibility') ? rows : units,
+      }),
+    };
+    if (failure === 'duplicate')
+      await assert.rejects(readModel(repo).readCurrentComponentFiles(client), /duplicate/u);
+    else {
+      const result = await readModel(repo).readCurrentComponentFiles(client);
+      assert.ok(result.errors.length > 0);
+      assert.equal(
+        result.bindings.length,
+        1,
+        'invalid physical evidence must not erase the current semantic set'
+      );
+      await assert.rejects(
+        readGovernanceFileRows(
+          client,
+          { path: 'unrelated.ts', limit: 1 },
+          { gitReader: repo.reader() }
+        ),
+        /responsibility/iu
+      );
+    }
+  });
+}
+
+test('bound symbols and test references come from the selected SHA rather than the worktree', async (t) => {
+  const repo = repository(t);
+  repo.write('model.ts', 'export function model() { return 1; }\n');
+  repo.write('model.test.ts', 'export const proof = true;\n');
+  const head = repo.commit(repo.base);
+  repo.write('model.ts', 'export function renamed() {}\n');
+  fs.unlinkSync(path.join(repo.root, 'model.test.ts'));
+  const rows = [
+    {
+      responsibilityId: 'RESP-MODEL',
+      componentId: 'SYS-TEST',
+      path: 'model.ts',
+      symbol: 'model',
+      role: 'implements',
+      testPaths: ['model.test.ts'],
+      responsibilityComponentId: 'SYS-TEST',
+      description: 'Read model',
+      status: 'approved',
+    },
+  ];
+  const client = {
+    query: async (sql) => ({
+      rows: sql.includes('component_source_responsibility') ? rows : [unit()],
+    }),
+  };
+  assert.deepEqual(
+    (await readModel(repo, { headRef: head }).readCurrentComponentFiles(client)).errors,
+    []
+  );
+});
+
 function readModel(repo, options = {}) {
   return createCurrentComponentFilesReadModelComponent({ gitReader: repo.reader(options) });
 }
@@ -69,7 +211,8 @@ test('current files include staged and untracked additions while excluding delet
     ['.gitignore', 'model.ts', 'staged.ts', 'untracked.ts']
   );
   assert.equal(snapshot.files.find((file) => file.path === 'staged.ts').component_unit, 'SYS-TEST');
-  assert.equal(client.calls.length, 1);
+  assert.equal(client.calls.length, 2);
+  assert.match(client.calls[1], /architecture.component_source_responsibility/u);
   assert.match(client.calls[0], /governance_unit_query definition/);
   assert.match(client.calls[0], /governance_component_definition_query component/);
   assert.doesNotMatch(

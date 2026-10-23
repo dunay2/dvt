@@ -1,5 +1,5 @@
 /** Owned concern: validate DB responsibility bindings against current source references. */
-const ts = require('typescript');
+const { readSourceCodeFacts } = require('./source-code-facts.cjs');
 
 function validateResponsibilityBindings(input) {
   const errors = [];
@@ -78,68 +78,14 @@ function validateResponsibilityBindings(input) {
   return { bindings: errors.length ? [] : bindings, errors };
 }
 
-function extractQualifiedSourceSymbols({ path, content }) {
-  if (typeof path !== 'string' || typeof content !== 'string')
-    throw new Error('Source path and content are required.');
-  const source = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true);
-  const compilerOptions = { noLib: true, noResolve: true, jsx: ts.JsxEmit.Preserve, allowJs: true };
-  const host = ts.createCompilerHost(compilerOptions);
-  host.getSourceFile = (name) => (name === path ? source : undefined);
-  const diagnostics = ts
-    .createProgram([path], compilerOptions, host)
-    .getSyntacticDiagnostics(source);
-  if (diagnostics.length)
-    throw new Error(
-      `Invalid source syntax in ${path}: ${ts.flattenDiagnosticMessageText(diagnostics[0].messageText, ' ')}`
-    );
+function extractQualifiedSourceSymbols(file) {
   const symbols = new Set();
-  const record = (name) => {
-    if (symbols.has(name)) throw new Error(`Ambiguous implemented symbol ${path}#${name}.`);
-    symbols.add(name);
-  };
-  const declared = (node) =>
-    ts.canHaveModifiers(node) &&
-    (ts.getModifiers(node) || []).some(
-      (modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword
-    );
-  const named = (node) =>
-    node.name && (ts.isIdentifier(node.name) || ts.isPrivateIdentifier(node.name));
-  function visit(node, scope = '') {
-    if (
-      declared(node) ||
-      ts.isClassExpression(node) ||
-      ts.isArrowFunction(node) ||
-      ts.isFunctionExpression(node)
-    )
-      return;
-    if (ts.isMethodDeclaration(node) && !ts.isClassDeclaration(node.parent)) return;
-    let nextScope = scope;
-    const qualify = (name) => (scope ? `${scope}.${name}` : name);
-    if (ts.isClassDeclaration(node) && named(node)) {
-      nextScope = qualify(node.name.text);
-      record(nextScope);
-    } else if (ts.isModuleDeclaration(node) && named(node)) {
-      nextScope = qualify(node.name.text);
-    } else if (ts.isFunctionDeclaration(node) && node.body && named(node)) {
-      nextScope = qualify(node.name.text);
-      record(nextScope);
-    } else if (ts.isMethodDeclaration(node) && node.body && named(node) && scope) {
-      nextScope = qualify(node.name.text);
-      record(nextScope);
-    } else if (
-      (ts.isVariableDeclaration(node) || ts.isPropertyDeclaration(node)) &&
-      named(node) &&
-      node.initializer &&
-      (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))
-    ) {
-      nextScope = qualify(node.name.text);
-      record(nextScope);
-      visit(node.initializer.body, nextScope);
-      return;
-    }
-    ts.forEachChild(node, (child) => visit(child, nextScope));
+  for (const fact of readSourceCodeFacts(file).declarations) {
+    if (!fact.implemented || !fact.linkable) continue;
+    if (symbols.has(fact.qualifiedName))
+      throw new Error(`Ambiguous implemented symbol ${file.path}#${fact.qualifiedName}.`);
+    symbols.add(fact.qualifiedName);
   }
-  visit(source);
   return [...symbols].sort();
 }
 

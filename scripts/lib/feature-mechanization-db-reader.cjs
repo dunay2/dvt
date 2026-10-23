@@ -19,7 +19,7 @@ function assertFeatureMechanizationAuthorityFresh(rows, currentSourceHashes) {
   }
 }
 
-async function readFeatureMechanizationManifestRowsFromDb(options = {}) {
+async function withPlanningDbClient(options, read) {
   const Client = options.deps?.Client || require('pg').Client;
   const connectionString =
     options.databaseUrl ||
@@ -29,12 +29,30 @@ async function readFeatureMechanizationManifestRowsFromDb(options = {}) {
     defaultPgUrl;
   const client = options.client || new Client({ connectionString });
   const ownsClient = !options.client;
+  let transactionStarted = false;
 
   try {
     if (ownsClient) {
       await client.connect();
     }
 
+    if (options.readOnlySnapshot) {
+      await client.query('begin isolation level repeatable read read only');
+      transactionStarted = true;
+    }
+    const result = await read(client);
+    if (options.readOnlySnapshot) await client.query('commit');
+    return result;
+  } catch (error) {
+    if (transactionStarted) await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+}
+
+async function readFeatureMechanizationManifestRowsFromDb(options = {}) {
+  return withPlanningDbClient(options, async (client) => {
     const result = await client.query(`
       with db_feature_manifest_rows as (
         select
@@ -85,11 +103,11 @@ async function readFeatureMechanizationManifestRowsFromDb(options = {}) {
     `);
     assertFeatureMechanizationAuthorityFresh(result.rows, options.currentSourceHashes || new Map());
     return result.rows;
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
+  });
 }
 
-module.exports = { readFeatureMechanizationManifestRowsFromDb };
+module.exports = {
+  readFeatureMechanizationManifestRowsFromDb,
+  assertFeatureMechanizationAuthorityFresh,
+  withPlanningDbClient,
+};

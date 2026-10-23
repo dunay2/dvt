@@ -1,0 +1,56 @@
+/** Owned concern: prove shared syntax identities while preserving consumer selection policies. */
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const { readSourceCodeFacts } = require('./source-code-facts.cjs');
+const { extractQualifiedSourceSymbols } = require('./component-source-responsibilities.cjs');
+const { extractCodeSymbolsFromFile } = require('../planning-db/code-symbol-inventory.cjs');
+const { FeatureImplementationGuard } = require('../check-feature-mechanization.cjs');
+
+test('consumers share qualified class and function identities with distinct explicit purposes', () => {
+  const file = {
+    path: 'model.ts',
+    content:
+      'export class Store { read() { return 1; } }\nexport function top() { return 1; }\nexport const count = 1;\n',
+  };
+  const facts = readSourceCodeFacts(file);
+  assert.deepEqual(
+    facts.declarations.map((f) => f.qualifiedName),
+    ['Store', 'Store.read', 'top', 'count']
+  );
+  assert.deepEqual(extractQualifiedSourceSymbols(file), ['Store', 'Store.read', 'top']);
+  assert.deepEqual(
+    extractCodeSymbolsFromFile(file, new Map()).map((f) => f.symbolName),
+    ['Store.read', 'top']
+  );
+  assert.deepEqual(
+    new FeatureImplementationGuard([]).extractAddedCodeSymbols(file.path, file.content.split('\n')),
+    ['Store', 'count', 'top']
+  );
+});
+
+test('syntax facts distinguish overload signatures, aliases and implemented declarations', () => {
+  const facts = readSourceCodeFacts({
+    path: 'model.ts',
+    content:
+      'export function read(x: string): string;\nexport function read(x: string) { return x; }\nexport { read as fetch };\nconst text = "function phantom() {}";\n// class Phantom {}\n',
+  });
+  assert.equal(
+    facts.declarations.filter((f) => f.qualifiedName === 'read' && f.implemented).length,
+    1
+  );
+  assert.ok(facts.declarations.some((f) => f.qualifiedName === 'fetch' && f.kind === 'alias'));
+  assert.ok(facts.declarations.every((f) => !/phantom/i.test(f.qualifiedName)));
+  assert.throws(
+    () => readSourceCodeFacts({ path: 'broken.ts', content: 'export function broken( {' }),
+    /syntax/i
+  );
+});
+
+test('nested named scopes are qualified and anonymous callbacks cannot invent binding identities', () => {
+  const file = {
+    path: 'model.ts',
+    content:
+      'function outer() { function inner() { return 1; } }\n[].map(() => { function hidden() { return 2; } });',
+  };
+  assert.deepEqual(extractQualifiedSourceSymbols(file), ['outer', 'outer.inner']);
+});

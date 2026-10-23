@@ -12,12 +12,20 @@ const {
   FeatureMechanizationGitDiffReader,
 } = require('../../lib/feature-mechanization-git-diff.cjs');
 const { schemaName } = require('../../planning-db-schema.cjs');
+const {
+  readSourceResponsibilityAuthority,
+} = require('../component-source-responsibility-store.cjs');
+const {
+  validateResponsibilityBindings,
+  validateSourceResponsibilityReferences,
+} = require('../../lib/component-source-responsibilities.cjs');
 
 function createCurrentComponentFilesReadModelComponent(deps = {}) {
   const compareText = (left, right) => (left === right ? 0 : left < right ? -1 : 1);
 
-  function readGitSourceInventory() {
-    const reader = deps.gitReader || new FeatureMechanizationGitDiffReader();
+  function readGitSourceInventory(
+    reader = deps.gitReader || new FeatureMechanizationGitDiffReader()
+  ) {
     reader.resolveComparison();
     return [...new Set(reader.readCurrentFiles())].sort(compareText);
   }
@@ -124,7 +132,8 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
   }
 
   async function readCurrentComponentFiles(client) {
-    const currentFiles = readGitSourceInventory();
+    const reader = deps.gitReader || new FeatureMechanizationGitDiffReader();
+    const currentFiles = readGitSourceInventory(reader);
     const result = await client.query(`
       select
         definition.unit_id as id,
@@ -158,7 +167,60 @@ function createCurrentComponentFilesReadModelComponent(deps = {}) {
           compareText(left.component_unit, right.component_unit) ||
           compareText(left.path, right.path)
       );
-    return { files, units };
+    const authority = await readSourceResponsibilityAuthority(client);
+    const shape = validateResponsibilityBindings(
+      authority.map(({ responsibilityId, componentId, path, symbol, role, testPaths }) => ({
+        responsibilityId,
+        componentId,
+        path,
+        symbol,
+        role,
+        testPaths,
+      }))
+    );
+    if (shape.errors.length)
+      throw new Error('Invalid source responsibility authority: ' + shape.errors.join('; '));
+    const responsibilities = authority.map((row) => ({
+      responsibilityId: row.responsibilityId,
+      componentId: row.responsibilityComponentId,
+      description: row.description,
+    }));
+    const paths = new Set(currentFiles);
+    const errors = [];
+    const byPath = new Map();
+    for (const binding of shape.bindings) {
+      if (!byPath.has(binding.path)) byPath.set(binding.path, []);
+      byPath.get(binding.path).push(binding);
+      if (!paths.has(binding.path))
+        errors.push('Missing mandatory responsibility source: ' + binding.path);
+    }
+    for (const row of authority)
+      if (!['approved', 'implemented'].includes(row.status))
+        errors.push(
+          'Noncanonical responsibility status ' + row.status + ': ' + row.responsibilityId
+        );
+    for (const file of files) {
+      const bindings = byPath.get(file.path) || [];
+      file.responsibility_bindings = bindings.map((binding) => ({
+        ...binding,
+        description: responsibilities.find(
+          (row) => row.responsibilityId === binding.responsibilityId
+        )?.description,
+      }));
+      file.responsibility_errors =
+        bindings.length === 0
+          ? []
+          : validateSourceResponsibilityReferences({
+              path: file.path,
+              content: reader.readSource(file.path),
+              bindings,
+              ownerComponentId: file.component_unit,
+              responsibilities,
+              currentPaths: paths,
+            }).errors;
+      errors.push(...file.responsibility_errors.map((error) => file.path + ': ' + error));
+    }
+    return { files, units, errors, bindings: shape.bindings };
   }
 
   return { readCurrentComponentFiles, readGitSourceInventory };

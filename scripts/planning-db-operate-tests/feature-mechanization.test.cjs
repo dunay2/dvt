@@ -6,7 +6,6 @@ const {
   assertFeatureMechanizationReferenceAuthority,
   parseArgs,
   planFeatureMechanizationRailRecordOperation,
-  planFeatureMechanizationRailRetireOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
 } = require('../planning-db-operate.cjs');
 const { validateFeatureMechanizationManifest } = require('../check-feature-mechanization.cjs');
@@ -97,16 +96,7 @@ function featureMechanizationRecordArgs(options = {}) {
   return [...args, ...(options.extraArgs || [])];
 }
 
-const responsibilityBinding = {
-  responsibilityId: 'RESP-LOCAL-DATA-READ-GENERATION',
-  componentId: 'SYS-API-INFRASTRUCTURE',
-  path: 'apps/api/src/infrastructure/duckdb/DuckDbGenerationStore.ts',
-  symbol: 'DuckDbGenerationStore.readGeneration',
-  role: 'implements',
-  testPaths: ['apps/api/test/infrastructure/DuckDbGenerationStore.test.ts'],
-};
-
-function planResponsibilityRecord(command, existingRail = null) {
+function planCurrentFeatureRecord(command, existingRail = null) {
   return planFeatureMechanizationRailRecordOperation({
     command,
     existingRail,
@@ -115,280 +105,36 @@ function planResponsibilityRecord(command, existingRail = null) {
   });
 }
 
-test('responsibility binding CLI distinguishes omission, replacement and explicit removal', () => {
-  const omitted = parseArgs(featureMechanizationRecordArgs());
-  assert.equal(Object.hasOwn(omitted, 'responsibilityBindings'), false);
-  for (const bindings of [[], [responsibilityBinding]]) {
-    const command = parseArgs(
-      featureMechanizationRecordArgs({
-        extraArgs: ['--responsibility-bindings', JSON.stringify(bindings)],
-      })
-    );
-    assert.deepEqual(command.responsibilityBindings, bindings);
-    const planned = planResponsibilityRecord(command);
-    assert.deepEqual(planned.rail.rawManifest.responsibilityBindings, bindings);
-    assert.deepEqual(planned.audit.payload.responsibilityBindings, bindings);
-  }
-});
-
-test('responsibility binding CLI rejects malformed JSON and invalid typed bindings', () => {
-  const invalidValues = [
-    '{',
-    'null',
-    '{}',
-    '[null]',
-    JSON.stringify([{ ...responsibilityBinding, role: 'owns' }]),
-    JSON.stringify([{ ...responsibilityBinding, testPaths: [] }]),
-    JSON.stringify([{ ...responsibilityBinding, path: '../outside.ts' }]),
-    JSON.stringify([{ ...responsibilityBinding, unknown: true }]),
-    JSON.stringify([responsibilityBinding, { ...responsibilityBinding, role: 'delegates' }]),
-  ];
-  for (const value of invalidValues) {
-    assert.throws(
-      () =>
-        parseArgs(
-          featureMechanizationRecordArgs({ extraArgs: ['--responsibility-bindings', value] })
-        ),
-      /responsibility/i,
-      value
-    );
-  }
-});
-
-test('responsibility binding planner validates programmatic inputs before planning a write', () => {
+test('explicit current replacement removes obsolete collections and requires the current revision', () => {
   const base = parseArgs(featureMechanizationRecordArgs());
-  for (const responsibilityBindings of [null, {}, [{ ...responsibilityBinding, symbol: '' }]]) {
-    assert.throws(
-      () => planResponsibilityRecord({ ...base, responsibilityBindings }),
-      /responsibility/i
-    );
-  }
-});
-
-test('responsibility replacement replaces one rail set while preserving unrelated manifest fields', () => {
-  const originalCommand = parseArgs(featureMechanizationRecordArgs());
-  const existingRail = planResponsibilityRecord(originalCommand).rail;
-  existingRail.rawManifest.responsibilityBindings = [responsibilityBinding];
-  existingRail.rawManifest.retainedEvidence = { note: 'independent metadata' };
-  const replacement = { ...responsibilityBinding, symbol: 'DuckDbGenerationStore.readCapture' };
-  const command = parseArgs(
-    featureMechanizationRecordArgs({
-      extraArgs: [
-        '--responsibility-bindings',
-        JSON.stringify([replacement]),
-        '--expected-revision',
-        '0',
-      ],
-    })
+  const existing = planCurrentFeatureRecord(base).rail;
+  existing.rawManifest.cypressFlows.push('obsolete browser story');
+  existing.rawManifest.fowlerSignals.push('obsolete decision');
+  existing.rawManifest.obsoleteCustomMetadata = true;
+  existing.governingSources.push('obsolete.md');
+  const replacement = parseArgs(
+    featureMechanizationRecordArgs({ extraArgs: ['--replace-current', 'true'] })
   );
-  const planned = planResponsibilityRecord(command, existingRail);
-  assert.deepEqual(planned.rail.rawManifest.responsibilityBindings, [replacement]);
-  assert.deepEqual(planned.rail.rawManifest.retainedEvidence, { note: 'independent metadata' });
-  assert.deepEqual(existingRail.rawManifest.responsibilityBindings, [responsibilityBinding]);
-  assert.equal(planned.audit.previousRevision, 0);
-  assert.equal(planned.audit.resultingRevision, 1);
-});
-
-test('omitted responsibility bindings preserve the current set without changing legacy audit payloads', () => {
-  const command = parseArgs(featureMechanizationRecordArgs());
-  const existingRail = planResponsibilityRecord(command).rail;
-  existingRail.rawManifest.responsibilityBindings = [responsibilityBinding];
-  const planned = planResponsibilityRecord(command, existingRail);
-  assert.deepEqual(planned.rail.rawManifest.responsibilityBindings, [responsibilityBinding]);
-  assert.equal(Object.hasOwn(planned.audit.payload, 'responsibilityBindings'), false);
-});
-
-test('explicit empty responsibility bindings clear inherited associations', () => {
-  const command = parseArgs(
-    featureMechanizationRecordArgs({
-      extraArgs: ['--responsibility-bindings', '[]', '--expected-revision', '2'],
-    })
+  assert.throws(() => planCurrentFeatureRecord(replacement, existing), /expected-revision/u);
+  const current = planCurrentFeatureRecord({ ...replacement, expectedRevision: 0 }, existing);
+  assert.deepEqual(current.rail.rawManifest.cypressFlows, base.cypressFlows);
+  assert.deepEqual(current.rail.rawManifest.fowlerSignals, base.fowlerSignals);
+  assert.equal(current.rail.rawManifest.obsoleteCustomMetadata, undefined);
+  assert.deepEqual(current.rail.governingSources, base.governingSources);
+  assert.equal(current.audit.payload.replaceCurrent, true);
+  assert.notEqual(replacement.idempotencyKey, base.idempotencyKey);
+  assert.throws(
+    () => planCurrentFeatureRecord({ ...replacement, expectedRevision: 9 }, existing),
+    /expected revision/u
   );
-  const existingRail = {
-    railId: command.railId,
-    revision: 2,
-    rawManifest: { responsibilityBindings: [responsibilityBinding] },
-  };
-  const planned = planResponsibilityRecord(command, existingRail);
-  assert.deepEqual(planned.rail.rawManifest.responsibilityBindings, []);
-  assert.deepEqual(planned.audit.payload.responsibilityBindings, []);
 });
 
-test('responsibility replacement and removal require an explicit current rail revision', () => {
-  for (const bindings of [[], [responsibilityBinding]]) {
-    const command = parseArgs(
-      featureMechanizationRecordArgs({
-        extraArgs: ['--responsibility-bindings', JSON.stringify(bindings)],
-      })
-    );
-    for (const revision of [0, 4, null]) {
-      assert.throws(
-        () => planResponsibilityRecord(command, { railId: command.railId, revision }),
-        /responsibility-bindings requires --expected-revision/
-      );
-    }
-    assert.throws(
-      () =>
-        planResponsibilityRecord(
-          { ...command, expectedRevision: 3 },
-          { railId: command.railId, revision: 4 }
-        ),
-      /expected revision 3, but current revision is 4/
-    );
-  }
-});
-
-test('forbidden binding and evidence paths fail instead of being silently pruned', () => {
-  for (const path of [responsibilityBinding.path, responsibilityBinding.testPaths[0]]) {
-    const command = parseArgs(
-      featureMechanizationRecordArgs({ extraArgs: ['--forbidden-surface', path] })
-    );
-    assert.throws(
-      () =>
-        planResponsibilityRecord({ ...command, responsibilityBindings: [responsibilityBinding] }),
-      /responsibility.*forbidden/i
-    );
-    assert.throws(
-      () =>
-        planResponsibilityRecord(command, {
-          railId: command.railId,
-          revision: 0,
-          rawManifest: { responsibilityBindings: [responsibilityBinding] },
-        }),
-      /responsibility.*forbidden/i
-    );
-  }
-});
-
-test('retained forbidden surfaces also reject a responsibility binding replacement', () => {
-  const command = parseArgs(featureMechanizationRecordArgs());
+test('feature commands reject the retired source binding flag', () => {
   assert.throws(
     () =>
-      planResponsibilityRecord(
-        { ...command, expectedRevision: 0, responsibilityBindings: [responsibilityBinding] },
-        {
-          railId: command.railId,
-          revision: 0,
-          rawManifest: { forbiddenImplementationSurfaces: ['apps/api/src/infrastructure/**'] },
-        }
-      ),
-    /responsibility.*forbidden/i
+      parseArgs(featureMechanizationRecordArgs({ extraArgs: ['--responsibility-bindings', '[]'] })),
+    /RecordArchitectureComponent/u
   );
-});
-
-test('terminal rails reject explicit and retained bindings but permit an explicit clear', () => {
-  for (const railStatus of ['retired', 'deprecated']) {
-    const command = parseArgs(
-      featureMechanizationRecordArgs({
-        implementationRefs: [],
-        extraArgs: ['--mechanization-status', 'closed', '--rail-status', railStatus],
-      })
-    );
-    const existingRail = {
-      railId: command.railId,
-      revision: 0,
-      rawManifest: { responsibilityBindings: [responsibilityBinding] },
-    };
-    assert.throws(
-      () =>
-        planResponsibilityRecord({ ...command, responsibilityBindings: [responsibilityBinding] }),
-      /responsibility.*retired|responsibility.*deprecated/i
-    );
-    assert.throws(
-      () => planResponsibilityRecord(command, existingRail),
-      /responsibility.*retired|responsibility.*deprecated/i
-    );
-    const planned = planResponsibilityRecord(
-      { ...command, expectedRevision: 0, responsibilityBindings: [] },
-      existingRail
-    );
-    assert.deepEqual(planned.rail.rawManifest.responsibilityBindings, []);
-  }
-});
-
-test('responsibility bindings participate in idempotence while omission preserves legacy replay', () => {
-  const omitted = parseArgs(featureMechanizationRecordArgs());
-  const cleared = parseArgs(
-    featureMechanizationRecordArgs({ extraArgs: ['--responsibility-bindings', '[]'] })
-  );
-  const declared = parseArgs(
-    featureMechanizationRecordArgs({
-      extraArgs: ['--responsibility-bindings', JSON.stringify([responsibilityBinding])],
-    })
-  );
-  assert.notEqual(omitted.idempotencyKey, cleared.idempotencyKey);
-  assert.notEqual(cleared.idempotencyKey, declared.idempotencyKey);
-  const planned = planResponsibilityRecord(declared);
-  const operation = {
-    operation_type: declared.kind,
-    actor: declared.actor,
-    rail_id: declared.railId,
-    expected_revision: declared.expectedRevision,
-    source_content_sha256: declared.sourceContentSha256,
-    payload: planned.audit.payload,
-  };
-  assert.doesNotThrow(() =>
-    assertFeatureMechanizationRailIdempotentReplayMatches(operation, declared)
-  );
-  for (const changed of [cleared, omitted]) {
-    assert.throws(
-      () => assertFeatureMechanizationRailIdempotentReplayMatches(operation, changed),
-      /FEATURE-MECHANIZATION-IDEMPOTENCY-MISMATCH/
-    );
-  }
-});
-
-test('rail retirement requires an explicit revisioned binding clear before deleting authority', () => {
-  const command = parseArgs([
-    'feature-mechanization',
-    'retire',
-    '--design',
-    'GH-3699-ATOMIC-SOURCE-RESPONSIBILITIES',
-    '--feature',
-    'FM-DB-FIRST-WRITER',
-    '--rail',
-    'RecordFeatureMechanizationRail',
-    '--type',
-    'command',
-    '--expected-revision',
-    '0',
-    '--reason',
-    'Retire the reconciled rail',
-    '--source-ref',
-    'docs/architecture/command-query-rail-governance.md',
-    '--source-content-sha256',
-    'f'.repeat(64),
-    '--actor',
-    'codex',
-  ]);
-  const inputs = {
-    command,
-    design: { designId: command.designId, status: 'review' },
-    designScopes: [{ subjectKind: 'decision', subjectId: command.railId, scopeKind: 'may_delete' }],
-    operationId: 'retire-responsibility-rail',
-    now: new Date('2026-10-23T00:00:00.000Z'),
-  };
-  assert.throws(
-    () =>
-      planFeatureMechanizationRailRetireOperation({
-        ...inputs,
-        existingRail: {
-          railId: command.railId,
-          revision: 0,
-          rawManifest: { responsibilityBindings: [responsibilityBinding] },
-        },
-      }),
-    /responsibility.*empty/i
-  );
-  const retired = planFeatureMechanizationRailRetireOperation({
-    ...inputs,
-    existingRail: {
-      railId: command.railId,
-      revision: 0,
-      rawManifest: { responsibilityBindings: [] },
-    },
-  });
-  assert.equal(retired.retirement.railId, command.railId);
 });
 
 test('parseArgs builds a feature mechanization rail record command', () => {
@@ -1291,7 +1037,6 @@ test('feature mechanization rail writer stores local rails without mutating impo
       implementationRefs: [
         'scripts/planning-db-operate.cjs#writePlannedFeatureMechanizationRailRecordOperation',
       ],
-      extraArgs: ['--responsibility-bindings', JSON.stringify([responsibilityBinding])],
     })
   );
   const planned = planFeatureMechanizationRailRecordOperation({
@@ -1318,12 +1063,8 @@ test('feature mechanization rail writer stores local rails without mutating impo
   const auditWrite = queries.find((query) =>
     query.sql.includes('feature_mechanization_local_operations')
   );
-  assert.deepEqual(JSON.parse(railWrite.params[18]).responsibilityBindings, [
-    responsibilityBinding,
-  ]);
-  assert.deepEqual(JSON.parse(auditWrite.params[10]).responsibilityBindings, [
-    responsibilityBinding,
-  ]);
+  assert.equal(Object.hasOwn(JSON.parse(railWrite.params[18]), 'responsibilityBindings'), false);
+  assert.equal(Object.hasOwn(JSON.parse(auditWrite.params[10]), 'responsibilityBindings'), false);
   assert.equal(
     queries.some((query) =>
       /insert into planning_query_store\.command_query_rails/.test(query.sql)

@@ -6,6 +6,7 @@
  * @decision Planning DB is rebuilt from current truth and has no migration compatibility.
  */
 const fs = require('node:fs');
+const { createHash } = require('node:crypto');
 const path = require('node:path');
 const { Client } = require('pg');
 
@@ -114,7 +115,66 @@ async function assertPlanningDbCurrentSchemaReady(client) {
 }
 
 async function main() {
+  if (process.argv.length > 2) {
+    const args = process.argv.slice(2);
+    if (args.length !== 4 || args[0] !== '--add-table' || args[2] !== '--expected-schema-sha256') {
+      throw new Error(
+        'Expected --add-table <schema.table> --expected-schema-sha256 <reviewed digest>.'
+      );
+    }
+    const result = await addCurrentPlanningDbTable({
+      table: args[1],
+      expectedSchemaSha256: args[3],
+    });
+    console.log(`[planning:db:schema] added=${result.table} schemaSha256=${result.schemaSha256}`);
+    return;
+  }
   await applyCurrentPlanningDbSchema();
+}
+
+async function addCurrentPlanningDbTable(options) {
+  const { table, expectedSchemaSha256 } = options;
+  if (
+    !/^(?:architecture|component_engineering|planning_query_store)\.[a-z][a-z0-9_]*$/u.test(table)
+  )
+    throw new Error('Invalid current-schema table identity.');
+  const schemaSql = assertCurrentPlanningDbSchema(fs.readFileSync(currentSchemaPath, 'utf8'));
+  const schemaSha256 = createHash('sha256').update(schemaSql).digest('hex');
+  if (schemaSha256 !== expectedSchemaSha256)
+    throw new Error('Reviewed schema digest does not match.');
+  const escapedTable = table.replace('.', '\\.');
+  const definitions = [
+    ...schemaSql.matchAll(
+      new RegExp('^CREATE TABLE ' + escapedTable + ' \\([\\s\\S]*?^\\);', 'gm')
+    ),
+  ];
+  const externalClauses = new RegExp('(?:ALTER TABLE(?: ONLY)?|ON) ' + escapedTable + '\\b', 'u');
+  if (definitions.length !== 1 || externalClauses.test(schemaSql))
+    throw new Error(
+      'Addition requires one self-contained current table definition with inline constraints.'
+    );
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  let transactionStarted = false;
+  try {
+    if (!options.client) await client.connect();
+    await client.query('begin');
+    transactionStarted = true;
+    await client.query(
+      "select pg_advisory_xact_lock(hashtext('dvt:planning-db'), hashtext('current-schema'))"
+    );
+    const existing = await client.query('select to_regclass($1) as existing', [table]);
+    if (existing.rows[0]?.existing)
+      throw new Error('Current-schema table already exists: ' + table);
+    await client.query(definitions[0][0]);
+    await client.query('commit');
+    return { table, schemaSha256 };
+  } catch (error) {
+    if (transactionStarted) await client.query('rollback');
+    throw error;
+  } finally {
+    if (!options.client) await client.end();
+  }
 }
 
 if (require.main === module) {
@@ -125,6 +185,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  addCurrentPlanningDbTable,
   applyCurrentPlanningDbSchema,
   assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
