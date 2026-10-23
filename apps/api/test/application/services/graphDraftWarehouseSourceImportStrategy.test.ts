@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 
-import type { SourceObject, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+import {
+  WorkspaceGraphAuthoringDraftSchema,
+  type SourceObject,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -150,6 +154,116 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(batchMutation.apply).not.toHaveBeenCalled();
     expect(draftStore.save).not.toHaveBeenCalled();
   });
+
+  it.each(['new', 'registered'] as const)(
+    'imports a %s definition while preserving its existing reference instances',
+    async (selection) => {
+      const draft = createDraftWithSourceInstances();
+      const draftStore = createDraftStore(draft);
+      const batchMutation = createBatchMutation();
+      const strategy = createStrategy(draftStore, batchMutation);
+      const selected = CONTEXT.sourceObjects[0]!;
+      const context =
+        selection === 'registered'
+          ? CONTEXT
+          : {
+              ...CONTEXT,
+              sourceObjects: [
+                {
+                  ...selected,
+                  objectId: 'relation/analytics/erp/customers',
+                  displayName: 'customers',
+                  locator: { ...selected.locator, name: 'customers' },
+                },
+              ],
+            };
+
+      const result = await strategy.execute(context, {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: context.canvasId,
+        authority: { kind: 'graph-draft' },
+      });
+
+      const saved = vi.mocked(draftStore.save).mock.calls[0]![0].draft;
+      expect(saved.nodeIds).toEqual(draft.nodeIds);
+      expect(saved.nodePositions).toEqual(draft.nodePositions);
+      expect(saved.edges).toEqual(draft.edges);
+      expect(saved.nodes.slice(0, draft.nodes.length)).toEqual(draft.nodes);
+      expect(saved.canvases?.[0]?.nodeIds).toEqual(draft.nodeIds);
+      expect(saved.canvases?.[0]?.nodePositions).toEqual(draft.nodePositions);
+      const definition = selection === 'registered' ? saved.nodes[0]! : saved.nodes.at(-1)!;
+      expect(saved.nodes).toHaveLength(selection === 'registered' ? 3 : 4);
+      expect(definition.sourceDefinitionId).toBeUndefined();
+      expect(saved.nodeIds).not.toContain(definition.id);
+      expect(result.outcome).toMatchObject({ importedNodeIds: [definition.id] });
+      expect(batchMutation.apply).toHaveBeenCalledTimes(1);
+    }
+  );
+
+  it('recovers the persisted definition ID when replay includes several instances', async () => {
+    const persisted = createDraftWithSourceInstances();
+    const draftStore = createDraftStore(
+      createDraft('orders-canvas'),
+      {
+        kind: 'saved',
+        schemaVersion: 'workspace-graph-draft.v1',
+        revision: 'source-import-original-revision',
+        updatedAt: '2026-07-14T00:00:00.000Z',
+        deduplicated: true,
+      },
+      persisted
+    );
+    const batchMutation = createBatchMutation(true);
+
+    await expect(
+      createStrategy(draftStore, batchMutation).execute(CONTEXT, {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: CONTEXT.canvasId,
+        authority: { kind: 'graph-draft' },
+      })
+    ).resolves.toMatchObject({
+      outcome: {
+        draftRevision: 'source-import-original-revision',
+        importedNodeIds: [persisted.nodes[0]!.id],
+      },
+    });
+    expect(draftStore.read).toHaveBeenCalledTimes(2);
+    expect(batchMutation.apply).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['missing', 'chained', 'configuration-override', 'cross-canvas'] as const)(
+    'rejects a %s instance reference before publishing files or a draft',
+    async (invalid) => {
+      const draft = createDraftWithSourceInstances();
+      const instance = draft.nodes[1]!;
+      if (invalid === 'missing') instance.sourceDefinitionId = 'missing-definition';
+      if (invalid === 'chained') instance.sourceDefinitionId = draft.nodes[2]!.id;
+      if (invalid === 'configuration-override') instance.metadata = {};
+      if (invalid === 'cross-canvas') {
+        const definition = draft.nodes.shift()!;
+        draft.canvases!.push({
+          canvas: { id: 'another-canvas', kind: 'canvas', title: 'Another Canvas' },
+          nodeIds: [],
+          nodePositions: {},
+          nodes: [definition],
+          edges: [],
+        });
+      }
+      const draftStore = createDraftStore(draft);
+      const batchMutation = createBatchMutation();
+
+      await expect(
+        createStrategy(draftStore, batchMutation).execute(CONTEXT, {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId: CONTEXT.canvasId,
+          authority: { kind: 'graph-draft' },
+        })
+      ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
+
+      expect(batchMutation.apply).not.toHaveBeenCalled();
+      expect(draftStore.save).not.toHaveBeenCalled();
+    }
+  );
 
   it('keeps the same physical object distinct across two connections without binding-derived IDs', async () => {
     const existingNodeId = 'dvt_src_01991dc0-0000-7000-8000-000000000001';
@@ -572,6 +686,41 @@ function createDraftWithSourceNode(canvasId: string, nodeId: string): WorkspaceG
       sourceObjectId: SOURCE_OBJECT.objectId,
     },
   ]);
+}
+
+function createDraftWithSourceInstances(): WorkspaceGraphAuthoringDraft {
+  const draft = createDraftWithSourceNode(
+    'orders-canvas',
+    'dvt_src_01991dc0-0000-7000-8000-000000000006'
+  );
+  const definition = draft.nodes[0]!;
+  const nodes = [
+    definition,
+    ...['first-instance', 'second-instance'].map((id) => ({
+      id,
+      sourceDefinitionId: definition.id,
+      name: definition.name,
+      pluginId: definition.pluginId,
+      kind: definition.kind,
+      role: definition.role,
+      status: definition.status,
+      tags: [],
+    })),
+  ];
+  const nodeIds = ['first-instance', 'second-instance'];
+  const nodePositions = {
+    'first-instance': { x: 120, y: 120 },
+    'second-instance': { x: 520, y: 240 },
+  };
+  const result = {
+    ...draft,
+    nodes,
+    nodeIds,
+    nodePositions,
+    canvases: draft.canvases?.map((canvas) => ({ ...canvas, nodes, nodeIds, nodePositions })),
+  };
+  WorkspaceGraphAuthoringDraftSchema.parse(result);
+  return result;
 }
 
 function createDraftWithSourceNodes(

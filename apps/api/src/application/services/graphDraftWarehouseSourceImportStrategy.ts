@@ -72,24 +72,24 @@ export class GraphDraftWarehouseSourceImportStrategy {
 
     const stored = await this.deps.draftStore.read(context.scope);
     if (!stored) throw new WarehouseSourceImportCanvasNotFoundError(context.canvasId);
-    const draft = WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
-    assertTargetCanvas(draft, context.canvasId);
-    for (const node of readTargetCanvas(draft, context.canvasId).nodes) {
-      if (node.pluginId !== 'dvt.warehouse-source') continue;
-      const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
-        node.metadata?.connectedSourceRef
-      );
-      if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
-        throw new WarehouseSourceImportDraftConflictError();
-      }
-    }
+    const parsedDraft = WorkspaceGraphAuthoringDraftSchema.safeParse(stored.draftPayload);
+    if (!parsedDraft.success) throw new WarehouseSourceImportDraftConflictError();
+    const draft = parsedDraft.data;
+    const definitionIdsByBinding = indexImportedSourceDefinitions(
+      readTargetCanvas(draft, context.canvasId).nodes
+    );
 
     const filePlan = await buildWarehouseSourceImportFilePlan({
       context,
       workspaceFiles: this.deps.workspaceFiles,
       authorityProjectRoot: null,
     });
-    const mutation = appendImportedSourceNodes(draft, context, filePlan.bindings);
+    const mutation = appendImportedSourceNodes(
+      draft,
+      context,
+      filePlan.bindings,
+      definitionIdsByBinding
+    );
     const appliedReceipt = await applyWarehouseSourceImportFilePlan({
       context,
       plan: filePlan,
@@ -169,20 +169,9 @@ async function readPersistedImportedNodeIds(
     throw new WarehouseSourceImportDraftConflictError();
   }
 
-  const nodeIdsByConnectedSourceRef = new Map<string, string[]>();
-  for (const node of readTargetCanvas(parsed.data, context.canvasId).nodes) {
-    if (node.pluginId !== 'dvt.warehouse-source') continue;
-    const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
-      node.metadata?.connectedSourceRef
-    );
-    if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
-      throw new WarehouseSourceImportDraftConflictError();
-    }
-    const bindingKey = jcsCanonicalize(connectedSourceRef.data);
-    const nodeIds = nodeIdsByConnectedSourceRef.get(bindingKey) ?? [];
-    nodeIds.push(node.id);
-    nodeIdsByConnectedSourceRef.set(bindingKey, nodeIds);
-  }
+  const definitionIdsByBinding = indexImportedSourceDefinitions(
+    readTargetCanvas(parsed.data, context.canvasId).nodes
+  );
 
   return context.sourceObjects.map((sourceObject) => {
     const connectedSourceRef: ConnectedSourceRef = {
@@ -194,9 +183,8 @@ async function readPersistedImportedNodeIds(
       },
       sourceObjectId: sourceObject.objectId,
     };
-    const nodeIds = nodeIdsByConnectedSourceRef.get(jcsCanonicalize(connectedSourceRef));
-    const nodeId = nodeIds?.[0];
-    if (nodeIds?.length !== 1 || !nodeId) {
+    const nodeId = definitionIdsByBinding.get(jcsCanonicalize(connectedSourceRef));
+    if (!nodeId) {
       throw new WarehouseSourceImportDraftConflictError();
     }
     return nodeId;
@@ -206,28 +194,14 @@ async function readPersistedImportedNodeIds(
 function appendImportedSourceNodes(
   draft: WorkspaceGraphAuthoringDraft,
   context: WarehouseSourceImportCommandContext,
-  sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>
+  sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>,
+  definitionIdsByBinding: ReadonlyMap<string, string>
 ): Readonly<{
   draft: WorkspaceGraphAuthoringDraft;
   selectedNodeIds: readonly string[];
 }> {
   const target = readTargetCanvas(draft, context.canvasId);
   const existingIds = new Set(target.nodes.map((node) => node.id));
-  const existingNodeIdByConnectedSourceRef = new Map<string, string>();
-  for (const node of target.nodes) {
-    if (node.pluginId !== 'dvt.warehouse-source') continue;
-    const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
-      node.metadata?.connectedSourceRef
-    );
-    if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
-      throw new WarehouseSourceImportDraftConflictError();
-    }
-    const bindingKey = jcsCanonicalize(connectedSourceRef.data);
-    if (existingNodeIdByConnectedSourceRef.has(bindingKey)) {
-      throw new WarehouseSourceImportDraftConflictError();
-    }
-    existingNodeIdByConnectedSourceRef.set(bindingKey, node.id);
-  }
 
   const importedNodes: WorkspaceGraphAuthoringNode[] = [];
   const selectedNodeIds: string[] = [];
@@ -241,9 +215,7 @@ function appendImportedSourceNodes(
       },
       sourceObjectId: sourceObject.objectId,
     };
-    const existingNodeId = existingNodeIdByConnectedSourceRef.get(
-      jcsCanonicalize(connectedSourceRef)
-    );
+    const existingNodeId = definitionIdsByBinding.get(jcsCanonicalize(connectedSourceRef));
     if (existingNodeId) {
       selectedNodeIds.push(existingNodeId);
       continue;
@@ -334,9 +306,23 @@ function toSourceNode(
   };
 }
 
-function assertTargetCanvas(draft: WorkspaceGraphAuthoringDraft, canvasId: string): void {
-  if (!hasTargetCanvas(draft, canvasId))
-    throw new WarehouseSourceImportCanvasNotFoundError(canvasId);
+function indexImportedSourceDefinitions(
+  nodes: readonly WorkspaceGraphAuthoringNode[]
+): ReadonlyMap<string, string> {
+  const definitionIdsByBinding = new Map<string, string>();
+  for (const node of nodes) {
+    if (node.pluginId !== 'dvt.warehouse-source' || node.sourceDefinitionId != null) continue;
+    const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
+      node.metadata?.connectedSourceRef
+    );
+    if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
+      throw new WarehouseSourceImportDraftConflictError();
+    }
+    const bindingKey = jcsCanonicalize(connectedSourceRef.data);
+    if (definitionIdsByBinding.has(bindingKey)) throw new WarehouseSourceImportDraftConflictError();
+    definitionIdsByBinding.set(bindingKey, node.id);
+  }
+  return definitionIdsByBinding;
 }
 
 function hasTargetCanvas(draft: WorkspaceGraphAuthoringDraft, canvasId: string): boolean {

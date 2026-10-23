@@ -138,6 +138,7 @@ describe('Canvas Source Import live', () => {
 
   it('imports catalog metadata into a fresh, scoped DVT Canvas and generates source YAML', () => {
     let session: WorkspaceGraphDraftScope;
+    let placedDraft: WorkspaceGraphAuthoringDraft;
     cy.visit('/canvas', {
       onBeforeLoad(window) {
         window.localStorage.clear();
@@ -216,11 +217,32 @@ describe('Canvas Source Import live', () => {
       });
     });
 
+    cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
+      placedDraft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
+      expect(placedDraft.nodes.filter((node) => node.sourceDefinitionId != null)).to.have.length(2);
+    });
+    cy.contains('button', 'Import sources').should('be.visible').click();
+    importLivePostgresSource({ kind: 'graph-draft' }, 'after-placement');
+    cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
+      const saved = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
+      expect(saved.nodeIds).to.deep.equal(placedDraft.nodeIds);
+      expect(saved.nodePositions).to.deep.equal(placedDraft.nodePositions);
+      expect(saved.edges).to.deep.equal(placedDraft.edges);
+      expect(saved.nodes.slice(0, placedDraft.nodes.length)).to.deep.equal(placedDraft.nodes);
+      const definitions = saved.nodes.filter(
+        (node) => node.kind === 'dvt:source' && node.sourceDefinitionId == null
+      );
+      expect(definitions).to.have.length(2);
+      expect(saved.nodes).to.have.length(placedDraft.nodes.length + 1);
+      cy.get('.react-flow__node').should('have.length', 2);
+    });
+
     cy.then(() => readLiveWorkspaceFile('models/sources/src_public.yml', session)).then(
       (response) => {
         expect(response.status).to.equal(200);
         const content = (response.body as { content: string }).content;
         expect(content).to.contain(`name: ${expectedLivePostgresSourceName()}`);
+        expect(content).to.contain(`name: ${expectedLivePostgresSourceName('after-placement')}`);
         expect(content).to.contain('schema: public');
         expect(content).to.contain('name: source_1');
         expect(content).to.contain('order_id');
