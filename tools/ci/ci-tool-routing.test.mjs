@@ -14,14 +14,27 @@ for (const file of EXECUTABLE_CI_TOOL_TESTS) {
   });
 }
 
-for (const file of [
-  'tools/ci/ci-tool-routing.test.mjs',
-  'apps/web/src/app/components/example.tsx',
-]) {
+for (const file of ['docs/guides/example.md', 'apps/web/src/app/components/example.tsx']) {
   test('unrelated input does not select executable CI contracts: ' + file, () => {
     assert.equal(
       computeWorkflowModeScopeOutputs('workflow', [file]).ci_tool_executable_contracts_relevant,
       false
+    );
+  });
+}
+
+for (const file of [
+  'scripts/planning-db-schema.cjs',
+  'scripts/planning-db/component-source-responsibility-store.cjs',
+  'scripts/planning-db/component-source-responsibility.integration.test.cjs',
+  'tools/docs/check-filenames.ts',
+  'packages/@dvt/cli/src/main.ts',
+  'packages/@dvt/engine/test/contracts/run-golden-paths.hash.test.ts',
+]) {
+  test('tooling crypto source selects pre-merge executable contracts: ' + file, () => {
+    assert.equal(
+      computeWorkflowModeScopeOutputs('workflow', [file]).ci_tool_executable_contracts_relevant,
+      true
     );
   });
 }

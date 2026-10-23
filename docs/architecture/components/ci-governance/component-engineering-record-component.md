@@ -191,6 +191,13 @@ test runs once for changes to any command file recognized by the catalog's own
 path predicate, or to the package command declarations. Unknown tools still fail
 closed; this introduces neither a second classifier nor a blanket helper rule.
 
+Schema and binding-set digests use the existing `@dvt/crypto` primitives. The
+tooling crypto contract owns one shared input predicate used by its scan, local
+selection and CI routing. A governed source change selects that exact contract
+locally, unless its complete test file is already selected. The existing
+executable CI contract lane must also run before merge. Source admission alone
+does not prove this dependency rule.
+
 Feature metadata updates preserve omitted fields, but explicit replacement of
 the current manifest must replace obsolete collections rather than union them
 back into existence. Replacement requires an expected revision and retains the

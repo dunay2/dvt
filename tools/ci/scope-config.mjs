@@ -9,7 +9,7 @@ import {
   isGovernanceToolingCommand,
 } from './repository-command-catalog.mjs';
 import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
-import { EXECUTABLE_CI_TOOL_TESTS } from './ci-tool-test-suite.mjs';
+import { EXECUTABLE_CI_TOOL_TESTS, isToolingCryptoContractInput } from './ci-tool-test-suite.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -854,6 +854,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
     ),
     ci_tool_executable_contracts_relevant: Boolean(
       scope.ci_tool_executable_contracts_relevant ||
+      buildFilesForPathPolicy(changedFiles, scopeContext).some(isToolingCryptoContractInput) ||
       packageJsonChange?.dependencySensitive ||
       packageJsonChange?.ciToolingSensitive ||
       packageJsonChange?.governanceToolingOnly

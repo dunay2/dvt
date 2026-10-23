@@ -298,7 +298,7 @@ test('emit-scope workflow mode exposes prepush-equivalent governance routing', (
   assert.equal(docsScope.code_validation_relevant, false);
 });
 
-test('emit-scope workflow mode routes executable CI tool contracts only for install-backed surfaces', () => {
+test('emit-scope workflow mode routes executable contracts for their tooling crypto inputs', () => {
   const executableScope = computeWorkflowModeScopeOutputs('workflow', [
     'tools/ci/docs-changed-governance-policy.test.mjs',
   ]);
@@ -308,7 +308,7 @@ test('emit-scope workflow mode routes executable CI tool contracts only for inst
   const staticScope = computeWorkflowModeScopeOutputs('workflow', ['tools/ci/emit-scope.test.mjs']);
 
   assert.equal(staticScope.changed_file_validation_relevant, true);
-  assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
+  assert.equal(staticScope.ci_tool_executable_contracts_relevant, true);
 
   const packageScriptScope = computeWorkflowModeScopeOutputs('workflow', ['package.json'], {
     'package.json': {

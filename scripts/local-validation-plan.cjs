@@ -12,6 +12,10 @@ const { createGitRepositoryEnvironment } = require('./lib/git-repository-environ
 
 const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
 const { isRepositoryCommandFile } = require('../tools/ci/repository-command-catalog.mjs');
+const {
+  TOOLING_CRYPTO_CONTRACT,
+  isToolingCryptoContractInput,
+} = require('../tools/ci/ci-tool-test-suite.mjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
@@ -347,6 +351,16 @@ function ciToolingTestSteps(changedFiles) {
     .map((testPath) =>
       testStep(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
     );
+  if (changedFiles.includes('tools/ci/scope-config.mjs')) {
+    for (const suite of [
+      'ci-tool-routing',
+      'emit-scope',
+      'package-json-scope-classification',
+      'workflow-scope-classification',
+    ]) {
+      pushStepOnce(plan, testStep(`test-${suite}`, 'node', '--test', `tools/ci/${suite}.test.mjs`));
+    }
+  }
   if (changedFiles.some((file) => file === 'package.json' || isRepositoryCommandFile(file))) {
     pushStepOnce(
       plan,
@@ -355,6 +369,20 @@ function ciToolingTestSteps(changedFiles) {
         'node',
         '--test',
         'tools/ci/repository-command-catalog.test.mjs'
+      )
+    );
+  }
+  if (
+    changedFiles.some(isToolingCryptoContractInput) &&
+    !plan.some((step) => step.args.includes(TOOLING_CRYPTO_CONTRACT.testPath))
+  ) {
+    plan.push(
+      testStep(
+        'test-tooling-crypto-contract',
+        'node',
+        '--test',
+        '--test-name-pattern=' + TOOLING_CRYPTO_CONTRACT.namePattern,
+        TOOLING_CRYPTO_CONTRACT.testPath
       )
     );
   }
