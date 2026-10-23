@@ -23,6 +23,33 @@ readiness have separate owners. The Canvas controller composes them; the API
 continues to own protected publication admission. Saving a disposition and
 executing it are distinct operations.
 
+The root `dependency-cruiser` configuration enforces the affected import
+directions through the existing `arch:deps` gate, including type-only imports:
+readiness projections do not depend on command implementations or transports;
+autosave does not depend on Preview/Run coordination; execution coordination does
+not depend on route composition. The API publication policy does not depend on
+UI, infrastructure or composition roots, and contracts do not import applications.
+Readiness may consume passive diagnostic translation. Commands may consume the
+readiness query and ports; the route composes these owners.
+
+```mermaid
+flowchart TD
+  Route[Route composition] --> Save[Draft persistence]
+  Route --> Commands[Preview and Run commands]
+  Route --> Readiness[Readiness query]
+  Commands --> Readiness
+  Commands --> Ports[Existing execution ports]
+  Save --> Repository[Draft repository]
+  Policy[API publication policy] --> Vocabulary[Contract rejection vocabulary]
+  Readiness --> Translation[Passive diagnostic translation]
+  Translation --> Vocabulary
+```
+
+The current Planning DB definitions name each responsibility's concrete reason
+to change and the concerns it delegates. Preview/Run coordination references both
+existing command rails; readiness remains on `ObservePlanRunReadiness`. These
+records describe current code and do not introduce additional product commands.
+
 ## Owned Concern
 
 ### Persistence And Execution Readiness

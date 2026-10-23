@@ -116,6 +116,18 @@ Delegation and verification may name another responsibility owner explicitly.
 No feature command owns these associations. Git retains source history; the
 existing command audit is not a source inventory.
 
+`ReviseGovernanceComponent` corrects an existing definition under admitted design
+scope and expected revision. `--cq-rails` and `--ddd-owner` correct the current
+values. `--remove-reason-to-change` and `--remove-non-goal` remove exact superseded
+values; the existing `--reason-to-change` and `--non-goal` add their replacements.
+Unknown removals fail rather than silently retaining stale semantics. The command
+audits these deltas and preserves unrelated metadata, ownership and source
+bindings. No new component identity or inventory import is needed for a semantic
+correction. Reasons name the concrete lifecycle, policy or contract that changes;
+non-goals identify another owner's concern. Physical `excludes` patterns govern
+file ownership; dependency direction is enforced separately by the existing root
+dependency-cruiser gate.
+
 The pilot covers five files: `buildLocalDataCaptureRuntime.ts`,
 `readLocalDataGenerationMetadataUseCase.ts`, `DuckDbGenerationStore.ts`,
 `duckDbGenerationMetadata.ts`, and `DuckDbLocalDataRuntime.ts`. It records their

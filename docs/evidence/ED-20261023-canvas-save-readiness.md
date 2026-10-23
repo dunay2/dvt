@@ -70,3 +70,32 @@ corruption. The subsequent integrity check passes with the prior 101 warnings.
 Exact validation results, failed invocations and the bounded browser acceptance
 are recorded in the issue. Listed commands declare scope, not blanket acceptance.
 No new runtime profile, rule exemption, hook bypass, debt or stub is introduced.
+
+## Component boundaries and executable fitness
+
+The [boundary refinement](https://github.com/dunay2/dvt/issues/3115#issuecomment-6373237186)
+records current/target diagrams and the allowed implementation surfaces before
+the writer and dependency tests. Six existing components retain their identities
+and bindings while their concrete reasons to change and excluded concerns replace
+generic metadata. Preview/Run coordination references the existing StartRun rail.
+
+The existing ReviseGovernanceComponent command now accepts rail/semantic-owner
+corrections and exact removal of superseded reasons or non-goals. Expected
+revision, design scope, audit identity and unrelated metadata are preserved.
+Unknown removals and invalid rail declarations reject. No raw SQL write, import
+or replacement catalog is used.
+
+Five root dependency-cruiser error rules enforce current import direction:
+readiness to effects, autosave to execution, execution to route composition,
+publication policy to adapters, and contracts to applications. The existing
+architecture gate owns execution in CI. Negative fixtures exercise both runtime
+and type-only edges; positive fixtures retain composition, ports and passive
+diagnostic translation. The actual repository graph is also checked through
+`pnpm arch:deps`.
+
+Focused commands for this refinement are
+`node --test scripts/planning-db-operate-tests/component-create.test.cjs` and
+`node --test --test-name-pattern='Canvas component boundaries' tools/ci/architecture-dependency-guard.test.mjs`.
+The issue records exact outcomes and committed base/head. This tooling and
+metadata refinement does not change product runtime behavior or repeat the
+previous browser acceptance.

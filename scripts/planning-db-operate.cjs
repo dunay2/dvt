@@ -311,6 +311,8 @@ const componentListOptionKeys = new Set([
   'remove-owns',
   'add-excludes',
   'remove-excludes',
+  'remove-non-goal',
+  'remove-reason-to-change',
 ]);
 const featureMechanizationListOptionKeys = new Set([
   'component-guide',
@@ -336,6 +338,7 @@ const operationHelp = Object.freeze({
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
       'ReviseGovernanceComponent overlays imported ownership, status, and semantic metadata through a scoped, audited DB command.',
+      'Revise accepts --cq-rails and --ddd-owner corrections, plus exact --remove-reason-to-change and --remove-non-goal deltas with their existing add flags.',
       'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
@@ -1527,6 +1530,8 @@ function operationPayload(command) {
       status: command.status,
       childrenRequired: command.childrenRequired,
       ownedConcern: command.ownedConcern,
+      ...(command.dddOwner ? { dddOwner: command.dddOwner } : {}),
+      ...(command.cqRails ? { cqRails: command.cqRails } : {}),
       addOwns: command.addOwns || [],
       removeOwns: command.removeOwns || [],
       addExcludes: command.addExcludes || [],
@@ -1534,6 +1539,10 @@ function operationPayload(command) {
       responsibilities: command.responsibilities || [],
       nonGoals: command.nonGoals || [],
       reasonsToChange: command.reasonsToChange || [],
+      ...(command.removeNonGoals?.length ? { removeNonGoals: command.removeNonGoals } : {}),
+      ...(command.removeReasonsToChange?.length
+        ? { removeReasonsToChange: command.removeReasonsToChange }
+        : {}),
       publicApi: command.publicApi || [],
       invariants: command.invariants || [],
       transitions: command.transitions || [],
@@ -2169,6 +2178,8 @@ function validateComponentReviseCommand(command) {
     command.status,
     command.childrenRequired,
     command.ownedConcern,
+    command.dddOwner,
+    command.cqRails,
     ...(command.addOwns || []),
     ...(command.removeOwns || []),
     ...(command.addExcludes || []),
@@ -2176,6 +2187,8 @@ function validateComponentReviseCommand(command) {
     ...(command.responsibilities || []),
     ...(command.nonGoals || []),
     ...(command.reasonsToChange || []),
+    ...(command.removeNonGoals || []),
+    ...(command.removeReasonsToChange || []),
     ...(command.publicApi || []),
     ...(command.invariants || []),
     ...(command.transitions || []),
@@ -2244,6 +2257,8 @@ function parseComponentCommand(action, args) {
           ? null
           : parseBooleanOption(options.childrenRequired, 'children-required'),
       ownedConcern: normalizeOptionalText(options.ownedConcern),
+      dddOwner: normalizeOptionalText(options.dddOwner),
+      cqRails: options.cqRails === undefined ? null : validateComponentCqRails(options.cqRails),
       addOwns: normalizeListOption(options.addOwns),
       removeOwns: normalizeListOption(options.removeOwns),
       addExcludes: normalizeListOption(options.addExcludes),
@@ -2251,6 +2266,8 @@ function parseComponentCommand(action, args) {
       responsibilities: normalizeListOption(options.responsibility),
       nonGoals: normalizeListOption(options.nonGoal),
       reasonsToChange: normalizeListOption(options.reasonToChange),
+      removeNonGoals: normalizeListOption(options.removeNonGoal),
+      removeReasonsToChange: normalizeListOption(options.removeReasonToChange),
       publicApi: normalizeListOption(options.publicApi),
       invariants: normalizeListOption(options.invariant),
       transitions: normalizeListOption(options.transition),
@@ -5004,6 +5021,8 @@ function planComponentReviseOperation({
     status: command.status ?? component.status,
     childrenRequired: command.childrenRequired ?? component.childrenRequired,
     ownedConcern: command.ownedConcern ?? component.ownedConcern,
+    dddOwner: command.dddOwner ?? component.dddOwner,
+    cqRails: command.cqRails ?? component.cqRails,
     owns: applyComponentPatternDelta(
       command.componentId,
       'owns',
@@ -5019,8 +5038,20 @@ function planComponentReviseOperation({
       command.removeExcludes
     ),
     responsibilities: mergeUniqueValues(component.responsibilities, command.responsibilities),
-    nonGoals: mergeUniqueValues(component.nonGoals, command.nonGoals),
-    reasonsToChange: mergeUniqueValues(component.reasonsToChange, command.reasonsToChange),
+    nonGoals: applyComponentPatternDelta(
+      command.componentId,
+      'non-goal',
+      component.nonGoals,
+      command.nonGoals,
+      command.removeNonGoals
+    ),
+    reasonsToChange: applyComponentPatternDelta(
+      command.componentId,
+      'reason-to-change',
+      component.reasonsToChange,
+      command.reasonsToChange,
+      command.removeReasonsToChange
+    ),
     publicApi: mergeUniqueValues(component.publicApi, command.publicApi),
     invariants: mergeUniqueValues(component.invariants, command.invariants),
     transitions: mergeUniqueValues(component.transitions, command.transitions),

@@ -130,6 +130,57 @@ module.exports = {
       from: { path: '^apps/api/src/' },
       to: { path: '^apps/api/test/' },
     },
+    {
+      name: 'no-canvas-readiness-to-effects',
+      severity: 'error',
+      from: {
+        path: '^apps/web/src/app/views/canvas/(?:canvasRuntimePolicy|canvasDraftAccessPostureModel|canvasPlanReadiness|canvasExecutionState)\\.ts$',
+      },
+      to: {
+        path: [
+          '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions|Controller|ControllerRuntime|DraftAutosave)|useDbtProjectFileExecution|canvasDraftAutosave(?:Execution|Scheduling)|canvasDraftPersistenceRuntime)\\.ts$',
+          '^apps/web/src/app/services/(?!api/dvtOperationalRejectionCopy\\.ts$)',
+        ],
+      },
+    },
+    {
+      name: 'no-canvas-autosave-to-execution',
+      severity: 'error',
+      from: {
+        path: '^apps/web/src/app/views/canvas/(?:useCanvasDraftAutosave|canvasDraftAutosave(?:Scheduling|Execution)|canvasDraftPersistenceRuntime)\\.ts$',
+      },
+      to: {
+        path: '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions|Controller|ControllerRuntime)|useDbtProjectFileExecution)\\.ts$',
+      },
+    },
+    {
+      name: 'no-canvas-execution-to-route-composition',
+      severity: 'error',
+      from: {
+        path: '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions))\\.ts$',
+      },
+      to: {
+        path: '^apps/web/src/app/views/canvas/(?:useCanvasController(?:Runtime)?|useDbtProjectFileExecution)\\.ts$',
+      },
+    },
+    {
+      name: 'no-dvt-publication-policy-to-adapters',
+      severity: 'error',
+      from: { path: '^apps/api/src/application/services/dvtWorkloadPublication\\.ts$' },
+      to: {
+        path: [
+          '^apps/web/',
+          '^apps/api/src/(?:entrypoints|infrastructure|modules|runtime)/',
+          '^packages/@dvt/adapter-',
+        ],
+      },
+    },
+    {
+      name: 'no-contracts-to-applications',
+      severity: 'error',
+      from: { path: '^packages/@dvt/contracts/(?:src/|index\\.ts$)' },
+      to: { path: '^apps/' },
+    },
   ],
 
   options: {
