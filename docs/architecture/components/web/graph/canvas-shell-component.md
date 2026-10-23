@@ -476,6 +476,35 @@ sequenceDiagram
 
 No backend command/query rail changes are introduced by this component.
 
+### Source Catalogue Presentation
+
+The existing `RenderCanvasContextualGraphSurface` query presents registered
+source definitions through `CanvasGraphExplorer` and the shared
+`CanvasExplorerList`. Sources use compact cards with a table icon, a minimum
+44 px hit target, 4 px separation and the available schema/connection as display
+context. Other explorer lists retain their existing presentation.
+
+The source projection excludes reference instances and preserves definition
+identity and catalogue order. Its derived rows change with the catalogue,
+independently from graph coordinates. The shared list prepares searchable text
+when its items change; an empty search returns those items directly. These are
+render-local projections, never a second source authority or a global cache.
+
+Click still inspects the definition. Drag still transfers only its identity to
+the existing guarded drop command. Filtering, card styling and keyboard focus
+must not place a node, write a draft or make a provider request. Missing display
+metadata is omitted without inventing a connection or schema.
+
+```mermaid
+flowchart LR
+  Catalogue[Authorized source catalogue] --> Projection[Definition rows]
+  Projection --> Search[Shared local search]
+  Search --> Card[Accessible compact card]
+  Card --> Inspect[Existing inspect action]
+  Card --> Drag[Existing identity drag]
+  Graph[Graph geometry] --> Elements[Existing element rows]
+```
+
 ### Drift To Prevent
 
 - Reintroducing `shell-top-bar-canvas-controls`.
