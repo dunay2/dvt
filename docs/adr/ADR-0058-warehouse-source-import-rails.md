@@ -172,6 +172,26 @@ database/schema/identifier/connection metadata changes.
 
 ## Connector boundary
 
+### Native Canvas source comments
+
+`SourceObject.comment` and `SourceObjectColumn.comment` carry optional, nonblank
+provider documentation as plain text. PostgreSQL discovery reads relation comments
+with `obj_description` and column comments with `col_description`, keyed by the
+actual relation OID and attribute number. Inspection and paged/search discovery
+share one batched column loader; comments introduce no per-column request or data
+scan. Existing database and SELECT authorization boundaries apply unchanged.
+
+Native graph-draft import stores the table comment as `metadata.sourceComment` and
+field comments in `metadata.columns`. Physical rebind replaces or clears these
+facts from the target, preserving logical identity and existing column order.
+These are import/rebind snapshots, not a subscription to warehouse metadata;
+existing Sources are not refreshed implicitly. Generic node comments and authored
+dbt descriptions are not provider comments. The file-authoritative dbt projection
+continues to carry authored documentation; it does not claim a provider snapshot.
+
+The Source inspector presents provider comments read-only, independently of the
+editable DVT description, with no external write-back or new comment command.
+
 The declared connection database and the database resolved by server credentials must be
 identical. PostgreSQL inspection, connection test, lazy discovery and Preview verify
 `current_database()` before reading catalog objects or rows. A mismatch is an explicit

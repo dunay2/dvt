@@ -1,5 +1,5 @@
 /** Owned concern: render one directed Canvas dependency without owning graph semantics. */
-import { BaseEdge, getBezierPath, type Edge, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, getSmoothStepPath, type Edge, type EdgeProps } from '@xyflow/react';
 import { useId, type ReactElement } from 'react';
 
 import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
@@ -22,13 +22,14 @@ export function CanvasDependencyEdge({
 }: EdgeProps<Edge<CanvasDependencyEdgeData>>): ReactElement {
   const markerId = useId().replaceAll(':', '');
   const dependency = readCanvasDependencyEdgeData(data);
-  const [edgePath, labelX, labelY] = getBezierPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
+    borderRadius: 12,
   });
   const execution = dependency?.execution;
   const closed = execution?.gateState === 'closed';
@@ -55,10 +56,10 @@ export function CanvasDependencyEdge({
           id={markerId}
           data-slot="canvas-dependency-direction-cue"
           viewBox="0 0 8 8"
-          markerWidth="12"
-          markerHeight="12"
+          markerWidth="8"
+          markerHeight="8"
           markerUnits="userSpaceOnUse"
-          refX="12"
+          refX="8"
           refY="4"
           orient="auto"
           aria-hidden="true"

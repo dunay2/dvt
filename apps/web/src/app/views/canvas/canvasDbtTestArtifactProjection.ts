@@ -6,7 +6,7 @@ import {
   type DbtTestType,
   validateDbtTestAuthoringMetadata,
 } from './canvasDbtTestAuthoringModel';
-import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
 import { resolveConnectedDbtTestTargets } from './canvasDbtTestTargetPolicy';
 
 export type DbtTestArtifactProjection = Readonly<{
@@ -86,11 +86,11 @@ export function projectDbtTestArtifact(args: {
     artifact: {
       testNodeId: args.testNode.id,
       targetModelId: targetModel.id,
-      modelName: normalizeDbtArtifactIdentifier(targetModel.name, targetModel.id),
+      modelName: normalizeDbtIdentifier(targetModel.name, targetModel.id),
       columnName: metadata.targetColumn.trim(),
       testType: metadata.testType as DbtTestType,
       severity: metadata.severity as DbtTestSeverity,
-      selector: normalizeDbtArtifactIdentifier(args.testNode.id, 'dbt_test'),
+      selector: normalizeDbtIdentifier(args.testNode.id, 'dbt_test'),
     },
   };
 }

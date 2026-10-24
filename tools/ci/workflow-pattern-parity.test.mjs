@@ -768,19 +768,19 @@ test('main full CI prepares Planning DB before the full validation baseline', ()
     '.github/actions/prepare-planning-db/action.yml',
     'utf8'
   );
-  const prepareDbIndex = ciWorkflow.indexOf('Prepare planning DB for full CI baseline');
-  const prepareDbActionIndex = ciWorkflow.indexOf('uses: ./.github/actions/prepare-planning-db');
-  const fullBaselineIndex = ciWorkflow.indexOf('run: pnpm ci:full');
+  const steps = yaml.load(ciWorkflow).jobs['full-ci'].steps;
+  const prepareDbIndex = steps.findIndex(
+    (step) => step.uses === './.github/actions/prepare-planning-db'
+  );
+  const fullBaselineIndex = steps.findIndex((step) => step.name === 'Run full CI baseline');
 
   assert.notEqual(prepareDbIndex, -1);
-  assert.notEqual(prepareDbActionIndex, -1);
   assert.notEqual(fullBaselineIndex, -1);
-  assert.ok(prepareDbIndex < prepareDbActionIndex);
-  assert.ok(prepareDbActionIndex < fullBaselineIndex);
+  assert.ok(prepareDbIndex < fullBaselineIndex);
+  assert.equal(steps[fullBaselineIndex].env.PLANNING_DB_INTEGRITY_SCOPE, 'bootstrap');
   assert.doesNotMatch(ciWorkflow, /import-governance:/u);
   assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
   assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
-  assertWorkflowContains(ciWorkflow, 'PLANNING_DB_INTEGRITY_SCOPE: bootstrap');
 });
 
 test('scope diff consumers use shallow checkout instead of full PR history', () => {

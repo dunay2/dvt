@@ -1,6 +1,7 @@
 /** Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details. */
 
 import { Button } from '../../components/ui/button';
+import { cn } from '../../components/ui/utils';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useCanvasInspectorDraftSubmission } from './useCanvasInspectorDraftSubmission';
@@ -79,7 +80,10 @@ export function CanvasInspectorAuthoringSection({
   return (
     <section
       data-slot="node-inspector-editable-section"
-      className={inspectorVisualClasses.contextPanelDetailsSection}
+      className={cn(
+        inspectorVisualClasses.contextPanelDetailsSection,
+        inspectorVisualClasses.inspectorForm
+      )}
     >
       <div className="space-y-3">
         <CanvasInspectorMetadataFields

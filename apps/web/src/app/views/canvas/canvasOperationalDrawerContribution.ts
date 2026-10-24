@@ -16,6 +16,10 @@ import type {
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerSelectionRecoveryMessages } from '../../components/shell/operationalDrawerSelectionRecoveryMessages';
 import type { PlanRunReadinessBlocker, PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import {
+  resolvePlanRunReadinessBlockerMessage,
+  resolvePlanRunReadinessBlockerLabel,
+} from './canvasReadinessPresentation';
 import { canvasViewCopy, formatCanvasCopyTemplate, type CanvasViewCopy } from './copy';
 
 type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
@@ -26,7 +30,6 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   canPlanGraph: boolean;
   canStartRun: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
   selectionRecovery?: CanvasExecutionSelectionRecoveryReadModel | null;
   selectionRecoveryCommands?: CanvasExecutionSelectionRecoveryCommands | null;
   selectionRecoveryMessages?: OperationalDrawerSelectionRecoveryMessages;
@@ -42,17 +45,17 @@ function buildReadinessProblems({
   blockers,
   canPreviewExecutionPlan,
   planRunReadiness,
-  planStatusSummary,
   previewActionLabel,
   labelBlocker,
+  copy,
   onPreviewExecutionPlan,
 }: Readonly<{
   blockers: readonly PlanRunReadinessBlocker[];
   canPreviewExecutionPlan: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
   previewActionLabel: string;
   labelBlocker: (blocker: PlanRunReadinessBlocker) => string;
+  copy: CanvasViewCopy;
   onPreviewExecutionPlan: () => void;
 }>): readonly OperationalDrawerProblem[] {
   if (planRunReadiness.status === 'ready') {
@@ -61,8 +64,13 @@ function buildReadinessProblems({
 
   return blockers.map((blocker) => ({
     id: blocker,
-    severity: blocker === 'authorization_denied' ? 'error' : 'warning',
-    message: planRunReadiness.summary || planStatusSummary,
+    severity:
+      blocker === 'authorization_denied'
+        ? 'error'
+        : blocker === 'draft_saving'
+          ? 'info'
+          : 'warning',
+    message: resolvePlanRunReadinessBlockerMessage(planRunReadiness, blocker, copy),
     detail: labelBlocker(blocker),
     action:
       canPreviewExecutionPlan && blocker === 'plan_integrity'
@@ -82,7 +90,6 @@ export function buildCanvasOperationalDrawerContribution({
   onPreviewExecutionPlan,
   onStartRun,
   planRunReadiness,
-  planStatusSummary,
   policy,
   copy = canvasViewCopy,
   runControls = null,
@@ -95,20 +102,8 @@ export function buildCanvasOperationalDrawerContribution({
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
   const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
-  const labelBlocker = (blocker: PlanRunReadinessBlocker): string => {
-    switch (blocker) {
-      case 'plan_integrity':
-        return copy.operationalDrawerPlanIntegrityBlocker;
-      case 'backpressure':
-        return copy.operationalDrawerBackpressureBlocker;
-      case 'capability_mismatch':
-        return copy.operationalDrawerCapabilityMismatchBlocker;
-      case 'adapter_degraded':
-        return copy.operationalDrawerAdapterDegradedBlocker;
-      case 'authorization_denied':
-        return copy.operationalDrawerAuthorizationDeniedBlocker;
-    }
-  };
+  const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
+    resolvePlanRunReadinessBlockerLabel(blocker, copy);
   const tabLabels = {
     log: copy.operationalDrawerLogTab,
     problems: copy.operationalDrawerProblemsTab,
@@ -127,9 +122,9 @@ export function buildCanvasOperationalDrawerContribution({
     blockers: readinessBlockers,
     canPreviewExecutionPlan,
     planRunReadiness,
-    planStatusSummary,
     previewActionLabel: copy.operationalDrawerPreviewAction,
     labelBlocker,
+    copy,
     onPreviewExecutionPlan,
   });
   const selectionProblem: OperationalDrawerProblem | null = selectionRecoveryBlocked
@@ -232,11 +227,11 @@ export function buildCanvasOperationalDrawerContribution({
             })
           : runsStatus === 'ready'
             ? copy.operationalDrawerReadyRunSummary
-            : planRunReadiness.summary || planStatusSummary,
+            : planRunReadiness.summary,
     },
     preview: {
       status: previewStatus,
-      summary: planRunReadiness.summary || planStatusSummary,
+      summary: planRunReadiness.summary,
       blockers: previewBlockers,
       canPreview: canPreviewExecutionPlan,
       onPreviewExecutionPlan,

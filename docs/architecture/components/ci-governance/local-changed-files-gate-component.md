@@ -152,6 +152,24 @@ sequenceDiagram
 
 ## Consumers
 
+### Changed-slice component ownership
+
+`SYS-CI-CHANGED-SLICE-VERIFICATION` owns exactly
+`scripts/local-validation-plan.cjs` and `scripts/verify-changed.test.cjs` beneath
+the existing CI governance root. Descendant ownership takes precedence over the
+ancestor glob. The component separates plan composition
+(`BuildChangedSliceVerificationPlan`) from process execution
+(`RunChangedSliceVerification`): the query derives complete, ordered validation
+obligations; the command executes the supplied plan with test-environment
+isolation and failure propagation. Their atomic responsibilities and current
+function-to-test associations live in Planning DB.
+
+The existing prepush tests remain evidence for prepush planning without moving
+their file ownership. The component guards component-source associations by
+selecting their existing contract tests when the associated inputs change;
+it does not own the DB writer or the association policy. The required-test and
+guard relation records describe these existing behaviors.
+
 ### Changed-slice execution order
 
 ```mermaid
@@ -168,6 +186,42 @@ individual checks invent another plan. Failing static validation is detected
 before expensive tests, without reducing the successful run's coverage or changing
 the `--committed-tests` path. The existing integrated failure test exercises
 `main` through `executeVerifyChangedPlan`, not a synthetic successful executor.
+
+### Complete Planning DB test coverage
+
+`BuildChangedSliceVerificationPlan` composes direct tests and the existing
+Planning DB package scripts by their effective test files. `package.json` owns
+the aggregate members; the planner does not maintain a second member catalog.
+Every current-schema change requires both the schema contract and the current
+schema policy contract, including when either test is already selected directly.
+
+The full Planning DB aggregate absorbs only obligations it actually covers.
+The current-schema aggregate absorbs its covered direct tests. Tests outside an
+aggregate remain selected, including a member removed from a broader package
+script. A selected test executes once; deduplication does not remove an obligation
+merely because another command has a similar name. Existing canonical query and
+operate entrypoints continue to cover their declared test shards.
+
+Only the two existing plain `node --test` package scripts with explicit test-file
+arguments are admitted as aggregate coverage. Missing, malformed, repeated or
+nonliteral members reject planning. Filtered commands retain their own execution
+semantics. This changes plan composition, not test bodies, browser selection,
+the isolated executor, fail-fast behavior or success-stamp identity.
+
+```mermaid
+flowchart LR
+  Changed[Canonical changed-file set] --> Obligations[Direct and aggregate obligations]
+  Scripts[Existing package scripts] --> Members[Explicit test members]
+  Obligations --> Compose[Complete coverage without repeated execution]
+  Members --> Compose
+  Compose --> Execute[Existing isolated fail-fast executor]
+  Members -->|invalid declaration| Reject[Reject before execution]
+```
+
+`scripts/verify-changed.test.cjs` proves the actual aggregate membership, schema
+and policy completeness, mixed direct/aggregate deduplication and retention of
+uncovered tests. The existing executor tests preserve test-environment isolation
+and failure without a success stamp.
 
 ### Changed-file lint execution
 

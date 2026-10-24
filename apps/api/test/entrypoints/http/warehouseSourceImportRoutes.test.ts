@@ -18,6 +18,7 @@ import {
   type SourceObjectCatalogResponse,
   type SourceObjectMetricEvidence,
   type WorkspaceGraphDraftScope,
+  type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 import Fastify from 'fastify';
@@ -1293,6 +1294,108 @@ describe('warehouseSourceImportRoutes', () => {
       })
     );
   });
+
+  it.each([false, true])(
+    'imports after placement and translates an invalid reference into a conflict: %s',
+    async (invalidReference) => {
+      const customers = relationSourceObject({ name: 'customers' });
+      const { app, draftStore, workspaceFiles } = buildApp({
+        catalogEntries: [
+          {
+            id: 'warehouse-prod',
+            name: 'Production warehouse',
+            type: 'postgres',
+            database: 'analytics',
+            sourceObjects: [defaultOrdersSourceObject, customers],
+          },
+        ],
+      });
+      const payload = {
+        ...SOURCE_IMPORT_REQUEST_BASE,
+        connectionId: 'warehouse-prod',
+        objects: [{ objectId: defaultOrdersSourceObject.objectId }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      };
+      const first = await app.inject({
+        method: 'POST',
+        url: `/workspace/sources/import?${SCOPE_QUERY}`,
+        payload,
+      });
+      expect(first.statusCode).toBe(200);
+      const draft: WorkspaceGraphAuthoringDraft = vi.mocked(draftStore.save).mock.calls[0]![0]
+        .draft;
+      const definition = draft.nodes[0]!;
+      const instance = {
+        id: 'placed-orders',
+        sourceDefinitionId: invalidReference ? 'missing-definition' : definition.id,
+        name: definition.name,
+        pluginId: definition.pluginId,
+        kind: definition.kind,
+        role: definition.role,
+        status: definition.status,
+        tags: [],
+      };
+      const nodes = [...draft.nodes, instance];
+      const nodeIds = [instance.id];
+      const nodePositions = { [instance.id]: { x: 420, y: 240 } };
+      const record = await draftStore.read();
+      vi.mocked(draftStore.read).mockResolvedValue({
+        ...record,
+        revision: 'placed-revision',
+        draftPayload: {
+          ...draft,
+          nodes,
+          nodeIds,
+          nodePositions,
+          canvases: draft.canvases?.map((canvas) => ({ ...canvas, nodes, nodeIds, nodePositions })),
+        },
+      });
+      const sourceFile = vi.mocked(workspaceFiles.saveFileContent).mock.calls[0]![1];
+      vi.mocked(workspaceFiles.getFileContent).mockResolvedValue({
+        path: sourceFile.path,
+        name: 'src_erp.yml',
+        language: 'yaml',
+        content: sourceFile.content,
+        contentSha256: sha256(sourceFile.content),
+        lastModified: '2026-10-23T00:00:00.000Z',
+      });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/workspace/sources/import?${SCOPE_QUERY}`,
+        payload: {
+          ...payload,
+          idempotencyKey: 'source-import-after-placement',
+          objects: [{ objectId: customers.objectId }],
+        },
+      });
+      if (invalidReference) {
+        expect(response.statusCode).toBe(409);
+        expect(response.json()).toEqual({
+          error: { type: 'conflict', reason: 'workspace_source_import_draft_conflict' },
+        });
+        expect(draftStore.save).toHaveBeenCalledTimes(1);
+        expect(workspaceFiles.saveFileContent).toHaveBeenCalledTimes(1);
+        return;
+      }
+      expect(response.statusCode).toBe(200);
+      const saved = vi.mocked(draftStore.save).mock.calls[1]![0];
+      expect(saved.expectedRevision).toBe('placed-revision');
+      expect(saved.draft.nodeIds).toEqual(nodeIds);
+      expect(saved.draft.nodePositions).toEqual(nodePositions);
+      expect(
+        saved.draft.nodes.find((node: WorkspaceGraphAuthoringNode) => node.id === instance.id)
+      ).toEqual(instance);
+      expect(saved.draft.nodes).toHaveLength(3);
+      expect(response.json().outcome.importedNodeIds).toEqual([saved.draft.nodes[2]!.id]);
+      const content = vi.mocked(workspaceFiles.saveFileContent).mock.calls[1]![1].content;
+      expect(content).toContain('name: orders');
+      expect(content).toContain('name: customers');
+    }
+  );
 
   it('rejects client-supplied source metrics before import', async () => {
     const { app, draftStore, workspaceFiles } = buildApp();

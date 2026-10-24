@@ -93,6 +93,32 @@ describe('SourceColumnsPanel', () => {
     );
   }
 
+  it('indicates a provider column comment and renders its complete escaped text in detail', async () => {
+    render({
+      ...sourceNode,
+      metadata: {
+        columns: [
+          {
+            name: 'id',
+            type: 'integer',
+            nullable: false,
+            comment: 'External <script>id</script>.\n  Second line.',
+          },
+        ],
+      },
+    });
+    const row = container.querySelector<HTMLButtonElement>('[data-column-name="id"]')!;
+    expect(row.querySelector('[data-slot="source-column-comment-indicator"]')).not.toBeNull();
+    expect(row.textContent).not.toContain('Second line');
+    await act(async () => {
+      fireEvent.click(row);
+    });
+    expect(container.querySelector('[data-slot="source-column-comment"]')?.textContent).toBe(
+      'External <script>id</script>.\n  Second line.'
+    );
+    expect(container.querySelector('script')).toBeNull();
+  });
+
   it('transfers only the published dragged column by identity without selecting or mutating it', () => {
     const before = structuredClone(sourceNode);
     render(sourceNode, false, [{ id: 'actor_id', name: 'Actor alias', type: 'text' }]);
@@ -155,6 +181,29 @@ describe('SourceColumnsPanel', () => {
     expect(container.textContent).not.toContain('unsupported-default');
     expect(container.textContent).not.toContain('unsupported-database-comment');
   });
+
+  it.each([false, true, undefined])(
+    'shows physical facts once in detail, with nullable=%s',
+    (nullable) => {
+      const type = 'numeric(38,12)';
+      render({
+        ...sourceNode,
+        metadata: { ...sourceNode.metadata, columns: [{ name: 'event_id', type, nullable }] },
+      });
+      act(() =>
+        container.querySelector<HTMLButtonElement>('[data-column-name="event_id"]')!.click()
+      );
+      const detail = container.querySelector('[data-slot="source-column-detail"]')!;
+      expect(detail.querySelector('[data-slot="source-column-summary"]')).toBeNull();
+      expect(Array.from(detail.querySelectorAll('dl dd'), (value) => value.textContent)).toEqual([
+        type,
+        nullable == null ? 'Not available' : nullable ? 'Nullable' : 'Not null',
+        'Primary key',
+      ]);
+      expect(detail.querySelector('h3')?.textContent).toBe('event_id');
+      expect(detail.querySelectorAll('[data-slot="source-column-badge-pk"]')).toHaveLength(1);
+    }
+  );
 
   it('filters by column name and keeps the visible count authoritative', () => {
     render();

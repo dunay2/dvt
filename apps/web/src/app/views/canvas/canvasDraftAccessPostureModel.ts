@@ -60,7 +60,7 @@ export type DeriveCanvasDraftAccessPostureArgs = Readonly<{
 export type CanvasDraftCommandAdmission = Readonly<{
   canMutateGraph: boolean;
   canPlan: boolean;
-  canRun: boolean;
+  draftExecutionBarrier: 'saving' | 'unavailable' | null;
   canReloadLatestDraft: boolean;
 }>;
 
@@ -406,32 +406,19 @@ export function applyCanvasDraftPostureToRuntimePolicyInput(args: {
   posture: CanvasDraftAccessPosture;
   canMutateGraph: boolean;
   canPlan: boolean;
-  canRun: boolean;
   canReloadLatestDraft: boolean;
 }): CanvasDraftCommandAdmission {
-  if (isCanvasDraftPostureMutationBlocked(args.posture)) {
-    return {
-      canMutateGraph: false,
-      canPlan: false,
-      canRun: false,
-      canReloadLatestDraft: args.posture.showReloadAction && args.canReloadLatestDraft,
-    };
-  }
-
-  if (args.posture.kind === 'saving') {
-    return {
-      canMutateGraph: args.canMutateGraph,
-      canPlan: args.canPlan,
-      canRun: false,
-      canReloadLatestDraft: args.canReloadLatestDraft,
-    };
-  }
-
+  const blocked = isCanvasDraftPostureMutationBlocked(args.posture);
   return {
-    canMutateGraph: args.canMutateGraph,
-    canPlan: args.canPlan,
-    canRun: args.canRun,
-    canReloadLatestDraft: args.canReloadLatestDraft,
+    canMutateGraph: args.canMutateGraph && !blocked,
+    canPlan: args.canPlan && !blocked,
+    draftExecutionBarrier:
+      blocked || args.posture.kind === 'save_failed'
+        ? 'unavailable'
+        : args.posture.kind === 'saving'
+          ? 'saving'
+          : null,
+    canReloadLatestDraft: args.canReloadLatestDraft && (!blocked || args.posture.showReloadAction),
   };
 }
 

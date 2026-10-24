@@ -8,7 +8,8 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 
 export type SourceColumnFacts = Readonly<{
-  column: Pick<SourceObjectColumn, 'name' | 'type'> & Partial<Pick<SourceObjectColumn, 'nullable'>>;
+  column: Pick<SourceObjectColumn, 'name' | 'type' | 'comment'> &
+    Partial<Pick<SourceObjectColumn, 'nullable'>>;
   primaryKey: boolean;
   independentlyUnique: boolean;
 }>;

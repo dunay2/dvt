@@ -140,7 +140,6 @@ function buildDefaultCanvasHarnessExecutionActionsResult(): CanvasHarnessState['
       status: 'blocked',
       summary: 'Preview required before running.',
     },
-    planStatusSummary: 'Preview required before running.',
     handlePreviewExecutionPlan: vi.fn(),
     handleStartRun: vi.fn(),
   };

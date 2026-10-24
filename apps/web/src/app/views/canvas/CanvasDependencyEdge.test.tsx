@@ -77,17 +77,75 @@ describe('CanvasDependencyEdge', () => {
     const cue = container.querySelector('[data-slot="canvas-dependency-direction-cue"]');
     expect(cue?.tagName).toBe('marker');
     expect(cue?.getAttribute('orient')).toBe('auto');
-    expect(Number(cue?.getAttribute('refX'))).toBeGreaterThan(8);
+    expect(cue?.getAttribute('refX')).toBe('8');
+    expect(cue?.getAttribute('markerWidth')).toBe('8');
+    expect(cue?.getAttribute('markerHeight')).toBe('8');
     expect(cue?.getAttribute('aria-hidden')).toBe('true');
     expect(cue?.getAttribute('pointer-events')).toBe('none');
     expect(mockedEdge.props).toMatchObject({
       interactionWidth: 18,
       style: { stroke: '#cbd5e1', strokeWidth: 2.5 },
     });
-    expect(mockedEdge.props.path).toMatch(/^M.*C/);
+    expect(mockedEdge.props.path).toMatch(/^M.*L/);
     expect(mockedEdge.props.markerEnd).toBe(`url(#${cue?.id})`);
     expect(container.querySelector('[data-slot="canvas-dependency-closed-gate"]')).toBeNull();
   });
+
+  it.each([
+    { name: 'level', sourceX: 0, sourceY: 40, targetX: 100, targetY: 40 },
+    { name: 'offset', sourceX: 0, sourceY: 120, targetX: 160, targetY: 40 },
+    { name: 'returning', sourceX: 160, sourceY: 40, targetX: 0, targetY: 120 },
+    { name: 'nearby', sourceX: 0, sourceY: 40, targetX: 10, targetY: 45 },
+    {
+      name: 'vertical',
+      sourceX: 40,
+      sourceY: 0,
+      targetX: 120,
+      targetY: 160,
+      sourcePosition: Position.Bottom,
+      targetPosition: Position.Top,
+    },
+  ])(
+    'keeps $name endpoints connected with straight segments and bounded rounded corners',
+    (route) => {
+      act(() => {
+        root.render(
+          <svg>
+            <CanvasDependencyEdge
+              id="dependency-geometry"
+              source="source"
+              target="transform"
+              sourcePosition={Position.Right}
+              targetPosition={Position.Left}
+              selected={false}
+              {...route}
+            />
+          </svg>
+        );
+      });
+
+      const path = mockedEdge.props.path!;
+      expect(path).toMatch(new RegExp(`^M${route.sourceX} ${route.sourceY}L`));
+      expect(path).toMatch(new RegExp(`L${route.targetX} ${route.targetY}$`));
+      expect(path).not.toMatch(/[Cc]/);
+      if (route.sourceY !== route.targetY) expect(path).toContain('Q');
+
+      let previous = [route.sourceX, route.sourceY];
+      for (const segment of path.matchAll(/([LQ])([^MLQ]+)/g)) {
+        const points = segment[2]!.trim().split(/[ ,]+/).map(Number);
+        for (let index = 0; index < points.length; index += 2) {
+          const next = [points[index]!, points[index + 1]!];
+          expect(next[0] === previous[0] || next[1] === previous[1]).toBe(true);
+          if (segment[1] === 'Q') {
+            expect(Math.abs(next[0]! - previous[0]!)).toBeLessThanOrEqual(12);
+            expect(Math.abs(next[1]! - previous[1]!)).toBeLessThanOrEqual(12);
+          }
+          previous = next;
+        }
+      }
+      expect(previous).toEqual([route.targetX, route.targetY]);
+    }
+  );
 
   it('makes a left-click selection visible on the dependency path', () => {
     act(() => {

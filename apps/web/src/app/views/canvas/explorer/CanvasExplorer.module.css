@@ -184,6 +184,54 @@
   cursor: default;
   opacity: 0.5;
 }
+.itemText {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.itemIcon {
+  display: flex;
+  flex: 0 0 16px;
+  color: var(--status-info);
+}
+.itemIcon svg {
+  width: 16px;
+  height: 16px;
+}
+.list[data-presentation='cards'] {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.list[data-presentation='cards'] .item {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 5px 8px;
+  border-color: var(--border-subtle);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+}
+.list[data-presentation='cards'] .item:hover,
+.list[data-presentation='cards'] .item[aria-pressed='true'] {
+  border-color: var(--status-info);
+  background: var(--surface-selected);
+}
+.list[data-presentation='cards'] .item[draggable='true'] {
+  cursor: grab;
+}
+.list[data-presentation='cards'] .item[draggable='true']:active {
+  cursor: grabbing;
+}
+.list[data-presentation='cards'] .name {
+  line-height: 14px;
+}
+.list[data-presentation='cards'] .description {
+  line-height: 12px;
+}
 .name,
 .description {
   display: block;

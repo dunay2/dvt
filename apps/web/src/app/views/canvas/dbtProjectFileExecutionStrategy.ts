@@ -152,6 +152,7 @@ export function buildDbtProjectFilePlannerProjection(
       selection,
       selectionMode: executionScope.selectionMode,
       requestedRootNodeIds: executionScope.requestedRootNodeIds,
+      workspaceArtifacts: null,
     }),
   };
 }

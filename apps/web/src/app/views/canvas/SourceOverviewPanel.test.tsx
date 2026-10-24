@@ -33,6 +33,7 @@ const node: CanonicalNode = {
     schema: 'dvt',
     tableName: 'auth_audit_events',
     comment: 'Generic node comment without external database authority.',
+    sourceComment: 'Database table documentation.\n  Literal <script>text</script>.',
   },
 };
 
@@ -156,7 +157,10 @@ describe('SourceOverviewPanel', () => {
   it('does not relabel generic node comments as external database metadata', () => {
     act(() => root.render(<Harness onApply={vi.fn()} />));
 
-    expect(container.textContent).not.toContain('Database comment');
+    expect(container.querySelector('[data-slot="source-table-comment"]')?.textContent).toContain(
+      'Database table documentation.\n  Literal <script>text</script>.'
+    );
+    expect(container.querySelector('script')).toBeNull();
     expect(container.textContent).not.toContain(
       'Generic node comment without external database authority.'
     );
@@ -166,9 +170,7 @@ describe('SourceOverviewPanel', () => {
     const onApply = vi.fn();
     act(() => root.render(<Harness onApply={onApply} />));
 
-    const nameBlock = Array.from(container.querySelectorAll('div.space-y-2')).find((element) =>
-      element.textContent?.includes('Name')
-    );
+    const nameBlock = container.querySelector('[data-slot="source-dvt-name"]');
     const editButton = Array.from(nameBlock?.querySelectorAll('button') ?? []).find(
       (button) => button.textContent === 'Edit'
     );

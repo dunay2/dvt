@@ -137,7 +137,8 @@ jobs:
         uses: ./.github/actions/prepare-planning-db
 
       - name: Run full CI baseline
-        run: pnpm ci:full
+        run: >-
+          ${{ github.event_name == 'push' && 'pnpm ci:docs && pnpm ci:code' || 'pnpm ci:full' }}
         env:
           DVT_CI: '1'
           PLANNING_DB_INTEGRITY_SCOPE: bootstrap

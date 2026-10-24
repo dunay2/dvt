@@ -1,4 +1,5 @@
 /** Owned concern: prove Source Inspector list ordering remains visible and local. */
+import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   getE2eApiCalls,
@@ -12,6 +13,9 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
+const longColumnName = 'external_customer_account_identifier_from_partner_system';
+const longColumnType = 'character varying(2048) COLLATE "en_US.utf8"';
+
 function stubCanvas(): void {
   stubShellBootstrapApis({ scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'] });
   stubE2eJsonApi('GET', '/workspace/context', {
@@ -23,11 +27,40 @@ function stubCanvas(): void {
     minFrontendVersion: '0.0.1',
     plugins: { dvt: { available: true } },
   });
-  stubStatefulCanvasDraftAuthoring({
+  const draft = stubStatefulCanvasDraftAuthoring({
     canvasKind: 'transformation',
     columnMapping: true,
     sourceInspectorOrdering: true,
   });
+  Object.assign(
+    draft,
+    normalizeProjectCanvasDraft({
+      ...draft,
+      nodes: draft.nodes.map((node) =>
+        node.id === 'source-orders'
+          ? {
+              ...node,
+              metadata: {
+                ...node.metadata,
+                sourceComment:
+                  'Sales orders from the warehouse.\nUpdated nightly by the ERP integration.',
+                columns: [
+                  ...(Array.isArray(node.metadata?.columns)
+                    ? node.metadata.columns.map((column: { name: string }) => ({
+                        ...column,
+                        ...(column.name === 'order_id'
+                          ? { comment: 'External order identifier.\nPreserved from PostgreSQL.' }
+                          : {}),
+                      }))
+                    : []),
+                  { name: longColumnName, type: longColumnType, nullable: true },
+                ],
+              },
+            }
+          : node
+      ),
+    })
+  );
 }
 
 function visitCanvas(): void {
@@ -43,7 +76,7 @@ function visitCanvas(): void {
   cy.get('.react-flow__node[data-id="source-orders"]').should('be.visible');
 }
 
-function openSourceSection(sectionId: 'columns' | 'inputs-outputs'): void {
+function openSourceSection(sectionId: 'general' | 'columns' | 'inputs-outputs'): void {
   cy.get('.react-flow__node[data-id="source-orders"] [data-slot="canvas-node-shell"]')
     .should('be.visible')
     .rightclick();
@@ -82,9 +115,39 @@ describe('Canvas Source Inspector ordering', () => {
     cy.viewport(1440, 900);
     visitCanvas();
 
-    openSourceSection('columns');
+    openSourceSection('general');
+    cy.viewport(1100, 600);
+    cy.get('[data-slot="source-table-comment"]').should(
+      'contain.text',
+      'Sales orders from the warehouse.'
+    );
+    cy.get('[data-slot="canvas-source-overview-external"]').then(($external) => {
+      cy.get('[data-slot="canvas-source-overview-dvt"]').should(($dvt) => {
+        expect($dvt[0]!.getBoundingClientRect().left).to.equal(
+          $external[0]!.getBoundingClientRect().left
+        );
+      });
+    });
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-overview-comments');
+    cy.viewport(1440, 900);
+
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should(($panel) => {
+      const panel = $panel[0]!;
+      const viewport = panel.ownerDocument.defaultView!;
+      const bounds = panel.getBoundingClientRect();
+      expect(bounds.left).to.be.at.least(0);
+      expect(bounds.right).to.be.at.most(viewport.innerWidth + 1);
+      expect(bounds.bottom).to.be.at.most(viewport.innerHeight + 1);
+    });
+    // Keep screenshots inside the native headless capture surface as well as
+    // the application's CSS viewport; the wide layout is checked above.
+    cy.viewport(1100, 600);
     cy.get('[data-slot="source-columns-search"]').should('have.css', 'font-size', '12px');
     cy.get('[data-slot="source-column-row"]').should('have.css', 'font-size', '12px');
+    cy.get('[data-slot="source-column-row"]').each(($row) => {
+      expect($row[0]!.getBoundingClientRect().height).to.be.within(44, 45);
+    });
     cy.get('[data-slot="source-column-detail"]').should('not.exist');
     cy.get('[data-slot="source-column-summary"]').should('be.visible');
     dragBefore('[data-column-name="amount"]', '[data-column-name="order_id"]');
@@ -95,6 +158,7 @@ describe('Canvas Source Inspector ordering', () => {
       'status',
       'created_at',
       'region',
+      longColumnName,
     ]);
     cy.get('[data-column-name="amount"]')
       .should('be.focused')
@@ -107,9 +171,26 @@ describe('Canvas Source Inspector ordering', () => {
       .should('have.text', 'amount')
       .and('have.css', 'font-size', '16px');
     cy.get('[data-slot="source-column-detail"] dl').should('have.css', 'font-size', '12px');
+    cy.get('[data-slot="source-column-detail"] [data-slot="source-column-summary"]').should(
+      'not.exist'
+    );
+    cy.get('[data-slot="source-column-detail"] dl dd').should('have.length', 3);
+    cy.get('[data-slot="source-column-detail"]').should(($detail) => {
+      const element = $detail[0]!;
+      expect(element.getBoundingClientRect().height).to.be.at.most(240);
+      const documentation = element
+        .querySelector('[data-slot="source-column-comment"]')!
+        .parentElement!.getBoundingClientRect();
+      const navigation = element.querySelector('nav')!.getBoundingClientRect();
+      expect(navigation.top - documentation.bottom).to.be.within(0, 9);
+    });
     cy.get('[data-slot="source-column-previous"]').should('be.disabled');
     cy.get('[data-slot="source-column-next"]').click();
     cy.get('[data-slot="source-column-detail"] h3').should('have.text', 'order_id');
+    cy.get('[data-slot="source-column-comment"]').should(
+      'contain.text',
+      'External order identifier.'
+    );
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-detail');
     cy.get('[data-slot="source-columns-back"]').click();
     cy.get('[data-column-name="order_id"]').should('be.focused');
@@ -123,6 +204,22 @@ describe('Canvas Source Inspector ordering', () => {
       expect($row.text()).to.contain('Not null')
     );
     cy.get('[data-slot="source-columns-filter"]').select('all');
+    cy.get(`[data-column-name="${longColumnName}"]`).click();
+    cy.get('[data-slot="source-column-detail"] h3').should('have.text', longColumnName);
+    cy.get('[data-slot="source-column-detail"] dl dd').first().should('have.text', longColumnType);
+    cy.get('[data-slot="source-column-detail"] h3, [data-slot="source-column-detail"] dd').each(
+      ($fact) => {
+        expect($fact[0]!.scrollWidth).to.be.at.most($fact[0]!.clientWidth + 1);
+        const panel = $fact[0]!
+          .closest('[data-slot="canvas-node-workbench-panel"]')!
+          .getBoundingClientRect();
+        const bounds = $fact[0]!.getBoundingClientRect();
+        expect(bounds.left).to.be.at.least(panel.left);
+        expect(bounds.right).to.be.at.most(panel.right + 1);
+      }
+    );
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('source-column-long-detail');
+    cy.get('[data-slot="source-columns-back"]').click();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 
     openSourceSection('inputs-outputs');
@@ -161,6 +258,7 @@ describe('Canvas Source Inspector ordering', () => {
       'status',
       'created_at',
       'region',
+      longColumnName,
     ]);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
 

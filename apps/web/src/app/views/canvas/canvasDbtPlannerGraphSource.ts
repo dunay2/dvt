@@ -24,10 +24,8 @@ import {
   type ObjectFilePostgresExecutionScope,
 } from './objectFilePostgresAuthoringModel';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
-import {
-  normalizeDbtArtifactIdentifier,
-  resolveCompatibleDbtModelOrigins,
-} from './canvasDbtModelArtifactProjection';
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
+import { resolveCompatibleDbtModelOrigins } from './canvasDbtModelArtifactProjection';
 import { projectDbtTestArtifact } from './canvasDbtTestArtifactProjection';
 import {
   isHttpJsonArtifactNode,
@@ -151,7 +149,7 @@ function buildGenericGraphNode(args: {
       ? testProjection.artifact.selector
       : isDbtCompatibleModel(args.node) ||
           (args.node.pluginId === 'dbt' && args.node.kind === 'dbt:snapshot')
-        ? normalizeDbtArtifactIdentifier(args.node.name, args.node.id)
+        ? normalizeDbtIdentifier(args.node.name, args.node.id)
         : null;
   const dbtStepTypeConfig =
     selector !== null

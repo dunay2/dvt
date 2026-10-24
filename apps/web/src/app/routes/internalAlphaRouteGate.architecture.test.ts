@@ -484,20 +484,20 @@ describe('internal alpha route gate architecture', () => {
     }
   });
 
-  it('keeps Plan/run readiness evidence accepted inside the full alpha route proof', () => {
+  it('keeps Plan/run readiness evidence accepted inside the full alpha route proof', async () => {
     const planRunStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Plan/run readiness'
     );
     const componentGuide = readRepoFile(
-      'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md'
+      'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md'
     );
-    const readinessModel = readRepoFile('apps/web/src/app/views/canvas/canvasPlanReadiness.ts');
+    const { observePlanRunReadiness } = await import('../views/canvas/canvasPlanReadiness');
 
     expect(planRunStage?.evidenceAcceptance).toBe('accepted');
     expect(planRunStage?.rails).toEqual(['ObservePlanRunReadiness']);
     expect(planRunStage?.evidenceRefs).toEqual(
       expect.arrayContaining([
-        'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
+        'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md',
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
@@ -505,14 +505,27 @@ describe('internal alpha route gate architecture', () => {
       ])
     );
     for (const blocker of [
-      'plan_integrity',
-      'backpressure',
       'capability_mismatch',
-      'adapter_degraded',
       'authorization_denied',
-    ]) {
+      'draft_saving',
+      'draft_unavailable',
+    ] as const) {
       expect(componentGuide).toContain(blocker);
-      expect(readinessModel).toContain(blocker);
+      const evaluation = observePlanRunReadiness({
+        runAdmission: { allowed: false, reason: blocker },
+        currentPlan: null,
+        isCurrentPlanStale: false,
+        previewProvenanceMismatch: false,
+        executionAvailable: true,
+        graphFailure: null,
+        previewRejection: null,
+      });
+      expect(evaluation).toMatchObject({
+        status: 'blocked',
+        target: null,
+        primaryBlocker: blocker,
+      });
+      expect(evaluation.blockers).toContain('plan_integrity');
     }
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({

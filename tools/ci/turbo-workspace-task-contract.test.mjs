@@ -152,7 +152,6 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
     /Run affected workspace build, lint and type-check preflight[\s\S]*GIT_BASE: origin\/\$\{\{ github\.base_ref \}\}/u
   );
   assert.equal(ciWorkflow.includes('run: pnpm preflight:affected\n'), false);
-  assert.ok(ciWorkflow.includes('run: pnpm ci:full'));
   assert.equal(
     ciWorkflow.includes(
       'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
@@ -229,7 +228,7 @@ test('GitHub workflows restrict optional remote Turbo cache credentials to trust
     );
   }
 
-  assertTrustedTurboEnv(findStepContainingCommand(ciWorkflow, 'pnpm ci:full'), 'pnpm ci:full');
+  assertTrustedTurboEnv(findStepNamed(ciWorkflow, 'Run full CI baseline'), 'full CI baseline');
   assertTrustedTurboEnv(
     findStepContainingCommand(
       testWorkflow,

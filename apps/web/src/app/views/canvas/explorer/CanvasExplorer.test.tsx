@@ -109,9 +109,9 @@ describe('Canvas explorer', () => {
     );
     render(view(false));
     const graph = screen.getByLabelText('Graph state');
-    expect(screen.queryByRole('button', { name: 'Orders dvt:source' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Orders' })).toBeNull();
     act(() => root.render(view(true)));
-    const source = screen.getByRole('button', { name: 'Orders dvt:source' });
+    const source = screen.getByRole('button', { name: 'Orders' });
     act(() => {
       fireEvent.click(source);
     });
@@ -129,6 +129,62 @@ describe('Canvas explorer', () => {
     expect(onInspectSource).toHaveBeenCalledTimes(1);
     expect(onSelect).not.toHaveBeenCalled();
     expect(screen.getByLabelText('Graph state')).toBe(graph);
+  });
+
+  it('reuses catalogue projection across graph movement and refreshes changed source context', () => {
+    let roleReads = 0;
+    const source: CanonicalNode = {
+      id: 'registered',
+      name: 'Orders',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      get role() {
+        roleReads += 1;
+        return 'input' as const;
+      },
+      status: 'idle',
+      tags: [],
+      metadata: { schema: 'raw', connectionName: 'Warehouse' },
+    };
+    const catalogue = [source];
+    const onInspectSource = vi.fn();
+    const view = (moved: boolean, sources = catalogue): JSX.Element => (
+      <CanvasGraphExplorer
+        nodes={
+          moved ? [{ id: 'placed', position: { x: 200, y: 40 }, data: { name: 'Placed' } }] : []
+        }
+        catalogue={sources}
+        onSelect={() => {}}
+        onInspectSource={onInspectSource}
+      >
+        <input aria-label="Retained graph" />
+      </CanvasGraphExplorer>
+    );
+    render(view(false));
+    expect(roleReads).toBeGreaterThan(0);
+    const row = screen.getByRole('button', { name: 'Orders raw · Warehouse' });
+    expect(row.draggable).toBe(false);
+    expect(row.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    roleReads = 0;
+    act(() => root.render(view(true)));
+    expect(roleReads).toBe(0);
+    expect(screen.getByRole('button', { name: 'Orders raw · Warehouse' })).toBe(row);
+    act(() => {
+      fireEvent.change(screen.getAllByRole('searchbox')[0]!, { target: { value: 'warehouse' } });
+    });
+    expect(screen.getByRole('button', { name: 'Orders raw · Warehouse' })).toBe(row);
+    act(() => {
+      fireEvent.click(row);
+    });
+    expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('registered');
+    act(() =>
+      root.render(
+        view(true, [{ ...source, metadata: { schema: 'reporting', connectionName: 'Warehouse' } }])
+      )
+    );
+    expect(screen.getByRole('button', { name: 'Orders reporting · Warehouse' })).toBe(row);
+    expect(screen.queryByText('raw · Warehouse')).toBeNull();
+    expect(screen.getByLabelText('Retained graph')).toBeTruthy();
   });
 
   it('collapses to the rail, closes completely and reopens through View with retained search', () => {

@@ -1,6 +1,26 @@
 /** Owned concern: prove contextual Canvas Code exposes workflow project files without an Artifacts route. */
-import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
-import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  PublishGraphDbtWorkspaceArtifactsRequestSchema,
+  CompileGraphDbtModelsRequestSchema,
+  GraphDbtModelCompilationResultSchema,
+  parsePlanPreviewRejectedOutcome,
+} from '@dvt/contracts';
+import { sha256HexUtf8 } from '@dvt/crypto';
+
+import type { FileContent, WorkspaceFileEntry } from '../../../src/app/ports/workspace';
+import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog';
+import {
+  stubCanvasDraftRead,
+  stubStatefulCanvasDraftAuthoring,
+} from '../../support/canvasDraftAuthoring';
+import { clickPreviewExecutionPlanFromOperationalDrawer } from '../../support/canvasExecutionSelection';
+import {
+  getE2eApiCalls,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -41,9 +61,11 @@ const WORKFLOW_PROJECT_FILE_TREE = [
   },
 ];
 
-function stubContextualProjectCodeApis(): void {
+const PREVIEW_REJECTION_REASON = 'Selected dependency is unavailable in this workspace.';
+
+function stubProjectCodeBootstrap(scopes: string[]): void {
   stubShellBootstrapApis({
-    scopes: ['workspace:files:view'],
+    scopes,
   });
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',
@@ -57,6 +79,10 @@ function stubContextualProjectCodeApis(): void {
     defaultWorkspace: E2E_PROJECT_WORKSPACE,
     availableWorkspaces: [E2E_PROJECT_WORKSPACE],
   });
+}
+
+function stubContextualProjectCodeApis(): void {
+  stubProjectCodeBootstrap(['workspace:files:view']);
   stubCanvasDraftRead();
   stubE2eJsonApi('GET', '/workspace/files', WORKFLOW_PROJECT_FILE_TREE);
   stubE2eApi('GET', '/workspace/files/pipelines%2Fsales_pipeline.yaml', () => ({
@@ -77,6 +103,148 @@ function stubContextualProjectCodeApis(): void {
       lastModified: '2026-04-08T00:00:00.000Z',
     },
   }));
+}
+
+function stubProjectPublicationApis(compilation: 'invalid' | 'compiled'): void {
+  stubProjectCodeBootstrap([
+    'workspace:files:view',
+    'workspace:graph-draft:view',
+    'workspace:graph-draft:save',
+    'plan:preview',
+    'run:start',
+  ]);
+  const draft = stubStatefulCanvasDraftAuthoring({ dbtGraph: true, authoringGenerated: true });
+  draft.nodes = draft.nodes.map((node) =>
+    node.id === 'raw_orders'
+      ? {
+          ...node,
+          metadata: {
+            ...node.metadata,
+            columns: [{ name: 'order_id', type: 'integer', nullable: false, primaryKey: true }],
+          },
+        }
+      : node
+  );
+  const files = new Map<string, FileContent>();
+  stubE2eApi('GET', '/workspace/files', () => {
+    const entries: WorkspaceFileEntry[] = [...files.values()].map(({ path, name }) => ({
+      path,
+      name,
+      kind: 'file',
+    }));
+    return {
+      body: [
+        ...entries.filter((entry) => !entry.path.startsWith('models/')),
+        {
+          path: 'models',
+          name: 'models',
+          kind: 'directory',
+          children: entries.filter((entry) => entry.path.startsWith('models/')),
+        },
+      ],
+    };
+  });
+  stubE2eApi('GET', /^\/workspace\/files\//, ({ url }) => {
+    const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
+    const file = files.get(path);
+    return file
+      ? { body: file }
+      : {
+          statusCode: 404,
+          body: { error: { type: 'not_found', reason: 'workspace_file_not_found' } },
+        };
+  });
+  stubE2eApi('POST', '/workspace/dbt/graph-artifacts/publications', ({ body }) => {
+    const request = PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(body);
+    const writes = request.artifacts
+      .filter((artifact) => artifact.writeRequired)
+      .map((artifact) => {
+        const contentSha256 = sha256HexUtf8(artifact.content);
+        files.set(artifact.path, {
+          path: artifact.path,
+          name: artifact.path.split('/').at(-1)!,
+          language: artifact.language,
+          content: artifact.content,
+          contentSha256,
+          lastModified: '2026-10-23T00:00:00.000Z',
+        });
+        return { path: artifact.path, contentSha256 };
+      });
+    return {
+      body: {
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+        kind: 'applied',
+        idempotencyKey: request.idempotencyKey,
+        requestHash: sha256HexUtf8(JSON.stringify(request)),
+        deduplicated: false,
+        writes,
+      },
+    };
+  });
+  stubE2eApi('POST', '/workspace/dbt/graph-artifacts/compiled-models', ({ body }) => {
+    const request = CompileGraphDbtModelsRequestSchema.parse(body);
+    return {
+      body: GraphDbtModelCompilationResultSchema.parse(
+        compilation === 'invalid'
+          ? {
+              schemaVersion: 'graph-dbt-model-compilation.v1',
+              kind: 'invalid',
+              canvasId: request.canvasId,
+              diagnostics: [{ code: 'dbt_compile_failed', message: 'Unsafe compiler detail' }],
+            }
+          : {
+              schemaVersion: 'graph-dbt-model-compilation.v1',
+              kind: 'compiled',
+              canvasId: request.canvasId,
+              authorityBinding: {
+                schemaVersion: 'canvas-authoring-authority-binding.v1',
+                canvasId: request.canvasId,
+                authority: { kind: 'graph-draft' },
+              },
+              projectRevision: {
+                projectRoot: '.',
+                projectName: 'analytics',
+                contentSetSha256: 'a'.repeat(64),
+                analyzedAt: '2026-10-24T00:00:00.000Z',
+                analyzerVersion: 'dvt-dbt-analyzer.v1',
+                dbtVersion: '1.10.0',
+              },
+              analysisSha256: 'b'.repeat(64),
+              models: request.selectors
+                .slice()
+                .sort()
+                .map((selector) => ({
+                  selector,
+                  uniqueId: `model.analytics.${selector}`,
+                  compiledSql: `select * from ${selector}`,
+                })),
+            }
+      ),
+    };
+  });
+  if (compilation === 'compiled') {
+    const details = parsePlanPreviewRejectedOutcome({
+      contractVersion: '1.0.0',
+      kind: 'selection-rejected',
+      rejection: { code: 'REJECTED', cause: 'dependency_gap', reason: PREVIEW_REJECTION_REASON },
+    });
+    stubE2eJsonApi(
+      'POST',
+      '/plans/preview',
+      { error: { type: 'unprocessable', reason: 'plan_rejected', details } },
+      { statusCode: 422 }
+    );
+  }
+  for (const path of compilation === 'compiled'
+    ? ['/runs/start']
+    : ['/plans/preview', '/runs/start']) {
+    stubE2eJsonApi(
+      'POST',
+      path,
+      { error: 'Unexpected submission after compilation rejection' },
+      { statusCode: 500 }
+    );
+  }
 }
 
 describe('Contextual project Code workflow files', () => {
@@ -102,4 +270,80 @@ describe('Contextual project Code workflow files', () => {
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
   });
+
+  for (const language of ['en', 'es'] as const) {
+    it(`refreshes published project files in Code when compilation rejects Preview (${language})`, () => {
+      const copy = resolveCanvasViewCopy(language);
+      stubProjectPublicationApis('invalid');
+      visitWithE2eWorkspaceSession('/canvas', {
+        onBeforeLoad(window) {
+          window.localStorage.setItem(
+            APPLICATION_LANGUAGE_STORAGE_KEY,
+            JSON.stringify({ state: { language }, version: 0 })
+          );
+        },
+      });
+      cy.get('[data-slot="shell-file-menu-trigger"]').click();
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      waitForE2eApiCall('/workspace/files', 'GET');
+      cy.get('[data-workspace-path="models/orders_model.sql"]').should('not.exist');
+      cy.then(() => getE2eApiCalls('/workspace/files', 'GET').length).then((initialReadCount) => {
+        clickPreviewExecutionPlanFromOperationalDrawer();
+        waitForE2eApiCall('/workspace/dbt/graph-artifacts/publications', 'POST');
+        waitForE2eApiCall('/workspace/dbt/graph-artifacts/compiled-models', 'POST');
+        cy.wrap(null).should(() => {
+          expect(getE2eApiCalls('/workspace/files', 'GET').length).to.be.greaterThan(
+            initialReadCount
+          );
+        });
+      });
+      cy.contains(copy.planGraphDbtCompilationFailedMessage).should('be.visible');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
+      cy.contains(copy.planStatusPreviewRequiredMessage).should('be.visible');
+      cy.get('[data-workspace-path="models/orders_model.sql"]').should('be.visible').click();
+      cy.contains("source('raw', 'orders')").should('exist');
+      cy.then(() => {
+        expect(
+          getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST')
+        ).to.have.length(1);
+        expect(
+          getE2eApiCalls('/workspace/dbt/graph-artifacts/compiled-models', 'POST')
+        ).to.have.length(1);
+        expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+      });
+      cy.screenshot(`confirmed-files-after-compilation-rejection-${language}`);
+    });
+
+    it(`preserves the actual rejected Preview cause in Operations (${language})`, () => {
+      const reason = PREVIEW_REJECTION_REASON;
+      stubProjectPublicationApis('compiled');
+      visitWithE2eWorkspaceSession('/canvas', {
+        onBeforeLoad(window) {
+          window.localStorage.setItem(
+            APPLICATION_LANGUAGE_STORAGE_KEY,
+            JSON.stringify({ state: { language }, version: 0 })
+          );
+        },
+      });
+      clickPreviewExecutionPlanFromOperationalDrawer();
+      waitForE2eApiCall('/plans/preview', 'POST');
+      cy.get('[data-testid="plan-preview-modal"] [data-slot="dialog-footer"]')
+        .contains('button', resolveCanvasViewCopy(language).planPreviewCloseLabel)
+        .click();
+      cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="problems"]').click();
+      cy.get('[data-slot="bottom-operational-drawer-problems"]')
+        .contains(reason)
+        .should('be.visible');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]').click();
+      cy.get('[data-slot="bottom-operational-drawer-runs"]').contains(reason).should('be.visible');
+      cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+      cy.then(() => {
+        expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(1);
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+      });
+      cy.screenshot(`preserved-preview-diagnostic-${language}`);
+    });
+  }
 });

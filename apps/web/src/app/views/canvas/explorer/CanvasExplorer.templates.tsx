@@ -15,6 +15,7 @@ import {
 } from '../../../components/ui/resizable';
 import type { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import styles from './CanvasExplorer.module.css';
+import type { CanvasExplorerItem } from './canvasExplorerItems';
 
 type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
 type Panel = 'sources' | 'elements';
@@ -164,13 +165,10 @@ export function CanvasExplorerListTemplate({
   onSelect,
   onImport,
   onDragStart,
+  presentation = 'list',
+  itemIcon,
 }: Readonly<{
-  items: readonly Readonly<{
-    id: string;
-    label: string;
-    description?: string;
-    selected?: boolean;
-  }>[];
+  items: readonly CanvasExplorerItem[];
   query: string;
   copy: Copy;
   disabled?: boolean;
@@ -178,6 +176,8 @@ export function CanvasExplorerListTemplate({
   onSelect: (id: string) => void;
   onImport?: () => void;
   onDragStart?: (id: string, event: React.DragEvent<HTMLButtonElement>) => void;
+  presentation?: 'list' | 'cards';
+  itemIcon?: ReactNode;
 }>): JSX.Element {
   return (
     <div className={styles.listPanel}>
@@ -197,7 +197,7 @@ export function CanvasExplorerListTemplate({
           {copy.importSources}
         </button>
       )}
-      <ul className={styles.list}>
+      <ul className={styles.list} data-presentation={presentation}>
         {items.map((item) => (
           <li key={item.id}>
             <button
@@ -211,10 +211,13 @@ export function CanvasExplorerListTemplate({
               draggable={!disabled && onDragStart != null}
               onDragStart={onDragStart == null ? undefined : (event) => onDragStart(item.id, event)}
             >
-              <span className={styles.name}>{item.label}</span>{' '}
-              {item.description == null ? null : (
-                <span className={styles.description}>{item.description}</span>
-              )}
+              {itemIcon == null ? null : <span className={styles.itemIcon}>{itemIcon}</span>}
+              <span className={styles.itemText}>
+                <span className={styles.name}>{item.label}</span>{' '}
+                {item.description == null ? null : (
+                  <span className={styles.description}>{item.description}</span>
+                )}
+              </span>
             </button>
           </li>
         ))}

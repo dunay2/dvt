@@ -231,9 +231,6 @@ export type CanvasViewCopy = {
   readonly nodeAlreadyOnCanvasMessage: string;
   readonly nodeKindUnavailableForCanvasMessage: string;
   readonly nodeDropPayloadInvalidMessage: string;
-  readonly transformationConnectionOrderMessage: string;
-  readonly transformationConnectionEdgeCountMessage: string;
-  readonly transformationConnectionDuplicateMessage: string;
   readonly planPermissionDeniedMessage: string;
   readonly planSqlArtifactRequiredMessage: string;
   readonly planUnableToCreateMessage: string;
@@ -244,7 +241,6 @@ export type CanvasViewCopy = {
   readonly previewProvenanceWorkspaceNotConfiguredMessage: string;
   readonly previewProvenanceExplicitGitRevisionRequiredMessage: string;
   readonly previewProvenanceWorkspaceFilesUnavailableMessage: string;
-  readonly runPermissionDeniedMessage: string;
   readonly runNoPlanMessage: string;
   readonly runPreviewStaleMessage: string;
   readonly runPlanRefUnavailableMessage: string;
@@ -342,7 +338,9 @@ export type CanvasViewCopy = {
   readonly planPreviewDecisionOutsideClosureReason: string;
   readonly planPreviewDecisionBoundedSelectionReason: string;
   readonly runStartedMessage: string;
-  readonly planStatusRunUnavailableMessage: string;
+  readonly planStatusRunAuthorizationDeniedMessage: string;
+  readonly planStatusDraftSavingMessage: string;
+  readonly planStatusDraftUnavailableMessage: string;
   readonly planStatusPreviewRequiredMessage: string;
   readonly planStatusPreviewNotAlignedMessage: string;
   readonly planStatusPreviewNotPersistedMessage: string;
@@ -390,12 +388,10 @@ export type CanvasViewCopy = {
   readonly operationalDrawerWarningSeverity: string;
   readonly operationalDrawerErrorSeverity: string;
   readonly operationalDrawerPlanIntegrityBlocker: string;
-  readonly operationalDrawerBackpressureBlocker: string;
   readonly operationalDrawerCapabilityMismatchBlocker: string;
-  readonly operationalDrawerAdapterDegradedBlocker: string;
   readonly operationalDrawerAuthorizationDeniedBlocker: string;
-  readonly planStatusBackpressureMessage: string;
-  readonly planStatusAdapterDegradedMessage: string;
+  readonly operationalDrawerDraftSavingBlocker: string;
+  readonly operationalDrawerDraftUnavailableBlocker: string;
   readonly selectionRecoveryTitle: string;
   readonly selectionRecoveryReadyStatus: string;
   readonly selectionRecoveryBlockedStatus: string;
@@ -417,13 +413,6 @@ export type CanvasViewCopy = {
   readonly selectionRecoveryDiscardReceiptTemplate: string;
   readonly selectionRecoveryWorkspaceReceiptTemplate: string;
   readonly selectionRecoveryRefreshReceiptTemplate: string;
-  readonly transformationAmbiguousExecutablePathMessage: string;
-  readonly transformationRequiresExecutablePathMessage: string;
-  readonly transformationRequiresPostgresConnectionMessage: string;
-  readonly transformationRequiresThreeNodesMessage: string;
-  readonly transformationUnsupportedRolesMessage: string;
-  readonly transformationRequiresOneOfEachRoleMessage: string;
-  readonly transformationDraftValidMessage: string;
   readonly connectionSelfNotAllowedMessage: string;
   readonly connectionAlreadyExistsMessage: string;
   readonly connectionCycleDetectedMessage: string;

@@ -21,7 +21,10 @@ const sourceNode: CanonicalNode = {
   role: 'input',
   status: 'idle',
   tags: ['raw'],
-  metadata: { dbt: { packageName: 'analytics', sourceName: 'raw', tableName: 'orders' } },
+  metadata: {
+    columns: [{ name: 'order_id', type: 'integer' }],
+    dbt: { packageName: 'analytics', sourceName: 'raw', tableName: 'orders' },
+  },
 };
 
 const objectFileLoadNode: CanonicalNode = {
@@ -538,8 +541,15 @@ describe('canvas dbt planner graph source', () => {
   ])(
     'keeps Canvas projection admissible for protected edge policy %o',
     ({ metadata, executable }) => {
-      const nodes = [modelNode, downstreamModelNode];
+      const nodes = [sourceNode, modelNode, downstreamModelNode];
       const canonicalEdges: CanonicalEdge[] = [
+        {
+          id: 'source-model',
+          sourceId: sourceNode.id,
+          targetId: modelNode.id,
+          relation: 'lineage',
+          metadata: { executionDependency: false },
+        },
         {
           id: 'edge-model-downstream',
           sourceId: modelNode.id,
@@ -557,7 +567,7 @@ describe('canvas dbt planner graph source', () => {
         strategy,
         canonicalNodes: nodes,
         canonicalEdges,
-        selectionIntent: { mode: 'explicit', nodeIds: nodes.map((node) => node.id) },
+        selectionIntent: { mode: 'explicit', nodeIds: [modelNode.id, downstreamModelNode.id] },
         workspaceNodeIds: nodes.map((node) => node.id),
       });
       expect(projection.ok).toBe(true);
@@ -593,7 +603,7 @@ describe('canvas dbt planner graph source', () => {
         ok: true,
         derivedDependencyNodeIds: executable ? [modelNode.id] : [],
       });
-      expect(canonicalEdges).toHaveLength(1);
+      expect(canonicalEdges).toHaveLength(2);
     }
   );
 });

@@ -53,6 +53,7 @@
     "apps/web/cypress/e2e/templates/templates-workbench.cy.ts"
   ],
   "available": [
+    "apps/web/cypress/e2e/canvas/canvas-model-materialization-save-live.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
     "apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts",

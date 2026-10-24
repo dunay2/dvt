@@ -73,13 +73,11 @@ type CanvasExecutionDefaultsDto = {
   canPlanGraph: CanvasController['canPlanGraph'];
   canStartRun: CanvasController['canStartRun'];
   planRunReadiness: CanvasController['planRunReadiness'];
-  planStatusSummary: CanvasController['planStatusSummary'];
   latestPreviewOutcome: CanvasController['latestPreviewOutcome'];
   exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
   canUseCostOverlay: CanvasController['canUseCostOverlay'];
   impactOverlayEnabled: CanvasController['impactOverlayEnabled'];
   columnLevelLineageEnabled: CanvasController['columnLevelLineageEnabled'];
-  transformationValidation: CanvasController['transformationValidation'];
   planModalOpen: CanvasController['planModalOpen'];
   currentPlan: CanvasController['currentPlan'];
   isCurrentPlanStale: CanvasController['isCurrentPlanStale'];
@@ -108,17 +106,6 @@ function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['use
     canPersistGraphDraft: true,
     canManagePlugins: false,
     canManageRBAC: false,
-  };
-}
-
-function buildDefaultTransformationValidation(): CanvasControllerStateDefaults['transformationValidation'] {
-  return {
-    valid: false,
-    summaryCode: 'requires_three_nodes',
-    draftSignature: 'draft',
-    scopedNodeIds: [],
-    scopedEdgeIds: [],
-    nodeRolesById: {},
   };
 }
 
@@ -228,13 +215,11 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
       status: 'blocked',
       summary: 'Preview required before running.',
     },
-    planStatusSummary: 'Preview required before running.',
     latestPreviewOutcome: null,
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: false,
     impactOverlayEnabled: false,
     columnLevelLineageEnabled: false,
-    transformationValidation: buildDefaultTransformationValidation(),
     planModalOpen: false,
     currentPlan: null,
     isCurrentPlanStale: false,

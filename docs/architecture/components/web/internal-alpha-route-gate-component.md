@@ -136,8 +136,8 @@ accepted through `ListWorkspaceFiles` plus `GetWorkspaceFileContent`, including
 scoped API tests, read-only UI proof, browser proof, and filesystem safety
 negative coverage. `Plan/run readiness` is accepted through
 `ObservePlanRunReadiness`, the `PlanRunReadinessReadModel`, unit proof for
-`plan_integrity`, `backpressure`, `capability_mismatch`, `adapter_degraded`,
-and `authorization_denied`, run-start fail-closed proof, and persisted preview
+`plan_integrity`, `capability_mismatch`, `authorization_denied`, `draft_saving`,
+and `draft_unavailable`, Run invocation-time fail-closed proof, and persisted Preview
 browser proof. `Recovery states` are accepted through
 `MapRouteRecoveryState`, the route-owned vocabulary guide, stage coverage in
 the architecture guard, and browser fail-closed evidence across startup, Canvas,

@@ -1,4 +1,5 @@
 /** Owned concern: project workspace file trees into Code route file-selection state. */
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
 import type { WorkspaceFileEntry, WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { DbtNode } from '../../types/dbt';
 
@@ -31,17 +32,6 @@ function isModelArtifactFile(entry: WorkspaceFileEntry): boolean {
   return entry.kind === 'file' && MODEL_ARTIFACT_PATH_PATTERN.test(entry.path);
 }
 
-function normalizeIdentifier(value: string, fallback: string): string {
-  const normalized = value
-    .trim()
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/[^A-Za-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .toLowerCase();
-
-  return normalized.length > 0 ? normalized : fallback;
-}
-
 function addNonEmptyPath(paths: Set<string>, path: string | undefined): void {
   const trimmedPath = path?.trim();
   if (trimmedPath) {
@@ -65,7 +55,7 @@ function addGraphNodeFilePath(paths: Set<string>, node: DbtNode): void {
   addNonEmptyPath(paths, node.path);
 
   if (isDbtModelNode(node)) {
-    paths.add(`models/${normalizeIdentifier(node.name, node.id)}.sql`);
+    paths.add(`models/${normalizeDbtIdentifier(node.name, node.id)}.sql`);
     return;
   }
 

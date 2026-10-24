@@ -54,6 +54,60 @@ beforeAll(async () => {
   await client.query(`INSERT INTO "${schema}".items VALUES ('before'), ('before'), ('before')`);
 });
 
+it('discovers real relation and column comments without confusing dropped attribute numbers', async () => {
+  await client.query(
+    `CREATE TABLE "${schema}".commented (discarded text, id integer, detail text)`
+  );
+  await client.query(`ALTER TABLE "${schema}".commented DROP COLUMN discarded`);
+  await client.query(
+    `COMMENT ON TABLE "${schema}".commented IS 'Warehouse orders.\n  Provider documentation.'`
+  );
+  await client.query(`COMMENT ON COLUMN "${schema}".commented.id IS 'External <id>.'`);
+  const probe = new WorkspaceWarehouseConnectionProbe({
+    credentialResolver: { resolveCredential: async () => databaseUrl },
+    now: () => new Date(),
+  });
+  const target = {
+    connectionId: 'proof',
+    type: 'postgres' as const,
+    database,
+    credentialRef: 'postgres:source-live-proof',
+    scope: { tenantId: 'proof', projectId: 'proof', environmentId: 'dev' },
+  };
+  for (const request of [
+    { kind: 'schema-page' as const, catalog: database, schema, limit: 10 },
+    { kind: 'name-search' as const, name: 'commented', limit: 10 },
+  ]) {
+    const page = await probe.listSourceObjectCatalog(target, request);
+    expect(page.kind).toBe('object-page');
+    if (page.kind !== 'object-page') throw new Error('Expected object page.');
+    const object = page.objects.find((object) => object.displayName === 'commented');
+    expect(object?.comment).toBe('Warehouse orders.\n  Provider documentation.');
+    expect(object?.columns).toEqual([
+      { name: 'id', type: 'integer', nullable: true, comment: 'External <id>.' },
+      { name: 'detail', type: 'text', nullable: true },
+    ]);
+  }
+  const inspection = await probe.inspectConnection(target);
+  expect(inspection.status).toBe('passed');
+  if (inspection.status !== 'passed') throw new Error('Expected inspection.');
+  expect(
+    inspection.sourceObjects.find((object) => object.displayName === 'commented')?.comment
+  ).toBe('Warehouse orders.\n  Provider documentation.');
+  await client.query(`COMMENT ON TABLE "${schema}".commented IS NULL`);
+  await client.query(`COMMENT ON COLUMN "${schema}".commented.id IS NULL`);
+  const cleared = await probe.listSourceObjectCatalog(target, {
+    kind: 'schema-page',
+    catalog: database,
+    schema,
+    limit: 10,
+  });
+  if (cleared.kind !== 'object-page') throw new Error('Expected object page.');
+  const object = cleared.objects.find((object) => object.displayName === 'commented');
+  expect(object).not.toHaveProperty('comment');
+  expect(object?.columns?.[0]).not.toHaveProperty('comment');
+});
+
 it('rejects a mismatched declared database across inspection, test, discovery and Preview', async () => {
   const probe = new WorkspaceWarehouseConnectionProbe({
     credentialResolver: { resolveCredential: async () => databaseUrl },

@@ -7,6 +7,8 @@
  */
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const catalogTest = 'node --test tools/ci/repository-command-catalog.test.mjs';
 const cryptoTest =
   'node --test --test-name-pattern=tooling crypto mechanics tools/ci/architecture-dependency-guard.test.mjs';
@@ -34,6 +36,141 @@ function labelsFor(files) {
 function focusedLabelsFor(files) {
   return buildFocusedChangedTestPlan(files).map(commandLabel);
 }
+
+const packagePath = path.resolve(__dirname, '../package.json');
+const packageScripts = JSON.parse(fs.readFileSync(packagePath, 'utf8')).scripts;
+
+function effectiveTestFiles(plan, scripts = packageScripts) {
+  return plan.flatMap((step) => {
+    if (step.kind !== 'test') return [];
+    const args = step.command === 'pnpm' ? scripts[step.args[0]]?.split(/\s+/).slice(1) : step.args;
+    return args?.[0] === '--test' && args.slice(1).every((arg) => !arg.startsWith('--'))
+      ? args.slice(1)
+      : [];
+  });
+}
+
+function mockPackageScripts(t, scripts) {
+  const readFileSync = fs.readFileSync;
+  return t.mock.method(fs, 'readFileSync', (file, ...args) =>
+    file === packagePath ? JSON.stringify({ scripts }) : readFileSync(file, ...args)
+  );
+}
+
+test('Planning DB schema obligations retain both contracts exactly once', () => {
+  const members = packageScripts['test:planning:db:current-schema'].split(/\s+/).slice(2);
+  assert.ok(members.includes('scripts/planning-db-schema.test.cjs'));
+  assert.ok(members.includes('scripts/planning-db-current-schema-policy.test.cjs'));
+  for (const files of [
+    ['scripts/planning-db-schema.cjs'],
+    ['scripts/planning-db-current-schema-policy.cjs'],
+    ['tools/planning-db/schema.sql', 'scripts/planning-db-schema.test.cjs'],
+    ['scripts/planning-db-schema.test.cjs', 'scripts/planning-db-current-schema-policy.test.cjs'],
+  ]) {
+    const plan = buildFocusedChangedTestPlan(files);
+    const selected = effectiveTestFiles(plan);
+    for (const member of members)
+      assert.equal(selected.filter((file) => file === member).length, 1, `${files}: ${member}`);
+    assert.ok(!plan.some((step) => step.args.includes('test:planning:db')));
+  }
+});
+
+test('Planning DB aggregate coverage removes repeated direct and current-schema execution', () => {
+  const aggregate = packageScripts['test:planning:db'].split(/\s+/).slice(2);
+  const files = [
+    'infra/planning-db/docker-compose.yml',
+    'tools/planning-db/schema.sql',
+    'scripts/planning-db-query.cjs',
+    'scripts/lib/source-code-facts.cjs',
+    'scripts/git-local-changes.cjs',
+  ];
+  const plan = buildFocusedChangedTestPlan(files);
+  const selected = effectiveTestFiles(plan);
+  assert.equal(selected.length, new Set(selected).size);
+  for (const member of aggregate) assert.ok(selected.includes(member), member);
+  assert.ok(selected.includes('scripts/git-local-changes.test.cjs'));
+  assert.ok(selected.includes('scripts/lib/source-code-facts.test.cjs'));
+  assert.ok(selected.includes('scripts/web-code-duplication.test.cjs'));
+  assert.ok(plan.some((step) => commandLabel(step) === cryptoTest));
+  assert.ok(!plan.some((step) => step.args.includes('test:planning:db:current-schema')));
+  assert.deepEqual(buildFocusedChangedTestPlan([...files].reverse().concat(files)), plan);
+});
+
+test('Planning DB aggregate coverage retains canonical parent execution without direct shards', () => {
+  const plan = buildFocusedChangedTestPlan([
+    'infra/planning-db/docker-compose.yml',
+    'scripts/planning-db/queries/current-component-files-query.cjs',
+    'scripts/planning-db/feature-mechanization-policy.cjs',
+  ]);
+  const selected = effectiveTestFiles(plan);
+  assert.ok(selected.includes('scripts/planning-db-query.test.cjs'));
+  assert.ok(selected.includes('scripts/planning-db-operate.test.cjs'));
+  assert.ok(!selected.includes('scripts/planning-db-query-tests/current-component-files.test.cjs'));
+  assert.ok(!selected.includes('scripts/planning-db-operate-tests/feature-mechanization.test.cjs'));
+  for (const [parent, child] of [
+    ['planning-db-query.test.cjs', 'planning-db-query-tests/current-component-files.test.cjs'],
+    ['planning-db-operate.test.cjs', 'planning-db-operate-tests/feature-mechanization.test.cjs'],
+  ]) {
+    assert.ok(
+      fs.readFileSync(path.join(__dirname, parent), 'utf8').includes(`require('./${child}')`)
+    );
+  }
+});
+
+test('Planning DB aggregate coverage follows actual package members and retains uncovered tests', (t) => {
+  const schema = 'scripts/planning-db-schema.test.cjs';
+  const extra = 'scripts/git-local-changes.test.cjs';
+  const scripts = {
+    ...packageScripts,
+    'test:planning:db': packageScripts['test:planning:db']
+      .split(/\s+/)
+      .filter((arg) => arg !== schema)
+      .join(' '),
+    'test:planning:db:current-schema': `${packageScripts['test:planning:db:current-schema']} ${extra}`,
+  };
+  mockPackageScripts(t, scripts);
+  const plan = buildFocusedChangedTestPlan([
+    'infra/planning-db/docker-compose.yml',
+    'tools/planning-db/schema.sql',
+    'scripts/git-local-changes.cjs',
+  ]);
+  const selected = effectiveTestFiles(plan, scripts);
+  assert.equal(selected.length, new Set(selected).size);
+  assert.ok(selected.includes(schema));
+  assert.ok(selected.includes(extra));
+  assert.ok(plan.every((step) => step.kind === 'test'));
+});
+
+test('Planning DB aggregate coverage rejects unsupported package declarations before execution', (t) => {
+  const invalidCommands = [
+    undefined,
+    '',
+    'node --test',
+    'node --test scripts/planning-db-schema.test.cjs && echo done',
+    'node --test --test-name-pattern=schema scripts/planning-db-schema.test.cjs',
+    'node --test scripts/*.test.cjs',
+    'node --test ../outside.test.cjs',
+    'node --test scripts/absent-planning-contract.test.cjs',
+    'node --test scripts/planning-db-schema.test.cjs scripts/planning-db-schema.test.cjs',
+  ];
+  for (const [name, changedFile] of [
+    ['test:planning:db:current-schema', 'tools/planning-db/schema.sql'],
+    ['test:planning:db', 'infra/planning-db/docker-compose.yml'],
+  ]) {
+    for (const command of invalidCommands) {
+      const mock = mockPackageScripts(t, { ...packageScripts, [name]: command });
+      try {
+        assert.throws(
+          () => buildFocusedChangedTestPlan([changedFile]),
+          new RegExp(`Invalid test aggregate ${name}:`),
+          String(command)
+        );
+      } finally {
+        mock.mock.restore();
+      }
+    }
+  }
+});
 
 test('tooling crypto inputs select the bounded architecture contract once', () => {
   const suite = 'tools/ci/architecture-dependency-guard.test.mjs';
@@ -306,14 +443,14 @@ test('buildVerifyChangedPlan routes schema-only changes to the current-schema su
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
-test('buildVerifyChangedPlan avoids duplicate schema tests when the suite is already direct', () => {
+test('buildVerifyChangedPlan covers direct schema edits through the complete current-schema suite', () => {
   const labels = labelsFor(['scripts/planning-db-schema.test.cjs', 'tools/planning-db/schema.sql']);
 
   assert.equal(
-    labels.filter((label) => label === 'node --test scripts/planning-db-schema.test.cjs').length,
+    labels.filter((label) => label === 'pnpm test:planning:db:current-schema').length,
     1
   );
-  assert.ok(!labels.includes('pnpm test:planning:db:current-schema'));
+  assert.ok(!labels.includes('node --test scripts/planning-db-schema.test.cjs'));
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
@@ -332,10 +469,10 @@ test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted an
     1
   );
   assert.equal(
-    labels.filter((label) => label === 'node --test scripts/planning-db-schema.test.cjs').length,
+    labels.filter((label) => label === 'pnpm test:planning:db:current-schema').length,
     1
   );
-  assert.ok(!labels.includes('pnpm test:planning:db:current-schema'));
+  assert.ok(!labels.includes('node --test scripts/planning-db-schema.test.cjs'));
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 

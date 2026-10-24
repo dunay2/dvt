@@ -11,7 +11,7 @@ import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
-import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { PlanRunReadinessReadModel, PlanRunReadinessEvaluation } from './canvasPlanReadiness';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type CanvasExecutionDraftGraph =
@@ -40,7 +40,7 @@ export type UseCanvasExecutionActionsParams = {
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
-  canRun: boolean;
+  runAdmission: import('./canvasRuntimePolicy').CanvasRunAdmission;
   sessionContext: SessionContextPort;
   executionEnvironmentId?: WorkspaceScope['environmentId'];
   shellFeedback: ShellFeedbackPort;
@@ -59,11 +59,20 @@ export type UseCanvasExecutionActionsResult = {
   canStartRun: boolean;
   isCurrentPlanStale: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
   latestPreviewOutcome: PlanPreviewOutcome | null;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
 };
 
-export type SetLastPlannedDraftSignature = Dispatch<SetStateAction<string | null>>;
+export type CanvasPreviewAttempt = Readonly<{
+  draftSignature: string;
+  outcome: PlanPreviewOutcome;
+}>;
 export type SetPlanModalOpen = Dispatch<SetStateAction<boolean>>;
+
+export type CanvasRunStartFailure =
+  | Readonly<{
+      kind: 'readiness';
+      readiness: Extract<PlanRunReadinessEvaluation, { status: 'blocked' }>;
+    }>
+  | Readonly<{ kind: 'submission'; message: string | null }>;

@@ -23,7 +23,6 @@ import {
 } from './dbtProjectFileLayout';
 import { deriveExecutionScope } from './canvasDraftScope';
 import { projectDbtProjectGraphToCanonicalCanvas } from './dbtProjectFileProjection';
-import { validateTransformationGraph } from './transformationGraphValidation';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
@@ -419,16 +418,6 @@ export function useDbtProjectFilesAuthorityController(
     },
     [authorityBinding, query]
   );
-  const transformationValidation = useMemo(
-    () =>
-      validateTransformationGraph({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        selectedNodeIds,
-        workspaceNodeIds: visibleNodeIds,
-      }),
-    [canonicalEdges, canonicalNodes, selectedNodeIds, visibleNodeIds]
-  );
 
   return {
     authorityBinding,
@@ -466,7 +455,6 @@ export function useDbtProjectFilesAuthorityController(
       impactOverlayEnabled,
       columnLevelLineageEnabled,
     },
-    transformationValidation,
     execution,
     executionSelectionRecovery: executionSelectionRecovery.model,
     currentPlan: store.currentPlan,

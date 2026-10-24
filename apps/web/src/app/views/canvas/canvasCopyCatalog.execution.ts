@@ -50,10 +50,6 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.preview.workspaceFilesUnavailableMessage',
     fallback: 'Preview provenance could not be resolved from the workspace files.',
   },
-  runPermissionDeniedMessage: {
-    key: 'canvas.run.permissionDeniedMessage',
-    fallback: 'You do not have permission to start runs',
-  },
   runNoPlanMessage: {
     key: 'canvas.run.noPlanMessage',
     fallback: 'No Execution Preview available - preview execution first.',
@@ -444,9 +440,25 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.run.startedMessage',
     fallback: 'Run started',
   },
-  planStatusRunUnavailableMessage: {
-    key: 'canvas.planStatus.runUnavailableMessage',
-    fallback: 'Run start is unavailable in this context.',
+  planStatusRunAuthorizationDeniedMessage: {
+    key: 'canvas.planStatus.runAuthorizationDeniedMessage',
+    fallback: 'You do not have permission to execute in this workspace.',
+  },
+  planStatusDraftSavingMessage: {
+    key: 'canvas.planStatus.draftSavingMessage',
+    fallback: 'Waiting for changes to finish saving before execution.',
+  },
+  planStatusDraftUnavailableMessage: {
+    key: 'canvas.planStatus.draftUnavailableMessage',
+    fallback: 'Resolve the Canvas draft state before execution.',
+  },
+  operationalDrawerDraftSavingBlocker: {
+    key: 'canvas.operationalDrawer.draftSavingBlocker',
+    fallback: 'Saving changes',
+  },
+  operationalDrawerDraftUnavailableBlocker: {
+    key: 'canvas.operationalDrawer.draftUnavailableBlocker',
+    fallback: 'Draft unavailable',
   },
   planStatusPreviewRequiredMessage: {
     key: 'canvas.planStatus.previewRequiredMessage',
@@ -640,30 +652,13 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.planIntegrityBlocker',
     fallback: 'Preview',
   },
-  operationalDrawerBackpressureBlocker: {
-    key: 'canvas.operationalDrawer.backpressureBlocker',
-    fallback: 'Backpressure',
-  },
   operationalDrawerCapabilityMismatchBlocker: {
     key: 'canvas.operationalDrawer.capabilityMismatchBlocker',
     fallback: 'Capability mismatch',
   },
-  operationalDrawerAdapterDegradedBlocker: {
-    key: 'canvas.operationalDrawer.adapterDegradedBlocker',
-    fallback: 'Adapter degraded',
-  },
   operationalDrawerAuthorizationDeniedBlocker: {
     key: 'canvas.operationalDrawer.authorizationDeniedBlocker',
     fallback: 'Authorization denied',
-  },
-  planStatusBackpressureMessage: {
-    key: 'canvas.planStatus.backpressureMessage',
-    fallback: 'Runtime admission is temporarily backpressured. Retry after capacity recovers.',
-  },
-  planStatusAdapterDegradedMessage: {
-    key: 'canvas.planStatus.adapterDegradedMessage',
-    fallback:
-      'The execution adapter is degraded. Run start remains blocked until runtime recovers.',
   },
   selectionRecoveryTitle: {
     key: 'canvas.selectionRecovery.title',

@@ -19,7 +19,6 @@ export const canvasViewExecutionCopyEs = {
     'La provenance del preview requiere una rama y un commit Git explicitos antes de planificar.',
   previewProvenanceWorkspaceFilesUnavailableMessage:
     'No se ha podido resolver la provenance del preview a partir de los ficheros del workspace.',
-  runPermissionDeniedMessage: 'No tienes permisos para arrancar runs',
   runNoPlanMessage: 'No hay un Execution Preview disponible: previsualiza la ejecucion antes.',
   runPreviewStaleMessage:
     'Execution Preview esta obsoleto. Previsualiza la ejecucion otra vez antes de arrancar.',
@@ -134,7 +133,6 @@ export const canvasViewExecutionCopyEs = {
   planPreviewDecisionBoundedSelectionReason:
     'El alcance de ejecución seleccionado incluye solo una parte del grafo.',
   runStartedMessage: 'Run arrancado',
-  planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
   planStatusPreviewRequiredMessage: 'Se requiere un preview antes de arrancar.',
   planStatusPreviewNotAlignedMessage:
     'Execution Preview no esta alineado con la referencia de Execution Preview activa. Previsualiza la ejecucion otra vez antes de arrancar.',
@@ -190,14 +188,16 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerWarningSeverity: 'Advertencia',
   operationalDrawerErrorSeverity: 'Error',
   operationalDrawerPlanIntegrityBlocker: 'Vista previa',
-  operationalDrawerBackpressureBlocker: 'Saturación temporal',
   operationalDrawerCapabilityMismatchBlocker: 'Capacidad incompatible',
-  operationalDrawerAdapterDegradedBlocker: 'Adaptador degradado',
   operationalDrawerAuthorizationDeniedBlocker: 'Autorización denegada',
-  planStatusBackpressureMessage:
-    'La admisión del runtime está temporalmente saturada. Reinténtalo cuando se recupere la capacidad.',
-  planStatusAdapterDegradedMessage:
-    'El adaptador de ejecución está degradado. El arranque seguirá bloqueado hasta que se recupere el runtime.',
+  operationalDrawerDraftSavingBlocker: 'Guardando cambios',
+  operationalDrawerDraftUnavailableBlocker: 'Borrador no disponible',
+  planStatusRunAuthorizationDeniedMessage:
+    'No tienes permiso para ejecutar en este espacio de trabajo.',
+  planStatusDraftSavingMessage:
+    'Esperando a que termine el guardado de los cambios antes de ejecutar.',
+  planStatusDraftUnavailableMessage:
+    'Resuelve el estado del borrador del Canvas antes de ejecutar.',
   selectionRecoveryTitle: 'Qué se va a ejecutar',
   selectionRecoveryReadyStatus: 'lista',
   selectionRecoveryBlockedStatus: 'bloqueada',

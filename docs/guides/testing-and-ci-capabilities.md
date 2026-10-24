@@ -34,7 +34,7 @@ See also:
 | Pre-push verification gate       | `pnpm verify:prepush`                  | [`package.json`](../../package.json)                                                                                                 |
 | Affected local PR preflight      | `pnpm preflight:affected`              | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                               |
 | Affected CI preflight            | `pnpm preflight:affected:ci`           | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
-| Full CI baseline                 | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
+| Local/manual full CI baseline    | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
 | Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)             |
 | Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                 |
 | AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                         |
@@ -626,11 +626,12 @@ coverage, nor does removing the obsolete UI story remove a runtime invariant.
 
 ### Workflow owners
 
-- `CI - Code Quality`: ordinary pull requests run changed-slice verification
-  through `pnpm verify:changed` and affected build/lint/type-check preflight
-  through `pnpm preflight:affected:ci`; pushes to `main` and manual runs use
-  `pnpm ci:full`. CI tool contract tests remain separate. It does not own
-  ADR-0000 traceability or package test execution.
+- `CI - Code Quality`: ordinary pull requests run affected build/lint/type-check
+  preflight through `pnpm preflight:affected:ci`. Pushes to `main` run
+  `pnpm ci:docs && pnpm ci:code`; Test Suite owns their Engine coverage.
+  Manual runs retain `pnpm ci:full`, including coverage, because dispatching
+  Code Quality does not start Test Suite. CI tool contract tests remain separate.
+  It does not own ADR-0000 traceability or affected PR package test execution.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, dependency graph builds,
   and one complete engine suite with coverage, determinism and replay. On pull
@@ -793,8 +794,10 @@ Current workflow consumers:
   checks and `pnpm preflight:affected:ci` for affected build, lint, and
   type-check. Package and dedicated tests stay owned by
   [`.github/workflows/test.yml`](../../.github/workflows/test.yml), avoiding a
-  second affected Turbo test pass inside Code Quality. Pushes to `main` and
-  manual runs use `pnpm ci:full` instead of the affected PR route. Its shared `any_code` and
+  second affected Turbo test pass inside Code Quality. Pushes to `main` use
+  `pnpm ci:docs && pnpm ci:code`, leaving coverage to the mandatory Test Suite
+  lane; manual Code Quality and local full validation retain `pnpm ci:full`.
+  Its shared `any_code` and
   `workspace_global` policy now include `turbo.json`, so Turbo graph changes
   trigger affected-workspace preflight instead of falling through to
   `No affected workspaces`. Workflow YAML changes remain `any_code` and

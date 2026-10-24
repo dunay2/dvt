@@ -175,16 +175,15 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
     {
       evidenceAcceptance: 'accepted',
       evidenceRefs: [
-        'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
-        'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
-        'docs/architecture/components/api/index.md',
+        'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md',
+        'docs/evidence/ED-20261023-canvas-save-readiness.md',
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
         'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
       ],
       failClosedProof:
-        'plan integrity, backpressure, capability mismatch, degraded adapter, and authorization denial stay distinct',
+        'plan integrity, capability mismatch, pending or unavailable draft, and authorization denial stay distinct',
       happyPathProof: 'plan/run controls explain ready-to-run posture with source-owned reasons',
       rails: ['ObservePlanRunReadiness'],
       recoveryState: 'ready',
