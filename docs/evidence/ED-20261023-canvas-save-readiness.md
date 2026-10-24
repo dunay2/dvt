@@ -13,6 +13,8 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasPlanReadiness.ts
   - apps/web/src/app/views/canvas/canvasPlanAction.ts
   - apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts
+  - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
+  - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts
   - apps/api/src/application/services/dvtWorkloadPublication.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts
 evidence:
@@ -344,3 +346,31 @@ validation rail and current evidence references to retired source/test files are
 removed through guarded canonical operations. Git retains the historical files;
 no legacy implementation or parallel catalog is kept. Exact RED/GREEN results,
 committed boundaries and remaining validation limits are recorded in #3115.
+
+## Reuse Within One Dbt Projection
+
+The [projection reuse design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6379479077)
+precedes the implementation. Workspace composition creates one model projector
+for its graph snapshot and reuses successful upstream projections within that
+evaluation. The old one-shot API is removed and its four production consumers
+use the same factory. No compatibility wrapper or persistent cache remains.
+
+A real render-work regression first observed six model generations for a
+three-model chain and five for a three-model fan-out. Each now requires three,
+with identical complete SQL artifacts in either traversal order. This measures
+eliminated repeated projection work, not total algorithmic complexity or a
+wall-clock speedup; graph scans remain.
+
+Cycle detection precedes result reuse. Failed results are not cached. Authoring
+overrides and node objects outside the graph snapshot have isolated evaluations;
+an independent review exposed a cloned-node cycle and its regression first
+failed before that isolation was corrected. The final focused tests cover both
+graph orders, fresh evaluations, source metadata changes, invalid columns,
+overrides and direct, indirect and cloned-node cycles.
+
+`SYS-WEB-DBT-ARTIFACT-PROJECTION` records the two existing production modules and
+their three tests. Its atomic responsibilities distinguish model projection
+from workspace artifact composition. The Readiness dependency is recorded as
+a call, with current function bindings and required behavioral evidence. Exact
+retirement removes only the deleted wrapper symbol from its existing rail
+records; unrelated authority remains. No new product command or query is added.
