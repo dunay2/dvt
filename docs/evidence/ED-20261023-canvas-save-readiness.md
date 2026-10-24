@@ -308,7 +308,8 @@ The dependency guard covers projection and graph evaluation imports and prevents
 the Run application command from importing presentation, including type imports.
 No compatibility facade or legacy execution path is retained. Exact scoped
 validation, failures encountered and final committed identities are recorded in
-#3115; no complete pre-push result or new global alpha acceptance is implied.
+[issue #3115](https://github.com/dunay2/dvt/issues/3115); no complete pre-push result
+or new global alpha acceptance is implied.
 
 ## Exact Artifact Identity And Single Validation Owners
 
