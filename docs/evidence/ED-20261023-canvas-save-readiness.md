@@ -536,3 +536,28 @@ then pass all 86 cases under the canonical configuration, without profiling or
 warnings. No retries, deadlines, product behavior or worker configuration change.
 This does not establish that the other timeout is resolved. Exact commands and
 final acceptance remain in issue #3115.
+
+## Architecture Proof Boundaries
+
+The next normal pre-push passes all 1067 presentation, 12 Monaco and 3179 unit
+cases, then fails seven architecture checks. Five depend on copied browser
+inventories or the retired copy wrapper; one prescribes Run's former local
+variable spelling. The unused-declaration fixture additionally exceeds its
+unchanged deadline while initializing the full typed Web program. Subsequent
+fixtures reuse that program; no timing profile attributes its entire cost.
+
+The [maintenance plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6384342248)
+keeps proof ownership explicit. Browser import
+reachability must agree with unique canonical runtime ownership and complete
+emission, without copied consumer lists or fixed catalogue totals. Existing
+LIVE receipt and exact Run payload tests own observable behavior; architecture
+guards retain the catalogue binding, single selection seam and public contract.
+
+Unused-declaration fixtures exercise the existing canonical syntax projection,
+with exact resolved-rule parity against strict lint in the existing hook-wiring
+contract. They do not need a typed
+program to detect unused declarations. Strict product lint, all suite membership,
+negative assertions, deadlines and retries remain unchanged. This maintenance
+adds no product rail, configuration, parser framework or alternate catalogue.
+Focused results and the complete committed acceptance are recorded in #3115;
+the failed normal pre-push is not treated as partial acceptance.
