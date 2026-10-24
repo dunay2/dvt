@@ -4,6 +4,8 @@ import { relative, resolve, sep } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { readArchitectureSources } from '../../../testing/vitestSuites.architecture.support';
+
 const HARDCUT_OWNED_CONCERN_MODULES = [
   ['src', 'app', 'services', 'composition', 'appServices.ts'],
   ['src', 'app', 'services', 'AppServicesContext.tsx'],
@@ -88,6 +90,21 @@ const PRODUCT_COMPOSITION_FILES = [
   ['src', 'app', 'bootstrap', 'AuthRouteGate.tsx'],
 ] as const;
 
+const FORBIDDEN_DATA_SOURCE_STRATEGY_TERMS = [
+  /\bDataSourceMode\b/,
+  /\bresolveDataSource\b/,
+  /\bgetRuntimeDataSourceMode\b/,
+  /\bsetRuntimeDataSourceMode\b/,
+  /\bVITE_DATA_SOURCE\b/,
+  /\bdataSourceMode\b/,
+];
+
+function collectDataSourceStrategyViolations(filePath: string, source: string): string[] {
+  return FORBIDDEN_DATA_SOURCE_STRATEGY_TERMS.filter((forbiddenTerm) =>
+    forbiddenTerm.test(source)
+  ).map((forbiddenTerm) => `${filePath} contains ${forbiddenTerm}`);
+}
+
 const HARDCUT_DOCUMENTATION_SECTIONS = [
   'section-f04-frontend-data-boundary-technical-manual-20260404',
   'section-f04-frontend-data-boundary-user-manual-20260404',
@@ -151,7 +168,35 @@ describe('app services mock hardcut architecture', () => {
     }
   });
 
-  it('keeps product runtime free of an exhausted data-source strategy', () => {
+  it('reports every exhausted strategy with its file while preserving identifier boundaries', () => {
+    expect(
+      collectDataSourceStrategyViolations(
+        'fixture.ts',
+        `
+      DataSourceMode resolveDataSource getRuntimeDataSourceMode
+      setRuntimeDataSourceMode VITE_DATA_SOURCE dataSourceMode
+    `
+      )
+    ).toEqual([
+      'fixture.ts contains /\\bDataSourceMode\\b/',
+      'fixture.ts contains /\\bresolveDataSource\\b/',
+      'fixture.ts contains /\\bgetRuntimeDataSourceMode\\b/',
+      'fixture.ts contains /\\bsetRuntimeDataSourceMode\\b/',
+      'fixture.ts contains /\\bVITE_DATA_SOURCE\\b/',
+      'fixture.ts contains /\\bdataSourceMode\\b/',
+    ]);
+    expect(
+      collectDataSourceStrategyViolations(
+        'clean.css',
+        `
+      DataSourceModeSuffix resolveDataSourceSuffix getRuntimeDataSourceModeSuffix
+      setRuntimeDataSourceModeSuffix VITE_DATA_SOURCE_SUFFIX dataSourceModeSuffix
+    `
+      )
+    ).toEqual([]);
+  });
+
+  it('keeps product runtime free of an exhausted data-source strategy', async () => {
     const productFiles = listFilesRecursive('src').filter(
       (filePath) =>
         !filePath.includes('/testing/') &&
@@ -159,22 +204,17 @@ describe('app services mock hardcut architecture', () => {
         !filePath.includes('.test.') &&
         !filePath.includes('.spec.')
     );
-    const forbiddenStrategyTerms = [
-      /\bDataSourceMode\b/,
-      /\bresolveDataSource\b/,
-      /\bgetRuntimeDataSourceMode\b/,
-      /\bsetRuntimeDataSourceMode\b/,
-      /\bVITE_DATA_SOURCE\b/,
-      /\bdataSourceMode\b/,
-    ];
+    const sources = await readArchitectureSources(
+      productFiles.map((filePath) => resolve(process.cwd(), filePath))
+    );
+    const violations = Array.from(sources, ([filePath, source]) =>
+      collectDataSourceStrategyViolations(
+        relative(process.cwd(), filePath).split(sep).join('/'),
+        source
+      )
+    ).flat();
 
-    for (const filePath of productFiles) {
-      const source = readRepoFile(...filePath.split('/'));
-
-      for (const forbiddenTerm of forbiddenStrategyTerms) {
-        expect(source, `${filePath} contains ${forbiddenTerm}`).not.toMatch(forbiddenTerm);
-      }
-    }
+    expect(violations).toEqual([]);
   });
 
   it('keeps product services free of non-test mock modules', () => {

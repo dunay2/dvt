@@ -633,3 +633,36 @@ issue #3115; isolated success does not demonstrate the cause of the CI clear fai
 All 26 affected presentation cases pass. The existing menu-view test double
 forwards only its declared DOM presentation props, removing its React warning
 without suppressing console output or replacing the real Radix focus proof.
+
+## Architecture Scan Work
+
+The normal pre-push on `5139bd8ee` passes Monaco, unit and presentation, then
+fails five architecture cases at the unchanged five-second limit. Isolating the
+four specs still fails four cases; this is not evidence of a host fault. Query
+guards repeat four source walks and reads, the catalog repeats six inventories,
+and two runtime guards create more than 8,000 assertions each.
+
+The [scan simplification plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6387643584)
+retains the existing `WebVitestSuitePartition` authority and every policy.
+One bounded reader in the existing test support shares only filesystem access;
+each guard retains its own inventory and forbidden facts. Query cases reuse
+one lazy snapshot, and catalog cases reuse one lazy inventory, both initialized
+inside the first consuming test. Dirents replace per-entry metadata calls while
+preserving symbolic-link handling. Runtime guards collect every file/rule
+violation before a single assertion; no compliant source is excluded.
+
+Negative policy examples, real inventory parity and bounded-read failure checks
+protect these substitutions. Exact commands, observed timings and complete
+acceptance remain in issue #3115. No deadline, worker, retry, isolation, hook or
+CI obligation changes; focused success alone does not authorize integration.
+
+The four changed specs pass all 46 cases, including their negative fixtures.
+A subsequent complete run exposes five timeouts elsewhere. A host observation
+finds full CPU utilization and duplicate, long-running VS Code Mermaid file
+searches following ignored paths and links. Cancelling only those read-only
+searches, with no source or configuration changes, changes the same five-spec
+run from four failures to 28 passing cases. This supports local contention as
+the explanation for that batch, without establishing every earlier failure's
+cause. The subsequent complete architecture run passes 130 files and 692 cases
+in 40.24 seconds. Normal pre-push, exact-head CI and main acceptance remain
+separate obligations.

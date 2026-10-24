@@ -5,7 +5,7 @@
  * @consequence Phased CI keeps the same configuration and full Vitest route.
  * @version 1.0.0
  */
-import { readFileSync } from 'node:fs';
+import { promises as fsPromises, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { load } from 'js-yaml';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -21,10 +21,28 @@ import {
   WEB_VITEST_PRIMARY_SUITE_NAMES,
   WEB_VITEST_SUITES,
 } from '../../vitest.suites';
-import { listWebVitestFiles, suiteMatchesFile, webRoot } from './vitestSuites.architecture.support';
+import {
+  listWebVitestFiles,
+  readArchitectureSources,
+  suiteMatchesFile,
+  webRoot,
+} from './vitestSuites.architecture.support';
+
+let webVitestFiles: string[] | undefined;
+
+function readWebVitestFiles(): string[] {
+  return (webVitestFiles ??= listWebVitestFiles());
+}
+
+function lacksWorkspaceScopeBrowserEnvironment(source: string): boolean {
+  return (
+    source.includes('installWorkspaceScopeHarness(') && !/@vitest-environment\s+jsdom/.test(source)
+  );
+}
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 describe('web Vitest suite catalog', () => {
@@ -50,36 +68,41 @@ describe('web Vitest suite catalog', () => {
   });
 
   it('assigns every web Vitest file to exactly one primary suite', () => {
-    for (const filePath of listWebVitestFiles()) {
+    const offenders = readWebVitestFiles().flatMap((filePath) => {
       const classification = classifyWebVitestFile(filePath);
-
-      expect(classification, filePath).not.toBeNull();
-      expect(classification?.primarySuites, filePath).toHaveLength(1);
-      expect(WEB_VITEST_PRIMARY_SUITE_NAMES, filePath).toContain(classification?.primarySuites[0]);
-    }
+      const primary = classification?.primarySuites[0];
+      return classification?.primarySuites.length === 1 &&
+        primary !== undefined &&
+        WEB_VITEST_PRIMARY_SUITE_NAMES.includes(primary)
+        ? []
+        : [{ filePath, classification }];
+    });
+    expect(offenders).toEqual([]);
   });
 
-  it('requires a browser environment for the persisted workspace-scope harness', () => {
-    for (const filePath of listWebVitestFiles()) {
-      if (classifyWebVitestFile(filePath)?.primarySuites[0] !== 'unit') continue;
-
-      const source = readFileSync(resolve(webRoot, filePath), 'utf8');
-      if (source.includes('installWorkspaceScopeHarness(')) {
-        expect(source, filePath).toMatch(/@vitest-environment\s+jsdom/);
-      }
-    }
+  it('requires a browser environment for the persisted workspace-scope harness', async () => {
+    const unitFiles = readWebVitestFiles()
+      .filter((filePath) => classifyWebVitestFile(filePath)?.primarySuites[0] === 'unit')
+      .map((filePath) => resolve(webRoot, filePath));
+    const sources = await readArchitectureSources(unitFiles);
+    const offenders = [...sources]
+      .filter(([, source]) => lacksWorkspaceScopeBrowserEnvironment(source))
+      .map(([filePath]) => filePath);
+    expect(offenders).toEqual([]);
   });
 
   it('keeps architecture tests out of unit and presentation suites', () => {
-    const architectureFiles = listWebVitestFiles().filter((filePath) =>
+    const architectureFiles = readWebVitestFiles().filter((filePath) =>
       filePath.includes('.architecture.test.')
     );
 
     expect(architectureFiles.length).toBeGreaterThan(0);
 
-    for (const filePath of architectureFiles) {
-      expect(classifyWebVitestFile(filePath)?.primarySuites, filePath).toEqual(['architecture']);
-    }
+    const offenders = architectureFiles.filter((filePath) => {
+      const primarySuites = classifyWebVitestFile(filePath)?.primarySuites;
+      return primarySuites?.length !== 1 || primarySuites[0] !== 'architecture';
+    });
+    expect(offenders).toEqual([]);
   });
 
   it('allows Canvas focus coverage to overlap with primary suite ownership', () => {
@@ -235,7 +258,7 @@ describe('web Vitest suite catalog', () => {
     'proves Canvas %s absorption preserves every file and execution setting',
     (primary) => {
       const focus = `canvas-${primary}` as const;
-      const files = listWebVitestFiles();
+      const files = readWebVitestFiles();
       const primaryFiles = files.filter((filePath) => suiteMatchesFile(primary, filePath));
       const focusFiles = files.filter((filePath) => suiteMatchesFile(focus, filePath));
       expect(focusFiles.length).toBeGreaterThan(0);
@@ -315,5 +338,67 @@ describe('web Vitest suite catalog', () => {
       requiresDependencies: true,
       suites: ['monaco', 'architecture'],
     });
+  });
+
+  it('rejects persisted workspace harness sources without their browser environment', () => {
+    expect(lacksWorkspaceScopeBrowserEnvironment('installWorkspaceScopeHarness()')).toBe(true);
+    expect(
+      lacksWorkspaceScopeBrowserEnvironment(
+        '// @vitest-environment node\ninstallWorkspaceScopeHarness()'
+      )
+    ).toBe(true);
+    expect(
+      lacksWorkspaceScopeBrowserEnvironment(
+        '// @vitest-environment jsdom\ninstallWorkspaceScopeHarness()'
+      )
+    ).toBe(false);
+    expect(lacksWorkspaceScopeBrowserEnvironment('const unrelated = true')).toBe(false);
+  });
+
+  it('reads architecture sources in bounded batches while preserving input order and content', async () => {
+    const paths = Array.from({ length: 65 }, (_, index) =>
+      resolve(webRoot, `fixture-${65 - index}.ts`)
+    );
+    let activeReads = 0;
+    let peakReads = 0;
+    const completions: string[] = [];
+    const read = vi.spyOn(fsPromises, 'readFile').mockImplementation(async (filePath) => {
+      activeReads += 1;
+      peakReads = Math.max(peakReads, activeReads);
+      const sourcePath = String(filePath);
+      for (
+        let remainingTurns = 32 - (paths.indexOf(sourcePath) % 32);
+        remainingTurns > 0;
+        remainingTurns -= 1
+      ) {
+        await Promise.resolve();
+      }
+      activeReads -= 1;
+      completions.push(sourcePath);
+      return `source:${sourcePath}`;
+    });
+
+    const sources = await readArchitectureSources(paths);
+
+    expect([...sources]).toEqual(paths.map((filePath) => [filePath, `source:${filePath}`]));
+    expect(completions.slice(0, 32)).toEqual(paths.slice(0, 32).reverse());
+    expect(read).toHaveBeenCalledTimes(paths.length);
+    expect(peakReads).toBe(32);
+    expect(activeReads).toBe(0);
+    expect(await readArchitectureSources([])).toEqual(new Map());
+    expect(read).toHaveBeenCalledTimes(paths.length);
+  });
+
+  it('propagates a source read failure without proceeding to another batch', async () => {
+    const failure = new Error('Unreadable architecture source');
+    const read = vi
+      .spyOn(fsPromises, 'readFile')
+      .mockResolvedValue('source')
+      .mockRejectedValueOnce(failure);
+    const paths = Array.from({ length: 33 }, (_, index) => resolve(webRoot, `fixture-${index}.ts`));
+
+    await expect(readArchitectureSources(paths)).rejects.toBe(failure);
+
+    expect(read).toHaveBeenCalledTimes(32);
   });
 });

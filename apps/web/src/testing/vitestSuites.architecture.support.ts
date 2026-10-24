@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { promises as fsPromises, readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 
 import type { WebVitestChangedSuiteName } from '../../vitest.suites';
@@ -12,11 +12,31 @@ function normalizePath(path: string): string {
 }
 
 function listFiles(dir: string): string[] {
-  return readdirSync(dir).flatMap((entry) => {
-    const entryPath = resolve(dir, entry);
-    const stats = statSync(entryPath);
-    return stats.isDirectory() ? listFiles(entryPath) : [entryPath];
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = resolve(dir, entry.name);
+    const isDirectory = entry.isSymbolicLink()
+      ? statSync(entryPath).isDirectory()
+      : entry.isDirectory();
+    return isDirectory ? listFiles(entryPath) : [entryPath];
   });
+}
+
+export async function readArchitectureSources(
+  absolutePaths: readonly string[]
+): Promise<Map<string, string>> {
+  const sources = new Map<string, string>();
+  for (let offset = 0; offset < absolutePaths.length; offset += 32) {
+    const batch = absolutePaths.slice(offset, offset + 32);
+    const contents = await Promise.all(
+      batch.map(
+        async (filePath) => [filePath, await fsPromises.readFile(filePath, 'utf8')] as const
+      )
+    );
+    for (const [filePath, source] of contents) {
+      sources.set(filePath, source);
+    }
+  }
+  return sources;
 }
 
 export function listWebVitestFiles(): string[] {
