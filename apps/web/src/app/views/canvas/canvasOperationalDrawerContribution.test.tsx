@@ -43,7 +43,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         canPlanGraph: true,
         canStartRun: false,
         planRunReadiness: buildPlanRunReadiness({
-          blockers: ['plan_integrity', 'backpressure'],
+          blockers: ['plan_integrity', 'draft_saving'],
           summary: 'Preview required before running.',
         }),
       },
@@ -76,15 +76,15 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         action: expect.objectContaining({ label: 'Create Execution Preview' }),
       }),
       expect.objectContaining({
-        id: 'backpressure',
-        severity: 'warning',
-        detail: 'Backpressure',
+        id: 'draft_saving',
+        severity: 'info',
+        detail: resolveCanvasViewCopy('en').operationalDrawerDraftSavingBlocker,
         action: null,
       }),
     ]);
     expect(contribution.problems.items.map((problem) => problem.message)).toEqual([
       'Preview required before running.',
-      resolveCanvasViewCopy('en').planStatusBackpressureMessage,
+      resolveCanvasViewCopy('en').planStatusDraftSavingMessage,
     ]);
     expect(contribution.runs).toMatchObject({
       activeRunId: null,
@@ -94,7 +94,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
     expect(contribution.preview).toMatchObject({
       status: 'blocked',
-      blockers: ['Preview', 'Backpressure'],
+      blockers: ['Preview', resolveCanvasViewCopy('en').operationalDrawerDraftSavingBlocker],
       canPreview: true,
     });
   });

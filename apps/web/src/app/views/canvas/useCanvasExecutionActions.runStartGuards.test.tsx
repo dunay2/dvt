@@ -5,9 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
+import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
 import { executeCanvasRunStartAction } from './canvasRunStartAction';
+import * as graphValidation from './transformationGraphValidation';
+import { observePlanRunReadiness } from './canvasPlanReadiness';
+import { presentCanvasRunStartFailure } from './canvasReadinessPresentation';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
@@ -164,6 +168,81 @@ async function expectUnavailableRunStart(args: {
 }
 
 describe('useCanvasExecutionActions run start guards', () => {
+  it('blocks the actual Run command after a persisted Preview is rejected', async () => {
+    const plan = buildPersistedPreviewPlan();
+    const plansService = createPlansServiceMock(plan);
+    vi.mocked(plansService.previewPlan).mockResolvedValue({
+      kind: 'plan-invalid',
+      plan: { ...plan, planRef: plan.planRef! },
+      validation: {
+        status: 'ERROR',
+        planId: plan.planId,
+        adapterId: 'temporal',
+        code: 'MISSING_CAPABILITY',
+        degradable: false,
+        reason: 'Current capability rejection',
+      },
+    });
+    const runsService = createRunsServiceMock();
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService,
+      stateful: true,
+      canonicalNodes: buildCanonicalNodes().map((node) =>
+        node.role === 'input'
+          ? {
+              ...node,
+              metadata: { ...node.metadata, columns: [{ name: 'order_id', type: 'integer' }] },
+            }
+          : node
+      ),
+    });
+    await harness.render();
+    await harness.clickPlan();
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(harness.text('can-start-run')).toBe('false');
+    await harness.clickStartRun();
+    expect(runsService.startRun).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith('Current capability rejection');
+  });
+
+  it('reuses graph analysis for presentation and admission, invalidating changed graph inputs and scope', async () => {
+    const validate = vi.spyOn(graphValidation, 'validateTransformationGraph');
+    try {
+      const nodes = buildCanonicalNodes();
+      harness = renderExecutionActionsHarness({
+        plansService: createPlansServiceMock(),
+        runsService: createRunsServiceMock(),
+        currentPlan: null,
+        canonicalNodes: nodes,
+        canonicalEdges: buildCanonicalEdges(),
+        workspaceNodeIds: nodes.map((node) => node.id),
+      });
+      await harness.render();
+      expect(validate).toHaveBeenCalledTimes(1);
+      await harness.openPlanModal();
+      await act(async () =>
+        useApplicationLanguageStore.getState().configureApplicationLanguage('es')
+      );
+      await harness.rerender({ currentPlan: buildPersistedPreviewPlan(), canRun: false });
+      expect(validate).toHaveBeenCalledTimes(1);
+      expect(harness.text('can-start-run')).toBe('false');
+      await harness.rerender({ canonicalNodes: [...buildCanonicalNodes()] });
+      expect(validate).toHaveBeenCalledTimes(2);
+      await harness.rerender({
+        selectionIntent: createCanvasExecutionSelectionIntent(['model-node']),
+      });
+      expect(validate).toHaveBeenCalledTimes(3);
+      await harness.rerender({ executionEnvironmentId: 'production' });
+      expect(validate).toHaveBeenCalledTimes(4);
+      await harness.rerender({ canonicalEdges: [...buildCanonicalEdges()] });
+      expect(validate).toHaveBeenCalledTimes(5);
+      await harness.rerender({ workspaceNodeIds: ['model-node'] });
+      expect(validate).toHaveBeenCalledTimes(6);
+    } finally {
+      validate.mockRestore();
+    }
+  });
   it.each([
     ['draft_saving', 'planStatusDraftSavingMessage'],
     ['draft_unavailable', 'planStatusDraftUnavailableMessage'],
@@ -173,23 +252,66 @@ describe('useCanvasExecutionActions run start guards', () => {
     'preserves %s through the actual Run command without transport',
     async (reason, messageKey) => {
       const runsService = createRunsServiceMock();
+      const observeReadiness = vi.fn(() =>
+        observePlanRunReadiness({
+          runAdmission: { allowed: false, reason },
+          currentPlan: buildRunnableExecutionPlan(),
+          isCurrentPlanStale: false,
+          previewProvenanceMismatch: false,
+          executionAvailable: true,
+          graphFailure: null,
+          previewRejection: null,
+        })
+      );
       const result = await executeCanvasRunStartAction({
-        runAdmission: { allowed: false, reason },
-        currentPlan: buildRunnableExecutionPlan(),
-        executableGraphFailureMessage: null,
-        hasPersistedPlanForRun: true,
-        isCurrentPlanStale: false,
+        observeReadiness,
         runsService,
         sessionContext: createSessionContext(),
       });
-      expect(result).toEqual({
-        ok: false,
+      expect(observeReadiness).toHaveBeenCalledTimes(1);
+      expect(result.ok).toBe(false);
+      if (result.ok) throw new Error('Expected denied Run.');
+      expect(presentCanvasRunStartFailure(result.failure)).toEqual({
         message: canvasViewCopy[messageKey],
         shouldOpenPlanModal: false,
       });
       expect(runsService.startRun).not.toHaveBeenCalled();
     }
   );
+
+  it('reevaluates changed admission at invocation instead of consuming an earlier ready boolean', async () => {
+    let permission = true;
+    const observeReadiness = vi.fn(() =>
+      observePlanRunReadiness({
+        runAdmission: permission
+          ? { allowed: true }
+          : { allowed: false, reason: 'authorization_denied' },
+        currentPlan: buildPersistedPreviewPlan(),
+        isCurrentPlanStale: false,
+        previewProvenanceMismatch: false,
+        executionAvailable: true,
+        graphFailure: null,
+        previewRejection: null,
+      })
+    );
+    expect(observeReadiness().status).toBe('ready');
+    permission = false;
+    const runsService = createRunsServiceMock();
+    const result = await executeCanvasRunStartAction({
+      observeReadiness,
+      runsService,
+      sessionContext: createSessionContext(),
+    });
+    expect(result).toMatchObject({
+      ok: false,
+      failure: {
+        kind: 'readiness',
+        readiness: { primaryBlocker: 'authorization_denied', target: null },
+      },
+    });
+    expect(observeReadiness).toHaveBeenCalledTimes(2);
+    expect(runsService.startRun).not.toHaveBeenCalled();
+  });
 
   let harness: ExecutionActionsHarness | null = null;
 

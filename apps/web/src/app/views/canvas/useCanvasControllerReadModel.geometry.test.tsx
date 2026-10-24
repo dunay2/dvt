@@ -59,7 +59,7 @@ describe('Canvas read model geometry', () => {
     try {
       const before = mounted.readState()?.nodesWithImpact;
       expect(before).toHaveLength(30);
-      expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(1);
+      expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(0);
       expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(1);
       semanticProjectionCounters.transformationValidation.mockClear();
       semanticProjectionCounters.columnLineage.mockClear();

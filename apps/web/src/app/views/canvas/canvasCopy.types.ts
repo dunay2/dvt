@@ -391,14 +391,10 @@ export type CanvasViewCopy = {
   readonly operationalDrawerWarningSeverity: string;
   readonly operationalDrawerErrorSeverity: string;
   readonly operationalDrawerPlanIntegrityBlocker: string;
-  readonly operationalDrawerBackpressureBlocker: string;
   readonly operationalDrawerCapabilityMismatchBlocker: string;
-  readonly operationalDrawerAdapterDegradedBlocker: string;
   readonly operationalDrawerAuthorizationDeniedBlocker: string;
   readonly operationalDrawerDraftSavingBlocker: string;
   readonly operationalDrawerDraftUnavailableBlocker: string;
-  readonly planStatusBackpressureMessage: string;
-  readonly planStatusAdapterDegradedMessage: string;
   readonly selectionRecoveryTitle: string;
   readonly selectionRecoveryReadyStatus: string;
   readonly selectionRecoveryBlockedStatus: string;

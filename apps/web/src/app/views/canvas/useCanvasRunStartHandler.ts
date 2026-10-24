@@ -6,22 +6,20 @@ import type {
   UseCanvasExecutionActionsParams,
 } from './canvasExecutionActions.types';
 import { executeCanvasRunStartAction } from './canvasRunStartAction';
+import { presentCanvasRunStartFailure } from './canvasReadinessPresentation';
+import type { PlanRunReadinessEvaluation } from './canvasPlanReadiness';
 
 type UseCanvasRunStartHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
   | 'bottomDrawerVisible'
-  | 'currentPlan'
   | 'onRunStarted'
   | 'runsService'
-  | 'runAdmission'
   | 'sessionContext'
   | 'setBottomDrawerHeight'
   | 'shellFeedback'
   | 'toggleBottomDrawer'
 > & {
-  executableGraphFailureMessage: string | null;
-  hasPersistedPlanForRun: boolean;
-  isCurrentPlanStale: boolean;
+  observeReadiness: () => PlanRunReadinessEvaluation;
   setPlanModalOpen: SetPlanModalOpen;
 };
 
@@ -42,12 +40,8 @@ function revealStartedRunOperations({
 }
 
 export function useCanvasRunStartHandler({
-  runAdmission,
   bottomDrawerVisible,
-  currentPlan,
-  executableGraphFailureMessage,
-  hasPersistedPlanForRun,
-  isCurrentPlanStale,
+  observeReadiness,
   onRunStarted,
   runsService,
   sessionContext,
@@ -58,18 +52,15 @@ export function useCanvasRunStartHandler({
 }: UseCanvasRunStartHandlerArgs): () => Promise<void> {
   return useCallback(async () => {
     const result = await executeCanvasRunStartAction({
-      runAdmission,
-      currentPlan,
-      executableGraphFailureMessage,
-      hasPersistedPlanForRun,
-      isCurrentPlanStale,
+      observeReadiness,
       runsService,
       sessionContext,
     });
 
     if (!result.ok) {
-      shellFeedback.error(result.message);
-      setPlanModalOpen(result.shouldOpenPlanModal);
+      const rejection = presentCanvasRunStartFailure(result.failure);
+      shellFeedback.error(rejection.message);
+      setPlanModalOpen(rejection.shouldOpenPlanModal);
       return;
     }
 
@@ -83,12 +74,8 @@ export function useCanvasRunStartHandler({
     shellFeedback.success(canvasViewCopy.runStartedMessage);
     onRunStarted(result.runId);
   }, [
-    runAdmission,
     bottomDrawerVisible,
-    currentPlan,
-    executableGraphFailureMessage,
-    hasPersistedPlanForRun,
-    isCurrentPlanStale,
+    observeReadiness,
     onRunStarted,
     runsService,
     sessionContext,

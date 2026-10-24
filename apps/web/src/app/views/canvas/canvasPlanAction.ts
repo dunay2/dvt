@@ -11,6 +11,7 @@ import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
+import { resolveCanvasExecutionGraphFailureMessage } from './canvasReadinessPresentation';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
 import { canvasViewCopy, formatCanvasCopyTemplate } from './copy';
@@ -136,7 +137,7 @@ export async function executeCanvasPlanAction({
         workspaceNodeIds,
       });
       if (!dvtProjection.ok) {
-        return fail(dvtProjection.message);
+        return fail(resolveCanvasExecutionGraphFailureMessage(dvtProjection, canvasViewCopy));
       }
       const previewOutcome = await plansService.previewPlan({
         previewProfile: execution.previewProfile,
@@ -165,7 +166,7 @@ export async function executeCanvasPlanAction({
       executionScope: sessionContext.getWorkspaceScopeSnapshot(),
     });
     if (!plannerProjection.ok) {
-      return fail(plannerProjection.message);
+      return fail(resolveCanvasExecutionGraphFailureMessage(plannerProjection, canvasViewCopy));
     }
     const scopedNodeIds = plannerProjection.scopedNodeIds;
 

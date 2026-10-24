@@ -1,3 +1,4 @@
+import { evaluateCanvasExecutionGraph } from './canvasExecutionGraph';
 /**
  * Owned concern: verify protected DVT Preview selection and its readiness projection.
  * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
@@ -15,7 +16,7 @@ import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
-import { presentCanvasExecutionState } from './canvasReadinessPresentation';
+import { presentPlanRunReadiness } from './canvasReadinessPresentation';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import {
   createDvtSubstraitProjectionDraft,
@@ -242,12 +243,9 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     ['closed execution gate', { executionGate: 'closed' }],
     ['disabled execution dependency', { executionDependency: false }],
   ])('ignores an outgoing edge with %s when resolving terminality', (_label, metadata) => {
-    const state = deriveCanvasExecutionState({
+    const stateGraph = evaluateCanvasExecutionGraph({
       graphDraftCanvasId: 'canvas-main',
-      runAdmission: { allowed: true },
-      executionStrategy: strategy,
-      currentPlan: null,
-      lastPlannedDraftSignature: null,
+      registeredStrategy: strategy,
       canonicalNodes: [source, transform],
       canonicalEdges: [
         lineage,
@@ -261,55 +259,58 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       ],
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       workspaceNodeIds: [source.id, transform.id, 'outside-selection'],
-      latestPreviewOutcome: null,
     });
 
-    expect(state.canPlanGraph).toBe(true);
-    expect(state.executableGraphFailure).toBeNull();
+    expect(stateGraph.canPlanGraph).toBe(true);
+    expect(stateGraph.failure).toBeNull();
   });
 
   it('enables Preview readiness for the exact protected terminal closure', () => {
-    const state = deriveCanvasExecutionState({
+    const stateGraph = evaluateCanvasExecutionGraph({
       graphDraftCanvasId: 'canvas-main',
-      runAdmission: { allowed: true },
-      executionStrategy: strategy,
-      currentPlan: null,
-      lastPlannedDraftSignature: null,
+      registeredStrategy: strategy,
       canonicalNodes: [source, transform],
       canonicalEdges: [lineage],
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       workspaceNodeIds: [source.id, transform.id],
+    });
+    const state = deriveCanvasExecutionState({
+      graph: stateGraph,
+      runAdmission: { allowed: true },
+      currentPlan: null,
+      lastPlannedDraftSignature: null,
       latestPreviewOutcome: null,
     });
 
-    expect(state.canPlanGraph).toBe(true);
-    expect(state.canStartRun).toBe(false);
-    expect(state.executableGraphFailure).toBeNull();
+    expect(stateGraph.canPlanGraph).toBe(true);
+    expect(state.planRunReadiness.status).toBe('blocked');
+    expect(stateGraph.failure).toBeNull();
   });
 
   it('expires a rejected Preview when the authored graph signature changes', () => {
-    const state = deriveCanvasExecutionState({
+    const stateGraph = evaluateCanvasExecutionGraph({
       graphDraftCanvasId: 'canvas-main',
-      runAdmission: { allowed: true },
-      executionStrategy: strategy,
-      currentPlan: null,
-      lastPlannedDraftSignature: 'previous-draft',
+      registeredStrategy: strategy,
       canonicalNodes: [source, transform],
       canonicalEdges: [lineage],
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       workspaceNodeIds: [source.id, transform.id],
+    });
+    const state = deriveCanvasExecutionState({
+      graph: stateGraph,
+      runAdmission: { allowed: true },
+      currentPlan: null,
+      lastPlannedDraftSignature: 'previous-draft',
       latestPreviewOutcome: {
         kind: 'selection-rejected',
         rejection: DVT_REJECTIONS.runDispositionUnsupported,
       },
     });
     expect(state.isPreviewOutcomeStale).toBe(true);
-    const presentation = presentCanvasExecutionState(state, 'en');
-    expect(presentation.planRunReadiness.diagnostic?.message).not.toContain(
-      'Do not configure both'
-    );
-    expect(presentation.planRunReadiness.summary).toBe('Preview required before running.');
-    expect(state.canStartRun).toBe(false);
+    const presentation = presentPlanRunReadiness(state.planRunReadiness, 'en');
+    expect(presentation.diagnostic?.message).not.toContain('Do not configure both');
+    expect(presentation.summary).toBe('Preview required before running.');
+    expect(state.planRunReadiness.status).toBe('blocked');
   });
 
   it.each([
@@ -335,33 +336,35 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       cause,
       reason: DVT_REJECTIONS.runDispositionUnsupported.reason,
     };
-    const state = deriveCanvasExecutionState({
+    const stateGraph = evaluateCanvasExecutionGraph({
       graphDraftCanvasId: 'canvas-main',
-      runAdmission: { allowed: true },
-      executionStrategy: strategy,
-      currentPlan: null,
-      lastPlannedDraftSignature: null,
+      registeredStrategy: strategy,
       canonicalNodes: [source, transform],
       canonicalEdges: [lineage],
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       workspaceNodeIds: [source.id, transform.id],
+    });
+    const state = deriveCanvasExecutionState({
+      graph: stateGraph,
+      runAdmission: { allowed: true },
+      currentPlan: null,
+      lastPlannedDraftSignature: null,
       latestPreviewOutcome: { kind: 'selection-rejected', rejection },
     });
 
     Object.freeze(rejection);
     Object.freeze(state.planRunReadiness.blockers);
     Object.freeze(state.planRunReadiness);
-    Object.freeze(state.readinessDiagnostic);
+    Object.freeze(state.planRunReadiness.diagnostic);
     Object.freeze(state);
     const before = structuredClone(state);
-    const presentation = presentCanvasExecutionState(state, applicationLanguage);
-    expect(presentation.planRunReadiness.summary).toBe(expected);
-    expect(presentation.planRunReadiness.summary).toBe(expected);
+    const presentation = presentPlanRunReadiness(state.planRunReadiness, applicationLanguage);
+    expect(presentation.summary).toBe(expected);
     expect(state.planRunReadiness.blockers).toContain('plan_integrity');
-    expect(state.canStartRun).toBe(false);
+    expect(state.planRunReadiness.status).toBe('blocked');
     expect(rejection.reason).toBe(DVT_REJECTIONS.runDispositionUnsupported.reason);
     expect(state).toEqual(before);
-    expect(state.readinessDiagnostic).toMatchObject({
+    expect(state.planRunReadiness.diagnostic).toMatchObject({
       kind: 'preview',
       diagnostic: { cause, reason: rejection.reason },
     });

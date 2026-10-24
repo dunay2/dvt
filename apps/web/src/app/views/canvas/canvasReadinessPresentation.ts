@@ -1,4 +1,4 @@
-/** Owned concern: present evaluated Canvas readiness without changing admission. */
+/** Owned concern: present typed Canvas readiness and Run failures without changing admission. */
 import { resolveDvtOperationalRejectionCopy } from '../../services/api/dvtOperationalRejectionCopy';
 import {
   getApplicationLanguage,
@@ -6,9 +6,9 @@ import {
 } from '../../stores/applicationLanguageStore';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
-import type { CanvasExecutionState } from './canvasExecutionState';
+import type { CanvasRunStartFailure } from './canvasExecutionActions.types';
 import type {
+  CanvasExecutableGraphFailure,
   PlanRunPreviewState,
   PlanRunReadinessBlocker,
   PlanRunReadinessEvaluation,
@@ -22,12 +22,8 @@ export function resolvePlanRunReadinessBlockerLabel(
   switch (blocker) {
     case 'plan_integrity':
       return copy.operationalDrawerPlanIntegrityBlocker;
-    case 'backpressure':
-      return copy.operationalDrawerBackpressureBlocker;
     case 'capability_mismatch':
       return copy.operationalDrawerCapabilityMismatchBlocker;
-    case 'adapter_degraded':
-      return copy.operationalDrawerAdapterDegradedBlocker;
     case 'authorization_denied':
       return copy.operationalDrawerAuthorizationDeniedBlocker;
     case 'draft_saving':
@@ -59,8 +55,9 @@ export function resolvePlanRunReadinessBlockerMessage(
   blocker: PlanRunReadinessBlocker,
   copy: CanvasViewCopy
 ): string {
-  if (readiness.diagnostic?.blocker === blocker) return readiness.diagnostic.message;
-  return resolvePlanRunBlockerMessage(blocker, copy);
+  return readiness.diagnostic?.blocker === blocker
+    ? readiness.diagnostic.message
+    : resolvePlanRunBlockerMessage(blocker, copy);
 }
 
 export function resolvePlanRunBlockerMessage(
@@ -74,14 +71,26 @@ export function resolvePlanRunBlockerMessage(
       return copy.planStatusDraftSavingMessage;
     case 'draft_unavailable':
       return copy.planStatusDraftUnavailableMessage;
-    case 'backpressure':
-      return copy.planStatusBackpressureMessage;
     case 'capability_mismatch':
       return copy.canvasExecutionUnavailableMessage;
-    case 'adapter_degraded':
-      return copy.planStatusAdapterDegradedMessage;
     case 'plan_integrity':
       return copy.planStatusPreviewRequiredMessage;
+  }
+}
+
+export function resolveCanvasExecutionGraphFailureMessage(
+  failure: CanvasExecutableGraphFailure,
+  copy: CanvasViewCopy
+): string {
+  switch (failure.cause) {
+    case 'execution_selection_unavailable':
+      return copy.dbtExplicitSelectionRequiresExecutableResourceMessage;
+    case 'graph_authority_unavailable':
+      return copy.planGraphAuthorityRefusedMessage;
+    case 'protected_path_required':
+      return copy.previewProvenanceTransformPathRequiredMessage;
+    case 'dbt_projection_failed':
+      return failure.diagnostic;
   }
 }
 
@@ -90,61 +99,73 @@ export function presentPlanRunReadiness(
   locale?: string
 ): PlanRunReadinessReadModel {
   const copy = resolveCanvasViewCopy(locale);
-  const previewSummary = resolvePreviewReadinessMessage(evaluation.previewState, copy);
+  const previewMessage = resolvePreviewReadinessMessage(evaluation.previewState, copy);
+  const source = evaluation.diagnostic;
+  const diagnostic =
+    source?.kind === 'graph'
+      ? {
+          blocker: source.blocker,
+          message: resolveCanvasExecutionGraphFailureMessage(source.failure, copy),
+        }
+      : source?.kind === 'preview'
+        ? {
+            blocker: source.blocker,
+            message:
+              resolveDvtOperationalRejectionCopy(
+                source.diagnostic?.cause,
+                normalizeApplicationLanguage(locale) ?? getApplicationLanguage()
+              ) ??
+              source.diagnostic?.reason ??
+              resolvePlanRunBlockerMessage(source.blocker, copy),
+          }
+        : evaluation.previewState !== 'ready'
+          ? { blocker: 'plan_integrity' as const, message: previewMessage }
+          : undefined;
+  const summary =
+    evaluation.status === 'ready'
+      ? previewMessage
+      : diagnostic?.blocker === evaluation.primaryBlocker
+        ? diagnostic.message
+        : evaluation.primaryBlocker === 'plan_integrity'
+          ? previewMessage
+          : resolvePlanRunBlockerMessage(evaluation.primaryBlocker, copy);
   return {
     rail: evaluation.rail,
     status: evaluation.status,
     blockers: evaluation.blockers,
-    summary:
-      evaluation.summaryBlocker == null
-        ? previewSummary
-        : resolvePlanRunBlockerMessage(evaluation.summaryBlocker, copy),
-    ...(evaluation.blockers.includes('plan_integrity')
-      ? { diagnostic: { blocker: 'plan_integrity' as const, message: previewSummary } }
-      : {}),
+    summary,
+    ...(diagnostic == null ? {} : { diagnostic }),
   };
 }
 
-export function presentCanvasExecutionState(
-  state: CanvasExecutionState,
-  applicationLanguage?: string
+export function presentCanvasRunStartFailure(
+  failure: CanvasRunStartFailure,
+  locale?: string
 ): Readonly<{
-  executableGraphFailureMessage: string | null;
-  planRunReadiness: PlanRunReadinessReadModel;
+  message: string;
+  shouldOpenPlanModal: boolean;
 }> {
-  const failure = state.executableGraphFailure;
-  const executableGraphFailureMessage =
-    failure == null
-      ? null
-      : failure.kind === 'projection'
-        ? failure.message
-        : formatTransformationGraphValidationSummary(failure.summaryCode, applicationLanguage);
-  const base = presentPlanRunReadiness(state.planRunReadiness, applicationLanguage);
-  const source = state.readinessDiagnostic;
-  const message =
-    source?.kind === 'preview'
-      ? (resolveDvtOperationalRejectionCopy(
-          source.diagnostic?.cause,
-          normalizeApplicationLanguage(applicationLanguage) ?? getApplicationLanguage()
-        ) ??
-        source.diagnostic?.reason ??
-        base.summary)
-      : source?.kind === 'graph'
-        ? executableGraphFailureMessage
-        : null;
-  const planRunReadiness =
-    source != null && message != null
-      ? {
-          ...base,
-          summary: message,
-          diagnostic: {
-            blocker: source.kind === 'preview' ? source.blocker : ('plan_integrity' as const),
-            message,
-          },
-        }
-      : base;
-  return {
-    executableGraphFailureMessage,
-    planRunReadiness,
-  };
+  const copy = resolveCanvasViewCopy(locale);
+  if (failure.kind === 'submission')
+    return { message: failure.message ?? copy.runFailedMessage, shouldOpenPlanModal: false };
+  const evaluation = failure.readiness;
+  if (evaluation.primaryBlocker !== 'plan_integrity' || evaluation.diagnostic != null) {
+    return {
+      message: presentPlanRunReadiness(evaluation, locale).summary,
+      shouldOpenPlanModal: false,
+    };
+  }
+  switch (evaluation.previewState) {
+    case 'required':
+      return { message: copy.runNoPlanMessage, shouldOpenPlanModal: false };
+    case 'stale':
+      return { message: copy.runPreviewStaleMessage, shouldOpenPlanModal: true };
+    case 'plan_ref_unavailable':
+      return { message: copy.runPlanRefUnavailableMessage, shouldOpenPlanModal: true };
+    case 'identity_mismatch':
+    case 'not_persisted':
+      return { message: copy.runPersistedPreviewRequiredMessage, shouldOpenPlanModal: true };
+    case 'ready':
+      return { message: copy.planStatusPreviewRequiredMessage, shouldOpenPlanModal: false };
+  }
 }

@@ -1,108 +1,35 @@
-/**
- * Owned concern: orchestrate Canvas run-start readiness and delegate execution
- * to the runs port without authoring runtime identity.
- */
+/** Owned concern: submit Run only from a freshly admitted readiness target. */
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
-import type { PlanViewModel } from '../../types/plans';
-
-import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
-import { resolvePlanRunBlockerMessage } from './canvasReadinessPresentation';
-import type { CanvasRunAdmission } from './canvasRuntimePolicy';
+import type { PlanRunReadinessEvaluation } from './canvasPlanReadiness';
+import type { CanvasRunStartFailure } from './canvasExecutionActions.types';
 import { collectPlanSelection } from './canvasRunSelection';
-import { canvasViewCopy } from './copy';
 
-type CanvasRunStartActionFailure = {
-  ok: false;
-  message: string;
-  shouldOpenPlanModal: boolean;
-};
+export type CanvasRunStartActionResult =
+  Readonly<{ ok: false; failure: CanvasRunStartFailure }> | Readonly<{ ok: true; runId: string }>;
 
-type CanvasRunStartActionSuccess = {
-  ok: true;
-  runId: string;
-};
-
-export type CanvasRunStartActionResult = CanvasRunStartActionFailure | CanvasRunStartActionSuccess;
-
-export async function executeCanvasRunStartAction({
-  runAdmission,
-  currentPlan,
-  executableGraphFailureMessage,
-  hasPersistedPlanForRun,
-  isCurrentPlanStale,
-  runsService,
-  sessionContext,
-}: {
-  runAdmission: CanvasRunAdmission;
-  currentPlan: PlanViewModel | null;
-  executableGraphFailureMessage: string | null;
-  hasPersistedPlanForRun: boolean;
-  isCurrentPlanStale: boolean;
-  runsService: IRunsPort;
-  sessionContext: SessionContextPort;
-}): Promise<CanvasRunStartActionResult> {
-  if (!runAdmission.allowed) {
-    return {
-      ok: false,
-      message: resolvePlanRunBlockerMessage(runAdmission.reason, canvasViewCopy),
-      shouldOpenPlanModal: false,
-    };
-  }
-
-  if (!currentPlan) {
-    return {
-      ok: false,
-      message: canvasViewCopy.runNoPlanMessage,
-      shouldOpenPlanModal: false,
-    };
-  }
-
-  if (executableGraphFailureMessage != null) {
-    return {
-      ok: false,
-      message: executableGraphFailureMessage,
-      shouldOpenPlanModal: false,
-    };
-  }
-
-  if (isCurrentPlanStale) {
-    return {
-      ok: false,
-      message: canvasViewCopy.runPreviewStaleMessage,
-      shouldOpenPlanModal: true,
-    };
-  }
-
-  const planRef = resolvePlanRefForStartRun(currentPlan);
-  if (!planRef) {
-    return {
-      ok: false,
-      message: canvasViewCopy.runPlanRefUnavailableMessage,
-      shouldOpenPlanModal: true,
-    };
-  }
-
-  if (!hasPersistedPlanForRun) {
-    return {
-      ok: false,
-      message: canvasViewCopy.runPersistedPreviewRequiredMessage,
-      shouldOpenPlanModal: true,
-    };
-  }
-
+export async function executeCanvasRunStartAction(
+  args: Readonly<{
+    observeReadiness: () => PlanRunReadinessEvaluation;
+    runsService: IRunsPort;
+    sessionContext: SessionContextPort;
+  }>
+): Promise<CanvasRunStartActionResult> {
   try {
-    const runReceipt = await runsService.startRun({
+    const readiness = args.observeReadiness();
+    if (readiness.status === 'blocked')
+      return { ok: false, failure: { kind: 'readiness', readiness } };
+    const { plan, planRef } = readiness.target;
+    const receipt = await args.runsService.startRun({
       planRef,
-      workspaceScope: sessionContext.getWorkspaceScopeSnapshot(),
-      selection: collectPlanSelection(currentPlan),
+      workspaceScope: args.sessionContext.getWorkspaceScopeSnapshot(),
+      selection: collectPlanSelection(plan),
     });
-    return { ok: true, runId: runReceipt.runId };
+    return { ok: true, runId: receipt.runId };
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : canvasViewCopy.runFailedMessage,
-      shouldOpenPlanModal: false,
+      failure: { kind: 'submission', message: error instanceof Error ? error.message : null },
     };
   }
 }

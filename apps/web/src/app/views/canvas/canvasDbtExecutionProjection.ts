@@ -6,7 +6,6 @@ import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
 } from './canvasDbtPlannerGraphSource';
-import { canvasViewCopy } from './copy';
 import {
   buildDbtProjectFileExecutionDraftSignature,
   buildDbtProjectFilePlannerProjection,
@@ -37,7 +36,7 @@ export function buildCanvasDbtExecutionProjection(args: {
     if (!projection.ok) {
       return {
         ok: false as const,
-        message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
+        cause: 'execution_selection_unavailable' as const,
       };
     }
 
@@ -60,7 +59,7 @@ export function buildCanvasDbtExecutionProjection(args: {
   if (!executionScope.ok) {
     return {
       ok: false as const,
-      message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
+      cause: 'execution_selection_unavailable' as const,
     };
   }
 
@@ -84,5 +83,9 @@ export function buildCanvasDbtExecutionProjection(args: {
           requestedRootNodeIds: executionScope.requestedRootNodeIds,
         }),
       }
-    : projection;
+    : {
+        ok: false as const,
+        cause: 'dbt_projection_failed' as const,
+        diagnostic: projection.message,
+      };
 }

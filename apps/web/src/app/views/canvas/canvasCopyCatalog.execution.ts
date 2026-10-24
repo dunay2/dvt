@@ -652,30 +652,13 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.operationalDrawer.planIntegrityBlocker',
     fallback: 'Preview',
   },
-  operationalDrawerBackpressureBlocker: {
-    key: 'canvas.operationalDrawer.backpressureBlocker',
-    fallback: 'Backpressure',
-  },
   operationalDrawerCapabilityMismatchBlocker: {
     key: 'canvas.operationalDrawer.capabilityMismatchBlocker',
     fallback: 'Capability mismatch',
   },
-  operationalDrawerAdapterDegradedBlocker: {
-    key: 'canvas.operationalDrawer.adapterDegradedBlocker',
-    fallback: 'Adapter degraded',
-  },
   operationalDrawerAuthorizationDeniedBlocker: {
     key: 'canvas.operationalDrawer.authorizationDeniedBlocker',
     fallback: 'Authorization denied',
-  },
-  planStatusBackpressureMessage: {
-    key: 'canvas.planStatus.backpressureMessage',
-    fallback: 'Runtime admission is temporarily backpressured. Retry after capacity recovers.',
-  },
-  planStatusAdapterDegradedMessage: {
-    key: 'canvas.planStatus.adapterDegradedMessage',
-    fallback:
-      'The execution adapter is degraded. Run start remains blocked until runtime recovers.',
   },
   selectionRecoveryTitle: {
     key: 'canvas.selectionRecovery.title',

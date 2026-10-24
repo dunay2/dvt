@@ -11,7 +11,8 @@ import type { IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
-import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { PlanRunReadinessReadModel, PlanRunReadinessEvaluation } from './canvasPlanReadiness';
+import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type CanvasExecutionDraftGraph =
@@ -59,6 +60,7 @@ export type UseCanvasExecutionActionsResult = {
   canStartRun: boolean;
   isCurrentPlanStale: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
+  transformationValidation: TransformationGraphValidationResult;
   latestPreviewOutcome: PlanPreviewOutcome | null;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
@@ -69,3 +71,10 @@ export type CanvasPreviewAttempt = Readonly<{
   outcome: PlanPreviewOutcome;
 }>;
 export type SetPlanModalOpen = Dispatch<SetStateAction<boolean>>;
+
+export type CanvasRunStartFailure =
+  | Readonly<{
+      kind: 'readiness';
+      readiness: Extract<PlanRunReadinessEvaluation, { status: 'blocked' }>;
+    }>
+  | Readonly<{ kind: 'submission'; message: string | null }>;

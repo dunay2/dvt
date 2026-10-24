@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { validateTransformationGraph } from './transformationGraphValidation';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
@@ -131,6 +132,7 @@ function buildDefaultCanvasHarnessGraphHandlersResult(): CanvasHarnessState['gra
 
 function buildDefaultCanvasHarnessExecutionActionsResult(): CanvasHarnessState['executionActionsResult'] {
   return {
+    transformationValidation: validateTransformationGraph({ nodes: [], edges: [] }),
     planModalOpen: false,
     setPlanModalOpen: vi.fn(),
     canStartRun: false,

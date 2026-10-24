@@ -1,10 +1,10 @@
 /** Owned concern: coordinate Canvas plan and run action handlers. */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { asNonBlankString } from '@dvt/contracts';
 
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
-import { presentCanvasExecutionState } from './canvasReadinessPresentation';
+import { presentPlanRunReadiness } from './canvasReadinessPresentation';
 import type {
   CanvasPreviewAttempt,
   UseCanvasExecutionActionsParams,
@@ -14,7 +14,7 @@ import { useCanvasPlanActionHandler } from './useCanvasPlanActionHandler';
 import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
 import { doesPreviewOutcomeOwnPlan } from './canvasPreviewOutcomeProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { resolveCanvasPreviewExecutionStrategy } from './canvasPreviewExecutionStrategy';
+import { evaluateCanvasExecutionGraph } from './canvasExecutionGraph';
 
 function normalizeExecutionEnvironmentId(
   environmentId: WorkspaceScope['environmentId'] | undefined
@@ -85,36 +85,46 @@ export function useCanvasExecutionActions({
     sessionContext,
     executionEnvironmentId,
   });
-  const resolvedExecutionStrategy = resolveCanvasPreviewExecutionStrategy({
-    graphDraftCanvasId,
-    registeredStrategy: executionStrategy,
-    canonicalNodes,
-    canonicalEdges,
-    selectionIntent,
-    workspaceNodeIds,
-    executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
-  });
-  const effectiveRunAdmission =
-    runAdmission.allowed &&
-    (resolvedExecutionStrategy == null || resolvedExecutionStrategy.kind === 'not_executable')
-      ? ({ allowed: false, reason: 'capability_mismatch' } as const)
-      : runAdmission;
-  const executionState = deriveCanvasExecutionState({
-    graphDraftCanvasId,
-    runAdmission: effectiveRunAdmission,
-    executionStrategy: resolvedExecutionStrategy,
-    currentPlan,
-    lastPlannedDraftSignature: previewAttempt?.draftSignature ?? null,
-    canonicalNodes,
-    canonicalEdges,
-    selectionIntent,
-    workspaceNodeIds,
-    latestPreviewOutcome,
-    executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
-  });
-  const { hasPersistedPlanForRun, isCurrentPlanStale, canPlanGraph, canStartRun } = executionState;
-  const { executableGraphFailureMessage, planRunReadiness } = presentCanvasExecutionState(
-    executionState,
+  const scope = executionSessionContext.getWorkspaceScopeSnapshot();
+  const graph = useMemo(
+    () =>
+      evaluateCanvasExecutionGraph({
+        graphDraftCanvasId,
+        registeredStrategy: executionStrategy,
+        canonicalNodes,
+        canonicalEdges,
+        selectionIntent,
+        workspaceNodeIds,
+        executionScope: {
+          tenantId: scope.tenantId,
+          projectId: scope.projectId,
+          environmentId: scope.environmentId,
+        },
+      }),
+    [
+      graphDraftCanvasId,
+      executionStrategy,
+      canonicalNodes,
+      canonicalEdges,
+      selectionIntent,
+      workspaceNodeIds,
+      scope.tenantId,
+      scope.projectId,
+      scope.environmentId,
+    ]
+  );
+  const observeExecution = () =>
+    deriveCanvasExecutionState({
+      graph,
+      runAdmission,
+      currentPlan,
+      lastPlannedDraftSignature: previewAttempt?.draftSignature ?? null,
+      latestPreviewOutcome,
+    });
+  const executionState = observeExecution();
+  const { isCurrentPlanStale } = executionState;
+  const planRunReadiness = presentPlanRunReadiness(
+    executionState.planRunReadiness,
     applicationLanguage
   );
 
@@ -124,7 +134,7 @@ export function useCanvasExecutionActions({
     canonicalEdges,
     canonicalNodes,
     plansService,
-    executionStrategy: resolvedExecutionStrategy,
+    executionStrategy: graph.executionStrategy,
     selectionIntent,
     sessionContext: executionSessionContext,
     shellFeedback,
@@ -139,12 +149,8 @@ export function useCanvasExecutionActions({
   });
 
   const handleStartRun = useCanvasRunStartHandler({
-    runAdmission: effectiveRunAdmission,
+    observeReadiness: () => observeExecution().planRunReadiness,
     bottomDrawerVisible,
-    currentPlan,
-    executableGraphFailureMessage,
-    hasPersistedPlanForRun,
-    isCurrentPlanStale,
     onRunStarted,
     runsService,
     sessionContext: executionSessionContext,
@@ -157,10 +163,11 @@ export function useCanvasExecutionActions({
   return {
     planModalOpen,
     setPlanModalOpen,
-    canPlanGraph,
-    canStartRun,
+    canPlanGraph: graph.canPlanGraph,
+    canStartRun: executionState.planRunReadiness.status === 'ready',
     isCurrentPlanStale,
     planRunReadiness,
+    transformationValidation: graph.transformationValidation,
     latestPreviewOutcome: executionState.isPreviewOutcomeStale ? null : latestPreviewOutcome,
     handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,

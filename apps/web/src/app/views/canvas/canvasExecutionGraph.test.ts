@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import * as dvtProjection from './canvasDvtPreviewProjection';
+import * as dbtProjection from './canvasDbtExecutionProjection';
+import * as validation from './transformationGraphValidation';
+import { deriveCanvasExecutionState } from './canvasExecutionState';
 
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -7,7 +11,7 @@ import {
   encodeDvtSubstraitProjectionDocument,
 } from './canvasDvtSubstraitProjection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
-import { resolveCanvasPreviewExecutionStrategy } from './canvasPreviewExecutionStrategy';
+import { evaluateCanvasExecutionGraph } from './canvasExecutionGraph';
 
 const registeredStrategy: Extract<CanvasExecutionStrategy, { kind: 'dvt_protected_preview' }> = {
   kind: 'dvt_protected_preview',
@@ -47,17 +51,69 @@ const dbtLineage: CanonicalEdge = {
   relation: 'lineage',
 };
 
-describe('resolveCanvasPreviewExecutionStrategy', () => {
-  it('keeps the existing dbt Preview authority for a dbt-compatible closure in the shared Canvas', () => {
-    expect(
-      resolveCanvasPreviewExecutionStrategy({
+describe('evaluateCanvasExecutionGraph', () => {
+  it('builds each fallback candidate once and reuses the graph for repeated readiness observations', () => {
+    const dvt = vi.spyOn(dvtProjection, 'buildProtectedDvtPreviewProjection');
+    const dbt = vi.spyOn(dbtProjection, 'buildCanvasDbtExecutionProjection');
+    const validate = vi.spyOn(validation, 'validateTransformationGraph');
+    try {
+      const graph = evaluateCanvasExecutionGraph({
         graphDraftCanvasId: 'canvas-main',
         registeredStrategy,
         canonicalNodes: [dbtSource, dbtModel],
         canonicalEdges: [dbtLineage],
         selectionIntent: { mode: 'workspace', nodeIds: [] },
         workspaceNodeIds: [dbtSource.id, dbtModel.id],
-      })
+      });
+      Object.freeze(graph);
+      for (let index = 0; index < 3; index++) {
+        const state = deriveCanvasExecutionState({
+          graph,
+          runAdmission: { allowed: true },
+          currentPlan: null,
+          lastPlannedDraftSignature: null,
+          latestPreviewOutcome: null,
+        });
+        expect(state.planRunReadiness).toMatchObject({
+          status: 'blocked',
+          target: null,
+          previewState: 'required',
+        });
+      }
+      expect(dvt).toHaveBeenCalledTimes(1);
+      expect(dbt).toHaveBeenCalledTimes(1);
+      expect(validate).toHaveBeenCalledTimes(1);
+    } finally {
+      dvt.mockRestore();
+      dbt.mockRestore();
+      validate.mockRestore();
+    }
+  });
+
+  it('does not authorize graph-authored Preview without an actual Canvas identity', () => {
+    const graph = evaluateCanvasExecutionGraph({
+      graphDraftCanvasId: null,
+      registeredStrategy,
+      canonicalNodes: [dbtSource, dbtModel],
+      canonicalEdges: [dbtLineage],
+      selectionIntent: { mode: 'workspace', nodeIds: [] },
+      workspaceNodeIds: [dbtSource.id, dbtModel.id],
+    });
+    expect(graph).toMatchObject({
+      canPlanGraph: false,
+      failure: { cause: 'graph_authority_unavailable' },
+    });
+  });
+  it('keeps the existing dbt Preview authority for a dbt-compatible closure in the shared Canvas', () => {
+    expect(
+      evaluateCanvasExecutionGraph({
+        graphDraftCanvasId: 'canvas-main',
+        registeredStrategy,
+        canonicalNodes: [dbtSource, dbtModel],
+        canonicalEdges: [dbtLineage],
+        selectionIntent: { mode: 'workspace', nodeIds: [] },
+        workspaceNodeIds: [dbtSource.id, dbtModel.id],
+      }).executionStrategy
     ).toEqual({
       kind: 'planner_generic_preview',
       previewProfile: 'planner-generic-v1',
@@ -108,14 +164,14 @@ describe('resolveCanvasPreviewExecutionStrategy', () => {
     );
 
     expect(
-      resolveCanvasPreviewExecutionStrategy({
+      evaluateCanvasExecutionGraph({
         graphDraftCanvasId: 'canvas-main',
         registeredStrategy,
         canonicalNodes: [source, transform],
         canonicalEdges: [dbtLineage],
         selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
         workspaceNodeIds: [source.id, transform.id],
-      })
+      }).executionStrategy
     ).toBe(registeredStrategy);
   });
 });

@@ -188,9 +188,7 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerWarningSeverity: 'Advertencia',
   operationalDrawerErrorSeverity: 'Error',
   operationalDrawerPlanIntegrityBlocker: 'Vista previa',
-  operationalDrawerBackpressureBlocker: 'Saturación temporal',
   operationalDrawerCapabilityMismatchBlocker: 'Capacidad incompatible',
-  operationalDrawerAdapterDegradedBlocker: 'Adaptador degradado',
   operationalDrawerAuthorizationDeniedBlocker: 'Autorización denegada',
   operationalDrawerDraftSavingBlocker: 'Guardando cambios',
   operationalDrawerDraftUnavailableBlocker: 'Borrador no disponible',
@@ -200,10 +198,6 @@ export const canvasViewExecutionCopyEs = {
     'Esperando a que termine el guardado de los cambios antes de ejecutar.',
   planStatusDraftUnavailableMessage:
     'Resuelve el estado del borrador del Canvas antes de ejecutar.',
-  planStatusBackpressureMessage:
-    'La admisión del runtime está temporalmente saturada. Reinténtalo cuando se recupere la capacidad.',
-  planStatusAdapterDegradedMessage:
-    'El adaptador de ejecución está degradado. El arranque seguirá bloqueado hasta que se recupere el runtime.',
   selectionRecoveryTitle: 'Qué se va a ejecutar',
   selectionRecoveryReadyStatus: 'lista',
   selectionRecoveryBlockedStatus: 'bloqueada',

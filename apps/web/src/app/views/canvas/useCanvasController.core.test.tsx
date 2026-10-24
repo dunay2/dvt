@@ -169,11 +169,8 @@ describe('useCanvasController core', () => {
       })
     );
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
-    expect(result?.transformationValidation).toEqual(
-      expect.objectContaining({
-        valid: false,
-        summaryCode: 'requires_executable_path',
-      })
+    expect(result?.transformationValidation).toBe(
+      harness.state.executionActionsResult.transformationValidation
     );
     expect(result?.registeredPlugins?.has('dbt')).toBe(true);
     expect(result?.registeredPlugins?.has('monitoring')).toBe(true);
