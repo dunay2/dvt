@@ -1,5 +1,10 @@
 /** Owned concern: prove contextual Canvas Code exposes workflow project files without an Artifacts route. */
-import { PublishGraphDbtWorkspaceArtifactsRequestSchema } from '@dvt/contracts';
+import {
+  PublishGraphDbtWorkspaceArtifactsRequestSchema,
+  CompileGraphDbtModelsRequestSchema,
+  GraphDbtModelCompilationResultSchema,
+  parsePlanPreviewRejectedOutcome,
+} from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { FileContent, WorkspaceFileEntry } from '../../../src/app/ports/workspace';
@@ -56,6 +61,8 @@ const WORKFLOW_PROJECT_FILE_TREE = [
   },
 ];
 
+const PREVIEW_REJECTION_REASON = 'Selected dependency is unavailable in this workspace.';
+
 function stubProjectCodeBootstrap(scopes: string[]): void {
   stubShellBootstrapApis({
     scopes,
@@ -98,7 +105,7 @@ function stubContextualProjectCodeApis(): void {
   }));
 }
 
-function stubFailedCompilationPublicationApis(): void {
+function stubProjectPublicationApis(compilation: 'invalid' | 'compiled'): void {
   stubProjectCodeBootstrap([
     'workspace:files:view',
     'workspace:graph-draft:view',
@@ -174,13 +181,63 @@ function stubFailedCompilationPublicationApis(): void {
       },
     };
   });
-  stubE2eJsonApi('POST', '/workspace/dbt/graph-artifacts/compiled-models', {
-    schemaVersion: 'graph-dbt-model-compilation.v1',
-    kind: 'invalid',
-    canvasId: 'main-canvas',
-    diagnostics: [{ code: 'dbt_compile_failed', message: 'Unsafe compiler detail' }],
+  stubE2eApi('POST', '/workspace/dbt/graph-artifacts/compiled-models', ({ body }) => {
+    const request = CompileGraphDbtModelsRequestSchema.parse(body);
+    return {
+      body: GraphDbtModelCompilationResultSchema.parse(
+        compilation === 'invalid'
+          ? {
+              schemaVersion: 'graph-dbt-model-compilation.v1',
+              kind: 'invalid',
+              canvasId: request.canvasId,
+              diagnostics: [{ code: 'dbt_compile_failed', message: 'Unsafe compiler detail' }],
+            }
+          : {
+              schemaVersion: 'graph-dbt-model-compilation.v1',
+              kind: 'compiled',
+              canvasId: request.canvasId,
+              authorityBinding: {
+                schemaVersion: 'canvas-authoring-authority-binding.v1',
+                canvasId: request.canvasId,
+                authority: { kind: 'graph-draft' },
+              },
+              projectRevision: {
+                projectRoot: '.',
+                projectName: 'analytics',
+                contentSetSha256: 'a'.repeat(64),
+                analyzedAt: '2026-10-24T00:00:00.000Z',
+                analyzerVersion: 'dvt-dbt-analyzer.v1',
+                dbtVersion: '1.10.0',
+              },
+              analysisSha256: 'b'.repeat(64),
+              models: request.selectors
+                .slice()
+                .sort()
+                .map((selector) => ({
+                  selector,
+                  uniqueId: `model.analytics.${selector}`,
+                  compiledSql: `select * from ${selector}`,
+                })),
+            }
+      ),
+    };
   });
-  for (const path of ['/plans/preview', '/runs/start']) {
+  if (compilation === 'compiled') {
+    const details = parsePlanPreviewRejectedOutcome({
+      contractVersion: '1.0.0',
+      kind: 'selection-rejected',
+      rejection: { code: 'REJECTED', cause: 'dependency_gap', reason: PREVIEW_REJECTION_REASON },
+    });
+    stubE2eJsonApi(
+      'POST',
+      '/plans/preview',
+      { error: { type: 'unprocessable', reason: 'plan_rejected', details } },
+      { statusCode: 422 }
+    );
+  }
+  for (const path of compilation === 'compiled'
+    ? ['/runs/start']
+    : ['/plans/preview', '/runs/start']) {
     stubE2eJsonApi(
       'POST',
       path,
@@ -217,7 +274,7 @@ describe('Contextual project Code workflow files', () => {
   for (const language of ['en', 'es'] as const) {
     it(`refreshes published project files in Code when compilation rejects Preview (${language})`, () => {
       const copy = resolveCanvasViewCopy(language);
-      stubFailedCompilationPublicationApis();
+      stubProjectPublicationApis('invalid');
       visitWithE2eWorkspaceSession('/canvas', {
         onBeforeLoad(window) {
           window.localStorage.setItem(
@@ -256,6 +313,37 @@ describe('Contextual project Code workflow files', () => {
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
       });
       cy.screenshot(`confirmed-files-after-compilation-rejection-${language}`);
+    });
+
+    it(`preserves the actual rejected Preview cause in Operations (${language})`, () => {
+      const reason = PREVIEW_REJECTION_REASON;
+      stubProjectPublicationApis('compiled');
+      visitWithE2eWorkspaceSession('/canvas', {
+        onBeforeLoad(window) {
+          window.localStorage.setItem(
+            APPLICATION_LANGUAGE_STORAGE_KEY,
+            JSON.stringify({ state: { language }, version: 0 })
+          );
+        },
+      });
+      clickPreviewExecutionPlanFromOperationalDrawer();
+      waitForE2eApiCall('/plans/preview', 'POST');
+      cy.get('[data-testid="plan-preview-modal"] [data-slot="dialog-footer"]')
+        .contains('button', resolveCanvasViewCopy(language).planPreviewCloseLabel)
+        .click();
+      cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="problems"]').click();
+      cy.get('[data-slot="bottom-operational-drawer-problems"]')
+        .contains(reason)
+        .should('be.visible');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]').click();
+      cy.get('[data-slot="bottom-operational-drawer-runs"]').contains(reason).should('be.visible');
+      cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+      cy.then(() => {
+        expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(1);
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+      });
+      cy.screenshot(`preserved-preview-diagnostic-${language}`);
     });
   }
 });
