@@ -1,8 +1,8 @@
 /**
  * Owned concern: shared local validation plan definitions and execution helpers.
  * @baseline Local Changed Files Gate: keep every affected check and its execution semantics.
- * @decision Reject static defects after governance admission and before expensive tests.
- * @consequence Fail earlier without changing test selection, isolation or success receipts.
+ * @decision Compose complete test obligations once after governance and static admission.
+ * @consequence Preserve coverage, failure propagation, isolation and success receipts.
  * @version 1.0.0
  */
 const path = require('node:path');
@@ -180,6 +180,13 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/generate-db-surface-inventory.test.cjs',
 });
 
+const PLANNING_TEST_PARENTS = Object.freeze({
+  'scripts/planning-db-query-tests/current-component-files.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-operate-tests/feature-mechanization.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+});
+
 function step(id, command, ...args) {
   return Object.freeze({ id, command, args });
 }
@@ -318,13 +325,82 @@ function planningWorkflowTestSteps(changedFiles) {
       .filter((filePath) => Object.hasOwn(PLANNING_WORKFLOW_SCRIPT_TESTS, filePath))
       .map((filePath) => PLANNING_WORKFLOW_SCRIPT_TESTS[filePath])
   );
-  // These aggregate entrypoints require the shards; standalone routing is for narrow changes.
-  if (tests.has('scripts/planning-db-query.test.cjs'))
-    tests.delete('scripts/planning-db-query-tests/current-component-files.test.cjs');
-  if (tests.has('scripts/planning-db-operate.test.cjs'))
-    tests.delete('scripts/planning-db-operate-tests/feature-mechanization.test.cjs');
   return [...tests].map((testPath) => {
     return testStep(`test-${path.basename(testPath, '.test.cjs')}`, 'node', '--test', testPath);
+  });
+}
+
+function readPlanningTestAggregate(scripts, name) {
+  const tokens = typeof scripts?.[name] === 'string' ? scripts[name].trim().split(/\s+/u) : [];
+  const files = tokens.slice(2);
+  if (
+    tokens[0] !== 'node' ||
+    tokens[1] !== '--test' ||
+    files.length === 0 ||
+    new Set(files).size !== files.length ||
+    files.some(
+      (file) =>
+        !/^(?:[\w@.-]+\/)*[\w@.-]+\.test\.[cm]?js$/u.test(file) ||
+        file.split('/').some((segment) => segment === '.' || segment === '..') ||
+        !fs.existsSync(path.join(repoRoot, file))
+    )
+  ) {
+    throw new Error(
+      `Invalid test aggregate ${name}: expected node --test with unique existing test files`
+    );
+  }
+  return files;
+}
+
+function composePlanningTestCoverage(plan) {
+  const aggregates = VERIFY_CHANGED_GROUPS.planningDb
+    .slice(2)
+    .reverse()
+    .filter((aggregate) => plan.some((entry) => entry.id === aggregate.id));
+  const scripts = aggregates.length
+    ? JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).scripts
+    : undefined;
+  const covered = new Set();
+  const aggregateSteps = new Map();
+  for (const aggregate of aggregates) {
+    const members = readPlanningTestAggregate(scripts, aggregate.args[0]);
+    const remaining = members.filter((file) => !covered.has(file));
+    aggregateSteps.set(
+      aggregate.id,
+      remaining.length === 0
+        ? null
+        : remaining.length === members.length
+          ? aggregate
+          : testStep(aggregate.id, 'node', '--test', ...remaining)
+    );
+    members.forEach((file) => covered.add(file));
+  }
+
+  const directTestFiles = new Map(
+    plan
+      .filter(
+        (entry) =>
+          entry.kind === 'test' &&
+          entry.command === 'node' &&
+          entry.args[0] === '--test' &&
+          entry.args.length > 1 &&
+          entry.args.slice(1).every((arg) => !arg.startsWith('-'))
+      )
+      .map((entry) => [entry.id, entry.args.slice(1)])
+  );
+  const selectedFiles = new Set([...covered, ...[...directTestFiles.values()].flat()]);
+  return plan.flatMap((entry) => {
+    if (aggregateSteps.has(entry.id)) {
+      const aggregate = aggregateSteps.get(entry.id);
+      return aggregate ? [aggregate] : [];
+    }
+    const members = directTestFiles.get(entry.id);
+    if (!members) return [entry];
+    const remaining = members.filter(
+      (file) => !covered.has(file) && !selectedFiles.has(PLANNING_TEST_PARENTS[file])
+    );
+    remaining.forEach((file) => covered.add(file));
+    return remaining.length === 0 ? [] : [{ ...entry, args: ['--test', ...remaining] }];
   });
 }
 
@@ -572,10 +648,7 @@ function buildFocusedChangedTestPlan(files) {
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));
   pushSteps(plan, documentationPublicationTestSteps(changedFiles));
-  const runsCurrentSchemaTestDirectly = directPlanningWorkflowTestSteps.some(
-    (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-schema.test.cjs'
-  );
-  if (hasPlanningDbCurrentSchemaChange(changedFiles) && !runsCurrentSchemaTestDirectly) {
+  if (hasPlanningDbCurrentSchemaChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
@@ -603,7 +676,7 @@ function buildFocusedChangedTestPlan(files) {
     }
   }
 
-  return plan;
+  return composePlanningTestCoverage(plan);
 }
 
 function commandLabel(nextStep) {
