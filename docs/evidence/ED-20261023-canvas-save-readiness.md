@@ -509,3 +509,30 @@ environment values and the absence of timeout or retry overrides.
 
 The complete normal pre-push, exact-head CI and post-merge main acceptance remain
 required. Diagnostic success is not a waiver or a manually generated success stamp.
+
+## Keyboard Test Synchronization Follow-Up
+
+The complete normal pre-push on `4d75d178a` passed documentation, 642 Planning DB
+manifests, changed-file quality and dependency builds. Canvas presentation then
+reported 342 passing cases and one five-second navigation timeout in 56 files.
+The operator interrupted the remaining work after that failure; no complete
+acceptance is claimed. The case passed alone and in an eight-file diagnostic,
+whose worker CPU profile does not establish the timeout's cause.
+
+The neighboring keyboard-menu case exposes a separate, demonstrated test defect:
+Radix defers keyboard focus, but this test waits for that focus outside `act`.
+The DOM test library does not supply a React act wrapper. A fifth End movement
+also activates the last item before proving it received focus. The existing
+`ResolveCanvasContextMenu` query and its product implementation remain unchanged.
+
+The [test-only correction plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6383634195)
+keeps each key/focus completion inside one awaited act, preserves every keyboard
+destination and callback assertion, and observes React warnings through a
+call-through spy. The unchanged keyboard case first failed with 48 warnings
+against zero expected. After correcting synchronization, that case and all
+19 cases in its existing file pass with zero warnings. The spy retains console
+output and is restored even if an assertion fails. The eight neighboring files
+then pass all 86 cases under the canonical configuration, without profiling or
+warnings. No retries, deadlines, product behavior or worker configuration change.
+This does not establish that the other timeout is resolved. Exact commands and
+final acceptance remain in issue #3115.
