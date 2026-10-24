@@ -42,7 +42,9 @@ flowchart TD
   Commands --> Ports[Existing execution ports]
   Save --> Repository[Draft repository]
   Policy[API publication policy] --> Vocabulary[Contract rejection vocabulary]
-  Readiness --> Translation[Passive diagnostic translation]
+  Route --> Presentation[Readiness presentation]
+  Presentation --> Readiness
+  Presentation --> Translation[Passive diagnostic translation]
   Translation --> Vocabulary
 ```
 
@@ -267,17 +269,60 @@ it does not require plan import or session subscription capabilities.
 ### Readiness Evaluation And Presentation
 
 `ObservePlanRunReadiness` evaluates identity and blockers without an application
-language or copy lookup. Its evaluation contains typed Preview state and blocker
-facts. `deriveCanvasExecutionState` owns graph/staleness decisions and forced
-blockers; original projection and Preview diagnostics remain evidence rather than
-authorization input.
+language or copy lookup. It owns one persisted-record/identity evaluation and
+returns either an admitted plan/PlanRef target or blocked reasons without a
+target. Actual permission, draft barriers, execution capability and current
+Preview/graph evidence are its inputs. Future-only backpressure and degraded
+adapter slots are not current readiness facts and must not be exposed without a
+real governed producer.
+
+Current blockers are `plan_integrity`, `capability_mismatch`,
+`authorization_denied`, `draft_saving` and `draft_unavailable`. The first reason
+from current admission/capability takes precedence; cause-specific graph and
+Preview evidence remains available for each affected problem row.
+
+`evaluateCanvasExecutionGraph` resolves the existing strategy fallback and graph
+projection once for the exact graph, selection and workspace identity. The React
+boundary memoizes those graph facts; plan, language and modal changes do not
+recompute them. Both graph-authoritative and file-authoritative presentation use
+the same transformation validation result. Preview reevaluates after draft flush
+because it may receive a genuinely changed authoritative snapshot.
+
+`deriveCanvasExecutionState` associates current Preview evidence with that graph
+identity and delegates readiness to the shared policy. `StartRun` reevaluates the
+current readiness query when invoked and consumes only its admitted target. It
+does not trust a cached toolbar boolean or choose messages/modal recovery. The
+existing protected backend continues to validate scope and authorization.
 
 `canvasReadinessPresentation` maps those facts to the existing readiness consumer
-DTO, shared blocker labels/messages and localized diagnostics. The hook composes
-both stages explicitly. The presenter cannot change Preview/Run decisions or
-mutate the evaluation. Dependency-cruiser forbids the two evaluation modules from
-importing presentation, copy or locale dependencies, including type-only imports;
-the presenter also remains separated from commands and transport implementations.
+DTO, shared blocker labels/messages, localized diagnostics and typed Run
+rejections. Projection failures have named causes; original lower-level
+diagnostic strings remain unparsed evidence. The hook composes policy and
+presentation explicitly. The presenter cannot change Preview/Run decisions or
+mutate the evaluation. Dependency-cruiser forbids the graph, projection and
+evaluation modules from importing presentation, copy or locale dependencies,
+including type-only imports; the Run command also remains separate from copy and
+presentation. The presenter remains separated from commands and transports.
+
+The operational registrar preserves the complete readiness DTO, including
+diagnostic, and observes semantic diagnostic changes in its memoization keys.
+Consumers use `planRunReadiness.summary` as the single summary source. The
+standalone readiness panel has no product consumer and is retired together with
+its test, source bindings and obsolete documentary claims.
+
+```mermaid
+flowchart LR
+  Inputs[Graph / selection / workspace] --> Graph[One graph evaluation]
+  Graph --> Policy[ObservePlanRunReadiness]
+  Current[Current admission / plan / Preview] --> Policy
+  Policy --> Target[Admitted target or typed blocked reasons]
+  Target --> Presentation[Readiness presentation]
+  Presentation --> Drawer[Complete diagnostic-preserving Operations DTO]
+  Run[Run intent] --> Reevaluate[Reevaluate current readiness]
+  Graph --> Reevaluate
+  Current --> Reevaluate
+  Reevaluate --> Command[Submit admitted target through StartRun]
+```
 
 ## Transitions
 

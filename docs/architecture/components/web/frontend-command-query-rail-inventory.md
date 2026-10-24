@@ -425,16 +425,19 @@ credentials, or define backend template contracts.
 - Type: query.
 - Status: `implemented-local`.
 - Owner: `PlanRunReadinessReadModel`.
-- Frontend surfaces: `observePlanRunReadiness`, `deriveCanvasExecutionState`,
-  `PlanRunReadinessPanel`, Canvas toolbar posture, and the bottom operational
-  drawer.
+- Frontend surfaces: `evaluateCanvasExecutionGraph`, `observePlanRunReadiness`,
+  `deriveCanvasExecutionState`, Canvas availability, and the bottom operational
+  drawer registrar. The canonical component guide is
+  [Canvas Authoring Draft Boundary](./graph/canvas-authoring-draft-boundary-component.md#readiness-evaluation-and-presentation).
 - Inputs: persisted preview identity, exact `PlanRef`, current graph signature,
-  execution strategy, authorization, adapter/capability posture, backpressure,
+  execution strategy, current authorization and draft/capability posture,
   and the typed Preview outcome.
 - Output: one `ready | blocked` read model with canonical blockers and a
-  source-owned summary. Presentation must not derive a second readiness gate.
+  complete cause-specific diagnostic and one presented summary. The underlying
+  policy returns an admitted target or blocked reasons; StartRun reevaluates it
+  at invocation. Presentation must not derive a second readiness gate.
 - Negative evidence: missing, stale, unpersisted, or mismatched plan identity;
-  unauthorized run; unsupported capability; degraded adapter; backpressure;
+  unauthorized run; pending or unavailable draft; unsupported capability;
   `selection-rejected`; and `plan-invalid`.
 
 ## Run Rails

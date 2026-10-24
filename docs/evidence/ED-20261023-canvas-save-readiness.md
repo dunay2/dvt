@@ -43,7 +43,7 @@ snapshot acknowledgement, CAS and recovery guards remain active.
 
 Runtime policy owns a discriminated Run admission value. Draft persistence
 supplies its barrier without interpreting Run permission. Readiness owns each
-blocker's message and label, shared by the panel and operational drawer. The old
+blocker's message and label, used by the operational drawer. The old
 unused global unavailable summary and duplicated label map are removed.
 The same typed cause reaches the Run application command; direct invocations
 cannot misreport a pending save or unavailable capability as permission denial.
@@ -244,15 +244,16 @@ the unrelated Run bindings. Tooling separation remains a subsequent cut.
 
 The [readiness design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6377354513)
 keeps `ObservePlanRunReadiness` responsible for typed Preview states, blocker
-ordering and admission facts. `deriveCanvasExecutionState` retains graph and
-Preview identity, staleness and Run decisions. Neither reads the application
-language or formats messages. Original upstream projection diagnostics remain
-opaque evidence; this cut does not rewrite those producers.
+ordering, exact persisted proof and the admitted Run target.
+`deriveCanvasExecutionState` binds Preview lifetime and provenance to the shared
+graph evaluation, then delegates admission to that query. Neither reads the
+application language or formats messages. Original upstream projection
+diagnostics remain opaque evidence.
 
 One `canvasReadinessPresentation` module maps these facts into the existing
 consumer read model. It owns shared labels, Preview messages, DVT cause
-translation and graph-summary formatting. The hook composes both boundaries;
-the panel, drawer and Run error adapter reuse the same message helpers without
+translation and graph-failure formatting. The hook composes both boundaries;
+the drawer and Run error adapter reuse the same message helpers without
 compatibility re-exports or a parallel query. The presenter cannot grant Run or
 change the evaluated blockers. Existing message priority and raw rejection
 evidence remain intact.
@@ -269,4 +270,38 @@ direction. Exact commands and results are recorded in #3115.
 `SYS-WEB-CANVAS-READINESS` remains the owner. Scoped revision and binding
 operations associate the new module and moved functions with the existing
 readiness-copy responsibility, distinct from drawer rendering. Unrelated
-runtime, posture, panel and Preview command ownership is preserved.
+runtime, posture and Preview command ownership is preserved.
+
+## Current Readiness Coherence And Retirement
+
+The [coherence design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6378435979)
+closes the six follow-up findings in the same product cut. One evaluation owns
+strategy selection and executable graph projection for the exact graph,
+selection, strategy and tenant/project/environment. The React composition
+reuses that result across presentation, current plan and permission changes;
+changed graph inputs or environment invalidate it. Controller and file-backed
+surfaces forward its transformation validation instead of computing another.
+
+The actual Run command reevaluates the same readiness query at invocation.
+Only its ready branch carries the exact persisted target; rejection cannot
+reach the Run port. A regression first demonstrated submission after a rejected
+Preview. Typed Run receipts now leave localization and modal recovery to the UI
+adapter. Graph projections return stable causes or original diagnostic evidence.
+
+The Operations registrar retains the complete bounded read model, including
+cause-specific diagnostics. Equivalent data preserves registration identity;
+a changed diagnostic replaces it even when the summary is unchanged. The
+controlled HTTP browser proof closes the Preview modal through its visible
+button, checks the actual reason in Problems and Runs in EN/ES, and verifies
+Run remains disabled with zero submissions. All five cases of that spec pass.
+This remains frontend acceptance with contract-validated HTTP responses.
+
+The unused standalone readiness panel, its dedicated test and obsolete component
+guide are removed. The previous strategy resolver is replaced by the shared
+evaluation. The summary alias, repeated persistence-proof helpers and blocker
+slots without a producer are retired with their consumers, copy and ownership.
+The dependency guard covers projection and graph evaluation imports and prevents
+the Run application command from importing presentation, including type imports.
+No compatibility facade or legacy execution path is retained. Exact scoped
+validation, failures encountered and final committed identities are recorded in
+#3115; no complete pre-push result or new global alpha acceptance is implied.
