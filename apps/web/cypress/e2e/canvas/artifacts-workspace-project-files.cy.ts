@@ -273,6 +273,7 @@ describe('Contextual project Code workflow files', () => {
 
   for (const language of ['en', 'es'] as const) {
     it(`refreshes published project files in Code when compilation rejects Preview (${language})`, () => {
+      cy.viewport(1000, 660);
       const copy = resolveCanvasViewCopy(language);
       stubProjectPublicationApis('invalid');
       visitWithE2eWorkspaceSession('/canvas', {
@@ -302,6 +303,22 @@ describe('Contextual project Code workflow files', () => {
       cy.contains(copy.planStatusPreviewRequiredMessage).should('be.visible');
       cy.get('[data-workspace-path="models/orders_model.sql"]').should('be.visible').click();
       waitForE2eApiCall('/workspace/files/models%2Forders_model.sql', 'GET');
+      for (const [width, height] of [
+        [1440, 900],
+        [1000, 660],
+      ] as const) {
+        cy.viewport(width, height);
+        cy.get(
+          '[data-slot="canvas-contextual-workbench"] [data-slot="route-workbench-body"]'
+        ).should(($body) => {
+          const body = $body[0]!;
+          const slots = body.querySelector('[data-slot="route-workbench-slot-stack"]')!;
+          expect(
+            slots.getBoundingClientRect().width,
+            'shared slots fill the allocated body'
+          ).to.be.closeTo(body.clientWidth, 1);
+        });
+      }
       cy.get('[data-slot="workspace-file-code-editor"][data-file-path="models/orders_model.sql"]')
         .find('[data-testid="monaco-code-viewer"] .view-lines')
         .invoke('text')

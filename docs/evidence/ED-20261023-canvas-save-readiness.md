@@ -588,3 +588,23 @@ The existing command record is amended with revision checking; no product rail,
 component or feature manifest is added. No focus override, retry, wait, deadline,
 coverage or hook exception is introduced. Exact focused, browser and complete
 acceptance results remain recorded in #3115.
+
+## Shared Workbench Width
+
+The complete normal pre-push and push on `1bfce6643` pass. Remote controlled
+browser acceptance subsequently fails two Code cases and one Name-edit case;
+the Test Suite aggregate consequently fails. These results do not authorize merge.
+
+The [bounded layout plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6386761990)
+reuses `RouteWorkbenchFrameSlotProjection` and its existing shared slot owner.
+Both Code language cases first fail a real geometry assertion: the slot stack
+occupies 427.609375 pixels of a 607-pixel body. Its flex-row parent does not give
+the stack a width or growth policy. Adding `w-full` at that shared owner fills
+the allocation without changing consumers, queries or Monaco semantics.
+
+The same cases then pass at 1000 by 660 and 1440 by 900, retaining visible SQL,
+exact published content and the prohibition on Preview/Run after compilation
+rejection. Together with the existing route-slot journeys, seven browser cases
+pass. The separate Name-edit case passes during passive diagnosis; its precise
+CI failure is not reproduced. Temporary tracing is removed. Full normal pre-push,
+exact-head CI and resulting main acceptance remain required.
