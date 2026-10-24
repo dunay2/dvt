@@ -279,8 +279,10 @@ closes the six follow-up findings in the same product cut. One evaluation owns
 strategy selection and executable graph projection for the exact graph,
 selection, strategy and tenant/project/environment. The React composition
 reuses that result across presentation, current plan and permission changes;
-changed graph inputs or environment invalidate it. Controller and file-backed
-surfaces forward its transformation validation instead of computing another.
+changed graph inputs or environment invalidate it. Execution eligibility comes
+from the authoritative projection. The unused structural validation result,
+its five implementation files, two dedicated tests, formatter, copy and DTO
+pass-throughs are retired. An unavailable projection has no usable signature.
 
 The actual Run command reevaluates the same readiness query at invocation.
 Only its ready branch carries the exact persisted target; rejection cannot
@@ -305,3 +307,40 @@ the Run application command from importing presentation, including type imports.
 No compatibility facade or legacy execution path is retained. Exact scoped
 validation, failures encountered and final committed identities are recorded in
 #3115; no complete pre-push result or new global alpha acceptance is implied.
+
+## Exact Artifact Identity And Single Validation Owners
+
+The [refinement plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6379164214)
+and [artifact identity amendment](https://github.com/dunay2/dvt/issues/3115#issuecomment-6379235481)
+precede the corresponding implementation. A regression changes a source table
+without changing its graph reference: the generated SQL and schema YAML change,
+so an earlier Preview must become stale. The existing generic projection derives
+its signature from the actual generated artifacts and passes those same artifacts
+to Preview publication. File-backed execution keeps its independent file revision
+and provenance authority. The command reevaluates after its authoritative draft
+flush; no renderer, signature algorithm or compatibility validator is duplicated.
+
+The changed-files test planner composes effective obligations from existing
+package command definitions. Schema changes include both the schema and policy
+tests. An aggregate absorbs only tests that it actually contains; unrelated and
+filtered obligations remain. Unsupported aggregate syntax fails closed. Existing
+failure propagation, environment isolation and success receipts are unchanged.
+`SYS-CI-CHANGED-SLICE-VERIFICATION` owns the existing planner/executor file and
+its test. Its two atomic responsibilities distinguish plan construction from
+process execution; seven implemented function bindings and the existing test
+contracts provide current evidence. The parent scope remains intact and no
+parallel rail or command catalog is introduced.
+
+On a main push, the dedicated mandatory Test Suite lane owns Engine coverage.
+Full CI executes its existing docs and code baseline. Manual Code Quality
+dispatch and local full validation retain coverage because they do not start
+that dedicated workflow. No coverage threshold, required result, hook or merge
+check is removed. The measured earlier main run repeated 75 files and 543 tests
+in 28.27 seconds; the saving is projected until the changed workflow runs.
+
+Planning DB removes duplicate physical ownership of two test files while
+preserving their use as evidence by multiple components. The obsolete structural
+validation rail and current evidence references to retired source/test files are
+removed through guarded canonical operations. Git retains the historical files;
+no legacy implementation or parallel catalog is kept. Exact RED/GREEN results,
+committed boundaries and remaining validation limits are recorded in #3115.

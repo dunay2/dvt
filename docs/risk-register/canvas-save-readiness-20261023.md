@@ -29,6 +29,10 @@ arc_level: ARC-2
 | Run command and visible availability disagree after Preview rejection       | One shared readiness query owns the exact admitted target and is reevaluated when Run is invoked    | Actual command rejection regression and controlled EN/ES Operations flow         |
 | Operations registration drops diagnostic evidence                           | Register the complete bounded read model with stable semantic identity                              | Real registrar regression for equivalent data and changed diagnostic             |
 | Presentation changes repeat graph work or stale graph work is reused        | Memoize the shared graph evaluation by graph, selection, strategy and execution scope inputs        | Language/modal/plan/admission reuse and graph/selection/environment invalidation |
+| Source metadata changes generated artifacts but leaves Preview valid        | Bind the existing generic signature to the exact artifacts published by its projection              | Source table, schema, column and materialization regressions and stale Run guard |
+| Removing an unused validator admits an unusable projection                  | Actual protected/dbt projection retains admission; unavailable projection has no usable signature   | Invalid graph, artifact failure, missing Canvas authority and recovery cases     |
+| Test deduplication silently removes required obligations                    | Derive aggregate membership from canonical commands and reject unsupported syntax                   | Schema-only, policy-only, mixed, filtered and malformed-command cases            |
+| Hosted coverage deduplication leaves a workflow without coverage            | Main uses the mandatory dedicated lane; manual/local full commands retain coverage                  | Parsed event matrix, unchanged package alias and missing/failed outcome tests    |
 
 Compact Inspector typography uses the existing body scale through shared tokens.
 Rendered acceptance checks form controls and read-only facts against the General

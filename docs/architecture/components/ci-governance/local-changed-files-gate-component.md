@@ -152,6 +152,24 @@ sequenceDiagram
 
 ## Consumers
 
+### Changed-slice component ownership
+
+`SYS-CI-CHANGED-SLICE-VERIFICATION` owns exactly
+`scripts/local-validation-plan.cjs` and `scripts/verify-changed.test.cjs` beneath
+the existing CI governance root. Descendant ownership takes precedence over the
+ancestor glob. The component separates plan composition
+(`BuildChangedSliceVerificationPlan`) from process execution
+(`RunChangedSliceVerification`): the query derives complete, ordered validation
+obligations; the command executes the supplied plan with test-environment
+isolation and failure propagation. Their atomic responsibilities and current
+function-to-test associations live in Planning DB.
+
+The existing prepush tests remain evidence for prepush planning without moving
+their file ownership. The component guards component-source associations by
+selecting their existing contract tests when the associated inputs change;
+it does not own the DB writer or the association policy. The required-test and
+guard relation records describe these existing behaviors.
+
 ### Changed-slice execution order
 
 ```mermaid
