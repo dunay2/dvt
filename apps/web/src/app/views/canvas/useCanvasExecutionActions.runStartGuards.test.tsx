@@ -9,7 +9,8 @@ import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutio
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
 import { executeCanvasRunStartAction } from './canvasRunStartAction';
-import * as graphValidation from './transformationGraphValidation';
+import * as executionGraph from './canvasExecutionGraph';
+
 import { observePlanRunReadiness } from './canvasPlanReadiness';
 import { presentCanvasRunStartFailure } from './canvasReadinessPresentation';
 import {
@@ -188,14 +189,7 @@ describe('useCanvasExecutionActions run start guards', () => {
       plansService,
       runsService,
       stateful: true,
-      canonicalNodes: buildCanonicalNodes().map((node) =>
-        node.role === 'input'
-          ? {
-              ...node,
-              metadata: { ...node.metadata, columns: [{ name: 'order_id', type: 'integer' }] },
-            }
-          : node
-      ),
+      canonicalNodes: buildCanonicalNodes(),
     });
     await harness.render();
     await harness.clickPlan();
@@ -207,7 +201,7 @@ describe('useCanvasExecutionActions run start guards', () => {
   });
 
   it('reuses graph analysis for presentation and admission, invalidating changed graph inputs and scope', async () => {
-    const validate = vi.spyOn(graphValidation, 'validateTransformationGraph');
+    const evaluateGraph = vi.spyOn(executionGraph, 'evaluateCanvasExecutionGraph');
     try {
       const nodes = buildCanonicalNodes();
       harness = renderExecutionActionsHarness({
@@ -219,28 +213,28 @@ describe('useCanvasExecutionActions run start guards', () => {
         workspaceNodeIds: nodes.map((node) => node.id),
       });
       await harness.render();
-      expect(validate).toHaveBeenCalledTimes(1);
+      expect(evaluateGraph).toHaveBeenCalledTimes(1);
       await harness.openPlanModal();
       await act(async () =>
         useApplicationLanguageStore.getState().configureApplicationLanguage('es')
       );
       await harness.rerender({ currentPlan: buildPersistedPreviewPlan(), canRun: false });
-      expect(validate).toHaveBeenCalledTimes(1);
+      expect(evaluateGraph).toHaveBeenCalledTimes(1);
       expect(harness.text('can-start-run')).toBe('false');
       await harness.rerender({ canonicalNodes: [...buildCanonicalNodes()] });
-      expect(validate).toHaveBeenCalledTimes(2);
+      expect(evaluateGraph).toHaveBeenCalledTimes(2);
       await harness.rerender({
         selectionIntent: createCanvasExecutionSelectionIntent(['model-node']),
       });
-      expect(validate).toHaveBeenCalledTimes(3);
+      expect(evaluateGraph).toHaveBeenCalledTimes(3);
       await harness.rerender({ executionEnvironmentId: 'production' });
-      expect(validate).toHaveBeenCalledTimes(4);
+      expect(evaluateGraph).toHaveBeenCalledTimes(4);
       await harness.rerender({ canonicalEdges: [...buildCanonicalEdges()] });
-      expect(validate).toHaveBeenCalledTimes(5);
+      expect(evaluateGraph).toHaveBeenCalledTimes(5);
       await harness.rerender({ workspaceNodeIds: ['model-node'] });
-      expect(validate).toHaveBeenCalledTimes(6);
+      expect(evaluateGraph).toHaveBeenCalledTimes(6);
     } finally {
-      validate.mockRestore();
+      evaluateGraph.mockRestore();
     }
   });
   it.each([

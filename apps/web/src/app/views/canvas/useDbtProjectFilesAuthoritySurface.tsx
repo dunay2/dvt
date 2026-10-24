@@ -288,7 +288,6 @@ export function useDbtProjectFilesAuthoritySurface({
       canUseCostOverlay: false,
       impactOverlayEnabled: controller.presentation.impactOverlayEnabled,
       columnLevelLineageEnabled: controller.presentation.columnLevelLineageEnabled,
-      transformationValidation: controller.transformationValidation,
     },
     graphCommands: controller.graphCommands,
     chromeCommands: controller.chromeCommands,

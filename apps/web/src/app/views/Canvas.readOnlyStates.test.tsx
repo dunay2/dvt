@@ -75,14 +75,6 @@ describe('Canvas route access states', () => {
         recoveryReason: null,
         draftSaveStatus: 'idle',
       }),
-      transformationValidation: {
-        valid: true,
-        summaryCode: 'valid',
-        draftSignature: 'draft',
-        scopedNodeIds: [],
-        scopedEdgeIds: [],
-        nodeRolesById: {},
-      },
     });
     const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
 

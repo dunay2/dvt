@@ -12,7 +12,6 @@ import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrat
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRunReadinessReadModel, PlanRunReadinessEvaluation } from './canvasPlanReadiness';
-import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type CanvasExecutionDraftGraph =
@@ -60,7 +59,6 @@ export type UseCanvasExecutionActionsResult = {
   canStartRun: boolean;
   isCurrentPlanStale: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
-  transformationValidation: TransformationGraphValidationResult;
   latestPreviewOutcome: PlanPreviewOutcome | null;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;

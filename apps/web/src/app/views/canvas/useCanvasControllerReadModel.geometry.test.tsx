@@ -10,12 +10,9 @@ import {
   renderReadModel,
 } from './useCanvasControllerReadModel.test-support';
 import { afterEach } from 'vitest';
-import * as validation from './transformationGraphValidation';
+
 import * as lineage from './canvasColumnLineageProjection';
-const semanticProjectionCounters = {
-  transformationValidation: vi.spyOn(validation, 'validateTransformationGraph'),
-  columnLineage: vi.spyOn(lineage, 'projectCanvasColumnLineage'),
-};
+const columnLineageProjection = vi.spyOn(lineage, 'projectCanvasColumnLineage');
 afterEach(() => vi.clearAllMocks());
 
 describe('Canvas read model geometry', () => {
@@ -59,10 +56,8 @@ describe('Canvas read model geometry', () => {
     try {
       const before = mounted.readState()?.nodesWithImpact;
       expect(before).toHaveLength(30);
-      expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(0);
-      expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(1);
-      semanticProjectionCounters.transformationValidation.mockClear();
-      semanticProjectionCounters.columnLineage.mockClear();
+      expect(columnLineageProjection).toHaveBeenCalledTimes(1);
+      columnLineageProjection.mockClear();
 
       const movedSourceNode = {
         ...graphNodes[0]!,
@@ -88,8 +83,7 @@ describe('Canvas read model geometry', () => {
         expect(after?.[index]?.data).toBe(before?.[index]?.data);
       }
 
-      expect(semanticProjectionCounters.transformationValidation).toHaveBeenCalledTimes(0);
-      expect(semanticProjectionCounters.columnLineage).toHaveBeenCalledTimes(0);
+      expect(columnLineageProjection).toHaveBeenCalledTimes(0);
 
       const retainedData = after?.[12]?.data as ReadModelNodeData;
       (retainedData.onInspectNode as (nodeId: string) => void)(canonicalNodes[12]!.id);

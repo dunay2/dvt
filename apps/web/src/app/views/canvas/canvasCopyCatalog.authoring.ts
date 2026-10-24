@@ -127,51 +127,6 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.node.dropPayloadInvalidMessage',
     fallback: 'The dropped node could not be read. The canvas was not changed.',
   },
-  transformationConnectionOrderMessage: {
-    key: 'canvas.transformation.connectionOrderMessage',
-    fallback:
-      'The selected dependencies are connected in an order unsupported by Execution Preview. Reconnect them to the currently evaluable terminal result.',
-  },
-  transformationConnectionEdgeCountMessage: {
-    key: 'canvas.transformation.connectionEdgeCountMessage',
-    fallback:
-      'The selected dependencies include a missing or extra dependency for the terminal result supported by Execution Preview. Add or remove the affected dependency.',
-  },
-  transformationConnectionDuplicateMessage: {
-    key: 'canvas.transformation.connectionDuplicateMessage',
-    fallback: 'Dependency already exists in this transformation draft.',
-  },
-  transformationRequiresThreeNodesMessage: {
-    key: 'canvas.transformation.requiresThreeNodesMessage',
-    fallback: 'The selection does not contain a terminal result supported by Execution Preview.',
-  },
-  transformationAmbiguousExecutablePathMessage: {
-    key: 'canvas.transformation.ambiguousExecutablePathMessage',
-    fallback: 'Execution Preview found multiple terminal result paths. Select one.',
-  },
-  transformationRequiresExecutablePathMessage: {
-    key: 'canvas.transformation.requiresExecutablePathMessage',
-    fallback:
-      'The current draft has no terminal result supported by Execution Preview. Complete or select a currently evaluable path.',
-  },
-  transformationRequiresPostgresConnectionMessage: {
-    key: 'canvas.transformation.requiresPostgresConnectionMessage',
-    fallback: 'Select a governed PostgreSQL connection on the source before previewing.',
-  },
-  transformationUnsupportedRolesMessage: {
-    key: 'canvas.transformation.unsupportedRolesMessage',
-    fallback:
-      'Execution Preview supports only input, transform, and output nodes in this vertical.',
-  },
-  transformationRequiresOneOfEachRoleMessage: {
-    key: 'canvas.transformation.requiresOneOfEachRoleMessage',
-    fallback:
-      'The selected node combination does not form a terminal result supported by Execution Preview.',
-  },
-  transformationDraftValidMessage: {
-    key: 'canvas.transformation.validMessage',
-    fallback: 'Transformation draft is valid for preview.',
-  },
   connectionSelfNotAllowedMessage: {
     key: 'canvas.connection.selfNotAllowedMessage',
     fallback: 'Self-connections are not allowed.',

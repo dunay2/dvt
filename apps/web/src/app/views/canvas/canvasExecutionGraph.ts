@@ -4,10 +4,6 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
-import {
-  validateTransformationGraph,
-  type TransformationGraphValidationResult,
-} from './transformationGraphValidation';
 import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAuthoringModel';
 import type { CanvasExecutableGraphFailure } from './canvasPlanReadiness';
 
@@ -29,23 +25,16 @@ export type CanvasExecutionGraphArgs = Readonly<{
 
 export type CanvasExecutionGraphEvaluation = Readonly<{
   executionStrategy: CanvasExecutionStrategy | null;
-  transformationValidation: TransformationGraphValidationResult;
   executionAvailable: boolean;
   canPlanGraph: boolean;
   failure: CanvasExecutableGraphFailure | null;
-  draftSignature: string;
+  draftSignature: string | null;
   selectedNodeIds: readonly string[];
 }>;
 
 export function evaluateCanvasExecutionGraph(
   args: CanvasExecutionGraphArgs
 ): CanvasExecutionGraphEvaluation {
-  const transformationValidation = validateTransformationGraph({
-    nodes: args.canonicalNodes,
-    edges: args.canonicalEdges,
-    selectedNodeIds: args.selectionIntent.nodeIds,
-    workspaceNodeIds: args.workspaceNodeIds,
-  });
   const registered = args.registeredStrategy;
   const protectedProjection =
     registered?.kind === 'dvt_protected_preview'
@@ -93,12 +82,10 @@ export function evaluateCanvasExecutionGraph(
       : null;
   return {
     executionStrategy,
-    transformationValidation,
     executionAvailable,
     canPlanGraph,
     failure,
-    draftSignature:
-      projection?.ok === true ? projection.draftSignature : transformationValidation.draftSignature,
+    draftSignature: canPlanGraph && projection?.ok === true ? projection.draftSignature : null,
     selectedNodeIds: projection?.ok === true ? projection.selection.nodeIds : [],
   };
 }

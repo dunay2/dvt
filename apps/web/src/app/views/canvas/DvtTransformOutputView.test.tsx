@@ -61,7 +61,9 @@ describe('Canonical code inspection query lifecycle', () => {
   }
 
   function select(value: 'substrait' | 'postgres-sql'): void {
-    act(() => fireEvent.change(container.querySelector('select')!, { target: { value } }));
+    act(() => {
+      fireEvent.change(container.querySelector('select')!, { target: { value } });
+    });
   }
 
   beforeEach(() => {

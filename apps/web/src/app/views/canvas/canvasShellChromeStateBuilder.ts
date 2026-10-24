@@ -21,6 +21,5 @@ export function buildCanvasShellChromeState({
     canUseCostOverlay: chromeStateSource.canUseCostOverlay,
     impactOverlayEnabled: chromeStateSource.impactOverlayEnabled,
     columnLevelLineageEnabled: chromeStateSource.columnLevelLineageEnabled,
-    transformationValidation: chromeStateSource.transformationValidation,
   };
 }

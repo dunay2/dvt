@@ -231,9 +231,6 @@ export type CanvasViewCopy = {
   readonly nodeAlreadyOnCanvasMessage: string;
   readonly nodeKindUnavailableForCanvasMessage: string;
   readonly nodeDropPayloadInvalidMessage: string;
-  readonly transformationConnectionOrderMessage: string;
-  readonly transformationConnectionEdgeCountMessage: string;
-  readonly transformationConnectionDuplicateMessage: string;
   readonly planPermissionDeniedMessage: string;
   readonly planSqlArtifactRequiredMessage: string;
   readonly planUnableToCreateMessage: string;
@@ -416,13 +413,6 @@ export type CanvasViewCopy = {
   readonly selectionRecoveryDiscardReceiptTemplate: string;
   readonly selectionRecoveryWorkspaceReceiptTemplate: string;
   readonly selectionRecoveryRefreshReceiptTemplate: string;
-  readonly transformationAmbiguousExecutablePathMessage: string;
-  readonly transformationRequiresExecutablePathMessage: string;
-  readonly transformationRequiresPostgresConnectionMessage: string;
-  readonly transformationRequiresThreeNodesMessage: string;
-  readonly transformationUnsupportedRolesMessage: string;
-  readonly transformationRequiresOneOfEachRoleMessage: string;
-  readonly transformationDraftValidMessage: string;
   readonly connectionSelfNotAllowedMessage: string;
   readonly connectionAlreadyExistsMessage: string;
   readonly connectionCycleDetectedMessage: string;

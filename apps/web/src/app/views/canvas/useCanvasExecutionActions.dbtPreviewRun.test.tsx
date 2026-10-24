@@ -14,7 +14,14 @@ import { makePlanRef } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
-function buildDbtNodes(): CanonicalNode[] {
+function buildDbtNodes(
+  overrides: {
+    tableName?: string;
+    schemaName?: string;
+    columnName?: string;
+    materialized?: string;
+  } = {}
+): CanonicalNode[] {
   return [
     {
       id: 'source-orders',
@@ -25,12 +32,12 @@ function buildDbtNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
-        columns: [{ name: 'order_id', type: 'bigint' }],
+        columns: [{ name: overrides.columnName ?? 'order_id', type: 'bigint' }],
         dbt: {
           packageName: 'analytics',
           sourceName: 'raw',
-          schemaName: 'raw',
-          tableName: 'orders',
+          schemaName: overrides.schemaName ?? 'raw',
+          tableName: overrides.tableName ?? 'orders',
         },
       },
     },
@@ -45,7 +52,7 @@ function buildDbtNodes(): CanonicalNode[] {
       metadata: {
         dbt: {
           packageName: 'analytics',
-          materialized: 'table',
+          materialized: overrides.materialized ?? 'table',
           selectedSourceId: 'source-orders',
         },
       },
@@ -109,6 +116,49 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     harness = null;
     restoreExecutionActionsTestDoubles();
   });
+
+  it.each([
+    { changedField: 'table', overrides: { tableName: 'payments' } },
+    { changedField: 'schema', overrides: { schemaName: 'staging' } },
+    { changedField: 'columns', overrides: { columnName: 'customer_id' } },
+    { changedField: 'materialization', overrides: { materialized: 'view' } },
+  ])(
+    'blocks Run after $changedField changes until Preview is recreated for the current artifacts',
+    async ({ overrides }) => {
+      const originalNodes = buildDbtNodes();
+      const plansService = createPlansServiceMock(buildDbtPersistedPlan());
+      const runsService = createRunsServiceMock();
+      harness = renderExecutionActionsHarness({
+        plansService,
+        runsService,
+        initialPlan: null,
+        stateful: true,
+        canonicalNodes: originalNodes,
+        canonicalEdges: buildDbtEdges(),
+        executionStrategy: {
+          kind: 'planner_generic_preview',
+          previewProfile: 'planner-generic-v1',
+          sourceFamily: 'dbt',
+        },
+        selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
+        workspaceNodeIds: ['source-orders', 'model-orders'],
+      });
+      await harness.render();
+      await harness.clickPlan();
+      expect(harness.text('can-start-run')).toBe('true');
+
+      await harness.rerender({ canonicalNodes: buildDbtNodes(overrides) });
+      expect(harness.text('can-start-run')).toBe('false');
+      await harness.clickStartRun();
+      expect(runsService.startRun).not.toHaveBeenCalled();
+
+      await harness.clickPlan();
+      expect(plansService.previewPlan).toHaveBeenCalledTimes(2);
+      expect(harness.text('can-start-run')).toBe('true');
+      await harness.clickStartRun();
+      expect(runsService.startRun).toHaveBeenCalledTimes(1);
+    }
+  );
 
   it('generates dbt files, previews planner-generic-v1, and enables run from persisted PlanRef', async () => {
     const persistedPlan = buildDbtPersistedPlan();

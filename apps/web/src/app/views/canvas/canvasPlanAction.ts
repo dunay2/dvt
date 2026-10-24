@@ -12,7 +12,6 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { resolveCanvasExecutionGraphFailureMessage } from './canvasReadinessPresentation';
-import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
 import { canvasViewCopy, formatCanvasCopyTemplate } from './copy';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -168,20 +167,14 @@ export async function executeCanvasPlanAction({
     if (!plannerProjection.ok) {
       return fail(resolveCanvasExecutionGraphFailureMessage(plannerProjection, canvasViewCopy));
     }
-    const scopedNodeIds = plannerProjection.scopedNodeIds;
-
     if (execution.kind === 'planner_generic_preview') {
       if (graphDraftCanvasId == null) {
         return fail(canvasViewCopy.planGraphAuthorityRefusedMessage);
       }
-      const artifactProjection = buildDbtWorkspaceArtifacts({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        scopedNodeIds,
-      });
-      if (!artifactProjection.ok) {
-        return fail(artifactProjection.message);
+      if (plannerProjection.kind !== execution.kind) {
+        return fail(canvasViewCopy.canvasExecutionUnavailableMessage);
       }
+      const artifactProjection = plannerProjection.workspaceArtifacts;
 
       const publication = await publishGraphDbtWorkspaceArtifacts({
         canvasId: graphDraftCanvasId,

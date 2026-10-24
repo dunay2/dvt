@@ -455,7 +455,6 @@ export function useDbtProjectFilesAuthorityController(
       impactOverlayEnabled,
       columnLevelLineageEnabled,
     },
-    transformationValidation: execution.transformationValidation,
     execution,
     executionSelectionRecovery: executionSelectionRecovery.model,
     currentPlan: store.currentPlan,

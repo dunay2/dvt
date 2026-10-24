@@ -284,9 +284,23 @@ Preview evidence remains available for each affected problem row.
 `evaluateCanvasExecutionGraph` resolves the existing strategy fallback and graph
 projection once for the exact graph, selection and workspace identity. The React
 boundary memoizes those graph facts; plan, language and modal changes do not
-recompute them. Both graph-authoritative and file-authoritative presentation use
-the same transformation validation result. Preview reevaluates after draft flush
+recompute them. The admitted protected or dbt projection owns execution eligibility
+and the successful semantic draft signature. An absent or rejected projection, or
+missing graph authority, has no usable signature (`null`), so a previously
+attempted Preview becomes stale.
+Readiness retains the current projection failure without a second structural
+validator, fallback signature algorithm or unused validation presentation DTO.
+Preview reevaluates after draft flush
 because it may receive a genuinely changed authoritative snapshot.
+
+For a graph-authored dbt Preview, the existing workspace-artifact projection owns
+the content identity: source table/schema, projected columns and materialization
+are included through the exact SQL/YAML artifacts in the existing execution-intent
+signature. The projection returns those same artifacts and model selectors to the
+Preview command; publication does not render them again. Artifact projection
+failure leaves no executable graph identity. File-authoritative dbt Preview passes
+an explicit absent artifact set because its existing revision/provenance owns
+content identity; protected DVT keeps its own projection identity.
 
 `deriveCanvasExecutionState` associates current Preview evidence with that graph
 identity and delegates readiness to the shared policy. `StartRun` reevaluates the

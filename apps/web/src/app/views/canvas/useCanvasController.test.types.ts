@@ -54,7 +54,6 @@ export type CanvasHarnessState = {
     onConnect: MockFn;
   } & Record<string, unknown>;
   executionActionsResult: {
-    transformationValidation: import('./transformationGraphValidation').TransformationGraphValidationResult;
     canStartRun: boolean;
     planRunReadiness: PlanRunReadinessReadModel;
     handlePreviewExecutionPlan: MockFn;

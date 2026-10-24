@@ -290,6 +290,7 @@ export function buildCanonicalNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
+        columns: [{ name: 'order_id', type: 'integer' }],
         dbt: {
           packageName: 'analytics',
           sourceName: 'raw',

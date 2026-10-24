@@ -84,7 +84,6 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
     planRunReadiness: executionActions.planRunReadiness,
     latestPreviewOutcome: executionActions.latestPreviewOutcome,
     isCurrentPlanStale: executionActions.isCurrentPlanStale,
-    transformationValidation: executionActions.transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
     currentPlan: store.currentPlan,

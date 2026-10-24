@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { GraphDbtModelCompilationResultSchema } from '@dvt/contracts';
 
 import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
@@ -11,6 +12,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import { executeCanvasPlanAction, type CanvasPlanExecution } from './canvasPlanAction';
+import * as workspaceArtifacts from './canvasDbtWorkspaceArtifacts';
 
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
@@ -130,6 +132,62 @@ function createGraphDraftPlanActionArgs(divergentSql = false): Parameters<
 }
 
 describe('Canvas graph-draft DBT publication receipts', () => {
+  it('publishes and identifies the same artifacts without rendering them twice', async () => {
+    const artifactProjection = vi.spyOn(workspaceArtifacts, 'buildDbtWorkspaceArtifacts');
+    try {
+      const args = createGraphDraftPlanActionArgs();
+      vi.mocked(args.execution.graphDbtModelCompilationQuery.compile).mockResolvedValue(
+        GraphDbtModelCompilationResultSchema.parse({
+          schemaVersion: 'graph-dbt-model-compilation.v1',
+          kind: 'compiled',
+          canvasId: 'orders-canvas',
+          authorityBinding: {
+            schemaVersion: 'canvas-authoring-authority-binding.v1',
+            canvasId: 'orders-canvas',
+            authority: { kind: 'graph-draft' },
+          },
+          projectRevision: {
+            projectRoot: '.',
+            projectName: 'analytics',
+            contentSetSha256: 'a'.repeat(64),
+            analyzedAt: '2026-08-19T22:00:00.000Z',
+            analyzerVersion: 'dvt-dbt-analyzer.v1',
+            dbtVersion: '1.10.0',
+          },
+          analysisSha256: 'b'.repeat(64),
+          models: [
+            {
+              selector: 'orders',
+              uniqueId: 'model.analytics.orders',
+              compiledSql: 'select order_id from raw.orders',
+            },
+          ],
+        })
+      );
+      const result = await executeCanvasPlanAction(args);
+      expect(result.ok).toBe(true);
+      if (!result.ok) throw new Error(result.message);
+      expect(artifactProjection).toHaveBeenCalledTimes(1);
+      const projected = artifactProjection.mock.results[0]?.value;
+      if (!projected?.ok) throw new Error('Expected admitted workspace artifacts.');
+      const published = vi.mocked(
+        args.execution.graphDbtWorkspaceArtifactPublicationCommand.publish
+      ).mock.calls[0]?.[0];
+      expect(
+        published?.artifacts.map(({ path, content, language }) => ({ path, content, language }))
+      ).toEqual(projected.artifacts);
+      expect(JSON.parse(result.draftSignature)).toMatchObject({
+        workspaceArtifacts: projected.artifacts,
+      });
+      expect(args.execution.graphDbtModelCompilationQuery.compile).toHaveBeenCalledWith({
+        canvasId: 'orders-canvas',
+        selectors: projected.modelSelectors,
+      });
+    } finally {
+      artifactProjection.mockRestore();
+    }
+  });
+
   it('refuses divergent pre-marker model SQL without an adoption path or confirmed writes', async () => {
     const args = createGraphDraftPlanActionArgs(true);
     const result = await executeCanvasPlanAction(args);

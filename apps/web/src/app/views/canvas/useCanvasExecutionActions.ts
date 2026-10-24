@@ -167,7 +167,6 @@ export function useCanvasExecutionActions({
     canStartRun: executionState.planRunReadiness.status === 'ready',
     isCurrentPlanStale,
     planRunReadiness,
-    transformationValidation: graph.transformationValidation,
     latestPreviewOutcome: executionState.isPreviewOutcomeStale ? null : latestPreviewOutcome,
     handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,

@@ -96,7 +96,6 @@ export type CanvasShellChromeStateBuilderArgs = Readonly<{
     | 'canUseCostOverlay'
     | 'impactOverlayEnabled'
     | 'columnLevelLineageEnabled'
-    | 'transformationValidation'
   >;
   routePresentation: Pick<CanvasRouteViewState, 'presentationState'>;
 }>;

@@ -7,6 +7,7 @@ import {
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import type { DbtWorkspaceArtifact } from './canvasDbtWorkspaceArtifacts';
 import { isObjectFilePostgresNode } from './objectFilePostgresAuthoringModel';
 import { isHttpJsonArtifactNode } from './httpJsonArtifactAuthoringModel';
 import {
@@ -109,10 +110,12 @@ export function buildDbtExecutionIntentDraftSignature(args: {
   readonly selection: ExecutionSelection;
   readonly selectionMode: CanvasExecutionSelectionIntent['mode'];
   readonly requestedRootNodeIds: readonly string[];
+  readonly workspaceArtifacts: readonly DbtWorkspaceArtifact[] | null;
 }): string {
   return JSON.stringify({
     graphSource: args.graphSource,
     selection: args.selection,
+    workspaceArtifacts: args.workspaceArtifacts,
     selectionIntent: {
       mode: args.selectionMode,
       requestedRootNodeIds: [...new Set(args.requestedRootNodeIds)].sort(),

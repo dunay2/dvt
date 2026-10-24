@@ -191,14 +191,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       canUseCostOverlay: false,
       impactOverlayEnabled: false,
       columnLevelLineageEnabled: false,
-      transformationValidation: {
-        valid: false,
-        summaryCode: 'requires_three_nodes',
-        draftSignature: 'draft',
-        scopedNodeIds: [],
-        scopedEdgeIds: [],
-        nodeRolesById: {},
-      },
       ...overrides?.chromeState,
     },
     graphCommands: {

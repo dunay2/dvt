@@ -20,7 +20,6 @@ import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
-import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
@@ -120,7 +119,6 @@ export type CanvasShellChromeState = {
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
-  transformationValidation: TransformationGraphValidationResult;
 };
 
 export type CanvasShellGraphCommands = {

@@ -121,7 +121,6 @@ function buildCanvasShellChromeStateArgs({
       canUseCostOverlay: controller.canUseCostOverlay,
       impactOverlayEnabled: controller.impactOverlayEnabled,
       columnLevelLineageEnabled: controller.columnLevelLineageEnabled,
-      transformationValidation: controller.transformationValidation,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,

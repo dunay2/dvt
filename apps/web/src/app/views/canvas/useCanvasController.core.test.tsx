@@ -169,9 +169,7 @@ describe('useCanvasController core', () => {
       })
     );
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
-    expect(result?.transformationValidation).toBe(
-      harness.state.executionActionsResult.transformationValidation
-    );
+    expect(result?.planRunReadiness).toBe(harness.state.executionActionsResult.planRunReadiness);
     expect(result?.registeredPlugins?.has('dbt')).toBe(true);
     expect(result?.registeredPlugins?.has('monitoring')).toBe(true);
     expect(result?.handlePreviewExecutionPlan).toBe(
