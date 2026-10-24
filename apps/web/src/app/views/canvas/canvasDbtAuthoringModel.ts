@@ -1,4 +1,5 @@
 /** Owned concern: derive and apply route-owned dbt export/round-trip metadata. */
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 export type DbtNodeAuthoringMetadata = Readonly<{
@@ -85,19 +86,8 @@ export function isDbtCompatibleModel(node: DbtCompatibilityNode): boolean {
   return node.kind === 'dvt:transform' && hasDbtCompatibilityMetadata(node);
 }
 
-function normalizeIdentifier(value: string | undefined, fallback: string): string {
-  const raw = value?.trim() ?? '';
-  const normalized = raw
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/[^A-Za-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .toLowerCase();
-
-  return normalized.length > 0 ? normalized : fallback;
-}
-
 function normalizeMaterialized(value: string | undefined): string {
-  const normalized = normalizeIdentifier(value, DEFAULT_MATERIALIZATION);
+  const normalized = normalizeDbtIdentifier(value, DEFAULT_MATERIALIZATION);
   return VALID_MATERIALIZATIONS.has(normalized) ? normalized : DEFAULT_MATERIALIZATION;
 }
 
@@ -107,25 +97,25 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
   const sourceName =
     readString(dbtMetadata?.sourceName) ??
     readString(configMetadata?.sourceName) ??
-    normalizeIdentifier(node.name, 'source');
+    normalizeDbtIdentifier(node.name, 'source');
   const tableName =
     readString(configMetadata?.table) ??
     readString(configMetadata?.tableName) ??
     readString(dbtMetadata?.tableName) ??
     readString(configMetadata?.alias) ??
-    normalizeIdentifier(node.name, 'table');
+    normalizeDbtIdentifier(node.name, 'table');
 
   return {
     packageName:
       readString(dbtMetadata?.packageName) ??
       readString(node.metadata?.package) ??
       DEFAULT_PACKAGE_NAME,
-    sourceName: normalizeIdentifier(sourceName, 'source'),
+    sourceName: normalizeDbtIdentifier(sourceName, 'source'),
     schemaName:
       readString(configMetadata?.schema) ??
       readString(dbtMetadata?.schemaName) ??
       DEFAULT_SCHEMA_NAME,
-    tableName: normalizeIdentifier(tableName, 'table'),
+    tableName: normalizeDbtIdentifier(tableName, 'table'),
     materialized: normalizeMaterialized(
       readString(dbtMetadata?.materialized) ?? readString(configMetadata?.materialized)
     ),
@@ -142,7 +132,7 @@ export function applyDbtNodeAuthoringMetadata(
   const existingConfig = readNodeMetadataRecord(node, 'config') ?? {};
   const { sql: _existingSql, ...configWithoutSql } = existingConfig;
   const schemaName = metadata.schemaName.trim() || DEFAULT_SCHEMA_NAME;
-  const tableName = normalizeIdentifier(metadata.tableName, 'table');
+  const tableName = normalizeDbtIdentifier(metadata.tableName, 'table');
   const { sql: _legacyTopLevelSql, ...metadataWithoutLegacyTopLevelSql } = node.metadata ?? {};
 
   return {
@@ -157,7 +147,7 @@ export function applyDbtNodeAuthoringMetadata(
       },
       dbt: {
         packageName: metadata.packageName.trim() || DEFAULT_PACKAGE_NAME,
-        sourceName: normalizeIdentifier(metadata.sourceName, 'source'),
+        sourceName: normalizeDbtIdentifier(metadata.sourceName, 'source'),
         schemaName,
         tableName,
         materialized,

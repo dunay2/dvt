@@ -116,6 +116,32 @@ function edge(sourceId: string): CanonicalEdge {
 }
 
 describe('canvas DBT model artifact projection', () => {
+  it.each([
+    { name: ' OrderItems / v2 ', modelName: 'order_items_v2', originName: 'order_items_v2' },
+    { name: 'Métric 名', modelName: 'm_tric', originName: 'm_tric' },
+    { name: ' ___ !!! ', modelName: 'Model-ID', originName: 'Origin-ID' },
+  ])('keeps model path and ref spelling coherent for $name', ({ name, modelName, originName }) => {
+    const origin = { ...upstreamModel, id: 'Origin-ID', name };
+    const selectedModel = {
+      ...model,
+      id: 'Model-ID',
+      name,
+      metadata: { dbt: { selectedSourceId: origin.id } },
+    };
+    const project = createDbtModelArtifactProjector({
+      nodes: [origin, selectedModel],
+      edges: [{ sourceId: origin.id, targetId: selectedModel.id }],
+    });
+    expect(project({ modelNode: selectedModel })).toMatchObject({
+      ok: true,
+      artifact: {
+        name: modelName,
+        path: `models/${modelName}.sql`,
+        origin: { nodeId: origin.id, sql: `{{ ref('${originName}') }}` },
+      },
+    });
+  });
+
   it('projects the exact object-file staging relation as a DBT source', () => {
     const modelFromObject = {
       ...model,

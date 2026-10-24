@@ -36,6 +36,14 @@ arc_level: ARC-2
 | Projection reuse conceals cycles or leaks results between authoring inputs  | Check ancestry before reuse; cache successes only within one evaluation and isolate overrides and external nodes | Direct, indirect and cloned-node cycles, failed projections and fresh-evaluation regressions |
 | Projection optimization changes emitted SQL or depends on traversal order   | Compare complete SQL artifacts for chains and fan-out graphs in both orders                                      | Render-work regression and exact artifact comparisons                                        |
 
+Dbt artifact generation, authoring metadata and Code file scope share one
+import-free plugin identifier policy. Characterization preserves the normalized
+value and exact caller fallback, including undefined input. The old normalizers
+and their current catalog references are removed. DVT/native normalization has
+the same current output under a different authoring authority; it does not become
+dependent on the dbt plugin. Template normalization has different behavior. This
+extraction does not merge those contracts or make Code depend on the Canvas renderer.
+
 Compact Inspector typography uses the existing body scale through shared tokens.
 Rendered acceptance checks form controls and read-only facts against the General
 tab at two widths, keyboard focus and overflow. Global UI primitives and control

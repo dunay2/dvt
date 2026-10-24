@@ -2,6 +2,7 @@
 import { ConnectedSourceRefSchema, WAREHOUSE_CONNECTION_TYPE } from '@dvt/contracts';
 
 import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createDbtNodeAuthoringMetadata,
@@ -80,17 +81,6 @@ type DbtModelOriginProjection = Readonly<{
   columnNames: readonly string[];
   source?: DbtModelArtifactSource;
 }>;
-
-export function normalizeDbtArtifactIdentifier(value: string, fallback: string): string {
-  const normalized = value
-    .trim()
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/[^A-Za-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .toLowerCase();
-
-  return normalized.length > 0 ? normalized : fallback;
-}
 
 function isWarehouseSource(node: CanonicalNode): boolean {
   return node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source';
@@ -279,7 +269,7 @@ function resolveOriginProjection(
   return {
     nodeId: origin.id,
     nodeName: origin.name,
-    sql: `{{ ref('${normalizeDbtArtifactIdentifier(origin.name, origin.id)}') }}`,
+    sql: `{{ ref('${normalizeDbtIdentifier(origin.name, origin.id)}') }}`,
     columnNames,
   };
 }
@@ -352,7 +342,7 @@ function projectDbtModelArtifactInternal(
     .filter((column) => column.output)
     .map((column) => column.name);
   const body = buildGeneratedBody({ ...origin, columnNames: generatedColumnNames });
-  const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
+  const name = normalizeDbtIdentifier(args.modelNode.name, args.modelNode.id);
 
   const result: Extract<DbtModelArtifactProjectionResult, { ok: true }> = {
     ok: true,

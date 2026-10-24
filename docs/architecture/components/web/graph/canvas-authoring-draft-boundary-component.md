@@ -302,6 +302,18 @@ failure leaves no executable graph identity. File-authoritative dbt Preview pass
 an explicit absent artifact set because its existing revision/provenance owns
 content identity; protected DVT keeps its own projection identity.
 
+The dbt plugin's import-free `normalizeDbtIdentifier` policy in
+`plugins/dbt/dbtIdentifier.ts` owns identifier spelling for authoring metadata,
+model artifacts, planner selectors, test artifacts and Code file scope. It trims
+optional input, separates camel-case boundaries, replaces runs outside ASCII
+letters/digits with underscores, removes boundary underscores and lowercases.
+An empty normalized value returns the caller's fallback unchanged. Each consumer
+imports the policy directly; neither a second normalizer nor a Canvas re-export
+owns this behavior. The DVT normalizer currently produces the same spelling but
+belongs to PostgreSQL/native authoring and retains its own reason to change;
+template naming follows a different policy. Those domains are not generalized
+by this extraction. This pure calculation performs no workspace read or write.
+
 `createDbtModelArtifactProjector` owns one synchronous graph evaluation. The
 workspace artifact builder creates it once for the selected models and reuses
 completed canonical model artifacts when projecting their dependents. Reuse is

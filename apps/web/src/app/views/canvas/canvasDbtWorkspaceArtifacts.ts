@@ -1,10 +1,10 @@
 /** Owned concern: project authored dbt canvas state into deterministic workspace files. */
 import { OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV } from '@dvt/contracts';
 
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata, isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import {
-  normalizeDbtArtifactIdentifier,
   createDbtModelArtifactProjector,
   type DbtModelArtifactProjection,
   type DbtModelArtifactSource,
@@ -220,7 +220,7 @@ export function buildDbtWorkspaceArtifacts(args: {
   const artifacts: DbtWorkspaceArtifact[] = [
     {
       path: 'dbt_project.yml',
-      content: buildDbtProjectYaml(normalizeDbtArtifactIdentifier(firstPackageName, 'analytics')),
+      content: buildDbtProjectYaml(normalizeDbtIdentifier(firstPackageName, 'analytics')),
       language: 'yaml',
     },
     ...models

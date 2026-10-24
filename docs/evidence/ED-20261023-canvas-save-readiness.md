@@ -375,3 +375,29 @@ from workspace artifact composition. The Readiness dependency is recorded as
 a call, with current function bindings and required behavioral evidence. Exact
 retirement removes only the deleted wrapper symbol from its existing rail
 records; unrelated authority remains. No new product command or query is added.
+
+## One Dbt Identifier Policy
+
+The [identifier policy plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6379869747)
+follows the real duplicate-guard failure at final validation. Canvas artifact
+projection and Code file selection had identical normalization bodies; review
+also found the same dbt naming policy in authoring metadata. One import-free
+`plugins/dbt/dbtIdentifier.ts` now owns the shared spelling rule, including
+optional input and the caller's unchanged fallback. All seven consumers use
+that leaf directly. The three former bodies and the old Canvas export
+are removed; Code does not import the Canvas artifact renderer to compute names.
+
+Characterization covers generated names, paths and references, Code file scope,
+source/table authoring, empty input and unchanged fallbacks. Existing model-chain,
+planner, workspace, test-artifact and Code presentation tests retain their
+behavioral assertions. The structural failure is recorded separately from the
+missing-module RED; only the former demonstrated the actual duplicate policy.
+
+The existing projection component gains the precise naming responsibility and
+owns the new leaf and its direct test. Its normalizer binding moves to that
+responsibility; other bindings and consumer ownership remain intact. Canonical
+catalog reconciliation removes only the retired Code normalizer from the
+affected current manifests. DVT/native normalization currently produces the same
+spelling but belongs to native authoring policy; it does not become dependent on
+the dbt plugin. Template normalization has different spelling behavior and also
+retains its own authority.
