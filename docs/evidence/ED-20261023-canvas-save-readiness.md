@@ -608,3 +608,28 @@ rejection. Together with the existing route-slot journeys, seven browser cases
 pass. The separate Name-edit case passes during passive diagnosis; its precise
 CI failure is not reproduced. Temporary tracing is removed. Full normal pre-push,
 exact-head CI and resulting main acceptance remain required.
+
+## Node Menu Focus Handoff
+
+Passive browser events show General receiving focus at 2543.6 milliseconds,
+followed by the menu's deferred cleanup returning it to the node shell at
+2570.7 milliseconds. The subsequent Name clear succeeds in that observation;
+the precise intermittent CI failure is not established by this trace.
+
+The [focus handoff plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6386940352)
+keeps the existing menu view and Radix lifecycle. Three cases in the real
+node-shell integration distinguish Escape, ordinary Properties close and
+Properties followed by a control receiving focus before cleanup. Before the
+change, only that last case fails: 14 pass and focus returns to the shell
+instead of the already focused input.
+
+The menu's existing close event now cancels restoration only when focus already
+belongs to an element outside the menu and document body. Normal restoration,
+action dispatch and Inspector state retain their current owners. This adds no
+state, timer, focus registry or alternate menu implementation. The original
+unsupported-inspection browser case passes with exact empty-name, Apply and
+semantic-authority assertions unchanged. Full acceptance remains recorded in
+#3115; isolated success does not demonstrate the cause of the CI clear failure.
+All 26 affected presentation cases pass. The existing menu-view test double
+forwards only its declared DOM presentation props, removing its React warning
+without suppressing console output or replacing the real Radix focus proof.

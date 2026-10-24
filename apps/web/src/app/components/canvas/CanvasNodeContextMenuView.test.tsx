@@ -8,8 +8,12 @@ import { CanvasNodeContextMenuView } from './CanvasNodeContextMenuView';
 import type { CanvasNodeContextMenuModel } from './canvasNodeContextMenuModel';
 
 vi.mock('../ui/context-menu', () => ({
-  ContextMenuContent: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) => (
-    <div role="menu" {...props}>
+  ContextMenuContent: ({
+    children,
+    className,
+    'data-slot': slot,
+  }: HTMLAttributes<HTMLDivElement> & { 'data-slot'?: string }) => (
+    <div role="menu" className={className} data-slot={slot}>
       {children}
     </div>
   ),
