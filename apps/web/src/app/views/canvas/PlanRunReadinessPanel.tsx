@@ -6,10 +6,8 @@ import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
 import { canvasViewCopy } from './copy';
-import {
-  resolvePlanRunReadinessBlockerLabel,
-  type PlanRunReadinessReadModel,
-} from './canvasPlanReadiness';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import { resolvePlanRunReadinessBlockerLabel } from './canvasReadinessPresentation';
 
 type PlanRunReadinessPanelProps = {
   readonly readiness: PlanRunReadinessReadModel;

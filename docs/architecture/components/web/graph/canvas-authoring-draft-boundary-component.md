@@ -29,7 +29,8 @@ readiness projections do not depend on command implementations or transports;
 autosave does not depend on Preview/Run coordination; execution coordination does
 not depend on route composition. The API publication policy does not depend on
 UI, infrastructure or composition roots, and contracts do not import applications.
-Readiness may consume passive diagnostic translation. Commands may consume the
+Readiness presentation may consume passive diagnostic translation; its evaluation
+cannot import copy, locale or presentation modules. Commands may consume the
 readiness query and ports; the route composes these owners.
 
 ```mermaid
@@ -262,6 +263,21 @@ one execution value to the existing command. Shared permission, draft flush,
 selection and confirmed-effect receipt handling stay in `PreviewPlan`. The command
 consumes only `previewPlan` from the plan port and the two session methods it uses;
 it does not require plan import or session subscription capabilities.
+
+### Readiness Evaluation And Presentation
+
+`ObservePlanRunReadiness` evaluates identity and blockers without an application
+language or copy lookup. Its evaluation contains typed Preview state and blocker
+facts. `deriveCanvasExecutionState` owns graph/staleness decisions and forced
+blockers; original projection and Preview diagnostics remain evidence rather than
+authorization input.
+
+`canvasReadinessPresentation` maps those facts to the existing readiness consumer
+DTO, shared blocker labels/messages and localized diagnostics. The hook composes
+both stages explicitly. The presenter cannot change Preview/Run decisions or
+mutate the evaluation. Dependency-cruiser forbids the two evaluation modules from
+importing presentation, copy or locale dependencies, including type-only imports;
+the presenter also remains separated from commands and transport implementations.
 
 ## Transitions
 

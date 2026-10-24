@@ -134,12 +134,26 @@ module.exports = {
       name: 'no-canvas-readiness-to-effects',
       severity: 'error',
       from: {
-        path: '^apps/web/src/app/views/canvas/(?:canvasRuntimePolicy|canvasDraftAccessPostureModel|canvasPlanReadiness|canvasExecutionState)\\.ts$',
+        path: '^apps/web/src/app/views/canvas/(?:canvasRuntimePolicy|canvasDraftAccessPostureModel|canvasPlanReadiness|canvasExecutionState|canvasReadinessPresentation)\\.ts$',
       },
       to: {
         path: [
           '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions|Controller|ControllerRuntime|DraftAutosave)|useDbtProjectFileExecution|canvasDraftAutosave(?:Execution|Scheduling)|canvasDraftPersistenceRuntime)\\.ts$',
           '^apps/web/src/app/services/(?!api/dvtOperationalRejectionCopy\\.ts$)',
+        ],
+      },
+    },
+    {
+      name: 'no-canvas-readiness-evaluation-to-presentation',
+      severity: 'error',
+      from: {
+        path: '^apps/web/src/app/views/canvas/(?:canvasPlanReadiness|canvasExecutionState)\\.ts$',
+      },
+      to: {
+        path: [
+          '^apps/web/src/app/views/canvas/(?:canvasReadinessPresentation|canvasCopyCatalog|canvasCopyFormatting|canvasCopy\\.types|copy)\\.ts$',
+          '^apps/web/src/app/stores/applicationLanguageStore\\.ts$',
+          '^apps/web/src/app/services/api/dvtOperationalRejectionCopy\\.ts$',
         ],
       },
     },

@@ -1516,6 +1516,11 @@ test('Canvas component boundaries reject reversed command/query and composition 
   const cases = [
     [
       'no-canvas-readiness-to-effects',
+      `${canvas}canvasReadinessPresentation.ts`,
+      `${canvas}canvasPlanAction.ts`,
+    ],
+    [
+      'no-canvas-readiness-to-effects',
       `${canvas}canvasPlanReadiness.ts`,
       `${canvas}canvasPlanAction.ts`,
     ],
@@ -1573,6 +1578,37 @@ test('Canvas component boundaries reject reversed command/query and composition 
   }
 });
 
+test('Canvas readiness evaluation rejects presentation dependencies', () => {
+  const canvas = 'apps/web/src/app/views/canvas/';
+  const cases = [
+    [`${canvas}canvasPlanReadiness.ts`, `${canvas}canvasReadinessPresentation.ts`],
+    [`${canvas}canvasPlanReadiness.ts`, `${canvas}canvasCopyCatalog.ts`],
+    [`${canvas}canvasPlanReadiness.ts`, `${canvas}canvasCopy.types.ts`],
+    [`${canvas}canvasExecutionState.ts`, `${canvas}canvasCopyFormatting.ts`],
+    [`${canvas}canvasExecutionState.ts`, 'apps/web/src/app/stores/applicationLanguageStore.ts'],
+    [
+      `${canvas}canvasExecutionState.ts`,
+      'apps/web/src/app/services/api/dvtOperationalRejectionCopy.ts',
+    ],
+  ];
+  for (const [from, to] of cases) {
+    const relative = posix.relative(posix.dirname(from), to).replace(/\.ts$/u, '.js');
+    const specifier = relative.startsWith('.') ? relative : `./${relative}`;
+    for (const source of [
+      `import value from '${specifier}'; export default value;\n`,
+      `import type { Value } from '${specifier}'; export type Output = Value;\n`,
+    ]) {
+      assert.ok(
+        collectDependencyViolations({
+          [from]: source,
+          [to]: 'export type Value = boolean; export default true;\n',
+        }).includes('no-canvas-readiness-evaluation-to-presentation'),
+        `${from} -> ${to}`
+      );
+    }
+  }
+});
+
 test('Canvas component boundaries allow composition, ports and pure projections', () => {
   const canvas = 'apps/web/src/app/views/canvas/';
   assert.deepEqual(
@@ -1582,7 +1618,9 @@ test('Canvas component boundaries allow composition, ports and pure projections'
       [`${canvas}canvasPlanAction.ts`]:
         "import readiness from './canvasPlanReadiness.js'; export default readiness;\n",
       [`${canvas}canvasPlanReadiness.ts`]:
-        "import type { Plan } from '../../ports/plans.js'; import copy from '../../services/api/dvtOperationalRejectionCopy.js'; export default (plan: Plan) => ({ ready: plan.ready, copy });\n",
+        "import type { Plan } from '../../ports/plans.js'; export default (plan: Plan) => ({ ready: plan.ready });\n",
+      [`${canvas}canvasReadinessPresentation.ts`]:
+        "import readiness from './canvasPlanReadiness.js'; import copy from '../../services/api/dvtOperationalRejectionCopy.js'; export default { readiness, copy };\n",
       'apps/web/src/app/services/api/dvtOperationalRejectionCopy.ts': 'export default "Ready";\n',
       'apps/web/src/app/ports/plans.ts': 'export interface Plan { ready: boolean }\n',
       [`${canvas}useCanvasDraftAutosave.ts`]:

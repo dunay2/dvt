@@ -238,5 +238,35 @@ compiler or backend. Exact commands, SHA boundaries and results remain on #3115.
 
 `SYS-WEB-CANVAS-PREVIEW` remains the owner. Its new composition function is bound
 to the existing presentation responsibility with its actual tests, preserving
-the unrelated Run bindings. Readiness evaluation/presentation and tooling
-separation remain subsequent cuts.
+the unrelated Run bindings. Tooling separation remains a subsequent cut.
+
+## Readiness Evaluation And Presentation Boundary
+
+The [readiness design](https://github.com/dunay2/dvt/issues/3115#issuecomment-6377354513)
+keeps `ObservePlanRunReadiness` responsible for typed Preview states, blocker
+ordering and admission facts. `deriveCanvasExecutionState` retains graph and
+Preview identity, staleness and Run decisions. Neither reads the application
+language or formats messages. Original upstream projection diagnostics remain
+opaque evidence; this cut does not rewrite those producers.
+
+One `canvasReadinessPresentation` module maps these facts into the existing
+consumer read model. It owns shared labels, Preview messages, DVT cause
+translation and graph-summary formatting. The hook composes both boundaries;
+the panel, drawer and Run error adapter reuse the same message helpers without
+compatibility re-exports or a parallel query. The presenter cannot grant Run or
+change the evaluated blockers. Existing message priority and raw rejection
+evidence remain intact.
+
+Six typed-state cases first failed against the mixed evaluator. Real negative
+dependency-cruiser fixtures also failed before the new import rule existed.
+Focused tests cover frozen evaluation, localization, duplicate blockers, summary
+priority, stale Preview and raw causes. The existing controlled Code browser
+spec exercises compilation rejection in EN and ES; it remains frontend evidence,
+not acceptance of a live backend or compiler. The actual repository dependency
+graph and the existing positive composition fixture validate the permitted
+direction. Exact commands and results are recorded in #3115.
+
+`SYS-WEB-CANVAS-READINESS` remains the owner. Scoped revision and binding
+operations associate the new module and moved functions with the existing
+readiness-copy responsibility, distinct from drawer rendering. Unrelated
+runtime, posture, panel and Preview command ownership is preserved.

@@ -13,8 +13,36 @@ import {
   resolvePlanRefForStartRun,
 } from './canvasPlanReadiness';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
+import {
+  presentCanvasExecutionState,
+  presentPlanRunReadiness,
+} from './canvasReadinessPresentation';
 
 describe('canvasPlanReadiness', () => {
+  it.each([
+    ['required', { currentPlan: null }],
+    ['stale', { isCurrentPlanStale: true }],
+    ['plan_ref_unavailable', { currentPlan: { ...mockExecutionPlan, planRef: undefined } }],
+    ['identity_mismatch', { persistedPreviewIdentityMismatch: true }],
+    ['not_persisted', { hasPersistedPlanForRun: false }],
+    ['ready', {}],
+  ] as const)(
+    'evaluates typed Preview state %s without presentation prose',
+    (previewState, overrides) => {
+      const evaluation = observePlanRunReadiness({
+        runAdmission: { allowed: true },
+        currentPlan: mockExecutionPlan,
+        isCurrentPlanStale: false,
+        persistedPreviewIdentityMismatch: false,
+        hasPersistedPlanForRun: true,
+        ...overrides,
+      });
+      expect(evaluation).toMatchObject({ previewState, summaryBlocker: null });
+      expect(evaluation).not.toHaveProperty('summary');
+      expect(evaluation).not.toHaveProperty('diagnostic');
+    }
+  );
+
   it('returns planRef from the execution plan when available', () => {
     const planRef = resolvePlanRefForStartRun(mockExecutionPlan);
 
@@ -81,10 +109,9 @@ describe('canvasPlanReadiness', () => {
       isCurrentPlanStale: false,
       persistedPreviewIdentityMismatch: false,
       hasPersistedPlanForRun: false,
-      locale: 'es',
     });
     expect(readiness.blockers).toEqual(['draft_saving', 'plan_integrity']);
-    expect(readiness.summary).toContain('guardado');
+    expect(presentPlanRunReadiness(readiness, 'es').summary).toContain('guardado');
     expect(readiness.blockers).not.toContain('authorization_denied');
   });
 
@@ -107,13 +134,15 @@ describe('canvasPlanReadiness', () => {
     };
 
     expect(
-      observePlanRunReadiness({
-        runAdmission: { allowed: true },
-        currentPlan: plan,
-        isCurrentPlanStale: false,
-        persistedPreviewIdentityMismatch: false,
-        hasPersistedPlanForRun: true,
-      })
+      presentPlanRunReadiness(
+        observePlanRunReadiness({
+          runAdmission: { allowed: true },
+          currentPlan: plan,
+          isCurrentPlanStale: false,
+          persistedPreviewIdentityMismatch: false,
+          hasPersistedPlanForRun: true,
+        })
+      )
     ).toEqual({
       blockers: [],
       rail: 'ObservePlanRunReadiness',
@@ -131,12 +160,46 @@ describe('canvasPlanReadiness', () => {
       hasPersistedPlanForRun: false,
     } as const;
 
-    expect(observePlanRunReadiness({ ...args, locale: 'en' }).summary).toBe(
+    const evaluation = observePlanRunReadiness(args);
+    Object.freeze(evaluation.blockers);
+    Object.freeze(evaluation);
+    const before = structuredClone(evaluation);
+    expect(presentPlanRunReadiness(evaluation, 'en').summary).toBe(
       resolveCanvasViewCopy('en').planStatusPreviewRequiredMessage
     );
-    expect(observePlanRunReadiness({ ...args, locale: 'es' }).summary).toBe(
+    expect(presentPlanRunReadiness(evaluation, 'es').summary).toBe(
       resolveCanvasViewCopy('es').planStatusPreviewRequiredMessage
     );
+    expect(evaluation).toEqual(before);
+    expect(presentPlanRunReadiness(evaluation, 'es')).toMatchObject({
+      status: 'blocked',
+      blockers: ['plan_integrity'],
+    });
+  });
+
+  it('keeps blocker order and summary priority independent of presentation', () => {
+    const evaluation = observePlanRunReadiness({
+      runAdmission: { allowed: false, reason: 'capability_mismatch' },
+      currentPlan: null,
+      isCurrentPlanStale: false,
+      persistedPreviewIdentityMismatch: false,
+      hasPersistedPlanForRun: false,
+      backpressure: true,
+      capabilityMismatch: true,
+      adapterDegraded: true,
+    });
+    expect(evaluation.blockers).toEqual([
+      'capability_mismatch',
+      'plan_integrity',
+      'backpressure',
+      'adapter_degraded',
+    ]);
+    expect(evaluation.summaryBlocker).toBe('backpressure');
+    const copy = resolveCanvasViewCopy('es');
+    expect(presentPlanRunReadiness(evaluation, 'es')).toMatchObject({
+      summary: copy.planStatusBackpressureMessage,
+      diagnostic: { blocker: 'plan_integrity', message: copy.planStatusPreviewRequiredMessage },
+    });
   });
 
   it.each([
@@ -336,7 +399,8 @@ describe('canvasPlanReadiness', () => {
     });
 
     expect(executionState.canPlanGraph).toBe(false);
-    expect(executionState.executableGraphFailureMessage).toBe(
+    expect(executionState.executableGraphFailure?.kind).toBe('projection');
+    expect(presentCanvasExecutionState(executionState).executableGraphFailureMessage).toBe(
       'Execution selection contains unavailable or non-executable resources. Resolve the explicit selection in Operations before Preview.'
     );
     expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');

@@ -19,7 +19,7 @@ import type { PlanRunReadinessBlocker, PlanRunReadinessReadModel } from './canva
 import {
   resolvePlanRunReadinessBlockerMessage,
   resolvePlanRunReadinessBlockerLabel,
-} from './canvasPlanReadiness';
+} from './canvasReadinessPresentation';
 import { canvasViewCopy, formatCanvasCopyTemplate, type CanvasViewCopy } from './copy';
 
 type BuildCanvasOperationalDrawerContributionArgs = Readonly<{

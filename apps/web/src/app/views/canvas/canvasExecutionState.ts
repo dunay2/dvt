@@ -1,16 +1,7 @@
 /**
- * Owned concern: project execution readiness from the current graph and Preview outcome.
- * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
- * @decision Reuse named rejection copy when projecting DVT readiness summaries.
- * @consequence Presentation changes language without changing admission or diagnostics.
- * @version 1.0.0
+ * Owned concern: evaluate execution admission from graph and Preview evidence.
  */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveDvtOperationalRejectionCopy } from '../../services/api/dvtOperationalRejectionCopy';
-import {
-  getApplicationLanguage,
-  normalizeApplicationLanguage,
-} from '../../stores/applicationLanguageStore';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanViewModel } from '../../types/plans';
 import {
@@ -18,19 +9,21 @@ import {
   hasPersistedPreviewIdentityMismatch,
   observePlanRunReadiness,
   type PlanRunReadinessBlocker,
-  type PlanRunReadinessReadModel,
+  type PlanRunReadinessEvaluation,
 } from './canvasPlanReadiness';
 import {
   validateTransformationGraph,
   type TransformationGraphValidationResult,
 } from './transformationGraphValidation';
-import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
 import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import type { PlanPreviewOutcome } from '../../ports/plans';
-import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
+import {
+  projectCanvasPreviewOutcome,
+  type CanvasPreviewOutcomeDiagnostic,
+} from './canvasPreviewOutcomeProjection';
 import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAuthoringModel';
 
 type DeriveCanvasExecutionStateArgs = {
@@ -45,8 +38,14 @@ type DeriveCanvasExecutionStateArgs = {
   workspaceNodeIds: string[];
   latestPreviewOutcome: PlanPreviewOutcome | null;
   executionScope?: ObjectFilePostgresExecutionScope;
-  applicationLanguage?: string;
 };
+
+export type CanvasExecutableGraphFailure =
+  | Readonly<{ kind: 'projection'; message: string }>
+  | Readonly<{
+      kind: 'transformation';
+      summaryCode: TransformationGraphValidationResult['summaryCode'];
+    }>;
 
 export type CanvasExecutionState = {
   transformationValidation: TransformationGraphValidationResult;
@@ -54,18 +53,24 @@ export type CanvasExecutionState = {
   persistedPreviewIdentityMismatch: boolean;
   isCurrentPlanStale: boolean;
   isPreviewOutcomeStale: boolean;
-  executableGraphFailureMessage: string | null;
+  executableGraphFailure: CanvasExecutableGraphFailure | null;
   canPlanGraph: boolean;
   canStartRun: boolean;
-  planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
+  planRunReadiness: PlanRunReadinessEvaluation;
+  readinessDiagnostic:
+    | Readonly<{
+        kind: 'preview';
+        blocker: PlanRunReadinessBlocker;
+        diagnostic: CanvasPreviewOutcomeDiagnostic | null;
+      }>
+    | Readonly<{ kind: 'graph' }>
+    | null;
 };
 
 function forceReadinessBlocker(
-  readiness: PlanRunReadinessReadModel,
-  blocker: PlanRunReadinessBlocker,
-  summary: string
-): PlanRunReadinessReadModel {
+  readiness: PlanRunReadinessEvaluation,
+  blocker: PlanRunReadinessBlocker
+): PlanRunReadinessEvaluation {
   const blockers: readonly PlanRunReadinessBlocker[] = readiness.blockers.includes(blocker)
     ? readiness.blockers
     : [...readiness.blockers, blocker];
@@ -74,8 +79,6 @@ function forceReadinessBlocker(
     ...readiness,
     blockers,
     status: 'blocked',
-    summary,
-    diagnostic: { blocker, message: summary },
   };
 }
 
@@ -91,7 +94,6 @@ export function deriveCanvasExecutionState({
   workspaceNodeIds,
   latestPreviewOutcome,
   executionScope,
-  applicationLanguage,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
   const persistedPlanIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
@@ -169,19 +171,16 @@ export function deriveCanvasExecutionState({
     isExecutableGraphReady &&
     !isCurrentPlanStale &&
     previewOutcomeProjection?.readinessBlocker == null;
-  const executableGraphFailureMessage =
+  const executableGraphFailure: CanvasExecutableGraphFailure | null =
     executionStrategy != null &&
     executionStrategy.kind !== 'not_executable' &&
     !isCurrentPlanStale &&
     !isExecutableGraphReady
       ? dbtPlannerProjection?.ok === false
-        ? dbtPlannerProjection.message
+        ? { kind: 'projection', message: dbtPlannerProjection.message }
         : dvtPreviewProjection?.ok === false
-          ? dvtPreviewProjection.message
-          : formatTransformationGraphValidationSummary(
-              transformationValidation.summaryCode,
-              applicationLanguage
-            )
+          ? { kind: 'projection', message: dvtPreviewProjection.message }
+          : { kind: 'transformation', summaryCode: transformationValidation.summaryCode }
       : null;
   const planRunReadinessSource = observePlanRunReadiness({
     runAdmission,
@@ -190,26 +189,22 @@ export function deriveCanvasExecutionState({
     persistedPreviewIdentityMismatch,
     hasPersistedPlanForRun,
     capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
-    locale: applicationLanguage,
   });
-  const previewRejectionMessage =
-    resolveDvtOperationalRejectionCopy(
-      previewOutcomeProjection?.diagnostic?.cause,
-      normalizeApplicationLanguage(applicationLanguage) ?? getApplicationLanguage()
-    ) ?? previewOutcomeProjection?.diagnostic?.reason;
-  const planRunReadiness =
+  const readinessDiagnostic: CanvasExecutionState['readinessDiagnostic'] =
     previewOutcomeProjection?.readinessBlocker != null
-      ? forceReadinessBlocker(
-          planRunReadinessSource,
-          previewOutcomeProjection.readinessBlocker,
-          previewRejectionMessage ?? planRunReadinessSource.summary
-        )
-      : executableGraphFailureMessage != null
-        ? forceReadinessBlocker(
-            planRunReadinessSource,
-            'plan_integrity',
-            executableGraphFailureMessage
-          )
+      ? {
+          kind: 'preview',
+          blocker: previewOutcomeProjection.readinessBlocker,
+          diagnostic: previewOutcomeProjection.diagnostic,
+        }
+      : executableGraphFailure != null
+        ? { kind: 'graph' }
+        : null;
+  const planRunReadiness =
+    readinessDiagnostic?.kind === 'preview'
+      ? forceReadinessBlocker(planRunReadinessSource, readinessDiagnostic.blocker)
+      : readinessDiagnostic?.kind === 'graph'
+        ? forceReadinessBlocker(planRunReadinessSource, 'plan_integrity')
         : planRunReadinessSource;
 
   return {
@@ -218,10 +213,10 @@ export function deriveCanvasExecutionState({
     persistedPreviewIdentityMismatch,
     isCurrentPlanStale,
     isPreviewOutcomeStale,
-    executableGraphFailureMessage,
+    executableGraphFailure,
     canPlanGraph,
     canStartRun,
     planRunReadiness,
-    planStatusSummary: planRunReadiness.summary,
+    readinessDiagnostic,
   };
 }

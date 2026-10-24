@@ -6,7 +6,8 @@ import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { PlanViewModel } from '../../types/plans';
 
-import { resolvePlanRefForStartRun, resolvePlanRunBlockerMessage } from './canvasPlanReadiness';
+import { resolvePlanRefForStartRun } from './canvasPlanReadiness';
+import { resolvePlanRunBlockerMessage } from './canvasReadinessPresentation';
 import type { CanvasRunAdmission } from './canvasRuntimePolicy';
 import { collectPlanSelection } from './canvasRunSelection';
 import { canvasViewCopy } from './copy';

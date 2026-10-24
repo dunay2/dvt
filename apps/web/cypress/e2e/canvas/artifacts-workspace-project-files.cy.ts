@@ -4,6 +4,7 @@ import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { FileContent, WorkspaceFileEntry } from '../../../src/app/ports/workspace';
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog';
 import {
   stubCanvasDraftRead,
   stubStatefulCanvasDraftAuthoring,
@@ -213,43 +214,48 @@ describe('Contextual project Code workflow files', () => {
     cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
   });
 
-  it('refreshes published project files in Code when compilation rejects Preview', () => {
-    stubFailedCompilationPublicationApis();
-    visitWithE2eWorkspaceSession('/canvas', {
-      onBeforeLoad(window) {
-        window.localStorage.setItem(
-          APPLICATION_LANGUAGE_STORAGE_KEY,
-          JSON.stringify({ state: { language: 'en' }, version: 0 })
-        );
-      },
-    });
-    cy.get('[data-slot="shell-file-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
-    waitForE2eApiCall('/workspace/files', 'GET');
-    cy.get('[data-workspace-path="models/orders_model.sql"]').should('not.exist');
-    cy.then(() => getE2eApiCalls('/workspace/files', 'GET').length).then((initialReadCount) => {
-      clickPreviewExecutionPlanFromOperationalDrawer();
-      waitForE2eApiCall('/workspace/dbt/graph-artifacts/publications', 'POST');
-      waitForE2eApiCall('/workspace/dbt/graph-artifacts/compiled-models', 'POST');
-      cy.wrap(null).should(() => {
-        expect(getE2eApiCalls('/workspace/files', 'GET').length).to.be.greaterThan(
-          initialReadCount
-        );
+  for (const language of ['en', 'es'] as const) {
+    it(`refreshes published project files in Code when compilation rejects Preview (${language})`, () => {
+      const copy = resolveCanvasViewCopy(language);
+      stubFailedCompilationPublicationApis();
+      visitWithE2eWorkspaceSession('/canvas', {
+        onBeforeLoad(window) {
+          window.localStorage.setItem(
+            APPLICATION_LANGUAGE_STORAGE_KEY,
+            JSON.stringify({ state: { language }, version: 0 })
+          );
+        },
       });
+      cy.get('[data-slot="shell-file-menu-trigger"]').click();
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      waitForE2eApiCall('/workspace/files', 'GET');
+      cy.get('[data-workspace-path="models/orders_model.sql"]').should('not.exist');
+      cy.then(() => getE2eApiCalls('/workspace/files', 'GET').length).then((initialReadCount) => {
+        clickPreviewExecutionPlanFromOperationalDrawer();
+        waitForE2eApiCall('/workspace/dbt/graph-artifacts/publications', 'POST');
+        waitForE2eApiCall('/workspace/dbt/graph-artifacts/compiled-models', 'POST');
+        cy.wrap(null).should(() => {
+          expect(getE2eApiCalls('/workspace/files', 'GET').length).to.be.greaterThan(
+            initialReadCount
+          );
+        });
+      });
+      cy.contains(copy.planGraphDbtCompilationFailedMessage).should('be.visible');
+      cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
+      cy.contains(copy.planStatusPreviewRequiredMessage).should('be.visible');
+      cy.get('[data-workspace-path="models/orders_model.sql"]').should('be.visible').click();
+      cy.contains("source('raw', 'orders')").should('exist');
+      cy.then(() => {
+        expect(
+          getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST')
+        ).to.have.length(1);
+        expect(
+          getE2eApiCalls('/workspace/dbt/graph-artifacts/compiled-models', 'POST')
+        ).to.have.length(1);
+        expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+      });
+      cy.screenshot(`confirmed-files-after-compilation-rejection-${language}`);
     });
-    cy.contains('native DBT compilation').should('be.visible');
-    cy.get('[data-workspace-path="models/orders_model.sql"]').should('be.visible').click();
-    cy.contains("source('raw', 'orders')").should('exist');
-    cy.then(() => {
-      expect(getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST')).to.have.length(
-        1
-      );
-      expect(
-        getE2eApiCalls('/workspace/dbt/graph-artifacts/compiled-models', 'POST')
-      ).to.have.length(1);
-      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
-      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
-    });
-    cy.screenshot('confirmed-files-after-compilation-rejection');
-  });
+  }
 });

@@ -75,7 +75,9 @@ describe('PlanRunReadinessPanel', () => {
     expect(
       container.querySelector('[data-slot="plan-run-readiness-status"]')?.textContent
     ).toContain('Blocked');
-    expect(container.textContent).toContain('Execution Preview integrity');
+    expect(container.querySelector('[data-blocker="plan_integrity"]')?.textContent).toBe(
+      'Previewplan_integrity'
+    );
     expect(container.textContent).not.toContain('Plan integrity');
     expect(container.textContent).toContain('Backpressure');
     expect(container.textContent).toContain('Capability mismatch');

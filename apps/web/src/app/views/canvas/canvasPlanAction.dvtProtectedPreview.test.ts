@@ -15,6 +15,7 @@ import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
+import { presentCanvasExecutionState } from './canvasReadinessPresentation';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import {
   createDvtSubstraitProjectionDraft,
@@ -264,7 +265,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     });
 
     expect(state.canPlanGraph).toBe(true);
-    expect(state.executableGraphFailureMessage).toBeNull();
+    expect(state.executableGraphFailure).toBeNull();
   });
 
   it('enables Preview readiness for the exact protected terminal closure', () => {
@@ -283,12 +284,11 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
 
     expect(state.canPlanGraph).toBe(true);
     expect(state.canStartRun).toBe(false);
-    expect(state.executableGraphFailureMessage).toBeNull();
+    expect(state.executableGraphFailure).toBeNull();
   });
 
   it('expires a rejected Preview when the authored graph signature changes', () => {
     const state = deriveCanvasExecutionState({
-      applicationLanguage: 'en',
       graphDraftCanvasId: 'canvas-main',
       runAdmission: { allowed: true },
       executionStrategy: strategy,
@@ -304,8 +304,11 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       },
     });
     expect(state.isPreviewOutcomeStale).toBe(true);
-    expect(state.planRunReadiness.diagnostic?.message).not.toContain('Do not configure both');
-    expect(state.planStatusSummary).toBe('Preview required before running.');
+    const presentation = presentCanvasExecutionState(state, 'en');
+    expect(presentation.planRunReadiness.diagnostic?.message).not.toContain(
+      'Do not configure both'
+    );
+    expect(presentation.planStatusSummary).toBe('Preview required before running.');
     expect(state.canStartRun).toBe(false);
   });
 
@@ -343,13 +346,24 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
       selectionIntent: { mode: 'explicit', nodeIds: [transform.id] },
       workspaceNodeIds: [source.id, transform.id],
       latestPreviewOutcome: { kind: 'selection-rejected', rejection },
-      applicationLanguage,
     });
 
-    expect(state.planStatusSummary).toBe(expected);
-    expect(state.planRunReadiness.summary).toBe(expected);
+    Object.freeze(rejection);
+    Object.freeze(state.planRunReadiness.blockers);
+    Object.freeze(state.planRunReadiness);
+    Object.freeze(state.readinessDiagnostic);
+    Object.freeze(state);
+    const before = structuredClone(state);
+    const presentation = presentCanvasExecutionState(state, applicationLanguage);
+    expect(presentation.planStatusSummary).toBe(expected);
+    expect(presentation.planRunReadiness.summary).toBe(expected);
     expect(state.planRunReadiness.blockers).toContain('plan_integrity');
     expect(state.canStartRun).toBe(false);
     expect(rejection.reason).toBe(DVT_REJECTIONS.runDispositionUnsupported.reason);
+    expect(state).toEqual(before);
+    expect(state.readinessDiagnostic).toMatchObject({
+      kind: 'preview',
+      diagnostic: { cause, reason: rejection.reason },
+    });
   });
 });

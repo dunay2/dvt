@@ -4,6 +4,7 @@ import { asNonBlankString } from '@dvt/contracts';
 
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
+import { presentCanvasExecutionState } from './canvasReadinessPresentation';
 import type {
   CanvasPreviewAttempt,
   UseCanvasExecutionActionsParams,
@@ -110,17 +111,10 @@ export function useCanvasExecutionActions({
     workspaceNodeIds,
     latestPreviewOutcome,
     executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
-    applicationLanguage,
   });
-  const {
-    hasPersistedPlanForRun,
-    isCurrentPlanStale,
-    executableGraphFailureMessage,
-    canPlanGraph,
-    canStartRun,
-    planRunReadiness,
-    planStatusSummary,
-  } = executionState;
+  const { hasPersistedPlanForRun, isCurrentPlanStale, canPlanGraph, canStartRun } = executionState;
+  const { executableGraphFailureMessage, planRunReadiness, planStatusSummary } =
+    presentCanvasExecutionState(executionState, applicationLanguage);
 
   const planAction = useCanvasPlanActionHandler({
     graphDraftCanvasId,
