@@ -629,7 +629,7 @@ action dispatch and Inspector state retain their current owners. This adds no
 state, timer, focus registry or alternate menu implementation. The original
 unsupported-inspection browser case passes with exact empty-name, Apply and
 semantic-authority assertions unchanged. Full acceptance remains recorded in
-#3115; isolated success does not demonstrate the cause of the CI clear failure.
+issue #3115; isolated success does not demonstrate the cause of the CI clear failure.
 All 26 affected presentation cases pass. The existing menu-view test double
 forwards only its declared DOM presentation props, removing its React warning
 without suppressing console output or replacing the real Radix focus proof.
