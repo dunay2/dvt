@@ -36,7 +36,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
     const shell = buildCanvasShellProps();
     const policy = shell.layout.surfaceStrategy!.operationalDrawer!;
     const dataSampleTabs = [] as const;
-    const renderDiagnostic = (message: string) => (
+    const renderDiagnostic = (message: string): React.ReactElement => (
       <CanvasOperationalDrawerContributionRegistrar
         policy={policy}
         panels={shell.panels}
