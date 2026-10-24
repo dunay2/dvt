@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
+import { createDbtModelArtifactProjector } from './canvasDbtModelArtifactProjection';
 
 const warehouseSource: CanonicalNode = {
   id: 'warehouse-orders',
@@ -129,11 +129,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: modelFromObject,
+      createDbtModelArtifactProjector({
         nodes: [objectFileLoad, modelFromObject],
         edges: [edge(objectFileLoad.id)],
-      })
+      })({ modelNode: modelFromObject })
     ).toMatchObject({
       ok: true,
       artifact: {
@@ -153,11 +152,10 @@ describe('canvas DBT model artifact projection', () => {
 
   it('projects one generated artifact with explicit provenance from a warehouse source', () => {
     expect(
-      projectDbtModelArtifact({
-        modelNode: model,
+      createDbtModelArtifactProjector({
         nodes: [warehouseSource, model],
         edges: [edge(warehouseSource.id)],
-      })
+      })({ modelNode: model })
     ).toEqual({
       ok: true,
       artifact: {
@@ -200,11 +198,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: selectedModel,
+      createDbtModelArtifactProjector({
         nodes: [warehouseSource, selectedModel],
         edges: [edge(warehouseSource.id)],
-      })
+      })({ modelNode: selectedModel })
     ).toMatchObject({
       ok: true,
       artifact: {
@@ -224,11 +221,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: model,
+      createDbtModelArtifactProjector({
         nodes: [sourceWithoutBinding, model],
         edges: [edge(sourceWithoutBinding.id)],
-      })
+      })({ modelNode: model })
     ).toEqual({
       ok: false,
       reason: 'origin_metadata_unavailable',
@@ -255,11 +251,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: model,
+      createDbtModelArtifactProjector({
         nodes: [sourceWithUnsupportedProvider, model],
         edges: [edge(sourceWithUnsupportedProvider.id)],
-      })
+      })({ modelNode: model })
     ).toEqual({
       ok: false,
       reason: 'origin_metadata_unavailable',
@@ -278,11 +273,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: model,
+      createDbtModelArtifactProjector({
         nodes: [sourceWithLegacyIdentity, model],
         edges: [edge(sourceWithLegacyIdentity.id)],
-      })
+      })({ modelNode: model })
     ).toEqual({
       ok: false,
       reason: 'origin_metadata_unavailable',
@@ -310,11 +304,10 @@ describe('canvas DBT model artifact projection', () => {
       },
     };
 
-    const result = projectDbtModelArtifact({
-      modelNode: modelWithLegacySql,
+    const result = createDbtModelArtifactProjector({
       nodes: [sourceWithoutColumns, modelWithLegacySql],
       edges: [edge(warehouseSource.id)],
-    });
+    })({ modelNode: modelWithLegacySql });
 
     expect(result).toEqual({
       ok: false,
@@ -324,7 +317,10 @@ describe('canvas DBT model artifact projection', () => {
   });
 
   it('projects a connected DBT model origin through ref without duplicating origin logic', () => {
-    const result = projectDbtModelArtifact({
+    const result = createDbtModelArtifactProjector({
+      nodes: [upstreamModel, model],
+      edges: [edge(upstreamModel.id)],
+    })({
       modelNode: {
         ...model,
         metadata: {
@@ -335,8 +331,6 @@ describe('canvas DBT model artifact projection', () => {
           },
         },
       },
-      nodes: [upstreamModel, model],
-      edges: [edge(upstreamModel.id)],
     });
 
     expect(result).toMatchObject({
@@ -354,11 +348,7 @@ describe('canvas DBT model artifact projection', () => {
 
   it('fails closed when no compatible origin is connected', () => {
     expect(
-      projectDbtModelArtifact({
-        modelNode: model,
-        nodes: [model],
-        edges: [],
-      })
+      createDbtModelArtifactProjector({ nodes: [model], edges: [] })({ modelNode: model })
     ).toEqual({
       ok: false,
       reason: 'origin_required',
@@ -376,11 +366,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: model,
+      createDbtModelArtifactProjector({
         nodes: [sourceWithoutColumns, model],
         edges: [edge(sourceWithoutColumns.id)],
-      })
+      })({ modelNode: model })
     ).toEqual({
       ok: false,
       reason: 'origin_columns_unavailable',
@@ -401,11 +390,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: unselectedModel,
+      createDbtModelArtifactProjector({
         nodes: [warehouseSource, unselectedModel],
         edges: [edge(warehouseSource.id)],
-      })
+      })({ modelNode: unselectedModel })
     ).toMatchObject({
       ok: true,
       artifact: {
@@ -430,11 +418,10 @@ describe('canvas DBT model artifact projection', () => {
     };
 
     expect(
-      projectDbtModelArtifact({
-        modelNode: staleSelectionModel,
+      createDbtModelArtifactProjector({
         nodes: [warehouseSource, staleSelectionModel],
         edges: [edge(warehouseSource.id)],
-      })
+      })({ modelNode: staleSelectionModel })
     ).toMatchObject({
       ok: true,
       artifact: {
@@ -448,7 +435,10 @@ describe('canvas DBT model artifact projection', () => {
 
   it('does not fall back to edge order when an origin was not explicitly selected', () => {
     expect(
-      projectDbtModelArtifact({
+      createDbtModelArtifactProjector({
+        nodes: [warehouseSource, objectFileLoad, model],
+        edges: [edge(warehouseSource.id), edge(objectFileLoad.id)],
+      })({
         modelNode: {
           ...model,
           metadata: {
@@ -459,8 +449,6 @@ describe('canvas DBT model artifact projection', () => {
             },
           },
         },
-        nodes: [warehouseSource, objectFileLoad, model],
-        edges: [edge(warehouseSource.id), edge(objectFileLoad.id)],
       })
     ).toEqual({
       ok: false,

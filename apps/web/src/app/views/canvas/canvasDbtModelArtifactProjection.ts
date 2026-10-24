@@ -68,6 +68,11 @@ type ProjectDbtModelArtifactArgs = Readonly<{
   authoringMetadata?: DbtNodeAuthoringMetadata;
 }>;
 
+type CompletedModelProjections = Map<
+  CanonicalNode,
+  Extract<DbtModelArtifactProjectionResult, { ok: true }>
+>;
+
 type DbtModelOriginProjection = Readonly<{
   nodeId: string;
   nodeName: string;
@@ -196,7 +201,8 @@ function projectSourceOrigin(
 function resolveOriginProjection(
   args: ProjectDbtModelArtifactArgs,
   metadata: DbtNodeAuthoringMetadata,
-  ancestorModelIds: ReadonlySet<string>
+  ancestorModelIds: ReadonlySet<string>,
+  completed: CompletedModelProjections
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
   const compatibleOrigins = resolveCompatibleDbtModelOrigins(args);
   const origin = resolveDbtModelConnectedOrigin(compatibleOrigins, metadata.selectedSourceId);
@@ -241,7 +247,8 @@ function resolveOriginProjection(
     authoredOriginColumns.length === 0
       ? projectDbtModelArtifactInternal(
           { modelNode: origin, nodes: args.nodes, edges: args.edges },
-          ancestorModelIds
+          ancestorModelIds,
+          completed
         )
       : null;
   if (originColumns != null && !originColumns.ok) return originColumns;
@@ -292,7 +299,8 @@ function buildArtifactContent(materialized: string, body: string): string {
 
 function projectDbtModelArtifactInternal(
   args: ProjectDbtModelArtifactArgs,
-  ancestorModelIds: ReadonlySet<string>
+  ancestorModelIds: ReadonlySet<string>,
+  completed: CompletedModelProjections
 ): DbtModelArtifactProjectionResult {
   if (!isDbtCompatibleModel(args.modelNode)) {
     return {
@@ -308,11 +316,13 @@ function projectDbtModelArtifactInternal(
       message: `DBT model "${args.modelNode.name}" cannot use a cyclic model origin.`,
     };
   }
+  const existing = completed.get(args.modelNode);
+  if (existing != null) return existing;
 
   const metadata = args.authoringMetadata ?? createDbtNodeAuthoringMetadata(args.modelNode);
   const nextAncestorModelIds = new Set(ancestorModelIds);
   nextAncestorModelIds.add(args.modelNode.id);
-  const origin = resolveOriginProjection(args, metadata, nextAncestorModelIds);
+  const origin = resolveOriginProjection(args, metadata, nextAncestorModelIds, completed);
   if ('ok' in origin) {
     return origin;
   }
@@ -344,7 +354,7 @@ function projectDbtModelArtifactInternal(
   const body = buildGeneratedBody({ ...origin, columnNames: generatedColumnNames });
   const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
 
-  return {
+  const result: Extract<DbtModelArtifactProjectionResult, { ok: true }> = {
     ok: true,
     artifact: {
       modelNodeId: args.modelNode.id,
@@ -363,10 +373,22 @@ function projectDbtModelArtifactInternal(
       ...(origin.source == null ? {} : { source: origin.source }),
     },
   };
+  completed.set(args.modelNode, result);
+  return result;
 }
 
-export function projectDbtModelArtifact(
-  args: ProjectDbtModelArtifactArgs
-): DbtModelArtifactProjectionResult {
-  return projectDbtModelArtifactInternal(args, new Set());
+export function createDbtModelArtifactProjector(
+  graph: Pick<ProjectDbtModelArtifactArgs, 'nodes' | 'edges'>
+): (
+  query: Pick<ProjectDbtModelArtifactArgs, 'modelNode' | 'authoringMetadata'>
+) => DbtModelArtifactProjectionResult {
+  const completed: CompletedModelProjections = new Map();
+  return (query) =>
+    projectDbtModelArtifactInternal(
+      { ...graph, ...query },
+      new Set(),
+      query.authoringMetadata == null && graph.nodes.includes(query.modelNode)
+        ? completed
+        : new Map()
+    );
 }

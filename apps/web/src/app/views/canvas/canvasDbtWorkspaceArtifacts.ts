@@ -5,7 +5,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata, isDbtCompatibleModel } from './canvasDbtAuthoringModel';
 import {
   normalizeDbtArtifactIdentifier,
-  projectDbtModelArtifact,
+  createDbtModelArtifactProjector,
   type DbtModelArtifactProjection,
   type DbtModelArtifactSource,
 } from './canvasDbtModelArtifactProjection';
@@ -181,12 +181,9 @@ export function buildDbtWorkspaceArtifacts(args: {
   }
 
   const models: DbtModelProjection[] = [];
+  const projectModel = createDbtModelArtifactProjector({ nodes: args.nodes, edges: args.edges });
   for (const modelNode of modelNodes) {
-    const projection = projectDbtModelArtifact({
-      modelNode,
-      nodes: args.nodes,
-      edges: args.edges,
-    });
+    const projection = projectModel({ modelNode });
     if (!projection.ok) {
       return {
         ok: false,

@@ -3,7 +3,7 @@ import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvas
 import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInputBindingEdge } from './canvasInputBindings';
-import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
+import { createDbtModelArtifactProjector } from './canvasDbtModelArtifactProjection';
 import {
   isObjectFilePostgresNode,
   resolveObjectFilePostgresAuthoringMetadata,
@@ -19,10 +19,8 @@ export type CanvasPresentationQuery = Readonly<{
 export function canvasNodePresentationBase(
   args: CanvasPresentationQuery
 ): CanvasNodePresentationTruth {
-  const artifact = projectDbtModelArtifact({
+  const artifact = createDbtModelArtifactProjector({ nodes: args.nodes, edges: args.edges })({
     modelNode: args.node,
-    nodes: args.nodes,
-    edges: args.edges,
   });
   const metadata = isObjectFilePostgresNode(args.node)
     ? resolveObjectFilePostgresAuthoringMetadata(args.node)

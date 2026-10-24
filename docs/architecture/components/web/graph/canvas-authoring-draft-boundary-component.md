@@ -302,6 +302,32 @@ failure leaves no executable graph identity. File-authoritative dbt Preview pass
 an explicit absent artifact set because its existing revision/provenance owns
 content identity; protected DVT keeps its own projection identity.
 
+`createDbtModelArtifactProjector` owns one synchronous graph evaluation. The
+workspace artifact builder creates it once for the selected models and reuses
+completed canonical model artifacts when projecting their dependents. Reuse is
+private to that evaluation and keyed by the canonical node object; no result
+survives into a later graph snapshot. Only successful projections are retained.
+Cycle checks and rejected projections keep their current ancestry and diagnostics.
+An Inspector authoring override or a model object outside the snapshot starts an
+isolated evaluation, so neither a previous canonical success nor an earlier edit
+can hide a cycle or change the canonical result. All consumers use this factory;
+there is no second one-shot
+projection API. The graph, metadata and generated artifact remain the authorities;
+memoization introduces no independent admission rule.
+
+```mermaid
+flowchart LR
+  Workspace["Workspace artifacts"] --> Evaluation["Evaluation: nodes + edges"]
+  Evaluation --> Query["Project requested model"]
+  Query --> Complete{"Completed canonical artifact?"}
+  Complete -->|yes| Reuse["Reuse complete artifact"]
+  Complete -->|no| Project["Project with current ancestry"]
+  Project -->|success| Memo["Evaluation-local results"]
+  Project -->|failure| Reject["Original rejection; no memo"]
+  Override["Inspector authoring override"] --> Isolated["Independent evaluation"]
+  Isolated --> Project
+```
+
 `deriveCanvasExecutionState` associates current Preview evidence with that graph
 identity and delegates readiness to the shared policy. `StartRun` reevaluates the
 current readiness query when invoked and consumes only its admitted target. It

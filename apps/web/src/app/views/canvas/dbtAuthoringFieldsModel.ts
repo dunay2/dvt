@@ -6,7 +6,7 @@ import {
   type DbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
 import {
-  projectDbtModelArtifact,
+  createDbtModelArtifactProjector,
   type DbtModelArtifactProjection,
 } from './canvasDbtModelArtifactProjection';
 import { isObjectFilePostgresNode } from './objectFilePostgresAuthoringModel';
@@ -85,10 +85,11 @@ export function buildDbtAuthoringModelProjection(args: {
     : originOptions.length === 1
       ? (originOptions[0]?.value ?? '')
       : '';
-  const artifactProjection = projectDbtModelArtifact({
-    modelNode: args.node,
+  const artifactProjection = createDbtModelArtifactProjector({
     nodes: args.nodes,
     edges: args.edges,
+  })({
+    modelNode: args.node,
     authoringMetadata: {
       ...args.authoringMetadata,
       selectedSourceId: selectedOriginId,
