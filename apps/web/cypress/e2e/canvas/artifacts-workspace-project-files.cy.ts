@@ -301,11 +301,25 @@ describe('Contextual project Code workflow files', () => {
       cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
       cy.contains(copy.planStatusPreviewRequiredMessage).should('be.visible');
       cy.get('[data-workspace-path="models/orders_model.sql"]').should('be.visible').click();
-      cy.contains("source('raw', 'orders')").should('exist');
+      waitForE2eApiCall('/workspace/files/models%2Forders_model.sql', 'GET');
+      cy.get('[data-slot="workspace-file-code-editor"][data-file-path="models/orders_model.sql"]')
+        .find('[data-testid="monaco-code-viewer"] .view-lines')
+        .invoke('text')
+        .should((renderedCode) => {
+          expect(renderedCode.replaceAll('\u00a0', ' ').replace(/\s+/g, ' ')).to.contain(
+            "source('raw', 'orders')"
+          );
+        });
       cy.then(() => {
+        const publications = getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST');
+        expect(publications).to.have.length(1);
+        const publication = PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(
+          publications[0]!.body
+        );
         expect(
-          getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST')
-        ).to.have.length(1);
+          publication.artifacts.find((artifact) => artifact.path === 'models/orders_model.sql')
+            ?.content
+        ).to.contain("source('raw', 'orders')");
         expect(
           getE2eApiCalls('/workspace/dbt/graph-artifacts/compiled-models', 'POST')
         ).to.have.length(1);
