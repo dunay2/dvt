@@ -16,6 +16,10 @@ code_refs:
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
   - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts
   - apps/api/src/application/services/dvtWorkloadPublication.ts
+  - apps/api/src/application/services/importDbtProjectUseCase.ts
+  - apps/api/src/application/services/validateDbtProjectImportUseCase.ts
+  - apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts
+  - apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts
 evidence:
   tests:
@@ -432,3 +436,42 @@ Readiness retains its 47 function bindings and consumes the catalogue through
 the recorded dependency. No source file, localization framework, compatibility
 wrapper or parallel command/query is added. Exact committed evidence, browser
 acceptance and the separate Planning DB availability incident remain in #3115.
+
+## One Fresh Analysis Per Dbt Import
+
+The [import refinement](https://github.com/dunay2/dvt/issues/3115#issuecomment-6382384092)
+records the measured repeated work, current and target sequences, existing rails,
+allowed surfaces and failure guarantees before implementation. Two local LIVE
+executions timed out waiting 30 seconds for the import response. A backend-only
+observation used the exact three-file fixture, real dbt subprocesses and disposable
+PostgreSQL stores. It completed in 21.815 seconds; its two parses consumed 10.805
+and 10.762 seconds, or 98.9% of import duration. That observation establishes the
+dominant repeated work, not the cause of the slower LIVE runs.
+
+The production composition regression first failed because one new import called
+the analyzer twice. The command now carries its own fresh scoped analysis from
+validation into the first graph projection. Validation's public response remains
+unchanged. The existing projector resolves persisted authority and checks the
+current source revision through the analyzer's canonical source-selection policy.
+Normal graph queries still analyze freshly. Completed receipt replay precedes
+inspection, analysis and revision reads; no result cache spans commands.
+
+Source configuration, SQL/YAML and installed dependencies participate in the
+revision; generated output does not. Mismatched scope, root, invalid analysis,
+changed source or a failed revision read refuse completion and retain the existing
+lease-guarded compensation. The adapter shares source limits and hashing policy
+with its snapshot path instead of introducing another inventory or parser.
+
+The six affected specs pass 67 distinct cases, including the corrected typed
+authority refusal and causal authority-acquisition fixture. Production/test types
+and strict lint pass. The post-change real-provider observation uses the same
+three file hashes and produces the same analysis hash and two projected resources.
+Import takes 10.580 seconds: one parse takes 10.412 seconds and the source-revision
+read takes 10 milliseconds after authority acquisition. This pair of observations
+shows a 51.5% lower import duration; it is not a performance distribution or proof
+of the original LIVE timeout's exact cause. Both subprocess/request deadlines stay
+at 30 seconds, and the disposable stores and files are cleaned up.
+
+Exact commands, intermediate test/type/lint failures, complete pre-push and
+committed CI identities are recorded on #3115. The backend measurement alone does
+not certify acceptance of the full LIVE user flow.

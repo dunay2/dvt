@@ -8,6 +8,7 @@ import type {
   AnalyzeDbtProjectInput,
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
+  IDbtProjectSourceRevisionReader,
 } from '../../application/ports/dbtProjectAnalysis.js';
 
 import { deriveDbtAnalysisSha256 } from './dbtAnalysisIdentity.js';
@@ -17,7 +18,7 @@ import {
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
-import type { ProjectContentRevision } from './dbtProjectContentRevision.js';
+import type { ProjectContentLimits, ProjectContentRevision } from './dbtProjectContentRevision.js';
 import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
 import {
   buildDbtProjectSemanticEvidence,
@@ -27,6 +28,7 @@ import {
 import {
   DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
   DbtProjectSourcePolicyError,
+  hashDbtProjectSource,
   snapshotDbtProjectSource,
 } from './dbtProjectSourceSnapshot.js';
 import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
@@ -54,16 +56,15 @@ export type DbtCliProjectAnalyzerOptions = Readonly<{
   now?: () => Date;
 }>;
 
-export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
+export class DbtCliProjectAnalyzer
+  implements IDbtProjectAnalyzerPort, IDbtProjectSourceRevisionReader
+{
   private readonly workspaceFilesRoot: string;
   private readonly profilesDirectory: string | null;
   private readonly dbtExecutable: string;
   private readonly timeoutMs: number;
   private readonly maxOutputBytes: number;
-  private readonly maxProjectFiles: number;
-  private readonly maxProjectBytes: number;
-  private readonly maxProjectDirectories: number;
-  private readonly maxProjectDepth: number;
+  private readonly sourceLimits: ProjectContentLimits;
   private readonly processRunner: DbtProcessRunner;
   private readonly processEnvironment: NodeJS.ProcessEnv;
   private readonly now: () => Date;
@@ -75,14 +76,24 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     this.dbtExecutable = options.dbtExecutable ?? 'dbt';
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
-    this.maxProjectFiles = options.maxProjectFiles ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles;
-    this.maxProjectBytes = options.maxProjectBytes ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxBytes;
-    this.maxProjectDirectories =
-      options.maxProjectDirectories ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDirectories;
-    this.maxProjectDepth = options.maxProjectDepth ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDepth;
+    this.sourceLimits = {
+      maxFiles: options.maxProjectFiles ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles,
+      maxBytes: options.maxProjectBytes ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxBytes,
+      maxDirectories:
+        options.maxProjectDirectories ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDirectories,
+      maxDepth: options.maxProjectDepth ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDepth,
+    };
     this.processRunner = options.processRunner ?? NODE_DBT_PROCESS_RUNNER;
     this.processEnvironment = options.processEnvironment ?? process.env;
     this.now = options.now ?? (() => new Date());
+  }
+
+  public async readSourceRevision(
+    input: Pick<AnalyzeDbtProjectInput, 'scope' | 'projectRoot'>
+  ): Promise<string> {
+    const projectDirectory = await this.resolveProjectDirectory(input);
+    const revision = await hashDbtProjectSource({ projectDirectory, limits: this.sourceLimits });
+    return revision.sha256;
   }
 
   public async analyze(input: AnalyzeDbtProjectInput): Promise<DbtProjectAnalysis> {
@@ -122,12 +133,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         contentRevision = await snapshotDbtProjectSource({
           projectDirectory,
           snapshotDirectory,
-          limits: {
-            maxFiles: this.maxProjectFiles,
-            maxBytes: this.maxProjectBytes,
-            maxDirectories: this.maxProjectDirectories,
-            maxDepth: this.maxProjectDepth,
-          },
+          limits: this.sourceLimits,
         });
       } catch (error) {
         if (error instanceof DbtProjectSourcePolicyError) {

@@ -118,3 +118,12 @@ export type DbtProjectAnalysis = Readonly<{
 export interface IDbtProjectAnalyzerPort {
   analyze(input: AnalyzeDbtProjectInput): Promise<DbtProjectAnalysis>;
 }
+
+export type ScopedDbtProjectAnalysis = Readonly<{
+  scope: WorkspaceStorageScope;
+  analysis: DbtProjectAnalysis;
+}>;
+
+export interface IDbtProjectSourceRevisionReader {
+  readSourceRevision(input: Pick<AnalyzeDbtProjectInput, 'scope' | 'projectRoot'>): Promise<string>;
+}

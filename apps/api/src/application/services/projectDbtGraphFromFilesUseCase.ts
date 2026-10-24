@@ -1,4 +1,8 @@
-import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
+import {
+  DbtProjectGraphProjectionSchema,
+  type CanvasAuthoringAuthorityBinding,
+  type DbtProjectGraphProjection,
+} from '@dvt/contracts';
 
 import type {
   IDbtExecutionConnectionBindingVerifier,
@@ -6,10 +10,16 @@ import type {
 } from '../ports/dbtExecutionTarget.js';
 import type {
   DbtProjectAnalysisResource,
+  DbtProjectAnalysis,
   DbtProjectSourceIdentityRef,
   IDbtProjectAnalyzerPort,
+  IDbtProjectSourceRevisionReader,
+  ScopedDbtProjectAnalysis,
 } from '../ports/dbtProjectAnalysis.js';
-import { DbtProjectFileAuthorityRequiredError } from '../ports/dbtProjectImport.js';
+import {
+  DbtProjectFileAuthorityRequiredError,
+  DbtProjectImportProjectionError,
+} from '../ports/dbtProjectImport.js';
 import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 import { WarehouseConnectionNotFoundError } from '../ports/warehouseSourceImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
@@ -22,10 +32,16 @@ export type ProjectDbtGraphFromFilesInput = Readonly<{
   includeGovernedSourceIdentity?: boolean;
 }>;
 
+type FileAuthorityBinding = CanvasAuthoringAuthorityBinding &
+  Readonly<{
+    authority: Extract<CanvasAuthoringAuthorityBinding['authority'], { kind: 'dbt-project-files' }>;
+  }>;
+
 export class ProjectDbtGraphFromFilesUseCase {
   public constructor(
     private readonly deps: {
       readonly analyzer: IDbtProjectAnalyzerPort;
+      readonly sourceRevisionReader: IDbtProjectSourceRevisionReader;
       readonly authorityPolicy: Pick<CanvasAuthoringAuthorityPolicy, 'resolve'>;
       readonly executionTargetResolver: IDbtExecutionTargetResolver;
       readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
@@ -34,6 +50,44 @@ export class ProjectDbtGraphFromFilesUseCase {
   ) {}
 
   public async execute(input: ProjectDbtGraphFromFilesInput): Promise<DbtProjectGraphProjection> {
+    const authorityBinding = await this.resolveFileAuthority(input);
+    const analysis = await this.deps.analyzer.analyze({
+      scope: input.scope,
+      projectRoot: authorityBinding.authority.projectRoot,
+    });
+    return this.projectAnalysis(input, authorityBinding, analysis);
+  }
+
+  public async projectValidatedAnalysis(
+    input: ProjectDbtGraphFromFilesInput,
+    scopedAnalysis: ScopedDbtProjectAnalysis
+  ): Promise<DbtProjectGraphProjection> {
+    const { scope, analysis } = scopedAnalysis;
+    if (
+      scope.tenantId !== input.scope.tenantId ||
+      scope.projectId !== input.scope.projectId ||
+      scope.environmentId !== input.scope.environmentId ||
+      analysis.status !== 'valid'
+    ) {
+      throw new DbtProjectImportProjectionError();
+    }
+    const authorityBinding = await this.resolveFileAuthority(input);
+    if (analysis.projectRevision.projectRoot !== authorityBinding.authority.projectRoot) {
+      throw new DbtProjectImportProjectionError();
+    }
+    const currentRevision = await this.deps.sourceRevisionReader.readSourceRevision({
+      scope: input.scope,
+      projectRoot: authorityBinding.authority.projectRoot,
+    });
+    if (currentRevision !== analysis.projectRevision.contentSetSha256) {
+      throw new DbtProjectImportProjectionError();
+    }
+    return this.projectAnalysis(input, authorityBinding, analysis);
+  }
+
+  private async resolveFileAuthority(
+    input: ProjectDbtGraphFromFilesInput
+  ): Promise<FileAuthorityBinding> {
     const authorityBinding = await this.deps.authorityPolicy.resolve({
       ...input.scope,
       canvasId: input.canvasId,
@@ -42,10 +96,14 @@ export class ProjectDbtGraphFromFilesUseCase {
       throw new DbtProjectFileAuthorityRequiredError();
     }
 
-    const analysis = await this.deps.analyzer.analyze({
-      scope: input.scope,
-      projectRoot: authorityBinding.authority.projectRoot,
-    });
+    return { ...authorityBinding, authority: authorityBinding.authority };
+  }
+
+  private async projectAnalysis(
+    input: ProjectDbtGraphFromFilesInput,
+    authorityBinding: FileAuthorityBinding,
+    analysis: DbtProjectAnalysis
+  ): Promise<DbtProjectGraphProjection> {
     const connectionLookups = new Map<
       string,
       ReturnType<IWarehouseConnectionCatalog['getConnection']>

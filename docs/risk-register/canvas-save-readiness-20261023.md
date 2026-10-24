@@ -78,3 +78,18 @@ English-Spanish-English transition through the same Proxy. Static dictionaries
 replace repeated English resolution without adding a persistent cache or a new
 language preference owner. The catalogue's file ownership is distinct from
 Readiness evaluation and presentation policy.
+
+Dbt import analysis reuse is limited to one command invocation. The first
+projection resolves persisted authority, checks all three scope dimensions and
+the project root, and compares the current canonical source hash with the analyzed
+snapshot. It retains the existing source/dependency partition and limits. A stale
+or unreadable revision refuses completion and follows the existing lease-guarded
+compensation; completed idempotent replay still returns before reading files.
+The ordinary projection query continues to analyze freshly.
+
+This check observes file content rather than locking the filesystem or certifying
+external profile stability. Required negative tests and production composition
+cover the scope, freshness, replay and recovery boundaries. The original backend measurement
+showed repeated parsing dominated import duration but did not reproduce the LIVE
+timeout; only the subsequent real-provider acceptance can establish that the
+affected user flow passes. No request or subprocess deadline is increased.

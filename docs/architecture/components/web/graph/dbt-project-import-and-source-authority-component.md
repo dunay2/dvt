@@ -2,7 +2,7 @@
 title: dbt Project Import And Source Authority Component
 status: Active
 owner: dbt Project Authoring / Canvas
-last_reviewed: 2026-10-23
+last_reviewed: 2026-10-24
 planning_type: architecture
 task_id: E-DBT-PROJECT-ROUNDTRIP-1
 ---
@@ -67,7 +67,7 @@ lease-guarded completion or compensation.
 | `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                                                   | Import policy or command/query orchestration changes.                                   |
 | `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.                          | Filesystem compatibility or import security policy changes.                             |
 | `DbtProjectSourcePathPolicy`         | Partition project source from configured dbt runtime-artifact directories.                               | dbt path configuration or source-selection policy changes.                              |
-| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                                       | Authority transition or default-resolution policy changes.                              |
+| `CanvasAuthoringAuthorityPolicy`     | Resolve persisted file or graph authority and reject missing or mixed authority.                         | Authority resolution policy changes.                                                    |
 | `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                                        | PostgreSQL persistence or conflict mechanics change.                                    |
 | `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                                               | Protected runtime dependency wiring changes.                                            |
 | `DbtProjectImportProcessStore`       | Own the durable import operation, lease, authority transition, compensation, and exact completed replay. | Import recovery, process ownership, or PostgreSQL transaction semantics change.         |
@@ -222,6 +222,7 @@ sequenceDiagram
   participant Import as ImportDbtProject
   participant Process as Import process store
   participant Graph as ProjectDbtGraphFromFiles
+  participant Revision as Source revision reader
   participant Source as ImportWarehouseSources
 
   User->>UI: enter workspace-relative project root
@@ -243,7 +244,10 @@ sequenceDiagram
     else new or expired operation acquired
       Process-->>Import: lease token and persisted authority
     end
-    Import->>Graph: first persisted-authority projection
+    Import->>Graph: first projection with this invocation's scoped analysis
+    Graph->>Graph: resolve persisted authority and verify analysis scope and root
+    Graph->>Revision: hash current canonical source set
+    Revision-->>Graph: source revision must match analyzed snapshot
     Graph-->>Import: fresh projection
     Import->>Process: complete exact result under lease
     opt projection or completion failure
@@ -258,6 +262,23 @@ sequenceDiagram
     Graph-->>UI: one source node per declared table
   end
 ```
+
+The import command owns one fresh analysis for its invocation. Validation's
+internal evaluation returns the report and scoped analysis; its public query
+returns only the existing report. The first projection reuses that server-owned
+analysis only after resolving persisted authority and checking the current source
+revision. It shares the ordinary graph query's projection policy. The ordinary
+query continues to analyze freshly, and a completed import replays its receipt
+before any inspection, analysis or revision read.
+
+The source-revision gateway uses the analyzer's existing source-selection policy:
+project configuration, source files and installed dependencies participate;
+generated target/log output does not. Scope, path and traversal limits remain
+enforced. A changed or unreadable revision fails the import and invokes its
+existing lease-guarded compensation. This removes a second complete parse without
+a cross-request cache, client-supplied analysis or relaxed request deadline.
+The revision check observes current file content; it does not lock the filesystem
+or establish stability of external profiles and credentials.
 
 ## File-Backed Source Import Sequence
 
@@ -293,8 +314,9 @@ sequenceDiagram
 
 - The server resolves authority from persisted state; URL parameters cannot
   establish authority.
-- An unbound Canvas is graph-draft by default. `ImportDbtProject` may bind only
-  a Canvas id that is not already present in the graph-draft aggregate.
+- Missing and mixed persisted authority are typed refusals. Graph-draft authority
+  requires the Canvas to exist in the persisted graph-draft aggregate.
+  `ImportDbtProject` may bind only an unoccupied Canvas id.
 - The two persistence paths enforce that rule symmetrically: file-authority
   binding and graph-draft save acquire the same scoped transaction lock and
   revalidate the competing store before commit. A concurrent claim has exactly
@@ -305,6 +327,10 @@ sequenceDiagram
   hash still match a fresh inspection.
 - A successful import persists authority before reporting success and proves
   the first projection through that persisted authority.
+- The first projection accepts only the current import invocation's valid
+  analysis for the same tenant, project, environment and project root. It checks
+  the source revision again after authority acquisition and never trusts a client
+  receipt as an analysis result.
 - A completed import persists its exact command result before responding. An
   equivalent retry replays that result before inspecting mutable project files;
   reuse of the same idempotency key for another command fails closed.
@@ -383,6 +409,9 @@ rather than represented by duplicate adapter-level logs.
 6. API tests prove validation is read-only, import is explicit, the first
    graph projection resolves persisted authority, and a completed command
    replays its original result after later project-file changes.
+   Composition tests prove one parse per new import, no analysis or revision read
+   on completed replay, fresh ordinary graph queries, and failure compensation
+   for changed or unreadable content and mismatched analysis scope or root.
 7. PostgreSQL process-store tests prove one active lease owner, expired-lease
    recovery, stale-owner rejection, completed-result precedence, mismatch
    rejection, and safe authority compensation after injected projection or

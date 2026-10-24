@@ -3,7 +3,10 @@ import type {
   IDbtExecutionConnectionBindingVerifier,
   IDbtExecutionTargetResolver,
 } from '../../application/ports/dbtExecutionTarget.js';
-import type { IDbtProjectAnalyzerPort } from '../../application/ports/dbtProjectAnalysis.js';
+import type {
+  IDbtProjectAnalyzerPort,
+  IDbtProjectSourceRevisionReader,
+} from '../../application/ports/dbtProjectAnalysis.js';
 import type {
   IDbtProjectImportInspectorPort,
   IDbtProjectImportProcessStore,
@@ -19,6 +22,7 @@ import { ValidateDbtProjectImportUseCase } from '../../application/services/vali
 
 export type BuildDbtProjectImportRuntimeDeps = {
   readonly analyzer: IDbtProjectAnalyzerPort;
+  readonly sourceRevisionReader: IDbtProjectSourceRevisionReader;
   readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
   readonly executionTargetResolver: IDbtExecutionTargetResolver;
   readonly inspector: IDbtProjectImportInspectorPort;
@@ -33,6 +37,7 @@ export type BuildDbtProjectImportRuntimeDeps = {
 export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeDeps) {
   const projectGraphUseCase = new ProjectDbtGraphFromFilesUseCase({
     analyzer: deps.analyzer,
+    sourceRevisionReader: deps.sourceRevisionReader,
     authorityPolicy: deps.authorityPolicy,
     executionConnectionBindingVerifier: deps.executionConnectionBindingVerifier,
     executionTargetResolver: deps.executionTargetResolver,

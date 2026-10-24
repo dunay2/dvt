@@ -29,9 +29,9 @@ import type { ValidateDbtProjectImportUseCase } from './validateDbtProjectImport
 export class ImportDbtProjectUseCase {
   public constructor(
     private readonly deps: {
-      readonly validator: Pick<ValidateDbtProjectImportUseCase, 'execute'>;
+      readonly validator: Pick<ValidateDbtProjectImportUseCase, 'evaluate'>;
       readonly processStore: IDbtProjectImportProcessStore;
-      readonly projectGraph: Pick<ProjectDbtGraphFromFilesUseCase, 'execute'>;
+      readonly projectGraph: Pick<ProjectDbtGraphFromFilesUseCase, 'projectValidatedAnalysis'>;
       readonly now: () => Date;
       readonly createLeaseToken: () => string;
       readonly operationLeaseMs: number;
@@ -56,12 +56,12 @@ export class ImportDbtProjectUseCase {
       return DbtProjectImportResultSchema.parse(replay.result);
     }
 
-    const freshReport = await this.deps.validator.execute(scope, {
+    const evaluation = await this.deps.validator.evaluate(scope, {
       schemaVersion: 'validate-dbt-project-import-request.v1',
       projectRoot: command.validationReceipt.projectRoot,
     });
-    if (freshReport.status !== 'accepted') throw new DbtProjectImportRejectedError();
-    if (!sameReceipt(command.validationReceipt, freshReport.receipt)) {
+    if (evaluation.status !== 'accepted') throw new DbtProjectImportRejectedError();
+    if (!sameReceipt(command.validationReceipt, evaluation.report.receipt)) {
       throw new DbtProjectImportStaleReceiptError();
     }
     const binding = {
@@ -100,10 +100,13 @@ export class ImportDbtProjectUseCase {
     }
 
     try {
-      const projection = await this.deps.projectGraph.execute({
-        scope,
-        canvasId: command.canvasId,
-      });
+      const projection = await this.deps.projectGraph.projectValidatedAnalysis(
+        {
+          scope,
+          canvasId: command.canvasId,
+        },
+        evaluation.scopedAnalysis
+      );
       if (
         projection.freshness !== 'fresh' ||
         projection.authorityBinding.authority.kind !== 'dbt-project-files' ||
