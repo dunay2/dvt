@@ -32,6 +32,46 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
     vi.clearAllMocks();
   });
 
+  it('preserves a cause-specific diagnostic and observes its change without summary churn', async () => {
+    const shell = buildCanvasShellProps();
+    const policy = shell.layout.surfaceStrategy!.operationalDrawer!;
+    const dataSampleTabs = [] as const;
+    const renderDiagnostic = (message: string) => (
+      <CanvasOperationalDrawerContributionRegistrar
+        policy={policy}
+        panels={shell.panels}
+        chromeState={{
+          ...shell.chromeState,
+          planRunReadiness: {
+            rail: 'ObservePlanRunReadiness',
+            status: 'blocked',
+            blockers: ['plan_integrity'],
+            summary: 'Preview is blocked',
+            diagnostic: { blocker: 'plan_integrity', message },
+          },
+        }}
+        runControls={shell.runControls}
+        onPreviewExecutionPlan={vi.fn()}
+        onStartRun={vi.fn()}
+        selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
+        dataSampleTabs={dataSampleTabs}
+      />
+    );
+    await act(async () => root.render(renderDiagnostic('Current cause A')));
+    const first = useOperationalDrawerContributionStore.getState().contribution;
+    expect(first?.problems.items.find((p) => p.id === 'plan_integrity')?.message).toBe(
+      'Current cause A'
+    );
+    await act(async () => root.render(renderDiagnostic('Current cause A')));
+    expect(useOperationalDrawerContributionStore.getState().contribution).toBe(first);
+    await act(async () => root.render(renderDiagnostic('Current cause B')));
+    const changed = useOperationalDrawerContributionStore.getState().contribution;
+    expect(changed).not.toBe(first);
+    expect(changed?.problems.items.find((p) => p.id === 'plan_integrity')?.message).toBe(
+      'Current cause B'
+    );
+  });
+
   it('keeps one registered snapshot while equivalent shell contracts are reallocated', async () => {
     const shell = buildCanvasShellProps();
     const policy = shell.layout.surfaceStrategy!.operationalDrawer!;
