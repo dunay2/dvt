@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-10-22
+last_reviewed: 2026-10-24
 planning_type: architecture
 ---
 
@@ -272,6 +272,16 @@ graph query allocates equivalent sets. The pending editor must retain its typed
 values, DOM identity and keyboard focus. Actual permission, connection, document
 or error changes still publish through the existing session and invalidate stale
 operand queries; the form cannot cache an older grant to preserve its contents.
+
+The React boundary admits received documents and eligibility by value before
+running session effects. An equivalent acknowledgement can arrive after a local
+command has applied its change but before the parent publishes that result; it
+must not feed the previous document back into the working session. Published
+state retains its admitted input identity and revision explicitly. Memoization
+preserves object identity but does not decide authority. Actual document,
+connection or permission changes still invalidate obsolete work. Document
+equality has one implementation shared by the session and this boundary; output
+rows and focus recovery remain consumers.
 
 The expanded #3612 request covers composable aggregate/window inputs and
 existence predicates through the existing relational operators, not SQL text

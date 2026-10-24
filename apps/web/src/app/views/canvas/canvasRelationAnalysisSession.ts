@@ -25,6 +25,19 @@ import {
   canvasRetainedOutputSchemaIsEligible,
 } from './canvasInputFieldEligibility';
 
+export function areCanvasRelationDocumentsEqual(
+  left: SubstraitDocument | null,
+  right: SubstraitDocument | null
+): boolean {
+  return (
+    left === right ||
+    (left != null &&
+      right != null &&
+      equals(PlanSchema, left.plan, right.plan) &&
+      jcsCanonicalize(left.sidecar) === jcsCanonicalize(right.sidecar))
+  );
+}
+
 export class CanvasRelationAnalysisSession {
   private analysis: RelationAnalysisSession | null = null;
   private accepted: SubstraitDocument | null = null;
@@ -62,13 +75,7 @@ export class CanvasRelationAnalysisSession {
   }
 
   hasDocument(document: SubstraitDocument | null): boolean {
-    return (
-      document === this.accepted ||
-      (document != null &&
-        this.accepted != null &&
-        equals(PlanSchema, document.plan, this.accepted.plan) &&
-        jcsCanonicalize(document.sidecar) === jcsCanonicalize(this.accepted.sidecar))
-    );
+    return areCanvasRelationDocumentsEqual(document, this.accepted);
   }
 
   private reindexSources(document: SubstraitDocument | null): void {

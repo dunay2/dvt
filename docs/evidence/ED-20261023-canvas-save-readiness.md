@@ -15,6 +15,8 @@ code_refs:
   - apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
   - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts
+  - apps/web/src/app/views/canvas/canvasRelationAnalysisSession.ts
+  - apps/web/src/app/views/canvas/useCanvasRelationAnalysisSession.ts
   - apps/api/src/application/services/dvtWorkloadPublication.ts
   - apps/api/src/application/services/importDbtProjectUseCase.ts
   - apps/api/src/application/services/validateDbtProjectImportUseCase.ts
@@ -23,6 +25,7 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/DvtOperationalRejection.v1.ts
 evidence:
   tests:
+    - pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasRelationOutputs.test.tsx src/app/views/canvas/useCanvasRelationAnalysisSession.test.tsx src/app/views/canvas/CanvasStagedAnalysisProvider.test.tsx
     - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasDraftAutosave.test.tsx src/app/views/canvas/canvasDraftAutosaveSnapshot.test.ts src/app/views/canvas/canvasDraftPersistenceRuntime.test.ts src/app/views/canvas/useCanvasDraftAutosave.architecture.test.ts
     - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasPlanReadiness.test.ts src/app/views/canvas/canvasRuntimePolicy.test.ts src/app/views/canvas/canvasOperationalDrawerContribution.test.tsx src/app/views/canvas/canvasPlanAction.dvtProtectedPreview.test.ts
     - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts
@@ -561,3 +564,27 @@ negative assertions, deadlines and retries remain unchanged. This maintenance
 adds no product rail, configuration, parser framework or alternate catalogue.
 Focused results and the complete committed acceptance are recorded in #3115;
 the failed normal pre-push is not treated as partial acceptance.
+
+## Output Publication During Acknowledgement
+
+The next normal pre-push passes presentation, Monaco, unit and architecture,
+then fails focus retention when reincluding a field in the three-input browser
+journey. Passive diagnostics locate a null analysis context and destroyed
+control; row keys and focus recovery are not the cause. Later instrumented runs
+pass, so those observations alone do not establish the precise interleaving.
+All temporary instrumentation is removed.
+
+The [bounded publication plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6385300714)
+adds a deterministic interleaving to the existing output-control test. An
+equivalent received acknowledgement arrives after the real command applies its
+edit and before publication. Before correction it destroys the control and
+prevents publication; the other 15 cases pass. The React boundary now admits
+received document and eligibility values before effects, retains the published
+input identity explicitly and shares the session's document equality predicate.
+Equivalent allocations cannot reapply the previous document over a pending local
+edit. Genuine changes retain the existing invalidation and rejection behavior.
+
+The existing command record is amended with revision checking; no product rail,
+component or feature manifest is added. No focus override, retry, wait, deadline,
+coverage or hook exception is introduced. Exact focused, browser and complete
+acceptance results remain recorded in #3115.
