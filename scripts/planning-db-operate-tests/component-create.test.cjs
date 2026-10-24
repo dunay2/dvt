@@ -1,6 +1,7 @@
 const test = require('node:test');
 const {
   assert,
+  assertComponentIdempotentReplayMatches,
   parseArgs,
   planComponentCreateOperation,
   planComponentReparentOperation,
@@ -450,7 +451,13 @@ test('component revise planner overlays imported semantics under design scope', 
   assert.equal(planned.audit.operationType, 'component_revise');
   assert.equal(planned.audit.previousRevision, 0);
   assert.equal(planned.audit.resultingRevision, 1);
-  for (const field of ['cqRails', 'dddOwner', 'removeNonGoals', 'removeReasonsToChange']) {
+  for (const field of [
+    'cqRails',
+    'dddOwner',
+    'removeNonGoals',
+    'removeReasonsToChange',
+    'removePublicApi',
+  ]) {
     assert.equal(Object.hasOwn(planned.audit.payload, field), false);
   }
 });
@@ -477,6 +484,12 @@ test('component revise corrects current semantics with explicit deltas and audit
     'Generic non-goal.',
     '--non-goal',
     'Publication policy belongs to API.',
+    '--remove-public-api',
+    'detectCanvasViewLocale',
+    '--remove-public-api',
+    'legacyLocale',
+    '--public-api',
+    'canvasViewCopy',
     '--source-ref',
     'https://github.com/dunay2/dvt/issues/3115',
     '--source-content-sha256',
@@ -507,6 +520,7 @@ test('component revise corrects current semantics with explicit deltas and audit
       reasons_to_change: ['Generic lifecycle changes.', 'Preserve another admitted reason.'],
       ddd_owner: 'Old owner',
       cq_rails: 'PreviewPlan',
+      public_api: ['detectCanvasViewLocale', 'legacyLocale', 'resolveCanvasViewCopy'],
       revision: 7,
     },
     latestOperation: null,
@@ -521,13 +535,54 @@ test('component revise corrects current semantics with explicit deltas and audit
     'Preview identity or Run submission protocol changes.',
   ]);
   assert.deepEqual(planned.definition.nonGoals, ['Publication policy belongs to API.']);
+  assert.deepEqual(command.removePublicApi, ['detectCanvasViewLocale', 'legacyLocale']);
+  assert.deepEqual(planned.definition.publicApi, ['resolveCanvasViewCopy', 'canvasViewCopy']);
+  assert.deepEqual(
+    planned.semanticItems
+      .filter((item) => item.itemKind === 'public_api')
+      .map((item) => item.itemValue),
+    ['resolveCanvasViewCopy', 'canvasViewCopy']
+  );
   assert.deepEqual(planned.definition.owns, input.existingComponent.owns);
   assert.equal(planned.definition.revision, 8);
   assert.equal(planned.audit.payload.cqRails, 'PreviewPlan; StartRun');
   assert.deepEqual(planned.audit.payload.removeReasonsToChange, ['Generic lifecycle changes.']);
+  assert.deepEqual(planned.audit.payload.removePublicApi, command.removePublicApi);
+  const storedOperation = {
+    operation_type: planned.audit.operationType,
+    actor: planned.audit.actor,
+    component_id: planned.audit.componentId,
+    expected_revision: planned.audit.expectedRevision,
+    payload: planned.audit.payload,
+  };
+  assert.deepEqual(storedOperation.payload.resultingDefinition, planned.definition);
+  assert.doesNotThrow(() => assertComponentIdempotentReplayMatches(storedOperation, command));
+  assert.throws(
+    () =>
+      assertComponentIdempotentReplayMatches(storedOperation, {
+        ...command,
+        removePublicApi: ['differentLocale'],
+      }),
+    /different governance component operation/
+  );
+  assert.throws(
+    () =>
+      assertComponentIdempotentReplayMatches(
+        { ...storedOperation, payload: { ...storedOperation.payload, unknownRequest: true } },
+        command
+      ),
+    /different governance component operation/
+  );
   const differentRails = args.slice();
   differentRails[differentRails.indexOf('--cq-rails') + 1] = 'PreviewPlan';
   assert.notEqual(command.idempotencyKey, parseArgs(differentRails).idempotencyKey);
+  const differentRemoval = args.slice();
+  differentRemoval[differentRemoval.indexOf('--remove-public-api') + 1] = 'otherLocale';
+  assert.notEqual(command.idempotencyKey, parseArgs(differentRemoval).idempotencyKey);
+  assert.throws(
+    () => parseArgs([...args, '--remove-public-api']),
+    /Missing value for --remove-public-api/
+  );
   assert.throws(
     () => planComponentReviseOperation({ ...input, command: { ...command, expectedRevision: 6 } }),
     /expected revision 6/
@@ -548,6 +603,36 @@ test('component revise corrects current semantics with explicit deltas and audit
         command: { ...command, removeNonGoals: ['Unknown non-goal.'] },
       }),
     /unknown non-goal/
+  );
+  assert.throws(
+    () =>
+      planComponentReviseOperation({
+        ...input,
+        command: { ...command, removePublicApi: ['unknownLocale'] },
+      }),
+    /unknown public-api/
+  );
+  const removalOnly = parseArgs([
+    'component',
+    'revise',
+    '--design',
+    command.designId,
+    '--component',
+    command.componentId,
+    '--remove-public-api',
+    'legacyLocale',
+    '--expected-revision',
+    '7',
+    '--source-ref',
+    command.sourceRef,
+    '--source-content-sha256',
+    command.sourceContentSha256,
+    '--actor',
+    'codex',
+  ]);
+  assert.deepEqual(
+    planComponentReviseOperation({ ...input, command: removalOnly }).definition.publicApi,
+    ['detectCanvasViewLocale', 'resolveCanvasViewCopy']
   );
 });
 

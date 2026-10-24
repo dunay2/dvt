@@ -313,6 +313,7 @@ const componentListOptionKeys = new Set([
   'remove-excludes',
   'remove-non-goal',
   'remove-reason-to-change',
+  'remove-public-api',
 ]);
 const featureMechanizationListOptionKeys = new Set([
   'component-guide',
@@ -338,7 +339,7 @@ const operationHelp = Object.freeze({
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
       'ReviseGovernanceComponent overlays imported ownership, status, and semantic metadata through a scoped, audited DB command.',
-      'Revise accepts --cq-rails and --ddd-owner corrections, plus exact --remove-reason-to-change and --remove-non-goal deltas with their existing add flags.',
+      'Revise accepts --cq-rails and --ddd-owner corrections, plus exact --remove-reason-to-change, --remove-non-goal and --remove-public-api deltas with their existing add flags.',
       'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
@@ -1544,6 +1545,7 @@ function operationPayload(command) {
         ? { removeReasonsToChange: command.removeReasonsToChange }
         : {}),
       publicApi: command.publicApi || [],
+      ...(command.removePublicApi?.length ? { removePublicApi: command.removePublicApi } : {}),
       invariants: command.invariants || [],
       transitions: command.transitions || [],
       consumers: command.consumers || [],
@@ -1822,7 +1824,8 @@ function normalizeRevision(value) {
 
 function assertComponentIdempotentReplayMatches(existingOperation, command) {
   const expectedPayload = operationPayload(command);
-  const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const existingPayload = { ...normalizeExistingPayload(existingOperation.payload) };
+  if (command.kind === 'component_revise') delete existingPayload.resultingDefinition;
   const sameOperation =
     existingOperation.operation_type === command.kind &&
     existingOperation.actor === command.actor &&
@@ -2190,6 +2193,7 @@ function validateComponentReviseCommand(command) {
     ...(command.removeNonGoals || []),
     ...(command.removeReasonsToChange || []),
     ...(command.publicApi || []),
+    ...(command.removePublicApi || []),
     ...(command.invariants || []),
     ...(command.transitions || []),
     ...(command.consumers || []),
@@ -2269,6 +2273,7 @@ function parseComponentCommand(action, args) {
       removeNonGoals: normalizeListOption(options.removeNonGoal),
       removeReasonsToChange: normalizeListOption(options.removeReasonToChange),
       publicApi: normalizeListOption(options.publicApi),
+      removePublicApi: normalizeListOption(options.removePublicApi),
       invariants: normalizeListOption(options.invariant),
       transitions: normalizeListOption(options.transition),
       consumers: normalizeListOption(options.consumer),
@@ -5052,7 +5057,13 @@ function planComponentReviseOperation({
       command.reasonsToChange,
       command.removeReasonsToChange
     ),
-    publicApi: mergeUniqueValues(component.publicApi, command.publicApi),
+    publicApi: applyComponentPatternDelta(
+      command.componentId,
+      'public-api',
+      component.publicApi,
+      command.publicApi,
+      command.removePublicApi
+    ),
     invariants: mergeUniqueValues(component.invariants, command.invariants),
     transitions: mergeUniqueValues(component.transitions, command.transitions),
     consumers: mergeUniqueValues(component.consumers, command.consumers),
