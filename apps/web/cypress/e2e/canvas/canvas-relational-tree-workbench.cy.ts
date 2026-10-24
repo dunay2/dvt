@@ -144,6 +144,69 @@ describe('Workbench navigation', () => {
       '[data-slot="dvt-relation-authoring"], [data-slot="dvt-relational-operation-chooser"]'
     ).should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    for (const width of [1280, 1024]) {
+      cy.viewport(width, 720);
+      cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor')
+        .should('be.visible')
+        .and(($editor) => {
+          const editor = $editor[0]!;
+          const panel = editor.closest('[data-slot="canvas-node-workbench-panel"]')!;
+          const bounds = editor.getBoundingClientRect();
+          const panelBounds = panel.getBoundingClientRect();
+          expect(bounds.height, 'usable code editor height').to.be.at.least(160);
+          expect(bounds.bottom, 'editor stays inside Inspector').to.be.at.most(panelBounds.bottom);
+          expect(bounds.right, 'editor stays inside Inspector width').to.be.at.most(
+            panelBounds.right
+          );
+          expect(
+            editor.querySelector('.view-lines')?.textContent,
+            'rendered canonical code'
+          ).to.contain('schemaVersion');
+        });
+      cy.get('[data-slot="dvt-transform-output-view"]').should(($output) => {
+        expect($output[0]!.scrollWidth, 'output has no horizontal overflow').to.be.at.most(
+          $output[0]!.clientWidth
+        );
+      });
+      cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+        `inspector-code-visible-${width}`
+      );
+    }
+    cy.get('[data-slot="canvas-node-workbench-tabs-list"] [role="tab"]')
+      .last()
+      .should('have.attr', 'data-slot', 'canvas-node-workbench-tab-code');
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').click();
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor')
+      .should('be.visible')
+      .and(($editor) => {
+        expect($editor[0]!.getBoundingClientRect().height).to.be.at.least(160);
+      });
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('postgres-sql');
+    cy.get('[data-slot="canvas-node-workbench-code-content"] [data-testid="monaco-code-viewer"]')
+      .should('have.length', 1)
+      .find('.view-lines')
+      .should(($lines) => {
+        expect($lines.text(), 'derived SQL uses the shared viewer').to.match(/\bselect\b/i);
+      });
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
+      expect(
+        $editor[0]!.getBoundingClientRect().height,
+        'SQL keeps the usable editor height'
+      ).to.be.at.least(160);
+    });
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('inspector-derived-sql');
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .view-lines').should(
+      'contain.text',
+      'schemaVersion'
+    );
+    cy.then(() => {
+      expect(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+        'inspection does not save the graph'
+      ).to.have.length(0);
+    });
     cy.get('[data-slot="canvas-open-semantic-editor"]').click();
     cy.get('[data-slot="canvas-model-main-tab"]')
       .should('have.length', 1)

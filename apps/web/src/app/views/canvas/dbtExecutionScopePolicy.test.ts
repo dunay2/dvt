@@ -198,12 +198,14 @@ describe('buildDbtExecutionIntentDraftSignature', () => {
       selection,
       selectionMode: 'workspace',
       requestedRootNodeIds: ['model.orders'],
+      workspaceArtifacts: null,
     });
     const explicitSignature = buildDbtExecutionIntentDraftSignature({
       graphSource,
       selection,
       selectionMode: 'explicit',
       requestedRootNodeIds: ['model.orders'],
+      workspaceArtifacts: null,
     });
 
     expect(workspaceSignature).not.toBe(explicitSignature);

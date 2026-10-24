@@ -54,6 +54,28 @@ function sourceObject(locator: SourceObject['locator']): SourceObject {
 }
 
 describe('SourceObjectCatalog', () => {
+  it('preserves provider table and column comments as optional plain text', () => {
+    const input = {
+      ...sourceObject({
+        kind: 'relation',
+        catalog: 'dvt',
+        schema: 'raw',
+        name: 'orders',
+        relationType: 'table',
+      }),
+      comment: ' Orders from ERP.\n  Updated nightly. ',
+      columns: [
+        { name: 'id', type: 'integer', nullable: false, comment: 'External <id>\nSecond line.' },
+      ],
+    };
+    expect(SourceObjectSchema.parse(input)).toEqual(input);
+    expect(SourceObjectSchema.safeParse({ ...input, comment: null }).success).toBe(false);
+    expect(SourceObjectSchema.safeParse({ ...input, comment: '  ' }).success).toBe(false);
+    expect(
+      SourceObjectSchema.safeParse({ ...input, columns: [{ ...input.columns[0], comment: 42 }] })
+        .success
+    ).toBe(false);
+  });
   it.each<SourceObject['locator']>([
     {
       kind: 'relation',

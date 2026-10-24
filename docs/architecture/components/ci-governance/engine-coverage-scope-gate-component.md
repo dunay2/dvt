@@ -118,8 +118,15 @@ governed by [#2928](https://github.com/dunay2/dvt/issues/2928).
 Within Test Suite, Engine Coverage Gate owns the entire engine test suite,
 including architecture, determinism and replay tests. The generic package matrix
 excludes engine, and no separate determinism/replay job repeats its collection.
-Local focus commands remain available. Real adapter/provider integrations and
-the Code Quality main/manual baseline remain independent and unchanged.
+Local focus commands and real adapter/provider integrations remain independent.
+On a push to `main`, Code Quality runs the existing `ci:docs` and `ci:code`
+baseline without another coverage invocation. Engine Coverage Gate is the sole
+coverage producer for that push, and `Test Suite Required for Merge` remains
+the required consumer of its result and fresh report. A manual Code Quality
+dispatch does not start Test Suite, so it retains `ci:full`, including coverage.
+The local `pnpm ci:full` command also retains that complete standalone contract.
+One Code Quality step selects the command by event and keeps the same dependency
+preparation, Planning DB bootstrap and execution environment for both paths.
 
 `coverage_relevant` includes the union of the displaced routes: engine package
 scope, determinism scope, existing coverage scope and root-build-sensitive
@@ -131,6 +138,9 @@ flowchart LR
     Scope[Shared semantic scope: union of engine triggers] --> Coverage[All engine tests with V8 once]
     Coverage --> Aggregate[Test Suite Required for Merge]
     Other[Other package and integration lanes] --> Aggregate
+    Push[Push to main] --> Baseline[Code Quality: ci:docs and ci:code]
+    Push --> Coverage
+    Manual[Manual Code Quality or local full validation] --> Full[ci:full including coverage]
 ```
 
 The existing required aggregate implements `ValidateTestSuiteEvidenceResult`, a
@@ -147,7 +157,10 @@ lanes to be skipped; `ready_for_review` recalculates the current SHA's scope.
 Push and manual events require every lane. Missing/malformed scope, missing
 results, failure, cancellation and unsupported events reject. The check name
 and repository protections remain unchanged. Executable workflow tests in
-`tools/ci/test-suite-outcome.test.mjs` protect these outcomes.
+`tools/ci/test-suite-outcome.test.mjs` protect these outcomes and resolve the
+actual Code Quality command for push, manual and PR events. They preserve the
+local full command and reject missing, skipped, failed or cancelled coverage
+on both push and manual Test Suite runs.
 
 ## DDD Objects
 

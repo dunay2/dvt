@@ -308,6 +308,85 @@ Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
+### Inspector Code Placement And Height
+
+The current Inspector implementation has two ownership boundaries, recorded in
+Planning DB rather than source-file metadata headers:
+
+| Component                        | Owned concern                                                                                              | Delegated concerns                                                                 |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `SYS-WEB-CANVAS-NODE-WORKBENCH`  | Compose node sections, contributions, tab requests and the passive property read model                     | Draft edits/persistence, code projection and shared editor implementation          |
+| `SYS-WEB-CANVAS-CODE-INSPECTION` | Present canonical output and request input-bound derived SQL through the existing graph projection adapter | Compiler semantics, graph edits, persistence, Run and shared Monaco implementation |
+
+The module entrypoints are `CanvasNodeWorkbenchPanel.tsx` and
+`DvtTransformCodeWorkbenchContent.tsx`. Their exact multi-file ownership,
+function responsibilities and required-test evidence remain in Planning DB;
+the shared Canvas folder is not a separate ownership claim for each module.
+
+Both use `RenderCanvasContextualGraphSurface`. Inspecting code returns a read
+model and updates local selection state; it does not write the draft, publish
+artifacts or execute SQL. Opening the semantic editor delegates its existing
+navigation callback. Mutations remain on the existing authoring command handlers.
+
+Derived SQL belongs to the exact transform, nodes and edges references supplied
+to its query. A pending query is reused for repeated selection of those inputs;
+a ready result is reused only for those inputs. Changed references invalidate
+the visible derived result and show canonical output until SQL is explicitly
+requested again. This conservative constant-time invalidation also covers
+layout-only reference changes and schedules no automatic compilation. Failures
+remain visible and a subsequent explicit selection can retry. Older completions
+cannot overwrite a newer request.
+
+Canonical JSON and ready SQL use one shared Monaco rendering path. The output
+view owns its flex growth directly; an extra height-distributing wrapper is not
+needed between it and the code contribution.
+
+The existing node-workbench section policy places General first and Code after
+the other supported primary sections. Explicit tab requests remain authoritative;
+the More action retains overflow sections. Source keeps its bounded Overview,
+Columns and Inputs / Outputs order.
+
+Canonical Transform output uses the available Inspector height through the
+existing section, contribution and output flex columns. The output container
+must allocate remaining height to the shared read-only Monaco surface. Editor
+height is not a fixed pixel value and no JavaScript resize state is introduced.
+Rendered acceptance checks code lines, containment and resizing, while preserving
+the canonical document and existing semantic-editor entry action.
+
+### Shared Inspector Form Typography
+
+The node authoring section applies the compact Inspector form typography from
+`inspectorVisualTokens`. Existing Input, Label, Textarea, native select and select
+trigger slots share the same `text-xs` scale as the Inspector tabs. Plugin fields
+and general name/tags/description fields inherit this one presentation boundary;
+individual fields do not duplicate font-size overrides. Read-only property facts
+use the same body scale in the Inspector and workbench variants. Global UI primitives,
+title hierarchy, control heights, code-editor typography and mutation handlers
+retain their existing owners.
+
+The rendered acceptance compares computed label/control font sizes with the
+General tab at two desktop widths, checks focus and form overflow, and retains
+the protected Model save flow. A matching class string is not visual evidence.
+
+### Native Source Overview And Provider Comments
+
+The narrow Source Overview uses full-width stacked source and DVT sections,
+compact label/value facts, and activated inline editing. It retains readable
+font sizes rather than splitting the panel into two narrow columns. Table
+comments come only from the canonical imported `metadata.sourceComment` snapshot;
+column comments come from validated `SourceObjectColumn.comment` facts. A compact
+column-row indicator opens the existing detail containing the complete plain
+text comment. Missing comments render as an em dash in detail. Long text wraps
+without horizontal overflow. DVT descriptions remain independently authored.
+
+```mermaid
+flowchart LR
+    Provider[Authorized provider catalog] --> Snapshot[Import or rebind snapshot]
+    Snapshot --> Overview[Compact Source facts and read-only table comment]
+    Snapshot --> Detail[Column indicator and full detail comment]
+    Authoring[Existing DVT authoring rail] --> Description[DVT description]
+```
+
 ### Compact Header Reflow
 
 The real workbench viewport proof exposed a regression at 640 x 450 CSS pixels:
@@ -475,6 +554,50 @@ sequenceDiagram
 | `RenderCanvasContextualGraphSurface` | query   | Canvas graph presentation | Proves screen composition without creating product behavior.    |
 
 No backend command/query rail changes are introduced by this component.
+
+### Source Column Inspection Density
+
+The existing contextual surface also presents `SourceColumnFacts` through passive
+column rows and a drill-in detail. Rows retain a minimum 44 px target and two
+readable lines, with reduced padding and a compact type cue. Detail height follows
+its content: navigation appears directly after the facts rather than below an
+artificial minimum-height area.
+
+The detail names the column once and renders physical type, nullability and
+constraint in one labelled definition list. A second summary does not repeat type
+or nullability. Unknown nullability remains unknown, and long physical types and
+column names remain fully readable in detail. The existing facts projection,
+filtered navigation, focus restoration, transfer and local ordering own their
+semantics; density changes do not issue provider requests or persist a draft.
+
+### Source Catalogue Presentation
+
+The existing `RenderCanvasContextualGraphSurface` query presents registered
+source definitions through `CanvasGraphExplorer` and the shared
+`CanvasExplorerList`. Sources use compact cards with a table icon, a minimum
+44 px hit target, 4 px separation and the available schema/connection as display
+context. Other explorer lists retain their existing presentation.
+
+The source projection excludes reference instances and preserves definition
+identity and catalogue order. Its derived rows change with the catalogue,
+independently from graph coordinates. The shared list prepares searchable text
+when its items change; an empty search returns those items directly. These are
+render-local projections, never a second source authority or a global cache.
+
+Click still inspects the definition. Drag still transfers only its identity to
+the existing guarded drop command. Filtering, card styling and keyboard focus
+must not place a node, write a draft or make a provider request. Missing display
+metadata is omitted without inventing a connection or schema.
+
+```mermaid
+flowchart LR
+  Catalogue[Authorized source catalogue] --> Projection[Definition rows]
+  Projection --> Search[Shared local search]
+  Search --> Card[Accessible compact card]
+  Card --> Inspect[Existing inspect action]
+  Card --> Drag[Existing identity drag]
+  Graph[Graph geometry] --> Elements[Existing element rows]
+```
 
 ### Drift To Prevent
 

@@ -66,7 +66,7 @@ function RouteWorkbenchSlotLayout({
   return (
     <div
       data-slot="route-workbench-slot-stack"
-      className={cn('flex h-full min-h-0 flex-col', isEmbedded ? 'gap-3' : 'gap-4')}
+      className={cn('flex h-full w-full min-h-0 flex-col', isEmbedded ? 'gap-3' : 'gap-4')}
     >
       <div
         data-slot="route-workbench-slot-layout"

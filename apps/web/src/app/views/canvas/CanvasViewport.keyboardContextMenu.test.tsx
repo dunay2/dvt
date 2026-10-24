@@ -161,9 +161,20 @@ describe('CanvasViewport keyboard context menu', () => {
       }),
     });
 
-    surface.focus();
     await act(async () => {
+      surface.focus();
       fireEvent.keyDown(surface, { key, shiftKey: key === 'F10' });
+    });
+  }
+
+  async function moveMenuFocus(
+    from: HTMLElement,
+    key: 'ArrowDown' | 'ArrowUp' | 'End' | 'Home',
+    to: HTMLElement
+  ): Promise<void> {
+    await act(async () => {
+      fireEvent.keyDown(from, { key });
+      await waitFor(() => expect(document.activeElement).toBe(to));
     });
   }
 
@@ -190,51 +201,47 @@ describe('CanvasViewport keyboard context menu', () => {
   );
 
   it('navigates with the shared menu keys and activates items with Enter or Space', async () => {
-    const onOpenCanvasSettings = vi.fn();
-    await renderViewport({
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
-      canOpenCanvasSettings: true,
-      onOpenCanvasSettings,
-    });
-    await openFromKeyboard();
+    const consoleError = vi.spyOn(console, 'error');
+    try {
+      const onOpenCanvasSettings = vi.fn();
+      await renderViewport({
+        authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+        canOpenCanvasSettings: true,
+        onOpenCanvasSettings,
+      });
+      await openFromKeyboard();
 
-    const items = menuItems();
-    const firstItem = items[0]!;
-    const secondItem = items[1]!;
-    const lastItem = items.at(-1)!;
+      const items = menuItems();
+      const firstItem = items[0]!;
+      const secondItem = items[1]!;
+      const lastItem = items.at(-1)!;
 
-    await act(async () => {
-      fireEvent.keyDown(firstItem, { key: 'ArrowDown' });
-    });
-    await waitFor(() => expect(document.activeElement).toBe(secondItem));
-    await act(async () => {
-      fireEvent.keyDown(secondItem, { key: 'ArrowUp' });
-    });
-    await waitFor(() => expect(document.activeElement).toBe(firstItem));
-    await act(async () => {
-      fireEvent.keyDown(firstItem, { key: 'End' });
-    });
-    await waitFor(() => expect(document.activeElement).toBe(lastItem));
-    await act(async () => {
-      fireEvent.keyDown(lastItem, { key: 'Home' });
-    });
-    await waitFor(() => expect(document.activeElement).toBe(firstItem));
+      await moveMenuFocus(firstItem, 'ArrowDown', secondItem);
+      await moveMenuFocus(secondItem, 'ArrowUp', firstItem);
+      await moveMenuFocus(firstItem, 'End', lastItem);
+      await moveMenuFocus(lastItem, 'Home', firstItem);
+      await moveMenuFocus(firstItem, 'End', lastItem);
+      await act(async () => {
+        expect(fireEvent.keyDown(lastItem, { key: 'Enter' })).toBe(false);
+      });
+      expect(onOpenCanvasSettings).toHaveBeenCalledTimes(1);
 
-    await act(async () => {
-      fireEvent.keyDown(firstItem, { key: 'End' });
-    });
-    await act(async () => {
-      expect(fireEvent.keyDown(lastItem, { key: 'Enter' })).toBe(false);
-    });
-    expect(onOpenCanvasSettings).toHaveBeenCalledTimes(1);
-
-    await openFromKeyboard();
-    const reopenedLastItem = menuItems().at(-1)!;
-    reopenedLastItem.focus();
-    await act(async () => {
-      expect(fireEvent.keyDown(reopenedLastItem, { key: ' ' })).toBe(false);
-    });
-    expect(onOpenCanvasSettings).toHaveBeenCalledTimes(2);
+      await openFromKeyboard();
+      const reopenedLastItem = menuItems().at(-1)!;
+      await act(async () => {
+        reopenedLastItem.focus();
+        expect(document.activeElement).toBe(reopenedLastItem);
+        expect(fireEvent.keyDown(reopenedLastItem, { key: ' ' })).toBe(false);
+      });
+      expect(onOpenCanvasSettings).toHaveBeenCalledTimes(2);
+      expect(
+        consoleError.mock.calls.filter(
+          ([message]) => typeof message === 'string' && message.includes('act(')
+        )
+      ).toHaveLength(0);
+    } finally {
+      consoleError.mockRestore();
+    }
   });
 
   it('opens the catalog as a dialog and focuses its search field', async () => {

@@ -22,7 +22,7 @@ import {
 } from './canvasRelationalCompositionTruth';
 import { analyzeCanvasRelations } from './canvasRelationalAnalysis';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { projectDbtModelArtifact } from './canvasDbtModelArtifactProjection';
+import { createDbtModelArtifactProjector } from './canvasDbtModelArtifactProjection';
 import { resolveCanvasPresentationInputs } from './canvasPresentationInputs';
 import type { CanonicalNode } from '../../types/canonical';
 import { presentRelationOutputSelection } from './canvasRelationOutputPresentation';
@@ -46,13 +46,10 @@ export async function projectCanvasPresentationNode(
       column.reference,
     ])
   );
+  const projectModel = createDbtModelArtifactProjector({ nodes: args.nodes, edges: args.edges });
   const inherited: CanvasNodePresentationColumn[] = inputs.flatMap((node) => {
     const upstream = presentations.get(node.id)!;
-    const artifact = projectDbtModelArtifact({
-      modelNode: node,
-      nodes: args.nodes,
-      edges: args.edges,
-    });
+    const artifact = projectModel({ modelNode: node });
     const selectedNames = artifact.ok ? new Set(artifact.artifact.outputColumns) : null;
     return upstream.columns.visible
       .filter(

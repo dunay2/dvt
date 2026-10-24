@@ -1,5 +1,5 @@
 /** Owned concern: passive column row and factual badges shared with its detail. */
-import { ChevronRight, GripVertical } from 'lucide-react';
+import { ChevronRight, GripVertical, MessageSquareText } from 'lucide-react';
 import type { ComponentPropsWithRef } from 'react';
 import { resolveTypeCue, type SourceColumnFacts } from './sourceColumnFacts';
 import type { SourceColumnsCopy } from './sourceColumnsCopy';
@@ -85,7 +85,16 @@ export function SourceColumnRow({
         </span>
         <SourceColumnSummary facts={facts} copy={copy} />
       </span>
-      <SourceColumnBadges facts={facts} copy={copy} />
+      <span className={styles.badges}>
+        <SourceColumnBadges facts={facts} copy={copy} />
+        {facts.column.comment ? (
+          <MessageSquareText
+            data-slot="source-column-comment-indicator"
+            className={styles.commentIndicator}
+            aria-label={copy.comment}
+          />
+        ) : null}
+      </span>
       <ChevronRight aria-hidden="true" className={styles.chevron} />
       <span
         data-slot="source-column-drop-indicator"

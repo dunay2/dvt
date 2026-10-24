@@ -1,6 +1,5 @@
 import type { CanvasConnectionRejection } from './canvasConnectionAggregate';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
-import type { TransformationGraphValidationSummaryCode } from './transformationGraphValidation';
 import type { CanvasDisabledCapability, CanvasViewCopy } from './canvasCopy.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
@@ -201,34 +200,6 @@ export function formatUnsupportedCanvasKindMessage(canvasKind: string, locale?: 
 export function formatDisabledCanvasPluginMessage(canvasKind: string, locale?: string): string {
   const copy = resolveCanvasViewCopy(locale);
   return `${copy.disabledCanvasPluginMessagePrefix}"${canvasKind}"${copy.disabledCanvasPluginMessageSuffix}`;
-}
-
-export function formatTransformationGraphValidationSummary(
-  summaryCode: TransformationGraphValidationSummaryCode,
-  locale?: string
-): string {
-  const copy = resolveCanvasViewCopy(locale);
-
-  switch (summaryCode) {
-    case 'valid':
-      return copy.transformationDraftValidMessage;
-    case 'ambiguous_executable_paths':
-      return copy.transformationAmbiguousExecutablePathMessage;
-    case 'requires_executable_path':
-      return copy.transformationRequiresExecutablePathMessage;
-    case 'requires_postgres_connection':
-      return copy.transformationRequiresPostgresConnectionMessage;
-    case 'requires_three_nodes':
-      return copy.transformationRequiresThreeNodesMessage;
-    case 'unsupported_roles':
-      return copy.transformationUnsupportedRolesMessage;
-    case 'requires_one_of_each_role':
-      return copy.transformationRequiresOneOfEachRoleMessage;
-    case 'requires_two_edges':
-      return copy.transformationConnectionEdgeCountMessage;
-    case 'invalid_edge_order':
-      return copy.transformationConnectionOrderMessage;
-  }
 }
 
 export function formatCanvasConnectionRejection(

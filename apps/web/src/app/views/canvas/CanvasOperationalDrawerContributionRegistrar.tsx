@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
-import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
 import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
@@ -56,7 +56,12 @@ export function CanvasOperationalDrawerContributionRegistrar({
     }),
     [policy.placement, policyTabKey]
   );
-  const blockerKey = chromeState.planRunReadiness.blockers.join('|');
+  // The complete data-only DTO is the semantic key, including optional diagnostics.
+  const readinessKey = JSON.stringify(chromeState.planRunReadiness);
+  const readiness = useMemo(
+    () => JSON.parse(readinessKey) as PlanRunReadinessReadModel,
+    [readinessKey]
+  );
   const contribution = useMemo(
     () =>
       buildCanvasOperationalDrawerContribution({
@@ -66,14 +71,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
         runControls,
         canPlanGraph: chromeState.canPlanGraph,
         canStartRun: chromeState.canStartRun,
-        planRunReadiness: {
-          rail: chromeState.planRunReadiness.rail,
-          status: chromeState.planRunReadiness.status,
-          summary: chromeState.planRunReadiness.summary,
-          blockers:
-            blockerKey.length === 0 ? [] : (blockerKey.split('|') as PlanRunReadinessBlocker[]),
-        },
-        planStatusSummary: chromeState.planStatusSummary,
+        planRunReadiness: readiness,
         selectionRecovery: chromeState.executionSelectionRecovery,
         selectionRecoveryCommands,
         selectionRecoveryMessages: copy,
@@ -85,13 +83,9 @@ export function CanvasOperationalDrawerContributionRegistrar({
         onStartRun: () => latestCommandsRef.current.onStartRun(),
       }),
     [
-      blockerKey,
+      readiness,
       chromeState.canPlanGraph,
       chromeState.canStartRun,
-      chromeState.planRunReadiness.rail,
-      chromeState.planRunReadiness.status,
-      chromeState.planRunReadiness.summary,
-      chromeState.planStatusSummary,
       chromeState.executionSelectionRecovery,
       copy,
       dataSampleTabs,

@@ -1,159 +1,112 @@
-/**
- * Owned concern: publish the Canvas ObservePlanRunReadiness read model and
- * keep plan/run disabled reasons source-owned before toolbar presentation.
- */
+/** Owned concern: evaluate current Canvas Run admission and exact Preview proof. */
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRef } from '../../types/engine';
-import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import type { CanvasRunAdmission, CanvasRunBlocker } from './canvasRuntimePolicy';
+import type { CanvasPreviewOutcomeDiagnostic } from './canvasPreviewOutcomeProjection';
 
-export type PlanRunReadinessBlocker =
-  | 'plan_integrity'
-  | 'backpressure'
-  | 'capability_mismatch'
-  | 'adapter_degraded'
-  | 'authorization_denied';
+export type PlanRunReadinessBlocker = 'plan_integrity' | CanvasRunBlocker;
 
-export type PlanRunReadinessReadModel = {
-  readonly rail: 'ObservePlanRunReadiness';
-  readonly status: 'ready' | 'blocked';
-  readonly blockers: readonly PlanRunReadinessBlocker[];
-  readonly summary: string;
-};
+export type CanvasExecutableGraphFailure =
+  | Readonly<{
+      cause:
+        | 'execution_selection_unavailable'
+        | 'graph_authority_unavailable'
+        | 'protected_path_required';
+    }>
+  | Readonly<{ cause: 'dbt_projection_failed'; diagnostic: string }>;
 
-export function resolvePlanRefForStartRun(plan: PlanViewModel): PlanRef | null {
-  return plan.planRef ?? null;
-}
+export type PlanRunReadinessReadModel = Readonly<{
+  rail: 'ObservePlanRunReadiness';
+  status: 'ready' | 'blocked';
+  blockers: readonly PlanRunReadinessBlocker[];
+  summary: string;
+  diagnostic?: Readonly<{ blocker: PlanRunReadinessBlocker; message: string }>;
+}>;
 
-export function hasPersistedPreviewProof(plan: PlanViewModel | null): boolean {
-  if (!plan?.preview?.persisted || !plan.planRef) {
-    return false;
-  }
+export type PlanRunPreviewState =
+  'required' | 'stale' | 'plan_ref_unavailable' | 'identity_mismatch' | 'not_persisted' | 'ready';
 
-  const hasPersistenceRecord = Boolean(
-    plan.preview.persisted.planRecordId && plan.preview.persisted.canonicalPlanSha256
+type AdmittedRunTarget = Readonly<{ plan: PlanViewModel; planRef: PlanRef }>;
+type PreviewProof =
+  | Readonly<{ state: 'ready'; target: AdmittedRunTarget }>
+  | Readonly<{ state: Exclude<PlanRunPreviewState, 'ready'>; target: null }>;
+
+export type PlanRunReadinessDiagnostic =
+  | Readonly<{
+      kind: 'preview';
+      blocker: PlanRunReadinessBlocker;
+      diagnostic: CanvasPreviewOutcomeDiagnostic | null;
+    }>
+  | Readonly<{ kind: 'graph'; blocker: 'plan_integrity'; failure: CanvasExecutableGraphFailure }>;
+
+type ReadinessFacts = Readonly<{
+  rail: 'ObservePlanRunReadiness';
+  previewState: PlanRunPreviewState;
+  blockers: readonly PlanRunReadinessBlocker[];
+  diagnostic: PlanRunReadinessDiagnostic | null;
+}>;
+
+export type PlanRunReadinessEvaluation = ReadinessFacts &
+  (
+    | Readonly<{ status: 'ready'; target: AdmittedRunTarget; primaryBlocker: null }>
+    | Readonly<{ status: 'blocked'; target: null; primaryBlocker: PlanRunReadinessBlocker }>
   );
-  if (!hasPersistenceRecord) {
-    return false;
-  }
 
-  return !hasPersistedPreviewIdentityMismatch(plan);
-}
-
-export function hasPersistedPreviewIdentityMismatch(plan: PlanViewModel | null): boolean {
-  if (!plan?.planRef || !hasPersistedPreviewRecord(plan)) {
-    return false;
-  }
-
-  const persistedPlanRecordId = plan.preview?.persisted?.planRecordId;
-  if (!persistedPlanRecordId) {
-    return false;
-  }
-
-  return persistedPlanRecordId !== plan.planId || plan.planRef.planId !== persistedPlanRecordId;
-}
-
-export function buildPlanStatusSummary(args: {
-  canRun: boolean;
+export type PlanRunReadinessArgs = Readonly<{
+  runAdmission: CanvasRunAdmission;
   currentPlan: PlanViewModel | null;
   isCurrentPlanStale: boolean;
-  persistedPreviewIdentityMismatch: boolean;
-  hasPersistedPlanForRun: boolean;
-  backpressure?: boolean;
-  capabilityMismatch?: boolean;
-  adapterDegraded?: boolean;
-  locale?: string;
-}): string {
-  return observePlanRunReadiness(args).summary;
-}
+  previewProvenanceMismatch: boolean;
+  executionAvailable: boolean;
+  graphFailure: CanvasExecutableGraphFailure | null;
+  previewRejection: Extract<PlanRunReadinessDiagnostic, { kind: 'preview' }> | null;
+}>;
 
-export function observePlanRunReadiness(args: {
-  canRun: boolean;
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-  persistedPreviewIdentityMismatch: boolean;
-  hasPersistedPlanForRun: boolean;
-  backpressure?: boolean;
-  capabilityMismatch?: boolean;
-  adapterDegraded?: boolean;
-  locale?: string;
-}): PlanRunReadinessReadModel {
-  const blockers: PlanRunReadinessBlocker[] = [];
-
-  if (!args.canRun) {
-    blockers.push('authorization_denied');
-  }
+function evaluatePreviewProof(args: PlanRunReadinessArgs): PreviewProof {
+  const plan = args.currentPlan;
+  if (plan == null) return { state: 'required', target: null };
+  if (args.isCurrentPlanStale) return { state: 'stale', target: null };
+  const planRef = plan.planRef;
+  if (!planRef) return { state: 'plan_ref_unavailable', target: null };
+  const persisted = plan.preview?.persisted;
+  const hasRecord = Boolean(persisted?.planRecordId && persisted.canonicalPlanSha256);
   if (
-    args.currentPlan == null ||
-    args.isCurrentPlanStale ||
-    !args.currentPlan.planRef ||
-    args.persistedPreviewIdentityMismatch ||
-    !args.hasPersistedPlanForRun
-  ) {
-    blockers.push('plan_integrity');
-  }
-  if (args.backpressure === true) {
-    blockers.push('backpressure');
-  }
-  if (args.capabilityMismatch === true) {
-    blockers.push('capability_mismatch');
-  }
-  if (args.adapterDegraded === true) {
-    blockers.push('adapter_degraded');
-  }
+    args.previewProvenanceMismatch ||
+    (hasRecord &&
+      (persisted?.planRecordId !== plan.planId || planRef.planId !== persisted?.planRecordId))
+  )
+    return { state: 'identity_mismatch', target: null };
+  if (!hasRecord) return { state: 'not_persisted', target: null };
+  return { state: 'ready', target: { plan, planRef } };
+}
 
-  return {
-    blockers,
+export function observePlanRunReadiness(args: PlanRunReadinessArgs): PlanRunReadinessEvaluation {
+  const proof = evaluatePreviewProof(args);
+  const diagnostic: PlanRunReadinessDiagnostic | null =
+    args.previewRejection ??
+    (args.graphFailure == null
+      ? null
+      : { kind: 'graph', blocker: 'plan_integrity', failure: args.graphFailure });
+  const blockers = [
+    ...new Set(
+      [
+        args.runAdmission.allowed ? null : args.runAdmission.reason,
+        args.executionAvailable ? null : ('capability_mismatch' as const),
+        proof.target == null ? ('plan_integrity' as const) : null,
+        diagnostic?.blocker ?? null,
+      ].filter((blocker): blocker is PlanRunReadinessBlocker => blocker !== null)
+    ),
+  ];
+  const facts: ReadinessFacts = {
     rail: 'ObservePlanRunReadiness',
-    status: blockers.length === 0 ? 'ready' : 'blocked',
-    summary: buildPlanRunReadinessSummary(args),
+    previewState: proof.state,
+    blockers,
+    diagnostic,
   };
-}
-
-function buildPlanRunReadinessSummary(args: {
-  canRun: boolean;
-  currentPlan: PlanViewModel | null;
-  isCurrentPlanStale: boolean;
-  persistedPreviewIdentityMismatch: boolean;
-  hasPersistedPlanForRun: boolean;
-  backpressure?: boolean;
-  capabilityMismatch?: boolean;
-  adapterDegraded?: boolean;
-  locale?: string;
-}): string {
-  const copy = resolveCanvasViewCopy(args.locale);
-
-  if (args.backpressure === true) {
-    return copy.planStatusBackpressureMessage;
+  if (proof.target != null && blockers.length === 0) {
+    return { ...facts, status: 'ready', target: proof.target, primaryBlocker: null };
   }
-  if (args.adapterDegraded === true) {
-    return copy.planStatusAdapterDegradedMessage;
-  }
-  if (args.capabilityMismatch === true) {
-    return copy.canvasExecutionUnavailableMessage;
-  }
-  if (!args.canRun) {
-    return copy.planStatusRunUnavailableMessage;
-  }
-  if (args.currentPlan == null) {
-    return copy.planStatusPreviewRequiredMessage;
-  }
-  if (args.isCurrentPlanStale) {
-    return copy.runPreviewStaleMessage;
-  }
-  if (!args.currentPlan.planRef) {
-    return copy.runPlanRefUnavailableMessage;
-  }
-  if (args.persistedPreviewIdentityMismatch) {
-    return copy.planStatusPreviewNotAlignedMessage;
-  }
-  if (!args.hasPersistedPlanForRun) {
-    return copy.planStatusPreviewNotPersistedMessage;
-  }
-  return copy.planStatusPreviewReadyMessage;
-}
-
-function hasPersistedPreviewRecord(plan: PlanViewModel | null): boolean {
-  return Boolean(
-    plan?.preview?.persisted?.planRecordId && plan.preview?.persisted?.canonicalPlanSha256
-  );
+  const primaryBlocker = blockers[0];
+  if (primaryBlocker === undefined) throw new Error('Blocked readiness must carry a blocker.');
+  return { ...facts, status: 'blocked', target: null, primaryBlocker };
 }

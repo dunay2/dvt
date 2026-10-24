@@ -8,28 +8,22 @@ import {
   type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
-import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import type { UseCanvasExecutionActionsParams } from './canvasExecutionActions.types';
 
-function readLatestExecutionCall(harness: CanvasControllerHarness):
-  | {
-      canonicalNodes?: Array<{ id: string }>;
-      canonicalEdges?: Array<{ id: string }>;
-      selectionIntent?: CanvasExecutionSelectionIntent;
-      workspaceNodeIds?: string[];
-      canPlan?: boolean;
-      canRun?: boolean;
-    }
+function readLatestExecutionCall(
+  harness: CanvasControllerHarness
+):
+  | Pick<
+      UseCanvasExecutionActionsParams,
+      | 'canonicalNodes'
+      | 'canonicalEdges'
+      | 'selectionIntent'
+      | 'workspaceNodeIds'
+      | 'canPlan'
+      | 'runAdmission'
+    >
   | undefined {
-  return harness.mocks.useCanvasExecutionActions.mock.calls.at(-1)?.[0] as
-    | {
-        canonicalNodes?: Array<{ id: string }>;
-        canonicalEdges?: Array<{ id: string }>;
-        selectionIntent?: CanvasExecutionSelectionIntent;
-        workspaceNodeIds?: string[];
-        canPlan?: boolean;
-        canRun?: boolean;
-      }
-    | undefined;
+  return harness.mocks.useCanvasExecutionActions.mock.calls.at(-1)?.[0];
 }
 
 function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): void {
@@ -42,7 +36,6 @@ function expectTransformationExecutionScopeSubset(harness: CanvasControllerHarne
   const latestExecutionCall = readLatestExecutionCall(harness);
 
   expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
-  expect(harness.getLatestResult()?.transformationValidation.scopedNodeIds).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalNodes?.map((node) => node.id)).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalEdges).toEqual([]);
   expect(latestExecutionCall?.selectionIntent).toEqual({ mode: 'workspace', nodeIds: [] });
@@ -105,7 +98,7 @@ function expectProtectedSemanticProjectionState(
     })
   );
   expect(latestExecutionCall?.canPlan).toBe(expectedCanPlan);
-  expect(latestExecutionCall?.canRun).toBe(expectedCanPlan);
+  expect(latestExecutionCall?.runAdmission.allowed).toBe(expectedCanPlan);
 }
 
 describe('useCanvasController draft lifecycle scope and projection', () => {

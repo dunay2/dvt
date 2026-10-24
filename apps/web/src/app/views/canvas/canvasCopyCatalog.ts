@@ -1,4 +1,3 @@
-import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
 import { resolveCopyLanguage } from '../../copyLanguage';
 import type { CanvasViewCopy, CanvasViewLanguage } from './canvasCopy.types';
 import { canvasViewAuthoringCopyByKey } from './canvasCopyCatalog.authoring';
@@ -11,36 +10,23 @@ import { canvasViewToolbarCopyByKey } from './canvasCopyCatalog.toolbar';
 import { canvasViewToolbarCopyEs } from './canvasCopyCatalog.toolbar.es';
 import { getApplicationLanguage } from '../../stores/applicationLanguageStore';
 
-const COPY_BY_KEY = {
-  ...canvasViewRouteCopyByKey,
-  ...canvasViewToolbarCopyByKey,
-  ...canvasViewAuthoringCopyByKey,
-  ...canvasViewExecutionCopyByKey,
-} satisfies Record<keyof CanvasViewCopy, LocalizableString>;
-
-const LOCALIZED_COPY_BY_LANGUAGE: Record<CanvasViewLanguage, CanvasViewCopy | null> = {
-  en: null,
+const LOCALIZED_COPY_BY_LANGUAGE: Record<CanvasViewLanguage, CanvasViewCopy> = {
+  en: {
+    ...canvasViewRouteCopyByKey,
+    ...canvasViewToolbarCopyByKey,
+    ...canvasViewAuthoringCopyByKey,
+    ...canvasViewExecutionCopyByKey,
+  },
   es: {
     ...canvasViewRouteCopyEs,
     ...canvasViewToolbarCopyEs,
     ...canvasViewAuthoringCopyEs,
     ...canvasViewExecutionCopyEs,
-  } satisfies CanvasViewCopy,
+  },
 };
 
-export function detectCanvasViewLocale(): string {
-  return getApplicationLanguage();
-}
-
-export function resolveCanvasViewCopy(locale: string = detectCanvasViewLocale()): CanvasViewCopy {
-  const localizedCopy = LOCALIZED_COPY_BY_LANGUAGE[resolveCopyLanguage(locale)];
-  if (localizedCopy) {
-    return localizedCopy;
-  }
-
-  return Object.fromEntries(
-    Object.entries(COPY_BY_KEY).map(([key, value]) => [key, resolveString(value, locale)])
-  ) as CanvasViewCopy;
+export function resolveCanvasViewCopy(locale: string = getApplicationLanguage()): CanvasViewCopy {
+  return LOCALIZED_COPY_BY_LANGUAGE[resolveCopyLanguage(locale)];
 }
 
 export const canvasViewCopy = new Proxy({} as CanvasViewCopy, {

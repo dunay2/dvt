@@ -9,6 +9,14 @@ last_reviewed: 2026-10-15
 
 ## Admitted extension: one explicit PostgreSQL Sink
 
+Authoring persistence and operational admission are separate. Native disposition
+changes can be saved even when the selected Run profile cannot execute them. A
+terminal table requires an explicit result target; terminal view execution and
+an ephemeral result without a Sink remain outside this profile. Rejections must
+distinguish an unsupported disposition, an absent required Sink, an incompatible
+Transform disposition before a Sink, and conflicting publication intent. They
+do not imply that the draft save failed or that authorization was denied.
+
 Issue #3115 admits a second Run shape through the same V1 and existing rails.
 The following extension is the implementation contract; acceptance evidence is
 recorded on that issue, not inferred from this declaration.

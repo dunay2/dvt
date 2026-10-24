@@ -90,14 +90,12 @@ export type CanvasShellChromeStateBuilderArgs = Readonly<{
     | 'canStartRun'
     | 'canExportProjectSnapshot'
     | 'canImportProjectSnapshot'
-    | 'planStatusSummary'
     | 'planRunReadiness'
     | 'executionSelectionRecovery'
     | 'exclusiveOverlayMode'
     | 'canUseCostOverlay'
     | 'impactOverlayEnabled'
     | 'columnLevelLineageEnabled'
-    | 'transformationValidation'
   >;
   routePresentation: Pick<CanvasRouteViewState, 'presentationState'>;
 }>;

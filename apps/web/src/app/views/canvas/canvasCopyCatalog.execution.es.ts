@@ -2,8 +2,6 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewExecutionCopyEs = {
   planPermissionDeniedMessage: 'No tienes permisos para crear Execution Previews',
-  planSqlArtifactRequiredMessage:
-    'La provenance del preview debe resolver el artefacto SQL antes de crear un Execution Preview persistido.',
   planUnableToCreateMessage: 'No se ha podido crear el Execution Preview',
   planGraphModelSqlDivergenceMessageTemplate:
     'Código de proyecto contiene una edición más reciente en {path}. El Preview se ha detenido sin sobrescribirla. Continúa desde un proyecto DBT con autoridad de archivos o restaura la revisión generada por el Canvas.',
@@ -13,13 +11,6 @@ export const canvasViewExecutionCopyEs = {
     'La previsualización se detuvo porque la compilación nativa de DBT no validó los modelos generados. Revisa el SQL del modelo y la configuración del destino.',
   previewProvenanceTransformPathRequiredMessage:
     'Execution Preview necesita una proyección ejecutable del Transform. Selecciona un Transform del workspace o usa uno creado en el Canvas para que DVT la genere.',
-  previewProvenanceWorkspaceNotConfiguredMessage:
-    'La provenance del preview no esta configurada para este workspace. Define el repo Git y la ruta del artefacto de grafo antes de planificar.',
-  previewProvenanceExplicitGitRevisionRequiredMessage:
-    'La provenance del preview requiere una rama y un commit Git explicitos antes de planificar.',
-  previewProvenanceWorkspaceFilesUnavailableMessage:
-    'No se ha podido resolver la provenance del preview a partir de los ficheros del workspace.',
-  runPermissionDeniedMessage: 'No tienes permisos para arrancar runs',
   runNoPlanMessage: 'No hay un Execution Preview disponible: previsualiza la ejecucion antes.',
   runPreviewStaleMessage:
     'Execution Preview esta obsoleto. Previsualiza la ejecucion otra vez antes de arrancar.',
@@ -134,7 +125,6 @@ export const canvasViewExecutionCopyEs = {
   planPreviewDecisionBoundedSelectionReason:
     'El alcance de ejecución seleccionado incluye solo una parte del grafo.',
   runStartedMessage: 'Run arrancado',
-  planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
   planStatusPreviewRequiredMessage: 'Se requiere un preview antes de arrancar.',
   planStatusPreviewNotAlignedMessage:
     'Execution Preview no esta alineado con la referencia de Execution Preview activa. Previsualiza la ejecucion otra vez antes de arrancar.',
@@ -148,8 +138,6 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerPreviewTab: 'Vista previa',
   operationalDrawerDataTab: 'Datos',
   operationalDrawerSemanticTab: 'Árbol relacional',
-  operationalDrawerSemanticIdleMessage:
-    'Selecciona un Transform para inspeccionar su árbol relacional.',
   operationalDrawerSemanticTopologyMismatchTitle: 'Composición semántica pendiente',
   operationalDrawerSemanticTopologyMismatchMessage:
     '{transformName} tiene {connectedInputCount} entradas conectadas que ya no coinciden con su semántica guardada. Define la nueva composición para sustituirla.',
@@ -190,14 +178,16 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerWarningSeverity: 'Advertencia',
   operationalDrawerErrorSeverity: 'Error',
   operationalDrawerPlanIntegrityBlocker: 'Vista previa',
-  operationalDrawerBackpressureBlocker: 'Saturación temporal',
   operationalDrawerCapabilityMismatchBlocker: 'Capacidad incompatible',
-  operationalDrawerAdapterDegradedBlocker: 'Adaptador degradado',
   operationalDrawerAuthorizationDeniedBlocker: 'Autorización denegada',
-  planStatusBackpressureMessage:
-    'La admisión del runtime está temporalmente saturada. Reinténtalo cuando se recupere la capacidad.',
-  planStatusAdapterDegradedMessage:
-    'El adaptador de ejecución está degradado. El arranque seguirá bloqueado hasta que se recupere el runtime.',
+  operationalDrawerDraftSavingBlocker: 'Guardando cambios',
+  operationalDrawerDraftUnavailableBlocker: 'Borrador no disponible',
+  planStatusRunAuthorizationDeniedMessage:
+    'No tienes permiso para ejecutar en este espacio de trabajo.',
+  planStatusDraftSavingMessage:
+    'Esperando a que termine el guardado de los cambios antes de ejecutar.',
+  planStatusDraftUnavailableMessage:
+    'Resuelve el estado del borrador del Canvas antes de ejecutar.',
   selectionRecoveryTitle: 'Qué se va a ejecutar',
   selectionRecoveryReadyStatus: 'lista',
   selectionRecoveryBlockedStatus: 'bloqueada',

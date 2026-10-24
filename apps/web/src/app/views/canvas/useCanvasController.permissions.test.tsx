@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { CanvasRuntimeRegistration } from '../../plugins/nodeTypeContracts';
 import {
   buildRemoteDraftRecord,
   createHarnessWithDraft,
@@ -22,6 +23,18 @@ describe('useCanvasController permission and posture contract', () => {
         edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
       })
     );
+    const runtime = harness.mocks.findCanvasRuntimeRegistration(
+      'transformation'
+    ) as CanvasRuntimeRegistration;
+    harness.mocks.findCanvasRuntimeRegistration.mockReturnValue({
+      ...runtime,
+      executionStrategy: {
+        kind: 'dvt_protected_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dvt',
+      },
+    } satisfies CanvasRuntimeRegistration);
+    harness.mocks.useCapabilitiesQuery.mockReturnValue({ data: { plugins: {} } });
   });
 
   afterEach(() => {
@@ -56,6 +69,11 @@ describe('useCanvasController permission and posture contract', () => {
   });
 
   it('applies draft access posture before exposing graph and execution commands', async () => {
+    await harness.renderProbe();
+    expect(harness.getLatestResult()?.userPermissions.canRun).toBe(true);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ runAdmission: { allowed: true } })
+    );
     const projectedRemoteDraft = projectCanvasHarnessDraftReadModel(
       harness.state.remoteDraftRecord
     );
@@ -83,7 +101,26 @@ describe('useCanvasController permission and posture contract', () => {
     expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
       expect.objectContaining({
         canPlan: false,
-        canRun: false,
+        runAdmission: { allowed: false, reason: 'draft_unavailable' },
+      })
+    );
+  });
+
+  it('denies Run for an actual permission rejection on an executable runtime', async () => {
+    await harness.renderProbe();
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ runAdmission: { allowed: true } })
+    );
+    const permissions = harness.state.store.userPermissions as { canRun: boolean };
+    harness.state.store.userPermissions = { ...permissions, canRun: false };
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.userPermissions.canRun).toBe(false);
+    expect(harness.getLatestResult()?.canStartRun).toBe(false);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        runAdmission: { allowed: false, reason: 'authorization_denied' },
       })
     );
   });
@@ -95,6 +132,8 @@ describe('useCanvasController permission and posture contract', () => {
     harness.state.store.userPermissions = {
       ...userPermissions,
       canEditEdges: false,
+      canPlan: false,
+      canRun: false,
     };
     await harness.renderProbe();
 

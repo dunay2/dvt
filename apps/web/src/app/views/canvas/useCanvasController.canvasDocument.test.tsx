@@ -74,7 +74,7 @@ describe('useCanvasController canvas document contract', () => {
       expect.objectContaining({
         executionStrategy: null,
         canPlan: false,
-        canRun: false,
+        runAdmission: { allowed: false, reason: 'capability_mismatch' },
       })
     );
   });
@@ -272,7 +272,7 @@ describe('useCanvasController canvas document contract', () => {
       expect.objectContaining({
         executionStrategy: null,
         canPlan: false,
-        canRun: false,
+        runAdmission: { allowed: false, reason: 'capability_mismatch' },
       })
     );
   });

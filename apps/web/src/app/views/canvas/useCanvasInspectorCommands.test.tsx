@@ -111,6 +111,32 @@ describe('useCanvasInspectorCommands', () => {
     expect(latest!.session).toBe(baseline);
   });
 
+  it.each(['view', 'table', 'ephemeral'])(
+    'accepts %s as an authoring intent independently of Run support',
+    (materialized) => {
+      const node = {
+        ...model,
+        metadata: { config: { materialized: materialized === 'view' ? 'table' : 'view' } },
+      };
+      act(() => root.render(<Harness node={node} />));
+      act(() => {
+        latest!.setSession(
+          canvasDraftSession.machine.bootstrap({
+            remoteDraft: null,
+            canonicalNodeIds: [model.id],
+            canonicalEdges: [],
+          })
+        );
+        expect(latest!.commands.setNodeMaterialization(model.id, materialized).outcome).toBe(
+          'applied'
+        );
+      });
+      expect(latest!.session.localNodeCatalog![model.id]!.metadata?.config).toMatchObject({
+        materialized,
+      });
+    }
+  );
+
   it('removes a terminal target on explicit ephemeral selection without restoring it later', () => {
     const configured: CanonicalNode = {
       ...model,

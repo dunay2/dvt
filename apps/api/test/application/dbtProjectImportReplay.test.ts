@@ -67,9 +67,9 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
 
     await expect(useCase.execute(SCOPE, COMMAND)).resolves.toEqual(RESULT);
     expect(deps.processStore.readCompleted).toHaveBeenCalledOnce();
-    expect(deps.validator.execute).not.toHaveBeenCalled();
+    expect(deps.validator.evaluate).not.toHaveBeenCalled();
     expect(deps.processStore.begin).not.toHaveBeenCalled();
-    expect(deps.projectGraph.execute).not.toHaveBeenCalled();
+    expect(deps.projectGraph.projectValidatedAnalysis).not.toHaveBeenCalled();
   });
 
   it('rejects a reused idempotency key before validating mutable project state', async () => {
@@ -79,14 +79,29 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
     await expect(useCase.execute(SCOPE, COMMAND)).rejects.toThrow(
       'idempotency key was reused for another command'
     );
-    expect(deps.validator.execute).not.toHaveBeenCalled();
+    expect(deps.validator.evaluate).not.toHaveBeenCalled();
   });
 
   it('compensates its acquired process when completion persistence fails', async () => {
     const fail = vi.fn().mockResolvedValue({ kind: 'failed' });
     const useCase = new ImportDbtProjectUseCase({
       validator: {
-        execute: vi.fn().mockResolvedValue({ status: 'accepted', receipt: RECEIPT }),
+        evaluate: vi.fn().mockResolvedValue({
+          status: 'accepted',
+          report: { status: 'accepted', receipt: RECEIPT },
+          scopedAnalysis: {
+            scope: SCOPE,
+            analysis: {
+              status: 'valid',
+              projectRevision: PROJECTION.projectRevision,
+              analysisSha256: PROJECTION.analysisSha256,
+              resources: [],
+              dependencies: [],
+              diagnostics: [],
+              semanticEvidence: { files: [], identities: [], regions: [], diagnostics: [] },
+            },
+          },
+        }),
       },
       processStore: {
         readCompleted: vi.fn().mockResolvedValue(null),
@@ -104,7 +119,7 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
         complete: vi.fn().mockRejectedValue(new Error('process completion failed')),
         fail,
       },
-      projectGraph: { execute: vi.fn().mockResolvedValue(PROJECTION) },
+      projectGraph: { projectValidatedAnalysis: vi.fn().mockResolvedValue(PROJECTION) },
       now: () => NOW,
       createLeaseToken: () => 'lease-a',
       operationLeaseMs: 60_000,
@@ -116,9 +131,9 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
 });
 
 type ReplayDeps = Readonly<{
-  validator: Readonly<{ execute: Mock }>;
+  validator: Readonly<{ evaluate: Mock }>;
   processStore: Readonly<{ readCompleted: Mock; begin: Mock }>;
-  projectGraph: Readonly<{ execute: Mock }>;
+  projectGraph: Readonly<{ projectValidatedAnalysis: Mock }>;
   now: () => Date;
   createLeaseToken: () => string;
   operationLeaseMs: number;
@@ -126,12 +141,12 @@ type ReplayDeps = Readonly<{
 
 function replayDeps(storedReceipt: { requestHash: string; result: typeof RESULT }): ReplayDeps {
   return {
-    validator: { execute: vi.fn() },
+    validator: { evaluate: vi.fn() },
     processStore: {
       readCompleted: vi.fn().mockResolvedValue(storedReceipt),
       begin: vi.fn(),
     },
-    projectGraph: { execute: vi.fn() },
+    projectGraph: { projectValidatedAnalysis: vi.fn() },
     now: () => NOW,
     createLeaseToken: () => 'lease-a',
     operationLeaseMs: 60_000,

@@ -6,7 +6,6 @@ import type { SqlContextWorkbenchHandle, SqlContextWorkbenchProps } from './SqlC
 
 const copy = {
   nodeWorkbenchCloseLabel: 'Close',
-  sqlContextWorkbenchLoadingMessage: 'Loading code',
   sqlContextWorkbenchMoveLabel: 'Move code workbench',
   sqlContextWorkbenchProjectTitle: 'Project code',
 };

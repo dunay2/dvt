@@ -1,160 +1,173 @@
 // @vitest-environment jsdom
-
-import { describe, expect, it } from 'vitest';
-
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { makePlanRef } from '../../testing/contractTestUtils';
 import type { PlanViewModel } from '../../types/plans';
-import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
-import {
-  observePlanRunReadiness,
-  hasPersistedPreviewProof,
-  hasPersistedPreviewIdentityMismatch,
-  resolvePlanRefForStartRun,
-} from './canvasPlanReadiness';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { observePlanRunReadiness, type PlanRunReadinessArgs } from './canvasPlanReadiness';
 import { deriveCanvasExecutionState } from './canvasExecutionState';
+import { evaluateCanvasExecutionGraph } from './canvasExecutionGraph';
+import { presentPlanRunReadiness } from './canvasReadinessPresentation';
+
+function persistedPlan(): PlanViewModel {
+  return {
+    ...mockExecutionPlan,
+    preview: {
+      ...mockExecutionPlan.preview!,
+      persisted: { planRecordId: mockExecutionPlan.planId, canonicalPlanSha256: 'a'.repeat(64) },
+    },
+  };
+}
+function readinessFacts(overrides: Partial<PlanRunReadinessArgs> = {}): PlanRunReadinessArgs {
+  return {
+    runAdmission: { allowed: true },
+    currentPlan: persistedPlan(),
+    isCurrentPlanStale: false,
+    previewProvenanceMismatch: false,
+    executionAvailable: true,
+    graphFailure: null,
+    previewRejection: null,
+    ...overrides,
+  };
+}
 
 describe('canvasPlanReadiness', () => {
-  it('returns planRef from the execution plan when available', () => {
-    const planRef = resolvePlanRefForStartRun(mockExecutionPlan);
-
-    expect(planRef).toEqual(mockExecutionPlan.planRef);
-  });
-
-  it('returns null when planRef is missing', () => {
-    const planRef = resolvePlanRefForStartRun({
-      ...mockExecutionPlan,
-      planRef: undefined,
-    });
-
-    expect(planRef).toBeNull();
-  });
-
-  it('accepts persisted preview proof when plan identity aligns even if canonical and executable hashes differ', () => {
-    const plan: PlanViewModel = {
-      ...mockExecutionPlan,
-      planId: 'plan_live_1',
-      planRef: makePlanRef({
-        ...mockExecutionPlan.planRef!,
-        planId: 'plan_live_1',
-        sha256: 'a'.repeat(64),
-      }),
-      preview: {
-        ...mockExecutionPlan.preview!,
-        persisted: {
-          planRecordId: 'plan_live_1',
-          canonicalPlanSha256: 'b'.repeat(64),
-        },
-      },
-    };
-
-    expect(hasPersistedPreviewProof(plan)).toBe(true);
-    expect(hasPersistedPreviewIdentityMismatch(plan)).toBe(false);
-  });
-
-  it('reports persisted preview mismatch when plan record identity drifts from the active plan', () => {
-    const plan = {
-      ...mockExecutionPlan,
-      planId: 'plan_live_1',
-      planRef: makePlanRef({
-        ...mockExecutionPlan.planRef!,
-        planId: 'plan_live_1',
-        sha256: 'a'.repeat(64),
-      }),
-      preview: {
-        ...mockExecutionPlan.preview!,
-        persisted: {
-          planRecordId: 'plan_other',
-          canonicalPlanSha256: 'b'.repeat(64),
-        },
-      },
-    };
-
-    expect(hasPersistedPreviewProof(plan)).toBe(false);
-    expect(hasPersistedPreviewIdentityMismatch(plan)).toBe(true);
-  });
-
-  it('publishes a ready ObservePlanRunReadiness read model when run inputs are admitted', () => {
-    const plan = {
-      ...mockExecutionPlan,
-      planId: 'plan_live_1',
-      planRef: makePlanRef({
-        ...mockExecutionPlan.planRef!,
-        planId: 'plan_live_1',
-        sha256: 'a'.repeat(64),
-      }),
-      preview: {
-        ...mockExecutionPlan.preview!,
-        persisted: {
-          planRecordId: 'plan_live_1',
-          canonicalPlanSha256: 'b'.repeat(64),
-        },
-      },
-    };
-
-    expect(
-      observePlanRunReadiness({
-        canRun: true,
-        currentPlan: plan,
-        isCurrentPlanStale: false,
-        persistedPreviewIdentityMismatch: false,
-        hasPersistedPlanForRun: true,
-      })
-    ).toEqual({
-      blockers: [],
-      rail: 'ObservePlanRunReadiness',
-      status: 'ready',
-      summary: canvasViewCopy.planStatusPreviewReadyMessage,
-    });
-  });
-
-  it('resolves the readiness summary from the requested application language', () => {
-    const args = {
-      canRun: true,
-      currentPlan: null,
-      isCurrentPlanStale: false,
-      persistedPreviewIdentityMismatch: false,
-      hasPersistedPlanForRun: false,
-    } as const;
-
-    expect(observePlanRunReadiness({ ...args, locale: 'en' }).summary).toBe(
-      resolveCanvasViewCopy('en').planStatusPreviewRequiredMessage
+  it('carries only an admitted exact target and derives proof from the actual plan', () => {
+    const plan = persistedPlan();
+    const evaluation = observePlanRunReadiness(readinessFacts({ currentPlan: plan }));
+    expect(evaluation).toMatchObject({ status: 'ready', target: { plan, planRef: plan.planRef } });
+    expect(evaluation.target?.plan).toBe(plan);
+    const invalid = observePlanRunReadiness(
+      readinessFacts({ currentPlan: { ...plan, preview: undefined } })
     );
-    expect(observePlanRunReadiness({ ...args, locale: 'es' }).summary).toBe(
-      resolveCanvasViewCopy('es').planStatusPreviewRequiredMessage
-    );
+    expect(invalid).toMatchObject({
+      status: 'blocked',
+      target: null,
+      previewState: 'not_persisted',
+    });
   });
 
   it.each([
-    ['plan_integrity', { currentPlan: null }],
-    ['backpressure', { backpressure: true }],
-    ['capability_mismatch', { capabilityMismatch: true }],
-    ['adapter_degraded', { adapterDegraded: true }],
-    ['authorization_denied', { canRun: false }],
+    ['required', { currentPlan: null }],
+    ['stale', { isCurrentPlanStale: true }],
+    ['plan_ref_unavailable', { currentPlan: { ...persistedPlan(), planRef: undefined } }],
+    ['identity_mismatch', { previewProvenanceMismatch: true }],
+    ['not_persisted', { currentPlan: { ...persistedPlan(), preview: undefined } }],
+    ['ready', {}],
   ] as const)(
-    'keeps %s explicit in the ObservePlanRunReadiness read model',
-    (expectedBlocker, overrides) => {
-      expect(
-        observePlanRunReadiness({
-          canRun: true,
-          currentPlan: {
-            ...mockExecutionPlan,
-            preview: {
-              ...mockExecutionPlan.preview!,
-              persisted: {
-                planRecordId: mockExecutionPlan.planId,
-                canonicalPlanSha256: 'b'.repeat(64),
-              },
-            },
-          },
-          isCurrentPlanStale: false,
-          persistedPreviewIdentityMismatch: false,
-          hasPersistedPlanForRun: true,
-          ...overrides,
-        }).blockers
-      ).toContain(expectedBlocker);
+    'evaluates typed Preview state %s without localized prose',
+    (previewState, overrides) => {
+      const evaluation = observePlanRunReadiness(readinessFacts(overrides));
+      expect(evaluation.previewState).toBe(previewState);
+      expect(evaluation.status).toBe(previewState === 'ready' ? 'ready' : 'blocked');
+      expect(evaluation).not.toHaveProperty('summary');
+      expect(evaluation.diagnostic).toBeNull();
     }
   );
+
+  it.each(['plan_id', 'plan_ref_id', 'missing_hash', 'missing_record'] as const)(
+    'rejects incomplete or mismatched persisted proof: %s',
+    (fault) => {
+      const plan = persistedPlan();
+      if (fault === 'plan_id') plan.planId = 'different-plan';
+      if (fault === 'plan_ref_id')
+        plan.planRef = makePlanRef({ ...plan.planRef!, planId: 'different-ref' });
+      if (fault === 'missing_hash')
+        plan.preview = {
+          ...plan.preview!,
+          persisted: { planRecordId: plan.planId, canonicalPlanSha256: '' },
+        };
+      if (fault === 'missing_record')
+        plan.preview = {
+          ...plan.preview!,
+          persisted: { planRecordId: '', canonicalPlanSha256: 'a'.repeat(64) },
+        };
+      expect(observePlanRunReadiness(readinessFacts({ currentPlan: plan }))).toMatchObject({
+        status: 'blocked',
+        target: null,
+        blockers: ['plan_integrity'],
+      });
+    }
+  );
+
+  it('accepts distinct canonical and executable hashes when persisted identity aligns', () => {
+    const plan = persistedPlan();
+    plan.planRef = makePlanRef({ ...plan.planRef!, sha256: 'b'.repeat(64) });
+    expect(observePlanRunReadiness(readinessFacts({ currentPlan: plan })).status).toBe('ready');
+  });
+
+  it.each([
+    'draft_saving',
+    'draft_unavailable',
+    'authorization_denied',
+    'capability_mismatch',
+  ] as const)('preserves current admission %s and never returns a target', (reason) => {
+    const evaluation = observePlanRunReadiness(
+      readinessFacts({
+        runAdmission: { allowed: false, reason },
+        currentPlan: null,
+        executionAvailable: reason !== 'capability_mismatch',
+      })
+    );
+    expect(evaluation).toMatchObject({ status: 'blocked', target: null, primaryBlocker: reason });
+    expect(evaluation.blockers).toEqual([reason, 'plan_integrity']);
+  });
+
+  it('keeps denial primary while retaining a cause-specific graph diagnostic', () => {
+    const evaluation = observePlanRunReadiness(
+      readinessFacts({
+        runAdmission: { allowed: false, reason: 'authorization_denied' },
+        currentPlan: null,
+        graphFailure: { cause: 'protected_path_required' },
+      })
+    );
+    const copy = resolveCanvasViewCopy('es');
+    expect(presentPlanRunReadiness(evaluation, 'es')).toMatchObject({
+      summary: copy.planStatusRunAuthorizationDeniedMessage,
+      diagnostic: {
+        blocker: 'plan_integrity',
+        message: copy.previewProvenanceTransformPathRequiredMessage,
+      },
+    });
+  });
+
+  it('presentation preserves frozen admission facts and changes only language', () => {
+    const evaluation = observePlanRunReadiness(readinessFacts({ currentPlan: null }));
+    Object.freeze(evaluation.blockers);
+    Object.freeze(evaluation);
+    const before = structuredClone(evaluation);
+    for (const language of ['en', 'es']) {
+      expect(presentPlanRunReadiness(evaluation, language)).toMatchObject({
+        status: 'blocked',
+        summary: resolveCanvasViewCopy(language).planStatusPreviewRequiredMessage,
+        blockers: ['plan_integrity'],
+      });
+    }
+    expect(evaluation).toEqual(before);
+  });
+
+  it('a Preview rejection without trusted prose cannot describe a blocked target as ready', () => {
+    const evaluation = observePlanRunReadiness(
+      readinessFacts({
+        previewRejection: {
+          kind: 'preview',
+          blocker: 'plan_integrity',
+          diagnostic: { code: 'UNKNOWN_PREVIEW_OUTCOME' },
+        },
+      })
+    );
+    expect(evaluation).toMatchObject({ status: 'blocked', target: null });
+    const copy = resolveCanvasViewCopy('en');
+    expect(presentPlanRunReadiness(evaluation, 'en').summary).toBe(
+      copy.planStatusPreviewRequiredMessage
+    );
+  });
+
+  it('has no dormant capacity inputs or caller-supplied persisted-proof flags', () => {
+    expectTypeOf<PlanRunReadinessArgs>().not.toHaveProperty('backpressure');
+    expectTypeOf<PlanRunReadinessArgs>().not.toHaveProperty('adapterDegraded');
+    expectTypeOf<PlanRunReadinessArgs>().not.toHaveProperty('hasPersistedPlanForRun');
+  });
 
   it('blocks a persisted dbt project preview when its authoritative revision is stale', () => {
     const plan: PlanViewModel = {
@@ -195,9 +208,8 @@ describe('canvasPlanReadiness', () => {
       },
     };
 
-    const executionState = deriveCanvasExecutionState({
-      canRun: true,
-      executionStrategy: {
+    const executionStateGraph = evaluateCanvasExecutionGraph({
+      registeredStrategy: {
         kind: 'dbt_project_file_preview',
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
@@ -231,8 +243,6 @@ describe('canvasPlanReadiness', () => {
           credentialRef: 'vault:dbt/development',
         },
       },
-      currentPlan: plan,
-      lastPlannedDraftSignature: null,
       canonicalNodes: [
         {
           id: 'model.analytics.orders',
@@ -247,19 +257,25 @@ describe('canvasPlanReadiness', () => {
       canonicalEdges: [],
       selectionIntent: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
       workspaceNodeIds: ['model.analytics.orders'],
+      graphDraftCanvasId: null,
+    });
+    const executionState = deriveCanvasExecutionState({
+      graph: executionStateGraph,
+      runAdmission: { allowed: true },
+      currentPlan: plan,
+      lastPlannedDraftSignature: null,
       latestPreviewOutcome: null,
     });
 
-    expect(executionState.persistedPreviewIdentityMismatch).toBe(true);
+    expect(executionState.planRunReadiness.target).toBeNull();
     expect(executionState.isCurrentPlanStale).toBe(true);
-    expect(executionState.canStartRun).toBe(false);
+    expect(executionState.planRunReadiness.status).toBe('blocked');
     expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
   });
 
   it('blocks Preview when an explicit dbt selection has no executable resources', () => {
-    const executionState = deriveCanvasExecutionState({
-      canRun: true,
-      executionStrategy: {
+    const executionStateGraph = evaluateCanvasExecutionGraph({
+      registeredStrategy: {
         kind: 'dbt_project_file_preview',
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
@@ -287,8 +303,6 @@ describe('canvasPlanReadiness', () => {
           credentialRef: 'vault:dbt/development',
         },
       },
-      currentPlan: null,
-      lastPlannedDraftSignature: null,
       canonicalNodes: [
         {
           id: 'source.analytics.raw.orders',
@@ -315,11 +329,19 @@ describe('canvasPlanReadiness', () => {
         nodeIds: ['source.analytics.raw.orders'],
       },
       workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
+      graphDraftCanvasId: null,
+    });
+    const executionState = deriveCanvasExecutionState({
+      graph: executionStateGraph,
+      runAdmission: { allowed: true },
+      currentPlan: null,
+      lastPlannedDraftSignature: null,
       latestPreviewOutcome: null,
     });
 
-    expect(executionState.canPlanGraph).toBe(false);
-    expect(executionState.executableGraphFailureMessage).toBe(
+    expect(executionStateGraph.canPlanGraph).toBe(false);
+    expect(executionStateGraph.failure?.cause).toBe('execution_selection_unavailable');
+    expect(presentPlanRunReadiness(executionState.planRunReadiness).summary).toBe(
       'Execution selection contains unavailable or non-executable resources. Resolve the explicit selection in Operations before Preview.'
     );
     expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');

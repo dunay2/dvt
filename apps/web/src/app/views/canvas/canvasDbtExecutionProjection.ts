@@ -6,7 +6,7 @@ import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
 } from './canvasDbtPlannerGraphSource';
-import { canvasViewCopy } from './copy';
+import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import {
   buildDbtProjectFileExecutionDraftSignature,
   buildDbtProjectFilePlannerProjection,
@@ -37,12 +37,13 @@ export function buildCanvasDbtExecutionProjection(args: {
     if (!projection.ok) {
       return {
         ok: false as const,
-        message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
+        cause: 'execution_selection_unavailable' as const,
       };
     }
 
     return {
       ...projection,
+      kind: 'dbt_project_file_preview' as const,
       scopedNodeIds: projection.selection.nodeIds,
       draftSignature: buildDbtProjectFileExecutionDraftSignature(
         args.strategy,
@@ -60,7 +61,7 @@ export function buildCanvasDbtExecutionProjection(args: {
   if (!executionScope.ok) {
     return {
       ok: false as const,
-      message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
+      cause: 'execution_selection_unavailable' as const,
     };
   }
 
@@ -70,19 +71,39 @@ export function buildCanvasDbtExecutionProjection(args: {
     scopedNodeIds: executionScope.nodeIds,
     executionScope: args.executionScope,
   });
-  return projection.ok
-    ? {
-        ...projection,
-        selectionMode: executionScope.selectionMode,
-        requestedRootNodeIds: executionScope.requestedRootNodeIds,
-        derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
-        scopedNodeIds: executionScope.nodeIds,
-        draftSignature: buildDbtExecutionIntentDraftSignature({
-          graphSource: projection.graphSource,
-          selection: projection.selection,
-          selectionMode: executionScope.selectionMode,
-          requestedRootNodeIds: executionScope.requestedRootNodeIds,
-        }),
-      }
-    : projection;
+  if (!projection.ok) {
+    return {
+      ok: false as const,
+      cause: 'dbt_projection_failed' as const,
+      diagnostic: projection.message,
+    };
+  }
+  const workspaceArtifacts = buildDbtWorkspaceArtifacts({
+    nodes: args.canonicalNodes,
+    edges: args.canonicalEdges,
+    scopedNodeIds: executionScope.nodeIds,
+  });
+  if (!workspaceArtifacts.ok) {
+    return {
+      ok: false as const,
+      cause: 'dbt_projection_failed' as const,
+      diagnostic: workspaceArtifacts.message,
+    };
+  }
+  return {
+    ...projection,
+    kind: 'planner_generic_preview' as const,
+    workspaceArtifacts,
+    selectionMode: executionScope.selectionMode,
+    requestedRootNodeIds: executionScope.requestedRootNodeIds,
+    derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
+    scopedNodeIds: executionScope.nodeIds,
+    draftSignature: buildDbtExecutionIntentDraftSignature({
+      graphSource: projection.graphSource,
+      selection: projection.selection,
+      selectionMode: executionScope.selectionMode,
+      requestedRootNodeIds: executionScope.requestedRootNodeIds,
+      workspaceArtifacts: workspaceArtifacts.artifacts,
+    }),
+  };
 }

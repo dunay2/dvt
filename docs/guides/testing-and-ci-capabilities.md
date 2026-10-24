@@ -34,7 +34,7 @@ See also:
 | Pre-push verification gate       | `pnpm verify:prepush`                  | [`package.json`](../../package.json)                                                                                                 |
 | Affected local PR preflight      | `pnpm preflight:affected`              | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                               |
 | Affected CI preflight            | `pnpm preflight:affected:ci`           | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) |
-| Full CI baseline                 | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
+| Local/manual full CI baseline    | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                 |
 | Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)             |
 | Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                 |
 | AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                         |
@@ -184,7 +184,15 @@ matching and workflow wiring stay covered by their current contract tests.
 
 ## Package Validation Commands
 
-The Web CI suites run with one isolated fork at a time. Unit and architecture
+The Web suite catalog bounds local execution to four isolated forks and CI
+execution to one, with a minimum of one in either context. The same construction
+owns every primary and focus suite. The CI worker heap remains 4096 MiB; local
+execution retains its inherited heap configuration. This scheduling policy does
+not change file selection, assertions, timeouts, retries or dependency preparation.
+Do not set global CI flags merely to limit workers: `DVT_CI` also changes package
+dependency preparation.
+
+Unit and architecture
 primary suites, and their `canvas-unit` and `canvas-architecture` focus suites,
 default to Node. Browser-dependent tests explicitly declare
 `@vitest-environment jsdom`, including tests of persisted session state and
@@ -207,6 +215,14 @@ non-DOM partition benchmarks, including the evidence journal and final closeout.
 The issue records the local comparison and rejected shared-fork alternative.
 The selected environment policy
 retains all primary files, assertions, isolated workers and existing commands.
+
+The [local worker comparison](https://github.com/dunay2/dvt/issues/3115#issuecomment-6383136858)
+kept the same 16 files and 55 cases, product revision and five-second limits.
+One isolated worker passed in 896.73 seconds; four passed in 270.96 seconds,
+with a slowest observed case of 3769 milliseconds. The complete earlier run
+with 14 observed workers had 24 timeouts and two subsequent assertion failures.
+These measurements support the local bound; they do not replace the complete
+normal pre-push or establish a general performance guarantee.
 
 | Capability                         | Command                                                                    | Scope                                                | Source                                                                                                 |
 | ---------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
@@ -626,11 +642,12 @@ coverage, nor does removing the obsolete UI story remove a runtime invariant.
 
 ### Workflow owners
 
-- `CI - Code Quality`: ordinary pull requests run changed-slice verification
-  through `pnpm verify:changed` and affected build/lint/type-check preflight
-  through `pnpm preflight:affected:ci`; pushes to `main` and manual runs use
-  `pnpm ci:full`. CI tool contract tests remain separate. It does not own
-  ADR-0000 traceability or package test execution.
+- `CI - Code Quality`: ordinary pull requests run affected build/lint/type-check
+  preflight through `pnpm preflight:affected:ci`. Pushes to `main` run
+  `pnpm ci:docs && pnpm ci:code`; Test Suite owns their Engine coverage.
+  Manual runs retain `pnpm ci:full`, including coverage, because dispatching
+  Code Quality does not start Test Suite. CI tool contract tests remain separate.
+  It does not own ADR-0000 traceability or affected PR package test execution.
   Source: [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)
 - `Test Suite`: package tests, affected test routing, dependency graph builds,
   and one complete engine suite with coverage, determinism and replay. On pull
@@ -793,8 +810,10 @@ Current workflow consumers:
   checks and `pnpm preflight:affected:ci` for affected build, lint, and
   type-check. Package and dedicated tests stay owned by
   [`.github/workflows/test.yml`](../../.github/workflows/test.yml), avoiding a
-  second affected Turbo test pass inside Code Quality. Pushes to `main` and
-  manual runs use `pnpm ci:full` instead of the affected PR route. Its shared `any_code` and
+  second affected Turbo test pass inside Code Quality. Pushes to `main` use
+  `pnpm ci:docs && pnpm ci:code`, leaving coverage to the mandatory Test Suite
+  lane; manual Code Quality and local full validation retain `pnpm ci:full`.
+  Its shared `any_code` and
   `workspace_global` policy now include `turbo.json`, so Turbo graph changes
   trigger affected-workspace preflight instead of falling through to
   `No affected workspaces`. Workflow YAML changes remain `any_code` and

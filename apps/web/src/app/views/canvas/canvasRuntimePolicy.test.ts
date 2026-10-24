@@ -34,7 +34,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: true,
     });
 
@@ -47,6 +48,7 @@ describe('resolveCanvasRuntimePolicy', () => {
       canOpenSourceImport: false,
       canPlan: false,
       canRun: false,
+      runAdmission: { allowed: false, reason: 'capability_mismatch' },
       canReloadLatestDraft: true,
     });
   });
@@ -60,7 +62,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: true,
     });
 
@@ -74,6 +77,7 @@ describe('resolveCanvasRuntimePolicy', () => {
       canOpenSourceImport: false,
       canPlan: false,
       canRun: false,
+      runAdmission: { allowed: false, reason: 'capability_mismatch' },
       canReloadLatestDraft: true,
     });
     expect(policy.execution.kind).toBe('blocked');
@@ -92,7 +96,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: true,
     });
 
@@ -108,6 +113,7 @@ describe('resolveCanvasRuntimePolicy', () => {
       canOpenSourceImport: false,
       canPlan: false,
       canRun: false,
+      runAdmission: { allowed: false, reason: 'capability_mismatch' },
       canReloadLatestDraft: true,
     });
     expect(policy.execution.kind).toBe('blocked');
@@ -128,7 +134,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: false,
     });
 
@@ -180,7 +187,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: false,
     });
 
@@ -240,7 +248,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: false,
     });
 
@@ -267,7 +276,6 @@ describe('resolveCanvasRuntimePolicy', () => {
       }),
       canMutateGraph: true,
       canPlan: true,
-      canRun: true,
       canReloadLatestDraft: false,
     });
     const policy = resolveCanvasRuntimePolicy({
@@ -278,6 +286,7 @@ describe('resolveCanvasRuntimePolicy', () => {
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
       canOpenSourceImport: true,
+      runPermissionGranted: true,
       ...draftAdmission,
     });
 
@@ -287,6 +296,7 @@ describe('resolveCanvasRuntimePolicy', () => {
       canOpenSourceImport: false,
       canPlan: false,
       canRun: false,
+      runAdmission: { allowed: false, reason: 'capability_mismatch' },
     });
   });
 
@@ -302,14 +312,13 @@ describe('resolveCanvasRuntimePolicy', () => {
       }),
       canMutateGraph: true,
       canPlan: true,
-      canRun: true,
       canReloadLatestDraft: false,
     });
 
     expect(draftAdmission).toEqual({
       canMutateGraph: true,
       canPlan: true,
-      canRun: false,
+      draftExecutionBarrier: 'saving',
       canReloadLatestDraft: false,
     });
   });
@@ -328,7 +337,8 @@ describe('resolveCanvasRuntimePolicy', () => {
       canMutateGraph: true,
       canOpenSourceImport: true,
       canPlan: true,
-      canRun: true,
+      runPermissionGranted: true,
+      draftExecutionBarrier: null,
       canReloadLatestDraft: false,
     });
 

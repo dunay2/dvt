@@ -70,10 +70,6 @@ function isEditableSection(
     return false;
   }
 
-  if (sectionId === 'general') {
-    return true;
-  }
-
   if (nodeKind === 'dvt:transform') {
     return sectionId === 'code' || sectionId === 'columns';
   }
@@ -91,10 +87,6 @@ function isSupportedSection(
 ): boolean {
   if (section.id === 'general') {
     return true;
-  }
-
-  if (section.id === 'summary') {
-    return args.contributedSectionIds.has(section.id) || hasRecordedSectionContent(section);
   }
 
   if (args.contributedSectionIds.has(section.id)) {
@@ -132,7 +124,7 @@ function resolveSourceSectionModel(
 
 /**
  * Resolves section capability separately from tab/overflow placement. Code is
- * first when supported for non-Source nodes. Source is intentionally bounded
+ * last when supported for non-Source nodes. Source is intentionally bounded
  * to Overview, Columns and Inputs / Outputs: key/index/constraint facts are
  * consumed by the Source Columns experience rather than reintroduced through
  * overflow tabs.
@@ -157,11 +149,11 @@ export function resolveCanvasNodeWorkbenchSectionModel(
     }
   };
 
-  appendPrimarySection('code');
   appendPrimarySection('general');
   for (const sectionId of declaredSectionIds) {
-    appendPrimarySection(sectionId);
+    if (sectionId !== 'code') appendPrimarySection(sectionId);
   }
+  appendPrimarySection('code');
 
   const primarySectionIdSet = new Set(primarySectionIds);
   const sections = [

@@ -4,21 +4,41 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { readArchitectureSources } from '../../../testing/vitestSuites.architecture.support';
+
+const FORBIDDEN_CANVAS_ROUTE_FACTS = [
+  'CanvasLegacyWorkbenchRedirect',
+  'canvasLegacyRouteIntent',
+  'useCanvasRouteIntentHandler',
+  'CanvasShellRouteIntentRequest',
+  'canvasIntent',
+];
+const RETIRED_CANVAS_URLS = /\/canvas\/(?:code|lineage|diff|artifacts)(?:[/?'"`]|$)/;
+
+function collectRetiredCanvasRouteViolations(filePath: string, source: string): string[] {
+  const violations = FORBIDDEN_CANVAS_ROUTE_FACTS.filter((forbiddenFact) =>
+    source.includes(forbiddenFact)
+  ).map((forbiddenFact) => `${filePath} contains ${forbiddenFact}`);
+  if (RETIRED_CANVAS_URLS.test(source))
+    violations.push(`${filePath} contains a retired Canvas URL`);
+  return violations;
+}
+
 describe('Canvas canonical route authority', () => {
   const appRoot = path.resolve(import.meta.dirname, '../..');
 
   function listProductionTypeScript(relativeDirectory: string): string[] {
     const absoluteDirectory = path.join(appRoot, relativeDirectory);
 
-    return readdirSync(absoluteDirectory).flatMap((entry) => {
-      const relativePath = path.join(relativeDirectory, entry).replaceAll(path.sep, '/');
+    return readdirSync(absoluteDirectory, { withFileTypes: true }).flatMap((entry) => {
+      const relativePath = path.join(relativeDirectory, entry.name).replaceAll(path.sep, '/');
       const absolutePath = path.join(appRoot, relativePath);
 
-      if (statSync(absolutePath).isDirectory()) {
+      if (entry.isDirectory() || (entry.isSymbolicLink() && statSync(absolutePath).isDirectory())) {
         return listProductionTypeScript(relativePath);
       }
 
-      if (!/\.(?:ts|tsx)$/.test(entry) || /\.(?:test|spec)\.(?:ts|tsx)$/.test(entry)) {
+      if (!/\.(?:ts|tsx)$/.test(entry.name) || /\.(?:test|spec)\.(?:ts|tsx)$/.test(entry.name)) {
         return [];
       }
 
@@ -42,23 +62,47 @@ describe('Canvas canonical route authority', () => {
     expect(routesSource).not.toContain('dbt.canvas.retired-workbench-redirect');
   });
 
-  it('keeps the one-shot canvasIntent protocol out of production source', () => {
-    const forbiddenFacts = [
-      'CanvasLegacyWorkbenchRedirect',
-      'canvasLegacyRouteIntent',
-      'useCanvasRouteIntentHandler',
-      'CanvasShellRouteIntentRequest',
-      'canvasIntent',
-    ];
-    const retiredUrls = /\/canvas\/(?:code|lineage|diff|artifacts)(?:[/?'"`]|$)/;
-
-    for (const relativePath of listProductionTypeScript('.')) {
-      const source = readFileSync(path.join(appRoot, relativePath), 'utf8');
-
-      for (const forbiddenFact of forbiddenFacts) {
-        expect(source, `${relativePath} contains ${forbiddenFact}`).not.toContain(forbiddenFact);
+  it('reports every retired route fact and preserves the Canvas URL boundaries', () => {
+    expect(
+      collectRetiredCanvasRouteViolations(
+        'fixture.ts',
+        `
+      CanvasLegacyWorkbenchRedirect canvasLegacyRouteIntent useCanvasRouteIntentHandler
+      CanvasShellRouteIntentRequest canvasIntent '/canvas/code'
+    `
+      )
+    ).toEqual([
+      'fixture.ts contains CanvasLegacyWorkbenchRedirect',
+      'fixture.ts contains canvasLegacyRouteIntent',
+      'fixture.ts contains useCanvasRouteIntentHandler',
+      'fixture.ts contains CanvasShellRouteIntentRequest',
+      'fixture.ts contains canvasIntent',
+      'fixture.ts contains a retired Canvas URL',
+    ]);
+    for (const route of ['code', 'lineage', 'diff', 'artifacts']) {
+      for (const suffix of ['', '/', '?', "'", '"', '`']) {
+        expect(
+          collectRetiredCanvasRouteViolations('route.tsx', `/canvas/${route}${suffix}`)
+        ).toEqual(['route.tsx contains a retired Canvas URL']);
       }
-      expect(source, `${relativePath} contains a retired Canvas URL`).not.toMatch(retiredUrls);
+      expect(collectRetiredCanvasRouteViolations('clean.tsx', `/canvas/${route}-review`)).toEqual(
+        []
+      );
     }
+    expect(collectRetiredCanvasRouteViolations('clean.tsx', 'CanvasIntent /canvas')).toEqual([]);
+  });
+
+  it('keeps the one-shot canvasIntent protocol out of production source', async () => {
+    const sources = await readArchitectureSources(
+      listProductionTypeScript('.').map((relativePath) => path.join(appRoot, relativePath))
+    );
+    const violations = Array.from(sources, ([filePath, source]) =>
+      collectRetiredCanvasRouteViolations(
+        path.relative(appRoot, filePath).replaceAll(path.sep, '/'),
+        source
+      )
+    ).flat();
+
+    expect(violations).toEqual([]);
   });
 });

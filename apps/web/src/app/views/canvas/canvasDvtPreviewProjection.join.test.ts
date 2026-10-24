@@ -69,7 +69,7 @@ describe('N-input protected Preview intent', () => {
         ok: true,
         selection: { mode: 'upstream', nodeIds: ['transform-orders'] },
       });
-      if (!result.ok) throw new Error(result.message);
+      if (!result.ok) throw new Error(result.cause);
       expect(result.derivedDependencyNodeIds).toHaveLength(count);
       expect(result.scopedNodeIds).toEqual([...input.workspaceNodeIds].sort());
       const reversed = buildProtectedDvtPreviewProjection({

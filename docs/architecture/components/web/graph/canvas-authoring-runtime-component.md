@@ -583,6 +583,13 @@ an edge badge, shared relational junction, synthetic node or shared trunk.
 Substrait remains the semantic authority inside the Model; internal operations
 are inspected and edited in the semantic editor reached from the Model.
 
+Under `ProjectCanvasAuthoringViewportGraph`, `CanvasDependencyEdge` renders
+these dependencies with XYFlow's orthogonal smooth-step path and corners of at
+most 12 Canvas units. A compact 8-unit direction marker anchors its tip at the
+target port. Geometry remains presentation-only: the existing `BaseEdge`
+retains its interaction area, selection and execution-gate cues. Column lineage
+uses its own renderer and is outside this dependency-path convention.
+
 The outer node inspector shows factual columns and read-only canonical code,
 alongside metadata and the existing Open semantic editor action. It must not
 mount composition starters or relation/operator forms in Columns, including

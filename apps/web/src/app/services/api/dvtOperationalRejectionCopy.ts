@@ -42,7 +42,13 @@ const COPY: Record<
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'The model configuration is invalid. Review its properties.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
-      'Use a table result, or an ephemeral model connected to one table Sink. Do not configure both destinations.',
+      'This result type can be saved, but execution currently supports a table result or an ephemeral model connected to one table Sink.',
+    [DVT_REJECTIONS.runSinkRequired.messageKey]:
+      'Connect the ephemeral model to a table Sink before execution.',
+    [DVT_REJECTIONS.runSinkTransformDispositionInvalid.messageKey]:
+      'Set the model feeding the table Sink to ephemeral before execution.',
+    [DVT_REJECTIONS.runPublicationConflict.messageKey]:
+      'The model and its Sink both configure publication. Use an ephemeral model without its own output target before the Sink.',
     [DVT_REJECTIONS.runTargetInvalid.messageKey]:
       'Configure a valid output connection, schema and table before Run.',
     unknown: 'This model cannot run. Review its configuration and preview again.',
@@ -77,7 +83,13 @@ const COPY: Record<
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'La configuración del modelo no es válida. Revisa sus propiedades.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
-      'Usa un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla. No configures ambos destinos.',
+      'Este tipo de resultado se puede guardar; la ejecución admite actualmente un resultado de tipo tabla o un modelo efímero conectado a un Sink de tabla.',
+    [DVT_REJECTIONS.runSinkRequired.messageKey]:
+      'Conecta el modelo efímero a un Sink de tabla antes de ejecutar.',
+    [DVT_REJECTIONS.runSinkTransformDispositionInvalid.messageKey]:
+      'Configura como efímero el modelo que alimenta al Sink de tabla antes de ejecutar.',
+    [DVT_REJECTIONS.runPublicationConflict.messageKey]:
+      'El modelo y su Sink configuran publicación. Usa un modelo efímero sin destino propio antes del Sink.',
     [DVT_REJECTIONS.runTargetInvalid.messageKey]:
       'Configura una conexión, un esquema y una tabla de salida válidos antes de ejecutar.',
     unknown: 'No se puede ejecutar este modelo. Revisa su configuración y repite la vista previa.',

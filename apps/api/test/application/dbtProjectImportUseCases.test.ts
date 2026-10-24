@@ -3,7 +3,10 @@ import type {
   DbtProjectImportResult,
   DbtProjectImportValidationReport,
 } from '@dvt/contracts';
-import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
+import {
+  DbtProjectGraphProjectionSchema,
+  DbtProjectImportValidationReceiptSchema,
+} from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IDbtProjectAnalyzerPort } from '../../src/application/ports/dbtProjectAnalysis.js';
@@ -12,7 +15,10 @@ import type {
   IDbtProjectImportProcessStore,
 } from '../../src/application/ports/dbtProjectImport.js';
 import { ImportDbtProjectUseCase } from '../../src/application/services/importDbtProjectUseCase.js';
-import { ValidateDbtProjectImportUseCase } from '../../src/application/services/validateDbtProjectImportUseCase.js';
+import {
+  ValidateDbtProjectImportUseCase,
+  type DbtProjectImportEvaluation,
+} from '../../src/application/services/validateDbtProjectImportUseCase.js';
 
 const SCOPE = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' } as const;
 const NOW = new Date('2026-07-14T10:00:00.000Z');
@@ -107,6 +113,19 @@ async function acceptedReport(): Promise<
   return report;
 }
 
+async function acceptedEvaluation(
+  report: Extract<DbtProjectImportValidationReport, { status: 'accepted' }>
+): Promise<DbtProjectImportEvaluation> {
+  return {
+    status: 'accepted',
+    report,
+    scopedAnalysis: {
+      scope: SCOPE,
+      analysis: await validAnalyzer().analyze({ scope: SCOPE, projectRoot: 'analytics' }),
+    },
+  };
+}
+
 describe('ValidateDbtProjectImportUseCase', () => {
   it('returns a deterministic accepted receipt only after safe inspection and fresh analysis', async () => {
     const report = await acceptedReport();
@@ -135,6 +154,27 @@ describe('ValidateDbtProjectImportUseCase', () => {
         identifier: 'orders_table',
       },
     ]);
+  });
+
+  it('captures the evaluation scope and keeps analysis out of the public report', async () => {
+    const scope = { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' };
+    const useCase = new ValidateDbtProjectImportUseCase({
+      inspector: safeInspector(),
+      analyzer: validAnalyzer(),
+      now: () => NOW,
+    });
+    const pending = useCase.evaluate(scope, {
+      schemaVersion: 'validate-dbt-project-import-request.v1',
+      projectRoot: 'analytics',
+    });
+    scope.tenantId = 'another-tenant';
+    const evaluation = await pending;
+    expect(evaluation.status).toBe('accepted');
+    if (evaluation.status !== 'accepted') throw new Error('Expected accepted evaluation');
+    expect(evaluation.scopedAnalysis.scope).toEqual(SCOPE);
+    expect(evaluation.scopedAnalysis.scope).not.toBe(scope);
+    expect(evaluation.report).not.toHaveProperty('scopedAnalysis');
+    expect(evaluation.report).not.toHaveProperty('analysis');
   });
 
   it('does not invoke dbt for a project rejected by filesystem policy', async () => {
@@ -216,9 +256,9 @@ describe('ImportDbtProjectUseCase', () => {
     const processStore = emptyProcessStore();
     const projection = freshProjection();
     const useCase = new ImportDbtProjectUseCase({
-      validator: { execute: vi.fn().mockResolvedValue(report) },
+      validator: { evaluate: vi.fn().mockResolvedValue(await acceptedEvaluation(report)) },
       processStore,
-      projectGraph: { execute: vi.fn().mockResolvedValue(projection) },
+      projectGraph: { projectValidatedAnalysis: vi.fn().mockResolvedValue(projection) },
       now: () => NOW,
       createLeaseToken: () => 'lease-a',
       operationLeaseMs: 60_000,
@@ -247,13 +287,18 @@ describe('ImportDbtProjectUseCase', () => {
     const processStore = emptyProcessStore();
     const useCase = new ImportDbtProjectUseCase({
       validator: {
-        execute: vi.fn().mockResolvedValue({
-          ...report,
-          receipt: { ...report.receipt, contentSetSha256: 'c'.repeat(64) },
-        }),
+        evaluate: vi.fn().mockResolvedValue(
+          await acceptedEvaluation({
+            ...report,
+            receipt: DbtProjectImportValidationReceiptSchema.parse({
+              ...report.receipt,
+              contentSetSha256: 'c'.repeat(64),
+            }),
+          })
+        ),
       },
       processStore,
-      projectGraph: { execute: vi.fn() },
+      projectGraph: { projectValidatedAnalysis: vi.fn() },
       now: () => NOW,
       createLeaseToken: () => 'lease-a',
       operationLeaseMs: 60_000,
@@ -283,9 +328,9 @@ describe('ImportDbtProjectUseCase', () => {
       },
     });
     const useCase = new ImportDbtProjectUseCase({
-      validator: { execute: vi.fn().mockResolvedValue(report) },
+      validator: { evaluate: vi.fn().mockResolvedValue(await acceptedEvaluation(report)) },
       processStore,
-      projectGraph: { execute: vi.fn().mockResolvedValue(changedProjection) },
+      projectGraph: { projectValidatedAnalysis: vi.fn().mockResolvedValue(changedProjection) },
       now: () => NOW,
       createLeaseToken: () => 'lease-a',
       operationLeaseMs: 60_000,
@@ -309,7 +354,7 @@ describe('ImportDbtProjectUseCase', () => {
     ['idempotency_mismatch', 'idempotency key was reused'],
   ] as const)('fails closed on authority %s before projecting', async (kind, message) => {
     const report = await acceptedReport();
-    const projectGraph = { execute: vi.fn() };
+    const projectGraph = { projectValidatedAnalysis: vi.fn() };
     const processStore = emptyProcessStore();
     processStore.begin.mockResolvedValue(
       kind === 'conflict'
@@ -325,7 +370,7 @@ describe('ImportDbtProjectUseCase', () => {
         : { kind }
     );
     const useCase = new ImportDbtProjectUseCase({
-      validator: { execute: vi.fn().mockResolvedValue(report) },
+      validator: { evaluate: vi.fn().mockResolvedValue(await acceptedEvaluation(report)) },
       processStore,
       projectGraph,
       now: () => NOW,
@@ -342,7 +387,7 @@ describe('ImportDbtProjectUseCase', () => {
         validationReceipt: report.receipt,
       })
     ).rejects.toThrow(message);
-    expect(projectGraph.execute).not.toHaveBeenCalled();
+    expect(projectGraph.projectValidatedAnalysis).not.toHaveBeenCalled();
   });
 });
 

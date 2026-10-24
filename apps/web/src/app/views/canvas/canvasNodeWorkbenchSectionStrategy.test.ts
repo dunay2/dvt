@@ -88,12 +88,12 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     expect(result.primarySectionIds).toEqual(['general', 'columns', 'inputs-outputs']);
   });
 
-  it('orders Code first and removes empty unsupported sections', () => {
+  it('orders Code last even when declared first and removes empty unsupported sections', () => {
     const result = resolveCanvasNodeWorkbenchSectionModel({
       nodeKind: 'dvt:transform',
       canEditNode: true,
       canOpenNodeCode: false,
-      strategySectionIds: ['properties', 'columns', 'tests', 'lineage'],
+      strategySectionIds: ['code', 'properties', 'columns', 'tests', 'lineage', 'sql'],
       contributedSectionIds: new Set(),
       sections: [
         section('general', { rows: [{ id: 'name', label: 'Name', value: 'Orders' }] }),
@@ -117,14 +117,14 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
     });
 
     expect(result.sections.map(({ id }) => id)).toEqual([
-      'code',
       'general',
       'columns',
       'inputs-outputs',
+      'code',
       'keys',
       'summary',
     ]);
-    expect(result.primarySectionIds).toEqual(['code', 'general', 'columns', 'inputs-outputs']);
+    expect(result.primarySectionIds).toEqual(['general', 'columns', 'inputs-outputs', 'code']);
   });
 
   it('keeps editor-only sections and contribution hosts even before they contain facts', () => {
@@ -143,8 +143,8 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
       ],
     });
 
-    expect(result.sections.map(({ id }) => id)).toEqual(['code', 'general', 'columns', 'comments']);
-    expect(result.primarySectionIds).toEqual(['code', 'general', 'columns']);
+    expect(result.sections.map(({ id }) => id)).toEqual(['general', 'columns', 'code', 'comments']);
+    expect(result.primarySectionIds).toEqual(['general', 'columns', 'code']);
   });
 
   it('keeps file-backed Code and recorded Summary reachable while passive empty sections stay absent', () => {
@@ -164,7 +164,46 @@ describe('resolveCanvasNodeWorkbenchSectionModel', () => {
       ],
     });
 
-    expect(result.sections.map(({ id }) => id)).toEqual(['code', 'general', 'summary']);
-    expect(result.primarySectionIds).toEqual(['code', 'general']);
+    expect(result.sections.map(({ id }) => id)).toEqual(['general', 'code', 'summary']);
+    expect(result.primarySectionIds).toEqual(['general', 'code']);
   });
+
+  it('does not manufacture a Code tab without recorded content or an editor capability', () => {
+    const result = resolveCanvasNodeWorkbenchSectionModel({
+      nodeKind: 'dvt:transform',
+      canEditNode: false,
+      canOpenNodeCode: false,
+      strategySectionIds: ['code', 'properties', 'columns'],
+      contributedSectionIds: new Set(),
+      sections: [section('code'), section('general'), section('columns')],
+    });
+
+    expect(result.sections.map(({ id }) => id)).toEqual(['general']);
+    expect(result.primarySectionIds).toEqual(['general']);
+  });
+
+  it.each([
+    { content: false, contribution: false, expected: ['general'] },
+    { content: true, contribution: false, expected: ['general', 'summary'] },
+    { content: false, contribution: true, expected: ['general', 'summary'] },
+  ])(
+    'uses the same content/contribution capability rule for Summary ($content, $contribution)',
+    ({ content, contribution, expected }) => {
+      const result = resolveCanvasNodeWorkbenchSectionModel({
+        nodeKind: 'dvt:transform',
+        canEditNode: true,
+        canOpenNodeCode: false,
+        strategySectionIds: ['properties'],
+        contributedSectionIds: new Set(contribution ? ['summary'] : []),
+        sections: [
+          section('general'),
+          section(
+            'summary',
+            content ? { rows: [{ id: 'tags', label: 'Tags', value: 'source' }] } : {}
+          ),
+        ],
+      });
+      expect(result.sections.map(({ id }) => id)).toEqual(expected);
+    }
+  );
 });

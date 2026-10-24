@@ -169,12 +169,7 @@ describe('useCanvasController core', () => {
       })
     );
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
-    expect(result?.transformationValidation).toEqual(
-      expect.objectContaining({
-        valid: false,
-        summaryCode: 'requires_executable_path',
-      })
-    );
+    expect(result?.planRunReadiness).toBe(harness.state.executionActionsResult.planRunReadiness);
     expect(result?.registeredPlugins?.has('dbt')).toBe(true);
     expect(result?.registeredPlugins?.has('monitoring')).toBe(true);
     expect(result?.handlePreviewExecutionPlan).toBe(
@@ -184,7 +179,7 @@ describe('useCanvasController core', () => {
     expect(result?.canStartRun).toBe(false);
     expect(result?.canEditInspectorNode).toBe(true);
     expect(typeof result?.applyInspectorNodeDraft).toBe('function');
-    expect(result?.planStatusSummary).toBe('Preview required before running.');
+    expect(result?.planRunReadiness.summary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.importedNodeFocusIds).toEqual([]);
     expect(harness.mocks.useCanvasExecutionActions).toHaveBeenCalledWith(

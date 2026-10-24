@@ -101,6 +101,24 @@ root project configuration files such as `dbt_project.yml`. If no workflow
 artifact exists, it falls back to the first reachable file in the workspace
 tree.
 
+For graph-authored dbt models, `CodeGraphFileScope` derives the generated
+`models/<name>.sql` path with the same `normalizeDbtIdentifier` plugin policy used
+by Canvas artifact projection. The policy lives in
+`plugins/dbt/dbtIdentifier.ts`, has no imports, and preserves the caller's fallback
+when normalization produces an empty value. Code imports it directly without
+depending on Canvas artifact rendering. Explicit node paths remain in scope;
+non-dbt model paths continue to use their node identity. File-backed project
+roots, authorization and file-content query behavior retain their existing owners.
+
+```mermaid
+flowchart LR
+  Code["Code graph file scope"] --> Naming["dbt plugin identifier policy"]
+  Canvas["Canvas authoring and artifact projection"] --> Naming
+  Naming --> Identifier["Normalized identifier or unchanged fallback"]
+  Code --> Scope["Explicit paths plus generated model paths"]
+  Scope --> Query["Existing scoped workspace-file queries"]
+```
+
 ## DDD Model
 
 | Object                     | Kind               | Responsibility                                                                            |

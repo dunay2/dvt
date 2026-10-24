@@ -152,13 +152,12 @@ describe('canvasDraftAccessPostureModel', () => {
         posture,
         canMutateGraph: true,
         canPlan: true,
-        canRun: true,
         canReloadLatestDraft: false,
       })
     ).toEqual({
       canMutateGraph: true,
       canPlan: true,
-      canRun: false,
+      draftExecutionBarrier: 'saving',
       canReloadLatestDraft: false,
     });
   });

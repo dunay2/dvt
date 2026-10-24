@@ -33,6 +33,7 @@ type ExecutionActionsHookViewProps = Readonly<{
 }>;
 
 type ExecutionActionsHookCommonProps = Readonly<{
+  runAdmission: import('./canvasRuntimePolicy').CanvasRunAdmission;
   graphDraftCanvasId: string | null;
   plansService: IPlansPort;
   runsService: IRunsPort;
@@ -49,7 +50,6 @@ type ExecutionActionsHookCommonProps = Readonly<{
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
-  canRun: boolean;
   bottomDrawerVisible: boolean;
   setBottomDrawerHeight: (height: number) => void;
   toggleBottomDrawer: () => void;
@@ -154,7 +154,7 @@ function ExecutionActionsHookView({
       <div data-testid="plan-run-readiness-blockers">
         {hook.planRunReadiness.blockers.join(',') || 'none'}
       </div>
-      <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
+      <div data-testid="plan-status-summary">{hook.planRunReadiness.summary}</div>
       <div data-testid="latest-preview-outcome">{hook.latestPreviewOutcome?.kind ?? 'none'}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
       <button
@@ -232,7 +232,9 @@ function resolveCommonHookProps(
       ? {}
       : { flushDraftForExecution: args.flushDraftForExecution }),
     canPlan: args.canPlan,
-    canRun: args.canRun,
+    runAdmission: args.canRun
+      ? { allowed: true }
+      : { allowed: false, reason: 'authorization_denied' },
     bottomDrawerVisible: args.bottomDrawerVisible,
     setBottomDrawerHeight: args.setBottomDrawerHeight,
     toggleBottomDrawer: args.toggleBottomDrawer,
@@ -288,6 +290,7 @@ export function buildCanonicalNodes(): CanonicalNode[] {
       status: 'idle',
       tags: [],
       metadata: {
+        columns: [{ name: 'order_id', type: 'integer' }],
         dbt: {
           packageName: 'analytics',
           sourceName: 'raw',

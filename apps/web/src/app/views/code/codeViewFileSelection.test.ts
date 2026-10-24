@@ -13,6 +13,38 @@ import {
 } from './codeViewFileSelection';
 
 describe('codeViewFileSelection', () => {
+  it.each([
+    { name: ' OrderItems / v2 ', expected: 'order_items_v2' },
+    { name: 'Métric 名', expected: 'm_tric' },
+    { name: ' ___ !!! ', expected: 'Model-ID' },
+  ])(
+    'scopes generated dbt files for $name while retaining explicit and native paths',
+    ({ name, expected }) => {
+      const dbtNode = {
+        id: 'Model-ID',
+        name,
+        type: 'MODEL' as const,
+        package: 'dbt',
+        path: 'models/authored.sql',
+        tags: [],
+        status: 'idle' as const,
+        dependencies: [],
+      };
+      const paths = deriveCodeGraphFilePaths({
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
+        nodes: [dbtNode, { ...dbtNode, id: 'Native-ID', package: 'dvt', path: '' }],
+        edges: [],
+      });
+      expect([...paths]).toEqual([
+        'models/authored.sql',
+        `models/${expected}.sql`,
+        'models/Native-ID.sql',
+        'dbt_project.yml',
+        'models/schema.yml',
+      ]);
+    }
+  );
+
   it('scopes file-backed Code to one dbt project root and prefers the requested resource path', () => {
     const tree: WorkspaceFileEntry[] = [
       {

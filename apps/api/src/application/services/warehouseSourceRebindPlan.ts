@@ -364,11 +364,18 @@ function rebindSourceNode(
     databaseUser: string;
   }
 ): WorkspaceGraphAuthoringNode {
+  const { sourceComment: _previousSourceComment, ...metadata } = node.metadata ?? {};
+  const commentsByName = new Map(
+    input.targetObject.columns?.map((column) => [column.name, column.comment])
+  );
+  const columns = readPersistedColumns(node).map(({ comment: _previousComment, ...column }) => {
+    const comment = commentsByName.get(column.name);
+    return { ...column, ...(comment === undefined ? {} : { comment }) };
+  });
   return {
     ...node,
-    description: `Imported source for ${input.targetObject.locator.catalog}.${input.targetObject.locator.schema}.${input.targetObject.locator.name}`,
     metadata: {
-      ...node.metadata,
+      ...metadata,
       connectedSourceRef: input.nextRef,
       connectionName: input.connectionName,
       databaseUser: input.databaseUser,
@@ -377,6 +384,10 @@ function rebindSourceNode(
       tableIdentifier: input.targetObject.locator.name,
       relationType: input.targetObject.locator.relationType,
       sourceMetricEvidence: input.targetObject.metricEvidence,
+      ...(input.targetObject.comment === undefined
+        ? {}
+        : { sourceComment: input.targetObject.comment }),
+      columns,
     },
   };
 }

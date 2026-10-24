@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { sourceOccurrenceCopy } from './relational-source-occurrence/sourceOccurrenceCopy';
@@ -12,7 +13,7 @@ import {
   formatCanvasConnectionRejection,
   formatCanvasModelOutputDependencyRejection,
   formatCanvasInspectorNodeDraftError,
-  formatTransformationGraphValidationSummary,
+  formatCanvasNodeRemovedMessage,
 } from './copy';
 
 describe('Model output dependency rejection copy', () => {
@@ -88,6 +89,49 @@ const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
 ])[];
 
 describe('canvas copy catalog', () => {
+  it.each([
+    { language: 'en', locales: ['en', 'en-US', 'EN-gb', 'fr-FR', 'unknown'] },
+    { language: 'es', locales: ['es', 'es-ES', 'ES-mx'] },
+  ])('reuses the $language catalog for repeated and regional lookups', ({ language, locales }) => {
+    const catalog = resolveCanvasViewCopy(language);
+    for (const locale of locales) {
+      expect(resolveCanvasViewCopy(locale)).toBe(catalog);
+    }
+  });
+
+  it('reads the current language through the same proxy and omitted locale', () => {
+    const initialLanguage = useApplicationLanguageStore.getState().language;
+    const copy = canvasViewCopy;
+    try {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+      expect(copy.inspectorDbtPackageLabel).toBe('Package');
+      expect(resolveCanvasViewCopy().inspectorDbtPackageLabel).toBe('Package');
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+      expect(copy.inspectorDbtPackageLabel).toBe('Paquete');
+      expect(resolveCanvasViewCopy().inspectorDbtPackageLabel).toBe('Paquete');
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+      expect(copy.inspectorDbtPackageLabel).toBe('Package');
+      expect(resolveCanvasViewCopy().inspectorDbtPackageLabel).toBe('Package');
+    } finally {
+      useApplicationLanguageStore.getState().configureApplicationLanguage(initialLanguage);
+    }
+  });
+
+  it('provides matching message keys and template slots while preserving optional suffixes', () => {
+    const english = resolveCanvasViewCopy('en');
+    const spanish = resolveCanvasViewCopy('es');
+    expect(Object.keys(spanish).sort()).toEqual(Object.keys(english).sort());
+    for (const key of Object.keys(english) as (keyof CanvasViewCopy)[]) {
+      expect(typeof english[key]).toBe('string');
+      expect(typeof spanish[key]).toBe('string');
+      expect([...spanish[key].matchAll(/\{([^{}]+)\}/g)].map((match) => match[1]).sort()).toEqual(
+        [...english[key].matchAll(/\{([^{}]+)\}/g)].map((match) => match[1]).sort()
+      );
+    }
+    expect(formatCanvasNodeRemovedMessage('Orders', 'en')).toBe('Removed Orders');
+    expect(formatCanvasNodeRemovedMessage('Orders', 'es')).toBe('Se ha eliminado Orders');
+  });
+
   it('localizes data Preview without confusing it with Run', () => {
     expect(resolveCanvasSemanticEditorCopy('es').previewAction).toBe('Vista previa');
     expect(resolveCanvasSemanticEditorCopy('en').previewAction).toBe('Preview');
@@ -178,7 +222,6 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.routeNeedsCanvasMessage).toBe(
       'Añade fuentes y construye tus transformaciones aquí.'
     );
-    expect(spanishCopy.toolbarLayoutLabel).toBe('Disposición');
     expect(spanishCopy.workspaceProjectActionsMenuLabel).toBe('Acciones del proyecto');
     expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Instantáneas del proyecto');
     expect(canvasViewCopy.canvasNodePortTargetLabel).toBe('Connect incoming port');
@@ -202,7 +245,6 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.draftSyncedLabel).toBe('Sincronizado');
     expect(spanishCopy.draftSavedLabel).toBe('Guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Error al guardar');
-    expect(spanishCopy.newCanvasLabel).toBe('Nuevo canvas');
     expect(canvasViewCopy.selectionRecoveryRequestedRootsLabel).toBe('Selected nodes');
     expect(spanishCopy.selectionRecoveryRequestedRootsLabel).toBe('Nodos seleccionados');
     expect(canvasViewCopy.selectionRecoveryNonExecutableRootsLabel).toBe('Nodes that cannot run');
@@ -225,11 +267,9 @@ describe('canvas copy catalog', () => {
     expect(canvasViewCopy.inspectorDbtPackageLabel).toBe('Package');
     expect(canvasViewCopy.inspectorErrorDbtPackageRequired).toBe('Package is required.');
     expect(canvasViewCopy.inspectorDvtConnectionLabel).toBe('Connection');
-    expect(canvasViewCopy.inspectorDvtSqlTransformTitle).toBe('DVT Transform');
     expect(spanishCopy.inspectorDbtPackageLabel).toBe('Paquete');
     expect(spanishCopy.inspectorErrorDbtPackageRequired).toBe('El paquete es obligatorio.');
     expect(spanishCopy.inspectorDvtConnectionLabel).toBe('Conexión');
-    expect(spanishCopy.inspectorDvtSqlTransformTitle).toBe('Transform DVT');
     expect(spanishCopy.inspectorDvtWriteModeLabel).toBe('Modo de escritura');
     expect(canvasViewCopy.inspectorErrorObjectFileSizeInvalid).toBe(
       'Object size must be a positive integer, no greater than 50000000 bytes, and no greater than maximum size.'
@@ -297,48 +337,6 @@ describe('canvas copy catalog', () => {
     }
 
     expect(coveredErrorCodes.size).toBe(INSPECTOR_DRAFT_ERROR_COPY_KEYS.length);
-  });
-
-  it('keeps terminal-result diagnostics independent from a fixed graph topology', () => {
-    const topologyDiagnostics = [
-      'requires_executable_path',
-      'ambiguous_executable_paths',
-      'requires_three_nodes',
-      'requires_one_of_each_role',
-      'requires_two_edges',
-      'invalid_edge_order',
-    ] as const;
-
-    for (const locale of ['en-US', 'es-ES']) {
-      const diagnostics = topologyDiagnostics.map((code) =>
-        formatTransformationGraphValidationSummary(code, locale)
-      );
-
-      expect(diagnostics.join(' ')).not.toMatch(/source\s*->\s*transform|transform\s*->\s*sink/iu);
-      expect(diagnostics.every((diagnostic) => /terminal/iu.test(diagnostic))).toBe(true);
-    }
-
-    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toMatch(
-      /currently evaluable/iu
-    );
-    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toMatch(
-      /evaluable actualmente/iu
-    );
-    expect(
-      formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')
-    ).not.toMatch(/consolidat/iu);
-    expect(
-      formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')
-    ).not.toMatch(/consolidad/iu);
-
-    for (const locale of ['en-US', 'es-ES'] as const) {
-      expect(formatTransformationGraphValidationSummary('requires_two_edges', locale)).toMatch(
-        /add|remove|añade|elimina/iu
-      );
-      expect(formatTransformationGraphValidationSummary('invalid_edge_order', locale)).toMatch(
-        /reconnect|recon[eé]cta/iu
-      );
-    }
   });
 
   it('formats a missing plugin connection policy from locale copy', () => {

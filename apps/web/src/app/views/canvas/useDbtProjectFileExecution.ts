@@ -14,6 +14,7 @@ import {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildDbtProjectFileExecutionStrategy } from './dbtProjectFileExecutionStrategy';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
+import { resolveCanvasRunAdmission } from './canvasRuntimePolicy';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import type { CanvasStoreView } from './useCanvasStoreFacade';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -52,7 +53,12 @@ export function useDbtProjectFileExecution(args: {
   );
   const canPlan =
     args.store.userPermissions.canPlan && args.projection?.capabilities.canPreview === true;
-  const canRun = args.store.userPermissions.canRun && args.projection?.capabilities.canRun === true;
+  const runAdmission = resolveCanvasRunAdmission({
+    permissionGranted: args.store.userPermissions.canRun,
+    executionAvailable: args.projection?.capabilities.canRun === true,
+    draftBarrier: null,
+  });
+  const canRun = runAdmission.allowed;
   const actions = useCanvasExecutionActions({
     graphDraftCanvasId: null,
     plansService,
@@ -66,7 +72,7 @@ export function useDbtProjectFileExecution(args: {
     selectionIntent: args.selectionIntent,
     workspaceNodeIds: args.workspaceNodeIds,
     canPlan,
-    canRun,
+    runAdmission,
     sessionContext,
     executionEnvironmentId: args.store.selectedEnvironment,
     shellFeedback,

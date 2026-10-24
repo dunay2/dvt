@@ -7,9 +7,23 @@ import {
   type ValidateDbtProjectImportRequest,
 } from '@dvt/contracts';
 
-import type { IDbtProjectAnalyzerPort } from '../ports/dbtProjectAnalysis.js';
+import type {
+  IDbtProjectAnalyzerPort,
+  ScopedDbtProjectAnalysis,
+} from '../ports/dbtProjectAnalysis.js';
 import type { IDbtProjectImportInspectorPort } from '../ports/dbtProjectImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
+
+export type DbtProjectImportEvaluation =
+  | Readonly<{
+      status: 'accepted';
+      report: Extract<DbtProjectImportValidationReport, { status: 'accepted' }>;
+      scopedAnalysis: ScopedDbtProjectAnalysis;
+    }>
+  | Readonly<{
+      status: 'rejected';
+      report: Extract<DbtProjectImportValidationReport, { status: 'rejected' }>;
+    }>;
 
 export class ValidateDbtProjectImportUseCase {
   public constructor(
@@ -24,12 +38,20 @@ export class ValidateDbtProjectImportUseCase {
     scope: WorkspaceStorageScope,
     request: ValidateDbtProjectImportRequest
   ): Promise<DbtProjectImportValidationReport> {
+    return (await this.evaluate(scope, request)).report;
+  }
+
+  public async evaluate(
+    scope: WorkspaceStorageScope,
+    request: ValidateDbtProjectImportRequest
+  ): Promise<DbtProjectImportEvaluation> {
+    const analysisScope = { ...scope };
     const inspection = await this.deps.inspector.inspect({
-      scope,
+      scope: analysisScope,
       projectRoot: request.projectRoot,
     });
     if (inspection.diagnostics.some((diagnostic) => diagnostic.severity === 'error')) {
-      return DbtProjectImportValidationReportSchema.parse({
+      return evaluationFromReport({
         schemaVersion: 'dbt-project-import-validation-report.v1',
         status: 'rejected',
         projectRoot: request.projectRoot,
@@ -40,12 +62,15 @@ export class ValidateDbtProjectImportUseCase {
       });
     }
 
-    const analysis = await this.deps.analyzer.analyze({ scope, projectRoot: request.projectRoot });
+    const analysis = await this.deps.analyzer.analyze({
+      scope: analysisScope,
+      projectRoot: request.projectRoot,
+    });
     if (
       analysis.status !== 'valid' ||
       analysis.projectRevision.projectRoot !== request.projectRoot
     ) {
-      return DbtProjectImportValidationReportSchema.parse({
+      return evaluationFromReport({
         schemaVersion: 'dbt-project-import-validation-report.v1',
         status: 'rejected',
         projectRoot: request.projectRoot,
@@ -81,26 +106,41 @@ export class ValidateDbtProjectImportUseCase {
       analysisSha256: analysis.analysisSha256,
       sourceTableDeclarations,
     });
-    return DbtProjectImportValidationReportSchema.parse({
-      schemaVersion: 'dbt-project-import-validation-report.v1',
-      status: 'accepted',
-      projectRoot: request.projectRoot,
-      projectName: inspection.projectName,
-      ...(adapterType === undefined ? {} : { adapterType }),
-      inventory: inspection.inventory,
-      diagnostics: inspection.diagnostics,
-      sourceTableDeclarations,
-      receipt: {
-        schemaVersion: 'dbt-project-import-validation-receipt.v1',
+    return evaluationFromReport(
+      {
+        schemaVersion: 'dbt-project-import-validation-report.v1',
+        status: 'accepted',
         projectRoot: request.projectRoot,
-        contentSetSha256: analysis.projectRevision.contentSetSha256,
-        analysisSha256: analysis.analysisSha256,
-        validationSha256,
-        policyVersion: 'dbt-project-import-policy.v1',
-        validatedAt,
+        projectName: inspection.projectName,
+        ...(adapterType === undefined ? {} : { adapterType }),
+        inventory: inspection.inventory,
+        diagnostics: inspection.diagnostics,
+        sourceTableDeclarations,
+        receipt: {
+          schemaVersion: 'dbt-project-import-validation-receipt.v1',
+          projectRoot: request.projectRoot,
+          contentSetSha256: analysis.projectRevision.contentSetSha256,
+          analysisSha256: analysis.analysisSha256,
+          validationSha256,
+          policyVersion: 'dbt-project-import-policy.v1',
+          validatedAt,
+        },
       },
-    });
+      { scope: analysisScope, analysis }
+    );
   }
+}
+
+function evaluationFromReport(
+  rawReport: unknown,
+  scopedAnalysis?: ScopedDbtProjectAnalysis
+): DbtProjectImportEvaluation {
+  const report = DbtProjectImportValidationReportSchema.parse(rawReport);
+  if (report.status === 'rejected') return { status: 'rejected', report };
+  if (scopedAnalysis === undefined) {
+    throw new Error('An accepted dbt import evaluation requires its server-owned analysis.');
+  }
+  return { status: 'accepted', report, scopedAnalysis };
 }
 
 function analysisDiagnostic(

@@ -363,7 +363,7 @@ describe('DVT terminal Transform Preview and Run live', () => {
       .should('be.visible')
       .and(
         'contain.text',
-        'Use a table result, or an ephemeral model connected to one table Sink. Do not configure both destinations.'
+        'This result type can be saved, but execution currently supports a table result or an ephemeral model connected to one table Sink.'
       )
       .and('not.contain.text', DVT_REJECTIONS.runDispositionUnsupported.reason);
     cy.get('[data-slot="plan-preview-start-run"]').should('not.exist');

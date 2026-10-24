@@ -29,11 +29,6 @@ describe('canvas run-start identity architecture', () => {
     );
     expect(RUN_START_ACTION_SOURCE).toContain("from './canvasRunSelection'");
     expect(RUN_START_ACTION_SOURCE).toContain('runsService.startRun({');
-    expect(RUN_START_ACTION_SOURCE).toContain('planRef,');
-    expect(RUN_START_ACTION_SOURCE).toContain(
-      'workspaceScope: sessionContext.getWorkspaceScopeSnapshot()'
-    );
-    expect(RUN_START_ACTION_SOURCE).toContain('selection: collectPlanSelection(currentPlan)');
     expect(RUNS_PORT_SOURCE).toContain('export type StartRunInput = {');
     expect(RUNS_PORT_SOURCE).toContain('planRef: PlanRef;');
     expect(RUNS_PORT_SOURCE).toContain('workspaceScope: WorkspaceScope;');

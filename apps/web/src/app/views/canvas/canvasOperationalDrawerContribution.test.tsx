@@ -28,7 +28,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         canPlanGraph: false,
         canStartRun: false,
         planRunReadiness: props.chromeState.planRunReadiness,
-        planStatusSummary: props.chromeState.planStatusSummary,
         onPreviewExecutionPlan: vi.fn(),
         onStartRun: vi.fn(),
         operationDataTab,
@@ -44,10 +43,9 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         canPlanGraph: true,
         canStartRun: false,
         planRunReadiness: buildPlanRunReadiness({
-          blockers: ['plan_integrity', 'backpressure'],
+          blockers: ['plan_integrity', 'draft_saving'],
           summary: 'Preview required before running.',
         }),
-        planStatusSummary: 'Preview required before running.',
       },
     });
     const onPreviewExecutionPlan = vi.fn();
@@ -59,7 +57,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPlanGraph: props.chromeState.canPlanGraph,
       canStartRun: props.chromeState.canStartRun,
       planRunReadiness: props.chromeState.planRunReadiness,
-      planStatusSummary: props.chromeState.planStatusSummary,
       onPreviewExecutionPlan,
       onStartRun: vi.fn(),
     });
@@ -79,11 +76,15 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         action: expect.objectContaining({ label: 'Create Execution Preview' }),
       }),
       expect.objectContaining({
-        id: 'backpressure',
-        severity: 'warning',
-        detail: 'Backpressure',
+        id: 'draft_saving',
+        severity: 'info',
+        detail: resolveCanvasViewCopy('en').operationalDrawerDraftSavingBlocker,
         action: null,
       }),
+    ]);
+    expect(contribution.problems.items.map((problem) => problem.message)).toEqual([
+      'Preview required before running.',
+      resolveCanvasViewCopy('en').planStatusDraftSavingMessage,
     ]);
     expect(contribution.runs).toMatchObject({
       activeRunId: null,
@@ -93,7 +94,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
     expect(contribution.preview).toMatchObject({
       status: 'blocked',
-      blockers: ['Preview', 'Backpressure'],
+      blockers: ['Preview', resolveCanvasViewCopy('en').operationalDrawerDraftSavingBlocker],
       canPreview: true,
     });
   });
@@ -111,7 +112,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
           status: 'ready',
           summary: 'Preview ready.',
         }),
-        planStatusSummary: 'Preview ready.',
       },
     });
 
@@ -122,7 +122,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPlanGraph: props.chromeState.canPlanGraph,
       canStartRun: props.chromeState.canStartRun,
       planRunReadiness: props.chromeState.planRunReadiness,
-      planStatusSummary: props.chromeState.planStatusSummary,
       onPreviewExecutionPlan: vi.fn(),
       onStartRun: vi.fn(),
     });
@@ -165,7 +164,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPlanGraph: props.chromeState.canPlanGraph,
       canStartRun: props.chromeState.canStartRun,
       planRunReadiness: props.chromeState.planRunReadiness,
-      planStatusSummary: props.chromeState.planStatusSummary,
       onPreviewExecutionPlan: vi.fn(),
       onStartRun: vi.fn(),
     });
@@ -222,7 +220,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPlanGraph: props.chromeState.canPlanGraph,
       canStartRun: props.chromeState.canStartRun,
       planRunReadiness: props.chromeState.planRunReadiness,
-      planStatusSummary: props.chromeState.planStatusSummary,
       dataSampleTabs,
       onPreviewExecutionPlan: vi.fn(),
       onStartRun: vi.fn(),
@@ -277,7 +274,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPlanGraph: false,
       canStartRun: false,
       planRunReadiness: props.chromeState.planRunReadiness,
-      planStatusSummary: props.chromeState.planStatusSummary,
       selectionRecovery,
       selectionRecoveryCommands: recoveryCommands,
       onPreviewExecutionPlan: vi.fn(),
@@ -308,7 +304,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
           blockers: ['plan_integrity', 'authorization_denied'],
           summary: 'Se requiere una vista previa antes de ejecutar.',
         }),
-        planStatusSummary: 'Se requiere una vista previa antes de ejecutar.',
       },
     });
     const copy = resolveCanvasViewCopy('es');
@@ -320,7 +315,6 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPlanGraph: props.chromeState.canPlanGraph,
       canStartRun: props.chromeState.canStartRun,
       planRunReadiness: props.chromeState.planRunReadiness,
-      planStatusSummary: props.chromeState.planStatusSummary,
       copy,
       selectionRecoveryMessages: copy,
       onPreviewExecutionPlan: vi.fn(),

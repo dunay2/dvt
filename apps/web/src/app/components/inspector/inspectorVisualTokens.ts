@@ -1,6 +1,8 @@
 /** Owned concern: own Inspector and node workbench visual tokens. */
 
 export const inspectorVisualClasses = {
+  inspectorForm:
+    'text-xs [&_[data-slot=label]]:text-xs [&_[data-slot=input]]:text-xs [&_[data-slot=textarea]]:text-xs [&_[data-slot=select-trigger]]:text-xs [&_select]:text-xs',
   inspectorField: 'space-y-2',
   inspectorCard: 'border-slate-700 bg-slate-950 p-3 text-slate-50',
   inspectorTitle: 'mb-2 text-sm font-medium text-slate-100',
@@ -79,8 +81,8 @@ export const inspectorPropertyClasses = {
   fact: 'contents',
   value: { inspector: propertyValue, workbench: `${propertyValue} text-(--text-primary)` },
   facts: {
-    inspector: 'grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm',
-    workbench: 'grid grid-cols-[minmax(96px,0.36fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm',
+    inspector: 'grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
+    workbench: 'grid grid-cols-[minmax(96px,0.36fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-xs',
     relationship: 'grid grid-cols-[minmax(6rem,0.3fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm',
   },
   records: {

@@ -61,6 +61,70 @@ function buildSourceEdge(): CanonicalEdge {
 }
 
 describe('canvas dbt authoring model', () => {
+  it.each([
+    {
+      value: ' OrderItems / v2 ',
+      sourceName: 'order_items_v2',
+      tableName: 'order_items_v2',
+      materialized: 'TABLE',
+      expectedMaterialized: 'table',
+    },
+    {
+      value: 'Métric 名',
+      sourceName: 'm_tric',
+      tableName: 'm_tric',
+      materialized: 'ephemeral',
+      expectedMaterialized: 'ephemeral',
+    },
+    {
+      value: '!!!',
+      sourceName: 'source',
+      tableName: 'table',
+      materialized: 'unknown',
+      expectedMaterialized: 'view',
+    },
+    {
+      value: undefined,
+      sourceName: 'raw_orders',
+      tableName: 'raw_orders',
+      materialized: undefined,
+      expectedMaterialized: 'view',
+    },
+  ])(
+    'reads dbt identifier spelling and defaults for $value',
+    ({ value, sourceName, tableName, materialized, expectedMaterialized }) => {
+      const node = {
+        ...buildDbtSourceNode(),
+        metadata: { dbt: { sourceName: value, tableName: value, materialized } },
+      };
+      expect(createDbtNodeAuthoringMetadata(node)).toMatchObject({
+        sourceName,
+        tableName,
+        materialized: expectedMaterialized,
+      });
+    }
+  );
+
+  it('applies the same spelling to dbt source and table metadata while preserving schema case', () => {
+    const node = buildDbtSourceNode();
+    const updated = applyDbtNodeAuthoringMetadata(node, {
+      ...createDbtNodeAuthoringMetadata(node),
+      sourceName: ' OrderItems / v2 ',
+      tableName: 'Métric 名',
+      schemaName: 'PhysicalSchema',
+      materialized: 'TABLE',
+    });
+    expect(updated.metadata).toMatchObject({
+      dbt: {
+        sourceName: 'order_items_v2',
+        tableName: 'm_tric',
+        schemaName: 'PhysicalSchema',
+        materialized: 'table',
+      },
+      config: { table: 'm_tric', schema: 'PhysicalSchema', materialized: 'table' },
+    });
+  });
+
   it('resolves the sole connected origin when duplicated selection metadata is stale', () => {
     const source = buildDbtSourceNode();
 

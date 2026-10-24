@@ -53,7 +53,7 @@ describe('Protected explicit Sink Preview intent', () => {
       requestedRootNodeIds: ['dvt-sink'],
       derivedDependencyNodeIds: expect.arrayContaining(['dvt-transform']),
     });
-    if (!result.ok) throw new Error(result.message);
+    if (!result.ok) throw new Error(result.cause);
     expect(result.scopedNodeIds).toEqual(input.canonicalNodes.map((node) => node.id).sort());
     expect(
       buildProtectedDvtPreviewProjection({

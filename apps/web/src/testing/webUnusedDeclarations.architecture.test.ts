@@ -1,16 +1,14 @@
-/** Owned concern: exercise unused-declaration enforcement through the real web ESLint configuration. */
+/** Owned concern: exercise unused-declaration enforcement through the canonical syntax lint profile. */
 import { resolve } from 'node:path';
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
 const eslint = new ESLint({
   cwd: resolve(import.meta.dirname, '../../../..'),
-  overrideConfig: {
-    languageOptions: {
-      // lintText supplies successive in-memory fixtures, not the first on-disk CI Program.
-      parserOptions: { disallowAutomaticSingleRunInference: true },
-    },
-  },
+  overrideConfigFile: resolve(
+    import.meta.dirname,
+    '../../../../tools/ci/eslint-precommit.config.cjs'
+  ),
 });
 const filePath = 'apps/web/src/testing/webUnusedDeclarations.architecture.test.ts';
 
@@ -19,7 +17,7 @@ describe('web unused declarations', () => {
     'const unconsumed = 1; export const consumed = 2;',
     'import type { ReactNode } from "react"; export const consumed = 2;',
   ])(
-    'rejects unconsumed declarations using canonical lint: %s',
+    'rejects unconsumed declarations using canonical syntax lint: %s',
     async (source) => {
       const [result] = await eslint.lintText(source, { filePath });
       expect(result?.fatalErrorCount).toBe(0);

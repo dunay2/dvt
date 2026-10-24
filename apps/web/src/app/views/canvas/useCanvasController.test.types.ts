@@ -56,7 +56,6 @@ export type CanvasHarnessState = {
   executionActionsResult: {
     canStartRun: boolean;
     planRunReadiness: PlanRunReadinessReadModel;
-    planStatusSummary: string;
     handlePreviewExecutionPlan: MockFn;
     handleStartRun: MockFn;
   } & Record<string, unknown>;

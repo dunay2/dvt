@@ -1,220 +1,63 @@
-/**
- * Owned concern: project execution readiness from the current graph and Preview outcome.
- * @baseline ADR-0044: Diagnostic prose is not a presentation contract.
- * @decision Reuse named rejection copy when projecting DVT readiness summaries.
- * @consequence Presentation changes language without changing admission or diagnostics.
- * @version 1.0.0
- */
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveDvtOperationalRejectionCopy } from '../../services/api/dvtOperationalRejectionCopy';
-import {
-  getApplicationLanguage,
-  normalizeApplicationLanguage,
-} from '../../stores/applicationLanguageStore';
-import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
+/** Owned concern: bind current Preview evidence and identity to the shared readiness policy. */
 import type { PlanViewModel } from '../../types/plans';
-import {
-  hasPersistedPreviewProof,
-  hasPersistedPreviewIdentityMismatch,
-  observePlanRunReadiness,
-  type PlanRunReadinessBlocker,
-  type PlanRunReadinessReadModel,
-} from './canvasPlanReadiness';
-import {
-  validateTransformationGraph,
-  type TransformationGraphValidationResult,
-} from './transformationGraphValidation';
-import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
-import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
-import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection';
-import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
-import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import type { PlanPreviewOutcome } from '../../ports/plans';
+import type { CanvasRunAdmission } from './canvasRuntimePolicy';
+import { observePlanRunReadiness, type PlanRunReadinessEvaluation } from './canvasPlanReadiness';
+import type { CanvasExecutionGraphEvaluation } from './canvasExecutionGraph';
+import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
 import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
-import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAuthoringModel';
 
-type DeriveCanvasExecutionStateArgs = {
-  graphDraftCanvasId?: string | null;
-  canRun: boolean;
-  executionStrategy: CanvasExecutionStrategy | null;
-  currentPlan: PlanViewModel | null;
-  lastPlannedDraftSignature: string | null;
-  canonicalNodes: CanonicalNode[];
-  canonicalEdges: CanonicalEdge[];
-  selectionIntent: CanvasExecutionSelectionIntent;
-  workspaceNodeIds: string[];
-  latestPreviewOutcome: PlanPreviewOutcome | null;
-  executionScope?: ObjectFilePostgresExecutionScope;
-  applicationLanguage?: string;
-};
-
-export type CanvasExecutionState = {
-  transformationValidation: TransformationGraphValidationResult;
-  hasPersistedPlanForRun: boolean;
-  persistedPreviewIdentityMismatch: boolean;
+export type CanvasExecutionState = Readonly<{
   isCurrentPlanStale: boolean;
-  executableGraphFailureMessage: string | null;
-  canPlanGraph: boolean;
-  canStartRun: boolean;
-  planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
-};
+  isPreviewOutcomeStale: boolean;
+  planRunReadiness: PlanRunReadinessEvaluation;
+}>;
 
-function forceReadinessBlocker(
-  readiness: PlanRunReadinessReadModel,
-  blocker: PlanRunReadinessBlocker,
-  summary: string
-): PlanRunReadinessReadModel {
-  const blockers: readonly PlanRunReadinessBlocker[] = readiness.blockers.includes(blocker)
-    ? readiness.blockers
-    : [...readiness.blockers, blocker];
-
-  return {
-    ...readiness,
-    blockers,
-    status: 'blocked',
-    summary,
-  };
-}
-
-export function deriveCanvasExecutionState({
-  graphDraftCanvasId,
-  canRun,
-  executionStrategy,
-  currentPlan,
-  lastPlannedDraftSignature,
-  canonicalNodes,
-  canonicalEdges,
-  selectionIntent,
-  workspaceNodeIds,
-  latestPreviewOutcome,
-  executionScope,
-  applicationLanguage,
-}: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
-  const previewOutcomeProjection =
-    latestPreviewOutcome == null ? null : projectCanvasPreviewOutcome(latestPreviewOutcome);
-  const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
-  const persistedPlanIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
-  const transformationValidation = validateTransformationGraph({
-    nodes: canonicalNodes,
-    edges: canonicalEdges,
-    selectedNodeIds: selectionIntent.nodeIds,
-    workspaceNodeIds,
-  });
-  const usesDbtPlanner =
-    executionStrategy?.kind === 'planner_generic_preview' ||
-    executionStrategy?.kind === 'dbt_project_file_preview';
-  const dbtPlannerProjection = usesDbtPlanner
-    ? buildCanvasDbtExecutionProjection({
-        strategy: executionStrategy,
-        canonicalNodes,
-        canonicalEdges,
-        selectionIntent,
-        workspaceNodeIds,
-        executionScope,
-      })
-    : null;
-  const usesProtectedDvtPreview = executionStrategy?.kind === 'dvt_protected_preview';
-  const dvtPreviewProjection = usesProtectedDvtPreview
-    ? buildProtectedDvtPreviewProjection({
-        canvasId: graphDraftCanvasId ?? null,
-        canonicalNodes,
-        canonicalEdges,
-        selectionIntent,
-        workspaceNodeIds,
-      })
-    : null;
-  const activeDraftSignature =
-    dbtPlannerProjection?.ok === true
-      ? dbtPlannerProjection.draftSignature
-      : dvtPreviewProjection?.ok === true
-        ? dvtPreviewProjection.draftSignature
-        : transformationValidation.draftSignature;
-  const isExecutableGraphReady = usesDbtPlanner
-    ? dbtPlannerProjection?.ok === true
-    : usesProtectedDvtPreview
-      ? dvtPreviewProjection?.ok === true
-      : transformationValidation.valid;
-  const canPlanGraph =
-    executionStrategy != null &&
-    executionStrategy.kind !== 'not_executable' &&
-    isExecutableGraphReady;
-  const dbtProjectFilePreviewIdentityMismatch =
+export function deriveCanvasExecutionState(
+  args: Readonly<{
+    graph: CanvasExecutionGraphEvaluation;
+    runAdmission: CanvasRunAdmission;
+    currentPlan: PlanViewModel | null;
+    lastPlannedDraftSignature: string | null;
+    latestPreviewOutcome: PlanPreviewOutcome | null;
+  }>
+): CanvasExecutionState {
+  const { graph, currentPlan, lastPlannedDraftSignature } = args;
+  const previewProvenanceMismatch =
     currentPlan != null &&
-    executionStrategy?.kind === 'dbt_project_file_preview' &&
-    dbtPlannerProjection?.ok === true &&
+    graph.executionStrategy?.kind === 'dbt_project_file_preview' &&
+    graph.canPlanGraph &&
     !isDbtProjectFilePreviewProvenanceCurrent(
-      executionStrategy,
-      dbtPlannerProjection.selection.nodeIds,
+      graph.executionStrategy,
+      graph.selectedNodeIds,
       currentPlan.preview?.provenance
     );
-  const persistedPreviewIdentityMismatch =
-    persistedPlanIdentityMismatch || dbtProjectFilePreviewIdentityMismatch;
+  const isPreviewOutcomeStale =
+    lastPlannedDraftSignature != null && lastPlannedDraftSignature !== graph.draftSignature;
   const isCurrentPlanStale =
-    currentPlan != null &&
-    (dbtProjectFilePreviewIdentityMismatch ||
-      (lastPlannedDraftSignature != null && lastPlannedDraftSignature !== activeDraftSignature));
-  const canStartRun =
-    canRun &&
-    executionStrategy != null &&
-    executionStrategy.kind !== 'not_executable' &&
-    currentPlan != null &&
-    hasPersistedPlanForRun &&
-    isExecutableGraphReady &&
-    !isCurrentPlanStale &&
-    previewOutcomeProjection?.readinessBlocker == null;
-  const executableGraphFailureMessage =
-    executionStrategy != null &&
-    executionStrategy.kind !== 'not_executable' &&
-    !isCurrentPlanStale &&
-    !isExecutableGraphReady
-      ? dbtPlannerProjection?.ok === false
-        ? dbtPlannerProjection.message
-        : dvtPreviewProjection?.ok === false
-          ? dvtPreviewProjection.message
-          : formatTransformationGraphValidationSummary(
-              transformationValidation.summaryCode,
-              applicationLanguage
-            )
-      : null;
-  const planRunReadinessSource = observePlanRunReadiness({
-    canRun,
-    currentPlan,
-    isCurrentPlanStale,
-    persistedPreviewIdentityMismatch,
-    hasPersistedPlanForRun,
-    capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
-    locale: applicationLanguage,
-  });
-  const previewRejectionMessage =
-    resolveDvtOperationalRejectionCopy(
-      previewOutcomeProjection?.diagnostic?.cause,
-      normalizeApplicationLanguage(applicationLanguage) ?? getApplicationLanguage()
-    ) ?? previewOutcomeProjection?.diagnostic?.reason;
-  const planRunReadiness =
-    previewOutcomeProjection?.readinessBlocker != null
-      ? forceReadinessBlocker(
-          planRunReadinessSource,
-          previewOutcomeProjection.readinessBlocker,
-          previewRejectionMessage ?? planRunReadinessSource.summary
-        )
-      : executableGraphFailureMessage != null
-        ? forceReadinessBlocker(
-            planRunReadinessSource,
-            'plan_integrity',
-            executableGraphFailureMessage
-          )
-        : planRunReadinessSource;
-
+    currentPlan != null && (previewProvenanceMismatch || isPreviewOutcomeStale);
+  const outcome =
+    args.latestPreviewOutcome == null || isPreviewOutcomeStale
+      ? null
+      : projectCanvasPreviewOutcome(args.latestPreviewOutcome);
   return {
-    transformationValidation,
-    hasPersistedPlanForRun,
-    persistedPreviewIdentityMismatch,
     isCurrentPlanStale,
-    executableGraphFailureMessage,
-    canPlanGraph,
-    canStartRun,
-    planRunReadiness,
-    planStatusSummary: planRunReadiness.summary,
+    isPreviewOutcomeStale,
+    planRunReadiness: observePlanRunReadiness({
+      runAdmission: args.runAdmission,
+      currentPlan,
+      isCurrentPlanStale,
+      previewProvenanceMismatch,
+      executionAvailable: graph.executionAvailable,
+      graphFailure: isCurrentPlanStale ? null : graph.failure,
+      previewRejection:
+        outcome?.readinessBlocker == null
+          ? null
+          : {
+              kind: 'preview',
+              blocker: outcome.readinessBlocker,
+              diagnostic: outcome.diagnostic,
+            },
+    }),
   };
 }

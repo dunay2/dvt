@@ -71,9 +71,9 @@ describe('ImportDbtProjectUseCase process recovery', () => {
       new ImportDbtProjectUseCase(deps as never).execute(SCOPE, COMMAND)
     ).resolves.toEqual(RESULT);
 
-    expect(deps.validator.execute).not.toHaveBeenCalled();
+    expect(deps.validator.evaluate).not.toHaveBeenCalled();
     expect(deps.processStore.begin).not.toHaveBeenCalled();
-    expect(deps.projectGraph.execute).not.toHaveBeenCalled();
+    expect(deps.projectGraph.projectValidatedAnalysis).not.toHaveBeenCalled();
   });
 
   it('completes a newly acquired process under its lease token', async () => {
@@ -100,7 +100,7 @@ describe('ImportDbtProjectUseCase process recovery', () => {
       recovered: true,
       record: authorityRecord(),
     });
-    deps.projectGraph.execute.mockRejectedValue(new Error('projection failed'));
+    deps.projectGraph.projectValidatedAnalysis.mockRejectedValue(new Error('projection failed'));
 
     await expect(
       new ImportDbtProjectUseCase(deps as never).execute(SCOPE, COMMAND)
@@ -125,12 +125,12 @@ describe('ImportDbtProjectUseCase process recovery', () => {
     await expect(
       new ImportDbtProjectUseCase(deps as never).execute(SCOPE, COMMAND)
     ).rejects.toThrow('already in progress');
-    expect(deps.projectGraph.execute).not.toHaveBeenCalled();
+    expect(deps.projectGraph.projectValidatedAnalysis).not.toHaveBeenCalled();
   });
 
   it('does not compensate after the lease has been recovered by another owner', async () => {
     const deps = createDeps();
-    deps.projectGraph.execute.mockRejectedValue(new Error('projection failed'));
+    deps.projectGraph.projectValidatedAnalysis.mockRejectedValue(new Error('projection failed'));
     deps.processStore.fail.mockResolvedValue({ kind: 'lease_lost' });
 
     await expect(
@@ -140,7 +140,7 @@ describe('ImportDbtProjectUseCase process recovery', () => {
 
   it('preserves the import failure when compensation persistence is unavailable', async () => {
     const deps = createDeps();
-    deps.projectGraph.execute.mockRejectedValue(new Error('projection failed'));
+    deps.projectGraph.projectValidatedAnalysis.mockRejectedValue(new Error('projection failed'));
     deps.processStore.fail.mockRejectedValue(new Error('process store unavailable'));
 
     const failure = await new ImportDbtProjectUseCase(deps as never)
@@ -159,14 +159,14 @@ describe('ImportDbtProjectUseCase process recovery', () => {
 });
 
 function createDeps(): {
-  validator: { execute: ReturnType<typeof vi.fn> };
+  validator: { evaluate: ReturnType<typeof vi.fn> };
   processStore: {
     readCompleted: ReturnType<typeof vi.fn>;
     begin: ReturnType<typeof vi.fn>;
     complete: ReturnType<typeof vi.fn>;
     fail: ReturnType<typeof vi.fn>;
   };
-  projectGraph: { execute: ReturnType<typeof vi.fn> };
+  projectGraph: { projectValidatedAnalysis: ReturnType<typeof vi.fn> };
   now: () => Date;
   createLeaseToken: () => string;
   operationLeaseMs: number;
@@ -174,7 +174,22 @@ function createDeps(): {
   const record = authorityRecord();
   return {
     validator: {
-      execute: vi.fn().mockResolvedValue({ status: 'accepted', receipt: RECEIPT }),
+      evaluate: vi.fn().mockResolvedValue({
+        status: 'accepted',
+        report: { status: 'accepted', receipt: RECEIPT },
+        scopedAnalysis: {
+          scope: SCOPE,
+          analysis: {
+            status: 'valid',
+            projectRevision: PROJECTION.projectRevision,
+            analysisSha256: PROJECTION.analysisSha256,
+            resources: [],
+            dependencies: [],
+            diagnostics: [],
+            semanticEvidence: { files: [], identities: [], regions: [], diagnostics: [] },
+          },
+        },
+      }),
     },
     processStore: {
       readCompleted: vi.fn().mockResolvedValue(null),
@@ -191,7 +206,7 @@ function createDeps(): {
       })),
       fail: vi.fn().mockResolvedValue({ kind: 'failed' }),
     },
-    projectGraph: { execute: vi.fn().mockResolvedValue(PROJECTION) },
+    projectGraph: { projectValidatedAnalysis: vi.fn().mockResolvedValue(PROJECTION) },
     now: () => NOW,
     createLeaseToken: () => 'lease-a',
     operationLeaseMs: 60_000,

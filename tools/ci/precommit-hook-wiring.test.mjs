@@ -113,6 +113,11 @@ test('pre-commit lint stays untyped while the canonical ESLint gate stays type-a
   assert.deepEqual(canonicalEngineConfig.languageOptions.parserOptions.project, [
     './tsconfig.eslint.json',
   ]);
+  assert.equal(canonicalConfig.rules['@typescript-eslint/no-unused-vars'][0], 2);
+  assert.deepEqual(
+    stagedConfig.rules['@typescript-eslint/no-unused-vars'],
+    canonicalConfig.rules['@typescript-eslint/no-unused-vars']
+  );
   assert.equal(canonicalConfig.rules['@typescript-eslint/no-floating-promises'][0], 2);
   assert.equal(canonicalConfig.rules['@typescript-eslint/no-misused-promises'][0], 2);
   assert.equal(canonicalConfig.rules['@typescript-eslint/await-thenable'][0], 2);

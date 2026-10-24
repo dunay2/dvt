@@ -25,6 +25,17 @@ export function CanvasNodeContextMenuView({
     <ContextMenuContent
       data-slot="canvas-node-context-menu"
       className="w-56 border-(--border-default) bg-(--surface-panel) text-(--text-default)"
+      onCloseAutoFocus={(event) => {
+        const menu = event.target;
+        if (!(menu instanceof Element)) return;
+        const activeElement = menu.ownerDocument.activeElement;
+        if (
+          activeElement != null &&
+          activeElement !== menu.ownerDocument.body &&
+          !menu.contains(activeElement)
+        )
+          event.preventDefault();
+      }}
     >
       <ContextMenuLabel className="truncate font-mono text-xs text-(--text-muted)">
         {model.target.nodeName}

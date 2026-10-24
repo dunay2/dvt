@@ -74,20 +74,16 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { store },
     executionActions,
-    graphPolicy: { runtimePolicy },
-    readModel: { transformationValidation },
   } = args;
 
   return {
     handlePreviewExecutionPlan: executionActions.handlePreviewExecutionPlan,
     handleStartRun: executionActions.handleStartRun,
     canPlanGraph: executionActions.canPlanGraph,
-    canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,
-    planStatusSummary: executionActions.planStatusSummary,
+    canStartRun: executionActions.canStartRun,
     planRunReadiness: executionActions.planRunReadiness,
     latestPreviewOutcome: executionActions.latestPreviewOutcome,
     isCurrentPlanStale: executionActions.isCurrentPlanStale,
-    transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
     currentPlan: store.currentPlan,

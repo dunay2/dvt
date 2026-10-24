@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { CanvasRuntimeRegistration } from '../../plugins/nodeTypeContracts';
 import { buildDraftSaveConflictResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
@@ -141,6 +142,23 @@ describe('useCanvasController draft lifecycle conflict state', () => {
       ),
       ['node_1', 'node_2']
     );
+    const runtime = harness.mocks.findCanvasRuntimeRegistration(
+      'transformation'
+    ) as CanvasRuntimeRegistration;
+    harness.mocks.findCanvasRuntimeRegistration.mockReturnValue({
+      ...runtime,
+      executionStrategy: {
+        kind: 'dvt_protected_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dvt',
+      },
+    } satisfies CanvasRuntimeRegistration);
+    harness.mocks.useCapabilitiesQuery.mockReturnValue({ data: { plugins: {} } });
+    await harness.renderProbe();
+    expect(harness.getLatestResult()?.userPermissions.canRun).toBe(true);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({ runAdmission: { allowed: true } })
+    );
     configureConflictTrigger(harness);
     harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = async () =>
       buildDraftSaveConflictResponse(
@@ -160,10 +178,6 @@ describe('useCanvasController draft lifecycle conflict state', () => {
     await waitForAutosaveDebounce();
     await harness.renderProbe();
 
-    const latestExecutionCall = harness.mocks.useCanvasExecutionActions.mock.calls.at(-1)?.[0] as
-      | { canPlan?: boolean; canRun?: boolean }
-      | undefined;
-
     expect(harness.getLatestResult()?.hasStaleDraftVersion).toBe(true);
     expect(harness.getLatestResult()?.canStartRun).toBe(false);
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
@@ -171,7 +185,11 @@ describe('useCanvasController draft lifecycle conflict state', () => {
         canEditEdges: false,
       })
     );
-    expect(latestExecutionCall?.canPlan).toBe(false);
-    expect(latestExecutionCall?.canRun).toBe(false);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canPlan: false,
+        runAdmission: { allowed: false, reason: 'draft_unavailable' },
+      })
+    );
   });
 });

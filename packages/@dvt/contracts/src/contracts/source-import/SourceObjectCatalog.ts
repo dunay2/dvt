@@ -184,6 +184,7 @@ export const SourceObjectColumnSchema = z
     name: OpaqueNonBlankStringSchema,
     type: OpaqueNonBlankStringSchema,
     nullable: z.boolean(),
+    comment: OpaqueNonBlankStringSchema.optional(),
   })
   .strict();
 
@@ -237,6 +238,7 @@ export const SourceObjectSchema = z
   .object({
     objectId: OpaqueNonBlankStringSchema,
     displayName: NonBlankStringSchema,
+    comment: OpaqueNonBlankStringSchema.optional(),
     locator: SourceObjectLocatorSchema,
     metricEvidence: SourceObjectMetricEvidenceSchema,
     columns: z.array(SourceObjectColumnSchema).optional(),

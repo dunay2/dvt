@@ -13,7 +13,6 @@ import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
 import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
 import { hasConnectedRelationSources } from './canvasConnectedRelationInputs';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
-import { canvasViewCopy } from './copy';
 
 export type ProtectedDvtPreviewProjection =
   | {
@@ -27,7 +26,7 @@ export type ProtectedDvtPreviewProjection =
     }
   | {
       readonly ok: false;
-      readonly message: string;
+      readonly cause: 'graph_authority_unavailable' | 'protected_path_required';
     };
 
 type TerminalProjectionClosure = {
@@ -131,7 +130,7 @@ export function buildProtectedDvtPreviewProjection(args: {
   readonly workspaceNodeIds: readonly string[];
 }): ProtectedDvtPreviewProjection {
   if (args.canvasId === null) {
-    return { ok: false, message: canvasViewCopy.planGraphAuthorityRefusedMessage };
+    return { ok: false, cause: 'graph_authority_unavailable' };
   }
 
   const workspaceNodeIds = new Set(
@@ -166,7 +165,7 @@ export function buildProtectedDvtPreviewProjection(args: {
   if (closures.length !== 1) {
     return {
       ok: false,
-      message: canvasViewCopy.previewProvenanceTransformPathRequiredMessage,
+      cause: 'protected_path_required',
     };
   }
 
@@ -174,7 +173,7 @@ export function buildProtectedDvtPreviewProjection(args: {
   if (closure === undefined) {
     return {
       ok: false,
-      message: canvasViewCopy.previewProvenanceTransformPathRequiredMessage,
+      cause: 'protected_path_required',
     };
   }
   const selection = parseExecutionSelection({

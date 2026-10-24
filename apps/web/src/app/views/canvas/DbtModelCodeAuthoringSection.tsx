@@ -3,7 +3,7 @@ import { inspectorVisualClasses } from '../../components/inspector/inspectorVisu
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { Label } from '../../components/ui/label';
 import type { CanonicalNode } from '../../types/canonical';
-import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
+import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
 import { formatCanvasCopyTemplate } from './canvasCopyFormatting';
 import { canvasViewCopy } from './copy';
 import type { DbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
@@ -16,8 +16,7 @@ export function DbtModelCodeAuthoringSection({
   projection: DbtAuthoringModelProjection;
 }>): JSX.Element {
   const artifact = projection.modelArtifact;
-  const modelPath =
-    artifact?.path ?? `models/${normalizeDbtArtifactIdentifier(node.name, node.id)}.sql`;
+  const modelPath = artifact?.path ?? `models/${normalizeDbtIdentifier(node.name, node.id)}.sql`;
   const provenanceDetail =
     artifact == null
       ? null

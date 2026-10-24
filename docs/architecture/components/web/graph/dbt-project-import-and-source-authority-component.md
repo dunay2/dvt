@@ -2,7 +2,7 @@
 title: dbt Project Import And Source Authority Component
 status: Active
 owner: dbt Project Authoring / Canvas
-last_reviewed: 2026-08-16
+last_reviewed: 2026-10-24
 planning_type: architecture
 task_id: E-DBT-PROJECT-ROUNDTRIP-1
 ---
@@ -11,8 +11,8 @@ task_id: E-DBT-PROJECT-ROUNDTRIP-1
 
 ## Purpose
 
-This component closes phase 3 of file-backed dbt authoring. A demanding user
-can validate an existing dbt project inside the authorized workspace, bind a
+This component defines source registration under the active Canvas authoring
+authority. Users can validate an existing dbt project inside the authorized workspace, bind a
 new Canvas to that project, and add warehouse sources without creating a
 second semantic authority. The import command is a durable process: a crash
 between authority binding, first projection, and result persistence can be
@@ -61,18 +61,19 @@ lease-guarded completion or compensation.
 
 ## Target Components
 
-| Component                            | Owned concern                                                                                            | Reason to change                                                                |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.                            | The cross-process import vocabulary changes.                                    |
-| `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                                                   | Import policy or command/query orchestration changes.                           |
-| `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.                          | Filesystem compatibility or import security policy changes.                     |
-| `DbtProjectSourcePathPolicy`         | Partition project source from configured dbt runtime-artifact directories.                               | dbt path configuration or source-selection policy changes.                      |
-| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                                       | Authority transition or default-resolution policy changes.                      |
-| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                                        | PostgreSQL persistence or conflict mechanics change.                            |
-| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                                               | Protected runtime dependency wiring changes.                                    |
-| `DbtProjectImportProcessStore`       | Own the durable import operation, lease, authority transition, compensation, and exact completed replay. | Import recovery, process ownership, or PostgreSQL transaction semantics change. |
-| `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback.                       | Local batch publication mechanics change.                                       |
-| `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                                       | The import interaction or presentation model changes.                           |
+| Component                            | Owned concern                                                                                            | Reason to change                                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.                            | The cross-process import vocabulary changes.                                            |
+| `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                                                   | Import policy or command/query orchestration changes.                                   |
+| `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.                          | Filesystem compatibility or import security policy changes.                             |
+| `DbtProjectSourcePathPolicy`         | Partition project source from configured dbt runtime-artifact directories.                               | dbt path configuration or source-selection policy changes.                              |
+| `CanvasAuthoringAuthorityPolicy`     | Resolve persisted file or graph authority and reject missing or mixed authority.                         | Authority resolution policy changes.                                                    |
+| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                                        | PostgreSQL persistence or conflict mechanics change.                                    |
+| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                                               | Protected runtime dependency wiring changes.                                            |
+| `DbtProjectImportProcessStore`       | Own the durable import operation, lease, authority transition, compensation, and exact completed replay. | Import recovery, process ownership, or PostgreSQL transaction semantics change.         |
+| `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback.                       | Local batch publication mechanics change.                                               |
+| `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                                       | The import interaction or presentation model changes.                                   |
+| `SYS-API-SOURCE-IMPORT`              | Orchestrate source registration under the resolved graph or file authority.                              | Source definition registration, receipt replay, or artifact transaction policy changes. |
 
 `ImportWarehouseSources` remains the existing command rail. Its application
 service resolves the active authority and delegates only the mode-specific
@@ -87,6 +88,49 @@ declared YAML table with non-secret `dvt_source_identity` metadata; it does not
 generate a parallel source file or a second logical source.
 
 ## Target Boundary
+
+### Source Definitions And Canvas Instances
+
+`ImportWarehouseSources` registers source definitions. Placing a registered
+source on the Canvas creates a distinct node with `sourceDefinitionId`; that
+instance carries its own identity and presentation state, while its definition
+owns the connection binding, metadata and source YAML path. Several instances
+may reference one definition in the same Canvas.
+
+`WorkspaceGraphAuthoringDraftSchema` validates those references and rejects
+missing, cross-Canvas, chained or incompatible targets and instance-local
+configuration overrides. The shared `resolveWorkspaceSourceInstances` read
+projection supplies effective metadata without copying it into persisted
+instances. Import must consume the validated aggregate, not redefine either
+contract rule.
+
+The graph-draft import strategy derives one index of imported **definitions**
+by `ConnectedSourceRef`. Reference instances do not enter that ownership index.
+Missing or malformed definition bindings and two definitions for one binding
+remain conflicts. Registration and deduplicated receipt recovery use the same
+index policy: an existing binding selects the definition ID, never an instance
+ID. A newly registered definition does not add visible node IDs, coordinates or
+edges, and existing instances retain their references and configuration owner.
+
+```mermaid
+flowchart LR
+  Draft[Authorized Canvas draft] --> Contract[Shared contract validates references]
+  Contract --> Index[Unique imported definition index]
+  Index --> Register[Append missing definitions]
+  Index --> Replay[Read persisted definition IDs]
+  Register --> Files[Existing scoped YAML transaction]
+  Files --> Save[Existing graph CAS and idempotency]
+  Save --> Receipt[Source Import receipt]
+  Replay --> Receipt
+```
+
+`SYS-API-SOURCE-IMPORT` owns the application orchestration: request dispatch,
+graph registration and replay, file-authoritative projection verification, and
+the shared YAML transaction plan. Contracts own reference validity; workspace
+ports and adapters own persistence and provider access; Canvas presentation owns
+placement. Atomic file, symbol and test associations live in Planning DB rather
+than source headers or another documentation inventory. File-backed import
+continues to verify its analyzer projection without writing a semantic draft.
 
 ### Source Import Search Continuation Recovery
 
@@ -178,6 +222,7 @@ sequenceDiagram
   participant Import as ImportDbtProject
   participant Process as Import process store
   participant Graph as ProjectDbtGraphFromFiles
+  participant Revision as Source revision reader
   participant Source as ImportWarehouseSources
 
   User->>UI: enter workspace-relative project root
@@ -199,7 +244,10 @@ sequenceDiagram
     else new or expired operation acquired
       Process-->>Import: lease token and persisted authority
     end
-    Import->>Graph: first persisted-authority projection
+    Import->>Graph: first projection with this invocation's scoped analysis
+    Graph->>Graph: resolve persisted authority and verify analysis scope and root
+    Graph->>Revision: hash current canonical source set
+    Revision-->>Graph: source revision must match analyzed snapshot
     Graph-->>Import: fresh projection
     Import->>Process: complete exact result under lease
     opt projection or completion failure
@@ -214,6 +262,23 @@ sequenceDiagram
     Graph-->>UI: one source node per declared table
   end
 ```
+
+The import command owns one fresh analysis for its invocation. Validation's
+internal evaluation returns the report and scoped analysis; its public query
+returns only the existing report. The first projection reuses that server-owned
+analysis only after resolving persisted authority and checking the current source
+revision. It shares the ordinary graph query's projection policy. The ordinary
+query continues to analyze freshly, and a completed import replays its receipt
+before any inspection, analysis or revision read.
+
+The source-revision gateway uses the analyzer's existing source-selection policy:
+project configuration, source files and installed dependencies participate;
+generated target/log output does not. Scope, path and traversal limits remain
+enforced. A changed or unreadable revision fails the import and invokes its
+existing lease-guarded compensation. This removes a second complete parse without
+a cross-request cache, client-supplied analysis or relaxed request deadline.
+The revision check observes current file content; it does not lock the filesystem
+or establish stability of external profiles and credentials.
 
 ## File-Backed Source Import Sequence
 
@@ -249,8 +314,9 @@ sequenceDiagram
 
 - The server resolves authority from persisted state; URL parameters cannot
   establish authority.
-- An unbound Canvas is graph-draft by default. `ImportDbtProject` may bind only
-  a Canvas id that is not already present in the graph-draft aggregate.
+- Missing and mixed persisted authority are typed refusals. Graph-draft authority
+  requires the Canvas to exist in the persisted graph-draft aggregate.
+  `ImportDbtProject` may bind only an unoccupied Canvas id.
 - The two persistence paths enforce that rule symmetrically: file-authority
   binding and graph-draft save acquire the same scoped transaction lock and
   revalidate the competing store before commit. A concurrent claim has exactly
@@ -261,6 +327,10 @@ sequenceDiagram
   hash still match a fresh inspection.
 - A successful import persists authority before reporting success and proves
   the first projection through that persisted authority.
+- The first projection accepts only the current import invocation's valid
+  analysis for the same tenant, project, environment and project root. It checks
+  the source revision again after authority acquisition and never trusts a client
+  receipt as an analysis result.
 - A completed import persists its exact command result before responding. An
   equivalent retry replays that result before inspecting mutable project files;
   reuse of the same idempotency key for another command fails closed.
@@ -339,6 +409,9 @@ rather than represented by duplicate adapter-level logs.
 6. API tests prove validation is read-only, import is explicit, the first
    graph projection resolves persisted authority, and a completed command
    replays its original result after later project-file changes.
+   Composition tests prove one parse per new import, no analysis or revision read
+   on completed replay, fresh ordinary graph queries, and failure compensation
+   for changed or unreadable content and mismatched analysis scope or root.
 7. PostgreSQL process-store tests prove one active lease owner, expired-lease
    recovery, stale-owner rejection, completed-result precedence, mismatch
    rejection, and safe authority compensation after injected projection or

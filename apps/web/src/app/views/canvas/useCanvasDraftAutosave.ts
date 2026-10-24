@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
 import {
   runCanvasDraftAutosaveEffect,
@@ -20,6 +20,10 @@ export function useCanvasDraftAutosave({
   setDraftSaveStatus,
   createDraftIdempotencyKey,
 }: CanvasDraftAutosaveSchedulingArgs) {
+  const committedPayload = useRef(currentDraftPayload);
+  useLayoutEffect(() => {
+    committedPayload.current = currentDraftPayload;
+  }, [currentDraftPayload]);
   useEffect(() => {
     return runCanvasDraftAutosaveEffect({
       refs,
@@ -29,7 +33,7 @@ export function useCanvasDraftAutosave({
       draftQueryCache,
       canPersistGraphDraft,
       canPersistCurrentDraft,
-      currentDraftPayload,
+      currentDraftPayload: committedPayload.current,
       draftSession,
       createDraftIdempotencyKey,
       setDraftSession,
@@ -40,7 +44,6 @@ export function useCanvasDraftAutosave({
     canPersistCurrentDraft,
     canPersistGraphDraft,
     createDraftIdempotencyKey,
-    currentDraftPayload,
     currentDraftPayloadSignature,
     draftRepository,
     draftSession.draftRevision,

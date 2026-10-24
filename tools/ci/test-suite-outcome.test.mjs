@@ -140,7 +140,7 @@ function assess({ jobs, context }) {
   return failures;
 }
 
-test('Test Suite keeps one engine evidence owner and a complete stable aggregate', () => {
+test('hosted CI gives coverage one push owner and retains manual full validation', () => {
   assert.equal(aggregate.name, 'Test Suite Required for Merge');
   assert.equal(aggregate.if, 'always()');
   assert.deepEqual([...aggregate.needs].sort(), ['detect_test_matrix', ...lanes].sort());
@@ -154,6 +154,33 @@ test('Test Suite keeps one engine evidence owner and a complete stable aggregate
   assert.ok(
     !commands.some((command) => /testNamePattern|test:determinism|test:replay/u.test(command))
   );
+
+  const quality = yaml.load(readFileSync('.github/workflows/ci.yml', 'utf8'));
+  const full = quality.jobs['full-ci'];
+  const baseline = full.steps.find((step) => step.name === 'Run full CI baseline');
+  const packageScripts = JSON.parse(readFileSync('package.json', 'utf8')).scripts;
+  assert.equal(
+    packageScripts['ci:full'],
+    'pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine',
+    'local and manual full validation must retain coverage'
+  );
+  assert.deepEqual(quality.on.push.branches, ['main']);
+  assert.ok(Object.hasOwn(quality.on, 'workflow_dispatch'));
+  for (const [eventName, expected] of [
+    ['push', 'pnpm ci:docs && pnpm ci:code'],
+    ['workflow_dispatch', 'pnpm ci:full'],
+    ['pull_request', null],
+  ]) {
+    const context = { github: { event_name: eventName } };
+    const selected = runInNewContext(`Boolean(${full.if})`, context);
+    assert.equal(selected, expected !== null, eventName);
+    if (!selected) continue;
+    const command = baseline.run.replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
+      String(runInNewContext(expression, context))
+    );
+    assert.equal(command.trim(), expected, eventName);
+  }
+  assert.equal(baseline.env.DVT_CI, '1');
 });
 
 test('PostgreSQL integration files run once in the full suite with the real database posture', () => {
@@ -463,22 +490,30 @@ test('drafts skip all work and ready_for_review requires the new current scope',
 
 test('push and manual require all lanes even when PR scope would be empty', () => {
   for (const event of ['push', 'workflow_dispatch']) {
-    assert.deepEqual(assess(fixture(event)), []);
+    const input = fixture(event);
+    assert.deepEqual(assess(input), []);
     for (const lane of lanes) {
-      const input = fixture(event);
-      input.jobs[lane].result = 'skipped';
-      assert.notEqual(assess(input).length, 0, `${event}: ${lane}`);
+      assert.equal(
+        runInNewContext(`Boolean(${workflow.jobs[lane].if})`, {
+          github: { event_name: event, event: input.context.payload },
+          needs: input.jobs,
+        }),
+        true,
+        `${event}: ${lane}`
+      );
     }
   }
 });
 
 test('selected missing, skipped, failed and cancelled results always reject', () => {
-  for (const lane of ['detect_test_matrix', ...lanes]) {
-    for (const result of ['skipped', 'failure', 'cancelled', undefined]) {
-      const input = fixture('pull_request', scopeKeys);
-      if (result === undefined) delete input.jobs[lane];
-      else input.jobs[lane].result = result;
-      assert.notEqual(assess(input).length, 0, `${lane}: ${result}`);
+  for (const event of ['pull_request', 'push', 'workflow_dispatch']) {
+    for (const lane of ['detect_test_matrix', ...lanes]) {
+      for (const result of ['skipped', 'failure', 'cancelled', undefined]) {
+        const input = fixture(event, scopeKeys);
+        if (result === undefined) delete input.jobs[lane];
+        else input.jobs[lane].result = result;
+        assert.notEqual(assess(input).length, 0, `${event}: ${lane}: ${result}`);
+      }
     }
   }
 });

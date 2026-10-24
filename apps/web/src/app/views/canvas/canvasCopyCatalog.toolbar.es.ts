@@ -1,15 +1,9 @@
-/** Owned concern: declare Spanish Canvas toolbar copy overrides for governed actions. */
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewToolbarCopyEs = {
   dependencyAddedMessage: 'Dependencia añadida',
   dependencyCreationFailedMessage: 'La conexión ha fallado. Revisa el modelo e inténtalo de nuevo.',
   layoutAppliedMessage: 'Layout aplicado',
-  toolbarWorkflowRecoveryLabel: 'Recuperación',
-  toolbarWorkflowReadOnlyLabel: 'Solo lectura',
-  toolbarWorkflowRunReadyLabel: 'Ejecución lista',
-  toolbarWorkflowPlanRequiredLabel: 'Execution Preview requerido',
-  toolbarLayoutLabel: 'Disposición',
   toolbarImpactLabel: 'Impacto',
   toolbarColumnsLabel: 'Columnas',
   toolbarCostLabel: 'Coste',
@@ -114,7 +108,6 @@ export const canvasViewToolbarCopyEs = {
   workspaceExploreProjectLabel: 'Explorar proyecto',
   workspaceOpenProjectCodeLabel: 'Abrir código del proyecto',
   workspaceActiveCanvasLabelTemplate: 'Canvas activo: {title}',
-  workspaceTransformationKindLabel: 'Transformación',
   projectExplorerTitle: 'Explorar proyecto',
   projectExplorerDescription: 'Abre otro canvas gobernado del proyecto activo.',
   projectExplorerCloseLabel: 'Cerrar',
@@ -131,12 +124,6 @@ export const canvasViewToolbarCopyEs = {
     'La exportacion del snapshot esta disponible cuando el borrador esta guardado.',
   projectSnapshotImportRejectedMessage: 'La importacion del snapshot fue rechazada.',
   projectSnapshotImportFailedMessage: 'La importacion del snapshot fallo.',
-  newCanvasLabel: 'Nuevo canvas',
-  replaceCanvasTitle: 'Crear un canvas nuevo?',
-  replaceCanvasMessage:
-    'Esto agrega otra hoja de trabajo al borrador del proyecto. El canvas activo sigue disponible en la lista izquierda.',
-  replaceCanvasCancelLabel: 'Cancelar',
-  replaceCanvasConfirmLabel: 'Crear canvas',
   draftSyncedLabel: 'Sincronizado',
   savingDraftLabel: 'Guardando',
   draftSavedLabel: 'Guardado',

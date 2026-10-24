@@ -254,7 +254,82 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(second.analysisSha256).toBe(first.analysisSha256);
     expect(first.analysisSha256).toBe(V2_ANALYSIS_SHA256);
     expect(first.analysisSha256).not.toBe(LEGACY_V1_ANALYSIS_SHA256);
+    const readRevision = await analyzer.readSourceRevision({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+    });
+    expect(readRevision).toBe(first.projectRevision.contentSetSha256);
+    expect(processRunner.run).toHaveBeenCalledTimes(2);
   });
+
+  it.each([
+    ['model', 'models/orders.sql', 'select 2 as order_id\n'],
+    [
+      'config',
+      'dbt_project.yml',
+      'name: analytics\nversion: 2.0.0\nprofile: analytics\nmodel-paths: [models]\n',
+    ],
+    ['installed dependency', 'dbt_packages/package/models/model.sql', 'select 3 as order_id\n'],
+  ])(
+    'changes the source revision when %s changes without invoking dbt',
+    async (_label, relativePath, content) => {
+      const run = vi.fn();
+      const analyzer = new DbtCliProjectAnalyzer({ workspaceFilesRoot, processRunner: { run } });
+      const input = { scope: SCOPE, projectRoot: 'analytics' };
+      const before = await analyzer.readSourceRevision(input);
+      await mkdir(path.dirname(path.join(projectDirectory, relativePath)), { recursive: true });
+      await writeFile(path.join(projectDirectory, relativePath), content, 'utf8');
+      await expect(analyzer.readSourceRevision(input)).resolves.not.toBe(before);
+      expect(run).not.toHaveBeenCalled();
+    }
+  );
+
+  it('does not change the source revision for generated runtime outputs', async () => {
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({ workspaceFilesRoot, processRunner: { run } });
+    const input = { scope: SCOPE, projectRoot: 'analytics' };
+    const before = await analyzer.readSourceRevision(input);
+    await writeFile(
+      path.join(projectDirectory, 'target/manifest.json'),
+      '{"changed":true}',
+      'utf8'
+    );
+    await mkdir(path.join(projectDirectory, 'logs'), { recursive: true });
+    await writeFile(path.join(projectDirectory, 'logs/dbt.log'), 'changed', 'utf8');
+    await expect(analyzer.readSourceRevision(input)).resolves.toBe(before);
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { scope: { ...SCOPE, tenantId: 'other' }, projectRoot: 'analytics' },
+    { scope: SCOPE, projectRoot: '../outside' },
+  ])('refuses reading source outside the authorized existing project: %j', async (input) => {
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({ workspaceFilesRoot, processRunner: { run } });
+    await expect(analyzer.readSourceRevision(input)).rejects.toThrow();
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { maxProjectFiles: 1 },
+    { maxProjectBytes: 1 },
+    { maxProjectDirectories: 1 },
+    { maxProjectDepth: 0 },
+  ])(
+    'enforces the configured snapshot traversal limits while reading revision: %j',
+    async (limits) => {
+      const run = vi.fn();
+      const analyzer = new DbtCliProjectAnalyzer({
+        workspaceFilesRoot,
+        processRunner: { run },
+        ...limits,
+      });
+      await expect(
+        analyzer.readSourceRevision({ scope: SCOPE, projectRoot: 'analytics' })
+      ).rejects.toThrow();
+      expect(run).not.toHaveBeenCalled();
+    }
+  );
 
   it('changes analysis identity when semantic evidence changes', () => {
     const identityInput = {

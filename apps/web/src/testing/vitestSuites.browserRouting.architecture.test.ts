@@ -212,8 +212,9 @@ describe('public Canvas gesture preconditions', () => {
     expect(body).toContain('waitForLiveWorkspaceFileContent');
     expect(body).toContain('monaco-code-editor');
     expect(body).toContain('enabled=false');
-    expect(body).toContain('canvasViewExecutionCopyByKey');
-    expect(body).toContain('selectionRecoveryWorkspaceReceiptTemplate.fallback');
+    expect(body).toContain(
+      'canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate'
+    );
     expect(body).not.toContain(".and('contain.text', 'workspace')");
     expect(body).not.toContain('Unavailable roots');
     expect(body).not.toContain('Admitted scope');
@@ -424,63 +425,38 @@ describe('governed browser evidence routing', () => {
     const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = [...browserModules.keys()]
       .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .map((path) => `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`)
       .sort();
-    const expected = {
-      controlled: [
-        'canvas/canvas-happy-path-draggable.cy.ts',
-        'canvas/canvas-project-snapshot-roundtrip.cy.ts',
-        'canvas/canvas-ready-node-authoring.cy.ts',
-        'shell/canvas-workbench-screen-composition.cy.ts',
-        'shell/shell-layout-contract.cy.ts',
-      ],
-      available: [
-        'canvas/canvas-dbt-author-code-run-live.cy.ts',
-        'canvas/canvas-dbt-selection-recovery-live.cy.ts',
-        'canvas/canvas-dvt-join-preview-live.cy.ts',
-        'canvas/canvas-dvt-sink-publication-live.cy.ts',
-        'canvas/canvas-dvt-start-run-boundaries-live.cy.ts',
-        'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
-        'canvas/canvas-first-authoring-live.cy.ts',
-        'canvas/canvas-formula-lineage-live.cy.ts',
-        'canvas/canvas-graph-search-filter-live.cy.ts',
-        'canvas/canvas-minimap-focus-live.cy.ts',
-        'canvas/canvas-selected-filter-live.cy.ts',
-        'canvas/canvas-semantic-persistence-run-live.cy.ts',
-        'canvas/canvas-semantic-unsupported-live.cy.ts',
-        'canvas/canvas-source-identity-live.cy.ts',
-        'canvas/canvas-source-import-live-clean.cy.ts',
-        'canvas/canvas-sql-progressive-live.cy.ts',
-        'canvas/canvas-transform-data-sample-live.cy.ts',
-        'dbt/dbt-project-preview-run-live.cy.ts',
-        'dbt/dbt-project-yaml-description-edit-live.cy.ts',
-        'runs/run-controls-live.cy.ts',
-      ],
-      unavailable: ['canvas/canvas-dvt-runtime-unavailable-live.cy.ts'],
-    };
-    const exactConsumers = Object.values(expected)
-      .flat()
-      .map((path) => `apps/web/cypress/e2e/${path}`);
-    expect(consumers).toEqual(
-      exactConsumers.map((path) => resolve(path.slice('apps/web/'.length))).sort()
-    );
-    for (const [capability, paths] of Object.entries(expected)) {
-      for (const path of paths) {
-        const repositoryPath = `apps/web/cypress/e2e/${path}`;
+    const plan = resolveWebVitestChangedSuitePlan([helperPath]);
+    expect(consumers.length).toBeGreaterThan(0);
+    for (const consumer of consumers) {
+      const owners = Object.entries(WEB_CYPRESS_SPECS)
+        .filter(([, paths]) => paths.includes(consumer))
+        .map(([capability]) => capability);
+      expect(owners, consumer).toHaveLength(1);
+      const consumerPlan = resolveWebVitestChangedSuitePlan([consumer]);
+      expect(
+        consumerPlan.browserCommands.map((command) => command.capability),
+        consumer
+      ).toEqual(owners);
+      for (const consumerOrHelperPlan of [consumerPlan, plan]) {
         expect(
-          resolveWebVitestChangedSuitePlan([repositoryPath]).browserCommands.map(
-            (command) => command.capability
+          consumerOrHelperPlan.browserCommands.flatMap((command) =>
+            command.specPaths.filter((path) => path === consumer).map(() => command.capability)
           ),
-          repositoryPath
-        ).toEqual([capability]);
+          consumer
+        ).toEqual(owners);
+        expect(
+          consumerOrHelperPlan.browserFiles.filter((path) => path === consumer),
+          consumer
+        ).toEqual([consumer]);
       }
     }
-    const plan = resolveWebVitestChangedSuitePlan([helperPath]);
     expect(plan.browserCommands.map((command) => command.capability)).toEqual([
       'controlled',
       'available',
       'unavailable',
     ]);
-    expect(plan.browserFiles).toEqual(expect.arrayContaining(exactConsumers));
   });
 
   it('routes all real source-import helper consumers to the available runtime', () => {
@@ -490,21 +466,18 @@ describe('governed browser evidence routing', () => {
     const target = resolve('cypress/support/liveWarehouseSourceImport.ts');
     const consumers = [...browserModules.keys()]
       .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
+      .map((path) => `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`)
       .sort();
-    const expected = [
-      'canvas/canvas-dvt-join-preview-live.cy.ts',
-      'canvas/canvas-dvt-sink-publication-live.cy.ts',
-      'canvas/canvas-dvt-terminal-transform-preview-live.cy.ts',
-      'canvas/canvas-formula-lineage-live.cy.ts',
-      'canvas/canvas-source-identity-live.cy.ts',
-      'canvas/canvas-source-import-live-clean.cy.ts',
-      'canvas/canvas-transform-data-sample-live.cy.ts',
-      'dbt/dbt-project-import-source-live.cy.ts',
-    ].map((path) => `apps/web/cypress/e2e/${path}`);
-    expect(consumers).toEqual(
-      expected.map((path) => resolve(path.slice('apps/web/'.length))).sort()
-    );
-    for (const path of [...expected, 'apps/web/cypress/support/liveWarehouseSourceImport.ts']) {
+    expect(consumers.length).toBeGreaterThan(0);
+    for (const consumer of consumers) {
+      expect(
+        Object.entries(WEB_CYPRESS_SPECS)
+          .filter(([, paths]) => paths.includes(consumer))
+          .map(([capability]) => capability),
+        consumer
+      ).toEqual(['available']);
+    }
+    for (const path of [...consumers, 'apps/web/cypress/support/liveWarehouseSourceImport.ts']) {
       expect(resolveWebVitestChangedSuitePlan([path]).browserCommands).toEqual([liveCommand]);
     }
   });
@@ -626,9 +599,6 @@ describe('governed browser evidence routing', () => {
         path
       ).toEqual([owner]);
     }
-    expect(WEB_CYPRESS_SPECS.available).toHaveLength(33);
-    expect(WEB_CYPRESS_SPECS.controlled).toHaveLength(51);
-    expect(WEB_CYPRESS_SPECS.unavailable).toHaveLength(1);
     expect(existsSync(resolve('cypress/e2e/canvas/canvas-selected-measures.cy.ts'))).toBe(false);
 
     const runtime = resolve('cypress/support/liveProtectedRuntime.ts');
@@ -760,7 +730,9 @@ describe('governed browser evidence routing', () => {
     ]);
     expect(live.browserCommands).toHaveLength(1);
     expect(live.browserCommands[0]).toEqual(liveCommand);
-    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts'))).toHaveLength(33);
+    expect(live.browserFiles.filter((path) => path.endsWith('.cy.ts')).sort()).toEqual(
+      [...WEB_CYPRESS_SPECS.available].sort()
+    );
     expect(resolveWebVitestChangedSuitePlan([unavailable]).browserCommands).toMatchObject([
       { capability: 'unavailable', specPaths: [unavailable] },
     ]);

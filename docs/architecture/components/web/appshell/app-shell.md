@@ -448,6 +448,23 @@ These controls update UI layout state only.
 - The persisted application-language preference controls English or Spanish copy.
 - Browser locale supplies the initial fallback only; changing the preference updates the open shell.
 
+`SYS-WEB-CANVAS-COPY` owns the Canvas text catalogue and its read-only resolution
+against that existing preference. Its English and Spanish sections contain plain
+strings and compose one dictionary per language. `resolveCanvasViewCopy` selects
+the existing dictionary; `canvasViewCopy` reads the current preference on each
+property access so an open Canvas follows language changes. Regional Spanish
+locales select Spanish; other locales retain the English fallback. Only entries
+with current consumers belong in the catalogue. Formatting, readiness decisions,
+and writes to the language preference retain their existing owners.
+
+```mermaid
+flowchart LR
+  Sections["English and Spanish Canvas sections"] --> Dictionaries["Compose once per language"]
+  Preference["Existing application-language preference"] --> Resolution["Read Canvas text"]
+  Dictionaries --> Resolution
+  Resolution --> Consumer["Existing Canvas consumers"]
+```
+
 ### Troubleshooting
 
 - If selectors appear empty, verify workspace bootstrap options are configured.

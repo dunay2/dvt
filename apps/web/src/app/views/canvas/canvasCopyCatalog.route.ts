@@ -1,225 +1,66 @@
-import type { LocalizableString } from '../../plugins/contracts/PluginManifest';
 import type { CanvasViewCopy } from './canvasCopy.types';
 
-type CanvasCopySection = Partial<Record<keyof CanvasViewCopy, LocalizableString>>;
-
 export const canvasViewRouteCopyByKey = {
-  routeLoadingTitle: {
-    key: 'canvas.route.loadingTitle',
-    fallback: 'Loading canvas',
-  },
-  routeLoadingMessage: {
-    key: 'canvas.route.loadingMessage',
-    fallback: 'Loading workspace graph data for the main authoring surface.',
-  },
-  backendLoadingTitle: {
-    key: 'canvas.backend.loadingTitle',
-    fallback: 'Checking backend readiness',
-  },
-  backendLoadingMessage: {
-    key: 'canvas.backend.loadingMessage',
-    fallback:
-      'Canvas is waiting for the backend readiness checks to settle before loading the authoring surface.',
-  },
-  canvasViewportContextSurfaceLabel: {
-    key: 'canvas.viewport.contextSurfaceLabel',
-    fallback: 'Canvas graph background',
-  },
-  canvasContextMenuLabel: {
-    key: 'canvas.contextMenu.label',
-    fallback: 'Canvas actions',
-  },
-  routeNeedsCanvasTitle: {
-    key: 'canvas.route.needsCanvasTitle',
-    fallback: 'Canvas',
-  },
-  routeNeedsCanvasMessage: {
-    key: 'canvas.route.needsCanvasMessage',
-    fallback: 'Add sources and build your transformations here.',
-  },
-  routeNeedsCanvasActionLabel: {
-    key: 'canvas.route.needsCanvasActionLabel',
-    fallback: 'Start canvas',
-  },
-  routeNeedsCanvasReadOnlyMessage: {
-    key: 'canvas.route.needsCanvasReadOnlyMessage',
-    fallback: 'You do not have permission to create the Canvas in this project.',
-  },
-  routeErrorTitle: {
-    key: 'canvas.route.errorTitle',
-    fallback: 'Canvas unavailable',
-  },
-  routeErrorFallbackMessage: {
-    key: 'canvas.route.errorFallbackMessage',
-    fallback: 'The workspace graph could not be loaded for Canvas.',
-  },
-  routeErrorMessage: {
-    key: 'canvas.route.errorMessage',
-    fallback:
-      'Canvas could not load the current workspace graph. Retry after the workspace service is available again.',
-  },
-  unsupportedCanvasKindMessagePrefix: {
-    key: 'canvas.route.unsupportedCanvasKindMessagePrefix',
-    fallback: 'Canvas cannot open persisted canvas kind ',
-  },
-  unsupportedCanvasKindMessageSuffix: {
-    key: 'canvas.route.unsupportedCanvasKindMessageSuffix',
-    fallback: ' because no runtime registration is available.',
-  },
-  disabledCanvasPluginMessagePrefix: {
-    key: 'canvas.route.disabledCanvasPluginMessagePrefix',
-    fallback: 'Canvas cannot open persisted canvas kind ',
-  },
-  disabledCanvasPluginMessageSuffix: {
-    key: 'canvas.route.disabledCanvasPluginMessageSuffix',
-    fallback: ' because its plugin is disabled or unavailable.',
-  },
-  backendBlockedTitle: {
-    key: 'canvas.backend.blockedTitle',
-    fallback: 'Backend not ready',
-  },
-  backendBlockedFallbackMessage: {
-    key: 'canvas.backend.blockedFallbackMessage',
-    fallback: 'Canvas stays blocked until backend readiness is restored.',
-  },
-  mutationUnavailableMessage: {
-    key: 'canvas.mutation.unavailableMessage',
-    fallback: 'Graph edits are unavailable in this context.',
-  },
-  readOnlyTitle: {
-    key: 'canvas.readOnly.title',
-    fallback: 'Read-only canvas',
-  },
-  readOnlyMessage: {
-    key: 'canvas.readOnly.message',
-    fallback:
-      'Inspect the graph and overlays here. Use an executable workspace scope to plan or run.',
-  },
-  limitedAccessTitle: {
-    key: 'canvas.readOnly.limitedAccessTitle',
-    fallback: 'Limited work mode',
-  },
-  readOnlyNote: {
-    key: 'canvas.readOnly.note',
-    fallback: 'Open a writable project or execution scope to keep working.',
-  },
-  readOnlyActionLabel: {
-    key: 'canvas.readOnly.actionLabel',
-    fallback: 'Choose execution scope',
-  },
-  draftAccessDeniedTitle: {
-    key: 'canvas.draft.accessDeniedTitle',
-    fallback: 'Draft access denied',
-  },
-  draftAccessDeniedMessage: {
-    key: 'canvas.draft.accessDeniedMessage',
-    fallback: 'Canvas cannot read the persisted draft for the current workspace scope.',
-  },
-  sessionRequiredDraftLabel: {
-    key: 'canvas.draft.sessionRequiredLabel',
-    fallback: 'Session required',
-  },
-  readOnlyDraftLabel: {
-    key: 'canvas.draft.readOnlyLabel',
-    fallback: 'Read-only draft',
-  },
-  forbiddenScopeDraftLabel: {
-    key: 'canvas.draft.forbiddenScopeLabel',
-    fallback: 'Draft access denied',
-  },
-  draftFormatBlockedLabel: {
-    key: 'canvas.draft.formatBlockedLabel',
-    fallback: 'Draft format blocked',
-  },
-  refreshSessionActionLabel: {
-    key: 'canvas.draft.refreshSessionAction',
-    fallback: 'Refresh session',
-  },
-  changeScopeActionLabel: {
-    key: 'canvas.draft.changeScopeAction',
-    fallback: 'Change scope',
-  },
-  inspectOnlyActionLabel: {
-    key: 'canvas.draft.inspectOnlyAction',
-    fallback: 'Inspect only',
-  },
-  escalateFormatActionLabel: {
-    key: 'canvas.draft.escalateFormatAction',
-    fallback: 'Escalate draft format issue',
-  },
-  draftSessionRequiredTitle: {
-    key: 'canvas.draft.sessionRequiredTitle',
-    fallback: 'Session required for draft access',
-  },
-  draftSessionRequiredMessage: {
-    key: 'canvas.draft.sessionRequiredMessage',
-    fallback:
-      'Canvas cannot read the protected draft because the current session is missing or expired. Refresh the session.',
-  },
-  draftForbiddenScopeTitle: {
-    key: 'canvas.draft.forbiddenScopeTitle',
-    fallback: 'Draft scope is forbidden',
-  },
-  draftForbiddenScopeMessage: {
-    key: 'canvas.draft.forbiddenScopeMessage',
-    fallback:
-      'Canvas cannot read this workspace draft with the current tenant, project, or permission scope. Change scope or request access.',
-  },
-  draftReadOnlyTitle: {
-    key: 'canvas.draft.readOnlyTitle',
-    fallback: 'Draft is read-only',
-  },
-  draftReadOnlyMessage: {
-    key: 'canvas.draft.readOnlyMessage',
-    fallback:
-      'Canvas can inspect this draft, but graph edits, planning, and run start are disabled for the current scope. Choose an executable workspace scope to work.',
-  },
-  draftUnsupportedSchemaTitle: {
-    key: 'canvas.draft.unsupportedSchemaTitle',
-    fallback: 'Persisted draft format is unsupported',
-  },
-  draftUnsupportedSchemaMessage: {
-    key: 'canvas.draft.unsupportedSchemaMessage',
-    fallback:
-      'Canvas cannot load the persisted draft because its stored schema version is not supported by this route yet.',
-  },
-  draftCorruptPayloadTitle: {
-    key: 'canvas.draft.corruptPayloadTitle',
-    fallback: 'Persisted draft payload is corrupt',
-  },
-  draftCorruptPayloadMessage: {
-    key: 'canvas.draft.corruptPayloadMessage',
-    fallback:
-      'Canvas cannot load the persisted draft because the stored payload is corrupt and fails the governed contract.',
-  },
-  staleDraftTitle: {
-    key: 'canvas.draft.staleTitle',
-    fallback: 'Stale draft version',
-  },
-  staleDraftMessage: {
-    key: 'canvas.draft.staleMessage',
-    fallback: 'A newer draft was saved elsewhere. Reload the latest draft before continuing edits.',
-  },
-  draftProjectionGapTitle: {
-    key: 'canvas.draft.projectionGapTitle',
-    fallback: 'Persisted draft is ahead of the current protected draft authority',
-  },
-  draftProjectionGapMessage: {
-    key: 'canvas.draft.projectionGapMessage',
-    fallback:
-      'Canvas has paused editing because the current protected draft authority cannot represent the full persisted draft yet. Reload the latest draft after the protected authority catches up.',
-  },
-  missingRemoteDraftTitle: {
-    key: 'canvas.draft.missingRemoteTitle',
-    fallback: 'Persisted draft no longer exists',
-  },
-  missingRemoteDraftMessage: {
-    key: 'canvas.draft.missingRemoteMessage',
-    fallback:
-      'Canvas has paused draft editing because the persisted draft disappeared. Reload the latest draft after protected authority is restored.',
-  },
-  reloadLatestDraftLabel: {
-    key: 'canvas.draft.reloadLatestLabel',
-    fallback: 'Reload latest draft',
-  },
-} satisfies CanvasCopySection;
+  routeLoadingTitle: 'Loading canvas',
+  routeLoadingMessage: 'Loading workspace graph data for the main authoring surface.',
+  backendLoadingTitle: 'Checking backend readiness',
+  backendLoadingMessage:
+    'Canvas is waiting for the backend readiness checks to settle before loading the authoring surface.',
+  canvasViewportContextSurfaceLabel: 'Canvas graph background',
+  canvasContextMenuLabel: 'Canvas actions',
+  routeNeedsCanvasTitle: 'Canvas',
+  routeNeedsCanvasMessage: 'Add sources and build your transformations here.',
+  routeNeedsCanvasActionLabel: 'Start canvas',
+  routeNeedsCanvasReadOnlyMessage:
+    'You do not have permission to create the Canvas in this project.',
+  routeErrorTitle: 'Canvas unavailable',
+  routeErrorFallbackMessage: 'The workspace graph could not be loaded for Canvas.',
+  routeErrorMessage:
+    'Canvas could not load the current workspace graph. Retry after the workspace service is available again.',
+  unsupportedCanvasKindMessagePrefix: 'Canvas cannot open persisted canvas kind ',
+  unsupportedCanvasKindMessageSuffix: ' because no runtime registration is available.',
+  disabledCanvasPluginMessagePrefix: 'Canvas cannot open persisted canvas kind ',
+  disabledCanvasPluginMessageSuffix: ' because its plugin is disabled or unavailable.',
+  backendBlockedTitle: 'Backend not ready',
+  backendBlockedFallbackMessage: 'Canvas stays blocked until backend readiness is restored.',
+  mutationUnavailableMessage: 'Graph edits are unavailable in this context.',
+  readOnlyTitle: 'Read-only canvas',
+  readOnlyMessage:
+    'Inspect the graph and overlays here. Use an executable workspace scope to plan or run.',
+  limitedAccessTitle: 'Limited work mode',
+  readOnlyNote: 'Open a writable project or execution scope to keep working.',
+  readOnlyActionLabel: 'Choose execution scope',
+  sessionRequiredDraftLabel: 'Session required',
+  readOnlyDraftLabel: 'Read-only draft',
+  forbiddenScopeDraftLabel: 'Draft access denied',
+  draftFormatBlockedLabel: 'Draft format blocked',
+  refreshSessionActionLabel: 'Refresh session',
+  changeScopeActionLabel: 'Change scope',
+  inspectOnlyActionLabel: 'Inspect only',
+  escalateFormatActionLabel: 'Escalate draft format issue',
+  draftSessionRequiredTitle: 'Session required for draft access',
+  draftSessionRequiredMessage:
+    'Canvas cannot read the protected draft because the current session is missing or expired. Refresh the session.',
+  draftForbiddenScopeTitle: 'Draft scope is forbidden',
+  draftForbiddenScopeMessage:
+    'Canvas cannot read this workspace draft with the current tenant, project, or permission scope. Change scope or request access.',
+  draftReadOnlyTitle: 'Draft is read-only',
+  draftReadOnlyMessage:
+    'Canvas can inspect this draft, but graph edits, planning, and run start are disabled for the current scope. Choose an executable workspace scope to work.',
+  draftUnsupportedSchemaTitle: 'Persisted draft format is unsupported',
+  draftUnsupportedSchemaMessage:
+    'Canvas cannot load the persisted draft because its stored schema version is not supported by this route yet.',
+  draftCorruptPayloadTitle: 'Persisted draft payload is corrupt',
+  draftCorruptPayloadMessage:
+    'Canvas cannot load the persisted draft because the stored payload is corrupt and fails the governed contract.',
+  staleDraftTitle: 'Stale draft version',
+  staleDraftMessage:
+    'A newer draft was saved elsewhere. Reload the latest draft before continuing edits.',
+  draftProjectionGapTitle: 'Persisted draft is ahead of the current protected draft authority',
+  draftProjectionGapMessage:
+    'Canvas has paused editing because the current protected draft authority cannot represent the full persisted draft yet. Reload the latest draft after the protected authority catches up.',
+  missingRemoteDraftTitle: 'Persisted draft no longer exists',
+  missingRemoteDraftMessage:
+    'Canvas has paused draft editing because the persisted draft disappeared. Reload the latest draft after protected authority is restored.',
+  reloadLatestDraftLabel: 'Reload latest draft',
+} satisfies Partial<CanvasViewCopy>;

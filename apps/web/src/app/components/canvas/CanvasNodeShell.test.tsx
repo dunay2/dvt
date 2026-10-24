@@ -5,6 +5,7 @@ import { fireEvent } from '@testing-library/dom';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import React, { act } from 'react';
+import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -193,6 +194,85 @@ describe('CanvasNodeShell', () => {
     );
     expect(onContextMenuAction).not.toHaveBeenCalled();
   });
+
+  it.each([
+    { close: 'Escape', handoff: false },
+    { close: 'Properties', handoff: false },
+    { close: 'Properties', handoff: true },
+  ])(
+    'preserves focus ownership after $close with external handoff $handoff',
+    async ({ close, handoff }) => {
+      const onContextMenuAction = vi.fn();
+      act(() => {
+        root.render(
+          <>
+            <CanvasNodeShell
+              contextMenuModel={{
+                ...CONTEXT_MENU_MODEL,
+                actionGroups: [
+                  {
+                    id: 'inspect',
+                    label: 'Inspect',
+                    actions: [
+                      {
+                        id: 'open-properties',
+                        label: 'Properties',
+                        intent: 'query',
+                        disabled: false,
+                      },
+                    ],
+                  },
+                ],
+              }}
+              shouldShowSourceHandle={false}
+              shouldShowTargetHandle={false}
+              onContextMenuAction={onContextMenuAction}
+              onOpenNode={vi.fn()}
+            >
+              Orders model
+            </CanvasNodeShell>
+            <input aria-label="Inspector name" />
+          </>
+        );
+      });
+
+      const shell = container.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]')!;
+      const inspectorInput = container.querySelector('input')!;
+      await act(async () => {
+        shell.focus();
+        fireEvent.contextMenu(shell);
+      });
+      const menu = document.querySelector<HTMLElement>('[data-slot="canvas-node-context-menu"]')!;
+      expect(menu).not.toBeNull();
+      const closed = new Promise<void>((resolveClosed) => {
+        menu.addEventListener(
+          'focusScope.autoFocusOnUnmount',
+          () => queueMicrotask(resolveClosed),
+          { once: true }
+        );
+      });
+
+      await act(async () => {
+        flushSync(() => {
+          if (close === 'Escape') fireEvent.keyDown(menu, { key: 'Escape' });
+          else fireEvent.click(menu.querySelector('[role="menuitem"]')!);
+        });
+        if (handoff) {
+          inspectorInput.focus();
+          expect(document.activeElement).toBe(inspectorInput);
+        }
+        await closed;
+      });
+
+      expect(document.activeElement).toBe(handoff ? inspectorInput : shell);
+      expect(document.querySelector('[data-slot="canvas-node-context-menu"]')).toBeNull();
+      if (close === 'Escape') expect(onContextMenuAction).not.toHaveBeenCalled();
+      else {
+        expect(onContextMenuAction).toHaveBeenCalledOnce();
+        expect(onContextMenuAction).toHaveBeenCalledWith('open-properties');
+      }
+    }
+  );
 
   it('renders graph ports through component-owned presentation slots', () => {
     act(() => {

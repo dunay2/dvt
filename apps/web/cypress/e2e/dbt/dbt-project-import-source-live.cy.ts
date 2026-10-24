@@ -119,9 +119,15 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
     const expectedSourceUniqueId = 'source.analytics.raw.source_1';
     const expectedYamlPath = `${PROJECT_ROOT}/models/schema.yml`;
 
-    readLiveGraphDraft(session, { failOnStatusCode: false }).then((response) => {
-      expect(response.status).to.equal(404);
-    });
+    readLiveGraphDraft(session, { failOnStatusCode: false })
+      .then((response) => {
+        expect(response.status).to.be.oneOf([200, 404]);
+        if (response.status === 200) {
+          expect(response.body).to.have.property('record').that.is.an('object');
+        }
+        return response;
+      })
+      .as('draftBeforeImport', { type: 'static' });
     visitCanvas(session);
 
     cy.get('[data-slot="shell-file-menu-trigger"]', { timeout: 30_000 })
@@ -189,8 +195,16 @@ describe('dbt project import and file-backed Source Import live vertical', () =>
       expect(content).to.contain('customer');
       expect(content).to.contain('amount');
     });
-    readLiveGraphDraft(session, { failOnStatusCode: false }).then((response) => {
-      expect(response.status).to.equal(404);
+    cy.get<Cypress.Response<{ record?: unknown }>>('@draftBeforeImport').then((before) => {
+      readLiveGraphDraft(session, { failOnStatusCode: false }).then((after) => {
+        expect(after.status, 'file-backed import preserves draft presence').to.equal(before.status);
+        if (before.status === 200) {
+          expect(
+            (after.body as { record: unknown }).record,
+            'existing draft is unchanged'
+          ).to.deep.equal(before.body.record);
+        }
+      });
     });
   });
 });

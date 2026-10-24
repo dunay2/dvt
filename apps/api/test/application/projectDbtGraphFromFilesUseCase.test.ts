@@ -5,6 +5,7 @@ import type {
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
 } from '../../src/application/ports/dbtProjectAnalysis.js';
+import { DbtProjectFileAuthorityRequiredError } from '../../src/application/ports/dbtProjectImport.js';
 import { WarehouseConnectionNotFoundError } from '../../src/application/ports/warehouseSourceImport.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 
@@ -136,6 +137,7 @@ function buildUseCase(
   readonly useCase: ProjectDbtGraphFromFilesUseCase;
   readonly resolve: ReturnType<typeof vi.fn>;
   readonly getConnection: ReturnType<typeof vi.fn>;
+  readonly readSourceRevision: ReturnType<typeof vi.fn>;
 } {
   const resolve = vi.fn().mockResolvedValue(binding);
   const getConnection = vi.fn(async (_scope, connectionId: string) => ({
@@ -149,9 +151,11 @@ function buildUseCase(
     credentialRef: 'env:DBT_PROFILES_DIR',
     sourceObjects: [],
   }));
+  const readSourceRevision = vi.fn().mockResolvedValue('a'.repeat(64));
   return {
     useCase: new ProjectDbtGraphFromFilesUseCase({
       analyzer: { analyze },
+      sourceRevisionReader: { readSourceRevision },
       authorityPolicy: { resolve },
       executionConnectionBindingVerifier: { verify: vi.fn(verifyExecutionBinding) },
       executionTargetResolver: { resolve: () => executionTarget },
@@ -159,10 +163,106 @@ function buildUseCase(
     }),
     resolve,
     getConnection,
+    readSourceRevision,
   };
 }
 
 describe('ProjectDbtGraphFromFilesUseCase', () => {
+  it('projects the same graph from scoped validated analysis without reanalyzing', async () => {
+    const analysis = analyzerResult();
+    const analyze = vi.fn().mockResolvedValue(analysis);
+    const { useCase, readSourceRevision } = buildUseCase(analyze);
+    const input = {
+      scope: SCOPE,
+      canvasId: FILE_AUTHORITY.canvasId,
+      includeGovernedSourceIdentity: true,
+    };
+    const fresh = await useCase.execute(input);
+    expect(readSourceRevision).not.toHaveBeenCalled();
+    analyze.mockClear();
+    await expect(
+      useCase.projectValidatedAnalysis(input, { scope: SCOPE, analysis })
+    ).resolves.toEqual(fresh);
+    expect(analyze).not.toHaveBeenCalled();
+    expect(readSourceRevision).toHaveBeenCalledWith({ scope: SCOPE, projectRoot: 'analytics' });
+  });
+
+  it.each(['tenantId', 'projectId', 'environmentId'] as const)(
+    'rejects validated analysis from another %s before reading its files',
+    async (dimension) => {
+      const analyze = vi.fn();
+      const { useCase, readSourceRevision, resolve } = buildUseCase(analyze);
+      await expect(
+        useCase.projectValidatedAnalysis(
+          { scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId },
+          { scope: { ...SCOPE, [dimension]: 'another' }, analysis: analyzerResult() }
+        )
+      ).rejects.toThrow('fresh projection');
+      expect(resolve).not.toHaveBeenCalled();
+      expect(readSourceRevision).not.toHaveBeenCalled();
+      expect(analyze).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['invalid', 'unavailable'] as const)(
+    'refuses a %s analysis without a fallback parse',
+    async (status) => {
+      const analyze = vi.fn();
+      const { useCase, readSourceRevision } = buildUseCase(analyze);
+      await expect(
+        useCase.projectValidatedAnalysis(
+          { scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId },
+          { scope: SCOPE, analysis: analyzerResult(status) }
+        )
+      ).rejects.toThrow('fresh projection');
+      expect(readSourceRevision).not.toHaveBeenCalled();
+      expect(analyze).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects validated analysis for another persisted project root', async () => {
+    const analyze = vi.fn();
+    const { useCase, readSourceRevision, resolve } = buildUseCase(analyze, {
+      ...FILE_AUTHORITY,
+      authority: { kind: 'dbt-project-files', projectRoot: 'another' },
+    });
+    await expect(
+      useCase.projectValidatedAnalysis(
+        { scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId },
+        { scope: SCOPE, analysis: analyzerResult() }
+      )
+    ).rejects.toThrow('fresh projection');
+    expect(resolve).toHaveBeenCalledOnce();
+    expect(readSourceRevision).not.toHaveBeenCalled();
+    expect(analyze).not.toHaveBeenCalled();
+  });
+
+  it('refuses current graph authority even when a valid file analysis is available', async () => {
+    const { useCase, readSourceRevision } = buildUseCase(vi.fn(), {
+      ...FILE_AUTHORITY,
+      authority: { kind: 'graph-draft' },
+    });
+    await expect(
+      useCase.projectValidatedAnalysis(
+        { scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId },
+        { scope: SCOPE, analysis: analyzerResult() }
+      )
+    ).rejects.toBeInstanceOf(DbtProjectFileAuthorityRequiredError);
+    expect(readSourceRevision).not.toHaveBeenCalled();
+  });
+
+  it('preserves failure to resolve persisted authority before reading source revision', async () => {
+    const { useCase, readSourceRevision, resolve } = buildUseCase(vi.fn());
+    resolve.mockRejectedValue(new Error('Persisted authority is missing'));
+    await expect(
+      useCase.projectValidatedAnalysis(
+        { scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId },
+        { scope: SCOPE, analysis: analyzerResult() }
+      )
+    ).rejects.toThrow('Persisted authority is missing');
+    expect(readSourceRevision).not.toHaveBeenCalled();
+  });
+
   it('projects analyzer resources by dbt unique_id without draft semantic input', async () => {
     const analyze = vi.fn().mockResolvedValue(analyzerResult());
     const { useCase, resolve } = buildUseCase(analyze);

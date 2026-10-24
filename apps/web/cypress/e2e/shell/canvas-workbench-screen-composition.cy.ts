@@ -242,8 +242,8 @@ function assertDependencyDirectionCues(): void {
           ?.querySelector<SVGPathElement>('.react-flow__edge-path');
 
         expect(cue.tagName.toLowerCase()).to.equal('marker');
-        expect(cue.getAttribute('markerWidth')).to.equal('12');
-        expect(cue.getAttribute('markerHeight')).to.equal('12');
+        expect(cue.getAttribute('markerWidth')).to.equal('8');
+        expect(cue.getAttribute('markerHeight')).to.equal('8');
         expect(cue.getAttribute('orient')).to.equal('auto');
         expect(cue.getAttribute('markerUnits')).to.equal('userSpaceOnUse');
         expect(bounds.width).to.equal(8);

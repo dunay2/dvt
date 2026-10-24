@@ -1,4 +1,5 @@
 import {
+  ConnectedSourceRefSchema,
   DVT_REJECTIONS,
   parseExecutionSelection,
   type DvtOperationalWorkloadV1,
@@ -126,6 +127,67 @@ function dependencies(): {
 }
 
 describe('ResolveAuthorizedDvtPreviewSelectionService', () => {
+  it.each([
+    ['ephemeral without Sink', false, { materialized: 'ephemeral' }, 'dvt_run_sink_required'],
+    [
+      'view feeding Sink',
+      true,
+      { materialized: 'view' },
+      'dvt_run_sink_transform_disposition_invalid',
+    ],
+    ['table feeding Sink', true, { materialized: 'table' }, 'dvt_run_publication_conflict'],
+    [
+      'view with output and Sink',
+      true,
+      { materialized: 'view', resultTarget: {} },
+      'dvt_run_publication_conflict',
+    ],
+  ] as const)(
+    'reports the exact %s cause without publishing',
+    async (_name, withSink, config, cause) => {
+      const source = withSink ? buildDvtSinkPublicationDraft() : buildDvtJoinPreviewDraft(2);
+      const connectionRef = ConnectedSourceRefSchema.parse(
+        source.nodes[0]!.metadata?.connectedSourceRef
+      ).connectionRef;
+      source.nodes.find((node) => node.role === 'transform')!.metadata!.config =
+        'resultTarget' in config
+          ? {
+              ...config,
+              resultTarget: {
+                schemaVersion: 'dvt-transform-result-target.v1',
+                connectionRef,
+                schema: 'analytics',
+                relation: 'other_output',
+              },
+            }
+          : config;
+      const selected = source.nodes.find(
+        (node) => node.role === (withSink ? 'output' : 'transform')
+      )!;
+      const selection = parseExecutionSelection({ mode: 'upstream', nodeIds: [selected.id] });
+      const harness = publicationHarness(source);
+      const deps = dependencies();
+      deps.executeWithAuthorizedDraft.mockResolvedValue({
+        ok: true,
+        value: {
+          selection,
+          nodeIds: source.nodeIds,
+          edgeIds: source.edges.map((edge) => edge.id),
+          authorizedDraft: { revision: 'revision-specific-admission', draft: source },
+        },
+      });
+      deps.publish.mockImplementation((input) => harness.publisher.publish(input));
+      await expect(
+        deps.service.execute(
+          { selection, provenance: { ...provenance, canvasId: source.canvas.id! } },
+          context()
+        )
+      ).resolves.toMatchObject({ ok: false, rejection: { cause } });
+      expect(harness.publish).not.toHaveBeenCalled();
+      expect(deps.project).not.toHaveBeenCalled();
+    }
+  );
+
   it.each([
     ['terminal view', false, DVT_REJECTIONS.runDispositionUnsupported],
     ['Sink view', true, DVT_REJECTIONS.runTargetInvalid],

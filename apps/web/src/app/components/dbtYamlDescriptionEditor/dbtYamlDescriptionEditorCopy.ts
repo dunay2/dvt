@@ -1,6 +1,6 @@
 /** Owned concern: resolve locale-aware copy for the dbt YAML description editor. */
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
-import { detectCanvasViewLocale } from '../../views/canvas/canvasCopyCatalog';
+import { getApplicationLanguage } from '../../stores/applicationLanguageStore';
 
 export type DbtYamlDescriptionEditorCopy = Readonly<{
   title: string;
@@ -241,7 +241,7 @@ const SPANISH_COPY: DbtYamlDescriptionEditorCopy = {
 };
 
 export function resolveDbtYamlDescriptionEditorCopy(
-  locale: string = detectCanvasViewLocale()
+  locale: string = getApplicationLanguage()
 ): DbtYamlDescriptionEditorCopy {
   if (locale.trim().toLowerCase().startsWith('es')) {
     return SPANISH_COPY;

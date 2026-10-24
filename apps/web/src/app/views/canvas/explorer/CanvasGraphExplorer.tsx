@@ -6,18 +6,21 @@
  * @version 1.0.0
  */
 import type { Node } from '@xyflow/react';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { Table2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { CanvasExplorer } from './CanvasExplorer';
 import { CanvasExplorerList } from './CanvasExplorerList';
-import { projectCanvasExplorerNodes } from './canvasExplorerItems';
+import { projectCanvasExplorerNodes, projectCanvasExplorerSources } from './canvasExplorerItems';
+
+const sourceIcon = <Table2 aria-hidden="true" />;
 
 export function CanvasGraphExplorer({
   nodes,
   onSelect,
   onImport,
-  catalogue = [],
+  catalogue,
   onInspectSource,
   canPlaceSource = false,
   importedSourceIds = [],
@@ -38,12 +41,10 @@ export function CanvasGraphExplorer({
 }>): JSX.Element {
   const items = projectCanvasExplorerNodes(nodes);
   const rootRef = useRef<HTMLDivElement>(null);
-  const sources = catalogue.filter(
-    (node) => node.role === 'input' && node.sourceDefinitionId == null
-  );
+  const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
   useEffect(() => {
     if (importedSourceIds.length === 0) return;
-    const registered = catalogue.some((node) => importedSourceIds.includes(node.id));
+    const registered = catalogue?.some((node) => importedSourceIds.includes(node.id));
     if (!registered) return;
     const first = Array.from(
       rootRef.current?.querySelectorAll<HTMLElement>('[data-element-id]') ?? []
@@ -57,7 +58,9 @@ export function CanvasGraphExplorer({
       workspaceTask={workspaceTask}
       sources={
         <CanvasExplorerList
-          items={sources.map((node) => ({ id: node.id, label: node.name, description: node.kind }))}
+          items={sources}
+          presentation="cards"
+          itemIcon={sourceIcon}
           onSelect={(id) => onInspectSource?.(id)}
           disabled={onInspectSource == null}
           onDragStart={

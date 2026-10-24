@@ -8,6 +8,7 @@
  */
 import { fireEvent } from '@testing-library/dom';
 import { act, useState, type ReactElement } from 'react';
+import { flushSync } from 'react-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { clone } from '@bufbuild/protobuf';
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
@@ -187,6 +188,8 @@ describe('output command authority during acknowledgement', () => {
 
   it.each([
     'equivalent acknowledgement',
+    'equivalent acknowledgement after apply',
+    'changed acknowledgement after apply',
     'equal permission sets',
     'session',
     'revision',
@@ -206,7 +209,10 @@ describe('output command authority during acknowledgement', () => {
     let selected: string | undefined;
     let receive!: (document: SubstraitDocument) => void;
     let analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
-    const onChange = vi.fn();
+    const publication: string[] = [];
+    const onChange = vi.fn<(document: SubstraitDocument) => void>(() => {
+      publication.push('published');
+    });
     function Host(): ReactElement {
       const [draft, setDraft] = useState(initial);
       receive = setDraft;
@@ -235,6 +241,7 @@ describe('output command authority during acknowledgement', () => {
     expect(onChange).toHaveBeenCalledOnce();
     const excluded: SubstraitDocument = onChange.mock.calls[0]![0];
     onChange.mockClear();
+    publication.length = 0;
     const session = analysis!.session;
     const revision = session.revision;
     const acceptedRoot = session.locate(session.rootId, revision).relation;
@@ -249,16 +256,37 @@ describe('output command authority during acknowledgement', () => {
       await gate;
       return query(...args);
     });
-    const preserved = change === 'equivalent acknowledgement' || change === 'equal permission sets';
+    const changedAcknowledgementAfterApply = change === 'changed acknowledgement after apply';
+    const acknowledgementAfterApply =
+      change === 'equivalent acknowledgement after apply' || changedAcknowledgementAfterApply;
+    const preserved =
+      change === 'equivalent acknowledgement' ||
+      change === 'equivalent acknowledgement after apply' ||
+      change === 'equal permission sets';
+    const acknowledged = {
+      plan: clone(PlanSchema, excluded.plan),
+      sidecar: { ...excluded.sidecar },
+    };
+    const apply = session.apply.bind(session);
+    const interleaved = acknowledgementAfterApply
+      ? vi.spyOn(session, 'apply').mockImplementationOnce((delta) => {
+          const next = apply(delta);
+          publication.push('applied');
+          queueMicrotask(() => {
+            publication.push('acknowledged');
+            flushSync(() => receive(acknowledged));
+          });
+          return next;
+        })
+      : null;
     let currentRevision = revision;
     try {
-      await act(async () => fireEvent.click(toggle));
+      await act(async () => {
+        if (acknowledgementAfterApply) toggle.focus();
+        fireEvent.click(toggle);
+      });
       expect(signal).toBeDefined();
       expect(toggle.getAttribute('aria-disabled')).toBe('true');
-      const acknowledged = {
-        plan: clone(PlanSchema, excluded.plan),
-        sidecar: { ...excluded.sidecar },
-      };
       if (change === 'equal permission sets') {
         denied = new Set([...denied].reverse());
         disconnected = new Set([...disconnected].reverse());
@@ -267,19 +295,19 @@ describe('output command authority during acknowledgement', () => {
       if (change === 'selection') selected = input.relationId;
       if (change === 'denied input') denied = new Set([inputFields[0]!]);
       if (change === 'disconnected input') disconnected = new Set([inputFields[0]!]);
-      if (change === 'revision')
+      if (change === 'revision' || changedAcknowledgementAfterApply)
         acknowledged.sidecar.relations = excluded.sidecar.relations.map((entry) =>
           entry.relationId === session.rootId ? { ...entry, displayName: 'Changed model' } : entry
         );
       await act(async () => {
         if (change === 'unmount') root.render(null);
-        else {
+        else if (!acknowledgementAfterApply) {
           receive(acknowledged);
           root.render(<Host />);
         }
       });
       currentRevision = analysis!.session.revision;
-      expect.soft(signal!.aborted).toBe(!preserved);
+      expect.soft(signal!.aborted).toBe(!preserved && !acknowledgementAfterApply);
       if (preserved) {
         expect(analysis!.session).toBe(session);
         expect(currentRevision).toBe(revision);
@@ -293,6 +321,18 @@ describe('output command authority during acknowledgement', () => {
         await gate;
       });
       deferred.mockRestore();
+      interleaved?.mockRestore();
+    }
+    if (acknowledgementAfterApply) {
+      expect
+        .soft(publication)
+        .toEqual(
+          preserved ? ['applied', 'acknowledged', 'published'] : ['applied', 'acknowledged']
+        );
+      if (preserved) {
+        expect.soft(toggle.isConnected).toBe(true);
+        expect.soft(document.activeElement).toBe(toggle);
+      }
     }
     if (preserved) {
       expect(onChange).toHaveBeenCalledOnce();
@@ -301,7 +341,16 @@ describe('output command authority during acknowledgement', () => {
       expect(session.revision).toBe(revision + 1);
     } else {
       expect(onChange).not.toHaveBeenCalled();
-      expect(analysis!.session.revision).toBe(currentRevision);
+      if (changedAcknowledgementAfterApply) {
+        expect(signal!.aborted).toBe(true);
+        expect(analysis!.session).toBe(session);
+        expect(session.hasDocument(excluded)).toBe(false);
+        expect(session.hasDocument(acknowledged)).toBe(true);
+        expect(session.locate(session.rootId, session.revision).binding.displayName).toBe(
+          'Changed model'
+        );
+        expect(session.revision).toBeGreaterThan(currentRevision);
+      } else expect(analysis!.session.revision).toBe(currentRevision);
     }
   });
 });

@@ -151,6 +151,7 @@ export async function buildProtectedRuntimeModule(
   );
   const dbtProjectImport = buildDbtProjectImportRuntime({
     analyzer: dbtProjectAnalyzer,
+    sourceRevisionReader: dbtProjectAnalyzer,
     executionConnectionBindingVerifier: dbtExecutionConnectionBindingVerifier,
     executionTargetResolver: dbtExecutionTargetResolver,
     inspector: new LocalDbtProjectImportInspector({
