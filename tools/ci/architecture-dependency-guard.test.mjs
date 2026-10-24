@@ -1520,6 +1520,16 @@ test('Canvas component boundaries reject reversed command/query and composition 
       `${canvas}canvasPlanAction.ts`,
     ],
     [
+      'no-canvas-run-command-to-presentation',
+      `${canvas}canvasRunStartAction.ts`,
+      `${canvas}canvasReadinessPresentation.ts`,
+    ],
+    [
+      'no-canvas-run-command-to-presentation',
+      `${canvas}canvasRunStartAction.ts`,
+      `${canvas}copy.ts`,
+    ],
+    [
       'no-canvas-readiness-to-effects',
       `${canvas}canvasPlanReadiness.ts`,
       `${canvas}canvasPlanAction.ts`,
@@ -1581,6 +1591,9 @@ test('Canvas component boundaries reject reversed command/query and composition 
 test('Canvas readiness evaluation rejects presentation dependencies', () => {
   const canvas = 'apps/web/src/app/views/canvas/';
   const cases = [
+    [`${canvas}canvasDbtExecutionProjection.ts`, `${canvas}canvasCopyCatalog.ts`],
+    [`${canvas}canvasDvtPreviewProjection.ts`, `${canvas}copy.ts`],
+    [`${canvas}canvasExecutionGraph.ts`, 'apps/web/src/app/stores/applicationLanguageStore.ts'],
     [`${canvas}canvasPlanReadiness.ts`, `${canvas}canvasReadinessPresentation.ts`],
     [`${canvas}canvasPlanReadiness.ts`, `${canvas}canvasCopyCatalog.ts`],
     [`${canvas}canvasPlanReadiness.ts`, `${canvas}canvasCopy.types.ts`],

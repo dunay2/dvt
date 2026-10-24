@@ -1,3 +1,9 @@
+const canvasPresentationDependencies = [
+  '^apps/web/src/app/views/canvas/(?:canvasReadinessPresentation|canvasCopyCatalog|canvasCopyFormatting|canvasCopy\\.types|copy)\\.ts$',
+  '^apps/web/src/app/stores/applicationLanguageStore\\.ts$',
+  '^apps/web/src/app/services/api/dvtOperationalRejectionCopy\\.ts$',
+];
+
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
   forbidden: [
@@ -134,7 +140,7 @@ module.exports = {
       name: 'no-canvas-readiness-to-effects',
       severity: 'error',
       from: {
-        path: '^apps/web/src/app/views/canvas/(?:canvasRuntimePolicy|canvasDraftAccessPostureModel|canvasPlanReadiness|canvasExecutionState|canvasReadinessPresentation)\\.ts$',
+        path: '^apps/web/src/app/views/canvas/(?:canvasRuntimePolicy|canvasDraftAccessPostureModel|canvasPlanReadiness|canvasExecutionState|canvasExecutionGraph|canvasDbtExecutionProjection|canvasDvtPreviewProjection|canvasReadinessPresentation)\\.ts$',
       },
       to: {
         path: [
@@ -147,15 +153,17 @@ module.exports = {
       name: 'no-canvas-readiness-evaluation-to-presentation',
       severity: 'error',
       from: {
-        path: '^apps/web/src/app/views/canvas/(?:canvasPlanReadiness|canvasExecutionState)\\.ts$',
+        path: '^apps/web/src/app/views/canvas/(?:canvasPlanReadiness|canvasExecutionState|canvasExecutionGraph|canvasDbtExecutionProjection|canvasDvtPreviewProjection)\\.ts$',
       },
       to: {
-        path: [
-          '^apps/web/src/app/views/canvas/(?:canvasReadinessPresentation|canvasCopyCatalog|canvasCopyFormatting|canvasCopy\\.types|copy)\\.ts$',
-          '^apps/web/src/app/stores/applicationLanguageStore\\.ts$',
-          '^apps/web/src/app/services/api/dvtOperationalRejectionCopy\\.ts$',
-        ],
+        path: canvasPresentationDependencies,
       },
+    },
+    {
+      name: 'no-canvas-run-command-to-presentation',
+      severity: 'error',
+      from: { path: '^apps/web/src/app/views/canvas/canvasRunStartAction\\.ts$' },
+      to: { path: canvasPresentationDependencies },
     },
     {
       name: 'no-canvas-autosave-to-execution',
