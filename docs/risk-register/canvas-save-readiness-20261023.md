@@ -69,3 +69,12 @@ PostgreSQL's observed backend termination remains unexplained; it is not declare
 fixed by this product slice. Existing global component evidence warnings also
 remain open. Git preserves prior documentation; no historical copies or parallel
 task registry are added.
+
+Canvas copy cleanup preserves all 660 surviving messages per language against
+the previous Git revision, including placeholders and intentionally empty
+suffixes. Reference review covers computed accesses before removing 140 unused
+entries. Tests preserve regional and unknown-language fallback and an
+English-Spanish-English transition through the same Proxy. Static dictionaries
+replace repeated English resolution without adding a persistent cache or a new
+language preference owner. The catalogue's file ownership is distinct from
+Readiness evaluation and presentation policy.

@@ -1,8 +1,25 @@
+// @vitest-environment jsdom
+
 import { describe, expect, it } from 'vitest';
 
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveDbtYamlDescriptionEditorCopy } from './dbtYamlDescriptionEditorCopy';
 
 describe('resolveDbtYamlDescriptionEditorCopy', () => {
+  it('uses the current application language when the locale is omitted', () => {
+    const initialLanguage = useApplicationLanguageStore.getState().language;
+    try {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+      expect(resolveDbtYamlDescriptionEditorCopy().fieldLabel).toBe('Resource description');
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+      expect(resolveDbtYamlDescriptionEditorCopy().reviewAction).toBe('Revisar cambios');
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+      expect(resolveDbtYamlDescriptionEditorCopy().fieldLabel).toBe('Resource description');
+    } finally {
+      useApplicationLanguageStore.getState().configureApplicationLanguage(initialLanguage);
+    }
+  });
+
   it('resolves Spanish interaction copy through the locale boundary', () => {
     const copy = resolveDbtYamlDescriptionEditorCopy('es-ES');
 

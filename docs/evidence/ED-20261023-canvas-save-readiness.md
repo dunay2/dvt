@@ -401,3 +401,34 @@ affected current manifests. DVT/native normalization currently produces the same
 spelling but belongs to native authoring policy; it does not become dependent on
 the dbt plugin. Template normalization has different spelling behavior and also
 retains its own authority.
+
+## Canvas Copy Without Repeated Resolution
+
+The [catalogue plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6381645154)
+precedes implementation and retains `ConfigureApplicationLanguage` authority.
+Two independent reference reviews identified 140 unused entries, including
+computed consumers. Both languages and their type contract retire those entries.
+The remaining 660 English and 660 Spanish messages match the previous Git
+revision exactly, including placeholders and legitimate empty suffixes.
+
+The four English sections now use the same plain string representation as
+Spanish. Unused `key` metadata and `fallback` wrappers are removed. Each language
+is composed once; the existing Proxy still reads the current preference for
+every lookup. Repeated English reads no longer resolve all 800 former entries.
+The focused reuse regression failed before the change; the final three copy and
+Code-consumer specs pass 24 cases, and Web type checking passes.
+
+The [locale follow-up](https://github.com/dunay2/dvt/issues/3115#issuecomment-6381868368)
+retires `detectCanvasViewLocale`, which only forwarded the existing application
+preference. Canvas and the YAML description editor now read that same store
+directly; the editor no longer imports the Canvas catalogue. Characterization
+before and after the change passes 22 cases across the Canvas and YAML copy
+specs, including preference changes on an open consumer. Nineteen overlap the
+earlier copy proof; the combined focused coverage is 27 distinct cases.
+
+`SYS-WEB-CANVAS-COPY` owns the existing catalogue, type and direct tests under
+one responsibility. Three physical files move from Readiness to that owner;
+Readiness retains its 47 function bindings and consumes the catalogue through
+the recorded dependency. No source file, localization framework, compatibility
+wrapper or parallel command/query is added. Exact committed evidence, browser
+acceptance and the separate Planning DB availability incident remain in #3115.

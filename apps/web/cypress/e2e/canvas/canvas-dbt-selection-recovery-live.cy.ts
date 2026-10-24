@@ -104,17 +104,14 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
       .should('match', /blocked|bloqueada/i);
-    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryUnavailableRootsLabel.fallback)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryUnavailableRootsLabel)
       .parent()
       .should('contain.text', SELECTED_MODEL_ID);
-    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel)
       .parent()
       .invoke('text')
       .should('match', /None|Ninguno/i);
-    cy.contains(
-      'button',
-      canvasViewExecutionCopyByKey.selectionRecoveryUseWorkspaceScopeAction.fallback
-    )
+    cy.contains('button', canvasViewExecutionCopyByKey.selectionRecoveryUseWorkspaceScopeAction)
       .scrollIntoView()
       .should('be.visible')
       .should('be.enabled')
@@ -125,12 +122,12 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
       .should('match', /ready|lista/i);
     cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]').should(
       'have.text',
-      canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate.fallback.replace(
+      canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate.replace(
         '{affected}',
         SELECTED_MODEL_ID
       )
     );
-    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel.fallback)
+    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel)
       .parent()
       .should('contain.text', SURVIVING_MODEL_ID);
     cy.get('[data-slot="bottom-operational-preview-action"]').should('be.enabled');

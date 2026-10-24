@@ -31,9 +31,6 @@ export const canvasViewRouteCopyEs = {
   limitedAccessTitle: 'Trabajo limitado',
   readOnlyNote: 'Abre un proyecto editable o un alcance de ejecucion para seguir trabajando.',
   readOnlyActionLabel: 'Elegir alcance de ejecucion',
-  draftAccessDeniedTitle: 'Acceso al draft denegado',
-  draftAccessDeniedMessage:
-    'Canvas no puede leer el draft persistido para el scope actual del workspace.',
   sessionRequiredDraftLabel: 'Sesion requerida',
   readOnlyDraftLabel: 'Draft en solo lectura',
   forbiddenScopeDraftLabel: 'Acceso al draft denegado',

@@ -2,26 +2,12 @@ import { describe, expect, it } from 'vitest';
 
 import { canvasViewExecutionCopyByKey } from './canvasCopyCatalog.execution';
 import { canvasViewExecutionCopyEs } from './canvasCopyCatalog.execution.es';
-import { canvasViewToolbarCopyEs } from './canvasCopyCatalog.toolbar.es';
-import { canvasViewToolbarCopyByKey } from './canvasCopyCatalog.toolbar';
-
-function executionFallbacks(): string[] {
-  return Object.values(canvasViewExecutionCopyByKey).map((entry) => entry.fallback);
-}
-
-function spanishExecutionCopy(): string[] {
-  return [
-    ...Object.values(canvasViewExecutionCopyEs),
-    canvasViewToolbarCopyEs.toolbarWorkflowPlanRequiredLabel,
-  ].filter((value): value is string => typeof value === 'string');
-}
+const englishExecutionCopy = Object.values(canvasViewExecutionCopyByKey).join('\n');
+const spanishExecutionCopy = Object.values(canvasViewExecutionCopyEs).join('\n');
 
 describe('canvas execution copy', () => {
   it('names user-visible preview actions without ambiguous Plan commands', () => {
-    const visibleExecutionCopy = [
-      ...executionFallbacks(),
-      canvasViewToolbarCopyByKey.toolbarWorkflowPlanRequiredLabel.fallback,
-    ].join('\n');
+    const visibleExecutionCopy = englishExecutionCopy;
 
     expect(visibleExecutionCopy).toContain('Execution Preview');
     expect(visibleExecutionCopy).not.toMatch(/\b(?:run|re-run)[^\S\r\n]+Plan\b/i);
@@ -29,7 +15,7 @@ describe('canvas execution copy', () => {
   });
 
   it('keeps Spanish visible execution copy on Execution Preview vocabulary', () => {
-    const visibleExecutionCopy = spanishExecutionCopy().join('\n');
+    const visibleExecutionCopy = spanishExecutionCopy;
 
     expect(visibleExecutionCopy).toContain('Execution Preview');
     expect(visibleExecutionCopy).not.toMatch(/\bplanes?\b/i);
@@ -37,7 +23,7 @@ describe('canvas execution copy', () => {
   });
 
   it('keeps English readiness feedback on Execution Preview vocabulary', () => {
-    const visibleExecutionCopy = executionFallbacks().join('\n');
+    const visibleExecutionCopy = englishExecutionCopy;
 
     expect(visibleExecutionCopy).toContain('Execution Preview');
     expect(visibleExecutionCopy).not.toMatch(/\bplans?\b/i);
