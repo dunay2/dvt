@@ -184,7 +184,15 @@ matching and workflow wiring stay covered by their current contract tests.
 
 ## Package Validation Commands
 
-The Web CI suites run with one isolated fork at a time. Unit and architecture
+The Web suite catalog bounds local execution to four isolated forks and CI
+execution to one, with a minimum of one in either context. The same construction
+owns every primary and focus suite. The CI worker heap remains 4096 MiB; local
+execution retains its inherited heap configuration. This scheduling policy does
+not change file selection, assertions, timeouts, retries or dependency preparation.
+Do not set global CI flags merely to limit workers: `DVT_CI` also changes package
+dependency preparation.
+
+Unit and architecture
 primary suites, and their `canvas-unit` and `canvas-architecture` focus suites,
 default to Node. Browser-dependent tests explicitly declare
 `@vitest-environment jsdom`, including tests of persisted session state and
@@ -207,6 +215,14 @@ non-DOM partition benchmarks, including the evidence journal and final closeout.
 The issue records the local comparison and rejected shared-fork alternative.
 The selected environment policy
 retains all primary files, assertions, isolated workers and existing commands.
+
+The [local worker comparison](https://github.com/dunay2/dvt/issues/3115#issuecomment-6383136858)
+kept the same 16 files and 55 cases, product revision and five-second limits.
+One isolated worker passed in 896.73 seconds; four passed in 270.96 seconds,
+with a slowest observed case of 3769 milliseconds. The complete earlier run
+with 14 observed workers had 24 timeouts and two subsequent assertion failures.
+These measurements support the local bound; they do not replace the complete
+normal pre-push or establish a general performance guarantee.
 
 | Capability                         | Command                                                                    | Scope                                                | Source                                                                                                 |
 | ---------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |

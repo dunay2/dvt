@@ -475,3 +475,37 @@ at 30 seconds, and the disposable stores and files are cleaned up.
 Exact commands, intermediate test/type/lint failures, complete pre-push and
 committed CI identities are recorded on #3115. The backend measurement alone does
 not certify acceptance of the full LIVE user flow.
+
+## Bounded Local Validation Workers
+
+The [worker policy plan](https://github.com/dunay2/dvt/issues/3115#issuecomment-6383136858)
+records the comparison and existing `WebVitestSuitePartition` authority before
+implementation. The normal pre-push on `ca9eb6206` passed changed-file quality
+and architecture gates, then failed Canvas presentation: 1041 cases passed and
+26 failed in 16 files. Twenty-four failures exceeded the unchanged five-second
+limit; two assertions followed timed-out cases in their own files. Fourteen
+forks were observed. This is a failed gate, not partial acceptance.
+
+The same 16 files and 55 cases passed unchanged with one isolated fork in
+896.73 seconds and four in 270.96 seconds. No other validation ran concurrently;
+neither CI environment flag was set. The four-worker run's slowest observed case
+took 3769 milliseconds, and a process snapshot confirmed four child forks.
+The 69.8% elapsed-time reduction compares only these two bounded observations.
+It does not prove an OOM cause or the precise continuation responsible for the
+earlier assertions.
+
+The existing catalog owns the local four-worker bound and unchanged CI
+one-worker policy. Its contract must retain per-file isolation, suite coverage,
+environments, dependency preparation and test deadlines. CI keeps its 4096 MiB
+heap arguments; local execution inherits its previous heap configuration.
+The superseded private CI-only helper name must be retired rather than wrapped,
+with exact current symbol reconciliation through the existing catalog operations.
+
+The existing catalog contract first passed 22 cases and failed its new local
+worker case because the bound was absent. After the single-helper change, all
+23 cases pass under `vitest.architecture.config.ts`. The contract checks every
+primary/focus suite and both existing CI signals, including unchanged heap and
+environment values and the absence of timeout or retry overrides.
+
+The complete normal pre-push, exact-head CI and post-merge main acceptance remain
+required. Diagnostic success is not a waiver or a manually generated success stamp.

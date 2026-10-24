@@ -255,30 +255,51 @@ describe('web Vitest suite catalog', () => {
     }
   );
 
-  it('bounds CI Vitest workers without removing primary suite coverage', () => {
-    vi.stubEnv('DVT_CI', '1');
-    vi.stubEnv('CI', '');
+  it.each([
+    { context: 'local', dvtCi: undefined, ci: undefined, workerCount: 4 },
+    { context: 'DVT_CI', dvtCi: '1', ci: undefined, workerCount: WEB_VITEST_CI_WORKER_COUNT },
+    { context: 'CI', dvtCi: undefined, ci: 'true', workerCount: WEB_VITEST_CI_WORKER_COUNT },
+  ] as const)(
+    'bounds $context workers without changing coverage, deadlines or inherited environment',
+    ({ context, dvtCi, ci, workerCount }) => {
+      vi.stubEnv('DVT_CI', dvtCi);
+      vi.stubEnv('CI', ci);
+      vi.stubEnv('NODE_OPTIONS', '--max-old-space-size=6144');
 
-    const config = createWebVitestConfig('presentation');
+      for (const suiteName of [
+        'all',
+        ...WEB_VITEST_PRIMARY_SUITE_NAMES,
+        ...WEB_VITEST_FOCUS_SUITE_NAMES,
+      ] as const) {
+        const config = createWebVitestConfig(suiteName).test;
 
-    expect(config.test).toMatchObject({
-      environment: 'jsdom',
-      include: WEB_VITEST_SUITES.presentation.include,
-      exclude: WEB_VITEST_SUITES.presentation.exclude,
-      pool: 'forks',
-      minWorkers: 1,
-      maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
-      poolOptions: {
-        forks: {
-          singleFork: false,
-          isolate: true,
-          minForks: 1,
-          maxForks: WEB_VITEST_CI_WORKER_COUNT,
-          execArgv: [WEB_VITEST_CI_NODE_OPTIONS],
-        },
-      },
-    });
-  });
+        expect(config, suiteName).toMatchObject({
+          include: WEB_VITEST_SUITES[suiteName].include,
+          exclude: WEB_VITEST_SUITES[suiteName].exclude,
+          pool: 'forks',
+          minWorkers: 1,
+          maxWorkers: workerCount,
+          poolOptions: {
+            forks: {
+              singleFork: false,
+              isolate: true,
+              minForks: 1,
+              maxForks: workerCount,
+            },
+          },
+        });
+        expect(config?.poolOptions?.forks?.execArgv, suiteName).toEqual(
+          context === 'local' ? undefined : [WEB_VITEST_CI_NODE_OPTIONS]
+        );
+        expect(config?.testTimeout, suiteName).toBeUndefined();
+        expect(config?.hookTimeout, suiteName).toBeUndefined();
+        expect(config?.retry, suiteName).toBeUndefined();
+      }
+      expect(process.env.DVT_CI).toBe(dvtCi);
+      expect(process.env.CI).toBe(ci);
+      expect(process.env.NODE_OPTIONS).toBe('--max-old-space-size=6144');
+    }
+  );
 
   it('keeps Monaco focus coverage aligned with Code workbench local models', () => {
     expect(WEB_VITEST_SUITES.monaco.include).toContain(

@@ -93,3 +93,13 @@ cover the scope, freshness, replay and recovery boundaries. The original backend
 showed repeated parsing dominated import duration but did not reproduce the LIVE
 timeout; only the subsequent real-provider acceptance can establish that the
 affected user flow passes. No request or subprocess deadline is increased.
+
+Local Web validation must not create CPU-derived batches without a resource
+bound. The catalog limits local execution to four isolated workers while keeping
+CI at one. The same failing 16-file group passed with one and four workers under
+the unchanged five-second test limit. The full suite may expose failures absent
+from that group, so complete pre-push and CI acceptance remain mandatory.
+The contract preserves selected files, assertions, isolation, environments and
+dependency preparation; it forbids scheduling changes from introducing timeout
+or retry overrides. CI heap arguments remain unchanged and are not silently
+applied to local workers. No global CI flag is introduced to obtain the bound.

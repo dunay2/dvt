@@ -1,6 +1,6 @@
 /**
  * @ownedConcern Own the web Vitest suite catalog, including primary suite
- * ownership, focus-suite overlap, and CI-facing config construction.
+ * ownership, focus-suite overlap, and bounded worker config construction.
  */
 import type { UserConfig } from 'vitest/config';
 
@@ -35,6 +35,7 @@ type WebVitestSuiteDefinition = Readonly<{
 }>;
 
 const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
+const WEB_VITEST_LOCAL_WORKER_COUNT = 4;
 export const WEB_VITEST_CI_WORKER_COUNT = 1;
 export const WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB = 4096;
 export const WEB_VITEST_CI_NODE_OPTIONS = `--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`;
@@ -201,7 +202,7 @@ export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig
           : 'jsdom',
       include: [...suite.include],
       exclude: [...suite.exclude],
-      ...(isWebVitestCi() ? createWebVitestCiWorkerConfig() : {}),
+      ...createWebVitestWorkerConfig(),
     },
   };
 }
@@ -210,18 +211,20 @@ function isWebVitestCi(): boolean {
   return process.env.DVT_CI === '1' || process.env.CI === 'true';
 }
 
-function createWebVitestCiWorkerConfig(): NonNullable<UserConfig['test']> {
+function createWebVitestWorkerConfig(): NonNullable<UserConfig['test']> {
+  const ci = isWebVitestCi();
+  const workerCount = ci ? WEB_VITEST_CI_WORKER_COUNT : WEB_VITEST_LOCAL_WORKER_COUNT;
   return {
     pool: 'forks',
     minWorkers: 1,
-    maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
+    maxWorkers: workerCount,
     poolOptions: {
       forks: {
         singleFork: false,
         isolate: true,
         minForks: 1,
-        maxForks: WEB_VITEST_CI_WORKER_COUNT,
-        execArgv: [WEB_VITEST_CI_NODE_OPTIONS],
+        maxForks: workerCount,
+        ...(ci ? { execArgv: [WEB_VITEST_CI_NODE_OPTIONS] } : {}),
       },
     },
   };
