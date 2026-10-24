@@ -35,7 +35,6 @@ export type BuildCanvasWorkbenchLogEntriesArgs = Readonly<{
     planRunReadiness: Pick<PlanRunReadinessReadModel, 'status' | 'summary'>;
     canPlanGraph: boolean;
     canStartRun: boolean;
-    planStatusSummary: string;
   }>;
   permissions: UserPermissions;
   graph: Readonly<{
@@ -159,7 +158,7 @@ export function buildCanvasWorkbenchLogEntries({
     pushEntry({
       severity: 'warning',
       source: 'plan',
-      message: toolbar.planRunReadiness.summary || toolbar.planStatusSummary,
+      message: toolbar.planRunReadiness.summary,
       detail: toolbar.planRunReadiness.status,
     });
   }

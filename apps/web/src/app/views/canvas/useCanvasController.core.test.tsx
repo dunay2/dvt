@@ -184,7 +184,7 @@ describe('useCanvasController core', () => {
     expect(result?.canStartRun).toBe(false);
     expect(result?.canEditInspectorNode).toBe(true);
     expect(typeof result?.applyInspectorNodeDraft).toBe('function');
-    expect(result?.planStatusSummary).toBe('Preview required before running.');
+    expect(result?.planRunReadiness.summary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.importedNodeFocusIds).toEqual([]);
     expect(harness.mocks.useCanvasExecutionActions).toHaveBeenCalledWith(

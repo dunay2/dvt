@@ -114,7 +114,6 @@ export type CanvasShellChromeState = {
   canStartRun: boolean;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
-  planStatusSummary: string;
   planRunReadiness: PlanRunReadinessReadModel;
   executionSelectionRecovery: CanvasExecutionSelectionRecoveryReadModel | null;
   exclusiveOverlayMode: 'runtime' | 'cost';

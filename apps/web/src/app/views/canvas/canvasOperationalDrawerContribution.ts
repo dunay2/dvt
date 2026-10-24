@@ -30,7 +30,6 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   canPlanGraph: boolean;
   canStartRun: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
   selectionRecovery?: CanvasExecutionSelectionRecoveryReadModel | null;
   selectionRecoveryCommands?: CanvasExecutionSelectionRecoveryCommands | null;
   selectionRecoveryMessages?: OperationalDrawerSelectionRecoveryMessages;
@@ -91,7 +90,6 @@ export function buildCanvasOperationalDrawerContribution({
   onPreviewExecutionPlan,
   onStartRun,
   planRunReadiness,
-  planStatusSummary,
   policy,
   copy = canvasViewCopy,
   runControls = null,
@@ -229,11 +227,11 @@ export function buildCanvasOperationalDrawerContribution({
             })
           : runsStatus === 'ready'
             ? copy.operationalDrawerReadyRunSummary
-            : planRunReadiness.summary || planStatusSummary,
+            : planRunReadiness.summary,
     },
     preview: {
       status: previewStatus,
-      summary: planRunReadiness.summary || planStatusSummary,
+      summary: planRunReadiness.summary,
       blockers: previewBlockers,
       canPreview: canPreviewExecutionPlan,
       onPreviewExecutionPlan,

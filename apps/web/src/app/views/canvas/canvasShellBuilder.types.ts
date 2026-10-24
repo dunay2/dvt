@@ -90,7 +90,6 @@ export type CanvasShellChromeStateBuilderArgs = Readonly<{
     | 'canStartRun'
     | 'canExportProjectSnapshot'
     | 'canImportProjectSnapshot'
-    | 'planStatusSummary'
     | 'planRunReadiness'
     | 'executionSelectionRecovery'
     | 'exclusiveOverlayMode'

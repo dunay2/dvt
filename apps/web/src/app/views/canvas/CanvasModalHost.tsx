@@ -14,7 +14,7 @@ export default function CanvasModalHost({ planPreview }: CanvasModalHostProps) {
       outcome={planPreview.outcome}
       messages={canvasViewCopy}
       startRunDisabled={!planPreview.canStartRun}
-      startRunMessage={planPreview.planStatusSummary}
+      startRunMessage={planPreview.startRunMessage}
       onStartRun={planPreview.onStartRun}
     />
   );

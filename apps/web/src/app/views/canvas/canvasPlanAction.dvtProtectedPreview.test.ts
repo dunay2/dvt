@@ -308,7 +308,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     expect(presentation.planRunReadiness.diagnostic?.message).not.toContain(
       'Do not configure both'
     );
-    expect(presentation.planStatusSummary).toBe('Preview required before running.');
+    expect(presentation.planRunReadiness.summary).toBe('Preview required before running.');
     expect(state.canStartRun).toBe(false);
   });
 
@@ -355,7 +355,7 @@ describe('executeCanvasPlanAction protected DVT branch', () => {
     Object.freeze(state);
     const before = structuredClone(state);
     const presentation = presentCanvasExecutionState(state, applicationLanguage);
-    expect(presentation.planStatusSummary).toBe(expected);
+    expect(presentation.planRunReadiness.summary).toBe(expected);
     expect(presentation.planRunReadiness.summary).toBe(expected);
     expect(state.planRunReadiness.blockers).toContain('plan_integrity');
     expect(state.canStartRun).toBe(false);

@@ -113,8 +113,10 @@ export function useCanvasExecutionActions({
     executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
   });
   const { hasPersistedPlanForRun, isCurrentPlanStale, canPlanGraph, canStartRun } = executionState;
-  const { executableGraphFailureMessage, planRunReadiness, planStatusSummary } =
-    presentCanvasExecutionState(executionState, applicationLanguage);
+  const { executableGraphFailureMessage, planRunReadiness } = presentCanvasExecutionState(
+    executionState,
+    applicationLanguage
+  );
 
   const planAction = useCanvasPlanActionHandler({
     graphDraftCanvasId,
@@ -159,7 +161,6 @@ export function useCanvasExecutionActions({
     canStartRun,
     isCurrentPlanStale,
     planRunReadiness,
-    planStatusSummary,
     latestPreviewOutcome: executionState.isPreviewOutcomeStale ? null : latestPreviewOutcome,
     handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,

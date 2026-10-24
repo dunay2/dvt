@@ -14,7 +14,7 @@ type CanvasModalHostBuilderSource = Readonly<
     | 'currentPlan'
     | 'latestPreviewOutcome'
     | 'canStartRun'
-    | 'planStatusSummary'
+    | 'planRunReadiness'
     | 'handleStartRun'
   >
 >;
@@ -28,7 +28,7 @@ export function buildCanvasModalHostProps(
       plan: controller.currentPlan,
       outcome: controller.latestPreviewOutcome,
       canStartRun: controller.canStartRun,
-      planStatusSummary: controller.planStatusSummary,
+      startRunMessage: controller.planRunReadiness.summary,
       onClose: () => controller.setPlanModalOpen(false),
       onStartRun: () => {
         void controller.handleStartRun();

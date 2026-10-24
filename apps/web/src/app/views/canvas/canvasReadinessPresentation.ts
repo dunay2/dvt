@@ -111,7 +111,6 @@ export function presentCanvasExecutionState(
 ): Readonly<{
   executableGraphFailureMessage: string | null;
   planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
 }> {
   const failure = state.executableGraphFailure;
   const executableGraphFailureMessage =
@@ -147,6 +146,5 @@ export function presentCanvasExecutionState(
   return {
     executableGraphFailureMessage,
     planRunReadiness,
-    planStatusSummary: planRunReadiness.summary,
   };
 }

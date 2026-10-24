@@ -15,7 +15,6 @@ export function buildCanvasShellChromeState({
     canStartRun: chromeStateSource.canStartRun,
     canExportProjectSnapshot: chromeStateSource.canExportProjectSnapshot,
     canImportProjectSnapshot: chromeStateSource.canImportProjectSnapshot,
-    planStatusSummary: chromeStateSource.planStatusSummary,
     planRunReadiness: chromeStateSource.planRunReadiness,
     executionSelectionRecovery: chromeStateSource.executionSelectionRecovery,
     exclusiveOverlayMode: chromeStateSource.exclusiveOverlayMode,

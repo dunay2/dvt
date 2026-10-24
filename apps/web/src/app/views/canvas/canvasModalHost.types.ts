@@ -9,7 +9,7 @@ export type CanvasPlanPreviewModalContract = Readonly<{
   plan: PlanViewModel | null;
   outcome: PlanPreviewOutcome | null;
   canStartRun: boolean;
-  planStatusSummary: string;
+  startRunMessage: string;
   onClose: () => void;
   onStartRun: () => void;
 }>;

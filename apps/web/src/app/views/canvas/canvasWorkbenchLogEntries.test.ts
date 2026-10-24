@@ -23,7 +23,6 @@ describe('buildCanvasWorkbenchLogEntries', () => {
         },
         canPlanGraph: false,
         canStartRun: false,
-        planStatusSummary: 'Preview must be regenerated before Run.',
       },
       permissions: {
         canPlan: false,
@@ -72,7 +71,6 @@ describe('buildCanvasWorkbenchLogEntries', () => {
         },
         canPlanGraph: true,
         canStartRun: true,
-        planStatusSummary: '',
       },
       permissions: {
         canPlan: true,

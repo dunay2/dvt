@@ -282,7 +282,6 @@ export function useDbtProjectFilesAuthoritySurface({
       canStartRun: controller.execution.canStartRun,
       canExportProjectSnapshot: false,
       canImportProjectSnapshot: false,
-      planStatusSummary: controller.execution.planStatusSummary,
       planRunReadiness: controller.execution.planRunReadiness,
       executionSelectionRecovery: controller.executionSelectionRecovery,
       exclusiveOverlayMode: 'runtime',
@@ -313,7 +312,7 @@ export function useDbtProjectFilesAuthoritySurface({
       plan: controller.currentPlan,
       outcome: controller.execution.latestPreviewOutcome,
       canStartRun: controller.execution.canStartRun,
-      planStatusSummary: controller.execution.planStatusSummary,
+      startRunMessage: controller.execution.planRunReadiness.summary,
       onClose: () => controller.execution.setPlanModalOpen(false),
       onStartRun: () => {
         void controller.execution.handleStartRun();

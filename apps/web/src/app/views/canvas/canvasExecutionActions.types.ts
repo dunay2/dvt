@@ -59,7 +59,6 @@ export type UseCanvasExecutionActionsResult = {
   canStartRun: boolean;
   isCurrentPlanStale: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
-  planStatusSummary: string;
   latestPreviewOutcome: PlanPreviewOutcome | null;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;

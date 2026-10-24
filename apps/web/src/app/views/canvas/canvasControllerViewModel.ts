@@ -83,7 +83,6 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
     handleStartRun: executionActions.handleStartRun,
     canPlanGraph: executionActions.canPlanGraph,
     canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,
-    planStatusSummary: executionActions.planStatusSummary,
     planRunReadiness: executionActions.planRunReadiness,
     latestPreviewOutcome: executionActions.latestPreviewOutcome,
     isCurrentPlanStale: executionActions.isCurrentPlanStale,

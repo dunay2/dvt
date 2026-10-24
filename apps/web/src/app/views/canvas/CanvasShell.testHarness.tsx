@@ -185,7 +185,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       canStartRun: false,
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
-      planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
       planRunReadiness: buildPlanRunReadiness(),
       executionSelectionRecovery: null,
       exclusiveOverlayMode: 'runtime',

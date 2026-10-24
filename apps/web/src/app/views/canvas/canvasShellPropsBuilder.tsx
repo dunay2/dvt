@@ -115,7 +115,6 @@ function buildCanvasShellChromeStateArgs({
       canStartRun: controller.canStartRun,
       canExportProjectSnapshot: controller.canExportProjectSnapshot,
       canImportProjectSnapshot: controller.canImportProjectSnapshot,
-      planStatusSummary: controller.planStatusSummary,
       planRunReadiness: controller.planRunReadiness,
       executionSelectionRecovery: controller.executionSelectionRecovery,
       exclusiveOverlayMode: controller.exclusiveOverlayMode,

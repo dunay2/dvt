@@ -18,7 +18,12 @@ describe('buildCanvasModalHostProps', () => {
       currentPlan: null,
       latestPreviewOutcome: outcome,
       canStartRun: false,
-      planStatusSummary: 'Preview blocked',
+      planRunReadiness: {
+        rail: 'ObservePlanRunReadiness',
+        status: 'blocked',
+        blockers: ['plan_integrity'],
+        summary: 'Preview blocked',
+      },
       handleStartRun: vi.fn(),
     } as unknown as Parameters<typeof buildCanvasModalHostProps>[0];
 

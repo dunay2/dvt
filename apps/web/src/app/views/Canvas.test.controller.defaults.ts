@@ -73,7 +73,6 @@ type CanvasExecutionDefaultsDto = {
   canPlanGraph: CanvasController['canPlanGraph'];
   canStartRun: CanvasController['canStartRun'];
   planRunReadiness: CanvasController['planRunReadiness'];
-  planStatusSummary: CanvasController['planStatusSummary'];
   latestPreviewOutcome: CanvasController['latestPreviewOutcome'];
   exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
   canUseCostOverlay: CanvasController['canUseCostOverlay'];
@@ -228,7 +227,6 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
       status: 'blocked',
       summary: 'Preview required before running.',
     },
-    planStatusSummary: 'Preview required before running.',
     latestPreviewOutcome: null,
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: false,
