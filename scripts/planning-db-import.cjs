@@ -3199,7 +3199,11 @@ function readFrontendReflectionCandidate() {
 
 function validateFrontendReflectionCandidate({ snapshot, trackedPaths, sourcePath }) {
   const components = new Map(snapshot.components.map((row) => [row.componentId, row]));
-  if (components.size === 0 || components.size !== snapshot.components.length) {
+  if (
+    components.size === 0 ||
+    components.size !== snapshot.components.length ||
+    [...components.keys()].some((id) => typeof id !== 'string' || !id.trim())
+  ) {
     throw new Error('Frontend recovery requires unique, nonempty component identities.');
   }
   const hashes = new Set(snapshot.components.map((row) => row.sourceContentSha256));
@@ -3231,6 +3235,13 @@ function validateFrontendReflectionCandidate({ snapshot, trackedPaths, sourcePat
   }
 }
 
+async function readFrontendReflectionSource(client) {
+  const result = await client.query(
+    `select distinct source_path, source_content_sha256 from ${schemaName}.frontend_components`
+  );
+  return result.rows;
+}
+
 async function importFrontendComponentReflection(options = {}, deps = {}) {
   validateImportScopeOptions({ ...options, scope: options.scope ?? 'frontend-components' });
   const candidate = (deps.readCandidate || readFrontendReflectionCandidate)();
@@ -3242,19 +3253,20 @@ async function importFrontendComponentReflection(options = {}, deps = {}) {
   try {
     await beginImportTransaction(client);
     await (deps.assertSchema || assertPlanningDbCurrentSchemaReady)(client);
-    const existing = await client.query(
-      `select distinct source_path, source_content_sha256 from ${schemaName}.frontend_components`
-    );
+    const sources = await (deps.readSource || readFrontendReflectionSource)(client);
     if (
-      existing.rows.length !== 1 ||
-      existing.rows[0].source_path !== candidate.sourcePath ||
-      existing.rows[0].source_content_sha256 !== options.expectedCurrentSha256
+      sources.length !== 1 ||
+      sources[0].source_path !== candidate.sourcePath ||
+      sources[0].source_content_sha256 !== options.expectedCurrentSha256
     ) {
       throw new Error(
         'Frontend recovery current source identity/hash does not match the expected value.'
       );
     }
-    await insertFrontendComponentReflectionSnapshot(client, candidate.snapshot);
+    await (deps.writeSnapshot || insertFrontendComponentReflectionSnapshot)(
+      client,
+      candidate.snapshot
+    );
     await client.query('commit');
   } catch (error) {
     await client.query('rollback');

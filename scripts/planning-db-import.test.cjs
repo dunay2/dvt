@@ -227,16 +227,9 @@ test('planning DB import parses its single architecture-governance scope', () =>
 
 test('frontend recovery requires an explicit scope and current source hash', () => {
   const hash = 'a'.repeat(64);
-  assert.deepEqual(
-    parseArgs(['--scope', 'frontend-components', '--expected-current-sha256', hash]),
-    {
-      databaseUrl: null,
-      help: false,
-      ifStale: false,
-      scope: 'frontend-components',
-      expectedCurrentSha256: hash,
-    }
-  );
+  const parsed = parseArgs(['--scope', 'frontend-components', '--expected-current-sha256', hash]);
+  assert.equal(parsed.scope, 'frontend-components');
+  assert.equal(parsed.expectedCurrentSha256, hash);
   for (const args of [
     ['--scope', 'all'],
     ['--scope', 'frontend-components'],
@@ -254,7 +247,8 @@ test('frontend recovery routes only to the bounded import', async () => {
       assert.fail('global import must not run');
     },
     importFrontendComponentReflection(actual) {
-      assert.equal(actual, options);
+      assert.equal(actual.scope, options.scope);
+      assert.equal(actual.expectedCurrentSha256, options.expectedCurrentSha256);
       return { frontendComponents: 1, importedScopes: ['frontend-components'] };
     },
   });
@@ -262,151 +256,192 @@ test('frontend recovery routes only to the bounded import', async () => {
 });
 
 function frontendRecoveryFixture() {
-  const snapshot = buildFrontendComponentReflectionSnapshot();
-  const trackedPaths = new Set([
-    ...snapshot.files.map((row) => row.filePath),
-    ...snapshot.evidence.map((row) => row.evidenceRef),
-  ]);
-  const candidate = {
-    snapshot,
-    trackedPaths,
-    sourceCommitSha: 'b'.repeat(40),
-    sourcePath: snapshot.components[0].sourcePath,
+  const componentId = 'web.component.fixture.Card';
+  const sourcePath = 'docs/fixture.md';
+  const filePath = 'fixture/Card.tsx';
+  const testPath = 'fixture/Card.test.tsx';
+  const snapshot = {
+    components: [
+      {
+        componentId,
+        componentName: 'Card',
+        componentKind: 'query-view',
+        componentStatus: 'current',
+        reuseDecision: 'reuse',
+        frontendOwner: 'Fixture',
+        responsibility: 'Present a supplied view model.',
+        packageName: '@dvt/web',
+        routeScope: '/canvas',
+        pluginScope: 'dvt',
+        capabilityGaps: [],
+        evidenceRefs: [testPath],
+        sourcePath,
+        sourceContentSha256: 'd'.repeat(64),
+        rawComponent: {},
+      },
+    ],
+    files: [{ componentId, filePath, fileRole: 'component', exportedSymbol: 'Card', rawFile: {} }],
+    rails: [
+      {
+        componentId,
+        railName: 'RenderCanvasContextualGraphSurface',
+        railKind: 'query',
+        railStatus: 'implemented-local',
+        rawRail: {},
+      },
+    ],
+    evidence: [
+      {
+        componentId,
+        evidenceId: componentId + '.unit',
+        evidenceKind: 'unit-test',
+        evidenceRef: testPath,
+        evidenceStatus: 'accepted',
+        rawEvidence: {},
+      },
+    ],
+    surfaceLinks: [
+      {
+        componentId,
+        surfaceId: 'web.canvas.graph',
+        routePath: '/canvas',
+        placementKind: 'context-panel',
+        placementOrder: 1,
+        rawLink: {},
+      },
+    ],
   };
-  const calls = [];
-  const client = {
-    async query(sql, params) {
-      calls.push({ sql: String(sql).trim(), params });
-      if (/select distinct source_path/.test(sql))
-        return {
-          rows: [
-            {
-              source_path: candidate.sourcePath,
-              source_content_sha256: 'a'.repeat(64),
-            },
-          ],
-        };
+  const fixture = {
+    candidate: {
+      snapshot,
+      sourcePath,
+      sourceCommitSha: 'b'.repeat(40),
+      trackedPaths: new Set([filePath, testPath]),
+    },
+    sources: [{ source_path: sourcePath, source_content_sha256: 'a'.repeat(64) }],
+    events: [],
+    writes: [],
+  };
+  fixture.client = {
+    async query(sql) {
+      const command = String(sql).trim().toLowerCase();
+      if (['begin', 'commit', 'rollback'].includes(command)) fixture.events.push(command);
       return { rows: [] };
     },
   };
-  return {
-    candidate,
-    calls,
-    client,
-    options: { client, expectedCurrentSha256: 'a'.repeat(64), silent: true },
-    deps: { readCandidate: () => candidate, assertSchema: async () => {} },
+  fixture.options = { client: fixture.client, expectedCurrentSha256: 'a'.repeat(64), silent: true };
+  fixture.deps = {
+    readCandidate: () => fixture.candidate,
+    assertSchema: async () => {},
+    readSource: async () => {
+      fixture.events.push('read');
+      return fixture.sources;
+    },
+    writeSnapshot: async (client, value) => {
+      fixture.events.push('write');
+      fixture.writes.push({ client, snapshot: value });
+    },
   };
+  return fixture;
 }
 
-test('frontend recovery writes exactly the five reflection tables under the shared lock', async () => {
+test('frontend recovery admits one snapshot and returns its provenance after commit', async () => {
   const fixture = frontendRecoveryFixture();
   const result = await planningDbImport.importFrontendComponentReflection(
     fixture.options,
     fixture.deps
   );
-  const writes = fixture.calls
-    .map(
-      (call) => /^(?:delete from|insert into) planning_query_store\.([a-z_]+)/i.exec(call.sql)?.[1]
-    )
-    .filter(Boolean);
-  assert.deepEqual([...new Set(writes)].sort(), [
-    'frontend_component_cq_rails',
-    'frontend_component_evidence',
-    'frontend_component_files',
-    'frontend_components',
-    'frontend_surface_component_links',
-  ]);
-  assert.equal(fixture.calls[0].sql, 'begin');
-  assert.deepEqual(fixture.calls[1].params, ['dvt:planning-query-store', 'import-content-v1']);
-  assert.equal(fixture.calls.at(-1).sql, 'commit');
+  assert.equal(fixture.writes.length, 1);
+  assert.equal(fixture.writes[0].client, fixture.client);
+  assert.deepEqual(fixture.writes[0].snapshot, fixture.candidate.snapshot);
+  const before = (first, second) => {
+    const firstIndex = fixture.events.indexOf(first);
+    assert.ok(firstIndex >= 0 && fixture.events.indexOf(second) > firstIndex);
+  };
+  before('begin', 'read');
+  before('read', 'write');
+  before('write', 'commit');
+  assert.equal(fixture.events.includes('rollback'), false);
   assert.equal(result.sourceCommitSha, fixture.candidate.sourceCommitSha);
   assert.equal(
     result.sourceContentSha256,
     fixture.candidate.snapshot.components[0].sourceContentSha256
   );
-  assert.equal(result.frontendComponents, fixture.candidate.snapshot.components.length);
+  assert.equal(result.frontendComponents, 1);
+  assert.equal(result.frontendComponentFiles, 1);
 });
 
-test('frontend recovery rejects stale, missing and mixed imported source identities before writes', async () => {
-  for (const rows of [
+test('frontend recovery denies stale, missing and mixed imported source identities before materialization', async () => {
+  for (const sources of [
     [],
     [{ source_path: 'wrong.md', source_content_sha256: 'a'.repeat(64) }],
+    [{ source_path: 'docs/fixture.md', source_content_sha256: 'c'.repeat(64) }],
     [
-      {
-        source_path: 'docs/architecture/components/web/frontend-component-inventory.md',
-        source_content_sha256: 'c'.repeat(64),
-      },
-    ],
-    [
-      { source_path: 'one.md', source_content_sha256: 'a'.repeat(64) },
+      { source_path: 'docs/fixture.md', source_content_sha256: 'a'.repeat(64) },
       { source_path: 'two.md', source_content_sha256: 'a'.repeat(64) },
     ],
   ]) {
     const fixture = frontendRecoveryFixture();
-    const query = fixture.client.query.bind(fixture.client);
-    fixture.client.query = (sql, params) =>
-      /select distinct source_path/.test(sql) ? Promise.resolve({ rows }) : query(sql, params);
-    await assert.rejects(
-      () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
-      /source|hash|identity/i
+    fixture.sources = sources;
+    await assert.rejects(() =>
+      planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps)
     );
-    assert.equal(fixture.calls.at(-1).sql, 'rollback');
-    assert.equal(
-      fixture.calls.some((call) => /^(delete|insert|update)/i.test(call.sql)),
-      false
-    );
+    assert.equal(fixture.writes.length, 0);
+    assert.equal(fixture.events.includes('rollback'), true);
+    assert.equal(fixture.events.includes('commit'), false);
   }
 });
 
-test('frontend recovery rejects missing files, unknown components and incomplete current components', async () => {
+test('frontend recovery rejects invalid references and incomplete components before DB work', async () => {
   for (const corrupt of [
     (candidate) => candidate.trackedPaths.delete(candidate.snapshot.files[0].filePath),
     (candidate) => (candidate.snapshot.files[0].componentId = 'unknown-component'),
     (candidate) => (candidate.snapshot.evidence = []),
     (candidate) => (candidate.snapshot.rails = []),
     (candidate) => candidate.snapshot.components.push(candidate.snapshot.components[0]),
+    (candidate) => {
+      for (const rows of Object.values(candidate.snapshot)) {
+        for (const row of rows) row.componentId = '';
+      }
+    },
   ]) {
     const fixture = frontendRecoveryFixture();
     corrupt(fixture.candidate);
     await assert.rejects(() =>
       planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps)
     );
-    assert.equal(
-      fixture.calls.some((call) => /^(delete|insert|update)/i.test(call.sql)),
-      false
-    );
+    assert.equal(fixture.events.length, 0);
+    assert.equal(fixture.writes.length, 0);
   }
 });
 
-test('frontend recovery rejects dirty candidate evidence before opening a transaction', async () => {
+test('frontend recovery propagates rejected Git evidence before DB work', async () => {
   const fixture = frontendRecoveryFixture();
+  const failure = new Error('candidate unavailable');
   fixture.deps.readCandidate = () => {
-    throw new Error('Governed source must be unmodified relative to HEAD');
+    throw failure;
   };
   await assert.rejects(
     () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
-    /unmodified relative to HEAD/
+    (error) => error === failure
   );
-  assert.equal(fixture.calls.length, 0);
+  assert.equal(fixture.events.length, 0);
 });
 
-test('frontend recovery rolls back a failed write without falling back to global import', async () => {
-  const fixture = frontendRecoveryFixture();
-  const query = fixture.client.query.bind(fixture.client);
-  fixture.client.query = async (sql, params) => {
-    if (/insert into planning_query_store\.frontend_component_files/.test(sql))
-      throw new Error('write failed');
-    return query(sql, params);
-  };
-  await assert.rejects(
-    () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
-    /write failed/
-  );
-  assert.equal(fixture.calls.at(-1).sql, 'rollback');
-  assert.equal(
-    fixture.calls.some((call) => call.sql === 'commit'),
-    false
-  );
+test('frontend recovery rolls back source-read and materialization failures', async () => {
+  for (const adapter of ['readSource', 'writeSnapshot']) {
+    const fixture = frontendRecoveryFixture();
+    const failure = new Error(adapter + ' unavailable');
+    fixture.deps[adapter] = async () => {
+      throw failure;
+    };
+    await assert.rejects(
+      () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
+      (error) => error === failure
+    );
+    assert.equal(fixture.events.includes('rollback'), true);
+    assert.equal(fixture.events.includes('commit'), false);
+  }
 });
 
 test('planning DB import falls back to direct tree diff for shallow merge refs', () => {

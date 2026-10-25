@@ -36,6 +36,12 @@ authority, mechanization, other imported projections and schema are preserved.
 Invalid component/file/evidence references reject the recovery; transaction
 failure rolls back all five tables. There is no fallback to a global import.
 
+The Git reader owns candidate provenance; the pure validator owns identity,
+reference and completeness invariants. The import coordinator owns admission,
+the shared transaction and its receipt. Source reads and the existing snapshot
+writer own SQL access. Coordinator tests exercise these boundaries with a
+minimal candidate; adapter tests and real DB recovery prove materialization.
+
 Physical component ownership remains separate from frontend reflection.
 `ReadComponentFiles` resolves current Git paths against the DB ownership tree;
 `ListFrontendComponentReflection` and the Canvas registry drift query inspect
