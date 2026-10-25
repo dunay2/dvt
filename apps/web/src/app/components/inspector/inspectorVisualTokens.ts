@@ -5,6 +5,7 @@ export const inspectorVisualClasses = {
   inspectorForm:
     'text-xs [&_[data-slot=label]]:text-xs [&_[data-slot=input]]:text-xs [&_[data-slot=textarea]]:text-xs [&_[data-slot=select-trigger]]:text-xs [&_select]:text-xs',
   inspectorField: 'space-y-2',
+  inspectorActions: 'flex items-center justify-end gap-2',
   inspectorCard: 'border-slate-700 bg-slate-950 p-3 text-slate-50',
   inspectorTitle: 'mb-2 text-sm font-medium text-slate-100',
   inspectorLabel: 'text-slate-400',

@@ -365,7 +365,9 @@ title hierarchy, control heights, code-editor typography and mutation handlers
 retain their existing owners.
 
 General metadata and DVT authoring reuse the Inspector's shared field and group
-spacing. Native selects inherit the form text color, matching Input rather than
+spacing. The Inspector visual owner also defines the draft-action row layout;
+the authoring composition controls its visibility and connects the shared Buttons
+to the draft controller. Native selects inherit the form text color, matching Input rather than
 forcing a separate palette. Destination-specific CSS owns only the schema/relation
 layout and the technical target value. The Model destination connection selector
 keeps its accessible name without repeating a visible Connection label under the
