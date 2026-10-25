@@ -90,6 +90,21 @@ describe('Workbench pending binary operations', () => {
       openWorkbenchModel();
       cy.get(join).click();
       cy.get('[data-slot="canvas-staged-operation-reconfigure"]').focus().click();
+      cy.get(join)
+        .closest('li')
+        .within(() => {
+          cy.get('[data-slot="canvas-node-execute"]')
+            .should('be.disabled')
+            .and(
+              'have.attr',
+              'title',
+              'Save the condition and apply the composition to preview this revision.'
+            );
+          cy.get('[data-slot="canvas-operation-preview-reason"]').should(
+            'contain.text',
+            'Save the condition and apply the composition'
+          );
+        });
       const conditions = '[data-slot="dvt-substrait-join-predicate-editors"]:visible';
       cy.get(conditions).should('be.visible');
       cy.get(`${conditions} [aria-label="Editar condición"]`).click();
@@ -98,6 +113,7 @@ describe('Workbench pending binary operations', () => {
       cy.then(() => {
         expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1);
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+        expect(getE2eApiCalls(/data-sample/, 'GET')).to.have.length(0);
       });
       cy.get(`[data-slot="canvas-relational-tree-${outcome}"]`).click();
       if (outcome === 'cancel') cy.get(join).should('have.length', 1);
@@ -126,6 +142,10 @@ describe('Workbench pending binary operations', () => {
         cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
         cy.get('[data-slot="canvas-staged-operation-reconfigure"]').should('not.exist');
         cy.get('[data-canvas-inspector="true"]').should('contain.text', '!=');
+        cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+          .closest('li')
+          .find('[data-slot="canvas-node-execute"]')
+          .should('be.enabled');
         cy.then(async () => {
           const document = decodeDvtSubstraitSemanticDocument(
             semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!)

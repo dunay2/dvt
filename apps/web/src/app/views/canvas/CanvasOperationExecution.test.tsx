@@ -11,10 +11,22 @@ import { CanvasRelationalTreeLayout } from './CanvasRelationalTreeLayout';
 import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
-it.each([false, true])(
-  'executes the exact card without replay after closing Properties or invalidation (StrictMode: %s)',
-  async (strict) => {
+it.each(
+  (['en', 'es'] as const).flatMap((language) =>
+    [false, true].map((strict) => ({ language, strict }))
+  )
+)(
+  'executes the exact card without replay after closing Properties or invalidation ($language, StrictMode: $strict)',
+  async ({ language, strict }) => {
+    const previousLanguage = useApplicationLanguageStore.getState().language;
+    useApplicationLanguageStore.setState({ language });
+    const unappliedReason =
+      language === 'es'
+        ? 'Guarda la condición y aplica la composición para previsualizar esta revisión.'
+        : 'Save the condition and apply the composition to preview this revision.';
+    const outsideReason = language === 'es' ? 'no forma parte del plan' : 'not part of the model';
     const Mode = strict ? StrictMode : Fragment;
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const container = document.createElement('div');
@@ -91,7 +103,7 @@ it.each([false, true])(
                   root={node}
                   outputName="Model"
                   selectedLocator={node.locator}
-                  copy={resolveCanvasViewCopy('en')}
+                  copy={resolveCanvasViewCopy(language)}
                   onSelect={vi.fn()}
                 />
               </RelationalLayoutSession>
@@ -134,8 +146,23 @@ it.each([false, true])(
       expect(dataHost.querySelector('table')).toBe(table);
       render(true, true);
       expect(dataHost.childElementCount).toBe(0);
+      expect(
+        container.querySelector<HTMLButtonElement>('[data-slot="canvas-node-execute"]')!.title
+      ).toBe(unappliedReason);
       await execute();
       expect(query.previewTransformRows).toHaveBeenCalledOnce();
+      render(true, true, digest, false);
+      const dirtyPreview = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-node-execute"]'
+      )!;
+      expect(dirtyPreview.disabled).toBe(true);
+      expect(dirtyPreview.title).toBe(unappliedReason);
+      expect(
+        container.querySelector('[data-slot="canvas-operation-preview-reason"]')?.textContent
+      ).toBe(unappliedReason);
+      await execute();
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
+      expect(onOpenData).toHaveBeenCalledOnce();
       render(true);
       expect(dataHost.childElementCount).toBe(0);
       expect(query.previewTransformRows).toHaveBeenCalledOnce();
@@ -150,10 +177,10 @@ it.each([false, true])(
         '[data-slot="canvas-node-execute"]'
       )!;
       expect(preview.disabled).toBe(true);
-      expect(preview.title).toContain('not part of the model');
+      expect(preview.title).toContain(outsideReason);
       expect(
         container.querySelector('[data-slot="canvas-operation-preview-reason"]')?.textContent
-      ).toContain('not part of the model');
+      ).toContain(outsideReason);
       await execute();
       expect(query.previewTransformRows).toHaveBeenCalledTimes(2);
       render(true);
@@ -166,6 +193,7 @@ it.each([false, true])(
       container.remove();
       dataHost.remove();
       vi.unstubAllGlobals();
+      useApplicationLanguageStore.setState({ language: previousLanguage });
     }
   }
 );

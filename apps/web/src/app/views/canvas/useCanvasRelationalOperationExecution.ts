@@ -46,11 +46,14 @@ export function useCanvasRelationalOperationExecution(node: CanvasRelationalTree
     };
   }
   if (!context.outputPlanRelationIds.has(node.relationId)) {
+    const reason = context.unapplied
+      ? copy.operationPreviewUnapplied
+      : copy.operationPreviewOutsideOutputPlan;
     return {
       label: copy.previewAction,
       disabled: true,
-      title: copy.operationPreviewOutsideOutputPlan,
-      disabledReason: copy.operationPreviewOutsideOutputPlan,
+      title: reason,
+      disabledReason: reason,
       onExecute: () => undefined,
     };
   }
