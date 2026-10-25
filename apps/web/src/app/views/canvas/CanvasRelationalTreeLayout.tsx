@@ -39,7 +39,9 @@ export function CanvasRelationalTreeLayout({
 }: Readonly<{
   outputName: string;
   root: CanvasRelationalTreeNode | null;
-  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select' | 'remove'>;
+  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select'> & {
+    remove: (id: string) => void;
+  };
   stagedOperations?: readonly CanvasStagedOperation[];
   selectedStagedOperationId?: string | null;
   onSelectStagedOperation?: (id: string) => void;

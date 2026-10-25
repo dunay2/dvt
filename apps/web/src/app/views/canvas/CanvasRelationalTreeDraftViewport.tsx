@@ -107,7 +107,7 @@ function DraftViewport({
               pending: pendingSources,
               selectedId: data.selectedPendingId,
               select: actions.selectPending,
-              remove: actions.removePending,
+              remove: actions.remove,
             }}
             stagedOperations={data.stagedOperations}
             selectedStagedOperationId={data.selectedStagedOperationId}
@@ -118,7 +118,7 @@ function DraftViewport({
             outputRelationId={data.outputRelationId}
             onConnectOutput={actions.connectOutput}
             onDisconnectOutput={actions.disconnectOutput}
-            onRemoveStagedOperation={actions.removeStagedOperation}
+            onRemoveStagedOperation={actions.remove}
             outputName={transformNode.name}
             root={draftProjection?.root ?? null}
             selectedLocator={selectedLocator}

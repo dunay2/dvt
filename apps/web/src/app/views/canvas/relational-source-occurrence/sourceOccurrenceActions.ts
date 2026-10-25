@@ -93,12 +93,6 @@ export function createSourceOccurrenceActions(
       );
       return true;
     },
-    remove: (id: string) => {
-      args.setPending((current) => current.filter((item) => item.read.binding.relationId !== id));
-      if (args.selectedId === id) {
-        args.setSelectedId(null);
-      }
-    },
   };
 }
 

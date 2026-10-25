@@ -27,20 +27,23 @@ export function useCanvasStagedOperationConfiguration(args: {
   state: Pick<DraftState, 'stagedOperations' | 'pendingSources' | 'setStagedOperations'>;
 }) {
   const { analysis, inputs, state } = args;
+  const resolveProducer = useCallback(
+    (relationId: string | null) =>
+      resolveCanvasStagedProducerDocument({
+        relationId,
+        canonical: analysis?.document ?? null,
+        operations: state.stagedOperations,
+        sources: state.pendingSources,
+      }),
+    [analysis?.document, state.pendingSources, state.stagedOperations]
+  );
   const configureImmediate = useCallback(
     (operation: CanvasStagedOperation) => {
       const signature = readCanvasStagedCompositionSignature(operation.operation);
       if (operation.configurationDocument != null && signature.repeatedInput == null)
         return restoreCanvasOperationConfiguration(
           operation,
-          operation.inputs.map((relationId) =>
-            resolveCanvasStagedProducerDocument({
-              relationId,
-              canonical: analysis?.document ?? null,
-              operations: state.stagedOperations,
-              sources: state.pendingSources,
-            })
-          )
+          operation.inputs.map(resolveProducer)
         );
       const strategy = signature.configuration;
       return strategy === 'composition'
@@ -53,7 +56,7 @@ export function useCanvasStagedOperationConfiguration(args: {
           )
         : operation;
     },
-    [analysis?.document, inputs, state.pendingSources, state.stagedOperations]
+    [analysis?.document, inputs, resolveProducer, state.pendingSources, state.stagedOperations]
   );
   useEffect(() => {
     let cancelled = false;
@@ -64,14 +67,7 @@ export function useCanvasStagedOperationConfiguration(args: {
           const restored = configureImmediate(operation);
           return restoreCanvasRetainedInputWrappers(
             restored,
-            operation.inputs.map((relationId) =>
-              resolveCanvasStagedProducerDocument({
-                relationId,
-                canonical: analysis?.document ?? null,
-                operations: snapshot,
-                sources: state.pendingSources,
-              })
-            )
+            operation.inputs.map(resolveProducer)
           );
         }
         const strategy = readCanvasStagedCompositionSignature(operation.operation).configuration;
@@ -79,12 +75,7 @@ export function useCanvasStagedOperationConfiguration(args: {
         if (strategy === 'manual') return operation;
         return configureCanvasStagedTransform(
           operation,
-          resolveCanvasStagedProducerDocument({
-            relationId: operation.inputs[0] ?? null,
-            canonical: analysis?.document ?? null,
-            operations: snapshot,
-            sources: state.pendingSources,
-          })
+          resolveProducer(operation.inputs[0] ?? null)
         );
       })
     ).then((configured) => {
@@ -109,12 +100,6 @@ export function useCanvasStagedOperationConfiguration(args: {
     return () => {
       cancelled = true;
     };
-  }, [
-    analysis,
-    configureImmediate,
-    state.pendingSources,
-    state.setStagedOperations,
-    state.stagedOperations,
-  ]);
+  }, [configureImmediate, resolveProducer, state.setStagedOperations, state.stagedOperations]);
   return configureImmediate;
 }

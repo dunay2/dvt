@@ -1,5 +1,5 @@
 /** Hydrate persisted incomplete authoring without making it semantic authority. */
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import type { CanonicalNode } from '../../types/canonical';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -23,7 +23,7 @@ export function useCanvasRelationalAuthoringDraftHydration(
     hydrateExisting: () => boolean;
     state: DraftState;
   }>
-): boolean {
+): Readonly<{ restorationUnavailable: boolean; restore: () => void }> {
   const { reset, restoreIncomplete, setPositions } = args.state;
   const persisted = useMemo(
     () => readCanvasRelationalAuthoringDraft(args.transformNode),
@@ -36,7 +36,7 @@ export function useCanvasRelationalAuthoringDraftHydration(
         : restoreCanvasRelationalAuthoringDraft(persisted, args.inputs, args.document),
     [args.document, args.inputs, persisted]
   );
-  useEffect(() => {
+  const restore = useCallback(() => {
     reset();
     if (!args.enabled || restored == null) return;
     if (persisted?.outputRelationId === undefined) {
@@ -54,5 +54,6 @@ export function useCanvasRelationalAuthoringDraftHydration(
     restored,
     setPositions,
   ]);
-  return persisted != null && restored == null;
+  useEffect(restore, [restore]);
+  return { restorationUnavailable: persisted != null && restored == null, restore };
 }

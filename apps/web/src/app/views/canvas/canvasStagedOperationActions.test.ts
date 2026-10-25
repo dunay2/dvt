@@ -12,11 +12,21 @@ import {
   decodeCanvasStagedOperation,
   resolveCanvasStagedEditingDocument,
 } from './canvasStagedOperationDocument';
+import { compositionInput } from './stagedAnalysisContext.test-support';
+import {
+  createPendingSourceOccurrence,
+  type PendingSourceOccurrence,
+} from './relational-source-occurrence/pendingSourceOccurrence';
+import { configureCanvasStagedComposition } from './canvasStagedCompositionConfiguration';
+import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 
-function actionsFor(state: {
-  operations: readonly CanvasStagedOperation[];
-  consumedProducerIds?: readonly string[];
-}): ReturnType<typeof createCanvasStagedOperationActions> {
+function actionsFor(
+  state: {
+    operations: readonly CanvasStagedOperation[];
+    consumedProducerIds?: readonly string[];
+  },
+  overrides: Partial<Parameters<typeof createCanvasStagedOperationActions>[0]> = {}
+): ReturnType<typeof createCanvasStagedOperationActions> {
   return createCanvasStagedOperationActions({
     editable: true,
     start: () => true,
@@ -28,10 +38,112 @@ function actionsFor(state: {
     setSelectedId: () => undefined,
     producerIds: ['left', 'right', 'join', 'first', 'second'],
     consumedProducerIds: state.consumedProducerIds ?? [],
+    ...overrides,
   });
 }
 
+function replacedJoin(): Readonly<{
+  inputs: readonly CanvasDvtCompositionInput[];
+  sources: readonly PendingSourceOccurrence[];
+  pending: CanvasStagedOperation;
+  original: CanvasStagedOperation;
+}> {
+  const inputs = [compositionInput('client', false), compositionInput('orders', false)];
+  const [left, previousRight, right] = [inputs[0]!, inputs[0]!, inputs[1]!].map(
+    createPendingSourceOccurrence
+  );
+  const original = configureCanvasStagedComposition(
+    {
+      id: 'pending-operation:join',
+      operation: 'inner_join',
+      inputs: [left!.read.binding.relationId, previousRight!.read.binding.relationId],
+    },
+    inputs,
+    [left!, previousRight!],
+    []
+  );
+  const pending: CanvasStagedOperation = {
+    id: original.id,
+    operation: original.operation,
+    inputs: [left!.read.binding.relationId, right!.read.binding.relationId],
+    configurationDocument: original.semanticDocument!,
+  };
+  return { inputs, sources: [left!, right!], pending, original };
+}
+
 describe('staged operation commands', () => {
+  it('explicitly reconfigures replaced JOIN inputs through the existing update command', () => {
+    const fixture = replacedJoin();
+    const state = { operations: [fixture.pending] as readonly CanvasStagedOperation[] };
+    const saved = JSON.stringify(fixture.pending);
+    const actions = actionsFor(state, {
+      configure: (operation) =>
+        configureCanvasStagedComposition(operation, fixture.inputs, fixture.sources, []),
+    });
+    expect(actions.updateConfiguration(fixture.pending.id, 'reconfigure')).toBe(true);
+    const next = state.operations[0]!;
+    expect(next.id).toBe(fixture.pending.id);
+    expect(next.inputs).toEqual(fixture.pending.inputs);
+    expect(next.configurationDocument).toBeUndefined();
+    const document = decodeCanvasStagedOperation(next)!;
+    expect(
+      document.sidecar.relations
+        .filter((relation) => relation.sourceRef != null)
+        .map((relation) => relation.relationId)
+    ).toEqual(fixture.pending.inputs);
+    expect(JSON.stringify(fixture.pending)).toBe(saved);
+  });
+
+  it.each([
+    'read-only',
+    'missing-input',
+    'mixed-connections',
+    'incompatible-fields',
+    'stale-snapshot',
+  ] as const)('preserves retained configuration on %s reconfiguration', (reason) => {
+    const fixture = replacedJoin();
+    const physicalRight = fixture.inputs[1]!;
+    if (physicalRight.sourceRef == null) throw new Error('Expected a physical input.');
+    const replacementInput: CanvasDvtCompositionInput =
+      reason === 'mixed-connections'
+        ? {
+            ...physicalRight,
+            sourceRef: {
+              ...physicalRight.sourceRef,
+              connectionRef: { ...physicalRight.sourceRef.connectionRef, connectionId: 'other' },
+            },
+          }
+        : reason === 'incompatible-fields'
+          ? {
+              ...physicalRight,
+              fields: [{ name: 'active', dataType: 'boolean', joinDataType: 'bool' }],
+            }
+          : physicalRight;
+    const sources = [fixture.sources[0]!, createPendingSourceOccurrence(replacementInput)];
+    const pending = {
+      ...fixture.pending,
+      inputs: sources.map((source) => source.read.binding.relationId),
+    };
+    const state = { operations: [pending] as readonly CanvasStagedOperation[] };
+    const original = state.operations;
+    const changed = [{ ...pending, inputs: [pending.inputs[0]!, null] }];
+    const actions = actionsFor(state, {
+      editable: reason !== 'read-only',
+      configure: (operation) => {
+        if (reason === 'stale-snapshot') state.operations = changed;
+        return configureCanvasStagedComposition(
+          operation,
+          reason === 'missing-input' ? [] : [fixture.inputs[0]!, replacementInput],
+          sources,
+          []
+        );
+      },
+    });
+    actions.updateConfiguration(pending.id, 'reconfigure');
+    expect(state.operations).toBe(reason === 'stale-snapshot' ? changed : original);
+    expect(fixture.pending.configurationDocument).toBe(fixture.original.semanticDocument);
+  });
+
   it('does not publish another graph for a repeated connection', () => {
     const operations: readonly CanvasStagedOperation[] = [
       { id: 'first', operation: 'field_transform', inputs: ['left'] },
@@ -39,49 +151,6 @@ describe('staged operation commands', () => {
     const state = { operations };
     actionsFor(state).connect('first', 0, 'left');
     expect(state.operations).toBe(operations);
-  });
-
-  it('removing a producer invalidates every consumer before detaching its direct inputs', async () => {
-    const document = connectedNamesProjectionDraft();
-    const session = new CanvasRelationAnalysisSession('remove-chain');
-    try {
-      session.receive(document);
-      const producer: CanvasStagedOperation = {
-        id: session.rootId,
-        operation: 'field_transform',
-        inputs: session.locate(session.rootId, session.revision).inputs,
-        semanticDocument: encodeDvtSubstraitSemanticDocument(document),
-      };
-      const consumer = await configureCanvasStagedTransform(
-        { id: 'consumer', operation: 'field_transform', inputs: [producer.id] },
-        document
-      );
-      const terminal = await configureCanvasStagedTransform(
-        { id: 'terminal', operation: 'field_transform', inputs: [consumer.id] },
-        decodeCanvasStagedOperation(consumer)
-      );
-      const unrelated: CanvasStagedOperation = {
-        id: 'unrelated',
-        operation: 'filter',
-        inputs: [null],
-      };
-      const state = { operations: [producer, consumer, terminal, unrelated] };
-      actionsFor(state).remove(producer.id);
-      expect(state.operations.map((item) => item.id)).toEqual([
-        'consumer',
-        'terminal',
-        'unrelated',
-      ]);
-      expect(state.operations[0]!.inputs).toEqual([null]);
-      expect(state.operations[1]!.inputs).toEqual(['consumer']);
-      for (const [index, original] of [consumer, terminal].entries()) {
-        expect(state.operations[index]!.semanticDocument).toBeUndefined();
-        expect(state.operations[index]!.configurationDocument).toBe(original.semanticDocument);
-      }
-      expect(state.operations[2]).toBe(unrelated);
-    } finally {
-      session.dispose();
-    }
   });
 
   it('does not invalidate configured consumers when a disconnect is rejected', async () => {

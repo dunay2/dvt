@@ -6,6 +6,12 @@ import {
 } from './TransformDependencyError';
 
 const en = {
+  joinRecovery: {
+    action: 'Reconfigure JOIN',
+    hint: 'The inputs changed. Configure a new condition for the current inputs. The saved configuration is kept until you apply; Cancel restores it.',
+    failed:
+      'The JOIN could not be reconfigured. Check that both inputs are available, use the same connection and have compatible fields.',
+  },
   stagedAnalysis: {
     'missing-input':
       'This operation has an unavailable input. Reconnect its Source or Model before editing.',
@@ -190,6 +196,12 @@ const en = {
   },
 };
 const es: typeof en = {
+  joinRecovery: {
+    action: 'Reconfigurar JOIN',
+    hint: 'Las entradas cambiaron. Configura una condición nueva para las entradas actuales. La configuración guardada se conserva hasta aplicar; Cancelar la recupera.',
+    failed:
+      'No se pudo reconfigurar el JOIN. Comprueba que ambas entradas estén disponibles, usen la misma conexión y tengan campos compatibles.',
+  },
   stagedAnalysis: {
     'missing-input':
       'Esta operación tiene una entrada no disponible. Reconecta su origen o modelo antes de editar.',

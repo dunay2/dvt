@@ -4,8 +4,57 @@ import { prepareCanvasCardRemoval } from './canvasCardRemoval';
 import { compositionGraphHarness } from './canvasCompositionSequence.test-support';
 import { configureCompositionStep } from './canvasCompositionConfiguration.test-support';
 import { decodeCanvasStagedOperation } from './canvasStagedOperationDocument';
+import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
+import type { CanvasStagedOperation } from './canvasStagedOperation';
+import { configureCanvasStagedTransform } from './canvasStagedTransformConfiguration';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
 describe('card removal proposal', () => {
+  it('invalidates every transitive consumer while preserving unrelated operations', async () => {
+    const document = connectedNamesProjectionDraft();
+    const session = new CanvasRelationAnalysisSession('remove-chain');
+    try {
+      session.receive(document);
+      const producer: CanvasStagedOperation = {
+        id: session.rootId,
+        operation: 'field_transform',
+        inputs: session.locate(session.rootId, session.revision).inputs,
+        semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+      };
+      const consumer = await configureCanvasStagedTransform(
+        { id: 'consumer', operation: 'field_transform', inputs: [producer.id] },
+        document
+      );
+      const terminal = await configureCanvasStagedTransform(
+        { id: 'terminal', operation: 'field_transform', inputs: [consumer.id] },
+        decodeCanvasStagedOperation(consumer)
+      );
+      const unrelated: CanvasStagedOperation = {
+        id: 'unrelated',
+        operation: 'filter',
+        inputs: [null],
+      };
+      const operations = [producer, consumer, terminal, unrelated];
+      const proposal = prepareCanvasCardRemoval(
+        { document: null, inputIds: [], sources: [], operations, outputRelationId: terminal.id },
+        producer.id
+      );
+      const remaining = proposal.graph.operations;
+      expect(remaining.map((item) => item.id)).toEqual(['consumer', 'terminal', 'unrelated']);
+      expect(remaining[0]!.inputs).toEqual([null]);
+      expect(remaining[1]!.inputs).toEqual(['consumer']);
+      for (const [index, original] of [consumer, terminal].entries()) {
+        expect(remaining[index]!.semanticDocument).toBeUndefined();
+        expect(remaining[index]!.configurationDocument).toBe(original.semanticDocument);
+      }
+      expect(remaining[2]).toBe(unrelated);
+      expect(operations[0]).toBe(producer);
+      expect(operations[1]!.semanticDocument).toBe(consumer.semanticDocument);
+    } finally {
+      session.dispose();
+    }
+  });
   it.each(['inner_join', 'union_all', 'filter', 'field_transform'] as const)(
     'removes only a %s producer and preserves its consumer and source branches',
     async (kind) => {

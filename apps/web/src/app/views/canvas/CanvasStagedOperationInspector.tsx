@@ -1,5 +1,5 @@
 /** Route a selected staged operation to its specific property editor. */
-import { useMemo, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasStagedCompositionInspector } from './CanvasStagedCompositionInspector';
@@ -10,6 +10,7 @@ import {
 } from './CanvasStagedUnaryOperationInspector';
 import {
   readCanvasStagedCompositionSignature,
+  deriveCanvasStagedCompositionState,
   type CanvasStagedOperation,
 } from './canvasStagedOperation';
 import { resolveCanvasRelationalOperationPresentation } from './canvasRelationalOperationPresentation';
@@ -21,6 +22,8 @@ import {
   CanvasStagedAnalysisProvider,
   type CanvasStagedAnalysisBinding,
 } from './CanvasStagedAnalysisProvider';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
 export function CanvasStagedOperationInspector({
   binding,
@@ -32,6 +35,7 @@ export function CanvasStagedOperationInspector({
   onClose,
   onPendingChange,
   onUpdate,
+  onReconfigure,
 }: Readonly<{
   binding: CanvasStagedAnalysisBinding;
   staged: CanvasStagedOperation;
@@ -44,6 +48,7 @@ export function CanvasStagedOperationInspector({
   onUpdate: (
     update: Pick<CanvasStagedOperation, 'operation' | 'semanticDocument'>
   ) => void | boolean;
+  onReconfigure?: () => boolean;
 }>): JSX.Element {
   const editor = readCanvasStagedCompositionSignature(staged.operation).editor;
   const configured = useMemo(
@@ -89,7 +94,12 @@ export function CanvasStagedOperationInspector({
       />
     );
   return content == null ? (
-    <CanvasStagedOperationProperties staged={staged} copy={copy} />
+    <CanvasStagedOperationProperties
+      key={staged.id}
+      staged={staged}
+      copy={copy}
+      onReconfigure={onReconfigure}
+    />
   ) : (
     <CanvasStagedAnalysisProvider
       binding={binding}
@@ -104,11 +114,19 @@ export function CanvasStagedOperationInspector({
 function CanvasStagedOperationProperties({
   staged,
   copy,
+  onReconfigure,
 }: Readonly<{
   staged: CanvasStagedOperation;
   copy: CanvasRelationalTreeWorkbenchCopy;
+  onReconfigure?: () => boolean;
 }>): JSX.Element {
   const title = copy[resolveCanvasRelationalOperationPresentation(staged.operation).labelKey];
+  const language = useApplicationLanguageStore((state) => state.language);
+  const recoveryCopy = resolveCanvasSemanticEditorCopy(language).joinRecovery;
+  const [rejected, setRejected] = useState(false);
+  const retainedJoin =
+    staged.configurationDocument != null &&
+    readCanvasStagedCompositionSignature(staged.operation).operator === 'join';
   return (
     <aside data-slot="canvas-staged-operation-inspector" className={styles.inspector}>
       <p className={styles.eyebrow}>{copy.canvasNodeContextPropertiesLabel}</p>
@@ -133,6 +151,25 @@ function CanvasStagedOperationProperties({
           </div>
         ))}
       </dl>
+      {retainedJoin && onReconfigure != null ? (
+        <div className={styles.recovery}>
+          <p>{recoveryCopy.hint}</p>
+          <button
+            type="button"
+            data-slot="canvas-staged-operation-reconfigure"
+            className={styles.reconfigure}
+            disabled={deriveCanvasStagedCompositionState(staged) !== 'ready'}
+            onClick={() => setRejected(!onReconfigure())}
+          >
+            {recoveryCopy.action}
+          </button>
+          {rejected ? (
+            <p role="alert" className={styles.status}>
+              {recoveryCopy.failed}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </aside>
   );
 }

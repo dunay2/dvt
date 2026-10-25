@@ -81,6 +81,40 @@ import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
 import PresentationNodeSource from './canvasPresentationNode.ts?raw';
 
 describe('staged editor analysis ownership', () => {
+  it('keeps retained JOIN recovery in the existing draft command and shared configurator', () => {
+    const source = (name: string): string =>
+      readArchitectureSiblingSource(import.meta.dirname, name);
+    const commands = source('canvasStagedOperationActions.ts');
+    expect(commands).toContain('updateConfiguration:');
+    expect(commands).toContain('args.configure?.(');
+    expect(commands).not.toMatch(/reconfigure\s*:/);
+    expect(commands).not.toMatch(/\b(?:remove|complete|disconnectProducer)\s*:/);
+    const graph = source('useCanvasRelationalGraphAuthoring.ts');
+    expect(graph).not.toMatch(/(?:staged|occurrences)\.remove\(/);
+    const view = source('canvasRelationalTreeAuthoringView.ts');
+    expect(view).toContain('remove: session.removal.remove');
+    expect(view).not.toMatch(/removePending|removeStagedOperation/);
+    expect(
+      source('useCanvasStagedOperationConfiguration.ts').match(
+        /resolveCanvasStagedProducerDocument\(/g
+      )
+    ).toHaveLength(1);
+    expect(source('CanvasRelationalTreeAuthoring.tsx')).toContain(
+      "actions.updateStagedOperation(staged.id, 'reconfigure')"
+    );
+    expect(source('useCanvasRelationalAuthoringDraftHydration.ts')).toContain(
+      'useEffect(restore, [restore])'
+    );
+    expect(source('useCanvasRelationalTreeAuthoringSession.ts')).toContain('cancel: restore');
+    for (const name of [
+      'CanvasStagedOperationInspector.tsx',
+      'CanvasRelationalTreeAuthoring.tsx',
+    ]) {
+      expect(source(name)).not.toMatch(
+        /createCanonicalComposition|configureCanvasStagedComposition|restoreCanvasOperationConfiguration/
+      );
+    }
+  });
   it('shares execution context and eligibility through one analysis boundary', () => {
     const source = (name: string): string =>
       readArchitectureSiblingSource(import.meta.dirname, name);

@@ -88,6 +88,7 @@ export function CanvasRelationalTreeAuthoring({
             onClose={actions.clearStagedOperationSelection}
             onPendingChange={onPendingConditionChange}
             onUpdate={(update) => actions.updateStagedOperation(staged.id, update)}
+            onReconfigure={() => actions.updateStagedOperation(staged.id, 'reconfigure')}
           />
         ) : pending != null ? (
           <PendingSourceOccurrenceProperties

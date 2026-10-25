@@ -27,7 +27,9 @@ export function CanvasRelationalTreeNodes({
   expanded: ReadonlySet<string>;
   zoomRevealsDetail: boolean;
   toggleDetail: (id: string) => void;
-  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select' | 'remove'>;
+  occurrences?: Pick<SourceOccurrenceActions, 'pending' | 'selectedId' | 'select'> & {
+    remove: (id: string) => void;
+  };
   stagedOperations: readonly CanvasStagedOperation[];
   selectedStagedOperationId: string | null;
   selectedLocator: string;

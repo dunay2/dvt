@@ -32,7 +32,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     projection: args.projection,
     onHydrate: state.hydrate,
   });
-  const restorationUnavailable = useCanvasRelationalAuthoringDraftHydration({
+  const { restorationUnavailable, restore } = useCanvasRelationalAuthoringDraftHydration({
     enabled,
     transformNode,
     document: args.document,
@@ -98,8 +98,6 @@ export function useCanvasRelationalTreeAuthoringSession(
     restorationUnavailable,
     analysis,
     ...graph,
-    occurrences: { ...graph.occurrences, remove: removal.remove },
-    staged: { ...graph.staged, remove: removal.remove },
     removal,
     cleared: prepared.cleared,
     applyRejection: state.applyRejection,
@@ -108,7 +106,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     seed,
     apply: () => apply(),
     applyOutputOrder: (document: SubstraitDocument) => apply(document).outcome !== 'rejected',
-    cancel: state.reset,
+    cancel: restore,
     joinDraft: state.joinDraft,
     operation: state.operation,
     selectedInputIds: state.slots.selectedInputIds,

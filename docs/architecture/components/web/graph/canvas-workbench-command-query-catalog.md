@@ -727,6 +727,21 @@ flowchart LR
   O -->|one consumer| T[Passive model Output]
 ```
 
+### Reconfigure a retained composition after replacing an input
+
+When a pending JOIN retains configuration for different producers, exact
+restoration remains unavailable. Properties must explain that the inputs changed
+and offer an explicit reconfiguration action once every input is connected. That
+action uses the existing typed composition builder with the current admitted
+producers; it never retargets the retained predicate by name or ordinal.
+
+Reconfiguration belongs to the existing discardable Model draft. The condition
+editor opens against the new draft, while the saved configuration remains intact
+until Apply through `ConfigureCanvasDvtNode` and `SaveWorkspaceGraphDraft`.
+Cancel restores the saved state. Rejected, read-only, unavailable, incompatible
+or stale attempts preserve the retained configuration and wiring. A failed
+attempt must expose a reason rather than leave an inert button.
+
 ## Exhaustiveness Rule
 
 ### Inspector and bounded preview presentation parity

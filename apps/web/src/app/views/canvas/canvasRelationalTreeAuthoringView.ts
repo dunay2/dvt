@@ -34,7 +34,6 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   remove: (id: string) => void;
   dropSource: (id: string) => string | null;
   selectPending: (id: string) => void;
-  removePending: (id: string) => void;
   renamePending: (id: string, alias: string) => boolean;
   stageOperation: CanvasStagedOperationActions['stage'];
   selectStagedOperation: CanvasStagedOperationActions['select'];
@@ -44,7 +43,6 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   disconnectRelation: (id: string, port: number) => void;
   connectOutput: (relationId: string) => void;
   disconnectOutput: () => void;
-  removeStagedOperation: CanvasStagedOperationActions['remove'];
   updateStagedOperation: CanvasStagedOperationActions['updateConfiguration'];
 }>;
 
@@ -97,7 +95,6 @@ export function projectCanvasRelationalTreeAuthoringView(
       remove: session.removal.remove,
       dropSource: session.occurrences.drop,
       selectPending: select,
-      removePending: session.occurrences.remove,
       renamePending: session.occurrences.rename,
       stageOperation: session.staged.stage,
       selectStagedOperation: session.staged.select,
@@ -107,7 +104,6 @@ export function projectCanvasRelationalTreeAuthoringView(
       disconnectRelation: session.disconnectRelation,
       connectOutput: session.output.connect,
       disconnectOutput: session.output.disconnect,
-      removeStagedOperation: session.staged.remove,
       updateStagedOperation: session.staged.updateConfiguration,
     },
   };
