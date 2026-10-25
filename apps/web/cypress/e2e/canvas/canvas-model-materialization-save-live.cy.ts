@@ -56,6 +56,7 @@ function inspectModelFormTypography(): void {
   cy.get('[data-slot="canvas-node-workbench-tab-general"]').should('be.visible').click();
   for (const width of [1600, 1200]) {
     cy.viewport(width, 1000);
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').focus();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should(($panel) => {
       const panel = $panel[0]!;
       const view = panel.ownerDocument.defaultView!;
@@ -67,6 +68,34 @@ function inspectModelFormTypography(): void {
       const fields = form.querySelectorAll(
         '[data-slot="label"], [data-slot="input"], [data-slot="textarea"], select'
       );
+      const name = form.querySelector<HTMLElement>('input[name="node-name"]')!;
+      const tags = form.querySelector<HTMLElement>('input[name="node-tags"]')!;
+      const materialization = form.querySelector<HTMLElement>(
+        'select[name="dvt-transform-materialization"]'
+      )!;
+      const target = form.querySelector<HTMLElement>('[data-slot="dvt-transform-result-target"]')!;
+      const nameStyle = view.getComputedStyle(name);
+      const selectStyle = view.getComputedStyle(materialization);
+      for (const property of [
+        'fontFamily',
+        'color',
+        'backgroundColor',
+        'borderTopColor',
+        'borderRadius',
+        'height',
+      ] as const) {
+        expect(selectStyle[property], `shared ${property}`).to.equal(nameStyle[property]);
+      }
+      const metadataGap =
+        tags.parentElement!.getBoundingClientRect().top -
+        name.parentElement!.getBoundingClientRect().bottom;
+      const destinationGap =
+        target.getBoundingClientRect().top -
+        materialization.parentElement!.getBoundingClientRect().bottom;
+      expect(
+        Math.abs(destinationGap - metadataGap),
+        'destination uses metadata group spacing'
+      ).to.be.lessThan(1);
       expect(fields.length, 'rendered metadata and plugin controls').to.be.greaterThan(4);
       const properties = panel.querySelectorAll('dl dt, dl dd');
       expect(properties.length, 'rendered read-only facts').to.be.greaterThan(0);
@@ -80,6 +109,11 @@ function inspectModelFormTypography(): void {
         form.clientWidth + 1
       );
     });
+    cy.get('select[name="dvt-transform-result-connection"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Connection')
+      .focus()
+      .should('have.focus');
     cy.get('input[name="node-name"]').focus().should('have.focus');
     cy.screenshot(`model-inspector-shared-typography-${width}`);
   }

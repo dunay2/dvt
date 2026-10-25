@@ -85,7 +85,7 @@ export function CanvasInspectorAuthoringSection({
         inspectorVisualClasses.inspectorForm
       )}
     >
-      <div className="space-y-3">
+      <div className={inspectorVisualClasses.inspectorFields}>
         <CanvasInspectorMetadataFields
           model={{
             nodeId: node.id,

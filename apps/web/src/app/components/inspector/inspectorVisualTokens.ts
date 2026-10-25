@@ -1,6 +1,7 @@
 /** Owned concern: own Inspector and node workbench visual tokens. */
 
 export const inspectorVisualClasses = {
+  inspectorFields: 'space-y-3',
   inspectorForm:
     'text-xs [&_[data-slot=label]]:text-xs [&_[data-slot=input]]:text-xs [&_[data-slot=textarea]]:text-xs [&_[data-slot=select-trigger]]:text-xs [&_select]:text-xs',
   inspectorField: 'space-y-2',
@@ -53,7 +54,7 @@ export const inspectorVisualClasses = {
   contextPanelColumnMeta: 'mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400',
   inspectorErrorText: 'text-xs text-red-300',
   inspectorSelectInput:
-    'border-input bg-input-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 py-1 text-sm text-slate-50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+    'border-input bg-input-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 py-1 text-sm outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
   inspectorDbtSection: 'space-y-3 border-t border-slate-700 pt-3',
 } as const;
 
@@ -73,7 +74,7 @@ const propertyCell = 'px-2 py-2 align-top';
 
 /** Shared property templates; surface differences are explicit, not copied into JSX. */
 export const inspectorPropertyClasses = {
-  section: 'space-y-3',
+  section: inspectorVisualClasses.inspectorFields,
   sectionFill: 'flex h-full min-h-0 flex-col',
   contribution: 'space-y-3 pt-1',
   contributionFill: 'flex min-h-0 flex-1 flex-col',

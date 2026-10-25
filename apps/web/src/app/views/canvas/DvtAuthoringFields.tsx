@@ -17,7 +17,7 @@ import {
   createDvtTransformMaterializationBinding,
 } from './dvtDestinationBinding';
 import { canvasViewCopy } from './copy';
-import styles from './dvtDestinationFields.module.css';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -66,7 +66,7 @@ export function DvtAuthoringFields({
     if (section !== 'all' && section !== 'general') return null;
     const provenance = resolveDvtConnectionProvenance({ node, nodes, edges });
     return (
-      <div className={styles.stack}>
+      <div className={inspectorVisualClasses.inspectorFields}>
         <DvtTransformMaterializationField
           binding={createDvtTransformMaterializationBinding({
             draft: draft.dvt,

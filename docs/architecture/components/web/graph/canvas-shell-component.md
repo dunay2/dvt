@@ -364,6 +364,13 @@ use the same body scale in the Inspector and workbench variants. Global UI primi
 title hierarchy, control heights, code-editor typography and mutation handlers
 retain their existing owners.
 
+General metadata and DVT authoring reuse the Inspector's shared field and group
+spacing. Native selects inherit the form text color, matching Input rather than
+forcing a separate palette. Destination-specific CSS owns only the schema/relation
+layout and the technical target value. The Model destination connection selector
+keeps its accessible name without repeating a visible Connection label under the
+destination heading; explicit Sink fields retain their visible label.
+
 The rendered acceptance compares computed label/control font sizes with the
 General tab at two desktop widths, checks focus and form overflow, and retains
 the protected Model save flow. A matching class string is not visual evidence.
