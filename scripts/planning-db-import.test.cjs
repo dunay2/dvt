@@ -225,6 +225,190 @@ test('planning DB import parses its single architecture-governance scope', () =>
   assert.throws(() => parseArgs(['--planning-only']), /Unknown planning DB import option/);
 });
 
+test('frontend recovery requires an explicit scope and current source hash', () => {
+  const hash = 'a'.repeat(64);
+  assert.deepEqual(
+    parseArgs(['--scope', 'frontend-components', '--expected-current-sha256', hash]),
+    {
+      databaseUrl: null,
+      help: false,
+      ifStale: false,
+      scope: 'frontend-components',
+      expectedCurrentSha256: hash,
+    }
+  );
+  for (const args of [
+    ['--scope', 'all'],
+    ['--scope', 'frontend-components'],
+    ['--scope', 'frontend-components', '--expected-current-sha256', 'invalid'],
+    ['--expected-current-sha256', hash],
+    ['--scope', 'frontend-components', '--expected-current-sha256', hash, '--if-stale'],
+  ])
+    assert.throws(() => parseArgs(args));
+});
+
+test('frontend recovery routes only to the bounded import', async () => {
+  const options = { scope: 'frontend-components', expectedCurrentSha256: 'a'.repeat(64) };
+  const result = await runPlanningImport(options, {
+    importContent() {
+      assert.fail('global import must not run');
+    },
+    importFrontendComponentReflection(actual) {
+      assert.equal(actual, options);
+      return { frontendComponents: 1, importedScopes: ['frontend-components'] };
+    },
+  });
+  assert.deepEqual(result.importedScopes, ['frontend-components']);
+});
+
+function frontendRecoveryFixture() {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const trackedPaths = new Set([
+    ...snapshot.files.map((row) => row.filePath),
+    ...snapshot.evidence.map((row) => row.evidenceRef),
+  ]);
+  const candidate = {
+    snapshot,
+    trackedPaths,
+    sourceCommitSha: 'b'.repeat(40),
+    sourcePath: snapshot.components[0].sourcePath,
+  };
+  const calls = [];
+  const client = {
+    async query(sql, params) {
+      calls.push({ sql: String(sql).trim(), params });
+      if (/select distinct source_path/.test(sql))
+        return {
+          rows: [
+            {
+              source_path: candidate.sourcePath,
+              source_content_sha256: 'a'.repeat(64),
+            },
+          ],
+        };
+      return { rows: [] };
+    },
+  };
+  return {
+    candidate,
+    calls,
+    client,
+    options: { client, expectedCurrentSha256: 'a'.repeat(64), silent: true },
+    deps: { readCandidate: () => candidate, assertSchema: async () => {} },
+  };
+}
+
+test('frontend recovery writes exactly the five reflection tables under the shared lock', async () => {
+  const fixture = frontendRecoveryFixture();
+  const result = await planningDbImport.importFrontendComponentReflection(
+    fixture.options,
+    fixture.deps
+  );
+  const writes = fixture.calls
+    .map(
+      (call) => /^(?:delete from|insert into) planning_query_store\.([a-z_]+)/i.exec(call.sql)?.[1]
+    )
+    .filter(Boolean);
+  assert.deepEqual([...new Set(writes)].sort(), [
+    'frontend_component_cq_rails',
+    'frontend_component_evidence',
+    'frontend_component_files',
+    'frontend_components',
+    'frontend_surface_component_links',
+  ]);
+  assert.equal(fixture.calls[0].sql, 'begin');
+  assert.deepEqual(fixture.calls[1].params, ['dvt:planning-query-store', 'import-content-v1']);
+  assert.equal(fixture.calls.at(-1).sql, 'commit');
+  assert.equal(result.sourceCommitSha, fixture.candidate.sourceCommitSha);
+  assert.equal(
+    result.sourceContentSha256,
+    fixture.candidate.snapshot.components[0].sourceContentSha256
+  );
+  assert.equal(result.frontendComponents, fixture.candidate.snapshot.components.length);
+});
+
+test('frontend recovery rejects stale, missing and mixed imported source identities before writes', async () => {
+  for (const rows of [
+    [],
+    [{ source_path: 'wrong.md', source_content_sha256: 'a'.repeat(64) }],
+    [
+      {
+        source_path: 'docs/architecture/components/web/frontend-component-inventory.md',
+        source_content_sha256: 'c'.repeat(64),
+      },
+    ],
+    [
+      { source_path: 'one.md', source_content_sha256: 'a'.repeat(64) },
+      { source_path: 'two.md', source_content_sha256: 'a'.repeat(64) },
+    ],
+  ]) {
+    const fixture = frontendRecoveryFixture();
+    const query = fixture.client.query.bind(fixture.client);
+    fixture.client.query = (sql, params) =>
+      /select distinct source_path/.test(sql) ? Promise.resolve({ rows }) : query(sql, params);
+    await assert.rejects(
+      () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
+      /source|hash|identity/i
+    );
+    assert.equal(fixture.calls.at(-1).sql, 'rollback');
+    assert.equal(
+      fixture.calls.some((call) => /^(delete|insert|update)/i.test(call.sql)),
+      false
+    );
+  }
+});
+
+test('frontend recovery rejects missing files, unknown components and incomplete current components', async () => {
+  for (const corrupt of [
+    (candidate) => candidate.trackedPaths.delete(candidate.snapshot.files[0].filePath),
+    (candidate) => (candidate.snapshot.files[0].componentId = 'unknown-component'),
+    (candidate) => (candidate.snapshot.evidence = []),
+    (candidate) => (candidate.snapshot.rails = []),
+    (candidate) => candidate.snapshot.components.push(candidate.snapshot.components[0]),
+  ]) {
+    const fixture = frontendRecoveryFixture();
+    corrupt(fixture.candidate);
+    await assert.rejects(() =>
+      planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps)
+    );
+    assert.equal(
+      fixture.calls.some((call) => /^(delete|insert|update)/i.test(call.sql)),
+      false
+    );
+  }
+});
+
+test('frontend recovery rejects dirty candidate evidence before opening a transaction', async () => {
+  const fixture = frontendRecoveryFixture();
+  fixture.deps.readCandidate = () => {
+    throw new Error('Governed source must be unmodified relative to HEAD');
+  };
+  await assert.rejects(
+    () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
+    /unmodified relative to HEAD/
+  );
+  assert.equal(fixture.calls.length, 0);
+});
+
+test('frontend recovery rolls back a failed write without falling back to global import', async () => {
+  const fixture = frontendRecoveryFixture();
+  const query = fixture.client.query.bind(fixture.client);
+  fixture.client.query = async (sql, params) => {
+    if (/insert into planning_query_store\.frontend_component_files/.test(sql))
+      throw new Error('write failed');
+    return query(sql, params);
+  };
+  await assert.rejects(
+    () => planningDbImport.importFrontendComponentReflection(fixture.options, fixture.deps),
+    /write failed/
+  );
+  assert.equal(fixture.calls.at(-1).sql, 'rollback');
+  assert.equal(
+    fixture.calls.some((call) => call.sql === 'commit'),
+    false
+  );
+});
+
 test('planning DB import falls back to direct tree diff for shallow merge refs', () => {
   const calls = [];
   const changedFiles = listChangedFiles('origin/main', 'merge-sha', (args) => {
