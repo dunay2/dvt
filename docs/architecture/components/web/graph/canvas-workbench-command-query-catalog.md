@@ -742,6 +742,34 @@ Cancel restores the saved state. Rejected, read-only, unavailable, incompatible
 or stale attempts preserve the retained configuration and wiring. A failed
 attempt must expose a reason rather than leave an inert button.
 
+The responsibility boundaries for this flow are:
+
+| Owner                                                                                                                                      | Responsibility and boundary                                                                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| [`CanvasStagedOperationInspector`](../../../../../apps/web/src/app/views/canvas/CanvasStagedOperationInspector.tsx)                        | Present the recovery intent and rejection; dispatch the existing draft command.                                   |
+| [`useCanvasStagedOperationConfiguration`](../../../../../apps/web/src/app/views/canvas/useCanvasStagedOperationConfiguration.ts)           | Resolve the current producer snapshot and coordinate the existing typed configuration builders.                   |
+| [`createCanvasStagedOperationActions`](../../../../../apps/web/src/app/views/canvas/canvasStagedOperationActions.ts)                       | Admit and project a configuration into the current local draft, preserving producer identity and snapshot checks. |
+| [`useCanvasRelationalAuthoringDraftHydration`](../../../../../apps/web/src/app/views/canvas/useCanvasRelationalAuthoringDraftHydration.ts) | Restore the persisted authoring state on entry and Cancel through one restoration function.                       |
+| [`useCanvasRelationalTreeRemoval`](../../../../../apps/web/src/app/views/canvas/useCanvasRelationalTreeRemoval.ts)                         | Own removal consent and revision-bound admission for every source and operation removal surface.                  |
+| [`useCanvasRelationalTreeAuthoringSession`](../../../../../apps/web/src/app/views/canvas/useCanvasRelationalTreeAuthoringSession.ts)       | Compose the edit lifetime and dispatch Apply through the existing protected persistence contract.                 |
+
+```mermaid
+flowchart LR
+  subgraph M[ConfigureCanvasDvtNode edit lifetime]
+    I[Staged operation inspector] -->|intent| C[Existing local updateConfiguration]
+    B[Typed configuration builders] -->|candidate| C
+    C --> D[Discardable Model draft]
+    R[Shared removal owner] --> D
+    D -->|Cancel| H[Draft hydration owner]
+    H --> D
+  end
+  S[Saved authoring state] --> H
+  D -->|Apply| P[SaveWorkspaceGraphDraft]
+```
+
+The [GH-3721 design rationale and before/after diagrams](https://github.com/dunay2/dvt/issues/3721)
+are also reachable through the corresponding Planning DB designs' work-item reference.
+
 ## Exhaustiveness Rule
 
 ### Inspector and bounded preview presentation parity
