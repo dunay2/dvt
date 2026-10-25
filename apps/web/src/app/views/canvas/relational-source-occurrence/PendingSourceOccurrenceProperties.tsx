@@ -1,6 +1,7 @@
 /** Inspect a detached Source through the same published Input controls as an applied Source. */
 import type { GraphNodeInputMapping } from '../../../plugins/graph/graphNodeColumnContracts';
 import { CanvasSourceOccurrenceOutputs } from '../CanvasSourceOccurrenceOutputs';
+import { canvasInputSlotId } from '../canvasInputBindings';
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
 import type { PendingSourceOccurrence } from './pendingSourceOccurrence';
 import { SourceOccurrencePropertiesForm } from './SourceOccurrencePropertiesForm';
@@ -40,11 +41,35 @@ export function PendingSourceOccurrenceProperties({
       output={
         input == null ? null : (
           <CanvasSourceOccurrenceOutputs
-            input={input}
-            publishedFieldNames={publishedFieldNames}
-            consumerNodeId={consumerNodeId}
-            onMapInput={onMapInput}
-            onRemoveInput={onRemoveInput}
+            fields={input.fields
+              .filter((field) => publishedFieldNames.includes(field.name))
+              .map((field) => ({
+                id: field.id ?? field.name,
+                name: field.name,
+                dataType: field.dataType,
+                included:
+                  input.inputBindings?.fields == null ||
+                  input.inputBindings.fields.some(
+                    (binding) => binding.producerFieldId === (field.id ?? field.name)
+                  ),
+                available: true,
+              }))}
+            disabled={onMapInput == null || onRemoveInput == null}
+            onChange={(fieldId, included) => {
+              const source = { nodeId: input.nodeId, columnId: fieldId };
+              if (included) onMapInput?.({ source, target: { nodeId: consumerNodeId } });
+              else
+                onRemoveInput?.({
+                  source,
+                  target: {
+                    nodeId: consumerNodeId,
+                    inputId:
+                      input.inputBindings?.fields.find(
+                        (binding) => binding.producerFieldId === fieldId
+                      )?.inputId ?? canvasInputSlotId(input.nodeId, fieldId),
+                  },
+                });
+            }}
           />
         )
       }

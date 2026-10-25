@@ -308,6 +308,43 @@ Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
+### Source Occurrence Output Selection
+
+The applied Model inspector selects the occurrence's direct contribution to the
+Model's root Output. It does not remove a Model Input binding. The governing
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V4`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6405053466).
+The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
+rails retain command and presentation ownership.
+
+```mermaid
+flowchart LR
+  Read[Selected Read occurrence] --> Query[Canonical direct output slots]
+  Root[Model root emit] --> Query
+  Query --> View[Controlled Source rows and shared inclusion button]
+  View --> Command[Existing relation command and root Output selection]
+  Command --> Root
+  Filter[Local hide excluded preference] --> View
+```
+
+`CanvasSourceOccurrenceOutputs` is passive presentation. The applied selection
+adapter reads the current session and delegates changes to
+`changeSelectedRelationOutputs` through `useRelationCommand`. Direct forwarding
+is resolved by canonical relation/field identity and emit mappings, including
+nested JOINs and self-JOINs. Calculation dependencies do not establish direct
+forwarding; aggregate and SET outputs cannot be attributed independently to one
+Source. Unavailable direct contributions remain visible with disabled controls.
+
+Excluding a field changes only root Output selection. The physical Read, JOIN
+predicate, calculation definitions, other occurrences and producer publication
+remain intact. Excluded fields stay listed with the existing add action. The
+optional hide-excluded filter starts off, is local to the selected occurrence,
+and never dispatches a graph command. Existing command authority owns revision,
+permissions, rejection, rollback and persistence. Pending detached Sources retain
+their explicit Input-binding adapter until they belong to the applied tree.
+Both adapters use the same passive rows and Inspector inclusion control; CSS
+consumes the existing semantic tokens without adding another style system.
+
 ### Inspector Code Placement And Height
 
 The current Inspector implementation has two ownership boundaries, recorded in

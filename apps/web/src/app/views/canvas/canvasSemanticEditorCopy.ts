@@ -39,6 +39,9 @@ const en = {
   output: 'Output',
   addOutputField: 'Add field',
   removeOutputField: 'Remove field',
+  hideExcludedFields: 'Hide excluded',
+  sourceOutputUnavailable:
+    'This field has no independent direct Model output. Use the operation Output.',
   fieldSelectionRejected: 'Cannot change this selection. Check the field and its dependencies.',
   fieldSelectionDependencies: 'Affected fields or operations',
   reorderOutput: 'Reorder output field',
@@ -232,6 +235,9 @@ const es: typeof en = {
   output: 'Output',
   addOutputField: 'Añadir campo',
   removeOutputField: 'Quitar campo',
+  hideExcludedFields: 'Ocultar excluidos',
+  sourceOutputUnavailable:
+    'Este campo no tiene una salida directa independiente en el Modelo. Usa el Output de la operación.',
   fieldSelectionRejected: 'No se puede cambiar la selección. Revisa el campo y sus dependencias.',
   fieldSelectionDependencies: 'Campos u operaciones afectados',
   reorderOutput: 'Reordenar campo de salida',

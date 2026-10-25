@@ -12,7 +12,7 @@ import { CanvasModelOutputInspector } from './CanvasModelOutputInspector';
 import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
 import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 import { CanvasTransformInspector } from './CanvasTransformInspector';
-import { CanvasSourceOccurrenceOutputs } from './CanvasSourceOccurrenceOutputs';
+import { CanvasSourceOccurrenceOutputSelection } from './CanvasSourceOccurrenceOutputSelection';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
 
 export type CanvasModelOutputInspectorState = Readonly<{
@@ -85,12 +85,11 @@ export function CanvasRelationalTreeSideInspector({
       inspection={inspection}
       sourceOutput={
         inspection?.kind === 'source' && sourceInput != null ? (
-          <CanvasSourceOccurrenceOutputs
+          <CanvasSourceOccurrenceOutputSelection
+            relationId={inspection.relationId!}
             input={sourceInput}
             publishedFieldNames={publishedFieldNames}
-            consumerNodeId={transformNode.id}
-            onMapInput={model.authoringAvailable ? authoring?.onMapInput : undefined}
-            onRemoveInput={model.authoringAvailable ? authoring?.onRemoveInput : undefined}
+            onChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
           />
         ) : undefined
       }
