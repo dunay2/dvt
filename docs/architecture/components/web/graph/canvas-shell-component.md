@@ -700,6 +700,24 @@ design `GH-3035-LOGICAL-COLUMN-DENSITY` records the rationale in
 This presentation change reuses `RenderCanvasContextualGraphSurface`; it does not
 dispatch a graph command or change the separate physical Source scanner below.
 
+### Native Model View Continuity
+
+Changing a configured native Model's materialization updates storage disposition
+and readiness without discarding unchanged field/code projections or sampled
+rows. `ProjectGraphNodeCardReadModel` and `PreviewCanvasTransformRows` share the
+current query-metadata projection: validated canonical authority, including its
+sidecar, and declared column facts. Missing or invalid native authority and
+non-native nodes retain their current metadata as invalidation inputs. Existing
+source-publication, edge/binding, scope and request-currentness guards remain.
+
+The Readiness registrar replaces its drawer contribution while retaining the
+active view's lifetime. It clears only its latest committed contribution on
+actual unmount; the existing store identity guard protects a newer owner.
+Selected tabs, table state and layout persist across storage-only changes.
+Canonical/schema/binding changes still invalidate stale results. Planning DB
+`GH-3035-MATERIALIZATION-VIEW-CONTINUITY` records the
+[rationale, ownership and validation](https://github.com/dunay2/dvt/issues/3035#issuecomment-6424129479).
+
 ### Source Column Inspection Density
 
 The existing contextual surface also presents `SourceColumnFacts` through passive

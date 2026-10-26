@@ -6,6 +6,7 @@ import type { useCanvasDataSample } from './useCanvasDataSample';
 import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { queryCanvasModelDataSample } from './useCanvasModelDataQuery';
+import { canvasNodeQueryMetadata } from './canvasNodeQueryMetadata';
 
 export function useCanvasTransformDataSample({
   canvasId,
@@ -25,14 +26,19 @@ export function useCanvasTransformDataSample({
   canEditModel: boolean;
 }> &
   Pick<ReturnType<typeof useCanvasDataSample>, 'openDataSample' | 'invalidateDataSample'>) {
-  // Graph metadata/bindings are query inputs; positions, selection and viewport are not.
+  // Current query inputs and bindings govern freshness, independently of storage disposition.
   const revision = useMemo(
     () =>
       JSON.stringify(
         toCanvasAuthoringSerializableValue([
           canvasId,
           nodes
-            .map(({ id, pluginId, kind, metadata }) => ({ id, pluginId, kind, metadata }))
+            .map((node) => ({
+              id: node.id,
+              pluginId: node.pluginId,
+              kind: node.kind,
+              metadata: canvasNodeQueryMetadata(node),
+            }))
             .sort((a, b) => a.id.localeCompare(b.id)),
           [...edges].sort((a, b) => a.id.localeCompare(b.id)),
         ])

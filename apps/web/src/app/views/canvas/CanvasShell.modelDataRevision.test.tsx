@@ -15,6 +15,11 @@ import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthorin
 import type { CanvasDraftLifecycle } from './canvasDraftLifecycle.types';
 import type { CanvasShellProps } from './canvasShell.types';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import {
+  applyDvtTransformAuthoringMetadata,
+  createDvtTransformAuthoringMetadata,
+} from './canvasDvtTransformAuthoring';
+import { withDvtTransformMaterialization } from './canvasDvtMaterializationPolicy';
 
 describe('Canvas Model card revision-safe execution', () => {
   const model = node(fixture());
@@ -152,6 +157,50 @@ describe('Canvas Model card revision-safe execution', () => {
     );
     expect(result()?.status).toBe('ready');
   });
+  it.each(['table', 'view', 'ephemeral'])(
+    'retains sampled rows and provenance when only storage disposition changes to %s',
+    async (materialized) => {
+      const previous = applyDvtTransformAuthoringMetadata(model, {
+        ...createDvtTransformAuthoringMetadata(model),
+        materialized: materialized === 'table' ? 'view' : 'table',
+        resultTarget: {
+          schemaVersion: 'dvt-transform-result-target.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'local-postgres-proof',
+            provider: 'postgres',
+          },
+          schema: 'public',
+          relation: 'saved_orders',
+        },
+      });
+      prepare.mockResolvedValue({ ...saved, canonicalNodes: [previous] });
+      await mount(true, true, previous);
+      await execute();
+      const ready = result();
+      expect(ready).toMatchObject({ status: 'ready', sample });
+      const next = applyDvtTransformAuthoringMetadata(
+        previous,
+        withDvtTransformMaterialization(createDvtTransformAuthoringMetadata(previous), materialized)
+      );
+      expect(next.metadata).toMatchObject({ config: { materialized } });
+      if (materialized === 'ephemeral')
+        expect(next.metadata?.config).not.toHaveProperty('resultTarget');
+      expect(readDvtTransformAuthoringAuthority(next)?.semanticDocument).toEqual(
+        readDvtTransformAuthoringAuthority(previous)?.semanticDocument
+      );
+
+      await mount(true, true, next);
+      expect(result()).toBe(ready);
+      expect(result()).toMatchObject({
+        status: 'ready',
+        sample: { provenance: sample.provenance },
+      });
+      expect(useOperationalDrawerContributionStore.getState().activeTab).toBe(`data:${model.id}`);
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
+      expect(prepare).toHaveBeenCalledOnce();
+    }
+  );
   it('removes refresh and invalidates ready rows when the model disappears', async () => {
     const props = await mount();
     await execute();

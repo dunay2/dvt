@@ -207,3 +207,38 @@ technical Source ID. The admitted V3 test refinement retains the complete long
 business name, direction and lineage, graph immutability and no-write assertion,
 while rejecting visible node/edge identities. Its focused suite passes 32/32.
 That failed full run is not final acceptance; the required gate must pass again.
+
+## Shared Column Privacy And Materialization Continuity
+
+The later screenshot exposes a canonical field reference in expanded Columns.
+`GH-3035-HIDE-COLUMN-REFERENCE` governs one shared visible-key rule for both
+Inspector and Workbench. Canonical cells, row identity and callback context stay
+intact; ordinary details retain business metadata and actual foreign-key targets.
+The semantic RED fails five cases before the rule; GREEN passes 23 presentation
+cases and the existing native spec passes 4/4 with density, keyboard and no-write
+assertions retained. Its fixture selection oracle follows the existing
+`available` value rather than introducing a selection behavior change.
+
+`GH-3035-MATERIALIZATION-VIEW-CONTINUITY` governs the subsequent bottom-panel
+report. RED reproduces a ready sample becoming unavailable for storage-only
+changes and a field projection becoming pending when `ephemeral` clears its
+result target. The shared positive query-metadata projection retains full
+canonical authority and declared columns; current raw inputs remain significant
+for absent/invalid native authority and other node kinds. The drawer registrar
+publishes replacements continuously and clears only its latest committed owner
+on actual unmount, preserving the existing store identity guard.
+
+The focused field/pending/Input group passes 14/14 and the sample/registrar group
+passes 28/28, including unchanged stale-receipt, binding and persistence negatives.
+The controlled native materialization spec passes 2/2 through held save and
+acknowledgement, preserving drawer/table/search/tab identity, height and menu
+dismissal. The protected native SQL/runtime proof also passes 2/2 and its Source
+provider checks pass 5/5: card transitions and General Apply retain the exact
+drawer/table/search/tab identity, provenance and layout, with one Source and one
+Model query. The first protected run exposed an eagerly captured test value;
+deferring that exact-value assertion to execution fixes the oracle without
+changing the product or weakening the continuity checks. These proofs do not
+replace final exact-head prepush. Their completed results, source ownership,
+metadata-reference retirement and full-gate outcome are recorded in
+[issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6424129479)
+and the implementation PR after execution.

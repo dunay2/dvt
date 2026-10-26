@@ -18,6 +18,7 @@ import {
   decodeDvtSubstraitSemanticDocument,
   encodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
+import { withDvtTransformMaterialization } from './canvasDvtMaterializationPolicy';
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
   let resolve!: () => void;
@@ -75,6 +76,60 @@ describe('Canvas asynchronous presentation ownership', () => {
       }
     }
   );
+
+  it('keeps the current semantic publication while storage changes remove an existing result target', async () => {
+    const model = buildCanonicalTransform();
+    const resultTarget = {
+      schemaVersion: 'dvt-transform-result-target.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        provider: 'postgres',
+        connectionId: 'warehouse-main',
+      },
+      schema: 'analytics',
+      relation: 'orders',
+    } as const;
+    let current: CanonicalNode = {
+      ...model,
+      metadata: { ...model.metadata, config: { materialized: 'table', resultTarget } },
+    };
+    const authority = readDvtTransformAuthoringAuthority(current);
+    const query = vi.spyOn(CanvasPresentationAnalysis.prototype, 'query');
+    const states: (string | undefined)[] = [];
+    let values!: ReturnType<typeof useCanvasNodePresentations>;
+    function Probe(): null {
+      values = useCanvasNodePresentations({ nodes: [SOURCE, current], edges: [EDGE] });
+      states.push(values.get(model.id)?.columns.state);
+      return null;
+    }
+    const mounted = await withTestQueryClient(createElement(Probe));
+    try {
+      const completed = values;
+      const publication = values.get(model.id)!;
+      const calls = query.mock.calls.length;
+      expect(publication.columns.state).toBe('ready');
+      for (const materialized of ['view', 'table', 'ephemeral', 'view', 'table']) {
+        const draft = createCanvasInspectorNodeDraft(current);
+        if (draft.dvt?.kind !== 'transform') throw new Error('Expected native transform');
+        current = applyCanvasInspectorNodeDraft(current, {
+          ...draft,
+          dvt: withDvtTransformMaterialization(draft.dvt, materialized),
+        });
+        states.length = 0;
+        await mounted.render(createElement(Probe));
+        expect(current.metadata?.config).toMatchObject({ materialized });
+        expect(readDvtTransformAuthoringAuthority(current)).toEqual(authority);
+        if (materialized === 'ephemeral')
+          expect(current.metadata?.config).not.toHaveProperty('resultTarget');
+        expect(states).not.toContain('pending');
+        expect(values).toBe(completed);
+        expect(values.get(model.id)).toBe(publication);
+        expect(query).toHaveBeenCalledTimes(calls);
+      }
+    } finally {
+      await mounted.cleanup();
+    }
+  });
 
   it.each(['sql', 'dbt'] as const)(
     'still invalidates %s configuration projections',

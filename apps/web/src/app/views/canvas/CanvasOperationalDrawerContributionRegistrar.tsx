@@ -99,12 +99,19 @@ export function CanvasOperationalDrawerContributionRegistrar({
     ]
   );
 
+  const committedContributionRef = useRef<typeof contribution | null>(null);
   useEffect(() => {
+    committedContributionRef.current = contribution;
     registerOperationalDrawerContribution(contribution);
-    return () => {
-      clearOperationalDrawerContribution(contribution);
-    };
-  }, [clearOperationalDrawerContribution, contribution, registerOperationalDrawerContribution]);
+  }, [contribution, registerOperationalDrawerContribution]);
+
+  useEffect(
+    () => () => {
+      const committed = committedContributionRef.current;
+      if (committed != null) clearOperationalDrawerContribution(committed);
+    },
+    [clearOperationalDrawerContribution]
+  );
 
   return null;
 }
