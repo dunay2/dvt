@@ -35,6 +35,9 @@ const {
 const {
   buildFrontendComponentReflectionSnapshot,
 } = require('./planning-db/frontend-component-inventory.cjs');
+const {
+  readGovernedSourceSnapshots,
+} = require('./planning-db/governed-source-refresh-write-rail.cjs');
 const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -127,6 +130,13 @@ function parseArgs(argv = process.argv.slice(2)) {
       continue;
     }
 
+    if (token === '--scope' || token === '--expected-current-sha256') {
+      const value = argv[++index];
+      if (!value || value.startsWith('--')) throw new Error(`Missing value for ${token}`);
+      options[token === '--scope' ? 'scope' : 'expectedCurrentSha256'] = value;
+      continue;
+    }
+
     if (token === '--help' || token === '-h') {
       options.help = true;
       continue;
@@ -135,7 +145,18 @@ function parseArgs(argv = process.argv.slice(2)) {
     throw new Error(`Unknown planning DB import option "${token}".`);
   }
 
+  validateImportScopeOptions(options);
   return options;
+}
+
+function validateImportScopeOptions(options) {
+  if (options.scope === undefined && options.expectedCurrentSha256 === undefined) return;
+  if (options.scope !== 'frontend-components')
+    throw new Error('Expected --scope frontend-components.');
+  if (!/^[a-f0-9]{64}$/u.test(options.expectedCurrentSha256 || '')) {
+    throw new Error('Frontend recovery requires --expected-current-sha256 <lowercase-sha256>.');
+  }
+  if (options.ifStale) throw new Error('Frontend recovery cannot be combined with --if-stale.');
 }
 
 function printHelp() {
@@ -144,6 +165,7 @@ function printHelp() {
       'Usage: pnpm planning:db:import [--if-stale] [--database-url <url>]',
       '',
       '--if-stale  Skip the architecture/governance import when its source state is current.',
+      '--scope frontend-components --expected-current-sha256 <hash>  Explicit frontend-only recovery.',
     ].join('\n')
   );
 }
@@ -3160,6 +3182,110 @@ async function beginImportTransaction(client) {
   ]);
 }
 
+function readFrontendReflectionCandidate() {
+  const sourcePath = 'docs/architecture/components/web/frontend-component-inventory.md';
+  const { sourceCommitSha } = readGovernedSourceSnapshots({ repoRoot, paths: [sourcePath] });
+  const git = (args) => execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
+  const content = git(['show', `${sourceCommitSha}:${sourcePath}`]);
+  return {
+    sourcePath,
+    sourceCommitSha,
+    snapshot: buildFrontendComponentReflectionSnapshot({ docs: [{ path: sourcePath, content }] }),
+    trackedPaths: new Set(
+      git(['ls-tree', '-r', '--name-only', sourceCommitSha]).trim().split(/\r?\n/u)
+    ),
+  };
+}
+
+function validateFrontendReflectionCandidate({ snapshot, trackedPaths, sourcePath }) {
+  const components = new Map(snapshot.components.map((row) => [row.componentId, row]));
+  if (
+    components.size === 0 ||
+    components.size !== snapshot.components.length ||
+    [...components.keys()].some((id) => typeof id !== 'string' || !id.trim())
+  ) {
+    throw new Error('Frontend recovery requires unique, nonempty component identities.');
+  }
+  const hashes = new Set(snapshot.components.map((row) => row.sourceContentSha256));
+  if (hashes.size !== 1 || snapshot.components.some((row) => row.sourcePath !== sourcePath)) {
+    throw new Error('Frontend recovery requires one inventory source identity.');
+  }
+  for (const rows of [snapshot.files, snapshot.rails, snapshot.evidence, snapshot.surfaceLinks]) {
+    for (const row of rows) {
+      if (!components.has(row.componentId))
+        throw new Error(`Unknown frontend component ${row.componentId}.`);
+      const reference = row.filePath || row.evidenceRef;
+      if (reference && !trackedPaths.has(reference)) {
+        throw new Error(
+          `Frontend reference ${reference} is absent from the selected Git candidate.`
+        );
+      }
+    }
+  }
+  for (const component of components.values()) {
+    if (
+      component.componentStatus === 'current' &&
+      (!snapshot.files.some((row) => row.componentId === component.componentId) ||
+        !snapshot.rails.some((row) => row.componentId === component.componentId) ||
+        !snapshot.evidence.some((row) => row.componentId === component.componentId))
+    )
+      throw new Error(
+        `Current frontend component ${component.componentId} requires files, rails and evidence.`
+      );
+  }
+}
+
+async function readFrontendReflectionSource(client) {
+  const result = await client.query(
+    `select distinct source_path, source_content_sha256 from ${schemaName}.frontend_components`
+  );
+  return result.rows;
+}
+
+async function importFrontendComponentReflection(options = {}, deps = {}) {
+  validateImportScopeOptions({ ...options, scope: options.scope ?? 'frontend-components' });
+  const candidate = (deps.readCandidate || readFrontendReflectionCandidate)();
+  validateFrontendReflectionCandidate(candidate);
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+  if (ownsClient) await client.connect();
+  try {
+    await beginImportTransaction(client);
+    await (deps.assertSchema || assertPlanningDbCurrentSchemaReady)(client);
+    const sources = await (deps.readSource || readFrontendReflectionSource)(client);
+    if (
+      sources.length !== 1 ||
+      sources[0].source_path !== candidate.sourcePath ||
+      sources[0].source_content_sha256 !== options.expectedCurrentSha256
+    ) {
+      throw new Error(
+        'Frontend recovery current source identity/hash does not match the expected value.'
+      );
+    }
+    await (deps.writeSnapshot || insertFrontendComponentReflectionSnapshot)(
+      client,
+      candidate.snapshot
+    );
+    await client.query('commit');
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) await client.end();
+  }
+  const result = {
+    sourceCommitSha: candidate.sourceCommitSha,
+    sourceContentSha256: candidate.snapshot.components[0].sourceContentSha256,
+    frontendComponents: candidate.snapshot.components.length,
+    frontendComponentFiles: candidate.snapshot.files.length,
+    importedScopes: ['frontend-components'],
+    skippedScopes: [],
+  };
+  if (!options.silent) console.log(`[planning:db:import] ${JSON.stringify(result)}`);
+  return result;
+}
+
 async function importContent(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
@@ -4247,11 +4373,15 @@ async function isGovernanceFresh(options, deps) {
 }
 
 async function runPlanningImport(options = {}, deps = {}) {
+  validateImportScopeOptions(options);
   const actualDeps = {
     importContent,
+    importFrontendComponentReflection,
     logger: console,
     ...deps,
   };
+  if (options.scope === 'frontend-components')
+    return actualDeps.importFrontendComponentReflection(options);
   const skippedScopes = [];
 
   if (options.ifStale && (await isGovernanceFresh(options, actualDeps))) {
@@ -4340,6 +4470,7 @@ module.exports = {
   evaluateArcPolicyReadiness,
   governanceImportDeleteTables,
   importContent,
+  importFrontendComponentReflection,
   insertGovernanceSnapshot,
   insertCodeSymbolSnapshot,
   insertRows,
