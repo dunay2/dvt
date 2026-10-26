@@ -784,6 +784,7 @@ describe('governed browser evidence routing', () => {
     formulaJourney,
     treeJourney,
     'apps/web/cypress/support/postgresPublicationFlow.ts',
+    'apps/web/cypress/support/semanticLive/progressive.ts',
     ...liveWorkloadConsumers,
     ...savedSampleConsumers,
     ...inspectorConsumers,
@@ -836,6 +837,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/e2e/new.cy.ts',
     'apps/web/cypress/support/e2e.ts',
     'apps/web/cypress/support/unregisteredRuntime.ts',
+    'apps/web/cypress/support/semanticLive/unregistered.ts',
     'apps/web/cypress/fixtures/new.json',
     'apps/web/cypress.live.config.ts',
     'apps/web/cypress/node/unregisteredDiagnostic.ts',
@@ -894,6 +896,11 @@ describe('governed browser evidence routing', () => {
     [dataHelper, 'registerCanvasNodeDataActionsProof', spec],
     [formulaJourney, 'exerciseTransformFormulaAuthoring', transformStage],
     [treeJourney, 'exerciseTransformTreeSelection', transformStage],
+    [
+      'apps/web/cypress/support/semanticLive/progressive.ts',
+      'addLiveFormula',
+      'apps/web/cypress/e2e/canvas/canvas-sql-progressive-live.cy.ts',
+    ],
   ])('guards exclusive ownership and registration of %s', (helperPath, registerName, owner) => {
     const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = new Set<string>();
