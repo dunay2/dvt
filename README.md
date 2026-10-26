@@ -312,21 +312,35 @@ documentation evidence before entering the active vocabulary.
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 10+
+- Node.js 22.22.1+; workspace tasks use Node.js 22.23.3.
+- pnpm 10.28.0, as declared by `packageManager`.
+- Git 2.32.0+ for lint-staged 17.
 
-**Pre-commit validation** (automated via Git hooks):
+pnpm selects the pinned runtime for `pnpm run` and `pnpm node`, downloading it
+on first use. See the [runtime bootstrap contract](docs/guides/testing-and-ci-capabilities.md#notes)
+for version selection and CI alignment.
 
 ```bash
-# These run automatically on git commit
+pnpm node --version
+pnpm node -p process.execPath
+```
+
+**Pre-commit validation**: `.husky/pre-commit` runs `pnpm run hooks:precommit`.
+The existing lint-staged configuration applies ESLint fixes and Prettier to
+staged paths and re-stages its changes. The staged-path-sensitive determinism
+gate runs afterward. Keep these hooks enabled and use `pnpm commit`.
+
+```bash
+# Manual validation for the affected scope
 pnpm lint                 # ESLint
 pnpm format:check         # Prettier
 pnpm type-check           # TypeScript
-
-# Manual checks
 pnpm lint:md              # Markdown linting
-pnpm test                 # Run tests
+pnpm test                 # Tests
 pnpm test:coverage        # Coverage report
+
+# Required repository gate before review/integration
+pnpm verify:prepush
 ```
 
 ### Pull Request Process
