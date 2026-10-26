@@ -8,11 +8,13 @@ import {
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftApplyResult,
+  CanvasInspectorNodeDraftInputChanges,
 } from './canvasInspectorAuthoring.types';
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import { modelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
+import { bindCanvasInputField } from './canvasInputBindingAuthoring';
 
 export function applyCanvasInspectorNodeDraftToSession(args: {
   draftSession: CanvasDraftSession;
@@ -62,4 +64,46 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
     outcome: 'applied',
     draftSession: canvasDraftSession.workingSet.updateNodeDefinition(nextSession, updated),
   };
+}
+
+/** Build the edge and node changes privately; the route owns the single CAS publication. */
+export async function applyCanvasInspectorNodeDraftWithInputsToSession(
+  args: Parameters<typeof applyCanvasInspectorNodeDraftToSession>[0] &
+    Readonly<{ changes: CanvasInspectorNodeDraftInputChanges; editable: boolean }>
+): Promise<CanvasInspectorNodeDraftApplyResult> {
+  if (!args.editable) return { outcome: 'rejected', reason: 'node_unavailable' };
+  const { signal } = args.changes;
+  signal?.throwIfAborted();
+  const additions = new Map(
+    args.changes.inputAdditions.map((source) => [
+      JSON.stringify([source.nodeId, source.columnId]),
+      source,
+    ])
+  );
+  let candidate = args.draftSession;
+  for (const source of additions.values()) {
+    const result = await bindCanvasInputField({
+      draftSession: candidate,
+      canonicalNodesById: args.canonicalNodesById,
+      target: { nodeId: args.node.id },
+      source,
+      editable: args.editable,
+      signal,
+    });
+    signal?.throwIfAborted();
+    if (result.outcome === 'rejected') return { outcome: 'rejected', reason: 'invalid_draft' };
+    candidate = result.draftSession;
+  }
+  const node =
+    candidate.localNodeCatalog?.[args.node.id] ?? args.canonicalNodesById.get(args.node.id);
+  if (node == null || !candidate.workingSet.visibleNodeIds.includes(node.id))
+    return { outcome: 'rejected', reason: 'node_unavailable' };
+  const result = applyCanvasInspectorNodeDraftToSession({
+    ...args,
+    node,
+    draftSession: candidate,
+  });
+  return result.outcome === 'no_changes' && candidate !== args.draftSession
+    ? { outcome: 'applied', draftSession: candidate }
+    : result;
 }

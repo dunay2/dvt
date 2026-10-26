@@ -2,6 +2,7 @@
 import { FieldInclusionToggle } from '../../components/inspector/FieldInclusionToggle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { useCanvasOutputPresentation } from './CanvasRelationalTreeEditorFrame';
 
 export type SourceOccurrenceOutputField = Readonly<{
   id: string;
@@ -15,21 +16,25 @@ export function CanvasSourceOccurrenceOutputs({
   fields,
   disabled,
   editing = false,
+  showExcluded,
   busy = false,
   onChange,
 }: Readonly<{
   fields: readonly SourceOccurrenceOutputField[];
   disabled: boolean;
   editing?: boolean;
+  showExcluded?: boolean;
   busy?: boolean;
   onChange: (fieldId: string, included: boolean) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
+  const presentation = useCanvasOutputPresentation();
+  const revealExcluded = editing && (showExcluded ?? presentation.showExcluded);
   return (
     <section data-slot="source-occurrence-outputs" className="space-y-2">
       {fields
-        .filter((field) => field.included || editing)
+        .filter((field) => field.included || revealExcluded)
         .map((field) => (
           <div
             key={field.id}
@@ -50,11 +55,11 @@ export function CanvasSourceOccurrenceOutputs({
                 slot={
                   field.included ? 'source-occurrence-remove-field' : 'source-occurrence-add-field'
                 }
-                disabled={disabled || !field.available}
+                disabled={disabled || (!field.available && !busy)}
                 busy={busy}
                 label={`${field.included ? copy.removeOutputField : copy.addOutputField}: ${field.name}`}
                 title={
-                  !field.available
+                  !field.available && !busy
                     ? copy.sourceOutputUnavailable
                     : field.included
                       ? copy.removeOutputField

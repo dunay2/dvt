@@ -9,6 +9,7 @@ import type { CanvasStagedOperationActions } from './canvasStagedOperationAction
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import type { CanvasStagedAnalysisBinding } from './CanvasStagedAnalysisProvider';
 import { resolveCanvasReadFieldEligibility } from './canvasInputFieldEligibility';
+import type { CanvasSourceInputRecovery } from './canvasSourceOccurrenceInputRecovery';
 
 export type CanvasRelationalTreeAuthoringDto = Readonly<{
   transformNode: CanonicalNode;
@@ -25,6 +26,7 @@ export type CanvasRelationalTreeAuthoringDto = Readonly<{
   stagedOperations: readonly CanvasStagedOperation[];
   selectedStagedOperationId: string | null;
   outputRelationId: string | null;
+  sourceInputRecovery?: CanvasSourceInputRecovery;
 }>;
 
 export type CanvasRelationalTreeAuthoringActions = Readonly<{
@@ -60,14 +62,14 @@ export function projectCanvasRelationalTreeAuthoringView(
   data: CanvasRelationalTreeAuthoringDto;
   actions: CanvasRelationalTreeAuthoringActions;
 }> {
-  const { model, transformNode, nodes, edges } = context;
+  const { model, transformNode, nodes } = context;
   const { session } = model;
   const select = context.pendingCondition ? selectRelation : model.selectRelation;
   return {
     data: {
       transformNode,
       nodes,
-      edges,
+      edges: session.sourceInputRecovery.edges,
       inputs: model.inputs,
       analysisBinding: {
         inputs: model.inputs,
@@ -76,7 +78,7 @@ export function projectCanvasRelationalTreeAuthoringView(
             document,
             nodeId: transformNode.id,
             nodes,
-            edges,
+            edges: session.sourceInputRecovery.edges,
           }),
       },
       draft: session.joinDraft,
@@ -88,6 +90,10 @@ export function projectCanvasRelationalTreeAuthoringView(
       stagedOperations: session.staged.operations,
       selectedStagedOperationId: session.staged.selectedId,
       outputRelationId: session.output.relationId ?? null,
+      sourceInputRecovery: {
+        ...session.sourceInputRecovery,
+        busy: session.sourceInputRecovery.busy || context.pendingCondition,
+      },
     },
     actions: {
       changeDraft: session.setJoinDraft,

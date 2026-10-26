@@ -9,6 +9,27 @@ import { relationOutputMapping } from './canvasRelationOutputBindings';
 import { rootFields } from './canvasDerivedOutputExpression';
 import { joinOutputScope } from './canvasSelectedJoinType';
 
+/** Assemble direct inclusion deltas without replacing partially selected identity-copy slots. */
+export function sourceOccurrenceOutputEdits(
+  selection: Awaited<ReturnType<typeof readCanvasSourceOccurrenceOutputSelection>>,
+  changes: ReadonlyMap<string, boolean>
+) {
+  const slotsFor = (included: boolean) =>
+    new Set(
+      selection.fields
+        .filter((field) => changes.get(field.id) === included)
+        .flatMap((field) => field.slots)
+    );
+  const removed = slotsFor(false);
+  const added = slotsFor(true);
+  return [
+    ...selection.slots
+      .filter((slot) => slot.output != null && !removed.has(slot.slot))
+      .sort((left, right) => left.output!.outputOrdinal - right.output!.outputOrdinal),
+    ...selection.slots.filter((slot) => slot.output == null && added.has(slot.slot)),
+  ].map((slot) => ({ slot: slot.slot, alias: slot.name }));
+}
+
 export async function readCanvasSourceOccurrenceOutputSelection(
   session: CanvasRelationAnalysisSession,
   relationId: string,
@@ -74,6 +95,7 @@ export async function readCanvasSourceOccurrenceOutputSelection(
         dataType: sourceTypes?.[field.outputOrdinal]?.kind.case,
         slots: contributions.map((slot) => slot.slot),
         included: contributions.some((slot) => slot.output != null),
+        canRecoverInput: root.relation.relType.case !== 'read' && contributions.length > 0,
         available:
           root.relation.relType.case !== 'read' &&
           contributions.length > 0 &&

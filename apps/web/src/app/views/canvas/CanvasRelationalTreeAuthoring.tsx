@@ -100,6 +100,7 @@ export function CanvasRelationalTreeAuthoring({
           />
         ) : (
           <CanvasRelationalTreeInlineEditor
+            sourceInputRecovery={data.sourceInputRecovery}
             sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
             reservedAliases={data.pendingSources.map((item) => item.read.binding.displayName)}
             copy={copy}

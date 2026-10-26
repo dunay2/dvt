@@ -6,6 +6,7 @@ import type { CanvasDraftSessionCommandRunner } from './useCanvasWorkspaceDraftS
 
 type Result =
   | Readonly<{ outcome: 'applied'; draftSession: CanvasDraftSession }>
+  | Readonly<{ outcome: 'no_changes' }>
   | Readonly<{ outcome: 'rejected'; reason: string }>;
 
 export function useCanvasColumnDraftCommand(run: CanvasDraftSessionCommandRunner) {

@@ -11,8 +11,20 @@ import {
   type CanvasPresentationOperation,
 } from './canvasRelationalOperationPresentation';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Checkbox } from '../../components/ui/checkbox';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
@@ -21,43 +33,74 @@ export const CanvasOperationExpressionHost = createContext<Readonly<{
   openProperties: () => void;
 }> | null>(null);
 
-type InspectorTab = Readonly<{ relationId: string; tab: string }>;
+type InspectorPresentation = Readonly<{
+  relationId: string;
+  tab?: string;
+  editing?: boolean;
+  selectedOnly?: boolean;
+}>;
 const InspectorTabs = createContext<
-  readonly [InspectorTab | null, (selection: InspectorTab) => void] | null
+  | readonly [InspectorPresentation | null, Dispatch<SetStateAction<InspectorPresentation | null>>]
+  | null
 >(null);
-const CanvasOutputEditing = createContext(true);
+const CanvasOutputPresentation = createContext({ editing: true, showExcluded: true });
 
-export function useCanvasOutputEditing(): boolean {
-  return useContext(CanvasOutputEditing);
+export function useCanvasOutputPresentation() {
+  return useContext(CanvasOutputPresentation);
 }
 
 export function CanvasOperationInspectorTabs({
   children,
-}: Readonly<{ children: ReactNode }>): JSX.Element {
-  const [selection, setSelection] = useState<InspectorTab | null>(null);
+  resetRevision = 0,
+}: Readonly<{ children: ReactNode; resetRevision?: number }>): JSX.Element {
+  const [selection, setSelection] = useState<InspectorPresentation | null>(null);
+  useEffect(() => {
+    setSelection((current) =>
+      current == null
+        ? current
+        : {
+            ...current,
+            editing: false,
+            selectedOnly: false,
+          }
+    );
+  }, [resetRevision]);
   const value = useMemo(() => [selection, setSelection] as const, [selection]);
   return <InspectorTabs.Provider value={value}>{children}</InspectorTabs.Provider>;
 }
 
-function useInspectorTab(relationId: string | null | undefined, initialTab: string) {
+function useInspectorPresentation(relationId: string | null | undefined) {
   const shared = useContext(InspectorTabs);
-  const [localTab, setLocalTab] = useState(initialTab);
+  const [local, setLocal] = useState<Omit<InspectorPresentation, 'relationId'>>({});
   const selection = shared?.[0];
   const select = shared?.[1];
-  const tab =
+  const current: Omit<InspectorPresentation, 'relationId'> =
     select == null || relationId == null
-      ? localTab
+      ? local
       : selection?.relationId === relationId
-        ? selection.tab
-        : initialTab;
-  const setTab = useCallback(
-    (next: string) => {
-      if (select != null && relationId != null) select({ relationId, tab: next });
-      else setLocalTab(next);
+        ? selection
+        : {};
+  const update = useCallback(
+    (changes: Partial<Omit<InspectorPresentation, 'relationId'>>) => {
+      if (select != null && relationId != null)
+        select((previous) => ({
+          ...(previous?.relationId === relationId ? previous : { relationId }),
+          ...changes,
+        }));
+      else setLocal((previous) => ({ ...previous, ...changes }));
     },
     [select, relationId]
   );
-  return [tab, setTab] as const;
+  return [current, update] as const;
+}
+
+export function useCanvasInspectorEditing(relationId: string | null | undefined) {
+  const [presentation, update] = useInspectorPresentation(relationId);
+  const setEditing = useCallback(
+    (editing: boolean) => update({ editing, selectedOnly: false }),
+    [update]
+  );
+  return [presentation.editing ?? false, setEditing] as const;
 }
 
 export function CanvasRelationalTreeEditorFrame({
@@ -94,7 +137,14 @@ export function CanvasRelationalTreeEditorFrame({
   const presentation = resolveCanvasRelationalOperationPresentation(operation);
   const title = label ?? resolveCanvasViewCopy(language)[presentation.labelKey];
   const Icon = presentation.icon;
-  const [tab, setTab] = useInspectorTab(relationId, initialTab);
+  const [inspector, updateInspector] = useInspectorPresentation(relationId);
+  const tab = inspector.tab ?? initialTab;
+  const selectedOnly = inspector.selectedOnly ?? false;
+  const setTab = useCallback((next: string) => updateInspector({ tab: next }), [updateInspector]);
+  const outputPresentation = useMemo(
+    () => ({ editing, showExcluded: editing && !selectedOnly }),
+    [editing, selectedOnly]
+  );
   const activeTab =
     (!hasExpression && tab === 'tree') || (output == null && tab === 'output') ? 'properties' : tab;
   const [expressionHost, setExpressionHost] = useState<HTMLDivElement | null>(null);
@@ -112,7 +162,7 @@ export function CanvasRelationalTreeEditorFrame({
       data-relation-id={relationId ?? undefined}
       aria-label={title}
       hidden={hidden}
-      className={`canvas-operation-properties ${hidden ? 'hidden' : 'flex'} min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-l border-(--border-subtle) bg-(--surface-panel)`}
+      className={`${inspectorVisualClasses.inspectorForm} canvas-operation-properties ${hidden ? 'hidden' : 'flex'} min-h-0 min-w-0 shrink-0 flex-col overflow-hidden border-l border-(--border-subtle) bg-(--surface-panel)`}
     >
       <header className="flex h-9 shrink-0 items-center gap-2 border-b border-(--border-subtle) bg-(--surface-panel) px-3">
         <Icon className="size-4 text-(--status-info)" />
@@ -122,7 +172,10 @@ export function CanvasRelationalTreeEditorFrame({
             type="button"
             data-slot="canvas-relational-edit"
             aria-pressed={editing}
-            onClick={onEdit}
+            onClick={() => {
+              updateInspector({ selectedOnly: false });
+              onEdit();
+            }}
             className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-(--surface-selected)"
           >
             <Pencil aria-hidden="true" className="size-3" />
@@ -140,7 +193,7 @@ export function CanvasRelationalTreeEditorFrame({
           <X aria-hidden="true" className="size-4" />
         </button>
       </header>
-      <CanvasOutputEditing.Provider value={editing}>
+      <CanvasOutputPresentation.Provider value={outputPresentation}>
         <CanvasOperationExpressionHost.Provider value={expressionContext}>
           <Tabs value={activeTab} onValueChange={setTab} className="min-h-0 flex-1 gap-0">
             <TabsList
@@ -199,12 +252,24 @@ export function CanvasRelationalTreeEditorFrame({
                 forceMount
                 className="min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
               >
+                {editing ? (
+                  <label className="mb-2 flex items-center gap-2 text-xs text-(--text-muted)">
+                    <Checkbox
+                      aria-label={copy.selectedFieldsOnly}
+                      checked={selectedOnly}
+                      onCheckedChange={(checked) =>
+                        updateInspector({ selectedOnly: checked === true })
+                      }
+                    />
+                    {copy.selectedFieldsOnly}
+                  </label>
+                ) : null}
                 {output}
               </TabsContent>
             )}
           </Tabs>
         </CanvasOperationExpressionHost.Provider>
-      </CanvasOutputEditing.Provider>
+      </CanvasOutputPresentation.Provider>
     </section>
   );
 }

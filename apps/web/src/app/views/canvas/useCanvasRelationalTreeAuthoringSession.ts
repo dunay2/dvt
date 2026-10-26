@@ -14,6 +14,7 @@ import { useCanvasRelationalAuthoringDraftHydration } from './useCanvasRelationa
 import { useCanvasRelationalGraphAuthoring } from './useCanvasRelationalGraphAuthoring';
 import { prepareCanvasRelationalTreeApply } from './canvasRelationalTreeApplyDraft';
 import { useCanvasSourceOutputInitialization } from './useCanvasSourceOutputInitialization';
+import { useCanvasSourceInputRecovery } from './useCanvasSourceInputRecovery';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -33,21 +34,31 @@ export function useCanvasRelationalTreeAuthoringSession(
     projection: args.projection,
     onHydrate: state.hydrate,
   });
-  const { restorationUnavailable, restore } = useCanvasRelationalAuthoringDraftHydration({
-    enabled,
-    transformNode,
-    document: args.document,
-    inputs,
-    hydrateExisting,
-    state,
-  });
+  const { restorationUnavailable, restore: restoreSnapshot } =
+    useCanvasRelationalAuthoringDraftHydration({
+      enabled,
+      transformNode,
+      document: args.document,
+      inputs,
+      hydrateExisting,
+      state,
+    });
   const editable = authoring?.canEditNode === true && !restorationUnavailable;
   const effectiveDraft = !state.active && seed != null ? seed.draft : state.joinDraft;
+  const sourceInputRecovery = useCanvasSourceInputRecovery({
+    state,
+    editable: enabled && editable,
+    nodeId: transformNode.id,
+    nodes,
+    edges,
+    inputs,
+    document: effectiveDraft,
+  });
   const { analysis } = useCanvasRelationalTreeAnalysisContext({
     document: effectiveDraft,
     transformNode,
     nodes,
-    edges,
+    edges: sourceInputRecovery.edges,
   });
   const effectiveOutputRelationId =
     (!state.active && seed != null ? seed.outputRelationId : state.outputRelationId) ?? null;
@@ -74,13 +85,20 @@ export function useCanvasRelationalTreeAuthoringSession(
     reset: state.reset,
   });
   const start = useCallback(() => {
-    if (!enabled || !editable) return false;
+    if (!enabled || !editable || sourceInputRecovery.isPending()) return false;
     if (!state.active && !hydrateExisting()) state.setActive(true);
     return true;
-  }, [state.active, state.setActive, editable, enabled, hydrateExisting]);
+  }, [
+    state.active,
+    state.setActive,
+    editable,
+    enabled,
+    hydrateExisting,
+    sourceInputRecovery.isPending,
+  ]);
   const graph = useCanvasRelationalGraphAuthoring({
     editable: enabled && editable,
-    inputs,
+    inputs: sourceInputRecovery.inputs,
     analysis,
     state,
     start,
@@ -90,15 +108,25 @@ export function useCanvasRelationalTreeAuthoringSession(
   const sourceOutputInitialization = useCanvasSourceOutputInitialization({
     state,
     editable: enabled && editable,
-    inputs,
+    inputs: sourceInputRecovery.inputs,
     nodeId: transformNode.id,
     nodes,
-    edges,
+    edges: sourceInputRecovery.edges,
   });
-  const applyCurrent = (document?: SubstraitDocument): W.CanvasRelationalTreeApplyResult =>
-    sourceOutputInitialization.blocked
-      ? { outcome: 'rejected', reason: 'source_output_unavailable' }
-      : apply(document);
+  const applyCurrent = (
+    document?: SubstraitDocument,
+    signal?: AbortSignal
+  ): W.CanvasRelationalTreeApplyResult | Promise<W.CanvasRelationalTreeApplyResult> => {
+    if (sourceOutputInitialization.blocked || sourceInputRecovery.isPending())
+      return { outcome: 'rejected', reason: 'source_output_unavailable' };
+    if (sourceInputRecovery.additions.length === 0) return apply(document);
+    return sourceInputRecovery.runApply((lifetime) =>
+      apply(document, {
+        inputAdditions: sourceInputRecovery.additions,
+        signal: signal == null ? lifetime : AbortSignal.any([signal, lifetime]),
+      })
+    );
+  };
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
     enabled: enabled && editable,
@@ -107,6 +135,10 @@ export function useCanvasRelationalTreeAuthoringSession(
     state,
     start,
   });
+  const restore = () => {
+    sourceInputRecovery.cancel();
+    restoreSnapshot();
+  };
   return {
     restorationUnavailable,
     analysis,
@@ -114,26 +146,31 @@ export function useCanvasRelationalTreeAuthoringSession(
     removal,
     cleared: prepared.cleared,
     sourceOutputInitialization,
+    sourceInputRecovery,
     applyRejection: sourceOutputInitialization.failed
       ? { outcome: 'rejected' as const, reason: 'source_output_unavailable' as const }
       : state.applyRejection,
     active: state.active,
     baselineDraft,
     seed,
-    apply: () => applyCurrent(),
-    applyOutputOrder: (document: SubstraitDocument) =>
-      applyCurrent(document).outcome !== 'rejected',
+    apply: (signal?: AbortSignal) => applyCurrent(undefined, signal),
+    applyOutputOrder: (document: SubstraitDocument) => {
+      if (sourceInputRecovery.additions.length > 0) return false;
+      const result = applyCurrent(document);
+      return !(result instanceof Promise) && result.outcome !== 'rejected';
+    },
     cancel: restore,
     joinDraft: state.joinDraft,
     operation: state.operation,
     selectedInputIds: state.slots.selectedInputIds,
     setJoinDraft: (draft: SubstraitDocument) => {
-      if (start()) state.setJoinDraft(draft);
+      if (!start()) return false;
+      state.setJoinDraft(draft);
     },
     start,
     positions: state.positions,
     setPositions: state.setPositions,
     hasIncompleteGraph: prepared.hasIncompleteGraph,
-    hasDraftChanges: prepared.hasDraftChanges,
+    hasDraftChanges: prepared.hasDraftChanges || sourceInputRecovery.additions.length > 0,
   } as const;
 }

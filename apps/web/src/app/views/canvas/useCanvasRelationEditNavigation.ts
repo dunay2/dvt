@@ -12,7 +12,7 @@ import {
 export type CanvasRelationEditNavigationSession = Readonly<{
   hasUnappliedChanges: boolean;
   canApply: boolean;
-  apply: () => CanvasRelationalTreeApplyResult;
+  apply: () => CanvasRelationalTreeApplyResult | Promise<CanvasRelationalTreeApplyResult>;
   cancel: () => void;
 }>;
 
@@ -62,10 +62,26 @@ export function useCanvasRelationEditNavigation(context: NavigationContext) {
         transition({ type: 'settle', request: state.request, accepted });
       }
     };
+    const complete = (accepted: boolean) => {
+      if (current.current !== state || committed.current?.scope !== scope) return;
+      try {
+        if (accepted) committed.current.context.onSelect(state.request.relationId);
+      } finally {
+        settle(accepted);
+      }
+    };
     let accepted = true;
     try {
       if (state.action === 'apply') {
-        accepted = active.context.session.apply().outcome !== 'rejected';
+        const result = active.context.session.apply();
+        if (result instanceof Promise) {
+          void result.then(
+            (receipt) => complete(receipt.outcome !== 'rejected'),
+            () => settle(false)
+          );
+          return;
+        }
+        accepted = result.outcome !== 'rejected';
       } else if (state.action === 'discard' || active.context.editing) {
         active.context.session.cancel();
       }
@@ -73,12 +89,7 @@ export function useCanvasRelationEditNavigation(context: NavigationContext) {
       settle(false);
       throw error;
     }
-    if (current.current !== state || committed.current?.scope !== scope) return;
-    try {
-      if (accepted) committed.current.context.onSelect(state.request.relationId);
-    } finally {
-      settle(accepted);
-    }
+    complete(accepted);
   };
   const dispatch = (event: RelationNavigationEvent) => {
     const previous = current.current;

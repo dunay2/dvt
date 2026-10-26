@@ -96,6 +96,18 @@ Write outcomes are explicit and typed:
 The v1 merge posture is reject-on-stale. The server does not auto-merge
 concurrent edits in this contract line.
 
+The Web Model edit transaction may stage explicit recovery of a currently
+published physical Read field omitted from its existing incoming Input binding.
+This remains `ConfigureCanvasDvtNode`: its existing Input binder validates an
+unpublished candidate, and Model Apply validates the semantic node and additive
+edge bindings before one aggregate CAS publication. Cancel discards both; failed
+or stale Apply retains the local draft without a partial workspace mutation.
+Ordinary Output inclusion changes do not alter Input bindings. Recovery does not
+restore withdrawn producer publication, create dependencies or select sibling
+occurrences' Output. The accepted node and edge changes use the existing typed
+workspace draft payload and protected Save request; no schema version, field,
+endpoint, migration or persistence authority is introduced by this interaction.
+
 ## Authoring aggregate posture
 
 Input nodes may declare `sourceDefinitionId` to identify a registered source in

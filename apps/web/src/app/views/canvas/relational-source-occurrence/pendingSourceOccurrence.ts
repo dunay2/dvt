@@ -13,6 +13,7 @@ import { createCanvasInputRead, sourceFieldType } from '../canvasSourceRelation'
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import { decodeDvtSubstraitSemanticDocument } from '../canvasDvtSubstraitSemanticDocument';
 import { selectedCanvasInputOrdinals } from '../canvasInputComposition';
+import { rootFields } from '../canvasDerivedOutputExpression';
 
 export type PendingSourceOccurrence = Readonly<{
   sourceNodeId: string;
@@ -32,9 +33,7 @@ export function pendingSourceOccurrencePublishedFieldIds(
     })
   );
   const { read } = occurrence;
-  return read.fields
-    .filter((field) => field.parentFieldId == null)
-    .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
+  return rootFields(read.fields)
     .filter((field) => {
       const producerFieldId = read.binding.producerRef?.fields.find(
         (binding) => binding.fieldId === field.fieldId

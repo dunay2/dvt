@@ -312,8 +312,8 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 The applied Model inspector selects the occurrence's direct contribution to the
 Model's root Output. It does not remove a Model Input binding. The governing
-design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V11`, with rationale and
-Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416688929).
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V12`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6419771739).
 The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
 rails retain command and presentation ownership.
 
@@ -346,8 +346,42 @@ remain intact. The applied view shows only included fields without editing
 controls. The existing Edit action opens the Model draft; its Source inspector
 shows included and excluded fields with the existing add/remove actions.
 Apply persists the draft selection; Cancel restores the previously applied
-document. There is no separate hide-excluded mode: the shared header action is
-literally `Edit`, and entering it never writes a command.
+document. The shared header action is literally `Edit`, and entering it never
+writes a command. Edit shows all admitted fields in stable order by default.
+The shared explicit `Solo seleccionados` selector may narrow that presentation;
+a field toggle does not change the filter, reorder rows or move focus, scroll or
+card coordinates. Selecting a connected Source during an already-active Model
+draft does not itself enter that Source's local Edit mode.
+
+An explicit plus on a physical Read field still published by its connected
+producer but omitted from the incoming Input binding stages additive recovery.
+It uses the existing `bindCanvasInputField` command on an unpublished candidate,
+derives ordinary graph eligibility from its accepted edges, and includes only
+the selected occurrence's direct root Output contribution. No permission
+whitelist, automatic producer repair, dependency creation or Input rewiring is
+admitted. Ordinary Output toggles continue to leave Input bindings unchanged.
+The complete physical Read, predicates, producers and sibling Output selections
+remain intact; a producer-to-Model binding does not select other occurrences.
+
+The existing Model Apply port carries optional additive Input identities with
+the semantic node draft. Its existing serialized workspace command evaluates
+both on the latest unpublished candidate and CAS-publishes one aggregate only
+after permission, scope, publication and semantic validation accept. Failed or
+stale Apply retains the local draft; Cancel discards Input and Output together.
+No workspace mutation occurs before accepted Apply, and navigation awaits it.
+The protected persistence envelope and public command rails remain unchanged.
+
+```mermaid
+flowchart LR
+  Plus[Explicit recovery plus] --> Bind[Existing Input bind on unpublished candidate]
+  Bind --> Eligibility[Graph eligibility from accepted edges]
+  Eligibility --> Output[Existing exact occurrence root Output command]
+  Output --> Local[Local Model graph snapshot]
+  Local --> Apply[Existing Model Apply and latest validation]
+  Apply --> CAS[One node and edge aggregate publication]
+  Cancel[Model Cancel] --> Discard[Discard local Input and Output]
+```
+
 Existing command authority owns revision, permissions, rejection, rollback and
 persistence. Detached Sources store optional `initialOutputFieldIds` on their
 own incomplete-authoring occurrence. They never invoke the Model Input mapping

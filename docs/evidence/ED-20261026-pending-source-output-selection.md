@@ -15,11 +15,21 @@ code_refs:
   - apps/web/src/app/views/canvas/useCanvasRelationalTreeDraftState.ts
   - apps/web/src/app/views/canvas/CanvasPendingSourceOutputs.tsx
   - apps/web/src/app/views/canvas/CanvasRelationalTreeEditorFrame.tsx
+  - apps/web/src/app/views/canvas/canvasSourceOccurrenceInputRecovery.ts
+  - apps/web/src/app/views/canvas/useCanvasSourceInputRecovery.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringCommand.ts
+  - apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts
+  - apps/web/src/app/views/canvas/useCanvasModelNavigation.ts
+  - apps/web/src/app/views/canvas/CanvasRelationalTreeSideInspector.tsx
   - apps/web/src/app/components/inspector/inspectorVisualTokens.ts
   - apps/web/src/app/components/inspector/NodePropertyTable.tsx
   - apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-card-field-lifecycle.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-pending-read-coverage.cy.ts
 evidence:
   tests:
+    - pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasSourceOccurrenceInputRecovery.test.ts src/app/views/canvas/canvasRelationalTreeApplyCommand.test.ts src/app/views/canvas/canvasSourceOutputDefaults.test.ts src/app/views/canvas/canvasInspectorAuthoringCommand.test.ts
+    - pnpm --filter @dvt/web test:presentation:run src/app/views/canvas/useCanvasSourceInputRecovery.test.tsx src/app/views/canvas/CanvasRelationalTreeWorkbench.sourceInputRecovery.test.tsx src/app/views/canvas/useCanvasRelationEditNavigation.test.tsx src/app/views/canvas/useCanvasInspectorCommands.test.tsx src/app/views/canvas/CanvasSourceOccurrenceOutputs.test.tsx src/app/views/canvas/CanvasRelationalTreeWorkbench.apply.test.tsx
     - pnpm --dir apps/web exec vitest run --config vitest.presentation.config.ts src/app/components/inspector/NodePropertySectionView.test.tsx src/app/components/inspector/NodePropertiesTabs.sourceInputsOutputs.test.tsx src/app/components/inspector/NodePropertyTable.test.tsx
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/contracts schema:verify
@@ -32,8 +42,8 @@ evidence:
 # Pending Source Output And Shared Edit
 
 [Issue #2937](https://github.com/dunay2/dvt/issues/2937) owns acceptance. Planning
-DB design `GH-2937-SOURCE-OUTPUT-SELECTION-V11` and its
-[preimplementation rationale](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416688929)
+DB design `GH-2937-SOURCE-OUTPUT-SELECTION-V12` and its
+[preimplementation rationale](https://github.com/dunay2/dvt/issues/2937#issuecomment-6419771739)
 own the admitted boundaries and test matrix. ADR-0061, ADR-0064, the existing
 ConfigureCanvasDvtNode and RenderCanvasContextualGraphSurface rails, the Canvas
 component/style contracts and workspace draft persistence govern implementation.
@@ -55,8 +65,10 @@ Source inspector follows its owning root even after terminal disconnect.
 
 Canvas forms share the existing frame, literal Edit action, passive field rows,
 inclusion control and semantic style tokens. Inspection shows included fields;
-editing shows all admitted fields. The hide-excluded filter and pending Input
-adapter are removed. Model transactions and existing atomic commands retain their
+editing shows all admitted fields. The common explicit `Solo seleccionados`
+selector narrows rows only by user intent; toggles preserve identity/order,
+focus, scroll and card placement. The obsolete pending Input adapter is removed.
+Model transactions and existing atomic commands retain their
 respective persistence ownership. No new CSS system or public rail is introduced.
 Pending type labels resolve stable producer identities after supported producer
 reordering and consumer reopen; saved Read ordinals do not index the current
@@ -90,6 +102,47 @@ gates run. Command lists identify evidence scope, not acceptance of unrun checks
 ARC evaluation of the committed slice returned ARC-2, evidence/risk required and
 lint, test, schema-validate, contract-golden checks. No rollout or compatibility
 artifact was required. No debt, stub, bypassed hook or relaxed rule was introduced.
+
+## Explicit Legacy Input Recovery
+
+Read-only live draft evidence distinguishes an old Input removal from root
+Output exclusion: client still publishes both fields and retains its complete
+Read, but its incoming edge omits country. V12 admits explicit recovery through
+the existing binder and Model Apply/CAS, with local Input and exact-occurrence
+Output accepted or discarded together. It also corrects local Edit entry during
+an already-active Model draft. The rationale, diagrams, exact paths and negative
+matrix precede TDD in the governing issue.
+
+The candidate and command unit group passes 35 tests. The affected lifecycle,
+Source, real Workbench self-JOIN, deferred navigation and Inspector command group
+passes 48 presentation tests. Tests reproduced and corrected an acknowledgement
+before a queued graph CAS was committed, premature async Apply/navigation, and
+the selected Source form unmounting during fresh analysis. Committed receipts
+now acknowledge the actual graph; passive stable rows wait for fresh permission
+results. Unrelated metrics refresh retains staged intent, while publication
+withdrawal withholds eligibility and preserves the pending additions for final
+validation. The common slot helper retains identity-copy and nested JOIN behavior.
+
+The Model navigation suite passes 15/15, including a reproduced late durable-save
+receipt navigating after unmount. Apply and durable-save attempts now use the
+same lifetime-check pattern; rejection stays visible and retryable. Presentation
+settlement is explicit, so incomplete Apply/Cancel also clears Edit and its
+filter while retaining the chosen tab. The Source view suite passes 10/10,
+including a focused, inert busy button during availability refresh. Existing
+architecture, size and style guards pass with unchanged limits; Model Output
+view state resides with its inspector and shares one pending predicate.
+
+Native lifecycle evidence passes 7/7, including the actual two/four-field partial
+Input shape, explicit local Edit/filter, stable DOM/focus/scroll/card position,
+no pre-Apply write, Cancel, one atomic Apply/save/reopen, and unchanged producer,
+Read, sibling edge, original Output identities and JOIN predicate. The final
+targeted pending-Source proof passes 2/2, including incomplete Apply/Cancel mode
+reset and stable toggles. These are separate successful runs, not a claim of one
+combined nine-case run. Initial browser failures were corrected hidden-control
+targeting or post-Cancel navigation oracles, not reported as product successes.
+Exact artifacts and final normalized-head repository/browser acceptance remain
+with the governing issue and PR gates; this record does not claim an unrun
+`pnpm verify:prepush` result.
 
 ## Shared Logical Column Density
 

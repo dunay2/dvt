@@ -1,27 +1,24 @@
 /** Apply persists the edited document without reconstructing or changing its identities. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
-import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
-import type { CanonicalNode } from '../../types/canonical';
-import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { createCanvasRelationalTreeApplyDraft } from './canvasRelationalTreeApplyDraft';
 import type {
+  CanvasInspectorNodeDraft,
+  CanvasInspectorNodeDraftInputChanges,
+} from './canvasInspectorAuthoring.types';
+import type {
   CanvasRelationalTreeApplyResult,
-  CanvasRelationalTreeAuthoringContract,
-  RelationalApplyRejection,
+  CanvasRelationalTreeApplyCommandArgs,
+  CanvasRelationalTreeApplyCommandFactory,
 } from './canvasRelationalTreeWorkbench.types';
 
-export function createCanvasRelationalTreeApplyCommand(args: {
-  authoring?: CanvasRelationalTreeAuthoringContract;
-  editable: boolean;
-  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;
-  cleared?: boolean;
-  joinDraft: SubstraitDocument | null;
-  operation: CanvasRelationalOperation | null;
-  reject: (rejection: RelationalApplyRejection) => void;
-  reset: () => void;
-  transformNode: CanonicalNode;
-}) {
-  return (joinDraft = args.joinDraft): CanvasRelationalTreeApplyResult => {
+export const createCanvasRelationalTreeApplyCommand = ((
+  args: CanvasRelationalTreeApplyCommandArgs
+) => {
+  return (
+    document?: SubstraitDocument,
+    inputChanges: CanvasInspectorNodeDraftInputChanges | undefined = args.inputChanges
+  ): CanvasRelationalTreeApplyResult | Promise<CanvasRelationalTreeApplyResult> => {
+    const joinDraft = document ?? args.joinDraft;
     const { authoring, editable, operation, reject, reset, transformNode } = args;
     if (
       !editable ||
@@ -40,9 +37,18 @@ export function createCanvasRelationalTreeApplyCommand(args: {
       joinDraft,
       relationalAuthoringDraft: args.relationalAuthoringDraft,
     });
-    const result = authoring.onApplyNodeDraft(transformNode.id, draft);
-    if (result.outcome === 'rejected') reject(result);
-    else if (args.relationalAuthoringDraft == null) reset();
-    return result;
+    const settle = (result: CanvasRelationalTreeApplyResult): CanvasRelationalTreeApplyResult => {
+      if (inputChanges?.signal?.aborted)
+        return { outcome: 'rejected', reason: 'command_unavailable' };
+      if (result.outcome === 'rejected') reject(result);
+      else if (args.relationalAuthoringDraft == null) reset();
+      return result;
+    };
+    const request: [string, CanvasInspectorNodeDraft, CanvasInspectorNodeDraftInputChanges?] =
+      inputChanges == null ? [transformNode.id, draft] : [transformNode.id, draft, inputChanges];
+    const result = authoring.onApplyNodeDraft(...request);
+    return result instanceof Promise
+      ? result.then(settle, () => settle({ outcome: 'rejected', reason: 'invalid_draft' }))
+      : settle(result);
   };
-}
+}) as CanvasRelationalTreeApplyCommandFactory;

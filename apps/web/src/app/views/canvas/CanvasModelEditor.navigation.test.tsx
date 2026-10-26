@@ -24,6 +24,11 @@ import {
 } from './operation-menu/operationMenu.test-support';
 import { connectWorkbenchOutput } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 import { dragSourceTo } from './CanvasRelationalTreeWorkbench.test-support';
+import { useCanvasModelNavigation } from './useCanvasModelNavigation';
+import { CanvasDraftDecisionDialog } from './CanvasDraftDecisionDialog';
+import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import type { CanvasRelationalTreeWorkbenchHandle } from './useCanvasRelationalTreeWorkbenchHandle';
+import type { CanvasRelationalTreeApplyResult } from './canvasRelationalTreeWorkbench.types';
 
 setupOperationMenuDom();
 
@@ -173,6 +178,155 @@ describe('CanvasModelEditor navigation', () => {
     useCanvasWorkspaceMenuContributionStore.setState({ modelTab: null });
     container.remove();
     globalThis.Request = NativeRequest;
+  });
+
+  it.each([
+    ['canvas', 'no_changes'],
+    ['route', 'no_changes'],
+    ['canvas', 'rejected'],
+    ['route', 'rejected'],
+    ['canvas', 'throws'],
+    ['canvas', 'unmounted'],
+    ['route', 'unmountedSave'],
+  ] as const)('waits for Apply before continuing to %s (%s)', async (target, outcome) => {
+    let finishApply!: (result: CanvasRelationalTreeApplyResult) => void;
+    let failApply!: (reason: unknown) => void;
+    const receipt = new Promise<CanvasRelationalTreeApplyResult>((resolve, reject) => {
+      finishApply = resolve;
+      failApply = reject;
+    });
+    let finishSave!: (result: {
+      ok: true;
+      canonicalNodes: readonly CanonicalNode[];
+      canonicalEdges: readonly CanonicalEdge[];
+      workspaceNodeIds: readonly string[];
+    }) => void;
+    const durableSave = new Promise<{
+      ok: true;
+      canonicalNodes: readonly CanonicalNode[];
+      canonicalEdges: readonly CanonicalEdge[];
+      workspaceNodeIds: readonly string[];
+    }>((resolve) => {
+      finishSave = resolve;
+    });
+    const apply = vi.fn(() => receipt);
+    const onClose = vi.fn();
+    const proceed = vi.fn();
+    const preparePreview = vi.fn(() => durableSave);
+    const copy = resolveCanvasSemanticEditorCopy('en');
+    const workbench: React.RefObject<CanvasRelationalTreeWorkbenchHandle> = {
+      current: {
+        hasUnappliedChanges: true,
+        canApply: true,
+        applyRejection: null,
+        apply,
+        cancel: vi.fn(),
+      },
+    };
+    function Host(): React.JSX.Element {
+      const navigation = useCanvasModelNavigation({
+        workbench,
+        onClose,
+        preparePreview,
+        draftStatus: durableStatus,
+        copy,
+      });
+      return (
+        <>
+          <button
+            type="button"
+            data-slot="request-async-navigation"
+            onClick={() =>
+              target === 'canvas'
+                ? navigation.requestClose()
+                : navigation.onRouteBlocked({ proceed, reset: vi.fn() })
+            }
+          >
+            Leave
+          </button>
+          <CanvasDraftDecisionDialog {...navigation.decision} />
+        </>
+      );
+    }
+    await act(async () => root.render(<Host />));
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="request-async-navigation"]')!.click()
+    );
+    const submit = findButton('Apply and continue');
+    await act(async () => {
+      submit.click();
+      submit.click();
+    });
+    expect(apply).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(proceed).not.toHaveBeenCalled();
+    expect(preparePreview).not.toHaveBeenCalled();
+    expect(document.querySelector('[role="alertdialog"]')).not.toBeNull();
+    expect(submit.disabled).toBe(true);
+    if (outcome === 'unmounted') {
+      await act(async () => root.render(<div>Another workspace</div>));
+    }
+    await act(async () => {
+      if (outcome === 'throws') failApply(new Error('Admission failed'));
+      else
+        finishApply(
+          outcome === 'rejected'
+            ? { outcome: 'rejected', reason: 'node_unavailable' }
+            : { outcome: 'no_changes' }
+        );
+    });
+    if (outcome === 'unmounted') {
+      expect(container.textContent).toBe('Another workspace');
+      expect(onClose).not.toHaveBeenCalled();
+      expect(proceed).not.toHaveBeenCalled();
+      expect(preparePreview).not.toHaveBeenCalled();
+      return;
+    }
+    if (outcome === 'rejected' || outcome === 'throws') {
+      expect(document.querySelector('[role="alertdialog"] [role="alert"]')?.textContent).toBe(
+        outcome === 'rejected' ? copy.applyNodeUnavailable : copy.applyRejected
+      );
+      expect(onClose).not.toHaveBeenCalled();
+      expect(proceed).not.toHaveBeenCalled();
+      expect(preparePreview).not.toHaveBeenCalled();
+      expect(submit.disabled).toBe(false);
+      apply.mockReturnValueOnce(Promise.resolve({ outcome: 'no_changes' }));
+      await act(async () => submit.click());
+      expect(apply).toHaveBeenCalledTimes(2);
+    }
+    if (target === 'route') {
+      expect(preparePreview).toHaveBeenCalledOnce();
+      expect(proceed).not.toHaveBeenCalled();
+      if (outcome === 'unmountedSave') {
+        await act(async () => root.render(<div>Another workspace</div>));
+        await act(async () =>
+          finishSave({
+            ok: true,
+            canonicalNodes: [source, model],
+            canonicalEdges: edges,
+            workspaceNodeIds: [source.id, model.id],
+          })
+        );
+        expect(container.textContent).toBe('Another workspace');
+        expect(proceed).not.toHaveBeenCalled();
+        expect(onClose).not.toHaveBeenCalled();
+        return;
+      }
+      await act(async () =>
+        finishSave({
+          ok: true,
+          canonicalNodes: [source, model],
+          canonicalEdges: edges,
+          workspaceNodeIds: [source.id, model.id],
+        })
+      );
+      expect(proceed).toHaveBeenCalledOnce();
+      expect(onClose).not.toHaveBeenCalled();
+    } else {
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(preparePreview).not.toHaveBeenCalled();
+    }
+    expect(document.querySelector('[role="alertdialog"]')).toBeNull();
   });
 
   it('keeps a rejected model output draft open and explains the dependent model', async () => {

@@ -19,6 +19,7 @@ import { useCanvasWorkbenchFocusRecovery } from './useCanvasWorkbenchFocus';
 import { useCanvasRelationalTreeSessionActions } from './useCanvasRelationalTreeSessionActions';
 import { CanvasOperationPreviewProvider } from './CanvasOperationDataPreview';
 import { CanvasOperationInspectorTabs } from './CanvasRelationalTreeEditorFrame';
+import { useCanvasModelOutputInspectorState } from './CanvasRelationalTreeSideInspector';
 import styles from './CanvasRelationalTreeWorkbench.module.css';
 import {
   useCanvasRelationalTreeWorkbenchHandle,
@@ -41,23 +42,25 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
     authoring,
   });
   const [pendingCondition, setPendingCondition] = useState(false);
-  const [pendingCompositionOutput, setPendingCompositionOutput] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [modelOutputOpen, setModelOutputOpen] = useState(false);
+  const modelOutput = useCanvasModelOutputInspectorState();
+  const [presentationRevision, setPresentationRevision] = useState(0);
   useEffect(() => {
-    if (model.session.active) setModelOutputOpen(false);
+    if (model.session.active) modelOutput.setOpen(false);
     else setPendingCondition(false);
-  }, [model.session.active]);
+  }, [model.session.active, modelOutput.setOpen]);
   const sessionHandle = useCanvasRelationalTreeWorkbenchHandle(
     ref,
     model,
     pendingCondition,
-    { pending: pendingCompositionOutput, discard: () => setModelOutputOpen(false) },
+    { pending: modelOutput.pending, discard: () => modelOutput.setOpen(false) },
     (relationId) => {
       model.retainAppliedSelection(relationId);
       setExpanded(true);
-    }
+    },
+    () => setPresentationRevision((current) => current + 1)
   );
+  const pending = pendingCondition || modelOutput.pending || sessionHandle.applying === true;
   const navigation = useCanvasRelationEditNavigation({
     modelId: transformNode.id,
     editing: model.session.active,
@@ -100,14 +103,10 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
           className={styles.workbench}
         >
           <CanvasRelationalTreeSessionActions {...sessionActions} host={actionsHost} />
-          <CanvasRelationalExplorer
-            model={model}
-            copy={copy}
-            pending={pendingCondition || pendingCompositionOutput}
-          >
+          <CanvasRelationalExplorer model={model} copy={copy} pending={pending}>
             <CanvasCardRemovalContext.Provider value={model.session.removal}>
               <CanvasRelationAnalysisContext.Provider value={model.session.analysis}>
-                <CanvasOperationInspectorTabs>
+                <CanvasOperationInspectorTabs resetRevision={presentationRevision}>
                   <CanvasRelationalTreeContent
                     model={model}
                     authoring={authoring}
@@ -118,13 +117,9 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
                     expanded={expanded}
                     onExpandedChange={setExpanded}
                     onPendingConditionChange={setPendingCondition}
-                    pendingCondition={pendingCondition || pendingCompositionOutput}
+                    pendingCondition={pending}
                     onSelectRelation={navigation.select}
-                    modelOutput={{
-                      open: modelOutputOpen,
-                      setOpen: setModelOutputOpen,
-                      setPending: setPendingCompositionOutput,
-                    }}
+                    modelOutput={modelOutput}
                   />
                 </CanvasOperationInspectorTabs>
               </CanvasRelationAnalysisContext.Provider>

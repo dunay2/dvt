@@ -41,6 +41,39 @@ describe('Source occurrence Model Output', () => {
     expect(container.querySelector('button')).toBeNull();
     expect(change).not.toHaveBeenCalled();
   });
+  it('keeps a focused busy field inert while its current availability refreshes', async () => {
+    const change = vi.fn();
+    const render = async (busy: boolean, available: boolean, disabled = false): Promise<void> =>
+      act(async () =>
+        root.render(
+          <CanvasSourceOccurrenceOutputs
+            editing
+            busy={busy}
+            disabled={disabled}
+            onChange={change}
+            fields={[{ id: 'field', name: 'Country', included: false, available }]}
+          />
+        )
+      );
+    await render(true, false);
+    const button = container.querySelector<HTMLButtonElement>(
+      '[data-slot="source-occurrence-add-field"]'
+    )!;
+    expect(button.disabled).toBe(false);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    button.focus();
+    await act(async () => button.click());
+    expect(change).not.toHaveBeenCalled();
+    await render(false, true);
+    expect(button.isConnected).toBe(true);
+    expect(document.activeElement).toBe(button);
+    await act(async () => button.click());
+    expect(change).toHaveBeenCalledExactlyOnceWith('field', true);
+    await render(true, true, true);
+    expect(button.disabled).toBe(true);
+    await act(async () => button.click());
+    expect(change).toHaveBeenCalledOnce();
+  });
   it('removes and restores an implicit JOIN field without changing its Read or condition', async () => {
     const input = source('client');
     const initial = createSourceJoin({

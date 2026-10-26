@@ -449,11 +449,23 @@ is `Edit`; editing shows included and excluded fields with the shared inclusion
 toggle. Creation starts in editing. Entering or leaving a presentation mode does
 not save, query a provider, or change graph semantics. New forms must reuse this
 frame, field rows, buttons and semantic tokens instead of introducing local CSS
-or another edit/filter state machine. There is no separate `Hide excluded` mode.
+or another edit/filter state machine. The common explicit `Solo seleccionados`
+selector is available during Output editing; Edit defaults to all admitted rows.
+In the default all-fields view, toggling inclusion does not change that filter,
+reorder or unmount the edited row, or move focus, scroll or card coordinates.
+The explicit selected-only view filters excluded rows without changing their
+canonical inclusion or ordering. A Source selected within an
+already-active Model transaction remains in inspection until its own Edit.
+The existing Frame provider owns relation mode and filter together; Apply/Cancel
+clear edit mode while preserving the selected tab.
 
 Persistence belongs to the existing command owner. Within an active Model draft,
 Apply/Cancel owns the complete transaction, including each Source occurrence's
-pending Output preference. Existing atomic Model/Transform Output editors retain
+pending Output preference and explicitly staged recovery of a still-published
+but unmapped physical Input field. Recovery and that occurrence's Output change
+apply or cancel together through the existing aggregate command; presentation
+must not call an immediate Input mapping callback. Ordinary Output toggles leave
+Input bindings unchanged. Existing atomic Model/Transform Output editors retain
 their command port and eligibility checks while consuming the same visual Edit
 gate. A shared visual interaction does not merge operation-specific validation
 or create another persistence authority.

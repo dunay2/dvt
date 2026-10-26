@@ -10,18 +10,25 @@ import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CardPosition } from './canvasRelationalTreeGeometry';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import type { prepareCanvasSourceOccurrenceInputRecovery } from './canvasSourceOccurrenceInputRecovery';
 
 type GraphSnapshot = Readonly<{
   joinDraft: SubstraitDocument | null;
   pendingSources: readonly PendingSourceOccurrence[];
   stagedOperations: readonly CanvasStagedOperation[];
   outputRelationId: string | null;
+  inputRecovery:
+    | (Awaited<ReturnType<typeof prepareCanvasSourceOccurrenceInputRecovery>> & {
+        authorityIdentity: string;
+      })
+    | null;
 }>;
 const emptyGraph: GraphSnapshot = {
   joinDraft: null,
   pendingSources: [],
   stagedOperations: [],
   outputRelationId: null,
+  inputRecovery: null,
 };
 
 export function useCanvasRelationalTreeDraftState() {
@@ -86,12 +93,23 @@ export function useCanvasRelationalTreeDraftState() {
         joinDraft: seed.draft,
         stagedOperations: [],
         outputRelationId: indexed.ok ? indexed.index.rootId : null,
+        inputRecovery: null,
       }));
     },
     [replaceInputs]
   );
   return {
     graphSnapshot: graph,
+    commitInputRecovery: useCallback(
+      (expected: GraphSnapshot, recovery: NonNullable<GraphSnapshot['inputRecovery']>) => {
+        setGraph((current) =>
+          current !== expected
+            ? current
+            : { ...current, joinDraft: recovery.document, inputRecovery: recovery }
+        );
+      },
+      []
+    ),
     commitOutputInitialization: useCallback(
       (expected: GraphSnapshot, document: SubstraitDocument, consumedIds: readonly string[]) => {
         setGraph((current) => {
@@ -157,6 +175,7 @@ export function useCanvasRelationalTreeDraftState() {
           pendingSources: draft.sources,
           stagedOperations: draft.operations,
           outputRelationId: draft.outputRelationId,
+          inputRecovery: null,
         }));
         setPendingSourceId(null);
         setSelectedStagedOperationId(null);
@@ -173,6 +192,7 @@ export function useCanvasRelationalTreeDraftState() {
       setStagedOperations([]);
       setSelectedStagedOperationId(null);
       setOutputRelationId(null);
+      updateGraph('inputRecovery', null);
       setApplyRejection(null);
     },
     applyRejection,

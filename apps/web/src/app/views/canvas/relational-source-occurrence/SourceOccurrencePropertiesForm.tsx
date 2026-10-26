@@ -4,13 +4,13 @@ import { useApplicationLanguageStore } from '../../../stores/applicationLanguage
 import { parseOccurrenceAlias } from './renameSourceOccurrence';
 import { sourceOccurrenceCopy } from './sourceOccurrenceCopy';
 import { SourceOccurrencePropertiesTemplate } from './SourceOccurrenceProperties.templates';
+import { useCanvasInspectorEditing } from '../CanvasRelationalTreeEditorFrame';
 
 export function SourceOccurrencePropertiesForm({
   data,
   actions,
   output,
   onPendingChange,
-  initialEditing = false,
 }: Readonly<{
   data: Readonly<{
     relationId: string;
@@ -23,7 +23,6 @@ export function SourceOccurrencePropertiesForm({
     close: () => void;
   }>;
   output: ReactNode | ((editing: boolean) => ReactNode);
-  initialEditing?: boolean;
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -31,7 +30,7 @@ export function SourceOccurrencePropertiesForm({
   const id = useId();
   const [alias, setAlias] = useState(data.alias);
   const [status, setStatus] = useState<'idle' | 'busy' | 'error'>('idle');
-  const [editing, setEditing] = useState(initialEditing);
+  const [editing, setEditing] = useCanvasInspectorEditing(data.relationId);
   const result = parseOccurrenceAlias(alias);
   const duplicate = result.success && data.occupied.has(result.data);
   const valid = result.success && !duplicate;

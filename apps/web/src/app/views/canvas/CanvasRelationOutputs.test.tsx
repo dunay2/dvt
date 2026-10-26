@@ -229,12 +229,35 @@ describe('output command authority during acknowledgement', () => {
     expect(onChange).not.toHaveBeenCalled();
     const editRows = container.querySelectorAll('[data-slot="relation-output-field"]').length;
     expect(editRows).toBeGreaterThan(initialRows);
-    const toggle = container.querySelector('[data-slot="relation-output-toggle"]')!;
+    const rowsBefore = Array.from(
+      container.querySelectorAll('[data-slot="relation-output-field"]')
+    );
+    const toggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="relation-output-toggle"]'
+    )!;
+    toggle.focus();
     await act(async () => fireEvent.click(toggle));
     expect(onChange).toHaveBeenCalledOnce();
     expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
       editRows
     );
+    expect(Array.from(container.querySelectorAll('[data-slot="relation-output-field"]'))).toEqual(
+      rowsBefore
+    );
+    expect(toggle.isConnected).toBe(true);
+    expect(document.activeElement).toBe(toggle);
+    const selectedOnly = container.querySelector<HTMLButtonElement>('[role="checkbox"]')!;
+    expect(selectedOnly.getAttribute('aria-checked')).toBe('false');
+    await act(async () => fireEvent.click(selectedOnly));
+    expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
+      initialRows - 1
+    );
+    expect(onChange).toHaveBeenCalledOnce();
+    await act(async () => fireEvent.click(selectedOnly));
+    expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
+      editRows
+    );
+    expect(onChange).toHaveBeenCalledOnce();
     await act(async () => inspect());
     expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
       initialRows - 1

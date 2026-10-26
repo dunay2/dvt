@@ -2,7 +2,10 @@
 import type { ConnectionRef } from '@dvt/contracts';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
-import { readCanvasSourceOccurrenceOutputSelection } from './canvasSourceOccurrenceOutputSlots';
+import {
+  readCanvasSourceOccurrenceOutputSelection,
+  sourceOccurrenceOutputEdits,
+} from './canvasSourceOccurrenceOutputSlots';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 
@@ -57,28 +60,14 @@ export async function initializeCanvasSourceOutputs(
         )
       )
         throw new Error('Source Output has no independent direct contribution.');
-      const removed = new Set(
-        selection.fields
-          .filter((field) => !selectedIds.has(field.id))
-          .flatMap((field) => field.slots)
-      );
-      const selected = selection.slots
-        .filter((slot) => slot.output != null && !removed.has(slot.slot))
-        .sort((a, b) => a.output!.outputOrdinal - b.output!.outputOrdinal);
-      const added = new Set(
-        selection.fields
-          .filter((field) => selectedIds.has(field.id))
-          .flatMap((field) => field.slots)
-      );
-      const outputs = [
-        ...selected,
-        ...selection.slots.filter((slot) => slot.output == null && added.has(slot.slot)),
-      ];
       document = await changeSelectedRelationOutputs(session, {
         relationId: session.rootId,
         expectedRevision: session.revision,
         signal: args.signal,
-        outputs: outputs.map((slot) => ({ slot: slot.slot, alias: slot.name })),
+        outputs: sourceOccurrenceOutputEdits(
+          selection,
+          new Map(selection.fields.map((field) => [field.id, selectedIds.has(field.id)]))
+        ),
       });
     }
     args.signal?.throwIfAborted();

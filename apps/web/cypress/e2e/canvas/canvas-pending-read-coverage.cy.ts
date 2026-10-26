@@ -96,10 +96,61 @@ describe('Pending Read persistence coverage', () => {
         selectedId = id!;
       });
     edit();
-    cy.get(toggle).should('have.attr', 'data-included', 'true').focus().click();
-    cy.get(toggle).should('have.attr', 'data-included', 'false').and('be.focused').click();
-    cy.get(toggle).should('have.attr', 'data-included', 'true').click();
+    const selectedOnly = '[role="checkbox"][aria-label="Solo seleccionados"]:visible';
+    cy.get(selectedOnly).should('have.attr', 'aria-checked', 'false');
+    cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('have.length', 2);
+    cy.get(toggle)
+      .should('have.attr', 'data-included', 'true')
+      .focus()
+      .then(($button) => {
+        const button = $button[0]!;
+        const row = button.closest('[data-slot="source-occurrence-output-field"]')!;
+        const scroller = button.closest('[data-value="output"]')!;
+        const cardSelector = `${read}[data-relation-id="${selectedId}"]`;
+        const card = button.ownerDocument.querySelector(cardSelector)!;
+        const bounds = card.getBoundingClientRect();
+        const scroll = [scroller.scrollLeft, scroller.scrollTop];
+        const fieldIds = [...button.ownerDocument.querySelectorAll(`${rows} [data-field-id]`)].map(
+          (field) => field.getAttribute('data-field-id')
+        );
+        for (const included of [false, true, false]) {
+          cy.get(toggle)
+            .click()
+            .should('have.attr', 'data-included', String(included))
+            .and('be.focused')
+            .should(($current) => {
+              expect($current[0], 'same pending field button').to.equal(button);
+              expect(
+                $current[0]!.closest('[data-slot="source-occurrence-output-field"]'),
+                'same pending field row'
+              ).to.equal(row);
+              expect(
+                [scroller.scrollLeft, scroller.scrollTop],
+                'Output scroll stays put'
+              ).to.deep.equal(scroll);
+              expect(
+                [...button.ownerDocument.querySelectorAll(`${rows} [data-field-id]`)].map((field) =>
+                  field.getAttribute('data-field-id')
+                ),
+                'complete stable row order'
+              ).to.deep.equal(fieldIds);
+              const next = button.ownerDocument
+                .querySelector(cardSelector)!
+                .getBoundingClientRect();
+              for (const dimension of ['left', 'top', 'width', 'height'] as const)
+                expect(next[dimension], `pending Source ${dimension}`).to.be.closeTo(
+                  bounds[dimension],
+                  0.5
+                );
+            });
+        }
+      });
+    cy.get(selectedOnly).click().should('have.attr', 'aria-checked', 'true');
+    cy.get(toggle).should('not.exist');
+    cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('have.length', 1);
+    cy.get(selectedOnly).click().should('have.attr', 'aria-checked', 'false');
     cy.get(toggle).should('have.attr', 'data-included', 'false');
+    cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('have.length', 2);
     cy.get('body').should('not.contain.text', 'Esta asignación de columna no está disponible');
     dragWorkbenchSource('orders', { x: 60, y: 380 });
     cy.get(read)
@@ -114,6 +165,7 @@ describe('Pending Read persistence coverage', () => {
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
     expectSavedSelection();
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Sincronizado');
+    cy.get(`${rows} button`).should('not.exist');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     visitWorkbenchCanvas('es');
     openWorkbenchModel();
@@ -127,6 +179,15 @@ describe('Pending Read persistence coverage', () => {
     cy.get(toggle).should('have.attr', 'data-included', 'true').click();
     cy.get(toggle).should('have.attr', 'data-included', 'false');
     cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get(`${rows} button`).should('not.exist');
+    cy.get(selectedOnly).should('not.exist');
+    cy.then(() => selectRead(selectedId));
+    cy.get(rows).should('be.visible').and('not.contain.text', 'order_id');
+    edit();
+    cy.get(selectedOnly).should('have.attr', 'aria-checked', 'false');
+    cy.get(toggle).should('have.attr', 'data-included', 'false');
+    cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+    cy.get(`${rows} button`).should('not.exist');
     cy.then(() => selectRead(siblingId));
     cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should(
       'contain.text',

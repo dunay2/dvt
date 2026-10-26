@@ -548,7 +548,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       name: 'Imported source for dvt.raw.orders in the local governed environment',
     };
     const authoring = { canEditNode: true, onApplyNodeDraft: vi.fn() };
-    const graph = {
+    const graph: { nodes: readonly CanonicalNode[]; edges: readonly CanonicalEdge[] } = {
       nodes: [source, MODEL_NODE],
       edges: [
         {

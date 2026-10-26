@@ -78,12 +78,12 @@ export function useCanvasRelationalTreeWorkbenchModel(
       projection?.inputs ?? [],
       session.occurrences.pending,
       args.nodes,
-      args.edges,
+      session.sourceInputRecovery.edges,
       args.transformNode.id
     );
   }, [
     args.nodes,
-    args.edges,
+    session.sourceInputRecovery.edges,
     args.transformNode.id,
     projection?.inputs,
     session.occurrences.pending,
@@ -95,7 +95,10 @@ export function useCanvasRelationalTreeWorkbenchModel(
     const base =
       projection == null
         ? composition?.state === 'pending' || pendingAuthoring
-          ? projectPendingCanvasRelationalTreeCatalogue(inputs, args.nodes)
+          ? projectPendingCanvasRelationalTreeCatalogue(
+              session.sourceInputRecovery.inputs,
+              args.nodes
+            )
           : []
         : projectCanvasRelationalTreeCatalogue({
             inputs: projection.inputs,
@@ -113,7 +116,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
   }, [
     args.nodes,
     composition?.state,
-    inputs,
+    session.sourceInputRecovery.inputs,
     authoringAvailable,
     projection,
     session.occurrences.pending,
@@ -143,13 +146,17 @@ export function useCanvasRelationalTreeWorkbenchModel(
 
   return {
     inputRevision: JSON.stringify(
-      inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
+      session.sourceInputRecovery.inputs.map((input) => [
+        input.nodeId,
+        input.fields,
+        input.inputBindings,
+      ])
     ),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
     outputPlanRelationIds,
     authoringAvailable,
     catalogue,
-    inputs,
+    inputs: session.sourceInputRecovery.inputs,
     pendingAuthoring,
     projection,
     sourceOutputFieldsByRelationId,

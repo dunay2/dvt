@@ -7,7 +7,6 @@
  */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { Database } from 'lucide-react';
-import { useState } from 'react';
 
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
@@ -16,7 +15,10 @@ import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
+import {
+  CanvasRelationalTreeEditorFrame,
+  useCanvasInspectorEditing,
+} from './CanvasRelationalTreeEditorFrame';
 
 export function CanvasModelOutputInspector({
   modelName,
@@ -38,7 +40,7 @@ export function CanvasModelOutputInspector({
   const relationId = root.relationId;
   const language = useApplicationLanguageStore((state) => state.language);
   const labels = resolveCanvasSemanticEditorCopy(language);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useCanvasInspectorEditing(relationId);
   if (relationId == null) return null;
   const steps = projectCanvasModelComposition(root);
 

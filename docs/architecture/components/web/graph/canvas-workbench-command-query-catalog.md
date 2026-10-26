@@ -580,12 +580,31 @@ that operation is edited or removed. Once an unconsumed binding is removed, the
 producer output may be deselected when no other consumer requires it. The card
 must not offer a fake local-only deletion.
 Inside the Model, selecting a source occurrence opens its Output tab first.
-That occurrence's available fields are exactly the external producer's published
-fields, never the physical warehouse schema. Explicit Add/Remove actions edit
-the binding on this model's dependency edge, not the external Source or the
-final Model Output; an in-use field is rejected rather than silently rewriting
-an operation. The source Read schema remains physical, and any partial binding
-still requires the explicit Project operation described below.
+That occurrence's admitted fields come from the external producer's publication,
+never unexposed warehouse columns. Ordinary inclusion actions select its direct
+contribution to final Model Output and leave Input bindings unchanged. An explicit
+plus for a still-published physical Read field omitted from an existing dependency
+edge stages additive Input recovery together with that occurrence's Output
+inclusion. It reuses `bindCanvasInputField` inside `ConfigureCanvasDvtNode`, with
+the target fixed to the owning Model and no replacement `inputId`. It does not
+change the external producer, other occurrences' Output, predicates or complete
+Read schema. Withdrawn, foreign, disconnected and non-forwarded fields do not
+gain another permission path. Partial raw input composition still follows the
+explicit Project prerequisite below.
+
+The existing `onApplyNodeDraft` port accepts optional additive producer-field
+identities for this Model transaction. Local recovery validates an unpublished
+candidate through the existing binder, then derives normal field eligibility
+from those accepted edges before executing the existing exact root Output
+command. No UI whitelist relaxes canonical eligibility. Final Apply replays
+binding and semantic validation against the latest workspace draft through the
+existing asynchronous command/CAS wrapper and publishes one node-and-edge
+aggregate. Two-argument generic Inspector calls retain their synchronous
+contract. Input-only changes remain real changes even when the semantic node
+reports `no_changes`; a wholly unchanged candidate retains that outcome.
+Denied, stale, cancelled or rejected work publishes nothing and preserves the
+local draft. Cancel discards staged Input and Output together; navigation waits
+for accepted Apply. No public rail or protected persistence API is added.
 
 Partial physical inputs require an explicit Transform before relational
 composition. The selected Transform preserves the complete physical Read schema
@@ -700,6 +719,11 @@ incomplete-authoring DTO; they do not use Model Input mapping. Per-occurrence
 by the existing Output command only at terminal connection. Apply waits for an
 atomic, revision-checked result. Presentation reuses the shared `Edit` frame and
 inclusion toggle; view/edit transitions never issue a command by themselves.
+Edit defaults to stable complete rows and offers the common explicit
+`Solo seleccionados` presentation filter. Field toggles preserve row identity,
+order, focus, scroll and card placement. An active Model draft does not imply
+local Edit for another selected Source. The existing relation presentation
+provider owns mode/filter; Apply/Cancel reset mode without resetting its tab.
 
 The active inspector tab is also Model-local presentation state, keyed by relation
 identity. Entering Edit, applying or cancelling a draft must not reset the selected

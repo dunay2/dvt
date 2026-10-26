@@ -24,6 +24,7 @@ import {
   resolveCanvasStagedProducerDocument,
 } from './canvasStagedOperationDocument';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { rootFields } from './canvasDerivedOutputExpression';
 
 export function CanvasPendingSourceInspector({
   data,
@@ -165,9 +166,8 @@ export function CanvasPendingSourceOutputs(
     <CanvasSourceOccurrenceOutputs
       editing={editing}
       disabled={input == null || occurrence.initialOutputFieldIds == null}
-      fields={occurrence.read.fields
-        .filter((field) => field.parentFieldId == null && available.has(field.fieldId))
-        .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
+      fields={rootFields(occurrence.read.fields)
+        .filter((field) => available.has(field.fieldId))
         .map((field) => ({
           id: field.fieldId,
           name: field.displayName ?? field.fieldId,

@@ -3,6 +3,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
+import type { CanvasSourceInputRecovery } from './canvasSourceOccurrenceInputRecovery';
 import {
   CanvasRelationalTreeCompositionEditor,
   type CanvasRelationalTreeCompositionEditorProps,
@@ -13,6 +14,7 @@ type InlineEditorProps = Omit<CanvasRelationalTreeCompositionEditorProps, 'draft
   operation: CanvasRelationalOperation | null;
   reservedAliases?: readonly string[];
   sourceOutputFieldsByRelationId: ReadonlyMap<string, readonly string[]>;
+  sourceInputRecovery?: CanvasSourceInputRecovery;
 };
 
 export function CanvasRelationalTreeInlineEditor(
@@ -26,6 +28,7 @@ export function CanvasRelationalTreeInlineEditor(
     <>
       {props.expanded ? (
         <CanvasRelationalTreeSelectedOperatorEditor
+          sourceInputRecovery={props.sourceInputRecovery}
           sourceOutputFieldsByRelationId={props.sourceOutputFieldsByRelationId}
           draft={props.joinDraft}
           operation={props.operation}
