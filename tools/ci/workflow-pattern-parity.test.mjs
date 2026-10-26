@@ -989,15 +989,17 @@ test('release generation and candidate admission have one trusted owner each', (
   }
 });
 
-test('setup-node consumers stay on one pinned action version', () => {
-  const githubYamlSources = listYamlFiles('.github')
-    .map((filePath) => readFileSync(filePath, 'utf8'))
-    .join('\n');
-  const setupNodePins = pinnedActionReferences(githubYamlSources, 'actions/setup-node');
+for (const action of ['setup-node', 'upload-artifact', 'setup-python']) {
+  test(`${action} consumers stay on one pinned action version`, () => {
+    const githubYamlSources = listYamlFiles('.github')
+      .map((filePath) => readFileSync(filePath, 'utf8'))
+      .join('\n');
+    const pins = pinnedActionReferences(githubYamlSources, `actions/${action}`);
 
-  assert.equal(new Set(setupNodePins.map(({ sha }) => sha)).size, 1);
-  assert.equal(new Set(setupNodePins.map(({ version }) => version)).size, 1);
-});
+    assert.equal(new Set(pins.map(({ sha }) => sha)).size, 1);
+    assert.equal(new Set(pins.map(({ version }) => version)).size, 1);
+  });
+}
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
   const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
