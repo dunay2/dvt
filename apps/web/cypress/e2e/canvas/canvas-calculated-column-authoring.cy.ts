@@ -19,6 +19,7 @@ import {
 } from '../../support/e2eApiStub';
 import {
   openWorkbenchModel,
+  editWorkbenchInspector,
   openWorkbenchProperties,
   revisitWorkbenchCanvas,
   dragWorkbenchSource,
@@ -128,6 +129,7 @@ function composeProjection(nodeId: string, sourceLabel: string): void {
   cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
   cy.get(project).should('have.length', 1).click();
   cy.get(inspector).should('be.visible');
+  editWorkbenchInspector(inspector);
 }
 
 function addFormula(alias: string, formula: string): void {
@@ -217,6 +219,7 @@ describe('Canvas calculated-column authoring', () => {
     openWorkbenchModel('model-orders');
     cy.get(project).click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
+    editWorkbenchInspector(inspector);
     cy.get(inspector)
       .find('input[aria-label="customer_alias"]')
       .should('have.value', 'customer_alias')
@@ -280,6 +283,7 @@ describe('Canvas calculated-column authoring', () => {
     cy.get('[data-slot="canvas-workspace-tab"]').click();
     openWorkbenchModel('dvt-transform-1');
     cy.get(project).click();
+    editWorkbenchInspector(inspector);
     addFormula('channel', "'web'");
     cy.then(() => {
       expect(savedModel('dvt-transform-1').outputs.map((field) => field.displayName)).to.deep.equal(

@@ -16,6 +16,7 @@ import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
+  editWorkbenchInspector,
   openWorkbenchModel,
   revisitWorkbenchCanvas,
   stageWorkbenchUnary,
@@ -37,6 +38,7 @@ function inspectSavedWindow(relationId: string, language: 'en' | 'es'): void {
     .should('have.length', 1)
     .find('[data-slot="canvas-operation-properties-tab"]')
     .click();
+  editWorkbenchInspector('[data-slot="canvas-transform-inspector"]');
   const action = `${resolveCanvasSemanticEditorCopy(language).edit} · ${resolveCanvasViewCopy(language).operationWindowLabel}`;
   cy.contains('[data-slot="canvas-transform-inspector"] button', action).click();
   cy.get(form).find('input').should('have.value', 'ranked_customer');

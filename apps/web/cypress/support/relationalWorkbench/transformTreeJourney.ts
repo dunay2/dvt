@@ -10,14 +10,14 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
 import { getE2eApiCalls } from '../e2eApiStub';
 
-import { openWorkbenchModel, revisitWorkbenchCanvas } from './navigation';
+import { editWorkbenchInspector, openWorkbenchModel, revisitWorkbenchCanvas } from './navigation';
 import { dragWorkbenchField } from './pointer';
 
 const inspector = '[data-slot="canvas-transform-inspector"]';
 const card = '[data-slot="canvas-relational-tree-node"][data-operator="project"]';
 
 function expectSavedExpressionCount(count: number): void {
-  cy.wrap(null).should(() => {
+  cy.get(`${inspector} [data-slot="relation-output-field"]`).should(($rows) => {
     const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as {
       draft: WorkspaceGraphAuthoringDraft;
     };
@@ -38,6 +38,13 @@ function expectSavedExpressionCount(count: number): void {
     expect(model.definitions, 'saved expression definitions in this Transform').to.have.length(
       count
     );
+    for (const definition of model.definitions) {
+      const output = definition.output;
+      expect(output, 'published calculated definition').not.to.equal(undefined);
+      const row = $rows.filter((_, field) => field.dataset.fieldId === output!.fieldId);
+      expect(row, 'one published row for the canonical definition').to.have.length(1);
+      expect(row.text()).to.contain(output!.displayName ?? output!.fieldId);
+    }
   });
 }
 
@@ -136,10 +143,10 @@ export function exerciseTransformTreeSelection(): void {
   });
   cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
   cy.get(card).click();
+  cy.get(inspector).find('[data-slot="relation-output-field"]').should('not.contain.text', 'total');
   cy.get(inspector)
-    .find('[data-slot="canvas-derived-output"]')
-    .should('have.length', 3)
-    .and('not.contain.text', 'total');
+    .find('[data-slot="canvas-relational-edit"]')
+    .should('have.attr', 'aria-pressed', 'false');
   cy.wrap(null).should(() =>
     expect(getE2eApiCalls('/workspace/graph/draft', 'PUT').length).to.be.greaterThan(
       writesBeforeRemoval
@@ -151,11 +158,13 @@ export function exerciseTransformTreeSelection(): void {
   revisitWorkbenchCanvas();
   openWorkbenchModel();
   cy.get(card).click();
+  cy.get(inspector).find('[data-slot="relation-output-field"]').should('not.contain.text', 'total');
   cy.get(inspector)
-    .find('[data-slot="canvas-derived-output"]')
-    .should('have.length', 3)
-    .and('not.contain.text', 'total');
+    .find('[data-slot="canvas-relational-edit"]')
+    .should('have.attr', 'aria-pressed', 'false');
+  expectSavedExpressionCount(3);
   cy.screenshot('transform-tree-field-selection');
+  editWorkbenchInspector(inspector);
   cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
   cy.get(inspector)
     .find('[data-slot="relation-output-toggle"]')
@@ -239,9 +248,12 @@ export function exerciseTransformTreeSelection(): void {
   openWorkbenchModel();
   cy.get(card).click();
   cy.get(inspector)
-    .find('[data-slot="canvas-derived-output"]')
-    .should('have.length', 2)
-    .and('not.contain.text', 'CAMPO_PRUEBA');
+    .find('[data-slot="relation-output-field"]')
+    .should('not.contain.text', 'CAMPO_PRUEBA');
+  cy.get(inspector)
+    .find('[data-slot="canvas-relational-edit"]')
+    .should('have.attr', 'aria-pressed', 'false');
+  expectSavedExpressionCount(2);
   cy.get(card)
     .closest('li')
     .find('[data-slot="canvas-relational-node-expand"]')

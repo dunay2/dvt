@@ -5,11 +5,12 @@
  * @consequence Controlled and LIVE proofs exercise the same formula without semantic injection.
  * @version 1.0.0
  */
-import { openWorkbenchModel } from './navigation';
+import { editWorkbenchInspector, openWorkbenchModel } from './navigation';
 
 export function authorLineageFormula(nodeId: string, formula: string): void {
   openWorkbenchModel(nodeId);
   cy.get('[data-slot="canvas-relational-tree-node"][data-operator="project"]').click();
+  editWorkbenchInspector('[data-slot="canvas-transform-inspector"]');
   cy.get(
     '[data-slot="canvas-transform-inspector"] [data-slot="canvas-derived-output-trigger"]'
   ).click();

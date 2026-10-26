@@ -13,6 +13,7 @@ import { transformExpressionDependencies } from '../../../src/app/views/canvas/c
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
+  editWorkbenchInspector,
   openWorkbenchModel,
   revisitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
@@ -46,6 +47,7 @@ describe('Semantic dataset Transform', () => {
       .click();
     const input = '[data-pending-operation="true"] [data-slot="canvas-relational-input-port"]';
     let fieldName = '';
+    let fieldId = '';
     const lifecycle: string[] = [];
     cy.window().then((window) => {
       for (const type of ['dragstart', 'pointercancel', 'dragover', 'drop', 'dragend']) {
@@ -86,6 +88,12 @@ describe('Semantic dataset Transform', () => {
       .find(included)
       .should('have.length', 1)
       .should(($field) => expect($field.attr('data-field-name')).to.equal(fieldName));
+    cy.get(inspector)
+      .find(included)
+      .closest('[data-slot="relation-output-field"]')
+      .then(($row) => {
+        fieldId = $row[0]!.dataset.fieldId!;
+      });
     cy.window().then((window) => {
       const dataTransfer = new window.DataTransfer();
       cy.get('[data-pending-operation="true"] [data-slot="canvas-relational-output-port"]').trigger(
@@ -110,9 +118,15 @@ describe('Semantic dataset Transform', () => {
     cy.get(card).click();
     cy.get(inspector).find('[data-slot="canvas-operation-output-tab"]').click();
     cy.get(inspector)
-      .find(included)
+      .find('[data-slot="relation-output-field"]')
       .should('have.length', 1)
-      .should(($field) => expect($field.attr('data-field-name')).to.equal(fieldName));
+      .and(($row) => {
+        expect($row[0]!.dataset.fieldId, 'persisted Output identity').to.equal(fieldId);
+        expect($row[0]!.querySelector('span')?.textContent, 'persisted Output name').to.equal(
+          fieldName
+        );
+      });
+    cy.get(inspector).find(included).should('not.exist');
     cy.screenshot('transform-single-field-connection-reopened');
   });
 
@@ -148,6 +162,7 @@ describe('Semantic dataset Transform', () => {
         relationId = id!;
       });
     cy.get(card).click();
+    editWorkbenchInspector(inspector);
     cy.get(inspector).find('[data-slot="canvas-derived-output-trigger"]').should('be.visible');
     cy.get(inspector)
       .find('[data-slot="canvas-derived-output"]')
@@ -244,6 +259,7 @@ describe('Semantic dataset Transform', () => {
       .should('have.length', 1)
       .should(($card) => expect($card.attr('data-relation-id')).to.equal(relationId))
       .click();
+    editWorkbenchInspector(inspector);
     cy.contains(`${inspector} [data-slot="canvas-derived-output"] span`, /^B$/)
       .closest('[data-slot="canvas-derived-output"]')
       .find('button')
