@@ -13,6 +13,7 @@ import { useCanvasRelationalTreeAnalysisContext } from './useCanvasRelationalTre
 import { useCanvasRelationalAuthoringDraftHydration } from './useCanvasRelationalAuthoringDraftHydration';
 import { useCanvasRelationalGraphAuthoring } from './useCanvasRelationalGraphAuthoring';
 import { prepareCanvasRelationalTreeApply } from './canvasRelationalTreeApplyDraft';
+import { useCanvasSourceOutputInitialization } from './useCanvasSourceOutputInitialization';
 export function useCanvasRelationalTreeAuthoringSession(
   args: Readonly<{
     enabled: boolean;
@@ -86,6 +87,18 @@ export function useCanvasRelationalTreeAuthoringSession(
     outputRelationId: effectiveOutputRelationId,
     sourceNodeIds: !state.active && seed != null ? seed.inputIds : state.slots.selectedInputIds,
   });
+  const sourceOutputInitialization = useCanvasSourceOutputInitialization({
+    state,
+    editable: enabled && editable,
+    inputs,
+    nodeId: transformNode.id,
+    nodes,
+    edges,
+  });
+  const applyCurrent = (document?: SubstraitDocument): W.CanvasRelationalTreeApplyResult =>
+    sourceOutputInitialization.blocked
+      ? { outcome: 'rejected', reason: 'source_output_unavailable' }
+      : apply(document);
   const removal = useCanvasRelationalTreeRemoval({
     analysis,
     enabled: enabled && editable,
@@ -100,12 +113,16 @@ export function useCanvasRelationalTreeAuthoringSession(
     ...graph,
     removal,
     cleared: prepared.cleared,
-    applyRejection: state.applyRejection,
+    sourceOutputInitialization,
+    applyRejection: sourceOutputInitialization.failed
+      ? { outcome: 'rejected' as const, reason: 'source_output_unavailable' as const }
+      : state.applyRejection,
     active: state.active,
     baselineDraft,
     seed,
-    apply: () => apply(),
-    applyOutputOrder: (document: SubstraitDocument) => apply(document).outcome !== 'rejected',
+    apply: () => applyCurrent(),
+    applyOutputOrder: (document: SubstraitDocument) =>
+      applyCurrent(document).outcome !== 'rejected',
     cancel: restore,
     joinDraft: state.joinDraft,
     operation: state.operation,

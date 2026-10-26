@@ -7,6 +7,7 @@ import { PendingSourceOccurrenceProperties } from './PendingSourceOccurrenceProp
 import { createPendingSourceOccurrence } from './pendingSourceOccurrence';
 import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
 import { occurrenceInput } from './occurrence.test.fixtures';
+import { CanvasPendingSourceOutputs } from '../CanvasPendingSourceOutputs';
 
 describe('Pending Source occurrence properties', () => {
   it('opens Output with no fields beyond the producer publication', () => {
@@ -28,9 +29,27 @@ describe('Pending Source occurrence properties', () => {
       root.render(
         <PendingSourceOccurrenceProperties
           occurrence={createPendingSourceOccurrence(input)}
-          input={input}
-          publishedFieldNames={['id']}
-          consumerNodeId="model"
+          output={(editing) => (
+            <CanvasPendingSourceOutputs
+              occurrence={createPendingSourceOccurrence(input)}
+              input={{
+                ...input,
+                inputBindings: {
+                  version: 'v1',
+                  fields: [{ inputId: 'id', producerFieldId: 'id' }],
+                },
+              }}
+              publishedFieldNames={['id']}
+              editing={editing}
+              document={null}
+              binding={{
+                inputs: [input],
+                readFieldEligibility: () => ({ denied: new Set(), disconnected: new Set() }),
+              }}
+              onChange={vi.fn()}
+              onCanonicalChange={vi.fn()}
+            />
+          )}
           occupied={new Set()}
           actions={{ rename: vi.fn(() => true), close: vi.fn() }}
           onPendingChange={vi.fn()}

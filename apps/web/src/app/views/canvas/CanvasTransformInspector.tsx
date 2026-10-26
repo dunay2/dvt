@@ -39,6 +39,8 @@ export function CanvasTransformInspector({
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const [editingWindow, setEditingWindow] = useState(false);
+  const [outputEditing, setOutputEditing] = useState(false);
+  const editing = onChange != null && (draft != null || outputEditing);
   const [setWindowPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
   const selected = useSelectedRelation(relationId);
   const analysis = useContext(CanvasRelationAnalysisContext);
@@ -65,6 +67,8 @@ export function CanvasTransformInspector({
       dataSlot="canvas-transform-inspector"
       initialTab="output"
       hasExpression={hasExpression}
+      editing={editing}
+      onEdit={onChange == null ? undefined : () => setOutputEditing(true)}
       output={
         onChange == null ? (
           <CanvasRelationFields relationId={relationId} />
@@ -85,7 +89,7 @@ export function CanvasTransformInspector({
           relationId={relationId}
         />
       ) : null}
-      {onChange == null || window?.tool.enabled !== true ? null : editingWindow ? (
+      {!editing || onChange == null || window?.tool.enabled !== true ? null : editingWindow ? (
         <CanvasRelationalTreeOperatorForm
           tool={window.tool}
           draft={window.analysis.document!}

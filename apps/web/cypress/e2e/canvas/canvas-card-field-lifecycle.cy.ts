@@ -24,17 +24,15 @@ describe('Canvas field lifecycle', () => {
       cy.get(source).first().click();
       cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('contain.text', 'name');
       cy.get(`${rows} button`).should('not.exist');
-      cy.get('[data-slot="canvas-relational-edit"]').click();
+      cy.get('[data-slot="canvas-relational-edit"]').should('have.text', 'Edit').click();
       cy.get(toggle).should('have.attr', 'data-included', 'true').focus().click();
       cy.get(toggle).should('have.attr', 'data-included', 'false').and('be.focused');
-      cy.get(`${rows} [role="checkbox"]`).click();
-      cy.get(toggle).should('not.exist');
-      cy.get(`${rows} [role="checkbox"]`).click();
+      cy.get(`${rows} [role="checkbox"]`).should('not.exist');
       cy.get(toggle).should('have.attr', 'data-included', 'false');
       cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
       cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('contain.text', 'name');
       cy.get(`${rows} button`).should('not.exist');
-      cy.get('[data-slot="canvas-relational-edit"]').click();
+      cy.get('[data-slot="canvas-relational-edit"]').should('have.text', 'Edit').click();
       cy.get(toggle).should('have.attr', 'data-included', 'true').click();
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
       cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should(
@@ -53,7 +51,7 @@ describe('Canvas field lifecycle', () => {
       openWorkbenchModel('join-transform');
       cy.get(source).first().click();
       cy.get(`${rows} button`).should('not.exist');
-      cy.get('[data-slot="canvas-relational-edit"]').click();
+      cy.get('[data-slot="canvas-relational-edit"]').should('have.text', 'Edit').click();
       cy.get(toggle).should('have.attr', 'data-included', 'false').click();
       cy.get(toggle).should('have.attr', 'data-included', 'true');
       cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
@@ -70,6 +68,9 @@ describe('Canvas field lifecycle', () => {
       cy.get(
         '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'
       ).click();
+      cy.get('[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-edit"]')
+        .should('have.text', 'Edit')
+        .click();
       cy.get('[data-slot="relation-output-toggle"][data-field-name="name"]').should(
         'have.attr',
         'data-included',

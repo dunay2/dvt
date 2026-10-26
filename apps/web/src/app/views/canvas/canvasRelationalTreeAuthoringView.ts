@@ -35,6 +35,7 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   dropSource: (id: string) => string | null;
   selectPending: (id: string) => void;
   renamePending: (id: string, alias: string) => boolean;
+  setPendingOutputIncluded: (id: string, fieldId: string, included: boolean) => boolean;
   stageOperation: CanvasStagedOperationActions['stage'];
   selectStagedOperation: CanvasStagedOperationActions['select'];
   clearStagedOperationSelection: CanvasStagedOperationActions['clearSelection'];
@@ -96,6 +97,7 @@ export function projectCanvasRelationalTreeAuthoringView(
       dropSource: session.occurrences.drop,
       selectPending: select,
       renamePending: session.occurrences.rename,
+      setPendingOutputIncluded: session.occurrences.setOutputIncluded,
       stageOperation: session.staged.stage,
       selectStagedOperation: session.staged.select,
       clearStagedOperationSelection: session.staged.clearSelection,

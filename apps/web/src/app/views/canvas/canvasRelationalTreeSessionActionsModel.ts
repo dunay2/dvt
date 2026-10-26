@@ -54,11 +54,13 @@ export function buildCanvasRelationalTreeSessionActionsModel(
     rejection?.reason === 'model_output_required' ||
     rejection?.reason === 'model_output_dependency_unavailable'
       ? formatCanvasModelOutputDependencyRejection(rejection, language)
-      : rejection?.reason === 'node_unavailable'
-        ? localCopy.applyNodeUnavailable
-        : rejection == null
-          ? null
-          : localCopy.applyRejected;
+      : rejection?.reason === 'source_output_unavailable'
+        ? localCopy.fieldSelectionRejected
+        : rejection?.reason === 'node_unavailable'
+          ? localCopy.applyNodeUnavailable
+          : rejection == null
+            ? null
+            : localCopy.applyRejected;
   return {
     kind: 'active',
     applyLabel: copy.inspectorDvtRelationalApply,

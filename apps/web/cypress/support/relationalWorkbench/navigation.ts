@@ -80,7 +80,10 @@ export function previewWorkbenchModel(nodeId = 'join-transform'): void {
   );
 }
 
-export function dragWorkbenchSource(sourceLabel: string): void {
+export function dragWorkbenchSource(
+  sourceLabel: string,
+  dropOffset?: Readonly<{ x: number; y: number }>
+): void {
   cy.window().then((window) => {
     const dataTransfer = new window.DataTransfer();
     cy.contains('[data-slot="canvas-relational-tree-source"]', sourceLabel).trigger('dragstart', {
@@ -90,8 +93,16 @@ export function dragWorkbenchSource(sourceLabel: string): void {
       '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
     )
       .should('be.visible')
-      .trigger('dragover', { dataTransfer })
-      .trigger('drop', { dataTransfer });
+      .then(($viewport) => {
+        const bounds = $viewport[0]!.getBoundingClientRect();
+        const position =
+          dropOffset == null
+            ? {}
+            : { clientX: bounds.left + dropOffset.x, clientY: bounds.top + dropOffset.y };
+        cy.wrap($viewport)
+          .trigger('dragover', { dataTransfer, ...position })
+          .trigger('drop', { dataTransfer, ...position });
+      });
   });
 }
 

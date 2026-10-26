@@ -38,6 +38,7 @@ export function useCanvasRelationalTreeWorkbenchHandle(
     canApply:
       !directEdit.pending &&
       !pendingCondition &&
+      !session.sourceOutputInitialization.blocked &&
       model.authoringAvailable &&
       session.hasDraftChanges &&
       (session.hasIncompleteGraph ||

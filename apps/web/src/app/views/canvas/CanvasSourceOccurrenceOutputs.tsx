@@ -1,7 +1,5 @@
 /** Present controlled field inclusion without owning Input or Output commands. */
-import { useId, useState } from 'react';
 import { FieldInclusionToggle } from '../../components/inspector/FieldInclusionToggle';
-import { Checkbox } from '../../components/ui/checkbox';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
@@ -28,22 +26,10 @@ export function CanvasSourceOccurrenceOutputs({
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  const [hideExcluded, setHideExcluded] = useState(false);
-  const filterId = useId();
   return (
     <section data-slot="source-occurrence-outputs" className="space-y-2">
-      {editing ? (
-        <label className="flex items-center gap-2 text-xs text-(--text-muted)" htmlFor={filterId}>
-          <Checkbox
-            id={filterId}
-            checked={hideExcluded}
-            onCheckedChange={(checked) => setHideExcluded(checked === true)}
-          />
-          {copy.hideExcludedFields}
-        </label>
-      ) : null}
       {fields
-        .filter((field) => field.included || (editing && !hideExcluded))
+        .filter((field) => field.included || editing)
         .map((field) => (
           <div
             key={field.id}
@@ -74,10 +60,7 @@ export function CanvasSourceOccurrenceOutputs({
                       ? copy.removeOutputField
                       : copy.addOutputField
                 }
-                onChange={(included) => {
-                  if (hideExcluded && !included) document.getElementById(filterId)?.focus();
-                  onChange(field.id, included);
-                }}
+                onChange={(included) => onChange(field.id, included)}
               />
             ) : null}
           </div>

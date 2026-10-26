@@ -4,6 +4,7 @@ import type { CanvasRelationAnalysisSession } from '../canvasRelationAnalysisSes
 import type { SourceOccurrenceRejection } from './sourceOccurrencePolicy';
 import {
   createPendingSourceOccurrence,
+  pendingSourceOccurrencePublishedFieldIds,
   type PendingSourceOccurrence,
 } from './pendingSourceOccurrence';
 import { nextSourceOccurrenceAlias } from './sourceOccurrenceAlias';
@@ -67,6 +68,41 @@ export function createSourceOccurrenceActions(
     },
     clearSelection: () => {
       args.setSelectedId(null);
+    },
+    setOutputIncluded: (id: string, fieldId: string, included: boolean): boolean => {
+      if (!args.editable) return false;
+      const occurrence = args.pending.find((item) => item.read.binding.relationId === id);
+      const input = args.inputs.find((candidate) => candidate.nodeId === occurrence?.sourceNodeId);
+      if (occurrence == null || occurrence.initialOutputFieldIds == null || input == null)
+        return false;
+      let published: readonly string[];
+      try {
+        published = pendingSourceOccurrencePublishedFieldIds(occurrence, input);
+      } catch {
+        return false;
+      }
+      if (!published.includes(fieldId)) return false;
+      if (!args.start()) return false;
+      args.setPending((current) => {
+        let changed = false;
+        const next = current.map((item) => {
+          if (
+            item.read.binding.relationId !== id ||
+            item.sourceNodeId !== input.nodeId ||
+            item.initialOutputFieldIds == null ||
+            !pendingSourceOccurrencePublishedFieldIds(item, input).includes(fieldId) ||
+            item.initialOutputFieldIds.includes(fieldId) === included
+          )
+            return item;
+          changed = true;
+          const initialOutputFieldIds = included
+            ? [...item.initialOutputFieldIds, fieldId]
+            : item.initialOutputFieldIds.filter((selectedId) => selectedId !== fieldId);
+          return { ...item, initialOutputFieldIds };
+        });
+        return changed ? next : current;
+      });
+      return true;
     },
     rename: (id: string, alias: string): boolean => {
       const name = parseOccurrenceAlias(alias);

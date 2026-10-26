@@ -25,6 +25,11 @@ type InspectorTab = Readonly<{ relationId: string; tab: string }>;
 const InspectorTabs = createContext<
   readonly [InspectorTab | null, (selection: InspectorTab) => void] | null
 >(null);
+const CanvasOutputEditing = createContext(true);
+
+export function useCanvasOutputEditing(): boolean {
+  return useContext(CanvasOutputEditing);
+}
 
 export function CanvasOperationInspectorTabs({
   children,
@@ -67,6 +72,7 @@ export function CanvasRelationalTreeEditorFrame({
   label,
   initialTab = 'properties',
   onEdit,
+  editing = !readOnly,
   dataSlot = 'canvas-relational-tree-inline-editor',
 }: Readonly<{
   operation: CanvasPresentationOperation;
@@ -80,6 +86,7 @@ export function CanvasRelationalTreeEditorFrame({
   label?: string;
   initialTab?: 'properties' | 'output';
   onEdit?: () => void;
+  editing?: boolean;
   dataSlot?: string;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -114,6 +121,7 @@ export function CanvasRelationalTreeEditorFrame({
           <button
             type="button"
             data-slot="canvas-relational-edit"
+            aria-pressed={editing}
             onClick={onEdit}
             className="ml-auto flex items-center gap-1 rounded px-2 py-1 text-xs hover:bg-(--surface-selected)"
           >
@@ -132,69 +140,71 @@ export function CanvasRelationalTreeEditorFrame({
           <X aria-hidden="true" className="size-4" />
         </button>
       </header>
-      <CanvasOperationExpressionHost.Provider value={expressionContext}>
-        <Tabs value={activeTab} onValueChange={setTab} className="min-h-0 flex-1 gap-0">
-          <TabsList
-            aria-label={title}
-            className="workspace-navigation-tabs border-b border-(--border-subtle)"
-          >
-            {hasExpression ? (
-              <TabsTrigger
-                value="tree"
-                data-slot="canvas-operation-tree-tab"
-                className="workspace-navigation-tab"
-              >
-                {copy.expressionTree}
-              </TabsTrigger>
-            ) : null}
-            <TabsTrigger
-              value="properties"
-              data-slot="canvas-operation-properties-tab"
-              className="workspace-navigation-tab"
+      <CanvasOutputEditing.Provider value={editing}>
+        <CanvasOperationExpressionHost.Provider value={expressionContext}>
+          <Tabs value={activeTab} onValueChange={setTab} className="min-h-0 flex-1 gap-0">
+            <TabsList
+              aria-label={title}
+              className="workspace-navigation-tabs border-b border-(--border-subtle)"
             >
-              {copy.properties}
-            </TabsTrigger>
-            {output == null ? null : (
+              {hasExpression ? (
+                <TabsTrigger
+                  value="tree"
+                  data-slot="canvas-operation-tree-tab"
+                  className="workspace-navigation-tab"
+                >
+                  {copy.expressionTree}
+                </TabsTrigger>
+              ) : null}
               <TabsTrigger
-                value="output"
-                data-slot="canvas-operation-output-tab"
+                value="properties"
+                data-slot="canvas-operation-properties-tab"
                 className="workspace-navigation-tab"
               >
-                {copy.output}
+                {copy.properties}
               </TabsTrigger>
-            )}
-          </TabsList>
-          <TabsContent
-            value="tree"
-            data-value="tree"
-            forceMount
-            className="min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
-          >
-            <div ref={setExpressionHost} className="h-full min-h-64" />
-          </TabsContent>
-          <TabsContent
-            value="properties"
-            data-value="properties"
-            forceMount
-            className="canvas-operation-panels min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
-          >
-            <div className="canvas-operation-controls min-h-0 min-w-0">{children}</div>
-            {readOnly && onEdit == null ? (
-              <p className="text-xs text-(--text-muted)">{copy.inspectionOnly}</p>
-            ) : null}
-          </TabsContent>
-          {output == null ? null : (
+              {output == null ? null : (
+                <TabsTrigger
+                  value="output"
+                  data-slot="canvas-operation-output-tab"
+                  className="workspace-navigation-tab"
+                >
+                  {copy.output}
+                </TabsTrigger>
+              )}
+            </TabsList>
             <TabsContent
-              value="output"
-              data-value="output"
+              value="tree"
+              data-value="tree"
               forceMount
               className="min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
             >
-              {output}
+              <div ref={setExpressionHost} className="h-full min-h-64" />
             </TabsContent>
-          )}
-        </Tabs>
-      </CanvasOperationExpressionHost.Provider>
+            <TabsContent
+              value="properties"
+              data-value="properties"
+              forceMount
+              className="canvas-operation-panels min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
+            >
+              <div className="canvas-operation-controls min-h-0 min-w-0">{children}</div>
+              {readOnly && onEdit == null ? (
+                <p className="text-xs text-(--text-muted)">{copy.inspectionOnly}</p>
+              ) : null}
+            </TabsContent>
+            {output == null ? null : (
+              <TabsContent
+                value="output"
+                data-value="output"
+                forceMount
+                className="min-h-0 overflow-auto p-3 data-[state=inactive]:hidden"
+              >
+                {output}
+              </TabsContent>
+            )}
+          </Tabs>
+        </CanvasOperationExpressionHost.Provider>
+      </CanvasOutputEditing.Provider>
     </section>
   );
 }

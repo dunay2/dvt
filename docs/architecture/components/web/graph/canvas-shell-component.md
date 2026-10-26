@@ -312,8 +312,8 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 The applied Model inspector selects the occurrence's direct contribution to the
 Model's root Output. It does not remove a Model Input binding. The governing
-design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V8`, with rationale and
-Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6405673913).
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V10`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416256992).
 The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
 rails retain command and presentation ownership.
 
@@ -326,7 +326,8 @@ flowchart LR
   Edit --> Draft[Controlled included and excluded rows with shared inclusion button]
   Draft --> Command[Existing root Output command]
   Command --> Root
-  Filter[Local hide excluded preference] --> Draft
+  Pending[Detached Read occurrence preference] --> Terminal[Connect terminal Output]
+  Terminal --> Command
 ```
 
 `CanvasSourceOccurrenceOutputs` is passive presentation. The applied selection
@@ -345,11 +346,29 @@ remain intact. The applied view shows only included fields without editing
 controls. The existing Edit action opens the Model draft; its Source inspector
 shows included and excluded fields with the existing add/remove actions.
 Apply persists the draft selection; Cancel restores the previously applied
-document. The optional hide-excluded filter starts off inside editing, is local
-to the selected occurrence, and never dispatches a graph command.
-Existing command authority owns revision,
-permissions, rejection, rollback and persistence. Pending detached Sources retain
-their explicit Input-binding adapter until they belong to the applied tree.
+document. There is no separate hide-excluded mode: the shared header action is
+literally `Edit`, and entering it never writes a command.
+Existing command authority owns revision, permissions, rejection, rollback and
+persistence. Detached Sources store optional `initialOutputFieldIds` on their
+own incomplete-authoring occurrence. They never invoke the Model Input mapping
+adapter. Absence uses the producer publication; an empty list selects nothing.
+Creation and detached restoration normalize that default to local Read identities
+before editing. An absent preference in a configured or retained operation stays
+absent on restore: its saved canonical Output takes precedence. Absence after
+successful consumption delegates to canonical Output ownership and cannot be
+overwritten by an obsolete pending-field callback. A disconnected terminal does
+not remove ownership from the configured operation's own Output inspector.
+The physical Read remains complete, including keys needed by later JOINs.
+
+Initialization waits for terminal Model Output connection, rather than narrowing
+the first intermediate operation. The existing canonical Output query/command
+materializes direct contributions in the terminal root. One graph-state snapshot
+coordinates document replacement and consumption of reachable preferences;
+obsolete or cancelled work cannot publish partially. Apply is unavailable while
+initialization is pending or rejected. Shared SET/aggregate contributions reject
+explicitly instead of silently losing intent. Unrelated pending Sources retain
+their preferences. Once initialized, configured occurrences use the canonical
+root adapter, including staged-root analysis and ancestor rebinding.
 Both adapters use the same passive rows and Inspector inclusion control; CSS
 consumes the existing semantic tokens without adding another style system.
 

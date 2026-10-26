@@ -12,7 +12,10 @@ import { restorePendingSourceOccurrence } from './relational-source-occurrence/p
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { indexSubstraitRelations, type SubstraitDocument } from '@dvt/substrait-analysis';
 import { createSourceDocument } from './canvasSourceDocument';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 
 /** A completed tree owns its terminal through its canonical root, not a draft snapshot. */
 export function retainIncompleteCanvasRelationalAuthoringDraft(
@@ -48,6 +51,9 @@ export function createCanvasRelationalAuthoringDraft(
       relationId: source.read.binding.relationId,
       sourceNodeId: source.sourceNodeId,
       displayName: source.read.binding.displayName,
+      ...(source.initialOutputFieldIds == null
+        ? {}
+        : { initialOutputFieldIds: [...source.initialOutputFieldIds] }),
       semanticDocument: encodeDvtSubstraitSemanticDocument(
         createSourceDocument([source.read], source.read)
       ),
@@ -80,11 +86,28 @@ export function restoreCanvasRelationalAuthoringDraft(
 }> | null {
   const indexed = appliedDocument == null ? null : indexSubstraitRelations(appliedDocument);
   const appliedRelationIds = indexed?.ok === true ? new Set(indexed.index.relations.keys()) : null;
+  const configuredRelationIds = new Set<string>();
+  try {
+    for (const operation of draft.operations)
+      for (const document of [operation.semanticDocument, operation.configurationDocument]) {
+        if (document == null) continue;
+        for (const binding of decodeDvtSubstraitSemanticDocument(document).sidecar.relations)
+          configuredRelationIds.add(binding.relationId);
+      }
+  } catch {
+    return null;
+  }
   const sources = draft.sources
     .filter((source) => !appliedRelationIds?.has(source.relationId))
     .map((source) => {
       const input = inputs.find((candidate) => candidate.nodeId === source.sourceNodeId);
-      return input == null ? null : restorePendingSourceOccurrence(input, source);
+      return input == null
+        ? null
+        : restorePendingSourceOccurrence(
+            input,
+            source,
+            configuredRelationIds.has(source.relationId)
+          );
     });
   if (sources.some((source) => source == null)) return null;
   return {

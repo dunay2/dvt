@@ -694,6 +694,13 @@ Movement alone retains its existing discardable-session behavior; this does not
 add an autosave or change navigation/cancellation ownership.
 
 Inspector visibility is presentation state, not the lifetime of that transaction.
+Pending Source Output changes reuse `ConfigureCanvasDvtNode` and the existing
+incomplete-authoring DTO; they do not use Model Input mapping. Per-occurrence
+`initialOutputFieldIds` is validated against the complete Read and materialized
+by the existing Output command only at terminal connection. Apply waits for an
+atomic, revision-checked result. Presentation reuses the shared `Edit` frame and
+inclusion toggle; view/edit transitions never issue a command by themselves.
+
 The active inspector tab is also Model-local presentation state, keyed by relation
 identity. Entering Edit, applying or cancelling a draft must not reset the selected
 tab when the same relation remains selected. Inspection and authoring frames share

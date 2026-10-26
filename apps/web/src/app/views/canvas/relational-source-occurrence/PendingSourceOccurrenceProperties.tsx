@@ -1,31 +1,20 @@
-/** Present detached Source Input bindings through the shared passive field rows. */
-import type { GraphNodeInputMapping } from '../../../plugins/graph/graphNodeColumnContracts';
-import { CanvasSourceOccurrenceOutputs } from '../CanvasSourceOccurrenceOutputs';
-import { canvasInputSlotId } from '../canvasInputBindings';
-import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
+/** Present one pending occurrence using the shared Source form and caller-owned Output adapter. */
+import type { ReactNode } from 'react';
 import type { PendingSourceOccurrence } from './pendingSourceOccurrence';
 import { SourceOccurrencePropertiesForm } from './SourceOccurrencePropertiesForm';
 
 export function PendingSourceOccurrenceProperties({
   occurrence,
-  input,
-  publishedFieldNames,
-  consumerNodeId,
-  onMapInput,
-  onRemoveInput,
   occupied,
   actions,
   onPendingChange,
+  output,
 }: Readonly<{
   occurrence: PendingSourceOccurrence;
-  input?: CanvasDvtCompositionInput;
-  publishedFieldNames: readonly string[];
-  consumerNodeId: string;
-  onMapInput?: (mapping: GraphNodeInputMapping) => void;
-  onRemoveInput?: (mapping: GraphNodeInputMapping) => void;
   occupied: ReadonlySet<string>;
   actions: Readonly<{ rename: (alias: string) => boolean; close: () => void }>;
   onPendingChange: (pending: boolean) => void;
+  output: (editing: boolean) => ReactNode;
 }>): JSX.Element {
   const { read } = occurrence;
   return (
@@ -38,42 +27,7 @@ export function PendingSourceOccurrenceProperties({
       }}
       actions={{ save: actions.rename, close: actions.close }}
       onPendingChange={onPendingChange}
-      output={
-        input == null ? null : (
-          <CanvasSourceOccurrenceOutputs
-            editing
-            fields={input.fields
-              .filter((field) => publishedFieldNames.includes(field.name))
-              .map((field) => ({
-                id: field.id ?? field.name,
-                name: field.name,
-                dataType: field.dataType,
-                included:
-                  input.inputBindings?.fields == null ||
-                  input.inputBindings.fields.some(
-                    (binding) => binding.producerFieldId === (field.id ?? field.name)
-                  ),
-                available: true,
-              }))}
-            disabled={onMapInput == null || onRemoveInput == null}
-            onChange={(fieldId, included) => {
-              const source = { nodeId: input.nodeId, columnId: fieldId };
-              if (included) onMapInput?.({ source, target: { nodeId: consumerNodeId } });
-              else
-                onRemoveInput?.({
-                  source,
-                  target: {
-                    nodeId: consumerNodeId,
-                    inputId:
-                      input.inputBindings?.fields.find(
-                        (binding) => binding.producerFieldId === fieldId
-                      )?.inputId ?? canvasInputSlotId(input.nodeId, fieldId),
-                  },
-                });
-            }}
-          />
-        )
-      }
+      output={output}
     />
   );
 }

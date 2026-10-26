@@ -1,5 +1,5 @@
 /** Owned concern: own the discardable relation draft and reset/hydrate it atomically. */
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type SetStateAction } from 'react';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { RelationalApplyRejection } from './canvasRelationalTreeWorkbench.types';
@@ -9,16 +9,58 @@ import type { PendingSourceOccurrence } from './relational-source-occurrence/pen
 import type { CanvasStagedOperation } from './canvasStagedOperation';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CardPosition } from './canvasRelationalTreeGeometry';
+import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+
+type GraphSnapshot = Readonly<{
+  joinDraft: SubstraitDocument | null;
+  pendingSources: readonly PendingSourceOccurrence[];
+  stagedOperations: readonly CanvasStagedOperation[];
+  outputRelationId: string | null;
+}>;
+const emptyGraph: GraphSnapshot = {
+  joinDraft: null,
+  pendingSources: [],
+  stagedOperations: [],
+  outputRelationId: null,
+};
 
 export function useCanvasRelationalTreeDraftState() {
   const [operation, setOperation] = useState<CanvasRelationalOperation | null>(null);
   const [active, setActive] = useState(false);
-  const [joinDraft, setJoinDraft] = useState<SubstraitDocument | null>(null);
-  const [pendingSources, setPendingSources] = useState<readonly PendingSourceOccurrence[]>([]);
+  const [graph, setGraph] = useState(emptyGraph);
+  const { joinDraft, pendingSources, stagedOperations, outputRelationId } = graph;
+  const updateGraph = useCallback(
+    <K extends keyof GraphSnapshot>(key: K, update: SetStateAction<GraphSnapshot[K]>) => {
+      setGraph((current) => {
+        const value =
+          typeof update === 'function'
+            ? (update as (previous: GraphSnapshot[K]) => GraphSnapshot[K])(current[key])
+            : update;
+        return value === current[key] ? current : { ...current, [key]: value };
+      });
+    },
+    []
+  );
+  const setJoinDraft = useCallback(
+    (update: SetStateAction<SubstraitDocument | null>) => updateGraph('joinDraft', update),
+    [updateGraph]
+  );
+  const setPendingSources = useCallback(
+    (update: SetStateAction<readonly PendingSourceOccurrence[]>) =>
+      updateGraph('pendingSources', update),
+    [updateGraph]
+  );
+  const setStagedOperations = useCallback(
+    (update: SetStateAction<readonly CanvasStagedOperation[]>) =>
+      updateGraph('stagedOperations', update),
+    [updateGraph]
+  );
+  const setOutputRelationId = useCallback(
+    (update: SetStateAction<string | null>) => updateGraph('outputRelationId', update),
+    [updateGraph]
+  );
   const [pendingSourceId, setPendingSourceId] = useState<string | null>(null);
-  const [stagedOperations, setStagedOperations] = useState<readonly CanvasStagedOperation[]>([]);
   const [selectedStagedOperationId, setSelectedStagedOperationId] = useState<string | null>(null);
-  const [outputRelationId, setOutputRelationId] = useState<string | null>(null);
   const [positions, setPositions] = useState<ReadonlyMap<string, CardPosition>>(() => new Map());
   const [applyRejection, setApplyRejection] = useState<RelationalApplyRejection | null>(null);
   const slots = useCanvasRelationalOperandSlots();
@@ -27,12 +69,9 @@ export function useCanvasRelationalTreeDraftState() {
     setActive(false);
     setOperation(null);
     resetOperands();
-    setJoinDraft(null);
-    setPendingSources([]);
+    setGraph(emptyGraph);
     setPendingSourceId(null);
-    setStagedOperations([]);
     setSelectedStagedOperationId(null);
-    setOutputRelationId(null);
     setApplyRejection(null);
   }, [resetOperands]);
   const hydrate = useCallback(
@@ -40,15 +79,50 @@ export function useCanvasRelationalTreeDraftState() {
       setActive(true);
       replaceInputs(seed.inputIds);
       setOperation(seed.operation);
-      setJoinDraft(seed.draft);
-      setStagedOperations([]);
       setSelectedStagedOperationId(null);
       const indexed = indexSubstraitRelations(seed.draft);
-      setOutputRelationId(indexed.ok ? indexed.index.rootId : null);
+      setGraph((current) => ({
+        ...current,
+        joinDraft: seed.draft,
+        stagedOperations: [],
+        outputRelationId: indexed.ok ? indexed.index.rootId : null,
+      }));
     },
     [replaceInputs]
   );
   return {
+    graphSnapshot: graph,
+    commitOutputInitialization: useCallback(
+      (expected: GraphSnapshot, document: SubstraitDocument, consumedIds: readonly string[]) => {
+        setGraph((current) => {
+          if (current !== expected || current.outputRelationId == null) return current;
+          const stagedRoot = current.stagedOperations.find(
+            (operation) => operation.id === current.outputRelationId
+          );
+          return {
+            ...current,
+            joinDraft: stagedRoot == null ? document : current.joinDraft,
+            stagedOperations:
+              stagedRoot == null
+                ? current.stagedOperations
+                : current.stagedOperations.map((operation) =>
+                    operation === stagedRoot
+                      ? {
+                          ...operation,
+                          semanticDocument: encodeDvtSubstraitSemanticDocument(document),
+                        }
+                      : operation
+                  ),
+            pendingSources: current.pendingSources.map((source) => {
+              if (!consumedIds.includes(source.read.binding.relationId)) return source;
+              const { initialOutputFieldIds: _initialOutputFieldIds, ...retained } = source;
+              return retained;
+            }),
+          };
+        });
+      },
+      []
+    ),
     slots,
     operation,
     setOperation,
@@ -78,11 +152,14 @@ export function useCanvasRelationalTreeDraftState() {
         }>
       ) => {
         setActive(true);
-        setPendingSources(draft.sources);
+        setGraph((current) => ({
+          ...current,
+          pendingSources: draft.sources,
+          stagedOperations: draft.operations,
+          outputRelationId: draft.outputRelationId,
+        }));
         setPendingSourceId(null);
-        setStagedOperations(draft.operations);
         setSelectedStagedOperationId(null);
-        setOutputRelationId(draft.outputRelationId);
         setPositions((current) => new Map([...current, ...draft.positions]));
       },
       []

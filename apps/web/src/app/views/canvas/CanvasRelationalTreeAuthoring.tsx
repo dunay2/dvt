@@ -9,10 +9,8 @@ import { CanvasRelationalTreeDraftViewport } from './CanvasRelationalTreeDraftVi
 import { CanvasRelationalTreeInlineEditor } from './CanvasRelationalTreeInlineEditor';
 import { CanvasRelationalTreeOperationShelf } from './CanvasRelationalTreeOperationShelf';
 import { CanvasRelationalTreeAuthoringTemplate } from './CanvasRelationalTreeAuthoring.templates';
-import { PendingSourceOccurrenceProperties } from './relational-source-occurrence/PendingSourceOccurrenceProperties';
-import { sourceOccurrenceAliases } from './relational-source-occurrence/sourceOccurrenceAlias';
 import { CanvasStagedOperationInspector } from './CanvasStagedOperationInspector';
-import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
+import { CanvasPendingSourceInspector } from './CanvasPendingSourceOutputs';
 import {
   resolveCanvasStagedProducerDocument,
   resolveCanvasStagedEditingDocument,
@@ -26,7 +24,6 @@ export function CanvasRelationalTreeAuthoring({
   onExpandedChange,
   onPendingConditionChange,
   sourceOutputFieldsByRelationId,
-  authoring,
 }: Readonly<{
   data: CanvasRelationalTreeAuthoringDto;
   actions: CanvasRelationalTreeAuthoringActions;
@@ -35,7 +32,6 @@ export function CanvasRelationalTreeAuthoring({
   onExpandedChange: (expanded: boolean) => void;
   onPendingConditionChange: (pending: boolean) => void;
   sourceOutputFieldsByRelationId: ReadonlyMap<string, readonly string[]>;
-  authoring?: CanvasRelationalTreeAuthoringContract;
 }>): JSX.Element {
   const { selectedPendingId: pendingId, selectedStagedOperationId: stagedId } = data;
   const pending = data.pendingSources.find((item) => item.read.binding.relationId === pendingId);
@@ -91,28 +87,15 @@ export function CanvasRelationalTreeAuthoring({
             onReconfigure={() => actions.updateStagedOperation(staged.id, 'reconfigure')}
           />
         ) : pending != null ? (
-          <PendingSourceOccurrenceProperties
+          <CanvasPendingSourceInspector
             key={pending.read.binding.relationId}
+            data={data}
+            actions={actions}
             occurrence={pending}
-            input={data.inputs.find((input) => input.nodeId === pending.sourceNodeId)}
             publishedFieldNames={
               sourceOutputFieldsByRelationId.get(pending.read.binding.relationId) ?? []
             }
-            consumerNodeId={data.transformNode.id}
-            onMapInput={authoring?.onMapInput}
-            onRemoveInput={authoring?.onRemoveInput}
-            occupied={
-              new Set([
-                ...sourceOccurrenceAliases(data.draft?.sidecar.relations ?? []),
-                ...data.pendingSources
-                  .filter((item) => item !== pending)
-                  .map((item) => item.read.binding.displayName),
-              ])
-            }
-            actions={{
-              rename: (alias) => actions.renamePending(pending.read.binding.relationId, alias),
-              close: () => expand(null, false),
-            }}
+            onClose={() => expand(null, false)}
             onPendingChange={onPendingConditionChange}
           />
         ) : (

@@ -59,6 +59,9 @@ export function openModelOutputs(nodeId = 'join-transform'): void {
     .should('be.visible')
     .find('[data-slot="canvas-operation-output-tab"]')
     .click();
+  cy.get('[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-edit"]')
+    .should('have.text', 'Edit')
+    .click();
 }
 
 export function prepareFieldSelection(sourceCount: 2 | 3): void {

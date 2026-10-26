@@ -233,6 +233,27 @@ Output remains manual. Pointer and keyboard movement obey the same boundary.
 
 ### Pending Read identity coverage
 
+Each pending Source may additionally carry `initialOutputFieldIds`, an ordered
+list of unique root field identities belonging to that occurrence's sole Read.
+Absent means the existing producer publication default; `[]` explicitly excludes
+all fields. Foreign identities, duplicates and nested-only field identities are
+invalid. Save/read preserve the preference without altering the complete Read,
+physical schema or Model Input bindings. This additive correction stays in the
+existing v1 authoring DTO and has no migration or secondary compatibility reader.
+Creating or restoring a detached incomplete occurrence resolves an absent
+preference against current producer publication using stable local Read identities.
+When that Read already belongs to a configured or retained operation document,
+an absent preference stays absent: the saved canonical configuration owns Output,
+including after terminal disconnect and reopen. Reconnecting cannot replay defaults
+over its selected emit.
+
+The preference is incomplete authoring intent, never executable authority. On
+terminal Output connection Web materializes it through canonical root Output
+selection, then atomically removes only consumed reachable preferences. Until
+that succeeds, Apply cannot expose executable semantics. Intermediate JOINs keep
+their complete inputs, and cancellation or stale/rejected initialization retains
+the previous snapshot. Completed occurrences thereafter read the canonical root.
+
 Pending source Reads require complete stable field identity coverage of their
 saved `baseSchema`: exactly one sidecar binding per root field and nested struct
 field, at the correct parent and sibling ordinal. List/map fields remain single

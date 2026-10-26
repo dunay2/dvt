@@ -14,6 +14,23 @@ describe('Relational session-action Presentation Model', () => {
     pendingNavigation: false,
   });
 
+  it('shows the Source Output rejection without inventing an Input mapping failure', () => {
+    expect(
+      buildCanvasRelationalTreeSessionActionsModel(
+        {
+          ...state,
+          canApply: false,
+          applyRejection: { outcome: 'rejected', reason: 'source_output_unavailable' },
+        },
+        resolveCanvasViewCopy('es'),
+        'es'
+      )
+    ).toMatchObject({
+      applyDisabled: true,
+      rejectionMessage: resolveCanvasSemanticEditorCopy('es').fieldSelectionRejected,
+    });
+  });
+
   it('hides every control outside the active session even with a pending decision', () => {
     expect(
       buildCanvasRelationalTreeSessionActionsModel(

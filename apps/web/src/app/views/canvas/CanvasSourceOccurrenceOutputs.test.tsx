@@ -110,7 +110,7 @@ describe('Source occurrence Model Output', () => {
     reopened.dispose();
   });
 
-  it('keeps excluded rows recoverable and filters only presentation, returning focus to the filter', async () => {
+  it('keeps included and excluded rows visible throughout editing without another filter', async () => {
     useApplicationLanguageStore.setState({ language: 'en' });
     const change = vi.fn();
     function Host(): ReactElement {
@@ -131,21 +131,16 @@ describe('Source occurrence Model Output', () => {
       );
     }
     await act(async () => root.render(<Host />));
-    const filter = container.querySelector<HTMLButtonElement>('[role="checkbox"]')!;
     const toggle = (): HTMLButtonElement => container.querySelector('[data-field-name="country"]')!;
-    expect(filter.getAttribute('aria-checked')).toBe('false');
-    await act(async () => fireEvent.click(toggle()));
-    expect(toggle().getAttribute('data-included')).toBe('false');
-    await act(async () => fireEvent.click(filter));
-    expect(container.textContent).not.toContain('country');
-    await act(async () => fireEvent.click(filter));
-    await act(async () => fireEvent.click(toggle()));
-    await act(async () => fireEvent.click(filter));
+    expect(container.querySelector('[role="checkbox"]')).toBeNull();
     toggle().focus();
     await act(async () => fireEvent.click(toggle()));
-    expect(document.activeElement).toBe(filter);
-    expect(change).toHaveBeenCalledTimes(3);
-    expect(filter.textContent).not.toContain('country');
+    expect(toggle().getAttribute('data-included')).toBe('false');
+    expect(container.textContent).toContain('country');
+    expect(document.activeElement).toBe(toggle());
+    await act(async () => fireEvent.click(toggle()));
+    expect(toggle().getAttribute('data-included')).toBe('true');
+    expect(change).toHaveBeenCalledTimes(2);
   });
 
   it.each([false, true])(

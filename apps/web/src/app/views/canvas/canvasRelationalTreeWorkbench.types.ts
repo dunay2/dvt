@@ -20,7 +20,7 @@ export type CanvasRelationalTreeWorkbenchProps = Readonly<{
 
 export type CanvasRelationalTreeApplyResult =
   | CanvasInspectorNodeDraftApplyResult
-  | Readonly<{ outcome: 'rejected'; reason: 'command_unavailable' }>;
+  | Readonly<{ outcome: 'rejected'; reason: 'command_unavailable' | 'source_output_unavailable' }>;
 
 export type RelationalApplyRejection = Extract<
   CanvasRelationalTreeApplyResult,

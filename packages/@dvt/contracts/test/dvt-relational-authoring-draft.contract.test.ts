@@ -1,5 +1,9 @@
 import { PlanSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
-import { toBinary } from '@bufbuild/protobuf';
+import {
+  TypeSchema,
+  Type_Nullability,
+} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { create, toBinary } from '@bufbuild/protobuf';
 import { sha256Hex } from '@dvt/crypto';
 import { describe, expect, it } from 'vitest';
 
@@ -80,6 +84,72 @@ function workspace(value: unknown): { nodes: { pluginId: string }[]; [key: strin
 }
 
 describe('DVT relational authoring draft v1', () => {
+  it.each([
+    { initialOutputFieldIds: undefined },
+    { initialOutputFieldIds: [] },
+    { initialOutputFieldIds: [sourceDocument.sidecar.fields[1]!.fieldId] },
+  ])(
+    'preserves pending initial Output selection $initialOutputFieldIds at both persisted boundaries',
+    ({ initialOutputFieldIds }) => {
+      const pending = {
+        ...relationalDraft,
+        sources: [
+          { ...source, ...(initialOutputFieldIds === undefined ? {} : { initialOutputFieldIds }) },
+        ],
+      };
+      expect(DvtRelationalAuthoringDraftV1Schema.parse(pending)).toEqual(pending);
+      expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(pending)).success).toBe(true);
+    }
+  );
+
+  it.each([
+    ['foreign-field'],
+    [sourceDocument.sidecar.fields[0]!.fieldId, sourceDocument.sidecar.fields[0]!.fieldId],
+  ])('rejects invalid pending Output identities %j', (...initialOutputFieldIds) => {
+    const pending = { ...relationalDraft, sources: [{ ...source, initialOutputFieldIds }] };
+    expect(DvtRelationalAuthoringDraftV1Schema.safeParse(pending).success).toBe(false);
+    expect(WorkspaceGraphAuthoringDraftSchema.safeParse(workspace(pending)).success).toBe(false);
+  });
+
+  it('rejects a nested-only initial Output identity from an otherwise valid Read', () => {
+    const semanticDocument = globalThis.structuredClone(sourceDocument);
+    const plan = decodeDvtSubstraitPlanV1(semanticDocument);
+    const root = plan.relations[0]!.relType;
+    if (root.case !== 'root' || root.value.input?.relType.case !== 'read')
+      throw new Error('Expected the pending Read fixture.');
+    const read = root.value.input.relType.value;
+    const types = read.baseSchema!.struct!.types;
+    types[0] = create(TypeSchema, {
+      kind: {
+        case: 'struct',
+        value: { types: [types[0]!], nullability: Type_Nullability.REQUIRED },
+      },
+    });
+    read.baseSchema!.names.splice(1, 0, 'detail');
+    root.value.names.splice(1, 0, 'detail');
+    const field = semanticDocument.sidecar.fields[0]!;
+    const child = {
+      ...field,
+      fieldId: 'nested-detail',
+      parentFieldId: field.fieldId,
+      outputOrdinal: 0,
+      displayName: 'detail',
+    };
+    semanticDocument.sidecar.fields.push(child);
+    const bytes = toBinary(PlanSchema, plan);
+    semanticDocument.semanticPlan.bytesBase64 = Buffer.from(bytes).toString('base64');
+    semanticDocument.semanticPlan.sha256 = sha256Hex(bytes);
+    semanticDocument.sidecar.semanticPlanSha256 = semanticDocument.semanticPlan.sha256;
+    const pending = { ...relationalDraft, sources: [{ ...source, semanticDocument }] };
+    expect(DvtRelationalAuthoringDraftV1Schema.safeParse(pending).success).toBe(true);
+    expect(
+      DvtRelationalAuthoringDraftV1Schema.safeParse({
+        ...pending,
+        sources: [{ ...pending.sources[0], initialOutputFieldIds: [child.fieldId] }],
+      }).success
+    ).toBe(false);
+  });
+
   it.each(['union_all', 'union_distinct'])('persists ordered incomplete N-input %s', (kind) => {
     for (const count of [2, 3, 4]) {
       const pending = {

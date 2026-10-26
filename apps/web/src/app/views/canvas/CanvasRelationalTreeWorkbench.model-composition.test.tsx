@@ -171,6 +171,9 @@ describe('Model composition Workbench', () => {
         ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
 
+    await act(async () =>
+      panel?.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')?.click()
+    );
     const alias = panel?.querySelector<HTMLInputElement>(
       '[data-slot="relation-output-field"] input:not([type="checkbox"])'
     );
@@ -260,6 +263,13 @@ describe('Model composition Workbench', () => {
         )!
         .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-edit"]'
+        )
+        ?.click()
+    );
     const alias = container.querySelector<HTMLInputElement>(
       '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
     )!;

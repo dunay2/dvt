@@ -20,11 +20,13 @@ export function SourceOccurrencePropertiesTemplate({
     error: string | null;
     invalid: boolean;
     canSubmit: boolean;
+    editing: boolean;
   }>;
   actions: Readonly<{
     changeAlias: (alias: string) => void;
     submit: () => void;
     close: () => void;
+    edit: () => void;
   }>;
   output: ReactNode;
 }>): JSX.Element {
@@ -37,8 +39,16 @@ export function SourceOccurrencePropertiesTemplate({
       onClose={actions.close}
       output={output}
       initialTab="output"
+      editing={data.editing}
+      onEdit={data.unsupported == null ? actions.edit : undefined}
     >
-      {data.unsupported == null ? (
+      {data.unsupported != null ? (
+        <p className="text-xs text-(--text-muted)">{data.unsupported}</p>
+      ) : !data.editing ? (
+        <p className="text-xs text-(--text-primary)">
+          {data.aliasLabel}: {data.alias}
+        </p>
+      ) : (
         <form
           className="space-y-3"
           onSubmit={(event) => {
@@ -71,8 +81,6 @@ export function SourceOccurrencePropertiesTemplate({
             {data.updateLabel}
           </Button>
         </form>
-      ) : (
-        <p className="text-xs text-(--text-muted)">{data.unsupported}</p>
       )}
     </CanvasRelationalTreeEditorFrame>
   );

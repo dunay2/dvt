@@ -32,6 +32,7 @@ export function SourceOccurrenceProperties({
   const command = useRelationCommand(relationId, onChange);
   return (
     <SourceOccurrencePropertiesForm
+      initialEditing
       data={{
         relationId,
         alias: binding?.displayName ?? '',

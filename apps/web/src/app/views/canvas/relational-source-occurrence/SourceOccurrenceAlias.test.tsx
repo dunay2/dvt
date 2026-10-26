@@ -13,6 +13,9 @@ import {
   setupWorkbenchTest,
 } from '../CanvasRelationalTreeWorkbench.test-support';
 import { occurrenceGraph } from './occurrence.test.fixtures';
+import { SourceOccurrencePropertiesForm } from './SourceOccurrencePropertiesForm';
+import { CanvasSourceOccurrenceOutputs } from '../CanvasSourceOccurrenceOutputs';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 
 async function changeAlias(value: string): Promise<void> {
   const input = container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')!;
@@ -30,6 +33,42 @@ async function click(slot: string): Promise<void> {
 
 describe('Read properties alias', () => {
   setupWorkbenchTest();
+  it('uses one literal Edit action for alias and output presentation without saving', async () => {
+    useApplicationLanguageStore.setState({ language: 'es' });
+    const save = vi.fn(() => true);
+    await act(async () =>
+      root.render(
+        <SourceOccurrencePropertiesForm
+          data={{ relationId: 'pending', alias: 'Source', occupied: new Set(), supported: true }}
+          actions={{ save, close: vi.fn() }}
+          output={(editing: boolean) => (
+            <CanvasSourceOccurrenceOutputs
+              fields={[
+                { id: 'included', name: 'Visible', included: true, available: true },
+                { id: 'excluded', name: 'Excluded', included: false, available: true },
+              ]}
+              editing={editing}
+              disabled={false}
+              onChange={vi.fn()}
+            />
+          )}
+        />
+      )
+    );
+    expect(container.querySelector('[data-slot="source-occurrence-alias"]')).toBeNull();
+    expect(container.querySelector('[data-slot="source-occurrence-update"]')).toBeNull();
+    expect(container.textContent).not.toContain('Excluded');
+    const edit = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-relational-edit"]'
+    )!;
+    expect(edit?.textContent).toBe('Edit');
+    await act(async () => edit.click());
+    expect(edit.getAttribute('aria-pressed')).toBe('true');
+    expect(container.querySelector('[data-slot="source-occurrence-alias"]')).not.toBeNull();
+    expect(container.textContent).toContain('Excluded');
+    expect(save).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="checkbox"]')).toBeNull();
+  });
   it('blocks a duplicate alias inline without applying a command', async () => {
     const graph = occurrenceGraph();
     const apply = vi.fn();
