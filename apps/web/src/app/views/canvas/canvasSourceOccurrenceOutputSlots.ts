@@ -37,22 +37,7 @@ export async function readCanvasSourceOccurrenceOutputSelection(
     if (variant.case === 'filter' || variant.case === 'sort' || variant.case === 'fetch')
       return inputs[0]!;
     if (variant.case === 'project')
-      return [
-        ...inputs[0]!,
-        ...variant.value.expressions.map((expression) => {
-          const rex = expression.rexType;
-          if (
-            rex.case !== 'selection' ||
-            rex.value.rootType.case !== 'rootReference' ||
-            rex.value.referenceType.case !== 'directReference'
-          )
-            return null;
-          const segment = rex.value.referenceType.value.referenceType;
-          return segment.case === 'structField' && segment.value.child == null
-            ? (inputs[0]![segment.value.field] ?? null)
-            : null;
-        }),
-      ];
+      return [...inputs[0]!, ...variant.value.expressions.map(() => null)];
     const schemas = await Promise.all(entry.inputs.map((input) => session.query(input, signal)));
     return deriveOperatorSchema(
       entry,

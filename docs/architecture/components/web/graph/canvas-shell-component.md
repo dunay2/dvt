@@ -333,7 +333,9 @@ flowchart LR
 adapter reads the current session and delegates changes to
 `changeSelectedRelationOutputs` through `useRelationCommand`. Direct forwarding
 is resolved by canonical relation/field identity and emit mappings, including
-nested JOINs and self-JOINs. Calculation dependencies do not establish direct
+nested JOINs and self-JOINs. Project expressions retain their own definition
+identity, including expressions that only select an Input field. Only forwarded
+Input slots belong to the Source inclusion control. Dependencies do not establish direct
 forwarding; aggregate and SET outputs cannot be attributed independently to one
 Source. Unavailable direct contributions remain visible with disabled controls.
 

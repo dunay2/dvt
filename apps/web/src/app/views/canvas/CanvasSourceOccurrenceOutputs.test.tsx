@@ -223,6 +223,57 @@ describe('Source occurrence Model Output', () => {
     session.dispose();
   });
 
+  it('keeps an explicit selection definition independent of Source output inclusion', async () => {
+    const prepared = new CanvasRelationAnalysisSession('selection-definition');
+    prepared.receive(connectedNamesProjectionDraft());
+    const initial = await applySelectedRelationDerivedOutput(prepared, {
+      relationId: prepared.rootId,
+      expectedRevision: prepared.revision,
+      intent: 'edit',
+      alias: 'direct_copy',
+      formula: 'first_name',
+    });
+    prepared.dispose();
+    const read = initial.sidecar.relations.find((entry) => entry.sourceRef != null)!;
+    const changes = vi.fn();
+    function Host(): ReactElement {
+      const [draft, setDraft] = useState(initial);
+      const analysis = useCanvasRelationAnalysisSession(draft, 'projection');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <CanvasSourceOccurrenceOutputSelection
+            relationId={read.relationId}
+            publishedFieldNames={['first_name', 'last_name']}
+            onChange={(next) => {
+              changes(next);
+              setDraft(next);
+            }}
+          />
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    const session = new CanvasRelationAnalysisSession('projection-oracle');
+    session.receive(initial);
+    const width = (await session.query(null)).fields.length;
+    const original = session.locate(session.rootId, session.revision).relation;
+    await act(async () => root.render(<Host />));
+    const toggle = container.querySelector<HTMLButtonElement>('[data-field-name="first_name"]')!;
+    await act(async () => fireEvent.click(toggle));
+    session.receive(changes.mock.calls[0]![0]);
+    expect((await session.query(null)).fields).toHaveLength(width - 1);
+    expect(
+      (await session.query(null)).bindings.some((field) => field.displayName === 'direct_copy')
+    ).toBe(true);
+    await act(async () => fireEvent.click(toggle));
+    session.receive(changes.mock.calls[1]![0]);
+    expect((await session.query(null)).fields).toHaveLength(width);
+    const restored = session.locate(session.rootId, session.revision).relation;
+    if (original.relType.case !== 'project' || restored.relType.case !== 'project')
+      throw new Error('Expected Project.');
+    expect(restored.relType.value.expressions).toEqual(original.relType.value.expressions);
+    session.dispose();
+  });
+
   it('does not attribute a calculation or a shared SET output to a Source field', async () => {
     const session = new CanvasRelationAnalysisSession('calculation');
     const initial = connectedNamesProjectionDraft();
