@@ -27,6 +27,20 @@ import {
   encodeDvtSubstraitSemanticDocument,
 } from './canvasDvtSubstraitSemanticDocument';
 import { insertSelectedRelationTransform } from './canvasSelectedRelationTransform';
+import { SOURCE, TRANSFORM, EDGE } from './canvasOutputProjection.test-support';
+import {
+  createDvtSubstraitProjectionDraft,
+  encodeDvtSubstraitProjectionDocument,
+  resolveDvtSubstraitProjectionSource,
+} from './canvasDvtSubstraitProjection';
+import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
+import {
+  createCanvasRelationalAuthoringDraft,
+  restoreCanvasRelationalAuthoringDraft,
+} from './canvasRelationalAuthoringDraft';
+import { resolveCanvasProducerDocument } from './canvasProducerDocument';
+import { relationOutputSlots } from './canvasRelationOutputSchema';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 
 async function configuredSourceFixture(ancestor: boolean): Promise<
   Readonly<{
@@ -104,6 +118,115 @@ async function outputWidth(document: SubstraitDocument): Promise<number> {
 
 describe('pending occurrence Output adapter', () => {
   setupWorkbenchTest();
+  it('keeps mixed producer field types attached to stable identity after reorder and restore', async () => {
+    const physical = {
+      ...SOURCE,
+      metadata: {
+        ...SOURCE.metadata,
+        columns: [
+          { name: 'order_id', type: 'bigint' },
+          { name: 'customer', type: 'text' },
+        ],
+      },
+    };
+    const source = resolveDvtSubstraitProjectionSource(physical);
+    if (source == null) throw new Error('Expected a connected source.');
+    const producer = applyDvtSubstraitSemanticDocument(
+      TRANSFORM,
+      encodeDvtSubstraitProjectionDocument(
+        createDvtSubstraitProjectionDraft({
+          source,
+          targetNodeId: TRANSFORM.id,
+          outputs: [
+            { fieldId: 'output:order_id', name: 'order_id', sourceFieldName: 'order_id' },
+            { fieldId: 'output:customer', name: 'customer_name', sourceFieldName: 'customer' },
+          ],
+        })
+      )
+    );
+    const consumer = { ...TRANSFORM, id: 'consumer', metadata: {} };
+    const edges = [
+      EDGE,
+      { ...EDGE, id: 'producer-consumer', sourceId: producer.id, targetId: consumer.id },
+    ];
+    const nodes = [physical, producer, consumer];
+    const input = readCanvasDvtCompositionInputCatalog({ targetNodeId: consumer.id, nodes, edges })
+      .inputs[0]!;
+    const pending = createPendingSourceOccurrence(input);
+    const saved = createCanvasRelationalAuthoringDraft({
+      sources: [pending],
+      operations: [],
+      outputRelationId: null,
+      positions: new Map(),
+    });
+    const session = new CanvasRelationAnalysisSession('producer-type-reorder');
+    try {
+      session.receive(resolveCanvasProducerDocument(producer, nodes)!);
+      const target = session.locate(session.rootId, session.revision);
+      const slots = relationOutputSlots(
+        target,
+        await Promise.all(target.inputs.map((id) => session.query(id)))
+      );
+      const selected = slots
+        .filter((slot) => slot.output != null)
+        .sort((left, right) => left.output!.outputOrdinal - right.output!.outputOrdinal);
+      const document = await changeSelectedRelationOutputs(session, {
+        relationId: session.rootId,
+        expectedRevision: session.revision,
+        outputs: selected.reverse().map((slot) => ({ slot: slot.slot, alias: slot.name })),
+      });
+      const reordered = applyDvtSubstraitSemanticDocument(
+        producer,
+        encodeDvtSubstraitSemanticDocument(document)
+      );
+      const updatedNodes = [physical, reordered, consumer];
+      const inputs = readCanvasDvtCompositionInputCatalog({
+        targetNodeId: consumer.id,
+        nodes: updatedNodes,
+        edges,
+      }).inputs;
+      expect(inputs[0]!.fields.map((field) => field.name)).toEqual(['customer_name', 'order_id']);
+      const restored = restoreCanvasRelationalAuthoringDraft(saved, inputs);
+      expect(restored).not.toBeNull();
+      const occurrence = restored!.sources[0]!;
+      expect(occurrence.read.fields).toEqual(pending.read.fields);
+      await act(async () =>
+        root.render(
+          <CanvasPendingSourceOutputs
+            occurrence={occurrence}
+            input={inputs[0]}
+            publishedFieldNames={['order_id', 'customer_name']}
+            editing
+            document={null}
+            binding={{
+              inputs,
+              readFieldEligibility: (document) =>
+                resolveCanvasReadFieldEligibility({
+                  document,
+                  nodeId: consumer.id,
+                  nodes: updatedNodes,
+                  edges,
+                }),
+            }}
+            onChange={vi.fn()}
+            onCanonicalChange={vi.fn()}
+          />
+        )
+      );
+      for (const [name, type] of [
+        ['order_id', 'i64'],
+        ['customer_name', 'string'],
+      ] as const) {
+        const local = occurrence.read.fields.find((field) => field.displayName === name)!;
+        const row = container.querySelector(
+          `[data-slot="source-occurrence-output-field"][data-field-id="${local.fieldId}"]`
+        )!;
+        expect(row.textContent).toBe(`${name}${type}`);
+      }
+    } finally {
+      session.dispose();
+    }
+  });
   it.each(['terminal', 'staged', 'ancestor', 'canonical'] as const)(
     'retains configured Source selection through its %s document owner',
     async (owner) => {

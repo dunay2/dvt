@@ -152,6 +152,15 @@ export function CanvasPendingSourceOutputs(
     input == null ? [] : pendingSourceOccurrencePublishedFieldIds(occurrence, input)
   );
   const selected = new Set(occurrence.initialOutputFieldIds ?? available);
+  const producerIds = new Map(
+    occurrence.read.binding.producerRef?.fields.map((mapping) => [
+      mapping.fieldId,
+      mapping.producerFieldId,
+    ])
+  );
+  const dataTypes = new Map(
+    input?.fields.map((field) => [input.sourceRef == null ? field.id : field.name, field.dataType])
+  );
   return (
     <CanvasSourceOccurrenceOutputs
       editing={editing}
@@ -162,7 +171,9 @@ export function CanvasPendingSourceOutputs(
         .map((field) => ({
           id: field.fieldId,
           name: field.displayName ?? field.fieldId,
-          dataType: input?.fields[field.outputOrdinal]?.dataType,
+          dataType: dataTypes.get(
+            input?.sourceRef == null ? producerIds.get(field.fieldId) : field.displayName
+          ),
           included: selected.has(field.fieldId),
           available: occurrence.initialOutputFieldIds != null,
         }))}

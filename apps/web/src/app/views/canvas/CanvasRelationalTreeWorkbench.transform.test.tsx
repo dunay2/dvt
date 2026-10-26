@@ -131,6 +131,11 @@ describe('Transform card in the production Workbench', () => {
     expect(saved.relationalAuthoringDraft).toBeNull();
     expect(container.querySelectorAll('[data-pending-operation="true"]')).toHaveLength(0);
     await act(async () => fireEvent.click(container.querySelector('[data-operator="project"]')!));
+    const appliedInspector = container.querySelector('[data-slot="canvas-transform-inspector"]')!;
+    expect(appliedInspector.querySelector('[data-slot="relation-output-toggle"]')).toBeNull();
+    await act(async () =>
+      fireEvent.click(appliedInspector.querySelector('[data-slot="canvas-relational-edit"]')!)
+    );
     await waitFor(() => {
       const restored = container.querySelector<HTMLButtonElement>(
         `[data-slot="canvas-transform-inspector"] [data-slot="relation-output-toggle"][data-field-name="${label}"]`

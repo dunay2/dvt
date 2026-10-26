@@ -301,7 +301,7 @@ describe('terminal Source initialization lifetime', () => {
     }
   });
 
-  it('keeps unconnected preferences and invalidates a waiting terminal on Cancel', async () => {
+  it('keeps unconfigured terminal preferences savable as incomplete intent and discards them on Cancel', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const input = {
       ...occurrenceInput.source,
@@ -352,7 +352,8 @@ describe('terminal Source initialization lifetime', () => {
           },
         ])
       );
-      expect(status.blocked).toBe(true);
+      expect(status.blocked).toBe(false);
+      expect(state.pendingSources[0]?.initialOutputFieldIds).toEqual([]);
       act(() => state.reset());
       expect(status.blocked).toBe(false);
       expect(state.joinDraft).toBeNull();

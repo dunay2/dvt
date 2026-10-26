@@ -63,11 +63,19 @@ export function CanvasRelationOutputs({
         (rowOrder.indexOf(a.slot) < 0 ? Infinity : rowOrder.indexOf(a.slot)) -
         (rowOrder.indexOf(b.slot) < 0 ? Infinity : rowOrder.indexOf(b.slot))
     );
-  const update = (next: typeof outputs) => {
-    if (editing && !disabled && command.state !== 'busy' && model != null && !model.physical)
-      void command.execute((session, request) =>
-        changeSelectedRelationOutputs(session, { ...request, outputs: next })
-      );
+  const update = (next: typeof outputs, order?: readonly number[]) => {
+    if (editing && !disabled && command.state !== 'busy' && model != null && !model.physical) {
+      const previousOrder = rowOrder;
+      if (order != null) setRowOrder(order);
+      void command
+        .execute((session, request) =>
+          changeSelectedRelationOutputs(session, { ...request, outputs: next })
+        )
+        .then((accepted) => {
+          if (!accepted && order != null)
+            setRowOrder((current) => (current === order ? previousOrder : current));
+        });
+    }
   };
   const reorder = useInspectorListReorder({
     orderedIds: outputIds,
@@ -81,11 +89,10 @@ export function CanvasRelationOutputs({
       const targetIndex = outputIds.filter((id) => id !== movedId).indexOf(targetId);
       if (moved == null || targetIndex < 0) return;
       next.splice(targetIndex + (placement === 'after' ? 1 : 0), 0, moved);
-      setRowOrder([
+      update(next, [
         ...next.map((field) => field.slot),
         ...rows.filter((field) => field.output == null).map((field) => field.slot),
       ]);
-      update(next);
     },
   });
   if (model == null) return null;
@@ -137,13 +144,13 @@ export function CanvasRelationOutputs({
             }}
             onInclude={(included) => {
               const order = rows.map((row) => row.slot);
-              setRowOrder(order);
               update(
                 included
                   ? [...outputs, { slot: field.slot, alias: field.name }].sort(
                       (a, b) => order.indexOf(a.slot) - order.indexOf(b.slot)
                     )
-                  : outputs.filter((output) => output.slot !== field.slot)
+                  : outputs.filter((output) => output.slot !== field.slot),
+                order
               );
             }}
             onRename={(alias) => {

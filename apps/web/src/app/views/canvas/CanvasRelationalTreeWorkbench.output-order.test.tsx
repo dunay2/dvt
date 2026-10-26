@@ -61,18 +61,41 @@ describe('direct output ordering', () => {
           '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-toggle"]'
         ),
       ];
-      expect(toggles()).toHaveLength(4);
-      expect(toggles().every((toggle) => toggle.disabled === !canEditNode)).toBe(true);
-      expect(container.querySelector('[data-slot="canvas-relational-edit"]')).toBeNull();
+      const inspector = container.querySelector<HTMLElement>(
+        '[data-slot="canvas-model-output-inspector"]:not([hidden])'
+      )!;
+      expect(inspector.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(4);
+      expect(toggles()).toHaveLength(0);
       expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).toBeNull();
       if (canEditNode) {
+        await act(async () =>
+          inspector
+            .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!
+            .click()
+        );
+        expect(toggles()).toHaveLength(4);
+        expect(toggles().every((toggle) => !toggle.disabled)).toBe(true);
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-authoring"]')
+        ).toBeNull();
+        expect(
+          container.querySelector('[data-slot="canvas-relational-tree-join-type"]')
+        ).toBeNull();
         for (const toggle of toggles()) await act(async () => toggle.click());
         expect(toggles().every((toggle) => toggle.dataset.included === 'false')).toBe(true);
         await act(async () => toggles()[0]!.click());
         expect(toggles().filter((toggle) => toggle.dataset.included === 'true')).toHaveLength(1);
         expect(applied).toHaveBeenCalledTimes(5);
       } else {
-        await act(async () => toggles()[0]!.click());
+        expect(inspector.querySelector('[data-slot="canvas-relational-edit"]')).toBeNull();
+        expect(
+          [...inspector.querySelectorAll<HTMLElement>('[data-slot="relation-output-field"]')].every(
+            (row) => !row.draggable
+          )
+        ).toBe(true);
+        await act(async () =>
+          inspector.querySelector<HTMLElement>('[data-slot="relation-output-field"]')!.click()
+        );
         expect(applied).not.toHaveBeenCalled();
       }
     }
@@ -109,8 +132,10 @@ describe('direct output ordering', () => {
       await act(async () =>
         container.querySelector<HTMLButtonElement>('[data-operator="join"]')!.click()
       );
+      const inspector = (): HTMLElement =>
+        container.querySelector<HTMLElement>('[data-canvas-inspector="true"]:not([hidden])')!;
       const rows = (): Element[] => [
-        ...container.querySelectorAll('[data-slot="relation-output-field"]'),
+        ...inspector().querySelectorAll('[data-slot="relation-output-field"]'),
       ];
       const ids = (): (string | null)[] => rows().map((row) => row.getAttribute('data-field-id'));
       const before = ids();
@@ -123,16 +148,27 @@ describe('direct output ordering', () => {
           '[data-slot="canvas-relational-tree-inline-editor"] input, [data-slot="canvas-relational-tree-inline-editor"] select'
         )
       ).toBeNull();
-      const properties = container.querySelector('[data-value="properties"]');
+      const properties = inspector().querySelector('[data-value="properties"]');
       expect(properties?.querySelector('[data-slot="relation-output-field"]')).toBeNull();
-      const outputTab = container.querySelector<HTMLButtonElement>(
+      await act(async () =>
+        container
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-output-open"]')!
+          .click()
+      );
+      await act(async () =>
+        inspector()
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!
+          .click()
+      );
+      expect(handle.current!.hasUnappliedChanges).toBe(false);
+      const outputTab = inspector().querySelector<HTMLButtonElement>(
         '[data-slot="canvas-operation-output-tab"]'
       );
       expect(outputTab?.textContent).toBe('Output');
       await act(async () =>
         outputTab?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
       );
-      const outputPanel = container.querySelector('[data-value="output"]');
+      const outputPanel = inspector().querySelector('[data-value="output"]');
       expect(outputPanel?.getAttribute('data-state')).toBe('active');
       expect(outputPanel?.querySelector('[aria-label="Move field up"]')).toBeNull();
       expect(rows()[0]?.querySelector('[data-slot="relation-output-drag-handle"]')).not.toBeNull();
@@ -208,10 +244,25 @@ describe('direct output ordering', () => {
       expect(saved.output.bindings.map((field) => field.fieldId)).toEqual(ids());
       session.dispose();
       await act(async () =>
-        container.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+        inspector()
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-collapse"]')!
+          .click()
+      );
+      await act(async () =>
+        container.querySelector<HTMLButtonElement>('[data-operator="join"]')!.click()
+      );
+      await act(async () =>
+        inspector()
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!
+          .click()
+      );
+      await act(async () =>
+        inspector()
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-properties-tab"]')!
+          .click()
       );
       await act(async () => {
-        const type = container.querySelector<HTMLSelectElement>(
+        const type = inspector().querySelector<HTMLSelectElement>(
           '[data-slot="canvas-relational-tree-join-type"]'
         )!;
         type.value = '1';

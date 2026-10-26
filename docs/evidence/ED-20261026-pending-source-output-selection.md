@@ -28,8 +28,8 @@ evidence:
 # Pending Source Output And Shared Edit
 
 [Issue #2937](https://github.com/dunay2/dvt/issues/2937) owns acceptance. Planning
-DB design `GH-2937-SOURCE-OUTPUT-SELECTION-V10` and its
-[preimplementation rationale](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416256992)
+DB design `GH-2937-SOURCE-OUTPUT-SELECTION-V11` and its
+[preimplementation rationale](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416688929)
 own the admitted boundaries and test matrix. ADR-0061, ADR-0064, the existing
 ConfigureCanvasDvtNode and RenderCanvasContextualGraphSurface rails, the Canvas
 component/style contracts and workspace draft persistence govern implementation.
@@ -54,6 +54,15 @@ inclusion control and semantic style tokens. Inspection shows included fields;
 editing shows all admitted fields. The hide-excluded filter and pending Input
 adapter are removed. Model transactions and existing atomic commands retain their
 respective persistence ownership. No new CSS system or public rail is introduced.
+Pending type labels resolve stable producer identities after supported producer
+reordering and consumer reopen; saved Read ordinals do not index the current
+catalogue. Existing tests enter the visible owning inspector's Edit mode and
+retain their permission, transaction and semantic oracles.
+
+An unconfigured terminal retains its preferences in the existing structural Save;
+it has no executable Output to initialize. A configured terminal still waits for
+canonical initialization. Rejected output ordering restores both canonical
+document order and the corresponding local row presentation.
 
 RED/GREEN evidence covers invalid/foreign/nested IDs, legacy payloads, publication
 defaults, batched edits, duplicate instances, save/reopen, nested JOINs, shared
@@ -62,9 +71,15 @@ same-snapshot dependency recovery. The new native browser journey passes through
 pending Edit, removal/recovery, duplicate isolation, protected draft-shaped
 persistence/reopen and terminal JOIN selection with full physical Reads retained.
 
-An earlier combined native run passed 10/11: an unchanged SVG edge helper sampled
-a stale click point in the existing three-input empty-output case. This is recorded
-as a test-targeting inference, not proof of a product regression. Final exact-head
+An earlier combined native run passed 10/11: the SVG edge helper sampled a stale
+click point in the existing three-input empty-output case. This is recorded as a
+test-targeting inference, not proof of a product regression. The helper queries an
+actionable current path centre on Cypress retries and retains a real rightclick,
+without forced actions, synthetic success or fixed sampled offsets. The first
+full package run passed 2264 unit tests and exposed 14 presentation failures:
+old Edit/hidden-inspector interactions and an incomplete-save gate regression.
+Preserved rejection assertions additionally exposed optimistic ordering rollback.
+These findings are corrected without weakening the assertions. Final exact-head
 repository and browser acceptance is recorded in the issue after the required
 gates run. Command lists identify evidence scope, not acceptance of unrun checks.
 

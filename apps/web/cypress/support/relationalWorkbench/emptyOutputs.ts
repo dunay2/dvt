@@ -62,33 +62,21 @@ export function proveEmptyJoinOutput(sourceCount: number): void {
   dragCanvasNodeByViewportDelta('Customer Orders', { x: 160, y: 0 }, { nodeId: 'join-transform' });
   cy.get(stageEdges).then(($edges) => {
     for (let index = 0; index < $edges.length; index += 1) {
-      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`).then(($paths) => {
-        // N-input edges can share a segment: remove an exposed edge, not the first DOM edge.
-        const exposed = [...$paths]
-          .map((path) => {
-            const matrix = path.getScreenCTM()!;
-            const fractions = Array.from({ length: 19 }, (_, index) => (index + 1) / 20).sort(
-              (left, right) => Math.abs(left - 0.5) - Math.abs(right - 0.5)
-            );
-            // Prefer the middle of the route, away from reconnect circles at its endpoints.
-            const points = fractions.map((fraction) =>
-              path.getPointAtLength(path.getTotalLength() * fraction).matrixTransform(matrix)
-            );
-            const point = points.find(
-              (point) => path.ownerDocument.elementFromPoint(point.x, point.y) === path
-            );
-            return point == null ? undefined : { path, point };
-          })
-          .find((candidate) => candidate != null);
-        expect(exposed, 'visible connection segment').not.to.equal(undefined);
-        const { path, point } = exposed!;
-        // Cypress checks actionability at the exposed segment, not the empty
-        // bounding-box centre of this curved SVG path.
-        const bounds = path.getBoundingClientRect();
-        cy.wrap(path).rightclick(point.x - bounds.left, point.y - bounds.top, {
-          scrollBehavior: false,
-        });
-      });
+      // Re-query an exposed center as handles settle after each save. Cypress
+      // measures its current center and retains all native actionability checks.
+      cy.get<SVGPathElement>(`${stageEdges} .react-flow__edge-interaction`)
+        .filter<SVGPathElement>((_, path) => {
+          const bounds = path.getBoundingClientRect();
+          return (
+            path.ownerDocument.elementFromPoint(
+              bounds.left + bounds.width / 2,
+              bounds.top + bounds.height / 2
+            ) === path
+          );
+        })
+        .first()
+        .should('be.visible')
+        .rightclick('center', { scrollBehavior: false });
       cy.contains('[data-slot="canvas-context-menu-item"]', 'Remove connection').click();
       cy.get(stageEdges)
         .should('have.length', $edges.length - index - 1)

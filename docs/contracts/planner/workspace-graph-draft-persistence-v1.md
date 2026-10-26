@@ -250,7 +250,10 @@ over its selected emit.
 The preference is incomplete authoring intent, never executable authority. On
 terminal Output connection Web materializes it through canonical root Output
 selection, then atomically removes only consumed reachable preferences. Until
-that succeeds, Apply cannot expose executable semantics. Intermediate JOINs keep
+that succeeds, Apply cannot expose executable semantics. A terminal operation
+without a semantic document can still save the incomplete DTO with its preferences;
+this preserves structural authoring without materializing executable Output.
+Intermediate JOINs keep
 their complete inputs, and cancellation or stale/rejected initialization retains
 the previous snapshot. Completed occurrences thereafter read the canonical root.
 

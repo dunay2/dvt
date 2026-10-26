@@ -32,15 +32,11 @@ export function useCanvasSourceOutputInitialization(
     [snapshot]
   );
   const needed = useMemo(() => {
-    if (!state.active || snapshot.outputRelationId == null) return false;
-    const index = document == null ? null : indexSubstraitRelations(document);
-    const reachable = new Set<string>([snapshot.outputRelationId]);
-    if (index?.ok) for (const id of index.index.relations.keys()) reachable.add(id);
-    else
-      for (const id of reachable)
-        for (const input of snapshot.stagedOperations.find((operation) => operation.id === id)
-          ?.inputs ?? [])
-          if (input != null) reachable.add(input);
+    // An unconfigured terminal remains a structural draft: existing Apply saves
+    // its DTO, never executable Output. Initialization begins once semantics exist.
+    if (!state.active || snapshot.outputRelationId == null || document == null) return false;
+    const index = indexSubstraitRelations(document);
+    const reachable = new Set(index.ok ? index.index.relations.keys() : []);
     return snapshot.pendingSources.some(
       (source) =>
         source.initialOutputFieldIds != null && reachable.has(source.read.binding.relationId)

@@ -104,6 +104,19 @@ describe('Canvas relational-tree Workbench apply', () => {
         '[data-pending="true"][data-operator="read"]'
       )!;
       await act(async () => pendingSource.click());
+      const sourceInspector = container.querySelector<HTMLElement>(
+        '[data-canvas-inspector="true"]:not([hidden])'
+      )!;
+      await act(async () =>
+        sourceInspector
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!
+          .click()
+      );
+      await act(async () =>
+        sourceInspector
+          .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-properties-tab"]')!
+          .click()
+      );
       expect(container.querySelector('[data-slot="source-occurrence-alias"]')).not.toBeNull();
       expect(container.querySelector('[data-slot="canvas-staged-operation-inspector"]')).toBeNull();
       await act(async () => joinCard.click());
@@ -157,7 +170,9 @@ describe('Canvas relational-tree Workbench apply', () => {
       if (closeInspector)
         await act(async () =>
           container
-            .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-collapse"]')!
+            .querySelector<HTMLButtonElement>(
+              '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-relational-collapse"]'
+            )!
             .click()
         );
       const actionButton = container.querySelector<HTMLButtonElement>(
@@ -217,7 +232,9 @@ describe('Canvas relational-tree Workbench apply', () => {
       ).not.toBeNull();
       expect(container.querySelectorAll('[data-pending="true"]')).toHaveLength(0);
       expect(container.querySelectorAll('[data-operator="join"]')).toHaveLength(1);
-      const inspector = container.querySelector<HTMLElement>('[data-canvas-inspector="true"]');
+      const inspector = container.querySelector<HTMLElement>(
+        '[data-canvas-inspector="true"]:not([hidden])'
+      );
       if (closeInspector) expect(inspector).toBeNull();
       else {
         expect(inspector).not.toBeNull();

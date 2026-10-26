@@ -21,6 +21,13 @@ arc_level: ARC-2
 | Disconnected terminal leaves enabled controls with no owner        | Resolve the owning configured root or disable unavailable controls                | Real staged-command/canonical inspector matrix                      |
 | Form-specific styles and edit states drift                         | Shared Frame Edit context, passive inclusion rows and existing tokens             | Presentation and existing architecture/style guards                 |
 
+Producer reordering resolves pending type labels by stable identity, with a real
+mixed-type reorder/reopen regression. Structural Save remains available for an
+unconfigured terminal while configured initialization retains its Apply guard.
+Rejected output ordering restores the local presentation as well as canonical
+authority. Native edge tests requery an actionable current centre instead of
+retaining stale offsets; the pointer action and persistence assertions remain.
+
 The implemented rejection of an independent partial Source contribution through a
 shared output is an explicit supported boundary, not an unfinished branch.
 Existing command permissions, Model Apply/Cancel and persistence CAS remain active.

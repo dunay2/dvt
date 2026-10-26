@@ -131,6 +131,58 @@ describe.each(Object.entries(documents))(
 describe('output command authority during acknowledgement', () => {
   setupWorkbenchTest();
 
+  it('restores the exact visible row order, including excluded positions, after a rejected reorder', async () => {
+    const initial = documents.join();
+    let reject = false;
+    let analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
+    const publication = vi.fn();
+    function Host(): ReactElement {
+      const [draft, setDraft] = useState(initial);
+      analysis = useCanvasRelationAnalysisSession(draft, 'rejected-output-order');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          {analysis?.document == null ? null : (
+            <CanvasRelationOutputs
+              relationId={analysis.session.rootId}
+              disabled={false}
+              onChange={(next) => {
+                publication(next);
+                if (reject) return false;
+                setDraft(next);
+                return true;
+              }}
+            />
+          )}
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    await act(async () => root.render(<Host />));
+    const rows = (): HTMLElement[] => [
+      ...container.querySelectorAll<HTMLElement>('[data-slot="relation-output-field"]'),
+    ];
+    const ids = (): (string | null)[] => rows().map((row) => row.getAttribute('data-field-id'));
+    await act(async () => fireEvent.click(container.querySelector('[data-field-name="name"]')!));
+    const accepted: SubstraitDocument = publication.mock.calls[0]![0];
+    const before = ids();
+    const excluded = rows()[1]!;
+    expect(excluded.querySelector('[data-included="false"]')).not.toBeNull();
+    const moved = rows()[0]!;
+    moved.focus();
+    reject = true;
+    await act(async () => fireEvent.keyDown(moved, { key: 'ArrowDown', altKey: true }));
+    expect(publication).toHaveBeenCalledTimes(2);
+    expect(analysis!.session.hasDocument(accepted)).toBe(true);
+    expect(ids()).toEqual(before);
+    expect(rows()[1]).toBe(excluded);
+    expect(document.activeElement).toBe(moved);
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    reject = false;
+    await act(async () => fireEvent.keyDown(moved, { key: 'ArrowDown', altKey: true }));
+    expect(publication).toHaveBeenCalledTimes(3);
+    expect(ids()).toEqual([before[2], before[0], before[1], before[3]]);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+  });
+
   it('shares the inspector Edit gate without publishing or exposing excluded outputs in inspection', async () => {
     const initial = documents.join();
     const onChange = vi.fn();

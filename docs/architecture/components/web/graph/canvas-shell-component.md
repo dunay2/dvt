@@ -312,8 +312,8 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 The applied Model inspector selects the occurrence's direct contribution to the
 Model's root Output. It does not remove a Model Input binding. The governing
-design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V10`, with rationale and
-Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416256992).
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V11`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6416688929).
 The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
 rails retain command and presentation ownership.
 
@@ -364,8 +364,10 @@ Initialization waits for terminal Model Output connection, rather than narrowing
 the first intermediate operation. The existing canonical Output query/command
 materializes direct contributions in the terminal root. One graph-state snapshot
 coordinates document replacement and consumption of reachable preferences;
-obsolete or cancelled work cannot publish partially. Apply is unavailable while
-initialization is pending or rejected. Shared SET/aggregate contributions reject
+obsolete or cancelled work cannot publish partially. Executable Apply is unavailable
+while initialization is pending or rejected. A terminal operation without a semantic
+document remains savable through the existing incomplete-authoring Apply; its
+preferences persist and confer no executable authority. Shared SET/aggregate contributions reject
 explicitly instead of silently losing intent. Unrelated pending Sources retain
 their preferences. Once initialized, configured occurrences use the canonical
 root adapter, including staged-root analysis and ancestor rebinding.
