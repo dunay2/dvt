@@ -240,8 +240,14 @@ describe('measure-pipeline', () => {
       cy.then(() =>
         cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`).click()
       );
-      cy.get('[data-slot="canvas-operation-output-tab"]:visible').click();
-      cy.get('[data-slot="canvas-relation-outputs"] [data-field-id]').should((outputs) => {
+      cy.get('[data-canvas-inspector="true"]:visible')
+        .should('have.length', 1)
+        .find('[data-slot="canvas-operation-output-tab"]')
+        .click()
+        .should('have.attr', 'aria-selected', 'true');
+      cy.get(
+        '[data-canvas-inspector="true"]:visible [role="tabpanel"][data-value="output"][data-state="active"] [data-field-id]'
+      ).should((outputs) => {
         expect([...outputs].map((output) => output.getAttribute('data-field-id'))).to.deep.equal(
           fields
         );

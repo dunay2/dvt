@@ -17,12 +17,10 @@ export function CanvasRelationOutputs({
   disabled,
   onChange,
   onPendingChange,
-  orderingOnly = false,
 }: Readonly<{
   relationId: string;
   disabled: boolean;
   onChange: (document: SubstraitDocument) => void | boolean;
-  orderingOnly?: boolean;
   onPendingChange?: (pending: boolean) => void;
 }>) {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -100,7 +98,7 @@ export function CanvasRelationOutputs({
   if (model == null) return null;
   return (
     <section className="space-y-2" data-slot="canvas-relation-outputs">
-      {(orderingOnly || !showExcluded ? selected : rows).map((field) => {
+      {(showExcluded ? rows : selected).map((field) => {
         const key = field.output?.fieldId ?? field.key;
         const canReorder = editable && field.output != null;
         const name = field.output == null ? field.name : (drafts.values[key] ?? field.name);
@@ -114,7 +112,7 @@ export function CanvasRelationOutputs({
                 : null;
         return (
           <RelationOutputRow
-            orderingOnly={orderingOnly || !editing}
+            orderingOnly={!editing}
             key={`${relationId}:${field.slot}`}
             field={field}
             copy={copy}

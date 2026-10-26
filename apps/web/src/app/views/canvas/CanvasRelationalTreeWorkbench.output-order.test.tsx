@@ -26,6 +26,151 @@ import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types'
 
 describe('direct output ordering', () => {
   setupWorkbenchTest();
+  it('keeps writable JOIN inspection passive and applies reordered outputs only through Edit and Apply', async () => {
+    const graph = occurrenceGraph();
+    const session = new CanvasRelationAnalysisSession('inspected-output-order');
+    session.receive(graph.draft);
+    const original = await querySelectedJoin(session, session.rootId, session.revision);
+    const bindings = original.output.bindings
+      .filter((field) => field.parentFieldId == null)
+      .sort((left, right) => left.outputOrdinal - right.outputOrdinal);
+    const before = bindings.map((field) => field.fieldId);
+    const reads = original.target.inputs.map((id) => session.locate(id, session.revision).relation);
+    const applied = vi.fn((_nodeId: string, _draft: CanvasInspectorNodeDraft) => ({
+      outcome: 'no_changes' as const,
+    }));
+    const handle = createRef<CanvasRelationalTreeWorkbenchHandle>();
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          ref={handle}
+          transformNode={graph.targetNode}
+          nodes={graph.nodes}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+        />
+      )
+    );
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-operator="join"]')!.click()
+    );
+    const inspector = (): HTMLElement =>
+      container.querySelector<HTMLElement>('[data-canvas-inspector="true"]:not([hidden])')!;
+    await act(async () =>
+      inspector()
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-output-tab"]')!
+        .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }))
+    );
+    const output = inspector().querySelector('[role="tabpanel"][data-state="active"]')!;
+    const rows = [...output.querySelectorAll<HTMLElement>('dl > [data-field-id]')];
+    expect(rows.map((row) => row.dataset.fieldId)).toEqual(before);
+    expect(rows.map((row) => row.querySelector('dt')?.textContent)).toEqual(
+      bindings.map((field) => field.displayName)
+    );
+    expect(rows.map((row) => row.querySelector('dd')?.textContent)).toEqual(
+      bindings.map((field) => original.output.fields[field.outputOrdinal]!.type.kind.case)
+    );
+    expect(output.querySelector('input, select, textarea, button, [draggable="true"]')).toBeNull();
+    const inspectionMove = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    await act(async () => rows[0]!.dispatchEvent(inspectionMove));
+    expect(inspectionMove.defaultPrevented).toBe(false);
+    expect(applied).not.toHaveBeenCalled();
+    expect(handle.current!.hasUnappliedChanges).toBe(false);
+    await act(async () =>
+      inspector().querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
+    expect(
+      inspector()
+        .querySelector('[data-slot="canvas-operation-output-tab"]')
+        ?.getAttribute('aria-selected')
+    ).toBe('true');
+    const includedRows = (): HTMLElement[] =>
+      [
+        ...inspector().querySelectorAll(
+          '[data-slot="relation-output-toggle"][data-included="true"]'
+        ),
+      ].map((toggle) => toggle.closest<HTMLElement>('[data-slot="relation-output-field"]')!);
+    expect(includedRows().map((row) => row.dataset.fieldId)).toEqual(before);
+    const move = new KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    await act(async () => includedRows()[0]!.dispatchEvent(move));
+    const expected = [before[1], before[0], ...before.slice(2)];
+    expect(move.defaultPrevented).toBe(true);
+    expect(includedRows().map((row) => row.dataset.fieldId)).toEqual(expected);
+    expect(handle.current!.hasUnappliedChanges).toBe(true);
+    expect(applied).not.toHaveBeenCalled();
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-relational-tree-apply"]')!
+        .click()
+    );
+    expect(applied).toHaveBeenCalledOnce();
+    const draft = applied.mock.calls[0]![1];
+    if (draft.dvt?.kind !== 'transform' || draft.dvt.mode !== 'substrait')
+      throw new Error('Expected canonical JOIN draft');
+    session.receive({ plan: draft.dvt.plan, sidecar: draft.dvt.sidecar });
+    const saved = await querySelectedJoin(session, session.rootId, session.revision);
+    expect(saved.relationId).toBe(original.relationId);
+    expect(saved.conditions).toEqual(original.conditions);
+    expect(saved.revision).toBe(original.revision + 1);
+    expect(saved.inputs.every((input) => input.revision === saved.revision)).toBe(true);
+    expect(
+      saved.inputs.map(({ relationId, fingerprint, bindings, fields }) => ({
+        relationId,
+        fingerprint,
+        bindings,
+        fields,
+      }))
+    ).toEqual(
+      original.inputs.map(({ relationId, fingerprint, bindings, fields }) => ({
+        relationId,
+        fingerprint,
+        bindings,
+        fields,
+      }))
+    );
+    expect(saved.target.inputs.map((id) => session.locate(id, session.revision).relation)).toEqual(
+      reads
+    );
+    expect(saved.output.bindings.map((field) => field.fieldId)).toEqual(expected);
+    expect(saved.output.bindings.map((field) => field.outputOrdinal)).toEqual([0, 1, 2, 3]);
+    const node = applyCanvasInspectorNodeDraft(graph.targetNode, draft);
+    await act(async () =>
+      root.render(
+        <CanvasRelationalTreeWorkbench
+          ref={handle}
+          transformNode={node}
+          nodes={[graph.source, node]}
+          edges={graph.edges}
+          copy={COPY}
+          authoring={{ canEditNode: true, onApplyNodeDraft: applied }}
+        />
+      )
+    );
+    expect(handle.current!.hasUnappliedChanges).toBe(false);
+    expect(
+      inspector()
+        .querySelector('[data-slot="canvas-relational-edit"]')
+        ?.getAttribute('aria-pressed')
+    ).toBe('false');
+    expect(
+      [...inspector().querySelectorAll<HTMLElement>('dl > [data-field-id]')].map(
+        (row) => row.dataset.fieldId
+      )
+    ).toEqual(expected);
+    expect(applied).toHaveBeenCalledOnce();
+    session.dispose();
+  });
   it.each([true, false])(
     'retains final JOIN output controls after disconnection without enabling general edits (%s)',
     async (canEditNode) => {
@@ -138,7 +283,9 @@ describe('direct output ordering', () => {
         ...inspector().querySelectorAll('[data-slot="relation-output-field"]'),
       ];
       const ids = (): (string | null)[] => rows().map((row) => row.getAttribute('data-field-id'));
-      const before = ids();
+      const before = [
+        ...inspector().querySelectorAll('[data-slot="canvas-relation-fields"] [data-field-id]'),
+      ].map((row) => row.getAttribute('data-field-id'));
       expect(before).toHaveLength(4);
       expect(
         container.querySelector('[data-slot="semantic-workbench-join-condition-row"]')
@@ -274,7 +421,11 @@ describe('direct output ordering', () => {
           .click()
       );
       expect(handle.current!.hasUnappliedChanges).toBe(false);
-      expect(ids()).toEqual([before[1], before[0], ...before.slice(2)]);
+      expect(
+        [
+          ...inspector().querySelectorAll('[data-slot="canvas-relation-fields"] [data-field-id]'),
+        ].map((row) => row.getAttribute('data-field-id'))
+      ).toEqual([before[1], before[0], ...before.slice(2)]);
     }
   );
 

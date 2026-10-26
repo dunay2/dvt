@@ -113,7 +113,6 @@ export function CanvasRelationalTreeSideInspector({
             }
           : undefined
       }
-      onOutputChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
     />
   );
 }
