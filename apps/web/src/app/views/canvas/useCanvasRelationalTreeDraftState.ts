@@ -187,12 +187,9 @@ export function useCanvasRelationalTreeDraftState() {
       setActive(true);
       setOperation(null);
       resetOperands();
-      setJoinDraft(null);
+      setGraph((current) => ({ ...emptyGraph, pendingSources: current.pendingSources }));
       setPendingSourceId(null);
-      setStagedOperations([]);
       setSelectedStagedOperationId(null);
-      setOutputRelationId(null);
-      updateGraph('inputRecovery', null);
       setApplyRejection(null);
     },
     applyRejection,
