@@ -97,8 +97,8 @@ export const inspectorPropertyClasses = {
     region: `max-h-80 overflow-y-auto ${propertyPanel}`,
     disclosure: 'group',
     trigger:
-      'flex cursor-pointer list-none items-start gap-2 px-3 py-2.5 text-sm text-(--text-primary) outline-none hover:bg-(--surface-hover) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden',
-    arrow: 'mt-0.5 size-4 shrink-0 text-(--text-muted) transition-transform group-open:rotate-90',
+      'flex min-h-7 cursor-pointer list-none items-center gap-1.5 px-2 py-1 text-xs leading-4 text-(--text-primary) outline-none hover:bg-(--surface-hover) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden',
+    arrow: 'size-3 shrink-0 text-(--text-muted) transition-transform group-open:rotate-90',
     name: `${propertyValue} font-medium`,
     details:
       'grid grid-cols-[minmax(6rem,0.34fr)_minmax(0,1fr)] gap-x-3 gap-y-2 px-3 pb-3 pl-9 text-xs',

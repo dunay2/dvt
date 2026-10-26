@@ -1234,6 +1234,14 @@ Suggested type scale:
 
 The workbench should use a tight but not cramped density model.
 
+Logical column collections in `NodePropertyTable` use the shared Inspector record
+tokens: 12px text with 16px line height, a 28px minimum collapsed summary, compact
+padding and a centred 12px chevron. Every generic Workbench Columns consumer uses
+that same pattern. Long names wrap and increase row height; expanded metadata
+remains readable and complete. Native disclosure, keyboard focus and bounded
+scrolling are preserved. This single-line logical collection differs from the
+physical Source scanner's two-line facts, whose minimum target remains 44px.
+
 Rules:
 
 - base spacing scale is `4px`;

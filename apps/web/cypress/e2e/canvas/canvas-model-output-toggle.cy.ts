@@ -1,6 +1,6 @@
 /** Owned concern: prove Model output authoring and column-menu lifecycle through save and reload. */
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import { allocateDvtFieldId, ConnectedSourceRefSchema } from '@dvt/contracts';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
@@ -25,7 +25,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubConnectedModel(): void {
+function stubConnectedModel(publishAllOutputs = false): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -55,7 +55,13 @@ function stubConnectedModel(): void {
       fields: columns.map((column) => ({ name: column.name, dataType: column.type })),
     },
     targetNodeId: model.id,
-    outputs: [],
+    outputs: publishAllOutputs
+      ? columns.map((column) => ({
+          fieldId: allocateDvtFieldId(),
+          name: column.name,
+          sourceFieldName: column.name,
+        }))
+      : [],
   });
   const root = document.plan.relations[0]!.relType;
   if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
@@ -194,6 +200,132 @@ function assertColumnMenuStaysOpenAndReopens(): void {
 }
 
 describe('Canvas Model output toggle lifecycle', () => {
+  it('keeps six logical column disclosures compact and keyboard-accessible without writing', () => {
+    cy.viewport(1440, 900);
+    stubConnectedModel(true);
+    visitCanvas();
+    openWorkbenchProperties('model-orders');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    const disclosures = '[data-slot="node-property-column-disclosure"]';
+    const summaries = `${disclosures} > summary`;
+    cy.get(disclosures).should('have.length', 6).and('not.have.attr', 'open');
+    for (const [width, height] of [
+      [1366, 768],
+      [1920, 1080],
+      [3440, 1440],
+    ]) {
+      cy.viewport(width!, height!);
+      cy.get(summaries).should(($summaries) => {
+        expect([...$summaries].map((summary) => summary.textContent)).to.deep.equal([
+          'order_id',
+          'customer',
+          'amount',
+          'status',
+          'created_at',
+          'region',
+        ]);
+        for (const summary of $summaries) {
+          const window = summary.ownerDocument.defaultView!;
+          const style = window.getComputedStyle(summary);
+          expect(style.fontSize, 'logical column summary text').to.equal('12px');
+          expect(style.lineHeight, 'logical column summary line').to.equal('16px');
+          expect(summary.getBoundingClientRect().height, 'single-line summary height').to.be.within(
+            28,
+            28.5
+          );
+          const name = summary.querySelector('span')!;
+          expect(name.getBoundingClientRect().height, 'one complete name line').to.equal(16);
+          const arrow = summary.querySelector(
+            '[data-slot="node-property-column-disclosure-arrow"]'
+          )!;
+          expect(arrow.getBoundingClientRect().width, 'compact chevron width').to.equal(12);
+          expect(arrow.getBoundingClientRect().height, 'compact chevron height').to.equal(12);
+        }
+      });
+    }
+    cy.viewport(1366, 768);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+      'model-columns-compact-six-rows'
+    );
+    cy.contains(summaries, /^customer$/).as('customerSummary');
+    cy.get('[data-slot="node-property-column-list"]')
+      .parent('[role="region"]')
+      .focus()
+      .should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.contains(summaries, /^order_id$/).should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('@customerSummary').should('be.focused');
+    // Cypress 15.18.1 omits Enter's CR text and virtual key code. Send the
+    // complete native key so Chromium performs the disclosure's default action.
+    cy.then(async () => {
+      await Cypress.automation('remote:debugger:protocol', {
+        command: 'Input.dispatchKeyEvent',
+        params: {
+          type: 'keyDown',
+          key: 'Enter',
+          code: 'Enter',
+          windowsVirtualKeyCode: 13,
+          nativeVirtualKeyCode: 13,
+          text: '\r',
+          unmodifiedText: '\r',
+        },
+      });
+      await Cypress.automation('remote:debugger:protocol', {
+        command: 'Input.dispatchKeyEvent',
+        params: {
+          type: 'keyUp',
+          key: 'Enter',
+          code: 'Enter',
+          windowsVirtualKeyCode: 13,
+          nativeVirtualKeyCode: 13,
+        },
+      });
+    });
+    cy.get('@customerSummary')
+      .should('be.focused')
+      .parent('details')
+      .should('have.prop', 'open', true);
+    cy.get('@customerSummary')
+      .parent('details')
+      .find('dd')
+      .should(($values) => {
+        const values = [...$values].map((value) => value.textContent);
+        expect(values, 'complete expanded type').to.include('text');
+        expect(values, 'complete expanded nullability').to.include('not null');
+        for (const value of $values) {
+          expect(value.scrollWidth, 'expanded metadata stays in its panel').to.be.at.most(
+            value.clientWidth + 1
+          );
+        }
+      });
+    cy.get(`${disclosures}[open]`).should('have.length', 1);
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('@customerSummary')
+      .should('be.focused')
+      .parent('details')
+      .should('have.prop', 'open', false);
+    cy.contains(summaries, /^created_at$/)
+      .click()
+      .parent('details')
+      .should('have.prop', 'open', true);
+    cy.contains(summaries, /^created_at$/)
+      .parent('details')
+      .find('dd')
+      .should(($values) => {
+        expect(
+          [...$values].map((value) => value.textContent),
+          'complete expanded timestamp type'
+        ).to.include('timestamp');
+      });
+    cy.get(`${disclosures}[open]`).should('have.length', 1);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+      'model-columns-compact-expanded'
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+  });
+
   it('persists one selected inherited output without timed menu dismissal', () => {
     cy.viewport(1920, 1080);
     stubConnectedModel();

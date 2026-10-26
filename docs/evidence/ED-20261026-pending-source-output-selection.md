@@ -15,6 +15,8 @@ code_refs:
   - apps/web/src/app/views/canvas/useCanvasRelationalTreeDraftState.ts
   - apps/web/src/app/views/canvas/CanvasPendingSourceOutputs.tsx
   - apps/web/src/app/views/canvas/CanvasRelationalTreeEditorFrame.tsx
+  - apps/web/src/app/components/inspector/inspectorVisualTokens.ts
+  - apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -86,3 +88,24 @@ gates run. Command lists identify evidence scope, not acceptance of unrun checks
 ARC evaluation of the committed slice returned ARC-2, evidence/risk required and
 lint, test, schema-validate, contract-golden checks. No rollout or compatibility
 artifact was required. No debt, stub, bypassed hook or relaxed rule was introduced.
+
+## Shared Logical Column Density
+
+The subsequent user screenshot identifies oversized typography and empty space in
+the outer Model Columns list. This visual steering is governed by
+[issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417091017)
+and Planning DB design `GH-3035-LOGICAL-COLUMN-DENSITY`. Its rationale, diagram,
+exact surfaces and browser matrix preceded the new visual regression.
+
+Only the existing shared Inspector record tokens change: logical column summaries
+use 12px/16px text, a minimum 28px row and a centred 12px chevron. Names can still
+wrap and rows grow; native disclosure, focus, complete details and scroll remain.
+The separate physical Source scanner keeps its 44px two-line target. No component,
+stylesheet, font stack, command or persistence behavior is added.
+
+The native browser RED measured 14px where the new contract requires 12px. The
+inspection-only regression checks six real canonical Model outputs at 1366x768,
+1920x1080 and 3440x1440, native Enter/Space and full detail without draft writes.
+Existing disclosure/Source presentation tests pass 33/33 and architecture/token
+guards pass 10/10. Exact final native and repository acceptance remains in the
+governing issue rather than an invented task-status document.

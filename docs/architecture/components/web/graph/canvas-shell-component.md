@@ -639,6 +639,15 @@ No backend command/query rail changes are introduced by this component.
 
 ### Source Column Inspection Density
 
+Generic Model/logical Columns use `NodePropertyTable` native disclosures and the
+existing `inspectorPropertyClasses.records` tokens. The compact shared summary is
+12px/16px with a minimum 28px row and a centred 12px chevron. Long values wrap,
+details remain complete and keyboard/focus behavior stays native. Planning DB
+design `GH-3035-LOGICAL-COLUMN-DENSITY` records the rationale in
+[issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417091017).
+This presentation change reuses `RenderCanvasContextualGraphSurface`; it does not
+dispatch a graph command or change the separate physical Source scanner below.
+
 The existing contextual surface also presents `SourceColumnFacts` through passive
 column rows and a drill-in detail. Rows retain a minimum 44 px target and two
 readable lines, with reduced padding and a compact type cue. Detail height follows
