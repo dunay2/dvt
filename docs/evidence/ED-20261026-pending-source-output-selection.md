@@ -116,8 +116,8 @@ governing issue rather than an invented task-status document.
 
 The next screenshot asks to place direction, node name and relation on the same
 level and omit the internal node ID. Planning DB
-`GH-3035-RELATIONSHIP-SUMMARY-V2` and its
-[admitted rationale](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417835229)
+`GH-3035-RELATIONSHIP-SUMMARY-V3` and its
+[admitted test-scope refinement](https://github.com/dunay2/dvt/issues/3035#issuecomment-6419090098)
 govern the shared passive `NodePropertyTable` summary. Only business cells are
 rendered, with optional connection context below. An identity-only or absent node
 label uses the existing empty state, while row keys, canonical IDs and callback
@@ -143,3 +143,10 @@ counts are replaced with complete visible metadata, one rendered custom cell and
 the stable callback context. Redundant literal implementation-call checks are
 removed from the pending Source architecture guard; forbidden ownership remains
 guarded and cancellation/rejection stays covered by real-session behavior tests.
+
+The full repository run passed 2264 unit tests and 1120 presentation tests, then
+failed the remaining Workbench integration oracle that still required a visible
+technical Source ID. The admitted V3 test refinement retains the complete long
+business name, direction and lineage, graph immutability and no-write assertion,
+while rejecting visible node/edge identities. Its focused suite passes 32/32.
+That failed full run is not final acceptance; the required gate must pass again.
