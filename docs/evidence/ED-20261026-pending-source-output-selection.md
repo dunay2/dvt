@@ -113,6 +113,10 @@ Output accepted or discarded together. It also corrects local Edit entry during
 an already-active Model draft. The rationale, diagrams, exact paths and negative
 matrix precede TDD in the governing issue.
 
+The additive repair capability belongs to canonical connected Reads. Pending
+and retained staged inspectors continue ordinary Output authoring; the native
+pending proof covers that behavior without claiming legacy Input repair there.
+
 The candidate and command unit group passes 35 tests. The affected lifecycle,
 Source, real Workbench self-JOIN, deferred navigation and Inspector command group
 passes 48 presentation tests. Tests reproduced and corrected an acknowledgement

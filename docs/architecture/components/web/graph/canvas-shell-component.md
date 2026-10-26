@@ -363,6 +363,10 @@ admitted. Ordinary Output toggles continue to leave Input bindings unchanged.
 The complete physical Read, predicates, producers and sibling Output selections
 remain intact; a producer-to-Model binding does not select other occurrences.
 
+Additive Input repair is available on the canonical connected Read inspection.
+Pending and retained staged Source inspectors keep ordinary Output selection;
+their presentation mode does not grant this separate binding capability.
+
 The existing Model Apply port carries optional additive Input identities with
 the semantic node draft. Its existing serialized workspace command evaluates
 both on the latest unpublished candidate and CAS-publishes one aggregate only

@@ -592,6 +592,11 @@ Read schema. Withdrawn, foreign, disconnected and non-forwarded fields do not
 gain another permission path. Partial raw input composition still follows the
 explicit Project prerequisite below.
 
+This additive repair is offered for a canonical connected Read with an admitted
+direct root Output contribution. Pending and retained staged Source inspectors
+keep their existing Output preference/selection behavior; they do not acquire
+Input repair from presentation mode alone.
+
 The existing `onApplyNodeDraft` port accepts optional additive producer-field
 identities for this Model transaction. Local recovery validates an unpublished
 candidate through the existing binder, then derives normal field eligibility
