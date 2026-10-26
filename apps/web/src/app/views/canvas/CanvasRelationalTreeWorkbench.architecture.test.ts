@@ -39,6 +39,7 @@ import AuthoringSource from './CanvasRelationalTreeAuthoring.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
+import CompositionEditorSource from './CanvasRelationalTreeCompositionEditor.tsx?raw';
 import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
@@ -190,11 +191,13 @@ describe('Canvas relational-tree Workbench architecture', () => {
     }
   });
   it('shares calculated SELECT authoring through the existing atomic projection command', () => {
-    for (const source of [InlineEditorSource, TransformInspectorSource]) {
+    for (const source of [CompositionEditorSource, TransformInspectorSource]) {
       expect(source.match(/<CanvasCalculatedRelationOutputs\b/g)).toHaveLength(1);
       expect(source).not.toMatch(/compileDerivedOutputFormula|applySelectedRelationDerivedOutput/);
     }
     expect(DerivedOutputSource).toContain('applySelectedRelationDerivedOutput');
+    expect(InlineEditorSource).toContain('<CanvasRelationalTreeCompositionEditor');
+    expect(InlineEditorSource).not.toContain('<CanvasCalculatedRelationOutputs');
     expect(CalculatedOutputsSource.match(/<CanvasDerivedOutputSection\b/g)).toHaveLength(1);
     expect(CalculatedOutputsSource).not.toMatch(
       /compileDerivedOutputFormula|applySelectedRelationDerivedOutput/
@@ -335,6 +338,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
+    expect(CompositionEditorSource.split('\n').length).toBeLessThan(80);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
     expect(SessionActionsSource.split('\n').length).toBeLessThan(80);

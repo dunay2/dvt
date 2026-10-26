@@ -312,8 +312,8 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 The applied Model inspector selects the occurrence's direct contribution to the
 Model's root Output. It does not remove a Model Input binding. The governing
-design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V6`, with rationale and
-Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6405271805).
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V8`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6405673913).
 The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
 rails retain command and presentation ownership.
 
@@ -352,6 +352,13 @@ permissions, rejection, rollback and persistence. Pending detached Sources retai
 their explicit Input-binding adapter until they belong to the applied tree.
 Both adapters use the same passive rows and Inspector inclusion control; CSS
 consumes the existing semantic tokens without adding another style system.
+
+The inline coordinator delegates Source/unary binding to
+`CanvasRelationalTreeSelectedOperatorEditor` and the JOIN/CROSS/SET frame to
+`CanvasRelationalTreeCompositionEditor`. The latter owns its property/output
+pending channels; the coordinator combines them with the selected editor's
+pending channel. Selecting another operation does not collapse these distinct
+pending obligations into one flag.
 
 ### Inspector Code Placement And Height
 
