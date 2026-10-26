@@ -11,7 +11,10 @@ import {
 } from '../../components/shell/operationalDrawerContributionStore';
 import { fixture, node } from './canvasOutputExpression.test.fixtures';
 import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
-import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import {
+  applyDvtSubstraitSemanticDocument,
+  readDvtTransformAuthoringAuthority,
+} from './canvasDvtTransformAuthoringAuthority';
 import type { CanvasDraftLifecycle } from './canvasDraftLifecycle.types';
 import type { CanvasShellProps } from './canvasShell.types';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
@@ -199,6 +202,49 @@ describe('Canvas Model card revision-safe execution', () => {
       expect(useOperationalDrawerContributionStore.getState().activeTab).toBe(`data:${model.id}`);
       expect(query.previewTransformRows).toHaveBeenCalledOnce();
       expect(prepare).toHaveBeenCalledOnce();
+    }
+  );
+  it.each(['sidecar', 'declared columns'] as const)(
+    'invalidates rows on changed %s even when the semantic plan is unchanged',
+    async (change) => {
+      await mount();
+      await execute();
+      const ready = result();
+      expect(ready).toMatchObject({ status: 'ready', sample });
+      const staleRefresh = useOperationalDrawerContributionStore
+        .getState()
+        .contribution!.tabs.find((tab) => tab.id === `data:${model.id}`)!.onRefresh!;
+      const document = readDvtTransformAuthoringAuthority(model)!.semanticDocument;
+      const read = document.sidecar.relations.find((binding) => binding.sourceRef != null);
+      expect(read).toBeDefined();
+      const next =
+        change === 'sidecar'
+          ? applyDvtSubstraitSemanticDocument(model, {
+              ...document,
+              sidecar: {
+                ...document.sidecar,
+                relations: document.sidecar.relations.map((binding) =>
+                  binding === read ? { ...binding, displayName: 'orders_rebound_alias' } : binding
+                ),
+              },
+            })
+          : {
+              ...model,
+              metadata: {
+                ...model.metadata,
+                columns: [{ name: 'customer', type: 'integer', nullable: false }],
+              },
+            };
+      const currentDocument = readDvtTransformAuthoringAuthority(next)!.semanticDocument;
+      expect(currentDocument.semanticPlan).toEqual(document.semanticPlan);
+      if (change === 'sidecar') expect(currentDocument.sidecar).not.toEqual(document.sidecar);
+      else expect(currentDocument).toEqual(document);
+
+      await mount(true, true, next);
+      expect(result()).not.toBe(ready);
+      expect(result()).toMatchObject({ status: 'error', reason: 'unavailable' });
+      await act(async () => staleRefresh());
+      expect(query.previewTransformRows).toHaveBeenCalledOnce();
     }
   );
   it('removes refresh and invalidates ready rows when the model disappears', async () => {
