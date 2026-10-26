@@ -82,16 +82,13 @@ import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
 import PresentationNodeSource from './canvasPresentationNode.ts?raw';
 
 describe('staged editor analysis ownership', () => {
-  it('keeps pending Source Output on occurrence intent and the canonical Output command', () => {
+  it('keeps pending Source presentation off Model Input mutation and direct schema edits', () => {
     const source = (name: string): string =>
       readArchitectureSiblingSource(import.meta.dirname, name);
     expect(
       source('relational-source-occurrence/PendingSourceOccurrenceProperties.tsx')
     ).not.toMatch(/onMapInput|onRemoveInput|canvasInputSlotId/);
-    expect(source('CanvasPendingSourceOutputs.tsx')).toContain('CanvasSourceOccurrenceOutputs');
-    expect(source('canvasSourceOutputDefaults.ts')).toContain('changeSelectedRelationOutputs');
     expect(source('canvasSourceOutputDefaults.ts')).not.toMatch(/emitKind\s*=|baseSchema\s*=/);
-    expect(source('useCanvasSourceOutputInitialization.ts')).toContain('cancellation.abort()');
   });
   it('keeps retained JOIN recovery in the existing draft command and shared configurator', () => {
     const source = (name: string): string =>

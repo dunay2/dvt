@@ -25,7 +25,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubConnectedModel(publishAllOutputs = false): void {
+function stubConnectedModel(publishAllOutputs = false, useRelationshipIdLabels = false): void {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -45,6 +45,11 @@ function stubConnectedModel(publishAllOutputs = false): void {
   });
   const source = draft.nodes.find((node) => node.id === 'source-orders')!;
   const model = draft.nodes.find((node) => node.id === 'model-orders')!;
+  if (useRelationshipIdLabels) {
+    source.name = source.id;
+    const sink = draft.nodes.find((node) => node.id === 'sink-orders')!;
+    sink.name = sink.id;
+  }
   const columns = source.metadata!.columns as { name: string; type: string; nullable?: boolean }[];
   const document = createDvtSubstraitProjectionDraft({
     source: {
@@ -200,6 +205,120 @@ function assertColumnMenuStaysOpenAndReopens(): void {
 }
 
 describe('Canvas Model output toggle lifecycle', () => {
+  for (const idLabels of [false, true]) {
+    it(`summarizes both real graph relationships without property labels${idLabels ? ' or identity fallbacks' : ''}`, () => {
+      cy.viewport(1366, 768);
+      stubConnectedModel(true, idLabels);
+      visitCanvas();
+      openWorkbenchProperties('model-orders');
+      cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').click();
+      const records = '[data-slot="node-property-relationship-record"]';
+      const summary = '[data-slot="node-property-relationship-summary"]';
+      const direction = '[data-slot="node-property-relationship-direction"]';
+      const node = '[data-slot="node-property-relationship-node"]';
+      const relation = '[data-slot="node-property-relationship-relation"]';
+      const connection = '[data-slot="node-property-relationship-connection"]';
+      cy.get(records)
+        .should('have.length', 2)
+        .each(($record, index) => {
+          cy.wrap($record).within(() => {
+            cy.get(summary).should('be.visible');
+            cy.get(direction).should('have.text', index === 0 ? 'Input' : 'Output');
+            cy.get(node).should(
+              'have.text',
+              idLabels ? '-' : index === 0 ? 'Orders source' : 'Orders sink'
+            );
+            cy.get(relation)
+              .should('be.visible')
+              .invoke('text')
+              .should('match', /^lineage$/i);
+            cy.get(summary).should(($header) => {
+              const document = $header[0]!.ownerDocument;
+              const window = document.defaultView!;
+              const host = document.querySelector('[data-slot="canvas-node-workbench-panel"]')!;
+              const panel = host.getBoundingClientRect();
+              const visibleLeft = Math.max(0, panel.left);
+              const visibleRight = Math.min(window.innerWidth, panel.right);
+              const relationBounds = $header[0]!.querySelector(relation)!.getBoundingClientRect();
+              const evidence = JSON.stringify({
+                panel: { left: panel.left, right: panel.right, width: panel.width },
+                innerWidth: window.innerWidth,
+                scrollClientWidth: host.querySelector('[data-radix-scroll-area-viewport]')
+                  ?.clientWidth,
+                relation: {
+                  left: relationBounds.left,
+                  right: relationBounds.right,
+                  width: relationBounds.width,
+                },
+              });
+              const centers = [direction, node, relation].map((selector) => {
+                const element = $header[0]!.querySelector(selector)!;
+                const bounds = element.getBoundingClientRect();
+                expect(bounds.left, `${selector} remains visible: ${evidence}`).to.be.at.least(
+                  visibleLeft
+                );
+                expect(bounds.right, `${selector} remains visible: ${evidence}`).to.be.at.most(
+                  visibleRight
+                );
+                return bounds.top + bounds.height / 2;
+              });
+              expect(
+                Math.max(...centers) - Math.min(...centers),
+                'direction, node and relation share one business line'
+              ).to.be.lessThan(1);
+            });
+            if (index === 0) {
+              cy.get(connection)
+                .should('have.text', 'postgres · canvas-e2e-postgres')
+                .and(($context) => {
+                  const header = $record[0]!.querySelector(summary)!.getBoundingClientRect();
+                  const bounds = $context[0]!.getBoundingClientRect();
+                  expect(bounds.top, 'connection is secondary context').to.be.at.least(
+                    header.bottom
+                  );
+                  expect($context[0]!.scrollWidth).to.be.at.most($context[0]!.clientWidth + 1);
+                });
+            } else cy.get(connection).should('not.exist');
+            cy.get('dt, dl').should('not.exist');
+          });
+        });
+      cy.get(records).should(($records) => {
+        for (const record of $records) {
+          const accessibleText = [
+            record.textContent,
+            ...[record, ...record.querySelectorAll('*')].flatMap((element) =>
+              ['title', 'aria-label', 'aria-description'].map(
+                (attribute) => element.getAttribute(attribute) ?? ''
+              )
+            ),
+          ].join(' ');
+          expect(accessibleText).not.to.include('source-orders');
+          expect(accessibleText).not.to.include('sink-orders');
+          expect(accessibleText).not.to.match(/nodeId|Node ID|direction:|relation:|connection:/);
+        }
+      });
+      // Keep the image inside the native headless capture surface after
+      // checking the wider application viewport above.
+      cy.viewport(1100, 600);
+      cy.get(relation).should(($relations) => {
+        for (const element of $relations) {
+          const window = element.ownerDocument.defaultView!;
+          const panel = element
+            .closest('[data-slot="canvas-node-workbench-panel"]')!
+            .getBoundingClientRect();
+          const bounds = element.getBoundingClientRect();
+          expect(bounds.left).to.be.at.least(Math.max(0, panel.left));
+          expect(bounds.right).to.be.at.most(Math.min(window.innerWidth, panel.right));
+        }
+      });
+      cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+        `model-relationship-summary${idLabels ? '-identity-fallback' : ''}`
+      );
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    });
+  }
+
   it('keeps six logical column disclosures compact and keyboard-accessible without writing', () => {
     cy.viewport(1440, 900);
     stubConnectedModel(true);

@@ -1242,6 +1242,15 @@ remains readable and complete. Native disclosure, keyboard focus and bounded
 scrolling are preserved. This single-line logical collection differs from the
 physical Source scanner's two-line facts, whose minimum target remains 44px.
 
+Generic Workbench Inputs/Outputs present each relationship as one compact business
+line: direction, related node name and relation. An existing connection value may
+appear beneath it as brief context. Do not repeat raw property keys or expose
+`nodeId` in this view. IDs remain in the read model and stable row/callback identity.
+If the node label is blank or merely repeats that ID, use the existing empty-cell
+state instead of inventing a name. Full names and connection values wrap; counts,
+order and existing custom cell rendering remain intact. This passive template
+does not acquire Source master/detail or reorder behavior.
+
 Rules:
 
 - base spacing scale is `4px`;

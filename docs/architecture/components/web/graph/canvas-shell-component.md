@@ -637,7 +637,17 @@ sequenceDiagram
 
 No backend command/query rail changes are introduced by this component.
 
-### Source Column Inspection Density
+### Shared Relationship Summaries
+
+Generic Inputs/Outputs use the shared `NodePropertyTable` business summary rather
+than stacked raw key/value fields: direction, related node name and relation on
+one line, with optional connection context below. The `nodeId` cell and an
+identity-only fallback name are not presented. Canonical IDs, row keys and custom
+cell context remain available to their existing owners. No navigation or mutation
+is invented. Planning DB `GH-3035-RELATIONSHIP-SUMMARY-V2` records the admitted
+[rationale and tests](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417835229).
+
+### Logical Column Inspection Density
 
 Generic Model/logical Columns use `NodePropertyTable` native disclosures and the
 existing `inspectorPropertyClasses.records` tokens. The compact shared summary is
@@ -647,6 +657,8 @@ design `GH-3035-LOGICAL-COLUMN-DENSITY` records the rationale in
 [issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417091017).
 This presentation change reuses `RenderCanvasContextualGraphSurface`; it does not
 dispatch a graph command or change the separate physical Source scanner below.
+
+### Source Column Inspection Density
 
 The existing contextual surface also presents `SourceColumnFacts` through passive
 column rows and a drill-in detail. Rows retain a minimum 44 px target and two

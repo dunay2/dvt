@@ -16,9 +16,11 @@ code_refs:
   - apps/web/src/app/views/canvas/CanvasPendingSourceOutputs.tsx
   - apps/web/src/app/views/canvas/CanvasRelationalTreeEditorFrame.tsx
   - apps/web/src/app/components/inspector/inspectorVisualTokens.ts
+  - apps/web/src/app/components/inspector/NodePropertyTable.tsx
   - apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
 evidence:
   tests:
+    - pnpm --dir apps/web exec vitest run --config vitest.presentation.config.ts src/app/components/inspector/NodePropertySectionView.test.tsx src/app/components/inspector/NodePropertiesTabs.sourceInputsOutputs.test.tsx src/app/components/inspector/NodePropertyTable.test.tsx
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/contracts schema:verify
     - pnpm validate:contracts
@@ -109,3 +111,35 @@ inspection-only regression checks six real canonical Model outputs at 1366x768,
 Existing disclosure/Source presentation tests pass 33/33 and architecture/token
 guards pass 10/10. Exact final native and repository acceptance remains in the
 governing issue rather than an invented task-status document.
+
+## Business Relationship Summaries And Test Stability
+
+The next screenshot asks to place direction, node name and relation on the same
+level and omit the internal node ID. Planning DB
+`GH-3035-RELATIONSHIP-SUMMARY-V2` and its
+[admitted rationale](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417835229)
+govern the shared passive `NodePropertyTable` summary. Only business cells are
+rendered, with optional connection context below. An identity-only or absent node
+label uses the existing empty state, while row keys, canonical IDs and callback
+context remain intact. Four unused stacked-record tokens are retired; no new
+stylesheet, state, command or navigation is added.
+
+Focused tests pass 20/20, including real relationship projection, Input/Output
+order, private identities, long values, custom cells and non-mutation. The native
+two-spec run passes 5/5, covering visible spans against the intersection of panel
+and AUT viewport, actual names and identity fallback, optional context, keyboard,
+column density and physical Source presentation without inspection writes.
+
+Native headless screenshots have a 1280px capture surface. Capturing at 1100px,
+as the existing Source proof does, shows the complete panel; all larger AUT
+geometry assertions remain. A clipped element screenshot was investigated rather
+than treated as evidence of a product overflow. Cypress 15.18.1 named Enter omits
+the character event; an isolated trusted-event comparison identified the driver
+limitation. The test sends a complete native Enter key through CDP and preserves
+the browser default-action assertions, without adding a product key handler.
+
+Fragile unit assertions on CSS class spelling and exact React renderer invocation
+counts are replaced with complete visible metadata, one rendered custom cell and
+the stable callback context. Redundant literal implementation-call checks are
+removed from the pending Source architecture guard; forbidden ownership remains
+guarded and cancellation/rejection stays covered by real-session behavior tests.

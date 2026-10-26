@@ -91,9 +91,14 @@ export const inspectorPropertyClasses = {
     relationship: 'grid grid-cols-[minmax(6rem,0.3fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm',
   },
   records: {
-    relationship: 'space-y-3',
+    relationship: 'space-y-1',
+    relationshipCard: `min-w-0 px-2 py-1.5 ${propertyPanel}`,
+    relationshipSummary:
+      'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs leading-4',
+    relationshipMeta: 'min-w-0 break-words text-(--text-muted)',
+    relationshipConnection:
+      'mt-0.5 min-w-0 [overflow-wrap:anywhere] text-xs leading-4 text-(--text-muted)',
     column: 'divide-y divide-(--border-subtle)',
-    card: `overflow-hidden ${propertyPanel}`,
     region: `max-h-80 overflow-y-auto ${propertyPanel}`,
     disclosure: 'group',
     trigger:
@@ -102,9 +107,6 @@ export const inspectorPropertyClasses = {
     name: `${propertyValue} font-medium`,
     details:
       'grid grid-cols-[minmax(6rem,0.34fr)_minmax(0,1fr)] gap-x-3 gap-y-2 px-3 pb-3 pl-9 text-xs',
-    divided: 'divide-y divide-(--border-subtle)',
-    field: 'space-y-1 px-3 py-2.5',
-    value: 'min-w-0 [overflow-wrap:anywhere] text-sm text-(--text-primary)',
   },
   table: {
     inspector: {
