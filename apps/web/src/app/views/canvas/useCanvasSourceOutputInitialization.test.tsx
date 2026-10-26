@@ -149,6 +149,65 @@ async function outputNames(
 }
 
 describe('terminal Source initialization lifetime', () => {
+  it.each(['accepted', 'Cancel'] as const)(
+    'settles both restricted Read preferences atomically after %s',
+    async (outcome) => {
+      const fixture = terminalFixture();
+      const indexed = indexSubstraitRelations(fixture.graph.draft);
+      if (!indexed.ok) throw indexed.error;
+      const reads = [...indexed.index.relations.values()].filter(
+        (entry) => entry.relation.relType.case === 'read'
+      );
+      const sources = reads.map((read): PendingSourceOccurrence => ({
+        sourceNodeId: fixture.graph.source.id,
+        read: { ...read, binding: { ...read.binding, displayName: read.binding.displayName! } },
+        initialOutputFieldIds: [read.fields[0]!.fieldId],
+      }));
+      const snapshot = globalThis.structuredClone({ graph: fixture.graph, sources });
+      const host = await initializationHost({
+        editable: true,
+        inputs: fixture.inputs,
+        nodeId: fixture.graph.targetNode.id,
+        nodes: fixture.graph.nodes,
+        edges: fixture.graph.edges.map((edge) => ({
+          ...edge,
+          inputBindings: {
+            version: 'v1',
+            fields: [{ inputId: 'mapped-id', producerFieldId: 'id' }],
+          },
+        })),
+      });
+      const delayed = outcome === 'Cancel' ? deferCanonicalQuery() : undefined;
+      try {
+        await host.connect(fixture, sources);
+        if (delayed != null) {
+          expect(host.status.pending).toBe(true);
+          act(() => host.state.reset());
+          expect(delayed.signal?.aborted).toBe(true);
+          await act(async () => delayed.release());
+          expect(host.state.joinDraft).toBeNull();
+          expect(host.state.pendingSources).toEqual([]);
+        } else {
+          expect(await outputNames(host.state.joinDraft)).toEqual(['id', 'places_id_2']);
+          expect(host.state.pendingSources).toHaveLength(2);
+          expect(
+            host.state.pendingSources.every((source) => source.initialOutputFieldIds == null)
+          ).toBe(true);
+          const after = indexSubstraitRelations(host.state.joinDraft!);
+          if (!after.ok) throw after.error;
+          for (const [id, entry] of indexed.index.relations)
+            if (id !== indexed.index.rootId) expect(after.index.relations.get(id)).toEqual(entry);
+        }
+        expect(host.status).toEqual({ blocked: false, pending: false, failed: false });
+        expect({ graph: fixture.graph, sources }).toEqual(snapshot);
+      } finally {
+        delayed?.release();
+        delayed?.restore();
+        host.close();
+      }
+    }
+  );
+
   it('materializes canonical terminal Output and consumes only reachable occurrence preferences', async () => {
     const fixture = terminalFixture();
     const unrelated = {

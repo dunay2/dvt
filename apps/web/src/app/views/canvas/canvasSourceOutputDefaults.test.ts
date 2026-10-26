@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   indexSubstraitRelations,
+  readRelationStructure,
   type IndexedRelation,
   type SubstraitDocument,
 } from '@dvt/substrait-analysis';
 import { createSourceJoin } from './canvasSourceJoin';
+import { createSourceCross } from './canvasSourceCross';
 import { source } from './canvasRelationalOperator.test-support';
 import { initializeCanvasSourceOutputs } from './canvasSourceOutputDefaults';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
@@ -22,14 +24,29 @@ import { configureCanvasStagedComposition } from './canvasStagedCompositionConfi
 import { createCanvasStagedOperation, connectCanvasStagedOperation } from './canvasStagedOperation';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
 
-function fixture(): { document: SubstraitDocument; reads: readonly IndexedRelation[] } {
-  const document = createSourceJoin({
-    left: { source: source('client'), fields: ['id', 'country'] },
-    right: { source: source('orders'), fields: ['id', 'amount'] },
-    leftFieldName: 'id',
-    rightFieldName: 'id',
-    targetNodeId: 'model',
-  });
+function fixture(operation: 'join' | 'cross' = 'join'): {
+  document: SubstraitDocument;
+  reads: readonly IndexedRelation[];
+} {
+  const document =
+    operation === 'cross'
+      ? createSourceCross(
+          ['client', 'orders'].map((name, side) => ({
+            ...source(name),
+            fields: (side === 0 ? ['id', 'country'] : ['id', 'amount']).map((name) => ({
+              name,
+              dataType: 'text',
+              joinDataType: 'string' as const,
+            })),
+          }))
+        )
+      : createSourceJoin({
+          left: { source: source('client'), fields: ['id', 'country'] },
+          right: { source: source('orders'), fields: ['id', 'amount'] },
+          leftFieldName: 'id',
+          rightFieldName: 'id',
+          targetNodeId: 'model',
+        });
   const indexed = indexSubstraitRelations(document);
   if (!indexed.ok) throw new Error('Invalid fixture');
   const reads = [...indexed.index.relations.values()]
@@ -51,6 +68,83 @@ function pending(
 }
 
 describe('pending Source terminal Output initialization', () => {
+  it.each([
+    { operation: 'join', reversed: false },
+    { operation: 'join', reversed: true },
+    { operation: 'cross', reversed: false },
+    { operation: 'cross', reversed: true },
+  ] as const)(
+    'initializes both restricted Sources atomically in $operation with reversed preferences $reversed',
+    async ({ operation, reversed }) => {
+      const { document, reads } = fixture(operation);
+      const sources = reads.map((read) => pending(read, [read.fields[0]!.fieldId]));
+      if (reversed) sources.reverse();
+      const before = indexSubstraitRelations(document);
+      if (!before.ok) throw before.error;
+      const snapshot = globalThis.structuredClone({ document, sources });
+      const selectedIds = new Set(reads.map((read) => read.fields[0]!.fieldId));
+      const retained = before.index.relations
+        .get(before.index.rootId)!
+        .fields.filter((field) => selectedIds.has(field.sourceFieldId!));
+      const result = await initializeCanvasSourceOutputs({
+        document,
+        sources,
+        deniedInputs: new Set(reads.map((read) => read.fields[1]!.fieldId)),
+      });
+      const after = indexSubstraitRelations(result.document);
+      if (!after.ok) throw after.error;
+      const beforeRoot = before.index.relations.get(before.index.rootId)!.relation;
+      const afterRoot = after.index.relations.get(after.index.rootId)!.relation;
+      expect(readRelationStructure(afterRoot).inputs).toEqual(
+        readRelationStructure(beforeRoot).inputs
+      );
+      if (beforeRoot.relType.case === 'join') {
+        if (afterRoot.relType.case !== 'join') throw new Error('Expected retained JOIN.');
+        expect(afterRoot.relType.value.type).toBe(beforeRoot.relType.value.type);
+        expect(afterRoot.relType.value.expression).toEqual(beforeRoot.relType.value.expression);
+      }
+      const oracle = new CanvasRelationAnalysisSession('joint-source-default-oracle');
+      try {
+        oracle.receive(result.document);
+        const output = await oracle.query(null);
+        expect(output.bindings.map((field) => field.fieldId)).toEqual(
+          retained.map((field) => field.fieldId)
+        );
+        expect(output.bindings.map((field) => field.displayName)).toEqual(
+          retained.map((field) => field.displayName)
+        );
+        expect(result.consumedIds).toEqual(sources.map((item) => item.read.binding.relationId));
+        for (const [id, entry] of before.index.relations)
+          if (id !== before.index.rootId) expect(after.index.relations.get(id)).toEqual(entry);
+        expect({ document, sources }).toEqual(snapshot);
+      } finally {
+        oracle.dispose();
+      }
+    }
+  );
+
+  it.each(['denied', 'unknown'] as const)(
+    'rejects a later %s preference without changing the document or consuming intent',
+    async (failure) => {
+      const { document, reads } = fixture();
+      const left = reads[0]!,
+        right = reads[1]!;
+      const sources = [
+        pending(left, [left.fields[0]!.fieldId]),
+        pending(right, [failure === 'denied' ? right.fields[1]!.fieldId : 'unknown-field']),
+      ];
+      const snapshot = globalThis.structuredClone({ document, sources });
+      await expect(
+        initializeCanvasSourceOutputs({
+          document,
+          sources,
+          deniedInputs: new Set([right.fields[1]!.fieldId]),
+        })
+      ).rejects.toThrow('Source Output publication is unavailable.');
+      expect({ document, sources }).toEqual(snapshot);
+    }
+  );
+
   it('materializes the producer publication default for a newly dropped partial physical Source', async () => {
     const inputs: CanvasDvtCompositionInput[] = ['client', 'orders'].map((name) => {
       const input = source(name);

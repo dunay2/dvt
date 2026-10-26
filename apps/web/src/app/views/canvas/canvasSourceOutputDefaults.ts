@@ -31,11 +31,14 @@ export async function initializeCanvasSourceOutputs(
   session.receive(args.document, args.deniedInputs, args.disconnectedInputs);
   let document = args.document;
   try {
+    const revision = session.revision;
+    const selections: Awaited<ReturnType<typeof readCanvasSourceOccurrenceOutputSelection>>[] = [];
+    const changes = new Map<string, boolean>();
     for (const source of sources) {
       const selection = await readCanvasSourceOccurrenceOutputSelection(
         session,
         source.read.binding.relationId,
-        session.revision,
+        revision,
         args.signal
       );
       const selectedIds = new Set(source.initialOutputFieldIds);
@@ -60,16 +63,20 @@ export async function initializeCanvasSourceOutputs(
         )
       )
         throw new Error('Source Output has no independent direct contribution.');
+      selections.push(selection);
+      for (const field of selection.fields) changes.set(field.id, selectedIds.has(field.id));
+    }
+    const first = selections[0];
+    if (first != null)
       document = await changeSelectedRelationOutputs(session, {
         relationId: session.rootId,
-        expectedRevision: session.revision,
+        expectedRevision: revision,
         signal: args.signal,
         outputs: sourceOccurrenceOutputEdits(
-          selection,
-          new Map(selection.fields.map((field) => [field.id, selectedIds.has(field.id)]))
+          { slots: first.slots, fields: selections.flatMap((selection) => selection.fields) },
+          changes
         ),
       });
-    }
     args.signal?.throwIfAborted();
     return { document, consumedIds: sources.map((source) => source.read.binding.relationId) };
   } finally {
