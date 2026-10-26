@@ -18,6 +18,7 @@ export async function readCanvasSourceOccurrenceOutputSelection(
   const source = session.locate(relationId, expectedRevision);
   if (source.relation.relType.case !== 'read')
     throw new SubstraitAnalysisError('invalid_binding', 'Expected a Source occurrence.');
+  const sourceTypes = source.relation.relType.value.baseSchema?.struct?.types;
   const cache = new Map<string, Promise<readonly (string | null)[]>>();
   const naturalOrigins = async (id: string): Promise<readonly (string | null)[]> => {
     signal?.throwIfAborted();
@@ -85,6 +86,7 @@ export async function readCanvasSourceOccurrenceOutputSelection(
       return {
         id: field.fieldId,
         name: field.displayName ?? field.fieldId,
+        dataType: sourceTypes?.[field.outputOrdinal]?.kind.case,
         slots: contributions.map((slot) => slot.slot),
         included: contributions.some((slot) => slot.output != null),
         available:

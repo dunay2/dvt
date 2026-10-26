@@ -16,11 +16,13 @@ export type SourceOccurrenceOutputField = Readonly<{
 export function CanvasSourceOccurrenceOutputs({
   fields,
   disabled,
+  editing = false,
   busy = false,
   onChange,
 }: Readonly<{
   fields: readonly SourceOccurrenceOutputField[];
   disabled: boolean;
+  editing?: boolean;
   busy?: boolean;
   onChange: (fieldId: string, included: boolean) => void;
 }>): JSX.Element {
@@ -30,16 +32,18 @@ export function CanvasSourceOccurrenceOutputs({
   const filterId = useId();
   return (
     <section data-slot="source-occurrence-outputs" className="space-y-2">
-      <label className="flex items-center gap-2 text-xs text-(--text-muted)" htmlFor={filterId}>
-        <Checkbox
-          id={filterId}
-          checked={hideExcluded}
-          onCheckedChange={(checked) => setHideExcluded(checked === true)}
-        />
-        {copy.hideExcludedFields}
-      </label>
+      {editing ? (
+        <label className="flex items-center gap-2 text-xs text-(--text-muted)" htmlFor={filterId}>
+          <Checkbox
+            id={filterId}
+            checked={hideExcluded}
+            onCheckedChange={(checked) => setHideExcluded(checked === true)}
+          />
+          {copy.hideExcludedFields}
+        </label>
+      ) : null}
       {fields
-        .filter((field) => !hideExcluded || field.included)
+        .filter((field) => field.included || (editing && !hideExcluded))
         .map((field) => (
           <div
             key={field.id}
@@ -53,27 +57,29 @@ export function CanvasSourceOccurrenceOutputs({
             {field.dataType == null ? null : (
               <span className="shrink-0 text-[11px] text-(--text-muted)">{field.dataType}</span>
             )}
-            <FieldInclusionToggle
-              fieldName={field.name}
-              included={field.included}
-              slot={
-                field.included ? 'source-occurrence-remove-field' : 'source-occurrence-add-field'
-              }
-              disabled={disabled || !field.available}
-              busy={busy}
-              label={`${field.included ? copy.removeOutputField : copy.addOutputField}: ${field.name}`}
-              title={
-                !field.available
-                  ? copy.sourceOutputUnavailable
-                  : field.included
-                    ? copy.removeOutputField
-                    : copy.addOutputField
-              }
-              onChange={(included) => {
-                if (hideExcluded && !included) document.getElementById(filterId)?.focus();
-                onChange(field.id, included);
-              }}
-            />
+            {editing ? (
+              <FieldInclusionToggle
+                fieldName={field.name}
+                included={field.included}
+                slot={
+                  field.included ? 'source-occurrence-remove-field' : 'source-occurrence-add-field'
+                }
+                disabled={disabled || !field.available}
+                busy={busy}
+                label={`${field.included ? copy.removeOutputField : copy.addOutputField}: ${field.name}`}
+                title={
+                  !field.available
+                    ? copy.sourceOutputUnavailable
+                    : field.included
+                      ? copy.removeOutputField
+                      : copy.addOutputField
+                }
+                onChange={(included) => {
+                  if (hideExcluded && !included) document.getElementById(filterId)?.focus();
+                  onChange(field.id, included);
+                }}
+              />
+            ) : null}
           </div>
         ))}
     </section>

@@ -1,5 +1,6 @@
 /** Owned concern: bind a selected Read or unary operation to its existing editor owner. */
 import type { CanonicalNode } from '../../types/canonical';
+import type { ReactNode } from 'react';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
@@ -16,6 +17,7 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onClose,
   onPendingConditionChange,
   reservedAliases,
+  sourceOutput,
 }: Readonly<{
   draft: DvtSubstraitProjectionDraft;
   operation: CanvasRelationalOperation;
@@ -25,10 +27,11 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onClose: () => void;
   onPendingConditionChange?: (pending: boolean) => void;
   reservedAliases?: readonly string[];
+  sourceOutput?: ReactNode;
 }>): JSX.Element | null {
   const entry = useSelectedRelation(relationId);
   const selected = entry?.relation.relType.case;
-  const read = entry?.binding.sourceRef == null ? null : entry.binding;
+  const read = selected === 'read' ? entry?.binding : null;
   if (selected === 'project' && relationId != null)
     return (
       <CanvasTransformInspector
@@ -44,6 +47,7 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   if (read != null)
     return (
       <SourceOccurrenceProperties
+        output={sourceOutput}
         key={read.relationId}
         draft={draft}
         relationId={read.relationId}

@@ -1,5 +1,6 @@
 /** Bind a connected Read alias form to the existing revision-bound rename command. */
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import type { ReactNode } from 'react';
 import { renameSourceOccurrence } from './renameSourceOccurrence';
 import { useRelationCommand } from '../useRelationCommand';
 import { CanvasRelationFields } from '../CanvasRelationFields';
@@ -13,6 +14,7 @@ export function SourceOccurrenceProperties({
   onChange,
   onClose,
   onPendingChange,
+  output,
 }: Readonly<{
   draft: SubstraitDocument;
   relationId: string;
@@ -20,6 +22,7 @@ export function SourceOccurrenceProperties({
   onChange: (draft: SubstraitDocument) => void;
   onClose: () => void;
   onPendingChange?: (pending: boolean) => void;
+  output?: ReactNode;
 }>): JSX.Element {
   const binding = draft.sidecar.relations.find((read) => read.relationId === relationId);
   const occupied = new Set([
@@ -44,7 +47,7 @@ export function SourceOccurrenceProperties({
           ),
       }}
       onPendingChange={onPendingChange}
-      output={<CanvasRelationFields relationId={relationId} />}
+      output={output ?? <CanvasRelationFields relationId={relationId} />}
     />
   );
 }

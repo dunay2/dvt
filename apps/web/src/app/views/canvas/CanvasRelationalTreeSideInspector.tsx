@@ -89,7 +89,6 @@ export function CanvasRelationalTreeSideInspector({
             relationId={inspection.relationId!}
             input={sourceInput}
             publishedFieldNames={publishedFieldNames}
-            onChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
           />
         ) : undefined
       }

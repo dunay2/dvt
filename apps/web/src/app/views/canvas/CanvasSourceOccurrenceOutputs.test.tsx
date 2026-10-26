@@ -22,6 +22,25 @@ import { useApplicationLanguageStore } from '../../stores/applicationLanguageSto
 
 describe('Source occurrence Model Output', () => {
   setupWorkbenchTest();
+  it('shows only included fields without editing controls in the normal view', async () => {
+    const change = vi.fn();
+    await act(async () =>
+      root.render(
+        <CanvasSourceOccurrenceOutputs
+          fields={[
+            { id: 'included', name: 'Visible', included: true, available: true },
+            { id: 'excluded', name: 'Excluded', included: false, available: true },
+          ]}
+          disabled={false}
+          onChange={change}
+        />
+      )
+    );
+    expect(container.textContent).toContain('Visible');
+    expect(container.textContent).not.toContain('Excluded');
+    expect(container.querySelector('button')).toBeNull();
+    expect(change).not.toHaveBeenCalled();
+  });
   it('removes and restores an implicit JOIN field without changing its Read or condition', async () => {
     const input = source('client');
     const initial = createSourceJoin({
@@ -98,6 +117,7 @@ describe('Source occurrence Model Output', () => {
       const [included, setIncluded] = useState(true);
       return (
         <CanvasSourceOccurrenceOutputs
+          editing
           fields={[
             { id: 'country', name: 'country', available: true, included },
             { id: 'key', name: 'key', available: true, included: true },
@@ -154,10 +174,16 @@ describe('Source occurrence Model Output', () => {
         );
       }
       await act(async () => root.render(<Host />));
-      const toggle = container.querySelector<HTMLButtonElement>('[data-field-name="name"]')!;
-      expect(toggle.disabled).toBe(!reject);
-      await act(async () => fireEvent.click(toggle));
-      expect(toggle.getAttribute('data-included')).toBe('true');
+      const toggle = container.querySelector<HTMLButtonElement>('[data-field-name="name"]');
+      if (!reject) {
+        expect(toggle).toBeNull();
+        expect(container.querySelector('[role="checkbox"]')).toBeNull();
+        expect(rejected).not.toHaveBeenCalled();
+        return;
+      }
+      expect(toggle?.disabled).toBe(false);
+      await act(async () => fireEvent.click(toggle!));
+      expect(toggle!.getAttribute('data-included')).toBe('true');
       expect(rejected).toHaveBeenCalledTimes(reject ? 1 : 0);
       expect(container.querySelector('[role="alert"]') != null).toBe(reject);
     }

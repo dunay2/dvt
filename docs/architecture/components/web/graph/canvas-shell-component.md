@@ -312,8 +312,8 @@ unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
 The applied Model inspector selects the occurrence's direct contribution to the
 Model's root Output. It does not remove a Model Input binding. The governing
-design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V4`, with rationale and
-Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6405053466).
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V6`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6405271805).
 The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
 rails retain command and presentation ownership.
 
@@ -321,10 +321,12 @@ rails retain command and presentation ownership.
 flowchart LR
   Read[Selected Read occurrence] --> Query[Canonical direct output slots]
   Root[Model root emit] --> Query
-  Query --> View[Controlled Source rows and shared inclusion button]
-  View --> Command[Existing relation command and root Output selection]
+  Query --> View[Applied Source: included fields only]
+  View --> Edit[Existing Edit opens the canonical draft]
+  Edit --> Draft[Controlled included and excluded rows with shared inclusion button]
+  Draft --> Command[Existing root Output command]
   Command --> Root
-  Filter[Local hide excluded preference] --> View
+  Filter[Local hide excluded preference] --> Draft
 ```
 
 `CanvasSourceOccurrenceOutputs` is passive presentation. The applied selection
@@ -337,9 +339,13 @@ Source. Unavailable direct contributions remain visible with disabled controls.
 
 Excluding a field changes only root Output selection. The physical Read, JOIN
 predicate, calculation definitions, other occurrences and producer publication
-remain intact. Excluded fields stay listed with the existing add action. The
-optional hide-excluded filter starts off, is local to the selected occurrence,
-and never dispatches a graph command. Existing command authority owns revision,
+remain intact. The applied view shows only included fields without editing
+controls. The existing Edit action opens the Model draft; its Source inspector
+shows included and excluded fields with the existing add/remove actions.
+Apply persists the draft selection; Cancel restores the previously applied
+document. The optional hide-excluded filter starts off inside editing, is local
+to the selected occurrence, and never dispatches a graph command.
+Existing command authority owns revision,
 permissions, rejection, rollback and persistence. Pending detached Sources retain
 their explicit Input-binding adapter until they belong to the applied tree.
 Both adapters use the same passive rows and Inspector inclusion control; CSS

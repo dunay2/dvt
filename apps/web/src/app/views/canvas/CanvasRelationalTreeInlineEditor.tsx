@@ -7,6 +7,7 @@ import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFra
 import { canvasJoinOperationForType } from './canvasRelationalTreeJoinType';
 import { CanvasRelationalTreeSelectedOperatorEditor } from './CanvasRelationalTreeSelectedOperatorEditor';
 import { CanvasCalculatedRelationOutputs } from './CanvasCalculatedRelationOutputs';
+import { CanvasSourceOccurrenceOutputSelection } from './CanvasSourceOccurrenceOutputSelection';
 import {
   CanvasRelationalTreeOperationEditor,
   type CanvasRelationalTreeOperationEditorProps,
@@ -19,6 +20,7 @@ type InlineEditorProps = Omit<CanvasRelationalTreeOperationEditorProps, 'cross' 
   onClose: () => void;
   onSelectRelation?: (relationId: string) => void;
   reservedAliases?: readonly string[];
+  sourceOutputFieldsByRelationId: ReadonlyMap<string, readonly string[]>;
 };
 export function CanvasRelationalTreeInlineEditor(
   props: Readonly<InlineEditorProps>
@@ -36,6 +38,17 @@ export function CanvasRelationalTreeInlineEditor(
     <>
       {selectedUnary && props.expanded ? (
         <CanvasRelationalTreeSelectedOperatorEditor
+          sourceOutput={
+            selected?.case === 'read' && selectedRelationId != null ? (
+              <CanvasSourceOccurrenceOutputSelection
+                relationId={selectedRelationId}
+                publishedFieldNames={
+                  props.sourceOutputFieldsByRelationId.get(selectedRelationId) ?? []
+                }
+                onChange={props.onChangeJoinDraft}
+              />
+            ) : undefined
+          }
           draft={joinDraft}
           operation={operation}
           relationId={selectedRelationId}

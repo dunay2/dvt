@@ -22,24 +22,43 @@ describe('Canvas field lifecycle', () => {
       const toggle = `${rows} [data-field-name="name"]`;
       let excluded: ReturnType<typeof savedOutputs>;
       cy.get(source).first().click();
+      cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('contain.text', 'name');
+      cy.get(`${rows} button`).should('not.exist');
+      cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get(toggle).should('have.attr', 'data-included', 'true').focus().click();
       cy.get(toggle).should('have.attr', 'data-included', 'false').and('be.focused');
+      cy.get(`${rows} [role="checkbox"]`).click();
+      cy.get(toggle).should('not.exist');
+      cy.get(`${rows} [role="checkbox"]`).click();
+      cy.get(toggle).should('have.attr', 'data-included', 'false');
+      cy.get('[data-slot="canvas-relational-tree-cancel"]').click();
+      cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('contain.text', 'name');
+      cy.get(`${rows} button`).should('not.exist');
+      cy.get('[data-slot="canvas-relational-edit"]').click();
+      cy.get(toggle).should('have.attr', 'data-included', 'true').click();
+      cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+      cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should(
+        'not.contain.text',
+        'name'
+      );
+      cy.get(`${rows} button`).should('not.exist');
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.then(() => {
         excluded = savedOutputs();
         expect(excluded.operands).to.have.length(sourceCount);
         expect(excluded.outputs.some((field) => field.displayName === 'name')).to.equal(false);
       });
-      cy.get(`${rows} [role="checkbox"]`).click();
-      cy.get(toggle).should('not.exist');
-      cy.get(`${rows} [role="checkbox"]`).click();
-      cy.get(toggle).should('have.attr', 'data-included', 'false');
       cy.on('window:before:load', installE2eApiFetchStub);
       cy.reload();
       openWorkbenchModel('join-transform');
       cy.get(source).first().click();
+      cy.get(`${rows} button`).should('not.exist');
+      cy.get('[data-slot="canvas-relational-edit"]').click();
       cy.get(toggle).should('have.attr', 'data-included', 'false').click();
       cy.get(toggle).should('have.attr', 'data-included', 'true');
+      cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+      cy.get(`${rows} [data-slot="source-occurrence-output-field"]`).should('contain.text', 'name');
+      cy.get(`${rows} button`).should('not.exist');
       cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
       cy.then(() => {
         const restored = savedOutputs();

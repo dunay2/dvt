@@ -102,7 +102,18 @@ describe('Model composition Workbench', () => {
     expect(inspector?.querySelector('[data-slot="source-occurrence-outputs"]')).not.toBeNull();
     expect(
       inspector?.querySelectorAll('[data-slot="source-occurrence-remove-field"]')
+    ).toHaveLength(0);
+    expect(
+      inspector?.querySelectorAll('[data-slot="source-occurrence-output-field"]')
     ).toHaveLength(2);
+    await act(async () =>
+      inspector?.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')?.click()
+    );
+    expect(container.querySelectorAll('[data-slot="source-occurrence-remove-field"]')).toHaveLength(
+      2
+    );
+    expect(onMapInput).not.toHaveBeenCalled();
+    expect(onRemoveInput).not.toHaveBeenCalled();
     expect(inspector?.querySelector('input[type="checkbox"]')).toBeNull();
   });
 

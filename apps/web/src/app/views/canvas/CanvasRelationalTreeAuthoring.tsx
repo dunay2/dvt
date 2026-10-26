@@ -117,6 +117,7 @@ export function CanvasRelationalTreeAuthoring({
           />
         ) : (
           <CanvasRelationalTreeInlineEditor
+            sourceOutputFieldsByRelationId={sourceOutputFieldsByRelationId}
             reservedAliases={data.pendingSources.map((item) => item.read.binding.displayName)}
             copy={copy}
             joinDraft={data.draft}

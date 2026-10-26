@@ -41,6 +41,7 @@ export function PendingSourceOccurrenceProperties({
       output={
         input == null ? null : (
           <CanvasSourceOccurrenceOutputs
+            editing
             fields={input.fields
               .filter((field) => publishedFieldNames.includes(field.name))
               .map((field) => ({

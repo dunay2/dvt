@@ -65,9 +65,12 @@ export function CanvasSourceOccurrenceOutputSelection({
           .filter((field) => publishedFieldNames.includes(field.name))
           .map((field) => ({
             ...field,
-            dataType: input?.fields.find((physical) => physical.name === field.name)?.dataType,
+            dataType:
+              input?.fields.find((physical) => physical.name === field.name)?.dataType ??
+              field.dataType,
           }))}
         disabled={onChange == null || selection == null}
+        editing={onChange != null}
         busy={command.state === 'busy'}
         onChange={(fieldId, included) => {
           if (onChange == null || command.state === 'busy' || selection == null) return;
