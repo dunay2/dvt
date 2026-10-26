@@ -1,4 +1,4 @@
-/** Inspect a detached Source through the same published Input controls as an applied Source. */
+/** Present detached Source Input bindings through the shared passive field rows. */
 import type { GraphNodeInputMapping } from '../../../plugins/graph/graphNodeColumnContracts';
 import { CanvasSourceOccurrenceOutputs } from '../CanvasSourceOccurrenceOutputs';
 import { canvasInputSlotId } from '../canvasInputBindings';
