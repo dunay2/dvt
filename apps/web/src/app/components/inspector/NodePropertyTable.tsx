@@ -190,7 +190,7 @@ export function NodePropertyTable({
 }: NodePropertyTableProps): JSX.Element {
   const columnKeys = Array.from(
     new Set(section.tableRows.flatMap((row) => Object.keys(row.cells)))
-  );
+  ).filter((key) => section.id !== 'columns' || key !== 'reference');
   if (surface === 'workbench' && (section.id === 'columns' || section.id === 'inputs-outputs')) {
     return (
       <PropertyRecords

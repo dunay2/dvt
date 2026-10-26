@@ -25,7 +25,10 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubConnectedModel(publishAllOutputs = false, useRelationshipIdLabels = false): void {
+function stubConnectedModel(
+  publishAllOutputs = false,
+  useRelationshipIdLabels = false
+): ReturnType<typeof createDvtSubstraitProjectionDraft> {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -96,6 +99,7 @@ function stubConnectedModel(publishAllOutputs = false, useRelationshipIdLabels =
     model.metadata
   );
   Object.assign(draft, normalized);
+  return document;
 }
 
 function visitCanvas(): void {
@@ -321,7 +325,9 @@ describe('Canvas Model output toggle lifecycle', () => {
 
   it('keeps six logical column disclosures compact and keyboard-accessible without writing', () => {
     cy.viewport(1440, 900);
-    stubConnectedModel(true);
+    const document = stubConnectedModel(true);
+    const technicalFieldIds = [...deriveSubstraitSchemas(document).index.fields.keys()];
+    expect(technicalFieldIds, 'real canonical field identities cover the fixture').not.to.be.empty;
     visitCanvas();
     openWorkbenchProperties('model-orders');
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
@@ -404,7 +410,33 @@ describe('Canvas Model output toggle lifecycle', () => {
     cy.get('@customerSummary')
       .should('be.focused')
       .parent('details')
-      .should('have.prop', 'open', true);
+      .should('have.prop', 'open', true)
+      .and(($details) => {
+        const labels = [...$details[0]!.querySelectorAll('dt')].map((label) =>
+          label.textContent?.trim().toLowerCase()
+        );
+        expect(labels, 'complete business metadata').to.deep.equal([
+          'type',
+          'nullable',
+          'key',
+          'default',
+          'comment',
+          'source',
+          'selection',
+        ]);
+        expect(labels, 'English Reference label stays private').not.to.include('reference');
+        expect(labels, 'Spanish Reference label stays private').not.to.include('referencia');
+        const accessibleText = [
+          $details[0]!.textContent,
+          ...[$details[0]!, ...$details[0]!.querySelectorAll('*')].flatMap((element) =>
+            ['title', 'aria-label', 'aria-description'].map(
+              (attribute) => element.getAttribute(attribute) ?? ''
+            )
+          ),
+        ].join(' ');
+        for (const fieldId of technicalFieldIds)
+          expect(accessibleText, 'canonical field identities stay private').not.to.include(fieldId);
+      });
     cy.get('@customerSummary')
       .parent('details')
       .find('dd')
@@ -412,6 +444,8 @@ describe('Canvas Model output toggle lifecycle', () => {
         const values = [...$values].map((value) => value.textContent);
         expect(values, 'complete expanded type').to.include('text');
         expect(values, 'complete expanded nullability').to.include('not null');
+        expect(values, 'complete expanded origin').to.include('Orders source');
+        expect(values, 'complete expanded publication selection').to.include('available');
         for (const value of $values) {
           expect(value.scrollWidth, 'expanded metadata stays in its panel').to.be.at.most(
             value.clientWidth + 1

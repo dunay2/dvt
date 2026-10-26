@@ -272,24 +272,31 @@ describe('NodePropertySectionView', () => {
     expect(section).toEqual(original);
   });
 
-  it('preserves all column metadata in the native disclosure', () => {
-    ({ container, root } = renderSection({
+  it('preserves complete business column details while keeping canonical references private', () => {
+    const section: NodePropertySection = {
       id: 'columns',
       label: 'Columns',
       rows: [],
+      columnLabels: { reference: 'Referencia' },
       tableRows: [
         {
-          id: 'event_id',
+          id: 'dvt_fld_private_event_identity',
           cells: {
             name: 'event_identifier_with_a_long_name',
             type: 'text',
             nullable: 'not null',
             source: 'auth_audit_events',
+            key: 'Primary key',
+            default: "'unknown'",
+            description: 'Unique event identifier',
+            selected: 'Included',
             reference: 'src_postgres_dvt_raw_auth_audit_events.event_identifier',
           },
         },
       ],
-    }));
+    };
+    const original = structuredClone(section);
+    ({ container, root } = renderSection(section));
 
     const record = container.querySelector('[data-slot="node-property-column-record"]');
     const values = Array.from(record?.querySelectorAll('dd') ?? []);
@@ -299,19 +306,21 @@ describe('NodePropertySectionView', () => {
     expect(container.querySelector('table')).toBeNull();
     expect(disclosure?.open).toBe(false);
     expect(trigger?.textContent).toBe('event_identifier_with_a_long_name');
-    expect(record?.textContent).toContain('auth_audit_events');
-    expect(record?.textContent).toContain(
+    expect(record?.textContent).not.toContain('Referencia');
+    expect(record?.textContent).not.toContain('dvt_fld_private_event_identity');
+    expect(record?.textContent).not.toContain(
       'src_postgres_dvt_raw_auth_audit_events.event_identifier'
     );
-    expect(values).toHaveLength(4);
-    expect(values.map((value) => value.textContent)).toEqual(
-      expect.arrayContaining([
-        'text',
-        'not null',
-        'auth_audit_events',
-        'src_postgres_dvt_raw_auth_audit_events.event_identifier',
-      ])
-    );
+    expect(values.map((value) => value.textContent)).toEqual([
+      'text',
+      'not null',
+      'auth_audit_events',
+      'Primary key',
+      "'unknown'",
+      'Unique event identifier',
+      'Included',
+    ]);
+    expect(section).toEqual(original);
   });
 
   it('renders scalar rows and code through shared Monaco without involving the tabs coordinator', () => {

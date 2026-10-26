@@ -682,15 +682,19 @@ than stacked raw key/value fields: direction, related node name and relation on
 one line, with optional connection context below. The `nodeId` cell and an
 identity-only fallback name are not presented. Canonical IDs, row keys and custom
 cell context remain available to their existing owners. No navigation or mutation
-is invented. Planning DB `GH-3035-RELATIONSHIP-SUMMARY-V2` records the admitted
-[rationale and tests](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417835229).
+is invented. Planning DB `GH-3035-RELATIONSHIP-SUMMARY-V3` records the admitted
+[rationale and tests](https://github.com/dunay2/dvt/issues/3035#issuecomment-6419090098).
 
 ### Logical Column Inspection Density
 
 Generic Model/logical Columns use `NodePropertyTable` native disclosures and the
 existing `inspectorPropertyClasses.records` tokens. The compact shared summary is
 12px/16px with a minimum 28px row and a centred 12px chevron. Long values wrap,
-details remain complete and keyboard/focus behavior stays native. Planning DB
+business details remain complete and keyboard/focus behavior stays native. The
+shared visibility policy keeps technical column references internal on both
+Inspector surfaces; `GH-3035-HIDE-COLUMN-REFERENCE` records the
+[admitted policy and tests](https://github.com/dunay2/dvt/issues/3035#issuecomment-6423409499).
+Planning DB
 design `GH-3035-LOGICAL-COLUMN-DENSITY` records the rationale in
 [issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417091017).
 This presentation change reuses `RenderCanvasContextualGraphSurface`; it does not
