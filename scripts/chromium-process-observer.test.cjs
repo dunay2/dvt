@@ -10,6 +10,10 @@ const test = require('node:test');
 const {
   startChromiumProcessObserver,
 } = require('../apps/web/cypress/node/chromiumProcessObserver.ts');
+const {
+  createChromiumNetworkDiagnostics,
+} = require('../apps/web/cypress/node/chromiumNetworkDiagnostics.ts');
+const { stageChromiumObservation } = require('../apps/web/cypress/node/chromiumNetworkEvidence.ts');
 
 function fixture(startRecords, code = 0, tail = '', settings = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-process-observer-test-'));
@@ -25,7 +29,7 @@ function fixture(startRecords, code = 0, tail = '', settings = {}) {
         stdout: new PassThrough(),
         stderr: new PassThrough(),
       });
-      const generation = 'unit-owned-' + purpose;
+      const generation = options.generation;
       let finish;
       const closed = new Promise((resolve) => {
         finish = resolve;
@@ -152,6 +156,107 @@ test('non-Linux does not start an observer or create evidence', async () => {
     ),
     null
   );
+});
+
+test('private generations stay distinct from a reused capture label and actual NetLog publication', async () => {
+  const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+  const diagnostics = createChromiumNetworkDiagnostics({ enabled: true, workspaceRoot: item.root });
+  item.options.captureRoot = diagnostics.directory;
+  const requested = [];
+  const open = item.port.open;
+  item.port.open = async (options, ...rest) => {
+    requested.push(options.generation);
+    return open(options, ...rest);
+  };
+  try {
+    for (let sequence = 0; sequence < 2; sequence++) {
+      const binding = await startChromiumProcessObserver(item.options, item.port);
+      await binding.stop();
+    }
+    const launch = { args: [], preferences: {}, extensions: [], env: {} };
+    diagnostics.beforeBrowserLaunch({ family: 'chromium' }, launch);
+    const raw = launch.args[0].slice('--log-net-log='.length);
+    fs.writeFileSync(
+      raw,
+      JSON.stringify({
+        constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+        events: [{ type: 1, source: { id: 3 }, params: { net_error: -2 } }],
+      })
+    );
+    stageChromiumObservation(path.dirname(raw), {
+      sequence: 1,
+      spec: 'cypress/e2e/canvas/canvas-join-consumers.cy.ts',
+    });
+    diagnostics.afterRun();
+    const directory = path.join(item.root, '.dvt/evidence/chromium-network');
+    const reports = fs.readdirSync(directory).map((filename) => ({
+      filename,
+      report: JSON.parse(fs.readFileSync(path.join(directory, filename), 'utf8')),
+    }));
+    assert.equal(requested.length, 6);
+    for (const generation of requested) {
+      assert.equal(typeof generation, 'string');
+      assert.ok(generation.length >= 6 && generation.length <= 80);
+      assert.equal(JSON.stringify(reports).includes(generation), false);
+      assert.notEqual(generation, path.basename(diagnostics.directory));
+      assert.notEqual(
+        generation,
+        path.basename(diagnostics.directory).slice('dvt-chromium-network-'.length)
+      );
+    }
+    assert.equal(new Set(requested).size, 6);
+    assert.deepEqual(
+      item.sessions.map((owned) => owned.lease.generation),
+      requested
+    );
+    assert.equal(Object.hasOwn(item.options, 'generation'), false);
+    const observation = reports.find(({ report }) => report.finalCapture !== undefined);
+    assert.ok(observation);
+    assert.ok(
+      observation.report.finalCapture.startsWith(path.basename(diagnostics.directory) + '-chrome-')
+    );
+    const final = reports.find(({ filename }) => filename === observation.report.finalCapture);
+    assert.ok(final);
+    assert.equal(final.report.events[0].netError, -2);
+    assert.equal(observation.report.continuity, 'retained');
+    assert.equal(fs.existsSync(diagnostics.directory), false);
+  } finally {
+    if (fs.existsSync(diagnostics.directory)) {
+      assert.ok(
+        path.resolve(diagnostics.directory).startsWith(path.resolve(os.tmpdir()) + path.sep)
+      );
+      fs.rmSync(diagnostics.directory, { recursive: true });
+    }
+    item.cleanup();
+  }
+});
+
+test('a self-consistent foreign lease and ACK are denied before capability admission', async () => {
+  const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+  const open = item.port.open;
+  const inputs = [];
+  item.port.open = async (options, ...rest) => {
+    const owned = await open({ ...options, generation: 'foreign-owned' }, ...rest);
+    owned.handle.child.stdin.on('data', (chunk) => inputs.push(JSON.parse(String(chunk))));
+    return owned;
+  };
+  let accepted;
+  try {
+    await assert.rejects(async () => {
+      accepted = await startChromiumProcessObserver(item.options, item.port);
+    }, /unavailable/);
+    assert.equal(item.sessions.length, 1);
+    assert.equal(
+      inputs.some((input) => input.action === 'admit'),
+      false
+    );
+    assert.equal(item.sessions[0].ended, true);
+    assert.equal(item.sessions[0].released, true);
+    assert.equal(fs.readdirSync(item.root).length, 0);
+  } finally {
+    await accepted?.stop();
+    item.cleanup();
+  }
 });
 
 test('readiness precedes use, EOF owns cleanup and only projected records publish', async () => {

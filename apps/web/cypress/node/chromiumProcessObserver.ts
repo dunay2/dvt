@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { createRequire } from 'node:module';
-import { basename, join } from 'node:path';
+import { join } from 'node:path';
 
 import { randomUuidV4 } from '@dvt/crypto';
 import { z } from 'zod';
@@ -180,7 +180,7 @@ type ObserverPort = Readonly<{
   platform: string;
   pid: number;
   open(
-    options: ObserverOptions,
+    options: ObserverOptions & Readonly<{ generation: string }>,
     purpose: Lease['purpose'],
     budget: SignalBudget
   ): Promise<OwnedObserver>;
@@ -273,7 +273,7 @@ function spawnOwned(
 }
 
 async function openNativeObserver(
-  options: ObserverOptions,
+  options: ObserverOptions & Readonly<{ generation: string }>,
   purpose: Lease['purpose'],
   budget: SignalBudget
 ): Promise<OwnedObserver> {
@@ -298,9 +298,7 @@ async function openNativeObserver(
       after.sessionId !== pid
     )
       throw new Error('Unowned observer process group');
-    const generation =
-      basename(options.captureRoot).slice('dvt-chromium-network-'.length) +
-      (purpose !== 'observe' ? '-' + purpose : '');
+    const generation = options.generation;
     if (!/^[A-Za-z0-9-]{6,80}$/u.test(generation))
       throw new Error('Invalid owned capture generation');
     const lease: Lease = {
@@ -446,7 +444,10 @@ export async function startChromiumProcessObserver(
   const openSession = async (
     purpose: Lease['purpose']
   ): Promise<ChromiumProcessObserverBinding & { owned: OwnedObserver }> => {
-    const owned = await port.open(options, purpose, { deadline: startupDeadline });
+    const generation = randomUuidV4();
+    const owned = await port.open({ ...options, generation }, purpose, {
+      deadline: startupDeadline,
+    });
     const child = owned.handle.child;
     const records: z.infer<typeof message>[] = [];
     const allocated = new Set<string>();
@@ -494,7 +495,7 @@ export async function startChromiumProcessObserver(
             const receipt = z
               .object({
                 kind: z.literal('ownership'),
-                generation: z.literal(owned.lease.generation),
+                generation: z.literal(generation),
               })
               .strict()
               .parse(raw);

@@ -786,8 +786,12 @@ existing process owner. A controller-held proc-directory descriptor pins the
 original leader. Privileged control duplicates that same open-file description
 with `pidfd_getfd`, then uses kernel process-group signalling. It does not reopen
 a vanished leader by PID or fall back to numeric `killpg`. The controller birth,
-descriptor identity and generation remain private and must still match. These
-are actual capability probes, including a privileged owned-group retirement
+descriptor identity and generation remain private and must still match. Session
+admission supplies an independent UUID for each canary, probe and observation
+through the existing observer port. The native lease and ownership acknowledgement
+must match that requested generation. Capture-directory labels and public NetLog
+names do not supply private identities; their existing publication format stays
+unchanged. These are actual capability probes, including a privileged owned-group retirement
 probe; an image label or unit fixture is insufficient.
 
 Readiness has a 20-second end-to-end budget. Normal EOF drain has 10 seconds,
