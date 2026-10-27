@@ -11,6 +11,7 @@ import type {
 } from './canvasInspectorAuthoring.types';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { canvasViewCopy } from './copy';
+import { bindDraftField } from './declarativeNodeFieldBinding';
 
 type MetadataField = 'name' | 'tags' | 'description';
 type MetadataModel = Readonly<{
@@ -43,13 +44,18 @@ function MetadataFieldView({
   const errorId = `inspector-node-${field}-error-${model.nodeId}`;
   const error = model.errors[field];
   const Control = field === 'description' ? Textarea : Input;
+  const binding = field === 'tags' ? null : bindDraftField({
+    draft: model.draft,
+    field,
+    updateDraft: (patch) => actions.onDraftChange((draft) => ({ ...draft, ...patch })),
+  });
   return (
     <div className={inspectorVisualClasses.inspectorField}>
       <Label htmlFor={id}>{canvasViewCopy[metadataLabelKeys[field]]}</Label>
       <Control
         id={id}
         name={`node-${field}`}
-        value={field === 'tags' ? model.tagsText : model.draft[field]}
+        value={field === 'tags' ? model.tagsText : binding!.value}
         disabled={model.disabled}
         placeholder={field === 'tags' ? canvasViewCopy.inspectorNodeTagsPlaceholder : undefined}
         aria-invalid={error ? 'true' : undefined}
@@ -57,7 +63,7 @@ function MetadataFieldView({
         onChange={(event) => {
           const value = event.target.value;
           if (field === 'tags') actions.onTagsTextChange(value);
-          else actions.onDraftChange((draft) => ({ ...draft, [field]: value }));
+          else binding!.onChange(value);
         }}
         onBlur={actions.onBlur}
       />
