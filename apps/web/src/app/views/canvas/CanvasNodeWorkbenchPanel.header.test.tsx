@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-/** Owned concern: prove the contextual Workbench header exposes compact localized help and close controls. */
-import { fireEvent } from '@testing-library/dom';
+/** Owned concern: prove accessible localized navigation and controls in the compact Workbench header. */
+import { fireEvent, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,18 +11,14 @@ import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 
 const NODE: CanonicalNode = {
-  id: 'source.orders',
-  name: 'Orders Source',
-  pluginId: 'dvt.warehouse-source',
-  kind: 'dvt:source',
-  role: 'input',
+  id: 'model.orders',
+  name: 'Orders Model',
+  pluginId: 'dvt',
+  kind: 'dvt:transform',
+  role: 'transform',
   status: 'idle',
   tags: [],
-  metadata: {
-    database: 'analytics',
-    schema: 'raw',
-    tableName: 'orders',
-  },
+  metadata: {},
 };
 
 describe('CanvasNodeWorkbenchPanel header hardening', () => {
@@ -47,7 +43,10 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     vi.clearAllMocks();
   });
 
-  async function renderPanel(onClose = vi.fn()): Promise<ReturnType<typeof vi.fn>> {
+  async function renderPanel(
+    onClose = vi.fn(),
+    onOpenSemanticEditor = vi.fn()
+  ): Promise<ReturnType<typeof vi.fn>> {
     await act(async () => {
       root.render(
         <CanvasNodeWorkbenchPanel
@@ -56,6 +55,7 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
           edges={[]}
           activeRunId={null}
           authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+          onOpenSemanticEditor={onOpenSemanticEditor}
           onClose={onClose}
         />
       );
@@ -63,8 +63,9 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     return onClose;
   }
 
-  it('keeps help and close as right-side accessible actions without a movement handle', async () => {
-    const onClose = await renderPanel();
+  it('keeps one semantic icon before help and close without duplicating section actions', async () => {
+    const onOpenSemanticEditor = vi.fn();
+    const onClose = await renderPanel(vi.fn(), onOpenSemanticEditor);
     const actions = container.querySelector<HTMLElement>(
       '[data-slot="canvas-node-workbench-header-actions"]'
     );
@@ -77,15 +78,25 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     const close = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-node-workbench-close"]'
     );
+    const openEditor = getByRole(actions!, 'button', { name: 'Open semantic editor' });
 
     expect(actions).not.toBeNull();
-    expect(actions?.className).toContain('ml-auto');
     expect(dragHandle).toBeNull();
+    expect(openEditor.tagName).toBe('BUTTON');
+    expect(openEditor.getAttribute('type')).toBe('button');
+    expect(openEditor.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelectorAll('[data-slot="canvas-open-semantic-editor"]')).toHaveLength(1);
+    const general = container.querySelector('[data-slot="canvas-node-workbench-general-content"]');
+    expect(general).not.toBeNull();
+    expect(general?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
     expect(help?.getAttribute('aria-label')).toBe('Editable properties');
     expect(close?.getAttribute('aria-label')).toBe('Close');
     expect(help?.querySelector('svg')).not.toBeNull();
     expect(close?.querySelector('svg')).not.toBeNull();
-    expect(help?.compareDocumentPosition(close!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(Array.from(actions!.querySelectorAll('button'))).toEqual([openEditor, help, close]);
+
+    await act(async () => fireEvent.click(openEditor));
+    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
 
     await act(async () => {
       fireEvent.click(close!);
@@ -94,9 +105,11 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the existing Canvas localization owner for Spanish help and close labels', async () => {
+  it('uses the existing localized name for the Spanish semantic icon', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     await renderPanel();
+    const openEditor = getByRole(container, 'button', { name: 'Abrir editor semántico' });
+    expect(openEditor.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
 
     expect(
       container

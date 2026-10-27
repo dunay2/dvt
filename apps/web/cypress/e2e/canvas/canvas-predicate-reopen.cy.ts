@@ -22,7 +22,10 @@ describe('Canonical relation inspection', () => {
         /Canonical Substrait document|Documento Substrait|SHA-256/
       );
     });
-    cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-code-content"]')
+      .should('be.visible')
+      .find('[data-slot="canvas-open-semantic-editor"]')
+      .should('not.exist');
     cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openWorkbenchModel();

@@ -3,9 +3,7 @@ import type { ReactNode } from 'react';
 
 import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
-import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { NodePropertySectionId } from '../../components/inspector/nodePropertiesContracts';
-import { Button } from '../../components/ui/button';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
@@ -55,13 +53,11 @@ export function CanvasNodeWorkbenchSections({
   edges,
   authoring,
   activeRunId,
-  onOpenSemanticEditor,
   onClose,
 }: CanvasNodeWorkbenchPanelProps & { controller: CanvasNodeWorkbenchController }): JSX.Element {
   const {
     node,
     copy,
-    semanticEditorCopy,
     workspaceLayoutKey,
     draftController,
     renderTableCell,
@@ -152,26 +148,6 @@ export function CanvasNodeWorkbenchSections({
         </>
       );
     }
-  }
-
-  if (semanticDvtTransform && onOpenSemanticEditor != null) {
-    sectionBeforeChildren.general = (
-      <>
-        <div className={inspectorVisualClasses.inspectorActions}>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className={inspectorVisualClasses.contextPanelActionButton}
-            data-slot="canvas-open-semantic-editor"
-            onClick={onOpenSemanticEditor}
-          >
-            {semanticEditorCopy.openEditorAction}
-          </Button>
-        </div>
-        {sectionBeforeChildren.general}
-      </>
-    );
   }
 
   return (

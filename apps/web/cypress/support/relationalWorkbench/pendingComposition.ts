@@ -34,11 +34,19 @@ export function openPendingRelationalOperationChooser(): void {
   cy.get('[data-slot="canvas-node-workbench-overlay"]')
     .should('be.visible')
     .and('not.contain.text', 'Needs predicate');
+  cy.get('[data-slot="canvas-node-workbench-general-content"]')
+    .should('be.visible')
+    .find('[data-slot="canvas-open-semantic-editor"]')
+    .should('not.exist');
   cy.get('[data-slot="dvt-relational-operation-chooser"]').should('not.exist');
-  cy.get('[data-slot="canvas-open-semantic-editor"]')
-    .invoke('text')
+  cy.get(
+    '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+  )
+    .invoke('attr', 'aria-label')
     .should('match', /^(Open semantic editor|Abrir editor semántico)$/);
-  cy.get('[data-slot="canvas-open-semantic-editor"]').click();
+  cy.get(
+    '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+  ).click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
   cy.get('[data-slot="canvas-relational-tree-workbench"]').should('be.visible');

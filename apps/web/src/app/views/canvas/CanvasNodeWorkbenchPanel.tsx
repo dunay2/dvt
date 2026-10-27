@@ -1,5 +1,5 @@
 /** Render the node-workbench header and container using its coordinated view state. */
-import { CircleHelp, X } from 'lucide-react';
+import { CircleHelp, Pencil, X } from 'lucide-react';
 
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import {
@@ -21,8 +21,9 @@ export type { CanvasNodeWorkbenchPanelProps } from './useCanvasNodeWorkbenchCont
 
 export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const controller = useCanvasNodeWorkbenchController(props);
-  const { node, copy, containsCanonicalCodeOutput } = controller;
-  const { onClose } = props;
+  const { node, copy, semanticEditorCopy, semanticDvtTransform, containsCanonicalCodeOutput } =
+    controller;
+  const { onClose, onOpenSemanticEditor } = props;
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
   return (
     <div
@@ -53,14 +54,34 @@ export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): 
         </div>
         <div
           data-slot="canvas-node-workbench-header-actions"
-          className="ml-auto flex shrink-0 items-center gap-1"
+          className="ml-auto flex shrink-0 items-center gap-0"
         >
+          {semanticDvtTransform && onOpenSemanticEditor != null ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={inspectorVisualClasses.contextPanelIconButton}
+                  data-slot="canvas-open-semantic-editor"
+                  aria-label={semanticEditorCopy.openEditorAction}
+                  onClick={onOpenSemanticEditor}
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                  <span className="sr-only">{semanticEditorCopy.openEditorAction}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">{semanticEditorCopy.openEditorAction}</TooltipContent>
+            </Tooltip>
+          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
+                className={inspectorVisualClasses.contextPanelIconButton}
                 data-slot="canvas-node-workbench-help"
                 aria-label={copy.inspectorEditablePropertiesTitle}
               >
@@ -76,6 +97,7 @@ export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): 
             type="button"
             variant="ghost"
             size="icon"
+            className={inspectorVisualClasses.contextPanelIconButton}
             data-slot="canvas-node-workbench-close"
             aria-label={copy.nodeWorkbenchCloseLabel}
             onClick={onClose}

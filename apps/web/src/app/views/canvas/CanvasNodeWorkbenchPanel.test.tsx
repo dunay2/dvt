@@ -953,17 +953,35 @@ describe('CanvasNodeWorkbenchPanel', () => {
       expect(panel?.querySelector('[data-slot="canvas-relation-outputs"]')).toBeNull();
       if (canonical) expect(panel?.textContent).toContain('order_id');
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
-      if (!canEditNode) return;
       await renderSection('general', 2);
-      const openEditor = panel?.querySelector<HTMLButtonElement>(
+      const actions = panel?.querySelector('[data-slot="canvas-node-workbench-header-actions"]');
+      const openEditor = actions?.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-open-semantic-editor"]'
       );
       expect(openEditor).not.toBeNull();
+      expect(panel?.querySelectorAll('[data-slot="canvas-open-semantic-editor"]')).toHaveLength(1);
+      const general = panel?.querySelector('[data-slot="canvas-node-workbench-general-content"]');
+      expect(general).not.toBeNull();
+      expect(general?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
       await act(async () => openEditor!.click());
       expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
       await renderSection('code', 3);
-      expect(panel?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+      expect(actions?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBe(openEditor);
+      expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      if (canEditNode) {
+        const code = panel?.querySelector('[data-slot="canvas-node-workbench-code-content"]');
+        expect(code).not.toBeNull();
+        expect(code?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+      } else {
+        expect(panel?.querySelector('[data-slot="canvas-node-workbench-tab-code"]')).toBeNull();
+        const fallback = panel?.querySelector(
+          '[data-slot="canvas-node-workbench-general-content"]'
+        );
+        expect(fallback).not.toBeNull();
+        expect(fallback?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+      }
       expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
       expect(
         panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')
@@ -981,6 +999,27 @@ describe('CanvasNodeWorkbenchPanel', () => {
       expect(header?.querySelector('p')).toBeNull();
     }
   );
+
+  it.each([
+    { name: 'Source', node: SOURCE_NODE, callback: true },
+    { name: 'dbt-compatible Model', node: MODEL_NODE, callback: true },
+    { name: 'missing callback', node: DVT_SUBSTRAIT_TRANSFORM_NODE, callback: false },
+  ])('omits semantic navigation for $name', async ({ node, callback }) => {
+    const onOpenSemanticEditor = vi.fn();
+    const onApplyNodeDraft = vi.fn();
+    await renderNodePanel(
+      root,
+      node,
+      'general',
+      { canEditNode: true, onApplyNodeDraft },
+      1,
+      undefined,
+      callback ? { onOpenSemanticEditor } : {}
+    );
+    expect(container.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
+    expect(onOpenSemanticEditor).not.toHaveBeenCalled();
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
+  });
 
   it('keeps canonical code scrolling inside Monaco without a nested workbench scrollbar', async () => {
     await renderNodePanel(root, DVT_SUBSTRAIT_TRANSFORM_NODE, 'code');

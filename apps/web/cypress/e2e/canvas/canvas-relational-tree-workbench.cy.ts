@@ -37,6 +37,7 @@ describe('Workbench navigation', () => {
           'true'
         );
         cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
+        cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
         cy.get('.react-flow__viewport').should(($current) => {
           expect($current[0]).to.equal(viewport);
           expect($current.attr('style')).to.equal(transform);
@@ -140,7 +141,15 @@ describe('Workbench navigation', () => {
       'aria-selected',
       'true'
     );
-    cy.get('[data-slot="canvas-open-semantic-editor"]').should('be.visible');
+    cy.get(
+      '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+    )
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Open semantic editor');
+    cy.get('[data-slot="canvas-node-workbench-general-content"]')
+      .should('be.visible')
+      .find('[data-slot="canvas-open-semantic-editor"]')
+      .should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="canvas-node-workbench-columns-section"]').should(
       'contain.text',
@@ -150,10 +159,15 @@ describe('Workbench navigation', () => {
       '[data-slot="dvt-relation-authoring"], [data-slot="dvt-relational-operation-chooser"]'
     ).should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-code-content"]')
+      .should('be.visible')
+      .find('[data-slot="canvas-open-semantic-editor"]')
+      .should('not.exist');
     for (const [width, height] of [
-      [1280, 720],
-      [1024, 720],
+      [1366, 768],
+      [1920, 1080],
+      [3440, 1440],
+      [900, 720],
       [640, 450],
     ] as const) {
       cy.viewport(width, height);
@@ -166,6 +180,32 @@ describe('Workbench navigation', () => {
           const bounds = editor.getBoundingClientRect();
           const panelBounds = panel.getBoundingClientRect();
           const viewport = editor.ownerDocument.defaultView!;
+          const controls = [
+            ...panel.querySelectorAll<HTMLButtonElement>(
+              '[data-slot="canvas-node-workbench-header-actions"] button'
+            ),
+          ];
+          expect(controls.map((control) => control.dataset.slot)).to.deep.equal([
+            'canvas-open-semantic-editor',
+            'canvas-node-workbench-help',
+            'canvas-node-workbench-close',
+          ]);
+          const controlBounds = controls.map((control) => control.getBoundingClientRect());
+          controlBounds.forEach((control, index) => {
+            expect(control.width, 'compact header target width').to.be.closeTo(28, 0.5);
+            expect(control.height, 'compact header target height').to.be.closeTo(28, 0.5);
+            expect(control.left).to.be.at.least(Math.max(panelBounds.left, 0));
+            expect(control.right).to.be.at.most(Math.min(panelBounds.right, viewport.innerWidth));
+            expect(control.top + control.height / 2).to.be.closeTo(
+              controlBounds[0]!.top + controlBounds[0]!.height / 2,
+              1
+            );
+            if (index > 0)
+              expect(control.left, 'adjacent controls without overlap').to.be.closeTo(
+                controlBounds[index - 1]!.right,
+                0.5
+              );
+          });
           expect(bounds.height, 'usable code editor height').to.be.greaterThan(0);
           if (width >= 1024) expect(bounds.height).to.be.at.least(160);
           expect(bounds.bottom, 'editor fills remaining Code height').to.be.closeTo(
@@ -275,7 +315,17 @@ describe('Workbench navigation', () => {
       'aria-selected',
       'true'
     );
-    cy.get('[data-slot="canvas-open-semantic-editor"]').click();
+    cy.get(
+      '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+    )
+      .focus()
+      .should('be.focused');
+    cy.get('[role="tooltip"]').should('contain.text', 'Open semantic editor');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('[data-slot="canvas-node-workbench-help"]').should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.focused');
+    cy.get('[data-slot="canvas-open-semantic-editor"]').focus().should('be.focused').click();
     cy.get('[data-slot="canvas-model-main-tab"]')
       .should('have.length', 1)
       .and('have.attr', 'aria-selected', 'true');
