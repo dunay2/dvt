@@ -660,7 +660,11 @@ export async function startChromiumProcessObserver(
                 return;
               }
               child.stdin.write(
-                JSON.stringify({ action: 'admit', generation: owned.lease.generation }) + '\n'
+                JSON.stringify({
+                  action: 'admit',
+                  generation: owned.lease.generation,
+                  deadlineEpochMs: startupDeadline,
+                }) + '\n'
               );
             }, rejectProtocol);
             continue;
@@ -747,16 +751,20 @@ export async function startChromiumProcessObserver(
           if (forced) {
             const exited = await within(owned.handle.completion, startupDeadline);
             phase = 'group-signal';
-            if (
-              exited.code !== 0 ||
-              exited.signal !== null ||
-              (await port.control(owned, { signal: 0 }, { deadline: startupDeadline })) !== 'alive'
-            )
-              throw new Error('Native leader-exit group capability failed');
-            if (
-              (await port.control(owned, { signal: 9 }, { deadline: startupDeadline })) !== 'alive'
-            )
-              throw new Error('Native owned SIGKILL probe failed');
+            if (exited.code !== 0 || exited.signal !== null)
+              throw Object.assign(new Error('Native leader-exit protocol failed'), {
+                code: 'OBSERVER_PROTOCOL',
+              });
+            const alive = await port.control(owned, { signal: 0 }, { deadline: startupDeadline });
+            if (alive !== 'alive')
+              throw Object.assign(new Error('Native leader-exit group capability failed'), {
+                code: alive === 'gone' ? 'ESRCH' : 'OBSERVER_PROTOCOL',
+              });
+            const killed = await port.control(owned, { signal: 9 }, { deadline: startupDeadline });
+            if (killed !== 'alive')
+              throw Object.assign(new Error('Native owned SIGKILL probe failed'), {
+                code: killed === 'gone' ? 'ESRCH' : 'OBSERVER_PROTOCOL',
+              });
           } else closeInput();
           try {
             await within(

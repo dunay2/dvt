@@ -142,14 +142,20 @@ def bootstrap(lease):
         raise ValueError("Observer escaped its owned process group")
     emit({"kind": "ownership", "generation": lease["generation"]})
     admission = read_private_input()
-    exact_keys(admission, ("action", "generation"))
-    if admission != {"action": "admit", "generation": lease["generation"]}:
+    exact_keys(admission, ("action", "generation", "deadlineEpochMs"))
+    if admission["action"] != "admit" or admission["generation"] != lease["generation"]:
         raise ValueError("Observer capability admission missing")
+    deadline = admission["deadlineEpochMs"]
+    now = time.time() * 1000
+    if type(deadline) is not int or not now < deadline <= now + 20000:
+        raise ValueError("Invalid observer startup deadline")
+    return time.monotonic() + (deadline - now) / 1000
 
 
-def probe_group(lease):
+def probe_group(lease, deadline):
     # Actual private trace instances plus a SIGKILL from the parent exercise the
-    # same privileged group port. EOF remains a normal cleanup path on failure.
+    # same privileged group port. Leader exit closes inherited stdin, not this
+    # descendant's lifetime; only the existing absolute deadline bounds its hold.
     with SignalTrace(lease["generation"], emit), SignalTrace(lease["generation"] + "-canary", emit):
         if os.fork() != 0:
             # The original Python/sudo leader is reaped while its root child
@@ -157,9 +163,11 @@ def probe_group(lease):
             # safely control that remaining lifetime after numeric leader exit.
             os._exit(0)
         emit({"kind": "probe-ready"})
-        if sys.stdin.buffer.read(1) != b"":
-            raise ValueError("Unexpected probe input")
-    return 0
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError("Owned probe startup deadline exceeded")
+            time.sleep(remaining)
 
 
 def subscription(stream, operation):
@@ -365,7 +373,7 @@ def main():
             raise ValueError("Unadmitted observer arguments")
         lease = validate_lease(read_private_input())
         source = "bootstrap"
-        bootstrap(lease)
+        deadline = bootstrap(lease)
         if lease["purpose"] == "canary":
             emit({"kind": "canary-ready"})
             if sys.stdin.buffer.read(1) != b"":
@@ -373,7 +381,7 @@ def main():
             return 0
         if lease["purpose"] == "probe":
             source = "trace-probe"
-            return probe_group(lease)
+            return probe_group(lease, deadline)
         root_pid = lease["controller"]["pid"]
         capture_root = lease["capture"]["path"]
         source = "process-events"

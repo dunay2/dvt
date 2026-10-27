@@ -23,7 +23,7 @@ function fixture(startRecords, code = 0, tail = '', settings = {}) {
   const port = {
     platform: 'linux',
     pid: 10,
-    async open(options, purpose) {
+    async open(options, purpose, budget) {
       const child = Object.assign(new EventEmitter(), {
         stdin: new PassThrough(),
         stdout: new PassThrough(),
@@ -68,7 +68,11 @@ function fixture(startRecords, code = 0, tail = '', settings = {}) {
         const input = JSON.parse(String(chunk));
         if (input.version === 1) write({ kind: 'ownership', generation });
         else {
-          assert.deepEqual(input, { action: 'admit', generation });
+          assert.deepEqual(input, {
+            action: 'admit',
+            generation,
+            deadlineEpochMs: budget.deadline,
+          });
           if (settings.unavailable?.session === purpose) {
             write(settings.unavailable.record);
             return;
@@ -161,6 +165,80 @@ test('non-Linux does not start an observer or create evidence', async () => {
     null
   );
 });
+
+test('all private admissions retain the same original startup deadline across sessions', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+  const budgets = [];
+  const admissions = [];
+  const open = item.port.open;
+  item.port.open = async (options, purpose, budget) => {
+    budgets.push(budget.deadline);
+    const owned = await open(options, purpose, budget);
+    owned.handle.child.stdin.on('data', (chunk) => {
+      const input = JSON.parse(String(chunk));
+      if (input.action === 'admit') admissions.push(input.deadlineEpochMs);
+    });
+    context.mock.timers.tick(100);
+    return owned;
+  };
+  try {
+    const binding = await startChromiumProcessObserver(item.options, item.port);
+    await binding.stop();
+    assert.deepEqual(budgets, [21000, 21000, 21000]);
+    assert.deepEqual(admissions, budgets);
+    assert.equal(Date.now(), 1300);
+  } finally {
+    item.cleanup();
+  }
+});
+
+for (const [fault, reason] of [
+  ['leader', 'protocol'],
+  ['gone0', 'missing'],
+  ['gone9', 'missing'],
+  ['invalid', 'protocol'],
+]) {
+  test(`probe ${fault} preserves its actual safe failure fact`, async () => {
+    const item = fixture([{ kind: 'ready', rootPid: 10 }]);
+    const open = item.port.open;
+    const control = item.port.control;
+    let probes = 0;
+    item.port.open = async (...args) => {
+      const owned = await open(...args);
+      if (fault === 'leader' && args[1] === 'probe')
+        owned.handle.completion = Promise.resolve({ code: 1, signal: null });
+      return owned;
+    };
+    item.port.control = async (owned, action, budget) => {
+      if (
+        owned.lease.purpose === 'probe' &&
+        owned.lease.leaderProcReference.ownerFd === owned.descriptor
+      ) {
+        if (action.signal === 0 && ++probes === 2 && (fault === 'gone0' || fault === 'invalid'))
+          return fault === 'gone0' ? 'gone' : 'invalid';
+        if (action.signal === 9 && fault === 'gone9') return 'gone';
+      }
+      return control(owned, action, budget);
+    };
+    try {
+      await assert.rejects(startChromiumProcessObserver(item.options, item.port), /unavailable/);
+      const report = item.report('admission');
+      assert.ok(
+        report.failures.some(
+          (failure) =>
+            failure.session === 'probe' &&
+            failure.phase === 'group-signal' &&
+            failure.reason === reason
+        )
+      );
+      assert.equal(report.state, 'failed');
+      assert.ok(item.sessions.every((owned) => owned.ended));
+    } finally {
+      item.cleanup();
+    }
+  });
+}
 
 for (const session of ['canary', 'probe']) {
   test(`a safe ${session} startup failure publishes bounded negative evidence after cleanup`, async () => {

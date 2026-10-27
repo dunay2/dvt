@@ -111,6 +111,19 @@ class ProcessProtocolTest(unittest.TestCase):
                 patch.object(observer, "emit") as emit, self.assertRaises(ValueError):
             observer.bootstrap(lease)
         emit.assert_not_called()
+        with patch.object(observer, "validate_controller"), \
+                patch.object(observer, "process_identity", return_value={"birthtimeTicks": "200", "parentPid": 10, "processGroupId": 20, "sessionId": 20}), \
+                patch.object(observer.os, "getpgrp", return_value=20, create=True), \
+                patch.object(observer.os, "getsid", return_value=20, create=True), \
+                patch.object(observer, "emit"), patch.object(observer.time, "time", return_value=1000), \
+                patch.object(observer.time, "monotonic", return_value=300):
+            for invalid in [True, 1005000.0, float("nan"), float("inf"), 1000000, 999999, 1020001, 10 ** 400]:
+                with self.subTest(invalid=invalid), patch.object(observer, "read_private_input", return_value={"action": "admit", "generation": "unit-owned", "deadlineEpochMs": invalid}), self.assertRaises(ValueError):
+                    observer.bootstrap(lease)
+            with patch.object(observer, "read_private_input", return_value={"action": "admit", "generation": "unit-owned"}), self.assertRaises(ValueError):
+                observer.bootstrap(lease)
+            with patch.object(observer, "read_private_input", return_value={"action": "admit", "generation": "unit-owned", "deadlineEpochMs": 1005000}):
+                self.assertEqual(observer.bootstrap(lease), 305)
         for failure, reason in [(PermissionError(errno.EACCES, "private generation"), "denied"),
                                 (FileNotFoundError(errno.ENOENT, "private path"), "missing")]:
             with patch.object(observer.sys, "argv", ["observer"]), \
@@ -127,6 +140,35 @@ class ProcessProtocolTest(unittest.TestCase):
         with self.assertRaises(InterruptedError), trace:
             observer.cancel_observer(15, None)
         trace.__exit__.assert_called_once()
+        trace = MagicMock()
+        stdin = SimpleNamespace(buffer=MagicMock())
+        stdin.buffer.read.return_value = b""
+        lease = {"purpose": "probe", "generation": "unit-owned"}
+        clock = [100]
+        with patch.object(observer.sys, "argv", ["observer"]), \
+                patch.object(observer, "read_private_input", return_value={}), \
+                patch.object(observer, "validate_lease", return_value=lease), \
+                patch.object(observer, "bootstrap", return_value=101), \
+                patch.object(observer, "SignalTrace", return_value=trace), \
+                patch.object(observer.os, "fork", return_value=0, create=True), \
+                patch.object(observer.sys, "stdin", stdin), \
+                patch.object(observer.time, "monotonic", side_effect=lambda: clock[0]), \
+                patch.object(observer.time, "sleep", side_effect=lambda duration: clock.__setitem__(0, clock[0] + duration)), \
+                patch.object(observer, "emit") as emit:
+            self.assertEqual(observer.main(), 1, "probe EOF must not become normal success")
+            self.assertEqual(clock[0], 101, "probe must consume only its original remaining interval")
+            self.assertEqual(trace.__exit__.call_count, 2)
+            self.assertTrue(all(call.args[0] is TimeoutError for call in trace.__exit__.call_args_list))
+            self.assertEqual(emit.call_args.args[0], {"kind": "unavailable", "phase": "trace-probe", "reason": "deadline"})
+        with patch.object(observer.sys, "argv", ["observer"]), \
+                patch.object(observer, "read_private_input", return_value={}), \
+                patch.object(observer, "validate_lease", return_value={"purpose": "canary"}), \
+                patch.object(observer, "bootstrap", return_value=101), \
+                patch.object(observer.sys, "stdin", SimpleNamespace(buffer=io.BytesIO(b""))), \
+                patch.object(observer.time, "sleep") as sleep, patch.object(observer, "emit") as emit:
+            self.assertEqual(observer.main(), 0, "normal canary EOF remains successful")
+            sleep.assert_not_called()
+            emit.assert_called_once_with({"kind": "canary-ready"})
 
     def test_signal_projection_retains_only_owned_pid_candidates(self):
         observation = observer.Observation(10, "/tmp/owned")

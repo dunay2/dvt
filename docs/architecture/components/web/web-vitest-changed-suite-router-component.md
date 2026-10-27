@@ -801,6 +801,18 @@ restart a stage budget. Synchronous consumers retain their behavior. There is
 one lifetime owner and no second polling loop or observer daemon. A timeout or
 denied control call reports failure or incomplete observation, never retirement.
 
+The private admit message carries `deadlineEpochMs`, the same absolute startup
+deadline already owned by the controller. Bootstrap validates its finite integer
+and positive remaining interval of at most 20 seconds, then converts that
+remaining interval once to a monotonic deadline for the probe descendant. Node
+destroys a child's input when its original leader exits; that inherited EOF is
+not proof that the owned group has retired. The probe descendant therefore holds
+until the intended SIGKILL or that same deadline. Deadline expiry fails and
+unwinds its trace contexts; it never admits Cypress. Canary and normal observer
+EOF behavior stays unchanged, with no additional budget or polling owner.
+Unexpected leader status is a protocol failure; an actual `gone` control receipt
+is missing-group evidence. Neither fact establishes an OS or permission cause.
+
 Stop precedes capture finalization. Finalization is still attempted when stop
 fails, and both primary and cleanup errors remain represented without raw
 exception payloads. Successful retirement requires original-group absence and
