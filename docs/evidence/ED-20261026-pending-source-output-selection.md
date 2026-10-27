@@ -63,6 +63,17 @@ a complete default leaves an operation's authored Output unchanged. Calculation
 definitions, including identity copies, retain their own authority. The configured
 Source inspector follows its owning root even after terminal disconnect.
 
+The [reviewed multi-Source correction](https://github.com/dunay2/dvt/issues/2937#issuecomment-6429753618)
+validates every reachable preference against one unchanged analysis revision
+before constructing a single terminal delta. A per-occurrence intermediate edit
+could otherwise retain another occurrence's denied field and reject a valid final
+selection. The existing contribution helper and root Output command now execute
+once, without widening eligibility or changing physical Reads, Input bindings,
+JOIN predicates, aliases or retained field order. RED/GREEN covers JOIN and CROSS
+with omitted denied fields on both occurrences, reversed preference order, later
+invalid preferences and cancellation: 20 unit and nine initialization-hook cases
+pass. Final integrated acceptance is recorded in issue #3732.
+
 Canvas forms share the existing frame, literal Edit action, passive field rows,
 inclusion control and semantic style tokens. Inspection shows included fields;
 editing shows all admitted fields. The common explicit `Solo seleccionados`
