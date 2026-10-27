@@ -841,6 +841,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/fixtures/new.json',
     'apps/web/cypress.live.config.ts',
     'apps/web/cypress/node/unregisteredDiagnostic.ts',
+    'apps/web/cypress/node/unregisteredDiagnostic.py',
   ])('rejects browser surfaces without admitted consumer evidence: %s', (file) => {
     expect(() => resolveWebVitestChangedSuitePlan([file])).toThrow(file);
     expect(() => resolveWebVitestChangedSuitePlan([spec, file], { full: true })).toThrow(file);
@@ -852,10 +853,22 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/node/chromiumNetworkDiagnostics.ts',
     'apps/web/cypress/node/chromiumNetworkProjection.ts',
     'apps/web/cypress/node/chromiumNetworkEvidence.ts',
+    'apps/web/cypress/node/chromiumProcessObserver.ts',
   ])('exact Node configuration imports retain all browser obligations: %s', (file) => {
     expect(
       resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
     ).toEqual(['controlled', 'available', 'unavailable']);
+  });
+
+  it.each([
+    'apps/web/cypress/node/linuxChromiumProcessObserver.py',
+    'apps/web/cypress/node/linuxChromiumProcessProtocol.py',
+    'apps/web/cypress/node/linuxChromiumSignalTrace.py',
+    'apps/web/cypress/node/linuxChromiumOomJournal.py',
+  ])('Linux observer changes retain the real LIVE execution obligation: %s', (file) => {
+    expect(
+      resolveWebVitestChangedSuitePlan([file]).browserCommands.map(({ capability }) => capability)
+    ).toEqual(['available']);
   });
 
   it.each([

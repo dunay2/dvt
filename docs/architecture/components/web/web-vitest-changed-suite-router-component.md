@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-18
+last_reviewed: 2026-10-27
 planning_type: architecture
 ---
 
@@ -729,14 +729,99 @@ owns hooks and lifetime; the pure mapper owns disclosure policy.
 The spec timestamp is a correlation marker, not a claim that all retained events
 belong to that spec: the final projection may also contain subsequent activity.
 
-An additional private Chrome process log admits only the exact network-service
-restart signal with numeric process/thread identifiers and its timestamp. A
-missing process log is explicitly unavailable; absence of a matched signal does
-not prove absence of a restart. Raw text and arbitrary errors are never exported.
+The private Chrome process log projects exact network-service restart records
+and the closed allowlist of 18 non-NONE Chromium validation codes. Each retained
+record contains only numeric process/thread identifiers, its timestamp and the
+allowed code. Optional explanatory text, unknown codes and malformed identities
+are not exported. The logging PID is not asserted to be the offending remote
+PID. A missing log is unavailable; an empty projection does not prove that no
+restart or validation failure occurred. Raw text and arbitrary errors are never
+exported.
 Both raw logs and private observations remain outside artifact publication and
 are removed at native completion, including rejection paths. Malformed or
 unreadable captures still fail explicitly. Test error/result payloads are never
 serialized. This repairs evidence lifecycle, not a demonstrated transport cause.
+
+##### Retained process evidence and ownership — GH-3735
+
+The baseline at `v0.20.0` captures transport observations but has no Linux process
+observer or validation-code projection. The integration admission in
+[#3735](https://github.com/dunay2/dvt/issues/3735#issuecomment-6436131547)
+reuses `RunWebCypressNative` and the existing artifact boundary. Historical
+Linux observations and failed hosted runs remain historical evidence, not
+acceptance of the current checkout.
+
+```mermaid
+flowchart LR
+  Command[Existing native browser command] --> Lease[Private capture lease]
+  Lease --> Admit{Actual platform and capability}
+  Admit -->|Non-Linux| Browser[Same Cypress operation]
+  Admit -->|Linux proven| Process[Owned process observation]
+  Admit -->|Denied or unknown| Reject[Fail before browser admission]
+  Process --> Browser
+  Browser --> Stop[Await owned observer retirement]
+  Stop --> Final[Finalize safe capture and private cleanup]
+  Final --> Evidence[Existing sanitized artifact]
+```
+
+The bounded `SYS-WEB-CHROMIUM-DIAGNOSTICS` component owns capture lifecycle,
+owned process observation and safe projection as three separate
+responsibilities. The unchanged evidence assembler remains part of that owner.
+The generic `SYS-CI-LIVE-PROOF-PROCESS-LIFETIME` owns process handles and awaited
+retirement; command, routing and changed-slice callers keep their existing
+boundaries. A ROOT ownership fallback is not evidence of cohesive responsibility
+or complete implementation coverage.
+
+Only `DVT_CYPRESS_NETWORK_DIAGNOSTICS=1` enables these observations. Non-Linux
+starts no Linux helper and makes no Linux-success claim. Linux must prove its
+already-permitted noninteractive capability, process connector acknowledgement
+and owned-child exit, kernel/signal sources and scoped journal access before
+admitting browser execution. No mount, sudoers, global trace, sandbox or browser
+permission change is part of this boundary. Missing capability rejects; it is
+not a successful empty report.
+
+The observer receives a private bootstrap before opening observation sources.
+Its session and group must match the exact detached handle created by the
+existing process owner. A controller-held proc-directory descriptor pins the
+original leader. Privileged control duplicates that same open-file description
+with `pidfd_getfd`, then uses kernel process-group signalling. It does not reopen
+a vanished leader by PID or fall back to numeric `killpg`. The controller birth,
+descriptor identity and generation remain private and must still match. These
+are actual capability probes, including a privileged owned-group retirement
+probe; an image label or unit fixture is insufficient.
+
+Readiness has a 20-second end-to-end budget. Normal EOF drain has 10 seconds,
+followed by the shared owner's existing five-second TERM and five-second KILL
+stages. Signal and liveness ports may be asynchronous, are awaited, and do not
+restart a stage budget. Synchronous consumers retain their behavior. There is
+one lifetime owner and no second polling loop or observer daemon. A timeout or
+denied control call reports failure or incomplete observation, never retirement.
+
+Stop precedes capture finalization. Finalization is still attempted when stop
+fails, and both primary and cleanup errors remain represented without raw
+exception payloads. Successful retirement requires original-group absence and
+actual process close. The separate `dispose-owned-trace` action then reuses the
+exact-instance cleanup primitive with a private root acquisition receipt. It
+touches only the generation's fixed-root trace instance, checks ownership and
+device/inode without following arbitrary paths, and performs no recursive or
+global cleanup. Unknown acquisition, foreign or stale identity fails without
+guessing deletion. Forced termination remains incomplete even if disposal
+succeeds; kernel failure cannot be converted into a clean receipt.
+
+Process identity combines executable role, owned capture generation and birth
+time. Renderer/utility children cannot become browser roots through inherited
+arguments. PID reuse or a later snapshot cannot relabel a queued exit. A signal
+generation event is not delivery or established causation; PID-only correlation
+and after-event snapshots retain that uncertainty. An empty bounded OOM query
+does not prove that no OOM occurred. Raw argv, environment, journal/kernel text,
+private control receipts and arbitrary descriptions never enter public evidence.
+
+Windows protocol fixtures establish decoder and lifetime behavior only. Fresh
+Linux native acceptance must observe the real capability, scoped browser
+lifetimes, pinned-group retirement and owned trace disposal, including a forced
+exit with an untouched canary instance. Exact spec cardinality, provider
+acceptance, assertions and all availability profiles remain required. The
+governing capability guide records the interpreter and host prerequisites.
 
 The real capture can end before its JSON footer when Cypress terminates Chrome.
 The maintained `jsonc-parser` development dependency decodes complete observed
@@ -765,10 +850,11 @@ when a report exists. An empty routed group produces neither a capture nor a
 synthetic artifact. Artifact admission has its own focused CI contract; malformed
 captures and incomplete browser results still reject at their existing owners.
 
-The Cypress config and its three exact Node diagnostic modules are admitted browser
+The Cypress config and its four exact Node diagnostic modules are admitted browser
 support boundaries for controlled, available and unavailable capabilities. Their
 module-load failures affect every capability even when capture is disabled. This
-retains complete evidence; unknown configuration and Node neighbors still reject.
+retains complete evidence. The four exact Linux Python helpers route to the
+available capability; unknown configuration, Node and Python neighbors still reject.
 
 ### Execution Selection Consumer Closure — GH-3610
 

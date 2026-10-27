@@ -96,6 +96,38 @@ test('Planning DB aggregate coverage removes repeated direct and current-schema 
   assert.deepEqual(buildFocusedChangedTestPlan([...files].reverse().concat(files)), plan);
 });
 
+test('Python source-facts inputs retain all actual source-facts consumers exactly once', () => {
+  for (const source of [
+    'scripts/lib/python-source-facts.cjs',
+    'scripts/lib/python-source-facts.py',
+  ]) {
+    const plan = buildFocusedChangedTestPlan([source]);
+    const selected = effectiveTestFiles(plan);
+    for (const contract of [
+      'scripts/lib/python-source-facts.test.cjs',
+      'scripts/lib/source-code-facts.test.cjs',
+      'scripts/lib/component-source-responsibilities.test.cjs',
+      'scripts/check-feature-mechanization.test.cjs',
+      'scripts/planning-db/code-symbol-inventory.test.cjs',
+      'scripts/web-code-duplication.test.cjs',
+    ]) {
+      assert.equal(
+        selected.filter((file) => file === contract).length,
+        1,
+        `${source}: ${contract}`
+      );
+    }
+    assert.equal(selected.length, new Set(selected).size);
+  }
+  const paired = effectiveTestFiles(
+    buildFocusedChangedTestPlan(['scripts/lib/python-source-facts.test.cjs'])
+  );
+  assert.equal(
+    paired.filter((file) => file === 'scripts/lib/python-source-facts.test.cjs').length,
+    1
+  );
+});
+
 test('Planning DB aggregate coverage retains canonical parent execution without direct shards', () => {
   const plan = buildFocusedChangedTestPlan([
     'infra/planning-db/docker-compose.yml',
@@ -292,6 +324,29 @@ test('Chromium diagnostic source and paired tests retain one focused Node obliga
       'apps/web/cypress/node/chromiumNetworkEvidence.ts',
       'scripts/chromium-network-diagnostics.test.cjs',
     ],
+    [
+      'apps/web/cypress/node/chromiumProcessObserver.ts',
+      'scripts/chromium-process-observer.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/linuxChromiumProcessObserver.py',
+      'scripts/chromium-process-protocol.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/linuxChromiumProcessProtocol.py',
+      'scripts/chromium-process-protocol.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/linuxChromiumSignalTrace.py',
+      'scripts/chromium-process-protocol.test.cjs',
+    ],
+    [
+      'apps/web/cypress/node/linuxChromiumOomJournal.py',
+      'scripts/chromium-process-protocol.test.cjs',
+    ],
+    ['scripts/chromium-process-protocol.test.py', 'scripts/chromium-process-protocol.test.cjs'],
+    ['scripts/chromium-signal-trace.test.py', 'scripts/chromium-process-protocol.test.cjs'],
+    ['scripts/chromium-oom-journal.test.py', 'scripts/chromium-process-protocol.test.cjs'],
   ]) {
     for (const files of [[source], [contract], [source, contract]]) {
       assert.deepEqual(focusedLabelsFor(files), [

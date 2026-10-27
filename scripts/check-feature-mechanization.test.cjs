@@ -2,6 +2,29 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+test('the implementation guard rejects an undeclared Python production definition', () => {
+  const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+  const path = 'scripts/owned.py';
+  const guard = new FeatureImplementationGuard(
+    [{ manifest: { allowedImplementationSurfaces: [path], symbols: [] } }],
+    {
+      changedFiles: [path],
+      currentFiles: [path],
+      addedLinesByPath: { [path]: ['    return 2'] },
+      fileContentsByPath: { [path]: 'def actual():\n    return 2\n' },
+    }
+  );
+  assert.match(guard.validate().errors.join('\n'), /adds code symbol actual/);
+  guard.manifestEntries[0].manifest.symbols.push({ path, name: 'actual' });
+  assert.deepEqual(guard.validate().errors, []);
+  guard.fileContentsByPath.set(path, 'def broken(:');
+  assert.throws(() => guard.validate(), /Python source facts unavailable or invalid/);
+  guard.fileContentsByPath.delete(path);
+  assert.throws(() => guard.validate(), /complete candidate source/);
+  for (const testPath of ['scripts/test_owned.py', 'scripts/owned.test.py'])
+    assert.equal(guard.isTestFile(testPath), true);
+});
+
 const {
   extractFeatureMechanizationManifests,
   normalizeDbFeatureMechanizationManifestRows,

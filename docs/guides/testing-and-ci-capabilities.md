@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-05-20
+last_reviewed: 2026-10-27
 ---
 
 # Testing and CI Capabilities
@@ -117,15 +117,24 @@ GitHub Actions cache transport is additionally checked in the actual workflow.
 
 ## Native Provider Browser Prerequisites
 
-The three `available` Web browser shards use Ubuntu 22.04, Node 22.23.3 and
+The three `available` Web browser shards use Ubuntu 24.04, Node 22.23.3 and
 Chrome stable 155.0.8059.84. The existing Test Suite workflow verifies the
 official Chrome package SHA256 and actual Cypress browser discovery before
 running provider-backed evidence. Chrome preparation runs only when the
 governed Web plan requires a browser. Other matrix phases retain their existing
 runner and Node selection.
 
-This declares an observed execution environment at the existing native runner
-boundary. In the [exact-product hosted comparison](https://github.com/dunay2/dvt/actions/runs/39682022844),
+GH-3735 changes only the available host choice because pinned-group diagnostic
+retirement needs Linux 6.9-or-newer process-group signalling and actual
+descriptor-duplication capability. The documented Ubuntu 22.04 image has kernel
+6.8. An Ubuntu 24.04 label is not proof: the real bootstrap, owned-group,
+descriptor and observation probes must succeed before browser admission. Node,
+Chrome, providers, scenarios, assertions, shards and their budgets are unchanged.
+The [host admission](https://github.com/dunay2/dvt/issues/3735#issuecomment-6436423335)
+does not add OS permissions or claim an OS fix for transport failures.
+
+The earlier host comparison remains historical. In the
+[exact-product hosted comparison](https://github.com/dunay2/dvt/actions/runs/39682022844),
 Ubuntu 22 passed both selected real flows; Ubuntu 24 failed Source Import after
 session admission redirected to Login. Both provider preflights passed. That
 single trial also used different image/provisioner versions and regions; it does
@@ -142,6 +151,58 @@ also passed Sink, with a complete capture and no dumps or restart messages
 detected on the same runner image. This supports the browser correction; one
 observation does not establish that all intermittent failures are eliminated
 or replace the required acceptance checks.
+
+### Diagnostic ownership and capability
+
+`DVT_CYPRESS_NETWORK_DIAGNOSTICS=1` retains its opt-in meaning. Non-Linux never
+starts the Linux observer or invokes sudo and cannot supply Linux proof. Linux
+uses only already-permitted noninteractive host capability; no sudoers, mount,
+global trace, sandbox or browser permission change is performed. Denied or
+unproven capability rejects before the native browser operation.
+
+The real `SYS-WEB-CHROMIUM-DIAGNOSTICS` boundary separates capture lifecycle,
+owned process observation and safe projection. The existing generic lifetime is
+recorded as `SYS-CI-LIVE-PROOF-PROCESS-LIFETIME`. Its exact handle, completion and
+shared termination stages remain authoritative. A ROOT fallback classifies
+unrefined files; it is not evidence that their functions or responsibilities
+have been verified.
+
+The private observer bootstrap precedes every privileged source acquisition.
+Controller/leader birth, session, group and descriptor identity must match.
+Control duplicates the retained descriptor using `pidfd_getfd` and signals the
+kernel-pinned group; numeric PID fallback is not admitted. Actual native probes,
+including retirement of an owned privileged group, establish capability.
+Readiness is bounded to 20 seconds, normal EOF/drain to 10 seconds, then the
+shared five-second TERM/five-second KILL stages. Awaitable signal/liveness ports
+consume those budgets rather than resetting them. No new lifecycle poller or
+watchdog daemon is introduced.
+
+Retirement must finish before capture finalization. Failure still attempts
+finalization and retains primary and cleanup errors. Only confirmed group
+absence and process close permit retirement; exact private trace-instance
+disposal additionally needs its acquisition receipt. Foreign, stale or unknown
+identity rejects without guessed deletion. Forced termination or unknown
+cleanup remains incomplete, even if some resources were removed. Neither an
+empty OOM query nor PID-only signal correlation proves the transport cause.
+No raw argv, environment, process/kernel/journal text or private control receipt
+is published.
+
+### Python source authority
+
+Shared source facts use the actual TypeScript parser for JS/TS and a bounded
+standard-library Python AST adapter only for `.py`. The source is parsed, never
+imported or executed. The adapter uses an explicit `PYTHON` executable when
+provided; otherwise it uses `python.exe` on Windows or `python3` on POSIX. It
+does not install interpreters or guess aliases. Python source requests require
+that capability; absent executables, invalid syntax, timeouts or malformed
+protocol fail explicitly rather than producing zero declarations.
+
+The configured parser process budget is five seconds with an 8 MiB response
+limit and fixed safe errors. Real qualified definitions, imports, source ranges
+and implementation/stub facts feed the existing binding, inventory and feature
+guards. JS/TS contracts and the canonical binding identifier restriction remain
+unchanged. There is no synthetic TypeScript AST or regular-expression fallback
+for Python. Protocol/unit fixtures do not replace real Linux-provider evidence.
 
 ## Package Test Runner Groups
 

@@ -121,7 +121,7 @@ jobs:
       Web Frontend Tests (${{ matrix.capability || matrix.phase }}${{ matrix.shard && format('
       {0}/3', matrix.shard) || '' }})
     runs-on: >-
-      ${{ matrix.phase == 'browser' && matrix.capability == 'available' && 'ubuntu-22.04' ||
+      ${{ matrix.phase == 'browser' && matrix.capability == 'available' && 'ubuntu-24.04' ||
       'ubuntu-latest' }}
     timeout-minutes: 25
     needs: [detect_test_matrix]

@@ -27,12 +27,14 @@ test('process log admits only the exact restart signal, never raw diagnostics or
         { processId: 21, threadId: 34, time: '1016/093012.123456' },
         { processId: 21, threadId: 34, time: '1016/093012.123456' },
       ],
+      validationErrors: [],
     }
   );
   assert.deepEqual(projectChromiumProcessLog(undefined), { state: 'unavailable' });
   assert.deepEqual(projectChromiumProcessLog(''), {
     state: 'observed',
     networkServiceRestarts: [],
+    validationErrors: [],
   });
 });
 
@@ -215,5 +217,76 @@ test('middle corruption and unfinished event bodies cannot become observed evide
     '{"constants":',
   ]) {
     assert.throws(() => projectChromiumNetworkCapture(input), /Invalid Chromium network capture/);
+  }
+});
+
+test('process log retains known Mojo codes without descriptions or raw log data', () => {
+  const codes = [
+    'MISALIGNED_OBJECT',
+    'ILLEGAL_MEMORY_RANGE',
+    'UNEXPECTED_STRUCT_HEADER',
+    'UNEXPECTED_ARRAY_HEADER',
+    'ILLEGAL_HANDLE',
+    'UNEXPECTED_INVALID_HANDLE',
+    'ILLEGAL_POINTER',
+    'UNEXPECTED_NULL_POINTER',
+    'ILLEGAL_INTERFACE_ID',
+    'UNEXPECTED_INVALID_INTERFACE_ID',
+    'MESSAGE_HEADER_INVALID_FLAGS',
+    'MESSAGE_HEADER_MISSING_REQUEST_ID',
+    'MESSAGE_HEADER_UNKNOWN_METHOD',
+    'DIFFERENT_SIZED_ARRAYS_IN_MAP',
+    'UNKNOWN_UNION_TAG',
+    'UNKNOWN_ENUM_VALUE',
+    'DESERIALIZATION_FAILED',
+    'MAX_RECURSION_DEPTH',
+  ].map((name) => `VALIDATION_ERROR_${name}`);
+  const header = '[21:34:1017/093012.123456:ERROR:validation_errors.cc(136)] ';
+  const secret = 'Authorization: Bearer private https://user:secret@private.invalid/?token=secret';
+  const result = projectChromiumProcessLog(
+    codes
+      .flatMap((code) => [
+        `${header}Invalid message: ${code}`,
+        `${header.replace('validation_errors.cc(136)', 'mojo/public/cpp/bindings/lib/validation_errors.cc:125')}Invalid message: ${code} (${secret})`,
+      ])
+      .join('\r\n')
+  );
+  assert.deepEqual(result, {
+    state: 'observed',
+    networkServiceRestarts: [],
+    validationErrors: codes.flatMap((code) => [
+      { processId: 21, threadId: 34, time: '1017/093012.123456', code },
+      { processId: 21, threadId: 34, time: '1017/093012.123456', code },
+    ]),
+  });
+  assert.doesNotMatch(JSON.stringify(result), /private|secret|Authorization|description|token/);
+});
+
+test('process log rejects unknown codes, malformed metadata and validation lookalikes', () => {
+  const line =
+    '[21:34:1017/093012.123456:ERROR:validation_errors.cc:136] Invalid message: VALIDATION_ERROR_ILLEGAL_POINTER';
+  for (const invalid of [
+    line.replace('ILLEGAL_POINTER', 'NONE'),
+    line.replace('ILLEGAL_POINTER', 'FUTURE_PRIVATE_CODE'),
+    line + '_PRIVATE',
+    line + ' private',
+    line + ' (unfinished',
+    'private ' + line,
+    line.replace('Invalid message:', 'Other message:'),
+    line.replace('ERROR:', 'WARNING:'),
+    line.replace('validation_errors.cc', 'other.cc'),
+    line.replace('validation_errors.cc', 'private/validation_errors.cc'),
+    line.replace('[21:', '[9007199254740992:'),
+    line.replace(':34:', ':9007199254740992:'),
+    line.replace('[21:', '[0:'),
+    line.replace(':34:', ':0:'),
+    line.replace('093012.123456', 'bad-time'),
+    line.replace(':136]', ':bad]'),
+  ]) {
+    assert.deepEqual(projectChromiumProcessLog(invalid), {
+      state: 'observed',
+      networkServiceRestarts: [],
+      validationErrors: [],
+    });
   }
 });

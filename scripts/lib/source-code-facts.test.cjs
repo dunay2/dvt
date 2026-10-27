@@ -6,6 +6,39 @@ const { extractQualifiedSourceSymbols } = require('./component-source-responsibi
 const { extractCodeSymbolsFromFile } = require('../planning-db/code-symbol-inventory.cjs');
 const { FeatureImplementationGuard } = require('../check-feature-mechanization.cjs');
 
+test('Python source facts resolve actual qualified definitions through the shared entrypoint', () => {
+  const facts = readSourceCodeFacts({
+    path: 'scripts/owned.py',
+    content: 'class Owned:\n    async def read(self):\n        return 42\n',
+  });
+  assert.equal(facts.language, 'python');
+  assert.deepEqual(
+    facts.declarations.map((fact) => fact.qualifiedName),
+    ['Owned', 'Owned.read']
+  );
+  assert.equal(facts.declarations[1].implemented, true);
+  assert.throws(
+    () =>
+      readSourceCodeFacts(
+        { path: 'scripts/owned.py', content: '    return 42' },
+        { fragment: true }
+      ),
+    /complete source/
+  );
+});
+
+test('TypeScript consumers retain actual source, declaration and block nodes', () => {
+  const ts = require('typescript');
+  const facts = readSourceCodeFacts({
+    path: 'owned.ts',
+    content: 'export function actual() { return 42; }',
+  });
+  assert.equal(facts.source.kind, ts.SyntaxKind.SourceFile);
+  assert.equal(ts.isFunctionDeclaration(facts.declarations[0].node), true);
+  assert.equal(ts.isBlock(facts.declarations[0].body), true);
+  assert.equal(facts.declarations[0].source, facts.source);
+});
+
 test('consumers share qualified class and function identities with distinct explicit purposes', () => {
   const file = {
     path: 'model.ts',

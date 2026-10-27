@@ -42,7 +42,7 @@ test('only available native browser shards use the admitted hosted platform and 
     value.startsWith('${{') ? runInNewContext(value.slice(3, -2), { matrix }) : value;
   for (const matrix of [...webMatrix, { phase: 'vitest', capability: 'available' }]) {
     const available = matrix.phase === 'browser' && matrix.capability === 'available';
-    assert.equal(resolve(web['runs-on'], matrix), available ? 'ubuntu-22.04' : 'ubuntu-latest');
+    assert.equal(resolve(web['runs-on'], matrix), available ? 'ubuntu-24.04' : 'ubuntu-latest');
     assert.equal(resolve(setup.with['node-version'], matrix), available ? '22.23.3' : '22.x');
   }
 });

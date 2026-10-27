@@ -273,6 +273,7 @@ test('opt-in native diagnostics finalize after execution without weakening faile
   try {
     await assert.rejects(
       main(['--spec', spec], {
+        observeProcesses: async () => null,
         run: async () => {
           const directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
           const hooks = new Map();
@@ -310,5 +311,35 @@ test('opt-in native diagnostics finalize after execution without weakening faile
     if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
     else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
     if (report !== undefined && fs.existsSync(report)) fs.unlinkSync(report);
+  }
+});
+
+test('native observer capability denial cannot admit Cypress or publish proof', async () => {
+  const previous = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  let admissions = 0;
+  let executions = 0;
+  const messages = [];
+  try {
+    await assert.rejects(
+      main(['--spec', spec], {
+        observeProcesses: async () => {
+          admissions += 1;
+          throw new Error('private denied observer capability');
+        },
+        run: async () => {
+          executions += 1;
+          return successful();
+        },
+        log: (value) => messages.push(value),
+      }),
+      /^Error: Cypress native execution failed$/
+    );
+    assert.equal(admissions, 1);
+    assert.equal(executions, 0);
+    assert.deepEqual(messages, []);
+  } finally {
+    if (previous === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previous;
   }
 });

@@ -1,9 +1,14 @@
 /** Owned concern: derive syntax, qualified identities and import facts from one source parser. */
 const ts = require('typescript');
+const { readPythonSourceCodeFacts } = require('./python-source-facts.cjs');
 
 function readSourceCodeFacts({ path, content }, { fragment = false } = {}) {
   if (typeof path !== 'string' || typeof content !== 'string')
     throw new Error('Source path and content are required.');
+  if (path.endsWith('.py')) {
+    if (fragment) throw new Error('Python source facts require complete source');
+    return readPythonSourceCodeFacts({ path, content });
+  }
   const source = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true);
   if (!fragment) {
     const options = { noLib: true, noResolve: true, jsx: ts.JsxEmit.Preserve, allowJs: true };

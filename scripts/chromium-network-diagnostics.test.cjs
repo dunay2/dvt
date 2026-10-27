@@ -40,7 +40,11 @@ test('plugin admission is explicit and disabled diagnostics register no hooks', 
     process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = 'true';
     assert.throws(() => configureChromiumNetworkDiagnostics(noHook, config), /Invalid.*flag/);
     await assert.rejects(
-      withChromiumNetworkDiagnostics('unused', async () => assert.fail('must not execute')),
+      withChromiumNetworkDiagnostics(
+        'unused',
+        async () => assert.fail('must not execute'),
+        async () => null
+      ),
       /Invalid.*flag/
     );
     process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
@@ -91,6 +95,11 @@ test('exports projected evidence and removes only its own capture', () => {
       events: [{ type: 1, source: { id: 3 }, params: { net_error: -2, body: 'private' } }],
     })
   );
+  const processLog = path.join(path.dirname(raw), 'process.log');
+  fs.writeFileSync(
+    processLog,
+    '[21:34:1017/093012.123456:ERROR:validation_errors.cc(125)] Invalid message: VALIDATION_ERROR_UNKNOWN_ENUM_VALUE (Authorization: Bearer private)\n'
+  );
   try {
     item.binding.afterRun();
     assert.equal(fs.existsSync(raw), false);
@@ -99,6 +108,15 @@ test('exports projected evidence and removes only its own capture', () => {
     const report = fs.readFileSync(path.join(evidence, fs.readdirSync(evidence)[0]), 'utf8');
     assert.doesNotMatch(report, /private|body/);
     assert.equal(JSON.parse(report).events[0].netError, -2);
+    assert.deepEqual(JSON.parse(report).processLog.validationErrors, [
+      {
+        processId: 21,
+        threadId: 34,
+        time: '1017/093012.123456',
+        code: 'VALIDATION_ERROR_UNKNOWN_ENUM_VALUE',
+      },
+    ]);
+    assert.equal(fs.existsSync(processLog), false);
   } finally {
     assert.ok(path.resolve(item.projectRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
     fs.rmSync(item.projectRoot, { recursive: true });
@@ -132,20 +150,24 @@ test('native completion owns finalization and restores scoped process environmen
   process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = 'outer-owned-context';
   let directory;
   try {
-    const result = await withChromiumNetworkDiagnostics(workspaceRoot, async () => {
-      directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
-      assert.notEqual(directory, 'outer-owned-context');
-      const browser = fs.mkdtempSync(path.join(directory, 'chrome-'));
-      fs.writeFileSync(
-        path.join(browser, 'netlog.json'),
-        JSON.stringify({
-          constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
-          events: [{ type: 1, source: { id: 3 }, params: { net_error: -2 } }],
-        })
-      );
-      assert.equal(fs.existsSync(browser), true);
-      return 'completed';
-    });
+    const result = await withChromiumNetworkDiagnostics(
+      workspaceRoot,
+      async () => {
+        directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+        assert.notEqual(directory, 'outer-owned-context');
+        const browser = fs.mkdtempSync(path.join(directory, 'chrome-'));
+        fs.writeFileSync(
+          path.join(browser, 'netlog.json'),
+          JSON.stringify({
+            constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+            events: [{ type: 1, source: { id: 3 }, params: { net_error: -2 } }],
+          })
+        );
+        assert.equal(fs.existsSync(browser), true);
+        return 'completed';
+      },
+      async () => null
+    );
     assert.equal(result, 'completed');
     assert.equal(fs.existsSync(directory), false);
     assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, 'outer-owned-context');
@@ -166,37 +188,43 @@ test('failed-spec snapshot survives raw overwrite without snapshotting successfu
   const evidence = path.join(workspaceRoot, '.dvt/evidence/chromium-network');
   const spec = { relative: 'cypress/e2e/canvas/example.cy.ts' };
   try {
-    await withChromiumNetworkDiagnostics(workspaceRoot, async () => {
-      const hooks = new Map();
-      configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {
-        projectRoot: path.join(workspaceRoot, 'apps/web'),
-      });
-      const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
-      const raw = launch.args[0].slice('--log-net-log='.length);
-      const afterSpec = hooks.get('after:spec');
-      assert.equal(typeof afterSpec, 'function');
-      afterSpec(spec, undefined);
-      afterSpec(spec, { stats: { failures: 0 } });
-      assert.equal(fs.existsSync(evidence), false);
-      const failed = { stats: { failures: 1 }, error: 'private failure' };
-      assert.throws(() => afterSpec(spec, failed), /^Error: Chromium network snapshot failed$/);
-      fs.writeFileSync(raw, 'private malformed capture');
-      assert.throws(() => afterSpec(spec, failed), /^Error: Chromium network snapshot failed$/);
-      const capture = {
-        constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
-        events: [{ type: 1, source: { id: 3 }, params: { headers: ['private'], body: 'private' } }],
-      };
-      fs.writeFileSync(raw, JSON.stringify(capture));
-      assert.throws(
-        () => afterSpec({ relative: '../private' }, failed),
-        /^Error: Chromium network snapshot failed$/
-      );
-      afterSpec(spec, failed);
-      assert.equal(fs.existsSync(raw), true);
-      assert.equal(fs.existsSync(evidence), false, 'open writer observations stay private');
-      capture.events[0].source.id = 9;
-      fs.writeFileSync(raw, JSON.stringify(capture));
-    });
+    await withChromiumNetworkDiagnostics(
+      workspaceRoot,
+      async () => {
+        const hooks = new Map();
+        configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {
+          projectRoot: path.join(workspaceRoot, 'apps/web'),
+        });
+        const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+        const raw = launch.args[0].slice('--log-net-log='.length);
+        const afterSpec = hooks.get('after:spec');
+        assert.equal(typeof afterSpec, 'function');
+        afterSpec(spec, undefined);
+        afterSpec(spec, { stats: { failures: 0 } });
+        assert.equal(fs.existsSync(evidence), false);
+        const failed = { stats: { failures: 1 }, error: 'private failure' };
+        assert.throws(() => afterSpec(spec, failed), /^Error: Chromium network snapshot failed$/);
+        fs.writeFileSync(raw, 'private malformed capture');
+        assert.throws(() => afterSpec(spec, failed), /^Error: Chromium network snapshot failed$/);
+        const capture = {
+          constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+          events: [
+            { type: 1, source: { id: 3 }, params: { headers: ['private'], body: 'private' } },
+          ],
+        };
+        fs.writeFileSync(raw, JSON.stringify(capture));
+        assert.throws(
+          () => afterSpec({ relative: '../private' }, failed),
+          /^Error: Chromium network snapshot failed$/
+        );
+        afterSpec(spec, failed);
+        assert.equal(fs.existsSync(raw), true);
+        assert.equal(fs.existsSync(evidence), false, 'open writer observations stay private');
+        capture.events[0].source.id = 9;
+        fs.writeFileSync(raw, JSON.stringify(capture));
+      },
+      async () => null
+    );
     const reports = fs.readdirSync(evidence);
     assert.equal(reports.length, 2);
     const read = (name) => JSON.parse(fs.readFileSync(path.join(evidence, name), 'utf8'));
@@ -222,35 +250,39 @@ test('failed specs bind only to the current Chromium launch, never earlier captu
   const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
   process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
   try {
-    await withChromiumNetworkDiagnostics(workspaceRoot, async () => {
-      const hooks = new Map();
-      configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {});
-      const failed = { stats: { failures: 1 } };
-      const afterSpec = hooks.get('after:spec');
-      assert.throws(
-        () => afterSpec({ relative: 'cypress/e2e/first.cy.ts' }, failed),
-        /snapshot failed/
-      );
-      for (const [id, spec] of [
-        [3, 'first'],
-        [9, 'second'],
-      ]) {
-        const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
-        fs.writeFileSync(
-          launch.args[0].slice('--log-net-log='.length),
-          JSON.stringify({
-            constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
-            events: [{ type: 1, source: { id } }],
-          })
+    await withChromiumNetworkDiagnostics(
+      workspaceRoot,
+      async () => {
+        const hooks = new Map();
+        configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {});
+        const failed = { stats: { failures: 1 } };
+        const afterSpec = hooks.get('after:spec');
+        assert.throws(
+          () => afterSpec({ relative: 'cypress/e2e/first.cy.ts' }, failed),
+          /snapshot failed/
         );
-        afterSpec({ relative: `cypress/e2e/${spec}.cy.ts` }, failed);
-      }
-      hooks.get('before:browser:launch')({ family: 'firefox' }, { args: [] });
-      assert.throws(
-        () => afterSpec({ relative: 'cypress/e2e/third.cy.ts' }, failed),
-        /snapshot failed/
-      );
-    });
+        for (const [id, spec] of [
+          [3, 'first'],
+          [9, 'second'],
+        ]) {
+          const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+          fs.writeFileSync(
+            launch.args[0].slice('--log-net-log='.length),
+            JSON.stringify({
+              constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+              events: [{ type: 1, source: { id } }],
+            })
+          );
+          afterSpec({ relative: `cypress/e2e/${spec}.cy.ts` }, failed);
+        }
+        hooks.get('before:browser:launch')({ family: 'firefox' }, { args: [] });
+        assert.throws(
+          () => afterSpec({ relative: 'cypress/e2e/third.cy.ts' }, failed),
+          /snapshot failed/
+        );
+      },
+      async () => null
+    );
     const evidence = path.join(workspaceRoot, '.dvt/evidence/chromium-network');
     const reports = fs
       .readdirSync(evidence)
@@ -284,31 +316,35 @@ for (const closed of [true, false])
       observed = resolve;
     });
     try {
-      const completion = withChromiumNetworkDiagnostics(workspaceRoot, async () => {
-        directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
-        const hooks = new Map();
-        configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {
-          projectRoot: path.join(workspaceRoot, 'apps/web'),
-        });
-        const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
-        const raw = launch.args[0].slice('--log-net-log='.length);
-        fs.writeFileSync(
-          raw,
-          '{"constants":{"logEventTypes":{"URL_REQUEST_START_JOB":1}},"events":[{"type":1,"source":{"id":3}}'
-        );
-        hooks.get('after:spec')(
-          { relative: 'cypress/e2e/canvas/example.cy.ts' },
-          { stats: { failures: 1 } }
-        );
-        observed();
-        await writer;
-        fs.appendFileSync(
-          raw,
-          ',{"type":1,"source":{"id":9},"params":{"net_error":-2,"body":"private"}}' +
-            (closed ? ']}' : '')
-        );
-        return 'failed browser result';
-      });
+      const completion = withChromiumNetworkDiagnostics(
+        workspaceRoot,
+        async () => {
+          directory = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+          const hooks = new Map();
+          configureChromiumNetworkDiagnostics((event, handler) => hooks.set(event, handler), {
+            projectRoot: path.join(workspaceRoot, 'apps/web'),
+          });
+          const launch = hooks.get('before:browser:launch')({ family: 'chromium' }, { args: [] });
+          const raw = launch.args[0].slice('--log-net-log='.length);
+          fs.writeFileSync(
+            raw,
+            '{"constants":{"logEventTypes":{"URL_REQUEST_START_JOB":1}},"events":[{"type":1,"source":{"id":3}}'
+          );
+          hooks.get('after:spec')(
+            { relative: 'cypress/e2e/canvas/example.cy.ts' },
+            { stats: { failures: 1 } }
+          );
+          observed();
+          await writer;
+          fs.appendFileSync(
+            raw,
+            ',{"type":1,"source":{"id":9},"params":{"net_error":-2,"body":"private"}}' +
+              (closed ? ']}' : '')
+          );
+          return 'failed browser result';
+        },
+        async () => null
+      );
       await observation;
       const prematurelyPublished = fs.existsSync(evidence);
       finishWriter();
@@ -333,3 +369,163 @@ for (const closed of [true, false])
       fs.rmSync(workspaceRoot, { recursive: true });
     }
   });
+
+test('native publication waits for the actual observer retirement promise', async () => {
+  const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-retirement-order-test-'));
+  const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  const previousCapture = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = 'outer-owned-context';
+  let releaseStop;
+  let operationStarted;
+  let stopStarted;
+  let admitted = false;
+  let settled = false;
+  let captureRoot;
+  const operationAcknowledgement = new Promise((resolve) => {
+    operationStarted = resolve;
+  });
+  const stopAcknowledgement = new Promise((resolve) => {
+    stopStarted = resolve;
+  });
+  const retirement = new Promise((resolve) => {
+    releaseStop = resolve;
+  });
+  const completion = withChromiumNetworkDiagnostics(
+    workspaceRoot,
+    async () => {
+      captureRoot = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+      const capture = fs.mkdtempSync(path.join(captureRoot, 'chrome-'));
+      fs.writeFileSync(
+        path.join(capture, 'netlog.json'),
+        JSON.stringify({
+          constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+          events: [{ type: 1, source: { id: 3 } }],
+        })
+      );
+      operationStarted();
+      return 'completed';
+    },
+    async () => {
+      admitted = true;
+      return {
+        stop: async () => {
+          stopStarted();
+          await retirement;
+        },
+      };
+    }
+  );
+  void completion.then(
+    () => {
+      settled = true;
+    },
+    () => {
+      settled = true;
+    }
+  );
+  try {
+    await operationAcknowledgement;
+    assert.equal(admitted, true);
+    await Promise.race([
+      stopAcknowledgement,
+      completion.then(() => assert.fail('native completion bypassed observer retirement')),
+    ]);
+    assert.equal(settled, false);
+    assert.equal(fs.existsSync(captureRoot), true);
+    assert.equal(fs.existsSync(path.join(workspaceRoot, '.dvt/evidence/chromium-network')), false);
+    releaseStop();
+    assert.equal(await completion, 'completed');
+    assert.equal(fs.existsSync(captureRoot), false);
+    assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, 'outer-owned-context');
+  } finally {
+    releaseStop();
+    await completion.catch(() => undefined);
+    if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
+    if (previousCapture === undefined) delete process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+    else process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = previousCapture;
+    assert.ok(path.resolve(workspaceRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+    fs.rmSync(workspaceRoot, { recursive: true });
+  }
+});
+
+for (const scenario of ['denied', 'ready-and-stop', 'operation-and-stop-fail']) {
+  test('Linux observer admission boundary: ' + scenario, async () => {
+    const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-observer-admission-test-'));
+    const oldFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    const oldCapture = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+    process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+    process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = 'outer-owned-context';
+    const calls = [];
+    let ownedRoot;
+    let failure;
+    try {
+      try {
+        const result = await withChromiumNetworkDiagnostics(
+          workspaceRoot,
+          async () => {
+            calls.push('operation');
+            ownedRoot = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+            const capture = fs.mkdtempSync(path.join(ownedRoot, 'chrome-'));
+            fs.writeFileSync(
+              path.join(capture, 'netlog.json'),
+              JSON.stringify({
+                constants: { logEventTypes: { URL_REQUEST_START_JOB: 1 } },
+                events: [{ type: 1, source: { id: 3 }, params: { net_error: -2 } }],
+              })
+            );
+            if (scenario === 'operation-and-stop-fail') throw new Error('owned operation failed');
+            return 'completed';
+          },
+          async (options) => {
+            calls.push('admit');
+            ownedRoot = options.captureRoot;
+            assert.equal(options.workspaceRoot, workspaceRoot);
+            assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, ownedRoot);
+            if (scenario === 'denied') throw new Error('owned capability denied');
+            return {
+              async stop() {
+                calls.push('stop');
+                assert.equal(fs.existsSync(ownedRoot), true);
+                assert.equal(
+                  fs.existsSync(path.join(workspaceRoot, '.dvt/evidence/chromium-network')),
+                  false
+                );
+                if (scenario === 'operation-and-stop-fail')
+                  throw new Error('owned observer stop failed');
+              },
+            };
+          }
+        );
+        assert.equal(result, 'completed');
+      } catch (error) {
+        failure = error;
+      }
+      assert.equal(calls[0], 'admit', 'observer capability must admit before browser operation');
+      assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, 'outer-owned-context');
+      if (scenario === 'denied') {
+        assert.deepEqual(calls, ['admit']);
+        const errors = failure instanceof AggregateError ? failure.errors : [failure];
+        assert.ok(errors.some((error) => error?.message === 'owned capability denied'));
+      } else {
+        assert.deepEqual(calls, ['admit', 'operation', 'stop']);
+        if (scenario === 'operation-and-stop-fail') {
+          assert.ok(failure instanceof AggregateError);
+          assert.deepEqual(
+            failure.errors.map((error) => error.message),
+            ['owned operation failed', 'owned observer stop failed']
+          );
+        } else assert.equal(failure, undefined);
+      }
+      assert.equal(fs.existsSync(ownedRoot), false);
+    } finally {
+      if (oldFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+      else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = oldFlag;
+      if (oldCapture === undefined) delete process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+      else process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT = oldCapture;
+      assert.ok(path.resolve(workspaceRoot).startsWith(path.resolve(os.tmpdir()) + path.sep));
+      fs.rmSync(workspaceRoot, { recursive: true });
+    }
+  });
+}

@@ -17,6 +17,40 @@ const binding = (changes = {}) => ({
   ...changes,
 });
 const source = 'export class Model { private read() { return 1; } }\n';
+
+test('a real Python callable can satisfy the same canonical responsibility reference', () => {
+  const path = 'scripts/model.py';
+  const result = validateSourceResponsibilityReferences({
+    path,
+    content: 'class Model:\n    def read(self):\n        return 1\n',
+    bindings: [binding({ path })],
+    ownerComponentId: 'SYS-OWNER',
+    responsibilities: [
+      { responsibilityId: 'RESP-READ', componentId: 'SYS-OWNER', description: 'Read.' },
+    ],
+    currentPaths: new Set([path, 'test/model.test.ts']),
+  });
+  assert.deepEqual(result.errors, []);
+  for (const content of [
+    'class Model:\n    def read(self): pass\n',
+    'class Other:\n    def read(self): return 1\n',
+  ]) {
+    const rejected = validateSourceResponsibilityReferences({
+      path,
+      content,
+      bindings: [binding({ path })],
+      ownerComponentId: 'SYS-OWNER',
+      responsibilities: [
+        { responsibilityId: 'RESP-READ', componentId: 'SYS-OWNER', description: 'Read.' },
+      ],
+      currentPaths: new Set([path, 'test/model.test.ts']),
+    });
+    assert.match(rejected.errors.join('\n'), /Missing implemented symbol/);
+  }
+  assert.ok(
+    validateResponsibilityBindings([binding({ path, symbol: 'Model.café' })]).errors.length > 0
+  );
+});
 const validateReferences = (changes = {}) =>
   validateSourceResponsibilityReferences({
     path: 'src/model.ts',
