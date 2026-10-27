@@ -284,11 +284,15 @@ inventory ranges. The existing ASCII qualified-symbol restriction for canonical
 DB bindings remains unchanged. Discovering a Unicode Python declaration does
 not authorize an identifier-policy expansion.
 
-For a changed Python production file, the implementation guard validates the
+For a changed Python production file present in the selected candidate, the implementation guard validates the
 complete candidate AST and requires the current top-level declaration names in
 the owning manifest. It does not parse an arbitrary added-line fragment as a
 complete Python module, guess names with regular expressions or construct a
-synthetic body. Existing TS/JS changed-line candidate selection is preserved.
+synthetic body. Authoritative deleted paths are omitted only from declaration
+analysis; the existing surface and retirement rules still authorize or reject
+their removal. A rename destination is a present candidate and must pass full
+source and declaration validation. Missing or malformed source for a present
+Python file still rejects. Existing TS/JS changed-line candidate selection is preserved.
 Test-file classification still excludes actual test modules rather than hiding
 production Python behind an unsupported extension.
 

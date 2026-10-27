@@ -150,6 +150,7 @@ class FeatureImplementationGuard {
     const declaredSymbols = this.collectDeclaredSymbols();
 
     for (const filePath of this.changedFiles) {
+      if (this.deletedFiles.has(filePath)) continue;
       if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) continue;
       const addedLines = this.addedLinesByPath.get(filePath) || [];
       const fileContent = this.fileContentsByPath.get(filePath);
