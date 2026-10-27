@@ -122,6 +122,7 @@ export function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCo
       canPersistGraphDraft: true,
       setDraftSession: effectiveSetDraftSession,
       setDraftSaveStatus: effectiveSetDraftSaveStatus,
+      invalidateInFlightSaveAttempt: vi.fn(),
       lastSavedSignatureRef: { current: null },
       ...overrides,
     },

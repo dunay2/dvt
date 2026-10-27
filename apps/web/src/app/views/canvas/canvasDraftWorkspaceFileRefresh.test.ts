@@ -2,11 +2,11 @@ import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphAuthoringNode } from '
 import { describe, expect, it, vi } from 'vitest';
 
 import { queryKeys } from '../../queries/queryKeys';
-import { performCanvasDraftAutosave } from './canvasDraftAutosaveExecution';
+import { performCanvasDraftSave } from './canvasDraftSaveExecution';
+import { createDraftAttemptRefs } from './canvasDraftPersistenceRuntime';
 import { createCanvasDraftQueryCache } from './canvasDraftQueryCache';
 import { hasRemovedImportedWarehouseSource } from './canvasDraftWorkspaceFileRefresh';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 
 describe('Canvas draft workspace-file refresh', () => {
   it('detects removal of an imported warehouse source binding', () => {
@@ -79,8 +79,8 @@ describe('Canvas draft workspace-file refresh', () => {
     const refreshWorkspaceFilesAfterSourceRemoval = vi.fn(async () => undefined);
     let session = buildEditingDraftSession();
 
-    performCanvasDraftAutosave({
-      refs: buildDraftAttemptRefs(),
+    await performCanvasDraftSave({
+      refs: createDraftAttemptRefs(),
       draftRepository: {
         readGraphDraftState: vi.fn(),
         readGraphDraft: vi.fn(),
@@ -112,17 +112,6 @@ describe('Canvas draft workspace-file refresh', () => {
     });
   });
 });
-
-function buildDraftAttemptRefs(): DraftAttemptRefs {
-  return {
-    saveDebounceTimerRef: { current: null },
-    lastSavedSignatureRef: { current: null },
-    lastFailedSignatureRef: { current: null },
-    saveAttemptGenerationRef: { current: 0 },
-    nextSaveAttemptIdRef: { current: 0 },
-    activeSaveAttemptRef: { current: null },
-  };
-}
 
 function buildEditingDraftSession(): CanvasDraftSession {
   return {

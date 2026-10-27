@@ -1,23 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 import { runCanvasDraftAutosaveEffect } from './canvasDraftAutosaveScheduling';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
   isStaleSaveResolution,
+  createDraftAttemptRefs,
   restoreEditingAfterSaveFailure,
+  startNextSaveAttempt,
 } from './canvasDraftPersistenceRuntime';
-
-function createDraftAttemptRefs(): DraftAttemptRefs {
-  return {
-    saveDebounceTimerRef: { current: null },
-    lastSavedSignatureRef: { current: null },
-    lastFailedSignatureRef: { current: null },
-    saveAttemptGenerationRef: { current: 0 },
-    nextSaveAttemptIdRef: { current: 0 },
-    activeSaveAttemptRef: { current: null },
-  };
-}
 
 describe('canvasDraftPersistenceRuntime', () => {
   it('treats a resolution as stale when the active save attempt was invalidated', () => {
@@ -29,11 +19,23 @@ describe('canvasDraftPersistenceRuntime', () => {
 
   it('keeps a matching active save attempt as current', () => {
     const refs = createDraftAttemptRefs();
-    const saveAttempt = { id: 2, generation: 3 };
-    refs.saveAttemptGenerationRef.current = saveAttempt.generation;
-    refs.activeSaveAttemptRef.current = saveAttempt;
+    refs.saveAttemptGenerationRef.current = 3;
+    const saveAttempt = startNextSaveAttempt(refs, 'current-draft');
 
     expect(isStaleSaveResolution(refs, saveAttempt)).toBe(false);
+  });
+
+  it('keeps independent draft lifetimes and wakes an invalidated attempt as stale', async () => {
+    const refs = createDraftAttemptRefs();
+    const other = createDraftAttemptRefs();
+    const attempt = startNextSaveAttempt(refs, 'pending-draft');
+
+    expect(other.activeSaveAttemptRef.current).toBeNull();
+    expect(other.nextSaveAttemptIdRef.current).toBe(0);
+    attempt.settleStale();
+
+    await expect(attempt.completion).resolves.toEqual({ outcome: 'stale' });
+    expect(refs.confirmedSaveReceiptRef.current).toBeNull();
   });
 
   it('holds a failed autosave signature until the draft changes', () => {
@@ -44,7 +46,7 @@ describe('canvasDraftPersistenceRuntime', () => {
     const setDraftSaveStatus = vi.fn();
 
     const cleanup = runCanvasDraftAutosaveEffect({
-      refs: refs as DraftAttemptRefs,
+      refs,
       draftRepository: {} as never,
       graphDraftQuery: { isPending: false, isError: false, data: undefined },
       graphAuthorityQuery: { isPending: false, isError: false },

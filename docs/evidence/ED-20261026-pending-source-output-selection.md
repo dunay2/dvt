@@ -253,3 +253,50 @@ replace final exact-head prepush. Their completed results, source ownership,
 metadata-reference retirement and full-gate outcome are recorded in
 [issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6424129479)
 and the implementation PR after execution.
+
+## Confirmed Draft Saves Before Preview
+
+Integration against `main` exposed a separate persistence coordination gap in
+[GH-3734](https://github.com/dunay2/dvt/issues/3734). On `888dad33`, all 5,747 Web
+Vitest cases passed, but the full controlled browser profile failed one of 142
+cases: the English rejected-Preview diagnostic stopped at a failed draft save,
+before publication, compilation or the plan request. That failed full gate is
+retained; subsequent isolated passes did not establish a correction.
+
+The [admitted design](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432205126)
+and canonical rationale preceded two deterministic semantic regressions. With
+the actual autosave, repository and deferred protected save receipt, the old
+flush dispatched two saves before React committed saving. After a real confirmed
+save but before React committed the revision, it projected the old three-node
+graph instead of the confirmed two-node graph. Both cases failed on unchanged
+production; the existing already-rendered saving case passed.
+
+Autosave and Preview now consume one shared save executor and its actual
+completion/confirmed receipt. The repository still confirms the exact protected
+revision through its readback. The executor owns successful-revision reuse and
+conflict rejection; Preview owns current permission/generation checks and the
+existing five-second completion deadline. No polling path, second direct flush
+writer, old-name forwarding module or new wire DTO is introduced. One real
+reference constructor replaces the repeated production/test shapes.
+
+The [document-command supplement](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432478954)
+places invalidation after the existing admission/input checks and before an
+actual write. Blocked Create and missing-target Select retain the current ACK;
+same-target Select preserves its existing normalized-save policy, as the
+[premise correction](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432581154)
+records. Its new guard regression failed semantically before the callback was
+wired, then passed without copying command policies into the lifecycle.
+
+Focused validation passed 26 unit, 30 presentation, eight additional fixture
+unit and nine architecture cases, with Web typecheck and strict affected-file
+lint. The original native artifact/Preview suite passed all five unchanged
+cases with no skipped/pending failures. These are scoped results, not a final
+prepush result for the integration.
+
+The [dependency-policy supplement](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432741725)
+also covers the renamed executor in both existing error-level import selectors.
+Its semantic RED reproduces the omitted readiness-to-save edge; the existing
+matrix additionally exercises value/type-only reverse execution imports and the
+allowed repository dependency. Existing alternatives and rule severity remain.
+Current native bindings, source-hash reconciliation and exact final base/HEAD
+full-gate acceptance must be recorded after the hooked implementation commit.

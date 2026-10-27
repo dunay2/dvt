@@ -2,13 +2,36 @@
 title: Canvas Workbench Stage 2 Autosave E2E Proof Plan
 status: Active
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-05-08
+last_reviewed: 2026-10-27
 planning_type: mandatory-proposal
 task_id: F-28-B
 parent_task_id: F-28
 ---
 
 # Canvas Workbench Stage 2 Autosave E2E Proof Plan
+
+## Confirmed Save Coordination Follow-Up
+
+[GH-3734](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432205126)
+admits the bounded correction discovered during integration: autosave and Preview
+must join the same protected save operation and consume its actual confirmed
+receipt, rather than infer transport completion from React's rendered state.
+The correction preserves revision CAS, scope/generation guards and the existing
+five-second wait bound. Conflict and failed confirmation cannot trigger automatic
+rebase or retry. The shared executor is `canvasDraftSaveExecution.ts`. Its current
+ownership and implementation are recorded by the component guide and current
+Save rail. The closed manifest below retains its original pre-rename proof
+footprint, including the former executor path; those historical addresses do not
+assert that the deleted module still exists or authorize new edits to it.
+Original content and run provenance remain in Git at `888dad33` and their
+governing issues. This history does not provide acceptance of the correction.
+
+Deterministic composed tests must reproduce both a dispatched save before React
+commits its saving state and a confirmed receipt before React commits the new
+revision. The original native Preview-diagnostic scenario must pass with its
+existing fixture and assertions. Current implementation and validation evidence
+must be recorded after the correction; an isolated rerun alone does not close the
+original failed full gate.
 
 ## Summary
 
@@ -35,7 +58,6 @@ truthful in the browser:
 - `docs/planning/state/planning-control-tower.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
 - `docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md`
 - `docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-shell-save-export-sequence-plan-20260505.md`
@@ -111,6 +133,9 @@ pnpm verify:prepush
 ```
 
 ## Feature Mechanization Manifest
+
+This closed manifest preserves the historical proof footprint described above.
+Current source addresses and GH-3734 acceptance are governed separately.
 
 ```feature-mechanization
 version: 1

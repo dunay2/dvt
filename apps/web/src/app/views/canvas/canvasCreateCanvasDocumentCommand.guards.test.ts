@@ -63,8 +63,24 @@ describe('canvasCreateCanvasDocumentCommand guards', () => {
       expect(draftQueryCache.replaceRemoteDraftState).not.toHaveBeenCalled();
       expect(setDraftSession).not.toHaveBeenCalled();
       expect(setDraftSaveStatus).not.toHaveBeenCalled();
+      expect(args.invalidateInFlightSaveAttempt).not.toHaveBeenCalled();
     }
   );
+
+  it('invalidates the previous attempt only after admission and before its new write', async () => {
+    const invalidate = vi.fn();
+    const { args, draftRepository } = buildCommandArgs({
+      invalidateInFlightSaveAttempt: invalidate,
+    });
+
+    await executeCreateCanvasDocumentCommand(args);
+
+    expect(invalidate).toHaveBeenCalledOnce();
+    expect(draftRepository.saveGraphDraft).toHaveBeenCalledOnce();
+    expect(invalidate.mock.invocationCallOrder[0]).toBeLessThan(
+      draftRepository.saveGraphDraft.mock.invocationCallOrder[0]!
+    );
+  });
 
   it.each([new Error('write failed'), new TypeError('Failed to fetch')])(
     'retains failed posture when authoritative save rejects with %s',

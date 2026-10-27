@@ -15,7 +15,7 @@ import {
   DRAFT_SAVE_DEBOUNCE_MS,
   shouldWaitForPersistenceReadiness,
 } from './canvasDraftPersistenceRuntime';
-import { performCanvasDraftAutosave } from './canvasDraftAutosaveExecution';
+import { performCanvasDraftSave } from './canvasDraftSaveExecution';
 import { hasRemovedImportedWarehouseSource } from './canvasDraftWorkspaceFileRefresh';
 
 type SetDraftSession = Dispatch<SetStateAction<CanvasDraftSession>>;
@@ -135,7 +135,8 @@ function scheduleCanvasDraftAutosave(args: {
   args.setDraftSaveStatus('saving');
 
   args.refs.saveDebounceTimerRef.current = globalThis.setTimeout(() => {
-    performCanvasDraftAutosave({
+    args.refs.saveDebounceTimerRef.current = null;
+    void performCanvasDraftSave({
       refs: args.refs,
       draftRepository: args.draftRepository,
       currentDraftPayload: args.currentDraftPayload,

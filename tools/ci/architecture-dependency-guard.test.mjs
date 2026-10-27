@@ -1541,6 +1541,11 @@ test('Canvas component boundaries reject reversed command/query and composition 
     ],
     [
       'no-canvas-readiness-to-effects',
+      `${canvas}canvasRuntimePolicy.ts`,
+      `${canvas}canvasDraftSaveExecution.ts`,
+    ],
+    [
+      'no-canvas-readiness-to-effects',
       `${canvas}canvasDraftAccessPostureModel.ts`,
       'apps/web/src/app/services/api/client.ts',
     ],
@@ -1549,6 +1554,11 @@ test('Canvas component boundaries reject reversed command/query and composition 
       `${canvas}useCanvasDraftAutosave.ts`,
       `${canvas}useCanvasExecutionActions.ts`,
     ],
+    ...['canvasPlanAction', 'canvasRunStartAction', 'useCanvasController'].map((target) => [
+      'no-canvas-autosave-to-execution',
+      `${canvas}canvasDraftSaveExecution.ts`,
+      `${canvas}${target}.ts`,
+    ]),
     [
       'no-canvas-execution-to-route-composition',
       `${canvas}canvasPlanAction.ts`,
@@ -1637,6 +1647,8 @@ test('Canvas component boundaries allow composition, ports and pure projections'
       'apps/web/src/app/services/api/dvtOperationalRejectionCopy.ts': 'export default "Ready";\n',
       'apps/web/src/app/ports/plans.ts': 'export interface Plan { ready: boolean }\n',
       [`${canvas}useCanvasDraftAutosave.ts`]:
+        "import repository from './canvasDraftRepository.js'; export default repository;\n",
+      [`${canvas}canvasDraftSaveExecution.ts`]:
         "import repository from './canvasDraftRepository.js'; export default repository;\n",
       [`${canvas}canvasDraftRepository.ts`]: 'export default true;\n',
       'apps/api/src/application/services/dvtWorkloadPublication.ts':

@@ -144,7 +144,7 @@ module.exports = {
       },
       to: {
         path: [
-          '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions|Controller|ControllerRuntime|DraftAutosave)|useDbtProjectFileExecution|canvasDraftAutosave(?:Execution|Scheduling)|canvasDraftPersistenceRuntime)\\.ts$',
+          '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions|Controller|ControllerRuntime|DraftAutosave)|useDbtProjectFileExecution|canvasDraftAutosave(?:Execution|Scheduling)|canvasDraftSaveExecution|canvasDraftPersistenceRuntime)\\.ts$',
           '^apps/web/src/app/services/(?!api/dvtOperationalRejectionCopy\\.ts$)',
         ],
       },
@@ -169,7 +169,7 @@ module.exports = {
       name: 'no-canvas-autosave-to-execution',
       severity: 'error',
       from: {
-        path: '^apps/web/src/app/views/canvas/(?:useCanvasDraftAutosave|canvasDraftAutosave(?:Scheduling|Execution)|canvasDraftPersistenceRuntime)\\.ts$',
+        path: '^apps/web/src/app/views/canvas/(?:useCanvasDraftAutosave|canvasDraftAutosave(?:Scheduling|Execution)|canvasDraftSaveExecution|canvasDraftPersistenceRuntime)\\.ts$',
       },
       to: {
         path: '^apps/web/src/app/views/canvas/(?:canvasPlanAction|canvasRunStartAction|useCanvas(?:PlanActionHandler|RunStartHandler|ExecutionActions|Controller|ControllerRuntime)|useDbtProjectFileExecution)\\.ts$',

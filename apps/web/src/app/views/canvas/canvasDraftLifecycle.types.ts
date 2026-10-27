@@ -9,7 +9,7 @@ import type {
   CanvasNodePositions,
 } from './canvasAuthoringRuntime.types';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
-import type { CanvasDraftRepository } from './canvasDraftRepository';
+import type { CanvasDraftRepository, CanvasDraftSaveResult } from './canvasDraftRepository';
 import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
@@ -28,13 +28,27 @@ export type GraphDraftQueryState = {
 
 export type DraftSaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
+export type DraftSaveCompletion = CanvasDraftSaveResult | { outcome: 'failed' | 'stale' };
+
 export type DraftAttemptRefs = {
   saveDebounceTimerRef: MutableRefObject<ReturnType<typeof globalThis.setTimeout> | null>;
   lastSavedSignatureRef: MutableRefObject<string | null>;
   lastFailedSignatureRef: MutableRefObject<string | null>;
   saveAttemptGenerationRef: MutableRefObject<number>;
   nextSaveAttemptIdRef: MutableRefObject<number>;
-  activeSaveAttemptRef: MutableRefObject<{ id: number; generation: number } | null>;
+  activeSaveAttemptRef: MutableRefObject<{
+    id: number;
+    generation: number;
+    signature: string;
+    completion: Promise<DraftSaveCompletion>;
+    settle: (result: DraftSaveCompletion) => void;
+    settleStale: () => void;
+  } | null>;
+  confirmedSaveReceiptRef: MutableRefObject<{
+    generation: number;
+    signature: string;
+    result: CanvasDraftSaveResult;
+  } | null>;
 };
 
 export type CanvasCurrentDraftPayloadDto = {
@@ -91,6 +105,7 @@ export type CanvasCreateCanvasDocumentCommandDto = {
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
+  invalidateInFlightSaveAttempt: () => void;
 };
 
 export type CanvasProjectCanvasLifecycleCommandDto = {
@@ -102,6 +117,7 @@ export type CanvasProjectCanvasLifecycleCommandDto = {
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
+  invalidateInFlightSaveAttempt: () => void;
 };
 
 export type CanvasImportProjectSnapshotCommandDto = {

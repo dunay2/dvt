@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node } from '@xyflow/react';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { DRAFT_SAVE_DEBOUNCE_MS } from './canvasDraftPersistenceRuntime';
+import { createDraftAttemptRefs, DRAFT_SAVE_DEBOUNCE_MS } from './canvasDraftPersistenceRuntime';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { CanvasCurrentDraftPayloadDto, DraftAttemptRefs } from './canvasDraftLifecycle.types';
 
@@ -168,14 +168,7 @@ describe('Canvas geometry draft isolation', () => {
 
   it('keeps one pending autosave timer through geometry-only parent frames', async () => {
     vi.useFakeTimers();
-    const refs: DraftAttemptRefs = {
-      saveDebounceTimerRef: { current: null },
-      lastSavedSignatureRef: { current: null },
-      lastFailedSignatureRef: { current: null },
-      saveAttemptGenerationRef: { current: 0 },
-      nextSaveAttemptIdRef: { current: 0 },
-      activeSaveAttemptRef: { current: null },
-    };
+    const refs: DraftAttemptRefs = createDraftAttemptRefs();
     const saveGraphDraft = vi.fn(() => new Promise<never>(() => undefined));
     const autosaveArgs: Parameters<typeof useCanvasDraftAutosave>[0] = {
       draftRepository: { saveGraphDraft } as never,
