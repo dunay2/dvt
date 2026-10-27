@@ -118,9 +118,13 @@ existing command audit is not a source inventory.
 
 `ReviseGovernanceComponent` corrects an existing definition under admitted design
 scope and expected revision. `--cq-rails` and `--ddd-owner` correct the current
-values. `--remove-reason-to-change`, `--remove-non-goal`, and `--remove-public-api`
-remove exact superseded values; the existing `--reason-to-change`, `--non-goal`,
-and `--public-api` add their replacements.
+values. `--remove-responsibility`, `--remove-reason-to-change`, `--remove-non-goal`,
+and `--remove-public-api` remove exact superseded values; the existing
+`--responsibility`, `--reason-to-change`, `--non-goal`, and `--public-api` add their
+replacements. Responsibility removal is repeatable and may be the only revision
+delta. A request cannot add and remove the same responsibility. Omitting
+`--remove-responsibility` preserves the legacy command shape, audit payload and
+default idempotency key without adding an empty removal field.
 Unknown removals fail rather than silently retaining stale semantics. The command
 audits these deltas and preserves unrelated metadata, ownership and source
 bindings. An identical replay compares the stored command input, excluding only

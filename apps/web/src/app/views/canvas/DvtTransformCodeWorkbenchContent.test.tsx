@@ -2,7 +2,7 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
@@ -43,8 +43,7 @@ describe('DVT Transform code workbench content', () => {
     container.remove();
   });
 
-  it('keeps the inspector read-only and enters relational authoring through the Model editor', () => {
-    const onOpenSemanticEditor = vi.fn();
+  it('keeps Code read-only without exposing semantic-editor navigation', () => {
     act(() => {
       root.render(
         <DvtTransformCodeWorkbenchContent
@@ -52,8 +51,6 @@ describe('DVT Transform code workbench content', () => {
           nodes={[TRANSFORM]}
           edges={[]}
           canonicalContent="{}"
-          openSemanticEditorLabel="Open semantic editor"
-          onOpenSemanticEditor={onOpenSemanticEditor}
           copy={COPY}
         />
       );
@@ -61,12 +58,6 @@ describe('DVT Transform code workbench content', () => {
 
     expect(container.querySelector('[data-slot="dvt-transform-output-view"]')).not.toBeNull();
     expect(container.querySelector('[data-slot^="dvt-select-operation-"]')).toBeNull();
-
-    act(() => {
-      container
-        .querySelector<HTMLButtonElement>('[data-slot="canvas-open-semantic-editor"]')!
-        .click();
-    });
-    expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
+    expect(container.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
   });
 });

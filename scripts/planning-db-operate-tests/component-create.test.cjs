@@ -456,6 +456,7 @@ test('component revise planner overlays imported semantics under design scope', 
     'dddOwner',
     'removeNonGoals',
     'removeReasonsToChange',
+    'removeResponsibilities',
     'removePublicApi',
   ]) {
     assert.equal(Object.hasOwn(planned.audit.payload, field), false);
@@ -498,6 +499,11 @@ test('component revise corrects current semantics with explicit deltas and audit
     'codex',
   ];
   const command = parseArgs(args);
+  assert.equal(
+    command.idempotencyKey,
+    'component_revise:codex:SYS-WEB-CANVAS-PREVIEW:7:1414ab2e9d048d9b'
+  );
+  assert.equal(Object.hasOwn(command, 'removeResponsibilities'), false);
   const input = {
     command,
     design: { design_id: command.designId, status: 'review' },
@@ -546,6 +552,7 @@ test('component revise corrects current semantics with explicit deltas and audit
   assert.deepEqual(planned.definition.owns, input.existingComponent.owns);
   assert.equal(planned.definition.revision, 8);
   assert.equal(planned.audit.payload.cqRails, 'PreviewPlan; StartRun');
+  assert.equal(Object.hasOwn(planned.audit.payload, 'removeResponsibilities'), false);
   assert.deepEqual(planned.audit.payload.removeReasonsToChange, ['Generic lifecycle changes.']);
   assert.deepEqual(planned.audit.payload.removePublicApi, command.removePublicApi);
   const storedOperation = {
@@ -633,6 +640,150 @@ test('component revise corrects current semantics with explicit deltas and audit
   assert.deepEqual(
     planComponentReviseOperation({ ...input, command: removalOnly }).definition.publicApi,
     ['detectCanvasViewLocale', 'resolveCanvasViewCopy']
+  );
+});
+
+test('component revise retires exact responsibilities while preserving the remaining definition', () => {
+  const args = [
+    'component',
+    'revise',
+    '--design',
+    'CANVAS-BOUNDARIES',
+    '--component',
+    'SYS-WEB-CANVAS-CODE-INSPECTION',
+    '--expected-revision',
+    '7',
+    '--remove-responsibility',
+    'Compose Code and semantic-editor navigation.',
+    '--responsibility',
+    'Compose canonical Code inspection.',
+    '--source-ref',
+    'https://github.com/dunay2/dvt/issues/3739',
+    '--source-content-sha256',
+    'b'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+  const command = parseArgs(args);
+  const existingComponent = {
+    componentId: command.componentId,
+    name: 'Canvas canonical Code inspection',
+    level: 'component',
+    parentComponentId: 'SYS-WEB-ROOT',
+    rootUnit: 'SYS-DVT',
+    domainUnit: 'SYS-WEB',
+    status: 'review',
+    childrenRequired: false,
+    ownedConcern: 'Present the current canonical Code.',
+    owns: ['apps/web/src/app/views/canvas/DvtTransformOutputView.tsx'],
+    excludes: ['apps/web/src/app/views/canvas/DvtTransformOutputView.test.tsx'],
+    responsibilities: [
+      'Compose Code and semantic-editor navigation.',
+      'Preserve current graph-bound output selection.',
+    ],
+    nonGoals: ['Mutate the Model draft.'],
+    reasonsToChange: ['Code presentation changes.'],
+    dddOwner: 'CanvasAuthoringPresentation',
+    cqRails: 'RenderCanvasContextualGraphSurface',
+    publicApi: ['DvtTransformOutputView'],
+    invariants: ['Code inspection does not publish a draft.'],
+    transitions: ['Explicit output selection requests a projection.'],
+    consumers: ['Canvas node workbench'],
+    governance: ['AGENTS.md'],
+    fowlerSignals: ['boundary drift'],
+    revision: 7,
+  };
+  const input = {
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      { subject_kind: 'component', subject_id: command.componentId, scope_kind: 'may_update' },
+    ],
+    existingComponent,
+    latestOperation: null,
+    operationId: 'retire-code-navigation-responsibility',
+    now: new Date('2026-10-27T20:00:00Z'),
+  };
+  const planned = planComponentReviseOperation(input);
+  assert.deepEqual(planned.definition, {
+    ...existingComponent,
+    responsibilities: [
+      'Preserve current graph-bound output selection.',
+      'Compose canonical Code inspection.',
+    ],
+    revision: 8,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    createdBy: command.actor,
+    createdAt: input.now.toISOString(),
+  });
+  assert.deepEqual(command.removeResponsibilities, [
+    'Compose Code and semantic-editor navigation.',
+  ]);
+  assert.deepEqual(planned.audit.payload.removeResponsibilities, command.removeResponsibilities);
+  assert.deepEqual(planned.audit.payload.resultingDefinition, planned.definition);
+  assert.deepEqual(
+    planned.semanticItems
+      .filter((item) => item.itemKind === 'responsibility')
+      .map((item) => item.itemValue),
+    planned.definition.responsibilities
+  );
+  const storedOperation = {
+    operation_type: planned.audit.operationType,
+    actor: planned.audit.actor,
+    component_id: planned.audit.componentId,
+    expected_revision: planned.audit.expectedRevision,
+    payload: planned.audit.payload,
+  };
+  assert.doesNotThrow(() => assertComponentIdempotentReplayMatches(storedOperation, command));
+  assert.throws(
+    () =>
+      assertComponentIdempotentReplayMatches(storedOperation, {
+        ...command,
+        removeResponsibilities: ['Preserve current graph-bound output selection.'],
+      }),
+    /different governance component operation/
+  );
+  const differentRemoval = args.slice();
+  differentRemoval[differentRemoval.indexOf('--remove-responsibility') + 1] =
+    'Preserve current graph-bound output selection.';
+  assert.notEqual(command.idempotencyKey, parseArgs(differentRemoval).idempotencyKey);
+  assert.throws(
+    () => parseArgs([...args, '--remove-responsibility']),
+    /Missing value for --remove-responsibility/
+  );
+  assert.throws(
+    () => parseArgs([...args, '--responsibility', 'Compose Code and semantic-editor navigation.']),
+    /cannot add and remove the same responsibility/
+  );
+  assert.throws(
+    () =>
+      planComponentReviseOperation({
+        ...input,
+        command: { ...command, removeResponsibilities: ['Unknown responsibility.'] },
+      }),
+    /unknown responsibility/
+  );
+  assert.throws(
+    () => planComponentReviseOperation({ ...input, command: { ...command, expectedRevision: 6 } }),
+    /expected revision 6/
+  );
+  assert.throws(() => planComponentReviseOperation({ ...input, designScopes: [] }), /scope/i);
+  const repeated = parseArgs([
+    ...args,
+    '--remove-responsibility',
+    'Preserve current graph-bound output selection.',
+  ]);
+  assert.deepEqual(
+    planComponentReviseOperation({ ...input, command: repeated }).definition.responsibilities,
+    ['Compose canonical Code inspection.']
+  );
+  const removalOnlyArgs = args.slice();
+  removalOnlyArgs.splice(removalOnlyArgs.indexOf('--responsibility'), 2);
+  const removalOnly = parseArgs(removalOnlyArgs);
+  assert.deepEqual(
+    planComponentReviseOperation({ ...input, command: removalOnly }).definition.responsibilities,
+    ['Preserve current graph-bound output selection.']
   );
 });
 

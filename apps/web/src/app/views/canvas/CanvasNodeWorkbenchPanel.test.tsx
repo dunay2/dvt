@@ -856,6 +856,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(project).not.toHaveBeenCalled();
     expect(canonicalViewer?.dataset.language).toBe('json');
     expect(canonicalViewer?.textContent).toContain('dvt-substrait-semantic-document.v1');
+    expect(
+      Array.from(codeSection?.querySelectorAll('p') ?? [], (paragraph) => paragraph.textContent)
+    ).not.toEqual(expect.arrayContaining([expect.stringMatching(/Substrait document|SHA-256/)]));
     expect(codeSection?.textContent).not.toContain('Convert to SQL');
 
     await act(async () => {
@@ -951,7 +954,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
       if (canonical) expect(panel?.textContent).toContain('order_id');
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
       if (!canEditNode) return;
-      await renderSection('code', 2);
+      await renderSection('general', 2);
       const openEditor = panel?.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-open-semantic-editor"]'
       );
@@ -959,6 +962,8 @@ describe('CanvasNodeWorkbenchPanel', () => {
       await act(async () => openEditor!.click());
       expect(onOpenSemanticEditor).toHaveBeenCalledOnce();
       expect(onApplyNodeDraft).not.toHaveBeenCalled();
+      await renderSection('code', 3);
+      expect(panel?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
       expect(panel?.querySelector('[data-slot="canvas-node-workbench-tabs"]')).not.toBeNull();
       expect(
         panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')
@@ -972,8 +977,6 @@ describe('CanvasNodeWorkbenchPanel', () => {
       const moreTrigger = panel?.querySelector('[data-slot="canvas-node-workbench-more-trigger"]');
       expect(tabList?.parentElement).toBe(tabsList);
       expect(moreTrigger?.parentElement).toBe(tabsList);
-      expect(tabList?.className).toContain('flex-1');
-      expect(tabList?.className).not.toContain('w-full');
       expect(header?.textContent).toContain('Clean Orders');
       expect(header?.querySelector('p')).toBeNull();
     }

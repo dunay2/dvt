@@ -17,9 +17,12 @@ describe('Canonical relation inspection', () => {
     prepareFieldSelection(2);
     openJoinWorkbench();
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    cy.get('[data-slot="canvas-node-workbench-code-content"]')
-      .should('contain.text', 'Canonical Substrait document')
-      .and('contain.text', 'SHA-256');
+    cy.get('[data-slot="canvas-node-workbench-code-content"]').should(($section) => {
+      expect($section.find('p').text(), 'no technical document caption').not.to.match(
+        /Canonical Substrait document|Documento Substrait|SHA-256/
+      );
+    });
+    cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
     cy.get('[data-testid="monaco-code-viewer"]').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openWorkbenchModel();

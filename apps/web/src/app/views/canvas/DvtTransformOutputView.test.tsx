@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import React, { act } from 'react';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getByRole } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
@@ -80,6 +80,18 @@ describe('Canonical code inspection query lifecycle', () => {
     act(() => root.unmount());
     container.remove();
     vi.restoreAllMocks();
+  });
+
+  it('keeps canonical bytes intact without rendering technical document and digest chrome', () => {
+    const canonicalContent = JSON.stringify({
+      schemaVersion: 'dvt-substrait-semantic-document.v1',
+      semanticPlan: { sha256: 'b'.repeat(64) },
+    });
+    render({ ...PROPS, canonicalContent });
+    expect(getByRole(container, 'combobox', { name: 'Output view' })).not.toBeNull();
+    expect(container.querySelector('pre')?.textContent).toBe(canonicalContent);
+    expect(container.querySelector('p')).toBeNull();
+    expect(project).not.toHaveBeenCalled();
   });
 
   it('does not query until SQL is selected and reuses a ready result for the same input', async () => {

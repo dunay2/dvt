@@ -3,7 +3,9 @@ import type { ReactNode } from 'react';
 
 import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { NodePropertySectionId } from '../../components/inspector/nodePropertiesContracts';
+import { Button } from '../../components/ui/button';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import { DvtTransformCodeWorkbenchContent } from './DvtTransformCodeWorkbenchContent';
@@ -100,9 +102,6 @@ export function CanvasNodeWorkbenchSections({
     node.id
   );
   if (semanticDvtTransform) {
-    const codeDescription = baseModel.sections.find(
-      (section) => section.id === 'code'
-    )?.description;
     sectionAfterChildren.code = (
       <>
         {sectionAfterChildren.code}
@@ -114,9 +113,6 @@ export function CanvasNodeWorkbenchSections({
           {...(presentationTruth.code.kind === 'canonical'
             ? { canonicalContent: presentationTruth.code.content }
             : {})}
-          canonicalDescription={codeDescription}
-          openSemanticEditorLabel={semanticEditorCopy.openEditorAction}
-          {...(onOpenSemanticEditor == null ? {} : { onOpenSemanticEditor })}
           copy={copy}
         />
       </>
@@ -156,6 +152,26 @@ export function CanvasNodeWorkbenchSections({
         </>
       );
     }
+  }
+
+  if (semanticDvtTransform && onOpenSemanticEditor != null) {
+    sectionBeforeChildren.general = (
+      <>
+        <div className={inspectorVisualClasses.inspectorActions}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className={inspectorVisualClasses.contextPanelActionButton}
+            data-slot="canvas-open-semantic-editor"
+            onClick={onOpenSemanticEditor}
+          >
+            {semanticEditorCopy.openEditorAction}
+          </Button>
+        </div>
+        {sectionBeforeChildren.general}
+      </>
+    );
   }
 
   return (

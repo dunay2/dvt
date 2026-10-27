@@ -26,7 +26,11 @@ export function openPendingRelationalOperationChooser(): void {
     '.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]'
   ).rightclick();
   cy.contains('[data-slot="canvas-node-context-menu-item"]', /^(Properties|Propiedades)$/).click();
-  cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
+  cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+    'have.attr',
+    'aria-selected',
+    'true'
+  );
   cy.get('[data-slot="canvas-node-workbench-overlay"]')
     .should('be.visible')
     .and('not.contain.text', 'Needs predicate');

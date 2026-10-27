@@ -162,13 +162,13 @@ describe('Canvas Model inspection', () => {
     expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
   });
 
-  it('routes the contextual inspector to the single semantic-editor tab', async () => {
+  it('routes Properties General to the single semantic-editor tab', async () => {
     const fixture = buildSemanticWorkbenchFixture();
     await harness.render({
       layout: { inspectorPanelVisible: true },
       panels: {
         inspectorNode: fixture.transform,
-        inspectorPreferredTabId: 'code',
+        inspectorPreferredTabId: 'general',
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
         inspectorGraphEdges: fixture.edges,
         relationalTreeAuthoring: {
@@ -190,7 +190,7 @@ describe('Canvas Model inspection', () => {
 
     expect(harness.container.querySelector('[data-slot^="dvt-select-operation-"]')).toBeNull();
     const openEditor = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-open-semantic-editor"]'
+      '[data-slot="canvas-node-workbench-general-content"] [data-slot="canvas-open-semantic-editor"]'
     );
     expect(openEditor).not.toBeNull();
 
