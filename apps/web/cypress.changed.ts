@@ -79,6 +79,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/relationalWorkbench/cardOutputControls.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/emptyOutputs.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/fieldSelection.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/pendingComposition.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/formulaLineageJourney.ts': [
     'controlled',
     'available',
