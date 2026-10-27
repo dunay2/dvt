@@ -6,6 +6,12 @@ import {
 } from './TransformDependencyError';
 
 const en = {
+  joinRecovery: {
+    action: 'Reconfigure JOIN',
+    hint: 'The inputs changed. Configure a new condition for the current inputs. The saved configuration is kept until you apply; Cancel restores it.',
+    failed:
+      'The JOIN could not be reconfigured. Check that both inputs are available, use the same connection and have compatible fields.',
+  },
   stagedAnalysis: {
     'missing-input':
       'This operation has an unavailable input. Reconnect its Source or Model before editing.',
@@ -33,6 +39,8 @@ const en = {
   output: 'Output',
   addOutputField: 'Add field',
   removeOutputField: 'Remove field',
+  sourceOutputUnavailable:
+    'This field has no independent direct Model output. Use the operation Output.',
   fieldSelectionRejected: 'Cannot change this selection. Check the field and its dependencies.',
   fieldSelectionDependencies: 'Affected fields or operations',
   reorderOutput: 'Reorder output field',
@@ -87,6 +95,7 @@ const en = {
   noMatches: 'No matching sources.',
   noCompatibleJoinFields: 'No compatible fields for this selection.',
   edit: 'Edit',
+  selectedFieldsOnly: 'Selected fields only',
   editConditions: 'Edit conditions',
   expand: 'Details',
   collapse: 'Hide details',
@@ -190,6 +199,12 @@ const en = {
   },
 };
 const es: typeof en = {
+  joinRecovery: {
+    action: 'Reconfigurar JOIN',
+    hint: 'Las entradas cambiaron. Configura una condición nueva para las entradas actuales. La configuración guardada se conserva hasta aplicar; Cancelar la recupera.',
+    failed:
+      'No se pudo reconfigurar el JOIN. Comprueba que ambas entradas estén disponibles, usen la misma conexión y tengan campos compatibles.',
+  },
   stagedAnalysis: {
     'missing-input':
       'Esta operación tiene una entrada no disponible. Reconecta su origen o modelo antes de editar.',
@@ -220,6 +235,8 @@ const es: typeof en = {
   output: 'Output',
   addOutputField: 'Añadir campo',
   removeOutputField: 'Quitar campo',
+  sourceOutputUnavailable:
+    'Este campo no tiene una salida directa independiente en el Modelo. Usa el Output de la operación.',
   fieldSelectionRejected: 'No se puede cambiar la selección. Revisa el campo y sus dependencias.',
   fieldSelectionDependencies: 'Campos u operaciones afectados',
   reorderOutput: 'Reordenar campo de salida',
@@ -276,7 +293,8 @@ const es: typeof en = {
   search: 'Buscar fuentes…',
   noMatches: 'No hay fuentes que coincidan.',
   noCompatibleJoinFields: 'No hay campos compatibles con esta selección.',
-  edit: 'Editar',
+  edit: 'Edit',
+  selectedFieldsOnly: 'Solo seleccionados',
   editConditions: 'Editar condiciones',
   expand: 'Detalles',
   collapse: 'Ocultar detalles',

@@ -102,7 +102,7 @@ export function useCanvasDraftLifecycle({
   const handleCreateCanvasDocument = useCallback<
     CanvasDraftLifecycle['handleCreateCanvasDocument']
   >(
-    async (command) =>
+    async (command) => {
       await executeCreateCanvasDocumentCommand({
         command,
         currentDraftPayload,
@@ -113,7 +113,9 @@ export function useCanvasDraftLifecycle({
         setDraftSession,
         setDraftSaveStatus,
         lastSavedSignatureRef: refs.lastSavedSignatureRef,
-      }),
+        invalidateInFlightSaveAttempt,
+      });
+    },
     [
       canPersistGraphDraft,
       draftQueryCache,
@@ -125,6 +127,7 @@ export function useCanvasDraftLifecycle({
       setDraftSession,
       setDraftSaveStatus,
       currentDraftPayload,
+      invalidateInFlightSaveAttempt,
     ]
   );
   const canvasLifecycleCommandDto = useMemo(
@@ -137,6 +140,7 @@ export function useCanvasDraftLifecycle({
       setDraftSession,
       setDraftSaveStatus,
       lastSavedSignatureRef: refs.lastSavedSignatureRef,
+      invalidateInFlightSaveAttempt,
     }),
     [
       canPersistGraphDraft,
@@ -147,6 +151,7 @@ export function useCanvasDraftLifecycle({
       refs.lastSavedSignatureRef,
       setDraftSession,
       setDraftSaveStatus,
+      invalidateInFlightSaveAttempt,
     ]
   );
   const handleSelectCanvasDocument = useCallback<
@@ -165,6 +170,7 @@ export function useCanvasDraftLifecycle({
     draftQueryCache,
     graphDraftState: graphDraftQuery.data,
     draftSession,
+    draftSaveStatus,
     currentDraftPayload,
     currentDraftPayloadSignature,
     canPersistGraphDraft,
@@ -172,7 +178,6 @@ export function useCanvasDraftLifecycle({
     refs,
     setDraftSession,
     setDraftSaveStatus,
-    invalidateInFlightSaveAttempt,
     createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
   const canExportProjectSnapshot =

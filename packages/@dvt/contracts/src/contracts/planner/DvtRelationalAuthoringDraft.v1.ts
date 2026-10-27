@@ -41,6 +41,7 @@ const SourceSchema = z
     sourceNodeId: NonBlankStringSchema,
     displayName: NonBlankStringSchema,
     semanticDocument: DvtSubstraitSemanticDocumentV1Schema,
+    initialOutputFieldIds: z.array(NonBlankStringSchema).optional(),
   })
   .strict();
 const OperationDraftSchema = z
@@ -86,6 +87,22 @@ export const DvtRelationalAuthoringDraftV1Schema = z
     }
     draft.sources.forEach((source, index) => {
       const document = source.semanticDocument;
+      const outputFieldIds = source.initialOutputFieldIds;
+      const roots = new Set(
+        document.sidecar.fields
+          .filter((field) => field.relationId === source.relationId && field.parentFieldId == null)
+          .map((field) => field.fieldId)
+      );
+      if (
+        outputFieldIds != null &&
+        (new Set(outputFieldIds).size !== outputFieldIds.length ||
+          outputFieldIds.some((fieldId) => !roots.has(fieldId)))
+      )
+        context.addIssue({
+          code: 'custom',
+          path: ['sources', index, 'initialOutputFieldIds'],
+          message: 'Initial Output must select unique root fields of this pending Read.',
+        });
       let validRead = false;
       try {
         const plan = decodeDvtSubstraitPlanV1(document);

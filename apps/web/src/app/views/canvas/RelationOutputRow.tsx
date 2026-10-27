@@ -6,13 +6,14 @@
  * @version 1.0.0
  */
 import { useId } from 'react';
-import { GripVertical, Plus, X } from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import type { DragEventHandler, KeyboardEventHandler } from 'react';
 import { Input } from '../../components/ui/input';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { RelationOutputSlot } from './canvasRelationOutputSchema';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
+import { FieldInclusionToggle } from '../../components/inspector/FieldInclusionToggle';
 
 export function RelationOutputRow({
   field,
@@ -97,27 +98,16 @@ export function RelationOutputRow({
           <span className="min-w-0 flex-1 truncate">{field.name}</span>
         ) : (
           <>
-            <button
-              type="button"
-              data-slot="relation-output-toggle"
-              data-field-name={field.name}
-              data-included={field.output != null}
+            <FieldInclusionToggle
+              slot="relation-output-toggle"
+              fieldName={field.name}
+              included={field.output != null}
               disabled={disabled}
-              aria-disabled={busy || undefined}
-              aria-busy={busy || undefined}
-              aria-label={`${inclusionLabel}: ${inclusionName}`}
+              busy={busy}
+              label={`${inclusionLabel}: ${inclusionName}`}
               title={inclusionLabel}
-              className="grid size-7 shrink-0 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) disabled:opacity-40"
-              onClick={() => {
-                if (!busy) onInclude(field.output == null);
-              }}
-            >
-              {field.output == null ? (
-                <Plus aria-hidden="true" className="size-3.5" />
-              ) : (
-                <X aria-hidden="true" className="size-3.5" />
-              )}
-            </button>
+              onChange={onInclude}
+            />
             <div className="min-w-0 flex-1">
               <Input
                 aria-label={name}

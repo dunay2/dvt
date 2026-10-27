@@ -42,6 +42,7 @@ describe('inspection after relation retirement', () => {
         root.render(
           <RelationAnalysisTestHost document={draft}>
             <CanvasRelationalTreeInlineEditor
+              sourceOutputFieldsByRelationId={new Map()}
               copy={COPY}
               joinDraft={draft}
               selectedRelationId={selected}

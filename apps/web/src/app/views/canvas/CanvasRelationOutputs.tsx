@@ -10,25 +10,27 @@ import { useRelationCommand } from './useRelationCommand';
 import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
 import { RelationOutputRow } from './RelationOutputRow';
 import { useInspectorListReorder } from '../../components/inspector/useInspectorListReorder';
+import { useCanvasOutputPresentation } from './CanvasRelationalTreeEditorFrame';
 
 export function CanvasRelationOutputs({
   relationId,
   disabled,
   onChange,
   onPendingChange,
-  orderingOnly = false,
 }: Readonly<{
   relationId: string;
   disabled: boolean;
   onChange: (document: SubstraitDocument) => void | boolean;
-  orderingOnly?: boolean;
   onPendingChange?: (pending: boolean) => void;
 }>) {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(language);
   const editorCopy = resolveCanvasSemanticEditorCopy(language);
   const model = useRelationOutputs(relationId);
+  const { editing, showExcluded } = useCanvasOutputPresentation();
   const command = useRelationCommand(relationId, onChange);
+  const editable = editing && !disabled && model != null && !model.physical;
+  const canChange = editable && command.state !== 'busy';
   const [localNames, setLocalNames] = useState<Readonly<Record<string, string>>>({});
   const [rowOrder, setRowOrder] = useState<readonly number[] | null>(null);
   const drafts = {
@@ -61,16 +63,24 @@ export function CanvasRelationOutputs({
         (rowOrder.indexOf(a.slot) < 0 ? Infinity : rowOrder.indexOf(a.slot)) -
         (rowOrder.indexOf(b.slot) < 0 ? Infinity : rowOrder.indexOf(b.slot))
     );
-  const update = (next: typeof outputs) => {
-    if (!disabled && command.state !== 'busy' && model != null && !model.physical)
-      void command.execute((session, request) =>
-        changeSelectedRelationOutputs(session, { ...request, outputs: next })
-      );
+  const update = (next: typeof outputs, order?: readonly number[]) => {
+    if (canChange) {
+      const previousOrder = rowOrder;
+      if (order != null) setRowOrder(order);
+      void command
+        .execute((session, request) =>
+          changeSelectedRelationOutputs(session, { ...request, outputs: next })
+        )
+        .then((accepted) => {
+          if (!accepted && order != null)
+            setRowOrder((current) => (current === order ? previousOrder : current));
+        });
+    }
   };
   const reorder = useInspectorListReorder({
     orderedIds: outputIds,
     visibleIds: outputIds,
-    enabled: !disabled && model != null && !model.physical && command.state !== 'busy',
+    enabled: canChange,
     onMove: (movedId, targetId, placement) => {
       const sourceIndex = outputIds.indexOf(movedId);
       if (sourceIndex < 0) return;
@@ -79,19 +89,18 @@ export function CanvasRelationOutputs({
       const targetIndex = outputIds.filter((id) => id !== movedId).indexOf(targetId);
       if (moved == null || targetIndex < 0) return;
       next.splice(targetIndex + (placement === 'after' ? 1 : 0), 0, moved);
-      setRowOrder([
+      update(next, [
         ...next.map((field) => field.slot),
         ...rows.filter((field) => field.output == null).map((field) => field.slot),
       ]);
-      update(next);
     },
   });
   if (model == null) return null;
   return (
     <section className="space-y-2" data-slot="canvas-relation-outputs">
-      {(orderingOnly ? selected : rows).map((field) => {
+      {(showExcluded ? rows : selected).map((field) => {
         const key = field.output?.fieldId ?? field.key;
-        const canReorder = field.output != null && !disabled && !model.physical;
+        const canReorder = editable && field.output != null;
         const name = field.output == null ? field.name : (drafts.values[key] ?? field.name);
         const error =
           name.trim().length === 0
@@ -103,14 +112,14 @@ export function CanvasRelationOutputs({
                 : null;
         return (
           <RelationOutputRow
-            orderingOnly={orderingOnly}
+            orderingOnly={!editing}
             key={`${relationId}:${field.slot}`}
             field={field}
             copy={copy}
             name={name}
             error={error}
             onNameChange={(value) => drafts.onChange(key, value)}
-            disabled={disabled || model.physical}
+            disabled={!editable}
             busy={command.state === 'busy'}
             draggable={canReorder}
             dropPlacement={reorder.dropPlacement(key)}
@@ -135,13 +144,13 @@ export function CanvasRelationOutputs({
             }}
             onInclude={(included) => {
               const order = rows.map((row) => row.slot);
-              setRowOrder(order);
               update(
                 included
                   ? [...outputs, { slot: field.slot, alias: field.name }].sort(
                       (a, b) => order.indexOf(a.slot) - order.indexOf(b.slot)
                     )
-                  : outputs.filter((output) => output.slot !== field.slot)
+                  : outputs.filter((output) => output.slot !== field.slot),
+                order
               );
             }}
             onRename={(alias) => {

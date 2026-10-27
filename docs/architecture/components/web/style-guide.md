@@ -442,6 +442,34 @@ barrel. The model header is content-sized and no longer reserves a last-run slot
 
 ### Explicit data action
 
+Canvas forms share one presentation contract through
+`CanvasRelationalTreeEditorFrame` and the existing Inspector controls. Inspection
+shows included Output fields without mutation controls. The textual header action
+is `Edit`; editing shows included and excluded fields with the shared inclusion
+toggle. Creation starts in editing. Entering or leaving a presentation mode does
+not save, query a provider, or change graph semantics. New forms must reuse this
+frame, field rows, buttons and semantic tokens instead of introducing local CSS
+or another edit/filter state machine. The common explicit `Solo seleccionados`
+selector is available during Output editing; Edit defaults to all admitted rows.
+In the default all-fields view, toggling inclusion does not change that filter,
+reorder or unmount the edited row, or move focus, scroll or card coordinates.
+The explicit selected-only view filters excluded rows without changing their
+canonical inclusion or ordering. A Source selected within an
+already-active Model transaction remains in inspection until its own Edit.
+The existing Frame provider owns relation mode and filter together; Apply/Cancel
+clear edit mode while preserving the selected tab.
+
+Persistence belongs to the existing command owner. Within an active Model draft,
+Apply/Cancel owns the complete transaction, including each Source occurrence's
+pending Output preference and explicitly staged recovery of a still-published
+but unmapped physical Input field. Recovery and that occurrence's Output change
+apply or cancel together through the existing aggregate command; presentation
+must not call an immediate Input mapping callback. Ordinary Output toggles leave
+Input bindings unchanged. Existing atomic Model/Transform Output editors retain
+their command port and eligibility checks while consuming the same visual Edit
+gate. A shared visual interaction does not merge operation-specific validation
+or create another persistence authority.
+
 `CanvasNodeDataAction` owns the shared Preview chrome in outer graph cards and
 relational operation cards. Reuse `PreviewWarehouseSourceObjectRows` and
 `PreviewCanvasTransformRows`; visibility never invokes either query or changes
@@ -1217,6 +1245,26 @@ Suggested type scale:
 ### Spacing, Radius, And Density
 
 The workbench should use a tight but not cramped density model.
+
+Logical column collections in `NodePropertyTable` use the shared Inspector record
+tokens: 12px text with 16px line height, a 28px minimum collapsed summary, compact
+padding and a centred 12px chevron. Every generic Workbench Columns consumer uses
+that same pattern. Long names wrap and increase row height; expanded business
+metadata remains readable and complete. The shared column presentation excludes
+the internal `reference` key in both Inspector tables and Workbench details.
+Canonical field references, row IDs and callback identity remain internal; origin,
+types, nullability and actual foreign-key targets remain visible. Native disclosure, keyboard focus and bounded
+scrolling are preserved. This single-line logical collection differs from the
+physical Source scanner's two-line facts, whose minimum target remains 44px.
+
+Generic Workbench Inputs/Outputs present each relationship as one compact business
+line: direction, related node name and relation. An existing connection value may
+appear beneath it as brief context. Do not repeat raw property keys or expose
+`nodeId` in this view. IDs remain in the read model and stable row/callback identity.
+If the node label is blank or merely repeats that ID, use the existing empty-cell
+state instead of inventing a name. Full names and connection values wrap; counts,
+order and existing custom cell rendering remain intact. This passive template
+does not acquire Source master/detail or reorder behavior.
 
 Rules:
 

@@ -102,7 +102,18 @@ describe('Model composition Workbench', () => {
     expect(inspector?.querySelector('[data-slot="source-occurrence-outputs"]')).not.toBeNull();
     expect(
       inspector?.querySelectorAll('[data-slot="source-occurrence-remove-field"]')
+    ).toHaveLength(0);
+    expect(
+      inspector?.querySelectorAll('[data-slot="source-occurrence-output-field"]')
     ).toHaveLength(2);
+    await act(async () =>
+      inspector?.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')?.click()
+    );
+    expect(container.querySelectorAll('[data-slot="source-occurrence-remove-field"]')).toHaveLength(
+      2
+    );
+    expect(onMapInput).not.toHaveBeenCalled();
+    expect(onRemoveInput).not.toHaveBeenCalled();
     expect(inspector?.querySelector('input[type="checkbox"]')).toBeNull();
   });
 
@@ -160,6 +171,9 @@ describe('Model composition Workbench', () => {
         ?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
 
+    await act(async () =>
+      panel?.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')?.click()
+    );
     const alias = panel?.querySelector<HTMLInputElement>(
       '[data-slot="relation-output-field"] input:not([type="checkbox"])'
     );
@@ -249,6 +263,13 @@ describe('Model composition Workbench', () => {
         )!
         .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     });
+    await act(async () =>
+      container
+        .querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-relational-edit"]'
+        )
+        ?.click()
+    );
     const alias = container.querySelector<HTMLInputElement>(
       '[data-slot="canvas-model-output-inspector"] [data-slot="relation-output-field"] input:not([type="checkbox"])'
     )!;

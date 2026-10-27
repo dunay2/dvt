@@ -42,6 +42,7 @@ describe('pending edits across relation selection', () => {
             Apply
           </button>
           <CanvasRelationalTreeInlineEditor
+            sourceOutputFieldsByRelationId={new Map()}
             copy={COPY}
             joinDraft={document}
             selectedRelationId={selected}

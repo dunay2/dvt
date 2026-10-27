@@ -3,10 +3,14 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftApplyResult,
+  CanvasInspectorNodeDraftInputChanges,
 } from './canvasInspectorAuthoring.types';
 import type { GraphNodeInputMapping } from '../../plugins/graph/graphNodeColumnContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasOperationPreviewPorts } from './CanvasOperationDataPreview';
+import type { SubstraitDocument } from '@dvt/substrait-analysis';
+import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
+import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 
 export type CanvasRelationalTreeWorkbenchProps = Readonly<{
   transformNode: CanonicalNode;
@@ -20,19 +24,56 @@ export type CanvasRelationalTreeWorkbenchProps = Readonly<{
 
 export type CanvasRelationalTreeApplyResult =
   | CanvasInspectorNodeDraftApplyResult
-  | Readonly<{ outcome: 'rejected'; reason: 'command_unavailable' }>;
+  | Readonly<{ outcome: 'rejected'; reason: 'command_unavailable' | 'source_output_unavailable' }>;
 
 export type RelationalApplyRejection = Extract<
   CanvasRelationalTreeApplyResult,
   { outcome: 'rejected' }
 >;
 
+export type CanvasRelationalTreeApplyCommandArgs = {
+  authoring?: CanvasRelationalTreeAuthoringContract;
+  editable: boolean;
+  relationalAuthoringDraft?: DvtRelationalAuthoringDraftV1 | null;
+  cleared?: boolean;
+  joinDraft: SubstraitDocument | null;
+  operation: CanvasRelationalOperation | null;
+  reject: (rejection: RelationalApplyRejection) => void;
+  reset: () => void;
+  transformNode: CanonicalNode;
+  inputChanges?: CanvasInspectorNodeDraftInputChanges;
+};
+
+type SynchronousApplyArgs = Omit<
+  CanvasRelationalTreeApplyCommandArgs,
+  'authoring' | 'inputChanges'
+> & {
+  authoring?: Omit<CanvasRelationalTreeAuthoringContract, 'onApplyNodeDraft'> & {
+    onApplyNodeDraft: (
+      nodeId: string,
+      draft: CanvasInspectorNodeDraft
+    ) => CanvasInspectorNodeDraftApplyResult;
+  };
+  inputChanges?: never;
+};
+
+export type CanvasRelationalTreeApplyCommandFactory = {
+  (args: SynchronousApplyArgs): (document?: SubstraitDocument) => CanvasRelationalTreeApplyResult;
+  (
+    args: CanvasRelationalTreeApplyCommandArgs
+  ): (
+    document?: SubstraitDocument,
+    changes?: CanvasInspectorNodeDraftInputChanges
+  ) => CanvasRelationalTreeApplyResult | Promise<CanvasRelationalTreeApplyResult>;
+};
+
 export type CanvasRelationalTreeAuthoringContract = Readonly<{
   canEditNode: boolean;
   onApplyNodeDraft: (
     nodeId: string,
-    draft: CanvasInspectorNodeDraft
-  ) => CanvasInspectorNodeDraftApplyResult;
+    draft: CanvasInspectorNodeDraft,
+    changes?: CanvasInspectorNodeDraftInputChanges
+  ) => CanvasInspectorNodeDraftApplyResult | Promise<CanvasInspectorNodeDraftApplyResult>;
   onMapInput?: (mapping: GraphNodeInputMapping) => void;
   onRemoveInput?: (mapping: GraphNodeInputMapping) => void;
 }>;

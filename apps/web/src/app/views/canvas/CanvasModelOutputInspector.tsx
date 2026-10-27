@@ -15,7 +15,10 @@ import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import { resolveCanvasRelationalNodeCopy } from './canvasRelationalNodePresentation';
 import type { CanvasRelationalTreeNode } from './canvasRelationalTreeProjection';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
+import {
+  CanvasRelationalTreeEditorFrame,
+  useCanvasInspectorEditing,
+} from './CanvasRelationalTreeEditorFrame';
 
 export function CanvasModelOutputInspector({
   modelName,
@@ -37,6 +40,7 @@ export function CanvasModelOutputInspector({
   const relationId = root.relationId;
   const language = useApplicationLanguageStore((state) => state.language);
   const labels = resolveCanvasSemanticEditorCopy(language);
+  const [editing, setEditing] = useCanvasInspectorEditing(relationId);
   if (relationId == null) return null;
   const steps = projectCanvasModelComposition(root);
 
@@ -48,6 +52,8 @@ export function CanvasModelOutputInspector({
       hasExpression={false}
       onClose={onClose}
       dataSlot="canvas-model-output-inspector"
+      editing={editing && editable}
+      onEdit={editable ? () => setEditing(true) : undefined}
       output={
         <CanvasRelationOutputs
           relationId={relationId}

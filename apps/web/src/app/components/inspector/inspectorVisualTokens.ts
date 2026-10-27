@@ -1,9 +1,14 @@
 /** Owned concern: own Inspector and node workbench visual tokens. */
 
 export const inspectorVisualClasses = {
+  inspectorFields: 'space-y-3',
   inspectorForm:
     'text-xs [&_[data-slot=label]]:text-xs [&_[data-slot=input]]:text-xs [&_[data-slot=textarea]]:text-xs [&_[data-slot=select-trigger]]:text-xs [&_select]:text-xs',
   inspectorField: 'space-y-2',
+  inspectorActions: 'flex items-center justify-end gap-2',
+  inspectorFieldInclusionButton:
+    'grid size-7 shrink-0 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) disabled:opacity-40',
+  inspectorFieldInclusionIcon: 'size-3.5',
   inspectorCard: 'border-slate-700 bg-slate-950 p-3 text-slate-50',
   inspectorTitle: 'mb-2 text-sm font-medium text-slate-100',
   inspectorLabel: 'text-slate-400',
@@ -53,7 +58,7 @@ export const inspectorVisualClasses = {
   contextPanelColumnMeta: 'mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400',
   inspectorErrorText: 'text-xs text-red-300',
   inspectorSelectInput:
-    'border-input bg-input-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 py-1 text-sm text-slate-50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+    'border-input bg-input-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 py-1 text-sm outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
   inspectorDbtSection: 'space-y-3 border-t border-slate-700 pt-3',
 } as const;
 
@@ -73,7 +78,7 @@ const propertyCell = 'px-2 py-2 align-top';
 
 /** Shared property templates; surface differences are explicit, not copied into JSX. */
 export const inspectorPropertyClasses = {
-  section: 'space-y-3',
+  section: inspectorVisualClasses.inspectorFields,
   sectionFill: 'flex h-full min-h-0 flex-col',
   contribution: 'space-y-3 pt-1',
   contributionFill: 'flex min-h-0 flex-1 flex-col',
@@ -86,20 +91,22 @@ export const inspectorPropertyClasses = {
     relationship: 'grid grid-cols-[minmax(6rem,0.3fr)_minmax(0,1fr)] gap-x-4 gap-y-4 text-sm',
   },
   records: {
-    relationship: 'space-y-3',
+    relationship: 'space-y-1',
+    relationshipCard: `min-w-0 px-2 py-1.5 ${propertyPanel}`,
+    relationshipSummary:
+      'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 text-xs leading-4',
+    relationshipMeta: 'min-w-0 break-words text-(--text-muted)',
+    relationshipConnection:
+      'mt-0.5 min-w-0 [overflow-wrap:anywhere] text-xs leading-4 text-(--text-muted)',
     column: 'divide-y divide-(--border-subtle)',
-    card: `overflow-hidden ${propertyPanel}`,
     region: `max-h-80 overflow-y-auto ${propertyPanel}`,
     disclosure: 'group',
     trigger:
-      'flex cursor-pointer list-none items-start gap-2 px-3 py-2.5 text-sm text-(--text-primary) outline-none hover:bg-(--surface-hover) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden',
-    arrow: 'mt-0.5 size-4 shrink-0 text-(--text-muted) transition-transform group-open:rotate-90',
+      'flex min-h-7 cursor-pointer list-none items-center gap-1.5 px-2 py-1 text-xs leading-4 text-(--text-primary) outline-none hover:bg-(--surface-hover) focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-(--focus-ring) [&::-webkit-details-marker]:hidden',
+    arrow: 'size-3 shrink-0 text-(--text-muted) transition-transform group-open:rotate-90',
     name: `${propertyValue} font-medium`,
     details:
       'grid grid-cols-[minmax(6rem,0.34fr)_minmax(0,1fr)] gap-x-3 gap-y-2 px-3 pb-3 pl-9 text-xs',
-    divided: 'divide-y divide-(--border-subtle)',
-    field: 'space-y-1 px-3 py-2.5',
-    value: 'min-w-0 [overflow-wrap:anywhere] text-sm text-(--text-primary)',
   },
   table: {
     inspector: {

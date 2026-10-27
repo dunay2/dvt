@@ -308,6 +308,117 @@ Source import still registers only; dragging creates an instance. This contract
 does not add Source double-click/Insert creation, change JOIN output, or expose
 unimplemented Edit/Undo/Insert/Run/Help capabilities.
 
+### Source Occurrence Output Selection
+
+The applied Model inspector selects the occurrence's direct contribution to the
+Model's root Output. It does not remove a Model Input binding. The governing
+design is Planning DB `GH-2937-SOURCE-OUTPUT-SELECTION-V12`, with rationale and
+Fowler matrix in [issue #2937](https://github.com/dunay2/dvt/issues/2937#issuecomment-6419771739).
+The existing `ConfigureCanvasDvtNode` and `RenderCanvasContextualGraphSurface`
+rails retain command and presentation ownership.
+
+```mermaid
+flowchart LR
+  Read[Selected Read occurrence] --> Query[Canonical direct output slots]
+  Root[Model root emit] --> Query
+  Query --> View[Applied Source: included fields only]
+  View --> Edit[Existing Edit opens the canonical draft]
+  Edit --> Draft[Controlled included and excluded rows with shared inclusion button]
+  Draft --> Command[Existing root Output command]
+  Command --> Root
+  Pending[Detached Read occurrence preference] --> Terminal[Connect terminal Output]
+  Terminal --> Command
+```
+
+`CanvasSourceOccurrenceOutputs` is passive presentation. The applied selection
+adapter reads the current session and delegates changes to
+`changeSelectedRelationOutputs` through `useRelationCommand`. Direct forwarding
+is resolved by canonical relation/field identity and emit mappings, including
+nested JOINs and self-JOINs. Project expressions retain their own definition
+identity, including expressions that only select an Input field. Only forwarded
+Input slots belong to the Source inclusion control. Dependencies do not establish direct
+forwarding; aggregate and SET outputs cannot be attributed independently to one
+Source. Unavailable direct contributions remain visible with disabled controls.
+
+Excluding a field changes only root Output selection. The physical Read, JOIN
+predicate, calculation definitions, other occurrences and producer publication
+remain intact. The applied view shows only included fields without editing
+controls. The existing Edit action opens the Model draft; its Source inspector
+shows included and excluded fields with the existing add/remove actions.
+Apply persists the draft selection; Cancel restores the previously applied
+document. The shared header action is literally `Edit`, and entering it never
+writes a command. Edit shows all admitted fields in stable order by default.
+The shared explicit `Solo seleccionados` selector may narrow that presentation;
+a field toggle does not change the filter, reorder rows or move focus, scroll or
+card coordinates. Selecting a connected Source during an already-active Model
+draft does not itself enter that Source's local Edit mode.
+
+An explicit plus on a physical Read field still published by its connected
+producer but omitted from the incoming Input binding stages additive recovery.
+It uses the existing `bindCanvasInputField` command on an unpublished candidate,
+derives ordinary graph eligibility from its accepted edges, and includes only
+the selected occurrence's direct root Output contribution. No permission
+whitelist, automatic producer repair, dependency creation or Input rewiring is
+admitted. Ordinary Output toggles continue to leave Input bindings unchanged.
+The complete physical Read, predicates, producers and sibling Output selections
+remain intact; a producer-to-Model binding does not select other occurrences.
+
+Additive Input repair is available on the canonical connected Read inspection.
+Pending and retained staged Source inspectors keep ordinary Output selection;
+their presentation mode does not grant this separate binding capability.
+
+The existing Model Apply port carries optional additive Input identities with
+the semantic node draft. Its existing serialized workspace command evaluates
+both on the latest unpublished candidate and CAS-publishes one aggregate only
+after permission, scope, publication and semantic validation accept. Failed or
+stale Apply retains the local draft; Cancel discards Input and Output together.
+No workspace mutation occurs before accepted Apply, and navigation awaits it.
+The protected persistence envelope and public command rails remain unchanged.
+
+```mermaid
+flowchart LR
+  Plus[Explicit recovery plus] --> Bind[Existing Input bind on unpublished candidate]
+  Bind --> Eligibility[Graph eligibility from accepted edges]
+  Eligibility --> Output[Existing exact occurrence root Output command]
+  Output --> Local[Local Model graph snapshot]
+  Local --> Apply[Existing Model Apply and latest validation]
+  Apply --> CAS[One node and edge aggregate publication]
+  Cancel[Model Cancel] --> Discard[Discard local Input and Output]
+```
+
+Existing command authority owns revision, permissions, rejection, rollback and
+persistence. Detached Sources store optional `initialOutputFieldIds` on their
+own incomplete-authoring occurrence. They never invoke the Model Input mapping
+adapter. Absence uses the producer publication; an empty list selects nothing.
+Creation and detached restoration normalize that default to local Read identities
+before editing. An absent preference in a configured or retained operation stays
+absent on restore: its saved canonical Output takes precedence. Absence after
+successful consumption delegates to canonical Output ownership and cannot be
+overwritten by an obsolete pending-field callback. A disconnected terminal does
+not remove ownership from the configured operation's own Output inspector.
+The physical Read remains complete, including keys needed by later JOINs.
+
+Initialization waits for terminal Model Output connection, rather than narrowing
+the first intermediate operation. The existing canonical Output query/command
+materializes direct contributions in the terminal root. One graph-state snapshot
+coordinates document replacement and consumption of reachable preferences;
+obsolete or cancelled work cannot publish partially. Executable Apply is unavailable
+while initialization is pending or rejected. A terminal operation without a semantic
+document remains savable through the existing incomplete-authoring Apply; its
+preferences persist and confer no executable authority. Shared SET/aggregate contributions reject
+explicitly instead of silently losing intent. Unrelated pending Sources retain
+their preferences. Once initialized, configured occurrences use the canonical
+root adapter, including staged-root analysis and ancestor rebinding.
+Both adapters use the same passive rows and Inspector inclusion control; CSS
+consumes the existing semantic tokens without adding another style system.
+
+The inline coordinator delegates Source/unary binding to
+`CanvasRelationalTreeSelectedOperatorEditor` and the JOIN/CROSS/SET frame to
+`CanvasRelationalTreeCompositionEditor`. The latter owns its property/output
+pending channels; the coordinator combines them with the selected editor's
+pending channel. Selecting another operation does not collapse these distinct
+pending obligations into one flag.
+
 ### Inspector Code Placement And Height
 
 The current Inspector implementation has two ownership boundaries, recorded in
@@ -363,6 +474,15 @@ individual fields do not duplicate font-size overrides. Read-only property facts
 use the same body scale in the Inspector and workbench variants. Global UI primitives,
 title hierarchy, control heights, code-editor typography and mutation handlers
 retain their existing owners.
+
+General metadata and DVT authoring reuse the Inspector's shared field and group
+spacing. The Inspector visual owner also defines the draft-action row layout;
+the authoring composition controls its visibility and connects the shared Buttons
+to the draft controller. Native selects inherit the form text color, matching Input rather than
+forcing a separate palette. Destination-specific CSS owns only the schema/relation
+layout and the technical target value. The Model destination connection selector
+keeps its accessible name without repeating a visible Connection label under the
+destination heading; explicit Sink fields retain their visible label.
 
 The rendered acceptance compares computed label/control font sizes with the
 General tab at two desktop widths, checks focus and form overflow, and retains
@@ -554,6 +674,49 @@ sequenceDiagram
 | `RenderCanvasContextualGraphSurface` | query   | Canvas graph presentation | Proves screen composition without creating product behavior.    |
 
 No backend command/query rail changes are introduced by this component.
+
+### Shared Relationship Summaries
+
+Generic Inputs/Outputs use the shared `NodePropertyTable` business summary rather
+than stacked raw key/value fields: direction, related node name and relation on
+one line, with optional connection context below. The `nodeId` cell and an
+identity-only fallback name are not presented. Canonical IDs, row keys and custom
+cell context remain available to their existing owners. No navigation or mutation
+is invented. Planning DB `GH-3035-RELATIONSHIP-SUMMARY-V3` records the admitted
+[rationale and tests](https://github.com/dunay2/dvt/issues/3035#issuecomment-6419090098).
+
+### Logical Column Inspection Density
+
+Generic Model/logical Columns use `NodePropertyTable` native disclosures and the
+existing `inspectorPropertyClasses.records` tokens. The compact shared summary is
+12px/16px with a minimum 28px row and a centred 12px chevron. Long values wrap,
+business details remain complete and keyboard/focus behavior stays native. The
+shared visibility policy keeps technical column references internal on both
+Inspector surfaces; `GH-3035-HIDE-COLUMN-REFERENCE` records the
+[admitted policy and tests](https://github.com/dunay2/dvt/issues/3035#issuecomment-6423409499).
+Planning DB
+design `GH-3035-LOGICAL-COLUMN-DENSITY` records the rationale in
+[issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417091017).
+This presentation change reuses `RenderCanvasContextualGraphSurface`; it does not
+dispatch a graph command or change the separate physical Source scanner below.
+
+### Native Model View Continuity
+
+Changing a configured native Model's materialization updates storage disposition
+and readiness without discarding unchanged field/code projections or sampled
+rows. `ProjectGraphNodeCardReadModel` and `PreviewCanvasTransformRows` share the
+current query-metadata projection: validated canonical authority, including its
+sidecar, and declared column facts. Missing or invalid native authority and
+non-native nodes retain their current metadata as invalidation inputs. Existing
+source-publication, edge/binding, scope and request-currentness guards remain.
+
+The Readiness registrar replaces its drawer contribution while retaining the
+active view's lifetime. It clears only its latest committed contribution on
+actual unmount; the existing store identity guard protects a newer owner.
+Selected tabs, table state and layout persist across storage-only changes.
+Canonical/schema/binding changes still invalidate stale results. Planning DB
+`GH-3035-MATERIALIZATION-VIEW-CONTINUITY` records the
+[rationale, ownership and validation](https://github.com/dunay2/dvt/issues/3035#issuecomment-6424129479).
 
 ### Source Column Inspection Density
 

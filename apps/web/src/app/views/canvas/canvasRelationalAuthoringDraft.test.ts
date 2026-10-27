@@ -20,10 +20,17 @@ import {
   createDvtSubstraitProjectionDraft,
   resolveDvtSubstraitProjectionSource,
 } from './canvasDvtSubstraitProjection';
-import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import {
+  decodeDvtSubstraitSemanticDocument,
+  encodeDvtSubstraitSemanticDocument,
+} from './canvasDvtSubstraitSemanticDocument';
 import { createSourceDocument } from './canvasSourceDocument';
 import { CanvasRelationAnalysisSession } from './canvasRelationAnalysisSession';
 import { applySelectedRelationDerivedOutput } from './canvasSelectedRelationDerivedOutput';
+import { changeSelectedRelationOutputs } from './canvasSelectedRelationOutputs';
+import { initializeCanvasSourceOutputs } from './canvasSourceOutputDefaults';
+import { restoreCanvasOperationConfiguration } from './canvasRetainedOperationConfiguration';
+import type { PendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { projectSubstraitToPostgresSql } from '@dvt/postgres-projection';
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import {
@@ -84,6 +91,138 @@ describe('relational authoring draft restoration', () => {
       joinDataType: field.type,
     })),
   };
+
+  it.each([false, true])(
+    'round-trips independent pending Output preferences (empty: %s)',
+    (empty) => {
+      const left = createPendingSourceOccurrence(input);
+      const right = createPendingSourceOccurrence(input);
+      const initialOutputFieldIds = empty ? [] : [left.read.fields[1]!.fieldId];
+      const selected = { ...left, initialOutputFieldIds };
+      const draft = createCanvasRelationalAuthoringDraft({
+        sources: [selected, right],
+        operations: [],
+        outputRelationId: null,
+        positions: new Map(),
+      });
+      expect(draft.sources[0]).toHaveProperty('initialOutputFieldIds', initialOutputFieldIds);
+      expect(draft.sources[1]).toHaveProperty('initialOutputFieldIds', right.initialOutputFieldIds);
+      const restored = restoreCanvasRelationalAuthoringDraft(JSON.parse(JSON.stringify(draft)), [
+        input,
+      ]);
+      expect(restored?.sources).toEqual([selected, right]);
+      expect(restored?.sources[0]?.read).toEqual(left.read);
+      expect(input.inputBindings).toBeUndefined();
+    }
+  );
+
+  it('normalizes an absent legacy preference from the current producer default without narrowing its Read', () => {
+    const admitted: CanvasDvtCompositionInput = {
+      ...input,
+      inputBindings: {
+        version: 'v1',
+        fields: [{ inputId: 'published-second', producerFieldId: input.fields[1]!.name }],
+      },
+    };
+    const occurrence = createPendingSourceOccurrence(admitted);
+    const draft = createCanvasRelationalAuthoringDraft({
+      sources: [occurrence],
+      operations: [],
+      outputRelationId: null,
+      positions: new Map(),
+    });
+    delete draft.sources[0]!.initialOutputFieldIds;
+    const restored = restoreCanvasRelationalAuthoringDraft(draft, [admitted]);
+    expect(restored?.sources[0]).toHaveProperty('initialOutputFieldIds', [
+      occurrence.read.fields[1]!.fieldId,
+    ]);
+    expect(restored?.sources[0]!.read).toEqual(occurrence.read);
+    expect(draft.sources[0]).not.toHaveProperty('initialOutputFieldIds');
+  });
+
+  it.each(['semanticDocument', 'configurationDocument'] as const)(
+    'preserves consumed Output ownership through disconnected save, reopen and reconnect (%s)',
+    async (authority) => {
+      const { document, session } = graphJoin();
+      const indexed = indexSubstraitRelations(document);
+      if (!indexed.ok) throw indexed.error;
+      const root = indexed.index.relations.get(indexed.index.rootId)!;
+      const reads = [...indexed.index.relations.values()]
+        .filter((entry) => entry.relation.relType.case === 'read')
+        .sort((left, right) => left.binding.relAnchor - right.binding.relAnchor);
+      const sources: PendingSourceOccurrence[] = reads.map((read) => ({
+        sourceNodeId: read.binding.displayName!,
+        read: { ...read, binding: { ...read.binding, displayName: read.binding.displayName! } },
+      }));
+      const inputs: CanvasDvtCompositionInput[] = reads.map((read, index) => ({
+        nodeId: read.binding.displayName!,
+        schema: 'public',
+        table: read.binding.displayName!,
+        sourceRef: read.binding.sourceRef!,
+        fields: ['customer_id', 'name'].map((name) => ({
+          name,
+          dataType: 'string',
+          joinDataType: 'string',
+          nullable: true,
+        })),
+        ...(index === 0
+          ? {
+              inputBindings: {
+                version: 'v1' as const,
+                fields: [{ inputId: 'published-name', producerFieldId: 'name' }],
+              },
+            }
+          : {}),
+      }));
+      try {
+        const selected = await changeSelectedRelationOutputs(session, {
+          relationId: session.rootId,
+          expectedRevision: session.revision,
+          outputs: [],
+        });
+        const saved = createCanvasRelationalAuthoringDraft({
+          sources,
+          operations: [
+            {
+              id: root.binding.relationId,
+              operation: 'inner_join',
+              inputs: authority === 'configurationDocument' ? [null, root.inputs[1]!] : root.inputs,
+              [authority]: encodeDvtSubstraitSemanticDocument(selected),
+            },
+          ],
+          outputRelationId: null,
+          positions: new Map(),
+        });
+        const restored = restoreCanvasRelationalAuthoringDraft(
+          JSON.parse(JSON.stringify(saved)),
+          inputs
+        )!;
+        expect(restored).not.toBeNull();
+        expect(restored.sources.every((source) => source.initialOutputFieldIds == null)).toBe(true);
+        const operation =
+          authority === 'configurationDocument'
+            ? restoreCanvasOperationConfiguration(
+                { ...restored.operations[0]!, inputs: root.inputs },
+                restored.sources.map((source) => createSourceDocument([source.read], source.read))
+              )
+            : restored.operations[0]!;
+        expect(operation.semanticDocument).toBeDefined();
+        const reconnected = await initializeCanvasSourceOutputs({
+          document: decodeDvtSubstraitSemanticDocument(operation.semanticDocument!),
+          sources: restored.sources,
+        });
+        expect(reconnected.consumedIds).toEqual([]);
+        session.receive(reconnected.document);
+        expect((await session.query(null)).fields).toEqual([]);
+        for (const read of reads)
+          expect(session.locate(read.binding.relationId, session.revision).relation).toEqual(
+            read.relation
+          );
+      } finally {
+        session.dispose();
+      }
+    }
+  );
 
   it('preserves the same Read and field identities when physical column order changes', () => {
     const occurrence = createPendingSourceOccurrence(input);

@@ -11,6 +11,7 @@ import {
   createCanvasRelationalAuthoringDraft,
   restoreCanvasRelationalAuthoringDraft,
 } from './canvasRelationalAuthoringDraft';
+import { prepareCanvasCardRemoval } from './canvasCardRemoval';
 
 describe('generated composition command sequences', () => {
   it.each(compositionKinds)('rejects every readonly graph mutation for %s', (kind) => {
@@ -24,10 +25,6 @@ describe('generated composition command sequences', () => {
     readonly.connect(id, 0, producer);
     readonly.disconnect(id, 0);
     expect(harness.state.operations).toBe(before);
-    readonly.disconnectProducer(producer);
-    expect(harness.state.operations).toBe(before);
-    readonly.remove(id);
-    expect(harness.state.operations).toBe(before);
   });
 
   it.each([1, 7, 23, 91, 3472, 65537])(
@@ -37,6 +34,19 @@ describe('generated composition command sequences', () => {
       const expected = new Map<string, (string | null)[]>();
       const sourceIds = harness.state.sources.map((entry) => entry.read.binding.relationId);
       const trace: string[] = [];
+      const remove = (id: string): void => {
+        const proposal = prepareCanvasCardRemoval(
+          {
+            document: null,
+            inputIds: [],
+            ...harness.state,
+            outputRelationId: null,
+          },
+          id
+        );
+        harness.state.operations = proposal.graph.operations;
+        harness.state.sources = [...proposal.graph.sources];
+      };
       const check = (): void => {
         const actual = new Map(
           harness.state.operations.map((operation) => [operation.id, [...operation.inputs]])
@@ -108,7 +118,7 @@ describe('generated composition command sequences', () => {
       roundtrip();
       for (const id of [...expected.keys()].filter((_, index) => index % 3 === seed % 3)) {
         trace.push('remove');
-        harness.commands().remove(id);
+        remove(id);
         expected.delete(id);
         for (const [consumer, inputs] of expected)
           expected.set(
@@ -119,7 +129,10 @@ describe('generated composition command sequences', () => {
         roundtrip();
       }
       const detached = sourceIds[1]!;
-      harness.commands().disconnectProducer(detached);
+      remove(detached);
+      expect(
+        harness.state.sources.some((entry) => entry.read.binding.relationId === detached)
+      ).toBe(false);
       for (const [id, inputs] of expected)
         expected.set(
           id,

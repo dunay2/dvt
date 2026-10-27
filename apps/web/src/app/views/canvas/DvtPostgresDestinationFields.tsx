@@ -13,19 +13,22 @@ export function DvtDestinationChoiceField({
   name,
   label,
   copy,
+  showLabel = true,
 }: Readonly<{
   binding: DvtDestinationChoiceBinding;
   name: string;
   label: string;
   copy: CanvasViewCopy;
+  showLabel?: boolean;
 }>): JSX.Element {
   const id = useId();
   return (
-    <div className={styles.field}>
-      <Label htmlFor={id}>{label}</Label>
+    <div className={inspectorVisualClasses.inspectorField}>
+      {showLabel ? <Label htmlFor={id}>{label}</Label> : null}
       <select
         id={id}
         name={name}
+        aria-label={showLabel ? undefined : label}
         value={binding.value}
         disabled={binding.disabled}
         className={inspectorVisualClasses.inspectorSelectInput}
@@ -60,13 +63,14 @@ export function DvtPostgresDestinationFields({
   const id = useId();
   const { model } = binding;
   return (
-    <fieldset className={styles.fields} data-slot={`${namespace}-target`}>
+    <fieldset className={inspectorVisualClasses.inspectorFields} data-slot={`${namespace}-target`}>
       <legend className={inspectorVisualClasses.contextPanelSectionTitle}>
         {copy.inspectorDvtDestinationTargetLabel}
       </legend>
       <DvtDestinationChoiceField
         name={`${namespace}-connection`}
         label={copy.inspectorDvtConnectionLabel}
+        showLabel={namespace === 'dvt-sink'}
         copy={copy}
         binding={{
           value: model.connectionId,
@@ -87,7 +91,7 @@ export function DvtPostgresDestinationFields({
           {(['schema', 'relation'] as const).map((field) => {
             const error = field === 'schema' ? model.errors?.schema : model.errors?.table;
             return (
-              <div key={field} className={styles.field}>
+              <div key={field} className={inspectorVisualClasses.inspectorField}>
                 <Label htmlFor={`${id}-${field}`}>
                   {field === 'schema' ? copy.inspectorDvtSchemaLabel : copy.inspectorDvtTableLabel}
                 </Label>

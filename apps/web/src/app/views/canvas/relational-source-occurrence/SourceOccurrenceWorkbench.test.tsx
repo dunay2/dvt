@@ -41,6 +41,14 @@ describe('explicit source occurrence controls', () => {
     ).toBeNull();
     const inspector = container.querySelector('[data-canvas-inspector="true"]:not([hidden])');
     expect(inspector?.getAttribute('data-relation-id')).toBe(pendingId);
+    await act(async () =>
+      inspector!.querySelector<HTMLButtonElement>('[data-slot="canvas-relational-edit"]')!.click()
+    );
+    await act(async () =>
+      inspector!
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-operation-properties-tab"]')!
+        .click()
+    );
     const alias = inspector?.querySelector<HTMLInputElement>(
       '[data-slot="source-occurrence-alias"]'
     );
@@ -120,6 +128,12 @@ describe('explicit source occurrence controls', () => {
       container.querySelectorAll('[data-slot="source-occurrence-outputs"] [data-field-id]'),
       (node) => node.getAttribute('data-field-id')
     );
+    await click(
+      '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-relational-edit"]'
+    );
+    await click(
+      '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-operation-properties-tab"]'
+    );
     for (const [alias, valid] of [
       [graph.draft.sidecar.relations.find((entry) => entry.sourceRef != null)!.displayName!, false],
       [
@@ -156,6 +170,12 @@ describe('explicit source occurrence controls', () => {
     await click('[data-operator="join"]');
     expect(container.querySelector('[data-slot="source-occurrence-alias"]')).toBeNull();
     await click(`[data-operator="read"][data-relation-id="${ids[0]}"]`);
+    await click(
+      '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-relational-edit"]'
+    );
+    await click(
+      '[data-canvas-inspector="true"]:not([hidden]) [data-slot="canvas-operation-properties-tab"]'
+    );
     expect(
       container.querySelector<HTMLInputElement>('[data-slot="source-occurrence-alias"]')!.value
     ).toBe('Independent places');

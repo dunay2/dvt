@@ -4,7 +4,11 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftRepository, CanvasDraftSaveResult } from './canvasDraftRepository';
 import type { CanvasDraftSession } from './canvasDraftSession';
-import type { DraftAttemptRefs, DraftSaveStatus } from './canvasDraftLifecycle.types';
+import type {
+  DraftAttemptRefs,
+  DraftSaveCompletion,
+  DraftSaveStatus,
+} from './canvasDraftLifecycle.types';
 import {
   applyConflictResolution,
   applySavedDraftResolution,
@@ -36,7 +40,7 @@ type SaveFailureContext = {
   currentDraftPayloadSignature: string;
 };
 
-export type PerformCanvasDraftAutosaveArgs = {
+export type PerformCanvasDraftSaveArgs = {
   refs: DraftAttemptRefs;
   draftRepository: CanvasDraftRepository;
   currentDraftPayload: WorkspaceGraphAuthoringDraft;
@@ -65,7 +69,11 @@ function resolveDraftSaveSuccess(
     return;
   }
 
-  refs.activeSaveAttemptRef.current = null;
+  refs.confirmedSaveReceiptRef.current = {
+    generation: saveAttempt.generation,
+    signature: currentDraftPayloadSignature,
+    result,
+  };
   if (result.outcome === 'conflict') {
     applyConflictResolution({
       draftQueryCache,
@@ -74,6 +82,7 @@ function resolveDraftSaveSuccess(
       refs,
       currentState: result.remoteDraftState,
     });
+    refs.activeSaveAttemptRef.current = null;
     return;
   }
 
@@ -85,6 +94,7 @@ function resolveDraftSaveSuccess(
     setDraftSaveStatus: (status) => setDraftSaveStatus(status),
     remoteDraftState: result.remoteDraftState,
   });
+  refs.activeSaveAttemptRef.current = null;
   if (refreshWorkspaceFilesAfterSave) {
     void draftQueryCache.refreshWorkspaceFilesAfterSourceRemoval().catch(() => undefined);
   }
@@ -102,12 +112,13 @@ function resolveDraftSaveFailure({
   }
 
   refs.activeSaveAttemptRef.current = null;
+  refs.confirmedSaveReceiptRef.current = null;
   restoreEditingAfterSaveFailure(refs, currentDraftPayloadSignature, setDraftSession, (status) =>
     setDraftSaveStatus(status)
   );
 }
 
-export function performCanvasDraftAutosave({
+export function performCanvasDraftSave({
   refs,
   draftRepository,
   currentDraftPayload,
@@ -118,18 +129,38 @@ export function performCanvasDraftAutosave({
   draftQueryCache,
   currentDraftPayloadSignature,
   refreshWorkspaceFilesAfterSave,
-}: PerformCanvasDraftAutosaveArgs) {
-  const saveAttempt = startNextSaveAttempt(refs);
-  markDraftSaving(setDraftSession, draftSession);
+}: PerformCanvasDraftSaveArgs): Promise<DraftSaveCompletion> {
+  const activeSaveAttempt = refs.activeSaveAttemptRef.current;
+  if (activeSaveAttempt != null) return activeSaveAttempt.completion;
+
+  const receipt = refs.confirmedSaveReceiptRef.current;
+  const confirmed = receipt?.generation === refs.saveAttemptGenerationRef.current ? receipt : null;
+  if (confirmed?.result.outcome === 'conflict') {
+    setDraftSaveStatus('idle');
+    return Promise.resolve(confirmed.result);
+  }
+  if (confirmed?.signature === currentDraftPayloadSignature) {
+    setDraftSaveStatus('saved');
+    return Promise.resolve(confirmed.result);
+  }
+  const confirmedRevision =
+    confirmed?.result.outcome === 'saved' ? confirmed.result.record.revision : null;
+  const saveAttempt = startNextSaveAttempt(refs, currentDraftPayloadSignature);
+  markDraftSaving(
+    setDraftSession,
+    confirmedRevision == null
+      ? draftSession
+      : { ...draftSession, syncState: 'editing', draftRevision: confirmedRevision }
+  );
   setDraftSaveStatus('saving');
 
-  draftRepository
-    .saveGraphDraft({
-      draft: currentDraftPayload,
-      expectedRevision: draftSession.draftRevision,
-      idempotencyKey: createDraftIdempotencyKey(),
-    })
-    .then((result) =>
+  void (async () => {
+    try {
+      const result = await draftRepository.saveGraphDraft({
+        draft: currentDraftPayload,
+        expectedRevision: confirmedRevision ?? draftSession.draftRevision,
+        idempotencyKey: createDraftIdempotencyKey(),
+      });
       resolveDraftSaveSuccess(result, {
         refs,
         saveAttempt,
@@ -138,15 +169,19 @@ export function performCanvasDraftAutosave({
         setDraftSaveStatus,
         currentDraftPayloadSignature,
         refreshWorkspaceFilesAfterSave,
-      })
-    )
-    .catch(() =>
+      });
+      saveAttempt.settle(result);
+    } catch {
       resolveDraftSaveFailure({
         refs,
         saveAttempt,
         setDraftSession,
         setDraftSaveStatus,
         currentDraftPayloadSignature,
-      })
-    );
+      });
+      saveAttempt.settle({ outcome: 'failed' });
+    }
+  })();
+
+  return saveAttempt.completion;
 }

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { NodePropertySectionView } from './NodePropertySectionView';
 import { NODE_PROPERTY_ROW_ID, type NodePropertySection } from './nodePropertiesContracts';
+import type { NodePropertyTableProps } from './NodePropertyTable';
 
 vi.mock('../monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({
@@ -23,7 +24,10 @@ vi.mock('../monaco/MonacoCodeViewer', () => ({
   ),
 }));
 
-function renderSection(section: NodePropertySection): {
+function renderSection(
+  section: NodePropertySection,
+  renderTableCell?: NodePropertyTableProps['renderTableCell']
+): {
   container: HTMLDivElement;
   root: Root;
 } {
@@ -40,6 +44,7 @@ function renderSection(section: NodePropertySection): {
         section={section}
         slots={{ code: 'node-section-code', sectionPrefix: 'node-section' }}
         surface="workbench"
+        renderTableCell={renderTableCell}
       />
     );
   });
@@ -131,59 +136,167 @@ describe('NodePropertySectionView', () => {
     expect(disclosures[1]?.open).toBe(false);
   });
 
-  it('stacks every relationship field so long values remain legible without horizontal overflow', () => {
+  it('summarizes Input and Output relationships with optional connection and no internal node identity', () => {
     ({ container, root } = renderSection({
       id: 'inputs-outputs',
       label: 'Inputs / Outputs',
       rows: [],
       tableRows: [
         {
-          id: 'source-to-transform',
+          id: 'input:source-to-transform',
           cells: {
             direction: 'Input',
-            node: 'source_1',
+            node: 'client',
             nodeId: 'src_postgresql_local_2333_dvt_public_source_1',
             relation: 'Lineage',
             connection: 'local-postgres-proof',
+          },
+        },
+        {
+          id: 'output:transform-to-sink',
+          cells: {
+            direction: 'Output',
+            node: 'published_orders',
+            nodeId: 'private-sink-id',
+            relation: 'Lineage',
           },
         },
       ],
     }));
 
     const list = container.querySelector('[data-slot="node-property-relationship-list"]');
-    const record = container.querySelector('[data-slot="node-property-relationship-record"]');
-    const values = Array.from(record?.querySelectorAll('dd') ?? []);
+    const records = [
+      ...container.querySelectorAll('[data-slot="node-property-relationship-record"]'),
+    ];
+    const header = records[0]!.querySelector('[data-slot="node-property-relationship-summary"]')!;
 
     expect(container.querySelector('table')).toBeNull();
     expect(list?.tagName).toBe('UL');
-    expect(record?.tagName).toBe('LI');
-    expect(record?.textContent).toContain('Input');
-    expect(record?.textContent).toContain('source_1');
-    expect(record?.textContent).toContain('src_postgresql_local_2333_dvt_public_source_1');
-    expect(container.textContent).toContain('Lineage');
-    expect(container.textContent).toContain('local-postgres-proof');
-    expect(values).toHaveLength(5);
-    expect(values.every((value) => value.className.includes('overflow-wrap:anywhere'))).toBe(true);
+    expect(records).toHaveLength(2);
+    expect(records.every((record) => record.tagName === 'LI')).toBe(true);
+    expect([...header.children].map((cell) => cell.textContent)).toEqual([
+      'Input',
+      'client',
+      'Lineage',
+    ]);
+    expect(
+      records[0]!.querySelector('[data-slot="node-property-relationship-connection"]')?.textContent
+    ).toBe('local-postgres-proof');
+    expect(
+      records[1]!.querySelector('[data-slot="node-property-relationship-summary"]')?.textContent
+    ).toContain('Output');
+    expect(
+      records[1]!.querySelector('[data-slot="node-property-relationship-node"]')?.textContent
+    ).toBe('published_orders');
+    expect(
+      records[1]!.querySelector('[data-slot="node-property-relationship-connection"]')
+    ).toBeNull();
+    expect(list?.querySelector('dl, dt, dd')).toBeNull();
+    expect(container.textContent).not.toContain('src_postgresql_local_2333_dvt_public_source_1');
+    expect(container.textContent).not.toContain('private-sink-id');
   });
 
-  it('keeps every column field visible in a stacked record instead of clipping it horizontally', () => {
-    ({ container, root } = renderSection({
-      id: 'columns',
-      label: 'Columns',
+  it.each(['', '   ', 'opaque-node-identity'])(
+    'uses the existing empty cell for missing business names (%j)',
+    (name) => {
+      const section: NodePropertySection = {
+        id: 'inputs-outputs',
+        label: 'Inputs / Outputs',
+        rows: [],
+        tableRows: [
+          {
+            id: 'input:opaque-edge-identity',
+            cells: {
+              direction: 'Input',
+              node: name,
+              nodeId: 'opaque-node-identity',
+              relation: 'Lineage',
+            },
+          },
+        ],
+      };
+      const original = structuredClone(section);
+      ({ container, root } = renderSection(section));
+      expect(
+        container.querySelector('[data-slot="node-property-relationship-node"]')?.textContent
+      ).toBe('-');
+      const accessible = [...container.querySelectorAll('[title], [aria-label]')]
+        .flatMap((element) => [element.getAttribute('title'), element.getAttribute('aria-label')])
+        .join(' ');
+      expect(`${container.textContent} ${accessible}`).not.toContain('opaque-node-identity');
+      expect(`${container.textContent} ${accessible}`).not.toContain('opaque-edge-identity');
+      expect(section).toEqual(original);
+    }
+  );
+
+  it('preserves complete long business values and custom cell identity in the compact relationship', () => {
+    const name = `business_${'long_name_'.repeat(30)}`;
+    const section: NodePropertySection = {
+      id: 'inputs-outputs',
+      label: 'Inputs / Outputs',
       rows: [],
       tableRows: [
         {
-          id: 'event_id',
+          id: 'output:stable-edge-identity',
+          cells: {
+            direction: 'Output',
+            node: name,
+            nodeId: 'private-node-identity',
+            relation: 'Lineage',
+            connection: 'postgres · local-postgres-proof',
+          },
+        },
+      ],
+    };
+    const original = structuredClone(section);
+    const renderTableCell = vi.fn<NonNullable<NodePropertyTableProps['renderTableCell']>>(
+      (context) => (context.columnKey === 'node' ? <em>{context.value}</em> : undefined)
+    );
+    ({ container, root } = renderSection(section, renderTableCell));
+    expect(
+      container.querySelector('[data-slot="node-property-relationship-node"] em')?.textContent
+    ).toBe(name);
+    expect(
+      container.querySelector('[data-slot="node-property-relationship-connection"]')?.textContent
+    ).toBe('postgres · local-postgres-proof');
+    expect(renderTableCell).toHaveBeenCalledWith({
+      sectionId: 'inputs-outputs',
+      rowId: 'output:stable-edge-identity',
+      columnKey: 'node',
+      value: name,
+    });
+    expect(
+      container.querySelectorAll('[data-slot="node-property-relationship-node"] em')
+    ).toHaveLength(1);
+    expect(container.textContent).not.toContain('private-node-identity');
+    expect(section).toEqual(original);
+  });
+
+  it('preserves complete business column details while keeping canonical references private', () => {
+    const section: NodePropertySection = {
+      id: 'columns',
+      label: 'Columns',
+      rows: [],
+      columnLabels: { reference: 'Referencia' },
+      tableRows: [
+        {
+          id: 'dvt_fld_private_event_identity',
           cells: {
             name: 'event_identifier_with_a_long_name',
             type: 'text',
             nullable: 'not null',
             source: 'auth_audit_events',
+            key: 'Primary key',
+            default: "'unknown'",
+            description: 'Unique event identifier',
+            selected: 'Included',
             reference: 'src_postgres_dvt_raw_auth_audit_events.event_identifier',
           },
         },
       ],
-    }));
+    };
+    const original = structuredClone(section);
+    ({ container, root } = renderSection(section));
 
     const record = container.querySelector('[data-slot="node-property-column-record"]');
     const values = Array.from(record?.querySelectorAll('dd') ?? []);
@@ -193,12 +306,21 @@ describe('NodePropertySectionView', () => {
     expect(container.querySelector('table')).toBeNull();
     expect(disclosure?.open).toBe(false);
     expect(trigger?.textContent).toBe('event_identifier_with_a_long_name');
-    expect(record?.textContent).toContain('auth_audit_events');
-    expect(record?.textContent).toContain(
+    expect(record?.textContent).not.toContain('Referencia');
+    expect(record?.textContent).not.toContain('dvt_fld_private_event_identity');
+    expect(record?.textContent).not.toContain(
       'src_postgres_dvt_raw_auth_audit_events.event_identifier'
     );
-    expect(values).toHaveLength(4);
-    expect(values.every((value) => value.className.includes('break-words'))).toBe(true);
+    expect(values.map((value) => value.textContent)).toEqual([
+      'text',
+      'not null',
+      'auth_audit_events',
+      'Primary key',
+      "'unknown'",
+      'Unique event identifier',
+      'Included',
+    ]);
+    expect(section).toEqual(original);
   });
 
   it('renders scalar rows and code through shared Monaco without involving the tabs coordinator', () => {

@@ -5,6 +5,7 @@
  * @consequence Rendering has no transaction authority or temporal state machine.
  */
 import type {
+  CanvasRelationalTreeApplyResult,
   CanvasRelationalTreeWorkbenchCopy,
   RelationalApplyRejection,
 } from './canvasRelationalTreeWorkbench.types';
@@ -20,7 +21,7 @@ type CanvasRelationalTreeSessionActionsState = Readonly<{
 }>;
 
 export type CanvasRelationalTreeSessionActionsBinding = Readonly<{
-  onApply: () => void;
+  onApply: () => CanvasRelationalTreeApplyResult | Promise<CanvasRelationalTreeApplyResult>;
   onCancel: () => void;
   onStay: () => void;
   onDiscard: () => void;
@@ -54,11 +55,13 @@ export function buildCanvasRelationalTreeSessionActionsModel(
     rejection?.reason === 'model_output_required' ||
     rejection?.reason === 'model_output_dependency_unavailable'
       ? formatCanvasModelOutputDependencyRejection(rejection, language)
-      : rejection?.reason === 'node_unavailable'
-        ? localCopy.applyNodeUnavailable
-        : rejection == null
-          ? null
-          : localCopy.applyRejected;
+      : rejection?.reason === 'source_output_unavailable'
+        ? localCopy.fieldSelectionRejected
+        : rejection?.reason === 'node_unavailable'
+          ? localCopy.applyNodeUnavailable
+          : rejection == null
+            ? null
+            : localCopy.applyRejected;
   return {
     kind: 'active',
     applyLabel: copy.inspectorDvtRelationalApply,

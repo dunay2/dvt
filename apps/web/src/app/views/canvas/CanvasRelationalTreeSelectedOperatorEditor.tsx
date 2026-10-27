@@ -1,11 +1,14 @@
 /** Owned concern: bind a selected Read or unary operation to its existing editor owner. */
 import type { CanonicalNode } from '../../types/canonical';
+import { useMemo } from 'react';
+import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import type { CanvasRelationalOperation } from './canvasRelationalOperationChoices';
 import type { DvtSubstraitProjectionDraft } from './canvasDvtSubstraitProjection';
 import { SourceOccurrenceProperties } from './relational-source-occurrence/SourceOccurrenceProperties';
 import { useSelectedRelation } from './useSelectedRelation';
 import { CanvasSelectedUnaryEditor } from './CanvasSelectedUnaryEditor';
 import { CanvasTransformInspector } from './CanvasTransformInspector';
+import type { CanvasSourceInputRecovery } from './canvasSourceOccurrenceInputRecovery';
 
 export function CanvasRelationalTreeSelectedOperatorEditor({
   draft,
@@ -16,6 +19,8 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onClose,
   onPendingConditionChange,
   reservedAliases,
+  sourceOutputFieldsByRelationId,
+  sourceInputRecovery,
 }: Readonly<{
   draft: DvtSubstraitProjectionDraft;
   operation: CanvasRelationalOperation;
@@ -25,10 +30,18 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   onClose: () => void;
   onPendingConditionChange?: (pending: boolean) => void;
   reservedAliases?: readonly string[];
+  sourceOutputFieldsByRelationId: ReadonlyMap<string, readonly string[]>;
+  sourceInputRecovery?: CanvasSourceInputRecovery;
 }>): JSX.Element | null {
   const entry = useSelectedRelation(relationId);
+  const retainedRead = useMemo(() => {
+    if (entry != null || relationId == null) return null;
+    const indexed = indexSubstraitRelations(draft);
+    const selected = indexed.ok ? indexed.index.relations.get(relationId) : null;
+    return selected?.relation.relType.case === 'read' ? selected.binding : null;
+  }, [entry, draft, relationId]);
   const selected = entry?.relation.relType.case;
-  const read = entry?.binding.sourceRef == null ? null : entry.binding;
+  const read = selected === 'read' ? entry?.binding : retainedRead;
   if (selected === 'project' && relationId != null)
     return (
       <CanvasTransformInspector
@@ -44,6 +57,8 @@ export function CanvasRelationalTreeSelectedOperatorEditor({
   if (read != null)
     return (
       <SourceOccurrenceProperties
+        publishedFieldNames={sourceOutputFieldsByRelationId.get(read.relationId) ?? []}
+        sourceInputRecovery={sourceInputRecovery}
         key={read.relationId}
         draft={draft}
         relationId={read.relationId}

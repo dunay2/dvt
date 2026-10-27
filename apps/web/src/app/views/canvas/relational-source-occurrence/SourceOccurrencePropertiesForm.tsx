@@ -4,6 +4,7 @@ import { useApplicationLanguageStore } from '../../../stores/applicationLanguage
 import { parseOccurrenceAlias } from './renameSourceOccurrence';
 import { sourceOccurrenceCopy } from './sourceOccurrenceCopy';
 import { SourceOccurrencePropertiesTemplate } from './SourceOccurrenceProperties.templates';
+import { useCanvasInspectorEditing } from '../CanvasRelationalTreeEditorFrame';
 
 export function SourceOccurrencePropertiesForm({
   data,
@@ -21,7 +22,7 @@ export function SourceOccurrencePropertiesForm({
     save: (alias: string) => boolean | Promise<boolean>;
     close: () => void;
   }>;
-  output: ReactNode;
+  output: ReactNode | ((editing: boolean) => ReactNode);
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
@@ -29,6 +30,7 @@ export function SourceOccurrencePropertiesForm({
   const id = useId();
   const [alias, setAlias] = useState(data.alias);
   const [status, setStatus] = useState<'idle' | 'busy' | 'error'>('idle');
+  const [editing, setEditing] = useCanvasInspectorEditing(data.relationId);
   const result = parseOccurrenceAlias(alias);
   const duplicate = result.success && data.occupied.has(result.data);
   const valid = result.success && !duplicate;
@@ -67,6 +69,7 @@ export function SourceOccurrencePropertiesForm({
               : null,
         invalid: !valid,
         canSubmit: pending && valid && status !== 'busy',
+        editing,
       }}
       actions={{
         changeAlias: (value) => {
@@ -77,8 +80,9 @@ export function SourceOccurrencePropertiesForm({
           void submit();
         },
         close: actions.close,
+        edit: () => setEditing(true),
       }}
-      output={output}
+      output={typeof output === 'function' ? output(editing) : output}
     />
   );
 }

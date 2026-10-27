@@ -1,7 +1,8 @@
 /** A save acknowledges its sent aggregate, never a newer local edit. */
 import { describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
-import { performCanvasDraftAutosave } from './canvasDraftAutosaveExecution';
+import { performCanvasDraftSave } from './canvasDraftSaveExecution';
+import { createDraftAttemptRefs } from './canvasDraftPersistenceRuntime';
 import { buildCurrentDraftPayload } from './canvasDraftLifecycleSnapshot';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
 import { buildAuthoringPort } from './canvasDraftRepository.test.fixtures';
@@ -10,6 +11,82 @@ import { runCanvasDraftAutosaveEffect } from './canvasDraftAutosaveScheduling';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
 describe('autosave snapshot acknowledgement', () => {
+  it.each(['saved', 'conflict'] as const)(
+    'publishes the actual %s receipt before queued query or session updates',
+    async (outcome) => {
+      const port = buildAuthoringPort();
+      if (outcome === 'conflict') {
+        const remote = await port.readGraphDraft();
+        if (remote.kind !== 'ok' || remote.record == null) throw new Error('Missing remote draft');
+        const revision = remote.record.revision;
+        port.saveGraphDraft = vi.fn<typeof port.saveGraphDraft>(async () => ({
+          kind: 'conflict',
+          capability: remote.capability,
+          auditRef: { ...remote.auditRef, action: 'draft_write', outcome: 'conflict' },
+          formatMeta: remote.formatMeta,
+          currentRevision: revision,
+        }));
+      }
+      const repository = createCanvasDraftRepository(port);
+      const saveGraphDraft = vi.spyOn(repository, 'saveGraphDraft');
+      const record = (await repository.readGraphDraft())!;
+      const session = canvasDraftSession.machine.bootstrap({
+        remoteDraft: record,
+        canonicalNodeIds: [],
+        canonicalEdges: [],
+      });
+      const refs = createDraftAttemptRefs();
+      const replaceRemoteDraftState = vi.fn((remoteDraftState) => {
+        expect(refs.confirmedSaveReceiptRef.current).toMatchObject({
+          generation: 0,
+          signature: 'sent-payload',
+          result: { outcome, remoteDraftState },
+        });
+      });
+      const setDraftSession = vi.fn();
+      const setDraftSaveStatus = vi.fn();
+      const args: Parameters<typeof performCanvasDraftSave>[0] = {
+        refs,
+        draftRepository: repository,
+        draftSession:
+          outcome === 'conflict' ? { ...session, draftRevision: 'stale-revision' } : session,
+        currentDraftPayload: record.draft,
+        currentDraftPayloadSignature: 'sent-payload',
+        createDraftIdempotencyKey: () => 'receipt-order-test',
+        setDraftSession,
+        setDraftSaveStatus,
+        draftQueryCache: {
+          fetchLatestRemoteDraftState: repository.readGraphDraftState,
+          fetchLatestRemoteDraft: repository.readGraphDraft,
+          replaceRemoteDraftState,
+          refreshWorkspaceFilesAfterSourceRemoval: vi.fn(),
+        },
+        refreshWorkspaceFilesAfterSave: false,
+      };
+      const result = await performCanvasDraftSave(args);
+
+      expect(result.outcome).toBe(outcome);
+      expect(replaceRemoteDraftState).toHaveBeenCalledOnce();
+      expect(refs.confirmedSaveReceiptRef.current?.result).toBe(result);
+      expect(refs.activeSaveAttemptRef.current).toBeNull();
+      expect(session.draftRevision).toBe(record.revision);
+      const sessionUpdates = setDraftSession.mock.calls.length;
+      setDraftSaveStatus.mockClear();
+
+      const repeated = await performCanvasDraftSave({
+        ...args,
+        currentDraftPayloadSignature:
+          outcome === 'conflict' ? 'new-intent-after-conflict' : args.currentDraftPayloadSignature,
+      });
+
+      expect(repeated).toBe(result);
+      expect(saveGraphDraft).toHaveBeenCalledOnce();
+      expect(replaceRemoteDraftState).toHaveBeenCalledOnce();
+      expect(setDraftSession).toHaveBeenCalledTimes(sessionUpdates);
+      expect(setDraftSaveStatus).toHaveBeenLastCalledWith(outcome === 'saved' ? 'saved' : 'idle');
+    }
+  );
+
   it.each(['debounce', 'in flight', 'acknowledged', 'failed'] as const)(
     'reports durability truthfully during %s',
     async (phase) => {
@@ -39,14 +116,11 @@ describe('autosave snapshot acknowledgement', () => {
         canPersistGraphDraft: true,
         canPersistCurrentDraft: true,
         refs: {
-          saveDebounceTimerRef: { current: null },
+          ...createDraftAttemptRefs(),
           lastSavedSignatureRef: {
             current: phase === 'acknowledged' ? 'edited-expression' : 'before',
           },
           lastFailedSignatureRef: { current: phase === 'failed' ? 'edited-expression' : null },
-          saveAttemptGenerationRef: { current: 0 },
-          nextSaveAttemptIdRef: { current: 0 },
-          activeSaveAttemptRef: { current: null },
         },
         setDraftSaveStatus: (update) => {
           status = typeof update === 'function' ? update(status) : update;
@@ -97,15 +171,9 @@ describe('autosave snapshot acknowledgement', () => {
       };
       if (timing === 'before send') edit();
       const status = vi.fn();
-      performCanvasDraftAutosave({
-        refs: {
-          saveDebounceTimerRef: { current: null },
-          lastSavedSignatureRef: { current: null },
-          lastFailedSignatureRef: { current: null },
-          saveAttemptGenerationRef: { current: 0 },
-          nextSaveAttemptIdRef: { current: 0 },
-          activeSaveAttemptRef: { current: null },
-        },
+      const refs = createDraftAttemptRefs();
+      const save = performCanvasDraftSave({
+        refs,
         draftRepository: repository,
         draftSession: sent,
         currentDraftPayload: payload,
@@ -125,7 +193,12 @@ describe('autosave snapshot acknowledgement', () => {
       });
       if (timing === 'after send') edit();
       await vi.waitFor(() => expect(status).toHaveBeenLastCalledWith('saved'));
+      await expect(save).resolves.toMatchObject({ outcome: 'saved' });
       expect((await repository.readGraphDraft())!.draft).toEqual(payload);
+      expect(refs.confirmedSaveReceiptRef.current?.result).toMatchObject({
+        outcome: 'saved',
+        record: { draft: payload },
+      });
       expect(current.localNodeCatalog?.[sentNode.id]).toEqual(
         timing === 'no edit' ? undefined : newerNode
       );

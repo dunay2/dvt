@@ -6,20 +6,29 @@
  * @version 1.1.0
  */
 import type { CanonicalNode } from '../../types/canonical';
+import { useState } from 'react';
 import type { CanvasRelationalTreeWorkbenchCopy } from './canvasRelationalTreeWorkbench.types';
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import { CanvasModelOutputInspector } from './CanvasModelOutputInspector';
 import { RelationalInspectionPanel } from './relational-inspection/RelationalInspectionPanel';
 import { resolveRelationalInspection } from './relational-inspection/inspectionModel';
 import { CanvasTransformInspector } from './CanvasTransformInspector';
-import { CanvasSourceOccurrenceOutputs } from './CanvasSourceOccurrenceOutputs';
+import { CanvasSourceOccurrenceOutputSelection } from './CanvasSourceOccurrenceOutputSelection';
 import type { CanvasRelationalTreeAuthoringContract } from './canvasRelationalTreeWorkbench.types';
+import { useCanvasInspectorEditing } from './CanvasRelationalTreeEditorFrame';
 
 export type CanvasModelOutputInspectorState = Readonly<{
   open: boolean;
   setOpen: (open: boolean) => void;
   setPending: (pending: boolean) => void;
 }>;
+
+export function useCanvasModelOutputInspectorState(): CanvasModelOutputInspectorState &
+  Readonly<{ pending: boolean }> {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  return { open, setOpen, pending, setPending };
+}
 
 export function CanvasRelationalTreeSideInspector({
   model,
@@ -38,6 +47,7 @@ export function CanvasRelationalTreeSideInspector({
   onExpandedChange: (expanded: boolean) => void;
   modelOutput: CanvasModelOutputInspectorState;
 }>): JSX.Element | null {
+  const [, setEditing] = useCanvasInspectorEditing(model.selectedNode?.relationId);
   if (model.projection == null) return null;
   const analysis = model.session.analysis;
   const retainedOutputEditable =
@@ -85,20 +95,24 @@ export function CanvasRelationalTreeSideInspector({
       inspection={inspection}
       sourceOutput={
         inspection?.kind === 'source' && sourceInput != null ? (
-          <CanvasSourceOccurrenceOutputs
+          <CanvasSourceOccurrenceOutputSelection
+            relationId={inspection.relationId!}
             input={sourceInput}
             publishedFieldNames={publishedFieldNames}
-            consumerNodeId={transformNode.id}
-            onMapInput={model.authoringAvailable ? authoring?.onMapInput : undefined}
-            onRemoveInput={model.authoringAvailable ? authoring?.onRemoveInput : undefined}
           />
         ) : undefined
       }
       transformNode={transformNode}
       copy={copy}
       onClose={() => onExpandedChange(false)}
-      onEdit={model.authoringAvailable ? model.session.start : undefined}
-      onOutputChange={model.authoringAvailable ? model.session.applyOutputOrder : undefined}
+      onEdit={
+        model.authoringAvailable
+          ? () => {
+              setEditing(true);
+              model.session.start();
+            }
+          : undefined
+      }
     />
   );
 }

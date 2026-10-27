@@ -24,7 +24,9 @@ export function CanvasRelationalTreeEditButtons({
         aria-label={model.applyLabel}
         title={model.applyLabel}
         disabled={model.applyDisabled}
-        onClick={binding.onApply}
+        onClick={() => {
+          void binding.onApply();
+        }}
         className={styles.applyButton}
       >
         <Check aria-hidden="true" className={styles.icon} />

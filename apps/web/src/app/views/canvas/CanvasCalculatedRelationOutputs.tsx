@@ -9,6 +9,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
 import { CanvasDerivedOutputSection } from './CanvasDerivedOutputSection';
 import { usePendingRelationEdits } from './usePendingRelationEdits';
+import { useCanvasOutputPresentation } from './CanvasRelationalTreeEditorFrame';
 
 export function CanvasCalculatedRelationOutputs({
   relationId,
@@ -24,6 +25,7 @@ export function CanvasCalculatedRelationOutputs({
   allowCalculatedFields?: boolean;
 }>): JSX.Element {
   const [setListPending, setFormulaPending] = usePendingRelationEdits(onPendingChange);
+  const { editing } = useCanvasOutputPresentation();
   const outputs = (
     <CanvasRelationOutputs
       relationId={relationId}
@@ -32,7 +34,7 @@ export function CanvasCalculatedRelationOutputs({
       onPendingChange={setListPending}
     />
   );
-  return allowCalculatedFields ? (
+  return allowCalculatedFields && editing ? (
     <CanvasDerivedOutputSection
       relationId={relationId}
       onChange={onChange}

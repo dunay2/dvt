@@ -9,19 +9,14 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import type {
   CanvasDraftLifecycle,
   DraftAttemptRefs,
+  DraftSaveCompletion,
   DraftSaveStatus,
 } from './canvasDraftLifecycle.types';
-import {
-  applyConflictResolution,
-  applySavedDraftResolution,
-  clearSaveDebounce,
-  markDraftSaving,
-  restoreEditingAfterSaveFailure,
-} from './canvasDraftPersistenceRuntime';
+import { clearSaveDebounce } from './canvasDraftPersistenceRuntime';
+import { performCanvasDraftSave } from './canvasDraftSaveExecution';
 import { canvasViewCopy } from './copy';
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 
-const DRAFT_SAVE_SETTLE_POLL_MS = 25;
 const DRAFT_SAVE_SETTLE_TIMEOUT_MS = 5000;
 
 type UseCanvasExecutionDraftFlushArgs = {
@@ -29,6 +24,7 @@ type UseCanvasExecutionDraftFlushArgs = {
   draftQueryCache: CanvasDraftQueryCache;
   graphDraftState: CanvasAuthoringDraftReadModel | undefined;
   draftSession: CanvasDraftSession;
+  draftSaveStatus: DraftSaveStatus;
   currentDraftPayload: WorkspaceGraphAuthoringDraft;
   currentDraftPayloadSignature: string;
   canPersistGraphDraft: boolean;
@@ -36,7 +32,6 @@ type UseCanvasExecutionDraftFlushArgs = {
   refs: DraftAttemptRefs;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
-  invalidateInFlightSaveAttempt: () => void;
   createDraftIdempotencyKey: () => string;
 };
 
@@ -56,22 +51,21 @@ function projectFlushGraph(draftState: CanvasAuthoringDraftReadModel) {
   };
 }
 
-async function waitForDraftSaveToSettle(latestFlushInputRef: {
-  current: { draftSession: CanvasDraftSession };
-}): Promise<boolean> {
-  const startedAt = Date.now();
-
-  while (latestFlushInputRef.current.draftSession.syncState === 'saving') {
-    if (Date.now() - startedAt >= DRAFT_SAVE_SETTLE_TIMEOUT_MS) {
-      return false;
-    }
-
-    await new Promise((resolve) => {
-      globalThis.setTimeout(resolve, DRAFT_SAVE_SETTLE_POLL_MS);
-    });
+async function waitForDraftSaveToSettle(
+  completion: Promise<DraftSaveCompletion>,
+  deadline: number
+): Promise<DraftSaveCompletion | null> {
+  let timer: ReturnType<typeof globalThis.setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      completion,
+      new Promise<null>((resolve) => {
+        timer = globalThis.setTimeout(() => resolve(null), Math.max(0, deadline - Date.now()));
+      }),
+    ]);
+  } finally {
+    globalThis.clearTimeout(timer);
   }
-
-  return true;
 }
 
 export function useCanvasExecutionDraftFlush({
@@ -79,6 +73,7 @@ export function useCanvasExecutionDraftFlush({
   draftQueryCache,
   graphDraftState,
   draftSession,
+  draftSaveStatus,
   currentDraftPayload,
   currentDraftPayloadSignature,
   canPersistGraphDraft,
@@ -86,7 +81,6 @@ export function useCanvasExecutionDraftFlush({
   refs,
   setDraftSession,
   setDraftSaveStatus,
-  invalidateInFlightSaveAttempt,
   createDraftIdempotencyKey,
 }: UseCanvasExecutionDraftFlushArgs): CanvasDraftLifecycle['flushDraftForExecution'] {
   const latestFlushInputRef = useRef({
@@ -95,6 +89,7 @@ export function useCanvasExecutionDraftFlush({
     currentDraftPayload,
     currentDraftPayloadSignature,
     draftSession,
+    draftSaveStatus,
     graphDraftState,
   });
   latestFlushInputRef.current = {
@@ -103,26 +98,20 @@ export function useCanvasExecutionDraftFlush({
     currentDraftPayload,
     currentDraftPayloadSignature,
     draftSession,
+    draftSaveStatus,
     graphDraftState,
   };
 
   return useCallback<CanvasDraftLifecycle['flushDraftForExecution']>(async () => {
-    let latest = latestFlushInputRef.current;
+    const generation = refs.saveAttemptGenerationRef.current;
+    const deadline = Date.now() + DRAFT_SAVE_SETTLE_TIMEOUT_MS;
 
-    if (!latest.canPersistGraphDraft || !latest.canPersistCurrentDraft) {
-      return {
-        ok: false,
-        message: canvasViewCopy.planUnableToCreateMessage,
-      };
-    }
-
-    if (latest.draftSession.syncState === 'saving') {
-      const draftSaveSettled = await waitForDraftSaveToSettle(latestFlushInputRef);
-      latest = latestFlushInputRef.current;
-      if (!draftSaveSettled) {
+    while (true) {
+      const latest = latestFlushInputRef.current;
+      if (generation !== refs.saveAttemptGenerationRef.current) {
         return {
           ok: false,
-          message: canvasViewCopy.savingDraftLabel,
+          message: canvasViewCopy.staleDraftMessage,
         };
       }
       if (!latest.canPersistGraphDraft || !latest.canPersistCurrentDraft) {
@@ -131,90 +120,83 @@ export function useCanvasExecutionDraftFlush({
           message: canvasViewCopy.planUnableToCreateMessage,
         };
       }
-    }
 
-    if (
-      latest.currentDraftPayloadSignature === refs.lastSavedSignatureRef.current &&
-      latest.graphDraftState?.record != null
-    ) {
-      const graph = projectFlushGraph(latest.graphDraftState);
-      if (graph != null) {
-        return {
-          ok: true,
-          ...graph,
-        };
-      }
-    }
-
-    clearSaveDebounce(refs);
-    invalidateInFlightSaveAttempt();
-    markDraftSaving(setDraftSession, latest.draftSession);
-    setDraftSaveStatus('saving');
-
-    try {
-      if (latest.draftSession.draftRevision == null) {
-        throw new Error('Cannot flush a draft without a persisted revision.');
+      const activeSaveAttempt = refs.activeSaveAttemptRef.current;
+      if (activeSaveAttempt != null) {
+        const result = await waitForDraftSaveToSettle(activeSaveAttempt.completion, deadline);
+        if (result == null) return { ok: false, message: canvasViewCopy.savingDraftLabel };
+        if (result.outcome !== 'saved') {
+          return {
+            ok: false,
+            message:
+              result.outcome === 'failed'
+                ? canvasViewCopy.draftSaveFailedLabel
+                : canvasViewCopy.staleDraftMessage,
+          };
+        }
+        continue;
       }
 
-      const result = await draftRepository.saveGraphDraft({
-        draft: latest.currentDraftPayload,
-        expectedRevision: latest.draftSession.draftRevision,
-        idempotencyKey: createDraftIdempotencyKey(),
-      });
-
-      if (result.outcome === 'conflict') {
-        applyConflictResolution({
-          draftQueryCache,
-          setDraftSession,
-          setDraftSaveStatus,
-          refs,
-          currentState: result.remoteDraftState,
-        });
-        return {
-          ok: false,
-          message: canvasViewCopy.staleDraftMessage,
-        };
+      const receipt = refs.confirmedSaveReceiptRef.current;
+      const confirmed = receipt?.generation === generation ? receipt : null;
+      if (confirmed?.result.outcome === 'conflict') {
+        return { ok: false, message: canvasViewCopy.staleDraftMessage };
+      }
+      if (confirmed?.signature === latest.currentDraftPayloadSignature) {
+        const graph = projectFlushGraph(confirmed.result.remoteDraftState);
+        return graph == null
+          ? { ok: false, message: canvasViewCopy.planUnableToCreateMessage }
+          : { ok: true, ...graph };
       }
 
-      applySavedDraftResolution({
-        draftQueryCache,
-        currentDraftPayloadSignature: latest.currentDraftPayloadSignature,
+      if (
+        (latest.draftSaveStatus === 'saving' || latest.draftSession.syncState === 'saving') &&
+        refs.saveDebounceTimerRef.current == null &&
+        confirmed == null
+      ) {
+        return { ok: false, message: canvasViewCopy.savingDraftLabel };
+      }
+      if (latest.draftSession.syncState === 'conflict') {
+        return { ok: false, message: canvasViewCopy.staleDraftMessage };
+      }
+      if (
+        latest.currentDraftPayloadSignature === refs.lastFailedSignatureRef.current ||
+        (latest.draftSaveStatus === 'failed' && confirmed == null)
+      ) {
+        return { ok: false, message: canvasViewCopy.draftSaveFailedLabel };
+      }
+      if (
+        latest.currentDraftPayloadSignature === refs.lastSavedSignatureRef.current &&
+        latest.graphDraftState?.record != null
+      ) {
+        const graph = projectFlushGraph(latest.graphDraftState);
+        return graph == null
+          ? { ok: false, message: canvasViewCopy.planUnableToCreateMessage }
+          : { ok: true, ...graph };
+      }
+
+      if (confirmed == null && latest.draftSession.draftRevision == null) {
+        return { ok: false, message: canvasViewCopy.draftSaveFailedLabel };
+      }
+      clearSaveDebounce(refs);
+      void performCanvasDraftSave({
         refs,
+        draftRepository,
+        draftQueryCache,
+        draftSession: latest.draftSession,
+        currentDraftPayload: latest.currentDraftPayload,
+        currentDraftPayloadSignature: latest.currentDraftPayloadSignature,
+        createDraftIdempotencyKey,
         setDraftSession,
         setDraftSaveStatus,
-        remoteDraftState: result.remoteDraftState,
+        refreshWorkspaceFilesAfterSave: false,
       });
-
-      const graph = projectFlushGraph(result.remoteDraftState);
-      if (graph == null) {
-        return {
-          ok: false,
-          message: canvasViewCopy.planUnableToCreateMessage,
-        };
-      }
-
-      return {
-        ok: true,
-        ...graph,
-      };
-    } catch {
-      restoreEditingAfterSaveFailure(
-        refs,
-        latest.currentDraftPayloadSignature,
-        setDraftSession,
-        setDraftSaveStatus
-      );
-      return {
-        ok: false,
-        message: canvasViewCopy.draftSaveFailedLabel,
-      };
     }
   }, [
     canPersistGraphDraft,
     createDraftIdempotencyKey,
     draftQueryCache,
     draftRepository,
-    invalidateInFlightSaveAttempt,
     refs,
     setDraftSaveStatus,
     setDraftSession,

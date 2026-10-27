@@ -11,29 +11,17 @@ import {
 } from './canvasNodePresentationBase';
 import { projectCanvasGraphPresentation } from './canvasNodePresentationProjection';
 import { canvasColumnTruth } from './canvasPresentationColumns';
-import { canConfigureNativeMaterialization } from './canvasDvtMaterializationPolicy';
+import { canvasNodeQueryMetadata } from './canvasNodeQueryMetadata';
 import { readCanvasInputBindings } from './canvasInputBindings';
 
 type Graph = Pick<CanvasPresentationQuery, 'nodes' | 'edges'>;
-
-function presentationMetadata(node: CanonicalNode): CanonicalNode['metadata'] {
-  const config = node.metadata?.config;
-  if (
-    !canConfigureNativeMaterialization(node) ||
-    (config != null && (typeof config !== 'object' || Array.isArray(config)))
-  )
-    return node.metadata;
-  // Native materialization changes storage, not the field/code/composition projection.
-  // DBT materialization remains significant because its generated code includes it.
-  return { ...node.metadata, config: { ...config, materialized: undefined } };
-}
 
 function sameMetadata(left: CanonicalNode, right: CanonicalNode): boolean {
   if (left.metadata === right.metadata) return true;
   try {
     return (
-      jcsCanonicalize(presentationMetadata(left) ?? null) ===
-      jcsCanonicalize(presentationMetadata(right) ?? null)
+      jcsCanonicalize(canvasNodeQueryMetadata(left) ?? null) ===
+      jcsCanonicalize(canvasNodeQueryMetadata(right) ?? null)
     );
   } catch {
     return false;

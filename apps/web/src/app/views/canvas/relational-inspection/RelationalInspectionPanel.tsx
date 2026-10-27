@@ -6,8 +6,6 @@ import { CanvasRelationalExpressionTree } from '../CanvasRelationalExpressionTre
 import { CanvasRelationalCrossNotice } from '../CanvasRelationalCrossNotice';
 import type { RelationalInspection } from './inspectionModel';
 import { CanvasRelationFields } from '../CanvasRelationFields';
-import { CanvasRelationOutputs } from '../CanvasRelationOutputs';
-import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { ReactNode } from 'react';
 import { JoinConditionSummary } from './JoinConditionSummary';
 
@@ -50,7 +48,6 @@ export function RelationalInspectionPanel({
   inspection,
   onClose,
   onEdit,
-  onOutputChange,
   sourceOutput,
   ...content
 }: Readonly<{
@@ -59,7 +56,6 @@ export function RelationalInspectionPanel({
   copy: CanvasRelationalTreeWorkbenchCopy;
   onClose: () => void;
   onEdit?: () => void;
-  onOutputChange?: (document: SubstraitDocument) => boolean;
   sourceOutput?: ReactNode;
 }>): JSX.Element | null {
   if (inspection == null) return null;
@@ -67,16 +63,8 @@ export function RelationalInspectionPanel({
     inspection.relationId == null || inspection.kind === 'unsupported' ? null : inspection.kind ===
       'source' ? (
       (sourceOutput ?? null)
-    ) : onOutputChange == null ? (
-      <CanvasRelationFields relationId={inspection.relationId} />
     ) : (
-      <CanvasRelationOutputs
-        key={inspection.relationId}
-        relationId={inspection.relationId}
-        disabled={false}
-        orderingOnly
-        onChange={onOutputChange}
-      />
+      <CanvasRelationFields relationId={inspection.relationId} />
     );
   return (
     <CanvasRelationalTreeEditorFrame

@@ -14,6 +14,9 @@ import action from './SourceOccurrenceAction.tsx?raw';
 import actions from './sourceOccurrenceActions.ts?raw';
 import aliasTests from './SourceOccurrenceAlias.test.tsx?raw';
 import appendTests from './SourceOccurrenceWorkbench.test.tsx?raw';
+import editingTests from './SourceOccurrenceEditing.test.tsx?raw';
+import outputTests from './pendingSourceOutputSelection.test.ts?raw';
+import outputFixture from './pendingSourceOutputSelection.test.fixtures.ts?raw';
 import policyTests from './sourceOccurrencePolicy.test.ts?raw';
 import draftState from '../useCanvasRelationalTreeDraftState.ts?raw';
 import aliasTemplate from './SourceOccurrenceProperties.templates.tsx?raw';
@@ -56,6 +59,9 @@ describe('source occurrence component boundaries', () => {
     ['append intent', actions],
     ['alias scenarios', aliasTests],
     ['append scenarios', appendTests],
+    ['editing presentation scenarios', editingTests],
+    ['pending Output command scenarios', outputTests],
+    ['pending Output fixture', outputFixture],
     ['policy scenarios', policyTests],
     ['draft state', draftState],
   ])('%s remains a concern-owned module within 200 lines', (_, text) => {

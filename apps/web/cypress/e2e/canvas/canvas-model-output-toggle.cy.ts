@@ -1,6 +1,6 @@
 /** Owned concern: prove Model output authoring and column-menu lifecycle through save and reload. */
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
-import { ConnectedSourceRefSchema } from '@dvt/contracts';
+import { allocateDvtFieldId, ConnectedSourceRefSchema } from '@dvt/contracts';
 import { deriveSubstraitSchemas } from '@dvt/substrait-analysis';
 
 import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
@@ -25,7 +25,10 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubConnectedModel(): void {
+function stubConnectedModel(
+  publishAllOutputs = false,
+  useRelationshipIdLabels = false
+): ReturnType<typeof createDvtSubstraitProjectionDraft> {
   stubShellBootstrapApis({
     scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
   });
@@ -45,6 +48,11 @@ function stubConnectedModel(): void {
   });
   const source = draft.nodes.find((node) => node.id === 'source-orders')!;
   const model = draft.nodes.find((node) => node.id === 'model-orders')!;
+  if (useRelationshipIdLabels) {
+    source.name = source.id;
+    const sink = draft.nodes.find((node) => node.id === 'sink-orders')!;
+    sink.name = sink.id;
+  }
   const columns = source.metadata!.columns as { name: string; type: string; nullable?: boolean }[];
   const document = createDvtSubstraitProjectionDraft({
     source: {
@@ -55,7 +63,13 @@ function stubConnectedModel(): void {
       fields: columns.map((column) => ({ name: column.name, dataType: column.type })),
     },
     targetNodeId: model.id,
-    outputs: [],
+    outputs: publishAllOutputs
+      ? columns.map((column) => ({
+          fieldId: allocateDvtFieldId(),
+          name: column.name,
+          sourceFieldName: column.name,
+        }))
+      : [],
   });
   const root = document.plan.relations[0]!.relType;
   if (root.case !== 'root' || root.value.input?.relType.case !== 'project')
@@ -85,6 +99,7 @@ function stubConnectedModel(): void {
     model.metadata
   );
   Object.assign(draft, normalized);
+  return document;
 }
 
 function visitCanvas(): void {
@@ -194,6 +209,276 @@ function assertColumnMenuStaysOpenAndReopens(): void {
 }
 
 describe('Canvas Model output toggle lifecycle', () => {
+  for (const idLabels of [false, true]) {
+    it(`summarizes both real graph relationships without property labels${idLabels ? ' or identity fallbacks' : ''}`, () => {
+      cy.viewport(1366, 768);
+      stubConnectedModel(true, idLabels);
+      visitCanvas();
+      openWorkbenchProperties('model-orders');
+      cy.get('[data-slot="canvas-node-workbench-tab-inputs-outputs"]').click();
+      const records = '[data-slot="node-property-relationship-record"]';
+      const summary = '[data-slot="node-property-relationship-summary"]';
+      const direction = '[data-slot="node-property-relationship-direction"]';
+      const node = '[data-slot="node-property-relationship-node"]';
+      const relation = '[data-slot="node-property-relationship-relation"]';
+      const connection = '[data-slot="node-property-relationship-connection"]';
+      cy.get(records)
+        .should('have.length', 2)
+        .each(($record, index) => {
+          cy.wrap($record).within(() => {
+            cy.get(summary).should('be.visible');
+            cy.get(direction).should('have.text', index === 0 ? 'Input' : 'Output');
+            cy.get(node).should(
+              'have.text',
+              idLabels ? '-' : index === 0 ? 'Orders source' : 'Orders sink'
+            );
+            cy.get(relation)
+              .should('be.visible')
+              .invoke('text')
+              .should('match', /^lineage$/i);
+            cy.get(summary).should(($header) => {
+              const document = $header[0]!.ownerDocument;
+              const window = document.defaultView!;
+              const host = document.querySelector('[data-slot="canvas-node-workbench-panel"]')!;
+              const panel = host.getBoundingClientRect();
+              const visibleLeft = Math.max(0, panel.left);
+              const visibleRight = Math.min(window.innerWidth, panel.right);
+              const relationBounds = $header[0]!.querySelector(relation)!.getBoundingClientRect();
+              const evidence = JSON.stringify({
+                panel: { left: panel.left, right: panel.right, width: panel.width },
+                innerWidth: window.innerWidth,
+                scrollClientWidth: host.querySelector('[data-radix-scroll-area-viewport]')
+                  ?.clientWidth,
+                relation: {
+                  left: relationBounds.left,
+                  right: relationBounds.right,
+                  width: relationBounds.width,
+                },
+              });
+              const centers = [direction, node, relation].map((selector) => {
+                const element = $header[0]!.querySelector(selector)!;
+                const bounds = element.getBoundingClientRect();
+                expect(bounds.left, `${selector} remains visible: ${evidence}`).to.be.at.least(
+                  visibleLeft
+                );
+                expect(bounds.right, `${selector} remains visible: ${evidence}`).to.be.at.most(
+                  visibleRight
+                );
+                return bounds.top + bounds.height / 2;
+              });
+              expect(
+                Math.max(...centers) - Math.min(...centers),
+                'direction, node and relation share one business line'
+              ).to.be.lessThan(1);
+            });
+            if (index === 0) {
+              cy.get(connection)
+                .should('have.text', 'postgres · canvas-e2e-postgres')
+                .and(($context) => {
+                  const header = $record[0]!.querySelector(summary)!.getBoundingClientRect();
+                  const bounds = $context[0]!.getBoundingClientRect();
+                  expect(bounds.top, 'connection is secondary context').to.be.at.least(
+                    header.bottom
+                  );
+                  expect($context[0]!.scrollWidth).to.be.at.most($context[0]!.clientWidth + 1);
+                });
+            } else cy.get(connection).should('not.exist');
+            cy.get('dt, dl').should('not.exist');
+          });
+        });
+      cy.get(records).should(($records) => {
+        for (const record of $records) {
+          const accessibleText = [
+            record.textContent,
+            ...[record, ...record.querySelectorAll('*')].flatMap((element) =>
+              ['title', 'aria-label', 'aria-description'].map(
+                (attribute) => element.getAttribute(attribute) ?? ''
+              )
+            ),
+          ].join(' ');
+          expect(accessibleText).not.to.include('source-orders');
+          expect(accessibleText).not.to.include('sink-orders');
+          expect(accessibleText).not.to.match(/nodeId|Node ID|direction:|relation:|connection:/);
+        }
+      });
+      // Keep the image inside the native headless capture surface after
+      // checking the wider application viewport above.
+      cy.viewport(1100, 600);
+      cy.get(relation).should(($relations) => {
+        for (const element of $relations) {
+          const window = element.ownerDocument.defaultView!;
+          const panel = element
+            .closest('[data-slot="canvas-node-workbench-panel"]')!
+            .getBoundingClientRect();
+          const bounds = element.getBoundingClientRect();
+          expect(bounds.left).to.be.at.least(Math.max(0, panel.left));
+          expect(bounds.right).to.be.at.most(Math.min(window.innerWidth, panel.right));
+        }
+      });
+      cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+        `model-relationship-summary${idLabels ? '-identity-fallback' : ''}`
+      );
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+    });
+  }
+
+  it('keeps six logical column disclosures compact and keyboard-accessible without writing', () => {
+    cy.viewport(1440, 900);
+    const document = stubConnectedModel(true);
+    const technicalFieldIds = [...deriveSubstraitSchemas(document).index.fields.keys()];
+    expect(technicalFieldIds, 'real canonical field identities cover the fixture').not.to.be.empty;
+    visitCanvas();
+    openWorkbenchProperties('model-orders');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    const disclosures = '[data-slot="node-property-column-disclosure"]';
+    const summaries = `${disclosures} > summary`;
+    cy.get(disclosures).should('have.length', 6).and('not.have.attr', 'open');
+    for (const [width, height] of [
+      [1366, 768],
+      [1920, 1080],
+      [3440, 1440],
+    ]) {
+      cy.viewport(width!, height!);
+      cy.get(summaries).should(($summaries) => {
+        expect([...$summaries].map((summary) => summary.textContent)).to.deep.equal([
+          'order_id',
+          'customer',
+          'amount',
+          'status',
+          'created_at',
+          'region',
+        ]);
+        for (const summary of $summaries) {
+          const window = summary.ownerDocument.defaultView!;
+          const style = window.getComputedStyle(summary);
+          expect(style.fontSize, 'logical column summary text').to.equal('12px');
+          expect(style.lineHeight, 'logical column summary line').to.equal('16px');
+          expect(summary.getBoundingClientRect().height, 'single-line summary height').to.be.within(
+            28,
+            28.5
+          );
+          const name = summary.querySelector('span')!;
+          expect(name.getBoundingClientRect().height, 'one complete name line').to.equal(16);
+          const arrow = summary.querySelector(
+            '[data-slot="node-property-column-disclosure-arrow"]'
+          )!;
+          expect(arrow.getBoundingClientRect().width, 'compact chevron width').to.equal(12);
+          expect(arrow.getBoundingClientRect().height, 'compact chevron height').to.equal(12);
+        }
+      });
+    }
+    cy.viewport(1366, 768);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+      'model-columns-compact-six-rows'
+    );
+    cy.contains(summaries, /^customer$/).as('customerSummary');
+    cy.get('[data-slot="node-property-column-list"]')
+      .parent('[role="region"]')
+      .focus()
+      .should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.contains(summaries, /^order_id$/).should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('@customerSummary').should('be.focused');
+    // Cypress 15.18.1 omits Enter's CR text and virtual key code. Send the
+    // complete native key so Chromium performs the disclosure's default action.
+    cy.then(async () => {
+      await Cypress.automation('remote:debugger:protocol', {
+        command: 'Input.dispatchKeyEvent',
+        params: {
+          type: 'keyDown',
+          key: 'Enter',
+          code: 'Enter',
+          windowsVirtualKeyCode: 13,
+          nativeVirtualKeyCode: 13,
+          text: '\r',
+          unmodifiedText: '\r',
+        },
+      });
+      await Cypress.automation('remote:debugger:protocol', {
+        command: 'Input.dispatchKeyEvent',
+        params: {
+          type: 'keyUp',
+          key: 'Enter',
+          code: 'Enter',
+          windowsVirtualKeyCode: 13,
+          nativeVirtualKeyCode: 13,
+        },
+      });
+    });
+    cy.get('@customerSummary')
+      .should('be.focused')
+      .parent('details')
+      .should('have.prop', 'open', true)
+      .and(($details) => {
+        const labels = [...$details[0]!.querySelectorAll('dt')].map((label) =>
+          label.textContent?.trim().toLowerCase()
+        );
+        expect(labels, 'complete business metadata').to.deep.equal([
+          'type',
+          'nullable',
+          'key',
+          'default',
+          'comment',
+          'source',
+          'selection',
+        ]);
+        expect(labels, 'English Reference label stays private').not.to.include('reference');
+        expect(labels, 'Spanish Reference label stays private').not.to.include('referencia');
+        const accessibleText = [
+          $details[0]!.textContent,
+          ...[$details[0]!, ...$details[0]!.querySelectorAll('*')].flatMap((element) =>
+            ['title', 'aria-label', 'aria-description'].map(
+              (attribute) => element.getAttribute(attribute) ?? ''
+            )
+          ),
+        ].join(' ');
+        for (const fieldId of technicalFieldIds)
+          expect(accessibleText, 'canonical field identities stay private').not.to.include(fieldId);
+      });
+    cy.get('@customerSummary')
+      .parent('details')
+      .find('dd')
+      .should(($values) => {
+        const values = [...$values].map((value) => value.textContent);
+        expect(values, 'complete expanded type').to.include('text');
+        expect(values, 'complete expanded nullability').to.include('not null');
+        expect(values, 'complete expanded origin').to.include('Orders source');
+        expect(values, 'complete expanded publication selection').to.include('available');
+        for (const value of $values) {
+          expect(value.scrollWidth, 'expanded metadata stays in its panel').to.be.at.most(
+            value.clientWidth + 1
+          );
+        }
+      });
+    cy.get(`${disclosures}[open]`).should('have.length', 1);
+    cy.press(Cypress.Keyboard.Keys.SPACE);
+    cy.get('@customerSummary')
+      .should('be.focused')
+      .parent('details')
+      .should('have.prop', 'open', false);
+    cy.contains(summaries, /^created_at$/)
+      .click()
+      .parent('details')
+      .should('have.prop', 'open', true);
+    cy.contains(summaries, /^created_at$/)
+      .parent('details')
+      .find('dd')
+      .should(($values) => {
+        expect(
+          [...$values].map((value) => value.textContent),
+          'complete expanded timestamp type'
+        ).to.include('timestamp');
+      });
+    cy.get(`${disclosures}[open]`).should('have.length', 1);
+    cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
+      'model-columns-compact-expanded'
+    );
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+  });
+
   it('persists one selected inherited output without timed menu dismissal', () => {
     cy.viewport(1920, 1080);
     stubConnectedModel();

@@ -85,7 +85,7 @@ export function CanvasInspectorAuthoringSection({
         inspectorVisualClasses.inspectorForm
       )}
     >
-      <div className="space-y-3">
+      <div className={inspectorVisualClasses.inspectorFields}>
         <CanvasInspectorMetadataFields
           model={{
             nodeId: node.id,
@@ -171,7 +171,7 @@ export function CanvasInspectorAuthoringSection({
         </CanvasInspectorMetadataFields>
 
         {authoring.canEditNode && isDirty && !(isDbtCompatibleModel(node) && showGeneral) ? (
-          <div className="flex items-center justify-end gap-2">
+          <div className={inspectorVisualClasses.inspectorActions}>
             <Button type="button" variant="ghost" size="sm" onClick={draftController.onResetDraft}>
               {canvasViewCopy.inspectorCancelLabel}
             </Button>

@@ -39,6 +39,7 @@ import AuthoringSource from './CanvasRelationalTreeAuthoring.tsx?raw';
 import CatalogueSource from './CanvasRelationalTreeSourceCatalogue.tsx?raw';
 import DraftViewportSource from './CanvasRelationalTreeDraftViewport.tsx?raw';
 import InlineEditorSource from './CanvasRelationalTreeInlineEditor.tsx?raw';
+import CompositionEditorSource from './CanvasRelationalTreeCompositionEditor.tsx?raw';
 import OperationShelfSource from './CanvasRelationalTreeOperationShelf.tsx?raw';
 import TreeSource from './CanvasRelationalTreeView.tsx?raw';
 import ViewportSource from './canvasRelationalTreeViewport.ts?raw';
@@ -81,6 +82,48 @@ import ColumnInteractionSource from './canvasNodeColumnInteraction.ts?raw';
 import PresentationNodeSource from './canvasPresentationNode.ts?raw';
 
 describe('staged editor analysis ownership', () => {
+  it('keeps pending Source presentation off Model Input mutation and direct schema edits', () => {
+    const source = (name: string): string =>
+      readArchitectureSiblingSource(import.meta.dirname, name);
+    expect(
+      source('relational-source-occurrence/PendingSourceOccurrenceProperties.tsx')
+    ).not.toMatch(/onMapInput|onRemoveInput|canvasInputSlotId/);
+    expect(source('canvasSourceOutputDefaults.ts')).not.toMatch(/emitKind\s*=|baseSchema\s*=/);
+  });
+  it('keeps retained JOIN recovery in the existing draft command and shared configurator', () => {
+    const source = (name: string): string =>
+      readArchitectureSiblingSource(import.meta.dirname, name);
+    const commands = source('canvasStagedOperationActions.ts');
+    expect(commands).toContain('updateConfiguration:');
+    expect(commands).toContain('args.configure?.(');
+    expect(commands).not.toMatch(/reconfigure\s*:/);
+    expect(commands).not.toMatch(/\b(?:remove|complete|disconnectProducer)\s*:/);
+    const graph = source('useCanvasRelationalGraphAuthoring.ts');
+    expect(graph).not.toMatch(/(?:staged|occurrences)\.remove\(/);
+    const view = source('canvasRelationalTreeAuthoringView.ts');
+    expect(view).toContain('remove: session.removal.remove');
+    expect(view).not.toMatch(/removePending|removeStagedOperation/);
+    expect(
+      source('useCanvasStagedOperationConfiguration.ts').match(
+        /resolveCanvasStagedProducerDocument\(/g
+      )
+    ).toHaveLength(1);
+    expect(source('CanvasRelationalTreeAuthoring.tsx')).toContain(
+      "actions.updateStagedOperation(staged.id, 'reconfigure')"
+    );
+    expect(source('useCanvasRelationalAuthoringDraftHydration.ts')).toContain(
+      'useEffect(restore, [restore])'
+    );
+    expect(source('useCanvasRelationalTreeAuthoringSession.ts')).toContain('cancel: restore');
+    for (const name of [
+      'CanvasStagedOperationInspector.tsx',
+      'CanvasRelationalTreeAuthoring.tsx',
+    ]) {
+      expect(source(name)).not.toMatch(
+        /createCanonicalComposition|configureCanvasStagedComposition|restoreCanvasOperationConfiguration/
+      );
+    }
+  });
   it('shares execution context and eligibility through one analysis boundary', () => {
     const source = (name: string): string =>
       readArchitectureSiblingSource(import.meta.dirname, name);
@@ -156,11 +199,13 @@ describe('Canvas relational-tree Workbench architecture', () => {
     }
   });
   it('shares calculated SELECT authoring through the existing atomic projection command', () => {
-    for (const source of [InlineEditorSource, TransformInspectorSource]) {
+    for (const source of [CompositionEditorSource, TransformInspectorSource]) {
       expect(source.match(/<CanvasCalculatedRelationOutputs\b/g)).toHaveLength(1);
       expect(source).not.toMatch(/compileDerivedOutputFormula|applySelectedRelationDerivedOutput/);
     }
     expect(DerivedOutputSource).toContain('applySelectedRelationDerivedOutput');
+    expect(InlineEditorSource).toContain('<CanvasRelationalTreeCompositionEditor');
+    expect(InlineEditorSource).not.toContain('<CanvasCalculatedRelationOutputs');
     expect(CalculatedOutputsSource.match(/<CanvasDerivedOutputSection\b/g)).toHaveLength(1);
     expect(CalculatedOutputsSource).not.toMatch(
       /compileDerivedOutputFormula|applySelectedRelationDerivedOutput/
@@ -301,6 +346,7 @@ describe('Canvas relational-tree Workbench architecture', () => {
     expect(DraftViewportSource.split('\n').length).toBeLessThan(170);
     expect(OperationShelfSource.split('\n').length).toBeLessThan(140);
     expect(InlineEditorSource.split('\n').length).toBeLessThan(80);
+    expect(CompositionEditorSource.split('\n').length).toBeLessThan(80);
     expect(OperandSlotsSource.split('\n').length).toBeLessThan(90);
     expect(ProjectionAuthoringSource.split('\n').length).toBeLessThan(60);
     expect(SessionActionsSource.split('\n').length).toBeLessThan(80);

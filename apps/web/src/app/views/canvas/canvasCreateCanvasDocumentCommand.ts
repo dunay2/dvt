@@ -19,6 +19,7 @@ export async function executeCreateCanvasDocumentCommand({
   setDraftSaveStatus,
   lastSavedSignatureRef,
   currentDraftPayload,
+  invalidateInFlightSaveAttempt,
 }: CanvasCreateCanvasDocumentCommandDto): Promise<void> {
   const eligibility = resolveCreateCanvasDocumentCommandEligibility({
     command,
@@ -29,6 +30,7 @@ export async function executeCreateCanvasDocumentCommand({
     return;
   }
 
+  invalidateInFlightSaveAttempt();
   setDraftSaveStatus('saving');
 
   try {

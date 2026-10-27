@@ -32,6 +32,7 @@ async function executeProjectCanvasDraftSave(
     return;
   }
 
+  args.invalidateInFlightSaveAttempt();
   args.setDraftSaveStatus('saving');
 
   try {

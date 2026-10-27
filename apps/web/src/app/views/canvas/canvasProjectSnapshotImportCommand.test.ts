@@ -8,10 +8,8 @@ import {
   createUnknownCanvasAuthoringDraftReadModel,
   createWritableCanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
-import type {
-  CanvasImportProjectSnapshotCommandDto,
-  DraftAttemptRefs,
-} from './canvasDraftLifecycle.types';
+import type { CanvasImportProjectSnapshotCommandDto } from './canvasDraftLifecycle.types';
+import { createDraftAttemptRefs, startNextSaveAttempt } from './canvasDraftPersistenceRuntime';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
 import {
@@ -64,17 +62,6 @@ function buildSnapshotFile(draft = buildAuthoringDraft()): File {
 
 function applyStateUpdater<T>(updater: SetStateAction<T>, current: T): T {
   return typeof updater === 'function' ? (updater as (value: T) => T)(current) : updater;
-}
-
-function createDraftAttemptRefs(): DraftAttemptRefs {
-  return {
-    saveDebounceTimerRef: { current: null },
-    lastSavedSignatureRef: { current: null },
-    lastFailedSignatureRef: { current: null },
-    saveAttemptGenerationRef: { current: 0 },
-    nextSaveAttemptIdRef: { current: 0 },
-    activeSaveAttemptRef: { current: null },
-  };
 }
 
 type BuildImportArgsResult = {
@@ -180,11 +167,13 @@ describe('canvasProjectSnapshotImportCommand', () => {
     const pendingTimer = globalThis.setTimeout(() => undefined, 1000);
     refs.saveDebounceTimerRef.current = pendingTimer;
     refs.saveAttemptGenerationRef.current = 7;
-    refs.activeSaveAttemptRef.current = { id: 3, generation: 7 };
+    refs.nextSaveAttemptIdRef.current = 2;
+    startNextSaveAttempt(refs, 'stale-local-signature');
     refs.lastFailedSignatureRef.current = 'stale-local-signature';
     const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout');
     const invalidateInFlightSaveAttempt = vi.fn(() => {
       refs.saveAttemptGenerationRef.current += 1;
+      refs.activeSaveAttemptRef.current?.settleStale();
       refs.activeSaveAttemptRef.current = null;
     });
 

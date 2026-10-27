@@ -20,6 +20,13 @@ import { setupWorkbenchTest, root, container } from './CanvasRelationalTreeWorkb
 import { CanvasRelationAnalysisContext } from './CanvasRelationAnalysisContext';
 import { useCanvasRelationAnalysisSession } from './useCanvasRelationAnalysisSession';
 import { CanvasRelationOutputs } from './CanvasRelationOutputs';
+import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
+import { CanvasModelOutputInspector } from './CanvasModelOutputInspector';
+import { CanvasTransformInspector } from './CanvasTransformInspector';
+import { occurrenceGraph } from './relational-source-occurrence/occurrence.test.fixtures';
+import { projectCanvasRelationalTree } from './canvasRelationalTreeProjection';
+import { connectedNamesProjectionDraft } from './canvasProjectionCommand.test-support';
+import { COPY } from './CanvasRelationalTreeWorkbench.test-support';
 
 const documents = {
   join: () =>
@@ -123,6 +130,199 @@ describe.each(Object.entries(documents))(
 
 describe('output command authority during acknowledgement', () => {
   setupWorkbenchTest();
+
+  it('restores the exact visible row order, including excluded positions, after a rejected reorder', async () => {
+    const initial = documents.join();
+    let reject = false;
+    let analysis: ReturnType<typeof useCanvasRelationAnalysisSession>;
+    const publication = vi.fn();
+    function Host(): ReactElement {
+      const [draft, setDraft] = useState(initial);
+      analysis = useCanvasRelationAnalysisSession(draft, 'rejected-output-order');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          {analysis?.document == null ? null : (
+            <CanvasRelationOutputs
+              relationId={analysis.session.rootId}
+              disabled={false}
+              onChange={(next) => {
+                publication(next);
+                if (reject) return false;
+                setDraft(next);
+                return true;
+              }}
+            />
+          )}
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    await act(async () => root.render(<Host />));
+    const rows = (): HTMLElement[] => [
+      ...container.querySelectorAll<HTMLElement>('[data-slot="relation-output-field"]'),
+    ];
+    const ids = (): (string | null)[] => rows().map((row) => row.getAttribute('data-field-id'));
+    await act(async () => fireEvent.click(container.querySelector('[data-field-name="name"]')!));
+    const accepted: SubstraitDocument = publication.mock.calls[0]![0];
+    const before = ids();
+    const excluded = rows()[1]!;
+    expect(excluded.querySelector('[data-included="false"]')).not.toBeNull();
+    const moved = rows()[0]!;
+    moved.focus();
+    reject = true;
+    await act(async () => fireEvent.keyDown(moved, { key: 'ArrowDown', altKey: true }));
+    expect(publication).toHaveBeenCalledTimes(2);
+    expect(analysis!.session.hasDocument(accepted)).toBe(true);
+    expect(ids()).toEqual(before);
+    expect(rows()[1]).toBe(excluded);
+    expect(document.activeElement).toBe(moved);
+    expect(container.querySelector('[role="alert"]')).not.toBeNull();
+    reject = false;
+    await act(async () => fireEvent.keyDown(moved, { key: 'ArrowDown', altKey: true }));
+    expect(publication).toHaveBeenCalledTimes(3);
+    expect(ids()).toEqual([before[2], before[0], before[1], before[3]]);
+    expect(container.querySelector('[role="alert"]')).toBeNull();
+  });
+
+  it('shares the inspector Edit gate without publishing or exposing excluded outputs in inspection', async () => {
+    const initial = documents.join();
+    const onChange = vi.fn();
+    let inspect!: () => void;
+    function Host(): ReactElement {
+      const [editing, setEditing] = useState(false);
+      inspect = () => setEditing(false);
+      const [draft, setDraft] = useState(initial);
+      const analysis = useCanvasRelationAnalysisSession(draft, 'output-edit-gate');
+      return (
+        <CanvasRelationAnalysisContext.Provider value={analysis}>
+          <CanvasRelationalTreeEditorFrame
+            operation="projection"
+            onClose={() => {}}
+            editing={editing}
+            onEdit={() => setEditing(true)}
+            output={
+              analysis?.document == null ? null : (
+                <CanvasRelationOutputs
+                  relationId={analysis.session.rootId}
+                  disabled={false}
+                  onChange={(next) => {
+                    onChange(next);
+                    setDraft(next);
+                  }}
+                />
+              )
+            }
+          >
+            {null}
+          </CanvasRelationalTreeEditorFrame>
+        </CanvasRelationAnalysisContext.Provider>
+      );
+    }
+    await act(async () => root.render(<Host />));
+    const initialRows = container.querySelectorAll('[data-slot="relation-output-field"]').length;
+    expect(initialRows).toBeGreaterThan(0);
+    expect(container.querySelector('[data-slot="relation-output-toggle"]')).toBeNull();
+    expect(container.querySelector('[data-slot="relation-output-field"] input')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).toBeNull();
+    await act(async () =>
+      fireEvent.click(container.querySelector('[data-slot="canvas-relational-edit"]')!)
+    );
+    expect(onChange).not.toHaveBeenCalled();
+    const editRows = container.querySelectorAll('[data-slot="relation-output-field"]').length;
+    expect(editRows).toBeGreaterThan(initialRows);
+    const rowsBefore = Array.from(
+      container.querySelectorAll('[data-slot="relation-output-field"]')
+    );
+    const toggle = container.querySelector<HTMLButtonElement>(
+      '[data-slot="relation-output-toggle"]'
+    )!;
+    toggle.focus();
+    await act(async () => fireEvent.click(toggle));
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
+      editRows
+    );
+    expect(Array.from(container.querySelectorAll('[data-slot="relation-output-field"]'))).toEqual(
+      rowsBefore
+    );
+    expect(toggle.isConnected).toBe(true);
+    expect(document.activeElement).toBe(toggle);
+    const selectedOnly = container.querySelector<HTMLButtonElement>('[role="checkbox"]')!;
+    expect(selectedOnly.getAttribute('aria-checked')).toBe('false');
+    await act(async () => fireEvent.click(selectedOnly));
+    expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
+      initialRows - 1
+    );
+    expect(onChange).toHaveBeenCalledOnce();
+    await act(async () => fireEvent.click(selectedOnly));
+    expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
+      editRows
+    );
+    expect(onChange).toHaveBeenCalledOnce();
+    await act(async () => inspect());
+    expect(container.querySelectorAll('[data-slot="relation-output-field"]')).toHaveLength(
+      initialRows - 1
+    );
+    expect(container.querySelector('[data-slot="relation-output-toggle"]')).toBeNull();
+  });
+
+  it.each(['model', 'transform'] as const)(
+    'opens direct %s output editing through the shared header without writing',
+    async (kind) => {
+      const graph = occurrenceGraph();
+      const projection = projectCanvasRelationalTree({
+        node: graph.targetNode,
+        nodes: graph.nodes,
+        edges: graph.edges,
+      });
+      if (!projection.ok) throw new Error('Expected Model projection.');
+      const projectedRoot = projection.projection.root;
+      const initial = kind === 'transform' ? connectedNamesProjectionDraft() : graph.draft;
+      const onChange = vi.fn();
+      function Host(): ReactElement {
+        const analysis = useCanvasRelationAnalysisSession(initial, `direct-${kind}`);
+        return (
+          <CanvasRelationAnalysisContext.Provider value={analysis}>
+            {analysis?.document == null ? null : kind === 'model' ? (
+              <CanvasModelOutputInspector
+                modelName="Model"
+                root={projectedRoot}
+                copy={COPY}
+                editable
+                onOutputChange={onChange}
+                onPendingOutputChange={() => {}}
+                onClose={() => {}}
+              />
+            ) : (
+              <CanvasTransformInspector
+                relationId={analysis.session.rootId}
+                transformNode={graph.targetNode}
+                onChange={onChange}
+                onClose={() => {}}
+              />
+            )}
+          </CanvasRelationAnalysisContext.Provider>
+        );
+      }
+      await act(async () => root.render(<Host />));
+      expect(container.querySelector('[data-slot="relation-output-field"]')).not.toBeNull();
+      expect(container.querySelector('[data-slot="relation-output-toggle"]')).toBeNull();
+      expect(container.querySelector('[data-slot="relation-output-field"] input')).toBeNull();
+      expect(container.querySelector('[data-slot="canvas-derived-output-trigger"]')).toBeNull();
+      const edit = container.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-relational-edit"]'
+      )!;
+      expect(edit.textContent).toBe('Edit');
+      await act(async () => fireEvent.click(edit));
+      expect(edit.getAttribute('aria-pressed')).toBe('true');
+      expect(container.querySelector('[data-slot="relation-output-toggle"]')).not.toBeNull();
+      expect(container.querySelector('[data-slot="relation-output-field"] input')).not.toBeNull();
+      if (kind === 'transform')
+        expect(
+          container.querySelector('[data-slot="canvas-derived-output-trigger"]')
+        ).not.toBeNull();
+      expect(onChange).not.toHaveBeenCalled();
+    }
+  );
 
   it('preserves eligibility and rejection feedback through rollback without reviving stale errors', async () => {
     const initial = documents.join();

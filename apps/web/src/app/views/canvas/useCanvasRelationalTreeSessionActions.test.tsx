@@ -145,7 +145,7 @@ describe('Relational session-action controller', () => {
     for (const callback of [navigation.apply, navigation.stay, navigation.discard])
       expect(callback).not.toHaveBeenCalled();
     act(() => {
-      for (const callback of Object.values(current!.binding)) callback();
+      for (const callback of Object.values(current!.binding)) void callback();
     });
     expect(session.apply).toHaveBeenCalledOnce();
     expect(session.cancel).toHaveBeenCalledOnce();

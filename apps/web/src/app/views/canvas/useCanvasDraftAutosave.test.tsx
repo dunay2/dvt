@@ -9,6 +9,7 @@ import type { CanvasDraftAutosaveSchedulingArgs } from './canvasDraftAutosaveSch
 import { canvasDraftSession } from './canvasDraftSession';
 import { buildAuthoringPort } from './canvasDraftRepository.test.fixtures';
 import { createCanvasDraftRepository } from './canvasDraftRepository';
+import { createDraftAttemptRefs } from './canvasDraftPersistenceRuntime';
 
 describe('Canvas autosave semantic scheduling', () => {
   afterEach(() => vi.useRealTimers());
@@ -24,6 +25,8 @@ describe('Canvas autosave semantic scheduling', () => {
         canonicalEdges: [],
       });
       const save = vi.spyOn(repository, 'saveGraphDraft');
+      const refs = createDraftAttemptRefs();
+      refs.lastSavedSignatureRef.current = 'before';
       const args: CanvasDraftAutosaveSchedulingArgs = {
         draftRepository: repository,
         graphDraftQuery: { isPending: false, isError: false, data: undefined },
@@ -40,14 +43,7 @@ describe('Canvas autosave semantic scheduling', () => {
         currentDraftPayload: record.draft,
         canPersistGraphDraft: scenario !== 'permission denied',
         canPersistCurrentDraft: true,
-        refs: {
-          saveDebounceTimerRef: { current: null },
-          lastSavedSignatureRef: { current: 'before' },
-          lastFailedSignatureRef: { current: null },
-          saveAttemptGenerationRef: { current: 0 },
-          nextSaveAttemptIdRef: { current: 0 },
-          activeSaveAttemptRef: { current: null },
-        },
+        refs,
         setDraftSaveStatus: vi.fn(),
         createDraftIdempotencyKey: () => 'equivalent-render',
       };

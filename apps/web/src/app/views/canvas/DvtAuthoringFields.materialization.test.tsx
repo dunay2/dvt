@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getByRole, getByText, queryByText } from '@testing-library/dom';
 import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { useAuthoringFieldsHarness } from './DvtAuthoringFields.test-support';
@@ -30,6 +30,10 @@ describe('DVT materialization authoring', () => {
       'ephemeral',
     ]);
     expect(view.draftJson()).not.toContain('"dbt"');
+    expect(getByRole(view.container, 'combobox', { name: 'Connection' }).getAttribute('name')).toBe(
+      'dvt-transform-result-connection'
+    );
+    expect(queryByText(view.container, 'Connection', { exact: true })).toBeNull();
 
     act(() => {
       fireEvent.change(select!, { target: { value: 'view' } });
@@ -60,6 +64,7 @@ describe('DVT materialization authoring', () => {
       'select[name="dvt-sink-write-mode"]'
     ) as HTMLSelectElement | null;
     expect(view.container.textContent).toContain('DVT sink');
+    expect(getByText(view.container, 'Connection', { exact: true }).tagName).toBe('LABEL');
     expect(view.container.textContent).toContain('marts.orders_daily');
     expect(view.container.textContent).not.toContain('analytics_prod.marts.orders_daily');
     expect(view.container.textContent).not.toContain('daily_by_order_date');

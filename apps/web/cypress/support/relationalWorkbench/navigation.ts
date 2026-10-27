@@ -31,6 +31,40 @@ export function openWorkbenchModel(nodeId = 'join-transform'): void {
   cy.get('[data-slot="canvas-model-editor"]').should('be.visible');
 }
 
+/** Enter the visible owning inspector's Edit mode without toggling an active edit. */
+export function editWorkbenchInspector(inspectorSelector: string): void {
+  const control = '[data-slot="canvas-relational-edit"]';
+  cy.get(inspectorSelector)
+    .filter(':visible')
+    .should('have.length', 1)
+    .find(control)
+    .should('have.length', 1)
+    .and('be.visible')
+    .and('be.enabled')
+    .and('have.text', 'Edit')
+    .should(($edit) => {
+      expect($edit.attr('aria-pressed'), 'explicit inspector Edit mode').to.be.oneOf([
+        'true',
+        'false',
+      ]);
+    })
+    .then(($edit) => {
+      if ($edit.attr('aria-pressed') === 'false') {
+        cy.get(inspectorSelector)
+          .filter(':visible')
+          .should('have.length', 1)
+          .find(control)
+          .should('have.attr', 'aria-pressed', 'false')
+          .click();
+      }
+    });
+  cy.get(inspectorSelector)
+    .filter(':visible')
+    .should('have.length', 1)
+    .find(control)
+    .should('have.attr', 'aria-pressed', 'true');
+}
+
 /** Properties is a contextual action; Model double-click belongs to the semantic editor. */
 export function openWorkbenchProperties(nodeId: string): void {
   const node = `.react-flow__node[data-id="${nodeId}"]`;
@@ -80,7 +114,10 @@ export function previewWorkbenchModel(nodeId = 'join-transform'): void {
   );
 }
 
-export function dragWorkbenchSource(sourceLabel: string): void {
+export function dragWorkbenchSource(
+  sourceLabel: string,
+  dropOffset?: Readonly<{ x: number; y: number }>
+): void {
   cy.window().then((window) => {
     const dataTransfer = new window.DataTransfer();
     cy.contains('[data-slot="canvas-relational-tree-source"]', sourceLabel).trigger('dragstart', {
@@ -90,8 +127,16 @@ export function dragWorkbenchSource(sourceLabel: string): void {
       '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]'
     )
       .should('be.visible')
-      .trigger('dragover', { dataTransfer })
-      .trigger('drop', { dataTransfer });
+      .then(($viewport) => {
+        const bounds = $viewport[0]!.getBoundingClientRect();
+        const position =
+          dropOffset == null
+            ? {}
+            : { clientX: bounds.left + dropOffset.x, clientY: bounds.top + dropOffset.y };
+        cy.wrap($viewport)
+          .trigger('dragover', { dataTransfer, ...position })
+          .trigger('drop', { dataTransfer, ...position });
+      });
   });
 }
 

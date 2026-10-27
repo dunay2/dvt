@@ -67,11 +67,6 @@ export function useCanvasRelationalGraphAuthoring(
         staged.clearSelection();
         occurrences.select(id);
       },
-      remove: (id: string) => {
-        staged.disconnectProducer(id);
-        if (outputRelationId === id) state.setOutputRelationId(null);
-        occurrences.remove(id);
-      },
     },
     staged: {
       ...staged,
@@ -99,10 +94,6 @@ export function useCanvasRelationalGraphAuthoring(
             },
             state.stagedOperations
           );
-      },
-      remove: (id: string) => {
-        if (outputRelationId === id) state.setOutputRelationId(null);
-        staged.remove(id);
       },
     },
     output: createCanvasRelationalOutputActions({ ...args, canonicalConsumers }),

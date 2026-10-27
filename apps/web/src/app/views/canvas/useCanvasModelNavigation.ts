@@ -24,10 +24,18 @@ export function useCanvasModelNavigation({
   const routeNavigation = useRef<CanvasModelBlockedNavigation | null>(null);
   const afterClose = useRef<(() => void) | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [appliedForNavigation, setAppliedForNavigation] = useState(false);
   const [navigationError, setNavigationError] = useState<string | null>(null);
-  const applyDecisionInFlight = useRef(false);
-  const routeSaveInFlight = useRef(false);
+  const applyDecisionInFlight = useRef<object | null>(null);
+  const routeSaveInFlight = useRef<object | null>(null);
+  useEffect(
+    () => () => {
+      applyDecisionInFlight.current = null;
+      routeSaveInFlight.current = null;
+    },
+    []
+  );
   const onRouteBlocked = useCallback((navigation: CanvasModelBlockedNavigation) => {
     routeNavigation.current = navigation;
     setPendingNavigation('route');
@@ -44,8 +52,10 @@ export function useCanvasModelNavigation({
         if (continuation != null) continuation();
         else onClose();
       }
-      routeSaveInFlight.current = false;
-      applyDecisionInFlight.current = false;
+      routeSaveInFlight.current = null;
+      setSaving(false);
+      applyDecisionInFlight.current = null;
+      setApplying(false);
       setPendingNavigation(null);
       setNavigationError(null);
       setAppliedForNavigation(false);
@@ -56,42 +66,54 @@ export function useCanvasModelNavigation({
     afterClose.current = undefined;
     routeNavigation.current?.reset();
     routeNavigation.current = null;
-    routeSaveInFlight.current = false;
-    applyDecisionInFlight.current = false;
+    routeSaveInFlight.current = null;
+    setSaving(false);
+    applyDecisionInFlight.current = null;
+    setApplying(false);
     setPendingNavigation(null);
     setNavigationError(null);
     setAppliedForNavigation(false);
   }, []);
-  const applyAndContinue = () => {
+  const applyAndContinue = async () => {
     if (
       pendingNavigation == null ||
       (!appliedForNavigation && workbench.current?.canApply !== true) ||
-      saving
+      saving ||
+      applying
     )
       return;
     if (appliedForNavigation) {
       setNavigationError(null);
       return;
     }
-    if (applyDecisionInFlight.current) return;
-    applyDecisionInFlight.current = true;
-    const result = workbench.current?.apply();
-    if (result?.outcome === 'rejected') {
-      applyDecisionInFlight.current = false;
-      setNavigationError(
-        result.reason === 'model_output_required' ||
-          result.reason === 'model_output_dependency_unavailable'
-          ? formatCanvasModelOutputDependencyRejection(result)
-          : result.reason === 'node_unavailable'
-            ? copy.applyNodeUnavailable
-            : copy.applyRejected
-      );
-      return;
+    if (applyDecisionInFlight.current != null) return;
+    const decision = {};
+    applyDecisionInFlight.current = decision;
+    setApplying(true);
+    try {
+      const result = await workbench.current?.apply();
+      if (applyDecisionInFlight.current !== decision) return;
+      if (result?.outcome === 'rejected') {
+        setNavigationError(
+          result.reason === 'model_output_required' ||
+            result.reason === 'model_output_dependency_unavailable'
+            ? formatCanvasModelOutputDependencyRejection(result)
+            : result.reason === 'node_unavailable'
+              ? copy.applyNodeUnavailable
+              : copy.applyRejected
+        );
+      } else if (result != null) {
+        setNavigationError(null);
+        setAppliedForNavigation(true);
+      }
+    } catch {
+      if (applyDecisionInFlight.current === decision) setNavigationError(copy.applyRejected);
+    } finally {
+      if (applyDecisionInFlight.current === decision) {
+        applyDecisionInFlight.current = null;
+        setApplying(false);
+      }
     }
-    if (result != null) {
-      setNavigationError(null);
-      setAppliedForNavigation(true);
-    } else applyDecisionInFlight.current = false;
   };
   useEffect(() => {
     if (!appliedForNavigation || pendingNavigation == null || navigationError != null) return;
@@ -99,22 +121,26 @@ export function useCanvasModelNavigation({
       navigate(pendingNavigation);
       return;
     }
-    if (routeSaveInFlight.current) return;
-    routeSaveInFlight.current = true;
+    if (routeSaveInFlight.current != null) return;
+    const decision = {};
+    routeSaveInFlight.current = decision;
     setSaving(true);
     void (async () => {
       try {
         const saved = await preparePreview?.();
+        if (routeSaveInFlight.current !== decision) return;
         if (saved?.ok !== true) {
           setNavigationError(copy.saveFailed);
           return;
         }
         navigate('route');
       } catch {
-        setNavigationError(copy.saveFailed);
+        if (routeSaveInFlight.current === decision) setNavigationError(copy.saveFailed);
       } finally {
-        routeSaveInFlight.current = false;
-        setSaving(false);
+        if (routeSaveInFlight.current === decision) {
+          routeSaveInFlight.current = null;
+          setSaving(false);
+        }
       }
     })();
   }, [
@@ -133,6 +159,8 @@ export function useCanvasModelNavigation({
     const preventLostDraft = (event: BeforeUnloadEvent) => {
       if (
         !saving &&
+        applyDecisionInFlight.current == null &&
+        routeSaveInFlight.current == null &&
         !workbench.current?.hasUnappliedChanges &&
         draftStatus.persistence === 'durable'
       )
@@ -151,11 +179,13 @@ export function useCanvasModelNavigation({
     },
     decision: {
       open: pendingNavigation != null,
-      busy: saving,
+      busy: saving || applying,
       error: navigationError,
       canApply: appliedForNavigation || workbench.current?.canApply === true,
       onStay: stay,
-      onApply: applyAndContinue,
+      onApply: () => {
+        void applyAndContinue();
+      },
       onDiscard: appliedForNavigation
         ? undefined
         : () => {

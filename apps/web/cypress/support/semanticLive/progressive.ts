@@ -9,6 +9,7 @@ import {
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { insertSelectedRelationTransform } from '../../../src/app/views/canvas/canvasSelectedRelationTransform';
 import { readLiveGraphDraft } from '../liveProtectedRuntime';
+import { editWorkbenchInspector } from '../relationalWorkbench/navigation';
 
 import { leftJoinDocument, modelId } from './fixture';
 
@@ -36,6 +37,7 @@ export function addLiveFormula(alias: string, formula: string): void {
   readLiveGraphDraft().then(({ body }) => {
     previousRevision = body.record.revision;
   });
+  editWorkbenchInspector('[data-slot="canvas-transform-inspector"]');
   cy.get(
     '[data-slot="canvas-transform-inspector"] [data-slot="canvas-derived-output-trigger"]'
   ).click();

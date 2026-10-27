@@ -45,6 +45,7 @@ import {
   writePublicationFormula,
 } from '../../support/postgresPublicationFlow';
 import {
+  editWorkbenchInspector,
   openWorkbenchModel,
   openWorkbenchProperties,
 } from '../../support/relationalWorkbench/navigation';
@@ -103,7 +104,16 @@ describe('N-input DVT Run live', () => {
     });
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.get('[data-operator="project"]').should('have.length', 1).click();
-    cy.get(transformInspector).should('contain.text', 'customer_clean').and('contain.text', 'TRIM');
+    cy.get(transformInspector)
+      .find('[data-slot="relation-output-field"]')
+      .should('contain.text', 'customer_clean');
+    cy.get(transformInspector).find('[data-slot="canvas-operation-tree-tab"]').click();
+    cy.get(transformInspector)
+      .find('[data-slot="canvas-relational-expression-tree"]')
+      .should('contain.text', 'TRIM');
+    cy.get(transformInspector)
+      .find('[data-slot="canvas-relational-edit"]')
+      .should('have.attr', 'aria-pressed', 'false');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.intercept('GET', '**/source-data-sample?*', (request) => {
       samples += 1;
@@ -127,6 +137,7 @@ describe('N-input DVT Run live', () => {
       openWorkbenchModel(modelId);
     });
     cy.get('[data-operator="project"]').should('have.length', 1).click();
+    editWorkbenchInspector(transformInspector);
     cy.contains(`${transformInspector} [data-slot="canvas-derived-output"]`, 'customer_clean')
       .find('button')
       .click();

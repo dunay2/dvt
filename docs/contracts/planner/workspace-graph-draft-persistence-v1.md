@@ -96,6 +96,18 @@ Write outcomes are explicit and typed:
 The v1 merge posture is reject-on-stale. The server does not auto-merge
 concurrent edits in this contract line.
 
+The Web Model edit transaction may stage explicit recovery of a currently
+published physical Read field omitted from its existing incoming Input binding.
+This remains `ConfigureCanvasDvtNode`: its existing Input binder validates an
+unpublished candidate, and Model Apply validates the semantic node and additive
+edge bindings before one aggregate CAS publication. Cancel discards both; failed
+or stale Apply retains the local draft without a partial workspace mutation.
+Ordinary Output inclusion changes do not alter Input bindings. Recovery does not
+restore withdrawn producer publication, create dependencies or select sibling
+occurrences' Output. The accepted node and edge changes use the existing typed
+workspace draft payload and protected Save request; no schema version, field,
+endpoint, migration or persistence authority is introduced by this interaction.
+
 ## Authoring aggregate posture
 
 Input nodes may declare `sourceDefinitionId` to identify a registered source in
@@ -232,6 +244,30 @@ the current canonical root after subsequent insertions; an explicitly moved
 Output remains manual. Pointer and keyboard movement obey the same boundary.
 
 ### Pending Read identity coverage
+
+Each pending Source may additionally carry `initialOutputFieldIds`, an ordered
+list of unique root field identities belonging to that occurrence's sole Read.
+Absent means the existing producer publication default; `[]` explicitly excludes
+all fields. Foreign identities, duplicates and nested-only field identities are
+invalid. Save/read preserve the preference without altering the complete Read,
+physical schema or Model Input bindings. This additive correction stays in the
+existing v1 authoring DTO and has no migration or secondary compatibility reader.
+Creating or restoring a detached incomplete occurrence resolves an absent
+preference against current producer publication using stable local Read identities.
+When that Read already belongs to a configured or retained operation document,
+an absent preference stays absent: the saved canonical configuration owns Output,
+including after terminal disconnect and reopen. Reconnecting cannot replay defaults
+over its selected emit.
+
+The preference is incomplete authoring intent, never executable authority. On
+terminal Output connection Web materializes it through canonical root Output
+selection, then atomically removes only consumed reachable preferences. Until
+that succeeds, Apply cannot expose executable semantics. A terminal operation
+without a semantic document can still save the incomplete DTO with its preferences;
+this preserves structural authoring without materializing executable Output.
+Intermediate JOINs keep
+their complete inputs, and cancellation or stale/rejected initialization retains
+the previous snapshot. Completed occurrences thereafter read the canonical root.
 
 Pending source Reads require complete stable field identity coverage of their
 saved `baseSchema`: exactly one sidecar binding per root field and nested struct

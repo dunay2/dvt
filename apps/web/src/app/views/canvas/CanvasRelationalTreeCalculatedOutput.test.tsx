@@ -64,6 +64,7 @@ describe('calculated SELECT Output', () => {
               Apply
             </button>
             <CanvasRelationalTreeInlineEditor
+              sourceOutputFieldsByRelationId={new Map()}
               copy={COPY}
               joinDraft={draft}
               operation="inner_join"

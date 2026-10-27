@@ -66,7 +66,6 @@ function CanvasRelationalTreeContentView({
         expanded={expanded}
         onExpandedChange={onExpandedChange}
         copy={copy}
-        authoring={authoring}
         sourceOutputFieldsByRelationId={model.sourceOutputFieldsByRelationId}
       />
     );

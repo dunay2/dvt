@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { NodePropertiesTabs } from './NodePropertiesTabs';
 import type { NodePropertiesReadModel } from './nodePropertiesContracts';
+import { buildNodePropertiesReadModel } from './nodePropertiesReadModel';
 
 const sourceNode: CanonicalNode = {
   id: 'src-orders',
@@ -70,12 +71,12 @@ describe('NodePropertiesTabs Source Inputs / Outputs presentation', () => {
     vi.clearAllMocks();
   });
 
-  function render(node: CanonicalNode): void {
+  function render(node: CanonicalNode, model: NodePropertiesReadModel = inputsOutputsModel): void {
     act(() => {
       root.render(
         <NodePropertiesTabs
           node={node}
-          model={{ ...inputsOutputsModel, nodeId: node.id, nodeName: node.name }}
+          model={{ ...model, nodeId: node.id, nodeName: node.name }}
           activeRunId={null}
           panels={[]}
           activeTab="inputs-outputs"
@@ -99,11 +100,56 @@ describe('NodePropertiesTabs Source Inputs / Outputs presentation', () => {
     ).toContain('1');
   });
 
-  it('uses shared stacked relationship records for non-Source nodes', () => {
+  it('uses compact business relationship summaries for non-Source nodes', () => {
     render(genericNode);
 
     expect(container.querySelector('[data-slot="canvas-source-inputs-outputs"]')).toBeNull();
     expect(container.querySelector('[data-slot="node-property-relationship-list"]')).not.toBeNull();
     expect(container.querySelector('table')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="node-property-relationship-summary"]')
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="node-property-relationship-node"]')?.textContent
+    ).toBe('Model 1');
+    expect(container.textContent).not.toContain('model-1');
+  });
+
+  it('keeps actual Input and Output edge identity private in the shared Model list', () => {
+    const input = { ...sourceNode, id: 'private-input-identity', name: 'client' };
+    const output = { ...genericNode, id: 'private-output-identity', name: 'published_orders' };
+    const model = buildNodePropertiesReadModel({
+      node: genericNode,
+      nodes: [input, genericNode, output],
+      edges: [
+        {
+          id: 'private-input-edge',
+          sourceId: input.id,
+          targetId: genericNode.id,
+          relation: 'lineage',
+        },
+        {
+          id: 'private-output-edge',
+          sourceId: genericNode.id,
+          targetId: output.id,
+          relation: 'lineage',
+        },
+      ],
+    });
+    const original = structuredClone(model);
+    render(genericNode, model);
+    const rows = [
+      ...container.querySelectorAll('[data-slot="node-property-relationship-summary"]'),
+    ];
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => [...row.children].map((cell) => cell.textContent))).toEqual([
+      ['Input', 'client', 'lineage'],
+      ['Output', 'published_orders', 'lineage'],
+    ]);
+    expect(container.textContent).not.toContain(input.id);
+    expect(container.textContent).not.toContain(output.id);
+    expect(container.textContent).not.toContain('private-input-edge');
+    expect(container.textContent).not.toContain('private-output-edge');
+    expect(model).toEqual(original);
   });
 });

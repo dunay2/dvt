@@ -1,86 +1,75 @@
-/** Present this Model's bindings from one producer's published fields. */
-import { Plus, X } from 'lucide-react';
-
-import type { GraphNodeInputMapping } from '../../plugins/graph/graphNodeColumnContracts';
+/** Present controlled field inclusion without owning Input or Output commands. */
+import { FieldInclusionToggle } from '../../components/inspector/FieldInclusionToggle';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
-import { canvasInputSlotId } from './canvasInputBindings';
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
+import { useCanvasOutputPresentation } from './CanvasRelationalTreeEditorFrame';
+
+export type SourceOccurrenceOutputField = Readonly<{
+  id: string;
+  name: string;
+  included: boolean;
+  available: boolean;
+  dataType?: string;
+}>;
 
 export function CanvasSourceOccurrenceOutputs({
-  input,
-  publishedFieldNames,
-  consumerNodeId,
-  onMapInput,
-  onRemoveInput,
+  fields,
+  disabled,
+  editing = false,
+  showExcluded,
+  busy = false,
+  onChange,
 }: Readonly<{
-  input: CanvasDvtCompositionInput;
-  publishedFieldNames: readonly string[];
-  consumerNodeId: string;
-  onMapInput?: (mapping: GraphNodeInputMapping) => void;
-  onRemoveInput?: (mapping: GraphNodeInputMapping) => void;
+  fields: readonly SourceOccurrenceOutputField[];
+  disabled: boolean;
+  editing?: boolean;
+  showExcluded?: boolean;
+  busy?: boolean;
+  onChange: (fieldId: string, included: boolean) => void;
 }>): JSX.Element {
   const language = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasSemanticEditorCopy(language);
-  const bindings = input.inputBindings?.fields;
-  const bindingByFieldId = new Map(bindings?.map((binding) => [binding.producerFieldId, binding]));
-
-  const fieldsByName = new Map(input.fields.map((field) => [field.name, field]));
+  const presentation = useCanvasOutputPresentation();
+  const revealExcluded = editing && (showExcluded ?? presentation.showExcluded);
   return (
-    <section data-slot="source-occurrence-outputs" className="space-y-1">
-      {publishedFieldNames.flatMap((name) => {
-        const field = fieldsByName.get(name);
-        if (field == null) return [];
-        const fieldId = field.id ?? field.name;
-        const binding = bindingByFieldId.get(fieldId);
-        const included = bindings == null || binding != null;
-        const source = { nodeId: input.nodeId, columnId: fieldId };
-        return [
+    <section data-slot="source-occurrence-outputs" className="space-y-2">
+      {fields
+        .filter((field) => field.included || revealExcluded)
+        .map((field) => (
           <div
-            key={fieldId}
-            data-field-id={fieldId}
+            key={field.id}
+            data-field-id={field.id}
+            data-slot="source-occurrence-output-field"
             className="flex min-h-9 items-center gap-2 rounded border border-(--border-subtle) bg-(--surface-subtle) px-2 text-xs"
           >
             <span className="min-w-0 flex-1 truncate font-medium text-(--text-primary)">
               {field.name}
             </span>
-            <span className="shrink-0 text-[11px] text-(--text-muted)">{field.dataType}</span>
-            {included ? (
-              <button
-                type="button"
-                data-slot="source-occurrence-remove-field"
-                disabled={onRemoveInput == null}
-                aria-label={`${copy.removeOutputField}: ${field.name}`}
-                title={copy.removeOutputField}
-                onClick={() =>
-                  onRemoveInput?.({
-                    source,
-                    target: {
-                      nodeId: consumerNodeId,
-                      inputId: binding?.inputId ?? canvasInputSlotId(input.nodeId, fieldId),
-                    },
-                  })
-                }
-                className="grid size-6 shrink-0 place-items-center rounded text-(--text-muted) hover:bg-(--surface-selected) hover:text-(--text-primary) disabled:opacity-40"
-              >
-                <X aria-hidden="true" className="size-3.5" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                data-slot="source-occurrence-add-field"
-                disabled={onMapInput == null}
-                aria-label={`${copy.addOutputField}: ${field.name}`}
-                title={copy.addOutputField}
-                onClick={() => onMapInput?.({ source, target: { nodeId: consumerNodeId } })}
-                className="grid size-6 shrink-0 place-items-center rounded text-(--status-info) hover:bg-(--surface-selected) disabled:opacity-40"
-              >
-                <Plus aria-hidden="true" className="size-3.5" />
-              </button>
+            {field.dataType == null ? null : (
+              <span className="shrink-0 text-[11px] text-(--text-muted)">{field.dataType}</span>
             )}
-          </div>,
-        ];
-      })}
+            {editing ? (
+              <FieldInclusionToggle
+                fieldName={field.name}
+                included={field.included}
+                slot={
+                  field.included ? 'source-occurrence-remove-field' : 'source-occurrence-add-field'
+                }
+                disabled={disabled || (!field.available && !busy)}
+                busy={busy}
+                label={`${field.included ? copy.removeOutputField : copy.addOutputField}: ${field.name}`}
+                title={
+                  !field.available && !busy
+                    ? copy.sourceOutputUnavailable
+                    : field.included
+                      ? copy.removeOutputField
+                      : copy.addOutputField
+                }
+                onChange={(included) => onChange(field.id, included)}
+              />
+            ) : null}
+          </div>
+        ))}
     </section>
   );
 }

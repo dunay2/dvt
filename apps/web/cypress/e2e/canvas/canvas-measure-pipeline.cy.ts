@@ -16,6 +16,7 @@ import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
+  editWorkbenchInspector,
   openWorkbenchModel,
   revisitWorkbenchCanvas,
   stageWorkbenchUnary,
@@ -37,6 +38,7 @@ function inspectSavedWindow(relationId: string, language: 'en' | 'es'): void {
     .should('have.length', 1)
     .find('[data-slot="canvas-operation-properties-tab"]')
     .click();
+  editWorkbenchInspector('[data-slot="canvas-transform-inspector"]');
   const action = `${resolveCanvasSemanticEditorCopy(language).edit} · ${resolveCanvasViewCopy(language).operationWindowLabel}`;
   cy.contains('[data-slot="canvas-transform-inspector"] button', action).click();
   cy.get(form).find('input').should('have.value', 'ranked_customer');
@@ -238,8 +240,14 @@ describe('measure-pipeline', () => {
       cy.then(() =>
         cy.get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`).click()
       );
-      cy.get('[data-slot="canvas-operation-output-tab"]:visible').click();
-      cy.get('[data-slot="canvas-relation-outputs"] [data-field-id]').should((outputs) => {
+      cy.get('[data-canvas-inspector="true"]:visible')
+        .should('have.length', 1)
+        .find('[data-slot="canvas-operation-output-tab"]')
+        .click()
+        .should('have.attr', 'aria-selected', 'true');
+      cy.get(
+        '[data-canvas-inspector="true"]:visible [role="tabpanel"][data-value="output"][data-state="active"] [data-field-id]'
+      ).should((outputs) => {
         expect([...outputs].map((output) => output.getAttribute('data-field-id'))).to.deep.equal(
           fields
         );

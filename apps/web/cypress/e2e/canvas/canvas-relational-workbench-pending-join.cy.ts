@@ -1,4 +1,12 @@
 /** Compose two transformed producers through explicit ports; Apply and Cancel stay atomic. */
+import {
+  DvtRelationalAuthoringDraftV1Schema,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
+
+import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
+import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
+import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
 import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
@@ -7,7 +15,10 @@ import {
   connectWorkbenchProducer,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
-import { semanticWrites } from '../../support/relationalWorkbench/persistence';
+import {
+  semanticWrites,
+  semanticDocumentFromWrite,
+} from '../../support/relationalWorkbench/persistence';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench pending binary operations', () => {
@@ -34,6 +45,131 @@ describe('Workbench pending binary operations', () => {
     cy.get('[data-pending-operation="true"]').should('not.exist');
     cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(0));
   });
+
+  for (const outcome of ['cancel', 'apply'] as const) {
+    it(`${outcome} after explicitly reconfiguring a saved JOIN with a replaced input`, () => {
+      const read = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
+      const join = '[data-pending-operation="true"] [data-operator="join"]';
+      for (const port of [0, 1]) {
+        dragWorkbenchSource('customers');
+        cy.get(read)
+          .last()
+          .closest('li')
+          .as('original' + port, { type: 'static' });
+      }
+      workbenchOperation('inner_join').click();
+      cy.get(join).closest('li').as('join', { type: 'static' });
+      connectWorkbenchProducer('@original0', '@join', 0);
+      connectWorkbenchProducer('@original1', '@join', 1);
+      connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      cy.get('@original1').find(read).rightclick();
+      cy.get('[data-slot="canvas-relational-remove-source"]').click();
+      cy.get('[data-slot="canvas-card-removal-confirm"]').click();
+      dragWorkbenchSource('orders');
+      cy.contains(read, 'orders').closest('li').as('replacement', { type: 'static' });
+      connectWorkbenchProducer('@replacement', '@join', 1);
+      cy.get('[data-slot="canvas-staged-operation-reconfigure"]').should('be.enabled');
+      cy.get('[data-slot="canvas-relational-tree-apply"]').click();
+      cy.wrap(null).should(() =>
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1)
+      );
+      let savedConfiguration: unknown;
+      cy.then(() => {
+        const { draft } = getE2eApiCalls('/workspace/graph/draft', 'PUT')[0]!.body as {
+          draft: WorkspaceGraphAuthoringDraft;
+        };
+        const retained = DvtRelationalAuthoringDraftV1Schema.parse(
+          draft.nodes.find((node) => node.id === 'join-transform')!.metadata
+            ?.relationalAuthoringDraft
+        );
+        savedConfiguration = structuredClone(retained.operations[0]!.configurationDocument);
+        expect(savedConfiguration).not.to.equal(undefined);
+        expect(retained.operations[0]!.semanticDocument).to.equal(undefined);
+      });
+      visitWorkbenchCanvas();
+      openWorkbenchModel();
+      cy.get(join).click();
+      cy.get('[data-slot="canvas-staged-operation-reconfigure"]').focus().click();
+      cy.get(join)
+        .closest('li')
+        .within(() => {
+          cy.get('[data-slot="canvas-node-execute"]')
+            .should('be.disabled')
+            .and(
+              'have.attr',
+              'title',
+              'Save the condition and apply the composition to preview this revision.'
+            );
+          cy.get('[data-slot="canvas-operation-preview-reason"]').should(
+            'contain.text',
+            'Save the condition and apply the composition'
+          );
+        });
+      const conditions = '[data-slot="dvt-substrait-join-predicate-editors"]:visible';
+      cy.get(conditions).should('be.visible');
+      cy.get(`${conditions} [aria-label="Editar condición"]`).click();
+      cy.get(`${conditions} [aria-label="Comparador de la condición"]`).select('not_equal');
+      cy.contains(`${conditions} button`, 'Guardar condición').click();
+      cy.then(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(1);
+        expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+        expect(getE2eApiCalls(/data-sample/, 'GET')).to.have.length(0);
+      });
+      cy.get(`[data-slot="canvas-relational-tree-${outcome}"]`).click();
+      if (outcome === 'cancel') cy.get(join).should('have.length', 1);
+      cy.wrap(null).should(() =>
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(
+          outcome === 'apply' ? 2 : 1
+        )
+      );
+      visitWorkbenchCanvas();
+      openWorkbenchModel();
+      if (outcome === 'cancel') {
+        cy.get(join).click();
+        cy.get('[data-slot="canvas-staged-operation-reconfigure"]').should('be.visible');
+        cy.then(() => {
+          const { draft } = getE2eApiCalls('/workspace/graph/draft', 'PUT')[0]!.body as {
+            draft: WorkspaceGraphAuthoringDraft;
+          };
+          const retained = DvtRelationalAuthoringDraftV1Schema.parse(
+            draft.nodes.find((node) => node.id === 'join-transform')!.metadata
+              ?.relationalAuthoringDraft
+          );
+          expect(retained.operations[0]!.configurationDocument).to.deep.equal(savedConfiguration);
+          expect(semanticWrites('join-transform')).to.have.length(0);
+        });
+      } else {
+        cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
+        cy.get('[data-slot="canvas-staged-operation-reconfigure"]').should('not.exist');
+        cy.get('[data-canvas-inspector="true"]').should('contain.text', '!=');
+        cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]')
+          .closest('li')
+          .find('[data-slot="canvas-node-execute"]')
+          .should('be.enabled');
+        cy.then(async () => {
+          const document = decodeDvtSubstraitSemanticDocument(
+            semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!)
+          );
+          expect(
+            document.sidecar.relations
+              .filter((relation) => relation.sourceRef != null)
+              .map((relation) => relation.sourceRef!.sourceObjectId)
+          ).to.deep.equal(['relation/dvt/public/customers', 'relation/dvt/public/orders']);
+          const session = new CanvasRelationAnalysisSession('reconfigured-join-proof');
+          try {
+            session.receive(document);
+            const selected = await querySelectedJoin(session, session.rootId, session.revision);
+            const condition = selected.conditions?.[0];
+            expect(condition?.kind === 'group' ? undefined : condition?.operator).to.equal(
+              'not_equal'
+            );
+          } finally {
+            session.dispose();
+          }
+        });
+      }
+    });
+  }
 
   it('keeps Filter Output, focus and viewport while selecting and moving columns', () => {
     dragWorkbenchSource('customers');

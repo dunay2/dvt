@@ -13,7 +13,7 @@ export function DvtSinkAuthoringSection({
   copy,
 }: Readonly<{ binding: DvtSinkAuthoringBinding; copy: CanvasViewCopy }>): JSX.Element {
   return (
-    <div className={styles.stack}>
+    <div className={inspectorVisualClasses.inspectorFields}>
       <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {copy.inspectorDvtSinkTitle}
       </h3>

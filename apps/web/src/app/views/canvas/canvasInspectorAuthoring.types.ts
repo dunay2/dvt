@@ -21,6 +21,7 @@ import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import type { CanvasModelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
+import type { CanvasColumnMappingSource } from './canvasColumnMappingModel';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -56,6 +57,20 @@ export type CanvasInspectorNodeDraftApplyResult =
       reason: 'node_unavailable' | 'invalid_draft';
       errors?: CanvasInspectorNodeDraftErrors;
     }>;
+
+export type CanvasInspectorNodeDraftInputChanges = Readonly<{
+  inputAdditions: readonly CanvasColumnMappingSource[];
+  signal?: AbortSignal;
+}>;
+
+export type CanvasApplyNodeDraft = {
+  (nodeId: string, draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraftApplyResult;
+  (
+    nodeId: string,
+    draft: CanvasInspectorNodeDraft,
+    changes: CanvasInspectorNodeDraftInputChanges
+  ): Promise<CanvasInspectorNodeDraftApplyResult>;
+};
 
 export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;

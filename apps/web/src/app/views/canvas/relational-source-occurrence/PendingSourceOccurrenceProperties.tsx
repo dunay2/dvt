@@ -1,30 +1,20 @@
-/** Inspect a detached Source through the same published Input controls as an applied Source. */
-import type { GraphNodeInputMapping } from '../../../plugins/graph/graphNodeColumnContracts';
-import { CanvasSourceOccurrenceOutputs } from '../CanvasSourceOccurrenceOutputs';
-import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCatalog';
+/** Present one pending occurrence using the shared Source form and caller-owned Output adapter. */
+import type { ReactNode } from 'react';
 import type { PendingSourceOccurrence } from './pendingSourceOccurrence';
 import { SourceOccurrencePropertiesForm } from './SourceOccurrencePropertiesForm';
 
 export function PendingSourceOccurrenceProperties({
   occurrence,
-  input,
-  publishedFieldNames,
-  consumerNodeId,
-  onMapInput,
-  onRemoveInput,
   occupied,
   actions,
   onPendingChange,
+  output,
 }: Readonly<{
   occurrence: PendingSourceOccurrence;
-  input?: CanvasDvtCompositionInput;
-  publishedFieldNames: readonly string[];
-  consumerNodeId: string;
-  onMapInput?: (mapping: GraphNodeInputMapping) => void;
-  onRemoveInput?: (mapping: GraphNodeInputMapping) => void;
   occupied: ReadonlySet<string>;
   actions: Readonly<{ rename: (alias: string) => boolean; close: () => void }>;
   onPendingChange: (pending: boolean) => void;
+  output: (editing: boolean) => ReactNode;
 }>): JSX.Element {
   const { read } = occurrence;
   return (
@@ -37,17 +27,7 @@ export function PendingSourceOccurrenceProperties({
       }}
       actions={{ save: actions.rename, close: actions.close }}
       onPendingChange={onPendingChange}
-      output={
-        input == null ? null : (
-          <CanvasSourceOccurrenceOutputs
-            input={input}
-            publishedFieldNames={publishedFieldNames}
-            consumerNodeId={consumerNodeId}
-            onMapInput={onMapInput}
-            onRemoveInput={onRemoveInput}
-          />
-        )
-      }
+      output={output}
     />
   );
 }

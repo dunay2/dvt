@@ -8,6 +8,8 @@
 import type { Type } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import { deriveSubstraitSchemas, type IndexedRelation } from '@dvt/substrait-analysis';
 
+import { projectWorkspaceGraphAuthoringDraftSemanticGraph } from '../../../src/app/services/workspace/workspaceGraphDraftProjection';
+import { buildCanvasAuthoringDraft as buildCanonicalCanvasDraft } from '../../../src/app/views/canvas/canvasDraftAuthoring';
 import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canvas/canvasDvtSubstraitSemanticDocument';
 import { normalizeProjectCanvasDraft } from '../../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 import { readCanvasTransformDependencyModel } from '../../../src/app/views/canvas/canvasTransformDependencyModel';
@@ -37,6 +39,7 @@ import {
   connectWorkbenchProducer,
   dragWorkbenchSource,
   openWorkbenchModel,
+  editWorkbenchInspector,
   revisitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
@@ -424,6 +427,7 @@ describe('Canvas ready node authoring', () => {
     cy.get(
       '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'
     ).click();
+    editWorkbenchInspector('[data-slot="canvas-model-output-inspector"]');
     cy.get(`${toggle}[data-field-name="total"]`)
       .should('have.attr', 'data-included', 'true')
       .click();
@@ -657,14 +661,28 @@ describe('Canvas ready node authoring', () => {
     cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('not.exist');
   });
 
-  it('keeps Inputs and Outputs before More and stacks complete relationship values', () => {
+  it('keeps Inputs and Outputs before More and summarizes complete business relationships', () => {
     const longRelatedNodeName =
       'Imported source for dvt.raw.orders in the local governed environment with a complete name';
-    stubStatefulCanvasDraftAuthoring({
+    const draft = stubStatefulCanvasDraftAuthoring({
       dbtGraph: true,
       authoringGenerated: true,
       longNodeNames: true,
     });
+    const graph = projectWorkspaceGraphAuthoringDraftSemanticGraph(draft);
+    Object.assign(
+      draft,
+      normalizeProjectCanvasDraft(
+        buildCanonicalCanvasDraft({
+          canvas: draft.canvas,
+          nodeIds: draft.nodeIds,
+          nodePositions: draft.nodePositions,
+          visibleEdges: draft.edges,
+          canonicalNodes: graph.canonicalNodes,
+          canonicalEdges: graph.canonicalEdges,
+        })
+      )
+    );
 
     visitReadyCanvas();
 
@@ -702,21 +720,89 @@ describe('Canvas ready node authoring', () => {
         expect(records).to.have.length(2);
         expect(section.textContent).to.contain(longRelatedNodeName);
 
-        for (const record of records) {
-          const firstLabel = record.querySelector('dt');
-          const firstValue = record.querySelector('dd');
-          expect(firstValue?.getBoundingClientRect().top).to.be.at.least(
-            firstLabel?.getBoundingClientRect().bottom ?? 0
+        const window = section.ownerDocument.defaultView!;
+        const panelRect = section
+          .closest('[data-slot="canvas-node-workbench-panel"]')!
+          .getBoundingClientRect();
+        const visibleLeft = Math.max(0, sectionRect.left, panelRect.left);
+        const visibleRight = Math.min(window.innerWidth, sectionRect.right, panelRect.right);
+        const visibleTop = Math.max(0, sectionRect.top, panelRect.top);
+        const visibleBottom = Math.min(window.innerHeight, sectionRect.bottom, panelRect.bottom);
+        records.forEach((record, index) => {
+          const summary = record.querySelector<HTMLElement>(
+            '[data-slot="node-property-relationship-summary"]'
+          )!;
+          expect(summary, 'business relationship summary').not.to.equal(null);
+          const [direction, node, relation] = ['direction', 'node', 'relation'].map((slot) => {
+            const value = summary.querySelector<HTMLElement>(
+              `[data-slot="node-property-relationship-${slot}"]`
+            );
+            expect(value, `relationship ${slot}`).not.to.equal(null);
+            return value!;
+          });
+          expect(direction!.textContent).to.equal('Input');
+          expect(node!.textContent).to.equal(index === 0 ? longRelatedNodeName : '-');
+          expect(relation!.textContent?.toLowerCase()).to.equal('lineage');
+          const values = [direction!, node!, relation!];
+          const centers = values.map((value) => {
+            const bounds = value.getBoundingClientRect();
+            return bounds.top + bounds.height / 2;
+          });
+          expect(
+            Math.max(...centers) - Math.min(...centers),
+            'direction, business name and relation share one summary line'
+          ).to.be.lessThan(1);
+          const connection = record.querySelector<HTMLElement>(
+            '[data-slot="node-property-relationship-connection"]'
           );
-        }
-
-        for (const value of section.querySelectorAll<HTMLElement>('dd')) {
-          const valueRect = value.getBoundingClientRect();
-          expect(getComputedStyle(value).overflowWrap).to.equal('anywhere');
-          expect(valueRect.left).to.be.at.least(sectionRect.left);
-          expect(valueRect.right).to.be.at.most(sectionRect.right + 1);
-        }
+          if (connection != null) {
+            expect(connection.textContent?.trim(), 'connection context').not.to.equal('');
+            expect(
+              connection.getBoundingClientRect().top,
+              'connection is secondary'
+            ).to.be.at.least(summary.getBoundingClientRect().bottom);
+            values.push(connection);
+          }
+          for (const value of values) {
+            const bounds = value.getBoundingClientRect();
+            expect(bounds.width, 'business value is visible').to.be.greaterThan(0);
+            expect(bounds.height, 'business value is visible').to.be.greaterThan(0);
+            expect(bounds.left).to.be.at.least(visibleLeft - 1);
+            expect(bounds.right).to.be.at.most(visibleRight + 1);
+            expect(bounds.top).to.be.at.least(visibleTop - 1);
+            expect(bounds.bottom).to.be.at.most(visibleBottom + 1);
+            expect(value.scrollWidth, 'complete value fits available width').to.be.at.most(
+              value.clientWidth + 1
+            );
+            expect(value.scrollHeight, 'wrapped value is not clipped').to.be.at.most(
+              value.clientHeight + 1
+            );
+          }
+          expect(record.querySelector('dt, dd'), 'no obsolete property-label stack').to.equal(null);
+          const accessibleText = [
+            record.textContent,
+            ...[record, ...record.querySelectorAll('*')].flatMap((element) =>
+              ['title', 'aria-label', 'aria-description'].map(
+                (attribute) => element.getAttribute(attribute) ?? ''
+              )
+            ),
+          ].join(' ');
+          for (const id of [
+            'raw_orders',
+            'warehouse_payments',
+            'orders_model',
+            'edge_raw_orders_model',
+            'edge_warehouse_payments_model',
+          ])
+            expect(accessibleText, 'technical graph identities remain private').not.to.include(id);
+        });
       });
+    cy.then(() =>
+      expect(
+        getE2eApiCalls('/workspace/graph/draft', 'PUT'),
+        'relationship inspection does not save'
+      ).to.have.length(0)
+    );
   });
 
   it('roundtrips dbt properties while generated SQL remains read-only', () => {

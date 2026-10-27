@@ -9,6 +9,7 @@ import type { CanvasStagedOperationActions } from './canvasStagedOperationAction
 import type { useCanvasRelationalTreeWorkbenchModel } from './useCanvasRelationalTreeWorkbenchModel';
 import type { CanvasStagedAnalysisBinding } from './CanvasStagedAnalysisProvider';
 import { resolveCanvasReadFieldEligibility } from './canvasInputFieldEligibility';
+import type { CanvasSourceInputRecovery } from './canvasSourceOccurrenceInputRecovery';
 
 export type CanvasRelationalTreeAuthoringDto = Readonly<{
   transformNode: CanonicalNode;
@@ -25,6 +26,7 @@ export type CanvasRelationalTreeAuthoringDto = Readonly<{
   stagedOperations: readonly CanvasStagedOperation[];
   selectedStagedOperationId: string | null;
   outputRelationId: string | null;
+  sourceInputRecovery?: CanvasSourceInputRecovery;
 }>;
 
 export type CanvasRelationalTreeAuthoringActions = Readonly<{
@@ -34,8 +36,8 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   remove: (id: string) => void;
   dropSource: (id: string) => string | null;
   selectPending: (id: string) => void;
-  removePending: (id: string) => void;
   renamePending: (id: string, alias: string) => boolean;
+  setPendingOutputIncluded: (id: string, fieldId: string, included: boolean) => boolean;
   stageOperation: CanvasStagedOperationActions['stage'];
   selectStagedOperation: CanvasStagedOperationActions['select'];
   clearStagedOperationSelection: CanvasStagedOperationActions['clearSelection'];
@@ -44,7 +46,6 @@ export type CanvasRelationalTreeAuthoringActions = Readonly<{
   disconnectRelation: (id: string, port: number) => void;
   connectOutput: (relationId: string) => void;
   disconnectOutput: () => void;
-  removeStagedOperation: CanvasStagedOperationActions['remove'];
   updateStagedOperation: CanvasStagedOperationActions['updateConfiguration'];
 }>;
 
@@ -61,14 +62,14 @@ export function projectCanvasRelationalTreeAuthoringView(
   data: CanvasRelationalTreeAuthoringDto;
   actions: CanvasRelationalTreeAuthoringActions;
 }> {
-  const { model, transformNode, nodes, edges } = context;
+  const { model, transformNode, nodes } = context;
   const { session } = model;
   const select = context.pendingCondition ? selectRelation : model.selectRelation;
   return {
     data: {
       transformNode,
       nodes,
-      edges,
+      edges: session.sourceInputRecovery.edges,
       inputs: model.inputs,
       analysisBinding: {
         inputs: model.inputs,
@@ -77,7 +78,7 @@ export function projectCanvasRelationalTreeAuthoringView(
             document,
             nodeId: transformNode.id,
             nodes,
-            edges,
+            edges: session.sourceInputRecovery.edges,
           }),
       },
       draft: session.joinDraft,
@@ -89,6 +90,10 @@ export function projectCanvasRelationalTreeAuthoringView(
       stagedOperations: session.staged.operations,
       selectedStagedOperationId: session.staged.selectedId,
       outputRelationId: session.output.relationId ?? null,
+      sourceInputRecovery: {
+        ...session.sourceInputRecovery,
+        busy: session.sourceInputRecovery.busy || context.pendingCondition,
+      },
     },
     actions: {
       changeDraft: session.setJoinDraft,
@@ -97,8 +102,8 @@ export function projectCanvasRelationalTreeAuthoringView(
       remove: session.removal.remove,
       dropSource: session.occurrences.drop,
       selectPending: select,
-      removePending: session.occurrences.remove,
       renamePending: session.occurrences.rename,
+      setPendingOutputIncluded: session.occurrences.setOutputIncluded,
       stageOperation: session.staged.stage,
       selectStagedOperation: session.staged.select,
       clearStagedOperationSelection: session.staged.clearSelection,
@@ -107,7 +112,6 @@ export function projectCanvasRelationalTreeAuthoringView(
       disconnectRelation: session.disconnectRelation,
       connectOutput: session.output.connect,
       disconnectOutput: session.output.disconnect,
-      removeStagedOperation: session.staged.remove,
       updateStagedOperation: session.staged.updateConfiguration,
     },
   };

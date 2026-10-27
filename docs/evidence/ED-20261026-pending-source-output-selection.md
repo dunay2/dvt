@@ -1,0 +1,302 @@
+---
+title: Pending Source Output intent and shared Canvas Edit
+status: draft
+date: 2026-10-26
+owners:
+  - Web
+  - Contracts
+arc_level: ARC-2
+breaking: false
+code_refs:
+  - packages/@dvt/contracts/src/contracts/planner/DvtRelationalAuthoringDraft.v1.ts
+  - apps/web/src/app/views/canvas/relational-source-occurrence/sourceOccurrenceActions.ts
+  - apps/web/src/app/views/canvas/canvasSourceOutputDefaults.ts
+  - apps/web/src/app/views/canvas/useCanvasSourceOutputInitialization.ts
+  - apps/web/src/app/views/canvas/useCanvasRelationalTreeDraftState.ts
+  - apps/web/src/app/views/canvas/CanvasPendingSourceOutputs.tsx
+  - apps/web/src/app/views/canvas/CanvasRelationalTreeEditorFrame.tsx
+  - apps/web/src/app/views/canvas/canvasSourceOccurrenceInputRecovery.ts
+  - apps/web/src/app/views/canvas/useCanvasSourceInputRecovery.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringCommand.ts
+  - apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts
+  - apps/web/src/app/views/canvas/useCanvasModelNavigation.ts
+  - apps/web/src/app/views/canvas/CanvasRelationalTreeSideInspector.tsx
+  - apps/web/src/app/components/inspector/inspectorVisualTokens.ts
+  - apps/web/src/app/components/inspector/NodePropertyTable.tsx
+  - apps/web/cypress/e2e/canvas/canvas-model-output-toggle.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-card-field-lifecycle.cy.ts
+  - apps/web/cypress/e2e/canvas/canvas-pending-read-coverage.cy.ts
+evidence:
+  tests:
+    - pnpm --filter @dvt/web test:unit:run src/app/views/canvas/canvasSourceOccurrenceInputRecovery.test.ts src/app/views/canvas/canvasRelationalTreeApplyCommand.test.ts src/app/views/canvas/canvasSourceOutputDefaults.test.ts src/app/views/canvas/canvasInspectorAuthoringCommand.test.ts
+    - pnpm --filter @dvt/web test:presentation:run src/app/views/canvas/useCanvasSourceInputRecovery.test.tsx src/app/views/canvas/CanvasRelationalTreeWorkbench.sourceInputRecovery.test.tsx src/app/views/canvas/useCanvasRelationEditNavigation.test.tsx src/app/views/canvas/useCanvasInspectorCommands.test.tsx src/app/views/canvas/CanvasSourceOccurrenceOutputs.test.tsx src/app/views/canvas/CanvasRelationalTreeWorkbench.apply.test.tsx
+    - pnpm --dir apps/web exec vitest run --config vitest.presentation.config.ts src/app/components/inspector/NodePropertySectionView.test.tsx src/app/components/inspector/NodePropertiesTabs.sourceInputsOutputs.test.tsx src/app/components/inspector/NodePropertyTable.test.tsx
+    - pnpm --filter @dvt/contracts test
+    - pnpm --filter @dvt/contracts schema:verify
+    - pnpm validate:contracts
+    - pnpm --dir apps/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasSourceOutputDefaults.test.ts src/app/views/canvas/canvasRelationalAuthoringDraft.test.ts src/app/views/canvas/canvasRelationalTreeSessionActionsModel.test.ts
+    - pnpm --dir apps/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/useCanvasSourceOutputInitialization.test.tsx src/app/views/canvas/useCanvasRelationalTreeDraftState.test.tsx src/app/views/canvas/CanvasPendingSourceOutputs.test.tsx
+    - pnpm --dir apps/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/CanvasRelationalTreeWorkbench.architecture.test.ts src/app/views/canvas/canvasCompositionStyleOwnership.architecture.test.ts
+---
+
+# Pending Source Output And Shared Edit
+
+[Issue #2937](https://github.com/dunay2/dvt/issues/2937) owns acceptance. Planning
+DB design `GH-2937-SOURCE-OUTPUT-SELECTION-V12` and its
+[preimplementation rationale](https://github.com/dunay2/dvt/issues/2937#issuecomment-6419771739)
+own the admitted boundaries and test matrix. ADR-0061, ADR-0064, the existing
+ConfigureCanvasDvtNode and RenderCanvasContextualGraphSurface rails, the Canvas
+component/style contracts and workspace draft persistence govern implementation.
+
+The user reproduced field removal on a detached pending Source. Its former
+adapter invoked Model Input removal for a mapping that did not exist. The
+correction records local root FieldIds on that occurrence in the existing
+incomplete-authoring DTO. Creation and detached restoration resolve producer
+publication defaults. Configured/retained ownership preserves consumed absence.
+The physical Read, Input bindings, other occurrences and producer are unchanged.
+
+Terminal initialization uses the canonical direct-origin query and root Output
+command. Graph snapshot comparison, cancellation and current field eligibility
+guard one atomic document/preference commit. Intermediate JOIN schemas and ON
+predicates remain complete. Shared SET/aggregate partial intent rejects explicitly;
+a complete default leaves an operation's authored Output unchanged. Calculation
+definitions, including identity copies, retain their own authority. The configured
+Source inspector follows its owning root even after terminal disconnect.
+
+The [reviewed multi-Source correction](https://github.com/dunay2/dvt/issues/2937#issuecomment-6429753618)
+validates every reachable preference against one unchanged analysis revision
+before constructing a single terminal delta. A per-occurrence intermediate edit
+could otherwise retain another occurrence's denied field and reject a valid final
+selection. The existing contribution helper and root Output command now execute
+once, without widening eligibility or changing physical Reads, Input bindings,
+JOIN predicates, aliases or retained field order. RED/GREEN covers JOIN and CROSS
+with omitted denied fields on both occurrences, reversed preference order, later
+invalid preferences and cancellation: 20 unit and nine initialization-hook cases
+pass. Final integrated acceptance is recorded in issue #3732.
+
+Canvas forms share the existing frame, literal Edit action, passive field rows,
+inclusion control and semantic style tokens. Inspection shows included fields;
+editing shows all admitted fields. The common explicit `Solo seleccionados`
+selector narrows rows only by user intent; toggles preserve identity/order,
+focus, scroll and card placement. The obsolete pending Input adapter is removed.
+Model transactions and existing atomic commands retain their
+respective persistence ownership. No new CSS system or public rail is introduced.
+Pending type labels resolve stable producer identities after supported producer
+reordering and consumer reopen; saved Read ordinals do not index the current
+catalogue. Existing tests enter the visible owning inspector's Edit mode and
+retain their permission, transaction and semantic oracles.
+
+An unconfigured terminal retains its preferences in the existing structural Save;
+it has no executable Output to initialize. A configured terminal still waits for
+canonical initialization. Rejected output ordering restores both canonical
+document order and the corresponding local row presentation.
+
+RED/GREEN evidence covers invalid/foreign/nested IDs, legacy payloads, publication
+defaults, batched edits, duplicate instances, save/reopen, nested JOINs, shared
+outputs, scalar definitions, cancellation, stale results, permission changes and
+same-snapshot dependency recovery. The new native browser journey passes through
+pending Edit, removal/recovery, duplicate isolation, protected draft-shaped
+persistence/reopen and terminal JOIN selection with full physical Reads retained.
+
+An earlier combined native run passed 10/11: the SVG edge helper sampled a stale
+click point in the existing three-input empty-output case. This is recorded as a
+test-targeting inference, not proof of a product regression. The helper queries an
+actionable current path centre on Cypress retries and retains a real rightclick,
+without forced actions, synthetic success or fixed sampled offsets. The first
+full package run passed 2264 unit tests and exposed 14 presentation failures:
+old Edit/hidden-inspector interactions and an incomplete-save gate regression.
+Preserved rejection assertions additionally exposed optimistic ordering rollback.
+These findings are corrected without weakening the assertions. Final exact-head
+repository and browser acceptance is recorded in the issue after the required
+gates run. Command lists identify evidence scope, not acceptance of unrun checks.
+
+ARC evaluation of the committed slice returned ARC-2, evidence/risk required and
+lint, test, schema-validate, contract-golden checks. No rollout or compatibility
+artifact was required. No debt, stub, bypassed hook or relaxed rule was introduced.
+
+## Explicit Legacy Input Recovery
+
+Read-only live draft evidence distinguishes an old Input removal from root
+Output exclusion: client still publishes both fields and retains its complete
+Read, but its incoming edge omits country. V12 admits explicit recovery through
+the existing binder and Model Apply/CAS, with local Input and exact-occurrence
+Output accepted or discarded together. It also corrects local Edit entry during
+an already-active Model draft. The rationale, diagrams, exact paths and negative
+matrix precede TDD in the governing issue.
+
+The additive repair capability belongs to canonical connected Reads. Pending
+and retained staged inspectors continue ordinary Output authoring; the native
+pending proof covers that behavior without claiming legacy Input repair there.
+
+The candidate and command unit group passes 35 tests. The affected lifecycle,
+Source, real Workbench self-JOIN, deferred navigation and Inspector command group
+passes 48 presentation tests. Tests reproduced and corrected an acknowledgement
+before a queued graph CAS was committed, premature async Apply/navigation, and
+the selected Source form unmounting during fresh analysis. Committed receipts
+now acknowledge the actual graph; passive stable rows wait for fresh permission
+results. Unrelated metrics refresh retains staged intent, while publication
+withdrawal withholds eligibility and preserves the pending additions for final
+validation. The common slot helper retains identity-copy and nested JOIN behavior.
+
+The Model navigation suite passes 15/15, including a reproduced late durable-save
+receipt navigating after unmount. Apply and durable-save attempts now use the
+same lifetime-check pattern; rejection stays visible and retryable. Presentation
+settlement is explicit, so incomplete Apply/Cancel also clears Edit and its
+filter while retaining the chosen tab. The Source view suite passes 10/10,
+including a focused, inert busy button during availability refresh. Existing
+architecture, size and style guards pass with unchanged limits; Model Output
+view state resides with its inspector and shares one pending predicate.
+
+Native lifecycle evidence passes 7/7, including the actual two/four-field partial
+Input shape, explicit local Edit/filter, stable DOM/focus/scroll/card position,
+no pre-Apply write, Cancel, one atomic Apply/save/reopen, and unchanged producer,
+Read, sibling edge, original Output identities and JOIN predicate. The final
+targeted pending-Source proof passes 2/2, including incomplete Apply/Cancel mode
+reset and stable toggles. These are separate successful runs, not a claim of one
+combined nine-case run. Initial browser failures were corrected hidden-control
+targeting or post-Cancel navigation oracles, not reported as product successes.
+Exact artifacts and final normalized-head repository/browser acceptance remain
+with the governing issue and PR gates; this record does not claim an unrun
+`pnpm verify:prepush` result.
+
+## Shared Logical Column Density
+
+The subsequent user screenshot identifies oversized typography and empty space in
+the outer Model Columns list. This visual steering is governed by
+[issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6417091017)
+and Planning DB design `GH-3035-LOGICAL-COLUMN-DENSITY`. Its rationale, diagram,
+exact surfaces and browser matrix preceded the new visual regression.
+
+Only the existing shared Inspector record tokens change: logical column summaries
+use 12px/16px text, a minimum 28px row and a centred 12px chevron. Names can still
+wrap and rows grow; native disclosure, focus, complete details and scroll remain.
+The separate physical Source scanner keeps its 44px two-line target. No component,
+stylesheet, font stack, command or persistence behavior is added.
+
+The native browser RED measured 14px where the new contract requires 12px. The
+inspection-only regression checks six real canonical Model outputs at 1366x768,
+1920x1080 and 3440x1440, native Enter/Space and full detail without draft writes.
+Existing disclosure/Source presentation tests pass 33/33 and architecture/token
+guards pass 10/10. Exact final native and repository acceptance remains in the
+governing issue rather than an invented task-status document.
+
+## Business Relationship Summaries And Test Stability
+
+The next screenshot asks to place direction, node name and relation on the same
+level and omit the internal node ID. Planning DB
+`GH-3035-RELATIONSHIP-SUMMARY-V3` and its
+[admitted test-scope refinement](https://github.com/dunay2/dvt/issues/3035#issuecomment-6419090098)
+govern the shared passive `NodePropertyTable` summary. Only business cells are
+rendered, with optional connection context below. An identity-only or absent node
+label uses the existing empty state, while row keys, canonical IDs and callback
+context remain intact. Four unused stacked-record tokens are retired; no new
+stylesheet, state, command or navigation is added.
+
+Focused tests pass 20/20, including real relationship projection, Input/Output
+order, private identities, long values, custom cells and non-mutation. The native
+two-spec run passes 5/5, covering visible spans against the intersection of panel
+and AUT viewport, actual names and identity fallback, optional context, keyboard,
+column density and physical Source presentation without inspection writes.
+
+Native headless screenshots have a 1280px capture surface. Capturing at 1100px,
+as the existing Source proof does, shows the complete panel; all larger AUT
+geometry assertions remain. A clipped element screenshot was investigated rather
+than treated as evidence of a product overflow. Cypress 15.18.1 named Enter omits
+the character event; an isolated trusted-event comparison identified the driver
+limitation. The test sends a complete native Enter key through CDP and preserves
+the browser default-action assertions, without adding a product key handler.
+
+Fragile unit assertions on CSS class spelling and exact React renderer invocation
+counts are replaced with complete visible metadata, one rendered custom cell and
+the stable callback context. Redundant literal implementation-call checks are
+removed from the pending Source architecture guard; forbidden ownership remains
+guarded and cancellation/rejection stays covered by real-session behavior tests.
+
+The full repository run passed 2264 unit tests and 1120 presentation tests, then
+failed the remaining Workbench integration oracle that still required a visible
+technical Source ID. The admitted V3 test refinement retains the complete long
+business name, direction and lineage, graph immutability and no-write assertion,
+while rejecting visible node/edge identities. Its focused suite passes 32/32.
+That failed full run is not final acceptance; the required gate must pass again.
+
+## Shared Column Privacy And Materialization Continuity
+
+The later screenshot exposes a canonical field reference in expanded Columns.
+`GH-3035-HIDE-COLUMN-REFERENCE` governs one shared visible-key rule for both
+Inspector and Workbench. Canonical cells, row identity and callback context stay
+intact; ordinary details retain business metadata and actual foreign-key targets.
+The semantic RED fails five cases before the rule; GREEN passes 23 presentation
+cases and the existing native spec passes 4/4 with density, keyboard and no-write
+assertions retained. Its fixture selection oracle follows the existing
+`available` value rather than introducing a selection behavior change.
+
+`GH-3035-MATERIALIZATION-VIEW-CONTINUITY` governs the subsequent bottom-panel
+report. RED reproduces a ready sample becoming unavailable for storage-only
+changes and a field projection becoming pending when `ephemeral` clears its
+result target. The shared positive query-metadata projection retains full
+canonical authority and declared columns; current raw inputs remain significant
+for absent/invalid native authority and other node kinds. The drawer registrar
+publishes replacements continuously and clears only its latest committed owner
+on actual unmount, preserving the existing store identity guard.
+
+The focused field/pending/Input group passes 14/14 and the sample/registrar group
+passes 28/28, including unchanged stale-receipt, binding and persistence negatives.
+The controlled native materialization spec passes 2/2 through held save and
+acknowledgement, preserving drawer/table/search/tab identity, height and menu
+dismissal. The protected native SQL/runtime proof also passes 2/2 and its Source
+provider checks pass 5/5: card transitions and General Apply retain the exact
+drawer/table/search/tab identity, provenance and layout, with one Source and one
+Model query. The first protected run exposed an eagerly captured test value;
+deferring that exact-value assertion to execution fixes the oracle without
+changing the product or weakening the continuity checks. These proofs do not
+replace final exact-head prepush. Their completed results, source ownership,
+metadata-reference retirement and full-gate outcome are recorded in
+[issue #3035](https://github.com/dunay2/dvt/issues/3035#issuecomment-6424129479)
+and the implementation PR after execution.
+
+## Confirmed Draft Saves Before Preview
+
+Integration against `main` exposed a separate persistence coordination gap in
+[GH-3734](https://github.com/dunay2/dvt/issues/3734). On `888dad33`, all 5,747 Web
+Vitest cases passed, but the full controlled browser profile failed one of 142
+cases: the English rejected-Preview diagnostic stopped at a failed draft save,
+before publication, compilation or the plan request. That failed full gate is
+retained; subsequent isolated passes did not establish a correction.
+
+The [admitted design](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432205126)
+and canonical rationale preceded two deterministic semantic regressions. With
+the actual autosave, repository and deferred protected save receipt, the old
+flush dispatched two saves before React committed saving. After a real confirmed
+save but before React committed the revision, it projected the old three-node
+graph instead of the confirmed two-node graph. Both cases failed on unchanged
+production; the existing already-rendered saving case passed.
+
+Autosave and Preview now consume one shared save executor and its actual
+completion/confirmed receipt. The repository still confirms the exact protected
+revision through its readback. The executor owns successful-revision reuse and
+conflict rejection; Preview owns current permission/generation checks and the
+existing five-second completion deadline. No polling path, second direct flush
+writer, old-name forwarding module or new wire DTO is introduced. One real
+reference constructor replaces the repeated production/test shapes.
+
+The [document-command supplement](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432478954)
+places invalidation after the existing admission/input checks and before an
+actual write. Blocked Create and missing-target Select retain the current ACK;
+same-target Select preserves its existing normalized-save policy, as the
+[premise correction](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432581154)
+records. Its new guard regression failed semantically before the callback was
+wired, then passed without copying command policies into the lifecycle.
+
+Focused validation passed 26 unit, 30 presentation, eight additional fixture
+unit and nine architecture cases, with Web typecheck and strict affected-file
+lint. The original native artifact/Preview suite passed all five unchanged
+cases with no skipped/pending failures. These are scoped results, not a final
+prepush result for the integration.
+
+The [dependency-policy supplement](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432741725)
+also covers the renamed executor in both existing error-level import selectors.
+Its semantic RED reproduces the omitted readiness-to-save edge; the existing
+matrix additionally exercises value/type-only reverse execution imports and the
+allowed repository dependency. Existing alternatives and rule severity remain.
+Current native bindings, source-hash reconciliation and exact final base/HEAD
+full-gate acceptance must be recorded after the hooked implementation commit.

@@ -9,7 +9,10 @@ import { useContext, useMemo, useState } from 'react';
 import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanonicalNode } from '../../types/canonical';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { CanvasRelationalTreeEditorFrame } from './CanvasRelationalTreeEditorFrame';
+import {
+  CanvasRelationalTreeEditorFrame,
+  useCanvasInspectorEditing,
+} from './CanvasRelationalTreeEditorFrame';
 import { CanvasRelationalExpressionTree } from './CanvasRelationalExpressionTree';
 import { CanvasCalculatedRelationOutputs } from './CanvasCalculatedRelationOutputs';
 import { CanvasRelationFields } from './CanvasRelationFields';
@@ -39,6 +42,8 @@ export function CanvasTransformInspector({
   onPendingChange?: (pending: boolean) => void;
 }>): JSX.Element {
   const [editingWindow, setEditingWindow] = useState(false);
+  const [outputEditing, setOutputEditing] = useCanvasInspectorEditing(relationId);
+  const editing = onChange != null && (draft != null || outputEditing);
   const [setWindowPending, setOutputsPending] = usePendingRelationEdits(onPendingChange);
   const selected = useSelectedRelation(relationId);
   const analysis = useContext(CanvasRelationAnalysisContext);
@@ -65,6 +70,8 @@ export function CanvasTransformInspector({
       dataSlot="canvas-transform-inspector"
       initialTab="output"
       hasExpression={hasExpression}
+      editing={editing}
+      onEdit={onChange == null ? undefined : () => setOutputEditing(true)}
       output={
         onChange == null ? (
           <CanvasRelationFields relationId={relationId} />
@@ -85,7 +92,7 @@ export function CanvasTransformInspector({
           relationId={relationId}
         />
       ) : null}
-      {onChange == null || window?.tool.enabled !== true ? null : editingWindow ? (
+      {!editing || onChange == null || window?.tool.enabled !== true ? null : editingWindow ? (
         <CanvasRelationalTreeOperatorForm
           tool={window.tool}
           draft={window.analysis.document!}

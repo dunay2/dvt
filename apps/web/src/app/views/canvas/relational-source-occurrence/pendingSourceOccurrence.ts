@@ -12,23 +12,55 @@ import type { CanvasDvtCompositionInput } from '../canvasDvtCompositionInputCata
 import { createCanvasInputRead, sourceFieldType } from '../canvasSourceRelation';
 import type { DvtRelationalAuthoringDraftV1 } from '@dvt/contracts';
 import { decodeDvtSubstraitSemanticDocument } from '../canvasDvtSubstraitSemanticDocument';
+import { selectedCanvasInputOrdinals } from '../canvasInputComposition';
+import { rootFields } from '../canvasDerivedOutputExpression';
 
 export type PendingSourceOccurrence = Readonly<{
   sourceNodeId: string;
   read: ReturnType<typeof createCanvasInputRead>;
+  initialOutputFieldIds?: readonly string[];
 }>;
+
+/** Resolve published local roots by stable producer identity, without narrowing the Read. */
+export function pendingSourceOccurrencePublishedFieldIds(
+  occurrence: PendingSourceOccurrence,
+  input: CanvasDvtCompositionInput
+): readonly string[] {
+  const published = new Set(
+    selectedCanvasInputOrdinals(input).map((ordinal) => {
+      const field = input.fields[ordinal]!;
+      return field.id ?? field.name;
+    })
+  );
+  const { read } = occurrence;
+  return rootFields(read.fields)
+    .filter((field) => {
+      const producerFieldId = read.binding.producerRef?.fields.find(
+        (binding) => binding.fieldId === field.fieldId
+      )?.producerFieldId;
+      return input.sourceRef == null
+        ? producerFieldId != null && published.has(producerFieldId)
+        : published.has(field.displayName ?? field.fieldId);
+    })
+    .map((field) => field.fieldId);
+}
 
 export function createPendingSourceOccurrence(
   input: CanvasDvtCompositionInput
 ): PendingSourceOccurrence {
-  return {
+  const occurrence: PendingSourceOccurrence = {
     sourceNodeId: input.nodeId,
     read: createCanvasInputRead(input, 1),
+  };
+  return {
+    ...occurrence,
+    initialOutputFieldIds: pendingSourceOccurrencePublishedFieldIds(occurrence, input),
   };
 }
 export function restorePendingSourceOccurrence(
   input: CanvasDvtCompositionInput,
-  source: DvtRelationalAuthoringDraftV1['sources'][number]
+  source: DvtRelationalAuthoringDraftV1['sources'][number],
+  outputOwnedByConfiguration = false
 ): PendingSourceOccurrence | null {
   try {
     if (input.nodeId !== source.sourceNodeId) return null;
@@ -38,13 +70,21 @@ export function restorePendingSourceOccurrence(
     const read = indexed.index.relations.get(source.relationId);
     if (read == null || !validatePendingSourceInput(read, input)) return null;
     deriveRelationSchema(read, []);
-    return {
+    const occurrence: PendingSourceOccurrence = {
       sourceNodeId: source.sourceNodeId,
       read: {
         relation: read.relation,
         binding: { ...read.binding, displayName: source.displayName },
         fields: read.fields,
       },
+    };
+    if (source.initialOutputFieldIds == null && outputOwnedByConfiguration) return occurrence;
+    return {
+      ...occurrence,
+      initialOutputFieldIds:
+        source.initialOutputFieldIds == null
+          ? pendingSourceOccurrencePublishedFieldIds(occurrence, input)
+          : [...source.initialOutputFieldIds],
     };
   } catch {
     return null;

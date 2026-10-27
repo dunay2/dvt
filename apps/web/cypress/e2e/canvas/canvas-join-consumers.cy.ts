@@ -8,6 +8,7 @@ import {
   stageWorkbenchUnary,
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  editWorkbenchInspector,
 } from '../../support/relationalWorkbench/navigation';
 import { form, openEditor } from '../../support/relationalWorkbench/operatorEditor';
 import {
@@ -107,6 +108,10 @@ describe('join-consumers', () => {
       .first()
       .dblclick(40, 18);
     cy.get('[data-operator="project"][data-presentation="field_transform"]').click();
+    cy.get('[data-slot="canvas-transform-inspector"]:visible')
+      .find('[data-slot="relation-output-field"]')
+      .should('contain.text', 'combined');
+    editWorkbenchInspector('[data-slot="canvas-transform-inspector"]');
     cy.get('[data-slot="canvas-derived-output"]:visible').should('contain.text', 'combined');
     cy.get('[aria-label="Edit combined"]').click();
     cy.get('[data-canvas-inspector="true"]:visible [data-slot="canvas-relation-outputs"]').should(

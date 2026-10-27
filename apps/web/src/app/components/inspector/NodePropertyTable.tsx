@@ -25,19 +25,85 @@ function PropertyCell({
   row,
   columnKey,
   renderTableCell,
+  displayValue,
 }: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
   Readonly<{
     row: NodePropertyTableRow;
     columnKey: string;
+    displayValue?: string;
   }>): JSX.Element {
+  const value = displayValue ?? row.cells[columnKey] ?? '';
   const content =
     renderTableCell?.({
       sectionId: section.id,
       rowId: row.id,
       columnKey,
-      value: row.cells[columnKey] ?? '',
-    }) ?? row.cells[columnKey];
+      value,
+    }) ?? value;
   return <>{content || <span className={inspectorVisualClasses.inspectorSubtle}>-</span>}</>;
+}
+
+function RelationshipRecord({
+  section,
+  row,
+  renderTableCell,
+}: Pick<NodePropertyTableProps, 'section' | 'renderTableCell'> &
+  Readonly<{ row: NodePropertyTableRow }>): JSX.Element {
+  const nodeName = row.cells.node?.trim();
+  const displayName = nodeName && nodeName !== row.cells.nodeId?.trim() ? row.cells.node : '';
+  return (
+    <li data-slot="node-property-relationship-record" className={styles.records.relationshipCard}>
+      <div
+        data-slot="node-property-relationship-summary"
+        className={styles.records.relationshipSummary}
+      >
+        <span
+          data-slot="node-property-relationship-direction"
+          className={styles.records.relationshipMeta}
+        >
+          <PropertyCell
+            section={section}
+            row={row}
+            columnKey="direction"
+            renderTableCell={renderTableCell}
+          />
+        </span>
+        <span data-slot="node-property-relationship-node" className={styles.records.name}>
+          <PropertyCell
+            section={section}
+            row={row}
+            columnKey="node"
+            displayValue={displayName}
+            renderTableCell={renderTableCell}
+          />
+        </span>
+        <span
+          data-slot="node-property-relationship-relation"
+          className={styles.records.relationshipMeta}
+        >
+          <PropertyCell
+            section={section}
+            row={row}
+            columnKey="relation"
+            renderTableCell={renderTableCell}
+          />
+        </span>
+      </div>
+      {row.cells.connection?.trim() ? (
+        <p
+          data-slot="node-property-relationship-connection"
+          className={styles.records.relationshipConnection}
+        >
+          <PropertyCell
+            section={section}
+            row={row}
+            columnKey="connection"
+            renderTableCell={renderTableCell}
+          />
+        </p>
+      ) : null}
+    </li>
+  );
 }
 
 function PropertyRecords({
@@ -46,7 +112,7 @@ function PropertyRecords({
   columnKeys,
 }: NodePropertyTableProps & Readonly<{ columnKeys: readonly string[] }>): JSX.Element {
   const columns = section.id === 'columns';
-  const detailKeys = columns ? columnKeys.filter((key) => key !== 'name') : columnKeys;
+  const detailKeys = columnKeys.filter((key) => key !== 'name');
   const records = (
     <ul
       data-slot={columns ? 'node-property-column-list' : 'node-property-relationship-list'}
@@ -54,15 +120,24 @@ function PropertyRecords({
       className={columns ? styles.records.column : styles.records.relationship}
     >
       {section.tableRows.map((row) => {
+        if (!columns)
+          return (
+            <RelationshipRecord
+              key={row.id}
+              section={section}
+              row={row}
+              renderTableCell={renderTableCell}
+            />
+          );
         const fields =
           detailKeys.length === 0 ? null : (
-            <dl className={columns ? styles.records.details : styles.records.divided}>
+            <dl className={styles.records.details}>
               {detailKeys.map((key) => (
-                <div key={key} className={columns ? styles.fact : styles.records.field}>
+                <div key={key} className={styles.fact}>
                   <dt className={inspectorVisualClasses.inspectorLabel}>
                     {columnLabel(section, key)}
                   </dt>
-                  <dd className={columns ? styles.value.workbench : styles.records.value}>
+                  <dd className={styles.value.workbench}>
                     <PropertyCell
                       section={section}
                       row={row}
@@ -75,31 +150,21 @@ function PropertyRecords({
             </dl>
           );
         return (
-          <li
-            key={row.id}
-            data-slot={
-              columns ? 'node-property-column-record' : 'node-property-relationship-record'
-            }
-            className={columns ? undefined : styles.records.card}
-          >
-            {columns ? (
-              <details
-                data-slot="node-property-column-disclosure"
-                className={styles.records.disclosure}
-              >
-                <summary className={styles.records.trigger}>
-                  <ChevronRight
-                    data-slot="node-property-column-disclosure-arrow"
-                    className={styles.records.arrow}
-                    aria-hidden="true"
-                  />
-                  <span className={styles.records.name}>{row.cells.name || row.id}</span>
-                </summary>
-                {fields}
-              </details>
-            ) : (
-              fields
-            )}
+          <li key={row.id} data-slot="node-property-column-record">
+            <details
+              data-slot="node-property-column-disclosure"
+              className={styles.records.disclosure}
+            >
+              <summary className={styles.records.trigger}>
+                <ChevronRight
+                  data-slot="node-property-column-disclosure-arrow"
+                  className={styles.records.arrow}
+                  aria-hidden="true"
+                />
+                <span className={styles.records.name}>{row.cells.name || row.id}</span>
+              </summary>
+              {fields}
+            </details>
           </li>
         );
       })}
@@ -125,7 +190,7 @@ export function NodePropertyTable({
 }: NodePropertyTableProps): JSX.Element {
   const columnKeys = Array.from(
     new Set(section.tableRows.flatMap((row) => Object.keys(row.cells)))
-  );
+  ).filter((key) => section.id !== 'columns' || key !== 'reference');
   if (surface === 'workbench' && (section.id === 'columns' || section.id === 'inputs-outputs')) {
     return (
       <PropertyRecords

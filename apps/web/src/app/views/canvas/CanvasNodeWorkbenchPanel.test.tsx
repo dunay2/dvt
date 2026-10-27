@@ -541,15 +541,14 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).not.toContain('not_null_orders_order_id');
   });
 
-  it('keeps long Model relationships complete in stacked records', async () => {
+  it('keeps long Model business relationships complete without technical identities', async () => {
     const source = {
       ...SOURCE_NODE,
       id: 'src_postgresql_local_2333_dvt_public_source_1',
       name: 'Imported source for dvt.raw.orders in the local governed environment',
     };
     const authoring = { canEditNode: true, onApplyNodeDraft: vi.fn() };
-
-    await renderNodePanel(root, MODEL_NODE, 'inputs-outputs', authoring, 1, undefined, {
+    const graph: { nodes: readonly CanonicalNode[]; edges: readonly CanonicalEdge[] } = {
       nodes: [source, MODEL_NODE],
       edges: [
         {
@@ -559,17 +558,30 @@ describe('CanvasNodeWorkbenchPanel', () => {
           relation: 'lineage',
         },
       ],
-    });
+    };
+    const originalGraph = structuredClone(graph);
+
+    await renderNodePanel(root, MODEL_NODE, 'inputs-outputs', authoring, 1, undefined, graph);
 
     const section = container.querySelector(
       '[data-slot="canvas-node-workbench-inputs-outputs-content"]'
     );
-    const record = section?.querySelector('[data-slot="node-property-relationship-record"]');
+    const summary = section?.querySelector('[data-slot="node-property-relationship-summary"]');
 
     expect(section?.querySelector('table')).toBeNull();
-    expect(record?.textContent).toContain(source.name);
-    expect(record?.textContent).toContain(source.id);
-    expect(record?.textContent).toContain('lineage');
+    expect(
+      summary?.querySelector('[data-slot="node-property-relationship-direction"]')?.textContent
+    ).toBe('Input');
+    expect(
+      summary?.querySelector('[data-slot="node-property-relationship-node"]')?.textContent
+    ).toBe(source.name);
+    expect(
+      summary?.querySelector('[data-slot="node-property-relationship-relation"]')?.textContent
+    ).toBe('lineage');
+    expect(section?.textContent).not.toContain(source.id);
+    expect(section?.textContent).not.toContain(graph.edges[0]!.id);
+    expect(graph).toEqual(originalGraph);
+    expect(authoring.onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
   it('shows dbt test meaning, execution selection, readiness impact and run history', async () => {

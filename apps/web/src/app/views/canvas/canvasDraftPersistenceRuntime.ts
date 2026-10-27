@@ -1,14 +1,23 @@
 import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
-import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
+import type { DraftAttemptRefs, DraftSaveCompletion } from './canvasDraftLifecycle.types';
 
 export const DRAFT_SAVE_DEBOUNCE_MS = 400;
 
-export type DraftSaveAttempt = {
-  id: number;
-  generation: number;
-};
+export type DraftSaveAttempt = NonNullable<DraftAttemptRefs['activeSaveAttemptRef']['current']>;
+
+export function createDraftAttemptRefs(): DraftAttemptRefs {
+  return {
+    saveDebounceTimerRef: { current: null },
+    lastSavedSignatureRef: { current: null },
+    lastFailedSignatureRef: { current: null },
+    saveAttemptGenerationRef: { current: 0 },
+    nextSaveAttemptIdRef: { current: 0 },
+    activeSaveAttemptRef: { current: null },
+    confirmedSaveReceiptRef: { current: null },
+  };
+}
 
 export function clearSaveDebounce(refs: DraftAttemptRefs) {
   if (refs.saveDebounceTimerRef.current != null) {
@@ -31,7 +40,7 @@ export function shouldWaitForPersistenceReadiness(
 
 export function isStaleSaveResolution(
   refs: DraftAttemptRefs,
-  saveAttempt: DraftSaveAttempt
+  saveAttempt: Pick<DraftSaveAttempt, 'id' | 'generation'>
 ): boolean {
   const activeSaveAttempt = refs.activeSaveAttemptRef.current;
 
@@ -42,14 +51,23 @@ export function isStaleSaveResolution(
   );
 }
 
-export function startNextSaveAttempt(refs: DraftAttemptRefs): DraftSaveAttempt {
+export function startNextSaveAttempt(refs: DraftAttemptRefs, signature: string): DraftSaveAttempt {
+  let settle!: (result: DraftSaveCompletion) => void;
+  const completion = new Promise<DraftSaveCompletion>((resolve) => {
+    settle = resolve;
+  });
   const saveAttempt = {
     id: refs.nextSaveAttemptIdRef.current + 1,
     generation: refs.saveAttemptGenerationRef.current,
+    signature,
+    completion,
+    settle,
+    settleStale: () => settle({ outcome: 'stale' }),
   };
 
   refs.nextSaveAttemptIdRef.current = saveAttempt.id;
   refs.activeSaveAttemptRef.current = saveAttempt;
+  refs.confirmedSaveReceiptRef.current = null;
   return saveAttempt;
 }
 

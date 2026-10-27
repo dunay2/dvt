@@ -4,9 +4,39 @@ import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { setupWorkbenchTest } from './CanvasRelationalTreeWorkbench.test-support';
 import { mountRelationNavigation } from './relationEditNavigation.test-support';
+import type { CanvasRelationalTreeApplyResult } from './canvasRelationalTreeWorkbench.types';
 
 describe('relation edit navigation', () => {
   setupWorkbenchTest();
+
+  it.each([false, true])(
+    'awaits deferred Apply before navigation (rejected: %s)',
+    async (rejected) => {
+      const host = mountRelationNavigation();
+      let finish!: (result: CanvasRelationalTreeApplyResult) => void;
+      const pending = new Promise<CanvasRelationalTreeApplyResult>((resolve) => {
+        finish = resolve;
+      });
+      host.apply.mockReturnValue(pending);
+      act(() => host.binding.select('destination'));
+      act(() => {
+        host.binding.apply();
+        host.binding.apply();
+      });
+      expect(host.apply).toHaveBeenCalledOnce();
+      expect(host.select).not.toHaveBeenCalled();
+      await act(async () => {
+        finish(
+          rejected ? { outcome: 'rejected', reason: 'invalid_draft' } : { outcome: 'no_changes' }
+        );
+        await pending;
+      });
+      if (rejected) {
+        expect(host.select).not.toHaveBeenCalled();
+        expect(host.binding.pending).toBe(true);
+      } else expect(host.select).toHaveBeenCalledExactlyOnceWith('destination');
+    }
+  );
 
   it.each([false, true])('navigates only after accepted Apply (rejected: %s)', (rejected) => {
     const host = mountRelationNavigation();

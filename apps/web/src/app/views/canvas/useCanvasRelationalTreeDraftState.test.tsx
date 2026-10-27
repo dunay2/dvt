@@ -5,6 +5,9 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CANVAS_RELATIONAL_OUTPUT_POSITION_ID } from './canvasRelationalTreeGeometry';
 import { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
+import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { occurrenceInput } from './relational-source-occurrence/occurrence.test.fixtures';
+import { createSourceDocument } from './canvasSourceDocument';
 
 describe('relational-tree draft layout ownership', () => {
   let container: HTMLDivElement;
@@ -52,5 +55,37 @@ describe('relational-tree draft layout ownership', () => {
     act(() => state.clear());
     expect(state.positions.get(CANVAS_RELATIONAL_OUTPUT_POSITION_ID)).toEqual(outputPosition);
     expect(state.positions.get('pending-source')).toEqual({ x: 80, y: 120 });
+  });
+
+  it('commits a matching graph snapshot and rejects stale initialization without consuming intent', () => {
+    const source = {
+      ...createPendingSourceOccurrence({
+        ...occurrenceInput.source,
+        fields: occurrenceInput.fields.map((name) => ({
+          name,
+          dataType: 'bigint',
+          joinDataType: 'i64',
+        })),
+      }),
+      initialOutputFieldIds: [],
+    };
+    const document = createSourceDocument([source.read], source.read);
+    act(() => {
+      state.setPendingSources([source]);
+      state.setOutputRelationId(source.read.binding.relationId);
+    });
+    const stale = state.graphSnapshot;
+    act(() => state.setPendingSources((current) => [...current]));
+    act(() => state.commitOutputInitialization(stale, document, [source.read.binding.relationId]));
+    expect(state.pendingSources[0]?.initialOutputFieldIds).toEqual([]);
+    expect(state.joinDraft).toBeNull();
+    act(() =>
+      state.commitOutputInitialization(state.graphSnapshot, document, [
+        source.read.binding.relationId,
+      ])
+    );
+    expect(state.joinDraft).toBe(document);
+    expect(state.pendingSources[0]?.initialOutputFieldIds).toBeUndefined();
+    expect(state.outputRelationId).toBe(source.read.binding.relationId);
   });
 });

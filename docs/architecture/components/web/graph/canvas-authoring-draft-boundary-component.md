@@ -2,7 +2,7 @@
 title: Canvas Authoring Draft Boundary Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-10-23
+last_reviewed: 2026-10-27
 planning_type: architecture
 task_id: TF-E2-A
 ---
@@ -74,6 +74,38 @@ projection objects from unrelated renders must not postpone an authorized save
 indefinitely. Genuine edits restart the bounded debounce; a sent save still
 acknowledges only its own snapshot, and failed/scope-changed/unmounted attempts
 retain the existing guarded recovery behavior.
+
+### Confirmed Save Coordination
+
+The [reviewed correction for GH-3734](https://github.com/dunay2/dvt/issues/3734#issuecomment-6432205126)
+requires autosave and the pre-submit Preview flush to share one actual save
+execution and its confirmed repository receipt. React's rendered saving state
+does not establish whether a request is in flight or which revision it confirmed.
+Persistence owns execution and receipt lifetime; Preview submission consumes the
+receipt. Other explicit save commands retain their existing owners.
+
+```mermaid
+flowchart LR
+  Autosave --> Save[Shared protected save execution]
+  Preview[Preview submission] --> Save
+  Save --> Repository[Existing draft repository and CAS port]
+  Repository --> Receipt[Confirmed revision and graph]
+  Receipt --> Preview
+```
+
+An equivalent concurrent consumer must join the current operation, then use its
+confirmed graph even if React has not committed the new revision. A subsequent
+edit may save against that successful confirmed revision. Conflict, failed
+confirmation, changed permission or generation must prevent Preview; none grants
+permission to retry or rebase a conflict. Waiting retains the existing five-second
+bound with one completion deadline and no polling owner. Scope invalidation wakes
+waiters as stale and must not claim to abort a dispatched server request.
+
+The correction also requires one pure attempt-reference constructor for the real
+hook and its test fixtures, a clean generic save-executor rename without a legacy
+forwarding wrapper, and explicit rejection of an unknown saving operation.
+Implementation and execution evidence belong to GH-3734; this section records
+the governing requirements rather than claiming its acceptance is complete.
 
 Owned concern: keep Canvas authoring commands, protected draft reads, protected
 draft writes, and React Flow projections aligned with the
@@ -408,7 +440,7 @@ stateDiagram-v2
 - `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentCommandPolicy.ts`
 - `apps/web/src/app/views/canvas/canvasCreateCanvasDocumentSaveResult.ts`
 - `apps/web/src/app/views/canvas/canvasDraftAuthoringComponent.architecture.test.ts`
-- `apps/web/src/app/views/canvas/canvasDraftAutosaveExecution.ts`
+- `apps/web/src/app/views/canvas/canvasDraftSaveExecution.ts`
 - `apps/web/src/app/views/canvas/canvasDraftAutosaveScheduling.ts`
 - `apps/web/src/app/views/canvas/canvasDraftLifecycleSnapshot.ts`
 - `apps/web/src/app/views/canvas/canvasDraftLocalNodeCatalog.ts`

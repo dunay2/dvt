@@ -970,8 +970,14 @@ aborts startup; a previous local build is not a runtime prerequisite.
   `prepare:integration` and `test:integration` steps.
 - `pnpm test:adapter-temporal:integration:transformation` is capability-specific
   verification for transformation-flow semantics above the Temporal baseline.
-- Local Node selection is pinned through `.node-version` and `.nvmrc` with the
-  same Node 22 baseline that the shared CI setup already uses.
+- The Node.js minimum is 22.22.1. `pnpm-workspace.yaml` pins the project runtime
+  to 22.23.3 through [`useNodeVersion`](https://pnpm.io/10.x/settings#usenodeversion);
+  `.node-version` and `.nvmrc` match it. pnpm downloads this managed runtime on
+  first use for `pnpm run` and `pnpm node`, without replacing the system Node.js
+  installation. Verify bootstrap with `pnpm node --version` and
+  `pnpm node -p process.execPath`; direct scripts use `pnpm node <script> ...`.
+  CI keeps its existing Node 22 host selectors, including the available browser
+  lane's explicit 22.23.3 pin.
 - `pnpm run hooks:precommit` runs Prettier plus
   `tools/ci/eslint-precommit.config.cjs` only for staged files. That projection
   preserves non-type-aware rules and path restrictions, but does not load the

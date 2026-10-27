@@ -8,7 +8,6 @@ import type {
   ImportSourcesResult,
   RelationalSourceObject,
   SourceObject,
-  TestWarehouseConnectionResult,
   WarehouseConnection,
   RenameWarehouseConnectionInput,
 } from '../../ports/workspace';
@@ -110,11 +109,8 @@ export interface SourceImportWizardState {
   addFreshness: boolean;
   isProcessing: boolean;
   isLoadingConnections: boolean;
-  isLoadingSourceObjects: boolean;
   isCreatingConnection: boolean;
   isRenamingConnection: boolean;
-  isTestingConnection: boolean;
-  connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: SourceImportFailure | null;
   createConnectionError: SourceImportFailure | null;
   renameConnectionError: SourceImportFailure | null;
