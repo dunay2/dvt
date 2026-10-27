@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.20.1 (2026-10-27)
+
+## What's Changed
+* fix(ci): Integrate retained Chromium diagnostics with shared source authority by @dunay2 in https://github.com/dunay2/dvt/pull/3736
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.20.0...v0.20.1
+
 ## 0.20.0 (2026-10-27)
 
 ## What's Changed
