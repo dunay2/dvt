@@ -3,6 +3,41 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const { buildCodeSymbolSnapshot } = require('./code-symbol-inventory.cjs');
 
+test('Python inventory includes a real callable with its original signature and source lines', () => {
+  const result = buildCodeSymbolSnapshot({
+    sourceFiles: [
+      { path: 'scripts/owned.py', content: 'def actual(value):\n    return value + 1\n' },
+    ],
+  }).symbols;
+  assert.equal(result.length, 1);
+  assert.equal(result[0].symbolName, 'actual');
+  assert.equal(result[0].signature, 'def actual(value):');
+  assert.equal(result[0].startLine, 1);
+  assert.equal(result[0].endLine, 2);
+});
+
+test('Python fingerprints preserve literal semantics and ownership while excluding stub bodies', () => {
+  const path = 'scripts/owned.py';
+  const result = buildCodeSymbolSnapshot({
+    sourceFiles: [
+      {
+        path,
+        content:
+          'import os\ndef one(value):\n    # comment\n    return value + "a  b"\ndef two(value): return value+"a  b"\ndef three(value): return value+"a b"\ndef stub(): ...\n',
+      },
+    ],
+    governanceSnapshot: { files: [{ path, componentUnit: 'SYS-OWNER', owningUnit: 'SYS-OWNER' }] },
+  }).symbols;
+  assert.deepEqual(
+    result.map((f) => f.symbolName),
+    ['one', 'two', 'three']
+  );
+  assert.equal(result[0].bodySha256, result[1].bodySha256);
+  assert.notEqual(result[0].bodySha256, result[2].bodySha256);
+  assert.ok(result.every((f) => f.componentId === 'SYS-OWNER'));
+  assert.deepEqual(result[0].importRefs, ['os']);
+});
+
 test('code symbol snapshot extracts owned functions and exact body duplicate hashes', () => {
   const duplicateBody = [
     '  if (value === undefined || value === null || value === "") {',

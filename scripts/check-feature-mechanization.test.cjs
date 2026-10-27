@@ -2,6 +2,115 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
+test('the implementation guard rejects an undeclared Python production definition', () => {
+  const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+  const path = 'scripts/owned.py';
+  const guard = new FeatureImplementationGuard(
+    [{ manifest: { allowedImplementationSurfaces: [path], symbols: [] } }],
+    {
+      changedFiles: [path],
+      currentFiles: [path],
+      addedLinesByPath: { [path]: ['    return 2'] },
+      fileContentsByPath: { [path]: 'def actual():\n    return 2\n' },
+    }
+  );
+  assert.match(guard.validate().errors.join('\n'), /adds code symbol actual/);
+  guard.manifestEntries[0].manifest.symbols.push({ path, name: 'actual' });
+  assert.deepEqual(guard.validate().errors, []);
+  guard.fileContentsByPath.set(path, 'def broken(:');
+  assert.throws(() => guard.validate(), /Python source facts unavailable or invalid/);
+  guard.fileContentsByPath.delete(path);
+  assert.throws(() => guard.validate(), /complete candidate source/);
+  for (const testPath of ['scripts/test_owned.py', 'scripts/owned.test.py'])
+    assert.equal(guard.isTestFile(testPath), true);
+});
+
+for (const operation of ['delete', 'rename']) {
+  test(`the implementation guard accepts admitted Python ${operation} from real candidate Git evidence`, (context) => {
+    const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+    const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+    const repo = repository(context);
+    repo.write('retired.py', 'def actual():\n    return 2\n');
+    const baseRef = repo.commit(repo.base);
+    repo.git(
+      operation === 'delete' ? 'rm' : 'mv',
+      'retired.py',
+      ...(operation === 'rename' ? ['replacement.py'] : [])
+    );
+    const headRef = repo.commit(baseRef);
+    const evidence = repo.reader({ baseRef, headRef }).read();
+    assert.ok(evidence.changedFiles.includes('retired.py'));
+    assert.ok(evidence.deletedFiles.includes('retired.py'));
+    assert.equal(Object.hasOwn(evidence.fileContentsByPath, 'retired.py'), false);
+    if (operation === 'rename') {
+      assert.ok(evidence.currentFiles.includes('replacement.py'));
+      assert.equal(evidence.fileContentsByPath['replacement.py'], 'def actual():\n    return 2\n');
+    }
+    const guard = new FeatureImplementationGuard(
+      [
+        {
+          manifest: {
+            allowedImplementationSurfaces: ['retired.py', 'replacement.py'],
+            symbols: operation === 'rename' ? [{ path: 'replacement.py', name: 'actual' }] : [],
+          },
+        },
+      ],
+      evidence
+    );
+    assert.deepEqual(guard.validate().errors, []);
+  });
+}
+
+test('a Python rename still validates declarations and complete source at its current destination', (context) => {
+  const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+  const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+  const repo = repository(context);
+  repo.write('retired.py', 'def actual():\n    return 2\n');
+  const baseRef = repo.commit(repo.base);
+  repo.git('mv', 'retired.py', 'replacement.py');
+  const headRef = repo.commit(baseRef);
+  const evidence = repo.reader({ baseRef, headRef }).read();
+  const guard = new FeatureImplementationGuard(
+    [
+      {
+        manifest: {
+          allowedImplementationSurfaces: ['retired.py', 'replacement.py'],
+          symbols: [],
+        },
+      },
+    ],
+    evidence
+  );
+  assert.match(guard.validate().errors.join('\n'), /replacement\.py adds code symbol actual/);
+  guard.fileContentsByPath.set('replacement.py', 'def broken(:');
+  assert.throws(() => guard.validate(), /Python source facts unavailable or invalid/);
+  guard.fileContentsByPath.delete('replacement.py');
+  assert.throws(() => guard.validate(), /complete candidate source/);
+});
+
+test('an unadmitted Python deletion still fails the surface authorization guard', (context) => {
+  const { repository } = require('./lib/feature-mechanization-git-fixture.cjs');
+  const { FeatureImplementationGuard } = require('./check-feature-mechanization.cjs');
+  const repo = repository(context);
+  repo.write('retired.py', 'def actual():\n    return 2\n');
+  const baseRef = repo.commit(repo.base);
+  repo.git('rm', 'retired.py');
+  const headRef = repo.commit(baseRef);
+  const evidence = repo.reader({ baseRef, headRef }).read();
+  const guard = new FeatureImplementationGuard(
+    [
+      {
+        manifest: {
+          allowedImplementationSurfaces: [],
+          symbols: [],
+        },
+      },
+    ],
+    evidence
+  );
+  assert.match(guard.validate().errors.join('\n'), /outside allowedImplementationSurfaces/);
+});
+
 const {
   extractFeatureMechanizationManifests,
   normalizeDbFeatureMechanizationManifestRows,

@@ -158,6 +158,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-(db-reader|git-diff|manifest)\.cjs$/u, 'docs-governance'],
   [/^scripts\/lib\/component-source-responsibilities\.cjs$/u, 'docs-governance'],
   [/^scripts\/lib\/source-code-facts\.cjs$/u, 'ci-tooling'],
+  [/^scripts\/lib\/python-source-facts\.cjs$/u, 'ci-tooling'],
   [/^scripts\/lib\/feature-mechanization-git-fixture\.cjs$/u, 'test-tooling'],
   [/^scripts\/lib\/risk-document-records\.cjs$/u, 'docs-governance'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],

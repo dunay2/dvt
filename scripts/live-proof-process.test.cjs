@@ -51,6 +51,115 @@ test('POSIX teardown waits for descendants after the leader exits and escalates 
   assert.equal(alive, false);
 });
 
+test('POSIX teardown awaits an asynchronous signal receipt before probing retirement', async () => {
+  const calls = [];
+  let alive = true;
+  let acknowledge;
+  const receipt = new Promise((resolve) => {
+    acknowledge = resolve;
+  });
+  const cleanup = terminateLiveProofProcess(
+    { name: 'async-tree', child: { pid: 123, exitCode: null, signalCode: null } },
+    {
+      platform: 'linux',
+      kill: (pid, signal) => {
+        assert.equal(pid, -123);
+        calls.push(signal);
+        if (!alive) throw Object.assign(new Error('gone'), { code: 'ESRCH' });
+        if (signal === 'SIGTERM') {
+          return receipt.then(() => {
+            alive = false;
+          });
+        }
+      },
+    }
+  );
+  try {
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.deepEqual(calls, [0, 'SIGTERM']);
+  } finally {
+    acknowledge();
+    await cleanup;
+  }
+  assert.equal(alive, false);
+});
+
+test('an asynchronous group probe consumes the original deadline and aborts on timeout', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const calls = [];
+  const cleanup = terminateLiveProofProcess(
+    { name: 'bounded', child: { pid: 123 } },
+    {
+      platform: 'linux',
+      gracefulTimeoutMs: 10,
+      forceTimeoutMs: 10,
+      kill: (_pid, signal, budget) => {
+        calls.push({ signal, budget });
+        return new Promise(() => {});
+      },
+    }
+  );
+  assert.equal(calls[0].budget.deadline, 1010);
+  context.mock.timers.tick(10);
+  await assert.rejects(cleanup, { code: 'PROCESS_SIGNAL_TIMEOUT' });
+  assert.equal(calls[0].budget.signal.aborted, true);
+  assert.deepEqual(
+    calls.map((call) => call.signal),
+    [0]
+  );
+  context.mock.timers.tick(1000);
+  assert.equal(calls.length, 1);
+});
+
+test('the caller absolute deadline caps async probes and both termination phases', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  const deadlines = [];
+  let alive = true;
+  await terminateLiveProofProcess(
+    { name: 'capped', child: { pid: 123 } },
+    {
+      platform: 'linux',
+      gracefulTimeoutMs: 0,
+      forceTimeoutMs: 5000,
+      deadline: 1010,
+      kill: async (_pid, signal, budget) => {
+        deadlines.push(budget.deadline);
+        if (!alive) throw Object.assign(new Error('gone'), { code: 'ESRCH' });
+        if (signal === 'SIGKILL') alive = false;
+      },
+    }
+  );
+  assert.equal(alive, false);
+  assert.ok(deadlines.length >= 4);
+  assert.deepEqual(deadlines, [1000, 1000, 1010, 1010]);
+});
+
+test('an async TERM-phase probe timeout still attempts bounded KILL and retains the failure', async (context) => {
+  context.mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1000 });
+  let alive = true;
+  let probes = 0;
+  const calls = [];
+  const cleanup = terminateLiveProofProcess(
+    { name: 'late-probe', child: { pid: 123 } },
+    {
+      platform: 'linux',
+      gracefulTimeoutMs: 10,
+      forceTimeoutMs: 10,
+      kill: (_pid, signal, budget) => {
+        calls.push({ signal, deadline: budget.deadline });
+        if (!alive) throw Object.assign(new Error('gone'), { code: 'ESRCH' });
+        if (signal === 'SIGKILL') alive = false;
+        if (signal === 0 && ++probes === 2) return new Promise(() => {});
+      },
+    }
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  context.mock.timers.tick(10);
+  await assert.rejects(cleanup, { code: 'PROCESS_SIGNAL_TIMEOUT' });
+  assert.equal(alive, false);
+  assert.ok(calls.some((call) => call.signal === 'SIGKILL' && call.deadline === 1020));
+});
+
 test('POSIX teardown fails explicitly when permission or forced-exit bounds cannot be satisfied', async () => {
   const handle = { name: 'tree', child: { pid: 123, exitCode: null, signalCode: null } };
   await assert.rejects(

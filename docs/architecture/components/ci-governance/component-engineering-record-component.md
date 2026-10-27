@@ -2,7 +2,7 @@
 title: Component Engineering Record Component
 status: Review
 owner: Engineering / CI Governance / Architecture
-last_reviewed: 2026-10-23
+last_reviewed: 2026-10-27
 planning_type: architecture
 ---
 
@@ -212,11 +212,138 @@ selects comparable nonempty bodies. Source comments and strings cannot invent
 symbols. This does not claim that syntactically different code has different
 responsibilities or that matching bodies necessarily justify a refactor.
 
+### Python source facts and existing validation consumers
+
+GH-3735-PYTHON-SOURCE-FACTS admitted this contract before implementation under
+the existing `ValidateFeatureMechanizationImplementation`, `ReadComponentFiles`
+and `ValidateChangedFiles` rails. The shared provider now implements the Python
+source-facts path described below. The
+[primary admission](https://github.com/dunay2/dvt/issues/3735#issuecomment-6436131547)
+and [bounded ownership supplement](https://github.com/dunay2/dvt/issues/3735#issuecomment-6436220381)
+do not establish implemented parser coverage or successful execution.
+
+At the `main` v0.20.0 baseline before this slice, the shared parser resolved
+TS/JS syntax. An explicit Python request failed that parser, the responsibility
+binding schema rejected `.py`, and the feature guard and code-symbol inventory
+excluded Python files. That historical empty result was unsupported coverage,
+not evidence that a Python module had no functions.
+
+```mermaid
+flowchart LR
+  TS[TS and JS candidate bytes] --> Parser[Existing TypeScript parser]
+  Parser --> Facts[Qualified source facts]
+  Facts --> Consumers[Bindings, inventory and implementation guard]
+  Python[Python candidate bytes] --> Invalid[Unsupported syntax or source path]
+  Python --> Excluded[Excluded from declaration discovery]
+  Excluded --> Gap[No Python coverage established]
+```
+
+The implementation extends the existing shared syntax owner. A thin Node
+gateway in `scripts/lib/python-source-facts.cjs` invokes the real standard-library
+AST adapter in `scripts/lib/python-source-facts.py`. One focused Node suite tests
+the actual Python parser and the gateway boundary. Python source is input data;
+the adapter never imports or executes the selected module.
+
+```mermaid
+flowchart LR
+  Git[Selected Git source bytes] --> Dispatch[readSourceCodeFacts]
+  Dispatch -->|TS or JS| TS[Actual TypeScript parser and AST]
+  Dispatch -->|Python only| Gateway[Bounded Node Python gateway]
+  Gateway --> AST[Actual Python AST]
+  TS --> Facts[Qualified declarations and literal import facts]
+  AST --> Facts
+  Facts --> Bindings[Existing responsibility reference policy]
+  Facts --> Guard[Existing mechanization implementation guard]
+  Facts --> Inventory[Existing code-symbol inventory]
+  Gateway -->|Unavailable, invalid or incomplete| Reject[Fixed safe rejection]
+```
+
+`readSourceCodeFacts({ path, content }, { fragment })` remains the common entry
+point. Only `.py` selects `readPythonSourceCodeFacts`. TS/JS consumers retain the
+actual TypeScript `source`, `node` and `body` contract and existing normalization.
+Python returns an explicit language strategy and AST-derived declaration,
+signature, body and range facts; it never impersonates a TypeScript node or
+`SourceFile`. The inventory consumes the appropriate real provider and shares
+its final record assembly. Source and body digests retain the existing
+`@dvt/crypto` authority.
+
+The Python facts name real functions, async functions, classes, methods and
+nested named scopes. Static `import` and `from` declarations contribute literal
+module references. Comments, strings and arbitrary computed expressions cannot
+invent declarations or imports. Qualified identities preserve the actual scope;
+duplicate implemented identities remain ambiguous and reject. A body containing
+only a docstring, `pass`, ellipsis or a NotImplemented stub does not establish an
+implemented callable; abstract-only classes cannot manufacture implementation
+coverage. This does not change the TS/JS implementation-selection policy.
+
+Python AST byte columns are translated from UTF-8 into the actual JavaScript
+UTF-16 offsets of the original source. Signatures, start/end lines and normalized
+body facts come from that source and the real AST. Unicode identifiers and text,
+including non-BMP characters before a declaration, must retain correct facts and
+inventory ranges. The existing ASCII qualified-symbol restriction for canonical
+DB bindings remains unchanged. Discovering a Unicode Python declaration does
+not authorize an identifier-policy expansion.
+
+For a changed Python production file present in the selected candidate, the implementation guard validates the
+complete candidate AST and requires the current top-level declaration names in
+the owning manifest. It does not parse an arbitrary added-line fragment as a
+complete Python module, guess names with regular expressions or construct a
+synthetic body. Authoritative deleted paths are omitted only from declaration
+analysis; the existing surface and retirement rules still authorize or reject
+their removal. A rename destination is a present candidate and must pass full
+source and declaration validation. Missing or malformed source for a present
+Python file still rejects. Existing TS/JS changed-line candidate selection is preserved.
+Test-file classification still excludes actual test modules rather than hiding
+production Python behind an unsupported extension.
+
+The gateway uses a nonempty explicit `PYTHON` value when supplied; otherwise it
+uses `python.exe` on Windows or `python3` on POSIX. It invokes the owned adapter
+without a shell, uses a five-second process budget and an 8 MiB output limit,
+and accepts only its bounded structured facts protocol. It does not guess other
+interpreters, install packages or fall back to a regex parser. Missing Python,
+invalid syntax, timeout, oversized or malformed output and unsafe facts reject
+with fixed safe errors; private stderr and source payloads are not reflected.
+Python capability is required only when Python facts are requested. The runtime
+choice and operational capability boundary also live in the existing
+[testing and CI capabilities guide](../../../guides/testing-and-ci-capabilities.md).
+
+`SYS-CI-SOURCE-FACTS` retains syntax, declaration and import responsibilities and
+owns the two existing source-facts files plus the three Python adapter/test
+paths. `SYS-CI-COMPONENT-ASSOCIATIONS` retains binding shape, symbol and reference
+validation. Adding `.py` does not relax path safety, owner identity, duplicate or
+ambiguous symbols, stale binding digests, missing tests, or canonical
+responsibility checks. The guard and inventory remain explicit existing
+consumers; this slice does not certify unrelated ROOT files.
+
+The same admission reifies the separate Chromium diagnostics and generic proof
+process lifetime owners. Their approved responsibilities and ownership do not
+constitute implemented source bindings. The seven diagnostic test paths are
+excluded exactly from CI ROOT when transferred to the Web diagnostics leaf,
+because an unrelated ROOT match would otherwise remain ambiguous. CI ROOT's
+supplemented owned concern explicitly describes fallback physical coverage, not
+cohesive implementation. No wildcard precedence rule or global SRP closure is
+introduced. Actual post-code declarations, evidence paths and fresh CAS must
+precede implemented binding registration. Historical failed/cancelled execution
+receipts remain historical evidence, not new native PASS records.
+
+| Scenario                                     | Opportunity      | Fowler pattern                       | DDD owner                         | Existing rail                                                                        | Implementation surfaces                                                  | Unit/package proof                                                                                                                   | Architecture proof                                                       | Operator flow                                                                  | Out of scope                                                                   |
+| -------------------------------------------- | ---------------- | ------------------------------------ | --------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Python definitions disappear from validation | Hidden authority | Gateway and explicit parser strategy | SourceCodeFacts                   | ValidateFeatureMechanizationImplementation; ReadComponentFiles; ValidateChangedFiles | Shared source facts, Python AST adapter and the three existing consumers | Real AST, async/nested scope, Unicode offsets, stub rejection, malformed protocol, unavailable interpreter and preserved TS behavior | Current qualified reference and exact changed-slice regression selection | Existing local component profile and exact-candidate implementation acceptance | New CQ rail, regex fallback, interpreter install or fabricated TS AST          |
+| Cross-root tests retain two owners           | Boundary drift   | Exact ownership transfer             | Architecture component definition | ReviseGovernanceComponent; ReadComponentFiles                                        | Existing native component definitions and exact seven exclusions         | Preserve unrelated ROOT fields and reject conflicting ownership                                                                      | Current deepest-owner resolution and canonical responsibility references | Existing read-only current-file query after native admission                   | Global ROOT closure, broad exclusions or historical execution reclassification |
+
 The existing repository command catalog classifies the responsibility validator
-as documentation governance and shared syntax facts as CI tooling. Its coverage
-test runs once for changes to any command file recognized by the catalog's own
-path predicate, or to the package command declarations. Unknown tools still fail
-closed; this introduces neither a second classifier nor a blanket helper rule.
+as documentation governance and shared syntax facts as CI tooling. This includes
+the exact `scripts/lib/python-source-facts.cjs` gateway: its purpose is `ci-tooling`,
+its sensitivity is `ci-policy`, and it requires changed-file validation without
+runtime fanout. The three existing repository-catalog queries own this finite
+classification; CI ROOT retains its explicit fallback ownership of the classifier.
+The Python AST adapter remains behind the gateway. This does not widen command
+discovery to Python or admit neighboring helpers.
+
+The coverage test runs once for changes to any command file recognized by the
+catalog's own path predicate, or to the package command declarations. Unknown
+tools still fail closed; this introduces neither a second classifier nor a
+blanket helper rule.
 
 Schema and binding-set digests use the existing `@dvt/crypto` primitives. The
 tooling crypto contract owns one shared input predicate used by its scan, local

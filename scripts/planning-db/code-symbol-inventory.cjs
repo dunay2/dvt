@@ -7,7 +7,7 @@ const { readSourceCodeFacts } = require('../lib/source-code-facts.cjs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
-const codeFileExtensions = new Set(['.cjs', '.mjs', '.js', '.jsx', '.ts', '.tsx']);
+const codeFileExtensions = new Set(['.cjs', '.mjs', '.js', '.jsx', '.ts', '.tsx', '.py']);
 const excludedPathParts = new Set(['node_modules', 'dist', 'coverage', '.turbo', '.next']);
 const includedSourceRoots = [
   'apps/',
@@ -97,24 +97,40 @@ function normalizeSyntaxTokens(node, source) {
 function extractCodeSymbolsFromFile(file, ownershipByPath) {
   const sourcePath = normalizeSourcePath(file.path || file.sourcePath || '');
   const content = String(file.content ?? '');
-  const { source, declarations, importRefs } = readSourceCodeFacts({ path: sourcePath, content });
+  const { source, declarations, importRefs, language } = readSourceCodeFacts({
+    path: sourcePath,
+    content,
+  });
   const contentSha256 = sha256HexUtf8(content);
   const ownership = ownershipByPath.get(sourcePath) || {};
   const candidates = declarations
     .filter(
       (fact) =>
-        fact.implemented && fact.body && ts.isBlock(fact.body) && fact.body.statements.length > 0
+        fact.implemented &&
+        (language === 'python'
+          ? fact.kind !== 'class' && fact.statementCount > 0
+          : fact.body && ts.isBlock(fact.body) && fact.body.statements.length > 0)
     )
     .map((fact) => ({ ...fact, name: fact.qualifiedName }));
 
   return candidates
     .sort((left, right) => left.start - right.start)
-    .map(({ node, name, kind, start, exportKind }) => {
-      const startLine = source.getLineAndCharacterOfPosition(start).line + 1;
-      const endLine = source.getLineAndCharacterOfPosition(node.end).line + 1;
-      const normalizedBody = normalizeSyntaxTokens(node.body, source);
+    .map(({ node, name, kind, start, exportKind, ...fact }) => {
+      const startLine =
+        language === 'python'
+          ? fact.startLine
+          : source.getLineAndCharacterOfPosition(start).line + 1;
+      const endLine =
+        language === 'python'
+          ? fact.endLine
+          : source.getLineAndCharacterOfPosition(node.end).line + 1;
+      const normalizedBody =
+        language === 'python' ? fact.normalizedBody : normalizeSyntaxTokens(node.body, source);
       const bodySha256 = sha256HexUtf8(normalizedBody);
-      const signature = content.slice(start, node.body.getStart(source)).trim();
+      const signature =
+        language === 'python'
+          ? fact.signature
+          : content.slice(start, node.body.getStart(source)).trim();
       return {
         symbolId: sha256HexUtf8(`${sourcePath}:${name}:${startLine}:${bodySha256}`),
         sourcePath,
@@ -137,7 +153,7 @@ function extractCodeSymbolsFromFile(file, ownershipByPath) {
         metadata: {
           sourceRoot: sourcePath.split('/')[0] || '',
           importRefCount: importRefs.length,
-          statementCount: node.body.statements.length,
+          statementCount: language === 'python' ? fact.statementCount : node.body.statements.length,
         },
         rawSymbol: { signature, startLine, endLine },
       };

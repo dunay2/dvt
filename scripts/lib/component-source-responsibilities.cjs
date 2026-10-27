@@ -38,8 +38,8 @@ function validateResponsibilityBindings(input) {
         errors.push(`${label} has invalid ${key}.`);
     }
     if (!repositoryPath(entry.path)) errors.push(`${label} has an unsafe or noncanonical path.`);
-    else if (!/\.(?:[cm]?[jt]s|[jt]sx)$/.test(entry.path))
-      errors.push(`${label} requires a TypeScript or JavaScript source path.`);
+    else if (!/\.(?:[cm]?[jt]s|[jt]sx|py)$/.test(entry.path))
+      errors.push(`${label} requires a TypeScript, JavaScript or Python source path.`);
     if (
       typeof entry.symbol !== 'string' ||
       !/^[A-Za-z_$][\w$]*(?:\.#?[A-Za-z_$][\w$]*)*$/.test(entry.symbol)

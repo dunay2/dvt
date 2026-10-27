@@ -150,9 +150,13 @@ class FeatureImplementationGuard {
     const declaredSymbols = this.collectDeclaredSymbols();
 
     for (const filePath of this.changedFiles) {
+      if (this.deletedFiles.has(filePath)) continue;
       if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) continue;
       const addedLines = this.addedLinesByPath.get(filePath) || [];
       const fileContent = this.fileContentsByPath.get(filePath);
+      const python = filePath.endsWith('.py');
+      if (python && typeof fileContent !== 'string')
+        throw new Error('Python declaration validation requires complete candidate source');
       const currentSymbols =
         typeof fileContent === 'string'
           ? new Set(
@@ -161,7 +165,10 @@ class FeatureImplementationGuard {
                 .map((fact) => fact.name)
             )
           : null;
-      for (const symbolName of this.extractAddedCodeSymbols(filePath, addedLines)) {
+      const candidates = python
+        ? [...currentSymbols]
+        : this.extractAddedCodeSymbols(filePath, addedLines);
+      for (const symbolName of candidates) {
         if (currentSymbols && !currentSymbols.has(symbolName)) {
           continue;
         }
@@ -323,6 +330,8 @@ class FeatureImplementationGuard {
 
   extractAddedCodeSymbols(filePath, addedLines) {
     if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) return [];
+    if (filePath.endsWith('.py'))
+      throw new Error('Python declaration validation requires complete candidate source');
     // Diff fragments select candidates; complete source facts confirm them in validateDeclaredSymbols.
     return [
       ...new Set(
@@ -334,12 +343,13 @@ class FeatureImplementationGuard {
   }
 
   isCodeFile(filePath) {
-    return /\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath);
+    return /\.(?:cjs|mjs|js|jsx|ts|tsx|py)$/.test(filePath);
   }
 
   isTestFile(filePath) {
     return (
-      /\.(?:test|spec)\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath) ||
+      /\.(?:test|spec)\.(?:cjs|mjs|js|jsx|ts|tsx|py)$/.test(filePath) ||
+      /(?:^|\/)test_[^/]+\.py$/.test(filePath) ||
       /(^|\/)(?:__tests__|test|tests|[^/]+-tests)\//.test(filePath)
     );
   }

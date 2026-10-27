@@ -25,6 +25,9 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/lib/component-source-responsibilities.test.cjs',
   'scripts/lib/source-code-facts.cjs': 'scripts/lib/source-code-facts.test.cjs',
   'scripts/lib/source-code-facts.test.cjs': 'scripts/lib/source-code-facts.test.cjs',
+  'scripts/lib/python-source-facts.cjs': 'scripts/lib/python-source-facts.test.cjs',
+  'scripts/lib/python-source-facts.py': 'scripts/lib/python-source-facts.test.cjs',
+  'scripts/lib/python-source-facts.test.cjs': 'scripts/lib/python-source-facts.test.cjs',
   'scripts/planning-db/component-source-responsibility-store.cjs':
     'scripts/planning-db/component-source-responsibility-store.test.cjs',
   'scripts/planning-db/component-source-responsibility-store.test.cjs':
@@ -73,6 +76,18 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'apps/web/cypress/node/chromiumNetworkEvidence.ts':
     'scripts/chromium-network-diagnostics.test.cjs',
   'scripts/chromium-network-diagnostics.test.cjs': 'scripts/chromium-network-diagnostics.test.cjs',
+  'apps/web/cypress/node/chromiumProcessObserver.ts': 'scripts/chromium-process-observer.test.cjs',
+  'scripts/chromium-process-observer.test.cjs': 'scripts/chromium-process-observer.test.cjs',
+  'apps/web/cypress/node/linuxChromiumProcessObserver.py':
+    'scripts/chromium-process-protocol.test.cjs',
+  'apps/web/cypress/node/linuxChromiumProcessProtocol.py':
+    'scripts/chromium-process-protocol.test.cjs',
+  'apps/web/cypress/node/linuxChromiumSignalTrace.py': 'scripts/chromium-process-protocol.test.cjs',
+  'apps/web/cypress/node/linuxChromiumOomJournal.py': 'scripts/chromium-process-protocol.test.cjs',
+  'scripts/chromium-process-protocol.test.cjs': 'scripts/chromium-process-protocol.test.cjs',
+  'scripts/chromium-process-protocol.test.py': 'scripts/chromium-process-protocol.test.cjs',
+  'scripts/chromium-signal-trace.test.py': 'scripts/chromium-process-protocol.test.cjs',
+  'scripts/chromium-oom-journal.test.py': 'scripts/chromium-process-protocol.test.cjs',
   'scripts/run-dev-stack.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/run-dev-stack.test.cjs': 'scripts/run-dev-stack.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
@@ -604,6 +619,8 @@ function buildFocusedChangedTestPlan(files) {
         'scripts/web-code-duplication.test.cjs',
         'scripts/check-changed.cjs',
         'scripts/lib/source-code-facts.cjs',
+        'scripts/lib/python-source-facts.cjs',
+        'scripts/lib/python-source-facts.py',
         'scripts/planning-db/code-symbol-inventory.cjs',
         'scripts/planning-db/code-symbol-inventory.test.cjs',
       ].includes(file)
@@ -637,9 +654,16 @@ function buildFocusedChangedTestPlan(files) {
       testStep('test-check-changed', 'node', '--test', 'scripts/check-changed.test.cjs')
     );
   }
-  const affectedPlanningFiles = changedFiles.includes('scripts/lib/source-code-facts.cjs')
+  const affectedPlanningFiles = changedFiles.some((file) =>
+    [
+      'scripts/lib/source-code-facts.cjs',
+      'scripts/lib/python-source-facts.cjs',
+      'scripts/lib/python-source-facts.py',
+    ].includes(file)
+  )
     ? [
         ...changedFiles,
+        'scripts/lib/source-code-facts.cjs',
         'scripts/lib/component-source-responsibilities.cjs',
         'scripts/check-feature-mechanization.cjs',
       ]
