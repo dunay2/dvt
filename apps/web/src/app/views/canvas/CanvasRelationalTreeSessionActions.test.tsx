@@ -36,11 +36,12 @@ describe('Passive relational session actions', () => {
       resolveCanvasViewCopy('en'),
       'en'
     );
-  const createBinding = (): Record<
-    keyof CanvasRelationalTreeSessionActionsBinding,
-    Mock<() => void>
-  > => ({
-    onApply: vi.fn(),
+  const createBinding = (): {
+    [Key in keyof CanvasRelationalTreeSessionActionsBinding]: Mock<
+      CanvasRelationalTreeSessionActionsBinding[Key]
+    >;
+  } => ({
+    onApply: vi.fn(() => ({ outcome: 'no_changes' as const })),
     onCancel: vi.fn(),
     onStay: vi.fn(),
     onDiscard: vi.fn(),

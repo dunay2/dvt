@@ -5,6 +5,7 @@
  * @consequence Rendering has no transaction authority or temporal state machine.
  */
 import type {
+  CanvasRelationalTreeApplyResult,
   CanvasRelationalTreeWorkbenchCopy,
   RelationalApplyRejection,
 } from './canvasRelationalTreeWorkbench.types';
@@ -20,7 +21,7 @@ type CanvasRelationalTreeSessionActionsState = Readonly<{
 }>;
 
 export type CanvasRelationalTreeSessionActionsBinding = Readonly<{
-  onApply: () => void;
+  onApply: () => CanvasRelationalTreeApplyResult | Promise<CanvasRelationalTreeApplyResult>;
   onCancel: () => void;
   onStay: () => void;
   onDiscard: () => void;
