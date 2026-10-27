@@ -25,6 +25,23 @@ test('responsibility helpers have explicit purposes without admitting arbitrary 
   assert.equal(classifyScriptFilePath('scripts/lib/source-code-unknown.cjs').domain, 'unknown');
 });
 
+test('classifies only the admitted Python source-facts gateway as CI tooling', () => {
+  assert.deepEqual(classifyScriptFilePath('scripts/lib/python-source-facts.cjs'), {
+    path: 'scripts/lib/python-source-facts.cjs',
+    domain: 'ci-tooling',
+    sensitivity: 'ci-policy',
+    runtimeFanout: false,
+    changedFileValidationRelevant: true,
+  });
+  assert.deepEqual(classifyScriptFilePath('scripts/lib/python-source-facts-extra.cjs'), {
+    path: 'scripts/lib/python-source-facts-extra.cjs',
+    domain: 'unknown',
+    sensitivity: 'unknown',
+    runtimeFanout: true,
+    changedFileValidationRelevant: true,
+  });
+});
+
 test('classifies the exact-duplicate guard without admitting arbitrary web helpers', () => {
   const classification = classifyScriptFilePath('scripts/web-code-duplication.cjs');
   assert.equal(classification.domain, 'ci-tooling');

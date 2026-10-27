@@ -328,10 +328,18 @@ receipts remain historical evidence, not new native PASS records.
 | Cross-root tests retain two owners           | Boundary drift   | Exact ownership transfer             | Architecture component definition | ReviseGovernanceComponent; ReadComponentFiles                                        | Existing native component definitions and exact seven exclusions         | Preserve unrelated ROOT fields and reject conflicting ownership                                                                      | Current deepest-owner resolution and canonical responsibility references | Existing read-only current-file query after native admission                   | Global ROOT closure, broad exclusions or historical execution reclassification |
 
 The existing repository command catalog classifies the responsibility validator
-as documentation governance and shared syntax facts as CI tooling. Its coverage
-test runs once for changes to any command file recognized by the catalog's own
-path predicate, or to the package command declarations. Unknown tools still fail
-closed; this introduces neither a second classifier nor a blanket helper rule.
+as documentation governance and shared syntax facts as CI tooling. This includes
+the exact `scripts/lib/python-source-facts.cjs` gateway: its purpose is `ci-tooling`,
+its sensitivity is `ci-policy`, and it requires changed-file validation without
+runtime fanout. The three existing repository-catalog queries own this finite
+classification; CI ROOT retains its explicit fallback ownership of the classifier.
+The Python AST adapter remains behind the gateway. This does not widen command
+discovery to Python or admit neighboring helpers.
+
+The coverage test runs once for changes to any command file recognized by the
+catalog's own path predicate, or to the package command declarations. Unknown
+tools still fail closed; this introduces neither a second classifier nor a
+blanket helper rule.
 
 Schema and binding-set digests use the existing `@dvt/crypto` primitives. The
 tooling crypto contract owns one shared input predicate used by its scan, local
