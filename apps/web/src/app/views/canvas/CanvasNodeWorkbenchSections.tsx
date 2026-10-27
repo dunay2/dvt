@@ -53,13 +53,11 @@ export function CanvasNodeWorkbenchSections({
   edges,
   authoring,
   activeRunId,
-  onOpenSemanticEditor,
   onClose,
 }: CanvasNodeWorkbenchPanelProps & { controller: CanvasNodeWorkbenchController }): JSX.Element {
   const {
     node,
     copy,
-    semanticEditorCopy,
     workspaceLayoutKey,
     draftController,
     renderTableCell,
@@ -100,9 +98,6 @@ export function CanvasNodeWorkbenchSections({
     node.id
   );
   if (semanticDvtTransform) {
-    const codeDescription = baseModel.sections.find(
-      (section) => section.id === 'code'
-    )?.description;
     sectionAfterChildren.code = (
       <>
         {sectionAfterChildren.code}
@@ -114,9 +109,6 @@ export function CanvasNodeWorkbenchSections({
           {...(presentationTruth.code.kind === 'canonical'
             ? { canonicalContent: presentationTruth.code.content }
             : {})}
-          canonicalDescription={codeDescription}
-          openSemanticEditorLabel={semanticEditorCopy.openEditorAction}
-          {...(onOpenSemanticEditor == null ? {} : { onOpenSemanticEditor })}
           copy={copy}
         />
       </>

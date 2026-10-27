@@ -2,7 +2,7 @@
 title: Canvas Shell Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-10-27
 ---
 
 # Canvas Shell Component
@@ -436,8 +436,14 @@ the shared Canvas folder is not a separate ownership claim for each module.
 
 Both use `RenderCanvasContextualGraphSurface`. Inspecting code returns a read
 model and updates local selection state; it does not write the draft, publish
-artifacts or execute SQL. Opening the semantic editor delegates its existing
-navigation callback. Mutations remain on the existing authoring command handlers.
+artifacts or execute SQL. The node context-menu Properties action opens General
+in the existing node workbench. Its header owns the existing Open semantic editor
+navigation action for eligible semantic nodes, before Help and Close. One Pencil
+icon uses the existing localized action name and tooltip; the same callback is
+available across sections. General and Code do not repeat the action. The three
+header controls reuse the shared 28 px Inspector icon-button token with no
+additional gap. Mutations remain on the existing authoring command handlers;
+moving the entrypoint introduces no second editor or navigation path.
 
 Derived SQL belongs to the exact transform, nodes and edges references supplied
 to its query. A pending query is reused for repeated selection of those inputs;
@@ -448,9 +454,34 @@ layout-only reference changes and schedules no automatic compilation. Failures
 remain visible and a subsequent explicit selection can retry. Older completions
 cannot overwrite a newer request.
 
-Canonical JSON and ready SQL use one shared Monaco rendering path. The output
-view owns its flex growth directly; an extra height-distributing wrapper is not
-needed between it and the code contribution.
+Canonical JSON and ready SQL use one shared Monaco rendering path. One compact
+row contains the accessible output selector using the shared Inspector form
+typography and native-select styles. Document schema and digest prose are not
+rendered as node chrome. Canonical document bytes and their internal digest
+remain unchanged; a schema or hash inside the selected JSON is still actual
+output and is not filtered. The output view owns its flex growth directly.
+`DvtTransformCodeWorkbenchContent` returns the output view directly and adds no
+DOM frame. The existing section contribution and output view distribute the
+available height without another wrapper.
+
+The former navigation row and technical caption competed with the code surface
+for height. Keeping navigation in the Inspector header and one control row in
+Code gives the editor the remaining space without another style system, fixed
+editor height or resize state. The General-only action and its unused button
+token are removed together; the header owns action placement while Sections
+continues to compose section content.
+
+```mermaid
+flowchart LR
+  Properties[Node Properties] --> General[Existing General section]
+  Properties --> Header[Compact inspector header]
+  Header --> Open[Existing semantic editor callback before Help and Close]
+  Tokens[Shared 28 px icon controls] --> Header
+  Code[Code inspection] --> Selector[Compact output selector]
+  Code --> Editor[Shared read-only editor fills remaining height]
+  Truth[Canonical document and digest] --> Projection[Existing input-bound projection]
+  Projection --> Editor
+```
 
 The existing node-workbench section policy places General first and Code after
 the other supported primary sections. Explicit tab requests remain authoritative;
@@ -461,8 +492,12 @@ Canonical Transform output uses the available Inspector height through the
 existing section, contribution and output flex columns. The output container
 must allocate remaining height to the shared read-only Monaco surface. Editor
 height is not a fixed pixel value and no JavaScript resize state is introduced.
-Rendered acceptance checks code lines, containment and resizing, while preserving
-the canonical document and existing semantic-editor entry action.
+Rendered acceptance checks actual code lines, remaining-height allocation,
+containment and resizing. It reaches the semantic-editor action in the Inspector
+header, verifies no duplicate in General or Code, accessible keyboard activation,
+localized names and compact controls without overlap, and preserves the canonical
+document, query lifecycle and non-mutating navigation. Source, dbt and a missing
+callback retain the existing absence of this semantic action.
 
 ### Shared Inspector Form Typography
 

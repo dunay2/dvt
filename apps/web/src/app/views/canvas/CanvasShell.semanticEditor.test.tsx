@@ -162,18 +162,19 @@ describe('Canvas Model inspection', () => {
     expect(getCanvasShellState().canvasViewportProps?.externalNodeSurfaceActive).toBe(false);
   });
 
-  it('routes the contextual inspector to the single semantic-editor tab', async () => {
+  it('routes the Properties header icon to the single semantic-editor tab without writing', async () => {
     const fixture = buildSemanticWorkbenchFixture();
+    const onApplyNodeDraft = vi.fn(() => ({ outcome: 'no_changes' }) as const);
     await harness.render({
       layout: { inspectorPanelVisible: true },
       panels: {
         inspectorNode: fixture.transform,
-        inspectorPreferredTabId: 'code',
+        inspectorPreferredTabId: 'general',
         inspectorGraphNodes: [...fixture.sources, fixture.transform],
         inspectorGraphEdges: fixture.edges,
         relationalTreeAuthoring: {
           canEditNode: true,
-          onApplyNodeDraft: vi.fn(() => ({ outcome: 'no_changes' }) as const),
+          onApplyNodeDraft,
         },
       },
       graph: {
@@ -190,14 +191,21 @@ describe('Canvas Model inspection', () => {
 
     expect(harness.container.querySelector('[data-slot^="dvt-select-operation-"]')).toBeNull();
     const openEditor = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-open-semantic-editor"]'
+      '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
     );
     expect(openEditor).not.toBeNull();
+    const general = harness.container.querySelector(
+      '[data-slot="canvas-node-workbench-general-content"]'
+    );
+    expect(general).not.toBeNull();
+    expect(general?.querySelector('[data-slot="canvas-open-semantic-editor"]')).toBeNull();
 
     await act(async () => openEditor!.click());
 
     expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).not.toBeNull();
     expect(navigation.querySelector('[data-slot="canvas-model-main-tab"]')).not.toBeNull();
+    expect(navigation.querySelectorAll('[data-slot="canvas-model-main-tab"]')).toHaveLength(1);
+    expect(onApplyNodeDraft).not.toHaveBeenCalled();
     expect(
       harness.container.querySelector('[data-slot="canvas-node-workbench-overlay"]')
     ).toBeNull();

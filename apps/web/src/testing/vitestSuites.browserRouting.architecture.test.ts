@@ -643,28 +643,43 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/e2e/shell/session-publication-lifecycle.cy.ts',
     'apps/web/cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
     'apps/web/cypress/support/startupReadiness.ts',
-  ])('admits exact shell evidence at the controlled runtime for %s', (path) => {
+    'apps/web/cypress/support/relationalWorkbench/pendingComposition.ts',
+  ])('admits exact evidence at the controlled runtime for %s', (path) => {
     const plan = resolveWebVitestChangedSuitePlan([path]);
+    expect(plan.commandPlan).toEqual([]);
     expect(plan.browserCommands.map(({ capability }) => capability)).toEqual(['controlled']);
     expect(plan.browserCommands[0]!.specPaths).toEqual(
       path.endsWith('.cy.ts') ? [path] : WEB_CYPRESS_SPECS.controlled
     );
   });
 
-  it('keeps the pending-capabilities setup scoped to its two real browser consumers', () => {
+  it.each([
+    [
+      'cypress/support/startupReadiness.ts',
+      [
+        'cypress/e2e/shell/startup-route-readiness.cy.ts',
+        'cypress/e2e/shell/startup-stylesheet-loading.cy.ts',
+      ],
+    ],
+    [
+      'cypress/support/relationalWorkbench/pendingComposition.ts',
+      [
+        'cypress/e2e/canvas/canvas-join-output-policies.cy.ts',
+        'cypress/e2e/canvas/canvas-relational-operation-chooser.cy.ts',
+      ],
+    ],
+  ] as const)('keeps %s scoped to its two real browser consumers', (helperPath, specPaths) => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
     );
-    const target = resolve('cypress/support/startupReadiness.ts');
+    const target = resolve(helperPath);
     const consumers = [...browserModules.keys()]
       .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
       .sort();
-    expect(consumers).toEqual(
-      [
-        resolve('cypress/e2e/shell/startup-route-readiness.cy.ts'),
-        resolve('cypress/e2e/shell/startup-stylesheet-loading.cy.ts'),
-      ].sort()
-    );
+    expect(consumers).toEqual(specPaths.map((path) => resolve(path)).sort());
+    for (const path of specPaths) {
+      expect(WEB_CYPRESS_SPECS.controlled).toContain(`apps/web/${path}`);
+    }
   });
 
   it('admits explicit measure retirement only with its retained controlled replacement', () => {
@@ -838,6 +853,7 @@ describe('governed browser evidence routing', () => {
     'apps/web/cypress/support/e2e.ts',
     'apps/web/cypress/support/unregisteredRuntime.ts',
     'apps/web/cypress/support/semanticLive/unregistered.ts',
+    'apps/web/cypress/support/relationalWorkbench/unregistered.ts',
     'apps/web/cypress/fixtures/new.json',
     'apps/web/cypress.live.config.ts',
     'apps/web/cypress/node/unregisteredDiagnostic.ts',

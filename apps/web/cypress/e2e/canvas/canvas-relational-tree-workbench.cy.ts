@@ -1,6 +1,9 @@
 /** Owned concern: keyboard Model entry and workspace navigation, without authoring scenarios. */
 import { getE2eApiCalls } from '../../support/e2eApiStub';
-import { visitWorkbenchCanvas } from '../../support/relationalWorkbench/navigation';
+import {
+  openWorkbenchProperties,
+  visitWorkbenchCanvas,
+} from '../../support/relationalWorkbench/navigation';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench navigation', () => {
@@ -34,6 +37,7 @@ describe('Workbench navigation', () => {
           'true'
         );
         cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
+        cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
         cy.get('.react-flow__viewport').should(($current) => {
           expect($current[0]).to.equal(viewport);
           expect($current.attr('style')).to.equal(transform);
@@ -131,10 +135,21 @@ describe('Workbench navigation', () => {
     cy.screenshot('semantic-editor-compact');
     cy.get('[data-slot="canvas-model-tab-close"]').click();
     cy.get('.react-flow__node[data-id="join-transform"]').should('exist');
-    cy.get('.react-flow__node[data-id="join-transform"] [data-slot="canvas-node-shell"]').click(
-      40,
-      18
+    openWorkbenchProperties('join-transform');
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
     );
+    cy.get(
+      '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+    )
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Open semantic editor');
+    cy.get('[data-slot="canvas-node-workbench-general-content"]')
+      .should('be.visible')
+      .find('[data-slot="canvas-open-semantic-editor"]')
+      .should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="canvas-node-workbench-columns-section"]').should(
       'contain.text',
@@ -144,19 +159,67 @@ describe('Workbench navigation', () => {
       '[data-slot="dvt-relation-authoring"], [data-slot="dvt-relational-operation-chooser"]'
     ).should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').click();
-    for (const width of [1280, 1024]) {
-      cy.viewport(width, 720);
+    cy.get('[data-slot="canvas-node-workbench-code-content"]')
+      .should('be.visible')
+      .find('[data-slot="canvas-open-semantic-editor"]')
+      .should('not.exist');
+    for (const [width, height] of [
+      [1366, 768],
+      [1920, 1080],
+      [3440, 1440],
+      [900, 720],
+      [640, 450],
+    ] as const) {
+      cy.viewport(width, height);
       cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor')
         .should('be.visible')
         .and(($editor) => {
           const editor = $editor[0]!;
           const panel = editor.closest('[data-slot="canvas-node-workbench-panel"]')!;
+          const content = editor.closest('[data-slot="canvas-node-workbench-code-content"]')!;
           const bounds = editor.getBoundingClientRect();
           const panelBounds = panel.getBoundingClientRect();
-          expect(bounds.height, 'usable code editor height').to.be.at.least(160);
-          expect(bounds.bottom, 'editor stays inside Inspector').to.be.at.most(panelBounds.bottom);
+          const viewport = editor.ownerDocument.defaultView!;
+          const controls = [
+            ...panel.querySelectorAll<HTMLButtonElement>(
+              '[data-slot="canvas-node-workbench-header-actions"] button'
+            ),
+          ];
+          expect(controls.map((control) => control.dataset.slot)).to.deep.equal([
+            'canvas-open-semantic-editor',
+            'canvas-node-workbench-help',
+            'canvas-node-workbench-close',
+          ]);
+          const controlBounds = controls.map((control) => control.getBoundingClientRect());
+          controlBounds.forEach((control, index) => {
+            expect(control.width, 'compact header target width').to.be.closeTo(28, 0.5);
+            expect(control.height, 'compact header target height').to.be.closeTo(28, 0.5);
+            expect(control.left).to.be.at.least(Math.max(panelBounds.left, 0));
+            expect(control.right).to.be.at.most(Math.min(panelBounds.right, viewport.innerWidth));
+            expect(control.top + control.height / 2).to.be.closeTo(
+              controlBounds[0]!.top + controlBounds[0]!.height / 2,
+              1
+            );
+            if (index > 0)
+              expect(control.left, 'adjacent controls without overlap').to.be.closeTo(
+                controlBounds[index - 1]!.right,
+                0.5
+              );
+          });
+          expect(bounds.height, 'usable code editor height').to.be.greaterThan(0);
+          if (width >= 1024) expect(bounds.height).to.be.at.least(160);
+          expect(bounds.bottom, 'editor fills remaining Code height').to.be.closeTo(
+            content.getBoundingClientRect().bottom,
+            2
+          );
+          expect(bounds.bottom, 'editor stays inside visible Inspector').to.be.at.most(
+            Math.min(panelBounds.bottom, viewport.innerHeight)
+          );
+          expect(bounds.left, 'editor stays inside visible Inspector').to.be.at.least(
+            Math.max(panelBounds.left, 0)
+          );
           expect(bounds.right, 'editor stays inside Inspector width').to.be.at.most(
-            panelBounds.right
+            Math.min(panelBounds.right, viewport.innerWidth)
           );
           expect(
             editor.querySelector('.view-lines')?.textContent,
@@ -167,11 +230,31 @@ describe('Workbench navigation', () => {
         expect($output[0]!.scrollWidth, 'output has no horizontal overflow').to.be.at.most(
           $output[0]!.clientWidth
         );
+        const select = $output[0]!.querySelector<HTMLSelectElement>('select')!;
+        const label = select.labels?.[0];
+        expect(label, 'native accessible output label').not.to.equal(undefined);
+        const caption = label!.querySelector('span')!.getBoundingClientRect();
+        const control = select.getBoundingClientRect();
+        expect(label!.textContent).to.contain('Output view');
+        expect(caption.top + caption.height / 2, 'one compact selector row').to.be.closeTo(
+          control.top + control.height / 2,
+          1
+        );
+        expect(label!.getBoundingClientRect().height, 'no stacked label row').to.be.at.most(
+          Math.max(caption.height, control.height) + 2
+        );
+        expect($output.find('p').text(), 'no technical document caption').not.to.match(
+          /Canonical Substrait document|Documento Substrait|SHA-256/
+        );
       });
       cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot(
         `inspector-code-visible-${width}`
       );
     }
+    cy.viewport(1024, 720);
+    cy.get('[data-slot="dvt-transform-output-view-selector"]').focus().should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.focused().closest('.monaco-editor').should('have.length', 1);
     cy.get('[data-slot="canvas-node-workbench-tabs-list"] [role="tab"]')
       .last()
       .should('have.attr', 'data-slot', 'canvas-node-workbench-tab-code');
@@ -194,6 +277,24 @@ describe('Workbench navigation', () => {
         $editor[0]!.getBoundingClientRect().height,
         'SQL keeps the usable editor height'
       ).to.be.at.least(160);
+      expect(
+        $editor[0]!.getBoundingClientRect().bottom,
+        'SQL fills remaining height'
+      ).to.be.closeTo(
+        $editor[0]!
+          .closest('[data-slot="canvas-node-workbench-code-content"]')!
+          .getBoundingClientRect().bottom,
+        2
+      );
+    });
+    cy.viewport(1024, 600);
+    cy.get('[data-slot="canvas-node-workbench-code-content"] .monaco-editor').should(($editor) => {
+      expect($editor[0]!.getBoundingClientRect().bottom, 'SQL adapts after resize').to.be.closeTo(
+        $editor[0]!
+          .closest('[data-slot="canvas-node-workbench-code-content"]')!
+          .getBoundingClientRect().bottom,
+        2
+      );
     });
     cy.get('[data-slot="canvas-node-workbench-panel"]').screenshot('inspector-derived-sql');
     cy.get('[data-slot="dvt-transform-output-view-selector"]').select('substrait');
@@ -207,7 +308,24 @@ describe('Workbench navigation', () => {
         'inspection does not save the graph'
       ).to.have.length(0);
     });
-    cy.get('[data-slot="canvas-open-semantic-editor"]').click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    openWorkbenchProperties('join-transform');
+    cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+      'have.attr',
+      'aria-selected',
+      'true'
+    );
+    cy.get(
+      '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+    )
+      .focus()
+      .should('be.focused');
+    cy.get('[role="tooltip"]').should('contain.text', 'Open semantic editor');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('[data-slot="canvas-node-workbench-help"]').should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.TAB);
+    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.focused');
+    cy.get('[data-slot="canvas-open-semantic-editor"]').focus().should('be.focused').click();
     cy.get('[data-slot="canvas-model-main-tab"]')
       .should('have.length', 1)
       .and('have.attr', 'aria-selected', 'true');

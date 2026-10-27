@@ -30,8 +30,6 @@ export const inspectorVisualClasses = {
   contextPanelSubtitle: 'mt-0.5 text-xs text-slate-300',
   contextPanelHelpText: 'text-[11px] leading-5 text-slate-400',
   contextPanelIconButton: 'size-7 text-slate-300 hover:text-white',
-  contextPanelActionButton:
-    'h-8 justify-start gap-2 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white',
   contextPanelSection: 'border-b border-slate-700 px-4 py-3',
   contextPanelSectionTitle: 'text-xs font-semibold uppercase text-slate-300',
   contextPanelSectionDescription: 'text-xs leading-5 text-(--text-muted)',

@@ -243,11 +243,22 @@ function assertModelSemanticDocumentUnchanged(
 function assertUnresolvedModelCodeUnavailable(): void {
   cy.get('.react-flow__node[data-id="dvt-transform-1"]').should('contain.text', 'RECONNECT INPUT');
   openNodeProperties('dvt-transform-1');
+  cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
+    'have.attr',
+    'aria-selected',
+    'true'
+  );
+  cy.get(
+    '[data-slot="canvas-node-workbench-header-actions"] [data-slot="canvas-open-semantic-editor"]'
+  ).should('be.visible');
   cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .click()
     .should('have.attr', 'aria-selected', 'true');
   cy.get('[data-slot="canvas-node-workbench-code-section"]').should('be.visible');
-  cy.get('[data-slot="canvas-open-semantic-editor"]').should('be.visible');
+  cy.get('[data-slot="canvas-node-workbench-code-content"]')
+    .should('be.visible')
+    .find('[data-slot="canvas-open-semantic-editor"]')
+    .should('not.exist');
   cy.get('[data-slot="dvt-transform-output-view-selector"]').should('not.exist');
   cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
   cy.get('[data-testid="monaco-code-editor"]').should('not.exist');

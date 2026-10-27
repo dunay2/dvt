@@ -311,6 +311,7 @@ const componentListOptionKeys = new Set([
   'remove-owns',
   'add-excludes',
   'remove-excludes',
+  'remove-responsibility',
   'remove-non-goal',
   'remove-reason-to-change',
   'remove-public-api',
@@ -339,7 +340,7 @@ const operationHelp = Object.freeze({
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
       'ReviseGovernanceComponent overlays imported ownership, status, and semantic metadata through a scoped, audited DB command.',
-      'Revise accepts --cq-rails and --ddd-owner corrections, plus exact --remove-reason-to-change, --remove-non-goal and --remove-public-api deltas with their existing add flags.',
+      'Revise accepts --cq-rails and --ddd-owner corrections, plus exact --remove-responsibility, --remove-reason-to-change, --remove-non-goal and --remove-public-api deltas with their existing add flags.',
       'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
@@ -1538,6 +1539,9 @@ function operationPayload(command) {
       addExcludes: command.addExcludes || [],
       removeExcludes: command.removeExcludes || [],
       responsibilities: command.responsibilities || [],
+      ...(command.removeResponsibilities?.length
+        ? { removeResponsibilities: command.removeResponsibilities }
+        : {}),
       nonGoals: command.nonGoals || [],
       reasonsToChange: command.reasonsToChange || [],
       ...(command.removeNonGoals?.length ? { removeNonGoals: command.removeNonGoals } : {}),
@@ -2188,6 +2192,7 @@ function validateComponentReviseCommand(command) {
     ...(command.addExcludes || []),
     ...(command.removeExcludes || []),
     ...(command.responsibilities || []),
+    ...(command.removeResponsibilities || []),
     ...(command.nonGoals || []),
     ...(command.reasonsToChange || []),
     ...(command.removeNonGoals || []),
@@ -2209,6 +2214,7 @@ function validateComponentReviseCommand(command) {
   for (const [label, additions, removals] of [
     ['owns', command.addOwns, command.removeOwns],
     ['excludes', command.addExcludes, command.removeExcludes],
+    ['responsibility', command.responsibilities, command.removeResponsibilities],
   ]) {
     const removalSet = new Set(removals || []);
     const conflict = (additions || []).find((value) => removalSet.has(value));
@@ -2268,6 +2274,9 @@ function parseComponentCommand(action, args) {
       addExcludes: normalizeListOption(options.addExcludes),
       removeExcludes: normalizeListOption(options.removeExcludes),
       responsibilities: normalizeListOption(options.responsibility),
+      ...(options.removeResponsibility === undefined
+        ? {}
+        : { removeResponsibilities: normalizeListOption(options.removeResponsibility) }),
       nonGoals: normalizeListOption(options.nonGoal),
       reasonsToChange: normalizeListOption(options.reasonToChange),
       removeNonGoals: normalizeListOption(options.removeNonGoal),
@@ -5042,7 +5051,13 @@ function planComponentReviseOperation({
       command.addExcludes,
       command.removeExcludes
     ),
-    responsibilities: mergeUniqueValues(component.responsibilities, command.responsibilities),
+    responsibilities: applyComponentPatternDelta(
+      command.componentId,
+      'responsibility',
+      component.responsibilities,
+      command.responsibilities,
+      command.removeResponsibilities
+    ),
     nonGoals: applyComponentPatternDelta(
       command.componentId,
       'non-goal',

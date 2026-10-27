@@ -20,7 +20,6 @@ type DerivedSqlState =
 export type DvtTransformOutputViewProps = DvtSubstraitTransformOutputProjectionArgs &
   Readonly<{
     canonicalContent: string;
-    canonicalDescription?: string;
     copy: Pick<
       CanvasViewCopy,
       | 'inspectorTransformOutputViewLabel'
@@ -36,7 +35,6 @@ export function DvtTransformOutputView({
   nodes,
   edges,
   canonicalContent,
-  canonicalDescription,
   copy,
 }: DvtTransformOutputViewProps): JSX.Element {
   const [activeView, setActiveView] = useState<TransformOutputViewId>('substrait');
@@ -93,12 +91,15 @@ export function DvtTransformOutputView({
   };
 
   return (
-    <div data-slot="dvt-transform-output-view" className="flex min-h-0 flex-1 flex-col gap-3">
-      <label className="block space-y-1 text-xs text-(--text-muted)">
-        <span>{copy.inspectorTransformOutputViewLabel}</span>
+    <div
+      data-slot="dvt-transform-output-view"
+      className={cn('flex min-h-0 flex-1 flex-col gap-2', inspectorVisualClasses.inspectorForm)}
+    >
+      <label className="flex shrink-0 items-center gap-2 text-xs text-(--text-muted)">
+        <span className="shrink-0">{copy.inspectorTransformOutputViewLabel}</span>
         <select
           data-slot="dvt-transform-output-view-selector"
-          className={inspectorVisualClasses.inspectorSelectInput}
+          className={cn(inspectorVisualClasses.inspectorSelectInput, 'min-w-0 flex-1')}
           value={selectedView}
           onChange={selectOutputView}
         >
@@ -106,12 +107,6 @@ export function DvtTransformOutputView({
           <option value="postgres-sql">{copy.inspectorTransformOutputPostgresSqlLabel}</option>
         </select>
       </label>
-
-      {canonicalDescription == null ? null : (
-        <p className={cn(inspectorVisualClasses.contextPanelSectionDescription, 'break-words')}>
-          {canonicalDescription}
-        </p>
-      )}
 
       {displayedCode != null ? (
         <MonacoCodeViewer
