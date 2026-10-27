@@ -2,7 +2,7 @@
 title: dbt Project Import And Source Authority Component
 status: Active
 owner: dbt Project Authoring / Canvas
-last_reviewed: 2026-10-24
+last_reviewed: 2026-10-27
 planning_type: architecture
 task_id: E-DBT-PROJECT-ROUNDTRIP-1
 ---
@@ -131,6 +131,89 @@ ports and adapters own persistence and provider access; Canvas presentation owns
 placement. Atomic file, symbol and test associations live in Planning DB rather
 than source headers or another documentation inventory. File-backed import
 continues to verify its analyzer projection without writing a semantic draft.
+
+### Source Import Request Ownership And Recovery
+
+`SYS-WEB-SOURCE-IMPORT-WIZARD` coordinates the existing Web Source Import
+workflow. Its three responsibilities are wizard coordination, current-request
+lifecycle and catalogue recovery. Connection creation/rename, import command
+identity and selection remain in the coordinator. The shared transition policy
+and React request binding serve independent connection-test and initial-catalogue
+requests. Per-page ownership permits concurrent schema pages and rejects stale
+search generations. These are collaborators in one application component, not
+additional command/query rails or a second semantic authority.
+
+Previously, initial discovery and connection testing shared `loadError`:
+
+```mermaid
+sequenceDiagram
+  participant Catalogue
+  participant Wizard
+  participant ConnectionTest
+  Catalogue-->>Wizard: Discovery failed, no selection
+  Wizard->>ConnectionTest: Test connection
+  ConnectionTest-->>Wizard: Shared error cleared
+  ConnectionTest-->>Wizard: Connection passed, Selected 0
+```
+
+A passing `TestWarehouseConnection` does not prove that
+`ListWarehouseConnectionSourceObjects` succeeded. Their loading, result and
+failure states therefore have independent owners. Each completion belongs to
+the current request and connection/session/binding scope. Closing or reopening
+the dialog, changing connection, replacing the binding or port, and superseding
+a search invalidate obsolete successes, failures and notifications. Independent
+schema requests retain their own identities and failures.
+
+```mermaid
+flowchart LR
+  View[Existing Source Import view]
+  Test[Connection-test lifecycle]
+  Catalogue[Initial catalogue lifecycle]
+  Pages[Per-schema and search generations]
+  Policy[Shared pure request transition]
+  Port[IWarehouseSourceImportPort]
+  Match[Current merged-object matching and selection]
+  View -->|Test connection| Test
+  View -->|Explicit Retry catalogue| Catalogue
+  View -->|Browse / Load more| Pages
+  Test --> Policy
+  Catalogue --> Policy
+  Test --> Port
+  Catalogue --> Port
+  Pages --> Port
+  Catalogue --> Match
+  Catalogue -->|Independent failure| View
+  Test -->|Independent result| View
+  Pages -->|Independent page failure| View
+```
+
+Explicit catalogue retry reexecutes the same initial schema-list, requested dbt
+name search, matcher and mandatory selection. Matching remains inside the
+functional update over merged objects. Query transport failure and current
+matching failure feed a narrow passive recovery binding; neither a successful
+connection test nor an unrelated connection action clears catalogue/page failure.
+The existing `ImportWarehouseSources` command and identity/replay behavior remain
+unchanged. Import requires completed discovery and the current valid selection;
+the button and command handler share that eligibility decision.
+
+The recovery view composes existing Alert and Button controls. Current compact
+ConnectionStep feedback, catalogue geometry, shared styles and source metadata
+remain at their existing owners. The native component's exact file/profile
+bindings govern this slice; the legacy SourceImportDialog reflection remains a
+separate 20-file/five-rail projection, not proof of complete physical ownership.
+
+| Scenario                                             | Opportunity                            | Pattern / owner                                       | Existing rail                                                 | Evidence                                                                              |
+| ---------------------------------------------------- | -------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Discovery fails before a passing connection test     | Shared error ownership                 | Independent request state / Wizard catalogue recovery | TestWarehouseConnection; ListWarehouseConnectionSourceObjects | Real-dialog error retention, explicit successful/failed retry and mandatory selection |
+| Connection or dialog changes while a test is pending | Stale completion authority             | Current-request identity / Wizard lifecycle           | TestWarehouseConnection                                       | A/B/A and close/reopen obsolete success/error while a current request remains pending |
+| Concurrent schema pages or repeated search text      | String equality admits old generations | Per-page identity / Wizard lifecycle                  | ListWarehouseConnectionSourceObjects                          | Both schemas survive; X/Y/X rejects old completion; page errors remain independent    |
+
+Tests first reproduce the current error/scope failure through the existing
+dialog, before relying on new modules or a Retry control. Pure-policy and import
+boundary tests support that semantic proof. Existing continuation, compact
+feedback, metadata and protected dbt/Source Import journeys remain preservation
+evidence. No automatic retry, transport workaround, new provider/API contract,
+Linux observation mechanism or CSS rewrite belongs to this recovery.
 
 ### Source Import Search Continuation Recovery
 

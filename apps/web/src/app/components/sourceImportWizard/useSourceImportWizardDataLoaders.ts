@@ -1,5 +1,12 @@
 /** Owned concern: load warehouse source import choices through the source import port. */
-import { useCallback, useEffect, type Dispatch, type SetStateAction } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
 
 import {
   isRelationalSourceObject,
@@ -14,6 +21,9 @@ import {
   buildSourceObjectIdentityKey,
 } from './sourceImportCatalogModel';
 import { matchRequestedDbtSourceTargets } from './sourceImportWizardModel';
+import { useSourceImportRequest } from './useSourceImportRequest';
+import { useSourceImportCatalogPages } from './useSourceImportCatalogPages';
+import type { SourceImportCatalogRecoveryBinding } from './sourceImportCatalogRecovery.binding';
 import {
   buildSourceImportFailure,
   type SelectableSourceObject,
@@ -114,14 +124,36 @@ export function useSourceCatalogLoader({
   warehouseSourceImport,
   setState,
 }: SourceCatalogLoaderParams) {
+  const [attempt, retry] = useReducer((value: number) => value + 1, 0);
+  const scope = useMemo(
+    () => ({}),
+    [
+      open,
+      selectedConnection,
+      initiallySelectedSourceObjects,
+      requestedDbtSourceDeclarations,
+      warehouseSourceImport,
+      attempt,
+    ]
+  );
+  const {
+    state: catalogueState,
+    begin,
+    succeed,
+    fail,
+    isCurrent,
+  } = useSourceImportRequest<void>(scope);
+  const {
+    begin: startPageRequest,
+    forget: forgetPageRequest,
+    failure: cataloguePageFailure,
+  } = useSourceImportCatalogPages(scope);
   useEffect(() => {
     if (!open || !selectedConnection) return;
-    let cancelled = false;
+    const request = begin();
     const loadCatalog = async () => {
       setState((prev) => ({
         ...prev,
-        isLoadingSourceObjects: true,
-        loadError: null,
         sourceObjectSchemas: [],
         sourceObjectSchemaListPage: { ...unloadedPage, loading: true },
         sourceObjectSchemaPages: {},
@@ -141,6 +173,7 @@ export function useSourceCatalogLoader({
           }
         );
         if (summaryPage.kind !== 'schema-list') throw new Error('Expected a source schema list.');
+        if (!isCurrent(request)) return;
 
         let requestedObjects: SourceObject[] = [];
         if (requestedDbtSourceDeclarations?.length) {
@@ -158,6 +191,7 @@ export function useSourceCatalogLoader({
                 limit: SOURCE_OBJECT_CATALOG_DEFAULT_PAGE_SIZE,
                 ...(cursor ? { cursor } : {}),
               });
+              if (!isCurrent(request)) return;
               if (page.kind !== 'object-page') throw new Error('Expected a source object page.');
               objects.push(...page.objects);
               cursor = page.nextCursor;
@@ -167,8 +201,9 @@ export function useSourceCatalogLoader({
           requestedObjects = pages.flat();
         }
 
-        if (!cancelled) {
+        if (isCurrent(request)) {
           setState((prev) => {
+            if (!isCurrent(request)) return prev;
             let sourceObjects = mergeSourceImportCatalogObjects(
               prev.sourceObjects,
               requestedObjects
@@ -198,32 +233,33 @@ export function useSourceCatalogLoader({
               },
               sourceObjects,
               activeSourceObjectKey: active?.objectId ?? null,
-              loadError: requestedMatch?.unmatchedSourceUniqueIds.length
-                ? buildSourceImportFailure('match-dbt-source-tables')
-                : null,
             };
           });
+          succeed(request, undefined);
         }
       } catch (error) {
-        if (!cancelled) {
-          setState((prev) => ({
-            ...prev,
-            loadError: buildSourceImportFailure('load-source-objects', error),
-            sourceObjects: [],
-            sourceObjectSchemas: [],
-            sourceObjectSchemaListPage: { ...unloadedPage, loaded: true },
-            activeSourceObjectKey: null,
-          }));
+        if (isCurrent(request)) {
+          setState((prev) =>
+            !isCurrent(request)
+              ? prev
+              : {
+                  ...prev,
+                  sourceObjects: [],
+                  sourceObjectSchemas: [],
+                  sourceObjectSchemaListPage: { ...unloadedPage, loaded: true },
+                  activeSourceObjectKey: null,
+                }
+          );
+          fail(request, buildSourceImportFailure('load-source-objects', error));
         }
-      } finally {
-        if (!cancelled) setState((prev) => ({ ...prev, isLoadingSourceObjects: false }));
       }
     };
     void loadCatalog();
-    return () => {
-      cancelled = true;
-    };
   }, [
+    begin,
+    fail,
+    isCurrent,
+    succeed,
     initiallySelectedSourceObjects,
     open,
     requestedDbtSourceDeclarations,
@@ -236,12 +272,12 @@ export function useSourceCatalogLoader({
     async (schema: SourceImportSchemaIdentity, cursor?: string) => {
       if (!selectedConnection) return;
       const key = buildSourceImportSchemaKey(schema);
+      const { isCurrent: isCurrentPage, reject } = startPageRequest(`schema:${key}`);
       setState((prev) =>
-        prev.selectedConnection !== selectedConnection
+        !isCurrentPage()
           ? prev
           : {
               ...prev,
-              loadError: null,
               sourceObjectSchemaPages: {
                 ...prev.sourceObjectSchemaPages,
                 [key]: {
@@ -261,7 +297,7 @@ export function useSourceCatalogLoader({
         });
         if (page.kind !== 'object-page') throw new Error('Expected a source object page.');
         setState((prev) =>
-          prev.selectedConnection !== selectedConnection
+          !isCurrentPage()
             ? prev
             : {
                 ...prev,
@@ -273,12 +309,12 @@ export function useSourceCatalogLoader({
               }
         );
       } catch (error) {
+        reject(error);
         setState((prev) =>
-          prev.selectedConnection !== selectedConnection
+          !isCurrentPage()
             ? prev
             : {
                 ...prev,
-                loadError: buildSourceImportFailure('load-source-objects', error),
                 sourceObjectSchemaPages: {
                   ...prev.sourceObjectSchemaPages,
                   [key]: {
@@ -290,14 +326,15 @@ export function useSourceCatalogLoader({
         );
       }
     },
-    [selectedConnection, setState, warehouseSourceImport]
+    [selectedConnection, setState, startPageRequest, warehouseSourceImport]
   );
 
   const loadMoreSchemas = useCallback(
     async (cursor: string) => {
       if (!selectedConnection) return;
+      const { isCurrent: isCurrentPage, reject } = startPageRequest('schema-list');
       setState((prev) =>
-        prev.selectedConnection !== selectedConnection
+        !isCurrentPage()
           ? prev
           : {
               ...prev,
@@ -315,7 +352,7 @@ export function useSourceCatalogLoader({
         });
         if (page.kind !== 'schema-list') throw new Error('Expected a source schema list.');
         setState((prev) =>
-          prev.selectedConnection !== selectedConnection
+          !isCurrentPage()
             ? prev
             : {
                 ...prev,
@@ -328,12 +365,12 @@ export function useSourceCatalogLoader({
               }
         );
       } catch (error) {
+        reject(error);
         setState((prev) =>
-          prev.selectedConnection !== selectedConnection
+          !isCurrentPage()
             ? prev
             : {
                 ...prev,
-                loadError: buildSourceImportFailure('load-source-objects', error),
                 sourceObjectSchemaListPage: {
                   ...prev.sourceObjectSchemaListPage,
                   loading: false,
@@ -342,19 +379,18 @@ export function useSourceCatalogLoader({
         );
       }
     },
-    [selectedConnection, setState, warehouseSourceImport]
+    [selectedConnection, setState, startPageRequest, warehouseSourceImport]
   );
 
   const loadSearchPage = useCallback(
     async (query: string, cursor?: string) => {
       if (!selectedConnection) return;
+      const { isCurrent: isCurrentPage, reject } = startPageRequest('search');
       setState((prev) =>
-        prev.selectedConnection !== selectedConnection ||
-        prev.sourceObjectSearchQuery.trim() !== query
+        !isCurrentPage() || prev.sourceObjectSearchQuery.trim() !== query
           ? prev
           : {
               ...prev,
-              loadError: null,
               sourceObjectSearchPage: { query, loading: true, nextCursor: cursor ?? null },
             }
       );
@@ -367,8 +403,7 @@ export function useSourceCatalogLoader({
         });
         if (page.kind !== 'object-page') throw new Error('Expected a source object page.');
         setState((prev) =>
-          prev.selectedConnection !== selectedConnection ||
-          prev.sourceObjectSearchQuery.trim() !== query
+          !isCurrentPage() || prev.sourceObjectSearchQuery.trim() !== query
             ? prev
             : {
                 ...prev,
@@ -389,19 +424,18 @@ export function useSourceCatalogLoader({
               }
         );
       } catch (error) {
+        reject(error);
         setState((prev) =>
-          prev.selectedConnection !== selectedConnection ||
-          prev.sourceObjectSearchQuery.trim() !== query
+          !isCurrentPage() || prev.sourceObjectSearchQuery.trim() !== query
             ? prev
             : {
                 ...prev,
-                loadError: buildSourceImportFailure('load-source-objects', error),
                 sourceObjectSearchPage: { query, loading: false, nextCursor: cursor ?? null },
               }
         );
       }
     },
-    [selectedConnection, setState, warehouseSourceImport]
+    [selectedConnection, setState, startPageRequest, warehouseSourceImport]
   );
 
   useEffect(() => {
@@ -421,8 +455,29 @@ export function useSourceCatalogLoader({
     const timer = window.setTimeout(() => {
       void loadSearchPage(query);
     }, 300);
-    return () => window.clearTimeout(timer);
-  }, [loadSearchPage, open, selectedConnection, setState, sourceObjectSearchQuery]);
+    return () => {
+      window.clearTimeout(timer);
+      forgetPageRequest('search');
+    };
+  }, [
+    forgetPageRequest,
+    loadSearchPage,
+    open,
+    selectedConnection,
+    setState,
+    sourceObjectSearchQuery,
+  ]);
 
-  return { loadSchemaPage, loadMoreSchemas, loadSearchPage };
+  const catalogueRecovery: SourceImportCatalogRecoveryBinding = {
+    failure: catalogueState.status === 'failed' ? catalogueState.failure : null,
+    retry,
+  };
+  return {
+    loadSchemaPage,
+    loadMoreSchemas,
+    loadSearchPage,
+    catalogueState,
+    catalogueRecovery,
+    cataloguePageFailure,
+  };
 }

@@ -14,7 +14,15 @@ interface WizardStepContentProps {
 export function WizardStepContent({ controller }: WizardStepContentProps) {
   const { copy } = useSourceImportLocalization();
   const { state } = controller;
-  const loadError = resolveSourceImportFailureMessage(copy, state.loadError);
+  const testState = controller.connectionTest.model;
+  const loadError = resolveSourceImportFailureMessage(
+    copy,
+    state.loadError ?? controller.cataloguePageFailure
+  );
+  const connectionError = resolveSourceImportFailureMessage(
+    copy,
+    testState.status === 'failed' ? testState.failure : state.loadError
+  );
   const createConnectionError = resolveSourceImportFailureMessage(
     copy,
     state.createConnectionError
@@ -43,9 +51,9 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             isLoadingConnections={state.isLoadingConnections}
             isCreatingConnection={state.isCreatingConnection}
             isRenamingConnection={state.isRenamingConnection}
-            isTestingConnection={state.isTestingConnection}
-            connectionTestResult={state.connectionTestResult}
-            loadError={loadError}
+            isTestingConnection={testState.status === 'loading'}
+            connectionTestResult={testState.status === 'succeeded' ? testState.value : null}
+            loadError={connectionError}
             createConnectionError={createConnectionError}
             createConnectionErrorCode={state.createConnectionError?.code ?? null}
             renameConnectionError={renameConnectionError}
@@ -61,7 +69,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
               void controller.handleCreateConnection();
             }}
             onTestConnection={() => {
-              void controller.handleTestConnection();
+              void controller.connectionTest.test();
             }}
             onRenameConnection={() => {
               void controller.handleRenameConnection();

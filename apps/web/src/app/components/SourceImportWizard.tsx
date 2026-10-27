@@ -8,6 +8,7 @@ import { useSourceImportWizard } from './sourceImportWizard/useSourceImportWizar
 import { SourceImportSectionTabs } from './sourceImportWizard/SourceImportSectionTabs';
 import { WizardStepContent } from './sourceImportWizard/WizardStepContent';
 import { SourceImportWizardFrame } from './sourceImportWizard/SourceImportWizardFrame';
+import { SourceImportCatalogRecovery } from './sourceImportWizard/SourceImportCatalogRecovery';
 
 export default function SourceImportWizard({
   open,
@@ -58,6 +59,7 @@ export default function SourceImportWizard({
         />
       }
     >
+      <SourceImportCatalogRecovery binding={controller.catalogueRecovery} />
       <WizardStepContent controller={controller} />
     </SourceImportWizardFrame>
   );
