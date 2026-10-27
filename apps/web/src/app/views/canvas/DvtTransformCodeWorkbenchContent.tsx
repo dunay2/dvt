@@ -11,18 +11,14 @@ export function DvtTransformCodeWorkbenchContent({
 }: Omit<DvtTransformOutputViewProps, 'canonicalContent'> &
   Readonly<{
     canonicalContent?: string;
-  }>): JSX.Element {
-  return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
-      {canonicalContent == null ? null : (
-        <DvtTransformOutputView
-          transformNode={transformNode}
-          nodes={nodes}
-          edges={edges}
-          canonicalContent={canonicalContent}
-          copy={copy}
-        />
-      )}
-    </div>
+  }>): JSX.Element | null {
+  return canonicalContent == null ? null : (
+    <DvtTransformOutputView
+      transformNode={transformNode}
+      nodes={nodes}
+      edges={edges}
+      canonicalContent={canonicalContent}
+      copy={copy}
+    />
   );
 }

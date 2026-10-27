@@ -456,9 +456,10 @@ row contains the accessible output selector using the shared Inspector form
 typography and native-select styles. Document schema and digest prose are not
 rendered as node chrome. Canonical document bytes and their internal digest
 remain unchanged; a schema or hash inside the selected JSON is still actual
-output and is not filtered. The output view owns its flex growth directly; an
-extra height-distributing wrapper is not needed between it and the code
-contribution.
+output and is not filtered. The output view owns its flex growth directly.
+`DvtTransformCodeWorkbenchContent` returns the output view directly and adds no
+DOM frame. The existing section contribution and output view distribute the
+available height without another wrapper.
 
 The former navigation row and technical caption competed with the code surface
 for height. Keeping navigation in Properties and one control row in Code gives
