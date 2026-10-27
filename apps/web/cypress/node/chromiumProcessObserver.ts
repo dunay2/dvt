@@ -134,16 +134,46 @@ const message = z.union([
       'signal-not-observed',
     ]),
   }),
-  z.object({
-    kind: z.literal('unavailable'),
-    source: z.enum([
-      'process-events',
-      'kernel-oom',
-      'signal-generation',
-      'userspace-oom',
-      'observation',
-    ]),
-  }),
+  z
+    .object({
+      kind: z.literal('unavailable'),
+      source: z.enum([
+        'process-events',
+        'kernel-oom',
+        'signal-generation',
+        'userspace-oom',
+        'observation',
+      ]),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('unavailable'),
+      phase: z.enum([
+        'bootstrap',
+        'descriptor-duplication',
+        'group-signal',
+        'trace-probe',
+        'trace-disposal',
+        'process-events',
+        'kernel-oom',
+        'signal-generation',
+        'userspace-oom',
+        'observation',
+        'protocol',
+        'retirement',
+        'unknown',
+      ]),
+      reason: z.enum([
+        'denied',
+        'missing',
+        'invalid-or-unsupported',
+        'protocol',
+        'deadline',
+        'unavailable',
+      ]),
+    })
+    .strict(),
   z.object({ kind: z.literal('complete'), incomplete: z.boolean() }),
 ]);
 
@@ -235,7 +265,12 @@ async function within<T>(operation: Promise<T>, deadline: number): Promise<T> {
       operation,
       new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error('Owned observer deadline exceeded')),
+          () =>
+            reject(
+              Object.assign(new Error('Owned observer deadline exceeded'), {
+                code: 'OBSERVER_DEADLINE',
+              })
+            ),
           Math.max(0, deadline - Date.now())
         );
       }),
@@ -330,6 +365,15 @@ async function openNativeObserver(
     try {
       await within(owned.closed, Math.min(budget.deadline, Date.now() + 10_000));
     } catch (cleanup) {
+      if (cleanup instanceof Error)
+        Object.assign(cleanup, {
+          diagnostic: {
+            kind: 'unavailable',
+            phase: 'retirement',
+            reason:
+              Reflect.get(cleanup, 'code') === 'OBSERVER_DEADLINE' ? 'deadline' : 'unavailable',
+          },
+        });
       throw new AggregateError([error, cleanup], 'Observer bootstrap and cleanup failed', {
         cause: cleanup,
       });
@@ -346,7 +390,9 @@ async function controlNativeObserver(
   budget: SignalBudget
 ): Promise<string> {
   if (Date.now() >= budget.deadline || budget.signal?.aborted)
-    throw new Error('Privileged observer control deadline exceeded');
+    throw Object.assign(new Error('Privileged observer control deadline exceeded'), {
+      code: 'OBSERVER_DEADLINE',
+    });
   const options = { workspaceRoot: owned.workspaceRoot, captureRoot: owned.lease.capture.path };
   const rpc = spawnOwned(options, ['--control']);
   let output = '';
@@ -375,6 +421,11 @@ async function controlNativeObserver(
   );
   try {
     const result = await within(rpc.closed, budget.deadline);
+    const diagnostic = message.safeParse(JSON.parse(output));
+    if (diagnostic.success && diagnostic.data.kind === 'unavailable' && 'phase' in diagnostic.data)
+      throw Object.assign(new Error('Privileged observer control unavailable'), {
+        diagnostic: diagnostic.data,
+      });
     if (failed || result.code !== 0 || result.signal !== null)
       throw new Error('Privileged observer control denied');
     const receipt = z
@@ -394,6 +445,15 @@ async function controlNativeObserver(
     try {
       await within(rpc.closed, budget.deadline);
     } catch (cleanup) {
+      if (cleanup instanceof Error)
+        Object.assign(cleanup, {
+          diagnostic: {
+            kind: 'unavailable',
+            phase: 'retirement',
+            reason:
+              Reflect.get(cleanup, 'code') === 'OBSERVER_DEADLINE' ? 'deadline' : 'unavailable',
+          },
+        });
       throw new AggregateError([error, cleanup], 'Privileged observer control cleanup unknown', {
         cause: cleanup,
       });
@@ -441,9 +501,83 @@ export async function startChromiumProcessObserver(
 ): Promise<ChromiumProcessObserverBinding | null> {
   if (port.platform !== 'linux') return null;
   const startupDeadline = Date.now() + 20_000;
+  const failures: Array<
+    { session: Lease['purpose'] } & Omit<
+      Extract<z.infer<typeof message>, { kind: 'unavailable'; phase: unknown }>,
+      'kind'
+    >
+  > = [];
+  let published = false;
+  let admitted = false;
+  let currentSession: Lease['purpose'] = 'canary';
+  const recordFailure = (
+    session: Lease['purpose'],
+    error: unknown,
+    phase: (typeof failures)[number]['phase'] = 'unknown'
+  ): void => {
+    const pending: unknown[] = [error];
+    const before = failures.length;
+    for (let count = 0; count < 16 && pending.length && failures.length < 16; count++) {
+      const value = pending.shift();
+      if (value instanceof AggregateError) {
+        pending.push(...value.errors.slice(0, 16));
+        continue;
+      }
+      const parsed = message.safeParse(
+        value instanceof Error ? Reflect.get(value, 'diagnostic') : value
+      );
+      const code: unknown = value instanceof Error ? Reflect.get(value, 'code') : undefined;
+      const reason =
+        code === 'EACCES' || code === 'EPERM'
+          ? 'denied'
+          : code === 'ENOENT' || code === 'ESRCH'
+            ? 'missing'
+            : code === 'EINVAL' || code === 'ENOSYS' || code === 'ENOTSUP'
+              ? 'invalid-or-unsupported'
+              : code === 'OBSERVER_PROTOCOL'
+                ? 'protocol'
+                : code === 'OBSERVER_DEADLINE' ||
+                    code === 'PROCESS_SIGNAL_TIMEOUT' ||
+                    code === 'ETIMEDOUT'
+                  ? 'deadline'
+                  : 'unavailable';
+      const failure: (typeof failures)[number] =
+        parsed.success && parsed.data.kind === 'unavailable' && 'phase' in parsed.data
+          ? { session, phase: parsed.data.phase, reason: parsed.data.reason }
+          : { session, phase, reason };
+      if (
+        !failures.some(
+          (prior) =>
+            prior.session === failure.session &&
+            prior.phase === failure.phase &&
+            prior.reason === failure.reason
+        )
+      )
+        failures.push(failure);
+    }
+    if (failures.length === before && before === 0)
+      failures.push({ session, phase: 'unknown', reason: 'unavailable' });
+  };
+  const publishFailure = (): void => {
+    if (published || failures.length === 0) return;
+    published = true;
+    const directory = join(options.workspaceRoot, '.dvt/evidence/chromium-network');
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(
+      join(directory, `admission-${randomUuidV4()}.json`),
+      JSON.stringify({
+        schemaVersion: 1,
+        observer: 'linux-process-connector',
+        state: 'failed',
+        failures,
+      }),
+      { flag: 'wx' }
+    );
+  };
   const openSession = async (
     purpose: Lease['purpose']
   ): Promise<ChromiumProcessObserverBinding & { owned: OwnedObserver }> => {
+    currentSession = purpose;
     const generation = randomUuidV4();
     const owned = await port.open({ ...options, generation }, purpose, {
       deadline: startupDeadline,
@@ -467,7 +601,8 @@ export async function startChromiumProcessObserver(
     const closeInput = (): void => {
       if (!child.stdin.writableEnded) child.stdin.end();
     };
-    const rejectProtocol = (): void => {
+    const rejectProtocol = (error?: unknown): void => {
+      recordFailure(purpose, error);
       failed = true;
       pending = '';
       closeInput();
@@ -491,6 +626,23 @@ export async function startChromiumProcessObserver(
         try {
           const raw: unknown = JSON.parse(line);
           const kind = z.object({ kind: z.string() }).parse(raw).kind;
+          if (kind === 'unavailable') {
+            const unavailable = message.safeParse(raw);
+            if (!unavailable.success || unavailable.data.kind !== 'unavailable') {
+              rejectProtocol();
+              return;
+            }
+            if ('phase' in unavailable.data) rejectProtocol(unavailable.data);
+            else {
+              if (purpose === 'observe') records.push(unavailable.data);
+              rejectProtocol({
+                kind: 'unavailable',
+                phase: unavailable.data.source,
+                reason: 'unavailable',
+              });
+            }
+            return;
+          }
           if (kind === 'ownership') {
             const receipt = z
               .object({
@@ -590,9 +742,11 @@ export async function startChromiumProcessObserver(
         const errors: unknown[] = [];
         let retired = false;
         let forced = purpose === 'probe' && ready;
+        let phase: (typeof failures)[number]['phase'] = 'retirement';
         try {
           if (forced) {
             const exited = await within(owned.handle.completion, startupDeadline);
+            phase = 'group-signal';
             if (
               exited.code !== 0 ||
               exited.signal !== null ||
@@ -616,6 +770,7 @@ export async function startChromiumProcessObserver(
             Date.now() + 10_000,
             purpose !== 'observe' ? startupDeadline : Infinity
           );
+          phase = 'retirement';
           forced = (await port.terminate(owned, { deadline })) || forced;
           const closed = await within(owned.closed, deadline);
           retired = true;
@@ -629,6 +784,7 @@ export async function startChromiumProcessObserver(
           if ([...allocated].some((generation) => !traces.has(generation)))
             throw new Error('Trace resource cleanup unknown: acquisition receipt missing');
           if (purpose === 'probe' && ready) {
+            phase = 'trace-disposal';
             const first = traces.get(owned.lease.generation)!;
             const canary = traces.get(owned.lease.generation + '-canary')!;
             let denied = false;
@@ -644,6 +800,7 @@ export async function startChromiumProcessObserver(
             if (!denied) throw new Error('Foreign trace canary was not protected');
           }
           for (const trace of traces.values()) {
+            phase = 'trace-disposal';
             const state = await port.control(
               owned,
               { trace },
@@ -656,6 +813,7 @@ export async function startChromiumProcessObserver(
               throw new Error('Private trace disposal unconfirmed');
           }
         } catch (error) {
+          recordFailure(purpose, error, phase);
           failed = true;
           errors.push(error);
           closeInput();
@@ -685,15 +843,32 @@ export async function startChromiumProcessObserver(
               errors.push(error);
             }
           }
-          if (retired) owned.release();
+          if (retired) {
+            try {
+              owned.release();
+            } catch (error) {
+              failed = true;
+              errors.push(error);
+              recordFailure(purpose, error, 'retirement');
+            }
+          }
         }
-        if (failed || errors.length)
+        if (failed || errors.length) {
+          if (failures.length === 0) recordFailure(purpose, undefined, 'observation');
+          if (admitted) {
+            try {
+              publishFailure();
+            } catch (publication) {
+              errors.push(publication);
+            }
+          }
           throw new AggregateError(
             errors,
             ready
               ? 'Linux Chromium process diagnostics incomplete'
               : 'Linux Chromium process diagnostics unavailable'
           );
+        }
       })();
       return stopping;
     };
@@ -714,44 +889,60 @@ export async function startChromiumProcessObserver(
     }
     return { stop, owned };
   };
-  const canary = await openSession('canary');
-  const errors: unknown[] = [];
-  let probe: Awaited<ReturnType<typeof openSession>> | undefined;
   try {
-    probe = await openSession('probe');
-    const wrongDescriptor = {
-      ...probe.owned,
-      lease: {
-        ...probe.owned.lease,
-        leaderProcReference: {
-          ...probe.owned.lease.leaderProcReference,
-          ownerFd: canary.owned.lease.leaderProcReference.ownerFd,
+    const canary = await openSession('canary');
+    const errors: unknown[] = [];
+    let probe: Awaited<ReturnType<typeof openSession>> | undefined;
+    try {
+      probe = await openSession('probe');
+      const wrongDescriptor = {
+        ...probe.owned,
+        lease: {
+          ...probe.owned.lease,
+          leaderProcReference: {
+            ...probe.owned.lease.leaderProcReference,
+            ownerFd: canary.owned.lease.leaderProcReference.ownerFd,
+          },
         },
-      },
-    };
-    let denied = false;
-    try {
-      await port.control(wrongDescriptor, { signal: 9 }, { deadline: startupDeadline });
-    } catch {
-      denied = true;
-    }
-    if (
-      !denied ||
-      (await port.control(canary.owned, { signal: 0 }, { deadline: startupDeadline })) !== 'alive'
-    )
-      throw new Error('Unrelated owned process canary was not protected');
-  } catch (error) {
-    errors.push(error);
-  }
-  for (const binding of [probe, canary]) {
-    if (!binding) continue;
-    try {
-      await binding.stop();
+      };
+      let denied = false;
+      try {
+        await port.control(wrongDescriptor, { signal: 9 }, { deadline: startupDeadline });
+      } catch {
+        denied = true;
+      }
+      if (
+        !denied ||
+        (await port.control(canary.owned, { signal: 0 }, { deadline: startupDeadline })) !== 'alive'
+      )
+        throw new Error('Unrelated owned process canary was not protected');
     } catch (error) {
       errors.push(error);
     }
+    for (const binding of [probe, canary]) {
+      if (!binding) continue;
+      try {
+        await binding.stop();
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+    if (errors.length)
+      throw new AggregateError(errors, 'Linux Chromium process diagnostics unavailable');
+    const observed = await openSession('observe');
+    admitted = true;
+    return observed;
+  } catch (error) {
+    if (failures.length === 0) recordFailure(currentSession, error, 'bootstrap');
+    try {
+      publishFailure();
+    } catch (publication) {
+      throw new AggregateError(
+        [error, publication],
+        'Linux Chromium diagnostics and negative publication failed',
+        { cause: publication }
+      );
+    }
+    throw error;
   }
-  if (errors.length)
-    throw new AggregateError(errors, 'Linux Chromium process diagnostics unavailable');
-  return openSession('observe');
 }

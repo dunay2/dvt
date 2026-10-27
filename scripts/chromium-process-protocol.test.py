@@ -78,6 +78,17 @@ class ProcessProtocolTest(unittest.TestCase):
                 patch.object(observer.signal, "pidfd_send_signal", side_effect=OSError(errno.EINVAL, "unsupported group flag"), create=True), \
                 self.assertRaises(OSError):
             observer.control({"action": "signal-owned-group", "lease": lease, "signal": 0})
+        for operation, failure, phase, reason in [
+                ("duplicate_reference", PermissionError(errno.EPERM, "private /capture fd=42"), "descriptor-duplication", "denied"),
+                ("pidfd_send_signal", OSError(errno.EINVAL, "private unsupported group flag"), "group-signal", "invalid-or-unsupported")]:
+            with patch.object(observer.sys, "argv", ["observer", "--control"]), \
+                    patch.object(observer, "read_private_input", return_value={"action": "signal-owned-group", "lease": lease, "signal": 0}), \
+                    patch.object(observer.signal, "alarm", create=True), patch.object(observer, "emit") as emit, \
+                    patch.object(observer, "duplicate_reference", side_effect=failure if operation == "duplicate_reference" else None, return_value=42), \
+                    patch.object(observer.os, "close"), \
+                    patch.object(observer.signal, "pidfd_send_signal", side_effect=failure if operation == "pidfd_send_signal" else None, create=True):
+                self.assertEqual(observer.main(), 1)
+                emit.assert_called_once_with({"kind": "unavailable", "phase": phase, "reason": reason})
 
     def test_pinned_descriptor_mismatch_and_pid_reuse_fail_before_any_signal(self):
         lease = {"controller": {"pid": 10, "birthtimeTicks": "100"},
@@ -100,6 +111,16 @@ class ProcessProtocolTest(unittest.TestCase):
                 patch.object(observer, "emit") as emit, self.assertRaises(ValueError):
             observer.bootstrap(lease)
         emit.assert_not_called()
+        for failure, reason in [(PermissionError(errno.EACCES, "private generation"), "denied"),
+                                (FileNotFoundError(errno.ENOENT, "private path"), "missing")]:
+            with patch.object(observer.sys, "argv", ["observer"]), \
+                    patch.object(observer, "read_private_input", return_value={}), \
+                    patch.object(observer, "validate_lease", return_value={"purpose": "probe"}), \
+                    patch.object(observer, "bootstrap"), \
+                    patch.object(observer, "probe_group", side_effect=failure), \
+                    patch.object(observer, "emit") as emit:
+                self.assertEqual(observer.main(), 1)
+                emit.assert_called_once_with({"kind": "unavailable", "phase": "trace-probe", "reason": reason})
 
     def test_catchable_cancellation_unwinds_owned_resources(self):
         trace = MagicMock()

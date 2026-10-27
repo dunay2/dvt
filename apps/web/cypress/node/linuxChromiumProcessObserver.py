@@ -56,47 +56,55 @@ def validate_controller(lease):
 
 
 def duplicate_reference(lease):
-    validate_controller(lease)
-    controller = lease["controller"]
-    pidfd = os.pidfd_open(controller["pid"], 0)
+    phase = "bootstrap"
     try:
-        if process_identity(controller["pid"])["birthtimeTicks"] != controller["birthtimeTicks"]:
-            raise ValueError("Reused observer controller")
-        libc = ctypes.CDLL(None, use_errno=True)
-        duplicate = libc.pidfd_getfd
-        duplicate.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint]
-        duplicate.restype = ctypes.c_int
-        descriptor = duplicate(pidfd, lease["leaderProcReference"]["ownerFd"], 0)
-        if descriptor < 0:
-            raise OSError(ctypes.get_errno(), "Owned descriptor duplication denied")
-    finally:
-        os.close(pidfd)
-    try:
-        identity = os.fstat(descriptor)
-        reference = lease["leaderProcReference"]
-        if (not stat.S_ISDIR(identity.st_mode) or str(identity.st_dev) != reference["device"]
-                or str(identity.st_ino) != reference["inode"]):
-            raise ValueError("Foreign pinned observer descriptor")
-        # The duplicated open file description and fstat identity remain valid
-        # after reaping. A textual /proc symlink may gain a '(deleted)' suffix;
-        # it is neither an ownership guard nor evidence of group retirement.
-        return descriptor
-    except BaseException:
-        os.close(descriptor)
+        validate_controller(lease)
+        phase = "descriptor-duplication"
+        controller = lease["controller"]
+        pidfd = os.pidfd_open(controller["pid"], 0)
+        try:
+            if process_identity(controller["pid"])["birthtimeTicks"] != controller["birthtimeTicks"]:
+                raise ValueError("Reused observer controller")
+            libc = ctypes.CDLL(None, use_errno=True)
+            duplicate = libc.pidfd_getfd
+            duplicate.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint]
+            duplicate.restype = ctypes.c_int
+            descriptor = duplicate(pidfd, lease["leaderProcReference"]["ownerFd"], 0)
+            if descriptor < 0:
+                raise OSError(ctypes.get_errno(), "Owned descriptor duplication denied")
+        finally:
+            os.close(pidfd)
+        try:
+            identity = os.fstat(descriptor)
+            reference = lease["leaderProcReference"]
+            if (not stat.S_ISDIR(identity.st_mode) or str(identity.st_dev) != reference["device"]
+                    or str(identity.st_ino) != reference["inode"]):
+                raise ValueError("Foreign pinned observer descriptor")
+            return descriptor
+        except BaseException:
+            os.close(descriptor)
+            raise
+    except (OSError, ValueError, IndexError, AttributeError, TypeError) as error:
+        error.observer_phase = phase
         raise
 
 
 def control(request):
-    action = request.get("action") if isinstance(request, dict) else None
-    fields = ("action", "lease", "signal") if action == "signal-owned-group" else ("action", "lease", "trace")
-    exact_keys(request, fields)
-    lease = validate_lease(request["lease"])
-    descriptor = duplicate_reference(lease)
+    phase = "protocol"
+    descriptor = None
     try:
+        action = request.get("action") if isinstance(request, dict) else None
+        fields = ("action", "lease", "signal") if action == "signal-owned-group" else ("action", "lease", "trace")
+        exact_keys(request, fields)
+        lease = validate_lease(request["lease"])
+        phase = "descriptor-duplication"
+        descriptor = duplicate_reference(lease)
         if action == "signal-owned-group":
+            phase = "protocol"
             requested = request["signal"]
             if type(requested) is not int or requested not in (0, signal.SIGTERM, signal.SIGKILL):
                 raise ValueError("Unadmitted observer signal")
+            phase = "group-signal"
             try:
                 signal.pidfd_send_signal(descriptor, requested, None, 1 << 2)
                 return {"state": "alive"}
@@ -104,15 +112,23 @@ def control(request):
                 # Only ESRCH from this kernel operation proves group retirement.
                 return {"state": "gone"}
         if action != "dispose-owned-trace":
+            phase = "protocol"
             raise ValueError("Unadmitted observer control")
+        phase = "group-signal"
         try:
             signal.pidfd_send_signal(descriptor, 0, None, 1 << 2)
         except ProcessLookupError:
+            phase = "trace-disposal"
             receipt = validate_trace_receipt(request["trace"], lease)
             return {"state": dispose_owned_trace(receipt)}
         raise ValueError("Observer group still alive during disposal")
+    except (OSError, ValueError, IndexError, AttributeError, TypeError) as error:
+        if not hasattr(error, "observer_phase"):
+            error.observer_phase = phase
+        raise
     finally:
-        os.close(descriptor)
+        if descriptor is not None:
+            os.close(descriptor)
 
 
 def bootstrap(lease):
@@ -335,7 +351,7 @@ def cancel_observer(_signal, _frame):
 
 
 def main():
-    source = "process-events"
+    source = "protocol"
     kernel = None
     try:
         if sys.argv[1:] == ["--control"]:
@@ -348,6 +364,7 @@ def main():
         if sys.argv[1:]:
             raise ValueError("Unadmitted observer arguments")
         lease = validate_lease(read_private_input())
+        source = "bootstrap"
         bootstrap(lease)
         if lease["purpose"] == "canary":
             emit({"kind": "canary-ready"})
@@ -355,9 +372,11 @@ def main():
                 raise ValueError("Unexpected canary input")
             return 0
         if lease["purpose"] == "probe":
+            source = "trace-probe"
             return probe_group(lease)
         root_pid = lease["controller"]["pid"]
         capture_root = lease["capture"]["path"]
+        source = "process-events"
         with socket.socket(socket.AF_NETLINK, socket.SOCK_DGRAM, 11) as stream:
             try:
                 stream.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 1024 * 1024)
@@ -376,8 +395,22 @@ def main():
                 if kernel is not None:
                     os.close(kernel)
                 subscription(stream, 2)
-    except (OSError, ValueError, IndexError, AttributeError, TypeError, subprocess.SubprocessError):
-        emit({"kind": "unavailable", "source": source})
+    except (OSError, ValueError, IndexError, AttributeError, TypeError, subprocess.SubprocessError) as error:
+        phase = getattr(error, "observer_phase", source)
+        if phase not in ("bootstrap", "descriptor-duplication", "group-signal", "trace-probe", "trace-disposal", "process-events", "kernel-oom", "signal-generation", "userspace-oom", "observation", "protocol", "retirement", "unknown"):
+            phase = "unknown"
+        code = error.errno if isinstance(error, OSError) else None
+        if code in (errno.EACCES, errno.EPERM):
+            reason = "denied"
+        elif code in (errno.ENOENT, errno.ESRCH):
+            reason = "missing"
+        elif isinstance(error, (TimeoutError, subprocess.TimeoutExpired)):
+            reason = "deadline"
+        elif code in (errno.EINVAL, errno.ENOSYS, errno.ENOTSUP) or isinstance(error, (AttributeError, ValueError, IndexError, TypeError)):
+            reason = "protocol" if phase == "protocol" else "invalid-or-unsupported"
+        else:
+            reason = "unavailable"
+        emit({"kind": "unavailable", "phase": phase, "reason": reason})
         return 1
 
 

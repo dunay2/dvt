@@ -820,6 +820,26 @@ and after-event snapshots retain that uncertainty. An empty bounded OOM query
 does not prove that no OOM occurred. Raw argv, environment, journal/kernel text,
 private control receipts and arbitrary descriptions never enter public evidence.
 
+Startup failures remain failed acceptance even before an observer handle or
+observation report exists. After cleanup has been attempted, the admission
+boundary publishes a bounded `admission-<independent UUID>.json` negative artifact.
+The private `recordFailure` and `publishFailure` helpers within the existing
+startup boundary centralize enum validation and exactly-once publication under
+the existing safe-projection responsibility; they introduce no additional port.
+It contains only `schemaVersion: 1`, `observer: linux-process-connector`,
+`state: failed` and `failures`, a list of at most 16 strict `session`, `phase`, `reason` records.
+Session is `canary`, `probe` or `observe`. Phase is `bootstrap`,
+`descriptor-duplication`, `group-signal`, `trace-probe`, `trace-disposal`,
+`process-events`, `kernel-oom`, `signal-generation`, `userspace-oom`,
+`observation`, `protocol`, `retirement` or `unknown`. Reason is `denied`,
+`missing`, `invalid-or-unsupported`, `protocol`, `deadline` or `unavailable`.
+Only recognized native errno, protocol and deadline facts select a narrower
+value; otherwise the result is `unknown` / `unavailable`. The private protocol
+accepts the same strict failure union before purpose-specific readiness checks.
+No exception, cause, stderr, path, PID, descriptor, receipt or private generation
+is serialized. A negative artifact proves neither cleanup nor successful
+execution, and does not weaken the existing Cypress failure or capability gates.
+
 Windows protocol fixtures establish decoder and lifetime behavior only. Fresh
 Linux native acceptance must observe the real capability, scoped browser
 lifetimes, pinned-group retirement and owned trace disposal, including a forced

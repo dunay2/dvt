@@ -69,6 +69,10 @@ function fixture(startRecords, code = 0, tail = '', settings = {}) {
         if (input.version === 1) write({ kind: 'ownership', generation });
         else {
           assert.deepEqual(input, { action: 'admit', generation });
+          if (settings.unavailable?.session === purpose) {
+            write(settings.unavailable.record);
+            return;
+          }
           for (const [index, name] of (purpose === 'canary'
             ? []
             : [generation, ...(purpose === 'probe' ? [generation + '-canary'] : [])]
@@ -131,11 +135,11 @@ function fixture(startRecords, code = 0, tail = '', settings = {}) {
       workspaceRoot: root,
       captureRoot: path.join(os.tmpdir(), 'dvt-chromium-network-owned'),
     },
-    report() {
+    report(kind = 'processes') {
       const directory = path.join(root, '.dvt/evidence/chromium-network');
-      return JSON.parse(
-        fs.readFileSync(path.join(directory, fs.readdirSync(directory)[0]), 'utf8')
-      );
+      const files = fs.readdirSync(directory).filter((filename) => filename.startsWith(kind + '-'));
+      assert.equal(files.length, 1);
+      return JSON.parse(fs.readFileSync(path.join(directory, files[0]), 'utf8'));
     },
     cleanup() {
       assert.ok(path.resolve(root).startsWith(path.resolve(os.tmpdir()) + path.sep));
@@ -156,6 +160,220 @@ test('non-Linux does not start an observer or create evidence', async () => {
     ),
     null
   );
+});
+
+for (const session of ['canary', 'probe']) {
+  test(`a safe ${session} startup failure publishes bounded negative evidence after cleanup`, async () => {
+    const item = fixture([], 0, '', {
+      unavailable: {
+        session,
+        record: {
+          kind: 'unavailable',
+          phase: 'trace-probe',
+          reason: 'denied',
+        },
+      },
+    });
+    try {
+      await assert.rejects(startChromiumProcessObserver(item.options, item.port), /unavailable/);
+      assert.ok(item.sessions.every((owned) => owned.ended && owned.released));
+      const directory = path.join(item.root, '.dvt/evidence/chromium-network');
+      assert.equal(fs.existsSync(directory), true, 'startup failure must retain safe evidence');
+      const files = fs.readdirSync(directory);
+      assert.equal(files.length, 1);
+      assert.match(files[0], /^admission-[a-f0-9-]+\.json$/u);
+      const report = JSON.parse(fs.readFileSync(path.join(directory, files[0]), 'utf8'));
+      assert.deepEqual(Object.keys(report).sort(), [
+        'failures',
+        'observer',
+        'schemaVersion',
+        'state',
+      ]);
+      assert.equal(report.schemaVersion, 1);
+      assert.equal(report.observer, 'linux-process-connector');
+      assert.equal(report.state, 'failed');
+      assert.ok(report.failures.length > 0 && report.failures.length <= 16);
+      assert.ok(
+        report.failures.some(
+          (failure) =>
+            failure.session === session &&
+            failure.phase === 'trace-probe' &&
+            failure.reason === 'denied'
+        )
+      );
+      for (const failure of report.failures)
+        assert.deepEqual(Object.keys(failure).sort(), ['phase', 'reason', 'session']);
+    } finally {
+      item.cleanup();
+    }
+  });
+}
+
+test('open rejection publishes once only after its actual cleanup attempt and excludes exception payloads', async () => {
+  const item = fixture([]);
+  let release;
+  let attempted = false;
+  const cleanup = new Promise((resolve) => {
+    release = resolve;
+  });
+  item.port.open = async () => {
+    await cleanup;
+    attempted = true;
+    throw Object.assign(new Error('private /capture/path generation-secret pid=777'), {
+      code: 'EACCES',
+      cause: { lease: 'private' },
+    });
+  };
+  const starting = startChromiumProcessObserver(item.options, item.port);
+  try {
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(fs.readdirSync(item.root).length, 0);
+    release();
+    await assert.rejects(starting);
+    assert.equal(attempted, true);
+    const directory = path.join(item.root, '.dvt/evidence/chromium-network');
+    assert.equal(fs.existsSync(directory), true, 'open-before-handle failure must publish');
+    const files = fs.readdirSync(directory);
+    assert.equal(files.length, 1);
+    const text = fs.readFileSync(path.join(directory, files[0]), 'utf8');
+    assert.deepEqual(JSON.parse(text), {
+      schemaVersion: 1,
+      observer: 'linux-process-connector',
+      state: 'failed',
+      failures: [{ session: 'canary', phase: 'bootstrap', reason: 'denied' }],
+    });
+    assert.doesNotMatch(text, /private|capture|generation-secret|777|cause|lease|stack|message/);
+  } finally {
+    release();
+    await starting.catch(() => undefined);
+    item.cleanup();
+  }
+});
+
+test('unknown or extra diagnostic data produces only the safe fallback and never its raw fields', async () => {
+  const item = fixture([], 0, '', {
+    unavailable: {
+      session: 'canary',
+      record: {
+        kind: 'unavailable',
+        phase: 'bootstrap',
+        reason: 'denied',
+        generation: 'private-secret',
+        path: '/private',
+        pid: 777,
+      },
+    },
+  });
+  try {
+    await assert.rejects(startChromiumProcessObserver(item.options, item.port), /unavailable/);
+    const directory = path.join(item.root, '.dvt/evidence/chromium-network');
+    assert.equal(fs.existsSync(directory), true);
+    const files = fs.readdirSync(directory);
+    assert.equal(files.length, 1);
+    const text = fs.readFileSync(path.join(directory, files[0]), 'utf8');
+    const report = JSON.parse(text);
+    assert.deepEqual(report.failures, [
+      { session: 'canary', phase: 'unknown', reason: 'unavailable' },
+    ]);
+    assert.doesNotMatch(text, /private|generation|777|path|pid/);
+  } finally {
+    item.cleanup();
+  }
+});
+
+test('safe control failure retains descriptor phase and cleanup failure adds only bounded retirement metadata', async () => {
+  const item = fixture([]);
+  item.port.control = async () => {
+    throw Object.assign(new Error('private-control'), {
+      diagnostic: {
+        kind: 'unavailable',
+        phase: 'descriptor-duplication',
+        reason: 'denied',
+      },
+    });
+  };
+  let cleanupCalls = 0;
+  item.port.terminate = async () => {
+    cleanupCalls++;
+    throw Object.assign(new Error('private-cleanup'), { code: 'EPERM' });
+  };
+  try {
+    await assert.rejects(startChromiumProcessObserver(item.options, item.port), /unavailable/);
+    assert.equal(cleanupCalls, 1);
+    const directory = path.join(item.root, '.dvt/evidence/chromium-network');
+    assert.equal(fs.existsSync(directory), true);
+    const files = fs.readdirSync(directory);
+    assert.equal(files.length, 1);
+    const text = fs.readFileSync(path.join(directory, files[0]), 'utf8');
+    const report = JSON.parse(text);
+    assert.ok(report.failures.length <= 16);
+    assert.ok(
+      report.failures.some(
+        (failure) => failure.phase === 'descriptor-duplication' && failure.reason === 'denied'
+      )
+    );
+    assert.ok(
+      report.failures.some(
+        (failure) => failure.phase === 'retirement' && failure.reason === 'denied'
+      )
+    );
+    assert.doesNotMatch(text, /private|cause|stack|message|pid|generation/);
+  } finally {
+    item.cleanup();
+  }
+});
+
+test('many safe failures retain a bounded strict list without serializing their exception objects', async () => {
+  const item = fixture([]);
+  const phases = [
+    'bootstrap',
+    'descriptor-duplication',
+    'group-signal',
+    'trace-probe',
+    'trace-disposal',
+    'process-events',
+    'kernel-oom',
+    'signal-generation',
+    'userspace-oom',
+    'observation',
+    'protocol',
+    'retirement',
+    'unknown',
+  ];
+  const reasons = [
+    'denied',
+    'missing',
+    'invalid-or-unsupported',
+    'protocol',
+    'deadline',
+    'unavailable',
+  ];
+  item.port.open = async () => {
+    throw new AggregateError(
+      phases.flatMap((phase) =>
+        reasons.map((reason) =>
+          Object.assign(new Error('private aggregate'), {
+            diagnostic: { kind: 'unavailable', phase, reason },
+            lease: 'private',
+          })
+        )
+      ),
+      'private outer'
+    );
+  };
+  try {
+    await assert.rejects(startChromiumProcessObserver(item.options, item.port));
+    const report = item.report('admission');
+    assert.ok(report.failures.length > 1 && report.failures.length <= 16);
+    for (const failure of report.failures) {
+      assert.deepEqual(Object.keys(failure).sort(), ['phase', 'reason', 'session']);
+      assert.equal(failure.session, 'canary');
+      assert.ok(phases.includes(failure.phase) && reasons.includes(failure.reason));
+    }
+    assert.doesNotMatch(JSON.stringify(report), /private|message|stack|lease|cause/);
+  } finally {
+    item.cleanup();
+  }
 });
 
 test('private generations stay distinct from a reused capture label and actual NetLog publication', async () => {
@@ -252,7 +470,7 @@ test('a self-consistent foreign lease and ACK are denied before capability admis
     );
     assert.equal(item.sessions[0].ended, true);
     assert.equal(item.sessions[0].released, true);
-    assert.equal(fs.readdirSync(item.root).length, 0);
+    assert.equal(item.report('admission').state, 'failed');
   } finally {
     await accepted?.stop();
     item.cleanup();
@@ -505,7 +723,7 @@ test('denied descriptor capability rejects before allocating traces or admitting
     await assert.rejects(startChromiumProcessObserver(item.options, item.port), /unavailable/);
     assert.equal(item.sessions.length, 1);
     assert.ok(actions.every((action) => action.signal === 0));
-    assert.equal(fs.readdirSync(item.root).length, 0);
+    assert.equal(item.report('admission').state, 'failed');
   } finally {
     item.cleanup();
   }
@@ -521,7 +739,7 @@ test('an unprotected foreign trace canary fails native admission before observat
   try {
     await assert.rejects(startChromiumProcessObserver(item.options, item.port), /unavailable/);
     assert.equal(item.sessions.length, 2);
-    assert.equal(fs.readdirSync(item.root).length, 0);
+    assert.equal(item.report('admission').state, 'failed');
   } finally {
     item.cleanup();
   }
@@ -571,7 +789,7 @@ test('a failed leader-exit probe never admits observation and still closes the s
     assert.equal(item.sessions.length, 2);
     assert.equal(item.sessions[0].ended, true);
     assert.equal(item.sessions[0].released, true);
-    assert.equal(fs.readdirSync(item.root).length, 0);
+    assert.equal(item.report('admission').state, 'failed');
   } finally {
     item.cleanup();
   }
