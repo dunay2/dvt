@@ -252,6 +252,290 @@ test('component binding command preserves authority, replaces atomically and rej
       await client.query('rollback');
       await other.end();
     }
+
+    // A review descriptor must have an explicit, atomic route to source admission.
+    const proposedArgs = args.map((value) =>
+      value === 'approved'
+        ? 'review'
+        : value === 'RESP-MODEL|Publish model|Model changes|Model'
+          ? 'RESP-PROPOSED|Publish model|Model changes|Model'
+          : value
+    );
+    await applyArchitectureComponentRecordOperation(parseArgs(proposedArgs), { databaseUrl });
+    const approvalBindings = [binding, { ...binding, responsibilityId: 'RESP-PROPOSED' }];
+    const approval = parseArgs([
+      ...proposedArgs,
+      '--expected-responsibility-status',
+      'proposed',
+      '--responsibility-status',
+      'approved',
+      '--source-bindings',
+      JSON.stringify(approvalBindings),
+      '--expected-bindings-hash',
+      bindingSetHash([binding]),
+    ]);
+    const acceptedApproval = await applyArchitectureComponentRecordOperation(approval, {
+      databaseUrl,
+    });
+    assert.equal(
+      (
+        await client.query(
+          "select status from architecture.component_responsibility where responsibility_id='RESP-PROPOSED'"
+        )
+      ).rows[0].status,
+      'approved'
+    );
+    assert.deepEqual(await readComponentBindings(client, 'SYS-MODEL'), approvalBindings);
+    assert.equal(acceptedApproval.responsibilities[0].status, 'approved');
+    assert.equal(acceptedApproval.audit.payload.expectedResponsibilityStatus, 'proposed');
+    assert.equal(acceptedApproval.audit.payload.responsibilityStatus, 'approved');
+
+    const readPromotionState = async () => {
+      const results = await Promise.all([
+        client.query('select * from architecture.component order by component_id'),
+        client.query(
+          'select * from architecture.component_responsibility order by responsibility_id'
+        ),
+        client.query(
+          'select * from architecture.component_source_responsibility order by component_id, responsibility_id, source_path, qualified_symbol'
+        ),
+        client.query('select * from architecture.design_operations order by operation_id'),
+      ]);
+      return results.map((result) => result.rows);
+    };
+    const afterApproval = await readPromotionState();
+    assert.equal(
+      (await applyArchitectureComponentRecordOperation(approval, { databaseUrl })).idempotent,
+      true
+    );
+    assert.deepEqual(
+      await readPromotionState(),
+      afterApproval,
+      'an exact replay makes no additional writes'
+    );
+    await assert.rejects(
+      applyArchitectureComponentRecordOperation(
+        parseArgs([
+          ...proposedArgs,
+          '--expected-responsibility-status',
+          'approved',
+          '--responsibility-status',
+          'implemented',
+          '--idempotency-key',
+          approval.idempotencyKey,
+        ]),
+        { databaseUrl }
+      ),
+      /idempotency|replay/iu
+    );
+    assert.deepEqual(await readPromotionState(), afterApproval);
+
+    for (const [label, request, error] of [
+      [
+        'stale status',
+        [
+          ...proposedArgs,
+          '--name',
+          'Must roll back',
+          '--expected-responsibility-status',
+          'proposed',
+          '--responsibility-status',
+          'approved',
+          '--idempotency-key',
+          'stale-promotion',
+        ],
+        /ARCH-RESPONSIBILITY-STATUS-CONFLICT/u,
+      ],
+      [
+        'missing responsibility',
+        [
+          ...proposedArgs.map((value) =>
+            value === 'RESP-PROPOSED|Publish model|Model changes|Model'
+              ? 'RESP-MISSING|Publish model|Model changes|Model'
+              : value
+          ),
+          '--expected-responsibility-status',
+          'proposed',
+          '--responsibility-status',
+          'approved',
+        ],
+        /ARCH-RESPONSIBILITY-STATUS-CONFLICT/u,
+      ],
+      [
+        'foreign owner',
+        [
+          ...proposedArgs.map((value) => (value === 'SYS-MODEL' ? 'SYS-OTHER' : value)),
+          '--expected-responsibility-status',
+          'approved',
+          '--responsibility-status',
+          'implemented',
+        ],
+        /ARCH-RESPONSIBILITY-STATUS-CONFLICT/u,
+      ],
+      [
+        'later stale binding digest',
+        [
+          ...proposedArgs,
+          '--name',
+          'Must roll back',
+          '--expected-responsibility-status',
+          'approved',
+          '--responsibility-status',
+          'implemented',
+          '--source-bindings',
+          JSON.stringify(approvalBindings),
+          '--expected-bindings-hash',
+          bindingSetHash([]),
+        ],
+        /Stale/u,
+      ],
+      [
+        'later invalid binding',
+        [
+          ...proposedArgs,
+          '--name',
+          'Must roll back',
+          '--expected-responsibility-status',
+          'approved',
+          '--responsibility-status',
+          'implemented',
+          '--source-bindings',
+          JSON.stringify([{ ...binding, responsibilityId: 'RESP-UNKNOWN' }]),
+          '--expected-bindings-hash',
+          bindingSetHash(approvalBindings),
+        ],
+        /Unknown/u,
+      ],
+    ]) {
+      await assert.rejects(
+        applyArchitectureComponentRecordOperation(parseArgs(request), { databaseUrl }),
+        error
+      );
+      assert.deepEqual(
+        await readPromotionState(),
+        afterApproval,
+        label + ' must roll back every descriptor, status, binding and audit write'
+      );
+    }
+
+    await applyArchitectureComponentRecordOperation(
+      parseArgs([...proposedArgs, '--idempotency-key', 'ordinary-review-after-approval']),
+      { databaseUrl }
+    );
+    assert.equal(
+      (
+        await client.query(
+          "select status from architecture.component_responsibility where responsibility_id='RESP-PROPOSED'"
+        )
+      ).rows[0].status,
+      'approved',
+      'ordinary review registration never downgrades an approved responsibility'
+    );
+
+    await applyArchitectureComponentRecordOperation(
+      parseArgs(
+        proposedArgs.map((value) =>
+          value === 'RESP-PROPOSED|Publish model|Model changes|Model'
+            ? 'RESP-LATER|Publish later|Later changes|Model'
+            : value
+        )
+      ),
+      { databaseUrl }
+    );
+    const beforeMixedStatuses = await readPromotionState();
+    await assert.rejects(
+      applyArchitectureComponentRecordOperation(
+        parseArgs([
+          ...proposedArgs,
+          '--responsibility',
+          'RESP-LATER|Publish later|Later changes|Model',
+          '--expected-responsibility-status',
+          'approved',
+          '--responsibility-status',
+          'implemented',
+        ]),
+        { databaseUrl }
+      ),
+      /ARCH-RESPONSIBILITY-STATUS-CONFLICT/u
+    );
+    assert.deepEqual(
+      await readPromotionState(),
+      beforeMixedStatuses,
+      'a stale second member rolls back the first member promotion too'
+    );
+
+    const implemented = await applyArchitectureComponentRecordOperation(
+      parseArgs([
+        ...proposedArgs,
+        '--expected-responsibility-status',
+        'approved',
+        '--responsibility-status',
+        'implemented',
+      ]),
+      { databaseUrl }
+    );
+    assert.equal(implemented.responsibilities[0].status, 'implemented');
+    assert.equal(
+      (
+        await client.query(
+          "select status from architecture.component_responsibility where responsibility_id='RESP-PROPOSED'"
+        )
+      ).rows[0].status,
+      'implemented'
+    );
+    assert.deepEqual(
+      await readComponentBindings(client, 'SYS-MODEL'),
+      approvalBindings,
+      'omitting the binding replacement preserves current bindings'
+    );
+
+    const raceArgs = proposedArgs.map((value) =>
+      value === 'RESP-PROPOSED|Publish model|Model changes|Model'
+        ? 'RESP-RACE|Publish once|Concurrent changes|Model'
+        : value
+    );
+    await applyArchitectureComponentRecordOperation(parseArgs(raceArgs), { databaseUrl });
+    const beforeRace = await readPromotionState();
+    const races = await Promise.allSettled(
+      ['one', 'two'].map((name) =>
+        applyArchitectureComponentRecordOperation(
+          parseArgs([
+            ...raceArgs,
+            '--name',
+            'Winner ' + name,
+            '--expected-responsibility-status',
+            'proposed',
+            '--responsibility-status',
+            'approved',
+            '--idempotency-key',
+            'promotion-race-' + name,
+          ]),
+          { databaseUrl }
+        )
+      )
+    );
+    assert.equal(races.filter((result) => result.status === 'fulfilled').length, 1);
+    assert.match(
+      races.find((result) => result.status === 'rejected').reason.message,
+      /ARCH-RESPONSIBILITY-STATUS-CONFLICT/u
+    );
+    const afterRace = await readPromotionState();
+    assert.equal(
+      afterRace[3].length,
+      beforeRace[3].length + 1,
+      'only the accepted promotion is audited'
+    );
+    assert.equal(
+      afterRace[0][0].name,
+      races.find((result) => result.status === 'fulfilled').value.component.name
+    );
+    assert.deepEqual(afterRace[2], beforeRace[2]);
+    assert.deepEqual(
+      afterRace[1],
+      beforeRace[1].map((row) =>
+        row.responsibility_id === 'RESP-RACE' ? { ...row, status: 'approved' } : row
+      )
+    );
   } finally {
     if (client) await client.end();
     await admin.query('drop database if exists "' + name + '"');
