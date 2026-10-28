@@ -1141,7 +1141,9 @@ describe('Canvas workbench screen composition', () => {
     });
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');
+    cy.get('.react-flow__node[data-id="model_orders"]')
+      .find('[data-slot="canvas-node-shell"]')
+      .should('be.focused');
 
     openWorkbenchProperties('orphan_metrics');
     cy.get('[data-slot="canvas-node-workbench-panel"] h2')
@@ -1149,13 +1151,15 @@ describe('Canvas workbench screen composition', () => {
       .and('have.text', 'orphan_metrics');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('@orphanNode').should('be.focused');
+    cy.get('@orphanNode').find('[data-slot="canvas-node-shell"]').should('be.focused');
 
     cy.get('.react-flow__controls-fitview').should('be.visible').click();
     openWorkbenchProperties('src_orders');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    cy.get('.react-flow__node[data-id="src_orders"]').should('be.focused');
+    cy.get('.react-flow__node[data-id="src_orders"]')
+      .find('[data-slot="canvas-node-shell"]')
+      .should('be.focused');
 
     for (const [path, sql] of [
       [MODEL_PATH, MODEL_SQL],
