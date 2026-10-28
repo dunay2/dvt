@@ -6,6 +6,7 @@ import { useWorkspaceFileContentQuery } from '../../queries/workspaceQueries';
 import { useWorkspaceFileContentCommandPort } from '../../services/AppServicesContext';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { cn } from '../../components/ui/utils';
+import { routeWorkbenchPanelHeaderClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { CodePreviewEmptyStateView, CodePreviewErrorStateView } from './CodeStateViews';
 import { CodeWorkingTreeNavigationGuard } from './CodeWorkingTreeNavigationGuard';
 import { CodeWorkingTreeStatus } from './CodeWorkingTreeStatus';
@@ -192,8 +193,8 @@ export const WorkspaceFileCodeEditor = forwardRef<
         blocked={workingTreeSync.navigationBlocked}
         flush={workingTreeSync.flush}
       />
-      <div className="flex min-h-8 items-center gap-2 border-b border-(--border-subtle) px-2">
-        <code className="min-w-0 flex-1 truncate text-xs text-(--text-secondary)">{path}</code>
+      <div className={routeWorkbenchPanelHeaderClassName}>
+        <code className="min-w-0 flex-1 truncate text-(--text-secondary)">{path}</code>
         {headerActions}
       </div>
       {posture.kind === 'graph_owned_read_only' ? null : (
@@ -210,7 +211,9 @@ export const WorkspaceFileCodeEditor = forwardRef<
           }}
         />
       )}
-      <div className={cn('flex-1 p-1', fillAvailableSpace ? 'min-h-0' : 'min-h-80')}>{surface}</div>
+      <div className={cn('flex-1 p-1', fillAvailableSpace ? 'flex min-h-0 flex-col' : 'min-h-80')}>
+        {surface}
+      </div>
     </div>
   );
 });

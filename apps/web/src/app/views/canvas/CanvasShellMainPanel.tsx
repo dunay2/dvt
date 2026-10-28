@@ -245,7 +245,7 @@ function CanvasShellMainSurface({
           <RouteWorkbenchFrame
             scroll={false}
             presentationMode="embedded"
-            bodyClassName="flex min-h-0 flex-1"
+            bodyClassName="flex"
             slots={{ leftPanel: projectFiles.tree, primarySurface: projectFiles.panel }}
           />
         )

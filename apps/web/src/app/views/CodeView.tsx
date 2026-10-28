@@ -13,10 +13,12 @@ import {
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
+import { NodePropertyFacts } from '../components/inspector/NodePropertyFacts';
 import { Button } from '../components/ui/button';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
+  routeWorkbenchPanelHeaderClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
 import {
   useWorkspaceFileContentQuery,
@@ -176,6 +178,13 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         selectedPath: resolvedPath,
       })
     : null;
+  const filePropertiesMessage = fileContentQuery.isPending
+    ? { text: copy.previewLoadingMessage, error: false }
+    : filePreviewErrorPresentation
+      ? { text: filePreviewErrorPresentation.title, error: true }
+      : selectedFile == null
+        ? { text: copy.previewEmptyMessage, error: false }
+        : null;
   const persistPendingFileSelection = useCallback(async (): Promise<void> => {
     const pendingSelection = pendingFileSelectionRef.current;
     if (!pendingSelection) {
@@ -260,7 +269,8 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   return (
     <RouteWorkbenchFrame
       scroll={false}
-      bodyClassName="flex min-h-0 flex-1"
+      bodyClassName="flex"
+      bodyContainerClassName="flex"
       presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
       header={
         !isProjectWorkspace && publishRouteBootstrap ? (
@@ -295,44 +305,36 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
               aria-label={copy.filePropertiesTitle}
               className="flex h-full flex-col border-l border-(--border-default)"
             >
-              <h2 className="flex min-h-8 shrink-0 items-center border-b border-(--border-subtle) px-2 text-xs font-semibold">
-                {copy.filePropertiesTitle}
-              </h2>
+              <h2 className={routeWorkbenchPanelHeaderClassName}>{copy.filePropertiesTitle}</h2>
               <div className="min-h-0 flex-1 overflow-auto p-3">
-                {fileContentQuery.isPending ? (
-                  <p className="text-xs text-(--text-muted)">{copy.previewLoadingMessage}</p>
-                ) : filePreviewErrorPresentation ? (
-                  <p role="alert" className="text-xs text-(--text-muted)">
-                    {filePreviewErrorPresentation.title}
+                {filePropertiesMessage != null ? (
+                  <p
+                    role={filePropertiesMessage.error ? 'alert' : undefined}
+                    className="text-xs text-(--text-muted)"
+                  >
+                    {filePropertiesMessage.text}
                   </p>
-                ) : selectedFile == null ? (
-                  <p className="text-xs text-(--text-muted)">{copy.previewEmptyMessage}</p>
-                ) : (
-                  <dl className="space-y-3 text-xs">
-                    <div>
-                      <dt className="text-(--text-muted)">{copy.name}</dt>
-                      <dd className="break-words">{selectedFile.name}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-(--text-muted)">{copy.path}</dt>
-                      <dd className="break-words">{selectedFile.path}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-(--text-muted)">{copy.language}</dt>
-                      <dd>{selectedFile.language}</dd>
-                    </div>
-                    {loadedModifiedAt == null ? null : (
-                      <div>
-                        <dt className="text-(--text-muted)">{copy.loadedVersionModified}</dt>
-                        <dd>
-                          <time dateTime={selectedFile.lastModified}>
-                            {loadedModifiedAt.toLocaleString(applicationLanguage)}
-                          </time>
-                        </dd>
-                      </div>
-                    )}
-                  </dl>
-                )}
+                ) : selectedFile != null ? (
+                  <NodePropertyFacts
+                    rows={[
+                      { label: copy.name, value: selectedFile.name },
+                      { label: copy.path, value: selectedFile.path },
+                      { label: copy.language, value: selectedFile.language },
+                      ...(loadedModifiedAt == null
+                        ? []
+                        : [
+                            {
+                              label: copy.loadedVersionModified,
+                              value: (
+                                <time dateTime={selectedFile.lastModified}>
+                                  {loadedModifiedAt.toLocaleString(applicationLanguage)}
+                                </time>
+                              ),
+                            },
+                          ]),
+                    ]}
+                  />
+                ) : null}
               </div>
             </section>
           ) : undefined
@@ -346,34 +348,32 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
           />
         ) : undefined,
         primarySurface: (
-          <div className="min-w-0 flex h-full flex-1 p-0">
-            <WorkspaceFileCodeEditor
-              ref={workspaceFileEditorRef}
-              fillAvailableSpace
-              headerActions={
-                isProjectWorkspace ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-6"
-                    aria-label={copy.filePropertiesTitle}
-                    title={copy.filePropertiesTitle}
-                    aria-expanded={propertiesOpen}
-                    aria-controls={propertiesId}
-                    onClick={() => setPropertiesOpen((current) => !current)}
-                  >
-                    <PanelRight aria-hidden="true" />
-                  </Button>
-                ) : undefined
-              }
-              authority={fileAuthority}
-              graphOwnedPaths={graphOwnedPaths}
-              path={resolvedPath}
-              reconcilePersistedFile={reconcilePersistedFile}
-              onPersistenceRecovered={persistPendingFileSelection}
-            />
-          </div>
+          <WorkspaceFileCodeEditor
+            ref={workspaceFileEditorRef}
+            fillAvailableSpace
+            headerActions={
+              isProjectWorkspace ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-6"
+                  aria-label={copy.filePropertiesTitle}
+                  title={copy.filePropertiesTitle}
+                  aria-expanded={propertiesOpen}
+                  aria-controls={propertiesId}
+                  onClick={() => setPropertiesOpen((current) => !current)}
+                >
+                  <PanelRight aria-hidden="true" />
+                </Button>
+              ) : undefined
+            }
+            authority={fileAuthority}
+            graphOwnedPaths={graphOwnedPaths}
+            path={resolvedPath}
+            reconcilePersistedFile={reconcilePersistedFile}
+            onPersistenceRecovered={persistPendingFileSelection}
+          />
         ),
       }}
     />

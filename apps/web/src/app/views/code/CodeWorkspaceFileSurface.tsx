@@ -26,7 +26,7 @@ export function CodeWorkspaceFileSurface({
   fillAvailableSpace = false,
 }: CodeWorkspaceFileSurfaceProps) {
   const containerClassName = fillAvailableSpace
-    ? cn(monacoVisualClasses.surface, 'h-full min-h-0 rounded-none border-0')
+    ? cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill, 'rounded-none border-0')
     : undefined;
   if (posture.kind !== 'editable') {
     return (
