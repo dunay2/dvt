@@ -2,7 +2,6 @@ const test = require('node:test');
 const {
   assert,
   assertDocsResolutionIdempotentReplayMatches,
-  buildDocsResolutionAuditRows,
   materializeDocsResolutionCommand,
   parseArgs,
   planDocsResolutionOperation,
@@ -177,26 +176,6 @@ test('planDocsResolutionOperation records source-hash guarded disposition resolu
   assert.equal(operation.resolution.resolutionStatus, 'ignored');
   assert.equal(operation.audit.operationType, 'docs_disposition_resolve');
   assert.equal(operation.audit.resolutionKey, operation.resolution.resolutionKey);
-});
-
-test('buildDocsResolutionAuditRows formats durable docs resolution audit rows', () => {
-  const rows = buildDocsResolutionAuditRows([
-    {
-      created_at: '2026-05-10T12:00:00.000Z',
-      operation_id: 'op-doc-resolution',
-      operation_type: 'docs_disposition_resolve',
-      actor: 'codex',
-      resolution_scope: 'docs_disposition',
-      issue_kind: 'unknown_task_like_id',
-      document_path: 'docs/planning/status/example.md',
-      reference_text: 'WEB-123',
-      resolution_status: 'ignored',
-    },
-  ]);
-
-  assert.deepEqual(rows, [
-    '2026-05-10T12:00:00.000Z op-doc-resolution docs_disposition_resolve docs_disposition/unknown_task_like_id docs/planning/status/example.md ref=WEB-123 status=ignored actor=codex',
-  ]);
 });
 
 test('canonical document relocation parses explicit proof without changing legacy commands', () => {

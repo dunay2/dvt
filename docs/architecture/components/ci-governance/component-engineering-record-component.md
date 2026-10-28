@@ -737,3 +737,73 @@ original complete snapshot in the native audit; do not describe the changed row
 as unchanged or retry an uncertain committed result. Acceptance requires real
 isolated PostgreSQL/Git preservation, stale-CAS, concurrency, replay and rollback
 proof; recording this contract does not claim those executions passed.
+
+## Planning DB operational composition
+
+`scripts/planning-db-operate.cjs` is the existing process entry and direct CJS
+application API. It delegates grammar/help/output to `operate/cli.cjs` and imports
+the existing named application operations from concern modules. Only that entry
+has a `require.main` guard. Family modules must not start a CLI, open a connection
+at import time or introduce a second command dispatcher.
+
+The extraction boundary is the reason to change, not a number of lines. The
+operational families are documentary resolution, Fowler facts, database surfaces,
+feature mechanization, governance component definitions/transactions, design
+authority/lifecycle, component topology, contracts/ports/storage I/O, evidence
+records/origins and fitness scans. Command grammar and shared value/envelope
+projection have their own responsibilities. Exact component and responsibility
+identities live in Planning DB; a containing ROOT path is not proof of cohesion.
+
+```mermaid
+flowchart TD
+  Entry[Same process entry and direct public API] --> CLI[Grammar and output]
+  Entry --> Operations[Existing named operation families]
+  CLI --> Operations
+  Operations --> Authority[Exact design and scope policy]
+  Operations --> Audit[Scoped replay and audit]
+  Audit --> Payload[Canonical payload and idempotency]
+  Operations --> Payload
+  Payload --> Values[Shared command values]
+  Values --> Policy[Single existing mechanization policy instance]
+  Operations --> Origin[Git and GitHub evidence gateway]
+  Operations --> Schema[Existing schema databaseUrl]
+  Operations --> PG[Same native transaction and writers]
+```
+
+Each moved function retains its command-kind policy, source guards, transaction
+and statement ordering, replay-first checks, CAS and rollback semantics. Pure
+governance definition planning remains separate from its database adapters. The
+payload module owns the docs key projection together with the canonical envelope;
+it must not import an operation family. The module dependency graph is acyclic.
+
+Consumers share the existing `createFeatureMechanizationPolicy({canonicalJson})`
+instance from command-values and import its returned method references directly.
+They must not create parallel policy instances or copy its rules. The local
+database URL wrapper is unnecessary: use the identical existing schema export,
+preserving environment/default precedence. Public entry exports are direct
+references to the actual implementations, without forwarding functions.
+
+Relocation must preserve location-sensitive behavior. Relative requires resolve
+to the same dependencies; Git helpers retain their existing scripts-directory
+fallback while documentary source proof retains the repository-root fallback.
+Injected roots keep precedence. The markdown `tsImport` path and its extracted
+module URL are one resolution pair. Bare packages, builtins and caller `cwd`
+policy are unchanged.
+
+Private functions and values participate in the real public command intents they
+implement. One helper may collaborate on several existing commands; it does not
+become a command or grant authority. Shared parser or payload branches require
+explicit participation review rather than propagation from the root dispatcher.
+Prospective feature declarations may name the planned same-name destinations
+before code exists, without asserting source presence or implementation. Moving
+CURRENT implementation references and recording actual responsibility bindings
+requires canonical SourceFacts for the real destination declarations. Actual SQL
+writers, authorization and command names remain the
+existing owners; source organization does not create a new rail or framework.
+
+Semantic CLI/operator tests and isolated PostgreSQL tests establish behavior.
+A one-off complete source-body, lexical dependency, direct-export and import
+resolution comparison establishes preservation for the actual extraction diff.
+Do not maintain another test copy of module names, export counts or source line
+limits. Native history and imported raw manifests remain historical; update
+eligible current implementation references through their existing guarded rails.
