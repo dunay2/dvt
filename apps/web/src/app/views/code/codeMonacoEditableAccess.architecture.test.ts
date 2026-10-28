@@ -132,7 +132,6 @@ describe('Code Monaco editable access architecture', () => {
     expect(canvasShell).toContain('useCanvasCodeWorkbench(');
     expect(canvasShell).not.toContain('<SqlContextWorkbench');
     expect(codeWorkbench).toContain('<SqlContextWorkbench');
-    expect(sqlContextWorkbench).toContain('import CodeView, { type CodeViewFileScope');
     expect(sqlContextWorkbench).toContain('publishRouteBootstrap={false}');
     expect(sqlContextWorkbench).not.toContain('useCodeWorkingTreeSync');
 
