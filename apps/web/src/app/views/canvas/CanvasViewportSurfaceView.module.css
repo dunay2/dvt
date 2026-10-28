@@ -23,7 +23,15 @@
 
 .flow {
   background-color: var(--canvas-surface);
+  /* Pilot: subtle depth without overriding governed palette or grid tokens. */
+  background-image: radial-gradient(circle at 50% 42%, rgb(45 105 180 / 8%), transparent 68%);
 }
+
+/* Restrict the pilot to the dark palette; keep light/high-contrast surfaces intact. */
+.viewport[data-canvas-palette='dark'] .flow {
+  background-image: radial-gradient(circle at 50% 42%, rgb(45 105 180 / 12%), transparent 68%);
+}
+
 
 .minimap {
   border-radius: var(--radius-lg);
