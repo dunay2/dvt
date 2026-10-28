@@ -655,3 +655,85 @@ engine pilot.
 | Engine pilot   | Engine root owns all package files directly                             | Split `SYS-RUNTIME-ENGINE-CORE` into child components and keep plan-ref cross-domain ownership |
 
 > Acceptance scope status: Review. Owner: Engineering / CI Governance / Architecture.
+
+## Lossless implementation-reference relocation
+
+`RecordFeatureMechanizationRail` uses its existing catalog-reconciliation mode
+to relocate implementation references after an admitted extraction. Imported
+rows can contain different DDD owners, CQ arrays and evidence on each symbol;
+the ordinary record builder cannot rebuild them as one homogeneous symbol set.
+
+```mermaid
+flowchart LR
+  Imported[Heterogeneous imported symbol records] --> Builder[Ordinary record builder]
+  Builder --> Rebuild[Row-wide owner and evidence reconstruction]
+  Rebuild --> Gap[Lossless relocation not established]
+  Reconcile[Existing catalog reconciliation] --> Documentary[Source and documentary corrections]
+```
+
+The existing request `{designId, actor, idempotencyKey, changes}` retains each
+change's `origin`, `railId` and full physical `expectedRowSha256`. The exclusive
+`implementationReferences` member accepts `origin: "imported"` only and cannot
+be combined with another patch kind. It contains only `sourceCommit`,
+`targetCommit` and a nonempty `selectors` array. Both commits are complete
+40-hex identities. Each selector contains exactly `field`, `index`, `from`
+and `to`; both endpoints contain only repository `path` and qualified `symbol`.
+
+`field` is one of `implementation_refs`, `symbol_refs` or
+`raw_manifest.symbols`; `index` is a nonnegative integer into that exact array.
+A string must equal the complete `from.path#from.symbol`. An object must match
+its exact `path` and `name`; raw-manifest symbols must be objects. The symbol
+name is preserved and the path must change. Reject absent/stale selections,
+unsupported shapes, duplicate/conflicting selectors, no-ops and omitted known
+mirrors. Duplicate occurrences need separate selectors; array order and length
+and all other object properties remain exact. This is not an arbitrary JSON
+patch, imported-to-local promotion or symbol-authority reassignment.
+
+The four imported rows cover operation help, query help's shared raw-symbol
+mirror, integrity RecordRail and integrity Revise. Their different per-symbol
+owners, CQ arrays, tests and guards remain intact. Local rows continue through
+the existing record API with their expected revisions; retained logical CLI
+citations are not automatically expanded into relocation requests.
+
+The source commit must be an ancestor of the target. Read actual tracked regular
+Git blobs and resolve both exact declarations through canonical SourceFacts;
+require compatible kinds and real implemented/linkable functions. Constants
+remain constants. The old CLI file may remain. Target commit must equal HEAD,
+and target files must be tracked regular files matching their committed working
+and index bytes; reject aliases, stubs, dirty/untracked/symlink targets and
+unavailable proof. Recheck that target proof before commit. Equal names do not
+prove behavioral equivalence; the admitted move map and regressions establish it.
+
+`catalog-implementation-reference-relocation.cjs` owns the closed selector policy,
+pure reference projection and bounded SQL leaf expressions. The existing
+`catalog-reconciliation.cjs` owns request parsing and dispatch; the existing
+`catalog-reconciliation-write.cjs` owns Git/SourceFacts proof, transaction,
+fixed table locks, full-row comparison, update and audit. These responsibilities
+do not create another CQ, writer, table, DDL path or monolithic CLI branch.
+
+```mermaid
+flowchart LR
+  Command[Existing record rail] --> Input[Exclusive imported selectors]
+  Input --> Policy[Pure relocation policy]
+  Policy --> Writer[Existing reconciliation writer]
+  Git[Git blobs and canonical SourceFacts] --> Writer
+  Writer --> Locked[Fixed locks then full physical row hash]
+  Locked --> Leaves[Server-side JSONB leaf replacement]
+  Leaves --> Receipt[Existing batch audit and commit]
+```
+
+After the existing fixed table locks, compare the full physical row SHA before
+the existing `rail_id` update and require one affected row. That locked comparison
+is the concurrency guard; it is not a hash predicate in the UPDATE. Construct
+the after-row from server JSONB with only selected leaf changes: opaque fields,
+unknown nested extensions and high-precision numbers must not round-trip through
+JavaScript. Preserve documentary source hashes, status, revisions and winning
+canonical IDs, and compare the full stored row to that exact projected before-row.
+
+An exact completed-request replay returns the existing batch receipt without
+another mutation; changed proof, selectors or actor under the same key rejects.
+Any row, source-proof or audit failure rolls back the whole batch. Preserve the
+original complete snapshot in the native audit; do not describe the changed row
+as unchanged or retry an uncertain committed result. Acceptance requires real
+isolated PostgreSQL/Git preservation, stale-CAS, concurrency, replay and rollback
+proof; recording this contract does not claim those executions passed.

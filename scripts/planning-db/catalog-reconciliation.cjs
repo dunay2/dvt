@@ -1,6 +1,10 @@
 /** Owned concern: validate and plan lossless catalog provenance/reference patches. */
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const {
+  validateImplementationReferenceRelocation,
+  projectImplementationReferenceRelocation,
+} = require('./catalog-implementation-reference-relocation.cjs');
+const {
   validateCurrentDocument,
   projectCurrentDocument,
 } = require('./catalog-current-document.cjs');
@@ -70,6 +74,7 @@ function parseCatalogReconciliation(value) {
         'sourceContent',
         'railRetirement',
         'currentDocument',
+        'implementationReferences',
       ],
       'change'
     );
@@ -87,11 +92,32 @@ function parseCatalogReconciliation(value) {
       !change.evidenceRetirement &&
       !change.sourceContent &&
       !change.railRetirement &&
-      !change.currentDocument
+      !change.currentDocument &&
+      !Object.hasOwn(change, 'implementationReferences')
     )
       throw new Error(
         'CATALOG-REQUEST: Explicit source, reference, evidence retirement, rail retirement or current content patch required.'
       );
+    if (Object.hasOwn(change, 'implementationReferences')) {
+      if (
+        change.origin !== 'imported' ||
+        [
+          'source',
+          'reference',
+          'evidenceRetirement',
+          'sourceContent',
+          'railRetirement',
+          'currentDocument',
+        ].some((key) => Object.hasOwn(change, key))
+      )
+        throw new Error('CATALOG-IMPLEMENTATION: Requires an exclusive imported-row patch.');
+      object(
+        change.implementationReferences,
+        ['sourceCommit', 'targetCommit', 'selectors'],
+        'implementation references'
+      );
+      validateImplementationReferenceRelocation(change.implementationReferences);
+    }
     if (Object.hasOwn(change, 'currentDocument')) {
       if (
         ['source', 'reference', 'evidenceRetirement', 'sourceContent', 'railRetirement'].some(
@@ -173,6 +199,13 @@ function planCatalogReconciliation(request, storedRows, sourceProofs) {
         projectFeatureMechanizationEvidenceRetirement(before, change.evidenceRetirement)
       );
     let proof = null;
+    if (change.implementationReferences) {
+      proof = sourceProofs.get(`implementation:${change.railId}`);
+      Object.assign(
+        after,
+        projectImplementationReferenceRelocation(before, change.implementationReferences, proof)
+      );
+    }
     if (change.currentDocument) {
       const document = change.currentDocument;
       proof = sourceProofs.get(`document:${document.commit}:${document.path}`);

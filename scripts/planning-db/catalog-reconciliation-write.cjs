@@ -1,9 +1,12 @@
 /** Owned concern: atomically reconcile catalog metadata with Git proof and audited CAS. */
 const path = require('node:path');
+const fs = require('node:fs');
 const { execFileSync } = require('node:child_process');
+const ts = require('typescript');
 const { Client } = require('pg');
 const { randomUuidV4, sha256Hex } = require('@dvt/crypto');
 const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
+const { readSourceCodeFacts } = require('../lib/source-code-facts.cjs');
 const { defaultPgUrl } = require('../planning-db-run.cjs');
 const { readRailReferenceAuthority } = require('./command-query-rail-authority.cjs');
 const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
@@ -15,6 +18,10 @@ const {
   buildCurrentDocumentSql,
   historicalDocumentTarget,
 } = require('./catalog-current-document.cjs');
+const {
+  validateImplementationReferenceRelocation,
+  buildImplementationReferenceRelocationSql,
+} = require('./catalog-implementation-reference-relocation.cjs');
 const {
   catalogRowHash,
   parseCatalogReconciliation,
@@ -98,6 +105,125 @@ function verifyCurrentSourceContent(source, expectedPath, options = {}) {
     path: current.path,
     blob: current.blobSha,
     contentSha256: current.contentHash,
+  };
+}
+
+function verifyImplementationReferenceRelocationSources(relocation, options = {}) {
+  validateImplementationReferenceRelocation(relocation);
+  const repoRoot = options.repoRoot || path.resolve(__dirname, '..', '..');
+  const declarations = [];
+  const proven = new Set();
+  for (const selector of relocation.selectors) {
+    const identity = JSON.stringify([selector.from, selector.to]);
+    if (proven.has(identity)) continue;
+    const resolved = [];
+    for (const [index, endpoint] of [selector.from, selector.to].entries()) {
+      const commit = index === 0 ? relocation.sourceCommit : relocation.targetCommit;
+      const source = { commit, path: endpoint.path };
+      const proof =
+        index === 0
+          ? verifyHistoricalSource(source, endpoint.path, { ...options, requireAbsent: false })
+          : verifyCurrentSourceContent(source, endpoint.path, options);
+      const bytes = execFileSync('git', ['cat-file', 'blob', proof.blob], {
+        cwd: repoRoot,
+        env: createGitRepositoryEnvironment(),
+        encoding: null,
+        stdio: ['ignore', 'pipe', 'pipe'],
+        maxBuffer: 16 * 1024 * 1024,
+      });
+      if (index === 1) {
+        const staged = execFileSync(
+          'git',
+          ['--literal-pathspecs', 'ls-files', '--stage', '-z', '--', endpoint.path],
+          {
+            cwd: repoRoot,
+            env: createGitRepositoryEnvironment(),
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+          }
+        );
+        if (
+          !new RegExp(`^100(?:644|755) ${proof.blob} 0\\t`, 'u').test(staged) ||
+          staged.split('\0').length !== 2 ||
+          !fs.readFileSync(path.resolve(repoRoot, endpoint.path)).equals(bytes)
+        )
+          throw new Error(
+            'CATALOG-IMPLEMENTATION-SOURCE: Target index and working bytes must match the committed blob.'
+          );
+      }
+      const facts = readSourceCodeFacts({ path: endpoint.path, content: bytes.toString('utf8') });
+      const matches = facts.declarations.filter((fact) => fact.qualifiedName === endpoint.symbol);
+      if (matches.length !== 1 || !matches[0].linkable || matches[0].kind === 'alias')
+        throw new Error(
+          'CATALOG-IMPLEMENTATION-DECLARATION: One actual linkable declaration required, not an export alias.'
+        );
+      const fact = matches[0];
+      if (['function', 'arrow_function', 'method', 'class'].includes(fact.kind)) {
+        if (!fact.implemented)
+          throw new Error('CATALOG-IMPLEMENTATION-STUB: A real implementation is required.');
+        if (fact.body) {
+          const meaningful = ts.isBlock(fact.body)
+            ? fact.body.statements.filter(
+                (statement) =>
+                  !ts.isEmptyStatement(statement) &&
+                  !(ts.isExpressionStatement(statement) && ts.isStringLiteral(statement.expression))
+              )
+            : [fact.body];
+          if (
+            !meaningful.length ||
+            (meaningful.length === 1 &&
+              (/^(?:return\s*(?:undefined|void\s+0)?\s*;?|undefined|void\s+0)$/u.test(
+                meaningful[0].getText(fact.source).trim()
+              ) ||
+                /^(?:throw\s+new\s+Error\s*\(\s*['"](?:not implemented|todo|stub)[^'"]*['"]\s*\)\s*;?)$/iu.test(
+                  meaningful[0].getText(fact.source).trim()
+                )))
+          )
+            throw new Error(
+              'CATALOG-IMPLEMENTATION-STUB: Empty or placeholder function is not a relocation target.'
+            );
+        }
+      } else if (fact.kind === 'variable' && fact.node) {
+        if (
+          !fact.node.initializer ||
+          ts.isIdentifier(fact.node.initializer) ||
+          ts.isPropertyAccessExpression(fact.node.initializer) ||
+          ts.isElementAccessExpression(fact.node.initializer)
+        )
+          throw new Error(
+            'CATALOG-IMPLEMENTATION-DECLARATION: A constant must remain an initialized declaration, not an alias.'
+          );
+      }
+      resolved.push({
+        kind: fact.kind,
+        blob: proof.blob,
+        contentSha256: sha256Hex(bytes),
+        head: proof.head,
+      });
+    }
+    if (
+      resolved[0].kind !== resolved[1].kind ||
+      resolved.some((proof) => proof.head !== relocation.targetCommit)
+    )
+      throw new Error(
+        'CATALOG-IMPLEMENTATION-PROOF: Compatible declaration kinds and exact target HEAD required.'
+      );
+    declarations.push({
+      from: selector.from,
+      to: selector.to,
+      kind: resolved[0].kind,
+      sourceBlob: resolved[0].blob,
+      targetBlob: resolved[1].blob,
+      sourceContentSha256: resolved[0].contentSha256,
+      targetContentSha256: resolved[1].contentSha256,
+    });
+    proven.add(identity);
+  }
+  return {
+    sourceCommit: relocation.sourceCommit,
+    targetCommit: relocation.targetCommit,
+    head: relocation.targetCommit,
+    declarations,
   };
 }
 
@@ -223,6 +349,11 @@ async function applyCatalogReconciliation(input, options = {}) {
       if (snapshot.snapshot_hash !== change.expectedRowSha256)
         throw new Error(`CATALOG-STALE: ${change.railId}.`);
       const before = snapshot.row;
+      if (change.implementationReferences)
+        sourceProofs.set(
+          `implementation:${change.railId}`,
+          verifyImplementationReferenceRelocationSources(change.implementationReferences, options)
+        );
       if (change.currentDocument) {
         const document = change.currentDocument;
         const key = `document:${document.commit}:${document.path}`;
@@ -298,6 +429,18 @@ async function applyCatalogReconciliation(input, options = {}) {
       const preserved = [];
       const changedColumns = [];
       const beforeSnapshot = `${bind(entry.beforeText)}::jsonb`;
+      const implementationReferences = request.changes[index].implementationReferences;
+      if (implementationReferences) {
+        const columns = buildImplementationReferenceRelocationSql(implementationReferences, {
+          bind,
+          beforeSnapshot,
+        });
+        for (const [column, expression] of Object.entries(columns)) {
+          assignments.push(`${column} = ${expression}`);
+          preserved.push(`${column} = (${expression})`);
+          changedColumns.push(column);
+        }
+      }
       const retirement = request.changes[index].evidenceRetirement;
       if (retirement) {
         const columns = buildFeatureMechanizationEvidenceRetirementSql(retirement, {
@@ -453,6 +596,17 @@ async function applyCatalogReconciliation(input, options = {}) {
       );
     }
     if (sourceProofs.size) {
+      for (const change of request.changes) {
+        if (
+          change.implementationReferences &&
+          catalogRowHash(
+            verifyImplementationReferenceRelocationSources(change.implementationReferences, options)
+          ) !== catalogRowHash(sourceProofs.get(`implementation:${change.railId}`))
+        )
+          throw new Error(
+            'CATALOG-IMPLEMENTATION-PROOF: Target proof changed during reconciliation.'
+          );
+      }
       const head = execFileSync('git', ['rev-parse', '--verify', 'HEAD^{commit}'], {
         cwd: options.repoRoot || path.resolve(__dirname, '..', '..'),
         env: createGitRepositoryEnvironment(),
@@ -481,4 +635,5 @@ module.exports = {
   verifyHistoricalSource,
   verifyEvidenceRetirementHistory,
   verifyCurrentSourceContent,
+  verifyImplementationReferenceRelocationSources,
 };
