@@ -22,10 +22,6 @@ import type {
   CanvasShellPanels,
 } from './canvasShell.types';
 
-function resolveCanvasShellMainPanelDefaultSize(): number {
-  return 100;
-}
-
 type CanvasShellMainPanelProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -224,25 +220,6 @@ function CanvasShellMainSurface({
   );
 }
 
-function CanvasShellNodeWorkbenchOverlay({
-  layout,
-  panels,
-  chromeCommands,
-  onOpenModelEditor,
-}: Pick<
-  CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'chromeCommands' | 'onOpenModelEditor'
->): JSX.Element | null {
-  return (
-    <CanvasNodeWorkbenchOverlay
-      layout={layout}
-      panels={panels}
-      onHide={chromeCommands.onHideInspector}
-      {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
-    />
-  );
-}
-
 export function CanvasShellMainPanel({
   layout,
   panels,
@@ -264,7 +241,7 @@ export function CanvasShellMainPanel({
     (layout.centerSurface == null || layout.centerSurfaceVisible === false);
 
   return (
-    <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
+    <CanvasShellMainPanelFrame defaultSize={100}>
       <CanvasShellMenuContributionRegistrars
         panels={panels}
         chromeState={chromeState}
@@ -286,11 +263,11 @@ export function CanvasShellMainPanel({
         onOpenCanvasSettings={onOpenCanvasSettings}
         contextMenuPresenter={contextMenuPresenter}
         inspector={
-          <CanvasShellNodeWorkbenchOverlay
+          <CanvasNodeWorkbenchOverlay
             layout={layout}
             panels={panels}
-            chromeCommands={chromeCommands}
-            onOpenModelEditor={onOpenModelEditor}
+            onHide={chromeCommands.onHideInspector}
+            {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
           />
         }
       />

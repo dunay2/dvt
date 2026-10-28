@@ -85,7 +85,13 @@ catalog exposed to the `Insert` surface. It must be derived from the active
 
 ## Contract rationale
 
-The hard cut replaces an anemic prop bag with grouped semantic ownership:
+Compose existing presentation owners directly. Forwarding their props or
+returning a fixed size alone does not justify another private component or
+resolver. Keep seams with their own state, policy or lifecycle; pass static
+configuration to the existing Frame. Architecture tests guard ownership and
+delegation, not the existence of props-only wrappers or constant resolvers.
+
+The shell groups its inputs by responsibility:
 
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable MD013 MD060 -->
