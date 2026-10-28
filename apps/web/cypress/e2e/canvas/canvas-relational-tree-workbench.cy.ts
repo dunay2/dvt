@@ -382,6 +382,8 @@ describe('Workbench navigation', () => {
       ).to.have.length(0);
     });
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    // Bring the card back into view after deliberately resizing the viewport.
+    cy.get('.react-flow__controls-fitview').should('be.visible').click();
     openWorkbenchProperties('join-transform');
     cy.get('[data-slot="canvas-node-workbench-tab-general"]').should(
       'have.attr',
