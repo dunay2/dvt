@@ -10,47 +10,120 @@ describe('Workbench navigation', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
   });
-  it('opens a fixed source inspector on click without replacing the Canvas or requesting rows', () => {
+  it('keeps Canvas cards and zoom stationary while inspecting Source and Model properties', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     // Wait for the fixture's initial fit (capped at 82%), not an arbitrary delay.
-    cy.get('.react-flow__viewport')
-      .should(($viewport) => {
-        expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
-      })
-      .then(($viewport) => {
-        const viewport = $viewport[0]!;
-        const transform = viewport.getAttribute('style');
-        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
-        cy.get('.react-flow__node [data-slot="canvas-node-shell"]').first().click(40, 18);
-        cy.get('[data-slot="canvas-node-workbench-overlay"]')
-          .should('be.visible')
-          .and(($panel) => {
-            expect($panel[0]!.tagName).to.equal('ASIDE');
-            const bounds = $panel[0]!.getBoundingClientRect();
-            expect(bounds.right).to.be.closeTo(1280, 30);
-            expect(bounds.width).to.be.at.most(450);
+    cy.get('.react-flow__viewport').should(($viewport) => {
+      expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
+    });
+    for (const zoomOut of [false, true]) {
+      if (zoomOut) {
+        cy.get('.react-flow__viewport').then(($viewport) => {
+          const previousZoom = new DOMMatrix($viewport[0]!.style.transform).a;
+          cy.get('.react-flow__controls-zoomout').click();
+          cy.get('.react-flow__viewport').should(($current) => {
+            expect(new DOMMatrix($current[0]!.style.transform).a).to.be.lessThan(previousZoom);
           });
-        cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
-          'have.attr',
-          'aria-selected',
-          'true'
-        );
-        cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
-        cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
-        cy.get('.react-flow__viewport').should(($current) => {
-          expect($current[0]).to.equal(viewport);
-          expect($current.attr('style')).to.equal(transform);
         });
-        cy.get('[data-slot="canvas-node-workbench-close"]').click();
-        cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-        cy.get('.react-flow__viewport').should(($current) =>
-          expect($current[0]).to.equal(viewport)
-        );
-        cy.then(() => {
-          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+      }
+      cy.get('.react-flow__viewport').then(($viewport) => {
+        const viewport = $viewport[0]!;
+        const document = viewport.ownerDocument;
+        const transform = viewport.getAttribute('style');
+        const host = document.querySelector('[data-testid="canvas-viewport"]')!;
+        const hostBounds = host.getBoundingClientRect();
+        const explorerToggle = document.querySelector(
+          '[data-slot="canvas-explorer-sources-toggle"]'
+        )!;
+        expect(explorerToggle.getAttribute('aria-expanded')).to.equal('true');
+        const dock = document.getElementById(explorerToggle.getAttribute('aria-controls')!)!;
+        const dockWidth = dock.getBoundingClientRect().width;
+        expect(dockWidth, 'visible Explorer width before Properties').to.be.greaterThan(0);
+        const nodeIds = ['source-customers', 'source-orders', 'join-transform'];
+        const cards = nodeIds.map((nodeId) => {
+          const card = document.querySelector(`.react-flow__node[data-id="${nodeId}"]`)!;
+          const bounds = card.getBoundingClientRect();
+          return { nodeId, x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
         });
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+        for (const [step, nodeId] of (
+          [
+            'source-customers',
+            'source-orders',
+            null,
+            'source-customers',
+            null,
+            'join-transform',
+            null,
+          ] as const
+        ).entries()) {
+          const phase = `${zoomOut ? 'zoomed-out' : 'initial-fit'} step ${step + 1} ${nodeId ?? 'close'}`;
+          if (nodeId === null) {
+            cy.get('[data-slot="canvas-node-workbench-close"]').click();
+            cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+          } else {
+            cy.get(`.react-flow__node[data-id="${nodeId}"] [data-slot="graph-node-card-title"]`)
+              .should('be.visible')
+              .click();
+            cy.get('[data-slot="canvas-node-workbench-overlay"]')
+              .should('be.visible')
+              .and(($panel) => {
+                expect($panel[0]!.tagName).to.equal('ASIDE');
+                const bounds = $panel[0]!.getBoundingClientRect();
+                expect(bounds.right).to.be.closeTo(1280, 30);
+                expect(bounds.width).to.be.at.most(450);
+              });
+            if (nodeId !== 'join-transform') {
+              cy.get('[data-slot="canvas-node-workbench-tab-columns"]').should(
+                'have.attr',
+                'aria-selected',
+                'true'
+              );
+              cy.get('[data-slot="canvas-open-semantic-editor"]').should('not.exist');
+            }
+            cy.get('[data-slot="canvas-node-workbench-drag-handle"]').should('not.exist');
+          }
+          cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+          cy.get('.react-flow__viewport').should(($current) => {
+            expect($current[0], `${phase}: viewport identity`).to.equal(viewport);
+            expect($current.attr('style'), `${phase}: viewport transform`).to.equal(transform);
+            for (const card of cards) {
+              const bounds = document
+                .querySelector(`.react-flow__node[data-id="${card.nodeId}"]`)!
+                .getBoundingClientRect();
+              expect(
+                bounds.left + bounds.width / 2,
+                `${phase}: ${card.nodeId} screen center x`
+              ).to.be.closeTo(card.x, 1);
+              expect(
+                bounds.top + bounds.height / 2,
+                `${phase}: ${card.nodeId} screen center y`
+              ).to.be.closeTo(card.y, 1);
+            }
+            expect(
+              dock.getBoundingClientRect().width,
+              `${phase}: Explorer width`
+            ).to.be.greaterThan(0);
+            expect(dock.getBoundingClientRect().width, `${phase}: Explorer width`).to.be.closeTo(
+              dockWidth,
+              1
+            );
+            expect(
+              host.getBoundingClientRect().left,
+              `${phase}: Canvas host screen origin x`
+            ).to.be.closeTo(hostBounds.left, 1);
+            expect(
+              host.getBoundingClientRect().top,
+              `${phase}: Canvas host screen origin y`
+            ).to.be.closeTo(hostBounds.top, 1);
+          });
+          cy.then(() => {
+            expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+          });
+        }
       });
+    }
     cy.then(() => {
       const calls = getE2eApiCalls(/.*/);
       expect(
@@ -222,7 +295,7 @@ describe('Workbench navigation', () => {
             Math.min(panelBounds.right, viewport.innerWidth)
           );
           expect(
-            editor.querySelector('.view-lines')?.textContent,
+            editor.querySelector('.view-lines')?.textContent?.replace(/\s/g, ''),
             'rendered canonical code'
           ).to.contain('schemaVersion');
         });

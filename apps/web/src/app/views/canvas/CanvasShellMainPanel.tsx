@@ -89,6 +89,7 @@ function CanvasShellViewport({
   onOpenCanvasSettings,
   contextMenuPresenter,
   workspaceTask,
+  inspector,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -99,7 +100,7 @@ function CanvasShellViewport({
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
   | 'workspaceTask'
->): JSX.Element {
+> & { inspector: ReactNode }): JSX.Element {
   const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
     focusMode: layout.focusMode,
     inspectorPanelVisible: layout.inspectorPanelVisible,
@@ -110,6 +111,7 @@ function CanvasShellViewport({
   return (
     <CanvasViewport
       workspaceTask={workspaceTask}
+      inspector={inspector}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
       canSelectNodes={layout.canSelectNodes}
@@ -184,9 +186,14 @@ function CanvasShellMainSurface({
   | 'contextMenuPresenter'
   | 'workspaceTask'
 > & { inspector: ReactNode }): JSX.Element {
+  const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
+  const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
+  const nodeInspector =
+    workspaceTask == null && layout.contextualWorkbench == null ? inspector : null;
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
+      inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
       panels={panels}
       graph={graph}
@@ -197,7 +204,6 @@ function CanvasShellMainSurface({
     />
   );
 
-  const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const baseSurface = (
     <CanvasShellWorkspaceSurfaces
       viewport={
@@ -213,7 +219,7 @@ function CanvasShellMainSurface({
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
       workbench={workspaceTask == null ? layout.contextualWorkbench : undefined}
-      inspector={workspaceTask == null ? inspector : null}
+      inspector={inspectorInViewport ? null : nodeInspector}
     />
   );
 }

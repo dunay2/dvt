@@ -2,7 +2,7 @@
 title: Canvas Shell Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-10-27
+last_reviewed: 2026-10-28
 ---
 
 # Canvas Shell Component
@@ -418,6 +418,47 @@ The inline coordinator delegates Source/unary binding to
 pending channels; the coordinator combines them with the selected editor's
 pending channel. Selecting another operation does not collapse these distinct
 pending obligations into one flag.
+
+### Properties Preserve The Graph Origin
+
+[Issue #3742](https://github.com/dunay2/dvt/issues/3742) corrects the composition
+under the existing `RenderCanvasContextualGraphSurface` query and the approved
+`GH-3610-CANVAS-LEFT-EXPLORER` / `GH-3610-EXPLORER-VIEWPORT-BOUNDARY` designs.
+Opening Properties must preserve the Explorer's width and the graph's screen
+origin, node positions and established pan/zoom. Retaining the React Flow DOM
+and transform alone is insufficient: a changing parent can move every card.
+
+```mermaid
+flowchart LR
+  Before[Inspector beside Explorer] --> Shrink[Explorer width shrinks]
+  Shrink --> Dock[Percentage source dock shrinks]
+  Dock --> Move[Graph origin and cards move]
+  After[Stable Explorer width] --> Retained[Existing retained surface]
+  Retained --> Graph[Graph retains left origin]
+  Retained --> Inspector[Properties occupies space at right]
+```
+
+`CanvasShellMainPanel` selects the inspector slot; `CanvasViewport` composes it
+beside `CanvasViewportSurfaceView` through the existing Explorer children slot.
+Explorer disclosure, resizing and retained-surface markup keep their current
+owners. The shared inspector width token remains `min(28rem,45%)`, now bounded
+by the retained graph surface so Properties leaves graph space available. Graph
+controls and the minimap follow its visible right edge. Alternative center
+surfaces retain their existing shell inspector slot; workspace tasks and
+contextual workbenches keep their existing exclusion rules.
+
+Closing Properties restores focus to the node's existing focusable `canvas-node-shell`
+interaction owner, with the React Flow wrapper as a fallback for plugin nodes
+without that shell. The existing user-focus guard and `preventScroll` remain.
+Focusing the outer wrapper of a shell-backed node can invoke XYFlow's automatic
+keyboard centering against pre-resize dimensions, moving the graph on close.
+The fix changes the focus target, not the camera or frame timing.
+
+No camera compensation, implicit fit, geometry store, draft write or data query
+is introduced. The browser regression compares actual card rectangles, graph
+origin and Explorer width across opening, replacing and closing Properties,
+including after explicit zoom. Source-coordinate or JSDOM-only proofs do not
+establish this visible invariant.
 
 ### Inspector Code Placement And Height
 

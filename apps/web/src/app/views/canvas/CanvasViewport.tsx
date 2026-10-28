@@ -85,6 +85,7 @@ type CanvasViewportProps = {
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
   readonly externalNodeSurfaceActive?: boolean;
   readonly workspaceTask?: ReactNode;
+  readonly inspector?: ReactNode;
 };
 
 type CanvasViewportWithPresenterProps = CanvasViewportProps &
@@ -501,6 +502,7 @@ function CanvasViewportWithPresenter({
         graphFilterController={graphFilterController}
         copy={copy}
       />
+      {props.inspector}
     </CanvasGraphExplorer>
   );
 }

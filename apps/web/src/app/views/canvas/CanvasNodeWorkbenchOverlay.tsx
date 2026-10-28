@@ -62,7 +62,12 @@ export function CanvasNodeWorkbenchOverlay({
         !closingSurface?.contains(activeElement)
       )
         return;
-      findCanvasGraphNodeElement(inspectorNodeId)?.focus({ preventScroll: true });
+      const node = findCanvasGraphNodeElement(inspectorNodeId);
+      (
+        node?.querySelector<HTMLElement>('[data-slot="canvas-node-shell"][tabindex="0"]') ?? node
+      )?.focus({
+        preventScroll: true,
+      });
     });
   }, [inspectorNodeId, onHide]);
 

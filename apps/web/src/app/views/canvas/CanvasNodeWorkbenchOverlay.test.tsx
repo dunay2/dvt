@@ -178,30 +178,44 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     expect(onHide).toHaveBeenCalledOnce();
   });
 
-  it.each([false, true])('restores card focus unless a newer interaction owns it (%s)', (newer) => {
-    const card = document.createElement('div');
-    card.className = 'react-flow__node';
-    card.dataset.id = NODE.id;
-    card.tabIndex = 0;
-    const control = document.createElement('button');
-    document.body.append(card, control);
-    renderOverlay(root);
-    const input = container.querySelector<HTMLInputElement>('input')!;
-    input.focus();
-    let closeFrame: FrameRequestCallback | undefined;
-    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      closeFrame = callback;
-      return 1;
-    });
-    act(() => {
-      (workbenchState.props!.onClose as () => void)();
-      if (newer) control.focus();
-      closeFrame!(0);
-    });
-    expect(document.activeElement).toBe(newer ? control : card);
-    card.remove();
-    control.remove();
-  });
+  it.each([
+    { shell: false, newer: false },
+    { shell: false, newer: true },
+    { shell: true, newer: false },
+    { shell: true, newer: true },
+  ])(
+    'restores the card interaction owner (shell: $shell, newer focus: $newer)',
+    ({ shell, newer }) => {
+      const card = document.createElement('div');
+      card.className = 'react-flow__node';
+      card.dataset.id = NODE.id;
+      card.tabIndex = 0;
+      const focusTarget = shell ? document.createElement('div') : card;
+      if (shell) {
+        focusTarget.dataset.slot = 'canvas-node-shell';
+        focusTarget.tabIndex = 0;
+        card.append(focusTarget);
+      }
+      const control = document.createElement('button');
+      document.body.append(card, control);
+      renderOverlay(root);
+      const input = container.querySelector<HTMLInputElement>('input')!;
+      input.focus();
+      let closeFrame: FrameRequestCallback | undefined;
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        closeFrame = callback;
+        return 1;
+      });
+      act(() => {
+        (workbenchState.props!.onClose as () => void)();
+        if (newer) control.focus();
+        closeFrame!(0);
+      });
+      expect(document.activeElement).toBe(newer ? control : focusTarget);
+      card.remove();
+      control.remove();
+    }
+  );
 
   it.each(['focus', 'hidden', 'strategy', 'node'])(
     'does not mount an inactive inspector (%s)',
