@@ -58,6 +58,7 @@ vi.mock('./CanvasViewport', () => ({
     shellState.canvasViewportProps = props;
     return (
       <div data-testid="canvas-viewport">
+        {props.projectFiles as React.ReactNode}
         {props.workspaceTask as React.ReactNode}
         {props.inspector as React.ReactNode}
       </div>
@@ -65,16 +66,41 @@ vi.mock('./CanvasViewport', () => ({
   },
 }));
 
+vi.mock('./explorer/CanvasProjectFilesExplorer', () => ({
+  CanvasProjectFilesExplorer: ({
+    onOpenFile,
+    projectRoot,
+  }: {
+    onOpenFile: (path: string) => void;
+    projectRoot?: string;
+  }) => (
+    <div data-testid="project-files-explorer" data-project-root={projectRoot}>
+      <button type="button" onClick={() => onOpenFile('notes/first.md')}>
+        Open first project file
+      </button>
+      <button type="button" onClick={() => onOpenFile('notes/second.md')}>
+        Open second project file
+      </button>
+    </div>
+  ),
+}));
+
 vi.mock('./SqlContextWorkbench', async () => {
   const { forwardRef, useImperativeHandle } = await import('react');
 
   return {
     SqlContextWorkbench: forwardRef(function MockSqlContextWorkbench(
-      _props: Record<string, unknown>,
+      props: Record<string, unknown>,
       ref
     ) {
       useImperativeHandle(ref, () => ({ flush: async () => true }));
-      return <div data-testid="sql-context-workbench" />;
+      return (
+        <div
+          data-testid="sql-context-workbench"
+          data-path={props.initialPath as string | undefined}
+          data-file-scope={(props.fileScope as { kind: string } | undefined)?.kind}
+        />
+      );
     }),
   };
 });

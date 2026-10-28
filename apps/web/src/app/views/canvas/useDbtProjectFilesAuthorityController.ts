@@ -135,6 +135,7 @@ export function useDbtProjectFilesAuthorityController(
     workspaceLayoutKey,
   } = store;
   const [projectCodeWorkbenchOpen, setProjectCodeWorkbenchOpen] = useState(false);
+  const [projectCodeInitialPath, setProjectCodeInitialPath] = useState<string | undefined>();
   const nodeCodeEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
@@ -322,12 +323,16 @@ export function useDbtProjectFilesAuthorityController(
     },
     [canonicalNodesById, flushActiveNodeCode, setInspectorNode, showInspectorPanel]
   );
-  const openProjectCode = useCallback(async () => {
-    if (!(await flushActiveNodeCode())) {
-      return;
-    }
-    setProjectCodeWorkbenchOpen(true);
-  }, [flushActiveNodeCode]);
+  const openProjectCode = useCallback(
+    async (initialPath?: string) => {
+      if (!(await flushActiveNodeCode())) {
+        return;
+      }
+      setProjectCodeInitialPath(initialPath);
+      setProjectCodeWorkbenchOpen(true);
+    },
+    [flushActiveNodeCode]
+  );
   const closeCodeWorkbench = useCallback(() => {
     setProjectCodeWorkbenchOpen(false);
   }, []);
@@ -428,6 +433,7 @@ export function useDbtProjectFilesAuthorityController(
     layoutKey,
     nodeCodeEditorRef,
     projectCodeWorkbenchOpen,
+    projectCodeInitialPath,
     openProjectCode,
     closeCodeWorkbench,
     refreshProjectGraphAfterMutation,

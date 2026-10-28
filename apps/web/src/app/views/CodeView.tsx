@@ -52,11 +52,13 @@ import {
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
-export type CodeViewFileScope = Readonly<{
-  kind: 'dbt-project-files';
-  projectRoot: string;
-  initialPath?: string;
-}>;
+export type CodeViewFileScope =
+  | Readonly<{ kind: 'workspace-files' }>
+  | Readonly<{
+      kind: 'dbt-project-files';
+      projectRoot: string;
+      initialPath?: string;
+    }>;
 
 export type CodeViewHandle = Readonly<{
   flush: () => Promise<boolean>;
@@ -84,15 +86,15 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
 ) {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCodeViewCopy(applicationLanguage);
+  const isDbtProjectFiles = fileScope?.kind === 'dbt-project-files';
+  const preferredPath = isDbtProjectFiles ? (fileScope.initialPath ?? initialPath) : initialPath;
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const graphSnapshotQuery = useWorkspaceGraphForViewQuery(
     CODE_GRAPH_FILE_SCOPE_VIEW_ID,
     undefined,
-    { enabled: fileScope === undefined }
+    { enabled: !isDbtProjectFiles }
   );
-  const [selectedPath, setSelectedPath] = useState<string | undefined>(
-    () => fileScope?.initialPath ?? initialPath
-  );
+  const [selectedPath, setSelectedPath] = useState<string | undefined>(() => preferredPath);
   const fileSelectionRequestIdRef = useRef(0);
   const workspaceFileEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
   const pendingFileSelectionRef = useRef<Readonly<{
@@ -102,25 +104,27 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   const workspaceFileTree = fileTreeQuery.data ?? [];
   const scopedWorkspaceFileTree = useMemo(
     () =>
-      fileScope
+      isDbtProjectFiles
         ? resolveProjectRootScopedCodeWorkspaceFileTree(workspaceFileTree, fileScope.projectRoot)
-        : resolveGraphScopedCodeWorkspaceFileTree({
-            entries: workspaceFileTree,
-            graph: graphSnapshotQuery.data,
-          }),
-    [fileScope, graphSnapshotQuery.data, workspaceFileTree]
+        : fileScope?.kind === 'workspace-files'
+          ? workspaceFileTree
+          : resolveGraphScopedCodeWorkspaceFileTree({
+              entries: workspaceFileTree,
+              graph: graphSnapshotQuery.data,
+            }),
+    [fileScope, isDbtProjectFiles, graphSnapshotQuery.data, workspaceFileTree]
   );
   const resolvedPath = useMemo(
     () =>
       hasCodeWorkspaceFilePath(scopedWorkspaceFileTree, selectedPath)
         ? selectedPath
-        : fileScope
+        : isDbtProjectFiles
           ? resolveInitialDbtProjectFilePath(scopedWorkspaceFileTree, {
               projectRoot: fileScope.projectRoot,
-              preferredPath: fileScope.initialPath,
+              preferredPath,
             })
           : resolveInitialCodeFilePath(scopedWorkspaceFileTree),
-    [fileScope, scopedWorkspaceFileTree, selectedPath]
+    [fileScope, isDbtProjectFiles, preferredPath, scopedWorkspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
   const graphOwnedPaths = useMemo(
@@ -128,7 +132,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     [graphSnapshotQuery.data]
   );
   const graphAuthority = graphSnapshotQuery.data?.authoringAuthority;
-  const fileAuthority = fileScope
+  const fileAuthority = isDbtProjectFiles
     ? 'dbt-project-files'
     : graphAuthority?.kind === 'resolved' && graphAuthority.binding.authority.kind === 'graph-draft'
       ? 'graph-draft'
@@ -164,6 +168,9 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   }, []);
   const requestFileSelection = useCallback(
     async (nextPath: string | undefined): Promise<void> => {
+      if (nextPath !== undefined && !hasCodeWorkspaceFilePath(scopedWorkspaceFileTree, nextPath)) {
+        return;
+      }
       if (nextPath === selectedPath || nextPath === resolvedPath) {
         fileSelectionRequestIdRef.current += 1;
         pendingFileSelectionRef.current = null;
@@ -175,15 +182,16 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       };
       await persistPendingFileSelection();
     },
-    [persistPendingFileSelection, resolvedPath, selectedPath]
+    [persistPendingFileSelection, resolvedPath, scopedWorkspaceFileTree, selectedPath]
   );
   const latestRequestFileSelectionRef = useRef(requestFileSelection);
   useEffect(() => {
     latestRequestFileSelectionRef.current = requestFileSelection;
   }, [requestFileSelection]);
   useEffect(() => {
-    void latestRequestFileSelectionRef.current(fileScope?.initialPath ?? initialPath);
-  }, [fileScope?.initialPath, initialPath]);
+    if (!fileTreeQuery.isSuccess || (!isDbtProjectFiles && graphSnapshotQuery.isPending)) return;
+    void latestRequestFileSelectionRef.current(preferredPath);
+  }, [preferredPath, fileTreeQuery.isSuccess, isDbtProjectFiles, graphSnapshotQuery.isPending]);
   useImperativeHandle(
     ref,
     () => ({ flush: async () => (await workspaceFileEditorRef.current?.flush()) ?? true }),
@@ -196,7 +204,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       {
         isLoadingFileTree:
           fileTreeQuery.isPending ||
-          (fileScope === undefined && fileTreeQuery.isSuccess && graphSnapshotQuery.isPending),
+          (!isDbtProjectFiles && fileTreeQuery.isSuccess && graphSnapshotQuery.isPending),
         fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,
         hasWorkspaceFiles: hasCodeWorkspaceFiles(scopedWorkspaceFileTree),
         isLoadingFilePreview: resolvedPath !== undefined && fileContentQuery.isPending,
@@ -209,7 +217,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
 
   if (
     fileTreeQuery.isPending ||
-    (fileScope === undefined && fileTreeQuery.isSuccess && graphSnapshotQuery.isPending)
+    (!isDbtProjectFiles && fileTreeQuery.isSuccess && graphSnapshotQuery.isPending)
   ) {
     return <CodeRouteLoadingStateView />;
   }

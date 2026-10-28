@@ -5,7 +5,7 @@
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
  * @version 1.0.0
  */
-import { getE2eApiCalls } from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   verifyWheelZoom,
   revealCardDetails,
@@ -20,6 +20,93 @@ import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenari
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
+  });
+  it('retains the Canvas while browsing Git and opening a project file', () => {
+    stubE2eJsonApi('GET', '/workspace/files', [
+      {
+        path: 'notes',
+        name: 'notes',
+        kind: 'directory',
+        children: [
+          { path: 'notes/first.md', name: 'first.md', kind: 'file' },
+          { path: 'notes/second.md', name: 'second.md', kind: 'file' },
+        ],
+      },
+    ]);
+    stubE2eApi('GET', /^\/workspace\/files\/.+/, ({ url }) => {
+      const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
+      return {
+        body: {
+          path,
+          name: path.split('/').at(-1),
+          language: 'markdown',
+          content: `# ${path}`,
+          contentSha256: 'a'.repeat(64),
+          lastModified: '2026-10-28T00:00:00Z',
+        },
+      };
+    });
+    stubE2eJsonApi('GET', /^\/workspace\/file-history\/.+/, []);
+    stubE2eApi('POST', /^\/workspace\/files\/.+/, () => {
+      throw new Error('Clean project-file browsing must not save content.');
+    });
+    cy.viewport(1280, 720);
+    visitWorkbenchCanvas();
+    const main = '[data-slot="canvas-workspace-surface"]';
+    const git = `${main} [data-slot="canvas-explorer-git-toggle"]`;
+    cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
+      expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
+    });
+    cy.then(() => expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(0));
+    cy.get(`${main} section[aria-labelledby$="-sources-button"] input[type="search"]`).type(
+      'customers'
+    );
+    cy.get(`${main} .react-flow__viewport`).then(($viewport) => {
+      const viewport = $viewport[0]!;
+      const transform = viewport.getAttribute('style');
+      const card = viewport.querySelector<HTMLElement>('[data-id="join-transform"]')!;
+      const before = card.getBoundingClientRect();
+      const assertStationary = (): void => {
+        cy.get(`${main} .react-flow__viewport`).should(($current) => {
+          expect($current[0]).to.equal(viewport);
+          expect($current.attr('style')).to.equal(transform);
+          const bounds = card.getBoundingClientRect();
+          expect(bounds.left).to.be.closeTo(before.left, 1);
+          expect(bounds.top).to.be.closeTo(before.top, 1);
+        });
+      };
+      cy.get(git).focus();
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get(git).should('have.attr', 'aria-expanded', 'true');
+      cy.get(`${main} section[aria-labelledby$="-git-button"]`)
+        .find('[data-slot="code-workspace-file-entry"]')
+        .should('have.length', 3);
+      cy.screenshot('canvas-git-project-files');
+      assertStationary();
+      for (const panel of ['elements', 'sources', 'git']) {
+        cy.get(`${main} [data-slot="canvas-explorer-${panel}-toggle"]`).click();
+        assertStationary();
+      }
+      cy.get(`${main} section[aria-labelledby$="-sources-button"] input`).should(
+        'have.value',
+        'customers'
+      );
+      cy.get(`${main} section[aria-labelledby$="-git-button"]`)
+        .find('[data-workspace-path="notes/first.md"]')
+        .click();
+      cy.get('[data-slot="canvas-contextual-workbench"]')
+        .should('be.visible')
+        .find('.monaco-editor .view-lines')
+        .should('contain.text', 'notes/first.md');
+      assertStationary();
+      cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+      cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
+      assertStationary();
+      cy.then(() => {
+        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+        expect(getE2eApiCalls(/^\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+      });
+    });
   });
   it('keeps zoom and source search while expanding and collapsing the rail', () => {
     let writesBeforeZoom = 0;

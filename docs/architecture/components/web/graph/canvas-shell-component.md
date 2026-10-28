@@ -844,6 +844,33 @@ flowchart LR
   Graph[Graph geometry] --> Elements[Existing element rows]
 ```
 
+### Project Files In The Main Canvas Explorer
+
+[Issue #3743](https://github.com/dunay2/dvt/issues/3743#issuecomment-6459144110)
+extends the main Canvas activity rail with an optional `Git` file/folder slot.
+The Model editor keeps its separate pending-draft navigation lifecycle.
+`CanvasExplorer` retains rail, disclosure, keyboard, ES/EN copy and shared-style
+ownership. Git mounts its file view on first activation and retains it afterwards.
+Switching Sources, Elements and Git preserves the graph, camera,
+disclosure and Properties' stable origin; no second rail or CSS is introduced.
+
+```mermaid
+flowchart LR
+  Explorer[Retained CanvasExplorer] --> Git[Optional Git / existing FileTreePanel]
+  Git --> Opener[Existing project Code opener with optional path]
+  File[Existing File-menu entry] --> Opener
+  Opener --> Code[Same mounted CodeView]
+```
+
+`CanvasProjectFilesExplorer` is a narrow adapter over the existing file-tree
+query. The rail requests a path and keeps no premature selected-file highlight;
+CodeView owns flush, revision and accepted selection. The
+[workspace-files contract](../code-workbench-workspace-files-component.md#canvas-project-files-entry--issue-3743)
+owns tree scope, file authority and proof requirements. Git adds no VCS status,
+stage, commit, push or branch command. Placement remains on
+`RenderCanvasContextualGraphSurface`; native ownership is not inferred from
+ROOT fallback coverage or the output-code component's name.
+
 ### Drift To Prevent
 
 - Reintroducing `shell-top-bar-canvas-controls`.

@@ -18,6 +18,7 @@ export function buildDbtProjectFileCodeWorkbench({
   onClose,
   reconcilePersistedFile,
   projectRoot,
+  initialPath,
   open,
 }: Readonly<{
   copy: DbtProjectFileCodeWorkbenchCopy;
@@ -27,6 +28,7 @@ export function buildDbtProjectFileCodeWorkbench({
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
   projectRoot: string;
+  initialPath?: string;
   open: boolean;
 }>): CanvasShellContextualWorkbench | undefined {
   if (!open) {
@@ -53,6 +55,7 @@ export function buildDbtProjectFileCodeWorkbench({
           kind: 'dbt-project-files',
           projectRoot,
         }}
+        initialPath={initialPath}
         reconcilePersistedFile={reconcilePersistedFile}
       />
     ),

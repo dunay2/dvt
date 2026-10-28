@@ -11,32 +11,37 @@ const copy = {
 };
 
 describe('buildDbtProjectFileCodeWorkbench', () => {
-  it('opens the project scope without fabricating a selected file', () => {
-    const reconcilePersistedFile = vi.fn(async () => ({
-      kind: 'fresh' as const,
-      analysisSha256: 'a'.repeat(64),
-      projectContentSetSha256: 'b'.repeat(64),
-    }));
-    const workbench = buildDbtProjectFileCodeWorkbench({
-      copy,
-      workbenchRef: { current: null },
-      onClose: vi.fn(),
-      reconcilePersistedFile,
-      projectRoot: 'analytics',
-      open: true,
-    });
+  it.each([undefined, 'analytics/models/marts/orders.sql'])(
+    'opens the actual project root with the requested path %s',
+    (initialPath) => {
+      const reconcilePersistedFile = vi.fn(async () => ({
+        kind: 'fresh' as const,
+        analysisSha256: 'a'.repeat(64),
+        projectContentSetSha256: 'b'.repeat(64),
+      }));
+      const workbench = buildDbtProjectFileCodeWorkbench({
+        copy,
+        workbenchRef: { current: null },
+        onClose: vi.fn(),
+        reconcilePersistedFile,
+        projectRoot: 'analytics',
+        initialPath,
+        open: true,
+      });
 
-    expect(workbench?.id).toBe('project-code');
-    expect(workbench?.title).toBe('Project code');
-    expect(workbench?.closeLabel).toBe('Close');
-    expect(isValidElement(workbench?.panel)).toBe(true);
-    const panel = workbench?.panel as ReactElement<SqlContextWorkbenchProps>;
-    expect(panel.props.fileScope).toEqual({
-      kind: 'dbt-project-files',
-      projectRoot: 'analytics',
-    });
-    expect(panel.props.reconcilePersistedFile).toBe(reconcilePersistedFile);
-  });
+      expect(workbench?.id).toBe('project-code');
+      expect(workbench?.title).toBe('Project code');
+      expect(workbench?.closeLabel).toBe('Close');
+      expect(isValidElement(workbench?.panel)).toBe(true);
+      const panel = workbench?.panel as ReactElement<SqlContextWorkbenchProps>;
+      expect(panel.props.fileScope).toEqual({
+        kind: 'dbt-project-files',
+        projectRoot: 'analytics',
+      });
+      expect(panel.props.reconcilePersistedFile).toBe(reconcilePersistedFile);
+      expect(panel.props.initialPath).toBe(initialPath);
+    }
+  );
 
   it('closes only after the Code buffer and project analysis are synchronized', async () => {
     const flush = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);

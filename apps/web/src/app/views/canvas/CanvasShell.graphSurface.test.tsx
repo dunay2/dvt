@@ -43,6 +43,40 @@ describe('CanvasShell graph base surface', () => {
     unmountShell();
   });
 
+  it('opens Git file requests in the retained project Code workbench', async () => {
+    await renderShell();
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const files = container.querySelector('[data-testid="project-files-explorer"]');
+    expect(files).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(files!.querySelectorAll('button')[0]!);
+    });
+    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    expect(editor?.getAttribute('data-path')).toBe('notes/first.md');
+    expect(editor?.getAttribute('data-file-scope')).toBe('workspace-files');
+    await act(async () => {
+      fireEvent.click(files!.querySelectorAll('button')[1]!);
+    });
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
+    expect(editor?.getAttribute('data-file-scope')).toBe('workspace-files');
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+  });
+
+  it('delegates Git file requests to the authority-owned Code opener with its actual root', async () => {
+    const onOpenProjectCode = vi.fn();
+    await renderShell({
+      workspaceCommands: { projectRoot: 'dbt/sales', onOpenProjectCode },
+    });
+    const files = container.querySelector('[data-testid="project-files-explorer"]');
+    expect(files?.getAttribute('data-project-root')).toBe('dbt/sales');
+    await act(async () => {
+      fireEvent.click(files!.querySelectorAll('button')[0]!);
+    });
+    expect(onOpenProjectCode).toHaveBeenCalledExactlyOnceWith('notes/first.md');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+  });
+
   it('keeps workspace-file Code inside the preserved node Properties context', async () => {
     const onHideInspector = vi.fn();
     const onShowInspector = vi.fn();

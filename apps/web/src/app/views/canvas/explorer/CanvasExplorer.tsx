@@ -15,38 +15,44 @@ import {
 } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
-import { CanvasExplorerTemplate } from './CanvasExplorer.templates';
+import { CanvasExplorerTemplate, type CanvasExplorerPanel } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 export function CanvasExplorer({
   sources,
   elements,
+  projectFiles,
   children,
   rootRef,
   workspaceTask,
 }: Readonly<{
   sources: ReactNode;
   elements: ReactNode;
+  projectFiles?: ReactNode;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
   workspaceTask?: ReactNode;
 }>): JSX.Element {
-  const [active, setActive] = useState<'sources' | 'elements' | null>('sources');
+  const [active, setActive] = useState<CanvasExplorerPanel | null>('sources');
+  const [gitOpened, setGitOpened] = useState(false);
+  const hasProjectFiles = projectFiles != null;
+  const activePanel = active === 'git' && !hasProjectFiles ? null : active;
   const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
   const close = useUiLayoutStore((state) => state.hideCanvasExplorer);
   // An explicit View-menu reopen must expand even a previously collapsed dock.
   useEffect(() => {
-    if (visible) setActive((current) => current ?? 'sources');
-  }, [visible]);
+    if (visible)
+      setActive((current) =>
+        current === 'git' && !hasProjectFiles ? 'sources' : (current ?? 'sources')
+      );
+  }, [visible, hasProjectFiles]);
   const id = useId();
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
-  const toggle = (key: 'sources' | 'elements'): void => {
+  const toggle = (key: CanvasExplorerPanel): void => {
+    if (key === 'git') setGitOpened(true);
     setActive((current) => (current === key ? null : key));
   };
-  const onKeyToggle = (
-    key: 'sources' | 'elements',
-    event: KeyboardEvent<HTMLButtonElement>
-  ): void => {
+  const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     event.stopPropagation();
@@ -55,18 +61,20 @@ export function CanvasExplorer({
   return (
     <CanvasExplorerTemplate
       id={id}
-      active={visible ? active : null}
+      active={visible ? activePanel : null}
       visible={visible}
       copy={copy}
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       sources={sources}
       elements={elements}
+      git={projectFiles}
+      gitOpened={gitOpened}
       onToggle={toggle}
       onKeyToggle={onKeyToggle}
       onCollapse={() => {
         setActive(null);
-        document.getElementById(`${id}-${active}-button`)?.focus();
+        document.getElementById(`${id}-${activePanel}-button`)?.focus();
       }}
       onClose={close}
     >
