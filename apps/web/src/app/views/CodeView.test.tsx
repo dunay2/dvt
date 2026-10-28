@@ -4,6 +4,7 @@ import { act, createRef, type RefObject } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { getByRole, queryByRole, within } from '@testing-library/dom';
 import type {
   IWorkspaceFileContentCommandPort,
   IWorkspaceFilesQueryPort,
@@ -170,6 +171,7 @@ describe('CodeView', () => {
       fileScope?: CodeViewFileScope;
       initialPath?: string;
       fileSelectionRequest?: CodeViewProps['fileSelectionRequest'];
+      presentation?: CodeViewProps['presentation'];
       queryClient?: QueryClient;
       workspaceGraphSnapshotQuery?: IWorkspaceGraphSnapshotQueryPort;
     }> = {}
@@ -195,6 +197,7 @@ describe('CodeView', () => {
               fileScope={options.fileScope}
               initialPath={options.initialPath}
               fileSelectionRequest={options.fileSelectionRequest}
+              presentation={options.presentation}
               reconcilePersistedFile={options.reconcilePersistedFile}
             />{' '}
           </AppServicesProvider>{' '}
@@ -1060,6 +1063,172 @@ describe('CodeView', () => {
     expect(getContainer().querySelector('[data-slot="route-workbench-right-panel"]')).toBeNull();
     expect(getContainer().querySelector('[data-slot="route-workbench-header"]')).toBeNull();
   });
+
+  it('shows loaded file properties without a second tree and collapses them without replacing the editor', async () => {
+    const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>();
+    setupContainer();
+    await renderCodeView({ saveFileContent }, false, undefined, {
+      fileScope: defaultEditableFileScope,
+      presentation: 'project-workspace',
+    });
+    await waitFor(() => getContainer().querySelector('[data-testid="monaco-code-editor"]') != null);
+    const editor = getContainer().querySelector('[data-testid="monaco-code-editor"]');
+    const properties = getByRole(getContainer(), 'region', { name: 'File properties' });
+    expect(within(properties).getByText('Name')).not.toBeNull();
+    expect(within(properties).getByText('stg_orders.sql')).not.toBeNull();
+    expect(within(properties).getByText('Path')).not.toBeNull();
+    expect(within(properties).getByText('models/staging/stg_orders.sql')).not.toBeNull();
+    expect(within(properties).getByText('Language')).not.toBeNull();
+    expect(within(properties).getByText('sql')).not.toBeNull();
+    expect(within(properties).getByText('Loaded version modified')).not.toBeNull();
+    expect(properties.querySelector('time')?.getAttribute('datetime')).toBe('2026-04-06T00:00:00Z');
+    expect(properties.textContent).not.toContain('a'.repeat(64));
+    expect(getContainer().querySelector('[data-slot="route-workbench-left-panel"]')).toBeNull();
+    const toggle = getByRole(getContainer(), 'button', { name: 'File properties' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    await act(async () => toggle.click());
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(queryByRole(getContainer(), 'region', { name: 'File properties' })).toBeNull();
+    expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBe(editor);
+    await act(async () => toggle.click());
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(getByRole(getContainer(), 'region', { name: 'File properties' }).textContent).toContain(
+      'models/staging/stg_orders.sql'
+    );
+    expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBe(editor);
+    expect(saveFileContent).not.toHaveBeenCalled();
+  });
+
+  it.each(['saved', 'conflict', 'preview-error'] as const)(
+    'keeps properties on the accepted file through a %s transition',
+    async (outcome) => {
+      const firstPath = 'models/staging/stg_orders.sql';
+      const nextPath = 'models/staging/stg_customers.sql';
+      let settleSave: (() => void) | undefined;
+      let settleRead: (() => void) | undefined;
+      const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
+        () =>
+          new Promise((resolve, reject) => {
+            settleSave = () =>
+              outcome === 'conflict'
+                ? reject(new WorkspaceFileRevisionConflictError(firstPath))
+                : resolve({
+                    kind: 'saved',
+                    disposition: 'updated',
+                    path: firstPath,
+                    contentSha256: 'b'.repeat(64),
+                    lastModified: '2026-10-29T00:00:00Z',
+                  });
+          })
+      );
+      const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>((path) => {
+        const file = {
+          path,
+          name: path.split('/').at(-1)!,
+          language: 'sql',
+          content: 'select 1',
+          contentSha256: 'a'.repeat(64),
+          lastModified: path === firstPath ? '2026-04-06T00:00:00Z' : '2026-08-12T00:00:00Z',
+        };
+        if (path === firstPath) return Promise.resolve(file);
+        return new Promise((resolve, reject) => {
+          settleRead = () =>
+            outcome === 'preview-error'
+              ? reject(new Error('Selected file cannot be read.'))
+              : resolve(file);
+        });
+      });
+      const options = {
+        presentation: 'project-workspace' as const,
+        fileScope: defaultEditableFileScope,
+        queryClient: createTestQueryClient(),
+        workspaceFilesQuery: buildWorkspaceFilesQueryPort({ getFileContent }),
+      };
+      setupContainer();
+      try {
+        await renderCodeView({ saveFileContent }, false, undefined, options);
+        await waitFor(
+          () => getContainer().querySelector('[data-testid="monaco-code-editor"]') != null
+        );
+        const editor = getContainer().querySelector<HTMLTextAreaElement>(
+          '[data-testid="monaco-code-editor"]'
+        );
+        expect(
+          getByRole(getContainer(), 'region', { name: 'File properties' }).textContent
+        ).toContain(firstPath);
+        await editAndVerifyEditor(editor);
+        await renderCodeView({ saveFileContent }, false, undefined, {
+          ...options,
+          fileSelectionRequest: { path: nextPath },
+        });
+        expect(saveFileContent).toHaveBeenCalledExactlyOnceWith({
+          path: firstPath,
+          content: 'select 1 as edited_value',
+          expectedRevision: { kind: 'content_sha256', value: 'a'.repeat(64) },
+        });
+        expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBe(editor);
+        expect(editor?.getAttribute('data-path')).toBe(firstPath);
+        const pending = getByRole(getContainer(), 'region', { name: 'File properties' });
+        expect(pending.textContent).toContain(firstPath);
+        expect(pending.textContent).not.toContain(nextPath);
+        expect(pending.querySelector('time')?.getAttribute('datetime')).toBe(
+          '2026-04-06T00:00:00Z'
+        );
+        expect(getFileContent.mock.calls.some(([path]) => path === nextPath)).toBe(false);
+        await act(async () => settleSave?.());
+        if (outcome === 'conflict') {
+          await waitFor(
+            () =>
+              getContainer()
+                .querySelector('[data-slot="code-working-tree-status"]')
+                ?.getAttribute('data-phase') === 'conflict'
+          );
+          expect(editor?.value).toBe('select 1 as edited_value');
+          expect(
+            getByRole(getContainer(), 'region', { name: 'File properties' }).textContent
+          ).toContain(firstPath);
+          expect(getFileContent.mock.calls.some(([path]) => path === nextPath)).toBe(false);
+        } else {
+          await waitFor(() => settleRead != null);
+          const loading = getByRole(getContainer(), 'region', { name: 'File properties' });
+          expect(loading.textContent).toContain(copy.previewLoadingMessage);
+          expect(loading.textContent).not.toContain('stg_orders.sql');
+          expect(loading.querySelector('time')).toBeNull();
+          await act(async () => settleRead?.());
+          if (outcome === 'saved') {
+            await waitFor(
+              () =>
+                getContainer()
+                  .querySelector('[data-testid="monaco-code-editor"]')
+                  ?.getAttribute('data-path') === nextPath
+            );
+            const accepted = getByRole(getContainer(), 'region', { name: 'File properties' });
+            expect(accepted.textContent).toContain(nextPath);
+            expect(accepted.textContent).not.toContain('stg_orders.sql');
+            expect(accepted.querySelector('time')?.getAttribute('datetime')).toBe(
+              '2026-08-12T00:00:00Z'
+            );
+          } else {
+            await waitFor(
+              () =>
+                getByRole(getContainer(), 'region', {
+                  name: 'File properties',
+                }).textContent?.includes(copy.previewErrorTitle) === true
+            );
+            const failed = getByRole(getContainer(), 'region', { name: 'File properties' });
+            expect(failed.textContent).not.toContain('stg_orders.sql');
+            expect(failed.querySelector('time')).toBeNull();
+          }
+        }
+        expect(saveFileContent).toHaveBeenCalledOnce();
+      } finally {
+        await act(async () => {
+          settleSave?.();
+          settleRead?.();
+        });
+      }
+    }
+  );
 
   it('renders selected-file history and hands revision review to Diff', async () => {
     setupContainer();

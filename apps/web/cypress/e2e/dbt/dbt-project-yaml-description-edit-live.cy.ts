@@ -230,11 +230,6 @@ function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<Live
   });
 }
 
-function closeContextualWorkbench(): void {
-  cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
-  cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
-}
-
 function replaceOpenCodeContent(content: string): void {
   cy.get('[data-testid="monaco-code-editor"]').find('.view-lines').click({ force: true });
   cy.focused()
@@ -338,16 +333,28 @@ describe('dbt YAML description edit live vertical', () => {
         expect($command.attr('data-disabled')).to.be.undefined;
       })
       .click();
-    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 })
+    cy.get('[data-slot="canvas-code-main-tab"]')
       .should('be.visible')
-      .and('contain.text', PROJECT_ROOT);
-    cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${SCHEMA_PATH}"]`).should(
-      'be.visible'
-    );
-    cy.get(
-      `[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_SQL_PATH}"]`
-    ).should('be.visible');
-    closeContextualWorkbench();
+      .and('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-code-workspace-surface"]', { timeout: 30_000 })
+      .should('be.visible')
+      .and('contain.text', PROJECT_ROOT)
+      .within(() => {
+        cy.get('[data-slot="route-workbench-left-panel"]').should('have.length', 1);
+        cy.get(
+          `[data-slot="code-workspace-file-entry"][data-workspace-path="${SCHEMA_PATH}"]`
+        ).should('be.visible');
+        cy.get(
+          `[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_SQL_PATH}"]`
+        ).should('be.visible');
+        cy.get('[data-testid="monaco-code-editor"]').should('be.visible').and('have.length', 1);
+      });
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .should('be.visible')
+      .click()
+      .should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.be.visible');
 
     selectCanvasClosure([MODEL_UNIQUE_ID]);
     openCanvasNodeOperations(MODEL_UNIQUE_ID);

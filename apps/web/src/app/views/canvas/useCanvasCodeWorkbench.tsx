@@ -19,6 +19,7 @@ import {
 } from './SqlContextWorkbench';
 import type { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
+import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
 
 export function useCanvasCodeWorkbench(
   layout: CanvasShellLayout,
@@ -36,10 +37,22 @@ export function useCanvasCodeWorkbench(
       ? null
       : `${layout.surfaceStrategy.id}:${canvasId}`;
   const scopedId = owner === ownerKey ? id : null;
+  const [activeOwnerKey, setActiveOwnerKey] = useState<string | null>(null);
+  const activationIntent = useRef(0);
+  const showCanvas = useCallback(() => {
+    activationIntent.current += 1;
+    setActiveOwnerKey(null);
+  }, []);
+  useEffect(
+    () => () => {
+      activationIntent.current += 1;
+    },
+    [ownerKey]
+  );
   const editorRef = useRef<SqlContextWorkbenchHandle>(null);
   const [fileSelectionRequest, setFileSelectionRequest] =
     useState<SqlContextWorkbenchProps['fileSelectionRequest']>();
-  const { capture, restore } = focus;
+  const { capture, restore, enter } = focus;
   useEffect(() => {
     if (id != null && scopedId == null) close();
   }, [id, scopedId, close]);
@@ -61,6 +74,7 @@ export function useCanvasCodeWorkbench(
             panel: (
               <SqlContextWorkbench
                 ref={editorRef}
+                presentation="project-workspace"
                 fileScope={{ kind: 'workspace-files' }}
                 fileSelectionRequest={fileSelectionRequest}
               />
@@ -95,17 +109,41 @@ export function useCanvasCodeWorkbench(
     [layout, selected, restore]
   );
   const openProjectCode = useCallback(
-    (path?: string) => {
+    async (path?: string): Promise<boolean> => {
+      const intent = ++activationIntent.current;
+      const focusedBeforeAdmission = document.activeElement;
       capture('[data-slot="shell-file-menu-trigger"]');
-      if (workspaceCommands?.onOpenProjectCode != null) workspaceCommands.onOpenProjectCode(path);
-      else if (ownerKey != null) {
-        if (path !== undefined || scopedId !== 'project-code') {
-          setFileSelectionRequest(path === undefined ? undefined : { path });
+      if (ownerKey == null) return false;
+      try {
+        if (workspaceCommands?.onOpenProjectCode != null) {
+          if (!(await workspaceCommands.onOpenProjectCode(path))) return false;
+        } else {
+          if (path !== undefined || scopedId !== 'project-code') {
+            setFileSelectionRequest(path === undefined ? undefined : { path });
+          }
+          open('project-code', ownerKey);
         }
-        open('project-code', ownerKey);
+        if (intent !== activationIntent.current) return false;
+        setActiveOwnerKey(ownerKey);
+        if (
+          focusedBeforeAdmission?.id !== canvasWorkspaceTabs.code.tabId &&
+          document.activeElement?.id !== canvasWorkspaceTabs.code.tabId &&
+          (document.activeElement === focusedBeforeAdmission ||
+            document.activeElement === document.body)
+        ) {
+          enter('[data-slot="canvas-code-workspace-surface"]');
+        }
+        return true;
+      } catch {
+        return false;
       }
     },
-    [capture, workspaceCommands?.onOpenProjectCode, ownerKey, scopedId, open]
+    [capture, enter, workspaceCommands?.onOpenProjectCode, ownerKey, scopedId, open]
   );
-  return { layout: shellLayout, openProjectCode };
+  return {
+    layout: shellLayout,
+    openProjectCode,
+    showCanvas,
+    active: activeOwnerKey === ownerKey && selected?.id === 'project-code',
+  };
 }

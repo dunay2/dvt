@@ -1,32 +1,30 @@
 /** Shared production shell setup for opening and draft-protection behaviors. */
-import { act } from 'react';
-import { createRoot, type Root } from 'react-dom/client';
 import { beforeEach, afterEach, vi } from 'vitest';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
-import { createCanvasShellHarness, getCanvasShellState } from './CanvasShell.testHarness';
-import { CanvasWorkspaceTopBarIdentity } from './CanvasWorkspaceMenuControls';
+import {
+  createCanvasShellHarness,
+  getCanvasShellState,
+  type CanvasShellPropsOverrides,
+} from './CanvasShell.testHarness';
 
 export let harness: ReturnType<typeof createCanvasShellHarness>;
 export let navigation: HTMLDivElement;
-let navigationRoot: Root;
 
 export function setupSemanticEditorShell(): void {
   beforeEach(() => {
     harness = createCanvasShellHarness();
-    navigation = document.createElement('div');
-    document.body.appendChild(navigation);
-    navigationRoot = createRoot(navigation);
-    act(() => navigationRoot.render(<CanvasWorkspaceTopBarIdentity />));
+    navigation = harness.navigation;
   });
   afterEach(() => {
     harness.unmount();
-    act(() => navigationRoot.unmount());
-    navigation.remove();
   });
 }
 
-export async function mountModel(withSecondModel = false): Promise<{
+export async function mountModel(
+  withSecondModel = false,
+  overrides: Pick<CanvasShellPropsOverrides, 'layout' | 'workspaceCommands'> = {}
+): Promise<{
   data: DbtNodeData;
   fixture: ReturnType<typeof buildSemanticWorkbenchFixture>;
   onSelectNode: ReturnType<typeof vi.fn>;
@@ -42,6 +40,7 @@ export async function mountModel(withSecondModel = false): Promise<{
     ...(withSecondModel ? [{ ...fixture.transform, id: 'other-model', name: 'Other model' }] : []),
   ];
   await harness.render({
+    ...overrides,
     panels: {
       inspectorGraphNodes: [...fixture.sources, ...models],
       inspectorGraphEdges: fixture.edges,

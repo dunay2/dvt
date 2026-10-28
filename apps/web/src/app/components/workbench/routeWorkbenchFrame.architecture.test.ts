@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -13,6 +14,49 @@ function readAppSource(relativePathFromApp: string): string {
 
 function readRepoDoc(relativePathFromRepo: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePathFromRepo), 'utf8');
+}
+
+function readFrameSlotKeys(text: string): string[][] {
+  const source = ts.createSourceFile(
+    'consumer.tsx',
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  const frames: string[][] = [];
+  const pending: ts.Node[] = [source];
+  while (pending.length > 0) {
+    const node = pending.pop()!;
+    if (
+      (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) &&
+      ts.isIdentifier(node.tagName) &&
+      node.tagName.text === 'RouteWorkbenchFrame'
+    ) {
+      const attribute = node.attributes.properties
+        .filter(ts.isJsxAttribute)
+        .find((property) => ts.isIdentifier(property.name) && property.name.text === 'slots');
+      const initializer = attribute?.initializer;
+      const expression =
+        initializer != null && ts.isJsxExpression(initializer) ? initializer.expression : undefined;
+      const properties =
+        expression != null && ts.isObjectLiteralExpression(expression) ? expression.properties : [];
+      frames.push(
+        properties.flatMap((property) => {
+          if (!ts.isPropertyAssignment(property) && !ts.isShorthandPropertyAssignment(property)) {
+            return [];
+          }
+          return ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)
+            ? [property.name.text]
+            : [];
+        })
+      );
+    }
+    ts.forEachChild(node, (child) => {
+      pending.push(child);
+    });
+  }
+  return frames;
 }
 
 describe('RouteWorkbenchFrame architecture', () => {
@@ -50,9 +94,11 @@ describe('RouteWorkbenchFrame architecture', () => {
       expect(componentGuide).toContain(requiredSection);
     }
 
-    expect(codeView).toContain('slots={{');
-    expect(codeView).toContain('leftPanel: (');
-    expect(codeView).toContain('primarySurface: (');
+    const codeFrames = readFrameSlotKeys(codeView);
+    expect(codeFrames).not.toHaveLength(0);
+    for (const slots of codeFrames) {
+      expect(slots).toEqual(expect.arrayContaining(['leftPanel', 'primarySurface', 'rightPanel']));
+    }
     expect(codeView).toContain('FileTreePanel');
     expect(codeView).toContain('Code workbench local Monaco buffer');
 
@@ -99,9 +145,11 @@ describe('RouteWorkbenchFrame architecture', () => {
     for (const relativePath of slotConsumerPaths) {
       const source = readAppSource(relativePath);
 
-      expect(source, relativePath).toContain('<RouteWorkbenchFrame');
-      expect(source, relativePath).toContain('slots={{');
-      expect(source, relativePath).toContain('primarySurface:');
+      const frames = readFrameSlotKeys(source);
+      expect(frames, relativePath).not.toHaveLength(0);
+      for (const slots of frames) {
+        expect(slots, relativePath).toContain('primarySurface');
+      }
     }
   });
 });

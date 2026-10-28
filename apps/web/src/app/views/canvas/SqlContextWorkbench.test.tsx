@@ -69,11 +69,12 @@ describe('SqlContextWorkbench', () => {
     });
   });
 
-  it('forwards repeated file requests by their original identity into the same Code workbench', async () => {
+  it('forwards workspace presentation and repeated file requests into the same Code workbench', async () => {
     const firstRequest = { path: 'notes/b.md' };
     await act(async () =>
       root.render(
         <SqlContextWorkbench
+          presentation="project-workspace"
           fileScope={{ kind: 'workspace-files' }}
           initialPath="notes/a.md"
           fileSelectionRequest={firstRequest}
@@ -83,10 +84,12 @@ describe('SqlContextWorkbench', () => {
     const workbench = container.querySelector('[data-slot="mock-code-view"]');
     expect(workbench).not.toBeNull();
     expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].fileSelectionRequest).toBe(firstRequest);
+    expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].presentation).toBe('project-workspace');
     const nextRequest = { path: firstRequest.path };
     await act(async () =>
       root.render(
         <SqlContextWorkbench
+          presentation="project-workspace"
           fileScope={{ kind: 'workspace-files' }}
           initialPath="notes/a.md"
           fileSelectionRequest={nextRequest}
@@ -94,6 +97,7 @@ describe('SqlContextWorkbench', () => {
       )
     );
     expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].fileSelectionRequest).toBe(nextRequest);
+    expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].presentation).toBe('project-workspace');
     expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].initialPath).toBe('notes/a.md');
     expect(container.querySelector('[data-slot="mock-code-view"]')).toBe(workbench);
   });

@@ -69,60 +69,89 @@ describe('Canvas Model inspection', () => {
     expect(previewTransformRows).not.toHaveBeenCalled();
     expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
-  it('uses shared keyboard navigation between Canvas and the named model', async () => {
-    const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
-    const panelFor = (tab: HTMLElement): HTMLElement => {
-      const panel = document.getElementById(tab.getAttribute('aria-controls') ?? '');
-      expect(panel).not.toBeNull();
-      expect(panel?.getAttribute('role')).toBe('tabpanel');
-      expect(panel?.getAttribute('aria-labelledby')).toBe(tab.id);
-      return panel!;
-    };
-    const canvas = navigation.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-workspace-tab"]'
-    )!;
-    const canvasPanel = panelFor(canvas);
-    const viewport = harness.container.querySelector('[data-testid="canvas-viewport"]');
-    await act(async () => data.onOpenNode?.(fixture.transform.id));
-    const model = navigation.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-model-main-tab"]'
-    )!;
-    const modelPanel = panelFor(model);
-    expect(
-      model
-        .closest('[role="tablist"]')
-        ?.contains(navigation.querySelector('[data-slot="canvas-model-tab-close"]'))
-    ).toBe(false);
-    expect(
-      modelPanel.contains(harness.container.querySelector('[data-slot="canvas-model-editor"]'))
-    ).toBe(true);
-    await act(async () => model.focus());
-    for (const [key, target, activePanel, inactivePanel] of [
-      ['Home', canvas, canvasPanel, modelPanel],
-      ['End', model, modelPanel, canvasPanel],
-      ['ArrowLeft', canvas, canvasPanel, modelPanel],
-      ['ArrowRight', model, modelPanel, canvasPanel],
-    ] as const) {
-      await act(async () => {
-        fireEvent.keyDown(document.activeElement!, { key });
-        await new Promise((resolve) => setTimeout(resolve, 0));
-      });
-      expect(document.activeElement).toBe(target);
-      expect(target.getAttribute('aria-selected')).toBe('true');
-      expect(panelFor(target)).toBe(activePanel);
-      expect(activePanel.getAttribute('aria-hidden')).toBe('false');
-      expect(activePanel.hasAttribute('inert')).toBe(false);
-      expect(inactivePanel.getAttribute('aria-hidden')).toBe('true');
-      expect(inactivePanel.hasAttribute('inert')).toBe(true);
+  it('uses shared keyboard navigation between Canvas, Code and the retained named model', async () => {
+    const frames: FrameRequestCallback[] = [];
+    const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    try {
+      const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel();
+      const panelFor = (tab: HTMLElement): HTMLElement => {
+        const panel = document.getElementById(tab.getAttribute('aria-controls') ?? '');
+        expect(panel).not.toBeNull();
+        expect(panel?.getAttribute('role')).toBe('tabpanel');
+        expect(panel?.getAttribute('aria-labelledby')).toBe(tab.id);
+        return panel!;
+      };
+      const canvas = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-workspace-tab"]'
+      )!;
+      const canvasPanel = panelFor(canvas);
+      const viewport = harness.container.querySelector('[data-testid="canvas-viewport"]');
+      await act(async () => data.onOpenNode?.(fixture.transform.id));
+      const model = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-model-main-tab"]'
+      )!;
+      const modelPanel = panelFor(model);
+      const code = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-code-main-tab"]'
+      )!;
+      let codePanel: HTMLElement | undefined;
+      let codeEditor: Element | null | undefined;
+      expect(
+        model
+          .closest('[role="tablist"]')
+          ?.contains(navigation.querySelector('[data-slot="canvas-model-tab-close"]'))
+      ).toBe(false);
+      expect(
+        modelPanel.contains(harness.container.querySelector('[data-slot="canvas-model-editor"]'))
+      ).toBe(true);
+      await act(async () => model.focus());
+      for (const [key, target] of [
+        ['Home', canvas],
+        ['End', model],
+        ['ArrowLeft', code],
+        ['ArrowLeft', canvas],
+        ['ArrowRight', code],
+        ['ArrowRight', model],
+        ['Home', canvas],
+      ] as const) {
+        await act(async () => {
+          fireEvent.keyDown(document.activeElement!, { key });
+          await new Promise((resolve) => setTimeout(resolve, 0));
+        });
+        await act(async () => frames.splice(0).forEach((callback) => callback(0)));
+        expect(document.activeElement).toBe(target);
+        expect(target.getAttribute('aria-selected')).toBe('true');
+        const activePanel = panelFor(target);
+        expect(activePanel.getAttribute('aria-hidden')).toBe('false');
+        expect(activePanel.hasAttribute('inert')).toBe(false);
+        if (target === code) {
+          codePanel ??= activePanel;
+          codeEditor ??= activePanel.querySelector('[data-testid="sql-context-workbench"]');
+          expect(activePanel).toBe(codePanel);
+          expect(activePanel.querySelector('[data-testid="sql-context-workbench"]')).toBe(
+            codeEditor
+          );
+        }
+        for (const inactive of [canvasPanel, modelPanel, codePanel]) {
+          if (inactive == null || inactive === activePanel) continue;
+          expect(inactive.getAttribute('aria-hidden')).toBe('true');
+          expect(inactive.hasAttribute('inert')).toBe(true);
+        }
+      }
+      await act(async () =>
+        navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
+      );
+      expect(panelFor(canvas)).toBe(canvasPanel);
+      expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+      expect(document.getElementById(modelPanel.id)).toBeNull();
+      expect(previewTransformRows).not.toHaveBeenCalled();
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    } finally {
+      schedule.mockRestore();
     }
-    await act(async () =>
-      navigation.querySelector<HTMLButtonElement>('[data-slot="canvas-model-tab-close"]')!.click()
-    );
-    expect(panelFor(canvas)).toBe(canvasPanel);
-    expect(harness.container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
-    expect(document.getElementById(modelPanel.id)).toBeNull();
-    expect(previewTransformRows).not.toHaveBeenCalled();
-    expect(onApplyNodeDraft).not.toHaveBeenCalled();
   });
 
   it('does not expose an orphan tab panel without an active Canvas', async () => {
@@ -130,6 +159,46 @@ describe('Canvas Model inspection', () => {
     expect(navigation.querySelector('[role="tab"]')).toBeNull();
     expect(harness.container.querySelector('[role="tabpanel"]')).toBeNull();
   });
+  it.each(['Canvas', 'Model'] as const)(
+    'rejects a late Code admission after a newer %s selection',
+    async (destination) => {
+      let settle!: (accepted: boolean) => void;
+      const admission = new Promise<boolean>((resolve) => {
+        settle = resolve;
+      });
+      const { data, fixture, previewTransformRows, onApplyNodeDraft } = await mountModel(false, {
+        workspaceCommands: { onOpenProjectCode: () => admission },
+        layout: {
+          contextualWorkbench: {
+            id: 'project-code',
+            title: 'Project files',
+            closeLabel: 'Close',
+            panel: <div>Existing authority-owned Code</div>,
+            requestClose: async () => true,
+          },
+        },
+      });
+      await act(async () => data.onOpenNode?.(fixture.transform.id));
+      const editor = harness.container.querySelector('[data-slot="canvas-model-editor"]');
+      const code = navigation.querySelector<HTMLButtonElement>(
+        '[data-slot="canvas-code-main-tab"]'
+      )!;
+      await act(async () => fireEvent.mouseDown(code, { button: 0, ctrlKey: false }));
+      const target = navigation.querySelector<HTMLButtonElement>(
+        destination === 'Canvas'
+          ? '[data-slot="canvas-workspace-tab"]'
+          : '[data-slot="canvas-model-main-tab"]'
+      )!;
+      await act(async () => fireEvent.mouseDown(target, { button: 0, ctrlKey: false }));
+      await act(async () => settle(true));
+      expect(target.getAttribute('aria-selected')).toBe('true');
+      expect(code.getAttribute('aria-selected')).toBe('false');
+      expect(harness.container.querySelector('[data-slot="canvas-model-editor"]')).toBe(editor);
+      expect(editor?.closest('[inert]') != null).toBe(destination === 'Canvas');
+      expect(previewTransformRows).not.toHaveBeenCalled();
+      expect(onApplyNodeDraft).not.toHaveBeenCalled();
+    }
+  );
   it('selects without navigation or queries, then opens the full-width editor on double-click', async () => {
     const { data, fixture, onSelectNode, previewTransformRows } = await mountModel();
     await act(async () => data.onSelectNode?.(fixture.transform.id));

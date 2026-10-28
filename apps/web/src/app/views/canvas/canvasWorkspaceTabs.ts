@@ -2,4 +2,5 @@
 export const canvasWorkspaceTabs = {
   canvas: { tabId: 'canvas-workspace-tab', panelId: 'canvas-workspace-surface' },
   model: { tabId: 'canvas-model-main-tab', panelId: 'canvas-model-workspace-surface' },
+  code: { tabId: 'canvas-code-main-tab', panelId: 'canvas-code-workspace-surface' },
 } as const;

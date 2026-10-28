@@ -15,6 +15,11 @@ export type CanvasWorkspaceMenuContribution = Readonly<{
   onImportDbtProject?: () => void;
   onOpenProjectExplorer?: () => void;
   onOpenProjectCode?: () => void;
+  codeTab?: Readonly<{
+    active: boolean;
+    onSelect: () => void;
+    onCanvas: () => void;
+  }>;
 }>;
 
 export type CanvasModelWorkspaceTabContribution = Readonly<{

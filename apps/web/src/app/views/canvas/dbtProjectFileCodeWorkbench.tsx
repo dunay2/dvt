@@ -57,6 +57,7 @@ export function buildDbtProjectFileCodeWorkbench({
     panel: (
       <SqlContextWorkbench
         ref={workbenchRef}
+        presentation="project-workspace"
         fileScope={{
           kind: 'dbt-project-files',
           projectRoot,

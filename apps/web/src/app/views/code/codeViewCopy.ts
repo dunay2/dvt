@@ -53,6 +53,11 @@ export type CodeViewCopy = Readonly<{
   previewMissingTitle: string;
   previewMissingMessagePrefix: string;
   historyTitle: string;
+  filePropertiesTitle: string;
+  name: string;
+  path: string;
+  language: string;
+  loadedVersionModified: string;
   historyNoFile: string;
   historyLoadingMessage: string;
   historyEmptyMessage: string;
@@ -221,6 +226,11 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
     key: 'code.previewMissingMessagePrefix',
     fallback: 'The selected file is no longer available in this workspace:',
   },
+  filePropertiesTitle: { key: 'code.filePropertiesTitle', fallback: 'File properties' },
+  name: { key: 'code.name', fallback: 'Name' },
+  path: { key: 'code.path', fallback: 'Path' },
+  language: { key: 'code.language', fallback: 'Language' },
+  loadedVersionModified: { key: 'code.loadedVersionModified', fallback: 'Loaded version modified' },
   historyTitle: { key: 'code.historyTitle', fallback: 'File history' },
   historyNoFile: { key: 'code.historyNoFile', fallback: 'Select a file to inspect history.' },
   historyLoadingMessage: {
@@ -310,6 +320,11 @@ const SPANISH_COPY: CodeViewCopy = {
   previewErrorMessage: 'No se pudo cargar el archivo seleccionado ahora.',
   previewMissingTitle: 'Archivo seleccionado no disponible',
   previewMissingMessagePrefix: 'El archivo seleccionado ya no está disponible en este workspace:',
+  filePropertiesTitle: 'Propiedades del archivo',
+  name: 'Nombre',
+  path: 'Ruta',
+  language: 'Lenguaje',
+  loadedVersionModified: 'Modificación de la versión cargada',
   historyTitle: 'Historial de archivo',
   historyNoFile: 'Selecciona un archivo para inspeccionar su historial.',
   historyLoadingMessage: 'Cargando historial del archivo...',

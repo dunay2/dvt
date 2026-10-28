@@ -30,12 +30,14 @@ import styles from './CanvasShell.module.css';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
+  let navigation: HTMLDivElement;
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
   let unmountShell: () => void;
 
   beforeEach(() => {
     const harness = createCanvasShellHarness();
     container = harness.container;
+    navigation = harness.navigation;
     renderShell = harness.render;
     unmountShell = harness.unmount;
   });
@@ -44,15 +46,40 @@ describe('CanvasShell graph base surface', () => {
     unmountShell();
   });
 
-  it('opens Git file requests in the retained project Code workbench', async () => {
+  it('enters one retained project Code workspace from Git and the File menu', async () => {
     await renderShell();
+    const codeTab = navigation.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-code-main-tab"]'
+    );
+    expect(codeTab).not.toBeNull();
+    expect(codeTab?.getAttribute('aria-selected')).toBe('false');
+    const initialCodePanel = document.getElementById(codeTab?.getAttribute('aria-controls') ?? '');
+    expect(initialCodePanel?.getAttribute('role')).toBe('tabpanel');
+    expect(initialCodePanel?.getAttribute('aria-hidden')).toBe('true');
+    expect(initialCodePanel?.hasAttribute('inert')).toBe(true);
+    expect(initialCodePanel?.childElementCount).toBe(0);
+    expect(container.querySelector('[data-testid="project-files-explorer"]')).toBeNull();
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+    });
+    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    expect(editor).not.toBeNull();
+    expect(codeTab?.getAttribute('aria-selected')).toBe('true');
+    const codePanel = document.getElementById(codeTab?.getAttribute('aria-controls') ?? '');
+    expect(codePanel).toBe(initialCodePanel);
+    expect(codePanel?.getAttribute('role')).toBe('tabpanel');
+    expect(codePanel?.getAttribute('aria-labelledby')).toBe(codeTab?.id);
+    expect(codePanel?.contains(editor)).toBe(true);
+    expect(container.querySelectorAll('[data-testid="project-files-explorer"]')).toHaveLength(1);
+    expect(viewport?.closest('[inert]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-contextual-workbench-overlay"]')).toBeNull();
     const files = container.querySelector('[data-testid="project-files-explorer"]');
     expect(files).not.toBeNull();
     await act(async () => {
       fireEvent.click(files!.querySelectorAll('button')[0]!);
     });
-    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
     expect(editor?.getAttribute('data-path')).toBe('notes/first.md');
     expect(editor?.getAttribute('data-file-scope')).toBe('workspace-files');
     await act(async () => {
@@ -62,30 +89,43 @@ describe('CanvasShell graph base surface', () => {
     expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
     expect(editor?.getAttribute('data-file-scope')).toBe('workspace-files');
     expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+    await act(async () => {
+      fireEvent.mouseDown(navigation.querySelector('[data-slot="canvas-workspace-tab"]')!, {
+        button: 0,
+      });
+    });
+    expect(viewport?.closest('[inert]')).toBeNull();
+    expect(editor?.closest('[inert]')).not.toBeNull();
+    expect(codeTab?.getAttribute('aria-selected')).toBe('false');
     const revealCode =
       useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode;
     expect(revealCode).toBeTypeOf('function');
     await act(async () => revealCode?.());
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
     expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
-    await act(async () => {
-      fireEvent.click(container.querySelector('[data-slot="canvas-contextual-workbench-close"]')!);
-    });
-    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
-    await act(async () =>
-      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.()
-    );
-    const reopened = container.querySelector('[data-testid="sql-context-workbench"]');
-    expect(reopened).not.toBeNull();
-    expect(reopened?.getAttribute('data-path')).toBeNull();
-    expect(reopened?.getAttribute('data-file-scope')).toBe('workspace-files');
+    expect(editor?.closest('[inert]')).toBeNull();
+    expect(viewport?.closest('[inert]')).not.toBeNull();
   });
 
   it('delegates Git file requests to the authority-owned Code opener with its actual root', async () => {
-    const onOpenProjectCode = vi.fn();
+    const onOpenProjectCode = vi.fn(async () => true);
     await renderShell({
       workspaceCommands: { projectRoot: 'dbt/sales', onOpenProjectCode },
+      layout: {
+        contextualWorkbench: {
+          id: 'project-code',
+          title: 'Sales files',
+          closeLabel: 'Close',
+          panel: <div data-testid="authority-owned-code" />,
+          requestClose: async () => true,
+        },
+      },
     });
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+    });
+    expect(onOpenProjectCode).toHaveBeenCalledExactlyOnceWith(undefined);
+    onOpenProjectCode.mockClear();
     const files = container.querySelector('[data-testid="project-files-explorer"]');
     expect(files?.getAttribute('data-project-root')).toBe('dbt/sales');
     await act(async () => {
@@ -94,6 +134,66 @@ describe('CanvasShell graph base surface', () => {
     expect(onOpenProjectCode).toHaveBeenCalledExactlyOnceWith('notes/first.md');
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
+
+  it('keeps the graph active when the authority-owned Code opener rejects entry', async () => {
+    const onOpenProjectCode = vi.fn(async () => false);
+    await renderShell({ workspaceCommands: { projectRoot: 'dbt/sales', onOpenProjectCode } });
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+    });
+    expect(onOpenProjectCode).toHaveBeenCalledOnce();
+    expect(viewport?.closest('[inert]')).toBeNull();
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+  });
+  it.each([false, true])(
+    'hands off Git keyboard focus without stealing a newer focus (%s)',
+    async (moved) => {
+      let settle!: (accepted: boolean) => void;
+      const admission = new Promise<boolean>((resolve) => {
+        settle = resolve;
+      });
+      const frames: FrameRequestCallback[] = [];
+      const schedule = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+        frames.push(callback);
+        return frames.length;
+      });
+      const elsewhere = document.createElement('button');
+      document.body.append(elsewhere);
+      try {
+        await renderShell({
+          workspaceCommands: { onOpenProjectCode: () => admission },
+          layout: {
+            contextualWorkbench: {
+              id: 'project-code',
+              title: 'Project files',
+              closeLabel: 'Close',
+              panel: <div>Existing authority-owned Code</div>,
+              requestClose: async () => true,
+            },
+          },
+        });
+        const git = container.querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-explorer-git-toggle"]'
+        )!;
+        git.focus();
+        await act(async () => fireEvent.keyDown(git, { key: 'Enter' }));
+        if (moved) elsewhere.focus();
+        await act(async () => settle(true));
+        await act(async () => frames.splice(0).forEach((callback) => callback(0)));
+        const panel = container.querySelector('[data-slot="canvas-code-workspace-surface"]');
+        expect(
+          navigation
+            .querySelector('[data-slot="canvas-code-main-tab"]')
+            ?.getAttribute('aria-selected')
+        ).toBe('true');
+        expect(document.activeElement).toBe(moved ? elsewhere : panel);
+      } finally {
+        schedule.mockRestore();
+        elsewhere.remove();
+      }
+    }
+  );
 
   it('keeps workspace-file Code inside the preserved node Properties context', async () => {
     const onHideInspector = vi.fn();
@@ -482,6 +582,7 @@ describe('CanvasShell graph base surface', () => {
 
   it('keeps governed center surfaces ahead of workbench unavailable panels', async () => {
     await renderShell({
+      panels: { activeCanvasId: null, activeCanvas: null },
       layout: {
         centerSurface: <div data-testid="first-canvas-center-surface" />,
         contextualWorkbench: {
@@ -501,11 +602,11 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
   });
 
-  it('renders a movable contextual workbench over the graph instead of replacing it', async () => {
+  it('retains the movable presentation for other contextual workbenches', async () => {
     await renderShell({
       layout: {
         contextualWorkbench: {
-          id: 'project-code',
+          id: 'output-expression',
           title: 'Project code',
           closeLabel: 'Cerrar',
           moveLabel: 'Mover código',
@@ -576,12 +677,14 @@ describe('CanvasShell graph base surface', () => {
         },
       },
     });
-
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
+    });
     expect(container.querySelector('[data-testid="dbt-project-file-code-panel"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-contextual-workbench-overlay"]')).toBeNull();
     expect(
-      container
-        .querySelector('[data-slot="canvas-contextual-workbench-close"]')
-        ?.getAttribute('aria-label')
-    ).toBe('Cerrar: Orders project code');
+      container.querySelector('[data-testid="canvas-viewport"]')?.closest('[inert]')
+    ).not.toBeNull();
   });
 });

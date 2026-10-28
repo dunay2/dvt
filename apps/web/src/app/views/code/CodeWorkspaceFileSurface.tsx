@@ -2,6 +2,8 @@
 import type { FileContent } from '../../ports/workspace';
 import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
+import { monacoVisualClasses } from '../../components/monaco/monacoVisualTokens';
+import { cn } from '../../components/ui/utils';
 import type { CodeWorkspaceFileEditPosture } from './codeWorkspaceFileEditPosture';
 
 type CodeWorkspaceFileSurfaceProps = Readonly<{
@@ -11,6 +13,7 @@ type CodeWorkspaceFileSurfaceProps = Readonly<{
   onChange: (value: string) => void;
   posture: CodeWorkspaceFileEditPosture;
   value: string;
+  fillAvailableSpace?: boolean;
 }>;
 
 export function CodeWorkspaceFileSurface({
@@ -20,11 +23,16 @@ export function CodeWorkspaceFileSurface({
   onChange,
   posture,
   value,
+  fillAvailableSpace = false,
 }: CodeWorkspaceFileSurfaceProps) {
+  const containerClassName = fillAvailableSpace
+    ? cn(monacoVisualClasses.surface, 'h-full min-h-0 rounded-none border-0')
+    : undefined;
   if (posture.kind !== 'editable') {
     return (
       <MonacoCodeViewer
         ariaLabel={ariaLabel}
+        containerClassName={containerClassName}
         language={file.language}
         loadingLabel={loadingLabel}
         path={file.path}
@@ -36,6 +44,7 @@ export function CodeWorkspaceFileSurface({
   return (
     <MonacoCodeEditor
       ariaLabel={ariaLabel}
+      containerClassName={containerClassName}
       language={file.language}
       loadingLabel={loadingLabel}
       onChange={onChange}

@@ -18,6 +18,11 @@ import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
 import { CanvasExplorerTemplate, type CanvasExplorerPanel } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
+export type CanvasExplorerProjectWorkspace = Readonly<{
+  onActivate: () => Promise<boolean>;
+  onCanvas: () => void;
+}>;
+
 export function CanvasExplorer({
   sources,
   elements,
@@ -28,29 +33,31 @@ export function CanvasExplorer({
 }: Readonly<{
   sources: ReactNode;
   elements: ReactNode;
-  projectFiles?: ReactNode;
+  projectFiles?: CanvasExplorerProjectWorkspace;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
   workspaceTask?: ReactNode;
 }>): JSX.Element {
-  const [active, setActive] = useState<CanvasExplorerPanel | null>('sources');
-  const [gitOpened, setGitOpened] = useState(false);
+  const [selected, setSelected] = useState<CanvasExplorerPanel>('sources');
+  const [expanded, setExpanded] = useState(true);
   const hasProjectFiles = projectFiles != null;
-  const activePanel = active === 'git' && !hasProjectFiles ? null : active;
+  const selectedPanel = selected;
   const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
   const close = useUiLayoutStore((state) => state.hideCanvasExplorer);
   // An explicit View-menu reopen must expand even a previously collapsed dock.
   useEffect(() => {
-    if (visible)
-      setActive((current) =>
-        current === 'git' && !hasProjectFiles ? 'sources' : (current ?? 'sources')
-      );
-  }, [visible, hasProjectFiles]);
+    if (visible) setExpanded(true);
+  }, [visible]);
   const id = useId();
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const toggle = (key: CanvasExplorerPanel): void => {
-    if (key === 'git') setGitOpened(true);
-    setActive((current) => (current === key ? null : key));
+    if (key === 'git') {
+      if (projectFiles != null) void projectFiles.onActivate().catch(() => undefined);
+      return;
+    }
+    projectFiles?.onCanvas();
+    setExpanded((current) => (selectedPanel === key ? !current : true));
+    setSelected(key);
   };
   const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -61,22 +68,25 @@ export function CanvasExplorer({
   return (
     <CanvasExplorerTemplate
       id={id}
-      active={visible ? activePanel : null}
+      active={visible && expanded ? selectedPanel : null}
       visible={visible}
       copy={copy}
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       sources={sources}
       elements={elements}
-      git={projectFiles}
-      gitOpened={gitOpened}
+      hasProjectFiles={hasProjectFiles}
       onToggle={toggle}
       onKeyToggle={onKeyToggle}
       onCollapse={() => {
-        setActive(null);
-        document.getElementById(`${id}-${activePanel}-button`)?.focus();
+        projectFiles?.onCanvas();
+        setExpanded(false);
+        document.getElementById(`${id}-${selectedPanel}-button`)?.focus();
       }}
-      onClose={close}
+      onClose={() => {
+        projectFiles?.onCanvas();
+        close();
+      }}
     >
       {children}
     </CanvasExplorerTemplate>

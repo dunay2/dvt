@@ -1,10 +1,11 @@
 /** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
-import { FileCode2 } from 'lucide-react';
+import { FileCode2, PanelRight } from 'lucide-react';
 import {
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -12,6 +13,7 @@ import {
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
+import { Button } from '../components/ui/button';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
@@ -70,6 +72,7 @@ export type CodeViewProps = Readonly<{
   fileScope?: CodeViewFileScope;
   initialPath?: string;
   fileSelectionRequest?: Readonly<{ path: string }>;
+  presentation?: 'default' | 'project-workspace';
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -82,12 +85,16 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     fileScope,
     initialPath,
     fileSelectionRequest,
+    presentation = 'default',
     reconcilePersistedFile,
   }: CodeViewProps = {},
   ref
 ) {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCodeViewCopy(applicationLanguage);
+  const isProjectWorkspace = presentation === 'project-workspace';
+  const [propertiesOpen, setPropertiesOpen] = useState(true);
+  const propertiesId = useId();
   const isDbtProjectFiles = fileScope?.kind === 'dbt-project-files';
   const preferredPath =
     fileSelectionRequest?.path ??
@@ -143,7 +150,17 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       : graphAuthority?.kind === 'unresolved' && graphAuthority.reason === 'mixed_authority'
         ? 'mixed'
         : 'missing';
-  const fileHistoryQuery = useWorkspaceFileHistoryQuery(resolvedPath);
+  const fileHistoryQuery = useWorkspaceFileHistoryQuery(
+    isProjectWorkspace ? undefined : resolvedPath
+  );
+  const selectedFile =
+    fileContentQuery.isSuccess && fileContentQuery.data.path === resolvedPath
+      ? fileContentQuery.data
+      : undefined;
+  const loadedModifiedAt =
+    selectedFile != null && !Number.isNaN(Date.parse(selectedFile.lastModified))
+      ? new Date(selectedFile.lastModified)
+      : null;
   const fileTreeErrorPresentation = fileTreeQuery.isError
     ? resolveCodeWorkbenchErrorPresentation({
         scope: 'file-tree',
@@ -246,7 +263,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       bodyClassName="flex min-h-0 flex-1"
       presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
       header={
-        publishRouteBootstrap ? (
+        !isProjectWorkspace && publishRouteBootstrap ? (
           <div className={routeWorkbenchHeaderBandClassName}>
             <ViewHeader
               className="border-0 bg-transparent px-0 py-0"
@@ -258,7 +275,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         ) : undefined
       }
       slots={{
-        leftPanel: (
+        leftPanel: isProjectWorkspace ? undefined : (
           <FileTreePanel
             title={copy.explorerTitle}
             tree={scopedWorkspaceFileTree}
@@ -270,7 +287,56 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
             }}
           />
         ),
-        rightPanel: publishRouteBootstrap ? (
+        rightPanel: isProjectWorkspace ? (
+          propertiesOpen ? (
+            <section
+              id={propertiesId}
+              role="region"
+              aria-label={copy.filePropertiesTitle}
+              className="flex h-full flex-col border-l border-(--border-default)"
+            >
+              <h2 className="flex min-h-8 shrink-0 items-center border-b border-(--border-subtle) px-2 text-xs font-semibold">
+                {copy.filePropertiesTitle}
+              </h2>
+              <div className="min-h-0 flex-1 overflow-auto p-3">
+                {fileContentQuery.isPending ? (
+                  <p className="text-xs text-(--text-muted)">{copy.previewLoadingMessage}</p>
+                ) : filePreviewErrorPresentation ? (
+                  <p role="alert" className="text-xs text-(--text-muted)">
+                    {filePreviewErrorPresentation.title}
+                  </p>
+                ) : selectedFile == null ? (
+                  <p className="text-xs text-(--text-muted)">{copy.previewEmptyMessage}</p>
+                ) : (
+                  <dl className="space-y-3 text-xs">
+                    <div>
+                      <dt className="text-(--text-muted)">{copy.name}</dt>
+                      <dd className="break-words">{selectedFile.name}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-(--text-muted)">{copy.path}</dt>
+                      <dd className="break-words">{selectedFile.path}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-(--text-muted)">{copy.language}</dt>
+                      <dd>{selectedFile.language}</dd>
+                    </div>
+                    {loadedModifiedAt == null ? null : (
+                      <div>
+                        <dt className="text-(--text-muted)">{copy.loadedVersionModified}</dt>
+                        <dd>
+                          <time dateTime={selectedFile.lastModified}>
+                            {loadedModifiedAt.toLocaleString(applicationLanguage)}
+                          </time>
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                )}
+              </div>
+            </section>
+          ) : undefined
+        ) : publishRouteBootstrap ? (
           <CodeFileHistoryPanel
             copy={copy}
             selectedPath={resolvedPath}
@@ -280,9 +346,27 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
           />
         ) : undefined,
         primarySurface: (
-          <div className="min-w-0 flex h-full flex-1 p-4">
+          <div className="min-w-0 flex h-full flex-1 p-0">
             <WorkspaceFileCodeEditor
               ref={workspaceFileEditorRef}
+              fillAvailableSpace
+              headerActions={
+                isProjectWorkspace ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-6"
+                    aria-label={copy.filePropertiesTitle}
+                    title={copy.filePropertiesTitle}
+                    aria-expanded={propertiesOpen}
+                    aria-controls={propertiesId}
+                    onClick={() => setPropertiesOpen((current) => !current)}
+                  >
+                    <PanelRight aria-hidden="true" />
+                  </Button>
+                ) : undefined
+              }
               authority={fileAuthority}
               graphOwnedPaths={graphOwnedPaths}
               path={resolvedPath}

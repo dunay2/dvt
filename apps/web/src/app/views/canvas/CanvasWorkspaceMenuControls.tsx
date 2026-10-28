@@ -39,6 +39,7 @@ export function CanvasWorkspaceMenuContributionRegistrar(
   const hasImportDbtProjectCommand = props.onImportDbtProject != null;
   const hasOpenProjectCodeCommand = props.onOpenProjectCode != null;
   const hasOpenProjectExplorerCommand = props.onOpenProjectExplorer != null;
+  const hasCodeTab = props.codeTab != null;
   const contribution = useMemo<CanvasWorkspaceMenuContribution>(
     () => ({
       activeCanvas:
@@ -56,6 +57,15 @@ export function CanvasWorkspaceMenuContributionRegistrar(
       canImportDbtProject: props.canImportDbtProject,
       canOpenProjectCode: props.canOpenProjectCode,
       canOpenProjectExplorer: props.canOpenProjectExplorer,
+      ...(hasCodeTab
+        ? {
+            codeTab: {
+              active: props.codeTab?.active === true,
+              onSelect: () => latestPropsRef.current.codeTab?.onSelect(),
+              onCanvas: () => latestPropsRef.current.codeTab?.onCanvas(),
+            },
+          }
+        : {}),
       ...(hasExportProjectSnapshotCommand
         ? { onExportProjectSnapshot: () => latestPropsRef.current.onExportProjectSnapshot?.() }
         : {}),
@@ -91,6 +101,8 @@ export function CanvasWorkspaceMenuContributionRegistrar(
       hasImportDbtProjectCommand,
       hasOpenProjectCodeCommand,
       hasOpenProjectExplorerCommand,
+      hasCodeTab,
+      props.codeTab?.active,
     ]
   );
 
@@ -202,6 +214,7 @@ export function CanvasWorkspaceMenuControls({
 
 export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
   const modelTab = useCanvasWorkspaceMenuContributionStore((state) => state.modelTab);
+  const codeTab = useCanvasWorkspaceMenuContributionStore((state) => state.contribution?.codeTab);
   const activeCanvas = useCanvasWorkspaceMenuContributionStore(
     (state) => state.contribution?.activeCanvas ?? null
   );
@@ -225,6 +238,7 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       <CanvasWorkspaceModelTabs
         canvasTitle={activeCanvas.title}
         tab={modelTab?.canvasId === activeCanvas.id ? modelTab : undefined}
+        codeTab={codeTab}
       />
     </div>
   );

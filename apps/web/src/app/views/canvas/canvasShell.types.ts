@@ -72,6 +72,14 @@ export type CanvasShellContextualWorkbench = Readonly<{
   requestClose: () => Promise<boolean>;
 }>;
 
+export type CanvasShellProjectCodeWorkspace = Readonly<{
+  tree: React.ReactNode;
+  panel?: React.ReactNode;
+  active: boolean;
+  onActivate: () => Promise<boolean>;
+  onCanvas: () => void;
+}>;
+
 export type CanvasShellPanels = {
   authoringNodeKinds: readonly NodeKindRegistration[];
   activeCanvasId: string | null;
@@ -170,7 +178,7 @@ export type CanvasShellCanvasCommands = {
 export type CanvasShellWorkspaceCommands = Readonly<{
   canOpenProjectExplorer?: boolean;
   projectRoot?: string;
-  onOpenProjectCode?: (path?: string) => void;
+  onOpenProjectCode?: (path?: string) => Promise<boolean>;
 }>;
 
 export type CanvasShellProps = Readonly<{

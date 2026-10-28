@@ -1,6 +1,7 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import type { ReactNode } from 'react';
+import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   CanvasShellContextualWorkbenchSplit,
   CanvasShellMainPanelFrame,
@@ -20,6 +21,7 @@ import type {
   CanvasShellLayout,
   CanvasShellOpenDataRegistryCommand,
   CanvasShellPanels,
+  CanvasShellProjectCodeWorkspace,
 } from './canvasShell.types';
 
 type CanvasShellMainPanelProps = Readonly<{
@@ -37,7 +39,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
   workspaceTask?: ReactNode;
-  projectFiles?: ReactNode;
+  projectFiles?: CanvasShellProjectCodeWorkspace;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
@@ -47,6 +49,8 @@ function CanvasShellMenuContributionRegistrars({
   onOpenProjectExplorer,
   onOpenProjectCode,
   onImportDbtProject,
+  projectFiles,
+  workspaceTask,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'panels'
@@ -55,6 +59,8 @@ function CanvasShellMenuContributionRegistrars({
   | 'onOpenProjectExplorer'
   | 'onOpenProjectCode'
   | 'onImportDbtProject'
+  | 'projectFiles'
+  | 'workspaceTask'
 >): JSX.Element {
   return (
     <CanvasWorkspaceMenuContributionRegistrar
@@ -73,6 +79,17 @@ function CanvasShellMenuContributionRegistrars({
       onOpenProjectExplorer={onOpenProjectExplorer}
       onOpenProjectCode={onOpenProjectCode}
       onImportDbtProject={onImportDbtProject}
+      codeTab={
+        projectFiles == null
+          ? undefined
+          : {
+              active: workspaceTask == null && projectFiles.active,
+              onSelect: () => {
+                void projectFiles.onActivate();
+              },
+              onCanvas: projectFiles.onCanvas,
+            }
+      }
     />
   );
 }
@@ -156,9 +173,11 @@ function CanvasShellViewport({
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
       externalNodeSurfaceActive={
+        projectFiles?.active === true ||
         workspaceTask != null ||
         nodeWorkbenchVisible ||
-        layout.contextualWorkbench != null ||
+        (layout.contextualWorkbench != null &&
+          !(projectFiles != null && layout.contextualWorkbench.id === 'project-code')) ||
         layout.centerSurfaceVisible === true
       }
     />
@@ -190,8 +209,11 @@ function CanvasShellMainSurface({
 > & { inspector: ReactNode }): JSX.Element {
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
-  const nodeInspector =
-    workspaceTask == null && layout.contextualWorkbench == null ? inspector : null;
+  const contextualWorkbench =
+    projectFiles != null && layout.contextualWorkbench?.id === 'project-code'
+      ? undefined
+      : layout.contextualWorkbench;
+  const nodeInspector = workspaceTask == null && contextualWorkbench == null ? inspector : null;
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
@@ -215,13 +237,26 @@ function CanvasShellMainSurface({
       editor={modelWorkspaceOpen ? layout.centerSurface : null}
       editorVisible={workspaceTask == null && layout.centerSurfaceVisible === true}
       hasWorkspaceTabs={panels.activeCanvas != null}
+      code={
+        projectFiles == null ? undefined : projectFiles.panel == null ? (
+          <></>
+        ) : (
+          <RouteWorkbenchFrame
+            scroll={false}
+            presentationMode="embedded"
+            bodyClassName="flex min-h-0 flex-1"
+            slots={{ leftPanel: projectFiles.tree, primarySurface: projectFiles.panel }}
+          />
+        )
+      }
+      codeVisible={workspaceTask == null && projectFiles?.active === true}
     />
   );
 
   return (
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
-      workbench={workspaceTask == null ? layout.contextualWorkbench : undefined}
+      workbench={workspaceTask == null ? contextualWorkbench : undefined}
       inspector={inspectorInViewport ? null : nodeInspector}
     />
   );
@@ -246,6 +281,7 @@ export function CanvasShellMainPanel({
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
     workspaceTask == null &&
+    projectFiles?.active !== true &&
     (layout.centerSurface == null || layout.centerSurfaceVisible === false);
 
   return (
@@ -257,6 +293,8 @@ export function CanvasShellMainPanel({
         onOpenProjectExplorer={onOpenProjectExplorer}
         onOpenProjectCode={onOpenProjectCode}
         onImportDbtProject={onImportDbtProject}
+        projectFiles={projectFiles}
+        workspaceTask={workspaceTask}
       />
       {layout.readOnlyBanner ? (
         <CanvasShellReadOnlyBannerSlot>{layout.readOnlyBanner}</CanvasShellReadOnlyBannerSlot>

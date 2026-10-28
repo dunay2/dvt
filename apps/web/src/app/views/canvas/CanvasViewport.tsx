@@ -32,6 +32,7 @@ import {
 } from './canvasNodeContextSurfaceModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
+import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
@@ -85,7 +86,7 @@ type CanvasViewportProps = {
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
   readonly externalNodeSurfaceActive?: boolean;
   readonly workspaceTask?: ReactNode;
-  readonly projectFiles?: ReactNode;
+  readonly projectFiles?: CanvasExplorerProjectWorkspace;
   readonly inspector?: ReactNode;
 };
 
@@ -239,6 +240,7 @@ function CanvasViewportWithPresenter({
     [props.onNodesChange, reactFlow.fitView]
   );
   const viewportRef = useRef<HTMLDivElement>(null);
+  const externalSurfaceActive = props.externalNodeSurfaceActive ?? false;
   const [nodeContextSurfaceState, dispatchNodeContextSurface] = useReducer(
     reduceCanvasNodeContextSurface,
     undefined,
@@ -287,7 +289,6 @@ function CanvasViewportWithPresenter({
   );
 
   useEffect(() => {
-    const externalSurfaceActive = props.externalNodeSurfaceActive ?? false;
     if (externalSurfaceActive) {
       nodeHealthPopoverTriggerRef.current = null;
     }
@@ -295,7 +296,7 @@ function CanvasViewportWithPresenter({
       type: 'synchronize-external-surface',
       active: externalSurfaceActive,
     });
-  }, [props.externalNodeSurfaceActive]);
+  }, [externalSurfaceActive]);
 
   const semanticViewportNodes = useCanvasViewportSemanticNodes(props.nodesWithImpact);
   const graphFilterController = useCanvasGraphFilterController({
@@ -475,7 +476,7 @@ function CanvasViewportWithPresenter({
         viewportRef={viewportRef}
         resolvedCanvasPalette={resolvedCanvasPalette}
         canEditEdges={props.canEditEdges}
-        canDeleteWithKeyboard={props.canEditEdges && !(props.externalNodeSurfaceActive ?? false)}
+        canDeleteWithKeyboard={props.canEditEdges && !externalSurfaceActive}
         canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
         canSelectNodes={canSelectNodes}
         nodesWithImpact={renderedNodes}

@@ -1,6 +1,6 @@
 /** Passive workspace tab strip: markup, accessibility and semantic class names. */
 import './canvasSemanticEditor.css';
-import { Table2, X } from 'lucide-react';
+import { Code2, Table2, X } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import type { CanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 
@@ -29,9 +29,23 @@ export function CanvasWorkspaceModelTabsTemplate({
             data-slot={item.tabId}
             title={item.label}
             className="workspace-navigation-tab"
+            onMouseDown={(event) => {
+              if (
+                item.key !== 'code' &&
+                item.key === activeKey &&
+                event.button === 0 &&
+                !event.ctrlKey
+              )
+                onSelect(item.key);
+            }}
+            onFocus={() => {
+              if (item.key !== 'code' && item.key === activeKey) onSelect(item.key);
+            }}
           >
             {item.key === 'model' ? (
               <Table2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
+            ) : item.key === 'code' ? (
+              <Code2 aria-hidden="true" className="canvas-workspace-model-tab-icon" />
             ) : null}
             <span className="canvas-workspace-model-tab-label">{item.label}</span>
           </TabsTrigger>

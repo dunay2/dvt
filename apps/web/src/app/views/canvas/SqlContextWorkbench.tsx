@@ -13,6 +13,7 @@ export type SqlContextWorkbenchProps = Readonly<{
   fileScope?: CodeViewFileScope;
   initialPath?: string;
   fileSelectionRequest?: CodeViewProps['fileSelectionRequest'];
+  presentation?: CodeViewProps['presentation'];
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -26,6 +27,7 @@ export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlCont
       fileScope,
       initialPath,
       fileSelectionRequest,
+      presentation,
       reconcilePersistedFile,
     }: SqlContextWorkbenchProps,
     ref
@@ -37,6 +39,7 @@ export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlCont
         fileScope={fileScope}
         initialPath={initialPath}
         fileSelectionRequest={fileSelectionRequest}
+        presentation={presentation}
         reconcilePersistedFile={reconcilePersistedFile}
       />
     );

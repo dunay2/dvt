@@ -1,10 +1,11 @@
 /** Owned concern: edit one known workspace file through the canonical revision-aware Code rail. */
-import { forwardRef, useCallback, useImperativeHandle } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, type ReactNode } from 'react';
 
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { useWorkspaceFileContentQuery } from '../../queries/workspaceQueries';
 import { useWorkspaceFileContentCommandPort } from '../../services/AppServicesContext';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { cn } from '../../components/ui/utils';
 import { CodePreviewEmptyStateView, CodePreviewErrorStateView } from './CodeStateViews';
 import { CodeWorkingTreeNavigationGuard } from './CodeWorkingTreeNavigationGuard';
 import { CodeWorkingTreeStatus } from './CodeWorkingTreeStatus';
@@ -31,6 +32,8 @@ export type WorkspaceFileCodeEditorProps = Readonly<{
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
   onPersistenceRecovered?: () => void | Promise<void>;
+  fillAvailableSpace?: boolean;
+  headerActions?: ReactNode;
 }>;
 
 export const WorkspaceFileCodeEditor = forwardRef<
@@ -44,6 +47,8 @@ export const WorkspaceFileCodeEditor = forwardRef<
     path,
     reconcilePersistedFile,
     onPersistenceRecovered,
+    fillAvailableSpace = false,
+    headerActions,
   },
   ref
 ) {
@@ -168,6 +173,7 @@ export const WorkspaceFileCodeEditor = forwardRef<
   ) : (
     <CodeWorkspaceFileSurface
       ariaLabel={`${copy.editorAriaLabelPrefix} ${fileContentQuery.data.name}`}
+      fillAvailableSpace={fillAvailableSpace}
       file={fileContentQuery.data}
       loadingLabel={copy.editorLoadingMessage}
       onChange={workingTreeSync.updateValue}
@@ -186,8 +192,9 @@ export const WorkspaceFileCodeEditor = forwardRef<
         blocked={workingTreeSync.navigationBlocked}
         flush={workingTreeSync.flush}
       />
-      <div className="flex min-h-10 items-center gap-3 border-b border-(--border-subtle) px-3 py-2">
+      <div className="flex min-h-8 items-center gap-2 border-b border-(--border-subtle) px-2">
         <code className="min-w-0 flex-1 truncate text-xs text-(--text-secondary)">{path}</code>
+        {headerActions}
       </div>
       {posture.kind === 'graph_owned_read_only' ? null : (
         <CodeWorkingTreeStatus
@@ -203,7 +210,7 @@ export const WorkspaceFileCodeEditor = forwardRef<
           }}
         />
       )}
-      <div className="min-h-80 flex-1 p-3">{surface}</div>
+      <div className={cn('flex-1 p-1', fillAvailableSpace ? 'min-h-0' : 'min-h-80')}>{surface}</div>
     </div>
   );
 });

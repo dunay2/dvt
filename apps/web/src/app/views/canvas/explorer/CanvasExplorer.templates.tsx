@@ -5,7 +5,7 @@
  * @consequence Switching a panel cannot recreate the graph or lose a search input.
  * @version 1.0.0
  */
-import { Database, Workflow, GitBranch, Search, Plus, ChevronLeft, X } from 'lucide-react';
+import { Database, Workflow, Search, Plus, ChevronLeft, X } from 'lucide-react';
 import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
@@ -19,9 +19,20 @@ import type { CanvasExplorerItem } from './canvasExplorerItems';
 
 type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
 const panels = [
-  { key: 'sources', Icon: Database },
-  { key: 'elements', Icon: Workflow },
-  { key: 'git', Icon: GitBranch },
+  { key: 'sources', icon: <Database aria-hidden="true" /> },
+  { key: 'elements', icon: <Workflow aria-hidden="true" /> },
+  {
+    key: 'git',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <path d="m12 2 10 10-10 10L2 12Z" strokeLinejoin="round" />
+        <path d="m8 8 8 8M8 8v8" />
+        <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+        <circle cx="8" cy="16" r="1.5" fill="currentColor" />
+        <circle cx="16" cy="16" r="1.5" fill="currentColor" />
+      </svg>
+    ),
+  },
 ] as const;
 export type CanvasExplorerPanel = (typeof panels)[number]['key'];
 
@@ -34,8 +45,7 @@ export function CanvasExplorerTemplate(
     rootRef?: RefObject<HTMLDivElement>;
     sources: ReactNode;
     elements: ReactNode;
-    git?: ReactNode;
-    gitOpened: boolean;
+    hasProjectFiles: boolean;
     children: ReactNode;
     workspaceTask?: ReactNode;
     onToggle: (key: CanvasExplorerPanel) => void;
@@ -44,11 +54,11 @@ export function CanvasExplorerTemplate(
     onClose: () => void;
   }>
 ): JSX.Element {
-  const availablePanels = panels.filter(({ key }) => key !== 'git' || props.git != null);
+  const availablePanels = panels.filter(({ key }) => key !== 'git' || props.hasProjectFiles);
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
       <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
-        {availablePanels.map(({ key, Icon }) => (
+        {availablePanels.map(({ key, icon }) => (
           <button
             key={key}
             type="button"
@@ -57,12 +67,12 @@ export function CanvasExplorerTemplate(
             data-slot={`canvas-explorer-${key}-toggle`}
             aria-label={props.copy[key]}
             title={props.copy[key]}
-            aria-expanded={props.active === key}
-            aria-controls={`${props.id}-${key}`}
+            aria-expanded={key === 'git' ? undefined : props.active === key}
+            aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
             onClick={() => props.onToggle(key)}
             onKeyDown={(event) => props.onKeyToggle(key, event)}
           >
-            <Icon aria-hidden="true" />
+            {icon}
           </button>
         ))}
       </nav>
@@ -75,38 +85,40 @@ export function CanvasExplorerTemplate(
           maxSize={40}
           className={props.active == null ? styles.hidden : styles.dock}
         >
-          {availablePanels.map(({ key }) => (
-            <section
-              key={key}
-              id={`${props.id}-${key}`}
-              aria-labelledby={`${props.id}-${key}-button`}
-              hidden={props.active !== key}
-              className={styles.panel}
-            >
-              <header className={styles.header}>
-                <h3 className={styles.heading}>{props.copy[key]}</h3>
-                <button
-                  type="button"
-                  className={styles.headerAction}
-                  aria-label={props.copy.collapse}
-                  title={props.copy.collapse}
-                  onClick={props.onCollapse}
-                >
-                  <ChevronLeft aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className={styles.headerAction}
-                  aria-label={props.copy.close}
-                  title={props.copy.close}
-                  onClick={props.onClose}
-                >
-                  <X aria-hidden="true" />
-                </button>
-              </header>
-              {key === 'git' && !props.gitOpened ? null : props[key]}
-            </section>
-          ))}
+          {availablePanels.map(({ key }) =>
+            key === 'git' ? null : (
+              <section
+                key={key}
+                id={`${props.id}-${key}`}
+                aria-labelledby={`${props.id}-${key}-button`}
+                hidden={props.active !== key}
+                className={styles.panel}
+              >
+                <header className={styles.header}>
+                  <h3 className={styles.heading}>{props.copy[key]}</h3>
+                  <button
+                    type="button"
+                    className={styles.headerAction}
+                    aria-label={props.copy.collapse}
+                    title={props.copy.collapse}
+                    onClick={props.onCollapse}
+                  >
+                    <ChevronLeft aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.headerAction}
+                    aria-label={props.copy.close}
+                    title={props.copy.close}
+                    onClick={props.onClose}
+                  >
+                    <X aria-hidden="true" />
+                  </button>
+                </header>
+                {props[key]}
+              </section>
+            )
+          )}
         </ResizablePanel>
         <ResizableHandle
           aria-label={props.copy.resize}
@@ -125,7 +137,7 @@ export function CanvasExplorerTemplate(
             className={styles.retainedSurface}
             data-slot="canvas-explorer-retained-surface"
             aria-hidden={props.workspaceTask != null}
-            {...(props.workspaceTask == null ? {} : { inert: '' })}
+            {...(props.workspaceTask != null ? { inert: '' } : {})}
           >
             {props.children}
           </div>
