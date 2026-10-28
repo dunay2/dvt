@@ -429,6 +429,31 @@ describe('DBT project Git browsing with real file authority', () => {
     );
     cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_browser_dbt');
     cy.get(properties).should('contain.text', projectPath);
+    cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
+    cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).then(($directory) => {
+      const directory = $directory[0]!;
+      cy.get('@actualFileTree.all').then((requests) => {
+        const treeReads = requests.length;
+        cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
+        cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
+        cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
+        cy.get('[data-slot="canvas-workspace-tab"]').click();
+        cy.get(code).should('not.be.visible');
+        cy.get(main).should('be.visible');
+        cy.get('[data-slot="canvas-code-main-tab"]').click();
+        cy.get(code).should('be.visible');
+        cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).should(($current) => {
+          expect($current[0], 'the real directory survives the workspace roundtrip').to.equal(
+            directory
+          );
+        });
+        cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
+        cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
+        cy.get('@actualFileTree.all').should('have.length', treeReads);
+        cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
+        cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
+      });
+    });
     cy.get(`${git} [data-workspace-path="${secondPath}"]`).click();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
       'have.attr',

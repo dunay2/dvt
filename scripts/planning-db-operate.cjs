@@ -8,7 +8,7 @@
  * @version 1.2.0
  */
 const { spawnSync } = require('node:child_process');
-const { readFileSync } = require('node:fs');
+const { readFileSync, lstatSync } = require('node:fs');
 const { Client } = require('pg');
 const { randomUuidV4, sha256Hex, sha256HexUtf8 } = require('@dvt/crypto');
 
@@ -44,9 +44,14 @@ const {
 } = require('./planning-db/commands/governed-source-refresh-command.cjs');
 const {
   applyGovernedSourceRefreshOperation,
+  readGovernedSourceSnapshots,
+  canonicalSourceContentHash,
 } = require('./planning-db/governed-source-refresh-write-rail.cjs');
 const { parseCatalogReconciliation } = require('./planning-db/catalog-reconciliation.cjs');
 const { applyCatalogReconciliation } = require('./planning-db/catalog-reconciliation-write.cjs');
+const {
+  planCanonicalDocumentRelocation,
+} = require('./planning-db/docs-canonical-source-resolution.cjs');
 const {
   requireBindings,
   replaceComponentBindings,
@@ -1241,6 +1246,9 @@ function operationPayload(command) {
       referenceText: normalizeOptionalText(command.referenceText),
       resolutionStatus: command.resolutionStatus,
       reason: command.reason,
+      ...(command.canonicalSource === undefined
+        ? {}
+        : { canonicalSource: command.canonicalSource }),
     };
   }
 
@@ -1983,6 +1991,18 @@ function parseDocsResolutionCommand(action, args) {
     idempotencyKey: options.idempotencyKey,
     idempotencyKeyDefaulted: !options.idempotencyKey,
   };
+
+  if (
+    command.issueKind === 'canonical_document_relocation' ||
+    options.canonicalSource !== undefined
+  ) {
+    try {
+      command.canonicalSource = JSON.parse(requireOption(options, 'canonicalSource'));
+    } catch (error) {
+      throw new Error('DOC-RELOCATION: Invalid canonical-source JSON.', { cause: error });
+    }
+    planCanonicalDocumentRelocation({ command, validateOnly: true });
+  }
 
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
@@ -5622,6 +5642,10 @@ function normalizeDocsResolutionSource(command, sourceRow) {
 }
 
 function planDocsResolutionOperation({ command, sourceRow, operationId, now }) {
+  const canonicalSource =
+    command.canonicalSource === undefined
+      ? undefined
+      : planCanonicalDocumentRelocation({ command, sourceRow });
   const source = normalizeDocsResolutionSource(command, sourceRow);
   if (!source) {
     throw new Error(
@@ -5646,6 +5670,7 @@ function planDocsResolutionOperation({ command, sourceRow, operationId, now }) {
   resolution.rawResolution = {
     ...resolution,
     sourceReason: source.sourceReason,
+    ...(canonicalSource === undefined ? {} : { canonicalSource }),
   };
 
   const audit = {
@@ -6094,6 +6119,99 @@ async function readDocsDispositionAction(client, command) {
   );
 
   return result.rows[0] || null;
+}
+
+async function readCanonicalDocumentRelocationFacts(client, command) {
+  planCanonicalDocumentRelocation({ command, validateOnly: true });
+  await client.query(
+    "select pg_advisory_xact_lock(hashtext('dvt:docs-relocation'), hashtext($1))",
+    [command.documentPath]
+  );
+  await client.query(
+    `select document_id from ${schemaName}.knowledge_documents
+    where document_path = any($1::text[]) order by document_path for share`,
+    [[command.documentPath, command.canonicalSource.targetPath]]
+  );
+  await client.query(`select path from ${schemaName}.governance_files where path=$1 for share`, [
+    command.canonicalSource.targetPath,
+  ]);
+  const result = await client.query(
+    `select source.document_id, source.document_path, source.document_type,
+    source.source_content_sha256, target.document_id as target_document_id,
+    target.document_path as target_document_path, target.document_type as target_document_type,
+    target.status as target_status, governed.content_hash as target_content_sha256,
+    case when resolution.resolution_key is null then null else
+      ${schemaName}.sha256_text(${schemaName}.stable_jsonb_text(to_jsonb(resolution))) end as overlay_sha256,
+    resolution.raw_resolution #>> '{canonicalSource,targetPath}' as overlay_target_path,
+    exists(select 1 from ${schemaName}.doc_resolution_overlays other
+      where other.issue_kind='canonical_document_relocation' and other.resolution_status='linked'
+      and other.document_path=target.document_path and other.source_content_sha256=target.source_content_sha256)
+      as target_relocated
+    from ${schemaName}.knowledge_documents source
+    left join ${schemaName}.knowledge_documents target on target.document_path=$2
+    left join ${schemaName}.governance_file_query governed on governed.path=target.document_path
+    left join ${schemaName}.doc_resolution_overlays resolution on resolution.resolution_scope='docs_disposition'
+      and resolution.issue_kind='canonical_document_relocation' and resolution.document_path=source.document_path
+      and resolution.reference_text is null
+    where source.document_path=$1`,
+    [command.documentPath, command.canonicalSource.targetPath]
+  );
+  return result.rows[0] || null;
+}
+
+async function verifyCanonicalDocumentRelocationGit(command, options = {}) {
+  const proof = command.canonicalSource;
+  const root = options.repoRoot || require('node:path').resolve(__dirname, '..');
+  const gitOptions = { ...options, repoRoot: root };
+  if (readGitValue(['rev-parse', 'HEAD'], gitOptions) !== proof.targetCommit) {
+    throw new Error('DOC-RELOCATION: Target commit must be current HEAD.');
+  }
+  if (
+    canonicalSourceContentHash(
+      readGitFileAtCommit(proof.sourceCommit, command.documentPath, gitOptions)
+    ) !== proof.expectedSourceContentSha256
+  ) {
+    throw new Error('DOC-RELOCATION: Imported origin blob does not match.');
+  }
+  readGitValue(
+    ['merge-base', '--is-ancestor', proof.sourceCommit, proof.retirementCommit],
+    gitOptions
+  );
+  readGitValue(
+    ['merge-base', '--is-ancestor', proof.retirementCommit, proof.targetCommit],
+    gitOptions
+  );
+  readGitFileAtCommit(`${proof.retirementCommit}^`, command.documentPath, gitOptions);
+  for (const commit of [proof.retirementCommit, proof.targetCommit]) {
+    if (readGitValue(['ls-tree', '-z', commit, '--', command.documentPath], gitOptions)) {
+      throw new Error('DOC-RELOCATION: Source must be retired and absent at HEAD.');
+    }
+  }
+  try {
+    lstatSync(require('node:path').resolve(root, command.documentPath));
+    throw new Error('DOC-RELOCATION: Retired source exists in the working tree.');
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  const snapshot = readGovernedSourceSnapshots({ paths: [proof.targetPath], repoRoot: root });
+  if (
+    snapshot.sourceCommitSha !== proof.targetCommit ||
+    snapshot.sources[0].contentHash !== proof.expectedTargetContentSha256
+  ) {
+    throw new Error('DOC-RELOCATION: Target source proof does not match.');
+  }
+  const { tsImport } = await import('tsx/esm/api');
+  const { extractAnchors } = await tsImport(
+    '../tools/docs/lib/markdownAnchors.ts',
+    require('node:url').pathToFileURL(__filename).href
+  );
+  const anchors = extractAnchors(
+    readGitFileAtCommit(proof.targetCommit, proof.targetPath, gitOptions).toString('utf8')
+  );
+  if (proof.targetAnchors.some((anchor) => !anchors.has(anchor))) {
+    throw new Error('DOC-RELOCATION: Missing target anchor.');
+  }
+  return snapshot;
 }
 
 async function writePlannedArchitectureDesignCreateOperation(client, planned) {
@@ -7223,7 +7341,8 @@ async function writePlannedFowlerAnalysisOperation(client, planned) {
 }
 
 async function writePlannedDocsResolutionOperation(client, planned) {
-  await client.query(
+  const relocation = planned.resolution.rawResolution.canonicalSource;
+  const result = await client.query(
     `insert into ${schemaName}.doc_resolution_overlays
       (resolution_key, resolution_scope, issue_kind, document_path, reference_text,
        resolution_status, resolved_by, resolved_at, reason, source_content_sha256, raw_resolution)
@@ -7234,7 +7353,13 @@ async function writePlannedDocsResolutionOperation(client, planned) {
        resolved_at = excluded.resolved_at,
        reason = excluded.reason,
        source_content_sha256 = excluded.source_content_sha256,
-       raw_resolution = excluded.raw_resolution`,
+       raw_resolution = excluded.raw_resolution${
+         relocation === undefined
+           ? ''
+           : relocation.expectedResolutionSha256 === 'absent'
+             ? ' where false'
+             : ` where ${schemaName}.sha256_text(${schemaName}.stable_jsonb_text(to_jsonb(doc_resolution_overlays))) = $12`
+       }`,
     [
       planned.resolution.resolutionKey,
       planned.resolution.resolutionScope,
@@ -7247,8 +7372,13 @@ async function writePlannedDocsResolutionOperation(client, planned) {
       planned.resolution.reason,
       planned.resolution.sourceContentSha256,
       toJson(planned.resolution.rawResolution),
+      ...(relocation === undefined || relocation.expectedResolutionSha256 === 'absent'
+        ? []
+        : [relocation.expectedResolutionSha256]),
     ]
   );
+  if (relocation !== undefined && result.rowCount !== 1)
+    throw new Error('DOC-RELOCATION: Resolution CAS failed.');
 
   await client.query(
     `insert into ${schemaName}.doc_resolution_operations
@@ -7287,7 +7417,10 @@ async function applyDocsResolutionOperation(command, options = {}) {
     await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
-    const sourceRow = await readDocsDispositionAction(client, command);
+    const sourceRow =
+      command.canonicalSource === undefined
+        ? await readDocsDispositionAction(client, command)
+        : await readCanonicalDocumentRelocationFacts(client, command);
     const materializedCommand = materializeDocsResolutionCommand(command, sourceRow);
 
     const existing = await readExistingDocsResolutionOperation(
@@ -7300,6 +7433,9 @@ async function applyDocsResolutionOperation(command, options = {}) {
       return { idempotent: true, audit: existing };
     }
 
+    if (command.canonicalSource !== undefined)
+      await verifyCanonicalDocumentRelocationGit(command, options);
+
     const planned = planDocsResolutionOperation({
       command: materializedCommand,
       sourceRow,
@@ -7308,6 +7444,8 @@ async function applyDocsResolutionOperation(command, options = {}) {
     });
 
     await writePlannedDocsResolutionOperation(client, planned);
+    if (command.canonicalSource !== undefined)
+      await verifyCanonicalDocumentRelocationGit(command, options);
     await client.query('commit');
     return { idempotent: false, ...planned };
   } catch (error) {

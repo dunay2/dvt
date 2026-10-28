@@ -10,6 +10,7 @@ const { applyCurrentPlanningDbSchema } = require('./planning-db-schema.cjs');
 require('./planning-db-operate-tests/catalog-current-document-integration.cjs')(dbUrl);
 require('./planning-db-operate-tests/catalog-authority-integration.cjs')(dbUrl);
 require('./planning-db-operate-tests/catalog-authority-import-integration.cjs')(dbUrl);
+require('./planning-db-operate-tests/docs-canonical-source-integration.cjs')(dbUrl);
 
 let adminClient;
 let isolatedDatabaseName;

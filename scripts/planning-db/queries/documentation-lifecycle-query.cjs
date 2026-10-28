@@ -22,6 +22,7 @@ function createDocumentationLifecycleReadModelComponent(deps = {}) {
       row.document_path ?? row.documentPath,
       row.subject_key ?? row.subjectKey ?? '-',
       row.title,
+      row.canonical_target_path ?? row.canonicalTargetPath ?? '-',
     ]);
   }
 
@@ -53,7 +54,8 @@ function createDocumentationLifecycleReadModelComponent(deps = {}) {
         inbound_repository_reference_count,
         lifecycle_gap_kind,
         suggested_query,
-        source_content_sha256
+        source_content_sha256,
+        canonical_target_path
       from ${activeSchemaName}.documentation_lifecycle_query`;
   }
 

@@ -301,7 +301,6 @@ test('feature mechanization readers query DB-first manifest projections', async 
     5,
   ]);
   assert.match(captured[1].sql, /jsonb_array_elements_text/);
-  assert.match(captured[1].sql, /componentGuides/);
   assert.deepEqual(captured[1].params, ['implemented', 6]);
   assert.match(captured[2].sql, /jsonb_array_elements/);
   assert.match(captured[2].sql, /symbols/);

@@ -2915,6 +2915,46 @@ CREATE TABLE planning_query_store.feature_mechanization_local_rails (
 
 
 --
+-- Name: doc_resolution_overlays; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.doc_resolution_overlays (
+    resolution_key text NOT NULL,
+    resolution_scope text NOT NULL,
+    issue_kind text NOT NULL,
+    document_path text,
+    reference_text text,
+    resolution_status text NOT NULL,
+    resolved_by text NOT NULL,
+    resolved_at timestamp with time zone DEFAULT now() NOT NULL,
+    reason text NOT NULL,
+    source_content_sha256 text,
+    raw_resolution jsonb DEFAULT '{}'::jsonb NOT NULL,
+    CONSTRAINT doc_resolution_overlays_resolution_scope_check CHECK ((resolution_scope = 'docs_disposition'::text)),
+    CONSTRAINT doc_resolution_overlays_resolution_status_check CHECK ((resolution_status = ANY (ARRAY['resolved'::text, 'accepted'::text, 'ignored'::text, 'linked'::text]))),
+    CONSTRAINT doc_resolution_overlays_source_content_sha256_check CHECK (((source_content_sha256 IS NULL) OR (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))
+);
+
+
+--
+-- Name: knowledge_documents; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.knowledge_documents (
+    document_id text NOT NULL,
+    document_path text NOT NULL,
+    document_type text NOT NULL,
+    title text NOT NULL,
+    status text,
+    planning_type text,
+    owner text,
+    mandatory boolean DEFAULT false NOT NULL,
+    source_content_sha256 text NOT NULL,
+    raw_frontmatter jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+--
 -- Name: command_query_rail_manifest_query; Type: VIEW; Schema: planning_query_store; Owner: -
 --
 
@@ -3093,7 +3133,23 @@ CREATE VIEW planning_query_store.command_query_rail_manifest_query AS
     raw_rail,
     raw_manifest,
     rail_source,
-    imported_at
+    imported_at,
+    (SELECT COALESCE(jsonb_agg(
+        CASE WHEN resolution.resolution_key IS NULL THEN guide.value
+          ELSE resolution.raw_resolution #>> '{canonicalSource,targetPath}' END
+        ORDER BY guide.ordinality), '[]'::jsonb)
+      FROM jsonb_array_elements_text(CASE WHEN jsonb_typeof(raw_manifest->'componentGuides')='array'
+        THEN raw_manifest->'componentGuides' ELSE '[]'::jsonb END) WITH ORDINALITY guide(value, ordinality)
+      LEFT JOIN planning_query_store.knowledge_documents original ON original.document_path=guide.value
+      LEFT JOIN planning_query_store.doc_resolution_overlays resolution
+        ON resolution.resolution_scope='docs_disposition' AND resolution.issue_kind='canonical_document_relocation'
+        AND resolution.resolution_status='linked' AND resolution.reference_text IS NULL
+        AND resolution.document_path=original.document_path
+        AND resolution.source_content_sha256=original.source_content_sha256
+        AND resolution.raw_resolution #>> '{canonicalSource,sourceDocumentId}'=original.document_id
+        AND resolution.raw_resolution #>> '{canonicalSource,expectedSourceContentSha256}'=original.source_content_sha256
+        AND resolution.raw_resolution #>> '{canonicalSource,targetPath}' IS NOT NULL
+    ) AS effective_component_guides
    FROM effective_manifest_rails;
 
 
@@ -3336,24 +3392,6 @@ CREATE TABLE planning_query_store.knowledge_document_links (
 
 
 --
--- Name: knowledge_documents; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.knowledge_documents (
-    document_id text NOT NULL,
-    document_path text NOT NULL,
-    document_type text NOT NULL,
-    title text NOT NULL,
-    status text,
-    planning_type text,
-    owner text,
-    mandatory boolean DEFAULT false NOT NULL,
-    source_content_sha256 text NOT NULL,
-    raw_frontmatter jsonb DEFAULT '{}'::jsonb NOT NULL
-);
-
-
---
 -- Name: knowledge_intake_repository_references; Type: TABLE; Schema: planning_query_store; Owner: -
 --
 
@@ -3392,7 +3430,20 @@ CREATE TABLE planning_query_store.fowler_analysis_dispositions (
 --
 
 CREATE VIEW planning_query_store.documentation_lifecycle_query AS
- WITH accepted_db_authority_dispositions AS (
+ WITH canonical_relocations AS (
+         SELECT original.document_path,
+            resolution.raw_resolution #>> '{canonicalSource,targetPath}' AS canonical_target_path
+           FROM planning_query_store.knowledge_documents original
+           JOIN planning_query_store.doc_resolution_overlays resolution
+             ON resolution.document_path=original.document_path
+            AND resolution.resolution_scope='docs_disposition'
+            AND resolution.issue_kind='canonical_document_relocation'
+            AND resolution.resolution_status='linked' AND resolution.reference_text IS NULL
+            AND resolution.source_content_sha256=original.source_content_sha256
+            AND resolution.raw_resolution #>> '{canonicalSource,sourceDocumentId}'=original.document_id
+            AND resolution.raw_resolution #>> '{canonicalSource,expectedSourceContentSha256}'=original.source_content_sha256
+            AND resolution.raw_resolution #>> '{canonicalSource,targetPath}' IS NOT NULL
+        ), accepted_db_authority_dispositions AS (
          SELECT disposition.document_path,
             disposition.disposition_kind,
             disposition.source_content_sha256
@@ -3441,12 +3492,14 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             COALESCE(action_counts.open_action_count, 0) AS open_action_count,
             COALESCE(reference_counts.inbound_knowledge_reference_count, 0) AS inbound_knowledge_reference_count,
             COALESCE(repository_counts.inbound_repository_reference_count, 0) AS inbound_repository_reference_count,
-            document.source_content_sha256
+            document.source_content_sha256,
+            relocation.canonical_target_path
            FROM ((((planning_query_store.knowledge_documents document
              LEFT JOIN action_counts ON ((action_counts.document_id = document.document_id)))
              LEFT JOIN knowledge_reference_counts reference_counts ON ((reference_counts.document_id = document.document_id)))
              LEFT JOIN repository_reference_counts repository_counts ON ((repository_counts.document_id = document.document_id)))
              LEFT JOIN accepted_db_authority_dispositions disposition ON (((disposition.document_path = document.document_path) AND (disposition.source_content_sha256 = document.source_content_sha256))))
+             LEFT JOIN canonical_relocations relocation ON relocation.document_path=document.document_path
         ), stateful AS (
          SELECT classified.document_id,
             classified.document_path,
@@ -3465,7 +3518,9 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             classified.inbound_knowledge_reference_count,
             classified.inbound_repository_reference_count,
             classified.source_content_sha256,
+            classified.canonical_target_path,
                 CASE
+                    WHEN classified.canonical_target_path IS NOT NULL THEN 'superseded'::text
                     WHEN (classified.db_disposition_kind = 'db_authority_historical'::text) THEN 'superseded'::text
                     WHEN ((lower(COALESCE(classified.status, ''::text)) = ANY (ARRAY['rejected'::text, 'discarded'::text, 'disposable'::text])) OR (classified.document_path ~~ 'docs/planning/proposals/disposable/%'::text)) THEN 'discarded'::text
                     WHEN ((lower(COALESCE(classified.status, ''::text)) = 'superseded'::text) OR (classified.document_path ~~ 'docs/planning/proposals/superseded/%'::text)) THEN 'superseded'::text
@@ -3523,7 +3578,8 @@ CREATE VIEW planning_query_store.documentation_lifecycle_query AS
             ELSE 'none'::text
         END AS lifecycle_gap_kind,
     (('pnpm planning:db:query documentation-lifecycle --path '::text || quote_literal(stateful.document_path)) || ' --limit 30'::text) AS suggested_query,
-    stateful.source_content_sha256
+    stateful.source_content_sha256,
+    stateful.canonical_target_path
    FROM (stateful
      LEFT JOIN peer_counts ON ((peer_counts.subject_key = stateful.subject_key)));
 
@@ -6164,28 +6220,6 @@ CREATE TABLE planning_query_store.doc_disposition_documents (
     raw_frontmatter jsonb DEFAULT '{}'::jsonb NOT NULL,
     raw_document jsonb NOT NULL,
     imported_at timestamp with time zone DEFAULT now() NOT NULL
-);
-
-
---
--- Name: doc_resolution_overlays; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.doc_resolution_overlays (
-    resolution_key text NOT NULL,
-    resolution_scope text NOT NULL,
-    issue_kind text NOT NULL,
-    document_path text,
-    reference_text text,
-    resolution_status text NOT NULL,
-    resolved_by text NOT NULL,
-    resolved_at timestamp with time zone DEFAULT now() NOT NULL,
-    reason text NOT NULL,
-    source_content_sha256 text,
-    raw_resolution jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT doc_resolution_overlays_resolution_scope_check CHECK ((resolution_scope = 'docs_disposition'::text)),
-    CONSTRAINT doc_resolution_overlays_resolution_status_check CHECK ((resolution_status = ANY (ARRAY['resolved'::text, 'accepted'::text, 'ignored'::text, 'linked'::text]))),
-    CONSTRAINT doc_resolution_overlays_source_content_sha256_check CHECK (((source_content_sha256 IS NULL) OR (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))
 );
 
 

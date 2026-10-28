@@ -3,6 +3,7 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { sha256HexUtf8 } = require('@dvt/crypto');
+const { spawnSync } = require('node:child_process');
 
 const {
   addCurrentPlanningDbTable,
@@ -10,9 +11,66 @@ const {
   assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
   currentSchemaPath,
+  replaceCurrentPlanningDbViews,
   schemaName,
   schemaNames,
 } = require('./planning-db-schema.cjs');
+
+test('explicit two-view CLI rejects an unreviewed schema before connecting or rebuilding', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(__dirname, 'planning-db-schema.cjs'),
+      '--replace-read-views',
+      '--expected-schema-sha256',
+      'a'.repeat(64),
+      '--expected-manifest-view-sha256',
+      'b'.repeat(64),
+      '--expected-lifecycle-view-sha256',
+      'c'.repeat(64),
+    ],
+    { encoding: 'utf8' }
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Reviewed schema digest does not match/);
+});
+
+test('fixed two-view extraction refuses stacked statements and caller-supplied SQL before connecting', async (t) => {
+  const sql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const start = sql.indexOf(
+    'CREATE VIEW planning_query_store.command_query_rail_manifest_query AS'
+  );
+  const end = start + sql.slice(start).search(/;\r?\n\r?\n/u) + 1;
+  const malicious = sql.slice(0, end) + '\nDROP TABLE architecture.design;' + sql.slice(end);
+  const originalRead = fs.readFileSync;
+  const reader = t.mock.method(fs, 'readFileSync', (name, ...args) =>
+    name === currentSchemaPath ? malicious : originalRead(name, ...args)
+  );
+  const client = new RecordingClient();
+  try {
+    await assert.rejects(
+      replaceCurrentPlanningDbViews({
+        client,
+        expectedSchemaSha256: sha256HexUtf8(malicious),
+        expectedManifestViewSha256: 'b'.repeat(64),
+        expectedLifecycleViewSha256: 'c'.repeat(64),
+      }),
+      /Exactly one CREATE VIEW statement/
+    );
+    assert.deepEqual(client.queries, []);
+  } finally {
+    reader.mock.restore();
+  }
+  await assert.rejects(
+    replaceCurrentPlanningDbViews({ client, sql: 'DROP TABLE architecture.design' }),
+    /caller SQL/
+  );
+  await assert.rejects(
+    replaceCurrentPlanningDbViews({ client, view: 'architecture.foreign' }),
+    /caller SQL/
+  );
+  assert.deepEqual(client.queries, []);
+});
 
 test('explicit table addition uses the reviewed current definition without replacing schemas', async () => {
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');

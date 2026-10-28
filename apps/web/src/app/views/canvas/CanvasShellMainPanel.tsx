@@ -1,6 +1,7 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import type { ReactNode } from 'react';
+import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   CanvasShellContextualWorkbenchSplit,
@@ -21,7 +22,6 @@ import type {
   CanvasShellLayout,
   CanvasShellOpenDataRegistryCommand,
   CanvasShellPanels,
-  CanvasShellProjectCodeWorkspace,
 } from './canvasShell.types';
 
 type CanvasShellMainPanelProps = Readonly<{
@@ -39,7 +39,8 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
   workspaceTask?: ReactNode;
-  projectFiles?: CanvasShellProjectCodeWorkspace;
+  projectFiles?: CanvasExplorerProjectWorkspace &
+    Readonly<{ tree: ReactNode; panel?: ReactNode; active: boolean }>;
 }>;
 
 function CanvasShellMenuContributionRegistrars({

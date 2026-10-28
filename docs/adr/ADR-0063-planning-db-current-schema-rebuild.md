@@ -77,6 +77,35 @@ responsibility associations. Acceptance requires a real PostgreSQL test proving
 rollback, foreign-key enforcement, rejection of existing tables and preservation
 of unrelated architecture rows.
 
+### Explicit replacement of documentation read projections
+
+The separate [GH-3747 decision](https://github.com/dunay2/dvt/issues/3747#issuecomment-6476202219)
+permits a bounded extension of `ApplyCurrentPlanningDbSchema` to reconcile
+consolidated component-guide references. This is an explicit operator action;
+the implementation contract must be satisfied before it is applied.
+
+The mode may replace only
+`planning_query_store.command_query_rail_manifest_query` and
+`planning_query_store.documentation_lifecycle_query`. It reads their definitions
+from the reviewed current `tools/planning-db/schema.sql`, requires that file's
+SHA-256 and both live `pg_get_viewdef` hashes, and checks them under the same
+current-schema advisory lock and transaction before replacement.
+
+The existing 27 manifest columns and 26 lifecycle columns retain their names,
+types and order. The only admitted additions are final
+`effective_component_guides jsonb` and `canonical_target_path text`, respectively.
+Imported declarations and their raw manifests remain historical facts; the
+effective projection identifies the current consultation target.
+
+The operation must reject absent or unexpected views, stale hashes, unsupported
+arguments and any other signature change. Both replacements roll back together
+on failure. It accepts no caller-supplied SQL, path or object identity, never
+reaches schema reset or table addition, and alters no table or stored row.
+Queries, imports, refreshes and checks must not invoke it automatically. It
+introduces no migration chain, applied-version ledger or older-schema
+compatibility path. Isolated PostgreSQL tests must prove rollback, exact
+column preservation and preservation of unrelated definitions and data.
+
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
 DB-authored architecture and mechanization are read through governed queries;
