@@ -37,6 +37,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenModelEditor?: (nodeId: string) => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
   workspaceTask?: ReactNode;
+  projectFiles?: ReactNode;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
@@ -85,6 +86,7 @@ function CanvasShellViewport({
   onOpenCanvasSettings,
   contextMenuPresenter,
   workspaceTask,
+  projectFiles,
   inspector,
 }: Pick<
   CanvasShellMainPanelProps,
@@ -96,6 +98,7 @@ function CanvasShellViewport({
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
   | 'workspaceTask'
+  | 'projectFiles'
 > & { inspector: ReactNode }): JSX.Element {
   const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
     focusMode: layout.focusMode,
@@ -107,6 +110,7 @@ function CanvasShellViewport({
   return (
     <CanvasViewport
       workspaceTask={workspaceTask}
+      projectFiles={projectFiles}
       inspector={inspector}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
@@ -171,6 +175,7 @@ function CanvasShellMainSurface({
   contextMenuPresenter,
   inspector,
   workspaceTask,
+  projectFiles,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -181,6 +186,7 @@ function CanvasShellMainSurface({
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
   | 'workspaceTask'
+  | 'projectFiles'
 > & { inspector: ReactNode }): JSX.Element {
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
@@ -189,6 +195,7 @@ function CanvasShellMainSurface({
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
+      projectFiles={projectFiles}
       inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
       panels={panels}
@@ -235,6 +242,7 @@ export function CanvasShellMainPanel({
   onOpenModelEditor,
   contextMenuPresenter,
   workspaceTask,
+  projectFiles,
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
     workspaceTask == null &&
@@ -255,6 +263,7 @@ export function CanvasShellMainPanel({
       ) : null}
       <CanvasShellMainSurface
         workspaceTask={workspaceTask}
+        projectFiles={projectFiles}
         layout={layout}
         panels={panels}
         graph={graph}

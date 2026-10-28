@@ -6,6 +6,7 @@ import { fireEvent, screen } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { DropdownMenu, DropdownMenuContent } from '../../../components/ui/dropdown-menu';
 import { CanvasExplorerViewMenu } from './CanvasExplorerViewMenu';
 import { CanvasGraphExplorer } from './CanvasGraphExplorer';
@@ -18,6 +19,7 @@ let root: Root;
 let container: HTMLDivElement;
 beforeEach(() => {
   useUiLayoutStore.setState({ canvasExplorerVisible: true });
+  useApplicationLanguageStore.setState({ language: 'en' });
 });
 function render(element: React.ReactNode): void {
   (
@@ -26,14 +28,126 @@ function render(element: React.ReactNode): void {
   container = document.createElement('div');
   document.body.append(container);
   root = createRoot(container);
-  act(() => root.render(element));
+  act(() => {
+    root.render(element);
+  });
 }
 afterEach(() => {
-  act(() => root?.unmount());
+  act(() => {
+    root?.unmount();
+  });
   container?.remove();
 });
 
 describe('Canvas explorer', () => {
+  it.each([
+    ['en', ['Sources', 'Elements', 'Git']],
+    ['es', ['Fuentes', 'Elementos', 'Git']],
+  ] as const)('keeps optional Git on the localized shared rail (%s)', (language, labels) => {
+    useApplicationLanguageStore.setState({ language });
+    render(
+      <CanvasExplorer sources={null} elements={null} projectFiles={<p>Files</p>}>
+        <p>Graph</p>
+      </CanvasExplorer>
+    );
+    expect(
+      [...screen.getByRole('navigation').querySelectorAll('button')].map((button) =>
+        button.getAttribute('aria-label')
+      )
+    ).toEqual(labels);
+  });
+
+  it.each([false, true])(
+    'retains Git state and recovers a withdrawn slot (hidden: %s)',
+    (hidden) => {
+      const view = (files: React.ReactNode): JSX.Element => (
+        <CanvasExplorer
+          sources={<input aria-label="Source search" defaultValue="orders" />}
+          elements={<p>Existing elements</p>}
+          projectFiles={files}
+        >
+          <input aria-label="Graph state" />
+        </CanvasExplorer>
+      );
+      const files = <input aria-label="Project file search" defaultValue="models" />;
+      render(view(files));
+      const graph = screen.getByLabelText('Graph state');
+      const source = screen.getByLabelText('Source search');
+      const git = screen.getByRole('button', { name: 'Git' });
+      act(() => {
+        fireEvent.click(git);
+      });
+      const search = screen.getByLabelText('Project file search');
+      act(() => {
+        fireEvent.change(search, { target: { value: 'staging' } });
+      });
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+      });
+      expect(screen.queryByRole('textbox', { name: 'Project file search' })).toBeNull();
+      act(() => {
+        fireEvent.keyDown(git, { key: ' ' });
+      });
+      expect(screen.getByRole('textbox', { name: 'Project file search' })).toBe(search);
+      expect((search as HTMLInputElement).value).toBe('staging');
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Close explorer' }));
+      });
+      expect(screen.queryByRole('textbox', { name: 'Project file search' })).toBeNull();
+      act(() => {
+        useUiLayoutStore.setState({ canvasExplorerVisible: true });
+      });
+      expect(screen.getByRole('textbox', { name: 'Project file search' })).toBe(search);
+      expect((search as HTMLInputElement).value).toBe('staging');
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Collapse explorer' }));
+      });
+      expect(document.activeElement).toBe(git);
+      expect(git.getAttribute('aria-expanded')).toBe('false');
+      act(() => {
+        fireEvent.click(git);
+      });
+      if (hidden)
+        act(() => {
+          useUiLayoutStore.setState({ canvasExplorerVisible: false });
+        });
+      act(() => {
+        root.render(view(undefined));
+      });
+      if (hidden)
+        act(() => {
+          useUiLayoutStore.setState({ canvasExplorerVisible: true });
+        });
+      expect(screen.queryByRole('button', { name: 'Git' })).toBeNull();
+      const sources = screen.getByRole('button', { name: 'Sources' });
+      expect(sources.getAttribute('aria-expanded')).toBe('true');
+      expect(screen.getByRole('textbox', { name: 'Source search' })).toBe(source);
+      expect(screen.getByLabelText('Graph state')).toBe(graph);
+      expect(screen.getByRole('navigation').querySelectorAll('button')).toHaveLength(2);
+    }
+  );
+
+  it('offers the optional Git panel without replacing the retained graph', () => {
+    render(
+      <CanvasExplorer
+        sources={<p>Catalogue</p>}
+        elements={null}
+        projectFiles={<input aria-label="Project files" />}
+      >
+        <input aria-label="Graph state" />
+      </CanvasExplorer>
+    );
+    const graph = screen.getByLabelText('Graph state');
+    const git = screen.getByRole('button', { name: 'Git' });
+    act(() => {
+      git.focus();
+      fireEvent.keyDown(git, { key: 'Enter' });
+    });
+    expect(git.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('textbox', { name: 'Project files' })).not.toBeNull();
+    expect(screen.getByLabelText('Graph state')).toBe(graph);
+  });
+
   it('retains graph state while an inline task temporarily owns its surface', () => {
     const view = (task: React.ReactNode): JSX.Element => (
       <CanvasExplorer sources={<p>Catalogue</p>} elements={null} workspaceTask={task}>

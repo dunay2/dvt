@@ -5,7 +5,7 @@
  * @consequence Switching a panel cannot recreate the graph or lose a search input.
  * @version 1.0.0
  */
-import { Database, Workflow, Search, Plus, ChevronLeft, X } from 'lucide-react';
+import { Database, Workflow, GitBranch, Search, Plus, ChevronLeft, X } from 'lucide-react';
 import type { KeyboardEvent, ReactNode, RefObject } from 'react';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
@@ -18,33 +18,37 @@ import styles from './CanvasExplorer.module.css';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
 
 type Copy = ReturnType<typeof resolveCanvasExplorerCopy>;
-type Panel = 'sources' | 'elements';
 const panels = [
   { key: 'sources', Icon: Database },
   { key: 'elements', Icon: Workflow },
+  { key: 'git', Icon: GitBranch },
 ] as const;
+export type CanvasExplorerPanel = (typeof panels)[number]['key'];
 
 export function CanvasExplorerTemplate(
   props: Readonly<{
     id: string;
-    active: Panel | null;
+    active: CanvasExplorerPanel | null;
     visible: boolean;
     copy: Copy;
     rootRef?: RefObject<HTMLDivElement>;
     sources: ReactNode;
     elements: ReactNode;
+    git?: ReactNode;
+    gitOpened: boolean;
     children: ReactNode;
     workspaceTask?: ReactNode;
-    onToggle: (key: Panel) => void;
-    onKeyToggle: (key: Panel, event: KeyboardEvent<HTMLButtonElement>) => void;
+    onToggle: (key: CanvasExplorerPanel) => void;
+    onKeyToggle: (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>) => void;
     onCollapse: () => void;
     onClose: () => void;
   }>
 ): JSX.Element {
+  const availablePanels = panels.filter(({ key }) => key !== 'git' || props.git != null);
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
       <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
-        {panels.map(({ key, Icon }) => (
+        {availablePanels.map(({ key, Icon }) => (
           <button
             key={key}
             type="button"
@@ -71,7 +75,7 @@ export function CanvasExplorerTemplate(
           maxSize={40}
           className={props.active == null ? styles.hidden : styles.dock}
         >
-          {panels.map(({ key }) => (
+          {availablePanels.map(({ key }) => (
             <section
               key={key}
               id={`${props.id}-${key}`}
@@ -100,7 +104,7 @@ export function CanvasExplorerTemplate(
                   <X aria-hidden="true" />
                 </button>
               </header>
-              {props[key]}
+              {key === 'git' && !props.gitOpened ? null : props[key]}
             </section>
           ))}
         </ResizablePanel>

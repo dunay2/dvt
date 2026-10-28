@@ -3,7 +3,11 @@ import type { RefObject } from 'react';
 
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasShellContextualWorkbench } from './canvasShell.types';
-import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
+import {
+  SqlContextWorkbench,
+  type SqlContextWorkbenchHandle,
+  type SqlContextWorkbenchProps,
+} from './SqlContextWorkbench';
 import type { CodeWorkingTreeReconciliationOutcome } from '../code/codeWorkingTreeSyncModel';
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 
@@ -18,6 +22,8 @@ export function buildDbtProjectFileCodeWorkbench({
   onClose,
   reconcilePersistedFile,
   projectRoot,
+  initialPath,
+  fileSelectionRequest,
   open,
 }: Readonly<{
   copy: DbtProjectFileCodeWorkbenchCopy;
@@ -27,6 +33,8 @@ export function buildDbtProjectFileCodeWorkbench({
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
   projectRoot: string;
+  initialPath?: string;
+  fileSelectionRequest?: SqlContextWorkbenchProps['fileSelectionRequest'];
   open: boolean;
 }>): CanvasShellContextualWorkbench | undefined {
   if (!open) {
@@ -53,6 +61,8 @@ export function buildDbtProjectFileCodeWorkbench({
           kind: 'dbt-project-files',
           projectRoot,
         }}
+        initialPath={initialPath}
+        fileSelectionRequest={fileSelectionRequest}
         reconcilePersistedFile={reconcilePersistedFile}
       />
     ),

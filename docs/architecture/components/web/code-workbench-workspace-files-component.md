@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-10-12
+last_reviewed: 2026-10-28
 planning_type: architecture
 ---
 
@@ -95,9 +95,9 @@ semantics.
 
 ### Initial Selection Policy
 
-`CodeFileSelection` opens the file most likely to explain the graph the user
-just planned. It must prefer `pipelines/*.yaml|yml` workflow artifacts over
-root project configuration files such as `dbt_project.yml`. If no workflow
+Without an admitted requested path, `CodeFileSelection` prefers
+`pipelines/*.yaml|yml` workflow artifacts over root project configuration files
+such as `dbt_project.yml`. If no workflow
 artifact exists, it falls back to the first reachable file in the workspace
 tree.
 
@@ -118,6 +118,48 @@ flowchart LR
   Code --> Scope["Explicit paths plus generated model paths"]
   Scope --> Query["Existing scoped workspace-file queries"]
 ```
+
+### Canvas Project Files Entry — Issue 3743
+
+[Issue #3743](https://github.com/dunay2/dvt/issues/3743#issuecomment-6459144110)
+reuses `FileTreePanel` and the `ListWorkspaceFiles` scoped query/cache for Canvas
+Git and project Code. Preserve tenant/project/environment isolation, supported
+paths, hierarchy, ordering and the existing response cap. Empty/error/denied
+reads retain their existing states without fixture fallback or new transport.
+
+`CodeViewFileScope` distinguishes tree presentation from edit authority:
+
+| Input                                    | Tree presented                 | Authority retained                                       |
+| ---------------------------------------- | ------------------------------ | -------------------------------------------------------- |
+| No scope: default Code route             | Existing graph projection      | Existing graph query and generated-file read-only policy |
+| `workspace-files`: internal project Code | Full authorized workspace tree | Graph query and authority checks remain active           |
+| `dbt-project-files`                      | Actual bound DBT project root  | Existing DBT binding, reconciliation and node flush      |
+
+Internal project Code always uses `workspace-files`, with or without a requested
+path; path presence never chooses the scope. The default Code route stays
+unchanged. Explicit scope or tree membership cannot grant DBT edit authority or
+make generated files editable. DBT uses its existing actual-root projector,
+never a guessed root or a truthy-scope shortcut.
+
+The existing project-Code opener sends explicit paths through `fileSelectionRequest`
+to the same mounted CodeView. A fresh immutable request also represents a repeated
+path after the editor's own selection changed; `initialPath` remains compatible
+initial configuration. A no-path reveal keeps the open editor's current selection.
+Require authorized tree membership and the existing current-request,
+flush and revision guards before changing selection. Failure/conflict retains
+the current file and buffer; requesting another path must not remount them away.
+The rail owns no speculative selection state or second selection controller.
+A request may flush already modified content through `SaveWorkspaceFileContent`;
+it does not author content. `GetWorkspaceFileContent` remains the content query.
+Clean browsing/expansion sends no file saves or graph writes and grants no VCS
+status or commands. The Model editor, File-menu lifecycle, shared controls and
+ES/EN copy retain their existing owners.
+
+Proofs cover default-route versus internal-project scope, repeated requests in
+a mounted editor, flush/conflict retention, generated-file denial, actual DBT
+root/path forwarding and scope isolation. Architecture guards retain the query/
+port boundary; the existing Canvas viewport flow proves public file opening,
+retained camera/disclosure and no writes from clean browsing.
 
 ## DDD Model
 

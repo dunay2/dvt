@@ -17,6 +17,7 @@ import { CanvasModelEditor } from './CanvasModelEditor';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
+import { CanvasProjectFilesExplorer } from './explorer/CanvasProjectFilesExplorer';
 import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellOpenDataRegistryCommand, CanvasShellProps } from './canvasShell.types';
@@ -191,6 +192,14 @@ export default function CanvasShell({
         />
       )}
       <CanvasShellMainPanel
+        projectFiles={
+          panels.activeCanvasId == null || layout.surfaceStrategy == null ? undefined : (
+            <CanvasProjectFilesExplorer
+              projectRoot={workspaceCommands?.projectRoot}
+              onOpenFile={code.openProjectCode}
+            />
+          )
+        }
         layout={
           model.selected == null || panels.activeCanvasId == null
             ? {

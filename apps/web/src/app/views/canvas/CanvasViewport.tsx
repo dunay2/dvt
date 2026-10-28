@@ -85,6 +85,7 @@ type CanvasViewportProps = {
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
   readonly externalNodeSurfaceActive?: boolean;
   readonly workspaceTask?: ReactNode;
+  readonly projectFiles?: ReactNode;
   readonly inspector?: ReactNode;
 };
 
@@ -453,6 +454,7 @@ function CanvasViewportWithPresenter({
   return (
     <CanvasGraphExplorer
       workspaceTask={props.workspaceTask}
+      projectFiles={props.projectFiles}
       nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
       onInspectSource={props.onInspectSource}

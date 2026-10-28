@@ -5,14 +5,18 @@
  * @consequence Closing code restores its opener without creating a new editor or navigation rail.
  * @version 1.0.0
  */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type {
   CanvasShellContextualWorkbench,
   CanvasShellLayout,
   CanvasShellWorkspaceCommands,
 } from './canvasShell.types';
-import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
+import {
+  SqlContextWorkbench,
+  type SqlContextWorkbenchHandle,
+  type SqlContextWorkbenchProps,
+} from './SqlContextWorkbench';
 import type { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 
@@ -33,6 +37,8 @@ export function useCanvasCodeWorkbench(
       : `${layout.surfaceStrategy.id}:${canvasId}`;
   const scopedId = owner === ownerKey ? id : null;
   const editorRef = useRef<SqlContextWorkbenchHandle>(null);
+  const [fileSelectionRequest, setFileSelectionRequest] =
+    useState<SqlContextWorkbenchProps['fileSelectionRequest']>();
   const { capture, restore } = focus;
   useEffect(() => {
     if (id != null && scopedId == null) close();
@@ -52,7 +58,13 @@ export function useCanvasCodeWorkbench(
               if (flushed) close();
               return flushed;
             },
-            panel: <SqlContextWorkbench ref={editorRef} />,
+            panel: (
+              <SqlContextWorkbench
+                ref={editorRef}
+                fileScope={{ kind: 'workspace-files' }}
+                fileSelectionRequest={fileSelectionRequest}
+              />
+            ),
           },
     [
       scopedId,
@@ -61,6 +73,7 @@ export function useCanvasCodeWorkbench(
       copy.sqlContextWorkbenchMoveLabel,
       copy.sqlContextWorkbenchProjectDescription,
       close,
+      fileSelectionRequest,
     ]
   );
   const selected = layout.contextualWorkbench ?? internal;
@@ -81,10 +94,18 @@ export function useCanvasCodeWorkbench(
           },
     [layout, selected, restore]
   );
-  const openProjectCode = useCallback(() => {
-    capture('[data-slot="shell-file-menu-trigger"]');
-    if (workspaceCommands?.onOpenProjectCode != null) workspaceCommands.onOpenProjectCode();
-    else if (ownerKey != null) open('project-code', ownerKey);
-  }, [capture, workspaceCommands?.onOpenProjectCode, ownerKey, open]);
+  const openProjectCode = useCallback(
+    (path?: string) => {
+      capture('[data-slot="shell-file-menu-trigger"]');
+      if (workspaceCommands?.onOpenProjectCode != null) workspaceCommands.onOpenProjectCode(path);
+      else if (ownerKey != null) {
+        if (path !== undefined || scopedId !== 'project-code') {
+          setFileSelectionRequest(path === undefined ? undefined : { path });
+        }
+        open('project-code', ownerKey);
+      }
+    },
+    [capture, workspaceCommands?.onOpenProjectCode, ownerKey, scopedId, open]
+  );
   return { layout: shellLayout, openProjectCode };
 }

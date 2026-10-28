@@ -373,6 +373,7 @@ const operationHelp = Object.freeze({
       'RetireArchitectureComponentResponsibility removes one stale responsibility through exact component update authority.',
       'Requires taxonomy fields --kind, --layer, --owner, --repo-path, --public-contract, and at least one --responsibility.',
       '--source-bindings <JSON-array> replaces the component association set with --expected-bindings-hash; omission preserves it.',
+      'Optional paired --expected-responsibility-status and --responsibility-status promote only named existing owned responsibilities proposed→approved or approved→implemented atomically; omission preserves existing status.',
     ],
   },
   'architecture-relation': {
@@ -1334,6 +1335,12 @@ function operationPayload(command) {
         : {
             sourceBindings: command.sourceBindings,
             expectedBindingsHash: command.expectedBindingsHash,
+          }),
+      ...(command.expectedResponsibilityStatus === undefined
+        ? {}
+        : {
+            expectedResponsibilityStatus: command.expectedResponsibilityStatus,
+            responsibilityStatus: command.responsibilityStatus,
           }),
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
@@ -2394,6 +2401,35 @@ function validateArchitectureComponentRecordCommand(command) {
     );
   }
 
+  if (
+    (command.expectedResponsibilityStatus === undefined) !==
+    (command.responsibilityStatus === undefined)
+  ) {
+    throw new Error(
+      'ARCH-RESPONSIBILITY-STATUS-PAIR-MISSING: expected and target responsibility statuses are required together.'
+    );
+  }
+  if (command.expectedResponsibilityStatus !== undefined) {
+    if (!(
+      (command.expectedResponsibilityStatus === 'proposed' &&
+        command.responsibilityStatus === 'approved') ||
+      (command.expectedResponsibilityStatus === 'approved' &&
+        command.responsibilityStatus === 'implemented')
+    )) {
+      throw new Error(
+        'ARCH-RESPONSIBILITY-STATUS-TRANSITION-INVALID: only proposed→approved or approved→implemented is allowed.'
+      );
+    }
+    if (
+      new Set(command.responsibilities.map((entry) => entry.responsibilityId)).size !==
+      command.responsibilities.length
+    ) {
+      throw new Error(
+        'ARCH-RESPONSIBILITY-STATUS-DUPLICATE: explicitly promoted responsibility IDs must be unique.'
+      );
+    }
+  }
+
   if (command.parentComponentId && command.parentComponentId === command.componentId) {
     throw new Error(`Architecture component ${command.componentId} cannot be its own parent.`);
   }
@@ -2455,6 +2491,12 @@ function parseArchitectureComponentCommand(action, args) {
     ...(options.expectedBindingsHash === undefined
       ? {}
       : { expectedBindingsHash: options.expectedBindingsHash }),
+    ...(options.expectedResponsibilityStatus === undefined
+      ? {}
+      : { expectedResponsibilityStatus: options.expectedResponsibilityStatus }),
+    ...(options.responsibilityStatus === undefined
+      ? {}
+      : { responsibilityStatus: options.responsibilityStatus }),
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -4125,9 +4167,9 @@ function planArchitectureComponentRecordOperation({
   const responsibilities = command.responsibilities.map((responsibility) => ({
     ...responsibility,
     componentId: command.componentId,
-    status: ['approved', 'implemented', 'drift'].includes(command.status)
-      ? command.status
-      : 'proposed',
+    status:
+      command.responsibilityStatus ??
+      (['approved', 'implemented', 'drift'].includes(command.status) ? command.status : 'proposed'),
     createdAt,
   }));
   const audit = architectureScopedAudit({ command, operationId, now });
@@ -4136,6 +4178,12 @@ function planArchitectureComponentRecordOperation({
     component,
     responsibilities,
     audit,
+    ...(command.expectedResponsibilityStatus === undefined
+      ? {}
+      : {
+          expectedResponsibilityStatus: command.expectedResponsibilityStatus,
+          responsibilityStatus: command.responsibilityStatus,
+        }),
     ...(command.sourceBindings === undefined
       ? {}
       : {
@@ -6201,6 +6249,25 @@ async function writePlannedArchitectureComponentRecordOperation(client, planned)
   );
 
   for (const responsibility of planned.responsibilities) {
+    if (planned.expectedResponsibilityStatus !== undefined) {
+      const promoted = await client.query(
+        `update architecture.component_responsibility
+         set status = $1
+         where responsibility_id = $2 and component_id = $3 and status = $4
+         returning responsibility_id`,
+        [
+          planned.responsibilityStatus,
+          responsibility.responsibilityId,
+          planned.component.componentId,
+          planned.expectedResponsibilityStatus,
+        ]
+      );
+      if (promoted.rowCount !== 1) {
+        throw new Error(
+          `ARCH-RESPONSIBILITY-STATUS-CONFLICT: ${responsibility.responsibilityId} must exist in ${planned.component.componentId} with status ${planned.expectedResponsibilityStatus}.`
+        );
+      }
+    }
     await client.query(
       `insert into architecture.component_responsibility
         (responsibility_id, component_id, responsibility, reason_to_change,

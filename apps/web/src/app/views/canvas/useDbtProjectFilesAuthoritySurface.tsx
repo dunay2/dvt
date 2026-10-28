@@ -211,6 +211,7 @@ export function useDbtProjectFilesAuthoritySurface({
     onClose: controller.closeCodeWorkbench,
     reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     projectRoot,
+    fileSelectionRequest: controller.projectCodeFileSelectionRequest,
     open: controller.projectCodeWorkbenchOpen,
   });
 
@@ -295,8 +296,9 @@ export function useDbtProjectFilesAuthoritySurface({
     runControls,
     workspaceCommands: {
       canOpenProjectExplorer: false,
-      onOpenProjectCode: () => {
-        void controller.openProjectCode();
+      projectRoot,
+      onOpenProjectCode: (path) => {
+        void controller.openProjectCode(path);
       },
     },
     canvasContextScreenToFlowPosition: screenToFlowPosition,

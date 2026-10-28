@@ -27,12 +27,14 @@ export function CanvasGraphExplorer({
   onImportFocusComplete,
   children,
   workspaceTask,
+  projectFiles,
 }: Readonly<{
   nodes: readonly Node[];
   onSelect: (id: string) => void;
   onImport?: () => void;
   children: ReactNode;
   workspaceTask?: ReactNode;
+  projectFiles?: ReactNode;
   catalogue?: readonly CanonicalNode[];
   onInspectSource?: (id: string) => void;
   canPlaceSource?: boolean;
@@ -56,6 +58,7 @@ export function CanvasGraphExplorer({
     <CanvasExplorer
       rootRef={rootRef}
       workspaceTask={workspaceTask}
+      projectFiles={projectFiles}
       sources={
         <CanvasExplorerList
           items={sources}

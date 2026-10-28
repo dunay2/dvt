@@ -13,6 +13,7 @@ import {
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import type { CanvasShellProps } from './canvasShell.types';
 import type { SourceDataSample } from '../../ports/workspace';
 import { WarehouseSourceDataSampleQueryError } from '../../services/workspace/workspaceErrors';
@@ -41,6 +42,57 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
+  });
+
+  it('opens Git file requests in the retained project Code workbench', async () => {
+    await renderShell();
+    const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const files = container.querySelector('[data-testid="project-files-explorer"]');
+    expect(files).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(files!.querySelectorAll('button')[0]!);
+    });
+    const editor = container.querySelector('[data-testid="sql-context-workbench"]');
+    expect(editor?.getAttribute('data-path')).toBe('notes/first.md');
+    expect(editor?.getAttribute('data-file-scope')).toBe('workspace-files');
+    await act(async () => {
+      fireEvent.click(files!.querySelectorAll('button')[1]!);
+    });
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
+    expect(editor?.getAttribute('data-file-scope')).toBe('workspace-files');
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+    const revealCode =
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode;
+    expect(revealCode).toBeTypeOf('function');
+    await act(async () => revealCode?.());
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+    expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-slot="canvas-contextual-workbench-close"]')!);
+    });
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
+    await act(async () =>
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectCode?.()
+    );
+    const reopened = container.querySelector('[data-testid="sql-context-workbench"]');
+    expect(reopened).not.toBeNull();
+    expect(reopened?.getAttribute('data-path')).toBeNull();
+    expect(reopened?.getAttribute('data-file-scope')).toBe('workspace-files');
+  });
+
+  it('delegates Git file requests to the authority-owned Code opener with its actual root', async () => {
+    const onOpenProjectCode = vi.fn();
+    await renderShell({
+      workspaceCommands: { projectRoot: 'dbt/sales', onOpenProjectCode },
+    });
+    const files = container.querySelector('[data-testid="project-files-explorer"]');
+    expect(files?.getAttribute('data-project-root')).toBe('dbt/sales');
+    await act(async () => {
+      fireEvent.click(files!.querySelectorAll('button')[0]!);
+    });
+    expect(onOpenProjectCode).toHaveBeenCalledExactlyOnceWith('notes/first.md');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
 
   it('keeps workspace-file Code inside the preserved node Properties context', async () => {
