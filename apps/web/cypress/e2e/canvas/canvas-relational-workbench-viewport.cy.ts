@@ -5,7 +5,21 @@
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
  * @version 1.0.0
  */
-import { getE2eApiCalls, stubE2eApi, stubE2eJsonApi } from '../../support/e2eApiStub';
+import {
+  adoptLiveDbtProjectFileAuthority,
+  seedLiveWorkspaceFiles,
+} from '../../support/dbtProjectLive';
+import {
+  getE2eApiCalls,
+  resetE2eApiStubs,
+  stubE2eApi,
+  stubE2eJsonApi,
+} from '../../support/e2eApiStub';
+import {
+  hasLiveProtectedRuntimeEnv,
+  readLiveWorkspaceFile,
+  visitWithLiveWorkspaceSession,
+} from '../../support/liveProtectedRuntime';
 import {
   verifyWheelZoom,
   revealCardDetails,
@@ -92,12 +106,34 @@ describe('Workbench viewport', () => {
         'customers'
       );
       cy.get(`${main} section[aria-labelledby$="-git-button"]`)
-        .find('[data-workspace-path="notes/first.md"]')
+        .find('[data-workspace-path="notes/second.md"]')
         .click();
       cy.get('[data-slot="canvas-contextual-workbench"]')
         .should('be.visible')
         .find('.monaco-editor .view-lines')
-        .should('contain.text', 'notes/first.md');
+        .should('contain.text', 'notes/second.md');
+      cy.get('[data-slot="canvas-contextual-workbench"]')
+        .find('[data-workspace-path="notes/first.md"]')
+        .click();
+      cy.get('[data-slot="canvas-contextual-workbench"] .monaco-editor .view-lines').should(
+        'contain.text',
+        'notes/first.md'
+      );
+      cy.get('[data-slot="canvas-contextual-workbench-drag-handle"]').focus();
+      for (let step = 0; step < 16; step += 1) cy.press(Cypress.Keyboard.Keys.RIGHT);
+      cy.get(`${main} section[aria-labelledby$="-git-button"]`)
+        .find('[data-workspace-path="notes/second.md"]')
+        .click();
+      cy.get('[data-slot="canvas-contextual-workbench"] .monaco-editor .view-lines').should(
+        'contain.text',
+        'notes/second.md'
+      );
+      cy.get('[data-slot="shell-file-menu-trigger"]').click();
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get('[data-slot="canvas-contextual-workbench"] .monaco-editor .view-lines').should(
+        'contain.text',
+        'notes/second.md'
+      );
       assertStationary();
       cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
       cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
@@ -224,5 +260,117 @@ describe('Workbench viewport', () => {
     cy.then(() =>
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(writesBeforeZoom)
     );
+  });
+});
+
+describe('DBT project Git browsing with real file authority', () => {
+  const projectRoot = 'git-browser-dbt';
+  const canvasId = 'git-browser-dbt-files';
+  const projectPath = `${projectRoot}/dbt_project.yml`;
+  const firstPath = `${projectRoot}/models/a.sql`;
+  const secondPath = `${projectRoot}/models/b.sql`;
+  const outsidePath = 'git-browser-outside.md';
+  const files = {
+    [projectPath]:
+      "name: git_browser_dbt\nversion: '1.0'\nconfig-version: 2\nprofile: dvt_live_proof\nmodel-paths: ['models']\n",
+    [firstPath]: 'select 11 as git_a\n',
+    [secondPath]: 'select 22 as git_b\n',
+    [outsidePath]: '# Outside the bound DBT root\n',
+  };
+
+  before(() => {
+    expect(hasLiveProtectedRuntimeEnv(), 'real protected API configuration').to.equal(true);
+    resetE2eApiStubs();
+    return seedLiveWorkspaceFiles(files).then(() =>
+      adoptLiveDbtProjectFileAuthority(projectRoot, canvasId)
+    );
+  });
+
+  it('retains repeated file selection within the actual DBT root without clean-browse writes', () => {
+    const hashes: Record<string, string> = {};
+    const main = '[data-slot="canvas-workspace-surface"]';
+    const git = `${main} section[aria-labelledby$="-git-button"]`;
+    const code = '[data-slot="canvas-contextual-workbench"]';
+    for (const path of Object.keys(files)) {
+      readLiveWorkspaceFile(path).then(({ status, body }) => {
+        expect(status).to.equal(200);
+        const file = body as { contentSha256: string };
+        expect(file.contentSha256).to.match(/^[a-f0-9]{64}$/);
+        hashes[path] = file.contentSha256;
+      });
+    }
+    cy.intercept({ method: 'GET', pathname: '/workspace/files' }).as('actualFileTree');
+    cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('fileWrites');
+    cy.intercept({ method: 'PUT', pathname: '/workspace/graph/draft' }).as('graphWrites');
+    cy.viewport(1500, 900);
+    visitWithLiveWorkspaceSession(
+      `/canvas?authority=dbt-project-files&canvasId=${canvasId}&projectRoot=${projectRoot}`
+    );
+    cy.get(`${main} [data-slot="canvas-explorer-git-toggle"]`, { timeout: 60_000 })
+      .should('be.visible')
+      .click();
+    cy.wait('@actualFileTree')
+      .its('response')
+      .should((response) => {
+        expect(response?.statusCode).to.equal(200);
+        expect(JSON.stringify(response?.body)).to.contain(outsidePath);
+      });
+    cy.get(`${git} [data-workspace-path]`).each(($entry) => {
+      const path = $entry.attr('data-workspace-path')!;
+      expect(path === projectRoot || path.startsWith(`${projectRoot}/`)).to.equal(true);
+    });
+    cy.get(`${git} [data-workspace-path="${outsidePath}"]`).should('not.exist');
+    cy.get(`${git} [data-workspace-path="${secondPath}"]`).click();
+    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
+      'have.attr',
+      'data-file-path',
+      secondPath
+    );
+    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
+    cy.get(`${code} [data-workspace-path="${outsidePath}"]`).should('not.exist');
+    cy.get(`${code} [data-workspace-path="${firstPath}"]`).click();
+    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
+      'have.attr',
+      'data-file-path',
+      firstPath
+    );
+    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_a');
+    cy.get('[data-slot="canvas-contextual-workbench-drag-handle"]').focus();
+    for (let step = 0; step < 16; step += 1) cy.press(Cypress.Keyboard.Keys.RIGHT);
+    cy.get(`${git} [data-workspace-path="${secondPath}"]`).click();
+    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
+      'have.attr',
+      'data-file-path',
+      secondPath
+    );
+    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
+      'have.attr',
+      'data-file-path',
+      secondPath
+    );
+    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_b');
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get(code).should('not.exist');
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
+      'have.attr',
+      'data-file-path',
+      projectPath
+    );
+    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'git_browser_dbt');
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get(code).should('not.exist');
+    cy.get('@fileWrites.all').should('have.length', 0);
+    cy.get('@graphWrites.all').should('have.length', 0);
+    for (const path of Object.keys(files)) {
+      readLiveWorkspaceFile(path).then(({ status, body }) => {
+        expect(status).to.equal(200);
+        expect((body as { contentSha256: string }).contentSha256).to.equal(hashes[path]);
+      });
+    }
   });
 });

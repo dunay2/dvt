@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
+import type { CodeViewProps } from '../CodeView';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
@@ -90,15 +91,15 @@ vi.mock('./SqlContextWorkbench', async () => {
 
   return {
     SqlContextWorkbench: forwardRef(function MockSqlContextWorkbench(
-      props: Record<string, unknown>,
+      props: Pick<CodeViewProps, 'fileScope' | 'initialPath' | 'fileSelectionRequest'>,
       ref
     ) {
       useImperativeHandle(ref, () => ({ flush: async () => true }));
       return (
         <div
           data-testid="sql-context-workbench"
-          data-path={props.initialPath as string | undefined}
-          data-file-scope={(props.fileScope as { kind: string } | undefined)?.kind}
+          data-path={props.fileSelectionRequest?.path ?? props.initialPath}
+          data-file-scope={props.fileScope?.kind}
         />
       );
     }),

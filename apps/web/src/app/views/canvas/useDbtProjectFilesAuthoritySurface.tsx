@@ -211,7 +211,7 @@ export function useDbtProjectFilesAuthoritySurface({
     onClose: controller.closeCodeWorkbench,
     reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     projectRoot,
-    initialPath: controller.projectCodeInitialPath,
+    fileSelectionRequest: controller.projectCodeFileSelectionRequest,
     open: controller.projectCodeWorkbenchOpen,
   });
 

@@ -6,22 +6,21 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SqlContextWorkbench } from './SqlContextWorkbench';
+import CodeView, { type CodeViewProps } from '../CodeView';
 
 vi.mock('../CodeView', () => ({
-  default: ({
-    fileScope,
-    reconcilePersistedFile,
-  }: {
-    fileScope?: { projectRoot: string; initialPath?: string };
-    reconcilePersistedFile?: () => Promise<unknown>;
-  }) => (
+  default: vi.fn(({ fileScope, reconcilePersistedFile }: CodeViewProps) => (
     <div
       data-slot="mock-code-view"
-      data-project-root={fileScope?.projectRoot}
-      data-initial-path={fileScope?.initialPath}
+      data-project-root={
+        fileScope?.kind === 'dbt-project-files' ? fileScope.projectRoot : undefined
+      }
+      data-initial-path={
+        fileScope?.kind === 'dbt-project-files' ? fileScope.initialPath : undefined
+      }
       data-has-sync-consumer={String(reconcilePersistedFile != null)}
     />
-  ),
+  )),
 }));
 
 describe('SqlContextWorkbench', () => {
@@ -40,6 +39,7 @@ describe('SqlContextWorkbench', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    vi.clearAllMocks();
   });
 
   it('opens the selected node SQL path inside the existing project-scoped Code workbench', async () => {
@@ -67,5 +67,34 @@ describe('SqlContextWorkbench', () => {
       expect(codeView?.getAttribute('data-initial-path')).toBe('analytics/models/marts/orders.sql');
       expect(codeView?.getAttribute('data-has-sync-consumer')).toBe('true');
     });
+  });
+
+  it('forwards repeated file requests by their original identity into the same Code workbench', async () => {
+    const firstRequest = { path: 'notes/b.md' };
+    await act(async () =>
+      root.render(
+        <SqlContextWorkbench
+          fileScope={{ kind: 'workspace-files' }}
+          initialPath="notes/a.md"
+          fileSelectionRequest={firstRequest}
+        />
+      )
+    );
+    const workbench = container.querySelector('[data-slot="mock-code-view"]');
+    expect(workbench).not.toBeNull();
+    expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].fileSelectionRequest).toBe(firstRequest);
+    const nextRequest = { path: firstRequest.path };
+    await act(async () =>
+      root.render(
+        <SqlContextWorkbench
+          fileScope={{ kind: 'workspace-files' }}
+          initialPath="notes/a.md"
+          fileSelectionRequest={nextRequest}
+        />
+      )
+    );
+    expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].fileSelectionRequest).toBe(nextRequest);
+    expect(vi.mocked(CodeView).mock.calls.at(-1)?.[0].initialPath).toBe('notes/a.md');
+    expect(container.querySelector('[data-slot="mock-code-view"]')).toBe(workbench);
   });
 });

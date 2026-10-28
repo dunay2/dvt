@@ -12,7 +12,11 @@ import type {
   CanvasShellLayout,
   CanvasShellWorkspaceCommands,
 } from './canvasShell.types';
-import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
+import {
+  SqlContextWorkbench,
+  type SqlContextWorkbenchHandle,
+  type SqlContextWorkbenchProps,
+} from './SqlContextWorkbench';
 import type { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { useCanvasWorkbenchFocus } from './useCanvasWorkbenchFocus';
 
@@ -33,7 +37,8 @@ export function useCanvasCodeWorkbench(
       : `${layout.surfaceStrategy.id}:${canvasId}`;
   const scopedId = owner === ownerKey ? id : null;
   const editorRef = useRef<SqlContextWorkbenchHandle>(null);
-  const [initialPath, setInitialPath] = useState<string | undefined>();
+  const [fileSelectionRequest, setFileSelectionRequest] =
+    useState<SqlContextWorkbenchProps['fileSelectionRequest']>();
   const { capture, restore } = focus;
   useEffect(() => {
     if (id != null && scopedId == null) close();
@@ -57,7 +62,7 @@ export function useCanvasCodeWorkbench(
               <SqlContextWorkbench
                 ref={editorRef}
                 fileScope={{ kind: 'workspace-files' }}
-                initialPath={initialPath}
+                fileSelectionRequest={fileSelectionRequest}
               />
             ),
           },
@@ -68,7 +73,7 @@ export function useCanvasCodeWorkbench(
       copy.sqlContextWorkbenchMoveLabel,
       copy.sqlContextWorkbenchProjectDescription,
       close,
-      initialPath,
+      fileSelectionRequest,
     ]
   );
   const selected = layout.contextualWorkbench ?? internal;
@@ -94,11 +99,13 @@ export function useCanvasCodeWorkbench(
       capture('[data-slot="shell-file-menu-trigger"]');
       if (workspaceCommands?.onOpenProjectCode != null) workspaceCommands.onOpenProjectCode(path);
       else if (ownerKey != null) {
-        setInitialPath(path);
+        if (path !== undefined || scopedId !== 'project-code') {
+          setFileSelectionRequest(path === undefined ? undefined : { path });
+        }
         open('project-code', ownerKey);
       }
     },
-    [capture, workspaceCommands?.onOpenProjectCode, ownerKey, open]
+    [capture, workspaceCommands?.onOpenProjectCode, ownerKey, scopedId, open]
   );
   return { layout: shellLayout, openProjectCode };
 }

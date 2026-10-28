@@ -69,6 +69,7 @@ export type CodeViewProps = Readonly<{
   routeBootstrapId?: string;
   fileScope?: CodeViewFileScope;
   initialPath?: string;
+  fileSelectionRequest?: Readonly<{ path: string }>;
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -80,6 +81,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     routeBootstrapId = CANVAS_ROUTE_ID,
     fileScope,
     initialPath,
+    fileSelectionRequest,
     reconcilePersistedFile,
   }: CodeViewProps = {},
   ref
@@ -87,7 +89,9 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCodeViewCopy(applicationLanguage);
   const isDbtProjectFiles = fileScope?.kind === 'dbt-project-files';
-  const preferredPath = isDbtProjectFiles ? (fileScope.initialPath ?? initialPath) : initialPath;
+  const preferredPath =
+    fileSelectionRequest?.path ??
+    (isDbtProjectFiles ? (fileScope.initialPath ?? initialPath) : initialPath);
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const graphSnapshotQuery = useWorkspaceGraphForViewQuery(
     CODE_GRAPH_FILE_SCOPE_VIEW_ID,
@@ -191,7 +195,13 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   useEffect(() => {
     if (!fileTreeQuery.isSuccess || (!isDbtProjectFiles && graphSnapshotQuery.isPending)) return;
     void latestRequestFileSelectionRef.current(preferredPath);
-  }, [preferredPath, fileTreeQuery.isSuccess, isDbtProjectFiles, graphSnapshotQuery.isPending]);
+  }, [
+    fileSelectionRequest,
+    preferredPath,
+    fileTreeQuery.isSuccess,
+    isDbtProjectFiles,
+    graphSnapshotQuery.isPending,
+  ]);
   useImperativeHandle(
     ref,
     () => ({ flush: async () => (await workspaceFileEditorRef.current?.flush()) ?? true }),

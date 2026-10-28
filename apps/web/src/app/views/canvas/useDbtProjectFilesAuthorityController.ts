@@ -41,6 +41,7 @@ import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliat
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { useDbtProjectFileInspector } from './useDbtProjectFileInspector';
+import type { SqlContextWorkbenchProps } from './SqlContextWorkbench';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -135,7 +136,8 @@ export function useDbtProjectFilesAuthorityController(
     workspaceLayoutKey,
   } = store;
   const [projectCodeWorkbenchOpen, setProjectCodeWorkbenchOpen] = useState(false);
-  const [projectCodeInitialPath, setProjectCodeInitialPath] = useState<string | undefined>();
+  const [projectCodeFileSelectionRequest, setProjectCodeFileSelectionRequest] =
+    useState<SqlContextWorkbenchProps['fileSelectionRequest']>();
   const nodeCodeEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
@@ -328,10 +330,14 @@ export function useDbtProjectFilesAuthorityController(
       if (!(await flushActiveNodeCode())) {
         return;
       }
-      setProjectCodeInitialPath(initialPath);
+      if (initialPath !== undefined || !projectCodeWorkbenchOpen) {
+        setProjectCodeFileSelectionRequest(
+          initialPath === undefined ? undefined : { path: initialPath }
+        );
+      }
       setProjectCodeWorkbenchOpen(true);
     },
-    [flushActiveNodeCode]
+    [flushActiveNodeCode, projectCodeWorkbenchOpen]
   );
   const closeCodeWorkbench = useCallback(() => {
     setProjectCodeWorkbenchOpen(false);
@@ -433,7 +439,7 @@ export function useDbtProjectFilesAuthorityController(
     layoutKey,
     nodeCodeEditorRef,
     projectCodeWorkbenchOpen,
-    projectCodeInitialPath,
+    projectCodeFileSelectionRequest,
     openProjectCode,
     closeCodeWorkbench,
     refreshProjectGraphAfterMutation,

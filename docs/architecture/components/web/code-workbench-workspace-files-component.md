@@ -141,8 +141,11 @@ unchanged. Explicit scope or tree membership cannot grant DBT edit authority or
 make generated files editable. DBT uses its existing actual-root projector,
 never a guessed root or a truthy-scope shortcut.
 
-The existing project-Code opener accepts an optional path into the same mounted
-CodeView. Require authorized tree membership and the existing current-request,
+The existing project-Code opener sends explicit paths through `fileSelectionRequest`
+to the same mounted CodeView. A fresh immutable request also represents a repeated
+path after the editor's own selection changed; `initialPath` remains compatible
+initial configuration. A no-path reveal keeps the open editor's current selection.
+Require authorized tree membership and the existing current-request,
 flush and revision guards before changing selection. Failure/conflict retains
 the current file and buffer; requesting another path must not remount them away.
 The rail owns no speculative selection state or second selection controller.

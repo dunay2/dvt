@@ -14,6 +14,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
   it.each([undefined, 'analytics/models/marts/orders.sql'])(
     'opens the actual project root with the requested path %s',
     (initialPath) => {
+      const fileSelectionRequest = initialPath === undefined ? undefined : { path: initialPath };
       const reconcilePersistedFile = vi.fn(async () => ({
         kind: 'fresh' as const,
         analysisSha256: 'a'.repeat(64),
@@ -26,6 +27,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
         reconcilePersistedFile,
         projectRoot: 'analytics',
         initialPath,
+        fileSelectionRequest,
         open: true,
       });
 
@@ -40,6 +42,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       });
       expect(panel.props.reconcilePersistedFile).toBe(reconcilePersistedFile);
       expect(panel.props.initialPath).toBe(initialPath);
+      expect(panel.props.fileSelectionRequest).toBe(fileSelectionRequest);
     }
   );
 

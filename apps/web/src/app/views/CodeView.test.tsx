@@ -18,7 +18,11 @@ import {
   WorkspaceFileLoadError,
   WorkspaceFileRevisionConflictError,
 } from '../services/workspace/workspaceErrors';
-import CodeView, { type CodeViewFileScope, type CodeViewHandle } from './CodeView';
+import CodeView, {
+  type CodeViewFileScope,
+  type CodeViewHandle,
+  type CodeViewProps,
+} from './CodeView';
 import { resolveCodeViewCopy } from './code/codeViewCopy';
 import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
@@ -165,6 +169,7 @@ describe('CodeView', () => {
       >;
       fileScope?: CodeViewFileScope;
       initialPath?: string;
+      fileSelectionRequest?: CodeViewProps['fileSelectionRequest'];
       queryClient?: QueryClient;
       workspaceGraphSnapshotQuery?: IWorkspaceGraphSnapshotQueryPort;
     }> = {}
@@ -189,6 +194,7 @@ describe('CodeView', () => {
               publishRouteBootstrap={publishRouteBootstrap}
               fileScope={options.fileScope}
               initialPath={options.initialPath}
+              fileSelectionRequest={options.fileSelectionRequest}
               reconcilePersistedFile={options.reconcilePersistedFile}
             />{' '}
           </AppServicesProvider>{' '}
@@ -419,7 +425,8 @@ describe('CodeView', () => {
     setupContainer();
     await renderCodeView({ saveFileContent }, false, undefined, {
       fileScope: { kind: 'workspace-files' },
-      initialPath: 'README.md',
+      initialPath: 'models/graph_model.sql',
+      fileSelectionRequest: { path: 'README.md' },
       workspaceGraphSnapshotQuery: { getGraphSnapshot },
       workspaceFilesQuery: buildWorkspaceFilesQueryPort({
         listFiles: async () => [
@@ -487,6 +494,103 @@ describe('CodeView', () => {
     expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
     expect(saveFileContent).not.toHaveBeenCalled();
   });
+
+  it.each(['saved', 'conflict'] as const)(
+    'readmits a repeated explicit path after internal navigation while retaining %s protection',
+    async (outcome) => {
+      let settleSave: (() => void) | undefined;
+      const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
+        () =>
+          new Promise((resolve, reject) => {
+            settleSave = () =>
+              outcome === 'conflict'
+                ? reject(new WorkspaceFileRevisionConflictError('notes/a.md'))
+                : resolve({
+                    kind: 'saved',
+                    disposition: 'updated',
+                    path: 'notes/a.md',
+                    contentSha256: 'b'.repeat(64),
+                    lastModified: '2026-10-28T00:00:00.000Z',
+                  });
+          })
+      );
+      const options = {
+        fileScope: { kind: 'workspace-files' } as const,
+        initialPath: 'notes/b.md',
+        queryClient: createTestQueryClient(),
+        workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+          listFiles: async () => [
+            { path: 'notes/a.md', name: 'a.md', kind: 'file' },
+            { path: 'notes/b.md', name: 'b.md', kind: 'file' },
+          ],
+        }),
+        workspaceGraphSnapshotQuery: {
+          getGraphSnapshot: async () => ({
+            authoringAuthority: mockGraphDraftAuthoringAuthority,
+            nodes: [],
+            edges: [],
+          }),
+        },
+      };
+      setupContainer();
+      try {
+        await renderCodeView({ saveFileContent }, false, undefined, {
+          ...options,
+          fileSelectionRequest: { path: 'notes/b.md' },
+        });
+        await waitFor(
+          () =>
+            getContainer()
+              .querySelector('[data-testid="monaco-code-editor"]')
+              ?.getAttribute('data-path') === 'notes/b.md'
+        );
+        const first = getContainer().querySelector<HTMLButtonElement>(
+          '[data-slot="code-workspace-file-entry"][data-workspace-path="notes/a.md"]'
+        );
+        expect(first).not.toBeNull();
+        await act(async () => first?.click());
+        await waitFor(
+          () =>
+            getContainer()
+              .querySelector('[data-testid="monaco-code-editor"]')
+              ?.getAttribute('data-path') === 'notes/a.md'
+        );
+        const editor = getContainer().querySelector<HTMLTextAreaElement>(
+          '[data-testid="monaco-code-editor"]'
+        );
+        await editAndVerifyEditor(editor);
+        await renderCodeView({ saveFileContent }, false, undefined, {
+          ...options,
+          fileSelectionRequest: { path: 'notes/b.md' },
+        });
+        expect(saveFileContent).toHaveBeenCalledOnce();
+        expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBe(editor);
+        expect(editor?.getAttribute('data-path')).toBe('notes/a.md');
+        expect(editor?.value).toBe('select 1 as edited_value');
+        await act(async () => settleSave?.());
+        if (outcome === 'saved') {
+          await waitFor(
+            () =>
+              getContainer()
+                .querySelector('[data-testid="monaco-code-editor"]')
+                ?.getAttribute('data-path') === 'notes/b.md'
+          );
+        } else {
+          await waitFor(
+            () =>
+              getContainer()
+                .querySelector('[data-slot="code-working-tree-status"]')
+                ?.getAttribute('data-phase') === 'conflict'
+          );
+          expect(editor?.getAttribute('data-path')).toBe('notes/a.md');
+          expect(editor?.value).toBe('select 1 as edited_value');
+        }
+        expect(saveFileContent).toHaveBeenCalledOnce();
+      } finally {
+        await act(async () => settleSave?.());
+      }
+    }
+  );
 
   it('accepts the latest requested workspace file when the authorized tree finishes loading', async () => {
     let resolveTree: ((entries: WorkspaceFileEntry[]) => void) | undefined;
