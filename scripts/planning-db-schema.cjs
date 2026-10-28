@@ -5,17 +5,14 @@
  * @baseline ADR-0063: Planning DB current-schema rebuild
  * @decision Planning DB is rebuilt from current truth and has no migration compatibility.
  */
-const fs = require('node:fs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
-const path = require('node:path');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
 const schemaName = 'planning_query_store';
 const schemaNames = ['architecture', 'component_engineering', schemaName];
-const currentSchemaPath = path.join(repoRoot, 'tools', 'planning-db', 'schema.sql');
+const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -44,7 +41,7 @@ function assertCurrentPlanningDbSchema(schemaSql) {
 
 async function applyCurrentPlanningDbSchema(options = {}) {
   const schemaSql = assertCurrentPlanningDbSchema(
-    options.schemaSql ?? fs.readFileSync(currentSchemaPath, 'utf8')
+    options.schemaSql ?? readCurrentPlanningDbSchema()
   );
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -176,7 +173,7 @@ async function replaceCurrentPlanningDbViews(options = {}) {
   ) {
     throw new Error('Unsupported two-view option; caller SQL and identities are forbidden.');
   }
-  const sql = assertCurrentPlanningDbSchema(fs.readFileSync(currentSchemaPath, 'utf8'));
+  const sql = assertCurrentPlanningDbSchema(readCurrentPlanningDbSchema());
   const schemaSha256 = sha256HexUtf8(sql);
   if (schemaSha256 !== options.expectedSchemaSha256)
     throw new Error('Reviewed schema digest does not match.');
@@ -281,7 +278,7 @@ async function addCurrentPlanningDbTable(options) {
     !/^(?:architecture|component_engineering|planning_query_store)\.[a-z][a-z0-9_]*$/u.test(table)
   )
     throw new Error('Invalid current-schema table identity.');
-  const schemaSql = assertCurrentPlanningDbSchema(fs.readFileSync(currentSchemaPath, 'utf8'));
+  const schemaSql = assertCurrentPlanningDbSchema(readCurrentPlanningDbSchema());
   const schemaSha256 = sha256HexUtf8(schemaSql);
   if (schemaSha256 !== expectedSchemaSha256)
     throw new Error('Reviewed schema digest does not match.');
@@ -333,7 +330,6 @@ module.exports = {
   applyCurrentPlanningDbSchema,
   assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
-  currentSchemaPath,
   databaseUrl,
   schemaName,
   schemaNames,

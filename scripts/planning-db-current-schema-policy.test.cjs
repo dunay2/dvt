@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { currentSchemaSources } = require('../tools/planning-db/schema/manifest.cjs');
 
 const {
   assertCurrentStateValue,
@@ -71,6 +72,23 @@ test('current-schema policy rejects Planning DB migration paths and executable s
       ],
     ]
   );
+});
+
+test('current-schema policy admits the fixed bundle and rejects unlisted SQL neighbors', () => {
+  const unlisted = [
+    'tools/planning-db/schema.sql',
+    'tools/planning-db/schema/unlisted.sql',
+    'tools/planning-db/parallel.sql',
+  ];
+  const artifacts = findPlanningDbMigrationArtifacts({
+    filePaths: [...currentSchemaSources, ...unlisted],
+    readFile: () => '',
+  });
+  assert.deepEqual(
+    artifacts.map(({ path }) => path),
+    [...unlisted].sort()
+  );
+  assert.ok(artifacts.every(({ reason }) => reason === 'Parallel Planning DB SQL owner'));
 });
 
 test('current-schema policy fails closed with actionable diagnostics', () => {

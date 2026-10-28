@@ -9,7 +9,8 @@ const { Client } = require('pg');
 const { sha256HexUtf8 } = require('@dvt/crypto');
 const { createGitRepositoryEnvironment } = require('../lib/git-repository-environment.cjs');
 const { parseArgs, applyDocsResolutionOperation } = require('../planning-db-operate.cjs');
-const { replaceCurrentPlanningDbViews, currentSchemaPath } = require('../planning-db-schema.cjs');
+const { replaceCurrentPlanningDbViews } = require('../planning-db-schema.cjs');
+const { readCurrentPlanningDbSchema } = require('../planning-db/current-schema.cjs');
 const {
   readDocumentationLifecycleRows,
   readFeatureMechanizationComponentRows,
@@ -71,7 +72,7 @@ function registerDocsCanonicalSourceIntegration(dbUrl) {
       );
       const beforeDefinitions = await viewHashes();
       const expected = {
-        expectedSchemaSha256: sha256HexUtf8(fs.readFileSync(currentSchemaPath, 'utf8')),
+        expectedSchemaSha256: sha256HexUtf8(readCurrentPlanningDbSchema()),
         expectedManifestViewSha256: beforeDefinitions.find(({ name }) => name === views[0]).hash,
         expectedLifecycleViewSha256: beforeDefinitions.find(({ name }) => name === views[1]).hash,
       };

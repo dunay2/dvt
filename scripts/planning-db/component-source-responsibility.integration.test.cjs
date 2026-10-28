@@ -12,8 +12,8 @@ const {
 const {
   applyCurrentPlanningDbSchema,
   addCurrentPlanningDbTable,
-  currentSchemaPath,
 } = require('../planning-db-schema.cjs');
+const { readCurrentPlanningDbSchema } = require('./current-schema.cjs');
 const {
   parseArgs,
   applyArchitectureComponentRecordOperation,
@@ -107,7 +107,7 @@ test('component binding command preserves authority, replaces atomically and rej
     );
     // Exercise the explicit addition path on this disposable database only.
     await client.query('drop table architecture.component_source_responsibility');
-    const schemaSha256 = sha256HexUtf8(fs.readFileSync(currentSchemaPath, 'utf8'));
+    const schemaSha256 = sha256HexUtf8(readCurrentPlanningDbSchema());
     await client.query(
       'alter table architecture.component_responsibility rename to unavailable_responsibility'
     );

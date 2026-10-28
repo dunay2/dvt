@@ -7,6 +7,7 @@
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { currentSchemaSources } = require('../tools/planning-db/schema/manifest.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const exactForbiddenPaths = new Map([
@@ -143,7 +144,7 @@ function findPlanningDbMigrationArtifacts(options = {}) {
     if (
       filePath.startsWith('tools/planning-db/') &&
       filePath.endsWith('.sql') &&
-      filePath !== 'tools/planning-db/schema.sql'
+      !currentSchemaSources.includes(filePath)
     ) {
       artifacts.push({ path: filePath, reason: 'Parallel Planning DB SQL owner' });
       continue;

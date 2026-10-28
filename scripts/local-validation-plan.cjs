@@ -7,6 +7,7 @@
  */
 const path = require('node:path');
 const fs = require('node:fs');
+const { currentSchemaSources } = require('../tools/planning-db/schema/manifest.cjs');
 const { spawnSync } = require('node:child_process');
 const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
@@ -325,7 +326,9 @@ function hasPlanningDbFullSuiteChange(changedFiles) {
 function hasPlanningDbCurrentSchemaChange(changedFiles) {
   return changedFiles.some((filePath) =>
     [
-      'tools/planning-db/schema.sql',
+      ...currentSchemaSources,
+      'tools/planning-db/schema/manifest.cjs',
+      'scripts/planning-db/current-schema.cjs',
       'scripts/planning-db-schema.cjs',
       'scripts/planning-db-schema.test.cjs',
       'scripts/planning-db-current-schema-policy.cjs',

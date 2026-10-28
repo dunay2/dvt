@@ -55,7 +55,9 @@
         "scripts/generated-doc-date.cjs",
         "package.json",
         "pnpm-workspace.yaml",
-        "tools/planning-db/schema.sql",
+        "scripts/planning-db/current-schema.cjs",
+        "tools/planning-db/schema/manifest.cjs",
+        "tools/planning-db/schema/**/*.sql",
         "scripts/planning-db-import.cjs",
         "docs/planning/status/system-governance-unit-index.units.yaml",
         "docs/*.md",
@@ -93,7 +95,9 @@
         "scripts/generated-doc-date.cjs",
         "scripts/planning-db-query.cjs",
         "scripts/planning-db-import.cjs",
-        "tools/planning-db/schema.sql",
+        "scripts/planning-db/current-schema.cjs",
+        "tools/planning-db/schema/manifest.cjs",
+        "tools/planning-db/schema/**/*.sql",
         "docs/planning/status/system-governance-unit-index.units.yaml",
         "docs/*.md",
         "docs/**/*.md",
@@ -162,7 +166,9 @@
         ".release-please-manifest.json",
         "CHANGELOG.md",
         "pnpm-workspace.yaml",
-        "tools/planning-db/schema.sql",
+        "scripts/planning-db/current-schema.cjs",
+        "tools/planning-db/schema/manifest.cjs",
+        "tools/planning-db/schema/**/*.sql",
         ".",
         "**/package.json",
         "**/src/**",
@@ -245,7 +251,9 @@
       "sourcePaths": [
         "scripts/generate-knowledge-intake-literature.cjs",
         "scripts/planning-db/queries/knowledge-intake-retirement-query.cjs",
-        "tools/planning-db/schema.sql"
+        "scripts/planning-db/current-schema.cjs",
+        "tools/planning-db/schema/manifest.cjs",
+        "tools/planning-db/schema/**/*.sql"
       ],
       "generatorCommand": "pnpm docs:knowledge-intake:generate",
       "tracking": "untracked",
@@ -274,7 +282,9 @@
       "sourcePaths": [
         "scripts/generate-db-surface-inventory.cjs",
         "scripts/planning-db/db-surface-inventory.cjs",
-        "tools/planning-db/schema.sql"
+        "scripts/planning-db/current-schema.cjs",
+        "tools/planning-db/schema/manifest.cjs",
+        "tools/planning-db/schema/**/*.sql"
       ],
       "generatorCommand": "pnpm docs:db-surface-inventory:generate",
       "tracking": "untracked",
@@ -305,7 +315,9 @@
       "sourcePaths": [
         "scripts/generate-dbt-project-roundtrip-capability-status.cjs",
         "scripts/planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs",
-        "tools/planning-db/schema.sql"
+        "scripts/planning-db/current-schema.cjs",
+        "tools/planning-db/schema/manifest.cjs",
+        "tools/planning-db/schema/**/*.sql"
       ],
       "generatorCommand": "pnpm docs:dbt-roundtrip-capabilities:generate",
       "tracking": "untracked",

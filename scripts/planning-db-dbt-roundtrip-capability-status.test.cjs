@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const schemaPath = path.join(__dirname, '..', 'tools', 'planning-db', 'schema.sql');
+const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
 const capabilityCatalogPath = path.join(
   __dirname,
   '..',
@@ -17,7 +17,7 @@ function readCapabilityCatalog() {
 }
 
 test('DBT round-trip capability current schema owns normalized phase evidence and projection', () => {
-  const sql = fs.readFileSync(schemaPath, 'utf8');
+  const sql = readCurrentPlanningDbSchema();
   assert.match(sql, /CREATE TABLE planning_query_store\.dbt_project_roundtrip_phases/);
   assert.match(sql, /CREATE TABLE planning_query_store\.dbt_project_roundtrip_phase_rail_evidence/);
   assert.match(
