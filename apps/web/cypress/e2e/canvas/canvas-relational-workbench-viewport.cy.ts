@@ -5,6 +5,8 @@
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
  * @version 1.0.0
  */
+import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
+
 import {
   adoptLiveDbtProjectFileAuthority,
   seedLiveWorkspaceFiles,
@@ -17,6 +19,7 @@ import {
 } from '../../support/e2eApiStub';
 import {
   hasLiveProtectedRuntimeEnv,
+  readLiveGraphDraft,
   readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
@@ -286,8 +289,14 @@ describe('DBT project Git browsing with real file authority', () => {
     );
   });
 
-  it('retains repeated file selection within the actual DBT root without clean-browse writes', () => {
+  it('retains repeated DBT file selection without file saves or persisted graph changes', () => {
     const hashes: Record<string, string> = {};
+    let graphBefore:
+      | {
+          status: number;
+          body: ReturnType<typeof WorkspaceGraphDraftReadResponseSchema.parse>;
+        }
+      | undefined;
     const main = '[data-slot="canvas-workspace-surface"]';
     const git = `${main} section[aria-labelledby$="-git-button"]`;
     const code = '[data-slot="canvas-contextual-workbench"]';
@@ -299,9 +308,14 @@ describe('DBT project Git browsing with real file authority', () => {
         hashes[path] = file.contentSha256;
       });
     }
+    readLiveGraphDraft(undefined, { failOnStatusCode: false }).then(({ status, body }) => {
+      expect(status).to.be.oneOf([200, 404]);
+      const draft = WorkspaceGraphDraftReadResponseSchema.parse(body);
+      expect(draft.kind).to.equal(status === 200 ? 'ok' : 'not_found');
+      graphBefore = { status, body: draft };
+    });
     cy.intercept({ method: 'GET', pathname: '/workspace/files' }).as('actualFileTree');
     cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('fileWrites');
-    cy.intercept({ method: 'PUT', pathname: '/workspace/graph/draft' }).as('graphWrites');
     cy.viewport(1500, 900);
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${canvasId}&projectRoot=${projectRoot}`
@@ -365,7 +379,17 @@ describe('DBT project Git browsing with real file authority', () => {
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
     cy.get(code).should('not.exist');
     cy.get('@fileWrites.all').should('have.length', 0);
-    cy.get('@graphWrites.all').should('have.length', 0);
+    readLiveGraphDraft(undefined, { failOnStatusCode: false }).then(({ status, body }) => {
+      if (graphBefore === undefined) throw new Error('Persisted graph baseline was not captured.');
+      const draft = WorkspaceGraphDraftReadResponseSchema.parse(body);
+      expect(status, 'persisted graph presence is unchanged').to.equal(graphBefore.status);
+      expect(draft.kind).to.equal(graphBefore.body.kind);
+      if (draft.kind === 'ok' && graphBefore.body.kind === 'ok') {
+        expect(draft.record, 'persisted graph record is unchanged').to.deep.equal(
+          graphBefore.body.record
+        );
+      }
+    });
     for (const path of Object.keys(files)) {
       readLiveWorkspaceFile(path).then(({ status, body }) => {
         expect(status).to.equal(200);
