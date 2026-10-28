@@ -116,6 +116,48 @@ Delegation and verification may name another responsibility owner explicitly.
 No feature command owns these associations. Git retains source history; the
 existing command audit is not a source inventory.
 
+An existing proposed responsibility can be explicitly approved by the same
+`RecordArchitectureComponent` command with
+`--expected-responsibility-status proposed --responsibility-status approved`.
+The other admitted promotion is `approved` to `implemented`. Both flags are
+required together and apply only to the responsibilities named in that
+command. They do not derive approval from the component descriptor's status.
+Missing, same-state, reverse, skipped or drift transitions are rejected;
+duplicate named responsibility IDs are rejected for an explicit promotion.
+Ordinary recording without the pair preserves each existing responsibility
+status, including when the descriptor is recorded as review. Omission also
+preserves the legacy command shape, audit payload and default idempotency key.
+
+The existing transaction and component lock own the entire operation. Before
+each named responsibility's upsert, the writer compares and sets its exact ID,
+component owner and expected status, requiring one matching existing row. The
+status predicate is the atomic concurrency guard; a preflight snapshot is not
+a full-row CAS. Missing, foreign or stale responsibilities fail rather than
+being created, reassigned or silently accepted. The status-preserving upsert
+then retains the accepted target, and binding validation sees it within that
+same transaction. A later invalid binding, stale binding digest or stale member
+of a multi-responsibility request rolls back status, descriptor, bindings and
+audit together. Exact replay follows the existing idempotent command receipt;
+changed input under the same key remains a conflict.
+
+```mermaid
+flowchart LR
+  Record[Existing component record plus explicit status pair] --> Validate[Validate finite forward promotion]
+  Validate --> Transaction[Existing transaction and component lock]
+  Transaction --> CAS[Responsibility ID owner and expected status CAS]
+  CAS --> Upsert[Existing status-preserving upsert]
+  Upsert --> Bind[Existing binding digest and reference validation]
+  Bind --> Audit[Existing audit and commit]
+  CAS -->|missing foreign or stale| Rollback[Rollback whole command]
+  Bind -->|rejected| Rollback
+```
+
+This closes the proposed-to-approved lifecycle gap without weakening the
+approved/implemented binding requirement or adding a second command, schema,
+responsibility store, retirement/recreation route or automatic approval.
+Registration and lifecycle status do not claim that tests or product execution
+passed; execution evidence remains separate.
+
 `ReviseGovernanceComponent` corrects an existing definition under admitted design
 scope and expected revision. `--cq-rails` and `--ddd-owner` correct the current
 values. `--remove-responsibility`, `--remove-reason-to-change`, `--remove-non-goal`,

@@ -471,6 +471,93 @@ test('parseArgs accepts architecture component lifecycle statuses supported by t
   assert.equal(command.status, 'deprecated');
 });
 
+test('architecture component responsibility promotions are explicit and preserve legacy input', () => {
+  const args = [
+    'architecture-component',
+    'record',
+    '--design',
+    'RESPONSIBILITY-STATUS',
+    '--component',
+    'SYS-MODEL',
+    '--name',
+    'Model',
+    '--kind',
+    'module',
+    '--layer',
+    'application',
+    '--owner',
+    'Test',
+    '--repo-path',
+    'model.ts',
+    '--public-contract',
+    'Model',
+    '--status',
+    'review',
+    '--responsibility',
+    'RESP-MODEL|Publish model|Model changes|Model',
+    '--source-ref',
+    'https://example.invalid/design',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'test',
+  ];
+  const legacy = parseArgs(args);
+  assert.equal(
+    legacy.idempotencyKey,
+    'architecture_component_record:test:RESPONSIBILITY-STATUS:SYS-MODEL:13e29f0c75011f13'
+  );
+  assert.equal(Object.hasOwn(legacy, 'expectedResponsibilityStatus'), false);
+  assert.equal(Object.hasOwn(legacy, 'responsibilityStatus'), false);
+  for (const [expected, target] of [
+    ['proposed', 'approved'],
+    ['approved', 'implemented'],
+  ]) {
+    const command = parseArgs([
+      ...args,
+      '--expected-responsibility-status',
+      expected,
+      '--responsibility-status',
+      target,
+    ]);
+    assert.equal(command.expectedResponsibilityStatus, expected);
+    assert.equal(command.responsibilityStatus, target);
+    assert.notEqual(command.idempotencyKey, legacy.idempotencyKey);
+  }
+  for (const flags of [
+    ['--expected-responsibility-status', 'proposed'],
+    ['--responsibility-status', 'approved'],
+    ...[
+      ['proposed', 'implemented'],
+      ['approved', 'approved'],
+      ['approved', 'proposed'],
+      ['implemented', 'approved'],
+      ['drift', 'approved'],
+      ['proposed', 'unknown'],
+    ].map(([expected, target]) => [
+      '--expected-responsibility-status',
+      expected,
+      '--responsibility-status',
+      target,
+    ]),
+  ]) {
+    assert.throws(() => parseArgs([...args, ...flags]), /ARCH-RESPONSIBILITY-STATUS/u);
+  }
+  assert.throws(
+    () =>
+      parseArgs([
+        ...args,
+        '--responsibility',
+        'RESP-MODEL|Publish model|Model changes|Model',
+        '--expected-responsibility-status',
+        'proposed',
+        '--responsibility-status',
+        'approved',
+      ]),
+    /ARCH-RESPONSIBILITY-STATUS/u
+  );
+});
+
 test('parseArgs builds an architecture test evidence record command', () => {
   const command = parseArgs([
     'architecture-evidence',

@@ -392,6 +392,78 @@ test('architecture component updates preserve governed maturity and creation tim
   assert.equal(planned.component.updatedAt, now.toISOString());
 });
 
+test('component plans audit explicit responsibility promotions without changing legacy payload bytes', () => {
+  const args = [
+    'architecture-component',
+    'record',
+    '--design',
+    'RESPONSIBILITY-STATUS',
+    '--component',
+    'SYS-MODEL',
+    '--name',
+    'Model',
+    '--kind',
+    'module',
+    '--layer',
+    'application',
+    '--owner',
+    'Test',
+    '--repo-path',
+    'model.ts',
+    '--public-contract',
+    'Model',
+    '--status',
+    'review',
+    '--responsibility',
+    'RESP-MODEL|Publish model|Model changes|Model',
+    '--source-ref',
+    'https://example.invalid/design',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'test',
+  ];
+  const legacy = parseArgs(args);
+  const input = {
+    design: { design_id: legacy.designId, status: 'review' },
+    designScopes: [
+      { subject_kind: 'component', subject_id: legacy.componentId, scope_kind: 'may_create' },
+    ],
+    existingComponent: null,
+    parentComponent: null,
+    operationId: 'fixed',
+    now: '2026-10-28T00:00:00.000Z',
+  };
+  const plannedLegacy = planArchitectureComponentRecordOperation({ ...input, command: legacy });
+  assert.equal(
+    sha256Hex(Buffer.from(JSON.stringify(plannedLegacy.audit.payload))),
+    '53fdafb4847241c8f56712aaf32af6e6c9e969da5b4a254bbce7986cbd9ec321'
+  );
+  assert.equal(Object.hasOwn(plannedLegacy, 'expectedResponsibilityStatus'), false);
+  assert.equal(Object.hasOwn(plannedLegacy, 'responsibilityStatus'), false);
+  for (const [expected, target] of [
+    ['proposed', 'approved'],
+    ['approved', 'implemented'],
+  ]) {
+    const command = parseArgs([
+      ...args,
+      '--expected-responsibility-status',
+      expected,
+      '--responsibility-status',
+      target,
+    ]);
+    const planned = planArchitectureComponentRecordOperation({ ...input, command });
+    assert.equal(planned.responsibilities[0].status, target);
+    assert.equal(planned.expectedResponsibilityStatus, expected);
+    assert.equal(planned.responsibilityStatus, target);
+    assert.deepEqual(planned.audit.payload, {
+      ...plannedLegacy.audit.payload,
+      expectedResponsibilityStatus: expected,
+      responsibilityStatus: target,
+    });
+  }
+});
+
 test('architecture responsibility retirement requires exact component authority and deletes one row', async () => {
   const now = new Date('2026-08-14T08:00:00.000Z');
   const command = parseArgs([
