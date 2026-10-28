@@ -22,10 +22,6 @@ import type {
   CanvasShellPanels,
 } from './canvasShell.types';
 
-function resolveCanvasShellMainPanelDefaultSize(): number {
-  return 100;
-}
-
 type CanvasShellMainPanelProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -89,6 +85,7 @@ function CanvasShellViewport({
   onOpenCanvasSettings,
   contextMenuPresenter,
   workspaceTask,
+  inspector,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -99,7 +96,7 @@ function CanvasShellViewport({
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
   | 'workspaceTask'
->): JSX.Element {
+> & { inspector: ReactNode }): JSX.Element {
   const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
     focusMode: layout.focusMode,
     inspectorPanelVisible: layout.inspectorPanelVisible,
@@ -110,6 +107,7 @@ function CanvasShellViewport({
   return (
     <CanvasViewport
       workspaceTask={workspaceTask}
+      inspector={inspector}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
       canSelectNodes={layout.canSelectNodes}
@@ -184,9 +182,14 @@ function CanvasShellMainSurface({
   | 'contextMenuPresenter'
   | 'workspaceTask'
 > & { inspector: ReactNode }): JSX.Element {
+  const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
+  const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
+  const nodeInspector =
+    workspaceTask == null && layout.contextualWorkbench == null ? inspector : null;
   const viewport = (
     <CanvasShellViewport
       workspaceTask={workspaceTask}
+      inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
       panels={panels}
       graph={graph}
@@ -197,7 +200,6 @@ function CanvasShellMainSurface({
     />
   );
 
-  const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const baseSurface = (
     <CanvasShellWorkspaceSurfaces
       viewport={
@@ -213,26 +215,7 @@ function CanvasShellMainSurface({
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
       workbench={workspaceTask == null ? layout.contextualWorkbench : undefined}
-      inspector={workspaceTask == null ? inspector : null}
-    />
-  );
-}
-
-function CanvasShellNodeWorkbenchOverlay({
-  layout,
-  panels,
-  chromeCommands,
-  onOpenModelEditor,
-}: Pick<
-  CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'chromeCommands' | 'onOpenModelEditor'
->): JSX.Element | null {
-  return (
-    <CanvasNodeWorkbenchOverlay
-      layout={layout}
-      panels={panels}
-      onHide={chromeCommands.onHideInspector}
-      {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
+      inspector={inspectorInViewport ? null : nodeInspector}
     />
   );
 }
@@ -258,7 +241,7 @@ export function CanvasShellMainPanel({
     (layout.centerSurface == null || layout.centerSurfaceVisible === false);
 
   return (
-    <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
+    <CanvasShellMainPanelFrame defaultSize={100}>
       <CanvasShellMenuContributionRegistrars
         panels={panels}
         chromeState={chromeState}
@@ -280,11 +263,11 @@ export function CanvasShellMainPanel({
         onOpenCanvasSettings={onOpenCanvasSettings}
         contextMenuPresenter={contextMenuPresenter}
         inspector={
-          <CanvasShellNodeWorkbenchOverlay
+          <CanvasNodeWorkbenchOverlay
             layout={layout}
             panels={panels}
-            chromeCommands={chromeCommands}
-            onOpenModelEditor={onOpenModelEditor}
+            onHide={chromeCommands.onHideInspector}
+            {...(onOpenModelEditor == null ? {} : { onOpenModelEditor })}
           />
         }
       />

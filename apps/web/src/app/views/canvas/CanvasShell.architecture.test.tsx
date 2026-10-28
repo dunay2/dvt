@@ -167,20 +167,15 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.workbenchTabStrip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasToolbar');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('canvas-workbench-chrome');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
-      'function resolveCanvasShellMainPanelDefaultSize('
-    );
     expect(CANVAS_SHELL_SOURCE).not.toContain('function CanvasShellExplorerRail(');
     expect(CANVAS_SHELL_SOURCE).not.toContain('function CanvasShellInspectorRail(');
     expect(CANVAS_SHELL_SOURCE).not.toContain('DbtExplorer');
     expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasInspectorPanel');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellNodeWorkbenchOverlay');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasShellOverlayCenterSurfaceFrame');
     expect(CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE).not.toContain('overlayContent');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellViewport(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainPanel(');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('resolveCanvasShellMainPanelDefaultSize()');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');

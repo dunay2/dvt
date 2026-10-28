@@ -51,6 +51,7 @@ describe('Explicit PostgreSQL Sink live', () => {
         resultTarget: { relation: `${relation}_intermediate` },
       });
       cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.get('.react-flow__controls-fitview').click();
       getVisibleCanvasNodeByCardTitle('Model 1')
         .find('[data-slot="graph-node-materialization"]')
         .click();

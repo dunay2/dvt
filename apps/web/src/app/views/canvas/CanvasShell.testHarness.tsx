@@ -56,7 +56,12 @@ vi.mock('../../components/dbtProjectImport/DbtProjectImportDialog', () => ({
 vi.mock('./CanvasViewport', () => ({
   default: (props: Record<string, unknown>) => {
     shellState.canvasViewportProps = props;
-    return <div data-testid="canvas-viewport">{props.workspaceTask as React.ReactNode}</div>;
+    return (
+      <div data-testid="canvas-viewport">
+        {props.workspaceTask as React.ReactNode}
+        {props.inspector as React.ReactNode}
+      </div>
+    );
   },
 }));
 
