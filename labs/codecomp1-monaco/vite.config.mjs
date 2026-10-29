@@ -14,7 +14,13 @@ const monoFontRoot = realpathSync(
 export default {
   plugins: [tailwindcss()],
   resolve: { alias: { 'monaco-editor': `${monacoRoot}/esm/vs` } },
-  optimizeDeps: { noDiscovery: true },
+  optimizeDeps: {
+    noDiscovery: true,
+    include: [
+      'monaco-editor/editor/editor.api.js',
+      'monaco-editor/languages/definitions/sql/register.js',
+    ],
+  },
   server: {
     host: '127.0.0.1',
     port: 5188,

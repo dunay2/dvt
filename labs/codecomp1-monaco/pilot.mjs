@@ -10,7 +10,6 @@ import {
 } from '../../apps/web/src/app/components/monaco/monacoVisualTokens.ts';
 import { fixture } from './fixture.mjs';
 import { attachCards } from './cards.mjs';
-import './pilot.css';
 
 self.MonacoEnvironment = { getWorker: () => new EditorWorker() };
 configureMonacoVisualTheme(monaco);
