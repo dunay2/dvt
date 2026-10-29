@@ -450,6 +450,274 @@ function registerDocsCanonicalSourceIntegration(dbUrl) {
       fs.rmSync(repoRoot, { recursive: true, force: true });
     }
   });
+  for (const mode of ['sequential', 'concurrent']) {
+    test(
+      `canonical relocation prevents an incoming target becoming a source (${mode})`,
+      { timeout: 30_000 },
+      async (t) => {
+        assert.match(new URL(dbUrl()).pathname, /^\/dvt_planning_test_/u);
+        const clients = [],
+          repos = [],
+          pending = [];
+        let releaseFirst = () => {};
+        const connect = async () => {
+          const connection = new Client({ connectionString: dbUrl() });
+          clients.push(connection);
+          await connection.connect();
+          return connection;
+        };
+        const makeRepo = (from, to, fromText, toText) => {
+          const root = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-doc-chain-'));
+          repos.push(root);
+          const git = (...args) =>
+            execFileSync('git', args, {
+              cwd: root,
+              env: createGitRepositoryEnvironment(),
+              encoding: 'utf8',
+              stdio: ['ignore', 'pipe', 'pipe'],
+            }).trim();
+          git('init');
+          git('config', 'user.name', 'Document chain fixture');
+          git('config', 'user.email', 'fixture@example.invalid');
+          git('config', 'core.autocrlf', 'false');
+          fs.mkdirSync(path.dirname(path.join(root, from)), { recursive: true });
+          fs.writeFileSync(path.join(root, from), fromText);
+          git('add', '.');
+          const sourceCommit = git('commit-tree', git('write-tree'), '-m', 'Imported source');
+          git('update-ref', 'HEAD', sourceCommit);
+          fs.unlinkSync(path.join(root, from));
+          fs.writeFileSync(path.join(root, to), toText);
+          git('add', '.');
+          const targetCommit = git(
+            'commit-tree',
+            git('write-tree'),
+            '-p',
+            sourceCommit,
+            '-m',
+            'Canonical target'
+          );
+          git('update-ref', 'HEAD', targetCommit);
+          return { root, sourceCommit, targetCommit };
+        };
+        try {
+          const client = await connect();
+          const prefix = `docs/chain-${mode}`,
+            paths = ['a', 'b', 'c'].map((name) => `${prefix}/${name}.md`);
+          const content = ['# A origin\n', '# B contract\n', '# C contract\n'];
+          const hashes = content.map((value) => sha256HexUtf8(value));
+          const ab = makeRepo(paths[0], paths[1], content[0], content[1]);
+          const bc = makeRepo(paths[1], paths[2], content[1], content[2]);
+          for (let i = 0; i < paths.length; i++) {
+            await client.query(
+              `insert into planning_query_store.knowledge_documents
+            (document_id,document_path,document_type,title,status,source_content_sha256)
+            values ($1,$2,'architecture_component',$3,'Review',$4)`,
+              [`chain-${mode}-${i}`, paths[i], `Chain ${mode} ${i}`, hashes[i]]
+            );
+          }
+          const fixture = `chain-${mode}-fixture`,
+            fixtureHash = sha256HexUtf8(content.join(''));
+          await client.query(
+            `insert into planning_query_store.governance_sources
+          (source_path,source_type,content_sha256,source_bytes) values ($1,'governance_file_shard',$2,0)`,
+            [fixture, fixtureHash]
+          );
+          await client.query(
+            `insert into planning_query_store.governance_file_shards
+          (shard_id,source_path,file_count,content_hash,source_content_sha256,raw_shard)
+          values ($1,$1,2,$2,$2,'{}')`,
+            [fixture, fixtureHash]
+          );
+          for (const i of [1, 2]) {
+            await client.query(
+              `insert into planning_query_store.governance_files
+            (path,file_id,shard_id,source_path,path_hash,content_hash,governance_hash,state_fingerprint,
+             owning_unit,root_unit,domain_unit,component_unit,owner_level,unit_status,governance_state,
+             canonical_role,evidence_state,is_drift,is_legacy,ddd_owner,cq_rails,source_content_sha256,raw_file)
+            values ($1,$2,$3,$3,$4,$4,$4,$4,'fixture','fixture','fixture','fixture','component','review',
+              'current','canonical','none',false,false,'Docs','ResolveDocsDispositionQueue',$4,'{}')`,
+              [paths[i], `chain-${mode}-${i}`, fixture, hashes[i]]
+            );
+          }
+          const command = (fromIndex, toIndex, repo) =>
+            parseArgs([
+              'docs-disposition',
+              'resolve',
+              '--kind',
+              'canonical_document_relocation',
+              '--path',
+              paths[fromIndex],
+              '--actor',
+              'test',
+              '--resolution',
+              'linked',
+              '--reason',
+              'Preserve one-hop canonical resolution.',
+              '--canonical-source',
+              JSON.stringify({
+                sourceCommit: repo.sourceCommit,
+                retirementCommit: repo.targetCommit,
+                expectedSourceContentSha256: hashes[fromIndex],
+                targetCommit: repo.targetCommit,
+                targetPath: paths[toIndex],
+                targetAnchors: [toIndex === 1 ? 'b-contract' : 'c-contract'],
+                expectedTargetContentSha256: hashes[toIndex],
+                expectedResolutionSha256: 'absent',
+              }),
+            ]);
+          const first = command(0, 1, ab),
+            second = command(1, 2, bc);
+          const rows = async () => ({
+            overlays: (
+              await client.query(
+                'select to_jsonb(t)::text raw from planning_query_store.doc_resolution_overlays t order by resolution_key'
+              )
+            ).rows,
+            audits: (
+              await client.query(
+                'select to_jsonb(t)::text raw from planning_query_store.doc_resolution_operations t order by operation_id'
+              )
+            ).rows,
+            documents: (
+              await client.query(
+                'select to_jsonb(t)::text raw from planning_query_store.knowledge_documents t order by document_id'
+              )
+            ).rows,
+            governedFiles: (
+              await client.query(
+                'select to_jsonb(t)::text raw from planning_query_store.governance_files t order by path'
+              )
+            ).rows,
+            rails: (
+              await client.query(
+                'select to_jsonb(t)::text raw from planning_query_store.command_query_rails t order by rail_id'
+              )
+            ).rows,
+          });
+          const before = await rows();
+          const secondClient = await connect();
+          await secondClient.query("set default_transaction_isolation to 'repeatable read'");
+          let secondIsolation;
+          const observedSecond = {
+            async query(...args) {
+              const result = await secondClient.query(...args);
+              if (result.fields?.some((field) => field.name === 'target_relocated'))
+                secondIsolation = (await secondClient.query('show transaction_isolation')).rows[0]
+                  .transaction_isolation;
+              return result;
+            },
+          };
+          if (mode === 'sequential') {
+            await applyDocsResolutionOperation(first, { databaseUrl: dbUrl(), repoRoot: ab.root });
+            const accepted = await rows();
+            await assert.rejects(
+              applyDocsResolutionOperation(second, { client: observedSecond, repoRoot: bc.root }),
+              /DOC-RELOCATION: Source is already a canonical target\./
+            );
+            assert.deepEqual(
+              await rows(),
+              accepted,
+              'Rejected B→C must preserve every overlay/audit/source row'
+            );
+          } else {
+            const firstClient = await connect();
+            const firstPid = (await firstClient.query('select pg_backend_pid()::int pid')).rows[0]
+              .pid;
+            const secondPid = (await secondClient.query('select pg_backend_pid()::int pid')).rows[0]
+              .pid;
+            let factsReached;
+            const factsReady = new Promise((resolve) => {
+              factsReached = resolve;
+            });
+            const resumeFirst = new Promise((resolve) => {
+              releaseFirst = resolve;
+            });
+            const observedFirst = {
+              async query(...args) {
+                const result = await firstClient.query(...args);
+                if (result.fields?.some((field) => field.name === 'target_relocated')) {
+                  factsReached();
+                  await resumeFirst;
+                }
+                return result;
+              },
+            };
+            const firstSettled = applyDocsResolutionOperation(first, {
+              client: observedFirst,
+              repoRoot: ab.root,
+            }).then(
+              (value) => ({ status: 'fulfilled', value }),
+              (reason) => ({ status: 'rejected', reason })
+            );
+            pending.push(firstSettled);
+            assert.equal(
+              await Promise.race([factsReady.then(() => true), firstSettled.then(() => false)]),
+              true,
+              'A→B must reach its registered database facts'
+            );
+            let secondResult;
+            const secondSettled = applyDocsResolutionOperation(second, {
+              client: observedSecond,
+              repoRoot: bc.root,
+            }).then(
+              (value) => (secondResult = { status: 'fulfilled', value }),
+              (reason) => (secondResult = { status: 'rejected', reason })
+            );
+            pending.push(secondSettled);
+            try {
+              while (!secondResult) {
+                t.signal.throwIfAborted();
+                const blockers = (
+                  await client.query('select pg_blocking_pids($1) blockers', [secondPid])
+                ).rows[0].blockers;
+                if (blockers.includes(firstPid)) break;
+                await new Promise((resolve) => setImmediate(resolve));
+              }
+            } finally {
+              releaseFirst();
+            }
+            const [a, b] = await Promise.all([firstSettled, secondSettled]);
+            assert.equal(a.status, 'fulfilled');
+            assert.equal(b.status, 'rejected', 'Concurrent A→B and B→C must not both commit');
+            assert.match(
+              b.reason.message,
+              /DOC-RELOCATION: Source is already a canonical target\./
+            );
+          }
+          assert.equal(
+            secondIsolation,
+            'read committed',
+            'Canonical relocation must see the prior committed mapping despite caller default RR'
+          );
+          const after = await rows();
+          assert.equal(after.overlays.length, before.overlays.length + 1);
+          assert.equal(after.audits.length, before.audits.length + 1);
+          assert.deepEqual(
+            after.overlays.filter((row) => JSON.parse(row.raw).document_path !== paths[0]),
+            before.overlays
+          );
+          assert.deepEqual(
+            after.audits.filter((row) => JSON.parse(row.raw).document_path !== paths[0]),
+            before.audits
+          );
+          assert.deepEqual(after.documents, before.documents);
+          assert.deepEqual(after.governedFiles, before.governedFiles);
+          assert.deepEqual(after.rails, before.rails);
+          const lifecycle = await readDocumentationLifecycleRows(client, { path: paths[0] });
+          assert.equal(lifecycle[0].canonical_target_path, paths[1]);
+          assert.equal(lifecycle[0].lifecycle_state, 'superseded');
+        } finally {
+          releaseFirst();
+          await Promise.allSettled(pending);
+          for (const connection of clients.reverse()) await connection.end();
+          for (const repo of repos) {
+            assert.equal(path.dirname(repo), path.resolve(os.tmpdir()));
+            fs.rmSync(repo, { recursive: true, force: true });
+          }
+        }
+      }
+    );
+  }
 }
 
 module.exports = registerDocsCanonicalSourceIntegration;

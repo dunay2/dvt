@@ -88,6 +88,12 @@ function planCanonicalDocumentRelocation({ command, sourceRow, validateOnly = fa
   if ((sourceRow.overlay_sha256 ?? 'absent') !== proof.expectedResolutionSha256) {
     throw new Error('DOC-RELOCATION: Stale resolution CAS.');
   }
+  if (typeof sourceRow.source_is_canonical_target !== 'boolean') {
+    throw new Error('DOC-RELOCATION: Canonical target state is unavailable.');
+  }
+  if (sourceRow.source_is_canonical_target) {
+    throw new Error('DOC-RELOCATION: Source is already a canonical target.');
+  }
   return {
     ...proof,
     sourceDocumentId: sourceRow.document_id,

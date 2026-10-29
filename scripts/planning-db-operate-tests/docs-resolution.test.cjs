@@ -268,6 +268,7 @@ test('canonical relocation retains a structured target from a real registered do
       overlay_sha256: null,
       source_relocated: false,
       target_relocated: false,
+      source_is_canonical_target: false,
     },
     operationId: 'relocate',
     now: '2026-10-28T12:00:00Z',
@@ -310,6 +311,7 @@ test('canonical relocation rejects unsupported proofs and missing, stale or reti
     target_content_sha256: 'e'.repeat(64),
     target_status: 'Review',
     overlay_sha256: null,
+    source_is_canonical_target: false,
   };
   for (const changed of [
     { target_document_id: null },
@@ -319,6 +321,9 @@ test('canonical relocation rejects unsupported proofs and missing, stale or reti
     { target_status: 'Superseded' },
     { target_status: 'Retired' },
     { target_relocated: true },
+    { source_is_canonical_target: true },
+    { source_is_canonical_target: null },
+    { source_is_canonical_target: undefined },
     { overlay_target_path: 'docs/foreign.md' },
     { overlay_sha256: 'f'.repeat(64) },
     { document_type: 'intake' },
