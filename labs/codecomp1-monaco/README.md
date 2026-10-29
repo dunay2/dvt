@@ -38,6 +38,7 @@ Responsibilities:
 - `pilot.mjs`: one editor session, exact example verification and inspection.
 - `pilot.css`: layout using existing application tokens.
 - `vite.config.mjs`: isolated loopback server/build using installed packages.
+- `.lintstagedrc.json`: normal pre-commit formatting/lint for the lab file types.
 
 Build without changing production output:
 
