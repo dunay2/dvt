@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Raven · Código y componentes</title>
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="http://127.0.0.1:5173/canvas">Raven</a>
+      <nav aria-label="Vistas"><a href="http://127.0.0.1:5173/canvas">Canvas</a><span aria-current="page">Código</span></nav>
+      <span class="lab-badge">Piloto · datos de ejemplo</span>
+    </header>
+    <section class="toolbar" aria-label="Documento">
+      <div><span class="file-icon" aria-hidden="true">⌘</span><strong>ventas_por_cliente.sql</strong><span class="file-folder">models /</span></div>
+      <div class="actions">
+        <label><input id="read-only" type="checkbox" /> Solo lectura</label>
+        <button id="verify" type="button">Validar ejemplo</button>
+      </div>
+    </section>
+    <main>
+      <section class="editor-pane" aria-label="Código y componentes"><div id="editor"></div></section>
+      <aside aria-label="Propiedades del componente">
+        <div class="details-header"><h1 id="detail-title" tabindex="-1">El documento</h1><button id="close-details" type="button" aria-label="Cerrar definición" hidden>×</button></div>
+        <div id="details"><p class="muted">Dos modelos junto a sus referencias, sin salir del código.</p><div class="fact"><span>Modelo</span><strong>Ventas por cliente</strong></div><div class="fact"><span>Entradas</span><strong>Clientes activos · Pedidos recientes</strong></div><p class="hint">Abre una definición para consultar su código y sus campos.</p><p class="hint">Al editar se ocultan las tarjetas. Esta prueba valida únicamente el documento de ejemplo; conserva Deshacer y Rehacer de Monaco.</p></div>
+      </aside>
+    </main>
+    <footer role="status" aria-live="polite"><span id="state" data-state="loading">Preparando editor…</span><span id="card-count"></span><span class="footer-language">PostgreSQL · UTF-8</span></footer>
+    <script type="module" src="/pilot.mjs"></script>
+  </body>
+</html>
