@@ -616,6 +616,49 @@ test('buildVerifyChangedPlan routes CodeStatus evidence to its existing canonica
   }
 });
 
+test('modular Planning DB operation sources retain their canonical suite without directory discovery', () => {
+  const paths = [
+    'scripts/planning-db/operate/cli.cjs',
+    'scripts/planning-db/operate/command-values.cjs',
+    'scripts/planning-db/operate/operation-payload.cjs',
+    'scripts/planning-db/operate/docs.cjs',
+    'scripts/planning-db/operate/component-definition.cjs',
+    'scripts/planning-db/operate/component-operations.cjs',
+    'scripts/planning-db/operate/feature-mechanization.cjs',
+    'scripts/planning-db/operate/architecture-design-authority.cjs',
+    'scripts/planning-db/operate/architecture-design-operations.cjs',
+    'scripts/planning-db/operate/architecture-component-profile.cjs',
+    'scripts/planning-db/operate/architecture-relations.cjs',
+    'scripts/planning-db/operate/architecture-contracts-io.cjs',
+    'scripts/planning-db/operate/architecture-evidence.cjs',
+    'scripts/planning-db/operate/architecture-fitness.cjs',
+    'scripts/planning-db/operate/architecture-audit.cjs',
+    'scripts/planning-db/operate/evidence-origin.cjs',
+    'scripts/planning-db/operate/fowler.cjs',
+    'scripts/planning-db/operate/db-surface.cjs',
+    'scripts/planning-db/catalog-implementation-reference-relocation.cjs',
+    'scripts/planning-db/docs-canonical-source-resolution.cjs',
+    'scripts/planning-db-operate-tests/catalog-implementation-reference-relocation.test.cjs',
+  ];
+  for (const files of [
+    ...paths.map((file) => [file]),
+    [...paths, 'scripts/planning-db-operate.cjs'],
+  ]) {
+    for (const labels of [focusedLabelsFor(files), labelsFor(files)]) {
+      assert.equal(
+        labels.filter((label) => label === 'node --test scripts/planning-db-operate.test.cjs')
+          .length,
+        1
+      );
+      assert.ok(!labels.includes('pnpm test:planning:db'));
+    }
+  }
+  const unknown = ['scripts/planning-db/operate/undeclared-operation.cjs'];
+  for (const labels of [focusedLabelsFor(unknown), labelsFor(unknown)]) {
+    assert.ok(!labels.includes('node --test scripts/planning-db-operate.test.cjs'));
+  }
+});
+
 test('buildVerifyChangedPlan routes catalog reconciliation to one canonical command suite', () => {
   const paths = [
     'scripts/planning-db/catalog-reconciliation.cjs',

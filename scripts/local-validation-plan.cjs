@@ -146,6 +146,34 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-current-schema-policy.test.cjs':
     'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/cli.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/command-values.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/operation-payload.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/docs.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/component-definition.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/component-operations.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/feature-mechanization.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-design-authority.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-design-operations.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-component-profile.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-relations.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-contracts-io.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-evidence.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-fitness.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-audit.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/evidence-origin.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/fowler.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/db-surface.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/catalog-implementation-reference-relocation.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/docs-canonical-source-resolution.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/catalog-implementation-reference-relocation.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db/catalog-reconciliation.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db/catalog-reconciliation-write.cjs': 'scripts/planning-db-operate.test.cjs',
