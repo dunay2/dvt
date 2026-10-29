@@ -157,6 +157,36 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(container.textContent).not.toContain('Import');
   });
 
+  it.each([
+    ['en', 'Code'],
+    ['es', 'Código'],
+  ] as const)(
+    'projects the top Code command in the configured language (%s)',
+    async (language, label) => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage(language);
+      const selectCode = vi.fn();
+      const showCanvas = vi.fn();
+      await act(async () =>
+        root.render(
+          <>
+            <CanvasWorkspaceMenuContributionRegistrar
+              activeCanvas={{ id: 'sales', kind: 'transformation', title: 'Sales' }}
+              canExportProjectSnapshot={false}
+              canImportProjectSnapshot={false}
+              codeTab={{ active: false, onSelect: selectCode, onCanvas: showCanvas }}
+            />
+            <CanvasWorkspaceTopBarIdentity />
+          </>
+        )
+      );
+      const tabs = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+      expect(tabs.map((tab) => tab.textContent)).toEqual(['Sales', label]);
+      await act(async () => fireEvent.mouseDown(tabs[1]!, { button: 0, ctrlKey: false }));
+      expect(selectCode).toHaveBeenCalledExactlyOnceWith();
+      await act(async () => fireEvent.mouseDown(tabs[0]!, { button: 0, ctrlKey: false }));
+      expect(showCanvas).toHaveBeenCalledExactlyOnceWith();
+    }
+  );
   it('renders project commands and active Canvas context in the configured language', async () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 

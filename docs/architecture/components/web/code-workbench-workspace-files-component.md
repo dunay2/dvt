@@ -72,11 +72,14 @@ workspace file command rail.
 
 ### Web Port
 
-`apps/web/src/app/ports/workspace.ts` remains the web-facing port:
+`apps/web/src/app/ports/workspace.ts` keeps queries and commands separate:
 
-- `listFiles(): Promise<WorkspaceFileEntry[]>`
-- `getFileContent(path: string): Promise<FileContent>`
-- `saveFileContent(path: string, content: string): Promise<FileContent>`
+- `IWorkspaceFilesQueryPort.listFiles(): Promise<WorkspaceFileEntry[]>`
+- `IWorkspaceFilesQueryPort.getFileContent(path: string): Promise<FileContent>`
+- `IWorkspaceFileContentCommandPort.saveFileContent(input: SaveWorkspaceFileContentInput): Promise<WorkspaceFileSaveReceipt>`
+
+The command input contains `path`, `content` and the mandatory `expectedRevision`;
+the receipt distinguishes saved content from an unchanged write.
 
 The API adapter must build scoped endpoints from the active session store. The
 mock adapter may remain a test/demo adapter, but it must not define live API
@@ -152,14 +155,55 @@ The rail owns no speculative selection state or second selection controller.
 A request may flush already modified content through `SaveWorkspaceFileContent`;
 it does not author content. `GetWorkspaceFileContent` remains the content query.
 Clean browsing/expansion sends no file saves or graph writes and grants no VCS
-status or commands. The Model editor, File-menu lifecycle, shared controls and
-ES/EN copy retain their existing owners.
+status or commands. The Model editor, shared controls and ES/EN copy retain their
+existing owners.
+
+### Main Canvas Code Workspace — Issue 3747
+
+[Issue #3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6473478671)
+uses the existing top workspace tabs for Canvas, Code and open Models on
+`/canvas`. Git, Code and the Main Canvas File menu share one admitted opener and
+one retained Project Code host. The explicit workspace presentation omits CodeView's internal file tree
+because `CanvasProjectFilesExplorer` already supplies the single left tree.
+The existing `RouteWorkbenchFrame` primary and right slots present the editor
+and collapsible file metadata. This is application-area layout, not browser or
+operating-system fullscreen. The default Code route/history and other embedded
+consumers keep their existing presentation.
+
+Metadata is a passive projection of `GetWorkspaceFileContent` for CodeView's
+accepted `resolvedPath`: name, path, language and last-modified metadata when
+available. It never follows a requested path before selection flush succeeds.
+An unavailable new read cannot relabel the previous file's metadata. A date is
+identified as belonging to the loaded version; generic autosave does not itself
+prove the query was refreshed. Technical hashes are not shown by default, and
+size, author, Git status and node properties are not inferred. No history query,
+new endpoint, file policy or editor controller is introduced for metadata.
+
+Git and top-Code activation consume the existing opener's actual admission
+result. A denied DBT node flush preserves the current tab; it is not discarded by
+a void adapter. A later Canvas or Model selection invalidates pending Code
+activation. Canvas, Code and Model are sibling retained surfaces; Canvas ↔ Code
+does not move the file tree or editor between React parents, preserving the file
+session and pending buffer. The graph Explorer only requests Code and owns no
+second workspace-selection state. No new route or navigation store is introduced.
+
+Node inspection is a separate lifetime handoff. The existing DBT controller owns
+both editor refs and must flush the actual project Code editor before closing it
+for `InspectCanvasNode`, as well as retaining the existing node-editor flush.
+A conflict rejects that handoff and preserves the project buffer. Re-entering Git
+must remain available to repair that buffer; opening the already retained project
+editor does not require flushing itself. The same ref reaches the existing Code
+builder, so this adds no parallel synchronization or save policy.
 
 Proofs cover default-route versus internal-project scope, repeated requests in
 a mounted editor, flush/conflict retention, generated-file denial, actual DBT
 root/path forwarding and scope isolation. Architecture guards retain the query/
 port boundary; the existing Canvas viewport flow proves public file opening,
-retained camera/disclosure and no writes from clean browsing.
+retained camera/disclosure and no writes from clean browsing. Workspace proofs
+also cover direct Git entry, a single visible tree, accepted-file metadata,
+metadata collapse, stale activation rejection, accessible top-tab navigation and
+return to the same graph. These file-flow proofs do not establish a real project
+Git repository or native-model file publication; both remain pending separately.
 
 ## DDD Model
 
@@ -597,24 +641,23 @@ Tests:
 #### CODE-FILES-6: Code Is Reachable Before First Canvas Document
 
 As a user entering a workspace without a persisted canvas document, I want Code
-to open contextually over Graph so I can inspect and update workspace files
+to open from Canvas so I can inspect and update workspace files
 before choosing a canvas template.
 
 Acceptance criteria:
 
-- project code opens from contextual Canvas actions instead of a permanent tab
-  strip;
-- Code activation preserves the graph context rather than selecting a route
-  tab;
-- the contextual workbench loads `ListWorkspaceFiles` and
+- project Code opens through the existing Canvas actions; an active Canvas also
+  exposes Code beside Canvas in the existing workspace tab strip;
+- Code activation preserves the graph context on the same `/canvas` route;
+- the project workbench loads `ListWorkspaceFiles` and
   `GetWorkspaceFileContent`;
 - Monaco edits synchronize through `SaveWorkspaceFileContent`;
 - Lineage, Diff, Artifacts, and Runs remain hidden until their scopes are ready.
 
 Tests:
 
-- component/presenter tests keep Code behind contextual Canvas activation;
-- Cypress: contextual Code entry keeps Graph context visible and Monaco accepts
+- component/presenter tests preserve admitted Code entry and top-tab navigation;
+- Cypress: Code entry retains the Graph context and Monaco accepts
   typed text.
 
 ### Scenario Matrix

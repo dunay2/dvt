@@ -10,7 +10,7 @@ import { Table2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
-import { CanvasExplorer } from './CanvasExplorer';
+import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerNodes, projectCanvasExplorerSources } from './canvasExplorerItems';
 
@@ -34,7 +34,7 @@ export function CanvasGraphExplorer({
   onImport?: () => void;
   children: ReactNode;
   workspaceTask?: ReactNode;
-  projectFiles?: ReactNode;
+  projectFiles?: CanvasExplorerProjectWorkspace;
   catalogue?: readonly CanonicalNode[];
   onInspectSource?: (id: string) => void;
   canPlaceSource?: boolean;

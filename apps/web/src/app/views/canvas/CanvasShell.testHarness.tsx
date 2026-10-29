@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
+import { CanvasWorkspaceTopBarIdentity } from './CanvasWorkspaceMenuControls';
 import type { CodeViewProps } from '../CodeView';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
@@ -54,18 +55,24 @@ vi.mock('../../components/dbtProjectImport/DbtProjectImportDialog', () => ({
   },
 }));
 
-vi.mock('./CanvasViewport', () => ({
-  default: (props: Record<string, unknown>) => {
-    shellState.canvasViewportProps = props;
-    return (
-      <div data-testid="canvas-viewport">
-        {props.projectFiles as React.ReactNode}
-        {props.workspaceTask as React.ReactNode}
-        {props.inspector as React.ReactNode}
-      </div>
-    );
-  },
-}));
+vi.mock('./CanvasViewport', async () => {
+  const { CanvasExplorer } = await import('./explorer/CanvasExplorer');
+  return {
+    default: (props: Record<string, unknown>) => {
+      shellState.canvasViewportProps = props;
+      return (
+        <CanvasExplorer
+          sources={<p>Source catalogue</p>}
+          elements={<p>Canvas elements</p>}
+          projectFiles={props.projectFiles as Parameters<typeof CanvasExplorer>[0]['projectFiles']}
+          workspaceTask={props.workspaceTask as React.ReactNode}
+        >
+          <div data-testid="canvas-viewport">{props.inspector as React.ReactNode}</div>
+        </CanvasExplorer>
+      );
+    },
+  };
+});
 
 vi.mock('./explorer/CanvasProjectFilesExplorer', () => ({
   CanvasProjectFilesExplorer: ({
@@ -279,6 +286,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
 
 export function createCanvasShellHarness(): {
   container: HTMLDivElement;
+  navigation: HTMLDivElement;
   render: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
   renderProps: (props: CanvasShellProps) => Promise<void>;
   unmount: () => void;
@@ -286,6 +294,9 @@ export function createCanvasShellHarness(): {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root: Root = createRoot(container);
+  const navigation = document.createElement('div');
+  document.body.appendChild(navigation);
+  const navigationRoot = createRoot(navigation);
   const queryClient = new QueryClient({
     defaultOptions: {
       mutations: { retry: false },
@@ -296,16 +307,22 @@ export function createCanvasShellHarness(): {
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
   shellState.canvasViewportProps = null;
+  act(() => navigationRoot.render(<CanvasWorkspaceTopBarIdentity />));
   shellState.sourceImportWizardProps = null;
   shellState.dbtProjectImportDialogProps = null;
   useCanvasInteractionStore.setState({
     contextualWorkbenchId: null,
     contextualWorkbenchOwnerKey: null,
   });
-  useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
+  useUiLayoutStore.setState({
+    canvasExplorerVisible: true,
+    bottomDrawerHeight: 0,
+    bottomDrawerVisible: false,
+  });
 
   return {
     container,
+    navigation,
     render: async (overrides?: CanvasShellPropsOverrides) => {
       const props = buildCanvasShellProps(overrides);
       await act(async () => {
@@ -329,6 +346,7 @@ export function createCanvasShellHarness(): {
     unmount: () => {
       act(() => {
         root.unmount();
+        navigationRoot.unmount();
       });
       useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
       useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
@@ -338,6 +356,7 @@ export function createCanvasShellHarness(): {
       });
       queryClient.clear();
       container.remove();
+      navigation.remove();
       vi.clearAllMocks();
     },
   };

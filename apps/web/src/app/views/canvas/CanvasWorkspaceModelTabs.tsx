@@ -4,24 +4,40 @@ import { CanvasWorkspaceModelTabsTemplate } from './CanvasWorkspaceModelTabs.tem
 import { resolveCanvasSemanticEditorCopy } from './canvasSemanticEditorCopy';
 import type { CanvasModelWorkspaceTabContribution } from './canvasWorkspaceMenuContributionStore';
 import { canvasWorkspaceTabs } from './canvasWorkspaceTabs';
+import { resolveCodeViewCopy } from '../code/codeViewCopy';
+import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 
 export function CanvasWorkspaceModelTabs({
   canvasTitle,
   tab,
+  codeTab,
 }: Readonly<{
   canvasTitle: string;
   tab?: CanvasModelWorkspaceTabContribution;
+  codeTab?: CanvasWorkspaceMenuContribution['codeTab'];
 }>): JSX.Element {
-  const copy = resolveCanvasSemanticEditorCopy(
-    useApplicationLanguageStore((state) => state.language)
-  );
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasSemanticEditorCopy(language);
   const tabs = [
     {
       key: 'canvas',
       ...canvasWorkspaceTabs.canvas,
       label: canvasTitle,
-      select: tab?.onCanvas,
+      select: () => {
+        codeTab?.onCanvas();
+        tab?.onCanvas();
+      },
     },
+    ...(codeTab == null
+      ? []
+      : [
+          {
+            key: 'code',
+            ...canvasWorkspaceTabs.code,
+            label: resolveCodeViewCopy(language).title,
+            select: codeTab.onSelect,
+          },
+        ]),
     ...(tab == null
       ? []
       : [
@@ -29,14 +45,17 @@ export function CanvasWorkspaceModelTabs({
             key: 'model',
             ...canvasWorkspaceTabs.model,
             label: tab.label,
-            select: tab.onSelect,
+            select: () => {
+              codeTab?.onCanvas();
+              tab.onSelect();
+            },
           },
         ]),
   ];
   return (
     <CanvasWorkspaceModelTabsTemplate
       tabs={tabs}
-      activeKey={tab?.active === true ? 'model' : 'canvas'}
+      activeKey={codeTab?.active === true ? 'code' : tab?.active === true ? 'model' : 'canvas'}
       copy={copy}
       onSelect={(key) => tabs.find((item) => item.key === key)?.select?.()}
       onClose={tab == null ? undefined : () => tab.onClose()}

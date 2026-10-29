@@ -9,6 +9,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { currentSchemaSources } = require('../tools/planning-db/schema/manifest.cjs');
 const catalogTest = 'node --test tools/ci/repository-command-catalog.test.mjs';
 const cryptoTest =
   'node --test --test-name-pattern=tooling crypto mechanics tools/ci/architecture-dependency-guard.test.mjs';
@@ -24,7 +25,7 @@ const {
 
 const MIXED_CHANGED_FILES = [
   'apps/web/src/testing/vitestSuites.architecture.test.ts',
-  'tools/planning-db/schema.sql',
+  'tools/planning-db/schema/manifest.cjs',
   'scripts/local-validation-plan.cjs',
   'scripts/check-changed.cjs',
 ];
@@ -62,9 +63,12 @@ test('Planning DB schema obligations retain both contracts exactly once', () => 
   assert.ok(members.includes('scripts/planning-db-schema.test.cjs'));
   assert.ok(members.includes('scripts/planning-db-current-schema-policy.test.cjs'));
   for (const files of [
+    ...currentSchemaSources.map((source) => [source]),
+    ['tools/planning-db/schema/manifest.cjs'],
+    ['scripts/planning-db/current-schema.cjs'],
     ['scripts/planning-db-schema.cjs'],
     ['scripts/planning-db-current-schema-policy.cjs'],
-    ['tools/planning-db/schema.sql', 'scripts/planning-db-schema.test.cjs'],
+    ['tools/planning-db/schema/manifest.cjs', 'scripts/planning-db-schema.test.cjs'],
     ['scripts/planning-db-schema.test.cjs', 'scripts/planning-db-current-schema-policy.test.cjs'],
   ]) {
     const plan = buildFocusedChangedTestPlan(files);
@@ -79,7 +83,7 @@ test('Planning DB aggregate coverage removes repeated direct and current-schema 
   const aggregate = packageScripts['test:planning:db'].split(/\s+/).slice(2);
   const files = [
     'infra/planning-db/docker-compose.yml',
-    'tools/planning-db/schema.sql',
+    'tools/planning-db/schema/manifest.cjs',
     'scripts/planning-db-query.cjs',
     'scripts/lib/source-code-facts.cjs',
     'scripts/git-local-changes.cjs',
@@ -163,7 +167,7 @@ test('Planning DB aggregate coverage follows actual package members and retains 
   mockPackageScripts(t, scripts);
   const plan = buildFocusedChangedTestPlan([
     'infra/planning-db/docker-compose.yml',
-    'tools/planning-db/schema.sql',
+    'tools/planning-db/schema/manifest.cjs',
     'scripts/git-local-changes.cjs',
   ]);
   const selected = effectiveTestFiles(plan, scripts);
@@ -186,7 +190,7 @@ test('Planning DB aggregate coverage rejects unsupported package declarations be
     'node --test scripts/planning-db-schema.test.cjs scripts/planning-db-schema.test.cjs',
   ];
   for (const [name, changedFile] of [
-    ['test:planning:db:current-schema', 'tools/planning-db/schema.sql'],
+    ['test:planning:db:current-schema', 'tools/planning-db/schema/manifest.cjs'],
     ['test:planning:db', 'infra/planning-db/docker-compose.yml'],
   ]) {
     for (const command of invalidCommands) {
@@ -455,7 +459,10 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
 });
 
 test('buildVerifyChangedPlan adds planning DB validation for planning query-store changes', () => {
-  const labels = labelsFor(['scripts/planning-db-query.cjs', 'tools/planning-db/schema.sql']);
+  const labels = labelsFor([
+    'scripts/planning-db-query.cjs',
+    'tools/planning-db/schema/manifest.cjs',
+  ]);
 
   assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 0);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
@@ -486,7 +493,7 @@ test('buildVerifyChangedPlan runs the buzon retirement guard before markdown gat
 });
 
 test('buildVerifyChangedPlan routes schema-only changes to the current-schema suite', () => {
-  const labels = labelsFor(['tools/planning-db/schema.sql']);
+  const labels = labelsFor(['tools/planning-db/schema/manifest.cjs']);
 
   assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 0);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
@@ -499,7 +506,10 @@ test('buildVerifyChangedPlan routes schema-only changes to the current-schema su
 });
 
 test('buildVerifyChangedPlan covers direct schema edits through the complete current-schema suite', () => {
-  const labels = labelsFor(['scripts/planning-db-schema.test.cjs', 'tools/planning-db/schema.sql']);
+  const labels = labelsFor([
+    'scripts/planning-db-schema.test.cjs',
+    'tools/planning-db/schema/manifest.cjs',
+  ]);
 
   assert.equal(
     labels.filter((label) => label === 'pnpm test:planning:db:current-schema').length,
@@ -515,7 +525,7 @@ test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted an
     'scripts/planning-db-import.cjs',
     'scripts/planning-db-import.test.cjs',
     'scripts/planning-db-schema.test.cjs',
-    'tools/planning-db/schema.sql',
+    'tools/planning-db/schema/manifest.cjs',
   ]);
 
   assert.deepEqual(labels, [...new Set(labels)]);
@@ -558,6 +568,95 @@ test('buildVerifyChangedPlan routes planning DB query shards to the canonical su
     1
   );
   assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan routes extracted query evidence to its canonical suite', () => {
+  const paths = [
+    'scripts/planning-db-query-tests/catalogs.test.cjs',
+    'scripts/planning-db-query-tests/documentation.test.cjs',
+    'scripts/planning-db-query-tests/knowledge-intake.test.cjs',
+    'scripts/planning-db-query-tests/frontend.test.cjs',
+    'scripts/planning-db-query-tests/architecture-authority.test.cjs',
+    'scripts/planning-db-query-tests/architecture-fitness.test.cjs',
+    'scripts/planning-db-query-tests/component-engineering.test.cjs',
+    'scripts/planning-db-query-tests/governance.test.cjs',
+    'scripts/planning-db-query-tests/operator-context.test.cjs',
+    'scripts/planning-db-query-tests/source-drift.test.cjs',
+    'scripts/planning-db-query-tests/canvas-component-registry-drift.test.cjs',
+    'scripts/planning-db-query-tests/component-profiles.test.cjs',
+  ];
+  for (const changed of [...paths.map((file) => [file]), paths]) {
+    const labels = labelsFor(changed);
+    assert.equal(
+      labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
+      1
+    );
+    assert.ok(!labels.includes('pnpm test:planning:db'));
+  }
+});
+
+test('buildVerifyChangedPlan routes CodeStatus evidence to its existing canonical suite', () => {
+  const paths = [
+    'scripts/generate-code-status-tests/workspace-membership.test.cjs',
+    'scripts/generate-code-status-tests/repository-map.test.cjs',
+    'scripts/generate-code-status-tests/component-topology.test.cjs',
+    'scripts/generate-code-status-tests/system-delivery.test.cjs',
+    'scripts/generate-code-status.test.cjs',
+    'scripts/generate-code-status-tests/publication.integration.test.cjs',
+    'scripts/generate-code-status-tests/helpers.cjs',
+  ];
+  for (const changed of [...paths.map((file) => [file]), paths]) {
+    const labels = labelsFor(changed);
+    assert.equal(
+      labels.filter((label) => label === 'node --test scripts/generate-code-status.test.cjs')
+        .length,
+      1
+    );
+    assert.ok(!labels.includes('node --test scripts/planning-db-query.test.cjs'));
+  }
+});
+
+test('modular Planning DB operation sources retain their canonical suite without directory discovery', () => {
+  const paths = [
+    'scripts/planning-db/operate/cli.cjs',
+    'scripts/planning-db/operate/command-values.cjs',
+    'scripts/planning-db/operate/operation-payload.cjs',
+    'scripts/planning-db/operate/docs.cjs',
+    'scripts/planning-db/operate/component-definition.cjs',
+    'scripts/planning-db/operate/component-operations.cjs',
+    'scripts/planning-db/operate/feature-mechanization.cjs',
+    'scripts/planning-db/operate/architecture-design-authority.cjs',
+    'scripts/planning-db/operate/architecture-design-operations.cjs',
+    'scripts/planning-db/operate/architecture-component-profile.cjs',
+    'scripts/planning-db/operate/architecture-relations.cjs',
+    'scripts/planning-db/operate/architecture-contracts-io.cjs',
+    'scripts/planning-db/operate/architecture-evidence.cjs',
+    'scripts/planning-db/operate/architecture-fitness.cjs',
+    'scripts/planning-db/operate/architecture-audit.cjs',
+    'scripts/planning-db/operate/evidence-origin.cjs',
+    'scripts/planning-db/operate/fowler.cjs',
+    'scripts/planning-db/operate/db-surface.cjs',
+    'scripts/planning-db/catalog-implementation-reference-relocation.cjs',
+    'scripts/planning-db/docs-canonical-source-resolution.cjs',
+    'scripts/planning-db-operate-tests/catalog-implementation-reference-relocation.test.cjs',
+  ];
+  for (const files of [
+    ...paths.map((file) => [file]),
+    [...paths, 'scripts/planning-db-operate.cjs'],
+  ]) {
+    for (const labels of [focusedLabelsFor(files), labelsFor(files)]) {
+      assert.equal(
+        labels.filter((label) => label === 'node --test scripts/planning-db-operate.test.cjs')
+          .length,
+        1
+      );
+      assert.ok(!labels.includes('pnpm test:planning:db'));
+    }
+  }
+  const unknown = ['scripts/planning-db/operate/undeclared-operation.cjs'];
+  for (const labels of [focusedLabelsFor(unknown), labelsFor(unknown)]) {
+    assert.ok(!labels.includes('node --test scripts/planning-db-operate.test.cjs'));
+  }
 });
 
 test('buildVerifyChangedPlan routes catalog reconciliation to one canonical command suite', () => {

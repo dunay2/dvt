@@ -144,17 +144,26 @@ function openEditableDbtProjectCodeFile(path: string): void {
       expect($item.attr('data-disabled')).to.be.undefined;
     })
     .click();
-  cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
-  cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`, {
-    timeout: 30_000,
-  })
+  cy.get('[data-slot="canvas-code-main-tab"]')
     .should('be.visible')
-    .click();
-  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
-  cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
-  cy.get('[data-slot="code-working-tree-status"]')
+    .and('have.attr', 'aria-selected', 'true');
+  cy.get('[data-slot="canvas-code-workspace-surface"]', { timeout: 30_000 })
     .should('be.visible')
-    .and('contain.text', resolveCodeViewCopy().workingTreeSynchronizedLabel);
+    .within(() => {
+      cy.get('[data-slot="route-workbench-left-panel"]').should('have.length', 1);
+      cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`, {
+        timeout: 30_000,
+      })
+        .should('be.visible')
+        .click();
+      cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+        .should('be.visible')
+        .and('have.length', 1);
+      cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
+      cy.get('[data-slot="code-working-tree-status"]')
+        .should('be.visible')
+        .and('contain.text', resolveCodeViewCopy().workingTreeSynchronizedLabel);
+    });
 }
 
 describe('Canvas dbt authoring Code and Run live protected runtime', () => {
@@ -259,7 +268,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     expectGeneratedModelSql();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     openEditableDbtProjectCodeFile(workingTreePath);
-    cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
+    cy.get('[data-slot="canvas-code-workspace-surface"]').within(() => {
       cy.get('button').should(($buttons) => {
         const labels = [...$buttons].map((button) => button.textContent?.trim());
         expect(labels).not.to.include.members(['Save', 'Guardar']);
@@ -281,8 +290,12 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       expect(content).to.contain(GENERATED_ORDER_ID_PROJECTION);
       expect(content).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
-    cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .should('be.visible')
+      .click()
+      .should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('not.be.visible');
 
     replaceLiveWorkspaceFile(workingTreePath, EXTERNAL_MODEL_SQL);
     clickPreviewExecutionPlanFromOperationalDrawer();

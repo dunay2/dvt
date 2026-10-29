@@ -43,6 +43,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       expect(panel.props.reconcilePersistedFile).toBe(reconcilePersistedFile);
       expect(panel.props.initialPath).toBe(initialPath);
       expect(panel.props.fileSelectionRequest).toBe(fileSelectionRequest);
+      expect(panel.props.presentation).toBe('project-workspace');
     }
   );
 

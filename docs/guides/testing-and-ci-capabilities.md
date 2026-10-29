@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-10-27
+last_reviewed: 2026-10-29
 ---
 
 # Testing and CI Capabilities
@@ -485,7 +485,9 @@ Command semantics:
   AI iteration on report rendering and DB-source normalization under the
   adjacent generator contract instead of escalating to the full planning DB
   suite unless the current schema, DB rails, or shared query-store surfaces changed.
-- Planning DB schema edits under `tools/planning-db/schema.sql` route through
+- Planning DB schema edits to the SQL sources declared by
+  `tools/planning-db/schema/manifest.cjs`, that manifest, or the fixed
+  `scripts/planning-db/current-schema.cjs` reader route through
   `pnpm test:planning:db:current-schema`, which exercises the declarative schema,
   DB-authority boundary, and no-history policy without running the full
   `pnpm test:planning:db` package. When the same slice already changes an adjacent

@@ -12,8 +12,6 @@ import type { IWorkspaceFilesQueryPort, WorkspaceFileEntry } from '../../../port
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { resolveCodeViewCopy } from '../../code/codeViewCopy';
 import { CanvasProjectFilesExplorer } from './CanvasProjectFilesExplorer';
-import { CanvasExplorer } from './CanvasExplorer';
-import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
 
 const listFiles = vi.fn<() => Promise<WorkspaceFileEntry[]>>();
 const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>();
@@ -25,7 +23,6 @@ let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
 beforeEach(() => {
   vi.resetAllMocks();
   useApplicationLanguageStore.setState({ language: 'en' });
-  useUiLayoutStore.setState({ canvasExplorerVisible: true });
   listFiles.mockResolvedValue([
     {
       path: 'models',
@@ -56,44 +53,6 @@ async function renderExplorer(projectRoot?: string): Promise<void> {
   if (mounted) await mounted.render(view);
   else mounted = await withTestQueryClient(view);
 }
-
-it('defers the file query until Git is opened and retains its tree after switching panels', async () => {
-  mounted = await withTestQueryClient(
-    <AppServicesProvider overrides={services}>
-      <CanvasExplorer
-        sources={<p>Catalogue</p>}
-        elements={<p>Elements</p>}
-        projectFiles={<CanvasProjectFilesExplorer onOpenFile={onOpenFile} />}
-      >
-        <input aria-label="Graph state" />
-      </CanvasExplorer>
-    </AppServicesProvider>
-  );
-  const graph = screen.getByLabelText('Graph state');
-  expect(listFiles).not.toHaveBeenCalled();
-  const git = screen.getByRole('button', { name: 'Git' });
-  act(() => {
-    fireEvent.click(git);
-  });
-  await waitForReactQuery(() => screen.queryByRole('button', { name: 'orders.sql' }) != null);
-  const directory = screen.getByRole('button', { name: 'models' });
-  act(() => {
-    fireEvent.click(directory);
-  });
-  act(() => {
-    fireEvent.click(screen.getByRole('button', { name: 'Sources' }));
-  });
-  act(() => {
-    fireEvent.click(git);
-  });
-  expect(screen.getByRole('button', { name: 'models' })).toBe(directory);
-  expect(screen.queryByRole('button', { name: 'orders.sql' })).toBeNull();
-  expect(screen.getByLabelText('Graph state')).toBe(graph);
-  expect(listFiles).toHaveBeenCalledOnce();
-  expect(onOpenFile).not.toHaveBeenCalled();
-  expect(getFileContent).not.toHaveBeenCalled();
-  expect(saveFileContent).not.toHaveBeenCalled();
-});
 
 it('preserves query order and directory disclosure and requests only an explicit file path', async () => {
   await renderExplorer();

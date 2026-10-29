@@ -1,5 +1,5 @@
 /** Owned concern: adapt external dbt project-file authority into the shared Canvas surface contracts. */
-import { useMemo, useRef, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import {
   createCompleteRouteBootstrapPresentation,
@@ -22,7 +22,6 @@ import { buildDbtExecutionTargetWorkbenchContributions } from './dbtExecutionTar
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
 import { buildDbtWorkspaceFileCodeContributions } from './dbtWorkspaceFileCodeContribution';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
-import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
 import { useDbtProjectFilesAuthorityController } from './useDbtProjectFilesAuthorityController';
 
@@ -172,7 +171,6 @@ export function useDbtProjectFilesAuthoritySurface({
   ]);
   usePublishedRouteBootstrap(CANVAS_ROUTE_ID, bootstrapPresentation);
 
-  const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const runControls = useCanvasRunControlSurface(
     controller.workspaceLayoutKey,
     controller.activeRunId
@@ -207,7 +205,7 @@ export function useDbtProjectFilesAuthoritySurface({
   ];
   const contextualWorkbench = buildDbtProjectFileCodeWorkbench({
     copy,
-    workbenchRef: codeWorkbenchRef,
+    workbenchRef: controller.projectCodeEditorRef,
     onClose: controller.closeCodeWorkbench,
     reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     projectRoot,
@@ -297,9 +295,7 @@ export function useDbtProjectFilesAuthoritySurface({
     workspaceCommands: {
       canOpenProjectExplorer: false,
       projectRoot,
-      onOpenProjectCode: (path) => {
-        void controller.openProjectCode(path);
-      },
+      onOpenProjectCode: controller.openProjectCode,
     },
     canvasContextScreenToFlowPosition: screenToFlowPosition,
     sourceImportInitialSelection,

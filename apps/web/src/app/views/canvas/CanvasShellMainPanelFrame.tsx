@@ -23,11 +23,15 @@ export function CanvasShellWorkspaceSurfaces({
   editor,
   editorVisible,
   hasWorkspaceTabs,
+  code,
+  codeVisible = false,
 }: Readonly<{
   viewport: ReactNode;
   editor: ReactNode;
   editorVisible: boolean;
   hasWorkspaceTabs: boolean;
+  code?: ReactNode;
+  codeVisible?: boolean;
 }>): JSX.Element {
   return (
     <div
@@ -36,8 +40,9 @@ export function CanvasShellWorkspaceSurfaces({
     >
       {(
         [
-          { kind: 'canvas', content: viewport, visible: !editorVisible },
-          { kind: 'model', content: editor, visible: editorVisible },
+          { kind: 'canvas', content: viewport, visible: !editorVisible && !codeVisible },
+          { kind: 'model', content: editor, visible: editorVisible && !codeVisible },
+          { kind: 'code', content: code, visible: codeVisible },
         ] as const
       ).map(({ kind, content, visible }) =>
         content == null ? null : (

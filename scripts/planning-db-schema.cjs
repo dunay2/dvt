@@ -5,17 +5,14 @@
  * @baseline ADR-0063: Planning DB current-schema rebuild
  * @decision Planning DB is rebuilt from current truth and has no migration compatibility.
  */
-const fs = require('node:fs');
 const { sha256HexUtf8 } = require('@dvt/crypto');
-const path = require('node:path');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
-const repoRoot = path.resolve(__dirname, '..');
 const schemaName = 'planning_query_store';
 const schemaNames = ['architecture', 'component_engineering', schemaName];
-const currentSchemaPath = path.join(repoRoot, 'tools', 'planning-db', 'schema.sql');
+const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -44,7 +41,7 @@ function assertCurrentPlanningDbSchema(schemaSql) {
 
 async function applyCurrentPlanningDbSchema(options = {}) {
   const schemaSql = assertCurrentPlanningDbSchema(
-    options.schemaSql ?? fs.readFileSync(currentSchemaPath, 'utf8')
+    options.schemaSql ?? readCurrentPlanningDbSchema()
   );
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -117,6 +114,35 @@ async function assertPlanningDbCurrentSchemaReady(client) {
 async function main() {
   if (process.argv.length > 2) {
     const args = process.argv.slice(2);
+    if (args[0] === '--replace-read-views') {
+      const flags = new Map();
+      for (let index = 1; index < args.length; index += 2) {
+        if (
+          ![
+            '--expected-schema-sha256',
+            '--expected-manifest-view-sha256',
+            '--expected-lifecycle-view-sha256',
+          ].includes(args[index]) ||
+          flags.has(args[index]) ||
+          !args[index + 1]
+        ) {
+          throw new Error('Explicit two-view mode requires exactly the three reviewed digests.');
+        }
+        flags.set(args[index], args[index + 1]);
+      }
+      if (flags.size !== 3)
+        throw new Error('Explicit two-view mode requires exactly the three reviewed digests.');
+      console.log(
+        JSON.stringify(
+          await replaceCurrentPlanningDbViews({
+            expectedSchemaSha256: flags.get('--expected-schema-sha256'),
+            expectedManifestViewSha256: flags.get('--expected-manifest-view-sha256'),
+            expectedLifecycleViewSha256: flags.get('--expected-lifecycle-view-sha256'),
+          })
+        )
+      );
+      return;
+    }
     if (args.length !== 4 || args[0] !== '--add-table' || args[2] !== '--expected-schema-sha256') {
       throw new Error(
         'Expected --add-table <schema.table> --expected-schema-sha256 <reviewed digest>.'
@@ -132,13 +158,127 @@ async function main() {
   await applyCurrentPlanningDbSchema();
 }
 
+async function replaceCurrentPlanningDbViews(options = {}) {
+  if (
+    Object.keys(options).some(
+      (key) =>
+        ![
+          'client',
+          'databaseUrl',
+          'expectedSchemaSha256',
+          'expectedManifestViewSha256',
+          'expectedLifecycleViewSha256',
+        ].includes(key)
+    )
+  ) {
+    throw new Error('Unsupported two-view option; caller SQL and identities are forbidden.');
+  }
+  const sql = assertCurrentPlanningDbSchema(readCurrentPlanningDbSchema());
+  const schemaSha256 = sha256HexUtf8(sql);
+  if (schemaSha256 !== options.expectedSchemaSha256)
+    throw new Error('Reviewed schema digest does not match.');
+  const views = [
+    {
+      name: 'planning_query_store.command_query_rail_manifest_query',
+      expected: options.expectedManifestViewSha256,
+      count: 27,
+      append: { attname: 'effective_component_guides', type: 'jsonb' },
+    },
+    {
+      name: 'planning_query_store.documentation_lifecycle_query',
+      expected: options.expectedLifecycleViewSha256,
+      count: 26,
+      append: { attname: 'canonical_target_path', type: 'text' },
+    },
+  ];
+  for (const view of views) {
+    if (!/^[a-f0-9]{64}$/u.test(view.expected || ''))
+      throw new Error('Exact live view-definition digests required.');
+    const matches = [
+      ...sql.matchAll(
+        new RegExp(
+          '^CREATE VIEW ' + view.name.replaceAll('.', '\\.') + ' AS[\\s\\S]*?;(?=\\r?\\n\\r?\\n)',
+          'gm'
+        )
+      ),
+    ];
+    if (matches.length !== 1)
+      throw new Error('Expected exactly one reviewed definition for ' + view.name);
+    const statement = matches[0][0].replace(/'(?:[^']|'')*'/gu, "''");
+    if (statement.split(';').length !== 2 || !statement.endsWith(';')) {
+      throw new Error('Exactly one CREATE VIEW statement is required for ' + view.name);
+    }
+    view.statement = matches[0][0].replace(/^CREATE VIEW /u, 'CREATE OR REPLACE VIEW ');
+  }
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  try {
+    if (!options.client) await client.connect();
+    await client.query('begin');
+    await client.query(
+      "select pg_advisory_xact_lock(hashtext('dvt:planning-db'), hashtext('current-schema'))"
+    );
+    for (const view of views) {
+      const result = await client.query(
+        'select pg_get_viewdef(to_regclass($1), true) as definition',
+        [view.name]
+      );
+      if (
+        typeof result.rows[0]?.definition !== 'string' ||
+        sha256HexUtf8(result.rows[0].definition) !== view.expected
+      ) {
+        throw new Error('Missing view or stale definition CAS: ' + view.name);
+      }
+      view.before = (
+        await client.query(
+          `select attname, format_type(atttypid, atttypmod) as type
+        from pg_attribute where attrelid=$1::regclass and attnum>0 and not attisdropped order by attnum`,
+          [view.name]
+        )
+      ).rows;
+      if (view.before.length !== view.count)
+        throw new Error('Unexpected current view signature: ' + view.name);
+    }
+    for (const view of views) await client.query(view.statement);
+    for (const view of views) {
+      const columns = (
+        await client.query(
+          `select attname, format_type(atttypid, atttypmod) as type
+        from pg_attribute where attrelid=$1::regclass and attnum>0 and not attisdropped order by attnum`,
+          [view.name]
+        )
+      ).rows;
+      if (JSON.stringify(columns) !== JSON.stringify([...view.before, view.append]))
+        throw new Error('View signature drift: ' + view.name);
+      view.after = sha256HexUtf8(
+        (await client.query('select pg_get_viewdef($1::regclass, true) as definition', [view.name]))
+          .rows[0].definition
+      );
+    }
+    await client.query('commit');
+    return {
+      schemaSha256,
+      replaced: views.map((view) => ({
+        view: view.name,
+        beforeDefinitionSha256: view.expected,
+        afterDefinitionSha256: view.after,
+      })),
+    };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (!options.client) await client.end();
+  }
+}
+
 async function addCurrentPlanningDbTable(options) {
   const { table, expectedSchemaSha256 } = options;
   if (
     !/^(?:architecture|component_engineering|planning_query_store)\.[a-z][a-z0-9_]*$/u.test(table)
   )
     throw new Error('Invalid current-schema table identity.');
-  const schemaSql = assertCurrentPlanningDbSchema(fs.readFileSync(currentSchemaPath, 'utf8'));
+  const schemaSql = assertCurrentPlanningDbSchema(readCurrentPlanningDbSchema());
   const schemaSha256 = sha256HexUtf8(schemaSql);
   if (schemaSha256 !== expectedSchemaSha256)
     throw new Error('Reviewed schema digest does not match.');
@@ -185,11 +325,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+  replaceCurrentPlanningDbViews,
   addCurrentPlanningDbTable,
   applyCurrentPlanningDbSchema,
   assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
-  currentSchemaPath,
   databaseUrl,
   schemaName,
   schemaNames,

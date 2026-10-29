@@ -69,6 +69,14 @@ export default function CanvasShell({
     panels.activeCanvasId,
     panels.inspectorGraphNodes
   );
+  const openModel = useCallback(
+    (nodeId: string) => {
+      if (!model.modelIds.has(nodeId)) return;
+      code.showCanvas();
+      model.open(nodeId);
+    },
+    [code.showCanvas, model.modelIds, model.open]
+  );
   const { dataSampleTabs, projectNode, openSource } = useCanvasNodeDataSample({
     activeCanvasId: panels.activeCanvasId,
     nodes: graph.nodesWithImpact,
@@ -83,7 +91,7 @@ export default function CanvasShell({
     () =>
       projectCanvasShellNodes(graph.nodesWithImpact, {
         modelIds: model.modelIds,
-        openModel: model.open,
+        openModel,
         inspectOutput: outputInspection.open,
         previewLabel: semanticCopy.previewAction,
         projectSample: projectNode,
@@ -92,7 +100,7 @@ export default function CanvasShell({
     [
       graph.nodesWithImpact,
       model.modelIds,
-      model.open,
+      openModel,
       outputInspection.open,
       semanticCopy.previewAction,
       projectNode,
@@ -117,6 +125,15 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
+  const openProjectCode = useCallback(
+    async (path?: string): Promise<boolean> => {
+      if (!(await code.openProjectCode(path))) return false;
+      model.setActive(false);
+      void outputInspection.workbench?.requestClose();
+      return true;
+    },
+    [code.openProjectCode, model.setActive, outputInspection.workbench]
+  );
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
@@ -193,12 +210,23 @@ export default function CanvasShell({
       )}
       <CanvasShellMainPanel
         projectFiles={
-          panels.activeCanvasId == null || layout.surfaceStrategy == null ? undefined : (
-            <CanvasProjectFilesExplorer
-              projectRoot={workspaceCommands?.projectRoot}
-              onOpenFile={code.openProjectCode}
-            />
-          )
+          panels.activeCanvasId == null || layout.surfaceStrategy == null
+            ? undefined
+            : {
+                tree: (
+                  <CanvasProjectFilesExplorer
+                    projectRoot={workspaceCommands?.projectRoot}
+                    onOpenFile={(path) => void openProjectCode(path)}
+                  />
+                ),
+                panel:
+                  code.layout.contextualWorkbench?.id === 'project-code'
+                    ? code.layout.contextualWorkbench.panel
+                    : undefined,
+                active: code.active,
+                onActivate: openProjectCode,
+                onCanvas: code.showCanvas,
+              }
         }
         layout={
           model.selected == null || panels.activeCanvasId == null
@@ -235,9 +263,15 @@ export default function CanvasShell({
                     preparePreview={prepareModelPreview}
                     operationDataHost={operationData.host}
                     onOpenOperationData={operationData.open}
-                    active={model.active}
-                    onSelect={() => model.setActive(true)}
-                    onShowCanvas={() => model.setActive(false)}
+                    active={model.active && !code.active}
+                    onSelect={() => {
+                      code.showCanvas();
+                      model.setActive(true);
+                    }}
+                    onShowCanvas={() => {
+                      code.showCanvas();
+                      model.setActive(false);
+                    }}
                     onClose={model.close}
                   />
                 ),
@@ -252,10 +286,12 @@ export default function CanvasShell({
         onOpenProjectExplorer={
           workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer
         }
-        onOpenProjectCode={code.openProjectCode}
+        onOpenProjectCode={() => {
+          void openProjectCode();
+        }}
         onImportDbtProject={onDbtProjectImported == null ? undefined : openDbtProjectImport}
         onOpenCanvasSettings={openCanvasSettings}
-        onOpenModelEditor={model.open}
+        onOpenModelEditor={openModel}
         contextMenuPresenter={contextMenuPresenter}
         workspaceTask={
           panels.activeCanvasId == null || !sourceImportDialog.open ? null : (

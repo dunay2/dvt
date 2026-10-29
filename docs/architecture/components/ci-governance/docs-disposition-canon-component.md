@@ -2,15 +2,15 @@
 title: Docs Disposition Canon Component
 status: Active
 owner: Architecture / Docs / Planning
-last_reviewed: 2026-05-24
+last_reviewed: 2026-10-29
 component_type: governance
 ---
 
 # Docs Disposition Canon Component
 
 > Owned concern: this component owns semantic closure for active Draft,
-> Superseded, and task-like identifier documentation findings through the
-> Planning DB docs-disposition rail.
+> Superseded, and task-like identifier documentation findings, and audited
+> canonical-source relocation, through the Planning DB docs-disposition rail.
 
 ## Public API
 
@@ -18,6 +18,59 @@ component_type: governance
   with actor, referenced evidence, source hash, and status.
 - `ClassifyDocsDispositionClosure(input)`: classifies a finding as open,
   linked, ignored, reopened, or requiring a focused follow-up.
+
+### Canonical component-guide relocation
+
+The [GH-3747 contract](https://github.com/dunay2/dvt/issues/3747#issuecomment-6476202219)
+extends the same `ResolveDocsDispositionQueue` command with explicit kind
+`canonical_document_relocation`. Its native implementation must satisfy this
+contract before operators use that mode. Existing finding-based commands retain
+their input, default idempotency keys and source requirements.
+
+Relocation reads real registered source and target documents; it does not invent
+a disposition finding. The strict `canonicalSource` input names `sourceCommit`,
+`retirementCommit`, `expectedSourceContentSha256`, `targetCommit`, `targetPath`,
+`targetAnchors`, `expectedTargetContentSha256` and `expectedResolutionSha256`.
+The imported-origin blob must match the old source hash. The separate retirement
+commit proves removal, and the current committed target must be tracked, clean,
+regular, registered and contain the verified anchors. Its governed fingerprint
+must match the target blob. An old imported origin need not equal the parent of
+the retirement commit.
+
+Use the existing resolution and operation tables. The stable resolution identity
+is kind plus old path with no reference text; store the target and Git provenance
+in structured `raw_resolution`. Require exact full-overlay hash CAS or explicit
+`absent`. A concurrent stale caller, conflicting target, bad source, bad anchor
+or failed audit must not leave a partial resolution. Exact completed-command
+replay returns its existing result without another write; a changed proof or
+target under the same key rejects.
+
+Canonical relocation is a one-hop mapping. A document that is the target of an
+effective linked relocation cannot itself be relocated: after A points to B,
+B cannot point to C while that incoming mapping remains effective. Detect
+incoming mappings with the same scope, source identity and source hash rules
+as the read projection; an unavailable incoming-mapping fact also rejects.
+Serialize canonical mapping changes with one
+transaction-level advisory mutex and use explicit READ COMMITTED isolation so
+a waiting writer observes the preceding commit. Reject without changing
+overlays or audit history; ordinary finding resolution retains its transaction
+behavior. Exact completed-command replay retains its existing result.
+
+`ListDocumentationLifecycleFacts` exposes the old document's effective
+superseded state and canonical target. Feature-mechanization readers use
+`effective_component_guides`, preserving original array order and cardinality.
+Imported status, raw manifests and source hashes remain history. The
+`doc_disposition_document_query` is explicitly an imported-facts surface, not
+the effective lifecycle authority. A later legitimate target edit does not
+reactivate the retired source; target identity and provenance freshness remain
+separate facts.
+
+Deploy only the two reviewed read projections through the explicit schema mode
+governed by [ADR-0063](../../../adr/ADR-0063-planning-db-current-schema-rebuild.md#explicit-replacement-of-documentation-read-projections).
+Disposition commands do not deploy schema, import or rebuild authority. Real
+isolated PostgreSQL tests must prove effective consultation, source/target/CAS
+rejections, concurrency, replay, rollback and complete preservation of unrelated
+physical rows and historical declarations.
 
 ## Invariants
 
@@ -41,8 +94,8 @@ stateDiagram-v2
   Open --> FollowUp: ResolveDocsDispositionQueue
   Linked --> Closed
   Ignored --> Closed
-  FollowUp --> PlanningTask
-  PlanningTask --> Closed: Evidence accepted
+  FollowUp --> GitHubIssue
+  GitHubIssue --> Closed: Evidence accepted
   Closed --> Reopened: source hash changes
   Reopened --> Open
   Closed --> [*]

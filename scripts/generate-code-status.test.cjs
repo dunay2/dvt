@@ -991,7 +991,13 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
-  assert.ok(entry.sourcePaths.includes('tools/planning-db/schema.sql'));
+  for (const sourcePath of [
+    'scripts/planning-db/current-schema.cjs',
+    'tools/planning-db/schema/manifest.cjs',
+    'tools/planning-db/schema/**/*.sql',
+  ]) {
+    assert.ok(entry.sourcePaths.includes(sourcePath), sourcePath);
+  }
   assert.ok(!entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
   assert.ok(entry.sourcePaths.includes('scripts/planning-db-import.cjs'));
   assert.ok(
@@ -1026,7 +1032,13 @@ test('Component Map policy is DB-first, on-demand, and has no manual catalog', (
   assert.equal(entry.manualEditPolicy, 'generator-owned');
   assert.deepEqual(entry.publication, { enabled: true });
   assert.ok(entry.sourcePaths.includes('scripts/planning-db-query.cjs'));
-  assert.ok(entry.sourcePaths.includes('tools/planning-db/schema.sql'));
+  for (const sourcePath of [
+    'scripts/planning-db/current-schema.cjs',
+    'tools/planning-db/schema/manifest.cjs',
+    'tools/planning-db/schema/**/*.sql',
+  ]) {
+    assert.ok(entry.sourcePaths.includes(sourcePath), sourcePath);
+  }
   assert.deepEqual(
     entry.dbBackedArtifacts.map((group) => group.queryView),
     [

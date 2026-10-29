@@ -41,7 +41,7 @@ import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliat
 import type { WorkspaceFileCodeEditorHandle } from '../code/WorkspaceFileCodeEditor';
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { useDbtProjectFileInspector } from './useDbtProjectFileInspector';
-import type { SqlContextWorkbenchProps } from './SqlContextWorkbench';
+import type { SqlContextWorkbenchHandle, SqlContextWorkbenchProps } from './SqlContextWorkbench';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -139,6 +139,7 @@ export function useDbtProjectFilesAuthorityController(
   const [projectCodeFileSelectionRequest, setProjectCodeFileSelectionRequest] =
     useState<SqlContextWorkbenchProps['fileSelectionRequest']>();
   const nodeCodeEditorRef = useRef<WorkspaceFileCodeEditorHandle>(null);
+  const projectCodeEditorRef = useRef<SqlContextWorkbenchHandle>(null);
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
     () => buildLayoutKey(workspaceLayoutKey, authorityBinding),
@@ -318,6 +319,9 @@ export function useDbtProjectFilesAuthorityController(
       if (!(await flushActiveNodeCode())) {
         return;
       }
+      if ((await projectCodeEditorRef.current?.flush()) === false) {
+        return;
+      }
 
       setProjectCodeWorkbenchOpen(false);
       setInspectorNode(nodeId, preferredTabId ?? 'general');
@@ -326,9 +330,9 @@ export function useDbtProjectFilesAuthorityController(
     [canonicalNodesById, flushActiveNodeCode, setInspectorNode, showInspectorPanel]
   );
   const openProjectCode = useCallback(
-    async (initialPath?: string) => {
+    async (initialPath?: string): Promise<boolean> => {
       if (!(await flushActiveNodeCode())) {
-        return;
+        return false;
       }
       if (initialPath !== undefined || !projectCodeWorkbenchOpen) {
         setProjectCodeFileSelectionRequest(
@@ -336,6 +340,7 @@ export function useDbtProjectFilesAuthorityController(
         );
       }
       setProjectCodeWorkbenchOpen(true);
+      return true;
     },
     [flushActiveNodeCode, projectCodeWorkbenchOpen]
   );
@@ -438,6 +443,7 @@ export function useDbtProjectFilesAuthorityController(
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,
     layoutKey,
     nodeCodeEditorRef,
+    projectCodeEditorRef,
     projectCodeWorkbenchOpen,
     projectCodeFileSelectionRequest,
     openProjectCode,

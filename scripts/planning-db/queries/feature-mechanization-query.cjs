@@ -34,6 +34,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
       rail.source_content_sha256,
       rail.raw_rail,
       rail.raw_manifest,
+      rail.effective_component_guides,
       rail.rail_source,
       rail.imported_at
     from ${activeSchemaName}.command_query_rail_manifest_query rail
@@ -50,7 +51,8 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
       coalesce(rail.raw_manifest->>'implementationPlan', '-') as implementation_plan,
       rail.source_path,
       rail.source_content_sha256,
-      rail.raw_manifest
+      rail.raw_manifest,
+      rail.effective_component_guides
     from (
       ${featureMechanizationRailSourceSelect(activeSchemaName)}
     ) rail`;
@@ -160,7 +162,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
          count(distinct component_ref.value)::int as component_count
        from filtered_rails
        cross join lateral jsonb_array_elements_text(${jsonArray(
-         "filtered_rails.raw_manifest->'componentGuides'"
+         'filtered_rails.effective_component_guides'
        )}) as component_ref(value)
        group by filtered_rails.feature_id
      ),
@@ -275,7 +277,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
        manifest.source_path
      from manifests manifest
      cross join lateral jsonb_array_elements_text(${jsonArray(
-       "manifest.raw_manifest->'componentGuides'"
+       'manifest.effective_component_guides'
      )}) as component_ref(value)
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by manifest.feature_id, component_ref.value, manifest.source_path

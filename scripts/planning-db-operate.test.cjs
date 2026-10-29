@@ -4,6 +4,7 @@ require('./planning-db-operate-tests/db-surface.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization.test.cjs');
 require('./planning-db/command-query-rail-authority.test.cjs');
 require('./planning-db-operate-tests/catalog-reconciliation.test.cjs');
+require('./planning-db-operate-tests/catalog-implementation-reference-relocation.test.cjs');
 require('./planning-db-operate-tests/catalog-current-document.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization-retirement.test.cjs');
 require('./planning-db-operate-tests/fowler-analysis.test.cjs');

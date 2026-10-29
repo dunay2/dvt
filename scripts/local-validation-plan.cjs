@@ -7,6 +7,7 @@
  */
 const path = require('node:path');
 const fs = require('node:fs');
+const { currentSchemaSources } = require('../tools/planning-db/schema/manifest.cjs');
 const { spawnSync } = require('node:child_process');
 const { createGitRepositoryEnvironment } = require('./lib/git-repository-environment.cjs');
 
@@ -145,6 +146,34 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-current-schema-policy.test.cjs':
     'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/cli.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/command-values.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/operation-payload.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/docs.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/component-definition.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/component-operations.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/feature-mechanization.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-design-authority.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-design-operations.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-component-profile.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-relations.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-contracts-io.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-evidence.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-fitness.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/architecture-audit.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/evidence-origin.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/fowler.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/operate/db-surface.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/catalog-implementation-reference-relocation.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db/docs-canonical-source-resolution.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/catalog-implementation-reference-relocation.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db/catalog-reconciliation.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db/catalog-reconciliation-write.cjs': 'scripts/planning-db-operate.test.cjs',
@@ -180,6 +209,34 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/source-drift.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/helpers.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/catalogs.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/documentation.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/knowledge-intake.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/frontend.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/architecture-authority.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/architecture-fitness.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/component-engineering.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/governance.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/operator-context.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/canvas-component-registry-drift.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/component-profiles.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/generate-code-status-tests/workspace-membership.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/repository-map.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/component-topology.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/system-delivery.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status.test.cjs': 'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/publication.integration.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/helpers.cjs': 'scripts/generate-code-status.test.cjs',
   'scripts/planning-db/queries/component-integrity-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/rail-vocabulary-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/source-drift-query.cjs': 'scripts/planning-db-query.test.cjs',
@@ -325,7 +382,9 @@ function hasPlanningDbFullSuiteChange(changedFiles) {
 function hasPlanningDbCurrentSchemaChange(changedFiles) {
   return changedFiles.some((filePath) =>
     [
-      'tools/planning-db/schema.sql',
+      ...currentSchemaSources,
+      'tools/planning-db/schema/manifest.cjs',
+      'scripts/planning-db/current-schema.cjs',
       'scripts/planning-db-schema.cjs',
       'scripts/planning-db-schema.test.cjs',
       'scripts/planning-db-current-schema-policy.cjs',

@@ -1,4 +1,5 @@
 /** Owned concern: index command/query rail implementation and documentation references. */
+const { currentSchemaSources } = require('../../tools/planning-db/schema/manifest.cjs');
 function createCommandQueryRailReferenceIndexComponent(deps = {}) {
   const shared = deps.shared || require('./command-query-rail-shared.cjs');
   const {
@@ -70,7 +71,10 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
       return false;
     }
 
-    if (normalizedPath === 'tools/planning-db/schema.sql') {
+    if (
+      currentSchemaSources.includes(normalizedPath) ||
+      normalizedPath === 'tools/planning-db/schema/manifest.cjs'
+    ) {
       return false;
     }
 

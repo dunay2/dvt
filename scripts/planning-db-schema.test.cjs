@@ -3,19 +3,96 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { sha256HexUtf8 } = require('@dvt/crypto');
+const { spawnSync } = require('node:child_process');
 
 const {
   addCurrentPlanningDbTable,
   applyCurrentPlanningDbSchema,
   assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
-  currentSchemaPath,
+  replaceCurrentPlanningDbViews,
   schemaName,
   schemaNames,
 } = require('./planning-db-schema.cjs');
 
+const { readCurrentPlanningDbSchema } = require('./planning-db/current-schema.cjs');
+const { currentSchemaSources } = require('../tools/planning-db/schema/manifest.cjs');
+
+function readCurrentSchemaView(name) {
+  assert.match(name, /^[a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*$/u);
+  const matches = [
+    ...readCurrentPlanningDbSchema().matchAll(
+      new RegExp(
+        '^CREATE VIEW ' + name.replaceAll('.', '\\.') + String.raw` AS(?:[^';]|'(?:''|[^'])*')*;`,
+        'gmu'
+      )
+    ),
+  ];
+  assert.equal(matches.length, 1, 'Expected exactly one current view: ' + name);
+  return matches[0][0];
+}
+
+test('explicit two-view CLI rejects an unreviewed schema before connecting or rebuilding', () => {
+  const result = spawnSync(
+    process.execPath,
+    [
+      path.join(__dirname, 'planning-db-schema.cjs'),
+      '--replace-read-views',
+      '--expected-schema-sha256',
+      'a'.repeat(64),
+      '--expected-manifest-view-sha256',
+      'b'.repeat(64),
+      '--expected-lifecycle-view-sha256',
+      'c'.repeat(64),
+    ],
+    { encoding: 'utf8' }
+  );
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Reviewed schema digest does not match/);
+});
+
+test('fixed two-view extraction refuses stacked statements and caller-supplied SQL before connecting', async (t) => {
+  const view = readCurrentSchemaView('planning_query_store.command_query_rail_manifest_query');
+  const root = path.resolve(__dirname, '..');
+  const targetPath = currentSchemaSources
+    .map((source) => path.join(root, source))
+    .find((source) => fs.readFileSync(source, 'utf8').includes(view));
+  assert.ok(targetPath);
+  const originalRead = fs.readFileSync;
+  const reader = t.mock.method(fs, 'readFileSync', (name, ...args) => {
+    const value = originalRead(name, ...args);
+    return name === targetPath
+      ? value.replace(view, view + '\nDROP TABLE architecture.design;')
+      : value;
+  });
+  const client = new RecordingClient();
+  try {
+    await assert.rejects(
+      replaceCurrentPlanningDbViews({
+        client,
+        expectedSchemaSha256: sha256HexUtf8(readCurrentPlanningDbSchema()),
+        expectedManifestViewSha256: 'b'.repeat(64),
+        expectedLifecycleViewSha256: 'c'.repeat(64),
+      }),
+      /Exactly one CREATE VIEW statement/
+    );
+    assert.deepEqual(client.queries, []);
+  } finally {
+    reader.mock.restore();
+  }
+  await assert.rejects(
+    replaceCurrentPlanningDbViews({ client, sql: 'DROP TABLE architecture.design' }),
+    /caller SQL/
+  );
+  await assert.rejects(
+    replaceCurrentPlanningDbViews({ client, view: 'architecture.foreign' }),
+    /caller SQL/
+  );
+  assert.deepEqual(client.queries, []);
+});
+
 test('explicit table addition uses the reviewed current definition without replacing schemas', async () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
   const client = new RecordingClient();
   await addCurrentPlanningDbTable({
     client,
@@ -32,7 +109,7 @@ test('explicit table addition uses the reviewed current definition without repla
 });
 
 test('table addition rejects unreviewed, unsafe and incomplete definitions before writing', async () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
   const expectedSchemaSha256 = sha256HexUtf8(schemaSql);
   for (const options of [
     { table: 'architecture.component_source_responsibility', expectedSchemaSha256: 'a'.repeat(64) },
@@ -62,15 +139,11 @@ class RecordingClient {
   }
 }
 
-test('current Planning DB schema is one declarative artifact without migration state', () => {
+test('current Planning DB schema is one declarative bundle without migration state', () => {
   assert.equal(schemaName, 'planning_query_store');
   assert.deepEqual(schemaNames, ['architecture', 'component_engineering', 'planning_query_store']);
-  assert.equal(
-    path.relative(path.resolve(__dirname, '..'), currentSchemaPath).replaceAll('\\', '/'),
-    'tools/planning-db/schema.sql'
-  );
 
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
   assert.doesNotMatch(schemaSql, /schema_migrations/iu);
   assert.doesNotMatch(schemaSql, /migration_state/iu);
   assert.doesNotMatch(
@@ -107,11 +180,7 @@ test('current Planning DB schema is one declarative artifact without migration s
 });
 
 test('command/query rail authority excludes feature references while retaining their evidence', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
-  const viewSql = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW planning_query_store.command_query_rail_query AS'),
-    schemaSql.indexOf('-- Name: evidence_subject_implementation_query')
-  );
+  const viewSql = readCurrentSchemaView('planning_query_store.command_query_rail_query');
 
   assert.ok(viewSql.includes(`raw_rail @> '{"referenceOnly": true}'::jsonb) AS is_reference`));
   assert.ok(viewSql.includes('FILTER (WHERE ((NOT rail_1.is_reference)'));
@@ -120,18 +189,14 @@ test('command/query rail authority excludes feature references while retaining t
 });
 
 test('governed source drift checks repository paths without treating external evidence as files', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
-  const viewSql = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW planning_query_store.governed_source_drift_query AS'),
-    schemaSql.indexOf('-- Name: governance_problem_dashboard_query')
-  );
+  const viewSql = readCurrentSchemaView('planning_query_store.governed_source_drift_query');
 
   assert.ok(viewSql.includes("source_path !~* '^https?://'::text"));
   assert.ok(viewSql.includes("source_path !~ '^\\.generated-docs/'::text"));
 });
 
 test('current schema accepts audited architecture storage I/O records', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -140,7 +205,7 @@ test('current schema accepts audited architecture storage I/O records', () => {
 });
 
 test('current schema accepts audited architecture design transitions', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -149,7 +214,7 @@ test('current schema accepts audited architecture design transitions', () => {
 });
 
 test('current schema can retire superseded architecture relations', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -158,7 +223,7 @@ test('current schema can retire superseded architecture relations', () => {
 });
 
 test('current schema accepts audited architecture authority retirements', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -175,7 +240,7 @@ test('current schema accepts audited architecture authority retirements', () => 
 });
 
 test('architecture proof distinguishes assertions from fresh executions', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -206,7 +271,7 @@ test('architecture proof distinguishes assertions from fresh executions', () => 
 });
 
 test('governed source current content is an audited overlay over immutable imports', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -224,10 +289,7 @@ test('governed source current content is an audited overlay over immutable impor
     schemaSql,
     /CREATE VIEW planning_query_store\.command_query_rail_manifest_query AS[\s\S]*governance_file_query[\s\S]*COALESCE\(source\.content_hash/u
   );
-  const evidenceSql = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW architecture.evidence_subject_implementation_query AS'),
-    schemaSql.indexOf('-- Name: implementation_violation_query')
-  );
+  const evidenceSql = readCurrentSchemaView('architecture.evidence_subject_implementation_query');
   assert.match(evidenceSql, /planning_query_store\.governance_file_query/u);
   assert.doesNotMatch(evidenceSql, /planning_query_store\.governance_files/u);
   assert.match(
@@ -237,7 +299,7 @@ test('governed source current content is an audited overlay over immutable impor
 });
 
 test('documentation lifecycle accepts only hash-matched DB authority dispositions', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -255,38 +317,17 @@ test('documentation lifecycle accepts only hash-matched DB authority disposition
 });
 
 test('Fowler read models invalidate accepted decisions when analyzed source bytes change', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
-  const coverageView = schemaSql.slice(
-    schemaSql.indexOf(
-      'CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS'
-    ),
-    schemaSql.indexOf(
-      '-- Name: fowler_analysis_improvement_query',
-      schemaSql.indexOf(
-        'CREATE VIEW planning_query_store.fowler_analysis_canonical_coverage_query AS'
-      )
-    )
+  const coverageView = readCurrentSchemaView(
+    'planning_query_store.fowler_analysis_canonical_coverage_query'
   );
-  const referenceView = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS'),
-    schemaSql.indexOf(
-      '-- Name: fowler_analysis_retirement_decisions',
-      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_reference_query AS')
-    )
+  const referenceView = readCurrentSchemaView(
+    'planning_query_store.fowler_analysis_reference_query'
   );
-  const retirementView = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS'),
-    schemaSql.indexOf(
-      '-- Name: fowler_analysis_work_query',
-      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_retirement_query AS')
-    )
+  const retirementView = readCurrentSchemaView(
+    'planning_query_store.fowler_analysis_retirement_query'
   );
-  const intendedWorkView = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS'),
-    schemaSql.indexOf(
-      '-- Name: fowler_analysis_duplicate_intent_query',
-      schemaSql.indexOf('CREATE VIEW planning_query_store.fowler_analysis_intended_work_query AS')
-    )
+  const intendedWorkView = readCurrentSchemaView(
+    'planning_query_store.fowler_analysis_intended_work_query'
   );
 
   assert.match(coverageView, /target\.source_content_sha256 = document\.source_content_sha256/u);
@@ -310,14 +351,7 @@ test('Fowler read models invalidate accepted decisions when analyzed source byte
 });
 
 test('documentation lifecycle duplicate counts exclude non-publishable documents', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
-  const lifecycleView = schemaSql.slice(
-    schemaSql.indexOf('CREATE VIEW planning_query_store.documentation_lifecycle_query AS'),
-    schemaSql.indexOf(
-      '-- Name: knowledge_document_sections',
-      schemaSql.indexOf('CREATE VIEW planning_query_store.documentation_lifecycle_query AS')
-    )
-  );
+  const lifecycleView = readCurrentSchemaView('planning_query_store.documentation_lifecycle_query');
 
   assert.match(
     lifecycleView,
@@ -326,7 +360,7 @@ test('documentation lifecycle duplicate counts exclude non-publishable documents
 });
 
 test('current schema accepts audited governance component revisions', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(
     schemaSql,
@@ -335,7 +369,7 @@ test('current schema accepts audited governance component revisions', () => {
 });
 
 test('current schema accepts architecture design scopes for ports', () => {
-  const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
+  const schemaSql = readCurrentPlanningDbSchema();
 
   assert.match(schemaSql, /architecture_design_scope_subject_kind_check[^\r\n]*'port'::text/u);
 });
@@ -487,4 +521,149 @@ test('schema application rolls back and never publishes a partial replacement', 
     schemaSql,
     'rollback',
   ]);
+});
+
+test('default schema application consumes every whole manifest module in declared order', async (t) => {
+  assert.ok(Object.isFrozen(currentSchemaSources));
+  assert.ok(currentSchemaSources.length > 1);
+  const modulePaths = currentSchemaSources.map((source) => path.resolve(__dirname, '..', source));
+  const fragments = modulePaths.map((_, index) =>
+    index === 0
+      ? 'CREATE SCHEMA architecture;\nCREATE SCHEMA component_engineering;\nCREATE SCHEMA planning_query_store;\n'
+      : '-- whole module ' + index + '\nSELECT ' + index + ';\n'
+  );
+  const reads = [];
+  const originalRead = fs.readFileSync;
+  t.mock.method(fs, 'readFileSync', (name, ...args) => {
+    const index = modulePaths.indexOf(name);
+    if (index < 0) return originalRead(name, ...args);
+    reads.push(name);
+    return fragments[index];
+  });
+  const expected = fragments.join('');
+  assert.equal(readCurrentPlanningDbSchema(), expected);
+  assert.deepEqual(reads, modulePaths);
+  reads.length = 0;
+  const client = new RecordingClient();
+  await applyCurrentPlanningDbSchema({ client, silent: true });
+  assert.equal(client.queries.filter((sql) => sql === expected.trim()).length, 1);
+  assert.deepEqual(reads, modulePaths);
+  assert.equal(client.queries[0], 'begin');
+  assert.equal(client.queries.at(-1), 'commit');
+});
+
+test('bundle manifest rejects empty, duplicate, escaped, aliased and non-SQL source identities', () => {
+  const manifestPath = require.resolve('../tools/planning-db/schema/manifest.cjs');
+  const readerPath = require.resolve('./planning-db/current-schema.cjs');
+  const manifest = require(manifestPath);
+  const originalSources = manifest.currentSchemaSources;
+  const originalReader = require.cache[readerPath];
+  const first = originalSources[0];
+  try {
+    for (const invalid of [
+      null,
+      [],
+      [first, first],
+      [first, first.toUpperCase()],
+      ['../outside.sql'],
+      [path.resolve(__dirname, 'outside.sql')],
+      ['tools/planning-db/schema/manifest.cjs'],
+      [first.replace('/schema/', '/schema/./')],
+      [first.replaceAll('/', '\\')],
+    ]) {
+      manifest.currentSchemaSources = invalid;
+      delete require.cache[readerPath];
+      assert.throws(() => require(readerPath).readCurrentPlanningDbSchema());
+    }
+  } finally {
+    manifest.currentSchemaSources = originalSources;
+    require.cache[readerPath] = originalReader;
+  }
+});
+
+test('bundle rejects unreadable, empty and psql module contents without partial assembly', (t) => {
+  const target = path.resolve(__dirname, '..', currentSchemaSources[0]);
+  const originalRead = fs.readFileSync;
+  for (const invalid of [null, '', '  \n', '\\i another.sql\n', '\\ir another.sql\n']) {
+    const spy = t.mock.method(fs, 'readFileSync', (name, ...args) => {
+      if (name !== target) return originalRead(name, ...args);
+      if (invalid === null)
+        throw Object.assign(new Error('missing schema module'), { code: 'ENOENT' });
+      return invalid;
+    });
+    try {
+      assert.throws(() => readCurrentPlanningDbSchema());
+    } finally {
+      spy.mock.restore();
+    }
+  }
+});
+
+test('bundle rejects non-regular files and symlinked file or directory segments', (t) => {
+  const target = path.resolve(__dirname, '..', currentSchemaSources[0]);
+  const originalStat = fs.lstatSync;
+  for (const scenario of [
+    { path: target, file: false, link: false },
+    { path: target, file: true, link: true },
+    { path: path.dirname(target), file: false, link: true },
+  ]) {
+    const spy = t.mock.method(fs, 'lstatSync', (name, ...args) => {
+      const stat = originalStat(name, ...args);
+      return name === scenario.path
+        ? new Proxy(stat, {
+            get(value, key) {
+              if (key === 'isFile') return () => scenario.file;
+              if (key === 'isSymbolicLink') return () => scenario.link;
+              return Reflect.get(value, key);
+            },
+          })
+        : stat;
+    });
+    try {
+      assert.throws(() => readCurrentPlanningDbSchema());
+    } finally {
+      spy.mock.restore();
+    }
+  }
+});
+
+test('bundle rejects distinct source names resolving to the same physical file', (t) => {
+  assert.ok(currentSchemaSources.length > 1);
+  const first = path.resolve(__dirname, '..', currentSchemaSources[0]);
+  const second = path.resolve(__dirname, '..', currentSchemaSources[1]);
+  const originalRealpath = fs.realpathSync;
+  t.mock.method(fs, 'realpathSync', (name, ...args) =>
+    originalRealpath(name === second ? first : name, ...args)
+  );
+  assert.throws(() => readCurrentPlanningDbSchema());
+});
+
+test('all three schema modes fail before any query when a declared module is unavailable', async (t) => {
+  const target = path.resolve(__dirname, '..', currentSchemaSources[0]);
+  const originalRead = fs.readFileSync;
+  t.mock.method(fs, 'readFileSync', (name, ...args) => {
+    if (name === target)
+      throw Object.assign(new Error('missing schema module'), { code: 'ENOENT' });
+    return originalRead(name, ...args);
+  });
+  for (const mode of ['bootstrap', 'table', 'views']) {
+    const client = new RecordingClient();
+    await assert.rejects(
+      mode === 'bootstrap'
+        ? applyCurrentPlanningDbSchema({ client, silent: true })
+        : mode === 'table'
+          ? addCurrentPlanningDbTable({
+              client,
+              table: 'architecture.component_source_responsibility',
+              expectedSchemaSha256: 'a'.repeat(64),
+            })
+          : replaceCurrentPlanningDbViews({
+              client,
+              expectedSchemaSha256: 'a'.repeat(64),
+              expectedManifestViewSha256: 'b'.repeat(64),
+              expectedLifecycleViewSha256: 'c'.repeat(64),
+            })
+    );
+    assert.deepEqual(client.queries, []);
+  }
 });

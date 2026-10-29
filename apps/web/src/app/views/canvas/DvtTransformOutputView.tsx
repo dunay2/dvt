@@ -113,7 +113,7 @@ export function DvtTransformOutputView({
           ariaLabel={displayedCode.label}
           language={displayedCode.language}
           loadingLabel={displayedCode.label}
-          containerClassName={cn(monacoVisualClasses.surface, 'h-auto min-h-0 flex-1')}
+          containerClassName={cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill)}
           value={displayedCode.value}
         />
       ) : (

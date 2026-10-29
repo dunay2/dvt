@@ -19,6 +19,7 @@ type CreateMonacoDiffOptionsInput = Readonly<{
 export const monacoVisualClasses = {
   surface:
     'h-[420px] overflow-hidden rounded border border-[color:var(--border-default)] bg-[var(--surface-app)]',
+  flexFill: 'h-auto min-h-0 flex-1',
   fallback: 'flex items-center justify-center text-sm text-[var(--text-muted)]',
 } as const;
 

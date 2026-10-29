@@ -1,10 +1,11 @@
 /** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
-import { FileCode2 } from 'lucide-react';
+import { FileCode2, PanelRight } from 'lucide-react';
 import {
   forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -12,9 +13,12 @@ import {
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
+import { NodePropertyFacts } from '../components/inspector/NodePropertyFacts';
+import { Button } from '../components/ui/button';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
+  routeWorkbenchPanelHeaderClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
 import {
   useWorkspaceFileContentQuery,
@@ -70,6 +74,7 @@ export type CodeViewProps = Readonly<{
   fileScope?: CodeViewFileScope;
   initialPath?: string;
   fileSelectionRequest?: Readonly<{ path: string }>;
+  presentation?: 'default' | 'project-workspace';
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -82,12 +87,16 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     fileScope,
     initialPath,
     fileSelectionRequest,
+    presentation = 'default',
     reconcilePersistedFile,
   }: CodeViewProps = {},
   ref
 ) {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCodeViewCopy(applicationLanguage);
+  const isProjectWorkspace = presentation === 'project-workspace';
+  const [propertiesOpen, setPropertiesOpen] = useState(true);
+  const propertiesId = useId();
   const isDbtProjectFiles = fileScope?.kind === 'dbt-project-files';
   const preferredPath =
     fileSelectionRequest?.path ??
@@ -143,7 +152,17 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       : graphAuthority?.kind === 'unresolved' && graphAuthority.reason === 'mixed_authority'
         ? 'mixed'
         : 'missing';
-  const fileHistoryQuery = useWorkspaceFileHistoryQuery(resolvedPath);
+  const fileHistoryQuery = useWorkspaceFileHistoryQuery(
+    isProjectWorkspace ? undefined : resolvedPath
+  );
+  const selectedFile =
+    fileContentQuery.isSuccess && fileContentQuery.data.path === resolvedPath
+      ? fileContentQuery.data
+      : undefined;
+  const loadedModifiedAt =
+    selectedFile != null && !Number.isNaN(Date.parse(selectedFile.lastModified))
+      ? new Date(selectedFile.lastModified)
+      : null;
   const fileTreeErrorPresentation = fileTreeQuery.isError
     ? resolveCodeWorkbenchErrorPresentation({
         scope: 'file-tree',
@@ -159,6 +178,13 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         selectedPath: resolvedPath,
       })
     : null;
+  const filePropertiesMessage = fileContentQuery.isPending
+    ? { text: copy.previewLoadingMessage, error: false }
+    : filePreviewErrorPresentation
+      ? { text: filePreviewErrorPresentation.title, error: true }
+      : selectedFile == null
+        ? { text: copy.previewEmptyMessage, error: false }
+        : null;
   const persistPendingFileSelection = useCallback(async (): Promise<void> => {
     const pendingSelection = pendingFileSelectionRef.current;
     if (!pendingSelection) {
@@ -243,10 +269,11 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   return (
     <RouteWorkbenchFrame
       scroll={false}
-      bodyClassName="flex min-h-0 flex-1"
+      bodyClassName="flex"
+      bodyContainerClassName="flex"
       presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
       header={
-        publishRouteBootstrap ? (
+        !isProjectWorkspace && publishRouteBootstrap ? (
           <div className={routeWorkbenchHeaderBandClassName}>
             <ViewHeader
               className="border-0 bg-transparent px-0 py-0"
@@ -258,7 +285,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         ) : undefined
       }
       slots={{
-        leftPanel: (
+        leftPanel: isProjectWorkspace ? undefined : (
           <FileTreePanel
             title={copy.explorerTitle}
             tree={scopedWorkspaceFileTree}
@@ -270,7 +297,48 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
             }}
           />
         ),
-        rightPanel: publishRouteBootstrap ? (
+        rightPanel: isProjectWorkspace ? (
+          propertiesOpen ? (
+            <section
+              id={propertiesId}
+              role="region"
+              aria-label={copy.filePropertiesTitle}
+              className="flex h-full flex-col border-l border-(--border-default)"
+            >
+              <h2 className={routeWorkbenchPanelHeaderClassName}>{copy.filePropertiesTitle}</h2>
+              <div className="min-h-0 flex-1 overflow-auto p-3">
+                {filePropertiesMessage != null ? (
+                  <p
+                    role={filePropertiesMessage.error ? 'alert' : undefined}
+                    className="text-xs text-(--text-muted)"
+                  >
+                    {filePropertiesMessage.text}
+                  </p>
+                ) : selectedFile != null ? (
+                  <NodePropertyFacts
+                    rows={[
+                      { label: copy.name, value: selectedFile.name },
+                      { label: copy.path, value: selectedFile.path },
+                      { label: copy.language, value: selectedFile.language },
+                      ...(loadedModifiedAt == null
+                        ? []
+                        : [
+                            {
+                              label: copy.loadedVersionModified,
+                              value: (
+                                <time dateTime={selectedFile.lastModified}>
+                                  {loadedModifiedAt.toLocaleString(applicationLanguage)}
+                                </time>
+                              ),
+                            },
+                          ]),
+                    ]}
+                  />
+                ) : null}
+              </div>
+            </section>
+          ) : undefined
+        ) : publishRouteBootstrap ? (
           <CodeFileHistoryPanel
             copy={copy}
             selectedPath={resolvedPath}
@@ -280,16 +348,32 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
           />
         ) : undefined,
         primarySurface: (
-          <div className="min-w-0 flex h-full flex-1 p-4">
-            <WorkspaceFileCodeEditor
-              ref={workspaceFileEditorRef}
-              authority={fileAuthority}
-              graphOwnedPaths={graphOwnedPaths}
-              path={resolvedPath}
-              reconcilePersistedFile={reconcilePersistedFile}
-              onPersistenceRecovered={persistPendingFileSelection}
-            />
-          </div>
+          <WorkspaceFileCodeEditor
+            ref={workspaceFileEditorRef}
+            fillAvailableSpace
+            headerActions={
+              isProjectWorkspace ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-6"
+                  aria-label={copy.filePropertiesTitle}
+                  title={copy.filePropertiesTitle}
+                  aria-expanded={propertiesOpen}
+                  aria-controls={propertiesId}
+                  onClick={() => setPropertiesOpen((current) => !current)}
+                >
+                  <PanelRight aria-hidden="true" />
+                </Button>
+              ) : undefined
+            }
+            authority={fileAuthority}
+            graphOwnedPaths={graphOwnedPaths}
+            path={resolvedPath}
+            reconcilePersistedFile={reconcilePersistedFile}
+            onPersistenceRecovered={persistPendingFileSelection}
+          />
         ),
       }}
     />

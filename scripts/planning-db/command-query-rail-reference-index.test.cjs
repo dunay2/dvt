@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { currentSchemaSources } = require('../../tools/planning-db/schema/manifest.cjs');
 
 const {
   createCommandQueryRailReferenceIndexComponent,
@@ -9,9 +10,10 @@ const referenceIndex = createCommandQueryRailReferenceIndexComponent();
 
 test('implementation references exclude declarative schema and executable test evidence', () => {
   const sourceFiles = [
+    ...currentSchemaSources.map((path) => ({ path, content: "select 'ImportDbtProject';" })),
     {
-      path: 'tools/planning-db/schema.sql',
-      content: "select 'ImportDbtProject';",
+      path: 'tools/planning-db/schema/manifest.cjs',
+      content: "module.exports = ['ImportDbtProject'];",
     },
     {
       path: 'scripts/planning-db-import.test.cjs',

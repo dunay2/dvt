@@ -55,11 +55,75 @@ Planning DB MUST NOT contain or expose:
 - compatibility logic for an older Planning DB instance; or
 - an implicit destructive rebuild during import, query, refresh, or closeout.
 
+### One logical schema, composed from cohesive source modules
+
+The [GH-3749 decision](https://github.com/dunay2/dvt/issues/3749) changes the
+physical representation of the current definition. A 10,707-line SQL file mixes
+independent object families and makes their ownership difficult to review. One
+logical current schema does not require one physical file.
+
+`tools/planning-db/schema/manifest.cjs` declares the complete ordered
+`currentSchemaSources` list. Its SQL modules group complete definitions by owned
+concern and dependency phase. The manifest is source configuration, not a list of
+historical transitions: every bootstrap reads every module, with no applied
+ordinal, version, migration ledger or older-schema compatibility.
+
+`scripts/planning-db/current-schema.cjs#readCurrentPlanningDbSchema` reads that
+fixed bundle and assembles its SQL in memory. It accepts no caller-selected
+path, SQL, manifest or glob. Duplicate, missing, non-regular or out-of-bundle
+sources reject the read. No generated aggregate SQL file is retained. The
+obsolete `tools/planning-db/schema.sql` and `currentSchemaPath` export are
+removed; no compatibility alias or second schema owner remains.
+
+The bootstrap, explicit table-addition and explicit two-view-replacement modes
+consume that same reader. Reviewed schema digests identify the complete SQL
+assembled in manifest order. Earlier operation receipts remain historical
+facts; this representation change does not apply DDL to an existing database.
+The existing modes, locks, transactions, live-definition CAS and rejection of
+caller-supplied DDL remain unchanged.
+
+Before:
+
+```mermaid
+flowchart LR
+  File[One large schema.sql] --> Bootstrap[Explicit bootstrap]
+  File --> Table[Explicit table addition]
+  File --> Views[Explicit two-view replacement]
+  Paths[Separate exact-path checks] --> Fitness[Fitness and validation routing]
+```
+
+After:
+
+```mermaid
+flowchart LR
+  Manifest[Explicit currentSchemaSources] --> Reader[One fixed bundle reader]
+  Modules[Cohesive complete SQL definitions] --> Reader
+  Reader --> Bootstrap[Explicit bootstrap]
+  Reader --> Table[Explicit table addition]
+  Reader --> Views[Explicit two-view replacement]
+  Manifest --> Fitness[Fitness and validation routing]
+```
+
+Current-schema fitness admits only the declared SQL sources and continues to
+reject migration artifacts and parallel SQL owners. Validation routing and
+command/query source discovery recognise the same bundle; declarative SQL and
+its manifest cannot be inferred as executable application implementations.
+Documentation generation declares the bundle as its physical source input.
+
+The initial decomposition preserves each SQL object's definition. Dependency
+ordering may change only with real PostgreSQL evidence comparing the previous
+and composed schemas, including functions, columns, constraints, indexes,
+triggers and views. Durable tests prove bundle loading and rejection behavior;
+they must not freeze the initial aggregate digest or require Git history in CI.
+Existing PostgreSQL bootstrap/import and operator preservation tests remain
+required. No routine query, import, refresh or validation may apply the bundle
+to the authoritative Planning DB as a side effect.
+
 ### Explicit additions to the current schema
 
 An operator may add a previously absent table through `ApplyCurrentPlanningDbSchema`
 with an explicit table identity and the SHA-256 of the reviewed current schema.
-The command reads the complete table definition from `tools/planning-db/schema.sql`;
+The command reads the complete table definition from the fixed current-schema bundle;
 it accepts no alternative SQL file or caller-supplied DDL. The addition must be
 self-contained, including its constraints. Existing objects, data and definitions
 remain untouched. Existing tables, missing dependencies, external table clauses,
@@ -76,6 +140,35 @@ The accepted GH-3699 scope uses this path for current component-to-source
 responsibility associations. Acceptance requires a real PostgreSQL test proving
 rollback, foreign-key enforcement, rejection of existing tables and preservation
 of unrelated architecture rows.
+
+### Explicit replacement of documentation read projections
+
+The separate [GH-3747 decision](https://github.com/dunay2/dvt/issues/3747#issuecomment-6476202219)
+permits a bounded extension of `ApplyCurrentPlanningDbSchema` to reconcile
+consolidated component-guide references. This is an explicit operator action;
+the implementation contract must be satisfied before it is applied.
+
+The mode may replace only
+`planning_query_store.command_query_rail_manifest_query` and
+`planning_query_store.documentation_lifecycle_query`. It reads their definitions
+from the reviewed current-schema bundle, requires the assembled SQL's SHA-256
+and both live `pg_get_viewdef` hashes, and checks them under the same
+current-schema advisory lock and transaction before replacement.
+
+The existing 27 manifest columns and 26 lifecycle columns retain their names,
+types and order. The only admitted additions are final
+`effective_component_guides jsonb` and `canonical_target_path text`, respectively.
+Imported declarations and their raw manifests remain historical facts; the
+effective projection identifies the current consultation target.
+
+The operation must reject absent or unexpected views, stale hashes, unsupported
+arguments and any other signature change. Both replacements roll back together
+on failure. It accepts no caller-supplied SQL, path or object identity, never
+reaches schema reset or table addition, and alters no table or stored row.
+Queries, imports, refreshes and checks must not invoke it automatically. It
+introduces no migration chain, applied-version ledger or older-schema
+compatibility path. Isolated PostgreSQL tests must prove rollback, exact
+column preservation and preservation of unrelated definitions and data.
 
 Git remains the history and review boundary for repository-owned inputs.
 `ImportPlanningGovernanceQueryStore` owns their projection into Planning DB.
@@ -106,7 +199,7 @@ Positive:
 
 Costs:
 
-- every Planning DB schema change edits the current schema in place;
+- every Planning DB schema change edits its current source modules in place;
 - an operator-confirmed reset intentionally discards DB-authored state and is
   not a routine recovery mechanism;
 - schema and import must be validated together against a real PostgreSQL

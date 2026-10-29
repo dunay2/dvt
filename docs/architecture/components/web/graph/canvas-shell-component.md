@@ -850,16 +850,41 @@ flowchart LR
 extends the main Canvas activity rail with an optional `Git` file/folder slot.
 The Model editor keeps its separate pending-draft navigation lifecycle.
 `CanvasExplorer` retains rail, disclosure, keyboard, ES/EN copy and shared-style
-ownership. Git mounts its file view on first activation and retains it afterwards.
-Switching Sources, Elements and Git preserves the graph, camera,
-disclosure and Properties' stable origin; no second rail or CSS is introduced.
+ownership. Its Git action requests the existing project-Code opener. The file
+tree belongs to the retained Code workspace, rather than the graph Explorer.
+Sources and Elements preserve the graph, camera, disclosure and Properties'
+stable origin; no second activity rail is introduced.
+
+[Issue #3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6473478671)
+places Code in the existing top workspace tab strip beside Canvas and any open
+Model tab. Canvas, Code and Model are retained sibling surfaces on `/canvas`;
+this does not add a `/code` route or another navigation framework. Git, the Code
+tab and File > Project Code request the same existing opener. Code becomes active
+only after admission succeeds. The existing DBT node-editor flush may reject
+entry, preserving the prior tab. A later Canvas or Model selection wins over an
+earlier pending Code activation.
+
+The application work area has one file tree on the left, Code in the center and
+the open file's metadata on the right. The graph and its node inspector remain
+mounted, hidden and inert while Code is visible. Selecting the Canvas tab restores
+the same graph rather than fitting or recreating it. Returning to Code restores
+the same file tree, editor and buffer at their existing React parent. Import
+remains the priority task layer without replacing the retained Code host. Model
+authoring and file synchronization keep their existing owners.
 
 ```mermaid
 flowchart LR
-  Explorer[Retained CanvasExplorer] --> Git[Optional Git / existing FileTreePanel]
+  Explorer[Retained CanvasExplorer] --> Git[Git action]
   Git --> Opener[Existing project Code opener with optional path]
   File[Existing File-menu entry] --> Opener
-  Opener --> Code[Same mounted CodeView]
+  CodeTab[Top Code tab] --> Opener
+  Opener --> Admission{Existing opener admits entry?}
+  Admission -->|yes| Code[Retained Code workspace tab]
+  Admission -->|no| Prior[Current surface remains]
+  Code --> Tree[One existing project file tree]
+  Code --> Editor[Same retained CodeView]
+  Code --> Metadata[Accepted open-file metadata]
+  Return[Top Canvas tab] --> Graph[Same retained graph and camera]
 ```
 
 `CanvasProjectFilesExplorer` is a narrow adapter over the existing file-tree
@@ -867,7 +892,9 @@ query. The rail requests a path and keeps no premature selected-file highlight;
 CodeView owns flush, revision and accepted selection. The
 [workspace-files contract](../code-workbench-workspace-files-component.md#canvas-project-files-entry--issue-3743)
 owns tree scope, file authority and proof requirements. Git adds no VCS status,
-stage, commit, push or branch command. Placement remains on
+stage, commit, push or branch command. Real project Git and native-model
+publication remain separate pending work; filesystem browsing is not Git proof.
+Placement reuses `SelectCanvasWorkbenchTab`, `ListCanvasWorkbenchTabs` and
 `RenderCanvasContextualGraphSurface`; native ownership is not inferred from
 ROOT fallback coverage or the output-code component's name.
 

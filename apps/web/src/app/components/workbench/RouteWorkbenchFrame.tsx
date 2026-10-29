@@ -17,6 +17,11 @@ export const routeWorkbenchScrollAreaClassName = 'min-h-0 flex-1';
 export const routeWorkbenchPanelClassName =
   'border-[color:var(--border-default)] bg-[var(--surface-panel)] text-[var(--text-default)]';
 
+export const routeWorkbenchPanelHeaderClassName = cn(
+  routeWorkbenchPanelClassName,
+  'flex min-h-8 shrink-0 items-center gap-2 border-b border-[color:var(--border-subtle)] px-2 text-xs font-semibold'
+);
+
 export const routeWorkbenchFieldClassName =
   'border border-[color:var(--border-default)] bg-[var(--surface-app)] text-[var(--text-default)]';
 

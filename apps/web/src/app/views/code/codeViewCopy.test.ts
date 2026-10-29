@@ -11,6 +11,11 @@ describe('resolveCodeViewCopy', () => {
       workingTreePersistedInvalidLabel: 'Invalid project',
       workingTreePersistedVerificationUnavailableLabel: 'Verification unavailable',
       routeEmptyTitle: 'No workspace files available',
+      filePropertiesTitle: 'File properties',
+      name: 'Name',
+      path: 'Path',
+      language: 'Language',
+      loadedVersionModified: 'Loaded version modified',
     });
   });
 
@@ -22,6 +27,11 @@ describe('resolveCodeViewCopy', () => {
       workingTreePersistedInvalidLabel: 'Proyecto no válido',
       workingTreePersistedVerificationUnavailableLabel: 'Verificación no disponible',
       routeEmptyTitle: 'No hay archivos del workspace disponibles',
+      filePropertiesTitle: 'Propiedades del archivo',
+      name: 'Nombre',
+      path: 'Ruta',
+      language: 'Lenguaje',
+      loadedVersionModified: 'Modificación de la versión cargada',
     });
   });
 });

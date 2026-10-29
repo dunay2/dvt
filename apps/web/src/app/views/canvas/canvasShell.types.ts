@@ -170,7 +170,7 @@ export type CanvasShellCanvasCommands = {
 export type CanvasShellWorkspaceCommands = Readonly<{
   canOpenProjectExplorer?: boolean;
   projectRoot?: string;
-  onOpenProjectCode?: (path?: string) => void;
+  onOpenProjectCode?: (path?: string) => Promise<boolean>;
 }>;
 
 export type CanvasShellProps = Readonly<{

@@ -1591,6 +1591,14 @@ test('buildDocumentationLifecycleRows shows lifecycle facts without prose parsin
         subject_key: 'example',
         title: 'Example Plan',
       },
+      {
+        lifecycle_gap_kind: 'none',
+        lifecycle_state: 'superseded',
+        canonicality: 'canonical',
+        document_path: 'docs/architecture/components/web/route-workbench-frame-component.md',
+        title: 'Consolidated component guide',
+        canonical_target_path: 'docs/architecture/components/web/style-guide.md',
+      },
     ]),
     [
       [
@@ -1605,6 +1613,21 @@ test('buildDocumentationLifecycleRows shows lifecycle facts without prose parsin
         'docs/planning/proposals/mandatory/example.md',
         'example',
         'Example Plan',
+        '-',
+      ],
+      [
+        'none',
+        'superseded',
+        'canonical',
+        0,
+        0,
+        0,
+        0,
+        0,
+        'docs/architecture/components/web/route-workbench-frame-component.md',
+        '-',
+        'Consolidated component guide',
+        'docs/architecture/components/web/style-guide.md',
       ],
     ]
   );
@@ -3125,6 +3148,7 @@ test('runQuery dispatches documentation-lifecycle through the database lifecycle
       'docs/architecture/components/example.md',
       'example',
       'Example Component',
+      '-',
     ],
   ]);
 });
