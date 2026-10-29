@@ -1501,6 +1501,27 @@ units:
     fowlerSignals:
       - coverage refinement
       - hidden authority
+  - id: SYS-WEB-MONACO-LAB
+    name: Isolated mixed Monaco browser laboratory
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: Demonstrate inline Monaco cards using exact declared fixture revisions.
+    owns:
+      - labs/codecomp1-monaco/.lintstagedrc.json
+      - labs/codecomp1-monaco/README.md
+      - labs/codecomp1-monaco/cards.mjs
+      - labs/codecomp1-monaco/fixture.mjs
+      - labs/codecomp1-monaco/index.html
+      - labs/codecomp1-monaco/pilot.css
+      - labs/codecomp1-monaco/pilot.mjs
+      - labs/codecomp1-monaco/vite.config.mjs
+    childrenRequired: false
+    dddOwner: Experimental browser presentation / explicit fixture laboratory
+    cqRails: none - isolated browser laboratory; no product query, command or runtime API
+    governance:
+      - labs/codecomp1-monaco/README.md
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6506809339
   - id: SYS-WORKERS
     name: Worker domain
     parent: SYS-DVT
