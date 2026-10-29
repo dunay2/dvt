@@ -2,7 +2,7 @@
 title: Docs Disposition Canon Component
 status: Active
 owner: Architecture / Docs / Planning
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-29
 component_type: governance
 ---
 
@@ -44,6 +44,17 @@ in structured `raw_resolution`. Require exact full-overlay hash CAS or explicit
 or failed audit must not leave a partial resolution. Exact completed-command
 replay returns its existing result without another write; a changed proof or
 target under the same key rejects.
+
+Canonical relocation is a one-hop mapping. A document that is the target of an
+effective linked relocation cannot itself be relocated: after A points to B,
+B cannot point to C while that incoming mapping remains effective. Detect
+incoming mappings with the same scope, source identity and source hash rules
+as the read projection; an unavailable incoming-mapping fact also rejects.
+Serialize canonical mapping changes with one
+transaction-level advisory mutex and use explicit READ COMMITTED isolation so
+a waiting writer observes the preceding commit. Reject without changing
+overlays or audit history; ordinary finding resolution retains its transaction
+behavior. Exact completed-command replay retains its existing result.
 
 `ListDocumentationLifecycleFacts` exposes the old document's effective
 superseded state and canonical target. Feature-mechanization readers use

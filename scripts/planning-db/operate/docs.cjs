@@ -257,7 +257,7 @@ async function readCanonicalDocumentRelocationFacts(client, command) {
   planCanonicalDocumentRelocation({ command, validateOnly: true });
   await client.query(
     "select pg_advisory_xact_lock(hashtext('dvt:docs-relocation'), hashtext($1))",
-    [command.documentPath]
+    ['canonical-document-mappings']
   );
   await client.query(
     `select document_id from ${schemaName}.knowledge_documents
@@ -278,7 +278,17 @@ async function readCanonicalDocumentRelocationFacts(client, command) {
     exists(select 1 from ${schemaName}.doc_resolution_overlays other
       where other.issue_kind='canonical_document_relocation' and other.resolution_status='linked'
       and other.document_path=target.document_path and other.source_content_sha256=target.source_content_sha256)
-      as target_relocated
+      as target_relocated,
+    exists(select 1 from ${schemaName}.doc_resolution_overlays incoming
+      join ${schemaName}.knowledge_documents original on original.document_path=incoming.document_path
+        and incoming.source_content_sha256=original.source_content_sha256
+        and incoming.raw_resolution #>> '{canonicalSource,sourceDocumentId}'=original.document_id
+        and incoming.raw_resolution #>> '{canonicalSource,expectedSourceContentSha256}'=original.source_content_sha256
+      where incoming.resolution_scope='docs_disposition'
+        and incoming.issue_kind='canonical_document_relocation'
+        and incoming.resolution_status='linked' and incoming.reference_text is null
+        and incoming.raw_resolution #>> '{canonicalSource,targetPath}'=source.document_path)
+      as source_is_canonical_target
     from ${schemaName}.knowledge_documents source
     left join ${schemaName}.knowledge_documents target on target.document_path=$2
     left join ${schemaName}.governance_file_query governed on governed.path=target.document_path
@@ -421,7 +431,9 @@ async function applyDocsResolutionOperation(command, options = {}) {
 
   try {
     await assertPlanningDbCurrentSchemaReady(client);
-    await client.query('begin');
+    await client.query(
+      command.canonicalSource === undefined ? 'begin' : 'begin isolation level read committed'
+    );
 
     const sourceRow =
       command.canonicalSource === undefined
