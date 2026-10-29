@@ -72,10 +72,6 @@ const allowedArchitectureComponentLayers = new Set([
 
 const allowedArchitectureComponentCriticalities = new Set(['low', 'medium', 'high', 'critical']);
 
-function validateArchitectureComponentId(value, optionName = 'component') {
-  return validateComponentId(value, optionName);
-}
-
 function validateArchitectureComponentKind(value) {
   if (!allowedArchitectureComponentKinds.has(value)) {
     throw new Error(
@@ -215,10 +211,7 @@ function parseArchitectureComponentCommand(action, args) {
     const command = {
       kind: 'architecture_component_responsibility_retire',
       designId: validateArchitectureDesignId(requireOption(options, 'design')),
-      componentId: validateArchitectureComponentId(
-        requireOption(options, 'component'),
-        'component'
-      ),
+      componentId: validateComponentId(requireOption(options, 'component'), 'component'),
       responsibilityId: validateArchitectureResponsibilityId(
         requireOption(options, 'responsibility')
       ),
@@ -243,7 +236,7 @@ function parseArchitectureComponentCommand(action, args) {
   const command = {
     kind: 'architecture_component_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
-    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    componentId: validateComponentId(requireOption(options, 'component'), 'component'),
     name: requireOption(options, 'name'),
     componentKind: validateArchitectureComponentKind(requireOption(options, 'kind')),
     layer: validateArchitectureComponentLayer(requireOption(options, 'layer')),
@@ -253,9 +246,7 @@ function parseArchitectureComponentCommand(action, args) {
     runtime: options.runtime || 'none',
     criticality: validateArchitectureComponentCriticality(options.criticality || 'medium'),
     status: validateArchitectureRecordStatus(options.status || 'proposed'),
-    parentComponentId: options.parent
-      ? validateArchitectureComponentId(options.parent, 'parent')
-      : null,
+    parentComponentId: options.parent ? validateComponentId(options.parent, 'parent') : null,
     responsibilities: parseArchitectureComponentResponsibilities(options.responsibility),
     ...(options.sourceBindings === undefined
       ? {}
@@ -640,7 +631,6 @@ module.exports = {
   planArchitectureComponentRecordOperation,
   planArchitectureComponentResponsibilityRetireOperation,
   readArchitectureComponent,
-  validateArchitectureComponentId,
   writePlannedArchitectureComponentRecordOperation,
   writePlannedArchitectureComponentResponsibilityRetireOperation,
 };
