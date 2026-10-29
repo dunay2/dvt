@@ -241,3 +241,213 @@ test('source and dashboard queries propagate unavailable DB authority without su
     (error) => error === failure
   );
 });
+
+const {
+  buildCodeSymbolRows,
+  buildCodeSymbolDuplicateRows,
+  buildSourceDriftRows,
+  buildGovernanceProblemRows,
+  parseArgs,
+  readCodeSymbolRows,
+  readCodeSymbolDuplicateRows,
+  readSourceDriftRows,
+  readGovernanceProblemRows,
+} = require('../planning-db-query.cjs');
+
+test('code symbol duplicate query behavior lives in a focused read-model component', () => {
+  const codeSymbolComponent = require('../planning-db/queries/code-symbol-query.cjs');
+  const sourceDriftComponent = require('../planning-db/queries/source-drift-query.cjs');
+
+  assert.equal(codeSymbolComponent.buildCodeSymbolRows, buildCodeSymbolRows);
+  assert.equal(codeSymbolComponent.buildCodeSymbolDuplicateRows, buildCodeSymbolDuplicateRows);
+  assert.equal(sourceDriftComponent.buildSourceDriftRows, buildSourceDriftRows);
+  assert.equal(codeSymbolComponent.buildGovernanceProblemRows, buildGovernanceProblemRows);
+  assert.equal(codeSymbolComponent.readCodeSymbolRows, readCodeSymbolRows);
+  assert.equal(codeSymbolComponent.readCodeSymbolDuplicateRows, readCodeSymbolDuplicateRows);
+  assert.equal(sourceDriftComponent.readSourceDriftRows, readSourceDriftRows);
+  assert.equal(codeSymbolComponent.readSourceDriftRows, undefined);
+  assert.equal(codeSymbolComponent.readGovernanceProblemRows, readGovernanceProblemRows);
+});
+
+test('parseArgs parses code symbol and source drift query filters', () => {
+  assert.deepEqual(parseArgs(['code-symbols', '--component', 'SYS-WEB-ROOT', '--limit', '5']), {
+    queryName: 'code-symbols',
+    filters: {
+      component: 'SYS-WEB-ROOT',
+      limit: 5,
+    },
+  });
+
+  assert.deepEqual(
+    parseArgs([
+      'code-symbol-duplicates',
+      '--kind',
+      'exact_body_duplicate',
+      '--severity',
+      'warning',
+    ]),
+    {
+      queryName: 'code-symbol-duplicates',
+      filters: {
+        kind: 'exact_body_duplicate',
+        severity: 'warning',
+      },
+    }
+  );
+
+  assert.deepEqual(parseArgs(['source-drift', '--path', 'buzon/TAREA.TXT', '--limit', '3']), {
+    queryName: 'source-drift',
+    filters: {
+      path: 'buzon/TAREA.TXT',
+      limit: 3,
+    },
+  });
+});
+
+test('buildCodeSymbolRows shows code symbols with component ownership', () => {
+  assert.deepEqual(
+    buildCodeSymbolRows([
+      {
+        symbol_id: 'sym-1',
+        symbol_name: 'parseLimit',
+        symbol_kind: 'function',
+        component_id: 'SYS-CI-TOOLS-PLANNING-DB',
+        file_path: 'scripts/planning-db-query.cjs',
+        start_line: 517,
+        end_line: 528,
+        body_sha256: 'abc123',
+        normalized_body_length: 226,
+      },
+    ]),
+    [
+      [
+        'sym-1',
+        'parseLimit',
+        'function',
+        'SYS-CI-TOOLS-PLANNING-DB',
+        'scripts/planning-db-query.cjs',
+        517,
+        528,
+        'abc123',
+        226,
+      ],
+    ]
+  );
+});
+
+test('buildCodeSymbolDuplicateRows shows duplicate function findings', () => {
+  assert.deepEqual(
+    buildCodeSymbolDuplicateRows([
+      {
+        finding_kind: 'exact_body_duplicate',
+        severity: 'warning',
+        duplicate_key: 'body:abc123',
+        symbol_name: 'parseLimit',
+        component_id: 'SYS-CI-TOOLS-PLANNING-DB',
+        source_path: 'scripts/planning-db-query.cjs',
+        start_line: 517,
+        duplicate_count: 14,
+        action_hint:
+          'Extract one canonical helper or document why local duplication is intentional.',
+      },
+    ]),
+    [
+      [
+        'exact_body_duplicate',
+        'warning',
+        'body:abc123',
+        'parseLimit',
+        'SYS-CI-TOOLS-PLANNING-DB',
+        'scripts/planning-db-query.cjs',
+        517,
+        14,
+        'Extract one canonical helper or document why local duplication is intentional.',
+      ],
+    ]
+  );
+});
+
+test('buildSourceDriftRows shows governed references to missing tracked files', () => {
+  assert.deepEqual(
+    buildSourceDriftRows([
+      {
+        finding_kind: 'missing_source_file',
+        severity: 'error',
+        source_path: 'buzon/TAREA.TXT',
+        source_table: 'planning_query_store.command_query_rails',
+        reference_count: 2,
+        action_hint: 'Repoint the governed source or retire the stale row explicitly.',
+      },
+    ]),
+    [
+      [
+        'missing_source_file',
+        'error',
+        'buzon/TAREA.TXT',
+        'planning_query_store.command_query_rails',
+        2,
+        'Repoint the governed source or retire the stale row explicitly.',
+      ],
+    ]
+  );
+});
+
+test('readCodeSymbolRows queries DB-owned code symbol inventory', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCodeSymbolRows(client, {
+    component: 'SYS-CI-TOOLS-PLANNING-DB',
+    path: 'scripts/planning-db-query.cjs',
+    kind: 'function',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.code_symbol_inventory_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /file_path = \$2/);
+  assert.match(captured.sql, /symbol_kind = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'SYS-CI-TOOLS-PLANNING-DB',
+    'scripts/planning-db-query.cjs',
+    'function',
+    5,
+  ]);
+});
+
+test('readCodeSymbolDuplicateRows queries DB-owned duplicate symbol findings', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCodeSymbolDuplicateRows(client, {
+    kind: 'exact_body_duplicate',
+    severity: 'warning',
+    component: 'SYS-CI-TOOLS-PLANNING-DB',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.code_symbol_problem_query/);
+  assert.match(captured.sql, /finding_kind = \$1/);
+  assert.match(captured.sql, /severity = \$2/);
+  assert.match(captured.sql, /component_id = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'exact_body_duplicate',
+    'warning',
+    'SYS-CI-TOOLS-PLANNING-DB',
+    5,
+  ]);
+});

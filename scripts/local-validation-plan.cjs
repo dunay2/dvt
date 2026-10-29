@@ -181,6 +181,34 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/source-drift.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query-tests/helpers.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/catalogs.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/documentation.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/knowledge-intake.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/frontend.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/architecture-authority.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/architecture-fitness.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/component-engineering.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/governance.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/operator-context.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/canvas-component-registry-drift.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/component-profiles.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/generate-code-status-tests/workspace-membership.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/repository-map.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/component-topology.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/system-delivery.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status.test.cjs': 'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/publication.integration.test.cjs':
+    'scripts/generate-code-status.test.cjs',
+  'scripts/generate-code-status-tests/helpers.cjs': 'scripts/generate-code-status.test.cjs',
   'scripts/planning-db/queries/component-integrity-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/rail-vocabulary-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/source-drift-query.cjs': 'scripts/planning-db-query.test.cjs',

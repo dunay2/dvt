@@ -49,6 +49,8 @@ test('classifies Repository Map binding and lifecycle inputs as generated-status
     'docs/contracts/index.md',
     'buzon/20260807-example.md',
     'scripts/planning-db-import.cjs',
+    'scripts/generate-code-status-tests/repository-map.test.cjs',
+    'scripts/generate-code-status-tests/helpers.cjs',
     'README.md',
     'src/index.ts',
     'test/root.test.ts',

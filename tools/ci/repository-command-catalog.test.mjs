@@ -241,6 +241,14 @@ test('classifies current command file paths without broad script-directory assum
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
   assert.equal(
+    classifyScriptFilePath('scripts/generate-code-status-tests/helpers.cjs').domain,
+    'test-tooling'
+  );
+  assert.equal(
+    classifyScriptFilePath('scripts/generate-code-status-tests/undeclared-helper.cjs').domain,
+    'unknown'
+  );
+  assert.equal(
     classifyScriptFilePath('scripts/planning-db-query-tests/helpers.cjs').domain,
     'planning-db'
   );
