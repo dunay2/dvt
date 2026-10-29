@@ -1,6 +1,7 @@
 # Code with inline components — Monaco pilot
 
 Owner: [CODECOMP1.1 / #3751](https://github.com/dunay2/dvt/issues/3751).
+Catalog operation: `RunMixedMonacoLaboratory` (laboratory only).
 Prospective scope: [authorized laboratory](https://github.com/dunay2/dvt/issues/3751#issuecomment-6506809339).
 
 This isolated laboratory uses the installed Monaco **0.56.0**, the existing

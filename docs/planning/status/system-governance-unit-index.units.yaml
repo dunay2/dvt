@@ -1517,8 +1517,8 @@ units:
       - labs/codecomp1-monaco/pilot.mjs
       - labs/codecomp1-monaco/vite.config.mjs
     childrenRequired: false
-    dddOwner: Experimental browser presentation / explicit fixture laboratory
-    cqRails: none - isolated browser laboratory
+    dddOwner: MixedMonacoLaboratoryRun
+    cqRails: RunMixedMonacoLaboratory
     governance:
       - labs/codecomp1-monaco/README.md
       - https://github.com/dunay2/dvt/issues/3751#issuecomment-6506809339
