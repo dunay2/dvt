@@ -1,4 +1,5 @@
 /** Owned concern: coordinate the single-editor laboratory session and exact fixture verification. */
+
 import * as monaco from 'monaco-editor/editor/editor.api.js';
 import 'monaco-editor/languages/definitions/sql/register.js';
 import EditorWorker from 'monaco-editor/editor/editor.worker.js?worker';
@@ -64,7 +65,10 @@ function inspect(reference) {
   details.replaceChildren();
   appendText(details, 'p', 'Definición · solo lectura', 'muted');
   appendText(details, 'pre', reference.definition, 'definition-code');
-  for (const [label, ports] of [['Entrada', reference.inputs], ['Salida', [reference.output]]]) {
+  for (const [label, ports] of [
+    ['Entrada', reference.inputs],
+    ['Salida', [reference.output]],
+  ]) {
     for (const port of ports) {
       appendText(details, 'h2', `${label} · ${port.name}`, 'schema-heading');
       for (const column of port.columns) {
@@ -87,7 +91,12 @@ async function verifyFixture() {
   const [actualRevision, expectedRevision] = await Promise.all([checksum(value), fixtureRevision]);
   if (requestGeneration !== generation || version !== model.getVersionId()) return;
   verifyButton.disabled = false;
-  if (actualRevision !== expectedRevision || fixture.references.some((ref) => value.slice(ref.startOffset, ref.endOffset) !== ref.referenceSource)) {
+  if (
+    actualRevision !== expectedRevision ||
+    fixture.references.some(
+      (ref) => value.slice(ref.startOffset, ref.endOffset) !== ref.referenceSource
+    )
+  ) {
     showState('unsupported', 'Texto fuera del ejemplo · usa Deshacer para volver a validarlo');
     return;
   }
@@ -115,11 +124,15 @@ closeDetails.addEventListener('click', () => {
 
 // Laboratory browser-proof access to the real editor; no alternate buffer or history.
 window.codecompPilot = Object.freeze({ editor, model });
-window.addEventListener('pagehide', () => {
-  generation += 1;
-  hideCards();
-  contentSubscription.dispose();
-  editor.dispose();
-  model.dispose();
-}, { once: true });
+window.addEventListener(
+  'pagehide',
+  () => {
+    generation += 1;
+    hideCards();
+    contentSubscription.dispose();
+    editor.dispose();
+    model.dispose();
+  },
+  { once: true }
+);
 await verifyFixture();

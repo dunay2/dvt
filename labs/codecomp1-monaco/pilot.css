@@ -1,56 +1,330 @@
 /* Owned concern: pilot layout; palette and editor theme come from the application. */
+
 @import '../../apps/web/src/styles/index.css';
 
-* { box-sizing: border-box; }
-body { margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-app); color: var(--text-default); font: 13px 'IBM Plex Sans', sans-serif; }
-button, input { font: inherit; }
-button { border: 1px solid var(--border-default); border-radius: var(--radius-sm); background: var(--surface-elevated); color: var(--text-default); cursor: pointer; padding: 5px 10px; }
-button:hover { background: var(--surface-selected); }
-button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
-button:disabled { opacity: .5; cursor: default; }
-a { color: inherit; text-decoration: none; }
-.app-header, .toolbar { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; border-bottom: 1px solid var(--border-default); padding: 0 18px; }
-.app-header { height: 48px; background: var(--surface-shell); gap: 28px; }
-.brand { color: var(--text-strong); font-weight: 500; letter-spacing: .03em; }
-nav { display: flex; align-self: stretch; gap: 24px; flex: 1; }
-nav a, nav span { display: flex; align-items: center; }
-nav span { color: var(--text-strong); border-bottom: 2px solid var(--primary); }
-.lab-badge, .reference-card-type { color: var(--text-subtle); font-size: 11px; }
-.toolbar { min-height: 46px; background: var(--surface-route); gap: 12px; }
-.toolbar > div, .actions { display: flex; align-items: center; gap: 10px; }
-.toolbar strong { font-size: 12px; font-weight: 500; }
-.file-icon { color: var(--status-info); font-size: 17px; }
-.file-folder { color: var(--text-subtle); font-size: 11px; }
-.actions label { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 12px; }
-input { accent-color: var(--primary); }
-main { display: grid; grid-template-columns: minmax(0, 1fr) 290px; flex: 1; min-height: 0; }
-.editor-pane { min-width: 0; min-height: 0; position: relative; }
-#editor { width: 100%; height: 100%; }
-aside { overflow: auto; padding: 16px; background: var(--surface-panel); border-left: 1px solid var(--border-default); }
-.details-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 18px; }
-.details-header h1 { margin: 0; color: var(--text-strong); font-size: 13px; font-weight: 500; }
-.details-header button { border: 0; background: transparent; font-size: 18px; padding: 0 4px; }
-.muted, .hint, .fact > span { color: var(--text-subtle); }
-.muted { line-height: 1.6; margin: 0 0 20px; }
-.hint { font-size: 12px; line-height: 1.6; margin: 22px 0 0; }
-.fact { display: grid; gap: 5px; margin: 16px 0; }
-.fact > span { font-size: 11px; }
-.fact > strong { font-weight: 400; }
-.definition-code { white-space: pre-wrap; overflow-wrap: anywhere; margin: 12px 0 22px; font: 12px/1.7 Consolas, monospace; color: var(--text-default); }
-.schema-heading { color: var(--text-subtle); margin: 18px 0 8px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.schema-field { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border-subtle); padding: 7px 0; font-size: 12px; }
-.schema-field span:last-child { color: var(--text-subtle); }
-.reference-card { height: 138px; border: 1px solid var(--border-default); border-left: 3px solid var(--primary); border-radius: var(--radius-md); background: var(--surface-panel); color: var(--text-default); padding: 14px 16px; font: 12px 'IBM Plex Sans', sans-serif; overflow: hidden; }
-.reference-card-header { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
-.reference-card-name { margin: 0; font-size: 13px; font-weight: 500; color: var(--text-strong); }
-.reference-card-ports { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 24px; }
-.reference-card-ports::after { content: '→'; position: absolute; left: 47%; color: var(--status-info); }
-.reference-card-port { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.reference-card-port::before { content: ''; width: 7px; height: 7px; flex-shrink: 0; border-radius: 50%; border: 1px solid var(--status-info); }
-.reference-card-schema { color: var(--text-muted); font-size: 11px; margin-top: 12px; }
-footer { display: flex; align-items: center; gap: 16px; height: 30px; flex-shrink: 0; padding: 0 16px; border-top: 1px solid var(--border-default); background: var(--surface-shell); font-size: 11px; }
-#state[data-state='ready'] { color: var(--status-success); }
-#state[data-state='dirty'], #state[data-state='unsupported'] { color: var(--status-degraded); }
-.footer-language { margin-left: auto; color: var(--text-subtle); }
-@media (max-width: 900px) { main { grid-template-columns: minmax(0, 1fr) 235px; } .file-folder { display: none; } aside { padding: 12px; } .app-header, .toolbar { padding: 0 12px; } }
-@media (max-width: 640px) { main { grid-template-columns: minmax(0, 1fr); } aside { display: none; } aside:has(#close-details:not([hidden])) { display: block; position: absolute; right: 0; top: 94px; bottom: 30px; width: min(290px, 90vw); z-index: 10; } .lab-badge { font-size: 10px; } .actions label { font-size: 11px; } }
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-app);
+  color: var(--text-default);
+  font:
+    13px 'IBM Plex Sans',
+    sans-serif;
+}
+button,
+input {
+  font: inherit;
+}
+button {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-elevated);
+  color: var(--text-default);
+  cursor: pointer;
+  padding: 5px 10px;
+}
+button:hover {
+  background: var(--surface-selected);
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+.app-header,
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-default);
+  padding: 0 18px;
+}
+.app-header {
+  height: 48px;
+  background: var(--surface-shell);
+  gap: 28px;
+}
+.brand {
+  color: var(--text-strong);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+nav {
+  display: flex;
+  align-self: stretch;
+  gap: 24px;
+  flex: 1;
+}
+nav a,
+nav span {
+  display: flex;
+  align-items: center;
+}
+nav span {
+  color: var(--text-strong);
+  border-bottom: 2px solid var(--primary);
+}
+.lab-badge,
+.reference-card-type {
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+.toolbar {
+  min-height: 46px;
+  background: var(--surface-route);
+  gap: 12px;
+}
+.toolbar > div,
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.toolbar strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.file-icon {
+  color: var(--status-info);
+  font-size: 17px;
+}
+.file-folder {
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+.actions label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+input {
+  accent-color: var(--primary);
+}
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  flex: 1;
+  min-height: 0;
+}
+.editor-pane {
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+#editor {
+  width: 100%;
+  height: 100%;
+}
+aside {
+  overflow: auto;
+  padding: 16px;
+  background: var(--surface-panel);
+  border-left: 1px solid var(--border-default);
+}
+.details-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.details-header h1 {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: 500;
+}
+.details-header button {
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  padding: 0 4px;
+}
+.muted,
+.hint,
+.fact > span {
+  color: var(--text-subtle);
+}
+.muted {
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+.hint {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 22px 0 0;
+}
+.fact {
+  display: grid;
+  gap: 5px;
+  margin: 16px 0;
+}
+.fact > span {
+  font-size: 11px;
+}
+.fact > strong {
+  font-weight: 400;
+}
+.definition-code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 12px 0 22px;
+  font:
+    12px/1.7 Consolas,
+    monospace;
+  color: var(--text-default);
+}
+.schema-heading {
+  color: var(--text-subtle);
+  margin: 18px 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.schema-field {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 7px 0;
+  font-size: 12px;
+}
+.schema-field span:last-child {
+  color: var(--text-subtle);
+}
+.reference-card {
+  height: 138px;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  color: var(--text-default);
+  padding: 14px 16px;
+  font:
+    12px 'IBM Plex Sans',
+    sans-serif;
+  overflow: hidden;
+}
+.reference-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+.reference-card-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-strong);
+}
+.reference-card-ports {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+.reference-card-ports::after {
+  content: '→';
+  position: absolute;
+  left: 47%;
+  color: var(--status-info);
+}
+.reference-card-port {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.reference-card-port::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--status-info);
+}
+.reference-card-schema {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 12px;
+}
+footer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 30px;
+  flex-shrink: 0;
+  padding: 0 16px;
+  border-top: 1px solid var(--border-default);
+  background: var(--surface-shell);
+  font-size: 11px;
+}
+#state[data-state='ready'] {
+  color: var(--status-success);
+}
+#state[data-state='dirty'],
+#state[data-state='unsupported'] {
+  color: var(--status-degraded);
+}
+.footer-language {
+  margin-left: auto;
+  color: var(--text-subtle);
+}
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: minmax(0, 1fr) 235px;
+  }
+  .file-folder {
+    display: none;
+  }
+  aside {
+    padding: 12px;
+  }
+  .app-header,
+  .toolbar {
+    padding: 0 12px;
+  }
+}
+@media (max-width: 640px) {
+  main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  aside {
+    display: none;
+  }
+  aside:has(#close-details:not([hidden])) {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 94px;
+    bottom: 30px;
+    width: min(290px, 90vw);
+    z-index: 10;
+  }
+  .lab-badge {
+    font-size: 10px;
+  }
+  .actions label {
+    font-size: 11px;
+  }
+}
