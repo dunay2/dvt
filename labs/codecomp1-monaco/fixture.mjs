@@ -40,7 +40,9 @@ export const fixture = {
       startOffset: firstOffset,
       endOffset: firstOffset + firstSource.length,
       referenceSource: firstSource,
-      inputs: [{ name: 'Clientes', columns: customerColumns }],
+      inputs: [
+        { name: 'Clientes', columns: [...customerColumns, { name: 'activo', type: 'boolean' }] },
+      ],
       output: { name: 'ClientesActivos', columns: customerColumns },
       definition: 'SELECT cliente_id, nombre\nFROM Clientes\nWHERE activo = TRUE;',
     },
@@ -51,7 +53,7 @@ export const fixture = {
       startOffset: secondOffset,
       endOffset: secondOffset + secondSource.length,
       referenceSource: secondSource,
-      inputs: [{ name: 'Pedidos', columns: orderColumns }],
+      inputs: [{ name: 'Pedidos', columns: [...orderColumns, { name: 'fecha', type: 'date' }] }],
       output: { name: 'PedidosRecientes', columns: orderColumns },
       definition:
         "SELECT pedido_id, cliente_id, importe\nFROM Pedidos\nWHERE fecha >= DATE '2026-10-01';",
