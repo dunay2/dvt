@@ -1,5 +1,6 @@
 /** Owned concern: adapt a DBT project-file code target to the Canvas shell workbench contract. */
 import type { RefObject } from 'react';
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
 
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasShellContextualWorkbench } from './canvasShell.types';
@@ -25,6 +26,7 @@ export function buildDbtProjectFileCodeWorkbench({
   initialPath,
   fileSelectionRequest,
   open,
+  dbtProject,
 }: Readonly<{
   copy: DbtProjectFileCodeWorkbenchCopy;
   workbenchRef: RefObject<SqlContextWorkbenchHandle>;
@@ -36,6 +38,7 @@ export function buildDbtProjectFileCodeWorkbench({
   initialPath?: string;
   fileSelectionRequest?: SqlContextWorkbenchProps['fileSelectionRequest'];
   open: boolean;
+  dbtProject?: DbtProjectGraphProjection;
 }>): CanvasShellContextualWorkbench | undefined {
   if (!open) {
     return undefined;
@@ -65,6 +68,7 @@ export function buildDbtProjectFileCodeWorkbench({
         initialPath={initialPath}
         fileSelectionRequest={fileSelectionRequest}
         reconcilePersistedFile={reconcilePersistedFile}
+        dbtProject={dbtProject}
       />
     ),
   };

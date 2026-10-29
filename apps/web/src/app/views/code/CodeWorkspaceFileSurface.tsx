@@ -5,6 +5,7 @@ import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
 import { monacoVisualClasses } from '../../components/monaco/monacoVisualTokens';
 import { cn } from '../../components/ui/utils';
 import type { CodeWorkspaceFileEditPosture } from './codeWorkspaceFileEditPosture';
+import type { MonacoInlineReferences } from '../../components/monaco/monacoInlineReferences';
 
 type CodeWorkspaceFileSurfaceProps = Readonly<{
   ariaLabel: string;
@@ -14,6 +15,8 @@ type CodeWorkspaceFileSurfaceProps = Readonly<{
   posture: CodeWorkspaceFileEditPosture;
   value: string;
   fillAvailableSpace?: boolean;
+  inlineReferences?: MonacoInlineReferences;
+  onInspectReference?: (id: string) => void;
 }>;
 
 export function CodeWorkspaceFileSurface({
@@ -24,6 +27,8 @@ export function CodeWorkspaceFileSurface({
   posture,
   value,
   fillAvailableSpace = false,
+  inlineReferences,
+  onInspectReference,
 }: CodeWorkspaceFileSurfaceProps) {
   const containerClassName = fillAvailableSpace
     ? cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill, 'rounded-none border-0')
@@ -37,6 +42,8 @@ export function CodeWorkspaceFileSurface({
         loadingLabel={loadingLabel}
         path={file.path}
         value={value}
+        inlineReferences={inlineReferences}
+        onInspectReference={onInspectReference}
       />
     );
   }
@@ -50,6 +57,8 @@ export function CodeWorkspaceFileSurface({
       onChange={onChange}
       path={file.path}
       value={value}
+      inlineReferences={inlineReferences}
+      onInspectReference={onInspectReference}
     />
   );
 }

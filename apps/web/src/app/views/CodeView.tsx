@@ -1,5 +1,6 @@
 /** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
 import { FileCode2, PanelRight } from 'lucide-react';
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
 import {
   forwardRef,
   useCallback,
@@ -33,7 +34,9 @@ import {
   CodeRouteErrorStateView,
   CodeRouteLoadingStateView,
 } from './code/CodeStateViews';
-import { resolveCodeViewCopy } from './code/codeViewCopy';
+import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './code/codeViewCopy';
+import { CodeReferenceDetails } from './code/CodeReferenceDetails';
+import type { CodeInlineReferenceDetail } from './code/codeInlineReferences';
 import { CodeFileHistoryPanel } from './code/CodeFileHistoryPanel';
 import {
   hasCodeWorkspaceFilePath,
@@ -75,6 +78,7 @@ export type CodeViewProps = Readonly<{
   initialPath?: string;
   fileSelectionRequest?: Readonly<{ path: string }>;
   presentation?: 'default' | 'project-workspace';
+  dbtProject?: DbtProjectGraphProjection;
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -88,14 +92,29 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     initialPath,
     fileSelectionRequest,
     presentation = 'default',
+    dbtProject,
     reconcilePersistedFile,
   }: CodeViewProps = {},
   ref
 ) {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCodeViewCopy(applicationLanguage);
+  const inlineCopy = resolveCodeInlineReferenceCopy(applicationLanguage);
   const isProjectWorkspace = presentation === 'project-workspace';
   const [propertiesOpen, setPropertiesOpen] = useState(true);
+  const [inspectedReference, setInspectedReference] = useState<CodeInlineReferenceDetail>();
+  const referenceOpener = useRef<HTMLElement | null>(null);
+  const inspectReference = useCallback((reference: CodeInlineReferenceDetail | undefined) => {
+    if (reference != null) {
+      referenceOpener.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    }
+    setInspectedReference(reference);
+  }, []);
+  const closeReference = useCallback(() => {
+    setInspectedReference(undefined);
+    if (referenceOpener.current?.isConnected) referenceOpener.current.focus();
+  }, []);
   const propertiesId = useId();
   const isDbtProjectFiles = fileScope?.kind === 'dbt-project-files';
   const preferredPath =
@@ -305,37 +324,47 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
               aria-label={copy.filePropertiesTitle}
               className="flex h-full flex-col border-l border-(--border-default)"
             >
-              <h2 className={routeWorkbenchPanelHeaderClassName}>{copy.filePropertiesTitle}</h2>
-              <div className="min-h-0 flex-1 overflow-auto p-3">
-                {filePropertiesMessage != null ? (
-                  <p
-                    role={filePropertiesMessage.error ? 'alert' : undefined}
-                    className="text-xs text-(--text-muted)"
-                  >
-                    {filePropertiesMessage.text}
-                  </p>
-                ) : selectedFile != null ? (
-                  <NodePropertyFacts
-                    rows={[
-                      { label: copy.name, value: selectedFile.name },
-                      { label: copy.path, value: selectedFile.path },
-                      { label: copy.language, value: selectedFile.language },
-                      ...(loadedModifiedAt == null
-                        ? []
-                        : [
-                            {
-                              label: copy.loadedVersionModified,
-                              value: (
-                                <time dateTime={selectedFile.lastModified}>
-                                  {loadedModifiedAt.toLocaleString(applicationLanguage)}
-                                </time>
-                              ),
-                            },
-                          ]),
-                    ]}
-                  />
-                ) : null}
-              </div>
+              {inspectedReference != null ? (
+                <CodeReferenceDetails
+                  reference={inspectedReference}
+                  copy={inlineCopy}
+                  onClose={closeReference}
+                />
+              ) : (
+                <>
+                  <h2 className={routeWorkbenchPanelHeaderClassName}>{copy.filePropertiesTitle}</h2>
+                  <div className="min-h-0 flex-1 overflow-auto p-3">
+                    {filePropertiesMessage != null ? (
+                      <p
+                        role={filePropertiesMessage.error ? 'alert' : undefined}
+                        className="text-xs text-(--text-muted)"
+                      >
+                        {filePropertiesMessage.text}
+                      </p>
+                    ) : selectedFile != null ? (
+                      <NodePropertyFacts
+                        rows={[
+                          { label: copy.name, value: selectedFile.name },
+                          { label: copy.path, value: selectedFile.path },
+                          { label: copy.language, value: selectedFile.language },
+                          ...(loadedModifiedAt == null
+                            ? []
+                            : [
+                                {
+                                  label: copy.loadedVersionModified,
+                                  value: (
+                                    <time dateTime={selectedFile.lastModified}>
+                                      {loadedModifiedAt.toLocaleString(applicationLanguage)}
+                                    </time>
+                                  ),
+                                },
+                              ]),
+                        ]}
+                      />
+                    ) : null}
+                  </div>
+                </>
+              )}
             </section>
           ) : undefined
         ) : publishRouteBootstrap ? (
@@ -362,7 +391,10 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
                   title={copy.filePropertiesTitle}
                   aria-expanded={propertiesOpen}
                   aria-controls={propertiesId}
-                  onClick={() => setPropertiesOpen((current) => !current)}
+                  onClick={() => {
+                    setInspectedReference(undefined);
+                    setPropertiesOpen((current) => !current);
+                  }}
                 >
                   <PanelRight aria-hidden="true" />
                 </Button>
@@ -373,6 +405,8 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
             path={resolvedPath}
             reconcilePersistedFile={reconcilePersistedFile}
             onPersistenceRecovered={persistPendingFileSelection}
+            dbtProject={dbtProject}
+            onInspectReference={isProjectWorkspace && propertiesOpen ? inspectReference : undefined}
           />
         ),
       }}

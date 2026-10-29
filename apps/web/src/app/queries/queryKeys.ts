@@ -41,6 +41,26 @@ export const queryKeys = {
         projectRoot,
       ] as const,
     dbtProjectGraphRoot: () => ['workspace', 'dbt-project-graph'] as const,
+    dbtSelectedModelAnalysis: (
+      tenantId: string,
+      projectId: string,
+      environmentId: string,
+      canvasId: string | undefined,
+      projectRoot: string | undefined,
+      selectedUniqueId: string | undefined,
+      revisionToken: string | undefined
+    ) =>
+      [
+        'workspace',
+        'dbt-selected-model-analysis',
+        tenantId,
+        projectId,
+        environmentId,
+        canvasId,
+        projectRoot,
+        selectedUniqueId,
+        revisionToken,
+      ] as const,
     diffChanges: (workspaceLayoutKey: string) =>
       ['workspace', 'diff-changes', workspaceLayoutKey] as const,
     plugins: (workspaceLayoutKey: string) => ['workspace', 'plugins', workspaceLayoutKey] as const,

@@ -1,9 +1,13 @@
 /** Owned concern: bind Monaco Editor as the shared code surface for viewer and local editor modes. */
 import Editor, { useMonaco } from '@monaco-editor/react';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { editor } from 'monaco-editor';
 
 import type { MonacoCodeDiagnostic, MonacoCodeEditorMount } from './MonacoCodeEditor';
+import {
+  attachMonacoInlineReferences,
+  type MonacoInlineReferences,
+} from './monacoInlineReferences';
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
 import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
 import {
@@ -22,9 +26,12 @@ export type MonacoCodeSurfaceProps = Readonly<{
   value: string;
   diagnostics?: readonly MonacoCodeDiagnostic[];
   onMount?: MonacoCodeEditorMount;
+  inlineReferences?: MonacoInlineReferences;
+  onInspectReference?: (id: string) => void;
 }>;
 
 configureMonacoLocalWorkers();
+const EMPTY_DIAGNOSTICS: readonly MonacoCodeDiagnostic[] = [];
 
 export default function MonacoCodeSurface({
   ariaLabel,
@@ -34,11 +41,38 @@ export default function MonacoCodeSurface({
   path,
   readOnly = true,
   value,
-  diagnostics = [],
+  diagnostics = EMPTY_DIAGNOSTICS,
   onMount,
+  inlineReferences,
+  onInspectReference,
 }: MonacoCodeSurfaceProps) {
   const isReadOnly = readOnly;
   const monaco = useMonaco();
+  const [mounted, setMounted] = useState<Readonly<{
+    instance: editor.IStandaloneCodeEditor;
+    api: typeof import('monaco-editor');
+  }> | null>(null);
+  const inspectRef = useRef(onInspectReference);
+  useEffect(() => {
+    inspectRef.current = onInspectReference;
+  }, [onInspectReference]);
+  const inspectReference = useCallback((id: string) => inspectRef.current?.(id), []);
+  const mountSurface = useCallback<MonacoCodeEditorMount>(
+    (instance, api) => {
+      setMounted({ instance, api });
+      if (!isReadOnly) onMount?.(instance, api);
+    },
+    [isReadOnly, onMount]
+  );
+  useEffect(() => {
+    if (mounted === null || inlineReferences === undefined) return;
+    return attachMonacoInlineReferences(
+      mounted.instance,
+      mounted.api,
+      inlineReferences,
+      inspectReference
+    ).dispose;
+  }, [inlineReferences, inspectReference, mounted]);
 
   useEffect(() => {
     if (monaco == null || path == null) return;
@@ -88,7 +122,7 @@ export default function MonacoCodeSurface({
     >
       <Editor
         beforeMount={configureMonacoVisualTheme}
-        onMount={isReadOnly ? undefined : onMount}
+        onMount={mountSurface}
         height="100%"
         language={language}
         onChange={

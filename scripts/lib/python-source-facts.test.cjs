@@ -72,6 +72,32 @@ test('assigned lambdas retain actual callable identity without inventing declara
   assert.equal(facts.declarations[0].signature, 'read = lambda value:');
 });
 
+test('larger valid modules retain every qualified declaration and source range', () => {
+  const definitions = Array.from({ length: 200 }, (_, index) =>
+    [
+      `def project_${index}(record):`,
+      '    order_id = record["order_id"]',
+      `    return {"order_id": order_id, "value": record.get("value_${index}")}`,
+    ].join('\n')
+  );
+  const content = 'from typing import Any\n\n' + definitions.join('\n\n') + '\n';
+  const facts = readPythonSourceCodeFacts({ path: 'scripts/projections.py', content });
+  const functions = facts.declarations.filter((fact) => fact.kind === 'function');
+  assert.equal(facts.declarations.length, definitions.length * 2);
+  assert.deepEqual(facts.importRefs, ['typing']);
+  assert.deepEqual(
+    functions.map((fact) => fact.qualifiedName),
+    definitions.map((_, index) => `project_${index}`)
+  );
+  for (const [index, fact] of functions.entries()) {
+    assert.equal(fact.implemented, true);
+    assert.equal(fact.topLevel, true);
+    assert.equal(content.slice(fact.start, fact.end), definitions[index]);
+    assert.equal(fact.startLine, 3 + index * 4);
+    assert.equal(fact.endLine, 5 + index * 4);
+  }
+});
+
 test('ambiguous implemented qualified names reject instead of certifying one body', () => {
   assert.throws(
     () =>

@@ -24,6 +24,7 @@ import type {
 } from '../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
+import type { IDbtSelectedModelAnalysisQueryPort } from '../ports/dbtSelectedModelAnalysis';
 import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
 import type { IDbtYamlDescriptionEditPort } from '../ports/dbtYamlDescriptionEdit';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
@@ -68,6 +69,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.graphDbtModelCompilationQuery,
       overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.dbtProjectGraphQueryPort,
+      overrides?.dbtSelectedModelAnalysisQueryPort,
       overrides?.dbtProjectImportPort,
       overrides?.dbtYamlDescriptionEditPort,
       overrides?.capabilitiesPort,
@@ -147,6 +149,10 @@ export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAutho
 
 export function useDbtProjectGraphQueryPort(): IDbtProjectGraphQueryPort {
   return useRequiredAppServicesContext().dbtProjectGraphQueryPort;
+}
+
+export function useDbtSelectedModelAnalysisQueryPort(): IDbtSelectedModelAnalysisQueryPort {
+  return useRequiredAppServicesContext().dbtSelectedModelAnalysisQueryPort;
 }
 
 export function useDbtProjectImportPort(): IDbtProjectImportPort {
