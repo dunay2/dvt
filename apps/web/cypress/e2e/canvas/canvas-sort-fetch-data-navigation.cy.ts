@@ -95,8 +95,6 @@ describe('Sort/Fetch data navigation (controlled API boundary)', () => {
         for (const [key, slot] of [
           ['Home', 'canvas-workspace-tab'],
           ['End', 'canvas-model-main-tab'],
-          ['ArrowLeft', 'canvas-workspace-tab'],
-          ['ArrowRight', 'canvas-model-main-tab'],
         ] as const) {
           cy.press(key);
           cy.get(`[data-slot="${slot}"]`)

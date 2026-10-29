@@ -160,69 +160,41 @@ async function main() {
     return;
   }
 
-  const result =
-    command.kind === 'docs_disposition_resolve'
-      ? await applyDocsResolutionOperation(command)
-      : command.kind === 'architecture_design_create'
-        ? await applyArchitectureDesignCreateOperation(command)
-        : command.kind === 'architecture_design_transition'
-          ? await applyArchitectureDesignTransitionOperation(command)
-          : command.kind === 'architecture_component_record'
-            ? await applyArchitectureComponentRecordOperation(command)
-            : command.kind === 'architecture_component_responsibility_retire'
-              ? await applyArchitectureComponentResponsibilityRetireOperation(command)
-              : command.kind === 'architecture_relation_record'
-                ? await applyArchitectureRelationRecordOperation(command)
-                : command.kind === 'architecture_contract_record'
-                  ? await applyArchitectureContractRecordOperation(command)
-                  : command.kind === 'architecture_port_record'
-                    ? await applyArchitecturePortRecordOperation(command)
-                    : command.kind === 'architecture_storage_io_record'
-                      ? await applyArchitectureStorageIoRecordOperation(command)
-                      : command.kind === 'architecture_fitness_scan'
-                        ? await applyArchitectureFitnessScanOperation(command)
-                        : command.kind === 'architecture_test_record'
-                          ? await applyArchitectureTestRecordOperation(command)
-                          : command.kind === 'architecture_test_retire'
-                            ? await applyArchitectureTestRetireOperation(command)
-                            : command.kind === 'architecture_observability_record'
-                              ? await applyArchitectureObservabilityRecordOperation(command)
-                              : command.kind === 'architecture_evidence_record'
-                                ? await applyArchitectureEvidenceRecordOperation(command)
-                                : command.kind === 'architecture_evidence_retire'
-                                  ? await applyArchitectureEvidenceRetireOperation(command)
-                                  : command.kind === 'component_create'
-                                    ? await applyComponentCreateOperation(command)
-                                    : command.kind === 'component_revise'
-                                      ? await applyComponentReviseOperation(command)
-                                      : command.kind === 'component_reparent'
-                                        ? await applyComponentReparentOperation(command)
-                                        : command.kind === 'db_surface_upsert'
-                                          ? await applyDbSurfaceUpsertOperation(command)
-                                          : command.kind === 'feature_mechanization_rail_record'
-                                            ? await applyFeatureMechanizationRailRecordOperation(
-                                                command
-                                              )
-                                            : command.kind === 'feature_mechanization_rail_retire'
-                                              ? await applyFeatureMechanizationRailRetireOperation(
-                                                  command
-                                                )
-                                              : command.kind === 'governance_refresh_run_record'
-                                                ? await applyGovernanceRefreshRunRecordOperation(
-                                                    command
-                                                  )
-                                                : command.kind === 'governed_source_content_refresh'
-                                                  ? await applyGovernedSourceRefreshOperation(
-                                                      command
-                                                    )
-                                                  : command.kind.startsWith('fowler_analysis_')
-                                                    ? await applyFowlerAnalysisOperation(command)
-                                                    : (() => {
-                                                        throw new Error(
-                                                          `Unsupported planning DB operation "${command.kind}".`
-                                                        );
-                                                      })();
-  printOperationResult(result);
+  const operations = new Map([
+    ['docs_disposition_resolve', applyDocsResolutionOperation],
+    ['architecture_design_create', applyArchitectureDesignCreateOperation],
+    ['architecture_design_transition', applyArchitectureDesignTransitionOperation],
+    ['architecture_component_record', applyArchitectureComponentRecordOperation],
+    [
+      'architecture_component_responsibility_retire',
+      applyArchitectureComponentResponsibilityRetireOperation,
+    ],
+    ['architecture_relation_record', applyArchitectureRelationRecordOperation],
+    ['architecture_contract_record', applyArchitectureContractRecordOperation],
+    ['architecture_port_record', applyArchitecturePortRecordOperation],
+    ['architecture_storage_io_record', applyArchitectureStorageIoRecordOperation],
+    ['architecture_fitness_scan', applyArchitectureFitnessScanOperation],
+    ['architecture_test_record', applyArchitectureTestRecordOperation],
+    ['architecture_test_retire', applyArchitectureTestRetireOperation],
+    ['architecture_observability_record', applyArchitectureObservabilityRecordOperation],
+    ['architecture_evidence_record', applyArchitectureEvidenceRecordOperation],
+    ['architecture_evidence_retire', applyArchitectureEvidenceRetireOperation],
+    ['component_create', applyComponentCreateOperation],
+    ['component_revise', applyComponentReviseOperation],
+    ['component_reparent', applyComponentReparentOperation],
+    ['db_surface_upsert', applyDbSurfaceUpsertOperation],
+    ['feature_mechanization_rail_record', applyFeatureMechanizationRailRecordOperation],
+    ['feature_mechanization_rail_retire', applyFeatureMechanizationRailRetireOperation],
+    ['governance_refresh_run_record', applyGovernanceRefreshRunRecordOperation],
+    ['governed_source_content_refresh', applyGovernedSourceRefreshOperation],
+  ]);
+  const apply =
+    operations.get(command.kind) ??
+    (command.kind.startsWith('fowler_analysis_') ? applyFowlerAnalysisOperation : null);
+  if (apply == null) {
+    throw new Error(`Unsupported planning DB operation "${command.kind}".`);
+  }
+  printOperationResult(await apply(command));
 }
 
 if (require.main === module) {

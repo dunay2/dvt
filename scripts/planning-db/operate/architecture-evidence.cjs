@@ -13,6 +13,7 @@ const {
   parseFlagOptions,
   requireOption,
   toIso,
+  validateComponentId,
   validateSha256,
 } = require('./command-values.cjs');
 
@@ -30,7 +31,6 @@ const {
 const {
   normalizeArchitectureComponent,
   readArchitectureComponent,
-  validateArchitectureComponentId,
 } = require('./architecture-component-profile.cjs');
 
 const { defaultIdempotencyKey } = require('./operation-payload.cjs');
@@ -280,10 +280,7 @@ function parseArchitectureEvidenceCommand(action, args) {
       kind: 'architecture_test_retire',
       designId: validateArchitectureDesignId(requireOption(options, 'design')),
       testId: validateArchitectureTestId(requireOption(options, 'test')),
-      componentId: validateArchitectureComponentId(
-        requireOption(options, 'component'),
-        'component'
-      ),
+      componentId: validateComponentId(requireOption(options, 'component'), 'component'),
       reason: requireOption(options, 'reason'),
       sourceRef: requireOption(options, 'sourceRef'),
       sourceContentSha256: validateSha256(
@@ -342,10 +339,7 @@ function parseArchitectureEvidenceCommand(action, args) {
       kind: 'architecture_observability_record',
       designId: validateArchitectureDesignId(requireOption(options, 'design')),
       observabilityId: validateArchitectureObservabilityId(requireOption(options, 'observability')),
-      componentId: validateArchitectureComponentId(
-        requireOption(options, 'component'),
-        'component'
-      ),
+      componentId: validateComponentId(requireOption(options, 'component'), 'component'),
       signalName: requireOption(options, 'signalName'),
       signalKind: validateArchitectureObservabilitySignalKind(requireOption(options, 'signalKind')),
       required: parseBooleanOption(options.required, 'required') ?? true,
@@ -373,7 +367,7 @@ function parseArchitectureEvidenceCommand(action, args) {
     kind: 'architecture_test_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
     testId: validateArchitectureTestId(requireOption(options, 'test')),
-    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    componentId: validateComponentId(requireOption(options, 'component'), 'component'),
     testPath: requireOption(options, 'testPath'),
     testKind: validateArchitectureTestKind(requireOption(options, 'testKind')),
     coverageLevel: validateArchitectureTestCoverageLevel(requireOption(options, 'coverageLevel')),

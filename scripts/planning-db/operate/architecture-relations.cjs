@@ -12,6 +12,7 @@ const {
   parseFlagOptions,
   requireOption,
   toIso,
+  validateComponentId,
   toJson,
   validateSha256,
 } = require('./command-values.cjs');
@@ -28,7 +29,6 @@ const {
 const {
   normalizeArchitectureComponent,
   readArchitectureComponent,
-  validateArchitectureComponentId,
 } = require('./architecture-component-profile.cjs');
 
 const { defaultIdempotencyKey } = require('./operation-payload.cjs');
@@ -163,8 +163,8 @@ function parseArchitectureRelationCommand(action, args) {
     kind: 'architecture_relation_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
     relationId: validateArchitectureRelationId(requireOption(options, 'relation')),
-    sourceComponentId: validateArchitectureComponentId(requireOption(options, 'source'), 'source'),
-    targetComponentId: validateArchitectureComponentId(requireOption(options, 'target'), 'target'),
+    sourceComponentId: validateComponentId(requireOption(options, 'source'), 'source'),
+    targetComponentId: validateComponentId(requireOption(options, 'target'), 'target'),
     relationType: validateArchitectureRelationType(requireOption(options, 'type')),
     direction: validateArchitectureRelationDirection(requireOption(options, 'direction')),
     syncAsync: validateArchitectureRelationSyncMode(requireOption(options, 'syncAsync')),

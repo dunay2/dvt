@@ -13,6 +13,7 @@ const {
   parseFlagOptions,
   requireOption,
   toIso,
+  validateComponentId,
   validateSha256,
 } = require('./command-values.cjs');
 
@@ -28,7 +29,6 @@ const {
 const {
   normalizeArchitectureComponent,
   readArchitectureComponent,
-  validateArchitectureComponentId,
 } = require('./architecture-component-profile.cjs');
 
 const { defaultIdempotencyKey } = require('./operation-payload.cjs');
@@ -251,7 +251,7 @@ function parseArchitectureContractCommand(action, args) {
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
     contractId: validateArchitectureContractId(requireOption(options, 'contract')),
     contractKind: validateArchitectureContractKind(requireOption(options, 'kind')),
-    ownerComponentId: validateArchitectureComponentId(
+    ownerComponentId: validateComponentId(
       requireOption(options, 'ownerComponent'),
       'owner-component'
     ),
@@ -318,7 +318,7 @@ function parseArchitecturePortCommand(action, args) {
     kind: 'architecture_port_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
     portId: validateArchitecturePortId(requireOption(options, 'port')),
-    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    componentId: validateComponentId(requireOption(options, 'component'), 'component'),
     portName: requireOption(options, 'name'),
     portKind: validateArchitecturePortKind(requireOption(options, 'kind')),
     direction: validateArchitecturePortDirection(requireOption(options, 'direction')),
@@ -370,7 +370,7 @@ function parseArchitectureStorageIoCommand(action, args) {
     kind: 'architecture_storage_io_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
     storageIoId: validateArchitectureStorageIoId(requireOption(options, 'storageIo')),
-    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    componentId: validateComponentId(requireOption(options, 'component'), 'component'),
     expectedStorageObject: requireOption(options, 'expectedStorageObject'),
     storageObject: requireOption(options, 'storageObject'),
     direction: validateArchitectureStorageIoDirection(requireOption(options, 'direction')),

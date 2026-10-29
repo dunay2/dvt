@@ -2,7 +2,7 @@
 title: Component Engineering Record Component
 status: Review
 owner: Engineering / CI Governance / Architecture
-last_reviewed: 2026-10-27
+last_reviewed: 2026-10-29
 planning_type: architecture
 ---
 
