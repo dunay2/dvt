@@ -66,6 +66,26 @@ function fuse(selectNode: PostgresAstNode): PostgresAstNode | null {
   if (inner == null || !isSimpleSelect(inner, INNER_KEYS)) return null;
   if ((inner.fromClause as unknown[]).length === 0) return null;
 
+  // Rebinding an inner alias with the same name as the removed outer alias
+  // could capture references that originally belonged to the outer scope.
+  const aliases = new Set<string>();
+  const collectAliases = (value: unknown): boolean => {
+    const node = object(value);
+    if (node == null) return false;
+    const join = object(node.JoinExpr);
+    if (join != null) return collectAliases(join.larg) && collectAliases(join.rarg);
+    const range = object(node.RangeVar) ?? object(node.RangeSubselect);
+    if (range == null) return false;
+    const rangeAlias = object(range.alias)?.aliasname;
+    const implicitName = object(node.RangeVar)?.relname;
+    const name = typeof rangeAlias === 'string' ? rangeAlias : implicitName;
+    if (typeof name !== 'string' || aliases.has(name)) return false;
+    aliases.add(name);
+    return true;
+  };
+  if (!(inner.fromClause as unknown[]).every(collectAliases) || aliases.has(alias))
+    return null;
+
   const bindings = new Map<string, unknown>();
   for (const entry of inner.targetList as unknown[]) {
     const target = object(object(entry)?.ResTarget);
