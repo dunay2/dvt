@@ -21,6 +21,7 @@ export type ProtectedWorkspaceFilesRouteGroupOptions = {
   readonly env: Env;
   readonly runtimeAuth: RuntimeAuth;
   readonly workspaceFilesRoot: string;
+  readonly canvasAuthoringAuthorityPolicy: ProtectedRuntimeModule['canvasAuthoringAuthorityPolicy'];
 };
 
 export function registerProtectedWorkspaceFilesRouteGroup(
@@ -33,7 +34,10 @@ export function registerProtectedWorkspaceFilesRouteGroup(
 
   registerWorkspaceFilesRoutes(app, {
     ...options.runtimeAuth,
-    getUseCase: new GetWorkspaceFileContentUseCase(repository),
+    getUseCase: new GetWorkspaceFileContentUseCase(
+      repository,
+      options.canvasAuthoringAuthorityPolicy
+    ),
     listUseCase: new ListWorkspaceFilesUseCase(repository),
     saveUseCase: new SaveWorkspaceFileContentUseCase(repository),
     rateLimit: {

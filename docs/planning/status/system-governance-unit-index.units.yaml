@@ -155,42 +155,67 @@ units:
       - coverage refinement
   - id: SYS-API-APPLICATION-PORTS
     name: API application ports
-    parent: SYS-API-ROOT
-    level: component
-    status: coverage-required
     owns:
       - apps/api/src/application/ports/**
-    childrenRequired: false
-    dddOwner: PORT
+    level: component
+    parent: SYS-API-ROOT
+    status: coverage-required
     cqRails: API application command/query ports
+    dddOwner: PORT
+    excludes:
+      - apps/api/src/application/ports/canvasAuthoringAuthority.ts
+    nonGoals: []
+    consumers: []
+    publicApi: []
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
+    invariants: []
+    transitions: []
+    ownedConcern: >-
+      Fallback physical ownership of API application ports files not delegated to bounded child
+      definitions; coverage-required is not a claim of cohesive implementation or SRP closure.
     fowlerSignals:
       - coverage refinement
+    reasonsToChange: []
+    childrenRequired: false
+    responsibilities: []
   - id: SYS-API-APPLICATION-SERVICES
     name: API application services and use cases
-    parent: SYS-API-ROOT
-    level: component
-    status: coverage-required
     owns:
       - apps/api/src/application/services/**
+    level: component
+    parent: SYS-API-ROOT
+    status: coverage-required
+    cqRails: API application commands and queries
+    dddOwner: AS
     excludes:
       - apps/api/src/application/services/StoredExecutablePlanResolver.ts
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/src/application/services/WorkflowEngineFactory.ts
-    childrenRequired: false
-    dddOwner: AS
-    cqRails: API application commands and queries
+      - apps/api/src/application/services/getWorkspaceFileContentUseCase.ts
+      - apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts
+    nonGoals: []
+    consumers: []
+    publicApi: []
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/command-query-rail-governance.md
       - docs/planning/status/system-operations-inventory-20260501.md
+    invariants: []
+    transitions: []
+    ownedConcern: >-
+      Fallback physical ownership of API application services and use cases files not delegated to
+      bounded child definitions; coverage-required is not a claim of cohesive implementation or SRP
+      closure.
     fowlerSignals:
       - coverage refinement
+    reasonsToChange: []
+    childrenRequired: false
+    responsibilities: []
   - id: SYS-API-BOOTSTRAP
     name: API bootstrap and composition entry
     parent: SYS-API-ROOT
@@ -287,28 +312,37 @@ units:
       - coverage refinement
   - id: SYS-API-INFRASTRUCTURE
     name: API infrastructure adapters
-    parent: SYS-API-ROOT
-    level: component
-    status: coverage-required
-    ownedConcern:
-      Owns API infrastructure adapters and plugin composition not delegated to narrower components.
     owns:
       - apps/api/src/db/**
       - apps/api/src/infrastructure/**
       - apps/api/src/plugins/**
+    level: component
+    parent: SYS-API-ROOT
+    status: coverage-required
+    cqRails: API adapter-backed command/query support
+    dddOwner: ADP
     excludes:
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
-    childrenRequired: false
-    dddOwner: ADP
-    cqRails: API adapter-backed command/query support
+      - >-
+        apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
+    nonGoals: []
+    consumers: []
+    publicApi: []
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/architecture/reference-architecture.md
       - docs/planning/status/system-operations-inventory-20260501.md
+    invariants: []
+    transitions: []
+    ownedConcern:
+      Owns API infrastructure adapters and plugin composition not delegated to narrower components.
     fowlerSignals:
       - coverage refinement
+    reasonsToChange: []
+    childrenRequired: false
+    responsibilities: []
   - id: SYS-API-OPS-HEALTH
     name: API operational health and readiness routes
     parent: SYS-API-OPS-ROUTES
@@ -372,21 +406,33 @@ units:
       - docs/planning/status/system-operations-inventory-20260501.md
   - id: SYS-API-RUNTIME-COMPOSITION
     name: API runtime composition modules
-    parent: SYS-API-ROOT
-    level: component
-    status: coverage-required
     owns:
       - apps/api/src/modules/**
       - apps/api/src/runtime/**
-    childrenRequired: false
-    dddOwner: AS
+    level: component
+    parent: SYS-API-ROOT
+    status: coverage-required
     cqRails: API runtime composition commands and queries
+    dddOwner: AS
+    excludes:
+      - apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts
+    nonGoals: []
+    consumers: []
+    publicApi: []
     governance:
       - >-
         docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/planning/status/system-operations-inventory-20260501.md
+    invariants: []
+    transitions: []
+    ownedConcern: >-
+      Fallback physical ownership of API runtime composition modules files not delegated to bounded
+      child definitions; coverage-required is not a claim of cohesive implementation or SRP closure.
     fowlerSignals:
       - coverage refinement
+    reasonsToChange: []
+    childrenRequired: false
+    responsibilities: []
   - id: SYS-API-TESTS
     name: API app, integration, module, infrastructure, and fixture tests
     parent: SYS-API-ROOT
@@ -1557,34 +1603,6 @@ units:
       - docs/planning/proposals/web-user-stories-20260429.md
   - id: SYS-WEB-CODE-WORKSPACE-FILES
     name: Code Workbench Workspace Files
-    parent: SYS-WEB-ROOT
-    level: component
-    status: review
-    ownedConcern: >-
-      Present one accepted scoped file selection and revision-aware editor session, with passive
-      metadata and explicit default/project-workspace presentation.
-    responsibilities:
-      - >-
-        Coordinate accepted scoped file selection and passive metadata through the existing query
-        and flush guards.
-      - Present the actual revision-aware working-tree session through the shared editor.
-      - Project editable/view-only surface and localized Code presentation.
-      - >-
-        Admit revision-bound inline reference projections and inspect declared metadata without
-        parsing SQL or changing the active Code buffer.
-    nonGoals:
-      - >-
-        Consumes the protected query/command ports and working-tree sync; does not own transport
-        authorization, file storage, graph generation or repository Git. NodeWorkbench is a
-        shared-editor consumer association, not this owner.
-    reasonsToChange:
-      - >-
-        Requested-path membership, accepted selection, read currentness or metadata presentation
-        changes.
-      - >-
-        Buffer, revision, repair/navigation posture or delegated file synchronization presentation
-        changes.
-      - Monaco posture projection or EN/ES Code presentation copy changes.
     owns:
       - apps/web/src/app/views/CodeView.tsx
       - apps/web/src/app/views/canvas/SqlContextWorkbench.tsx
@@ -1596,11 +1614,21 @@ units:
       - apps/web/src/app/views/code/useCodeInlineReferences.ts
       - apps/web/src/app/views/code/CodeReferenceDetails.tsx
       - apps/web/src/app/views/code/CodeReferenceDetails.test.tsx
-    excludes: []
-    childrenRequired: false
-    dddOwner: CodeViewProps / FileContent / WorkspaceFileSaveReceipt
+      - apps/web/src/app/views/code/useCodeWorkspaceFileContext.ts
+      - apps/web/src/app/views/code/useCodeWorkspaceFileContext.test.tsx
+    level: component
+    parent: SYS-WEB-ROOT
+    status: review
     cqRails: >-
-      ListWorkspaceFiles;GetWorkspaceFileContent;SaveWorkspaceFileContent;GetWorkspaceFileHistory;AnalyzeSelectedDbtModel
+      ListWorkspaceFiles;GetWorkspaceFileContent;SaveWorkspaceFileContent;GetWorkspaceFileHistory;AnalyzeSelectedDbtModel;ProjectDbtGraphFromFiles
+    dddOwner: CodeViewProps / FileContent / WorkspaceFileSaveReceipt
+    excludes: []
+    nonGoals:
+      - >-
+        Consumes the protected query/command ports and working-tree sync; does not own transport
+        authorization, file storage, graph generation or repository Git. NodeWorkbench is a
+        shared-editor consumer association, not this owner.
+    consumers: []
     publicApi:
       - >-
         CodeViewProps.fileScope; CodeViewProps.fileSelectionRequest;
@@ -1608,16 +1636,43 @@ units:
       - >-
         resolveCodeSelectedModel; projectCodeInlineReferences; useCodeInlineReferences;
         CodeReferenceDetails
+      - >-
+        useCodeWorkspaceFileContext({file,project,allowed}): accepted project, context status and
+        existing persisted-file reconciliation callback.
+    governance:
+      - docs/architecture/components/web/code-workbench-workspace-files-component.md
+      - https://github.com/dunay2/dvt/issues/3749#issuecomment-6499489685
     invariants:
       - >-
         Preserve existing typed authority, scope and accepted-state guards; no new product API or
         filesystem-as-Git claim.
     transitions: []
-    consumers: []
-    governance:
-      - docs/architecture/components/web/code-workbench-workspace-files-component.md
-      - https://github.com/dunay2/dvt/issues/3749#issuecomment-6499489685
+    ownedConcern: >-
+      Present one accepted scoped file selection and revision-aware editor session, with passive
+      metadata and explicit default/project-workspace presentation.
     fowlerSignals: []
+    reasonsToChange:
+      - >-
+        Requested-path membership, accepted selection, read currentness or metadata presentation
+        changes.
+      - >-
+        Buffer, revision, repair/navigation posture or delegated file synchronization presentation
+        changes.
+      - Monaco posture projection or EN/ES Code presentation copy changes.
+    childrenRequired: false
+    responsibilities:
+      - >-
+        Coordinate accepted scoped file selection and passive metadata through the existing query
+        and flush guards.
+      - Present the actual revision-aware working-tree session through the shared editor.
+      - Project editable/view-only surface and localized Code presentation.
+      - >-
+        Admit revision-bound inline reference projections and inspect declared metadata without
+        parsing SQL or changing the active Code buffer.
+      - >-
+        Resolve server-confirmed file inspection context in the existing Code session and reuse
+        project graph/selected-model queries and persisted-file reconciliation independently of edit
+        posture.
   - id: SYS-WEB-DBT-PROJECT-FILES-AUTHORITY
     name: DBT project files authority presentation
     parent: SYS-WEB-ROOT
@@ -1807,12 +1862,38 @@ units:
     fowlerSignals: []
   - id: SYS-WEB-WORKSPACE-QUERY-ADAPTERS
     name: Workspace query adapters
-    parent: SYS-WEB-ROOT
+    owns:
+      - apps/web/src/app/queries/workspaceQueries.ts
+      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.ts
+      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.test.tsx
+      - apps/web/src/app/queries/dbtProjectQueries.ts
     level: component
+    parent: SYS-WEB-ROOT
     status: review
+    cqRails: ListWorkspaceFiles;AnalyzeSelectedDbtModel;ProjectDbtGraphFromFiles
+    dddOwner: Workspace read-port adapter
+    excludes: []
+    nonGoals:
+      - >-
+        No new product query/transport, no claim that ListWorkspaceFiles owns other hooks, no
+        whole-module coverage or execution PASS.
+    consumers:
+      - CanvasProjectFilesExplorer
+    publicApi:
+      - 'useWorkspaceFileTreeQuery(): existing scoped React Query WorkspaceFileTree observer'
+      - useDbtSelectedModelAnalysisQuery(binding, selectedUniqueId, {enabled, revisionToken})
+      - useDbtProjectGraphQuery(binding | undefined, {enabled,revisionToken})
+    governance: []
+    invariants:
+      - Provider retains authorization; query errors remain errors and no write is introduced.
+    transitions: []
     ownedConcern: >-
-      Bind existing minimal workspace read ports and active session scope to React Query
-      identities/results; selected file-tree coverage only is audited here.
+      Bind existing capability-specific workspace read ports and accepted session/binding/revision
+      identity to React Query; preserve absence, errors and scoped invalidation.
+    fowlerSignals: []
+    reasonsToChange:
+      - Workspace query-key scope and read-port adapter coordination.
+    childrenRequired: false
     responsibilities:
       - >-
         Adapt scoped workspace read-port query hooks without owning authorization, transport, file
@@ -1820,30 +1901,9 @@ units:
       - >-
         Adapt the existing selected-model analysis read port to accepted tenant/project/environment,
         Canvas/model and revision cache identity.
-    nonGoals:
       - >-
-        No new product query/transport, no claim that ListWorkspaceFiles owns other hooks, no
-        whole-module coverage or execution PASS.
-    reasonsToChange:
-      - Workspace query-key scope and read-port adapter coordination.
-    owns:
-      - apps/web/src/app/queries/workspaceQueries.ts
-      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.ts
-      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.test.tsx
-    excludes: []
-    childrenRequired: false
-    dddOwner: Workspace read-port adapter
-    cqRails: ListWorkspaceFiles;AnalyzeSelectedDbtModel
-    publicApi:
-      - 'useWorkspaceFileTreeQuery(): existing scoped React Query WorkspaceFileTree observer'
-      - useDbtSelectedModelAnalysisQuery(binding, selectedUniqueId, {enabled, revisionToken})
-    invariants:
-      - Provider retains authorization; query errors remain errors and no write is introduced.
-    transitions: []
-    consumers:
-      - CanvasProjectFilesExplorer
-    governance: []
-    fowlerSignals: []
+        Adapt ProjectDbtGraphFromFiles to an optional accepted binding and file revision key; absent
+        binding disables the query without sentinel IDs or roots.
   - id: SYS-WEB-CHROMIUM-DIAGNOSTICS
     name: Owned Chromium diagnostics
     parent: SYS-WEB-ROOT
@@ -1934,20 +1994,13 @@ units:
     fowlerSignals: []
   - id: SYS-WEB-ROOT
     name: Web root component
-    parent: SYS-WEB
-    level: component
-    status: coverage-required
     owns:
       - apps/web/**
-    childrenRequired: true
-    dddOwner: ENTRY
+    level: component
+    parent: SYS-WEB
+    status: coverage-required
     cqRails: UI actions and API queries
-    governance:
-      - >-
-        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
-    fowlerSignals:
-      - coverage refinement
-      - hidden authority
+    dddOwner: ENTRY
     excludes:
       - apps/web/src/app/components/monaco/MonacoCodeEditor.tsx
       - apps/web/src/app/components/monaco/MonacoCodeSurface.test.tsx
@@ -1984,10 +2037,27 @@ units:
       - apps/web/cypress/node/linuxChromiumProcessProtocol.py
       - apps/web/cypress/node/linuxChromiumSignalTrace.py
       - apps/web/cypress/node/linuxChromiumOomJournal.py
+      - apps/web/src/app/views/code/useCodeWorkspaceFileContext.ts
+      - apps/web/src/app/views/code/useCodeWorkspaceFileContext.test.tsx
+      - apps/web/src/app/queries/dbtProjectQueries.ts
+    nonGoals: []
+    consumers: []
+    publicApi: []
+    governance:
+      - >-
+        docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
+    invariants: []
+    transitions: []
     ownedConcern: >-
       Fallback physical ownership of Web paths until exact bounded child definitions assume them;
       coverage-required classification, not a claim of cohesive implementation or global SRP
       closure.
+    fowlerSignals:
+      - coverage refinement
+      - hidden authority
+    reasonsToChange: []
+    childrenRequired: true
+    responsibilities: []
   - id: SYS-WEB-MONACO-LAB
     name: Isolated mixed Monaco browser laboratory
     parent: SYS-WEB-ROOT
@@ -2041,3 +2111,123 @@ units:
       - docs/planning/status/system-operations-inventory-20260501.md
     fowlerSignals:
       - coverage refinement
+  - id: SYS-API-CANVAS-AUTHORING-AUTHORITY
+    name: Canvas persisted authoring authority
+    owns:
+      - apps/api/src/application/ports/canvasAuthoringAuthority.ts
+      - apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts
+      - >-
+        apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
+      - apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts
+    level: component
+    parent: SYS-API-APPLICATION-SERVICES
+    status: review
+    cqRails: GetWorkspaceFileContent;ProjectDbtGraphFromFiles;AnalyzeSelectedDbtModel
+    dddOwner: CanvasAuthoringAuthorityBinding
+    excludes: []
+    nonGoals:
+      - >-
+        No new query intent, endpoint, parser, persistence store, permissions or independent
+        save/reconciliation controller.
+    consumers:
+      - >-
+        GetWorkspaceFileContentUseCase; existing dbt import, ProjectDbtGraphFromFiles,
+        selected-model analysis and graph publication policies.
+    publicApi:
+      - >-
+        ICanvasAuthoringAuthorityStore.read/readFileAuthorityByProjectRoot/readFileAuthoritiesForPath/bind/release/withGraphArtifactPublicationLock;
+        CanvasAuthoringAuthorityPolicy.resolve/resolveFileContext;
+        buildCanvasAuthoringAuthorityRuntime
+    governance:
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6522037769
+    invariants:
+      - >-
+        A binding belongs to one tenant/project/environment/Canvas; no caller-derived project root
+        grants authority.
+      - >-
+        Declared root . is valid, empty/traversal/absolute roots are invalid; directory membership
+        is literal and bounded, not LIKE wildcard matching.
+      - >-
+        Zero matches, two matches including nested roots, revocation, mixed graph/file authority or
+        changed binding cannot yield a resolved inspection context.
+      - Existing write transactions, locks and idempotency remain owned by the same store.
+    transitions:
+      - >-
+        Persisted scoped bindings -> LIMIT 2 candidates by declared-root membership -> unique
+        candidate -> existing resolve policy -> exact same binding or unresolved.
+      - >-
+        Existing bind/release and graph-artifact publication retain their original transactional
+        transitions.
+    ownedConcern: >-
+      Resolve and persist the existing mutually exclusive graph/file Canvas authority, including
+      bounded read-only ownership discovery for a workspace file from declared roots in its scope.
+    fowlerSignals:
+      - >-
+        Hidden authority is explicit; shared DTO and HTTP composition remain collaborators rather
+        than falsely cohesive owned files.
+    reasonsToChange:
+      - >-
+        Resolve and persist the existing mutually exclusive graph/file Canvas authority, including
+        bounded read-only ownership discovery for a workspace file from declared roots in its scope.
+    childrenRequired: false
+    responsibilities:
+      - >-
+        Own the existing authority key/record/store contract, binding/release locks and idempotency,
+        PostgreSQL adapter and production composition.
+      - >-
+        Resolve file inspection from at most two persisted matching roots, then revalidate the sole
+        binding and graph conflict through the existing policy.
+  - id: SYS-API-WORKSPACE-FILE-CONTENT
+    name: Workspace file content query
+    owns:
+      - apps/api/src/application/services/getWorkspaceFileContentUseCase.ts
+    level: component
+    parent: SYS-API-APPLICATION-SERVICES
+    status: review
+    cqRails: GetWorkspaceFileContent;ProjectDbtGraphFromFiles;AnalyzeSelectedDbtModel
+    dddOwner: WorkspaceFileContent
+    excludes: []
+    nonGoals:
+      - >-
+        No new query intent, endpoint, parser, persistence store, permissions or independent
+        save/reconciliation controller.
+    consumers:
+      - >-
+        Protected workspaceFilesRoutes/get use case and its existing route-group composition; Code
+        project file inspection and read-only reference details.
+    publicApi:
+      - >-
+        GetWorkspaceFileContentUseCase.execute(scope, path): Promise<WorkspaceFileContent>;
+        WorkspaceFileContent.authoringAuthority?: CanvasAuthoringAuthorityResolution
+    governance:
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6522037769
+    invariants:
+      - >-
+        Tenant/project/environment and accepted file path remain the existing authorized query
+        scope.
+      - >-
+        Inspection context cannot authorize a file write, invent a binding, parse SQL or replace
+        revision CAS.
+    transitions:
+      - >-
+        Authorized path -> repository file content -> policy context resolution -> existing content
+        read model; repository/authority failures remain failures.
+    ownedConcern: >-
+      Read one authorized workspace file and enrich its read model with optional, server-resolved
+      inspection context without changing file persistence or edit authority.
+    fowlerSignals:
+      - >-
+        Hidden authority is explicit; shared DTO and HTTP composition remain collaborators rather
+        than falsely cohesive owned files.
+    reasonsToChange:
+      - >-
+        Read one authorized workspace file and enrich its read model with optional, server-resolved
+        inspection context without changing file persistence or edit authority.
+    childrenRequired: false
+    responsibilities:
+      - >-
+        Read the requested file through IWorkspaceFileRepository before resolving context so
+        missing/invalid reads preserve their actual failures.
+      - >-
+        Delegate persisted ownership resolution to CanvasAuthoringAuthorityPolicy and return its
+        existing resolution contract as optional read metadata.

@@ -233,6 +233,61 @@ describe('workspace ports api file history', () => {
   });
 });
 
+describe('workspace ports api file authoring context', () => {
+  installWorkspaceScopeHarness();
+
+  it.each([
+    undefined,
+    {
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'canvas-a',
+        authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
+      },
+    },
+    { kind: 'unresolved', reason: 'mixed_authority', canvasId: null },
+  ])(
+    'preserves file bytes and an optional canonical authority resolution (%#)',
+    async (authoringAuthority) => {
+      setWorkspaceScope(buildWorkspaceScope());
+      const payload = {
+        path: 'analytics/models/orders.sql',
+        name: 'orders.sql',
+        language: 'sql',
+        content: 'select 1',
+        contentSha256: 'a'.repeat(64),
+        lastModified: '2026-10-30T04:00:00.000Z',
+        ...(authoringAuthority === undefined ? {} : { authoringAuthority }),
+      };
+      const { workspaceFilesQuery } = createApiWorkspacePortHarness({
+        getJson: async <TResponse>() => payload as TResponse,
+      });
+      await expect(workspaceFilesQuery.getFileContent(payload.path)).resolves.toEqual(payload);
+    }
+  );
+
+  it.each([
+    false,
+    { kind: 'resolved', binding: {} },
+    { kind: 'unresolved', reason: 'invented', canvasId: null },
+  ])(
+    'rejects malformed authority metadata instead of trusting it (%#)',
+    async (authoringAuthority) => {
+      setWorkspaceScope(buildWorkspaceScope());
+      const { workspaceFilesQuery } = createApiWorkspacePortHarness({
+        getJson: async <TResponse>() =>
+          ({
+            path: 'models/orders.sql',
+            content: 'select 1',
+            authoringAuthority,
+          }) as TResponse,
+      });
+      await expect(workspaceFilesQuery.getFileContent('models/orders.sql')).rejects.toThrow();
+    }
+  );
+});
+
 describe('workspace ports api file content command', () => {
   installWorkspaceScopeHarness();
 

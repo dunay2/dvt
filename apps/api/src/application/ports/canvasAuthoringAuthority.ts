@@ -38,6 +38,11 @@ export interface ICanvasAuthoringAuthorityStore {
     scope: WorkspaceGraphDraftScope,
     projectRoot: string
   ): Promise<CanvasAuthoringAuthorityStoredRecord | null>;
+  /** Return at most two persisted owners; multiple matches are ambiguous. */
+  readFileAuthoritiesForPath(
+    scope: WorkspaceGraphDraftScope,
+    workspacePath: string
+  ): Promise<readonly CanvasAuthoringAuthorityStoredRecord[]>;
   withGraphArtifactPublicationLock<T>(
     input: {
       readonly key: CanvasAuthoringAuthorityKey;

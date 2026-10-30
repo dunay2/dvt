@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-30
 planning_type: architecture
 ---
 
@@ -41,6 +41,33 @@ resolves exactly one model by its declared file path and requires a fresh graph,
 matching authority, project content revision and analysis identity. It then checks
 the accepted file content, complete file hash, reference hash and UTF-8 byte
 boundaries before converting offsets to Monaco's UTF-16 coordinates.
+
+Normal project Code on `/canvas` resolves the same evidence from the accepted
+file read. `GetWorkspaceFileContent` includes optional `authoringAuthority`
+metadata using the existing `CanvasAuthoringAuthorityResolution` contract. The
+server matches the returned file path against persisted dbt roots within the
+authorized tenant/project/environment and revalidates the unique binding through
+`CanvasAuthoringAuthorityPolicy`. Directory boundaries are significant; wildcard
+characters do not broaden membership. Missing, overlapping, mixed or revoked
+bindings cannot select a project, and neither the directory name nor SQL supplies
+authority. This extends the existing file query, not its authorization or save
+semantics.
+
+Code uses that confirmed binding with `ProjectDbtGraphFromFiles` and
+`AnalyzeSelectedDbtModel`, independently of which Canvas opened the file. A graph
+owned file retains its existing edit restrictions. File context does not change
+the active Canvas or grant write authority. Loading, denied and unavailable
+context cannot reuse a previous file's cards or definition. Explicit dbt Canvas
+context and normal project Code converge on the same reference policy and
+renderer.
+
+After a normal project Code save, the existing working-tree reconciler refetches
+the bound project, maps its confirmed outcome through
+`projectDbtCodeReconciliationOutcome`, and rereads the file through
+`reconcileWorkspaceFileAuthority`. Only a matching accepted revision can recover
+cards. There is no second save controller, and a failed or cached project read
+cannot prove reconciliation. The regression entry is `/canvas` without special
+parameters, followed by Code and an ordinary file-tree selection.
 
 `codeInlineReferences` owns that projection policy; `useCodeInlineReferences`
 joins it to the scoped query and the existing working-tree phase.

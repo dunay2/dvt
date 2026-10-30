@@ -7,6 +7,7 @@
  * @consequence File-backed authoring cannot silently overwrite a newer authoritative project revision.
  * @version 1.0.0
  */
+import type { CanvasAuthoringAuthorityResolution } from '@dvt/contracts';
 
 export type WorkspaceFileEntry = {
   readonly path: string;
@@ -22,6 +23,7 @@ export type WorkspaceFileContent = {
   readonly content: string;
   readonly contentSha256: string;
   readonly lastModified: string;
+  readonly authoringAuthority?: CanvasAuthoringAuthorityResolution;
 };
 
 export type ExpectedWorkspaceFileRevision =

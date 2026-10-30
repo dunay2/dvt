@@ -145,6 +145,7 @@ export async function registerProtectedRuntimeRoutes(
     env,
     runtimeAuth: dependencies.runtimeAuth,
     workspaceFilesRoot: protectedModule.workspaceFilesRoot,
+    canvasAuthoringAuthorityPolicy: protectedModule.canvasAuthoringAuthorityPolicy,
   });
   registerProtectedRunRoutes(app, env, protectedModule, dependencies);
   registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
