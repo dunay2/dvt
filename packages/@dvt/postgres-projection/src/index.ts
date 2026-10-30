@@ -177,6 +177,7 @@ export { projectSubstraitProducerGraph } from './relationalSql/producerGraph.js'
 export {
   fusePostgresProjectionOnce,
   fusePostgresProjections,
+  renderFusedPostgresProjections,
   type ProjectionFusionStep,
   type ProjectionFusionResult,
 } from './relationalSql/projectionFusion.js';
