@@ -111,6 +111,56 @@ useCodeInlineReferences joins it to accepted file evidence. There is no frontend
 SQL parser, second analyzer or authority inferred from SQL text, node labels or
 directory names.
 
+### Inspection Eligibility And Stable Status
+
+The shared SQL-language predicate in codeInlineReferences governs automatic
+reference work in both file-context and selected-model hooks. An authorized YAML,
+JSON or Markdown file remains readable without either reference query, cards or a
+reference-verification message. The predicate uses the accepted language rather
+than a hard-coded models directory; supported SQL and custom model paths retain
+their existing scope, revision, hash and range checks.
+
+The previous flow started project analysis for every accepted file and inserted
+or removed a checking paragraph above Monaco:
+
+```mermaid
+flowchart LR
+  F[Accepted file] --> B[Authorized binding]
+  B --> G[Project query for every file SHA]
+  G --> P[Conditional status paragraph]
+  P --> J[Editor moves when the paragraph disappears]
+```
+
+The admitted flow separates eligibility from authority and uses the existing
+status band:
+
+```mermaid
+flowchart LR
+  F[Accepted file] --> E[Shared SQL eligibility]
+  E -->|Non-SQL| V[Read-only content without reference queries]
+  E -->|SQL| G[Existing revision-bound reference queries]
+  V --> S[Existing stable status band]
+  G --> S
+  P[Previously accepted pending edit] --> R[Explicit authorized reconciliation]
+  R --> G
+```
+
+Read-only checking, unavailable and ready messages share CodeWorkingTreeStatus;
+they do not create an extra layout row. Its existing global text utilities keep
+the band stable at narrow widths while retaining the full accessible message and
+title. File loading must not relabel old content as the newly requested file.
+
+Eligibility disables only automatic reference work. The accepted binding and
+explicit reconciliation callback remain available for recovery of a previously
+accepted YAML edit. SQL-to-YAML navigation must ignore late SQL evidence even
+when cache keys share a content hash; returning to SQL retains revalidation.
+
+This correction removes unused analysis and presentation movement. It introduces
+no parser, timer, stylesheet, cache or project-admission workflow. Global analysis
+reuse remains separate from this bounded inspection rule. The
+[prospective scope, rationale and negative cases](https://github.com/dunay2/dvt/issues/3747#issuecomment-6530524643)
+govern its implementation and validation.
+
 File-authoritative Canvas supplies its confirmed DbtProjectGraphProjection.
 Normal project Code resolves optional authoringAuthority from the accepted
 GetWorkspaceFileContent read. The API matches persisted roots within the granted
