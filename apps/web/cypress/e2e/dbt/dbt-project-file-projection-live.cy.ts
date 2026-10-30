@@ -10,6 +10,7 @@ import {
 } from '../../support/dbtProjectLive';
 import {
   hasLiveProtectedRuntimeEnv,
+  readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
@@ -182,8 +183,17 @@ describe('dbt project file projection live vertical', () => {
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
+    const observedFileWrites: string[] = [];
     cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
       observedRequests.push(request.url);
+    });
+    cy.intercept('POST', '**/workspace/files/**', (request) => {
+      observedFileWrites.push(request.url);
+    });
+    readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
+      expect(response.status).to.equal(200);
+      expect(response.body.content).to.equal(PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]);
+      cy.wrap(response.body.contentSha256).as('openedModelRevision');
     });
     cy.viewport(1500, 900);
     requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
@@ -307,11 +317,12 @@ describe('dbt project file projection live vertical', () => {
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
 
-    // The authoritative file is edited directly inside Properties Code.
+    // Properties Code inspects the authoritative file without changing it.
     cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
       .should('be.visible')
       .and('have.attr', 'data-file-path', `${PROJECT_ROOT}/models/orders.sql`);
-    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+    cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+    cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
       .should((editorText) => {
@@ -319,6 +330,22 @@ describe('dbt project file projection live vertical', () => {
           /source\(\s*'raw'\s*,\s*'orders'\s*\)/
         );
       });
+    cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
+      .should('have.prop', 'readOnly', true)
+      .and('be.focused');
+    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type(
+      'blocked_projection_edit',
+      { force: true, delay: 0 }
+    );
+    cy.get('@openedModelRevision').then((revision) => {
+      readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
+        expect(response.status).to.equal(200);
+        expect(response.body.content).to.equal(PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]);
+        expect(response.body.contentSha256).to.equal(revision);
+        expect(observedFileWrites).to.deep.equal([]);
+      });
+    });
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
     // Other Properties sections remain in the same node context.

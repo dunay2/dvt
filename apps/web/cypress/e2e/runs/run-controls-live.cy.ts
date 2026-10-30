@@ -1,7 +1,7 @@
 /**
  * Owned concern: prove cancellation and recovery against backend-owned run truth.
  * @baseline GH-3578: executable SQL belongs to governed project files, not node metadata.
- * @decision Enter through shared Properties, author Code, and reuse the real runtime.
+ * @decision Inspect a seeded workload through read-only Code and reuse the real runtime.
  * @consequence Original and descendant runs retain the same persisted plan identity.
  * @version 1.0.0
  */
@@ -20,6 +20,7 @@ import {
   hasLiveProtectedRuntimeEnv,
   readLiveRunEvents,
   readLiveRunSnapshot,
+  readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
@@ -37,7 +38,7 @@ config-version: 2
 profile: dvt_live_proof
 model-paths: ['models']
 `,
-  [MODEL_PATH]: 'select 1 as value',
+  [MODEL_PATH]: LONG_RUNNING_SQL,
 };
 
 type LiveRunSnapshot = Readonly<{ runId: string; planId?: string; status: string }>;
@@ -63,7 +64,15 @@ function waitForRunStatus(
   });
 }
 
-function authorLongRunningModel(): void {
+function inspectLongRunningModel(): void {
+  let inspectedRevision: string;
+  readLiveWorkspaceFile(MODEL_PATH).then(({ status, body }) => {
+    expect(status).to.equal(200);
+    expect((body as { content: string }).content).to.equal(LONG_RUNNING_SQL);
+    inspectedRevision = (body as { contentSha256: string }).contentSha256;
+    expect(inspectedRevision).to.match(/^[a-f0-9]{64}$/);
+  });
+  cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('runCodeWrites');
   openWorkbenchProperties(MODEL_ID);
   cy.get('[data-slot="canvas-node-workbench-tab-code"]')
     .should('be.visible')
@@ -74,33 +83,28 @@ function authorLongRunningModel(): void {
     'data-file-path',
     MODEL_PATH
   );
-  cy.get('[data-testid="monaco-code-editor"]', { timeout: 20_000 }).find('.view-lines').click();
-  cy.intercept({
-    method: 'GET',
-    pathname: '/workspace/dbt/graph',
-    query: { canvasId: CANVAS_ID, projectRoot: PROJECT_ROOT },
-  }).as('reconciledRunProject');
-  cy.intercept('GET', `**/workspace/files/${encodeURIComponent(MODEL_PATH)}?*`).as(
-    'reconciledRunFile'
-  );
-  cy.focused()
-    .should(($editor) => expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true))
-    .type('{ctrl+a}{backspace}', { delay: 0 });
-  cy.focused().type(LONG_RUNNING_SQL, { parseSpecialCharSequences: false, delay: 0 });
-  cy.wait('@reconciledRunProject').then(({ response }) => {
-    expect(response?.statusCode).to.equal(200);
-    expect(response?.body.freshness).to.equal('fresh');
+  cy.get('[data-testid="monaco-code-viewer"]', { timeout: 20_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-viewer"] .view-lines').should('contain.text', 'pg_sleep');
+  cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+  cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
+    .should('have.prop', 'readOnly', true)
+    .and('be.focused');
+  cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type('blocked_run_code_edit', {
+    force: true,
+    delay: 0,
   });
-  cy.wait('@reconciledRunFile').then(({ response }) => {
-    expect(response?.statusCode).to.equal(200);
-    expect(response?.body.path).to.equal(MODEL_PATH);
-    expect(response?.body.content).to.equal(LONG_RUNNING_SQL);
-  });
-  cy.get('[data-slot="code-working-tree-status"]').should(
-    'have.attr',
-    'data-phase',
-    'synchronized'
+  cy.get('[data-testid="monaco-code-viewer"] .view-lines').should(
+    'not.contain.text',
+    'blocked_run_code_edit'
   );
+  readLiveWorkspaceFile(MODEL_PATH).then(({ status, body }) => {
+    expect(status).to.equal(200);
+    expect((body as { content: string }).content).to.equal(LONG_RUNNING_SQL);
+    expect((body as { contentSha256: string }).contentSha256).to.equal(inspectedRevision);
+  });
+  cy.get('@runCodeWrites.all').should('have.length', 0);
+  cy.get('[data-slot="code-working-tree-status"]').should('have.attr', 'data-phase', 'read_only');
   cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
   cy.get(`.react-flow__node[data-id="${MODEL_ID}"]`)
@@ -188,7 +192,7 @@ describe('Run controls live protected runtime', () => {
         resourceType: 'model',
       });
     });
-    authorLongRunningModel();
+    inspectLongRunningModel();
     selectCanvasClosure([MODEL_ID]);
     cy.intercept('POST', '**/plans/preview').as('runControlsPreview');
     clickPreviewExecutionPlanFromOperationalDrawer();
