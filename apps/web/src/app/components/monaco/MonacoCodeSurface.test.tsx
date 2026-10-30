@@ -124,7 +124,16 @@ describe('shared Monaco edit boundary', () => {
     const projection = { path: 'models/client.sql', value: 'select 1', items: [] };
     const firstInspect = vi.fn();
     const nextInspect = vi.fn();
-    const props = { ariaLabel: 'SQL', language: 'sql', value: projection.value, readOnly: true };
+    const onMount = vi.fn();
+    const onChange = vi.fn();
+    const props = {
+      ariaLabel: 'SQL',
+      language: 'sql',
+      value: projection.value,
+      readOnly: true,
+      onMount,
+      onChange,
+    };
     try {
       await act(async () =>
         root.render(
@@ -135,6 +144,10 @@ describe('shared Monaco edit boundary', () => {
           />
         )
       );
+      expect(capture.code.mock.lastCall?.[0]).toMatchObject({
+        onChange: undefined,
+        options: { readOnly: true, domReadOnly: true },
+      });
       const mount = capture.code.mock.lastCall?.[0].onMount as MonacoCodeEditorMount;
       await act(async () =>
         mount(
@@ -143,6 +156,8 @@ describe('shared Monaco edit boundary', () => {
         )
       );
       expect(capture.attach).toHaveBeenCalledTimes(1);
+      expect(onMount).not.toHaveBeenCalled();
+      expect(onChange).not.toHaveBeenCalled();
       const inspect = capture.attach.mock.lastCall?.[3] as (id: string) => void;
       inspect('client');
       expect(firstInspect).toHaveBeenCalledExactlyOnceWith('client');
