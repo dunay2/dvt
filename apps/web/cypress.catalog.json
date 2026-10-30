@@ -85,6 +85,7 @@
     "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
     "apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts",
     "apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts",
+    "apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts",
     "apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts",
     "apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts"
   ],
