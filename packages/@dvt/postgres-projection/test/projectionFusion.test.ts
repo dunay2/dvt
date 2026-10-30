@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { pgColumnRef, pgQualifiedColumnRef, pgRangeSubselect, pgRangeVar } from '../src/postgresAst.js';
-import { fusePostgresProjectionOnce, fusePostgresProjections } from '../src/relationalSql/projectionFusion.js';
+import { fusePostgresProjectionOnce, fusePostgresProjections, renderFusedPostgresProjections } from '../src/relationalSql/projectionFusion.js';
 import { projectSubstraitToPostgresAst } from '../src/relationalSql/project.js';
 import { compositionalFixture } from './relationalSqlFixture.js';
 
@@ -153,6 +153,14 @@ describe('SQLREAD1 projection fusion (PostgreSQL AST)', () => {
     expect(() => fusePostgresProjections(root, 0)).toThrow(RangeError);
     expect(() => fusePostgresProjections(root, 1)).toThrow(/maxSteps/);
     expect(fusePostgresProjections(root, 2).steps).toHaveLength(2);
+  });
+
+  it('renders a readable SQL derived from the same AST', async () => {
+    const result = await renderFusedPostgresProjections(root);
+    expect(result.steps).toHaveLength(2);
+    expect(result.sql).toContain('SELECT');
+    expect(result.sql).toContain('client_id');
+    expect(result.sql).toContain('country');
   });
 
   it('accepts the actual AST projected from canonical DVT Substrait', () => {
