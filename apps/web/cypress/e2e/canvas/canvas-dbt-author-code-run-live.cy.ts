@@ -290,11 +290,14 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
           expect(renderedCode).to.contain(GENERATED_ORDER_ID_PROJECTION);
           expect(renderedCode).to.contain(GENERATED_AMOUNT_PROJECTION);
         });
-      cy.get('[data-testid="monaco-code-viewer"] .monaco-editor textarea')
-        .first()
+      cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+      cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
         .should('have.prop', 'readOnly', true)
-        .focus()
-        .type('blocked_generated_code_edit', { force: true, delay: 0 });
+        .and('be.focused');
+      cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type(
+        'blocked_generated_code_edit',
+        { force: true, delay: 0 }
+      );
       cy.get('[data-testid="monaco-code-viewer"] .view-lines').should(
         'not.contain.text',
         'blocked_generated_code_edit'

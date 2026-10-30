@@ -604,11 +604,14 @@ describe('DBT project Git browsing with real file authority', () => {
       'contain.text',
       'handoff_loaded'
     );
-    cy.get(`${code} [data-testid="monaco-code-viewer"] .monaco-editor textarea`)
-      .first()
+    cy.get(`${code} [data-testid="monaco-code-viewer"] .view-line`).first().click();
+    cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`)
       .should('have.prop', 'readOnly', true)
-      .focus()
-      .type('handoff_blocked', { force: true, delay: 0 });
+      .and('be.focused');
+    cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`).type(
+      'handoff_blocked',
+      { force: true, delay: 0 }
+    );
     cy.get(`${code} .view-lines`).should('not.contain.text', 'handoff_blocked');
     cy.get(`${code} [data-slot="code-working-tree-status"]`).should(
       'have.attr',

@@ -70,11 +70,11 @@ function attemptToDisableSelectedModelThroughReadOnlyCode(): void {
   cy.get('[data-testid="monaco-code-viewer"] .view-lines')
     .invoke('text')
     .should('match', /select\s+1\s+as\s+id/);
-  cy.get('[data-testid="monaco-code-viewer"] .monaco-editor textarea')
-    .first()
+  cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+  cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
     .should('have.prop', 'readOnly', true)
-    .focus()
-    .type('{ctrl+a}', { force: true });
+    .and('be.focused');
+  cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type('{ctrl+a}', { force: true });
   cy.window().then((window) => {
     const clipboardData = new window.DataTransfer();
     clipboardData.setData('text/plain', DISABLED_MODEL_SQL);
