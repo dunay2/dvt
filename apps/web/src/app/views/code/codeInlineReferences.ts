@@ -42,9 +42,12 @@ export type CodeInlineReferenceProjection =
   | Readonly<{ kind: 'text-only'; reason: CodeInlineIneligibilityReason }>;
 
 export function isCodeInlineReferenceFile(
-  file: Pick<FileContent, 'language'> | undefined
+  file: Pick<FileContent, 'language' | 'content'> | undefined
 ): boolean {
-  return file?.language.toLowerCase() === 'sql';
+  return (
+    file?.language.toLowerCase() === 'sql' &&
+    (file.content.includes('{{') || file.content.includes('{%'))
+  );
 }
 
 function normalizedRelativePath(path: string | undefined): string | undefined {

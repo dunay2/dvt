@@ -69,7 +69,7 @@ function stubContextualCodeWorkbenchApis(
 }
 
 describe('Canvas Project Code read-only inspection', () => {
-  it('reads authorized YAML without reference analysis and keeps the editor aligned between files', () => {
+  it('reads authorized YAML and plain SQL without reference analysis or editor movement', () => {
     const authoringAuthority: FileContent['authoringAuthority'] = {
       kind: 'resolved',
       binding: {
@@ -95,11 +95,19 @@ describe('Canvas Project Code read-only inspection', () => {
         lastModified: '2026-10-30T00:00:00.000Z',
         authoringAuthority,
       },
+      {
+        path: 'inspection_project/models/clientes.sql',
+        name: 'clientes.sql',
+        language: 'sql',
+        content: 'select client_id, country from raw.client where client_id is not null',
+        lastModified: '2026-10-30T00:00:00.000Z',
+        authoringAuthority,
+      },
     ].map((file) => ({ ...file, contentSha256: sha256HexUtf8(file.content) }));
     stubContextualCodeWorkbenchApis(files);
     for (const endpoint of ['/workspace/dbt/graph', '/workspace/dbt/analysis/selected-model']) {
       stubE2eApi('GET', endpoint, () => {
-        throw new Error(`YAML inspection must not request ${endpoint}.`);
+        throw new Error(`YAML and plain SQL inspection must not request ${endpoint}.`);
       });
     }
 
@@ -115,7 +123,7 @@ describe('Canvas Project Code read-only inspection', () => {
       .should('be.visible')
       .then(($monaco) => {
         const initialTop = $monaco[0]!.getBoundingClientRect().top;
-        for (const file of [files[1]!, files[0]!]) {
+        for (const file of [files[1]!, files[2]!, files[0]!]) {
           cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
           cy.get(editor).should('have.attr', 'data-file-path', file.path);
           cy.get(`${editor} .view-lines`).should(($lines) => {
@@ -124,6 +132,14 @@ describe('Canvas Project Code read-only inspection', () => {
           cy.get(monaco).should(($current) => {
             expect($current[0]!.getBoundingClientRect().top).to.be.closeTo(initialTop, 1);
           });
+          cy.get(`${editor} [data-reference-id]`).should('not.exist');
+          for (const language of ['en', 'es']) {
+            const copy = resolveCodeInlineReferenceCopy(language);
+            cy.get(editor)
+              .should('not.contain.text', copy.checkingMessage)
+              .and('not.contain.text', copy.unavailableMessage)
+              .and('not.contain.text', copy.unsupportedMessage);
+          }
         }
       });
     cy.get(`${editor} [data-testid="monaco-code-editor"]`).should('not.exist');
@@ -134,13 +150,6 @@ describe('Canvas Project Code read-only inspection', () => {
       'read_only'
     );
     cy.get(editor).children('[role="status"]').should('have.length', 1);
-    cy.get(`${editor} [data-reference-id]`).should('not.exist');
-    for (const language of ['en', 'es']) {
-      cy.get(editor).should(
-        'not.contain.text',
-        resolveCodeInlineReferenceCopy(language).checkingMessage
-      );
-    }
     cy.then(() => {
       const readPaths = getE2eApiCalls(/\/workspace\/files\/.+/, 'GET').map(({ url }) =>
         decodeURIComponent(url.pathname.slice('/workspace/files/'.length))

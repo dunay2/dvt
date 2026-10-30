@@ -149,13 +149,33 @@ function expectReason(
 }
 describe('Code inline reference authority', () => {
   it.each(['sql', 'SQL', 'Sql'])('admits %s files for reference inspection', (language) => {
-    expect(isCodeInlineReferenceFile({ language })).toBe(true);
+    expect(isCodeInlineReferenceFile({ language, content: "{{ ref('orders') }}" })).toBe(true);
+  });
+
+  it.each([
+    "{{ source('raw', 'client') }}",
+    '{{ custom_macro() }}',
+    '{% set relation = custom_macro() %}',
+    '{{- custom_macro() -}}',
+    "\uFEFF-- depends_on: {{ ref('orders') }}\nselect 1",
+    "{{ config(materialized='view') }}\nselect 1",
+  ])('keeps Jinja candidates for authoritative analysis: %s', (content) => {
+    expect(isCodeInlineReferenceFile({ language: 'sql', content })).toBe(true);
+  });
+
+  it.each([
+    'select client_id, country from raw.client where client_id is not null',
+    '',
+    "select ref('orders')",
+    '{# A Jinja comment #}\nselect 1',
+  ])('reads plain SQL without inline reference analysis: %s', (content) => {
+    expect(isCodeInlineReferenceFile({ language: 'sql', content })).toBe(false);
   });
 
   it.each(['yaml', 'YAML', 'json', 'markdown', 'python', ''])(
     'keeps %s files outside reference inspection',
     (language) => {
-      expect(isCodeInlineReferenceFile({ language })).toBe(false);
+      expect(isCodeInlineReferenceFile({ language, content: "{{ ref('orders') }}" })).toBe(false);
     }
   );
 
