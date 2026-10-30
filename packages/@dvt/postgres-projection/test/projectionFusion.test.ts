@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { pgColumnRef, pgQualifiedColumnRef, pgRangeSubselect, pgRangeVar } from '../src/postgresAst.js';
-import { fusePostgresProjectionOnce, fusePostgresProjections, renderFusedPostgresProjections } from '../src/relationalSql/projectionFusion.js';
+import {
+  pgColumnRef,
+  pgQualifiedColumnRef,
+  pgRangeSubselect,
+  pgRangeVar,
+} from '../src/postgresAst.js';
+import {
+  fusePostgresProjectionOnce,
+  fusePostgresProjections,
+  renderFusedPostgresProjections,
+} from '../src/relationalSql/projectionFusion.js';
 import { projectSubstraitToPostgresAst } from '../src/relationalSql/project.js';
 import { compositionalFixture } from './relationalSqlFixture.js';
 
