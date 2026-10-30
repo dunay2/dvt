@@ -46,6 +46,7 @@ export type FileContent = {
   content: string;
   contentSha256: string;
   lastModified: string;
+  authoringAuthority?: CanvasAuthoringAuthorityResolution;
 };
 
 export type ExpectedWorkspaceFileRevision =

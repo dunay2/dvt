@@ -27,9 +27,10 @@ import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './codeViewC
 import { resolveCodeWorkbenchErrorPresentation } from './codeWorkbenchErrorModel';
 import { useCodeWorkingTreeSync } from './useCodeWorkingTreeSync';
 import { reconcileWorkspaceFileAuthority } from './workspaceFileReconciliationAuthority';
-import { useCodeInlineReferences } from './useCodeInlineReferences';
+import { useCodeInlineReferences, type CodeInlineReferenceState } from './useCodeInlineReferences';
 import type { CodeInlineReferenceDetail } from './codeInlineReferences';
 import { CodeReferenceDetails } from './CodeReferenceDetails';
+import { useCodeWorkspaceFileContext } from './useCodeWorkspaceFileContext';
 
 export type WorkspaceFileCodeAuthority = 'graph-draft' | 'dbt-project-files' | 'missing' | 'mixed';
 
@@ -83,36 +84,47 @@ export const WorkspaceFileCodeEditor = forwardRef<
     selectedPath: path,
     graphOwnedPaths,
   });
+  const acceptedInlineFile =
+    fileContentQuery.isSuccess &&
+    !fileContentQuery.isFetching &&
+    fileContentQuery.data.path === path
+      ? fileContentQuery.data
+      : undefined;
+  const context = useCodeWorkspaceFileContext({
+    file: acceptedInlineFile,
+    project: dbtProject,
+    allowed: authority !== 'mixed' && (path === undefined || !graphOwnedPaths.has(path)),
+  });
+  const reconcileProject = reconcilePersistedFile ?? context.reconcilePersistedFile;
   const reconcilePersistedFileAuthority = useCallback(
     async (receipt: WorkspaceFileSaveReceipt): Promise<CodeWorkingTreeReconciliationOutcome> => {
-      if (reconcilePersistedFile == null) {
+      if (reconcileProject == null) {
         throw new Error('Project reconciliation is unavailable.');
       }
-      const projectOutcome = await reconcilePersistedFile(receipt);
+      const projectOutcome = await reconcileProject(receipt);
       const authoritativeFileResult = await refetchFileContent();
       if (!authoritativeFileResult.isSuccess || authoritativeFileResult.data == null) {
         return { kind: 'verification-unavailable' };
       }
       return reconcileWorkspaceFileAuthority(receipt, authoritativeFileResult.data, projectOutcome);
     },
-    [reconcilePersistedFile, refetchFileContent]
+    [reconcileProject, refetchFileContent]
   );
   const workingTreeSync = useCodeWorkingTreeSync({
     file: fileContentQuery.data,
     commandPort,
-    reconcilePersistedFile:
-      reconcilePersistedFile == null ? undefined : reconcilePersistedFileAuthority,
+    reconcilePersistedFile: reconcileProject == null ? undefined : reconcilePersistedFileAuthority,
   });
-  const acceptedInlineFile =
-    fileContentQuery.isSuccess && fileContentQuery.data.path === path
-      ? fileContentQuery.data
-      : undefined;
-  const inlineState = useCodeInlineReferences({
-    project: dbtProject,
+  const references = useCodeInlineReferences({
+    project: context.project,
     file: acceptedInlineFile,
     value: workingTreeSync.value,
-    enabled: authority === 'dbt-project-files' && workingTreeSync.phase === 'synchronized',
+    enabled: workingTreeSync.phase === 'synchronized',
   });
+  const inlineState: CodeInlineReferenceState =
+    context.status === 'checking' || context.status === 'unavailable'
+      ? { kind: context.status }
+      : references;
   const inlineReferences = useMemo(
     () =>
       inlineState.kind === 'ready' ? { ...inlineState.references, copy: inlineCopy } : undefined,

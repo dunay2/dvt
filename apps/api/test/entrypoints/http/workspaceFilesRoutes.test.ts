@@ -60,7 +60,11 @@ describe('workspaceFilesRoutes', () => {
       readonly authorized?: boolean;
       readonly maxFileBytes?: number;
     } = {}
-  ): { readonly app: FastifyInstance; readonly authorize: ReturnType<typeof vi.fn> } {
+  ): {
+    readonly app: FastifyInstance;
+    readonly authorize: ReturnType<typeof vi.fn>;
+    readonly resolveFileContext: ReturnType<typeof vi.fn>;
+  } {
     const app = Fastify({ logger: false });
     const repository = new LocalWorkspaceFileRepository({
       root,
@@ -80,6 +84,14 @@ describe('workspaceFilesRoutes', () => {
             },
           }
     );
+    const resolveFileContext = vi.fn().mockResolvedValue({
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'orders-canvas',
+        authority: { kind: 'dbt-project-files', projectRoot: '.' },
+      },
+    });
 
     registerWorkspaceFilesRoutes(app, {
       authenticator: {
@@ -93,13 +105,13 @@ describe('workspaceFilesRoutes', () => {
         ),
       } as never,
       authorizer: { authorize } as never,
-      getUseCase: new GetWorkspaceFileContentUseCase(repository),
+      getUseCase: new GetWorkspaceFileContentUseCase(repository, { resolveFileContext }),
       listUseCase: new ListWorkspaceFilesUseCase(repository),
       saveUseCase: new SaveWorkspaceFileContentUseCase(repository),
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
-    return { app, authorize };
+    return { app, authorize, resolveFileContext };
   }
 
   it('returns scoped workspace file tree', async () => {
@@ -141,7 +153,7 @@ describe('workspaceFilesRoutes', () => {
   });
 
   it('returns scoped workspace file content', async () => {
-    const { app } = buildApp();
+    const { app, resolveFileContext } = buildApp();
 
     const response = await app.inject({
       method: 'GET',
@@ -156,8 +168,33 @@ describe('workspaceFilesRoutes', () => {
       content: 'select * from orders',
       contentSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
       lastModified: expect.any(String),
+      authoringAuthority: {
+        kind: 'resolved',
+        binding: {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId: 'orders-canvas',
+          authority: { kind: 'dbt-project-files', projectRoot: '.' },
+        },
+      },
     });
+    expect(resolveFileContext).toHaveBeenCalledWith(ROUTE_SCOPE, 'models/staging/stg_orders.sql');
   });
+
+  it.each([
+    { authenticated: false, expected: 401 },
+    { authorized: false, expected: 403 },
+  ])(
+    'does not discover file authority before authentication/authorization: %s',
+    async (options) => {
+      const { app, resolveFileContext } = buildApp(options);
+      const response = await app.inject({
+        method: 'GET',
+        url: `/workspace/files/models%2Fstaging%2Fstg_orders.sql?${SCOPE_QUERY}`,
+      });
+      expect(response.statusCode).toBe(options.expected);
+      expect(resolveFileContext).not.toHaveBeenCalled();
+    }
+  );
 
   it('returns last-modified freshness metadata with workspace file content', async () => {
     const { app } = buildApp();

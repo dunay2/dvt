@@ -7,8 +7,8 @@ import { useDbtProjectGraphQueryPort, useSessionContext } from '../services/AppS
 import { queryKeys } from './queryKeys';
 
 export function useDbtProjectGraphQuery(
-  authorityBinding: DbtProjectFilesAuthorityBinding,
-  options: Readonly<{ enabled?: boolean }> = {}
+  authorityBinding: DbtProjectFilesAuthorityBinding | undefined,
+  options: Readonly<{ enabled?: boolean; revisionToken?: string }> = {}
 ) {
   const port = useDbtProjectGraphQueryPort();
   const sessionContext = useSessionContext();
@@ -17,17 +17,30 @@ export function useDbtProjectGraphQuery(
     sessionContext.getWorkspaceScopeSnapshot,
     sessionContext.getWorkspaceScopeSnapshot
   );
+  const hasContext = Boolean(
+    scope.tenantId.trim() &&
+    scope.projectId.trim() &&
+    scope.environmentId.trim() &&
+    authorityBinding?.canvasId.trim() &&
+    authorityBinding.authority.projectRoot.trim()
+  );
 
   return useQuery({
-    enabled: options.enabled ?? true,
+    enabled: hasContext && (options.enabled ?? true),
     queryKey: queryKeys.workspace.dbtProjectGraph(
       scope.tenantId,
       scope.projectId,
       scope.environmentId,
-      authorityBinding.canvasId,
-      authorityBinding.authority.projectRoot
+      authorityBinding?.canvasId,
+      authorityBinding?.authority.projectRoot,
+      options.revisionToken
     ),
-    queryFn: () => port.getProjectGraph(authorityBinding),
-    staleTime: 15_000,
+    queryFn: () => {
+      if (!hasContext || authorityBinding === undefined) {
+        throw new Error('ProjectDbtGraphFromFiles requires an accepted file authority binding.');
+      }
+      return port.getProjectGraph(authorityBinding);
+    },
+    staleTime: options.revisionToken === undefined ? 15_000 : 0,
   });
 }

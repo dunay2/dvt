@@ -68,6 +68,54 @@ describeWithPostgres('PostgresCanvasAuthoringAuthorityStore', () => {
     await expect(store!.read({ ...KEY, canvasId: 'other-canvas' })).resolves.toBeNull();
   });
 
+  it('finds only file roots in the exact tenant/project/environment', async () => {
+    await bindOrders();
+    await expect(
+      store!.readFileAuthoritiesForPath(KEY, 'analytics/models/orders.sql')
+    ).resolves.toMatchObject([{ binding: BINDING }]);
+    for (const dimension of ['tenantId', 'projectId', 'environmentId'] as const) {
+      await expect(
+        store!.readFileAuthoritiesForPath(
+          { ...KEY, [dimension]: 'other' },
+          'analytics/models/orders.sql'
+        )
+      ).resolves.toEqual([]);
+    }
+    await expect(
+      store!.readFileAuthoritiesForPath(KEY, 'analytics-extra/models/orders.sql')
+    ).resolves.toEqual([]);
+    await expect(store!.readFileAuthoritiesForPath(KEY, 'analytics')).resolves.toEqual([]);
+  });
+
+  it('matches wildcard characters literally rather than widening directory membership', async () => {
+    await bindFileRoot('analytics_%', 'literal-root');
+    await expect(
+      store!.readFileAuthoritiesForPath(KEY, 'analytics_%/orders.sql')
+    ).resolves.toHaveLength(1);
+    await expect(
+      store!.readFileAuthoritiesForPath(KEY, 'analytics_other/orders.sql')
+    ).resolves.toEqual([]);
+  });
+
+  it('includes the canonical workspace root without accepting empty roots', async () => {
+    await bindFileRoot('.', 'workspace-root');
+    await expect(store!.readFileAuthoritiesForPath(KEY, 'models/orders.sql')).resolves.toHaveLength(
+      1
+    );
+    await expect(bindFileRoot('', 'empty-root')).rejects.toThrow();
+  });
+
+  it('returns two overlapping candidates without silently choosing the deepest root', async () => {
+    await bindFileRoot('analytics', 'outer');
+    await bindFileRoot('analytics/models', 'inner');
+    await bindFileRoot('analytics/models/sub', 'deepest');
+    const candidates = await store!.readFileAuthoritiesForPath(
+      KEY,
+      'analytics/models/sub/orders.sql'
+    );
+    expect(candidates).toHaveLength(2);
+  });
+
   it('rejects rebinding an occupied Canvas instead of overwriting authority', async () => {
     await bindOrders();
     const result = await store!.bind({
@@ -285,6 +333,18 @@ async function bindOrders(): Promise<void> {
     requestHash: 'request-a',
     revision: 'authority-1',
     nowIso: '2026-07-14T10:00:00.000Z',
+  });
+  expect(result).toMatchObject({ kind: 'bound', deduplicated: false });
+}
+
+async function bindFileRoot(projectRoot: string, canvasId: string): Promise<void> {
+  const result = await store!.bind({
+    key: { ...KEY, canvasId },
+    binding: { ...BINDING, canvasId, authority: { kind: 'dbt-project-files', projectRoot } },
+    idempotencyKey: `bind-${canvasId}`,
+    requestHash: `request-${canvasId}`,
+    revision: `authority-${canvasId}`,
+    nowIso: '2026-10-30T10:00:00.000Z',
   });
   expect(result).toMatchObject({ kind: 'bound', deduplicated: false });
 }

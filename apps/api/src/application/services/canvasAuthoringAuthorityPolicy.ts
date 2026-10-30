@@ -1,15 +1,18 @@
 import {
   WorkspaceGraphAuthoringDraftSchema,
+  WorkspaceRelativeProjectRootSchema,
   resolveWorkspaceGraphDraftCanvasIds,
   type CanvasAuthoringAuthorityBinding,
   type CanvasAuthoringAuthorityResolution,
   type GraphDbtWorkspaceArtifactPublicationAuthorityRefused,
+  type WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
 
 import type {
   CanvasAuthoringAuthorityKey,
   ICanvasAuthoringAuthorityStore,
 } from '../ports/canvasAuthoringAuthority.js';
+import { serializeCanvasAuthoringAuthorityKey } from '../ports/canvasAuthoringAuthority.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 
 export class CanvasAuthoringAuthorityMissingError extends Error {
@@ -71,6 +74,61 @@ export class CanvasAuthoringAuthorityPolicy {
           kind: 'resolved',
           binding: graphDraftBinding(key.canvasId),
         };
+  }
+
+  public async resolveFileContext(
+    scope: WorkspaceGraphDraftScope,
+    workspacePath: string
+  ): Promise<CanvasAuthoringAuthorityResolution> {
+    const path = WorkspaceRelativeProjectRootSchema.safeParse(workspacePath);
+    const missing = { kind: 'unresolved', reason: 'missing_authority', canvasId: null } as const;
+    if (!path.success || path.data !== workspacePath || workspacePath === '.') return missing;
+
+    const candidates = await this.store.readFileAuthoritiesForPath(scope, workspacePath);
+    if (candidates.length === 0) return missing;
+    if (candidates.length > 1) {
+      return { kind: 'unresolved', reason: 'mixed_authority', canvasId: null };
+    }
+    const candidate = candidates[0]!;
+    const { key, binding } = candidate;
+    if (
+      key.tenantId !== scope.tenantId ||
+      key.projectId !== scope.projectId ||
+      key.environmentId !== scope.environmentId ||
+      key.canvasId !== binding.canvasId ||
+      binding.authority.kind !== 'dbt-project-files' ||
+      !fileBelongsToRoot(workspacePath, binding.authority.projectRoot)
+    )
+      return missing;
+
+    try {
+      const current = await this.resolve(key);
+      if (
+        current.canvasId !== binding.canvasId ||
+        current.authority.kind !== 'dbt-project-files' ||
+        current.authority.projectRoot !== binding.authority.projectRoot
+      )
+        return { ...missing, canvasId: key.canvasId };
+      const confirmed = await this.store.readFileAuthoritiesForPath(scope, workspacePath);
+      const owner = confirmed[0];
+      if (
+        confirmed.length !== 1 ||
+        owner === undefined ||
+        owner.revision !== candidate.revision ||
+        serializeCanvasAuthoringAuthorityKey(owner.key) !==
+          serializeCanvasAuthoringAuthorityKey(key)
+      )
+        return { ...missing, canvasId: key.canvasId };
+      return { kind: 'resolved', binding: current };
+    } catch (error) {
+      if (error instanceof CanvasAuthoringAuthorityMixedError) {
+        return { kind: 'unresolved', reason: 'mixed_authority', canvasId: key.canvasId };
+      }
+      if (error instanceof CanvasAuthoringAuthorityMissingError) {
+        return { ...missing, canvasId: key.canvasId };
+      }
+      throw error;
+    }
   }
 
   public async authorizeGraphArtifactPublication(
@@ -154,4 +212,13 @@ function graphDraftBinding(canvasId: string): CanvasAuthoringAuthorityBinding {
     canvasId,
     authority: { kind: 'graph-draft' },
   };
+}
+
+function fileBelongsToRoot(workspacePath: string, projectRoot: string): boolean {
+  const root = WorkspaceRelativeProjectRootSchema.safeParse(projectRoot);
+  return (
+    root.success &&
+    root.data === projectRoot &&
+    (projectRoot === '.' || workspacePath.startsWith(`${projectRoot}/`))
+  );
 }

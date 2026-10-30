@@ -28,8 +28,9 @@ export const queryKeys = {
       tenantId: string,
       projectId: string,
       environmentId: string,
-      canvasId: string,
-      projectRoot: string
+      canvasId: string | undefined,
+      projectRoot: string | undefined,
+      revisionToken?: string
     ) =>
       [
         'workspace',
@@ -39,6 +40,7 @@ export const queryKeys = {
         environmentId,
         canvasId,
         projectRoot,
+        revisionToken,
       ] as const,
     dbtProjectGraphRoot: () => ['workspace', 'dbt-project-graph'] as const,
     dbtSelectedModelAnalysis: (

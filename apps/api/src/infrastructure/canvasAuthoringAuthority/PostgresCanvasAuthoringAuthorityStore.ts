@@ -122,6 +122,32 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
     return result.rows[0] ? mapAuthorityRow(result.rows[0]) : null;
   }
 
+  public async readFileAuthoritiesForPath(
+    scope: Pick<CanvasAuthoringAuthorityKey, 'tenantId' | 'projectId' | 'environmentId'>,
+    workspacePath: string
+  ): Promise<readonly CanvasAuthoringAuthorityStoredRecord[]> {
+    const result = await this.config.pool.query<AuthorityRow>(
+      withTimeout(this.config.queryTimeoutMs, {
+        text: `
+          SELECT tenant_id, project_id, environment_id, canvas_id,
+                 binding_json, revision, updated_at
+          FROM ${quoteIdentifier(this.config.schema)}.canvas_authoring_authorities
+          WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3
+            AND binding_json->'authority'->>'kind' = 'dbt-project-files'
+            AND (
+              binding_json->'authority'->>'projectRoot' = '.'
+              OR left($4, length(binding_json->'authority'->>'projectRoot') + 1)
+                 = (binding_json->'authority'->>'projectRoot') || '/'
+            )
+          ORDER BY canvas_id
+          LIMIT 2
+        `,
+        values: [scope.tenantId, scope.projectId, scope.environmentId, workspacePath],
+      })
+    );
+    return result.rows.map(mapAuthorityRow);
+  }
+
   public async bind(input: {
     readonly key: CanvasAuthoringAuthorityKey;
     readonly binding: CanvasAuthoringAuthorityStoredRecord['binding'];

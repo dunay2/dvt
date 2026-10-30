@@ -1,5 +1,6 @@
 /** Owned concern: adapt workspace capability ports to protected API rails. */
 import {
+  CanvasAuthoringAuthorityResolutionSchema,
   ImportSourceObjectsResultV2Schema,
   SourceObjectCatalogResponseSchema,
   SourceDataSampleResponseSchema,
@@ -393,9 +394,17 @@ export function createApiWorkspaceFilesQueryPort(apiClient: ApiClient): IWorkspa
       ),
     getFileContent: async (path) => {
       try {
-        return await apiClient.getJson<FileContent>(
+        const file = await apiClient.getJson<FileContent>(
           buildWorkspaceFileContentEndpoint(path, readWorkspaceFilesScope())
         );
+        return file.authoringAuthority === undefined
+          ? file
+          : {
+              ...file,
+              authoringAuthority: CanvasAuthoringAuthorityResolutionSchema.parse(
+                file.authoringAuthority
+              ),
+            };
       } catch (error) {
         if (error instanceof ApiError && isWorkspaceFileNotFoundApiError(error)) {
           throw new WorkspaceFileLoadError('not_found', path);
