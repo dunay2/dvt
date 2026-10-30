@@ -113,12 +113,18 @@ directory names.
 
 ### Inspection Eligibility And Stable Status
 
-The shared SQL-language predicate in codeInlineReferences governs automatic
-reference work in both file-context and selected-model hooks. An authorized YAML,
-JSON or Markdown file remains readable without either reference query, cards or a
-reference-verification message. The predicate uses the accepted language rather
-than a hard-coded models directory; supported SQL and custom model paths retain
-their existing scope, revision, hash and range checks.
+The shared predicate in codeInlineReferences admits automatic reference work only
+for accepted SQL content containing a Jinja opening (`{{` or `{%`). Both
+file-context and selected-model hooks use it. Plain or empty SQL, YAML, JSON and
+Markdown remain readable without either inline reference query, cards or a
+reference-verification message. Custom model paths and case-insensitive SQL
+language names retain their existing scope, revision, hash and range checks.
+
+The literal opening check identifies candidates, not references or dependencies.
+It preserves macro expressions, statement blocks, whitespace control and Jinja in
+dependency comments. Only the existing dbt analysis can authorize a supported
+region. Canvas, lineage, Preview and Run retain their own analysis behavior;
+plain SQL is not a claim of dependency absence or SQL validity.
 
 The previous flow started project analysis for every accepted file and inserted
 or removed a checking paragraph above Monaco:
@@ -136,9 +142,9 @@ status band:
 
 ```mermaid
 flowchart LR
-  F[Accepted file] --> E[Shared SQL eligibility]
-  E -->|Non-SQL| V[Read-only content without reference queries]
-  E -->|SQL| G[Existing revision-bound reference queries]
+  F[Accepted file] --> E[SQL with a Jinja opening]
+  E -->|No| V[Read-only content without inline reference queries]
+  E -->|Yes| G[Existing revision-bound reference queries]
   V --> S[Existing stable status band]
   G --> S
   P[Previously accepted pending edit] --> R[Explicit authorized reconciliation]
@@ -152,13 +158,15 @@ title. File loading must not relabel old content as the newly requested file.
 
 Eligibility disables only automatic reference work. The accepted binding and
 explicit reconciliation callback remain available for recovery of a previously
-accepted YAML edit. SQL-to-YAML navigation must ignore late SQL evidence even
-when cache keys share a content hash; returning to SQL retains revalidation.
+accepted edit, including YAML or plain SQL. Navigating to noncandidate content
+must ignore late or cached reference evidence even when cache keys share a
+content hash; returning to candidate SQL retains revalidation.
 
 This correction removes unused analysis and presentation movement. It introduces
 no parser, timer, stylesheet, cache or project-admission workflow. Global analysis
 reuse remains separate from this bounded inspection rule. The
-[prospective scope, rationale and negative cases](https://github.com/dunay2/dvt/issues/3747#issuecomment-6530524643)
+[stable-status design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6530524643)
+and [plain-SQL refinement](https://github.com/dunay2/dvt/issues/3747#issuecomment-6532334252)
 govern its implementation and validation.
 
 File-authoritative Canvas supplies its confirmed DbtProjectGraphProjection.
