@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import type { FileContent } from '../../ports/workspace';
 import { useDbtSelectedModelAnalysisQuery } from '../../queries/dbtSelectedModelAnalysisQueries';
 import {
+  isCodeInlineReferenceFile,
   projectCodeInlineReferences,
   resolveCodeSelectedModel,
   type CodeInlineReferenceProjection,
@@ -24,9 +25,10 @@ export function useCodeInlineReferences({
   value: string;
   enabled: boolean;
 }>): CodeInlineReferenceState {
+  const inlineEligible = isCodeInlineReferenceFile(file);
   const selectedUniqueId = useMemo(
-    () => resolveCodeSelectedModel(project, file?.path),
-    [project, file?.path]
+    () => (inlineEligible ? resolveCodeSelectedModel(project, file?.path) : undefined),
+    [inlineEligible, project, file?.path]
   );
   const binding = project?.authorityBinding;
   const acceptedBinding = useMemo(
@@ -37,21 +39,27 @@ export function useCodeInlineReferences({
     [binding]
   );
   const analysis = useDbtSelectedModelAnalysisQuery(acceptedBinding, selectedUniqueId, {
-    enabled: enabled && project?.freshness === 'fresh',
+    enabled: inlineEligible && enabled && project?.freshness === 'fresh',
     revisionToken:
       project == null
         ? undefined
         : `${project.analysisSha256}:${project.projectRevision.contentSetSha256}`,
   });
   return useMemo<CodeInlineReferenceState>(() => {
-    if (project == null || file == null) return { kind: 'inactive' };
-    if (selectedUniqueId == null)
-      return file.language.toLowerCase() === 'sql'
-        ? { kind: 'text-only', reason: 'model-unresolved' }
-        : { kind: 'inactive' };
+    if (!inlineEligible || project == null || file == null) return { kind: 'inactive' };
+    if (selectedUniqueId == null) return { kind: 'text-only', reason: 'model-unresolved' };
     if (!enabled || file.content !== value) return { kind: 'text-only', reason: 'dirty-buffer' };
     if (analysis.isError) return { kind: 'unavailable' };
     if (analysis.data == null) return { kind: 'checking' };
     return projectCodeInlineReferences({ project, analysis: analysis.data, file, value });
-  }, [project, selectedUniqueId, file, value, enabled, analysis.data, analysis.isError]);
+  }, [
+    inlineEligible,
+    project,
+    selectedUniqueId,
+    file,
+    value,
+    enabled,
+    analysis.data,
+    analysis.isError,
+  ]);
 }

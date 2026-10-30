@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import type { FileContent } from '../../ports/workspace';
 
 import {
+  isCodeInlineReferenceFile,
   projectCodeInlineReferences,
   resolveCodeSelectedModel,
   type CodeInlineIneligibilityReason,
@@ -147,6 +148,29 @@ function expectReason(
   expect(projectCodeInlineReferences(input)).toEqual({ kind: 'text-only', reason });
 }
 describe('Code inline reference authority', () => {
+  it.each(['sql', 'SQL', 'Sql'])('admits %s files for reference inspection', (language) => {
+    expect(isCodeInlineReferenceFile({ language })).toBe(true);
+  });
+
+  it.each(['yaml', 'YAML', 'json', 'markdown', 'python', ''])(
+    'keeps %s files outside reference inspection',
+    (language) => {
+      expect(isCodeInlineReferenceFile({ language })).toBe(false);
+    }
+  );
+
+  it('does not infer SQL eligibility before an accepted file is available', () => {
+    expect(isCodeInlineReferenceFile(undefined)).toBe(false);
+  });
+
+  it('resolves a model in a custom model path without classifying its directory name', () => {
+    const input = fixture();
+    input.project.nodes[0]!.originalFilePath = 'warehouse/report.sql';
+    expect(resolveCodeSelectedModel(input.project, 'dbt/warehouse/report.sql')).toBe(
+      'model.demo.report'
+    );
+  });
+
   it.each([true, false])(
     'projects exact Monaco UTF-16 ranges while retaining raw revisions (BOM=%s)',
     (hasBom) => {

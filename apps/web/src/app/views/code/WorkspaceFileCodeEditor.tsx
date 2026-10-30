@@ -180,6 +180,10 @@ export const WorkspaceFileCodeEditor = forwardRef<
               ? inlineCopy.unsupportedMessage
               : inlineCopy.unavailableMessage
           : undefined;
+  const hasReadOnlyStatus =
+    posture.kind !== 'editable' &&
+    posture.kind !== 'graph_owned_read_only' &&
+    workingTreeSync.phase === 'synchronized';
 
   useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
 
@@ -245,7 +249,7 @@ export const WorkspaceFileCodeEditor = forwardRef<
       message:
         posture.kind === 'graph_owned_read_only'
           ? copy.workingTreeGraphOwnedReadOnlyMessage
-          : copy.workingTreeReadOnlyMessage,
+          : (inlineMessage ?? copy.workingTreeReadOnlyMessage),
     },
     retryLabel: copy.workingTreeRetryLabel,
     reloadLabel: copy.workingTreeReloadLabel,
@@ -299,18 +303,14 @@ export const WorkspaceFileCodeEditor = forwardRef<
         <code className="min-w-0 flex-1 truncate text-(--text-secondary)">{path}</code>
         {headerActions}
       </div>
-      {inlineMessage == null ? null : (
+      {inlineMessage == null || hasReadOnlyStatus ? null : (
         <p role="status" className="px-3 py-1 text-xs text-(--text-muted)">
           {inlineMessage}
         </p>
       )}
       {posture.kind === 'graph_owned_read_only' ? null : (
         <CodeWorkingTreeStatus
-          phase={
-            posture.kind === 'editable' || workingTreeSync.phase !== 'synchronized'
-              ? workingTreeSync.phase
-              : 'read_only'
-          }
+          phase={hasReadOnlyStatus ? 'read_only' : workingTreeSync.phase}
           copy={workingTreeStatusCopy}
           onRetry={() => void retryWorkingTreeSync()}
           onReload={() => {

@@ -1,6 +1,11 @@
 /** Owned concern: prove read-only Canvas Project Code preserves inspection and Canvas position. */
+import { sha256HexUtf8 } from '@dvt/crypto';
+
+import type { FileContent } from '../../../src/app/ports/workspace';
+import { resolveCodeInlineReferenceCopy } from '../../../src/app/views/code/codeViewCopy';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
+  getE2eApiCalls,
   getLastE2eApiCall,
   stubE2eApi,
   stubE2eJsonApi,
@@ -33,29 +38,29 @@ function stubCodeWorkbenchBootstrapApis(): void {
   });
 }
 
-function stubContextualCodeWorkbenchApis(): void {
-  stubCodeWorkbenchBootstrapApis();
-  stubE2eJsonApi('GET', '/workspace/files', [
+function stubContextualCodeWorkbenchApis(
+  files: ReadonlyArray<FileContent> = [
     {
-      path: 'models',
-      name: 'models',
-      kind: 'directory',
-      children: [
-        {
-          path: 'models/staging/stg_orders.sql',
-          name: 'stg_orders.sql',
-          kind: 'file',
-        },
-      ],
+      path: 'models/staging/stg_orders.sql',
+      name: 'stg_orders.sql',
+      language: 'sql',
+      content: INITIAL_SQL,
+      contentSha256: INITIAL_REVISION,
+      lastModified: '2026-07-12T00:00:00.000Z',
     },
-  ]);
-  stubE2eJsonApi('GET', /\/workspace\/files\/.+/, {
-    path: 'models/staging/stg_orders.sql',
-    name: 'stg_orders.sql',
-    language: 'sql',
-    content: INITIAL_SQL,
-    contentSha256: INITIAL_REVISION,
-    lastModified: '2026-07-12T00:00:00.000Z',
+  ]
+): void {
+  stubCodeWorkbenchBootstrapApis();
+  stubE2eJsonApi(
+    'GET',
+    '/workspace/files',
+    files.map(({ path, name }) => ({ path, name, kind: 'file' }))
+  );
+  stubE2eApi('GET', /\/workspace\/files\/.+/, ({ url }) => {
+    const path = decodeURIComponent(url.pathname.slice('/workspace/files/'.length));
+    const file = files.find((candidate) => candidate.path === path);
+    if (file === undefined) throw new Error(`Unexpected workspace file read: ${path}`);
+    return { body: file };
   });
   stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
   stubE2eApi('POST', /\/workspace\/files\/.+/, () => {
@@ -64,6 +69,89 @@ function stubContextualCodeWorkbenchApis(): void {
 }
 
 describe('Canvas Project Code read-only inspection', () => {
+  it('reads authorized YAML without reference analysis and keeps the editor aligned between files', () => {
+    const authoringAuthority: FileContent['authoringAuthority'] = {
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'yaml-code-inspection',
+        authority: { kind: 'dbt-project-files', projectRoot: 'inspection_project' },
+      },
+    };
+    const files: FileContent[] = [
+      {
+        path: 'inspection_project/dbt_project.yml',
+        name: 'dbt_project.yml',
+        language: 'yaml',
+        content: "name: inspection_project\nversion: '1.0'\nconfig-version: 2\nprofile: default\n",
+        lastModified: '2026-10-30T00:00:00.000Z',
+        authoringAuthority,
+      },
+      {
+        path: 'inspection_project/models/schema.yml',
+        name: 'schema.yml',
+        language: 'yaml',
+        content: 'version: 2\nmodels:\n  - name: stg_orders\n    description: Orders model\n',
+        lastModified: '2026-10-30T00:00:00.000Z',
+        authoringAuthority,
+      },
+    ].map((file) => ({ ...file, contentSha256: sha256HexUtf8(file.content) }));
+    stubContextualCodeWorkbenchApis(files);
+    for (const endpoint of ['/workspace/dbt/graph', '/workspace/dbt/analysis/selected-model']) {
+      stubE2eApi('GET', endpoint, () => {
+        throw new Error(`YAML inspection must not request ${endpoint}.`);
+      });
+    }
+
+    visitWithE2eWorkspaceSession('/canvas');
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
+    const surface = '[data-slot="canvas-code-workspace-surface"]';
+    const editor = `${surface} [data-slot="workspace-file-code-editor"]`;
+    const monaco = `${editor} [data-testid="monaco-code-viewer"] .monaco-editor`;
+    cy.get(editor).should('have.attr', 'data-file-path', files[0]!.path);
+    cy.get(monaco)
+      .should('be.visible')
+      .then(($monaco) => {
+        const initialTop = $monaco[0]!.getBoundingClientRect().top;
+        for (const file of [files[1]!, files[0]!]) {
+          cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
+          cy.get(editor).should('have.attr', 'data-file-path', file.path);
+          cy.get(`${editor} .view-lines`).should(($lines) => {
+            expect($lines.text().replace(/\u00a0/g, ' ')).to.contain(file.content.split('\n')[0]);
+          });
+          cy.get(monaco).should(($current) => {
+            expect($current[0]!.getBoundingClientRect().top).to.be.closeTo(initialTop, 1);
+          });
+        }
+      });
+    cy.get(`${editor} [data-testid="monaco-code-editor"]`).should('not.exist');
+    cy.get(`${editor} textarea.inputarea`).should('have.prop', 'readOnly', true);
+    cy.get(`${editor} [data-slot="code-working-tree-status"]`).should(
+      'have.attr',
+      'data-phase',
+      'read_only'
+    );
+    cy.get(editor).children('[role="status"]').should('have.length', 1);
+    cy.get(`${editor} [data-reference-id]`).should('not.exist');
+    for (const language of ['en', 'es']) {
+      cy.get(editor).should(
+        'not.contain.text',
+        resolveCodeInlineReferenceCopy(language).checkingMessage
+      );
+    }
+    cy.then(() => {
+      const readPaths = getE2eApiCalls(/\/workspace\/files\/.+/, 'GET').map(({ url }) =>
+        decodeURIComponent(url.pathname.slice('/workspace/files/'.length))
+      );
+      expect(readPaths).to.include.members(files.map(({ path }) => path));
+      expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(0);
+      expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0);
+      expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+    });
+  });
+
   it('allows selection and copying without changing the file or Canvas position', () => {
     stubContextualCodeWorkbenchApis();
 
