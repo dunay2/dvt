@@ -414,6 +414,31 @@ describe('buildAppServices', () => {
     expect(appServices.shellFeedback).toBe(shellFeedback);
   });
 
+  it('composes the selected-model analysis query without issuing a request', () => {
+    const apiClient = buildApiClientStub();
+    const appServices = buildAppServices({ apiClient });
+
+    expect(appServices.dbtSelectedModelAnalysisQueryPort).toEqual(
+      expect.objectContaining({ analyzeSelectedModel: expect.any(Function) })
+    );
+    expect(apiClient.requestRaw).not.toHaveBeenCalled();
+  });
+
+  it('preserves an explicitly supplied selected-model analysis capability', () => {
+    const dbtSelectedModelAnalysisQueryPort = {
+      analyzeSelectedModel: vi.fn(async () => {
+        throw new Error('Not requested by composition.');
+      }),
+    };
+    const appServices = buildAppServices({
+      apiClient: buildApiClientStub(),
+      dbtSelectedModelAnalysisQueryPort,
+    });
+
+    expect(appServices.dbtSelectedModelAnalysisQueryPort).toBe(dbtSelectedModelAnalysisQueryPort);
+    expect(dbtSelectedModelAnalysisQueryPort.analyzeSelectedModel).not.toHaveBeenCalled();
+  });
+
   it('builds the default capabilities port from the composition-owned api client', async () => {
     const apiClient = buildApiClientStub();
     const payload = {

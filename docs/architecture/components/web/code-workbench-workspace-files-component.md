@@ -27,6 +27,54 @@ Use with:
 - [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md)
 - [Web Auth, Project Onboarding, And Actionable Product Gaps](../../../planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md)
 
+## Inline model references
+
+Code consumes `AnalyzeSelectedDbtModel` through the capability-specific
+`IDbtSelectedModelAnalysisQueryPort`. Its HTTP adapter uses the existing protected
+query and granted workspace scope. It does not create another analyzer, query
+intent, document store or save controller.
+
+The file-authoritative Canvas passes the server-confirmed
+`DbtProjectGraphProjection` to both project Code and selected-model Code. A URL,
+node label or retained inspector selection cannot authorize a reference. Code
+resolves exactly one model by its declared file path and requires a fresh graph,
+matching authority, project content revision and analysis identity. It then checks
+the accepted file content, complete file hash, reference hash and UTF-8 byte
+boundaries before converting offsets to Monaco's UTF-16 coordinates.
+
+`codeInlineReferences` owns that projection policy; `useCodeInlineReferences`
+joins it to the scoped query and the existing working-tree phase.
+`WorkspaceFileCodeEditor` remains the sole owner of its editable value and CAS
+synchronization. An edit removes reference cards immediately. Cards return only
+when the saved, reconciled revision matches authoritative analysis. Late results
+and failures cannot restore cards for another buffer or workspace.
+
+The shared Monaco adapter owns passive view zones, accessible overlay controls
+and their disposal. It preserves the existing editor, text model, history,
+selection and scroll; it never writes text. Read-only surfaces retain their
+existing restriction on exposing mutable mount callbacks. The laboratory consumes
+the same renderer through its explicit fixture adapter. Card styles have one
+definition in the existing global stylesheet.
+
+Inspection uses the fixed Code metadata panel, or an overlay within the existing
+Code host when that panel is closed. It does not select another file or resize the
+editor. `CodeReferenceDetails` reads the identity-bound definition through
+`GetWorkspaceFileContent` and verifies its path and content hash. A failed or
+revoked query cannot display an old cached definition. Declared columns retain
+their supplied types; absent metadata is labelled as absent.
+
+The admitted capability is file-backed dbt model/source references with supported
+regions. Unsupported syntax, ambiguous identities, native Substrait objects
+without file correspondence and semantic entities without such a contract remain
+textual. Executable ports and inferred schemas are not fabricated. A source YAML
+definition is its verified complete file, because the current contract does not
+provide resource-specific definition ranges. External-package paths cannot be
+substituted with a similarly named local definition.
+
+This presentation does not change graph/file authority, preview, compilation or
+execution admission. The governing integration rationale and capability matrix
+are recorded in [CODECOMP1.1](https://github.com/dunay2/dvt/issues/3751#issuecomment-6510144467).
+
 ## Historical provenance
 
 These inputs explain earlier implementation decisions; they are not current

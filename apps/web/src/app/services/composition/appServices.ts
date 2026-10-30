@@ -23,6 +23,7 @@ import type {
 } from '../../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
 import type { IDbtProjectGraphQueryPort } from '../../ports/dbtProjectGraph';
+import type { IDbtSelectedModelAnalysisQueryPort } from '../../ports/dbtSelectedModelAnalysis';
 import type { IDbtProjectImportPort } from '../../ports/dbtProjectImport';
 import type { IDbtYamlDescriptionEditPort } from '../../ports/dbtYamlDescriptionEdit';
 import { createApiClient, type ApiClient } from '../api/createApiClient';
@@ -40,6 +41,7 @@ import { createSessionContextPort } from '../session/sessionContextPort';
 import { createWorkspaceScopeSelectionPort } from '../session/workspaceScopeSelectionPort';
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
 import { createApiDbtProjectGraphQueryPort } from '../dbtProject/dbtProjectGraph.api';
+import { createApiDbtSelectedModelAnalysisQueryPort } from '../dbtProject/dbtSelectedModelAnalysis.api';
 import { createApiDbtProjectImportPort } from '../dbtProject/dbtProjectImport.api';
 import { createApiDbtYamlDescriptionEditPort } from '../dbtProject/dbtYamlDescriptionEdit.api';
 import { createApiGraphDbtWorkspaceArtifactPublicationCommandPort } from '../dbtProject/graphDbtWorkspaceArtifactPublication.api';
@@ -63,6 +65,7 @@ export interface AppServices {
   readonly graphDbtModelCompilationQuery: IGraphDbtModelCompilationQueryPort;
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   readonly dbtProjectGraphQueryPort: IDbtProjectGraphQueryPort;
+  readonly dbtSelectedModelAnalysisQueryPort: IDbtSelectedModelAnalysisQueryPort;
   readonly dbtProjectImportPort: IDbtProjectImportPort;
   readonly dbtYamlDescriptionEditPort: IDbtYamlDescriptionEditPort;
   readonly runsService: IRunsPort;
@@ -91,6 +94,7 @@ export interface AppServicesOverrides {
   readonly graphDbtModelCompilationQuery?: IGraphDbtModelCompilationQueryPort;
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
   readonly dbtProjectGraphQueryPort?: IDbtProjectGraphQueryPort;
+  readonly dbtSelectedModelAnalysisQueryPort?: IDbtSelectedModelAnalysisQueryPort;
   readonly dbtProjectImportPort?: IDbtProjectImportPort;
   readonly dbtYamlDescriptionEditPort?: IDbtYamlDescriptionEditPort;
   readonly runsService?: IRunsPort;
@@ -142,6 +146,9 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     createApiWorkspaceGraphDraftAuthoringPort(apiClient);
   const dbtProjectGraphQueryPort =
     overrides.dbtProjectGraphQueryPort ?? createApiDbtProjectGraphQueryPort(apiClient);
+  const dbtSelectedModelAnalysisQueryPort =
+    overrides.dbtSelectedModelAnalysisQueryPort ??
+    createApiDbtSelectedModelAnalysisQueryPort(apiClient);
   const dbtProjectImportPort =
     overrides.dbtProjectImportPort ?? createApiDbtProjectImportPort(apiClient);
   const dbtYamlDescriptionEditPort =
@@ -163,6 +170,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     graphDbtModelCompilationQuery,
     workspaceGraphDraftAuthoringPort,
     dbtProjectGraphQueryPort,
+    dbtSelectedModelAnalysisQueryPort,
     dbtProjectImportPort,
     dbtYamlDescriptionEditPort,
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),

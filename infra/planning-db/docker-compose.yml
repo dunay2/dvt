@@ -3,6 +3,7 @@ name: dvt-planning-db
 services:
   postgres:
     image: ${DVT_PLANNING_DB_IMAGE:-postgres:16}
+    init: true
     container_name: dvt-planning-db-postgres
     environment:
       POSTGRES_DB: dvt_planning

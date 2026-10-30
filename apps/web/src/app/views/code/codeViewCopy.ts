@@ -358,3 +358,50 @@ export function resolveCodeViewCopy(locale: string = detectBrowserLocale()): Cod
 }
 
 export const codeViewCopy = resolveCodeViewCopy();
+
+const INLINE_COPY = {
+  en: {
+    inputsLabel: 'Inputs',
+    outputLabel: 'Output',
+    fieldsLabel: 'columns',
+    inspectLabel: 'View definition and schema',
+    inspectAriaPrefix: 'View definition and schema for',
+    modelLabel: 'Model',
+    sourceLabel: 'Source',
+    closeLabel: 'Close definition',
+    definitionLabel: 'Definition · read only',
+    declaredColumnsLabel: 'Declared columns',
+    unknownTypeLabel: 'Type not declared',
+    emptyColumnsMessage: 'No columns declared.',
+    missingDefinitionMessage: 'A verified definition is not available.',
+    checkingMessage: 'Checking saved model references…',
+    unavailableMessage: 'The file references could not be verified.',
+    dirtyMessage: 'References will appear when the saved revision is verified.',
+    unsupportedMessage: 'This file has no supported model references.',
+  },
+  es: {
+    inputsLabel: 'Entradas',
+    outputLabel: 'Salida',
+    fieldsLabel: 'campos',
+    inspectLabel: 'Ver definición y esquema',
+    inspectAriaPrefix: 'Ver definición y esquema de',
+    modelLabel: 'Modelo',
+    sourceLabel: 'Fuente',
+    closeLabel: 'Cerrar definición',
+    definitionLabel: 'Definición · solo lectura',
+    declaredColumnsLabel: 'Columnas declaradas',
+    unknownTypeLabel: 'Tipo no declarado',
+    emptyColumnsMessage: 'No hay columnas declaradas.',
+    missingDefinitionMessage: 'No hay una definición verificada disponible.',
+    checkingMessage: 'Verificando referencias del modelo guardado…',
+    unavailableMessage: 'No se pudieron verificar las referencias del archivo.',
+    dirtyMessage: 'Las referencias se mostrarán al verificar la revisión guardada.',
+    unsupportedMessage: 'Este archivo no tiene referencias de modelo compatibles.',
+  },
+};
+
+export type CodeInlineReferenceCopy = typeof INLINE_COPY.en;
+
+export function resolveCodeInlineReferenceCopy(locale: string): CodeInlineReferenceCopy {
+  return INLINE_COPY[resolveCodeViewLanguage(locale)];
+}

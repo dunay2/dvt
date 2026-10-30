@@ -1,5 +1,15 @@
 /** Owned concern: edit one known workspace file through the canonical revision-aware Code rail. */
-import { forwardRef, useCallback, useImperativeHandle, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
 
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { useWorkspaceFileContentQuery } from '../../queries/workspaceQueries';
@@ -13,10 +23,13 @@ import { CodeWorkingTreeStatus } from './CodeWorkingTreeStatus';
 import type { CodeWorkingTreeReconciliationOutcome } from './codeWorkingTreeSyncModel';
 import { resolveCodeWorkspaceFileEditPosture } from './codeWorkspaceFileEditPosture';
 import { CodeWorkspaceFileSurface } from './CodeWorkspaceFileSurface';
-import { resolveCodeViewCopy } from './codeViewCopy';
+import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './codeViewCopy';
 import { resolveCodeWorkbenchErrorPresentation } from './codeWorkbenchErrorModel';
 import { useCodeWorkingTreeSync } from './useCodeWorkingTreeSync';
 import { reconcileWorkspaceFileAuthority } from './workspaceFileReconciliationAuthority';
+import { useCodeInlineReferences } from './useCodeInlineReferences';
+import type { CodeInlineReferenceDetail } from './codeInlineReferences';
+import { CodeReferenceDetails } from './CodeReferenceDetails';
 
 export type WorkspaceFileCodeAuthority = 'graph-draft' | 'dbt-project-files' | 'missing' | 'mixed';
 
@@ -35,6 +48,8 @@ export type WorkspaceFileCodeEditorProps = Readonly<{
   onPersistenceRecovered?: () => void | Promise<void>;
   fillAvailableSpace?: boolean;
   headerActions?: ReactNode;
+  dbtProject?: DbtProjectGraphProjection;
+  onInspectReference?: (reference: CodeInlineReferenceDetail | undefined) => void;
 }>;
 
 export const WorkspaceFileCodeEditor = forwardRef<
@@ -50,11 +65,16 @@ export const WorkspaceFileCodeEditor = forwardRef<
     onPersistenceRecovered,
     fillAvailableSpace = false,
     headerActions,
+    dbtProject,
+    onInspectReference,
   },
   ref
 ) {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCodeViewCopy(applicationLanguage);
+  const inlineCopy = resolveCodeInlineReferenceCopy(applicationLanguage);
+  const [localReference, setLocalReference] = useState<CodeInlineReferenceDetail>();
+  const referenceOpener = useRef<HTMLElement | null>(null);
   const commandPort = useWorkspaceFileContentCommandPort();
   const fileContentQuery = useWorkspaceFileContentQuery(path);
   const refetchFileContent = fileContentQuery.refetch;
@@ -83,6 +103,57 @@ export const WorkspaceFileCodeEditor = forwardRef<
     reconcilePersistedFile:
       reconcilePersistedFile == null ? undefined : reconcilePersistedFileAuthority,
   });
+  const acceptedInlineFile =
+    fileContentQuery.isSuccess && fileContentQuery.data.path === path
+      ? fileContentQuery.data
+      : undefined;
+  const inlineState = useCodeInlineReferences({
+    project: dbtProject,
+    file: acceptedInlineFile,
+    value: workingTreeSync.value,
+    enabled: authority === 'dbt-project-files' && workingTreeSync.phase === 'synchronized',
+  });
+  const inlineReferences = useMemo(
+    () =>
+      inlineState.kind === 'ready' ? { ...inlineState.references, copy: inlineCopy } : undefined,
+    [inlineState, inlineCopy]
+  );
+  const clearReference = useCallback(() => {
+    setLocalReference(undefined);
+    onInspectReference?.(undefined);
+  }, [onInspectReference]);
+  useEffect(clearReference, [clearReference, inlineState]);
+  const inspectReference = useCallback(
+    (id: string) => {
+      if (inlineState.kind !== 'ready') return;
+      const reference = inlineState.details.find((item) => item.id === id);
+      if (reference == null) return;
+      referenceOpener.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      if (onInspectReference != null) onInspectReference(reference);
+      else setLocalReference(reference);
+    },
+    [inlineState, onInspectReference]
+  );
+  const changeValue = useCallback(
+    (nextValue: string) => {
+      clearReference();
+      workingTreeSync.updateValue(nextValue);
+    },
+    [clearReference, workingTreeSync.updateValue]
+  );
+  const inlineMessage =
+    inlineState.kind === 'checking'
+      ? inlineCopy.checkingMessage
+      : inlineState.kind === 'unavailable'
+        ? inlineCopy.unavailableMessage
+        : inlineState.kind === 'text-only'
+          ? inlineState.reason === 'dirty-buffer'
+            ? inlineCopy.dirtyMessage
+            : inlineState.reason === 'no-supported-references'
+              ? inlineCopy.unsupportedMessage
+              : inlineCopy.unavailableMessage
+          : undefined;
 
   useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
 
@@ -177,15 +248,17 @@ export const WorkspaceFileCodeEditor = forwardRef<
       fillAvailableSpace={fillAvailableSpace}
       file={fileContentQuery.data}
       loadingLabel={copy.editorLoadingMessage}
-      onChange={workingTreeSync.updateValue}
+      onChange={changeValue}
       posture={posture}
       value={workingTreeSync.value}
+      inlineReferences={inlineReferences}
+      onInspectReference={inspectReference}
     />
   );
 
   return (
     <div
-      className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-(--border-subtle) ${className ?? ''}`}
+      className={`relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-(--border-subtle) ${className ?? ''}`}
       data-file-path={path}
       data-slot="workspace-file-code-editor"
     >
@@ -197,6 +270,11 @@ export const WorkspaceFileCodeEditor = forwardRef<
         <code className="min-w-0 flex-1 truncate text-(--text-secondary)">{path}</code>
         {headerActions}
       </div>
+      {inlineMessage == null ? null : (
+        <p role="status" className="px-3 py-1 text-xs text-(--text-muted)">
+          {inlineMessage}
+        </p>
+      )}
       {posture.kind === 'graph_owned_read_only' ? null : (
         <CodeWorkingTreeStatus
           phase={posture.kind === 'editable' ? workingTreeSync.phase : 'read_only'}
@@ -214,6 +292,17 @@ export const WorkspaceFileCodeEditor = forwardRef<
       <div className={cn('flex-1 p-1', fillAvailableSpace ? 'flex min-h-0 flex-col' : 'min-h-80')}>
         {surface}
       </div>
+      {onInspectReference != null || localReference == null ? null : (
+        <CodeReferenceDetails
+          overlay
+          reference={localReference}
+          copy={inlineCopy}
+          onClose={() => {
+            clearReference();
+            if (referenceOpener.current?.isConnected) referenceOpener.current.focus();
+          }}
+        />
+      )}
     </div>
   );
 });

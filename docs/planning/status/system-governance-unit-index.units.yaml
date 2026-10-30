@@ -423,6 +423,60 @@ units:
     governance:
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/governance-document-rule-inventory.md
+  - id: SYS-CI-PLANNING-DB-RUNTIME
+    name: Local Planning Query Store runtime
+    parent: SYS-CI-GOVERNANCE-ROOT
+    level: component
+    status: review
+    ownedConcern: >-
+      Own the durable local Planning Query Store Docker lifecycle and configuration through the
+      existing canonical executor, preserving the configured data and explicit reset separation.
+    responsibilities:
+      - >-
+        Configure the fixed Compose project/container, image and persistent bind through the
+        existing argument and environment builders.
+      - >-
+        Start and inspect the shared runtime through existing bounded startup/readiness paths and
+        process supervision.
+    nonGoals:
+      - >-
+        No governance import, projection rebuild, schema migration, task authority or implicit data
+        reset.
+      - >-
+        Immediate shutdown remains an explicitly reviewed emergency operation; init supervision is
+        not proof of the original crash cause.
+    reasonsToChange:
+      - Local runtime lifecycle, canonical Compose configuration or preservation guarantees change.
+    owns:
+      - scripts/planning-db-run.cjs
+      - scripts/planning-db-run.test.cjs
+      - infra/planning-db/docker-compose.yml
+    excludes: []
+    childrenRequired: false
+    dddOwner: PlanningQueryStoreRuntime
+    cqRails: StartPlanningQueryStoreRuntime;InspectPlanningQueryStoreRuntime
+    publicApi:
+      - >-
+        runPlanningDbUp; runPlanningDbHealth; waitForPlanningDbReady; buildComposeArgs; buildPgEnv;
+        explicit planResetDataDir/resetPlanningDb separation
+    invariants:
+      - >-
+        Starting retains the fixed Compose project/container and configured persistent bind; startup
+        never authorizes reset, governance import or schema rebuild.
+      - >-
+        Canonical Compose supervises PostgreSQL under init while image, environment, ports and
+        healthcheck remain operator-explicit.
+    transitions:
+      - >-
+        The existing up/readiness paths move unavailable or stopped to starting and healthy only
+        through bounded successful results; errors remain failures.
+    consumers:
+      - >-
+        Local operators and existing Planning DB query, write and CI commands consume this shared
+        local PostgreSQL runtime.
+    governance:
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6512414690
+    fowlerSignals: []
   - id: SYS-CI-GOVERNANCE-ROOT
     name: CI and automation root component
     parent: SYS-CI-GOVERNANCE
@@ -445,6 +499,20 @@ units:
       - docs/guides/testing-and-ci-capabilities.md
     fowlerSignals:
       - coverage refinement
+    excludes:
+      - scripts/chromium-network-diagnostics.test.cjs
+      - scripts/chromium-network-projection.test.cjs
+      - scripts/chromium-process-observer.test.cjs
+      - scripts/chromium-process-protocol.test.cjs
+      - scripts/chromium-process-protocol.test.py
+      - scripts/chromium-signal-trace.test.py
+      - scripts/chromium-oom-journal.test.py
+      - scripts/planning-db-run.cjs
+      - scripts/planning-db-run.test.cjs
+    ownedConcern: >-
+      Fallback physical ownership of repository CI and automation paths until exact bounded child
+      definitions assume them; coverage-required classification, not a claim of cohesive
+      implementation or global SRP closure.
   - id: SYS-CI-SCHEDULING-LABORATORY
     name: Isolated scheduling strategy laboratory
     parent: SYS-CI-GOVERNANCE-ROOT
@@ -954,6 +1022,8 @@ units:
       - pnpm-workspace.yaml
     fowlerSignals:
       - coverage refinement
+    excludes:
+      - infra/planning-db/docker-compose.yml
   - id: SYS-RUNTIME
     name: Runtime domain
     parent: SYS-DVT
@@ -1485,6 +1555,383 @@ units:
       - >-
         docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md
       - docs/planning/proposals/web-user-stories-20260429.md
+  - id: SYS-WEB-CODE-WORKSPACE-FILES
+    name: Code Workbench Workspace Files
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: >-
+      Present one accepted scoped file selection and revision-aware editor session, with passive
+      metadata and explicit default/project-workspace presentation.
+    responsibilities:
+      - >-
+        Coordinate accepted scoped file selection and passive metadata through the existing query
+        and flush guards.
+      - Present the actual revision-aware working-tree session through the shared editor.
+      - Project editable/view-only surface and localized Code presentation.
+      - >-
+        Admit revision-bound inline reference projections and inspect declared metadata without
+        parsing SQL or changing the active Code buffer.
+    nonGoals:
+      - >-
+        Consumes the protected query/command ports and working-tree sync; does not own transport
+        authorization, file storage, graph generation or repository Git. NodeWorkbench is a
+        shared-editor consumer association, not this owner.
+    reasonsToChange:
+      - >-
+        Requested-path membership, accepted selection, read currentness or metadata presentation
+        changes.
+      - >-
+        Buffer, revision, repair/navigation posture or delegated file synchronization presentation
+        changes.
+      - Monaco posture projection or EN/ES Code presentation copy changes.
+    owns:
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/canvas/SqlContextWorkbench.tsx
+      - apps/web/src/app/views/code/CodeWorkspaceFileSurface.tsx
+      - apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
+      - apps/web/src/app/views/code/codeViewCopy.ts
+      - apps/web/src/app/views/code/codeInlineReferences.ts
+      - apps/web/src/app/views/code/codeInlineReferences.test.ts
+      - apps/web/src/app/views/code/useCodeInlineReferences.ts
+      - apps/web/src/app/views/code/CodeReferenceDetails.tsx
+      - apps/web/src/app/views/code/CodeReferenceDetails.test.tsx
+    excludes: []
+    childrenRequired: false
+    dddOwner: CodeViewProps / FileContent / WorkspaceFileSaveReceipt
+    cqRails: >-
+      ListWorkspaceFiles;GetWorkspaceFileContent;SaveWorkspaceFileContent;GetWorkspaceFileHistory;AnalyzeSelectedDbtModel
+    publicApi:
+      - >-
+        CodeViewProps.fileScope; CodeViewProps.fileSelectionRequest;
+        WorkspaceFileCodeEditorProps.authority; FileContent and WorkspaceFileSaveReceipt
+      - >-
+        resolveCodeSelectedModel; projectCodeInlineReferences; useCodeInlineReferences;
+        CodeReferenceDetails
+    invariants:
+      - >-
+        Preserve existing typed authority, scope and accepted-state guards; no new product API or
+        filesystem-as-Git claim.
+    transitions: []
+    consumers: []
+    governance:
+      - docs/architecture/components/web/code-workbench-workspace-files-component.md
+      - https://github.com/dunay2/dvt/issues/3749#issuecomment-6499489685
+    fowlerSignals: []
+  - id: SYS-WEB-DBT-PROJECT-FILES-AUTHORITY
+    name: DBT project files authority presentation
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: >-
+      Adapt an already bound file-authoritative DBT project graph to Canvas and the shared Code
+      session while preserving actual project root, freshness, layout and navigation guards.
+    responsibilities:
+      - >-
+        Coordinate file-authoritative graph query, root-bound layout and guarded editor/inspector
+        handoff.
+      - Adapt that controller and root-scoped Code to existing shell/bootstrap contracts.
+      - >-
+        Pass the accepted fresh DBT graph into the existing Code session as evidence, retaining
+        server-owned semantics and guarded file navigation.
+    nonGoals:
+      - >-
+        Query consumption/authority adaptation only. Import admission, query cache, execution,
+        inspector policy, graph projection and artifact publication stay delegated;
+        SYS-WEB-DBT-ARTIFACT-PROJECTION is not an equivalent owner.
+    reasonsToChange:
+      - >-
+        Bound DBT projection freshness, layout identity, import focus or file-session handoff
+        changes.
+      - >-
+        DBT authority notices, unsupported graph operations or shell/Code contribution projection
+        changes.
+    owns:
+      - apps/web/src/app/views/canvas/useDbtProjectFilesAuthorityController.ts
+      - apps/web/src/app/views/canvas/useDbtProjectFilesAuthoritySurface.tsx
+      - apps/web/src/app/views/canvas/dbtProjectFileCodeWorkbench.tsx
+      - apps/web/src/app/views/canvas/dbtWorkspaceFileCodeContribution.tsx
+    excludes: []
+    childrenRequired: false
+    dddOwner: DbtProjectFilesAuthorityBinding / DbtProjectGraphProjection
+    cqRails: >-
+      ProjectDbtGraphFromFiles;ImportDbtProject;GetWorkspaceFileContent;SaveWorkspaceFileContent;RenderCanvasContextualGraphSurface
+    publicApi:
+      - >-
+        DbtProjectFilesAuthorityBinding; DbtProjectGraphProjection; WorkspaceFileSaveReceipt;
+        Existing Canvas store/layout state
+      - Bound DbtProjectGraphProjection handoff to Code inline reference admission
+    invariants:
+      - >-
+        Preserve existing typed authority, scope and accepted-state guards; no new product API or
+        filesystem-as-Git claim.
+    transitions: []
+    consumers: []
+    governance:
+      - docs/architecture/components/web/graph/dbt-project-import-and-source-authority-component.md
+      - https://github.com/dunay2/dvt/issues/3749#issuecomment-6499489685
+    fowlerSignals: []
+  - id: SYS-WEB-DBT-SELECTED-MODEL-ANALYSIS
+    name: Selected dbt model analysis browser client
+    parent: SYS-WEB-DBT-PROJECT-FILES-AUTHORITY
+    level: component
+    status: review
+    ownedConcern: >-
+      Expose the existing authoritative selected-model query through a narrow typed browser port and
+      its protected HTTP adapter.
+    responsibilities:
+      - >-
+        Declare the required selected-model analysis read capability using existing
+        authority/read-model contracts.
+      - >-
+        Adapt the existing protected query and reject malformed payloads, mixed authority and
+        mismatched selected model responses.
+    nonGoals:
+      - >-
+        No dbt parser, server semantic authority, caller-selected authorization or React
+        Query/editor state ownership.
+    reasonsToChange:
+      - >-
+        Expose the existing authoritative selected-model query through a narrow typed browser port
+        and its protected HTTP adapter.
+    owns:
+      - apps/web/src/app/ports/dbtSelectedModelAnalysis.ts
+      - apps/web/src/app/services/dbtProject/dbtSelectedModelAnalysis.api.ts
+      - apps/web/src/app/services/dbtProject/dbtSelectedModelAnalysis.api.test.ts
+    excludes: []
+    childrenRequired: false
+    dddOwner: DbtSelectedModelAnalysis
+    cqRails: AnalyzeSelectedDbtModel
+    publicApi:
+      - >-
+        IDbtSelectedModelAnalysisQueryPort.analyzeSelectedModel(binding, selectedUniqueId):
+        Promise<DbtSelectedModelAnalysis>
+    invariants: []
+    transitions: []
+    consumers: []
+    governance:
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6510144467
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6511114757
+    fowlerSignals: []
+  - id: SYS-WEB-MONACO-PRESENTATION
+    name: Monaco Visual Token Component
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: >-
+      Own shared Monaco Code editor/viewer surfaces, theme and option presets and the passive
+      inline-reference mount/dispose bridge; callers retain content, authority and currentness
+      decisions.
+    responsibilities:
+      - Configure the shared editor theme.
+      - Project shared Code and Diff editor option presets.
+      - >-
+        Forward supplied Code editor/viewer state and callbacks through one shared surface and
+        manage the optional passive-reference attachment lifetime.
+    nonGoals:
+      - >-
+        Passive presentation collaborator of existing content rails, not an independent query or
+        command. No content/currentness/authorization ownership; monacoVisualClasses and monacoTheme
+        remain constants, never callable bindings.
+      - >-
+        No source semantic analysis, source-currentness admission, authorization, file persistence
+        or independent product rail.
+    reasonsToChange:
+      - Monaco theme definition or token readability changes.
+      - The common accessibility, readonly or layout option policy changes.
+    owns:
+      - apps/web/src/app/components/monaco/monacoVisualTokens.ts
+      - apps/web/src/app/components/monaco/MonacoCodeSurface.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeSurface.test.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeEditor.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeViewer.tsx
+    excludes: []
+    childrenRequired: false
+    dddOwner: MonacoCodeSurfaceProps / MonacoVisualClassNames / IStandaloneEditorConstructionOptions
+    cqRails: >-
+      none - passive shared Monaco surfaces and rendering collaborators consumed by existing file
+      and Canvas presentation rails
+    publicApi:
+      - Monaco editor.defineTheme gateway; ariaLabel/readOnly option inputs
+      - >-
+        MonacoCodeSurface / MonacoCodeEditor / MonacoCodeViewer props; supplied inlineReferences and
+        inspect callback; existing shared theme/options APIs
+    invariants:
+      - >-
+        Preserve existing typed authority, scope and accepted-state guards; no new product API or
+        filesystem-as-Git claim.
+    transitions: []
+    consumers: []
+    governance:
+      - docs/architecture/components/web/style-guide.md
+      - https://github.com/dunay2/dvt/issues/3749#issuecomment-6499489685
+    fowlerSignals: []
+  - id: SYS-WEB-MONACO-INLINE-REFERENCES
+    name: Monaco passive inline references
+    parent: SYS-WEB-MONACO-PRESENTATION
+    level: component
+    status: review
+    ownedConcern: >-
+      Present caller-validated inline references and dispose their overlays, view zones and event
+      subscriptions on the existing editor.
+    responsibilities:
+      - Render passive cards from supplied offsets and copy without interpreting SQL.
+      - Retain the existing editor/model and release every attached overlay, zone and subscription.
+    nonGoals:
+      - >-
+        No semantic analysis, source-currentness decision, authorization, persistence or independent
+        product rail.
+    reasonsToChange:
+      - >-
+        Present caller-validated inline references and dispose their overlays, view zones and event
+        subscriptions on the existing editor.
+    owns:
+      - apps/web/src/app/components/monaco/monacoInlineReferences.ts
+      - apps/web/src/app/components/monaco/monacoInlineReferences.test.ts
+    excludes: []
+    childrenRequired: false
+    dddOwner: MonacoInlineReferences
+    cqRails: >-
+      none - passive presentation collaborator of GetWorkspaceFileContent and
+      AnalyzeSelectedDbtModel
+    publicApi:
+      - >-
+        attachMonacoInlineReferences(editor, monaco, projection, onInspectReference): { dispose():
+        void }
+    invariants: []
+    transitions: []
+    consumers: []
+    governance:
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6510144467
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6511114757
+    fowlerSignals: []
+  - id: SYS-WEB-WORKSPACE-QUERY-ADAPTERS
+    name: Workspace query adapters
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: >-
+      Bind existing minimal workspace read ports and active session scope to React Query
+      identities/results; selected file-tree coverage only is audited here.
+    responsibilities:
+      - >-
+        Adapt scoped workspace read-port query hooks without owning authorization, transport, file
+        persistence or editor state.
+      - >-
+        Adapt the existing selected-model analysis read port to accepted tenant/project/environment,
+        Canvas/model and revision cache identity.
+    nonGoals:
+      - >-
+        No new product query/transport, no claim that ListWorkspaceFiles owns other hooks, no
+        whole-module coverage or execution PASS.
+    reasonsToChange:
+      - Workspace query-key scope and read-port adapter coordination.
+    owns:
+      - apps/web/src/app/queries/workspaceQueries.ts
+      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.ts
+      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.test.tsx
+    excludes: []
+    childrenRequired: false
+    dddOwner: Workspace read-port adapter
+    cqRails: ListWorkspaceFiles;AnalyzeSelectedDbtModel
+    publicApi:
+      - 'useWorkspaceFileTreeQuery(): existing scoped React Query WorkspaceFileTree observer'
+      - useDbtSelectedModelAnalysisQuery(binding, selectedUniqueId, {enabled, revisionToken})
+    invariants:
+      - Provider retains authorization; query errors remain errors and no write is introduced.
+    transitions: []
+    consumers:
+      - CanvasProjectFilesExplorer
+    governance: []
+    fowlerSignals: []
+  - id: SYS-WEB-CHROMIUM-DIAGNOSTICS
+    name: Owned Chromium diagnostics
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: >-
+      Own the opt-in Chromium capture lease, bounded owned Linux observation and safe evidence
+      projection without owning browser proof acceptance.
+    responsibilities:
+      - >-
+        Own current-launch capture identity, private failed-spec observations, native-completion
+        reconciliation and exact cleanup.
+      - >-
+        Observe only owned Linux process lifetimes, bounded signal and OOM evidence through proven
+        capabilities and await actual retirement.
+      - >-
+        Project only allowlisted network, process and validation-code metadata while preserving
+        unavailable, incomplete and uncertain outcomes.
+    nonGoals:
+      - >-
+        Product behavior, provider/auth policy, new browser rail, retry, timeout or assertion
+        relaxation.
+      - >-
+        Owning the external runner, Cypress configuration, browser router or changed-slice planner
+        merely because they call diagnostics.
+    reasonsToChange:
+      - Capture ownership, completion, reconciliation or cleanup rules change.
+      - >-
+        Kernel protocols, process identity, capability admission, deadlines or owned-resource
+        retirement change.
+      - Disclosure schema, strict input validation or correlation uncertainty changes.
+    owns:
+      - apps/web/cypress/node/chromiumNetworkDiagnostics.ts
+      - apps/web/cypress/node/chromiumNetworkEvidence.ts
+      - apps/web/cypress/node/chromiumNetworkProjection.ts
+      - apps/web/cypress/node/chromiumProcessObserver.ts
+      - apps/web/cypress/node/linuxChromiumProcessObserver.py
+      - apps/web/cypress/node/linuxChromiumProcessProtocol.py
+      - apps/web/cypress/node/linuxChromiumSignalTrace.py
+      - apps/web/cypress/node/linuxChromiumOomJournal.py
+      - scripts/chromium-network-diagnostics.test.cjs
+      - scripts/chromium-network-projection.test.cjs
+      - scripts/chromium-process-observer.test.cjs
+      - scripts/chromium-process-protocol.test.cjs
+      - scripts/chromium-process-protocol.test.py
+      - scripts/chromium-signal-trace.test.py
+      - scripts/chromium-oom-journal.test.py
+    excludes: []
+    childrenRequired: false
+    dddOwner: Web / Cypress diagnostics
+    cqRails: RunWebCypressNative
+    publicApi:
+      - withChromiumNetworkDiagnostics
+      - configureChromiumNetworkDiagnostics
+      - stageChromiumObservation
+      - finalizeChromiumCapture
+      - projectChromiumNetworkCapture
+      - projectChromiumProcessLog
+      - startChromiumProcessObserver
+    invariants:
+      - >-
+        The existing proof result and strict exact-spec acceptance remain authoritative; observation
+        cannot fabricate success.
+      - >-
+        Only exact owned launch identities and resources may be observed or retired; unavailable
+        capability rejects explicitly.
+      - >-
+        Readiness is bounded to 20 seconds, normal EOF to 10 seconds, then existing TERM 5 seconds
+        and KILL 5 seconds; retain actual completion and cleanup outcomes.
+      - >-
+        Privileged group retirement duplicates the controller-held open file description with actual
+        pidfd_getfd, never /proc FD reopening. Require the real libc wrapper, ptrace duplication
+        capability and kernel pidfd GROUP support from Linux 6.9 in the native probe; otherwise
+        deny. No unrelated process signal or global tracing change.
+      - >-
+        No raw log, arbitrary exception, URL, process payload, command line, credential or private
+        raw receipt is published as complete evidence.
+    transitions:
+      - >-
+        Admitted existing operation produces actual completion or an explicit failed, unavailable or
+        incomplete result.
+    consumers:
+      - Existing native browser proof adapters; external ownership and acceptance remain explicit.
+    governance:
+      - docs/architecture/components/web/web-vitest-changed-suite-router-component.md
+      - docs/guides/testing-and-ci-capabilities.md
+      - https://github.com/dunay2/dvt/issues/3735#issuecomment-6436131547
+    fowlerSignals: []
   - id: SYS-WEB-ROOT
     name: Web root component
     parent: SYS-WEB
@@ -1501,6 +1948,67 @@ units:
     fowlerSignals:
       - coverage refinement
       - hidden authority
+    excludes:
+      - apps/web/src/app/components/monaco/MonacoCodeEditor.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeSurface.test.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeSurface.tsx
+      - apps/web/src/app/components/monaco/MonacoCodeViewer.tsx
+      - apps/web/src/app/components/monaco/monacoInlineReferences.test.ts
+      - apps/web/src/app/components/monaco/monacoInlineReferences.ts
+      - apps/web/src/app/components/monaco/monacoVisualTokens.ts
+      - apps/web/src/app/ports/dbtSelectedModelAnalysis.ts
+      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.test.tsx
+      - apps/web/src/app/queries/dbtSelectedModelAnalysisQueries.ts
+      - apps/web/src/app/queries/workspaceQueries.ts
+      - apps/web/src/app/services/dbtProject/dbtSelectedModelAnalysis.api.test.ts
+      - apps/web/src/app/services/dbtProject/dbtSelectedModelAnalysis.api.ts
+      - apps/web/src/app/views/CodeView.tsx
+      - apps/web/src/app/views/canvas/SqlContextWorkbench.tsx
+      - apps/web/src/app/views/canvas/dbtProjectFileCodeWorkbench.tsx
+      - apps/web/src/app/views/canvas/dbtWorkspaceFileCodeContribution.tsx
+      - apps/web/src/app/views/canvas/useDbtProjectFilesAuthorityController.ts
+      - apps/web/src/app/views/canvas/useDbtProjectFilesAuthoritySurface.tsx
+      - apps/web/src/app/views/code/CodeReferenceDetails.test.tsx
+      - apps/web/src/app/views/code/CodeReferenceDetails.tsx
+      - apps/web/src/app/views/code/CodeWorkspaceFileSurface.tsx
+      - apps/web/src/app/views/code/WorkspaceFileCodeEditor.tsx
+      - apps/web/src/app/views/code/codeInlineReferences.test.ts
+      - apps/web/src/app/views/code/codeInlineReferences.ts
+      - apps/web/src/app/views/code/codeViewCopy.ts
+      - apps/web/src/app/views/code/useCodeInlineReferences.ts
+      - apps/web/cypress/node/chromiumNetworkDiagnostics.ts
+      - apps/web/cypress/node/chromiumNetworkEvidence.ts
+      - apps/web/cypress/node/chromiumNetworkProjection.ts
+      - apps/web/cypress/node/chromiumProcessObserver.ts
+      - apps/web/cypress/node/linuxChromiumProcessObserver.py
+      - apps/web/cypress/node/linuxChromiumProcessProtocol.py
+      - apps/web/cypress/node/linuxChromiumSignalTrace.py
+      - apps/web/cypress/node/linuxChromiumOomJournal.py
+    ownedConcern: >-
+      Fallback physical ownership of Web paths until exact bounded child definitions assume them;
+      coverage-required classification, not a claim of cohesive implementation or global SRP
+      closure.
+  - id: SYS-WEB-MONACO-LAB
+    name: Isolated mixed Monaco browser laboratory
+    parent: SYS-WEB-ROOT
+    level: component
+    status: review
+    ownedConcern: Demonstrate inline Monaco cards using exact declared fixture revisions.
+    owns:
+      - labs/codecomp1-monaco/.lintstagedrc.json
+      - labs/codecomp1-monaco/README.md
+      - labs/codecomp1-monaco/cards.mjs
+      - labs/codecomp1-monaco/fixture.mjs
+      - labs/codecomp1-monaco/index.html
+      - labs/codecomp1-monaco/pilot.css
+      - labs/codecomp1-monaco/pilot.mjs
+      - labs/codecomp1-monaco/vite.config.mjs
+    childrenRequired: false
+    dddOwner: MixedMonacoLaboratoryRun
+    cqRails: RunMixedMonacoLaboratory
+    governance:
+      - labs/codecomp1-monaco/README.md
+      - https://github.com/dunay2/dvt/issues/3751#issuecomment-6506809339
   - id: SYS-WORKERS
     name: Worker domain
     parent: SYS-DVT

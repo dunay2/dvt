@@ -2,6 +2,97 @@
 @import './tailwind.css';
 @import './theme.css';
 
+/* One passive Monaco reference-card treatment for Code and its laboratory. */
+.reference-card {
+  box-sizing: border-box;
+  height: 138px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  background: var(--surface-panel);
+  color: var(--text-default);
+  font: 12px/1.4 var(--font-sans);
+}
+.reference-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 14px;
+}
+.reference-card-name {
+  margin: 0;
+  color: var(--text-strong);
+  font-size: 13px;
+  font-weight: var(--font-weight-medium);
+}
+.reference-card-type {
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+.reference-card-ports {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+}
+.reference-card-ports::after {
+  content: '→';
+  position: absolute;
+  left: 47%;
+  color: var(--status-info);
+}
+.reference-card-port {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.reference-card-port::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border: 1px solid var(--status-info);
+  border-radius: 50%;
+}
+.reference-card-schema {
+  margin-top: 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.reference-card-schema:hover {
+  background: var(--surface-selected);
+}
+.reference-card-schema:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.code-reference-overlay {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  width: min(100%, 24rem);
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid var(--border-default);
+  background: var(--surface-panel);
+  box-shadow: -4px 0 12px var(--surface-app);
+}
+
 /* One tab treatment for workspace, model views and the operation inspector. */
 .workspace-navigation-tabs[role='tablist'] {
   display: flex;

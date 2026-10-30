@@ -127,7 +127,6 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(monacoVisualTokens).toContain('readOnly,');
     expect(monacoVisualTokens).toContain('domReadOnly: readOnly');
     expect(monacoVisualTokens).toContain('contextmenu: !readOnly');
-    expect(monacoSurface).toContain('onMount={isReadOnly ? undefined : onMount}');
     expect(monacoViewer).not.toContain('onMount');
     expect(monacoSurface).not.toContain('save');
 

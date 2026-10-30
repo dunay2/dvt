@@ -1,6 +1,7 @@
 /** Owned concern: load the Monaco code surface behind an editable working-tree API. */
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
 import { useMonacoCodeSurface } from './useMonacoCodeSurface';
+import type { MonacoInlineReferences } from './monacoInlineReferences';
 import type { editor } from 'monaco-editor';
 
 export type MonacoCodeEditorMount = (
@@ -19,6 +20,8 @@ type MonacoCodeEditorProps = Readonly<{
   value: string;
   diagnostics?: readonly MonacoCodeDiagnostic[];
   onMount?: MonacoCodeEditorMount;
+  inlineReferences?: MonacoInlineReferences;
+  onInspectReference?: (id: string) => void;
 }>;
 
 export type MonacoCodeDiagnostic = Readonly<{
@@ -36,8 +39,10 @@ export function MonacoCodeEditor({
   path,
   readOnly = false,
   value,
-  diagnostics = [],
+  diagnostics,
   onMount,
+  inlineReferences,
+  onInspectReference,
 }: MonacoCodeEditorProps) {
   const MonacoCodeSurface = useMonacoCodeSurface();
   if (MonacoCodeSurface == null) {
@@ -55,6 +60,8 @@ export function MonacoCodeEditor({
       value={value}
       diagnostics={diagnostics}
       onMount={onMount}
+      inlineReferences={inlineReferences}
+      onInspectReference={onInspectReference}
     />
   );
 }

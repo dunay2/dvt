@@ -201,6 +201,7 @@ export function useDbtProjectFilesAuthoritySurface({
       projectRoot,
       editorRef: controller.nodeCodeEditorRef,
       reconcilePersistedFile: controller.reconcileCodeFilePersistence,
+      dbtProject: controller.query.isSuccess ? controller.query.data : undefined,
     }),
   ];
   const contextualWorkbench = buildDbtProjectFileCodeWorkbench({
@@ -211,6 +212,7 @@ export function useDbtProjectFilesAuthoritySurface({
     projectRoot,
     fileSelectionRequest: controller.projectCodeFileSelectionRequest,
     open: controller.projectCodeWorkbenchOpen,
+    dbtProject: controller.query.isSuccess ? controller.query.data : undefined,
   });
 
   const shellProps: CanvasShellProps = {

@@ -1,5 +1,6 @@
 /** Owned concern: adapt a file-backed dbt node to the shared Properties Code contribution port. */
 import type { RefObject } from 'react';
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
 
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
@@ -14,6 +15,7 @@ import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 type BuildDbtWorkspaceFileCodeContributionsOptions = Readonly<{
   node: CanonicalNode | null;
   projectRoot: string;
+  dbtProject?: DbtProjectGraphProjection;
   editorRef: RefObject<WorkspaceFileCodeEditorHandle>;
   reconcilePersistedFile: (
     receipt: WorkspaceFileSaveReceipt
@@ -25,6 +27,7 @@ export function buildDbtWorkspaceFileCodeContributions({
   projectRoot,
   editorRef,
   reconcilePersistedFile,
+  dbtProject,
 }: BuildDbtWorkspaceFileCodeContributionsOptions): readonly CanvasNodeWorkbenchContribution[] {
   const visualEditability = node?.metadata?.visualEditability;
   const isExternalPackage =
@@ -65,6 +68,7 @@ export function buildDbtWorkspaceFileCodeContributions({
           className="min-h-[30rem]"
           path={workspaceFilePath}
           reconcilePersistedFile={reconcilePersistedFile}
+          dbtProject={dbtProject}
         />
       ),
     },

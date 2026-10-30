@@ -4,11 +4,7 @@ import json
 import sys
 
 
-def source_offsets(source, line, column):
-    starts = [0]
-    for index, character in enumerate(source):
-        if character == "\n" or (character == "\r" and source[index + 1:index + 2] != "\n"):
-            starts.append(index + 1)
+def source_offsets(source, line, column, starts):
     start = starts[line - 1]
     prefix = source[:start] + source[start:].encode("utf-8")[:column].decode("utf-8")
     return len(prefix), len(prefix.encode("utf-16-le")) // 2
@@ -54,14 +50,18 @@ def literal_imports(tree):
 
 def read_source_facts(source, path):
     tree = ast.parse(source, filename=path, type_comments=True)
+    starts = [0]
+    for index, character in enumerate(source):
+        if character == "\n" or (character == "\r" and source[index + 1:index + 2] != "\n"):
+            starts.append(index + 1)
     declarations = []
 
     def record(node, name, kind, scope, top_level):
-        start_char, start = source_offsets(source, node.lineno, node.col_offset)
-        end_char, end = source_offsets(source, node.end_lineno, node.end_col_offset)
+        start_char, start = source_offsets(source, node.lineno, node.col_offset, starts)
+        end_char, end = source_offsets(source, node.end_lineno, node.end_col_offset, starts)
         implementation = node.value if isinstance(getattr(node, "value", None), ast.Lambda) else node
         body = ([implementation.body] if isinstance(implementation, ast.Lambda) else implementation.body) if kind != "variable" else []
-        body_start = source_offsets(source, body[0].lineno, body[0].col_offset)[0] if body else end_char
+        body_start = source_offsets(source, body[0].lineno, body[0].col_offset, starts)[0] if body else end_char
         qualified = scope + "." + name if scope else name
         declarations.append({
             "name": name, "qualifiedName": qualified, "kind": kind,

@@ -1,6 +1,7 @@
 /** Owned concern: load the Monaco code surface behind a route-safe read-only viewer API. */
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
 import { useMonacoCodeSurface } from './useMonacoCodeSurface';
+import type { MonacoInlineReferences } from './monacoInlineReferences';
 
 type MonacoCodeViewerProps = Readonly<{
   ariaLabel: string;
@@ -9,6 +10,8 @@ type MonacoCodeViewerProps = Readonly<{
   loadingLabel: string;
   path?: string;
   value: string;
+  inlineReferences?: MonacoInlineReferences;
+  onInspectReference?: (id: string) => void;
 }>;
 
 export function MonacoCodeViewer({
@@ -18,6 +21,8 @@ export function MonacoCodeViewer({
   loadingLabel,
   path,
   value,
+  inlineReferences,
+  onInspectReference,
 }: MonacoCodeViewerProps) {
   const MonacoCodeSurface = useMonacoCodeSurface();
   if (MonacoCodeSurface == null) {
@@ -32,6 +37,8 @@ export function MonacoCodeViewer({
       path={path}
       readOnly={true}
       value={value}
+      inlineReferences={inlineReferences}
+      onInspectReference={onInspectReference}
     />
   );
 }

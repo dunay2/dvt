@@ -14,6 +14,7 @@ export type SqlContextWorkbenchProps = Readonly<{
   initialPath?: string;
   fileSelectionRequest?: CodeViewProps['fileSelectionRequest'];
   presentation?: CodeViewProps['presentation'];
+  dbtProject?: CodeViewProps['dbtProject'];
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -29,6 +30,7 @@ export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlCont
       fileSelectionRequest,
       presentation,
       reconcilePersistedFile,
+      dbtProject,
     }: SqlContextWorkbenchProps,
     ref
   ): JSX.Element {
@@ -41,6 +43,7 @@ export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlCont
         fileSelectionRequest={fileSelectionRequest}
         presentation={presentation}
         reconcilePersistedFile={reconcilePersistedFile}
+        dbtProject={dbtProject}
       />
     );
   }
