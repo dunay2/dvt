@@ -123,15 +123,12 @@ closeDetails.addEventListener('click', () => {
 
 // Laboratory browser-proof access to the real editor; no alternate buffer or history.
 window.codecompPilot = Object.freeze({ editor, model });
-window.addEventListener(
-  'pagehide',
-  () => {
-    generation += 1;
-    hideCards();
-    contentSubscription.dispose();
-    editor.dispose();
-    model.dispose();
-  },
-  { once: true }
-);
+window.addEventListener('pagehide', (event) => {
+  if (event.persisted) return;
+  generation += 1;
+  hideCards();
+  contentSubscription.dispose();
+  editor.dispose();
+  model.dispose();
+});
 await verifyFixture();
