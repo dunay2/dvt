@@ -21,7 +21,7 @@ const NODE: CanonicalNode = {
 };
 
 describe('buildDbtWorkspaceFileCodeContributions', () => {
-  it('binds a file-backed dbt node to the shared editable Code surface', () => {
+  it('binds a file-backed dbt node to shared read-only Code without changing its authority', () => {
     const editorRef = createRef<WorkspaceFileCodeEditorHandle>();
     const reconcilePersistedFile = vi.fn();
     const contributions = buildDbtWorkspaceFileCodeContributions({
@@ -44,6 +44,7 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     }
     expect(contributions[0].content.props).toMatchObject({
       authority: 'dbt-project-files',
+      access: 'read-only',
       path: 'analytics/models/orders.sql',
       reconcilePersistedFile,
     });
@@ -71,7 +72,7 @@ describe('buildDbtWorkspaceFileCodeContributions', () => {
     expect(contributions[0].content.props).toMatchObject({ path: expected });
   });
 
-  it('does not expose the editable workspace file rail for an external dbt package', () => {
+  it('does not substitute a workspace file for an external dbt package', () => {
     expect(
       buildDbtWorkspaceFileCodeContributions({
         node: {

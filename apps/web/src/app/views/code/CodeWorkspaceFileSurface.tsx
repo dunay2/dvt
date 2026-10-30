@@ -1,4 +1,5 @@
 /** Owned concern: render one workspace-file editor or viewer from an explicit edit posture. */
+import { useEffect, useState } from 'react';
 import type { FileContent } from '../../ports/workspace';
 import { MonacoCodeEditor } from '../../components/monaco/MonacoCodeEditor';
 import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
@@ -30,10 +31,14 @@ export function CodeWorkspaceFileSurface({
   inlineReferences,
   onInspectReference,
 }: CodeWorkspaceFileSurfaceProps) {
+  const [retainEditor, setRetainEditor] = useState(posture.kind === 'editable');
+  useEffect(() => {
+    if (posture.kind === 'editable') setRetainEditor(true);
+  }, [posture.kind]);
   const containerClassName = fillAvailableSpace
     ? cn(monacoVisualClasses.surface, monacoVisualClasses.flexFill, 'rounded-none border-0')
     : undefined;
-  if (posture.kind !== 'editable') {
+  if (!retainEditor && posture.kind !== 'editable') {
     return (
       <MonacoCodeViewer
         ariaLabel={ariaLabel}
@@ -55,6 +60,7 @@ export function CodeWorkspaceFileSurface({
       language={file.language}
       loadingLabel={loadingLabel}
       onChange={onChange}
+      readOnly={posture.kind !== 'editable'}
       path={file.path}
       value={value}
       inlineReferences={inlineReferences}

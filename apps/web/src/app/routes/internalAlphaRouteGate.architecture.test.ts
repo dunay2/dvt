@@ -341,15 +341,9 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
-  it('accepts Code evidence only with scoped file rails and canonical contextual sync', () => {
+  it('accepts Code evidence with scoped inspection and the existing conditional-write boundary', () => {
     const codeStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Code workbench'
-    );
-    const codeWorkbenchCypress = readRepoFile(
-      'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts'
-    );
-    const workspaceFilesRoutesTest = readRepoFile(
-      'apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts'
     );
 
     expect(codeStage?.evidenceAcceptance).toBe('accepted');
@@ -367,25 +361,6 @@ describe('internal alpha route gate architecture', () => {
         'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
       ])
     );
-    expect(codeWorkbenchCypress).toContain(
-      'Owned concern: prove canonical Canvas Project Code working-tree synchronization'
-    );
-    expect(codeWorkbenchCypress).toContain("visitWithE2eWorkspaceSession('/canvas')");
-    expect(codeWorkbenchCypress).not.toContain("visitWithE2eWorkspaceSession('/canvas/code')");
-    expect(codeWorkbenchCypress).toContain("waitForE2eApiCall('/workspace/files', 'GET')");
-    expect(codeWorkbenchCypress).toContain('canvas-contextual-workbench');
-    expect(codeWorkbenchCypress).toContain('canvas-workspace-open-project-code-command');
-    expect(codeWorkbenchCypress).toContain('code-working-tree-status');
-    expect(codeWorkbenchCypress).toContain("kind: 'content_sha256'");
-    for (const proof of [
-      'rejects path traversal before reading from the repository',
-      'rejects unsupported workspace file types before reading content',
-      'rejects oversized workspace files before returning content',
-      'returns last-modified freshness metadata with workspace file content',
-      'fails closed when the workspace file action is denied',
-    ]) {
-      expect(workspaceFilesRoutesTest).toContain(proof);
-    }
     expect(codeStage?.happyPathProof).toMatch(/scoped|tree|preview|working-tree|revision-guarded/);
     expect(codeStage?.failClosedProof).toMatch(
       /unauthorized|traversal|oversize|unsupported|not-found|unavailable|revision conflict/

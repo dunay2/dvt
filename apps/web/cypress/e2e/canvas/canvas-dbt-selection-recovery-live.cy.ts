@@ -1,9 +1,9 @@
 /**
- * Owned concern: prove unavailable DBT root recovery through real file authority.
- * @baseline GH-3610: invented projects and graph-owned dbt models are not admitted authority.
- * @decision Disable an explicitly selected file-authoritative model through Monaco synchronization.
- * @consequence Analysis removes the root; only explicit recovery may admit the surviving model.
- * @version 1.0.1
+ * Owned concern: prove read-only Code cannot disable an admitted DBT root or widen execution scope.
+ * @baseline GH-3747: Code inspection does not admit file edits.
+ * @decision Attempt the previous disabling gesture against the viewer and verify live bytes and scope.
+ * @consequence This browser case proves read-only selection integrity, not unavailable-root recovery.
+ * @version 2.0.0
  */
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import { canvasViewExecutionCopyByKey } from '../../../src/app/views/canvas/canvasCopyCatalog.execution';
@@ -17,8 +17,8 @@ import {
 } from '../../support/dbtProjectLive';
 import {
   hasLiveProtectedRuntimeEnv,
+  readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
-  waitForLiveWorkspaceFileContent,
 } from '../../support/liveProtectedRuntime';
 
 const PROJECT_ROOT = 'selection-recovery';
@@ -58,7 +58,7 @@ function visitCleanDbtCanvas(): void {
   cy.get(`.react-flow__node[data-id="${SURVIVING_MODEL_ID}"]`).should('be.visible');
 }
 
-function disableSelectedModelThroughCode(): void {
+function attemptToDisableSelectedModelThroughReadOnlyCode(): void {
   cy.get('.react-flow__controls-fitview').click();
   cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`)
     .find('[data-slot="graph-node-card-title"]')
@@ -66,71 +66,83 @@ function disableSelectedModelThroughCode(): void {
   cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
     .should('be.visible')
     .and('have.attr', 'data-file-path', SELECTED_MODEL_PATH);
-  cy.get('[data-testid="monaco-code-editor"]').find('.view-lines').click();
-  cy.focused()
-    .should(($editor) => {
-      expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true);
-    })
-    .type('{ctrl+a}');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-testid="monaco-code-viewer"] .view-lines')
+    .invoke('text')
+    .should('match', /select\s+1\s+as\s+id/);
+  cy.get('[data-testid="monaco-code-viewer"] .monaco-editor textarea')
+    .first()
+    .should('have.prop', 'readOnly', true)
+    .focus()
+    .type('{ctrl+a}', { force: true });
   cy.window().then((window) => {
     const clipboardData = new window.DataTransfer();
     clipboardData.setData('text/plain', DISABLED_MODEL_SQL);
     cy.focused().trigger('paste', { clipboardData, force: true });
   });
-  waitForLiveWorkspaceFileContent(SELECTED_MODEL_PATH, DISABLED_MODEL_SQL);
-  cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`, { timeout: 60_000 }).should(
-    'not.exist'
+  cy.get('[data-testid="monaco-code-viewer"] .view-lines').should(
+    'not.contain.text',
+    'enabled=false'
   );
-  cy.get(`.react-flow__node[data-id="${SURVIVING_MODEL_ID}"]`).should('be.visible');
+  cy.get('[data-slot="code-working-tree-status"]').should('have.attr', 'data-phase', 'read_only');
 }
 
-describe('Canvas DBT execution-selection recovery live protected runtime', () => {
+describe('Canvas DBT read-only Code selection integrity live protected runtime', () => {
   before(() => {
     if (!hasLiveProtectedRuntimeEnv()) {
-      throw new Error('DBT selection recovery requires the LIVE protected runtime.');
+      throw new Error('DBT read-only selection integrity requires the LIVE protected runtime.');
     }
     return seedLiveWorkspaceFiles(PROJECT_FILES).then(() =>
       adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID)
     );
   });
 
-  it('recovers an unavailable selected root without silently widening execution scope', () => {
+  it('keeps the selected model enabled and execution scope explicit after attempted Code edits', () => {
+    let selectedRevision: string;
+    readLiveWorkspaceFile(SELECTED_MODEL_PATH).then(({ status, body }) => {
+      expect(status).to.equal(200);
+      selectedRevision = (body as { contentSha256: string }).contentSha256;
+      expect(selectedRevision).to.match(/^[a-f0-9]{64}$/);
+    });
+    cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('readOnlyFileWrites');
     visitCleanDbtCanvas();
     selectCanvasClosure([SELECTED_MODEL_ID]);
-    disableSelectedModelThroughCode();
+    attemptToDisableSelectedModelThroughReadOnlyCode();
+    readLiveWorkspaceFile(SELECTED_MODEL_PATH).then(({ status, body }) => {
+      expect(status).to.equal(200);
+      expect((body as { contentSha256: string }).contentSha256).to.equal(selectedRevision);
+      expect((body as { content: string }).content).to.equal(PROJECT_FILES[SELECTED_MODEL_PATH]);
+    });
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get(`.react-flow__node[data-id="${SELECTED_MODEL_ID}"]`).should('be.visible');
+    cy.get(`.react-flow__node[data-id="${SURVIVING_MODEL_ID}"]`).should('be.visible');
 
     revealOperationalDrawer();
     cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
-      .should('match', /blocked|bloqueada/i);
+      .should('match', /ready|lista/i);
+    for (const label of [
+      canvasViewExecutionCopyByKey.selectionRecoveryRequestedRootsLabel,
+      canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel,
+    ]) {
+      cy.contains(label)
+        .parent()
+        .find('[data-slot="bottom-operational-selection-scope-value"]')
+        .should('have.length', 1)
+        .and('have.text', SELECTED_MODEL_ID);
+    }
     cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryUnavailableRootsLabel)
       .parent()
-      .should('contain.text', SELECTED_MODEL_ID);
-    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel)
-      .parent()
-      .invoke('text')
-      .should('match', /None|Ninguno/i);
-    cy.contains('button', canvasViewExecutionCopyByKey.selectionRecoveryUseWorkspaceScopeAction)
-      .scrollIntoView()
-      .should('be.visible')
-      .should('be.enabled')
-      .click();
-
-    cy.get('[data-slot="bottom-operational-selection-status"]')
-      .invoke('text')
-      .should('match', /ready|lista/i);
-    cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]').should(
-      'have.text',
-      canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate.replace(
-        '{affected}',
-        SELECTED_MODEL_ID
-      )
-    );
-    cy.contains(canvasViewExecutionCopyByKey.selectionRecoveryAdmittedScopeLabel)
-      .parent()
-      .should('contain.text', SURVIVING_MODEL_ID);
+      .find('[data-slot="bottom-operational-selection-scope-value"]')
+      .should('not.exist');
+    cy.get('[data-slot="bottom-operational-selection-recovery-receipt"]').should('not.exist');
+    cy.contains(
+      'button',
+      canvasViewExecutionCopyByKey.selectionRecoveryUseWorkspaceScopeAction
+    ).should('not.exist');
     cy.get('[data-slot="bottom-operational-preview-action"]').should('be.enabled');
-    cy.screenshot('canvas-dbt-selection-recovery-live-ready');
+    cy.get('@readOnlyFileWrites.all').should('have.length', 0);
+    cy.screenshot('canvas-dbt-readonly-selected-scope-preserved');
   });
 });

@@ -95,13 +95,14 @@ function buildWorkspaceFilesQueryPort(
 
 export function createCodeViewTestHarness() {
   const copy = resolveCodeViewCopy('en-US');
-  const defaultEditableFileScope: CodeViewFileScope = {
+  const defaultDbtFileScope: CodeViewFileScope = {
     kind: 'dbt-project-files',
     projectRoot: '.',
     initialPath: 'models/staging/stg_orders.sql',
   };
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
+  let defaultQueryClient: QueryClient | null = null;
 
   async function waitFor(predicate: () => boolean): Promise<void> {
     for (let index = 0; index < 20; index += 1) {
@@ -133,6 +134,7 @@ export function createCodeViewTestHarness() {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    defaultQueryClient = createTestQueryClient();
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -156,9 +158,11 @@ export function createCodeViewTestHarness() {
       workspaceGraphSnapshotQuery?: IWorkspaceGraphSnapshotQueryPort;
     }> = {}
   ): Promise<void> {
+    const queryClient = options.queryClient ?? defaultQueryClient;
+    if (queryClient == null) throw new Error('CodeView test host must be initialized');
     await act(async () => {
       root?.render(
-        <QueryClientProvider client={options.queryClient ?? createTestQueryClient()}>
+        <QueryClientProvider client={queryClient}>
           {' '}
           <AppServicesProvider
             overrides={{
@@ -203,22 +207,6 @@ export function createCodeViewTestHarness() {
     );
   }
 
-  async function editAndVerifyEditor(editor: HTMLTextAreaElement | null): Promise<void> {
-    await act(async () => {
-      if (!editor) {
-        throw new Error('expected Monaco editor test double');
-      }
-      const valueSetter = Object.getOwnPropertyDescriptor(
-        HTMLTextAreaElement.prototype,
-        'value'
-      )?.set;
-      valueSetter?.call(editor, 'select 1 as edited_value');
-      editor.dispatchEvent(new Event('input', { bubbles: true }));
-    });
-
-    expect(editor?.value).toBe('select 1 as edited_value');
-  }
-
   const cleanup = () => {
     if (root) {
       act(() => {
@@ -228,12 +216,14 @@ export function createCodeViewTestHarness() {
     container?.remove();
     root = null;
     container = null;
+    defaultQueryClient?.clear();
+    defaultQueryClient = null;
     vi.useRealTimers();
     useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   };
   return {
     copy,
-    defaultEditableFileScope,
+    defaultDbtFileScope,
     buildWorkspaceFilesQueryPort,
     waitFor,
     createTestQueryClient,
@@ -241,7 +231,6 @@ export function createCodeViewTestHarness() {
     setupContainer,
     renderCodeView,
     waitForInitialRender,
-    editAndVerifyEditor,
     cleanup,
   };
 }

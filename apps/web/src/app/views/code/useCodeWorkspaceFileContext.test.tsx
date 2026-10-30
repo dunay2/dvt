@@ -16,6 +16,7 @@ import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQu
 import { mockGraphDraftAuthoringAuthority } from '../../../testing/workspacePortDoubles';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import CodeView, { type CodeViewHandle } from '../CodeView';
+import { WorkspaceFileCodeEditor } from './WorkspaceFileCodeEditor';
 import { useCodeWorkspaceFileContext } from './useCodeWorkspaceFileContext';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import { queryKeys } from '../../queries/queryKeys';
@@ -49,14 +50,16 @@ vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({
     value,
     inlineReferences,
+    onInspectReference,
   }: {
     value: string;
     inlineReferences?: { items: readonly { id: string; label: string }[] };
+    onInspectReference?: (id: string) => void;
   }) => (
     <>
-      <pre>{value}</pre>
+      <pre data-testid="code-file-viewer">{value}</pre>
       {inlineReferences?.items.map((r) => (
-        <button key={r.id} data-reference={r.id}>
+        <button key={r.id} data-reference={r.id} onClick={() => onInspectReference?.(r.id)}>
           {r.label}
         </button>
       ))}
@@ -186,7 +189,9 @@ describe('Code workspace file context through normal Code entry', () => {
   let graphSnapshot: Promise<WorkspaceGraphSnapshot> | undefined;
   let fileRead: Promise<FileContent> | undefined;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const render = async (): Promise<void> => {
+  const render = async ({
+    editableFile = false,
+  }: Readonly<{ editableFile?: boolean }> = {}): Promise<void> => {
     const ui = (
       <AppServicesProvider
         overrides={{
@@ -236,12 +241,21 @@ describe('Code workspace file context through normal Code entry', () => {
           dbtSelectedModelAnalysisQueryPort: { analyzeSelectedModel: analysis },
         }}
       >
-        <CodeView
-          ref={handle}
-          publishRouteBootstrap={false}
-          fileScope={{ kind: 'workspace-files' }}
-          initialPath={fixture.file.path}
-        />
+        {editableFile ? (
+          <WorkspaceFileCodeEditor
+            ref={handle}
+            access="editable"
+            authority="dbt-project-files"
+            path={fixture.file.path}
+          />
+        ) : (
+          <CodeView
+            ref={handle}
+            publishRouteBootstrap={false}
+            fileScope={{ kind: 'workspace-files' }}
+            initialPath={fixture.file.path}
+          />
+        )}
       </AppServicesProvider>
     );
     if (mounted) {
@@ -267,12 +281,25 @@ describe('Code workspace file context through normal Code entry', () => {
     save.mockClear();
   });
 
-  it('loads two references from FileContent metadata without explicit dbt props or route parameters', async () => {
+  it('inspects normal project Code read-only without saving or reconciling', async () => {
     await render();
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     expect(graph).toHaveBeenCalledWith(fixture.project.authorityBinding);
     expect(analysis).toHaveBeenCalledWith(fixture.project.authorityBinding, 'model.demo.ventas');
-    expect(container.querySelector('textarea')?.value).toBe(fixture.file.content);
+    expect(container.querySelector('textarea')).toBeNull();
+    const viewer = container.querySelector('[data-testid="code-file-viewer"]');
+    expect(viewer?.textContent).toBe(fixture.file.content);
+    expect(container.querySelector('[data-phase="read_only"]')).not.toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-reference="region-0"]')?.click()
+    );
+    await waitFor(
+      () =>
+        container.querySelector('section[aria-label="clientes"] code')?.textContent === 'select 1'
+    );
+    expect(container.querySelector('[data-testid="code-file-viewer"]')).toBe(viewer);
+    expect(graph).toHaveBeenCalledTimes(1);
+    expect(analysis).toHaveBeenCalledTimes(1);
     expect(save).not.toHaveBeenCalled();
   });
 
@@ -280,7 +307,7 @@ describe('Code workspace file context through normal Code entry', () => {
     const inlineCopy = resolveCodeInlineReferenceCopy('en-US');
     await render();
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
-    const editor = container.querySelector('textarea');
+    const viewer = container.querySelector('[data-testid="code-file-viewer"]');
     const original = fixture.file.content;
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-reference="region-0"]')?.click()
@@ -328,8 +355,9 @@ describe('Code workspace file context through normal Code entry', () => {
       expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
       expect(container.querySelector('section[aria-label="clientes"]')).toBeNull();
       expect(graph).toHaveBeenCalledTimes(2);
-      expect(container.querySelector('textarea')).toBe(editor);
-      expect(editor?.value).toBe(original);
+      expect(container.querySelector('[data-testid="code-file-viewer"]')).toBe(viewer);
+      expect(viewer?.textContent).toBe(original);
+      expect(container.querySelector('textarea')).toBeNull();
       expect(save).not.toHaveBeenCalled();
       await act(async () => {
         finishFile?.(mixed);
@@ -409,7 +437,7 @@ describe('Code workspace file context through normal Code entry', () => {
   });
 
   it('hides dirty references and restores a saved revision in the same editor through existing reconciliation', async () => {
-    await render();
+    await render({ editableFile: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     const editor = container.querySelector('textarea')!;
     const next = `${fixture.file.content}\n-- edited`;
@@ -435,7 +463,7 @@ describe('Code workspace file context through normal Code entry', () => {
   });
 
   it('keeps cards hidden and exposes reconciliation failure after bytes persist', async () => {
-    await render();
+    await render({ editableFile: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     graph.mockRejectedValue(new Error('analysis offline'));
     const editor = container.querySelector('textarea')!;

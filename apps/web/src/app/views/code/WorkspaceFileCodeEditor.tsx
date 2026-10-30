@@ -1,4 +1,4 @@
-/** Owned concern: edit one known workspace file through the canonical revision-aware Code rail. */
+/** Owned concern: inspect one scoped workspace file while preserving existing edit-session recovery. */
 import {
   forwardRef,
   useCallback,
@@ -21,7 +21,10 @@ import { CodePreviewEmptyStateView, CodePreviewErrorStateView } from './CodeStat
 import { CodeWorkingTreeNavigationGuard } from './CodeWorkingTreeNavigationGuard';
 import { CodeWorkingTreeStatus } from './CodeWorkingTreeStatus';
 import type { CodeWorkingTreeReconciliationOutcome } from './codeWorkingTreeSyncModel';
-import { resolveCodeWorkspaceFileEditPosture } from './codeWorkspaceFileEditPosture';
+import {
+  resolveCodeWorkspaceFileEditPosture,
+  type CodeWorkspaceFileAccess,
+} from './codeWorkspaceFileEditPosture';
 import { CodeWorkspaceFileSurface } from './CodeWorkspaceFileSurface';
 import { resolveCodeViewCopy, resolveCodeInlineReferenceCopy } from './codeViewCopy';
 import { resolveCodeWorkbenchErrorPresentation } from './codeWorkbenchErrorModel';
@@ -39,6 +42,7 @@ export type WorkspaceFileCodeEditorHandle = Readonly<{
 }>;
 
 export type WorkspaceFileCodeEditorProps = Readonly<{
+  access?: CodeWorkspaceFileAccess;
   authority: WorkspaceFileCodeAuthority;
   className?: string;
   graphOwnedPaths?: ReadonlySet<string>;
@@ -58,6 +62,7 @@ export const WorkspaceFileCodeEditor = forwardRef<
   WorkspaceFileCodeEditorProps
 >(function WorkspaceFileCodeEditor(
   {
+    access = 'read-only',
     authority,
     className,
     graphOwnedPaths = EMPTY_GRAPH_OWNED_PATHS,
@@ -76,10 +81,18 @@ export const WorkspaceFileCodeEditor = forwardRef<
   const inlineCopy = resolveCodeInlineReferenceCopy(applicationLanguage);
   const [localReference, setLocalReference] = useState<CodeInlineReferenceDetail>();
   const referenceOpener = useRef<HTMLElement | null>(null);
+  const reloadRequestId = useRef(0);
+  useEffect(() => {
+    reloadRequestId.current += 1;
+    return () => {
+      reloadRequestId.current += 1;
+    };
+  }, [path]);
   const commandPort = useWorkspaceFileContentCommandPort();
   const fileContentQuery = useWorkspaceFileContentQuery(path);
   const refetchFileContent = fileContentQuery.refetch;
   const posture = resolveCodeWorkspaceFileEditPosture({
+    access,
     authority,
     selectedPath: path,
     graphOwnedPaths,
@@ -149,10 +162,11 @@ export const WorkspaceFileCodeEditor = forwardRef<
   );
   const changeValue = useCallback(
     (nextValue: string) => {
+      if (posture.kind !== 'editable') return;
       clearReference();
       workingTreeSync.updateValue(nextValue);
     },
-    [clearReference, workingTreeSync.updateValue]
+    [clearReference, posture.kind, workingTreeSync.updateValue]
   );
   const inlineMessage =
     inlineState.kind === 'checking'
@@ -246,17 +260,20 @@ export const WorkspaceFileCodeEditor = forwardRef<
       })
     : null;
 
+  const retainsPendingBuffer =
+    fileContentQuery.data?.path === path && workingTreeSync.navigationBlocked;
+
   const surface = fileContentQuery.isPending ? (
     <div className="flex min-h-48 items-center justify-center text-sm text-(--text-muted)">
       {copy.previewLoadingMessage}
     </div>
-  ) : errorPresentation ? (
+  ) : errorPresentation && !retainsPendingBuffer ? (
     <CodePreviewErrorStateView error={errorPresentation} />
   ) : !fileContentQuery.data ? (
     <CodePreviewEmptyStateView />
   ) : (
     <CodeWorkspaceFileSurface
-      ariaLabel={`${copy.editorAriaLabelPrefix} ${fileContentQuery.data.name}`}
+      ariaLabel={`${posture.kind === 'editable' ? copy.editorAriaLabelPrefix : copy.viewerAriaLabelPrefix} ${fileContentQuery.data.name}`}
       fillAvailableSpace={fillAvailableSpace}
       file={fileContentQuery.data}
       loadingLabel={copy.editorLoadingMessage}
@@ -289,18 +306,30 @@ export const WorkspaceFileCodeEditor = forwardRef<
       )}
       {posture.kind === 'graph_owned_read_only' ? null : (
         <CodeWorkingTreeStatus
-          phase={posture.kind === 'editable' ? workingTreeSync.phase : 'read_only'}
+          phase={
+            posture.kind === 'editable' || workingTreeSync.phase !== 'synchronized'
+              ? workingTreeSync.phase
+              : 'read_only'
+          }
           copy={workingTreeStatusCopy}
           onRetry={() => void retryWorkingTreeSync()}
           onReload={() => {
+            const requestId = ++reloadRequestId.current;
             void fileContentQuery.refetch().then((result) => {
-              if (result.data) {
+              if (
+                requestId === reloadRequestId.current &&
+                result.isSuccess &&
+                result.data?.path === path
+              ) {
                 workingTreeSync.loadAuthoritative(result.data);
               }
             });
           }}
         />
       )}
+      {errorPresentation && retainsPendingBuffer ? (
+        <CodePreviewErrorStateView error={errorPresentation} />
+      ) : null}
       <div className={cn('flex-1 p-1', fillAvailableSpace ? 'flex min-h-0 flex-col' : 'min-h-80')}>
         {surface}
       </div>
