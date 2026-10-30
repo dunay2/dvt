@@ -88,6 +88,26 @@ Warm-build note:
   `pnpm ci:affected:typecheck` path no longer depends on silent `--if-present`
   skips for the current TypeScript package inventory.
 
+## Architecture Source And Lint Evidence
+
+Canvas architecture checks inspect the complete sorted TypeScript inventory,
+including nested directories and symbolic-link targets. Directory entries supply
+ordinary file metadata; only symbolic links require a separate stat. The draft
+boundary check reads each unique source once through the existing bounded
+`readArchitectureSources` reader. Its 32-file batches, input ordering and read
+failure propagation remain unchanged. Acquisition occurs inside the test budget.
+
+`tools/ci/precommit-hook-wiring.test.mjs` owns the canonical staged/canonical
+ESLint configuration checks and the unused-declaration negative fixtures. It
+reuses the same staged linter for both concerns. One 30-second test budget covers
+cold configuration resolution and all three fixtures: unused variables and type
+imports must fail with severity two, while public exports and effectful calls
+remain accepted. The existing CI-tool suite and changed-file route execute this
+evidence; a separate Web Vitest linter bootstrap is unnecessary.
+
+These changes reduce repeated acquisition without narrowing inspected sources,
+adding a cache, prewarming tests, or changing worker isolation or required gates.
+
 ## Immutable Provisioning Image Cache
 
 Planning DB preparation and the provider-backed browser lane share

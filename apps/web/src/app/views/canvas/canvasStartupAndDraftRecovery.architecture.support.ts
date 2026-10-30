@@ -148,15 +148,17 @@ export function listCanvasSourceFiles(): string[] {
   const files: string[] = [];
 
   function visit(directory: string): void {
-    for (const entry of readdirSync(directory)) {
-      const absolutePath = path.join(directory, entry);
-      const stats = statSync(absolutePath);
-      if (stats.isDirectory()) {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const absolutePath = path.join(directory, entry.name);
+      const isDirectory = entry.isSymbolicLink()
+        ? statSync(absolutePath).isDirectory()
+        : entry.isDirectory();
+      if (isDirectory) {
         visit(absolutePath);
         continue;
       }
 
-      if (!/\.(?:ts|tsx)$/.test(entry)) {
+      if (!/\.(?:ts|tsx)$/.test(entry.name)) {
         continue;
       }
 

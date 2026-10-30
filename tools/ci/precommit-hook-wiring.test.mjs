@@ -34,97 +34,119 @@ test('pre-commit hook wiring avoids pnpm commit lifecycle duplication', () => {
   assert.doesNotMatch(preCommitHook, /pnpm run precommit(?:\s|$)/);
 });
 
-test('pre-commit lint stays untyped while the canonical ESLint gate stays type-aware', async () => {
-  const packageJson = readPackageJson();
-  const eslintCommands = Object.values(packageJson['lint-staged'])
-    .flat()
-    .filter((command) => command.startsWith('eslint '));
+test(
+  'pre-commit syntax lint preserves type boundaries and unused-declaration enforcement',
+  { timeout: 30_000 },
+  async () => {
+    const packageJson = readPackageJson();
+    const eslintCommands = Object.values(packageJson['lint-staged'])
+      .flat()
+      .filter((command) => command.startsWith('eslint '));
 
-  assert.ok(eslintCommands.length > 0, 'Expected lint-staged to invoke ESLint.');
-  assert.ok(
-    eslintCommands.every(
-      (command) => command === 'eslint --fix --config tools/ci/eslint-precommit.config.cjs'
-    ),
-    `Expected every staged ESLint command to use the fast config, received: ${eslintCommands.join(', ')}`
-  );
+    assert.ok(eslintCommands.length > 0, 'Expected lint-staged to invoke ESLint.');
+    assert.ok(
+      eslintCommands.every(
+        (command) => command === 'eslint --fix --config tools/ci/eslint-precommit.config.cjs'
+      ),
+      `Expected every staged ESLint command to use the fast config, received: ${eslintCommands.join(', ')}`
+    );
 
-  const stagedLint = new ESLint({
-    overrideConfigFile: path.join(repoRoot, 'tools', 'ci', 'eslint-precommit.config.cjs'),
-  });
-  const canonicalLint = new ESLint();
-  const stagedConfig = await stagedLint.calculateConfigForFile(
-    path.join(repoRoot, 'apps', 'web', 'src', 'app', 'AppProviders.tsx')
-  );
-  const canonicalConfig = await canonicalLint.calculateConfigForFile(
-    path.join(repoRoot, 'apps', 'web', 'src', 'app', 'AppProviders.tsx')
-  );
-  const canonicalEngineConfig = await canonicalLint.calculateConfigForFile(
-    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'WorkflowEngine.ts')
-  );
-  const canonicalCypressConfig = await canonicalLint.calculateConfigForFile(
-    path.join(repoRoot, 'apps', 'web', 'cypress', 'support', 'workspaceSession.ts')
-  );
-  const canonicalWebScriptConfig = await canonicalLint.calculateConfigForFile(
-    path.join(repoRoot, 'apps', 'web', 'scripts', 'run-vitest-changed-suites.ts')
-  );
-  const canonicalViteConfig = await canonicalLint.calculateConfigForFile(
-    path.join(repoRoot, 'apps', 'web', 'vite.config.ts')
-  );
-  const stagedEngineConfig = await stagedLint.calculateConfigForFile(
-    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'WorkflowEngine.ts')
-  );
-  const stagedTemporalWorkflowConfig = await stagedLint.calculateConfigForFile(
-    path.join(
-      repoRoot,
-      'packages',
-      '@dvt',
-      'adapter-temporal',
-      'src',
-      'workflows',
-      'RunPlanWorkflow.ts'
-    )
-  );
+    const stagedLint = new ESLint({
+      overrideConfigFile: path.join(repoRoot, 'tools', 'ci', 'eslint-precommit.config.cjs'),
+    });
+    const canonicalLint = new ESLint();
+    const filePath = path.join(repoRoot, 'apps', 'web', 'src', 'app', 'AppProviders.tsx');
+    const stagedConfig = await stagedLint.calculateConfigForFile(filePath);
+    const canonicalConfig = await canonicalLint.calculateConfigForFile(filePath);
+    const canonicalEngineConfig = await canonicalLint.calculateConfigForFile(
+      path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'WorkflowEngine.ts')
+    );
+    const canonicalCypressConfig = await canonicalLint.calculateConfigForFile(
+      path.join(repoRoot, 'apps', 'web', 'cypress', 'support', 'workspaceSession.ts')
+    );
+    const canonicalWebScriptConfig = await canonicalLint.calculateConfigForFile(
+      path.join(repoRoot, 'apps', 'web', 'scripts', 'run-vitest-changed-suites.ts')
+    );
+    const canonicalViteConfig = await canonicalLint.calculateConfigForFile(
+      path.join(repoRoot, 'apps', 'web', 'vite.config.ts')
+    );
+    const stagedEngineConfig = await stagedLint.calculateConfigForFile(
+      path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'WorkflowEngine.ts')
+    );
+    const stagedTemporalWorkflowConfig = await stagedLint.calculateConfigForFile(
+      path.join(
+        repoRoot,
+        'packages',
+        '@dvt',
+        'adapter-temporal',
+        'src',
+        'workflows',
+        'RunPlanWorkflow.ts'
+      )
+    );
 
-  assert.equal(stagedConfig.languageOptions.parserOptions.project, false);
-  assert.equal(stagedConfig.rules['@typescript-eslint/no-floating-promises'][0], 0);
-  assert.equal(stagedConfig.rules['@typescript-eslint/no-misused-promises'][0], 0);
-  assert.equal(stagedConfig.rules['@typescript-eslint/await-thenable'][0], 0);
-  assert.equal(stagedConfig.rules['import/no-unresolved'][0], 0);
-  assert.equal(stagedConfig.rules['import/no-cycle'][0], 0);
-  assert.deepEqual(Object.keys(stagedConfig.settings['import/resolver']), ['node']);
-  assert.equal(stagedEngineConfig.rules['no-restricted-imports'][0], 2);
-  assert.equal(stagedEngineConfig.rules['no-restricted-syntax'][0], 2);
-  assert.equal(stagedEngineConfig.rules['no-restricted-properties'][0], 2);
-  assert.equal(stagedTemporalWorkflowConfig.rules['no-restricted-globals'][0], 2);
-  assert.equal(stagedTemporalWorkflowConfig.rules['no-restricted-imports'][0], 2);
+    assert.equal(stagedConfig.languageOptions.parserOptions.project, false);
+    assert.equal(stagedConfig.rules['@typescript-eslint/no-floating-promises'][0], 0);
+    assert.equal(stagedConfig.rules['@typescript-eslint/no-misused-promises'][0], 0);
+    assert.equal(stagedConfig.rules['@typescript-eslint/await-thenable'][0], 0);
+    assert.equal(stagedConfig.rules['import/no-unresolved'][0], 0);
+    assert.equal(stagedConfig.rules['import/no-cycle'][0], 0);
+    assert.deepEqual(Object.keys(stagedConfig.settings['import/resolver']), ['node']);
+    assert.equal(stagedEngineConfig.rules['no-restricted-imports'][0], 2);
+    assert.equal(stagedEngineConfig.rules['no-restricted-syntax'][0], 2);
+    assert.equal(stagedEngineConfig.rules['no-restricted-properties'][0], 2);
+    assert.equal(stagedTemporalWorkflowConfig.rules['no-restricted-globals'][0], 2);
+    assert.equal(stagedTemporalWorkflowConfig.rules['no-restricted-imports'][0], 2);
 
-  assert.deepEqual(canonicalConfig.languageOptions.parserOptions.project, [
-    './apps/web/tsconfig.eslint.json',
-  ]);
-  assert.deepEqual(canonicalCypressConfig.languageOptions.parserOptions.project, [
-    './apps/web/tsconfig.eslint.json',
-  ]);
-  assert.deepEqual(canonicalWebScriptConfig.languageOptions.parserOptions.project, [
-    './apps/web/tsconfig.eslint.json',
-  ]);
-  assert.deepEqual(canonicalViteConfig.languageOptions.parserOptions.project, [
-    './apps/web/tsconfig.eslint.json',
-  ]);
-  assert.deepEqual(canonicalEngineConfig.languageOptions.parserOptions.project, [
-    './tsconfig.eslint.json',
-  ]);
-  assert.equal(canonicalConfig.rules['@typescript-eslint/no-unused-vars'][0], 2);
-  assert.deepEqual(
-    stagedConfig.rules['@typescript-eslint/no-unused-vars'],
-    canonicalConfig.rules['@typescript-eslint/no-unused-vars']
-  );
-  assert.equal(canonicalConfig.rules['@typescript-eslint/no-floating-promises'][0], 2);
-  assert.equal(canonicalConfig.rules['@typescript-eslint/no-misused-promises'][0], 2);
-  assert.equal(canonicalConfig.rules['@typescript-eslint/await-thenable'][0], 2);
-  assert.equal(canonicalConfig.rules['import/no-unresolved'][0], 2);
-  assert.equal(canonicalConfig.rules['import/no-cycle'][0], 2);
-  assert.ok(Object.hasOwn(canonicalConfig.settings['import/resolver'], 'typescript'));
-});
+    assert.deepEqual(canonicalConfig.languageOptions.parserOptions.project, [
+      './apps/web/tsconfig.eslint.json',
+    ]);
+    assert.deepEqual(canonicalCypressConfig.languageOptions.parserOptions.project, [
+      './apps/web/tsconfig.eslint.json',
+    ]);
+    assert.deepEqual(canonicalWebScriptConfig.languageOptions.parserOptions.project, [
+      './apps/web/tsconfig.eslint.json',
+    ]);
+    assert.deepEqual(canonicalViteConfig.languageOptions.parserOptions.project, [
+      './apps/web/tsconfig.eslint.json',
+    ]);
+    assert.deepEqual(canonicalEngineConfig.languageOptions.parserOptions.project, [
+      './tsconfig.eslint.json',
+    ]);
+    assert.equal(canonicalConfig.rules['@typescript-eslint/no-unused-vars'][0], 2);
+    assert.deepEqual(
+      stagedConfig.rules['@typescript-eslint/no-unused-vars'],
+      canonicalConfig.rules['@typescript-eslint/no-unused-vars']
+    );
+    assert.equal(canonicalConfig.rules['@typescript-eslint/no-floating-promises'][0], 2);
+    assert.equal(canonicalConfig.rules['@typescript-eslint/no-misused-promises'][0], 2);
+    assert.equal(canonicalConfig.rules['@typescript-eslint/await-thenable'][0], 2);
+    assert.equal(canonicalConfig.rules['import/no-unresolved'][0], 2);
+    assert.equal(canonicalConfig.rules['import/no-cycle'][0], 2);
+    assert.ok(Object.hasOwn(canonicalConfig.settings['import/resolver'], 'typescript'));
+
+    for (const source of [
+      'const unconsumed = 1; export const consumed = 2;',
+      'import type { ReactNode } from "react"; export const consumed = 2;',
+    ]) {
+      const [result] = await stagedLint.lintText(source, { filePath });
+      assert.equal(result?.fatalErrorCount, 0, source);
+      assert.ok(
+        result?.messages.some(
+          ({ ruleId, severity }) => ruleId === '@typescript-eslint/no-unused-vars' && severity === 2
+        ),
+        `Expected unused-declaration rejection for ${source}`
+      );
+    }
+    const [accepted] = await stagedLint.lintText(
+      'export const consumed = 2; console.info(consumed);',
+      {
+        filePath,
+      }
+    );
+    assert.deepEqual(accepted?.messages, []);
+  }
+);
 
 test('web workspace lint is fast while strict lint remains available', () => {
   const webPackageJson = readWebPackageJson();
