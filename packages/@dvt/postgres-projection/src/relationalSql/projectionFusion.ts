@@ -1,5 +1,6 @@
 /** Bounded, presentation-only PostgreSQL AST rewriting. Never changes Substrait authority. */
 import type { PostgresAstNode } from '../postgresAst.js';
+import { renderPostgresAst } from '../renderPostgresAst.js';
 
 type AstObject = Record<string, unknown>;
 
@@ -162,4 +163,12 @@ export function fusePostgresProjections(
   if (fusePostgresProjectionOnce(current).steps.length > 0)
     throw new RangeError('Projection fusion exceeded maxSteps before reaching a fixed point.');
   return { ast: current, steps };
+}
+
+/** Render a derived readable SQL statement without modifying the input AST. */
+export async function renderFusedPostgresProjections(
+  ast: PostgresAstNode
+): Promise<ProjectionFusionResult & Readonly<{ sql: string }>> {
+  const result = fusePostgresProjections(ast);
+  return { ...result, sql: await renderPostgresAst(result.ast) };
 }
