@@ -44,7 +44,7 @@ describe('Canvas explorer', () => {
     const host = document.createElement('div');
     document.body.append(host);
     const view = (target: HTMLElement | null): JSX.Element => (
-      <div aria-hidden="true" inert="">
+      <div aria-hidden="true" {...{ inert: '' }}>
         <CanvasExplorer
           sources={<input aria-label="Retained source search" defaultValue="orders" />}
           elements={null}

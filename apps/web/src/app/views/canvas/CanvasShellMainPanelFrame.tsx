@@ -35,6 +35,7 @@ export function CanvasShellWorkspaceSurfaces({
   codeVisible?: boolean;
   activityRailRef?: RefCallback<HTMLDivElement>;
 }>): JSX.Element {
+  const modelVisible = editorVisible && !codeVisible;
   return (
     <div
       data-slot="canvas-workspace-surfaces"
@@ -43,16 +44,16 @@ export function CanvasShellWorkspaceSurfaces({
       <div
         ref={activityRailRef}
         data-slot="canvas-activity-rail-host"
-        className={editorVisible && !codeVisible ? 'hidden' : 'contents'}
-        hidden={editorVisible && !codeVisible}
-        aria-hidden={editorVisible && !codeVisible}
-        {...(editorVisible && !codeVisible ? { inert: '' } : {})}
+        className={modelVisible ? 'hidden' : 'contents'}
+        hidden={modelVisible}
+        aria-hidden={modelVisible}
+        {...(modelVisible ? { inert: '' } : {})}
       />
       <div className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}>
         {(
           [
             { kind: 'canvas', content: viewport, visible: !editorVisible && !codeVisible },
-            { kind: 'model', content: editor, visible: editorVisible && !codeVisible },
+            { kind: 'model', content: editor, visible: modelVisible },
             { kind: 'code', content: code, visible: codeVisible },
           ] as const
         ).map(({ kind, content, visible }) =>
