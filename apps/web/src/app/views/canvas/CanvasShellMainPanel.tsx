@@ -1,7 +1,8 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
+import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
 import { RouteWorkbenchFrame } from '../../components/workbench/RouteWorkbenchFrame';
 import {
   CanvasShellContextualWorkbenchSplit,
@@ -106,6 +107,7 @@ function CanvasShellViewport({
   workspaceTask,
   projectFiles,
   inspector,
+  activityRail,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -117,7 +119,10 @@ function CanvasShellViewport({
   | 'contextMenuPresenter'
   | 'workspaceTask'
   | 'projectFiles'
-> & { inspector: ReactNode }): JSX.Element {
+> & {
+  inspector: ReactNode;
+  activityRail: CanvasExplorerActivityRail;
+}): JSX.Element {
   const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
     focusMode: layout.focusMode,
     inspectorPanelVisible: layout.inspectorPanelVisible,
@@ -129,6 +134,7 @@ function CanvasShellViewport({
     <CanvasViewport
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
+      activityRail={activityRail}
       inspector={inspector}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
@@ -208,6 +214,8 @@ function CanvasShellMainSurface({
   | 'workspaceTask'
   | 'projectFiles'
 > & { inspector: ReactNode }): JSX.Element {
+  const [activityRailTarget, setActivityRailTarget] = useState<HTMLDivElement | null>(null);
+  const codeVisible = workspaceTask == null && projectFiles?.active === true;
   const modelWorkspaceOpen = layout.centerSurfaceVisible != null;
   const inspectorInViewport = layout.centerSurface == null || layout.centerSurfaceVisible === false;
   const contextualWorkbench =
@@ -219,6 +227,7 @@ function CanvasShellMainSurface({
     <CanvasShellViewport
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
+      activityRail={{ target: activityRailTarget, codeVisible }}
       inspector={inspectorInViewport ? nodeInspector : null}
       layout={layout}
       panels={panels}
@@ -232,6 +241,7 @@ function CanvasShellMainSurface({
 
   const baseSurface = (
     <CanvasShellWorkspaceSurfaces
+      activityRailRef={setActivityRailTarget}
       viewport={
         modelWorkspaceOpen || workspaceTask != null ? viewport : (layout.centerSurface ?? viewport)
       }
@@ -250,7 +260,7 @@ function CanvasShellMainSurface({
           />
         )
       }
-      codeVisible={workspaceTask == null && projectFiles?.active === true}
+      codeVisible={codeVisible}
     />
   );
 

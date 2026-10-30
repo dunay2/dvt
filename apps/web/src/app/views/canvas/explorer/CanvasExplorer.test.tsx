@@ -40,6 +40,50 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('waits for the shared rail host without moving retained content or creating an inline rail', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const view = (target: HTMLElement | null): JSX.Element => (
+      <div aria-hidden="true" {...{ inert: '' }}>
+        <CanvasExplorer
+          sources={<input aria-label="Retained source search" defaultValue="orders" />}
+          elements={null}
+          activityRail={{ target, codeVisible: true }}
+          projectFiles={{ onActivate: async () => true, onCanvas: () => undefined }}
+        >
+          <input aria-label="Retained graph" defaultValue="camera" />
+        </CanvasExplorer>
+      </div>
+    );
+    try {
+      render(view(null));
+      const graph = screen.getByLabelText('Retained graph');
+      const search = screen.getByLabelText('Retained source search');
+      expect(container.querySelector('nav')).toBeNull();
+      expect(host.childElementCount).toBe(0);
+      act(() => root.render(view(host)));
+      expect(container.querySelector('nav')).toBeNull();
+      expect(screen.getAllByRole('navigation')).toHaveLength(1);
+      const rail = screen.getByRole('navigation');
+      expect(host.contains(rail)).toBe(true);
+      expect(rail.closest('[inert], [aria-hidden="true"]')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Sources' }).getAttribute('aria-expanded')).toBe(
+        'false'
+      );
+      expect(screen.getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')).toBe(
+        'true'
+      );
+      expect(screen.getByLabelText('Retained graph')).toBe(graph);
+      expect(screen.getByLabelText('Retained source search')).toBe(search);
+      act(() => useUiLayoutStore.getState().hideCanvasExplorer());
+      expect(screen.queryByRole('navigation')).toBeNull();
+      act(() => useUiLayoutStore.getState().showCanvasExplorer());
+      expect(screen.getByRole('navigation')).toBe(rail);
+    } finally {
+      host.remove();
+    }
+  });
+
   it.each([
     ['en', ['Sources', 'Elements', 'Git']],
     ['es', ['Fuentes', 'Elementos', 'Git']],

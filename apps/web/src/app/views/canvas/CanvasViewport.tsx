@@ -33,6 +33,7 @@ import {
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
+import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
@@ -87,6 +88,7 @@ type CanvasViewportProps = {
   readonly externalNodeSurfaceActive?: boolean;
   readonly workspaceTask?: ReactNode;
   readonly projectFiles?: CanvasExplorerProjectWorkspace;
+  readonly activityRail?: CanvasExplorerActivityRail;
   readonly inspector?: ReactNode;
 };
 
@@ -456,6 +458,7 @@ function CanvasViewportWithPresenter({
     <CanvasGraphExplorer
       workspaceTask={props.workspaceTask}
       projectFiles={props.projectFiles}
+      activityRail={props.activityRail}
       nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
       onInspectSource={props.onInspectSource}

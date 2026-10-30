@@ -15,7 +15,11 @@ import {
 } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { useUiLayoutStore } from '../../../stores/uiLayoutStore';
-import { CanvasExplorerTemplate, type CanvasExplorerPanel } from './CanvasExplorer.templates';
+import {
+  CanvasExplorerTemplate,
+  type CanvasExplorerActivityRail,
+  type CanvasExplorerPanel,
+} from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 export type CanvasExplorerProjectWorkspace = Readonly<{
@@ -30,6 +34,7 @@ export function CanvasExplorer({
   children,
   rootRef,
   workspaceTask,
+  activityRail,
 }: Readonly<{
   sources: ReactNode;
   elements: ReactNode;
@@ -37,6 +42,7 @@ export function CanvasExplorer({
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
   workspaceTask?: ReactNode;
+  activityRail?: CanvasExplorerActivityRail;
 }>): JSX.Element {
   const [selected, setSelected] = useState<CanvasExplorerPanel>('sources');
   const [expanded, setExpanded] = useState(true);
@@ -56,7 +62,9 @@ export function CanvasExplorer({
       return;
     }
     projectFiles?.onCanvas();
-    setExpanded((current) => (selectedPanel === key ? !current : true));
+    setExpanded((current) =>
+      activityRail?.codeVisible === true || selectedPanel !== key ? true : !current
+    );
     setSelected(key);
   };
   const onKeyToggle = (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>): void => {
@@ -73,6 +81,7 @@ export function CanvasExplorer({
       copy={copy}
       rootRef={rootRef}
       workspaceTask={workspaceTask}
+      activityRail={activityRail}
       sources={sources}
       elements={elements}
       hasProjectFiles={hasProjectFiles}

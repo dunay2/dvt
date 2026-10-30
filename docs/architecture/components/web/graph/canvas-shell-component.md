@@ -2,7 +2,7 @@
 title: Canvas Shell Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-10-28
+last_reviewed: 2026-10-30
 ---
 
 # Canvas Shell Component
@@ -872,9 +872,24 @@ the same file tree, editor and buffer at their existing React parent. Import
 remains the priority task layer without replacing the retained Code host. Model
 authoring and file synchronization keep their existing owners.
 
+The Main Canvas activity rail remains accessible in both Canvas and Code. The
+shell provides a stable local activity slot outside the retained panels that
+become hidden and inert. `CanvasExplorer` presents its single existing nav in that
+slot through a public React portal, retaining actions, keyboard behavior,
+disclosure, copy and CSS ownership. Standalone explorers retain their placement.
+The rail keeps its existing flex width; the graph, Code editor and project tree
+keep stable parents and geometry. Sources and Elements return through the existing
+Canvas action, while Git retains the same guarded Code opener.
+
+During Model authoring the main activity slot is hidden and inert because the
+Model owns its separate explorer lifecycle. There must be one visible activity
+rail for the active workspace. This local placement slot does not introduce a
+global toolbar portal, another navigation store, a file mutation or a save policy.
+
 ```mermaid
 flowchart LR
   Explorer[Retained CanvasExplorer] --> Git[Git action]
+  Explorer --> Slot[Shared local activity slot outside hidden panels]
   Git --> Opener[Existing project Code opener with optional path]
   File[Existing File-menu entry] --> Opener
   CodeTab[Top Code tab] --> Opener
