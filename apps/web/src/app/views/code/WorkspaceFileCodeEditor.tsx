@@ -85,7 +85,9 @@ export const WorkspaceFileCodeEditor = forwardRef<
     graphOwnedPaths,
   });
   const acceptedInlineFile =
-    fileContentQuery.isSuccess && fileContentQuery.data.path === path
+    fileContentQuery.isSuccess &&
+    !fileContentQuery.isFetching &&
+    fileContentQuery.data.path === path
       ? fileContentQuery.data
       : undefined;
   const context = useCodeWorkspaceFileContext({

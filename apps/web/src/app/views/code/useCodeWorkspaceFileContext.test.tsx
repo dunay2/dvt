@@ -7,9 +7,8 @@ import {
   type DbtSelectedModelAnalysis,
 } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { act, createRef } from 'react';
-import { createRoot } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
@@ -22,21 +21,24 @@ import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import { queryKeys } from '../../queries/queryKeys';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { FileContent, WorkspaceGraphSnapshot } from '../../ports/workspace';
+import { resolveCodeInlineReferenceCopy } from './codeViewCopy';
 
 vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
     value,
     onChange,
     inlineReferences,
+    onInspectReference,
   }: {
     value: string;
     onChange: (value: string) => void;
     inlineReferences?: { items: readonly { id: string; label: string }[] };
+    onInspectReference?: (id: string) => void;
   }) => (
     <>
       <textarea aria-label="Code" value={value} onChange={(e) => onChange(e.currentTarget.value)} />
       {inlineReferences?.items.map((r) => (
-        <button key={r.id} data-reference={r.id}>
+        <button key={r.id} data-reference={r.id} onClick={() => onInspectReference?.(r.id)}>
           {r.label}
         </button>
       ))}
@@ -175,93 +177,91 @@ describe('Code workspace file context through normal Code entry', () => {
       lastModified: fixture.file.lastModified,
     };
   });
-  const container = document.createElement('div');
-  let root: ReturnType<typeof createRoot> | undefined;
+  let container: HTMLDivElement;
+  let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
   const handle = createRef<CodeViewHandle>();
   let fileAuthority: unknown;
   let graphOwned = false;
   let parentMissing = false;
   let graphSnapshot: Promise<WorkspaceGraphSnapshot> | undefined;
+  let fileRead: Promise<FileContent> | undefined;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const render = async (): Promise<void> => {
-    (
-      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
-    ).IS_REACT_ACT_ENVIRONMENT = true;
-    if (!root) {
-      document.body.appendChild(container);
-      root = createRoot(container);
-    }
-    await act(async () =>
-      root?.render(
-        <QueryClientProvider client={client}>
-          <AppServicesProvider
-            overrides={{
-              ...createAppServicesTestOverrides(),
-              workspaceFilesQuery: {
-                listFiles: async () => [
-                  { path: fixture.file.path, name: 'ventas.sql', kind: 'file' },
-                ],
-                getFileContent: async () =>
-                  ({
-                    ...fixture.file,
-                    authoringAuthority:
-                      fileAuthority === undefined ? fixture.file.authoringAuthority : fileAuthority,
-                  }) as typeof fixture.file,
+    const ui = (
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          workspaceFilesQuery: {
+            listFiles: async () => [{ path: fixture.file.path, name: 'ventas.sql', kind: 'file' }],
+            getFileContent: async (path) => {
+              if (path === fixture.file.path && fileRead !== undefined) return fileRead;
+              return {
+                ...fixture.file,
+                path,
+                content: path === fixture.file.path ? fixture.file.content : 'select 1',
+                contentSha256:
+                  path === fixture.file.path
+                    ? fixture.file.contentSha256
+                    : sha256HexUtf8('select 1'),
+                authoringAuthority:
+                  fileAuthority === undefined ? fixture.file.authoringAuthority : fileAuthority,
+              } as typeof fixture.file;
+            },
+          },
+          workspaceGraphSnapshotQuery: {
+            getGraphSnapshot: async () =>
+              graphSnapshot ?? {
+                authoringAuthority: parentMissing
+                  ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
+                  : mockGraphDraftAuthoringAuthority,
+                edges: [],
+                nodes: graphOwned
+                  ? [
+                      {
+                        id: 'owned',
+                        name: 'owned',
+                        type: 'MODEL',
+                        package: 'demo',
+                        path: fixture.file.path,
+                        tags: [],
+                        status: 'idle',
+                        dependencies: [],
+                      },
+                    ]
+                  : [],
               },
-              workspaceGraphSnapshotQuery: {
-                getGraphSnapshot: async () =>
-                  graphSnapshot ?? {
-                    authoringAuthority: parentMissing
-                      ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
-                      : mockGraphDraftAuthoringAuthority,
-                    edges: [],
-                    nodes: graphOwned
-                      ? [
-                          {
-                            id: 'owned',
-                            name: 'owned',
-                            type: 'MODEL',
-                            package: 'demo',
-                            path: fixture.file.path,
-                            tags: [],
-                            status: 'idle',
-                            dependencies: [],
-                          },
-                        ]
-                      : [],
-                  },
-              },
-              workspaceFileContentCommand: { saveFileContent: save },
-              dbtProjectGraphQueryPort: { getProjectGraph: graph },
-              dbtSelectedModelAnalysisQueryPort: { analyzeSelectedModel: analysis },
-            }}
-          >
-            <CodeView
-              ref={handle}
-              publishRouteBootstrap={false}
-              fileScope={{ kind: 'workspace-files' }}
-              initialPath={fixture.file.path}
-            />
-          </AppServicesProvider>
-        </QueryClientProvider>
-      )
+          },
+          workspaceFileContentCommand: { saveFileContent: save },
+          dbtProjectGraphQueryPort: { getProjectGraph: graph },
+          dbtSelectedModelAnalysisQueryPort: { analyzeSelectedModel: analysis },
+        }}
+      >
+        <CodeView
+          ref={handle}
+          publishRouteBootstrap={false}
+          fileScope={{ kind: 'workspace-files' }}
+          initialPath={fixture.file.path}
+        />
+      </AppServicesProvider>
     );
+    if (mounted) {
+      await mounted.render(ui);
+    } else {
+      mounted = await withTestQueryClient(ui, client);
+      container = mounted.container;
+    }
   };
-  const waitFor = async (predicate: () => boolean): Promise<void> => {
-    for (let i = 0; i < 80 && !predicate(); i++)
-      await act(async () => new Promise((resolve) => setTimeout(resolve, 5)));
-    expect(predicate()).toBe(true);
-  };
+  const waitFor = waitForReactQuery;
   afterEach(async () => {
-    await act(async () => root?.unmount());
-    root = undefined;
-    container.remove();
+    await mounted?.cleanup();
+    mounted = undefined;
     client.clear();
     fixture = contextFixture();
     fileAuthority = undefined;
     graphOwned = false;
     parentMissing = false;
     graphSnapshot = undefined;
+    fileRead = undefined;
     graph.mockReset().mockImplementation(async () => fixture.project);
     analysis.mockClear();
     save.mockClear();
@@ -274,6 +274,77 @@ describe('Code workspace file context through normal Code entry', () => {
     expect(analysis).toHaveBeenCalledWith(fixture.project.authorityBinding, 'model.demo.ventas');
     expect(container.querySelector('textarea')?.value).toBe(fixture.file.content);
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it('withholds cached authority and definition while the file read is being revalidated', async () => {
+    const inlineCopy = resolveCodeInlineReferenceCopy('en-US');
+    await render();
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    const editor = container.querySelector('textarea');
+    const original = fixture.file.content;
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-reference="region-0"]')?.click()
+    );
+    await waitFor(
+      () =>
+        container.querySelector('section[aria-label="clientes"] code')?.textContent === 'select 1'
+    );
+
+    let finishGraph: ((projection: DbtProjectGraphProjection) => void) | undefined;
+    let finishFile: ((file: FileContent) => void) | undefined;
+    const pendingGraph = new Promise<DbtProjectGraphProjection>((resolve) => {
+      finishGraph = resolve;
+    });
+    fileRead = new Promise<FileContent>((resolve) => {
+      finishFile = resolve;
+    });
+    graph.mockImplementationOnce(() => pendingGraph);
+    const mixed: FileContent = {
+      ...fixture.file,
+      authoringAuthority: { kind: 'unresolved', reason: 'mixed_authority', canvasId: null },
+    };
+    let graphRefresh: Promise<void> | undefined;
+    let fileRefresh: Promise<void> | undefined;
+    try {
+      await act(async () => {
+        graphRefresh = client.refetchQueries({
+          queryKey: queryKeys.workspace.dbtProjectGraphRoot(),
+        });
+      });
+      await waitFor(() => graph.mock.calls.length === 2);
+      await waitFor(() => container.querySelectorAll('[data-reference]').length === 0);
+      expect(container.textContent).toContain(inlineCopy.checkingMessage);
+      await act(async () => {
+        fileRefresh = client.refetchQueries({
+          queryKey: ['workspace', 'file-content'],
+          predicate: (q) => q.queryKey.at(-1) === fixture.file.path,
+        });
+      });
+      await act(async () => {
+        finishGraph?.(fixture.project);
+        await graphRefresh;
+      });
+      await waitFor(() => !container.textContent?.includes(inlineCopy.checkingMessage));
+      expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+      expect(container.querySelector('section[aria-label="clientes"]')).toBeNull();
+      expect(graph).toHaveBeenCalledTimes(2);
+      expect(container.querySelector('textarea')).toBe(editor);
+      expect(editor?.value).toBe(original);
+      expect(save).not.toHaveBeenCalled();
+      await act(async () => {
+        finishFile?.(mixed);
+        await fileRefresh;
+      });
+      await waitFor(() => container.textContent?.includes(inlineCopy.unavailableMessage) === true);
+      expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+      expect(graph).toHaveBeenCalledTimes(2);
+    } finally {
+      await act(async () => {
+        finishGraph?.(fixture.project);
+        finishFile?.(mixed);
+        await Promise.all([graphRefresh, fileRefresh]);
+      });
+    }
   });
 
   it.each(['missing', 'mixed', 'graph-owned'] as const)(
