@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { pgColumnRef, pgQualifiedColumnRef, pgRangeSubselect, pgRangeVar } from '../src/postgresAst.js';
 import { fusePostgresProjectionOnce, fusePostgresProjections } from '../src/relationalSql/projectionFusion.js';
+import { projectSubstraitToPostgresAst } from '../src/relationalSql/project.js';
+import { compositionalFixture } from './relationalSqlFixture.js';
 
 const select = (
   targets: readonly { name: string; from: string; column: string }[],
@@ -151,5 +153,15 @@ describe('SQLREAD1 projection fusion (PostgreSQL AST)', () => {
     expect(() => fusePostgresProjections(root, 0)).toThrow(RangeError);
     expect(() => fusePostgresProjections(root, 1)).toThrow(/maxSteps/);
     expect(fusePostgresProjections(root, 2).steps).toHaveLength(2);
+  });
+
+  it('accepts the actual AST projected from canonical DVT Substrait', () => {
+    const document = compositionalFixture('join');
+    const originalDocument = structuredClone(document);
+    const ast = projectSubstraitToPostgresAst(document).ast;
+    const result = fusePostgresProjections(ast);
+    expect(result.steps.length).toBeGreaterThan(0);
+    expect(document).toEqual(originalDocument);
+    expect(fusePostgresProjections(result.ast).steps).toHaveLength(0);
   });
 });
