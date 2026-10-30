@@ -65,6 +65,7 @@ vi.mock('./CanvasViewport', async () => {
           sources={<p>Source catalogue</p>}
           elements={<p>Canvas elements</p>}
           projectFiles={props.projectFiles as Parameters<typeof CanvasExplorer>[0]['projectFiles']}
+          activityRail={props.activityRail as Parameters<typeof CanvasExplorer>[0]['activityRail']}
           workspaceTask={props.workspaceTask as React.ReactNode}
         >
           <div data-testid="canvas-viewport">{props.inspector as React.ReactNode}</div>

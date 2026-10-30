@@ -11,6 +11,7 @@ import { useEffect, useMemo, useRef, type ReactNode } from 'react';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
+import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerNodes, projectCanvasExplorerSources } from './canvasExplorerItems';
 
@@ -28,6 +29,7 @@ export function CanvasGraphExplorer({
   children,
   workspaceTask,
   projectFiles,
+  activityRail,
 }: Readonly<{
   nodes: readonly Node[];
   onSelect: (id: string) => void;
@@ -35,6 +37,7 @@ export function CanvasGraphExplorer({
   children: ReactNode;
   workspaceTask?: ReactNode;
   projectFiles?: CanvasExplorerProjectWorkspace;
+  activityRail?: CanvasExplorerActivityRail;
   catalogue?: readonly CanonicalNode[];
   onInspectSource?: (id: string) => void;
   canPlaceSource?: boolean;
@@ -59,6 +62,7 @@ export function CanvasGraphExplorer({
       rootRef={rootRef}
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
+      activityRail={activityRail}
       sources={
         <CanvasExplorerList
           items={sources}

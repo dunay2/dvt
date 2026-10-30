@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Open and inspect a Model without mutating or requesting its data. */
 import { act } from 'react';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, within } from '@testing-library/dom';
 import { describe, expect, it, vi } from 'vitest';
 import { buildSemanticWorkbenchFixture } from '../../labs/semanticWorkbenchFixture';
 import { getCanvasShellState } from './CanvasShell.testHarness';
@@ -89,6 +89,9 @@ describe('Canvas Model inspection', () => {
       )!;
       const canvasPanel = panelFor(canvas);
       const viewport = harness.container.querySelector('[data-testid="canvas-viewport"]');
+      const activityRail = within(harness.container).getByRole('navigation', {
+        name: 'Canvas explorer',
+      });
       await act(async () => data.onOpenNode?.(fixture.transform.id));
       const model = navigation.querySelector<HTMLButtonElement>(
         '[data-slot="canvas-model-main-tab"]'
@@ -127,6 +130,17 @@ describe('Canvas Model inspection', () => {
         const activePanel = panelFor(target);
         expect(activePanel.getAttribute('aria-hidden')).toBe('false');
         expect(activePanel.hasAttribute('inert')).toBe(false);
+        const visibleRails = within(harness.container).getAllByRole('navigation', {
+          name: 'Canvas explorer',
+        });
+        expect(visibleRails).toHaveLength(1);
+        if (target === model) {
+          expect(activityRail.closest('[hidden][inert]')).not.toBeNull();
+          expect(modelPanel.contains(visibleRails[0]!)).toBe(true);
+        } else {
+          expect(visibleRails[0]).toBe(activityRail);
+          expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
+        }
         if (target === code) {
           codePanel ??= activePanel;
           codeEditor ??= activePanel.querySelector('[data-testid="sql-context-workbench"]');

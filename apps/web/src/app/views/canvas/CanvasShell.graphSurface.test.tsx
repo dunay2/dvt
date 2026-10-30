@@ -3,7 +3,7 @@
 /** Owned concern: prove CanvasShell keeps the graph as the base work surface. */
 import { asIsoUtcString } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, within } from '@testing-library/dom';
 import { act } from 'react';
 import type { ConnectedSourceRef } from '@dvt/contracts';
 
@@ -60,6 +60,12 @@ describe('CanvasShell graph base surface', () => {
     expect(initialCodePanel?.childElementCount).toBe(0);
     expect(container.querySelector('[data-testid="project-files-explorer"]')).toBeNull();
     const viewport = container.querySelector('[data-testid="canvas-viewport"]');
+    const activityRail = container
+      .querySelector('[data-slot="canvas-explorer-git-toggle"]')!
+      .closest('nav')!;
+    expect(
+      within(activityRail).getByRole('button', { name: 'Sources' }).getAttribute('aria-expanded')
+    ).toBe('true');
     await act(async () => {
       fireEvent.click(container.querySelector('[data-slot="canvas-explorer-git-toggle"]')!);
     });
@@ -73,6 +79,20 @@ describe('CanvasShell graph base surface', () => {
     expect(codePanel?.contains(editor)).toBe(true);
     expect(container.querySelectorAll('[data-testid="project-files-explorer"]')).toHaveLength(1);
     expect(viewport?.closest('[inert]')).not.toBeNull();
+    expect(activityRail.closest('[inert], [aria-hidden="true"]')).toBeNull();
+    expect(within(container).getByRole('navigation')).toBe(activityRail);
+    expect(within(activityRail).getByRole('button', { name: 'Sources' })).not.toBeNull();
+    expect(within(activityRail).getByRole('button', { name: 'Elements' })).not.toBeNull();
+    expect(within(activityRail).getByRole('button', { name: 'Git' })).not.toBeNull();
+    expect(
+      within(activityRail).getByRole('button', { name: 'Sources' }).getAttribute('aria-expanded')
+    ).toBe('false');
+    expect(
+      within(activityRail).getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')
+    ).toBe('false');
+    expect(
+      within(activityRail).getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')
+    ).toBe('true');
     expect(container.querySelector('[data-slot="canvas-contextual-workbench-overlay"]')).toBeNull();
     const files = container.querySelector('[data-testid="project-files-explorer"]');
     expect(files).not.toBeNull();
@@ -105,6 +125,25 @@ describe('CanvasShell graph base surface', () => {
     expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
     expect(editor?.closest('[inert]')).toBeNull();
     expect(viewport?.closest('[inert]')).not.toBeNull();
+    for (const destination of ['Sources', 'Elements']) {
+      const button = within(activityRail).getByRole('button', { name: destination });
+      await act(async () => fireEvent.keyDown(button, { key: 'Enter' }));
+      expect(viewport?.closest('[inert]')).toBeNull();
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+      expect(
+        within(activityRail).getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')
+      ).toBe('false');
+      expect(codeTab?.getAttribute('aria-selected')).toBe('false');
+      await act(async () =>
+        fireEvent.click(within(activityRail).getByRole('button', { name: 'Git' }))
+      );
+      expect(within(container).getByRole('navigation')).toBe(activityRail);
+      expect(container.querySelector('[data-testid="canvas-viewport"]')).toBe(viewport);
+      expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBe(editor);
+      expect(container.querySelector('[data-testid="project-files-explorer"]')).toBe(files);
+      expect(editor?.getAttribute('data-path')).toBe('notes/second.md');
+      expect(viewport?.closest('[inert]')).not.toBeNull();
+    }
   });
 
   it('delegates Git file requests to the authority-owned Code opener with its actual root', async () => {

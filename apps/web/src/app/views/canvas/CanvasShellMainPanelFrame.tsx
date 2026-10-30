@@ -1,5 +1,5 @@
 /** Owned concern: render Canvas main panel frame and layout-only presentation slots. */
-import type { ReactNode } from 'react';
+import type { ReactNode, RefCallback } from 'react';
 
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
@@ -25,6 +25,7 @@ export function CanvasShellWorkspaceSurfaces({
   hasWorkspaceTabs,
   code,
   codeVisible = false,
+  activityRailRef,
 }: Readonly<{
   viewport: ReactNode;
   editor: ReactNode;
@@ -32,41 +33,52 @@ export function CanvasShellWorkspaceSurfaces({
   hasWorkspaceTabs: boolean;
   code?: ReactNode;
   codeVisible?: boolean;
+  activityRailRef?: RefCallback<HTMLDivElement>;
 }>): JSX.Element {
   return (
     <div
       data-slot="canvas-workspace-surfaces"
       className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}
     >
-      {(
-        [
-          { kind: 'canvas', content: viewport, visible: !editorVisible && !codeVisible },
-          { kind: 'model', content: editor, visible: editorVisible && !codeVisible },
-          { kind: 'code', content: code, visible: codeVisible },
-        ] as const
-      ).map(({ kind, content, visible }) =>
-        content == null ? null : (
-          <div
-            key={kind}
-            {...(hasWorkspaceTabs
-              ? {
-                  id: canvasWorkspaceTabs[kind].panelId,
-                  role: 'tabpanel',
-                  'aria-labelledby': canvasWorkspaceTabs[kind].tabId,
-                  tabIndex: 0,
-                }
-              : {})}
-            aria-hidden={!visible}
-            {...(visible ? {} : { inert: '' })}
-            data-slot={canvasWorkspaceTabs[kind].panelId}
-            className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
-              visible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
-            }`}
-          >
-            {content}
-          </div>
-        )
-      )}
+      <div
+        ref={activityRailRef}
+        data-slot="canvas-activity-rail-host"
+        className={editorVisible && !codeVisible ? 'hidden' : 'contents'}
+        hidden={editorVisible && !codeVisible}
+        aria-hidden={editorVisible && !codeVisible}
+        {...(editorVisible && !codeVisible ? { inert: '' } : {})}
+      />
+      <div className={canvasShellMainPanelFrameClassNames.workspaceSurfaces}>
+        {(
+          [
+            { kind: 'canvas', content: viewport, visible: !editorVisible && !codeVisible },
+            { kind: 'model', content: editor, visible: editorVisible && !codeVisible },
+            { kind: 'code', content: code, visible: codeVisible },
+          ] as const
+        ).map(({ kind, content, visible }) =>
+          content == null ? null : (
+            <div
+              key={kind}
+              {...(hasWorkspaceTabs
+                ? {
+                    id: canvasWorkspaceTabs[kind].panelId,
+                    role: 'tabpanel',
+                    'aria-labelledby': canvasWorkspaceTabs[kind].tabId,
+                    tabIndex: 0,
+                  }
+                : {})}
+              aria-hidden={!visible}
+              {...(visible ? {} : { inert: '' })}
+              data-slot={canvasWorkspaceTabs[kind].panelId}
+              className={`${canvasShellMainPanelFrameClassNames.workspaceSurface} ${
+                visible ? '' : canvasShellMainPanelFrameClassNames.workspaceSurfaceInactive
+              }`}
+            >
+              {content}
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }

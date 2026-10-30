@@ -7,6 +7,7 @@
  */
 import { Database, Workflow, Search, Plus, ChevronLeft, X } from 'lucide-react';
 import type { KeyboardEvent, ReactNode, RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import { DropdownMenuCheckboxItem } from '../../../components/ui/dropdown-menu';
 import {
   ResizablePanelGroup,
@@ -35,6 +36,10 @@ const panels = [
   },
 ] as const;
 export type CanvasExplorerPanel = (typeof panels)[number]['key'];
+export type CanvasExplorerActivityRail = Readonly<{
+  target: HTMLElement | null;
+  codeVisible: boolean;
+}>;
 
 export function CanvasExplorerTemplate(
   props: Readonly<{
@@ -48,6 +53,7 @@ export function CanvasExplorerTemplate(
     hasProjectFiles: boolean;
     children: ReactNode;
     workspaceTask?: ReactNode;
+    activityRail?: CanvasExplorerActivityRail;
     onToggle: (key: CanvasExplorerPanel) => void;
     onKeyToggle: (key: CanvasExplorerPanel, event: KeyboardEvent<HTMLButtonElement>) => void;
     onCollapse: () => void;
@@ -55,27 +61,38 @@ export function CanvasExplorerTemplate(
   }>
 ): JSX.Element {
   const availablePanels = panels.filter(({ key }) => key !== 'git' || props.hasProjectFiles);
+  const activityRail = (
+    <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
+      {availablePanels.map(({ key, icon }) => (
+        <button
+          key={key}
+          type="button"
+          id={`${props.id}-${key}-button`}
+          className={styles.activity}
+          data-slot={`canvas-explorer-${key}-toggle`}
+          aria-label={props.copy[key]}
+          title={props.copy[key]}
+          aria-expanded={
+            key === 'git'
+              ? props.activityRail?.codeVisible
+              : props.activityRail?.codeVisible !== true && props.active === key
+          }
+          aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
+          onClick={() => props.onToggle(key)}
+          onKeyDown={(event) => props.onKeyToggle(key, event)}
+        >
+          {icon}
+        </button>
+      ))}
+    </nav>
+  );
   return (
     <div ref={props.rootRef} className={styles.layout} data-slot="canvas-explorer">
-      <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
-        {availablePanels.map(({ key, icon }) => (
-          <button
-            key={key}
-            type="button"
-            id={`${props.id}-${key}-button`}
-            className={styles.activity}
-            data-slot={`canvas-explorer-${key}-toggle`}
-            aria-label={props.copy[key]}
-            title={props.copy[key]}
-            aria-expanded={key === 'git' ? undefined : props.active === key}
-            aria-controls={key === 'git' ? 'canvas-code-workspace-surface' : `${props.id}-${key}`}
-            onClick={() => props.onToggle(key)}
-            onKeyDown={(event) => props.onKeyToggle(key, event)}
-          >
-            {icon}
-          </button>
-        ))}
-      </nav>
+      {props.activityRail === undefined
+        ? activityRail
+        : props.activityRail.target === null
+          ? null
+          : createPortal(activityRail, props.activityRail.target)}
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
           id={`${props.id}-dock`}
