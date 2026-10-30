@@ -143,7 +143,7 @@ export function attachMonacoInlineReferences(
         element(
           'div',
           'reference-card-port',
-          `${copy.inputsLabel}: ${reference.inputs.join(', ')}`
+          `${copy.inputsLabel}: ${reference.inputs.join(', ') || '—'}`
         ),
         element('div', 'reference-card-port', `${copy.outputLabel}: ${reference.outputLabel}`)
       );

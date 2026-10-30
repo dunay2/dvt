@@ -25,10 +25,10 @@ type Fixture = {
   value: string;
 };
 
-function fixture(root = 'dbt'): Fixture {
+function fixture(root = 'dbt', bom = '\uFEFF'): Fixture {
   const ref = "{{ ref('orders') }}";
   const source = "{{ source('raw', 'clients') }}";
-  const value = `\uFEFF-- 😀 ámbito\nselect * from ${ref} a join ${source} b on true\nunion all select * from ${ref}`;
+  const value = `${bom}-- 😀 ámbito\nselect * from ${ref} a join ${source} b on true\nunion all select * from ${ref}`;
   const node = (name: string, resourceType: 'model' | 'source', path: string): Node => ({
     uniqueId: `${resourceType}.demo.${name}`,
     resourceType,
@@ -147,32 +147,42 @@ function expectReason(
   expect(projectCodeInlineReferences(input)).toEqual({ kind: 'text-only', reason });
 }
 describe('Code inline reference authority', () => {
-  it('projects exact identities, declared metadata and UTF-16 ranges without parsing SQL', () => {
-    const input = fixture();
-    const result = projectCodeInlineReferences(input);
-    expect(result.kind).toBe('ready');
-    if (result.kind !== 'ready') return;
-    expect(result.references.path).toBe(input.file.path);
-    expect(result.references.value).toBe(input.value);
-    expect(result.references.items.map((item) => item.id)).toEqual(
-      input.analysis.regions.map((r) => r.regionId)
-    );
-    for (const item of result.references.items) {
-      expect(input.value.slice(item.startOffset, item.endOffset)).toBe(item.sourceText);
+  it.each([true, false])(
+    'projects exact Monaco UTF-16 ranges while retaining raw revisions (BOM=%s)',
+    (hasBom) => {
+      const input = fixture('dbt', hasBom ? '\uFEFF' : '');
+      const monacoValue = hasBom ? input.value.slice(1) : input.value;
+      const result = projectCodeInlineReferences(input);
+      expect(result.kind).toBe('ready');
+      if (result.kind !== 'ready') return;
+      expect(result.references.path).toBe(input.file.path);
+      expect(result.references.value).toBe(monacoValue);
+      expect(input.file.content).toBe(input.value);
+      expect(input.file.contentSha256).toBe(sha256HexUtf8(input.value));
+      expect(input.analysis.files[1]?.revisionSha256).toBe(input.file.contentSha256);
+      if (hasBom) expect(sha256HexUtf8(monacoValue)).not.toBe(input.file.contentSha256);
+      expect(result.references.items.map((item) => item.id)).toEqual(
+        input.analysis.regions.map((r) => r.regionId)
+      );
+      for (const item of result.references.items) {
+        expect(monacoValue.slice(item.startOffset, item.endOffset)).toBe(item.sourceText);
+      }
+      expect(result.references.items[0]?.startOffset).toBe(
+        monacoValue.indexOf("{{ ref('orders') }}")
+      );
+      expect(result.references.items[0]?.label).toBe('orders');
+      expect(result.references.items[0]?.kind).toBe('model');
+      expect(result.references.items[0]?.inputs).toEqual(['clients']);
+      expect(result.references.items[0]?.columnCount).toBe(1);
+      expect(result.details[0]?.columns).toEqual(input.project.nodes[1]?.columns);
+      expect(result.details[0]?.definition?.revisionSha256).toBe(
+        sha256HexUtf8('orders definition')
+      );
+      expect(result.details[0]?.definition?.path).toBe('dbt/models/orders.sql');
+      expect(result.details[1]?.definition?.path).toBe('dbt/models/sources.yml');
+      expect(result.details[2]?.uniqueId).toBe(result.details[0]?.uniqueId);
     }
-    expect(result.references.items[0]?.startOffset).toBe(
-      input.value.indexOf("{{ ref('orders') }}")
-    );
-    expect(result.references.items[0]?.label).toBe('orders');
-    expect(result.references.items[0]?.kind).toBe('model');
-    expect(result.references.items[0]?.inputs).toEqual(['clients']);
-    expect(result.references.items[0]?.columnCount).toBe(1);
-    expect(result.details[0]?.columns).toEqual(input.project.nodes[1]?.columns);
-    expect(result.details[0]?.definition?.revisionSha256).toBe(sha256HexUtf8('orders definition'));
-    expect(result.details[0]?.definition?.path).toBe('dbt/models/orders.sql');
-    expect(result.details[1]?.definition?.path).toBe('dbt/models/sources.yml');
-    expect(result.details[2]?.uniqueId).toBe(result.details[0]?.uniqueId);
-  });
+  );
   it('resolves one model from its project-relative original path, including root dot and Windows separators', () => {
     const input = fixture();
     expect(resolveCodeSelectedModel(input.project, 'dbt\\.\\models\\report.sql')).toBe(

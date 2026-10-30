@@ -91,7 +91,10 @@ function readReferenceRange(bytes: Uint8Array, region: SemanticRegion) {
   if (sha256Hex(source) !== region.sourceSha256) return undefined;
   try {
     const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
-    const startOffset = decoder.decode(bytes.subarray(0, startByte)).length;
+    const startOffset =
+      decoder.decode(bytes.subarray(0, startByte)).length -
+      (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 1 : 0);
+    if (startOffset < 0) return undefined;
     const sourceText = decoder.decode(source);
     return { startOffset, endOffset: startOffset + sourceText.length, sourceText };
   } catch {
@@ -239,6 +242,14 @@ export function projectCodeInlineReferences({
     });
   }
   return items.length > 0
-    ? { kind: 'ready', references: { path: file.path, value, items }, details }
+    ? {
+        kind: 'ready',
+        references: {
+          path: file.path,
+          value: value.startsWith('\uFEFF') ? value.slice(1) : value,
+          items,
+        },
+        details,
+      }
     : refuse('no-supported-references');
 }

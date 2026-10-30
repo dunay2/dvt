@@ -30,6 +30,58 @@ vi.mock('@monaco-editor/react', () => ({
 vi.mock('./monacoLocalWorkers', () => ({ configureMonacoLocalWorkers: vi.fn() }));
 
 describe('shared Monaco edit boundary', () => {
+  it('keeps one original BOM in raw edits while Monaco receives BOM-free text', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
+    const root = createRoot(document.createElement('div'));
+    const sql = "-- 😀 ámbito\nselect * from {{ ref('orders') }}";
+    const onChange = vi.fn();
+    const onMount = vi.fn();
+    const props = {
+      ariaLabel: 'SQL',
+      language: 'sql',
+      path: 'models/report.sql',
+      onChange,
+      onMount,
+    };
+    try {
+      await act(async () =>
+        root.render(<MonacoCodeSurface {...props} value={`\uFEFF${sql}`} readOnly={false} />)
+      );
+      expect(capture.code.mock.lastCall?.[0]).toMatchObject({ value: sql, path: props.path });
+      capture.code.mock.lastCall?.[0].onChange(`${sql}\n-- edit`);
+      expect(onChange).toHaveBeenLastCalledWith(`\uFEFF${sql}\n-- edit`);
+      await act(async () =>
+        root.render(
+          <MonacoCodeSurface {...props} value={`\uFEFF${sql}\n-- edit`} readOnly={false} />
+        )
+      );
+      expect(capture.code.mock.lastCall?.[0].value).toBe(`${sql}\n-- edit`);
+      capture.code.mock.lastCall?.[0].onChange(`\uFEFF${sql}\n-- next`);
+      expect(onChange).toHaveBeenLastCalledWith(`\uFEFF${sql}\n-- next`);
+      capture.code.mock.lastCall?.[0].onChange(undefined);
+      expect(onChange).toHaveBeenLastCalledWith('\uFEFF');
+      await act(async () =>
+        root.render(<MonacoCodeSurface {...props} value={`\uFEFF${sql}`} readOnly />)
+      );
+      expect(capture.code.mock.lastCall?.[0]).toMatchObject({
+        value: sql,
+        onChange: undefined,
+        options: { readOnly: true, domReadOnly: true },
+      });
+      const readonlyMount = capture.code.mock.lastCall?.[0].onMount as MonacoCodeEditorMount;
+      await act(async () =>
+        readonlyMount(
+          {} as Parameters<MonacoCodeEditorMount>[0],
+          {} as Parameters<MonacoCodeEditorMount>[1]
+        )
+      );
+      expect(onMount).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => root.unmount());
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('withholds external mutable handles and changes in readonly mode while retaining editable support', async () => {
     vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
     const element = document.createElement('div');

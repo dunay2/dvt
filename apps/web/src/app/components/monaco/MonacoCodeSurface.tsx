@@ -129,13 +129,17 @@ export default function MonacoCodeSurface({
           isReadOnly
             ? undefined
             : (nextValue) => {
-                onChange?.(nextValue ?? '');
+                onChange?.(
+                  value.startsWith('\uFEFF') && !nextValue?.startsWith('\uFEFF')
+                    ? `\uFEFF${nextValue ?? ''}`
+                    : (nextValue ?? '')
+                );
               }
         }
         options={createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })}
         path={path}
         theme={monacoTheme}
-        value={value}
+        value={value.startsWith('\uFEFF') ? value.slice(1) : value}
       />
     </div>
   );

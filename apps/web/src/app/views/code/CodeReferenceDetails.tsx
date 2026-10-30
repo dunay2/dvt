@@ -43,6 +43,9 @@ export function CodeReferenceDetails({
     >
       <div className={routeWorkbenchPanelHeaderClassName}>
         <h2 className="min-w-0 flex-1 truncate">{reference.name}</h2>
+        <span className="text-(--text-muted)">
+          {reference.kind === 'model' ? copy.modelLabel : copy.sourceLabel}
+        </span>
         <Button
           type="button"
           variant="ghost"
@@ -55,18 +58,11 @@ export function CodeReferenceDetails({
         </Button>
       </div>
       <div className="min-h-0 flex-1 space-y-3 overflow-auto p-3 text-xs">
-        <NodePropertyFacts
-          rows={[
-            {
-              label: reference.kind === 'model' ? copy.modelLabel : copy.sourceLabel,
-              value: reference.name,
-            },
-            ...(reference.inputs.length === 0
-              ? []
-              : [{ label: copy.inputsLabel, value: reference.inputs.join(', ') }]),
-            { label: copy.outputLabel, value: reference.name },
-          ]}
-        />
+        {reference.inputs.length === 0 ? null : (
+          <NodePropertyFacts
+            rows={[{ label: copy.inputsLabel, value: reference.inputs.join(', ') }]}
+          />
+        )}
         <h3 className="font-medium">
           {copy.declaredColumnsLabel} ({reference.columns.length})
         </h3>

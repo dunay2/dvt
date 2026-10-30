@@ -27,15 +27,17 @@ return to that document, then validate again. This demonstrates the agreed dirty
 presentation policy; it does not analyze arbitrary SQL, call a simulated server
 or claim a production revision is valid. The fixture is labelled in the page.
 
-Production admission still needs the real `AnalyzeSelectedDbtModel` Web consumer,
-accepted Canvas/model context, scoped revision verification, guarded definition
-navigation and corresponding tests. Native Substrait anchors are not SQL ranges.
-The unavailable earlier pilot bundle is not used or purported to be reviewed.
+Production Code uses the real `AnalyzeSelectedDbtModel` Web consumer, accepted
+Canvas/model context, scoped revision verification and guarded definition
+inspection. It shares the passive renderer with this laboratory; see the
+[Code workspace-files contract](../../docs/architecture/components/web/code-workbench-workspace-files-component.md).
+Native Substrait anchors are not SQL ranges. The unavailable earlier pilot bundle
+is not used or purported to be reviewed.
 
 Responsibilities:
 
 - `fixture.mjs`: explicit example document, identities, reference spans and schemas.
-- `cards.mjs`: passive public Monaco widgets/zones and their disposal.
+- `cards.mjs`: adapts the explicit fixture to the shared passive Monaco renderer.
 - `pilot.mjs`: one editor session, exact example verification and inspection.
 - `pilot.css`: layout using existing application tokens.
 - `vite.config.mjs`: isolated loopback server/build using installed packages.
