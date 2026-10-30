@@ -174,3 +174,9 @@ export {
 } from './substraitMixedCrossReader.js';
 export { projectSubstraitToPostgresSql } from './relationalSql/project.js';
 export { projectSubstraitProducerGraph } from './relationalSql/producerGraph.js';
+export {
+  fusePostgresProjectionOnce,
+  fusePostgresProjections,
+  type ProjectionFusionStep,
+  type ProjectionFusionResult,
+} from './relationalSql/projectionFusion.js';
