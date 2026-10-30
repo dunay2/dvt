@@ -328,6 +328,16 @@ CSS strings, JSX formatting or Cypress test titles as substitutes for behavior.
 The API route remains thin and owns no filesystem/path/authorization policy.
 CodeView composes the existing selection/file-session owners and no second writer.
 
+Browser evidence admission belongs to the canonical Cypress catalog. The existing
+AST dependency graph identifies actual fixture and protected-transport consumers;
+do not maintain another list of non-fixture exceptions. Registered specs must
+exist and remain unique, fixture consumers must be registered, and live transport
+outside the catalog must be rejected. Shared-frame guards inspect semantic slots;
+Code behavior is proved by component and browser tests, without mirroring private
+comments or removed editing controls in their source. The
+[evidence-closure scope](https://github.com/dunay2/dvt/issues/3747#issuecomment-6534231837)
+records these obligations and the retired assertions.
+
 Required negatives include revoked/failed/pending reads with cached data, stale
 model evidence, unsupported syntax, scope/path mismatch, denied opener, failed
 pending-edit flush and unsuccessful Reload. Shared Monaco editing tests remain
