@@ -1883,7 +1883,10 @@ units:
       - 'useWorkspaceFileTreeQuery(): existing scoped React Query WorkspaceFileTree observer'
       - useDbtSelectedModelAnalysisQuery(binding, selectedUniqueId, {enabled, revisionToken})
       - useDbtProjectGraphQuery(binding | undefined, {enabled,revisionToken})
-    governance: []
+    governance:
+      - docs/architecture/components/web/code-workbench-workspace-files-component.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/adr/ADR-0060-dbt-project-authoring-authority.md
     invariants:
       - Provider retains authorization; query errors remain errors and no write is introduced.
     transitions: []
