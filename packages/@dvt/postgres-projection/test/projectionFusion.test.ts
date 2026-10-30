@@ -147,6 +147,18 @@ describe('SQLREAD1 projection fusion (PostgreSQL AST)', () => {
     expect(result.ast).toBe(guarded);
   });
 
+  it('rejects alias capture when the inner FROM reuses the outer alias', () => {
+    const inner = select(
+      [{ name: 'c0', from: 'i0', column: 'client_id' }],
+      [pgRangeVar({ schema: 'raw', table: 'client', alias: 'i0' })]
+    );
+    const outer = select(
+      [{ name: 'client_id', from: 'i0', column: 'c0' }],
+      [pgRangeSubselect(inner, 'i0')]
+    );
+    expect(fusePostgresProjectionOnce(outer).steps).toHaveLength(0);
+  });
+
   it('does not fuse when an inner output is a calculated expression', () => {
     const computed = structuredClone(source);
     const output = targetList(computed)[0] as { ResTarget: Record<string, unknown> };
