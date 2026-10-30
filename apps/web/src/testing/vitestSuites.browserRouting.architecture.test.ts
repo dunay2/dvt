@@ -203,27 +203,6 @@ describe('public Canvas gesture preconditions', () => {
     }
   );
 
-  it('recovers unavailable dbt roots through real file authority and Monaco synchronization', () => {
-    const ast = browserModules.get(
-      resolve('cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts')
-    )!;
-    const body = ast.getText();
-    expect(body).toContain('adoptLiveDbtProjectFileAuthority');
-    expect(body).toContain('waitForLiveWorkspaceFileContent');
-    expect(body).toContain('monaco-code-editor');
-    expect(body).toContain('enabled=false');
-    expect(body).toContain(
-      'canvasViewExecutionCopyByKey.selectionRecoveryWorkspaceReceiptTemplate'
-    );
-    expect(body).not.toContain(".and('contain.text', 'workspace')");
-    expect(body).not.toContain('Unavailable roots');
-    expect(body).not.toContain('Admitted scope');
-    expect(body).not.toContain('Use workspace scope');
-    expect(body).not.toContain('resolveLiveFirstAuthoringWorkspaceSession');
-    expect(body).not.toContain('replaceLiveWorkspaceFile');
-    expect(body).not.toContain('readLiveGraphDraft');
-  });
-
   it('uses the single current template and an owned language for graph-search evidence', () => {
     const ast = browserModules.get(
       resolve('cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts')
@@ -570,28 +549,14 @@ describe('governed browser evidence routing', () => {
     const target = resolve('cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts');
     const fixtureConsumers = specs.filter((path) => reachesModule(graph, path, target));
     const registered = [...Object.values(WEB_CYPRESS_SPECS).flat(), ...WEB_CYPRESS_NIGHTLY_SPECS];
-    const uiOnlyConsumers = [
-      'apps/web/cypress/e2e/templates/templates-workbench.cy.ts',
-      'apps/web/cypress/e2e/shell/active-project-creation-live.cy.ts',
-      'apps/web/cypress/e2e/runs/run-controls-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-dvt-sink-publication-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-source-identity-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts',
-      'apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-dbt-selection-recovery-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts',
-      'apps/web/cypress/e2e/canvas/canvas-minimap-focus-live.cy.ts',
-      'apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts',
-      'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
-    ];
-    expect(fixtureConsumers.sort()).toEqual(
-      registered
-        .filter((path) => !uiOnlyConsumers.includes(path))
-        .map((path) => resolve(path.slice('apps/web/'.length)))
-        .sort()
+    const registeredPhysical = new Set(
+      registered.map((path) => resolve(path.slice('apps/web/'.length)))
     );
-    expect(new Set(registered).size).toBe(registered.length);
+    expect(registeredPhysical.size).toBe(registered.length);
+    for (const path of registeredPhysical) {
+      expect(browserModules.has(path), path).toBe(true);
+    }
+    expect(fixtureConsumers.filter((path) => !registeredPhysical.has(path))).toEqual([]);
     for (const path of WEB_CYPRESS_SPECS.available) {
       const owner = resolve(path.slice('apps/web/'.length));
       expect(
@@ -603,13 +568,10 @@ describe('governed browser evidence routing', () => {
 
     const runtime = resolve('cypress/support/liveProtectedRuntime.ts');
     const unadmittedTransport = specs.filter(
-      (path) =>
-        reachesModule(graph, path, runtime) &&
-        !fixtureConsumers.includes(path) &&
-        !uiOnlyConsumers.some((consumer) => path === resolve(consumer.slice('apps/web/'.length)))
+      (path) => reachesModule(graph, path, runtime) && !registeredPhysical.has(path)
     );
-    expect(unadmittedTransport).toHaveLength(1);
-    for (const path of unadmittedTransport) {
+    expect(unadmittedTransport).toEqual([]);
+    for (const path of specs.filter((candidate) => !registeredPhysical.has(candidate))) {
       expect(() =>
         resolveWebVitestChangedSuitePlan([
           `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`,

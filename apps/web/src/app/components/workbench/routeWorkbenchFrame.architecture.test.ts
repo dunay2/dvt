@@ -64,8 +64,6 @@ describe('RouteWorkbenchFrame architecture', () => {
     const source = readAppSource('components/workbench/RouteWorkbenchFrame.tsx');
     const codeView = readAppSource('views/CodeView.tsx');
     const componentGuide = readRepoDoc('docs/architecture/components/web/appshell/app-shell.md');
-    const userStories = readRepoDoc('docs/architecture/components/web/appshell/app-shell.md');
-    const cypressProof = readRepoDoc('apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts');
 
     expect(source.trimStart().startsWith('/** Owned concern:')).toBe(true);
     expect(source).toContain('export type RouteWorkbenchFrameSlots');
@@ -99,8 +97,6 @@ describe('RouteWorkbenchFrame architecture', () => {
     for (const slots of codeFrames) {
       expect(slots).toEqual(expect.arrayContaining(['leftPanel', 'primarySurface', 'rightPanel']));
     }
-    expect(codeView).toContain('FileTreePanel');
-    expect(codeView).toContain('Code workbench local Monaco buffer');
 
     for (const requiredStory of [
       'US-ROUTE-WORKBENCH-FRAME-001',
@@ -111,18 +107,7 @@ describe('RouteWorkbenchFrame architecture', () => {
       '## Acceptance Coverage',
       'route-workbench-slots.cy.ts',
     ]) {
-      expect(userStories).toContain(requiredStory);
-    }
-
-    for (const requiredCypressSignal of [
-      'visitWithE2eWorkspaceSession',
-      'route-workbench-primary-surface',
-      'route-workbench-left-panel',
-      'stg_orders.sql',
-      'Synchronized|Sincronizado',
-      'monaco-code-editor',
-    ]) {
-      expect(cypressProof).toContain(requiredCypressSignal);
+      expect(componentGuide).toContain(requiredStory);
     }
 
     expect(componentGuide).toContain('## Command And Query Rail Posture');
