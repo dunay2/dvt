@@ -7,7 +7,6 @@ import {
   inspectorVisualClasses,
 } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
-import { ScrollArea } from '../../components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
 import { SourceNodeWorkbenchHeaderIdentity } from './SourceNodeWorkbenchHeaderIdentity';
@@ -116,11 +115,14 @@ export function CanvasNodeWorkbenchPanel(props: CanvasNodeWorkbenchPanelProps): 
           <CanvasNodeWorkbenchSections {...props} controller={controller} />
         </div>
       ) : (
-        <ScrollArea className="min-h-0 flex-1">
+        <div
+          data-slot="canvas-node-workbench-scroll-body"
+          className={inspectorVisualClasses.contextPanelScrollBody}
+        >
           <div className="space-y-4 p-4">
             <CanvasNodeWorkbenchSections {...props} controller={controller} />
           </div>
-        </ScrollArea>
+        </div>
       )}
     </div>
   );
