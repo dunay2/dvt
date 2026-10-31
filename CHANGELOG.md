@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.21.0 (2026-10-31)
+
+## What's Changed
+* fix(web): Compact code inspection and inspector header actions by @dunay2 in https://github.com/dunay2/dvt/pull/3740
+* fix(web): Keep Canvas cards stationary when inspecting properties by @dunay2 in https://github.com/dunay2/dvt/pull/3745
+* feat(web): Add project files to the Canvas Git activity by @dunay2 in https://github.com/dunay2/dvt/pull/3746
+* refactor(ci): Modularize Planning DB and consolidate retained Code presentation by @dunay2 in https://github.com/dunay2/dvt/pull/3769
+* test(ci): Partition Planning DB query and projection suites by responsibility by @dunay2 in https://github.com/dunay2/dvt/pull/3768
+* feat(web): Integrate real dbt reference cards into Code by @dunay2 in https://github.com/dunay2/dvt/pull/3777
+* fix(web): Resolve dbt references from the normal Code entry by @dunay2 in https://github.com/dunay2/dvt/pull/3778
+* fix(web): Keep the activity rail available in Canvas and Code by @dunay2 in https://github.com/dunay2/dvt/pull/3779
+* fix(web): Eliminate browser type errors and stabilize Code inspection by @dunay2 in https://github.com/dunay2/dvt/pull/3788
+* ci(ci): Partition controlled browser evidence across existing CI shards by @dunay2 in https://github.com/dunay2/dvt/pull/3795
+* ci(ci): Balance available browser evidence within existing shards by @dunay2 in https://github.com/dunay2/dvt/pull/3796
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.20.1...v0.21.0
+
 ## 0.20.1 (2026-10-27)
 
 ## What's Changed
