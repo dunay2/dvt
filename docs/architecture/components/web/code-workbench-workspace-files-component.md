@@ -315,6 +315,17 @@ without changing bytes, inspects verified references and returns to the same
 Canvas/camera. Record actual request counts and file revisions; no saves or
 post-save reconciliation are produced by these actions. A stubbed Cypress flow
 proves presentation, not live authorization, Git or native publication.
+Real file-snapshot proofs check unknown HTTP bodies through runtime assertions
+and require an actual SHA-256 revision before comparing the subsequent reread.
+
+Project Code evidence uses the selected Code tab and its central
+`canvas-code-workspace-surface`. Returning through the Canvas tab keeps Code
+mounted but hidden, restores the visible Canvas and leaves focus on its active
+tab. Browser checks retain full-content copy, read-only input, accessibility and
+workspace bounds at narrow viewports. Publication/compilation rejection checks
+retain their file-refresh and diagnostic assertions. The old Project Code overlay
+and its close/resize controls are not the navigation contract. Native node and
+output-expression contextual workbenches keep their existing contracts.
 
 Legacy pending-session recovery additionally proves modified/in-flight/failed
 states retain bytes/model and use the real existing conditional command boundary.
@@ -368,7 +379,7 @@ status. Browsing, attempted input and reference inspection produce no new file
 writes or reconciliation. File selection, copy, accepted metadata and reference
 definitions remain available. Previous dirty sessions retain their recovery guard.
 Proofs: CodeView and workspace-file behavioral suites, real shared browser and the
-existing contextual Code Cypress flow; there is no Save UI.
+existing central Code Cypress flow; there is no Save UI.
 
 #### CODE-FILES-3: Missing File Does Not Break Explorer
 

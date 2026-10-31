@@ -192,8 +192,14 @@ describe('dbt project file projection live vertical', () => {
     });
     readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
       expect(response.status).to.equal(200);
-      expect(response.body.content).to.equal(PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]);
-      cy.wrap(response.body.contentSha256).as('openedModelRevision');
+      expect(response.body).to.have.property(
+        'content',
+        PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
+      );
+      cy.wrap(response.body)
+        .its('contentSha256')
+        .should('match', /^[a-f0-9]{64}$/)
+        .as('openedModelRevision');
     });
     cy.viewport(1500, 900);
     requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
@@ -341,8 +347,11 @@ describe('dbt project file projection live vertical', () => {
     cy.get('@openedModelRevision').then((revision) => {
       readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
         expect(response.status).to.equal(200);
-        expect(response.body.content).to.equal(PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]);
-        expect(response.body.contentSha256).to.equal(revision);
+        expect(response.body).to.have.property(
+          'content',
+          PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
+        );
+        expect(response.body).to.have.property('contentSha256', revision);
         expect(observedFileWrites).to.deep.equal([]);
       });
     });
