@@ -132,13 +132,15 @@ function dispatchDragEvent(
 
 function dragNode(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"]`).then(($node) => {
-    const rect = $node[0].getBoundingClientRect();
+    const node = $node[0];
+    if (node === undefined) throw new Error(`Expected the projected node ${nodeId}.`);
+    const rect = node.getBoundingClientRect();
     const start = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     const middle = { x: start.x + 30, y: start.y + 24 };
     const end = { x: start.x + 110, y: start.y + 78 };
 
     cy.window().then((window) => {
-      dispatchDragEvent($node[0], window, 'mousedown', start, 1);
+      dispatchDragEvent(node, window, 'mousedown', start, 1);
       dispatchDragEvent(window, window, 'mousemove', middle, 1);
       dispatchDragEvent(window, window, 'mousemove', end, 1);
       dispatchDragEvent(window, window, 'mouseup', end, 0);
@@ -266,20 +268,26 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
-      const rect = $node[0].getBoundingClientRect();
+      const node = $node[0];
+      if (node === undefined) throw new Error('Expected the projected model before movement.');
+      const rect = node.getBoundingClientRect();
       cy.wrap({ left: rect.left, top: rect.top }).as('originalModelPosition');
     });
     dragNode('model.analytics.orders');
-    cy.get<Record<string, number>>('@originalModelPosition').then((original) => {
+    cy.get<{ left: number; top: number }>('@originalModelPosition').then((original) => {
       cy.get('.react-flow__node[data-id="model.analytics.orders"]').should(($node) => {
-        const rect = $node[0].getBoundingClientRect();
+        const node = $node[0];
+        if (node === undefined) throw new Error('Expected the moved projected model.');
+        const rect = node.getBoundingClientRect();
         expect(
           Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top)
         ).to.be.greaterThan(20);
       });
     });
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
-      const transform = new DOMMatrix($node[0].style.transform);
+      const node = $node[0];
+      if (node === undefined) throw new Error('Expected the settled projected model.');
+      const transform = new DOMMatrix(node.style.transform);
       const position = { x: transform.m41, y: transform.m42 };
       cy.wrap(position).as('settledModelPosition');
       cy.window().should((window) => {
@@ -307,7 +315,9 @@ describe('dbt project file projection live vertical', () => {
     cy.get<{ x: number; y: number }>('@settledModelPosition').then((settled) => {
       cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
         ($node) => {
-          const transform = new DOMMatrix($node[0].style.transform);
+          const node = $node[0];
+          if (node === undefined) throw new Error('Expected the restored projected model.');
+          const transform = new DOMMatrix(node.style.transform);
           expect(transform.m41, 'restored Canvas x').to.be.closeTo(settled.x, 0.001);
           expect(transform.m42, 'restored Canvas y').to.be.closeTo(settled.y, 0.001);
         }

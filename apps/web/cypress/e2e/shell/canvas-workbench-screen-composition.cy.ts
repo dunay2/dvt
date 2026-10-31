@@ -8,6 +8,7 @@
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+  parseWorkspaceGraphDraftSaveRequest,
 } from '@dvt/contracts';
 
 import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
@@ -437,21 +438,7 @@ describe('Canvas workbench screen composition', () => {
       };
     });
     stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
-      const saveRequest = body as {
-        scope: typeof E2E_WORKSPACE_SESSION;
-        schemaVersion: string;
-        expectedRevision: string;
-        draft: {
-          canvas: {
-            id?: string;
-            kind: string;
-            title: string;
-          };
-          nodeIds: string[];
-          nodes: unknown[];
-          edges: unknown[];
-        };
-      };
+      const saveRequest = parseWorkspaceGraphDraftSaveRequest(body);
 
       const expectedRevision = persistedDraft?.revision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION;
       expect(saveRequest).to.deep.include({

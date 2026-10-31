@@ -247,14 +247,18 @@ describe('Workbench viewport', () => {
       .invoke('text')
       .then((zoom) => {
         cy.get('[data-slot="canvas-relational-tree-viewport"]').then(($viewport) => {
-          const width = $viewport[0].clientWidth;
+          const viewport = $viewport[0];
+          if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
+          const width = viewport.clientWidth;
           cy.get(
             '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
           )
             .click()
             .should('have.attr', 'aria-expanded', 'false');
           cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($next) => {
-            expect($next[0].clientWidth).to.be.greaterThan(width);
+            const next = $next[0];
+            if (next === undefined) throw new Error('Expected the resized relational viewport.');
+            expect(next.clientWidth).to.be.greaterThan(width);
           });
         });
         cy.get('[data-slot="canvas-relational-tree-zoom"]').should('have.text', zoom);

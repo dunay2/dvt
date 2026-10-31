@@ -72,6 +72,7 @@ export function prepareFieldSelection(sourceCount: 2 | 3): void {
     const opener = '.react-flow__node[data-id="join-transform"]';
     const assertOpenerFocused = ($opener: JQuery<HTMLElement>): void => {
       const expected = $opener[0];
+      if (expected === undefined) throw new Error('Expected the field-selection opener.');
       const active = expected.ownerDocument.activeElement;
       const diagnostic = JSON.stringify({
         expectedIsConnected: expected.isConnected,

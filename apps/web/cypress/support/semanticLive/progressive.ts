@@ -1,5 +1,8 @@
 /** Scenario setup only: formulas and aggregate edits are authored by the live browser. */
-import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+import {
+  WorkspaceGraphDraftReadSuccessSchema,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts';
 import { selectDvtSubstraitRelation } from '@dvt/substrait-analysis';
 
 import {
@@ -35,7 +38,7 @@ export async function progressiveDocument(level: number): Promise<DvtSubstraitSe
 export function addLiveFormula(alias: string, formula: string): void {
   let previousRevision: string;
   readLiveGraphDraft().then(({ body }) => {
-    previousRevision = body.record.revision;
+    previousRevision = WorkspaceGraphDraftReadSuccessSchema.parse(body).record.revision;
   });
   editWorkbenchInspector('[data-slot="canvas-transform-inspector"]');
   cy.get(
@@ -51,7 +54,10 @@ export function addLiveFormula(alias: string, formula: string): void {
   cy.get('[data-slot="canvas-derived-output-form"]').should('not.exist');
   cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
   readLiveGraphDraft().then(({ body }) => {
-    expect(body.record.revision, 'Formula is durably saved').not.to.equal(previousRevision);
+    expect(
+      WorkspaceGraphDraftReadSuccessSchema.parse(body).record.revision,
+      'Formula is durably saved'
+    ).not.to.equal(previousRevision);
   });
 }
 

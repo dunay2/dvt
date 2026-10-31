@@ -162,7 +162,7 @@ function savedOutputNames(index: number): string[] {
   return relations.relations
     .get(relations.rootId)!
     .fields.filter((field) => field.parentFieldId == null)
-    .toSorted((left, right) => left.outputOrdinal - right.outputOrdinal)
+    .sort((left, right) => left.outputOrdinal - right.outputOrdinal)
     .map((field) => field.displayName!);
 }
 

@@ -25,7 +25,9 @@ export function readPersistedDocument(
     const authoring = model?.metadata?.transformAuthoring as
       { semanticDocument?: unknown } | undefined;
     const document = canonicalizeDvtSubstraitSemanticDocumentV1(authoring?.semanticDocument);
-    if (document.semanticPlan.sha256 !== previousSha) return document;
+    if (document.semanticPlan.sha256 !== previousSha) {
+      return cy.wrap<DvtSubstraitSemanticDocumentV1>(document, { log: false });
+    }
     if (attempt >= 60) throw new Error('The edited semantic revision was not persisted');
     return cy.wait(250).then(() => readPersistedDocument(previousSha, attempt + 1));
   });

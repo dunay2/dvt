@@ -54,7 +54,9 @@ function waitForRunStatus(
   return readLiveRunSnapshot(runId).then((response) => {
     expect(response.status).to.equal(200);
     const snapshot = response.body as LiveRunSnapshot;
-    if (snapshot.status.toLowerCase() === expectedStatus) return snapshot;
+    if (snapshot.status.toLowerCase() === expectedStatus) {
+      return cy.wrap<LiveRunSnapshot>(snapshot, { log: false });
+    }
     if (attempt >= 60) {
       throw new Error(
         `Timed out waiting for run ${runId} to become ${expectedStatus}; observed ${snapshot.status}.`
@@ -112,11 +114,11 @@ function inspectLongRunningModel(): void {
     .should('contain.text', 'table');
 }
 
-function cancelRun(runId: string, planId: string): Cypress.Chainable<void> {
+function cancelRun(runId: string, planId: string): Cypress.Chainable<unknown> {
   cy.get('[data-slot="run-cancel-action"]', { timeout: 20_000 }).should('be.enabled').click();
   return waitForRunStatus(runId, 'cancelled').then((snapshot) => {
     expect(snapshot.planId).to.equal(planId);
-    return readLiveRunEvents(runId).then((response) => {
+    return readLiveRunEvents(runId).then<unknown>((response) => {
       expect(response.status).to.equal(200);
       const events = ((response.body as LiveRunEventResponse).items ?? []).map(
         ({ eventType }) => eventType

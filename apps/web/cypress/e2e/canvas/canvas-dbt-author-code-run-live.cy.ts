@@ -68,8 +68,8 @@ function clickCommandSlotNatively(slot: string): void {
     });
 }
 
-function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft().then((response) => {
+function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable<unknown> {
+  return readLiveGraphDraft().then<unknown>((response) => {
     expect(response.status).to.equal(200);
     const nodes = (
       response.body as {
@@ -102,8 +102,8 @@ function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable
   });
 }
 
-function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft().then((response) => {
+function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<unknown> {
+  return readLiveGraphDraft().then<unknown>((response) => {
     expect(response.status).to.equal(200);
     const nodes = (
       response.body as {

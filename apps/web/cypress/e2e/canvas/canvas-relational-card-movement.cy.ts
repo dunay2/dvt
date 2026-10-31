@@ -13,10 +13,12 @@ const viewport = '[data-slot="canvas-relational-tree-viewport"]';
 const join = `${viewport} [data-slot="canvas-relational-tree-node"][data-operator="join"]`;
 const source = `${viewport} [data-slot="canvas-relational-tree-node"][data-operator="read"]:first`;
 const output = `${viewport} [data-slot="canvas-relational-tree-output"]`;
-const position = (element: HTMLElement): number[] => [
-  Number.parseFloat(element.parentElement!.style.left),
-  Number.parseFloat(element.parentElement!.style.top),
-];
+const position = (element: HTMLElement | undefined): [number, number] => {
+  if (element === undefined) throw new Error('Expected the positioned workbench card.');
+  const parent = element.parentElement;
+  if (parent === null) throw new Error('Expected the workbench card position container.');
+  return [Number.parseFloat(parent.style.left), Number.parseFloat(parent.style.top)];
+};
 
 describe('Relational card movement', () => {
   beforeEach(() => {
@@ -32,9 +34,9 @@ describe('Relational card movement', () => {
   it('moves a JOIN and its ports at the actual zoom without opening properties or saving', () => {
     cy.get(join).then(($card) => {
       const before = position($card[0]);
-      const zoom = Number(
-        (Cypress.$('[data-slot="canvas-relational-tree"]')[0] as HTMLElement).style.zoom
-      );
+      const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0];
+      if (tree === undefined) throw new Error('Expected the relational tree zoom surface.');
+      const zoom = Number(tree.style.zoom);
       const writes = semanticWrites('join-transform').length;
       const dataRequests = /\/(data-sample|preview|runs|execute)(\/|$)/;
       const requests = getE2eApiCalls(dataRequests).length;
@@ -146,16 +148,16 @@ describe('Relational card movement', () => {
     cy.get(source).then(($card) => {
       const card = $card[0];
       const before = position(card);
-      const zoom = Number(
-        (Cypress.$('[data-slot="canvas-relational-tree"]')[0] as HTMLElement).style.zoom
-      );
+      const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0];
+      if (tree === undefined) throw new Error('Expected the relational tree zoom surface.');
+      const zoom = Number(tree.style.zoom);
       const writes = semanticWrites('join-transform').length;
       const queries = /\/(data-sample|preview|runs|execute)(\/|$)/;
       const requests = getE2eApiCalls(queries).length;
       let displacement = 0;
       for (const delta of [220, -8, 8, -8, 8]) {
         displacement += delta;
-        const expected = before[1]! + displacement;
+        const expected = before[1] + displacement;
         moveWorkbenchCard(source, 0, delta * zoom);
         cy.get(source).should(($moved) => {
           expect($moved[0]).to.equal(card);
@@ -171,24 +173,30 @@ describe('Relational card movement', () => {
 
   it('moves Output, selects its properties and disconnects the focused connection with Delete', () => {
     cy.get(output).then(($output) => {
-      const before = [
-        Number.parseFloat($output[0].style.left),
-        Number.parseFloat($output[0].style.top),
+      const initialOutput = $output[0];
+      if (initialOutput === undefined) throw new Error('Expected the relational Output card.');
+      const before: [number, number] = [
+        Number.parseFloat(initialOutput.style.left),
+        Number.parseFloat(initialOutput.style.top),
       ];
-      const zoom = Number(
-        (Cypress.$('[data-slot="canvas-relational-tree"]')[0] as HTMLElement).style.zoom
-      );
+      const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0];
+      if (tree === undefined) throw new Error('Expected the relational tree zoom surface.');
+      const zoom = Number(tree.style.zoom);
       moveWorkbenchCard(output, 40, 24);
       cy.get(output).should(($moved) => {
-        expect(Number.parseFloat($moved[0].style.left)).to.be.closeTo(before[0]! + 40 / zoom, 2);
-        expect(Number.parseFloat($moved[0].style.top)).to.be.closeTo(before[1]! + 24 / zoom, 2);
-        const coordinates = Cypress.$('[data-slot="canvas-relational-output-edge"]')[0]
+        const moved = $moved[0];
+        if (moved === undefined) throw new Error('Expected the moved relational Output card.');
+        expect(Number.parseFloat(moved.style.left)).to.be.closeTo(before[0] + 40 / zoom, 2);
+        expect(Number.parseFloat(moved.style.top)).to.be.closeTo(before[1] + 24 / zoom, 2);
+        const edge = Cypress.$('[data-slot="canvas-relational-output-edge"]')[0];
+        if (edge === undefined) throw new Error('Expected the relational Output connection.');
+        const coordinates = edge
           .getAttribute('d')!
           .match(/-?[\d.]+/g)!
           .map(Number);
-        expect(coordinates.at(-2)).to.be.closeTo(Number.parseFloat($moved[0].style.left) - 10, 2);
+        expect(coordinates.at(-2)).to.be.closeTo(Number.parseFloat(moved.style.left) - 10, 2);
         expect(coordinates.at(-1)).to.be.closeTo(
-          Number.parseFloat($moved[0].style.top) + $moved[0].offsetHeight / 2,
+          Number.parseFloat(moved.style.top) + moved.offsetHeight / 2,
           2
         );
       });
@@ -231,6 +239,7 @@ describe('Relational card movement', () => {
       cy.get(output).scrollIntoView();
       cy.get(viewport).then(($viewport) => {
         const surface = $viewport[0];
+        if (surface === undefined) throw new Error('Expected the scrollable relational viewport.');
         if (axis === 'horizontal') {
           expect(surface.scrollWidth).to.be.greaterThan(surface.clientWidth);
           surface.scrollLeft = surface.scrollWidth;
@@ -241,6 +250,7 @@ describe('Relational card movement', () => {
       });
       cy.get(output).then(($card) => {
         const held = $card[0];
+        if (held === undefined) throw new Error('Expected the held relational Output card.');
         const before = held.getBoundingClientRect();
         const writes = semanticWrites('join-transform').length;
         const requests = getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/).length;
@@ -263,8 +273,11 @@ describe('Relational card movement', () => {
           );
         });
         cy.get(output).should(($released) => {
-          expect($released[0].getBoundingClientRect().left).to.be.closeTo(before.left + dx, 1);
-          expect($released[0].getBoundingClientRect().top).to.be.closeTo(before.top + dy, 1);
+          const released = $released[0];
+          if (released === undefined)
+            throw new Error('Expected the released relational Output card.');
+          expect(released.getBoundingClientRect().left).to.be.closeTo(before.left + dx, 1);
+          expect(released.getBoundingClientRect().top).to.be.closeTo(before.top + dy, 1);
         });
         verifyCompleteTreeFit(viewport);
         cy.then(() => {
@@ -289,11 +302,16 @@ describe('Relational card movement', () => {
       const before = position($card[0]);
       const writes = semanticWrites('join-transform').length;
       cy.get(viewport).then(($viewport) => {
-        const scrollLeft = $viewport[0].scrollLeft;
+        const initialViewport = $viewport[0];
+        if (initialViewport === undefined)
+          throw new Error('Expected the panning relational viewport.');
+        const scrollLeft = initialViewport.scrollLeft;
         moveWorkbenchCard(source, -40, 0);
-        cy.get(viewport).should(($panned) =>
-          expect($panned[0].scrollLeft).to.be.greaterThan(scrollLeft)
-        );
+        cy.get(viewport).should(($panned) => {
+          const panned = $panned[0];
+          if (panned === undefined) throw new Error('Expected the panned relational viewport.');
+          expect(panned.scrollLeft).to.be.greaterThan(scrollLeft);
+        });
       });
       cy.get(source).should(($same) => expect(position($same[0])).to.deep.equal(before));
       cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('not.exist');

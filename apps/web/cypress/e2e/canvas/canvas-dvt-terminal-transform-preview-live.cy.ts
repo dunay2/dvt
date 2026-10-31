@@ -86,8 +86,8 @@ describe('DVT terminal Transform Preview and Run live', () => {
     const targetRelation = 'orders_result';
     let previewSha = '';
     let publicationToken = '';
-    const waitForCompletedRun = (runId: string, attempt = 0): Cypress.Chainable<void> =>
-      readLiveRunSnapshot(runId).then((response) => {
+    const waitForCompletedRun = (runId: string, attempt = 0): Cypress.Chainable<unknown> =>
+      readLiveRunSnapshot(runId).then<unknown>((response) => {
         expect(response.status).to.equal(200);
         const status = String((response.body as { status?: unknown }).status ?? '').toLowerCase();
         if (status === 'completed') return;

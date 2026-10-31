@@ -372,7 +372,7 @@ describe('Producer fields enter Input; Output is passive', () => {
     );
     const field = '[data-slot="source-column-row"][data-column-name="customer"]';
     cy.get(field).should('be.visible').and('have.attr', 'draggable', 'true');
-    const drop = (): Cypress.Chainable<void> =>
+    const drop = (): Cypress.Chainable<Cypress.AUTWindow> =>
       cy.window().then((window) => {
         const dataTransfer = new window.DataTransfer();
         cy.get(field).trigger('dragstart', { dataTransfer });

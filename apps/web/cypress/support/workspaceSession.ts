@@ -46,7 +46,7 @@ export function seedE2eWorkspaceSession(
 export function visitWithE2eWorkspaceSession(
   path: string,
   options: {
-    onBeforeLoad?: (window: Window) => void;
+    onBeforeLoad?: (window: Cypress.AUTWindow) => void;
   } = {}
 ): void {
   cy.visit(path, {
@@ -62,7 +62,7 @@ export function visitWithE2eWorkspaceSession(
 export function visitWithLiveWorkspaceSession(
   path: string,
   options: {
-    onBeforeLoad?: (window: Window) => void;
+    onBeforeLoad?: (window: Cypress.AUTWindow) => void;
   } = {}
 ): void {
   cy.visit(path, {

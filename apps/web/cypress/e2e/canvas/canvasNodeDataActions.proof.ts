@@ -35,8 +35,11 @@ function proveResizableDataGrid(host: string, screenshot: string): void {
   const value = `${host} [data-slot="bottom-operational-data-value"]`;
   const fullyVisible = ($element: JQuery<HTMLElement>): void => {
     const element = $element[0];
+    if (element === undefined) throw new Error('Expected the visible data-grid element.');
     const bounds = element.getBoundingClientRect();
-    const panel = element.closest(host)!.getBoundingClientRect();
+    const container = element.closest(host);
+    if (container === null) throw new Error('Expected the data-grid host.');
+    const panel = container.getBoundingClientRect();
     const viewport = element.ownerDocument.defaultView!;
     // Scrolling rounds to device pixels; resizable panel bounds retain fractional CSS pixels.
     expect(bounds.top, 'content begins inside panel and viewport').to.be.at.least(
@@ -59,6 +62,9 @@ function proveResizableDataGrid(host: string, screenshot: string): void {
     .should(($host) => {
       const panel = $host[0];
       const row = $host.find('[data-slot="bottom-operational-data-value"]')[0];
+      if (panel === undefined || row === undefined) {
+        throw new Error('Expected the compact data-grid host and a data row.');
+      }
       expect(panel.clientHeight, 'compact host can contain a data row').to.be.at.least(
         row.clientHeight
       );
@@ -67,10 +73,11 @@ function proveResizableDataGrid(host: string, screenshot: string): void {
       );
     });
   cy.get(`${host} [data-slot="bottom-operational-data-table-frame"]`).should(($frame) => {
-    expect(
-      $frame[0].clientHeight,
-      'header and at least one compact row remain usable'
-    ).to.be.at.least(54);
+    const frame = $frame[0];
+    if (frame === undefined) throw new Error('Expected the data-table frame.');
+    expect(frame.clientHeight, 'header and at least one compact row remain usable').to.be.at.least(
+      54
+    );
   });
   cy.get(value).first().scrollIntoView().should('be.visible').should(fullyVisible);
   cy.get(handle).focus().trigger('keydown', { key: 'Home' });
@@ -202,7 +209,9 @@ export function registerCanvasNodeDataActionsProof(): void {
         const outside = '[data-slot="canvas-workspace-tab"]';
         hoverWorkbenchCard(outside);
         cy.get(host).then(($host) => {
-          const bounds = $host[0].getBoundingClientRect().toJSON();
+          const hostElement = $host[0];
+          if (hostElement === undefined) throw new Error('Expected the node action host.');
+          const bounds = hostElement.getBoundingClientRect().toJSON();
           const queries = getE2eApiCalls(/data-sample|preview|runs/).length;
           const saves = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
           cy.get(action)
@@ -222,9 +231,11 @@ export function registerCanvasNodeDataActionsProof(): void {
             cy.get(action).blur().should('have.css', 'opacity', '0');
             cy.get(action).should(($same) => expect($same[0]).to.equal($action[0]));
           });
-          cy.get(host).should(($same) =>
-            expect($same[0].getBoundingClientRect().toJSON()).to.deep.equal(bounds)
-          );
+          cy.get(host).should(($same) => {
+            const same = $same[0];
+            if (same === undefined) throw new Error('Expected the retained node action host.');
+            expect(same.getBoundingClientRect().toJSON()).to.deep.equal(bounds);
+          });
           cy.then(() => {
             expect(getE2eApiCalls(/data-sample|preview|runs/)).to.have.length(queries);
             expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(saves);

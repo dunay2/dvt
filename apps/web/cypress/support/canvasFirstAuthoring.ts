@@ -265,7 +265,7 @@ function pollLiveDraftNodePosition(args: {
       (args.previousPosition == null || positionsDiffer(position, args.previousPosition));
 
     if (statusCode === 200 && positionMatches) {
-      return position;
+      return cy.wrap<DraftNodePosition>(position, { log: false });
     }
 
     if (args.attemptsRemaining <= 0) {
@@ -288,10 +288,10 @@ function pollLiveDraftNodePosition(args: {
 function pollLiveDraftRecord(args: {
   variant: FirstAuthoringVariant;
   attemptsRemaining: number;
-}): Cypress.Chainable<void> {
+}): Cypress.Chainable<unknown> {
   const session = resolveLiveFirstAuthoringWorkspaceSession(args.variant);
 
-  return cy.request(buildDraftReadRequest(session)).then((response) => {
+  return cy.request(buildDraftReadRequest(session)).then<unknown>((response) => {
     const body = response.body as WorkspaceGraphDraftReadBody;
     if (response.status === 200 && body.kind === 'ok' && body.record?.draft != null) {
       return;
@@ -329,7 +329,7 @@ function pollLiveCanvasLayoutNodePosition(args: {
       nodeId: args.nodeId,
     });
     if (position != null && positionsDiffer(position, args.previousPosition)) {
-      return position;
+      return cy.wrap<DraftNodePosition>(position, { log: false });
     }
 
     if (args.attemptsRemaining <= 0) {
@@ -354,7 +354,7 @@ function pollLiveCanvasLayoutNodePosition(args: {
 
 export function waitForLiveFirstAuthoringDraftRecord(
   variant: FirstAuthoringVariant
-): Cypress.Chainable<void> {
+): Cypress.Chainable<unknown> {
   return pollLiveDraftRecord({
     variant,
     attemptsRemaining: 80,
@@ -387,10 +387,10 @@ export function waitForLiveFirstAuthoringLayoutPositionChange(
 
 export function assertLiveFirstAuthoringDraftScopeIsClean(
   variant: FirstAuthoringVariant = 'transformation'
-): Cypress.Chainable<void> {
+): Cypress.Chainable<unknown> {
   const session = resolveLiveFirstAuthoringWorkspaceSession(variant);
 
-  return cy.request(buildDraftReadRequest(session)).then((response) => {
+  return cy.request(buildDraftReadRequest(session)).then<unknown>((response) => {
     if (response.status === 404) {
       expect((response.body as { kind?: string }).kind).to.equal('not_found');
       return;

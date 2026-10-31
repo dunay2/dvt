@@ -1,4 +1,5 @@
 /** Owned concern: prove Canvas draft access fail-closed posture in browser. */
+import { resolveShellTopBarCopy } from '../../../src/app/components/shell/copy';
 import { buildDraftReadDeniedResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { buildCanvasDraftReadResponse } from '../../support/canvasDraftAuthoring';
@@ -92,11 +93,11 @@ function visitCanvasWithDraftRead(body: unknown): void {
 
 function assertUnsafeCanvasCommandsAreDisabled(): void {
   cy.window({ log: false }).then((window) => {
-    const copy = resolveCanvasViewCopy(
-      window.navigator.language || window.document.documentElement.lang
-    );
+    const locale = window.navigator.language || window.document.documentElement.lang;
+    const copy = resolveCanvasViewCopy(locale);
+    const shellCopy = resolveShellTopBarCopy(locale);
 
-    for (const label of [copy.toolbarPlanLabel, copy.toolbarRunLabel]) {
+    for (const label of [copy.operationalDrawerPreviewAction, shellCopy.runCommand]) {
       cy.get('body').then(($body) => {
         const matchingButton = [...$body.find('button')].find((button) =>
           button.textContent?.includes(label)

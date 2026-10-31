@@ -30,7 +30,7 @@ function waitForSavedNodes(
   scope: WorkspaceGraphDraftScope,
   attempts = 40
 ): Cypress.Chainable<unknown> {
-  return readLiveGraphDraft(scope, { failOnStatusCode: false }).then((response) => {
+  return readLiveGraphDraft(scope, { failOnStatusCode: false }).then<unknown>((response) => {
     const body = response.body as {
       record?: { revision: string; draft: { nodeIds: string[] } };
     };

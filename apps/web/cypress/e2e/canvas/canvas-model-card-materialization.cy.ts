@@ -192,7 +192,9 @@ describe('Model card materialization', () => {
     cy.get(frameSelector)
       .scrollTo(0, 48)
       .should(($frame) => {
-        expect($frame[0].scrollTop, 'loaded rows can scroll').to.be.greaterThan(0);
+        const frame = $frame[0];
+        if (frame === undefined) throw new Error('Expected the loaded result frame.');
+        expect(frame.scrollTop, 'loaded rows can scroll').to.be.greaterThan(0);
       });
 
     let drawer: HTMLElement;

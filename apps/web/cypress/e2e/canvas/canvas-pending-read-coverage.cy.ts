@@ -236,12 +236,15 @@ describe('Pending Read persistence coverage', () => {
     let savedDraft: WorkspaceGraphAuthoringDraft;
     let writes = 0;
     cy.wrap(null).should(() => {
-      const call = getE2eApiCalls('/workspace/graph/draft', 'PUT').findLast((item) => {
-        const { draft } = item.body as { draft: WorkspaceGraphAuthoringDraft };
-        return draft.nodes.some(
-          (node) => node.id === 'join-transform' && node.metadata?.relationalAuthoringDraft != null
-        );
-      });
+      const call = getE2eApiCalls('/workspace/graph/draft', 'PUT')
+        .reverse()
+        .find((item) => {
+          const { draft } = item.body as { draft: WorkspaceGraphAuthoringDraft };
+          return draft.nodes.some(
+            (node) =>
+              node.id === 'join-transform' && node.metadata?.relationalAuthoringDraft != null
+          );
+        });
       expect(call).not.to.equal(undefined);
       savedDraft = (call!.body as { draft: WorkspaceGraphAuthoringDraft }).draft;
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;

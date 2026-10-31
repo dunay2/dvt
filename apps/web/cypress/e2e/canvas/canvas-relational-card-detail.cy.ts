@@ -82,9 +82,11 @@ describe('Relational card detail', () => {
     cy.get('[data-operator="sort"]').scrollIntoView();
     cy.screenshot('relational-card-details');
     cy.get('[data-slot="canvas-relational-tree-layout"]').then(($layout) => {
+      const layout = $layout[0];
+      if (layout === undefined) throw new Error('Expected the relational tree layout.');
       const geometry = (): (string | null)[][] =>
         [
-          ...$layout[0].querySelectorAll(
+          ...layout.querySelectorAll(
             ':scope > ul > li, :scope > svg path, [data-slot="canvas-relational-tree-output"]'
           ),
         ].map((element) => [element.getAttribute('style'), element.getAttribute('d')]);

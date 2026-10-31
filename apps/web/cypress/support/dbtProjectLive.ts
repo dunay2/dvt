@@ -43,7 +43,7 @@ export function saveLiveWorkspaceFile(
   path: string,
   content: string,
   expectedRevision: WorkspaceFileRevision = { kind: 'absent' }
-): Cypress.Chainable<void> {
+): Cypress.Chainable<unknown> {
   const query = new URLSearchParams(resolveLiveWorkspaceSession());
   const authorization = buildLiveAuthorization();
 
@@ -57,13 +57,16 @@ export function saveLiveWorkspaceFile(
         expectedRevision,
       },
     })
-    .then((response) => {
+    .then<unknown>((response) => {
       expect(response.status).to.equal(200);
       expect(response.body.kind).to.equal('saved');
     });
 }
 
-export function replaceLiveWorkspaceFile(path: string, content: string): Cypress.Chainable<void> {
+export function replaceLiveWorkspaceFile(
+  path: string,
+  content: string
+): Cypress.Chainable<unknown> {
   const query = new URLSearchParams(resolveLiveWorkspaceSession());
   const authorization = buildLiveAuthorization();
   const endpoint = `${readRequiredEnv('apiBaseUrl')}/workspace/files/${encodeURIComponent(path)}?${query.toString()}`;
@@ -81,17 +84,17 @@ export function replaceLiveWorkspaceFile(path: string, content: string): Cypress
 
 export function seedLiveWorkspaceFiles(
   files: Readonly<Record<string, string>>
-): Cypress.Chainable<void> {
-  return Object.entries(files).reduce<Cypress.Chainable<void>>(
+): Cypress.Chainable<unknown> {
+  return Object.entries(files).reduce<Cypress.Chainable<unknown>>(
     (chain, [path, content]) => chain.then(() => saveLiveWorkspaceFile(path, content)),
-    cy.wrap(undefined)
+    cy.wrap<unknown>(undefined)
   );
 }
 
 export function adoptLiveDbtProjectFileAuthority(
   projectRoot: string,
   canvasId: string
-): Cypress.Chainable<void> {
+): Cypress.Chainable<unknown> {
   const query = new URLSearchParams(resolveLiveWorkspaceSession());
   const authorization = buildLiveAuthorization();
   const apiBaseUrl = readRequiredEnv('apiBaseUrl');
@@ -124,7 +127,7 @@ export function adoptLiveDbtProjectFileAuthority(
         },
       });
     })
-    .then((response) => {
+    .then<unknown>((response) => {
       expect(response.status).to.equal(200);
       expect(response.body.success).to.equal(true);
       expect(response.body.authorityBinding).to.deep.include({
