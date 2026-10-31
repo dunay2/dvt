@@ -396,23 +396,51 @@ describe('governed browser evidence routing', () => {
     expect(body).not.toContain('this.skip');
   });
 
-  it('admits every exact selection-helper consumer in its real runtime', () => {
+  it.each([
+    'apps/web/cypress/support/canvasExecutionSelection.ts',
+    'apps/web/cypress/support/canvasFirstAuthoring.ts',
+    'apps/web/cypress/support/dbtProjectLive.ts',
+    'apps/web/cypress/support/e2eApiStub.ts',
+    'apps/web/cypress/support/relationalWorkbench/geometry.ts',
+    'apps/web/cypress/support/relationalWorkbench/pointer.ts',
+    'apps/web/cypress/support/semanticLive/canonicalAssertions.ts',
+    'apps/web/cypress/support/workspaceSession.ts',
+  ])('admits every exact shared-helper consumer in its real runtime: %s', (helperPath) => {
     const graph = new Map(
       [...browserModules].map(([path, ast]) => [path, runtimeImports(path, ast)])
     );
-    const helperPath = 'apps/web/cypress/support/canvasExecutionSelection.ts';
     const target = resolve(helperPath.slice('apps/web/'.length));
     const consumers = [...browserModules.keys()]
       .filter((path) => path.endsWith('.cy.ts') && reachesModule(graph, path, target))
       .map((path) => `apps/web/${path.slice(resolve('.').length + 1).replaceAll('\\', '/')}`)
       .sort();
     const plan = resolveWebVitestChangedSuitePlan([helperPath]);
+    const expectedCapabilities = new Set<string>();
     expect(consumers.length).toBeGreaterThan(0);
     for (const consumer of consumers) {
       const owners = Object.entries(WEB_CYPRESS_SPECS)
         .filter(([, paths]) => paths.includes(consumer))
         .map(([capability]) => capability);
+      if (WEB_CYPRESS_NIGHTLY_SPECS.includes(consumer)) {
+        expect(owners, consumer).toEqual([]);
+        expect(
+          WEB_CYPRESS_NIGHTLY_SPECS.filter((path) => path === consumer),
+          consumer
+        ).toEqual([consumer]);
+        const nightlyPlan = resolveWebVitestChangedSuitePlan([consumer]);
+        expect(nightlyPlan.browserCommands, consumer).toEqual([]);
+        expect(
+          nightlyPlan.browserFiles.filter((path) => path === consumer),
+          consumer
+        ).toEqual([consumer]);
+        expect(
+          plan.browserCommands.flatMap((command) => command.specPaths),
+          consumer
+        ).not.toContain(consumer);
+        continue;
+      }
       expect(owners, consumer).toHaveLength(1);
+      owners.forEach((owner) => expectedCapabilities.add(owner));
       const consumerPlan = resolveWebVitestChangedSuitePlan([consumer]);
       expect(
         consumerPlan.browserCommands.map((command) => command.capability),
@@ -431,11 +459,9 @@ describe('governed browser evidence routing', () => {
         ).toEqual([consumer]);
       }
     }
-    expect(plan.browserCommands.map((command) => command.capability)).toEqual([
-      'controlled',
-      'available',
-      'unavailable',
-    ]);
+    expect(plan.browserCommands.map((command) => command.capability)).toEqual(
+      Object.keys(WEB_CYPRESS_SPECS).filter((capability) => expectedCapabilities.has(capability))
+    );
   });
 
   it('routes all real source-import helper consumers to the available runtime', () => {

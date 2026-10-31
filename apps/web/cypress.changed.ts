@@ -45,6 +45,10 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
     'unavailable',
   ],
   'apps/web/cypress/support/canvasGraphAuthoring.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/canvasFirstAuthoring.ts': ['available'],
+  'apps/web/cypress/support/dbtProjectLive.ts': ['available'],
+  'apps/web/cypress/support/e2eApiStub.ts': CAPABILITIES,
+  'apps/web/cypress/support/workspaceSession.ts': CAPABILITIES,
   'apps/web/cypress/support/canvasDrafts/buildCanvasAuthoringDraft.ts': [
     'controlled',
     'available',
@@ -79,6 +83,8 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/relationalWorkbench/cardOutputControls.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/emptyOutputs.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/fieldSelection.ts': ['controlled'],
+  'apps/web/cypress/support/relationalWorkbench/geometry.ts': ['controlled', 'available'],
+  'apps/web/cypress/support/relationalWorkbench/pointer.ts': ['controlled', 'available'],
   'apps/web/cypress/support/relationalWorkbench/pendingComposition.ts': ['controlled'],
   'apps/web/cypress/support/relationalWorkbench/formulaLineageJourney.ts': [
     'controlled',
@@ -87,6 +93,7 @@ const SUPPORT_CAPABILITIES: Readonly<Record<string, readonly WebCypressCapabilit
   'apps/web/cypress/support/relationalWorkbench/transformFormulaJourney.ts': ['available'],
   'apps/web/cypress/support/relationalWorkbench/transformTreeJourney.ts': ['available'],
   'apps/web/cypress/support/semanticLive/fixture.ts': ['available'],
+  'apps/web/cypress/support/semanticLive/canonicalAssertions.ts': ['available'],
   'apps/web/cypress/support/semanticLive/execution.ts': ['available'],
   'apps/web/cypress/support/semanticLive/progressive.ts': ['available'],
   'apps/web/cypress/support/liveCanvasDraftAuthoring.ts': ['available', 'unavailable'],
