@@ -164,7 +164,8 @@ content hash; returning to candidate SQL retains revalidation.
 
 This correction removes unused analysis and presentation movement. It introduces
 no parser, timer, stylesheet, cache or project-admission workflow. Global analysis
-reuse remains separate from this bounded inspection rule. The
+reuse belongs to the [native API analyzer](../api/dbt-project-analysis-component.md),
+separately from this bounded inspection rule. The
 [stable-status design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6530524643)
 and [plain-SQL refinement](https://github.com/dunay2/dvt/issues/3747#issuecomment-6532334252)
 govern its implementation and validation.

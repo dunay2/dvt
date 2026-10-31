@@ -99,11 +99,12 @@ describe('dbtProjectGraphRoutes', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('denies analysis when the caller cannot read workspace files', async () => {
-    const execute = vi.fn();
+  it('denies a repeated analysis after workspace file access is revoked', async () => {
+    let canReadFiles = true;
+    const execute = vi.fn().mockResolvedValue(projection());
     const authenticateBearerToken = vi.fn().mockResolvedValue({ ok: true, principal: principal() });
     const authorize = vi.fn().mockImplementation((_principal, requestedScope) =>
-      requestedScope.action.name === 'workspace:graph-draft:view'
+      requestedScope.action.name === 'workspace:graph-draft:view' || canReadFiles
         ? {
             ok: true,
             context: {
@@ -124,15 +125,21 @@ describe('dbtProjectGraphRoutes', () => {
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
+    const warm = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}`,
+    });
+    expect(warm.statusCode).toBe(200);
+    canReadFiles = false;
     const response = await app.inject({
       method: 'GET',
       url: `/workspace/dbt/graph?${VALID_QUERY}`,
     });
 
     expect(response.statusCode).toBe(403);
-    expect(authenticateBearerToken).toHaveBeenCalledTimes(1);
-    expect(authorize).toHaveBeenCalledTimes(2);
-    expect(execute).not.toHaveBeenCalled();
+    expect(authenticateBearerToken).toHaveBeenCalledTimes(2);
+    expect(authorize).toHaveBeenCalledTimes(4);
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it.each([

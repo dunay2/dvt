@@ -121,6 +121,8 @@ export async function buildProtectedRuntimeModule(
     dbtExecutable: env.DVT_DBT_ANALYZER_BIN,
     timeoutMs: env.DVT_DBT_ANALYZER_TIMEOUT_MS,
     maxOutputBytes: env.DVT_DBT_ANALYZER_MAX_OUTPUT_BYTES,
+    onAnalysis: (measurement) =>
+      appLogger.info({ eventType: 'dbt.analysis', ...measurement }, 'dbt analysis completed'),
   });
   const dbtProjectImportProcessStore = new PostgresDbtProjectImportProcessStore({
     pool,
