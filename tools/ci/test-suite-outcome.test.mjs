@@ -13,7 +13,9 @@ const workflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
 const aggregate = workflow.jobs['test-suite-required'];
 const webMatrix = [
   { phase: 'vitest', capability: '' },
-  { phase: 'browser', capability: 'controlled' },
+  { phase: 'browser', capability: 'controlled', shard: 1 },
+  { phase: 'browser', capability: 'controlled', shard: 2 },
+  { phase: 'browser', capability: 'controlled', shard: 3 },
   { phase: 'browser', capability: 'available', shard: 1 },
   { phase: 'browser', capability: 'available', shard: 2 },
   { phase: 'browser', capability: 'available', shard: 3 },
@@ -215,7 +217,7 @@ test('PostgreSQL integration files run once in the full suite with the real data
   }
 });
 
-test('Web keeps every bounded obligation with disjoint available shard producers', () => {
+test('Web keeps every bounded obligation with disjoint controlled and available producers', () => {
   const web = workflow.jobs['web-frontend-tests'];
   assert.equal(
     web.name,

@@ -137,6 +137,13 @@ jobs:
             capability: ''
           - phase: browser
             capability: controlled
+            shard: 1
+          - phase: browser
+            capability: controlled
+            shard: 2
+          - phase: browser
+            capability: controlled
+            shard: 3
           - phase: browser
             capability: available
             shard: 1

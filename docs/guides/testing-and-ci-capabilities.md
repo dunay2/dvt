@@ -108,6 +108,27 @@ evidence; a separate Web Vitest linter bootstrap is unnecessary.
 These changes reduce repeated acquisition without narrowing inspected sources,
 adding a cache, prewarming tests, or changing worker isolation or required gates.
 
+## Browser Evidence Partitions
+
+The existing Test Suite workflow partitions both `controlled` and `available`
+browser obligations into three jobs through `selectWebCypressShard`. The policy
+preserves catalog order and assigns each selected spec exactly once. Planning and
+execution use the same capability and shard selectors; local execution without a
+shard remains complete. The `unavailable` obligation is not partitioned.
+
+The complete affected plan is validated before partition selection. A nonempty
+controlled selection can leave a job unassigned when only one or two specs are
+affected. That job reports `browser_required=false` and `provider_required=false`
+and starts no browser command. An empty original request, unsupported capability,
+invalid selector or missing/unknown/restored-retired consumer still fails closed;
+an unassigned partition is not successful browser evidence.
+
+All selected browser evidence remains merge-blocking through the existing Test
+Suite aggregate. Native runtimes, assertions, deadlines, provider preparation and
+cleanup are unchanged. Parallel jobs repeat setup/build work: compare both the
+longest lane and summed runner durations when evaluating the improvement, rather
+than interpreting three partitions as a guaranteed threefold speedup.
+
 ## Immutable Provisioning Image Cache
 
 Planning DB preparation and the provider-backed browser lane share
