@@ -14,9 +14,9 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
-const PROJECT_ROOT = 'analytics';
+const PROJECT_ROOT = 'analytics-file-projection';
 const INVALID_PROJECT_ROOT = 'analytics-invalid';
-const CANVAS_ID = 'analytics-files';
+const CANVAS_ID = 'analytics-file-projection-files';
 const INVALID_CANVAS_ID = 'analytics-invalid-files';
 
 const INVALID_PROJECT_CONFIG = `
@@ -239,6 +239,11 @@ describe('dbt project file projection live vertical', () => {
         cy.contains('Rows').should('be.visible');
         cy.contains('Size').should('be.visible');
       });
+    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__node').should(
+      'have.length',
+      7
+    );
+    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__controls-fitview').click();
     cy.get('.react-flow__node[data-id="seed.analytics.country_codes"]').should('be.visible');
     cy.get('.react-flow__node[data-id="snapshot.analytics.orders_snapshot"]').should('be.visible');
     cy.get('.react-flow__node[data-id="exposure.analytics.orders_dashboard"]').should('be.visible');
