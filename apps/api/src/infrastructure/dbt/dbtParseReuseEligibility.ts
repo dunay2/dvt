@@ -15,7 +15,11 @@ export async function isDbtParseReuseEligible(
     profileContents: readonly string[];
   }>
 ): Promise<boolean> {
-  if (input.profileContents.some((content) => TEMPLATE_MARKER.test(content))) return false;
+  if (
+    input.profileContents.some((content) => content.includes('\\') || TEMPLATE_MARKER.test(content))
+  ) {
+    return false;
+  }
 
   for (const entry of input.contentRevision.entries) {
     const extension = path.posix.extname(entry.path).toLowerCase();
@@ -24,6 +28,7 @@ export async function isDbtParseReuseEligible(
       path.join(input.snapshotDirectory, ...entry.path.split('/')),
       'utf8'
     );
+    if ((extension === '.yml' || extension === '.yaml') && content.includes('\\')) return false;
     if (extension === '.sql' ? !hasOnlyLiteralReferences(content) : TEMPLATE_MARKER.test(content)) {
       return false;
     }

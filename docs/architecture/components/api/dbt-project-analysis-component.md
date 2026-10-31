@@ -75,6 +75,13 @@ using the existing semantic-region recognizer. Other files and managed profiles
 must contain no Jinja. Python, blocks, macros, unknown expressions and incomplete
 delimiters bypass reuse while retaining full native analysis support.
 
+YAML can decode backslash escapes into Jinja delimiters after this raw-source
+check. Therefore `.yml` and `.yaml` files (case-insensitive), including managed
+profiles, bypass reuse whenever they contain a backslash. This deliberately
+conservative rule covers keys and values without adding a YAML parser or claiming
+to validate decoded configuration. Plain YAML remains eligible; escaped YAML
+retains normal native analysis support. SQL keeps the literal-reference policy.
+
 Eligibility is not dependency analysis or SQL validation: the native manifest
 remains authoritative. Volatile Jinja context can alter parse-time attributes;
 see [dbt project parsing](https://docs.getdbt.com/reference/parsing). Compile and

@@ -8,6 +8,26 @@ import { isDbtParseReuseEligible } from '../../../src/infrastructure/dbt/dbtPars
 import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
 import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../../src/infrastructure/dbt/dbtProjectSourceSnapshot.js';
 
+const ESCAPED_YAML_CASES = [
+  ['Unicode escape', 'dbt_project.yml', 'name: "\\u007b\\u007b invocation_id \\u007d\\u007d"'],
+  [
+    'long Unicode escape',
+    'models/schema.yaml',
+    'description: "\\U0000007B\\U0000007B invocation_id \\U0000007D\\U0000007D"',
+  ],
+  [
+    'hexadecimal escape in a key',
+    'models/schema.YML',
+    '"\\x7b\\x7b invocation_id \\x7d\\x7d": value',
+  ],
+  [
+    'mixed literal and escaped delimiters',
+    'models/schema.YAML',
+    'description: "{\\u007b invocation_id }\\u007d"',
+  ],
+  ['other backslash escape', 'dbt_packages/helper/schema.yml', 'description: "line\\nbreak"'],
+] as const;
+
 describe('dbt parse reuse eligibility', () => {
   let snapshotDirectory: string;
 
@@ -44,9 +64,26 @@ describe('dbt parse reuse eligibility', () => {
           "select * from {{ ref(\"clients\") }} join {{ ref('package', 'orders') }} on true\n",
         'models/source.sql': "select * from {{ source('raw', 'clients') }}\n",
         'models/schema.yml': 'version: 2\nmodels: []\n',
+        'models/other.YAML': 'version: 2\nmodels: []\n',
       })
     ).resolves.toBe(true);
   });
+
+  it.each(ESCAPED_YAML_CASES)(
+    'bypasses reuse for YAML %s',
+    async (_description, relativePath, content) => {
+      await expect(eligible({ [relativePath]: content })).resolves.toBe(false);
+    }
+  );
+
+  it.each(ESCAPED_YAML_CASES)(
+    'bypasses reuse for managed profile %s',
+    async (_description, _relativePath, content) => {
+      await expect(
+        eligible({ 'models/plain.sql': 'select 1' }, ['plain: true', content])
+      ).resolves.toBe(false);
+    }
+  );
 
   it.each([
     ['Python model', 'models/model.py', 'def model(dbt, session): return None\n'],
