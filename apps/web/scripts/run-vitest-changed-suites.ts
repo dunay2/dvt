@@ -78,8 +78,14 @@ export function parseChangedSuiteArgs(argv: readonly string[]): ChangedSuiteArgs
   if (browserCapability !== undefined && phase !== 'browser') {
     throw new Error('--browser-capability requires --phase=browser.');
   }
-  if (browserShard !== undefined && (phase !== 'browser' || browserCapability !== 'available')) {
-    throw new Error('--browser-shard requires --phase=browser --browser-capability=available.');
+  if (
+    browserShard !== undefined &&
+    browserCapability !== 'available' &&
+    browserCapability !== 'controlled'
+  ) {
+    throw new Error(
+      '--browser-shard requires --phase=browser and --browser-capability=controlled or available.'
+    );
   }
   if ((full && !plan && phase !== 'browser') || (flags.has('--files') && files.length === 0)) {
     throw new Error(
@@ -271,7 +277,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
         args.phase !== 'vitest' &&
         (args.browserCapability === undefined || entry.capability === args.browserCapability)
     )
-    .map((entry) => selectWebCypressShard(entry, args.browserShard));
+    .map((entry) => selectWebCypressShard(entry, args.browserShard))
+    .filter((entry) => entry !== undefined);
 
   if (args.plan) {
     process.stdout.write(`${JSON.stringify({ ...plan, browserCommands })}\n`);
