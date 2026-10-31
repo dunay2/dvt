@@ -2266,28 +2266,94 @@ test('superseded studies and delivery narratives stay retired with their obligat
 
 // Refs #3412: historical URLs preserve provenance, not current authority.
 test('retired study provenance stays outside active authority and code references', () => {
-  for (const [path, start, end] of [
+  const pinnedLink = 'https://github.com/dunay2/dvt/blob/' + 'a'.repeat(40) + '/retired.md';
+  const documents = [
+    'docs/architecture/components/web/code-workbench-workspace-files-component.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
+  ].map((path) => [path, readRepoFile(path), true]);
+  documents.push(
     [
-      'docs/architecture/components/web/code-workbench-workspace-files-component.md',
-      'Use with:',
-      '## Historical provenance',
+      'renamed authority and normalized history',
+      `Governing sources:\ncurrent.md\n## hIsToRiCaL   ProVeNaNcE\n${pinnedLink}\n### Details\nEarlier behavior.`,
+      true,
     ],
     [
-      'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
-      '## Governing Sources',
-      '## Historical provenance',
+      'CRLF and closing hashes',
+      `## HISTORICAL PROVENANCE ##\r\n${pinnedLink}\r\n## Current\r\ncurrent.md`,
+      true,
     ],
-  ]) {
-    const text = readRepoFile(path);
-    const begin = text.toLowerCase().indexOf(start.toLowerCase());
-    const finish = text.indexOf(end, begin);
-    assert.ok(begin >= 0 && finish > begin, path);
-    assert.doesNotMatch(
-      text.slice(begin, finish),
-      /github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\//u,
-      path
-    );
-    assert.match(text.slice(finish), /not current[\s\S]*governing sources/u, path);
+    [
+      'active authority',
+      `## Governing Sources\n${pinnedLink}\n## Historical Provenance\nEarlier behavior.`,
+      false,
+    ],
+    [
+      'later peer section',
+      `## Historical Provenance\nEarlier behavior.\n## Current\n${pinnedLink}`,
+      false,
+    ],
+    [
+      'later parent section',
+      `## Historical Provenance\nEarlier behavior.\n# Current\n${pinnedLink}`,
+      false,
+    ],
+    ['fenced fake history', '```md\n## Historical Provenance\n```\n' + pinnedLink, false],
+    ['tilde-fenced fake history', '~~~md\n## Historical Provenance\n~~~\n' + pinnedLink, false],
+    [
+      'invalid backtick opener cannot hide a peer section',
+      `## Historical Provenance\n\`\`\`bad\`info\n## Current\n${pinnedLink}\n\`\`\``,
+      false,
+    ],
+    [
+      'fenced peer is not a section boundary',
+      `## Historical Provenance\n\`\`\`md\n## Example\n\`\`\`\n${pinnedLink}`,
+      true,
+    ]
+  );
+  for (const [path, text, expected] of documents) {
+    const lines = text.split(/\r?\n/u);
+    let begin = -1;
+    let finish = lines.length;
+    let fence = null;
+    for (const [index, line] of lines.entries()) {
+      const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/u.exec(line);
+      if (fence !== null) {
+        if (
+          marker &&
+          marker[1][0] === fence[0] &&
+          marker[1].length >= fence.length &&
+          marker[2].trim() === ''
+        )
+          fence = null;
+        continue;
+      }
+      if (marker && (marker[1][0] !== '`' || !marker[2].includes('`'))) {
+        fence = marker[1];
+        continue;
+      }
+      const heading = /^ {0,3}(#{1,2})[\t ]+(.+?)(?:[\t ]+#+)?[\t ]*$/u.exec(line);
+      if (!heading) continue;
+      if (begin >= 0) {
+        finish = index;
+        break;
+      }
+      if (
+        heading[1] === '##' &&
+        heading[2]
+          .trim()
+          .replace(/[\t ]+/gu, ' ')
+          .toLowerCase() === 'historical provenance'
+      )
+        begin = index;
+    }
+    const valid =
+      begin >= 0 &&
+      lines.every(
+        (line, index) =>
+          !/github\.com\/dunay2\/dvt\/blob\/[a-f0-9]{40}\//iu.test(line) ||
+          (index > begin && index < finish)
+      );
+    assert.equal(valid, expected, path);
   }
   const evidence = readRepoFile('docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md');
   const refs = evidence.match(/^code_refs:\n([\s\S]*?)^evidence:/mu);

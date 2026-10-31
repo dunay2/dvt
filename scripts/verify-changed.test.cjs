@@ -249,6 +249,36 @@ test('scope configuration changes retain routing and package metadata regression
   }
 });
 
+test('consumed provenance documents select one complete contract before Web tests', () => {
+  const suite = 'tools/ci/docs-disposition-canon.test.mjs';
+  const documents = [
+    'docs/architecture/components/web/code-workbench-workspace-files-component.md',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
+    'docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md',
+  ];
+  for (const file of documents) {
+    const plan = buildVerifyChangedPlan([file, file]);
+    assert.deepEqual(
+      plan.filter((step) => step.args.includes(suite)).map((step) => step.args),
+      [['--test', suite]],
+      file
+    );
+    assert.deepEqual(focusedLabelsFor([file]), ['node --test ' + suite], file);
+  }
+  const files = [...documents, suite, 'apps/web/src/app/views/CodeView.tsx'];
+  const plan = buildVerifyChangedPlan(files);
+  assert.deepEqual(buildVerifyChangedPlan([...files].reverse()), plan);
+  const selected = plan.filter((step) => step.args.includes(suite));
+  assert.equal(selected.length, 1);
+  assert.deepEqual(selected[0].args, ['--test', suite]);
+  assert.ok(plan.indexOf(selected[0]) > plan.findIndex((step) => step.id === 'check-changed'));
+  assert.ok(plan.indexOf(selected[0]) < plan.findIndex((step) => step.id === 'test-web-changed'));
+  for (const file of ['docs/guides/unrelated.md', 'apps/api/src/example.ts']) {
+    assert.ok(!buildVerifyChangedPlan([file]).some((step) => step.args.includes(suite)), file);
+    assert.ok(!buildFocusedChangedTestPlan([file]).some((step) => step.args.includes(suite)), file);
+  }
+});
+
 test('buildFocusedChangedTestPlan retains adjacent script tests without duplicating general gates', () => {
   const labels = focusedLabelsFor([
     'docs/guides/testing-and-ci-capabilities.md',
@@ -807,12 +837,12 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
     'pnpm lint:md:changed',
     'pnpm docs:feature-mechanization:implementation',
     'node scripts/check-changed.cjs',
+    catalogTest,
+    cryptoTest,
     'pnpm test:web:changed',
     'node --test scripts/web-code-duplication.test.cjs',
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
-    catalogTest,
-    cryptoTest,
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
     'node --test scripts/verify-prepush.test.cjs',
@@ -821,12 +851,12 @@ test('buildVerifyChangedPlan retains every mixed-scope gate once with static che
   assert.equal(new Set(labels).size, plan.length);
   assert.equal(new Set(plan.map((step) => step.id)).size, plan.length);
   assert.deepEqual(plan.filter((step) => step.kind === 'test').map(commandLabel), [
+    catalogTest,
+    cryptoTest,
     'pnpm test:web:changed',
     'node --test scripts/web-code-duplication.test.cjs',
     'node --test scripts/planning-db/code-symbol-inventory.test.cjs',
     'node --test scripts/check-changed.test.cjs',
-    catalogTest,
-    cryptoTest,
     'pnpm test:planning:db:current-schema',
     'node --test scripts/verify-changed.test.cjs',
     'node --test scripts/verify-prepush.test.cjs',
@@ -963,6 +993,30 @@ test('main preserves static failure without running any tests, later gates or st
     plan.filter((step) => step.kind === 'test' && calls.includes(commandLabel(step))),
     []
   );
+});
+
+test('a selected CI contract failure starts no Web tests and writes no validation stamp', () => {
+  const calls = [];
+  const status = main([], {
+    changedFiles: [
+      'docs/architecture/components/web/code-workbench-workspace-files-component.md',
+      'apps/web/src/app/views/CodeView.tsx',
+    ],
+    executeVerifyChangedPlan: (steps, options) =>
+      executeVerifyChangedPlan(steps, {
+        ...options,
+        spawn: (command, args) => {
+          calls.push(commandLabel({ command, args }));
+          return { status: args.includes('tools/ci/docs-disposition-canon.test.mjs') ? 11 : 0 };
+        },
+      }),
+    printPlan: () => {},
+    buildPrepushStamp: () => assert.fail('Failed CI contract must not build a stamp'),
+    writePrepushStamp: () => assert.fail('Failed CI contract must not write a stamp'),
+  });
+  assert.equal(status, 11);
+  assert.ok(calls.includes('node --test tools/ci/docs-disposition-canon.test.mjs'));
+  assert.ok(!calls.includes('pnpm test:web:changed'));
 });
 
 test('main runs focused tests from the exact committed diff without writing a local stamp', () => {
