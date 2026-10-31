@@ -59,7 +59,9 @@ describe('Internal operation card execution', () => {
     cy.get(detached)
       .invoke('attr', 'data-relation-id')
       .then((relationId) => {
-        const document = semanticDocumentFromWrite(semanticWrites('join-transform').at(-1)!);
+        const write = semanticWrites('join-transform').at(-1);
+        if (write === undefined) throw new Error('The saved semantic document is unavailable.');
+        const document = decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(write));
         expect(
           document.sidecar.relations.some((relation) => relation.relationId === relationId)
         ).to.equal(false);

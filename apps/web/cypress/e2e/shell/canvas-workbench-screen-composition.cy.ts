@@ -8,6 +8,7 @@
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+  parseWorkspaceGraphDraftSaveRequest,
 } from '@dvt/contracts';
 
 import { buildProtectedDraftRecord } from '../../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
@@ -69,7 +70,8 @@ const CLIPBOARD_EOL = Cypress.platform === 'win32' ? '\r\n' : '\n';
 
 /** Copy through the focused editor; rendered lines contain visual wrapping indentation. */
 function readProjectCode(): Cypress.Chainable<string> {
-  const editor = '[data-slot="canvas-contextual-workbench"] .monaco-editor';
+  const editor =
+    '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"] .monaco-editor';
   const selectAll = {
     key: 'a',
     code: 'KeyA',
@@ -85,6 +87,7 @@ function readProjectCode(): Cypress.Chainable<string> {
     return cy
       .get(editor)
       .find('textarea.inputarea')
+      .should('have.prop', 'readOnly', true)
       .should('be.focused')
       .then(($input) => {
         $input[0]!.dispatchEvent(new window.KeyboardEvent('keydown', selectAll));
@@ -287,6 +290,9 @@ describe('Canvas workbench screen composition', () => {
       defaultWorkspace: E2E_PROJECT_WORKSPACE,
       availableWorkspaces: [E2E_PROJECT_WORKSPACE, ALTERNATE_PROJECT_WORKSPACE],
     });
+    stubE2eApi('POST', /^\/workspace\/files\//, () => {
+      throw new Error('Read-only project Code must not save workspace files.');
+    });
     stubE2eApi('GET', '/workspace/files', ({ headers }) => ({
       body:
         headers['x-project-id'] === ALTERNATE_WORKSPACE_SESSION.projectId
@@ -432,21 +438,7 @@ describe('Canvas workbench screen composition', () => {
       };
     });
     stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
-      const saveRequest = body as {
-        scope: typeof E2E_WORKSPACE_SESSION;
-        schemaVersion: string;
-        expectedRevision: string;
-        draft: {
-          canvas: {
-            id?: string;
-            kind: string;
-            title: string;
-          };
-          nodeIds: string[];
-          nodes: unknown[];
-          edges: unknown[];
-        };
-      };
+      const saveRequest = parseWorkspaceGraphDraftSaveRequest(body);
 
       const expectedRevision = persistedDraft?.revision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION;
       expect(saveRequest).to.deep.include({
@@ -628,21 +620,28 @@ describe('Canvas workbench screen composition', () => {
         expect($item.attr('data-disabled')).to.be.undefined;
       })
       .click();
-    cy.get('[data-slot="canvas-contextual-workbench"]')
+    cy.get('[data-slot="canvas-code-main-tab"]')
       .should('be.visible')
-      .and('contain.text', 'Código del proyecto');
+      .and('have.attr', 'aria-selected', 'true')
+      .and('contain.text', 'Código');
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
     waitForE2eApiCall('/workspace/files', 'GET');
     for (const path of ['dbt_project.yml', 'models', 'models/analytics', MODEL_PATH]) {
-      cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`).should(
-        'be.visible'
-      );
+      cy.get(
+        `[data-slot="canvas-code-workspace-surface"] [data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`
+      ).should('be.visible');
     }
-    cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`).click();
+    cy.get(
+      `[data-slot="canvas-code-workspace-surface"] [data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`
+    ).click();
     waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
     readProjectCode().should('equal', MODEL_SQL.replaceAll('\n', CLIPBOARD_EOL));
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-code-workspace-surface"]');
 
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .click()
+      .should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.contains(
       '[data-slot="shell-workspace-scope-selector"] button',
@@ -688,21 +687,29 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="shell-file-menu-trigger"]').should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').should('be.visible').click();
-    cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${ALTERNATE_MODEL_PATH}"]`)
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
+    cy.get(
+      `[data-slot="canvas-code-workspace-surface"] [data-slot="code-workspace-file-entry"][data-workspace-path="${ALTERNATE_MODEL_PATH}"]`
+    )
       .should('be.visible')
       .click();
     waitForE2eApiCall('/workspace/files/models%2Fstaging%2Falternate_orders.sql', 'GET');
-    cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`).should(
-      'not.exist'
-    );
+    cy.get(
+      `[data-slot="canvas-code-workspace-surface"] [data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`
+    ).should('not.exist');
     readProjectCode().should('equal', ALTERNATE_MODEL_SQL.replaceAll('\n', CLIPBOARD_EOL));
     cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
     cy.then(() => {
       for (const { body } of getE2eApiCalls('/workspace/graph/draft', 'PUT')) {
         expect(body).to.have.property('scope').that.deep.equals(E2E_WORKSPACE_SESSION);
       }
+      expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
     });
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .click()
+      .should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
 
     cy.get('[data-slot="shell-app-menu-trigger"]').click();
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
@@ -858,26 +865,48 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
-    cy.get('[data-slot="canvas-contextual-workbench-overlay"]')
-      .should('be.visible')
-      .and(($workbench) => {
-        const rect = $workbench.get(0).getBoundingClientRect();
-        expect(rect.left).to.be.at.least(0);
-        expect(rect.right).to.be.at.most(390);
-        expect(rect.top).to.be.at.least(0);
-        expect(rect.bottom).to.be.at.most(844);
-      });
-    assertViewportHasNoGlobalHorizontalOverflow(390);
-    emulateBrowserZoom(2, { width: 780, height: 1688 });
-    cy.get('[data-slot="canvas-contextual-workbench-overlay"]').should(($workbench) => {
-      const rect = $workbench.get(0).getBoundingClientRect();
-      expect(rect.left).to.be.at.least(0);
-      expect(rect.right).to.be.at.most(390);
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    for (const zoom of [1, 2] as const) {
+      if (zoom === 2) {
+        emulateBrowserZoom(2, { width: 780, height: 1688 });
+      }
+      cy.get('[data-slot="canvas-code-workspace-surface"]')
+        .should('be.visible')
+        .and(($workbench) => {
+          const rect = $workbench.get(0).getBoundingClientRect();
+          const allocated = $workbench.get(0).parentElement!.getBoundingClientRect();
+          expect(rect.left, 'Code starts at the allocated workspace edge').to.be.closeTo(
+            allocated.left,
+            1
+          );
+          expect(rect.top, 'Code starts below the workspace tabs').to.be.closeTo(allocated.top, 1);
+          expect(rect.width, 'Code fills the allocated workspace width').to.be.closeTo(
+            allocated.width,
+            1
+          );
+          expect(rect.height, 'Code fills the allocated workspace height').to.be.closeTo(
+            allocated.height,
+            1
+          );
+          expect(rect.left).to.be.at.least(0);
+          expect(rect.right).to.be.at.most(390);
+          expect(rect.top).to.be.at.least(0);
+          expect(rect.bottom).to.be.at.most(844);
+        });
+      assertViewportHasNoGlobalHorizontalOverflow(390);
+    }
+    cy.get(
+      '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"] textarea.inputarea'
+    ).should('have.prop', 'readOnly', true);
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-code-workspace-surface"]');
+    cy.get('[data-slot="canvas-workspace-tab"]')
+      .click()
+      .should('have.attr', 'aria-selected', 'true')
+      .and('be.focused');
+    cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
+    cy.then(() => {
+      expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
     });
-    assertViewportHasNoGlobalHorizontalOverflow(390);
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
-    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
-    cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
 
     revealOperationalDrawer();
     cy.get('[data-slot="bottom-operational-drawer-tabs"]')
@@ -1168,25 +1197,38 @@ describe('Canvas workbench screen composition', () => {
     ] as const) {
       cy.get('[data-slot="shell-file-menu-trigger"]').click();
       cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
-      cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
-      cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`)
+      cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+      cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
+      cy.get(
+        `[data-slot="canvas-code-workspace-surface"] [data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`
+      )
         .should('be.visible')
         .click();
       waitForE2eApiCall(`/workspace/files/${encodeURIComponent(path)}`, 'GET');
-      cy.get('[data-slot="canvas-contextual-workbench"] [data-testid="monaco-code-viewer"]').should(
-        'be.visible'
-      );
+      cy.get(
+        '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"]'
+      ).should('be.visible');
       readProjectCode()
         .should('equal', sql.replaceAll('\n', CLIPBOARD_EOL))
         .and(
           'not.equal',
           (path === MODEL_PATH ? ORPHAN_SQL : MODEL_SQL).replaceAll('\n', CLIPBOARD_EOL)
         );
-      assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
-      cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
-      cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
-      cy.get('[data-slot="shell-file-menu-trigger"]').should('be.focused');
+      assertNoSeriousAccessibilityViolations('[data-slot="canvas-code-workspace-surface"]');
+      cy.get('[data-slot="canvas-workspace-tab"]')
+        .click()
+        .should('have.attr', 'aria-selected', 'true')
+        .and('be.focused');
+      cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'false');
+      cy.get('[data-slot="canvas-workspace-surface"]').should('be.visible');
+      cy.get('[data-slot="canvas-code-workspace-surface"]')
+        .should('not.be.visible')
+        .and('have.attr', 'aria-hidden', 'true')
+        .and('have.attr', 'inert');
     }
+    cy.then(() => {
+      expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
+    });
 
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
     emulateAccessibilityMedia();

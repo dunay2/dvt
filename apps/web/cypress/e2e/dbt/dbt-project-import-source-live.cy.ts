@@ -59,7 +59,7 @@ function saveWorkspaceFile(
   session: E2eWorkspaceSession,
   path: string,
   content: string
-): Cypress.Chainable<void> {
+): Cypress.Chainable<unknown> {
   const bearer = readRequiredEnv('apiBearerToken');
   const query = new URLSearchParams(session);
 
@@ -71,21 +71,21 @@ function saveWorkspaceFile(
       headers: { Authorization: `Bearer ${bearer}`, Accept: 'application/json' },
       body: { content, expectedRevision: { kind: 'absent' } },
     })
-    .then((response) => {
+    .then<unknown>((response) => {
       expect(response.status).to.equal(200);
       expect(response.body.kind).to.equal('saved');
     });
 }
 
-function seedDbtProjectFiles(session: E2eWorkspaceSession): Cypress.Chainable<void> {
-  const seeded = Object.entries(PROJECT_FILES).reduce<Cypress.Chainable<void>>(
+function seedDbtProjectFiles(session: E2eWorkspaceSession): Cypress.Chainable<unknown> {
+  const seeded = Object.entries(PROJECT_FILES).reduce<Cypress.Chainable<unknown>>(
     (chain, [path, content]) => chain.then(() => saveWorkspaceFile(session, path, content)),
-    cy.wrap(undefined)
+    cy.wrap<unknown>(undefined)
   );
-  return seeded.then(() => {
+  return seeded.then<unknown>(() => {
     readLiveWorkspaceFile(`${PROJECT_ROOT}/dbt_project.yml`, session).then((response) => {
       expect(response.status).to.equal(200);
-      expect(response.body.content).to.contain('name: analytics');
+      expect(response.body).to.have.property('content').and.contain('name: analytics');
     });
   });
 }

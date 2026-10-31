@@ -5,6 +5,31 @@ import { resolveCodeWorkspaceFileEditPosture } from './codeWorkspaceFileEditPost
 describe('Code workspace file edit posture', () => {
   const graphOwnedPaths = new Set(['dbt_project.yml', 'models/orders.sql', 'models/schema.yml']);
 
+  it('restricts presentation access without replacing valid file authority', () => {
+    expect(
+      resolveCodeWorkspaceFileEditPosture({
+        access: 'read-only',
+        authority: 'dbt-project-files',
+        selectedPath: 'models/orders.sql',
+        graphOwnedPaths,
+      })
+    ).toEqual({ kind: 'workspace_read_only' });
+  });
+
+  it.each(['missing', 'mixed'] as const)(
+    'preserves %s authority denial in read-only access',
+    (authority) => {
+      expect(
+        resolveCodeWorkspaceFileEditPosture({
+          access: 'read-only',
+          authority,
+          selectedPath: 'models/orders.sql',
+          graphOwnedPaths,
+        })
+      ).toEqual({ kind: 'authority_unavailable_read_only' });
+    }
+  );
+
   it('makes graph-owned generated files read-only', () => {
     expect(
       resolveCodeWorkspaceFileEditPosture({

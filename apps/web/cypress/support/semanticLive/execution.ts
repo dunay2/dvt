@@ -17,8 +17,8 @@ import {
 
 import { expectedColumns, expectedRows, modelId, resultRelation } from './fixture';
 
-function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<void> {
-  return readLiveRunSnapshot(runId).then((response) => {
+function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<unknown> {
+  return readLiveRunSnapshot(runId).then<unknown>((response) => {
     expect(response.status).to.equal(200);
     const status = String((response.body as { status: string }).status).toLowerCase();
     if (status === 'completed') return;

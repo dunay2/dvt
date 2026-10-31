@@ -44,10 +44,13 @@ function waitForDraftNodeCount(
         record: { revision: string; draft: { nodeIds: string[] } };
       };
       if (body.kind === 'ok' && body.record.draft.nodeIds.length === expectedCount) {
-        return {
-          revision: body.record.revision,
-          nodeIds: [...body.record.draft.nodeIds].sort(),
-        };
+        return cy.wrap<DraftSnapshot>(
+          {
+            revision: body.record.revision,
+            nodeIds: [...body.record.draft.nodeIds].sort(),
+          },
+          { log: false }
+        );
       }
     }
 

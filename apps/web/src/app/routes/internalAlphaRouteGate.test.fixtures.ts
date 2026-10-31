@@ -166,7 +166,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       failClosedProof:
         'empty, unavailable, unauthorized, not-found, traversal, oversize, unsupported binary-like file types, and revision conflicts are explicit',
       happyPathProof:
-        'scoped authorized tree, first-file preview, and revision-guarded working-tree synchronization are covered through the canonical Canvas command for contextual Project Code',
+        'scoped authorized tree, visible read-only file inspection and no new file writes are covered through canonical Canvas Project Code; existing conditional writes remain available for artifact publication and prior-session recovery',
       rails: ['ListWorkspaceFiles', 'GetWorkspaceFileContent', 'SaveWorkspaceFileContent'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'unauthorized', 'unavailable', 'not-found', 'stale'],

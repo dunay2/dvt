@@ -1,3 +1,5 @@
+import { resolveCopyLanguage } from '../../../src/app/copyLanguage';
+import { resolveRunStatesCopy } from '../../../src/app/views/runs/runStatesCopy';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
@@ -81,9 +83,12 @@ describe('Runs runtime contract', () => {
     waitForE2eApiCall('/db/ready', 'GET');
     cy.wait('@listRuns');
 
-    cy.get('[data-slot="run-operational-table"]').within(() => {
-      cy.contains('run_e2e_1').should('be.visible');
-      cy.contains('button', 'View Details').click();
+    cy.window().then((window) => {
+      const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
+      cy.get('[data-slot="run-operational-table"]').within(() => {
+        cy.contains('run_e2e_1').should('be.visible');
+        cy.contains('button', copy.viewDetails).click();
+      });
     });
     cy.wait('@getRun');
     cy.wait('@getRunEvents');
@@ -137,12 +142,18 @@ describe('Runs runtime contract', () => {
     cy.wait('@getCompletedRun');
     cy.wait('@getCompletedRunEvents');
 
-    cy.contains('Run run_completed').should('exist');
-    cy.contains('Materialization evidence').should('exist');
-    cy.contains('Executor').should('exist');
-    cy.contains('postgres').should('exist');
-    cy.contains('analytics.orders_daily').should('exist');
-    cy.contains('42').should('exist');
+    cy.window().then((window) => {
+      const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
+      cy.contains(copy.runTitle('run_completed')).should('be.visible');
+      cy.get('[data-slot="run-result-tab"]').should('be.enabled').click();
+      cy.get('[data-slot="run-materialization-card"]').within(() => {
+        cy.contains(copy.materializationTitle).should('be.visible');
+        cy.contains(copy.executorLabel).should('be.visible');
+        cy.contains('postgres').should('be.visible');
+        cy.contains('analytics.orders_daily').should('be.visible');
+        cy.contains('42').should('be.visible');
+      });
+    });
   });
 
   it('renders failed result diagnostics from the snapshot read model', () => {
@@ -191,11 +202,15 @@ describe('Runs runtime contract', () => {
     cy.wait('@getFailedRun');
     cy.wait('@getFailedRunEvents');
 
-    cy.contains('Run run_failed').should('exist');
-    cy.contains('Failure diagnostics').should('exist');
-    cy.contains('Executor').should('exist');
-    cy.contains('postgres').should('exist');
-    cy.contains('step-transform').should('exist');
-    cy.contains('STEP_FAILURE').should('exist');
+    cy.window().then((window) => {
+      const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
+      cy.contains(copy.runTitle('run_failed')).should('be.visible');
+      cy.contains(copy.executorLabel).should('be.visible');
+      cy.contains('postgres').should('be.visible');
+      cy.get('[data-slot="run-detail-diagnostics-tab"]').click();
+      cy.contains(copy.failureDiagnosticsTitle).should('be.visible');
+      cy.contains('step-transform').should('be.visible');
+      cy.contains('STEP_FAILURE').should('be.visible');
+    });
   });
 });

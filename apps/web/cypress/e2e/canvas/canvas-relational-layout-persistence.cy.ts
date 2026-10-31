@@ -34,10 +34,12 @@ describe('Completed relational layout persistence', () => {
     let rootId = '';
     moveWorkbenchCard(join, 40, 48);
     cy.get(join).then(($card) => {
+      const container = $card[0]?.parentElement;
+      if (container == null) throw new Error('Expected the moved card position container.');
       relationId = $card.attr('data-relation-id')!;
       moved = {
-        x: parseFloat($card[0].parentElement!.style.left),
-        y: parseFloat($card[0].parentElement!.style.top),
+        x: parseFloat(container.style.left),
+        y: parseFloat(container.style.top),
       };
     });
     cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
@@ -98,8 +100,10 @@ describe('Completed relational layout persistence', () => {
       visitWorkbenchCanvas();
       openWorkbenchModel();
       cy.get(join).should(($card) => {
-        expect(parseFloat($card[0].parentElement!.style.left)).to.be.closeTo(moved.x, 1);
-        expect(parseFloat($card[0].parentElement!.style.top)).to.be.closeTo(moved.y, 1);
+        const container = $card[0]?.parentElement;
+        if (container == null) throw new Error('Expected the restored card position container.');
+        expect(parseFloat(container.style.left)).to.be.closeTo(moved.x, 1);
+        expect(parseFloat(container.style.top)).to.be.closeTo(moved.y, 1);
       });
       cy.get('[data-slot="canvas-relational-tree-node"][data-operator="filter"]').should(
         'have.length',
@@ -107,10 +111,13 @@ describe('Completed relational layout persistence', () => {
       );
       cy.get('[data-slot="canvas-relational-output-edge"]').should('exist');
       cy.get('[data-slot="canvas-relational-tree-output"]').should(($output) => {
-        const root = $output[0].ownerDocument.querySelector(
+        const output = $output[0];
+        if (output === undefined) throw new Error('Expected the relational Output card.');
+        const root = output.ownerDocument.querySelector(
           `[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`
-        )!;
-        expect($output[0].getBoundingClientRect().left).to.be.greaterThan(
+        );
+        if (root === null) throw new Error('Expected the current canonical root card.');
+        expect(output.getBoundingClientRect().left).to.be.greaterThan(
           root.getBoundingClientRect().right
         );
       });

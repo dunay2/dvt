@@ -414,7 +414,7 @@ describe('dbt source connection binding', () => {
       .and('contain.text', '5.3 KB');
     cy.contains('[role="dialog"]', 'Selected: 3').should('be.visible');
     assertSeriousAccessibility();
-    cy.clock(undefined, ['setTimeout', 'clearTimeout']).as('sourceImportClock');
+    cy.clock(Date.now(), ['setTimeout', 'clearTimeout']).as('sourceImportClock');
     cy.contains('button', 'Add sources').should('be.enabled').click();
 
     waitForE2eApiCall('/workspace/sources/import', 'POST');
@@ -432,16 +432,19 @@ describe('dbt source connection binding', () => {
       .and('be.visible')
       .should(($toast) => {
         expect($toast.css('pointer-events')).not.to.equal('none');
-        assertSourceImportHitTarget($toast[0]);
+        const toast = $toast[0];
+        if (toast === undefined) throw new Error('The source import toast is unavailable.');
+        assertSourceImportHitTarget(toast);
       });
     cy.tick(4000);
-    cy.get<HTMLLIElement>('@sourceImportToast')
+    cy.get<JQuery<HTMLLIElement>>('@sourceImportToast')
       .should('have.attr', 'data-removed', 'true')
       .and('have.attr', 'data-mounted', 'true')
       .and('have.attr', 'data-visible', 'true')
       .should(($toast) => {
         expect($toast.css('pointer-events')).to.equal('none');
         const toast = $toast[0];
+        if (toast === undefined) throw new Error('The source import toast is unavailable.');
         for (const pseudo of ['::before', '::after']) {
           expect(
             toast.ownerDocument.defaultView!.getComputedStyle(toast, pseudo).pointerEvents
@@ -449,7 +452,11 @@ describe('dbt source connection binding', () => {
         }
       });
     cy.contains<HTMLButtonElement>('[role="dialog"] button', 'Done')
-      .should(($button) => assertSourceImportHitTarget($button[0]))
+      .should(($button) => {
+        const button = $button[0];
+        if (button === undefined) throw new Error('The source import Done button is unavailable.');
+        assertSourceImportHitTarget(button);
+      })
       .click();
     cy.get<HTMLLIElement>('@sourceImportToast').should('exist');
     cy.tick(200);

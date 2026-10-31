@@ -9,7 +9,6 @@ import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
 
 import {
   adoptLiveDbtProjectFileAuthority,
-  replaceLiveWorkspaceFile,
   seedLiveWorkspaceFiles,
 } from '../../support/dbtProjectLive';
 import {
@@ -71,7 +70,7 @@ describe('Workbench viewport', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
-    const git = `${main} [data-slot="canvas-explorer-git-toggle"]`;
+    const git = `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`;
     const code = '[data-slot="canvas-code-workspace-surface"]';
     const tree = `${code} [data-slot="route-workbench-left-panel"]`;
     const properties = `${code} [data-slot="route-workbench-right-panel"] [role="region"]`;
@@ -127,7 +126,9 @@ describe('Workbench viewport', () => {
       cy.screenshot('canvas-git-project-files');
       for (const panel of ['elements', 'sources']) {
         cy.get('[data-slot="canvas-workspace-tab"]').click();
-        cy.get(`${main} [data-slot="canvas-explorer-${panel}-toggle"]`).click();
+        cy.get(
+          `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-${panel}-toggle"]`
+        ).click();
         cy.get(code).should('not.be.visible');
         assertStationary();
       }
@@ -196,16 +197,20 @@ describe('Workbench viewport', () => {
     const main = '[data-slot="canvas-workspace-surface"]';
     cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
     cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
-    cy.get(`${main} [data-slot="canvas-explorer-sources-toggle"]`).should('be.visible').click();
+    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-sources-toggle"]`)
+      .should('be.visible')
+      .click();
     cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
-    cy.get(`${main} [data-slot="canvas-explorer-sources-toggle"]`).should('not.be.visible');
+    cy.get(
+      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-sources-toggle"]`
+    ).should('not.be.visible');
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="canvas-explorer-view-command"]')
       .should('have.attr', 'aria-checked', 'false')
       .click();
     cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
     cy.get(
-      '[data-slot="canvas-workspace-surface"] [data-slot="canvas-explorer-elements-toggle"]'
+      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]'
     ).click();
     cy.get('[data-slot="canvas-workspace-surface"] [data-element-id]:visible')
       .first()
@@ -242,14 +247,18 @@ describe('Workbench viewport', () => {
       .invoke('text')
       .then((zoom) => {
         cy.get('[data-slot="canvas-relational-tree-viewport"]').then(($viewport) => {
-          const width = $viewport[0].clientWidth;
+          const viewport = $viewport[0];
+          if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
+          const width = viewport.clientWidth;
           cy.get(
             '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
           )
             .click()
             .should('have.attr', 'aria-expanded', 'false');
           cy.get('[data-slot="canvas-relational-tree-viewport"]').should(($next) => {
-            expect($next[0].clientWidth).to.be.greaterThan(width);
+            const next = $next[0];
+            if (next === undefined) throw new Error('Expected the resized relational viewport.');
+            expect(next.clientWidth).to.be.greaterThan(width);
           });
         });
         cy.get('[data-slot="canvas-relational-tree-zoom"]').should('have.text', zoom);
@@ -368,9 +377,9 @@ describe('DBT project Git browsing with real file authority', () => {
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${canvasId}&projectRoot=${projectRoot}`
     );
-    cy.get(`${main} [data-slot="canvas-explorer-git-toggle"]`, { timeout: 60_000 }).should(
-      'be.visible'
-    );
+    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`, {
+      timeout: 60_000,
+    }).should('be.visible');
     cy.get(`${main} .react-flow__node`).its('length').should('be.at.least', 2);
     cy.get(`${main} .react-flow__controls-fitview`).click();
     cy.get(`${main} .react-flow__viewport`)
@@ -398,7 +407,9 @@ describe('DBT project Git browsing with real file authority', () => {
         viewport = $viewport[0]!;
         transform = viewport.getAttribute('style');
       });
-    cy.get(`${main} [data-slot="canvas-explorer-git-toggle"]`).click();
+    cy.get(
+      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`
+    ).click();
     cy.wait('@actualFileTree')
       .its('response')
       .should((response) => {
@@ -496,7 +507,9 @@ describe('DBT project Git browsing with real file authority', () => {
         expect($viewport[0]).to.equal(viewport);
         expect($viewport.attr('style')).to.equal(transform);
       });
-    cy.get(`${main} [data-slot="canvas-explorer-git-toggle"]`).click();
+    cy.get(
+      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]`
+    ).click();
     cy.get(code).should('be.visible');
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(
       'have.attr',
@@ -505,7 +518,9 @@ describe('DBT project Git browsing with real file authority', () => {
     );
     cy.get(properties).should('contain.text', secondPath);
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(`${main} [data-slot="canvas-explorer-elements-toggle"]`).click();
+    cy.get(
+      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`
+    ).click();
     cy.get(code).should('not.be.visible');
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
@@ -543,24 +558,31 @@ describe('DBT project Git browsing with real file authority', () => {
     }
   });
 
-  it('preserves a conflicted project buffer before admitting another node inspection', () => {
+  it('hands read-only project Code to node inspection without writes or viewport movement', () => {
     const handoffRoot = 'git-handoff-dbt';
     const handoffCanvas = 'git-handoff-dbt-files';
-    const editedPath = `${handoffRoot}/models/handoff_a.sql`;
+    const sourcePath = `${handoffRoot}/models/handoff_a.sql`;
     const targetPath = `${handoffRoot}/models/handoff_b.sql`;
-    const externalSql = 'select 101 as handoff_external\n';
     const main = '[data-slot="canvas-workspace-surface"]';
     const code = '[data-slot="canvas-code-workspace-surface"]';
     const target = `${main} .react-flow__node[data-id="model.git_handoff_dbt.handoff_b"]`;
-    let loadedRevision: string;
-    let editor: HTMLElement;
+    const hashes: Record<string, string> = {};
+    let viewport: HTMLElement | undefined;
+    let transform: string | null = null;
     resetE2eApiStubs();
     seedLiveWorkspaceFiles({
       [`${handoffRoot}/dbt_project.yml`]:
         "name: git_handoff_dbt\nversion: '1.0'\nconfig-version: 2\nprofile: dvt_live_proof\nmodel-paths: ['models']\n",
-      [editedPath]: 'select 11 as handoff_loaded\n',
+      [sourcePath]: 'select 11 as handoff_loaded\n',
       [targetPath]: 'select 22 as handoff_target\n',
     }).then(() => adoptLiveDbtProjectFileAuthority(handoffRoot, handoffCanvas));
+    for (const path of [sourcePath, targetPath]) {
+      readLiveWorkspaceFile(path).then(({ status, body }) => {
+        expect(status).to.equal(200);
+        hashes[path] = (body as { contentSha256: string }).contentSha256;
+        expect(hashes[path]).to.match(/^[a-f0-9]{64}$/);
+      });
+    }
     cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('handoffFileWrite');
     cy.viewport(1500, 900);
     visitWithLiveWorkspaceSession(
@@ -568,77 +590,45 @@ describe('DBT project Git browsing with real file authority', () => {
     );
     cy.get(target, { timeout: 60_000 }).should('be.visible');
     cy.get(`${main} .react-flow__controls-fitview`).click();
-    cy.get(`${main} [data-slot="canvas-explorer-git-toggle"]`).click();
-    cy.get(`${code} [data-workspace-path="${editedPath}"]`).click();
+    cy.get(`${main} .react-flow__viewport`)
+      .should('be.visible')
+      .then(($viewport) => {
+        viewport = $viewport[0]!;
+        transform = viewport.getAttribute('style');
+      });
+    cy.get(
+      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-git-toggle"]'
+    ).click();
+    cy.get(`${code} [data-workspace-path="${sourcePath}"]`).click();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`)
       .should('be.visible')
-      .and('have.attr', 'data-file-path', editedPath)
-      .then(($editor) => {
-        editor = $editor[0]!;
-      });
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'handoff_loaded');
-    readLiveWorkspaceFile(editedPath).then(({ status, body }) => {
-      expect(status).to.equal(200);
-      const file = body as { contentSha256: string };
-      expect(file.contentSha256).to.match(/^[a-f0-9]{64}$/);
-      loadedRevision = file.contentSha256;
-    });
-    replaceLiveWorkspaceFile(editedPath, externalSql);
-    cy.get(`${code} [data-testid="monaco-code-editor"] .view-lines`).click();
-    cy.focused()
-      .should(($input) => {
-        expect($input.is('textarea, [contenteditable="true"]')).to.equal(true);
-      })
-      .type('{ctrl+end}{enter}-- handoff_pending');
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'handoff_pending');
-    cy.wait('@handoffFileWrite').then(({ request, response }) => {
-      expect(request.body.expectedRevision).to.deep.equal({
-        kind: 'content_sha256',
-        value: loadedRevision,
-      });
-      expect(request.body.content).to.contain('handoff_pending');
-      expect(response?.statusCode).to.equal(409);
-    });
+      .and('have.attr', 'data-file-path', sourcePath);
+    cy.get(`${code} [data-testid="monaco-code-editor"]`).should('not.exist');
+    cy.get(`${code} [data-testid="monaco-code-viewer"] .view-lines`).should(
+      'contain.text',
+      'handoff_loaded'
+    );
+    cy.get(`${code} [data-testid="monaco-code-viewer"] .view-line`).first().click();
+    cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`)
+      .should('have.prop', 'readOnly', true)
+      .and('be.focused');
+    cy.get(`${code} [data-testid="monaco-code-viewer"] textarea.inputarea`).type(
+      'handoff_blocked',
+      { force: true, delay: 0 }
+    );
+    cy.get(`${code} .view-lines`).should('not.contain.text', 'handoff_blocked');
     cy.get(`${code} [data-slot="code-working-tree-status"]`).should(
       'have.attr',
       'data-phase',
-      'conflict'
+      'read_only'
     );
     cy.get('[data-slot="canvas-workspace-tab"]').click();
-    cy.get(target).find('[data-slot="graph-node-card-title"]').dblclick();
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(($editor) => {
-      expect($editor[0], 'conflicted project editor is retained after node inspection').to.equal(
-        editor
-      );
-    });
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'handoff_pending');
-    cy.get(`${main} [data-slot="canvas-explorer-git-toggle"]`).click();
-    cy.get(code).should('be.visible');
-    cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should(($editor) =>
-      expect($editor[0]).to.equal(editor)
-    );
-    cy.get(`${code} .monaco-editor .view-lines`).should('contain.text', 'handoff_pending');
-    cy.get(`${code} [data-slot="code-working-tree-status"]`).should(
-      'have.attr',
-      'data-phase',
-      'conflict'
-    );
-    readLiveWorkspaceFile(editedPath).then(({ status, body }) => {
-      expect(status).to.equal(200);
-      expect((body as { content: string }).content).to.equal(externalSql);
-    });
-    cy.get(`${code} [data-slot="code-working-tree-status"][data-phase="conflict"] button`)
-      .should('have.length', 1)
-      .click();
-    cy.get(`${code} [data-slot="code-working-tree-status"]`).should(
-      'have.attr',
-      'data-phase',
-      'synchronized'
-    );
-    cy.get(`${code} .monaco-editor .view-lines`)
-      .should('contain.text', 'handoff_external')
-      .and('not.contain.text', 'handoff_pending');
-    cy.get('[data-slot="canvas-workspace-tab"]').click();
+    cy.get(`${main} .react-flow__viewport`)
+      .should('be.visible')
+      .should(($viewport) => {
+        expect($viewport[0]).to.equal(viewport);
+        expect($viewport.attr('style')).to.equal(transform);
+      });
     cy.get(target).find('[data-slot="graph-node-card-title"]').dblclick();
     cy.get(`${code} [data-slot="workspace-file-code-editor"]`).should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-panel"] [data-slot="workspace-file-code-editor"]')
@@ -649,10 +639,22 @@ describe('DBT project Git browsing with real file authority', () => {
       'aria-selected',
       'true'
     );
-    cy.get('[data-slot="canvas-node-workbench-panel"] .monaco-editor .view-lines').should(
-      'contain.text',
-      'handoff_target'
+    cy.get(
+      '[data-slot="canvas-node-workbench-panel"] [data-testid="monaco-code-viewer"] .view-lines'
+    ).should('contain.text', 'handoff_target');
+    cy.get('[data-slot="canvas-node-workbench-panel"] [data-testid="monaco-code-editor"]').should(
+      'not.exist'
     );
-    cy.get('@handoffFileWrite.all').should('have.length', 1);
+    cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
+      expect($viewport[0]).to.equal(viewport);
+      expect($viewport.attr('style')).to.equal(transform);
+    });
+    cy.get('@handoffFileWrite.all').should('have.length', 0);
+    for (const path of [sourcePath, targetPath]) {
+      readLiveWorkspaceFile(path).then(({ status, body }) => {
+        expect(status).to.equal(200);
+        expect((body as { contentSha256: string }).contentSha256).to.equal(hashes[path]);
+      });
+    }
   });
 });

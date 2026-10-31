@@ -1041,7 +1041,9 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(
       container.querySelector('[data-slot="canvas-node-workbench-contained-body"]')
     ).toBeNull();
-    expect(container.querySelector('[data-slot="scroll-area"]')).not.toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-scroll-body"]')
+    ).not.toBeNull();
   });
 
   it('renders one read-only DBT SQL projection in Code', async () => {

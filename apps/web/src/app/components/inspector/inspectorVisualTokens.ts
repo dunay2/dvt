@@ -25,6 +25,7 @@ export const inspectorVisualClasses = {
   contextPanelRightShell:
     'flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50',
   contextPanelHeader: 'border-b border-slate-700 px-4 py-3',
+  contextPanelScrollBody: 'min-h-0 min-w-0 flex-1 overflow-y-auto',
   contextPanelHeaderRow: 'flex items-start justify-between border-b border-slate-700 px-4 py-3',
   contextPanelTitle: 'text-sm font-semibold text-slate-50',
   contextPanelSubtitle: 'mt-0.5 text-xs text-slate-300',

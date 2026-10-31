@@ -10,12 +10,13 @@ import {
 } from '../../support/dbtProjectLive';
 import {
   hasLiveProtectedRuntimeEnv,
+  readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
-const PROJECT_ROOT = 'analytics';
+const PROJECT_ROOT = 'analytics-file-projection';
 const INVALID_PROJECT_ROOT = 'analytics-invalid';
-const CANVAS_ID = 'analytics-files';
+const CANVAS_ID = 'analytics-file-projection-files';
 const INVALID_CANVAS_ID = 'analytics-invalid-files';
 
 const INVALID_PROJECT_CONFIG = `
@@ -131,13 +132,15 @@ function dispatchDragEvent(
 
 function dragNode(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"]`).then(($node) => {
-    const rect = $node[0].getBoundingClientRect();
+    const node = $node[0];
+    if (node === undefined) throw new Error(`Expected the projected node ${nodeId}.`);
+    const rect = node.getBoundingClientRect();
     const start = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
     const middle = { x: start.x + 30, y: start.y + 24 };
     const end = { x: start.x + 110, y: start.y + 78 };
 
     cy.window().then((window) => {
-      dispatchDragEvent($node[0], window, 'mousedown', start, 1);
+      dispatchDragEvent(node, window, 'mousedown', start, 1);
       dispatchDragEvent(window, window, 'mousemove', middle, 1);
       dispatchDragEvent(window, window, 'mousemove', end, 1);
       dispatchDragEvent(window, window, 'mouseup', end, 0);
@@ -182,8 +185,23 @@ describe('dbt project file projection live vertical', () => {
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
+    const observedFileWrites: string[] = [];
     cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
       observedRequests.push(request.url);
+    });
+    cy.intercept('POST', '**/workspace/files/**', (request) => {
+      observedFileWrites.push(request.url);
+    });
+    readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
+      expect(response.status).to.equal(200);
+      expect(response.body).to.have.property(
+        'content',
+        PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
+      );
+      cy.wrap(response.body)
+        .its('contentSha256')
+        .should('match', /^[a-f0-9]{64}$/)
+        .as('openedModelRevision');
     });
     cy.viewport(1500, 900);
     requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
@@ -221,6 +239,11 @@ describe('dbt project file projection live vertical', () => {
         cy.contains('Rows').should('be.visible');
         cy.contains('Size').should('be.visible');
       });
+    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__node').should(
+      'have.length',
+      7
+    );
+    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__controls-fitview').click();
     cy.get('.react-flow__node[data-id="seed.analytics.country_codes"]').should('be.visible');
     cy.get('.react-flow__node[data-id="snapshot.analytics.orders_snapshot"]').should('be.visible');
     cy.get('.react-flow__node[data-id="exposure.analytics.orders_dashboard"]').should('be.visible');
@@ -250,20 +273,26 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
-      const rect = $node[0].getBoundingClientRect();
+      const node = $node[0];
+      if (node === undefined) throw new Error('Expected the projected model before movement.');
+      const rect = node.getBoundingClientRect();
       cy.wrap({ left: rect.left, top: rect.top }).as('originalModelPosition');
     });
     dragNode('model.analytics.orders');
-    cy.get<Record<string, number>>('@originalModelPosition').then((original) => {
+    cy.get<{ left: number; top: number }>('@originalModelPosition').then((original) => {
       cy.get('.react-flow__node[data-id="model.analytics.orders"]').should(($node) => {
-        const rect = $node[0].getBoundingClientRect();
+        const node = $node[0];
+        if (node === undefined) throw new Error('Expected the moved projected model.');
+        const rect = node.getBoundingClientRect();
         expect(
           Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top)
         ).to.be.greaterThan(20);
       });
     });
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
-      const transform = new DOMMatrix($node[0].style.transform);
+      const node = $node[0];
+      if (node === undefined) throw new Error('Expected the settled projected model.');
+      const transform = new DOMMatrix(node.style.transform);
       const position = { x: transform.m41, y: transform.m42 };
       cy.wrap(position).as('settledModelPosition');
       cy.window().should((window) => {
@@ -291,7 +320,9 @@ describe('dbt project file projection live vertical', () => {
     cy.get<{ x: number; y: number }>('@settledModelPosition').then((settled) => {
       cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
         ($node) => {
-          const transform = new DOMMatrix($node[0].style.transform);
+          const node = $node[0];
+          if (node === undefined) throw new Error('Expected the restored projected model.');
+          const transform = new DOMMatrix(node.style.transform);
           expect(transform.m41, 'restored Canvas x').to.be.closeTo(settled.x, 0.001);
           expect(transform.m42, 'restored Canvas y').to.be.closeTo(settled.y, 0.001);
         }
@@ -307,11 +338,12 @@ describe('dbt project file projection live vertical', () => {
       .should('be.visible')
       .and('have.attr', 'aria-selected', 'true');
 
-    // The authoritative file is edited directly inside Properties Code.
+    // Properties Code inspects the authoritative file without changing it.
     cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
       .should('be.visible')
       .and('have.attr', 'data-file-path', `${PROJECT_ROOT}/models/orders.sql`);
-    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+    cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+    cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
       .should((editorText) => {
@@ -319,6 +351,25 @@ describe('dbt project file projection live vertical', () => {
           /source\(\s*'raw'\s*,\s*'orders'\s*\)/
         );
       });
+    cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
+      .should('have.prop', 'readOnly', true)
+      .and('be.focused');
+    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type(
+      'blocked_projection_edit',
+      { force: true, delay: 0 }
+    );
+    cy.get('@openedModelRevision').then((revision) => {
+      readLiveWorkspaceFile(`${PROJECT_ROOT}/models/orders.sql`).then((response) => {
+        expect(response.status).to.equal(200);
+        expect(response.body).to.have.property(
+          'content',
+          PROJECT_FILES[`${PROJECT_ROOT}/models/orders.sql`]
+        );
+        expect(response.body).to.have.property('contentSha256', revision);
+        expect(observedFileWrites).to.deep.equal([]);
+      });
+    });
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
     // Other Properties sections remain in the same node context.

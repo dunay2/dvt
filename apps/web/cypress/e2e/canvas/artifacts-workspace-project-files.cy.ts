@@ -1,4 +1,4 @@
-/** Owned concern: prove contextual Canvas Code exposes workflow project files without an Artifacts route. */
+/** Owned concern: prove central Canvas Code exposes read-only workflow files without an Artifacts route. */
 import {
   PublishGraphDbtWorkspaceArtifactsRequestSchema,
   CompileGraphDbtModelsRequestSchema,
@@ -78,6 +78,9 @@ function stubProjectCodeBootstrap(scopes: string[]): void {
   stubE2eJsonApi('GET', '/workspace/context', {
     defaultWorkspace: E2E_PROJECT_WORKSPACE,
     availableWorkspaces: [E2E_PROJECT_WORKSPACE],
+  });
+  stubE2eApi('POST', /^\/workspace\/files\//, () => {
+    throw new Error('Read-only project Code must not save workspace files.');
   });
 }
 
@@ -247,7 +250,7 @@ function stubProjectPublicationApis(compilation: 'invalid' | 'compiled'): void {
   }
 }
 
-describe('Contextual project Code workflow files', () => {
+describe('Central project Code workflow files', () => {
   it('shows workflow YAML and SQL files without opening a peer Artifacts workbench', () => {
     stubContextualProjectCodeApis();
 
@@ -259,14 +262,28 @@ describe('Contextual project Code workflow files', () => {
     waitForE2eApiCall('/workspace/files', 'GET');
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET');
 
-    cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
-    cy.get('[data-workspace-path="pipelines/sales_pipeline.yaml"]').should('be.visible');
-    cy.get('[data-workspace-path="models/analytics/model_orders.sql"]')
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
+    cy.get(
+      '[data-slot="canvas-code-workspace-surface"] [data-workspace-path="pipelines/sales_pipeline.yaml"]'
+    ).should('be.visible');
+    cy.get(
+      '[data-slot="canvas-code-workspace-surface"] [data-workspace-path="models/analytics/model_orders.sql"]'
+    )
       .should('be.visible')
       .click();
     waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
 
-    cy.contains('select *').should('exist');
+    cy.get('[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"]')
+      .should('be.visible')
+      .contains('select *')
+      .should('exist');
+    cy.get(
+      '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"] textarea.inputarea'
+    ).should('have.prop', 'readOnly', true);
+    cy.then(() => {
+      expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
+    });
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
   });
@@ -287,7 +304,11 @@ describe('Contextual project Code workflow files', () => {
       cy.get('[data-slot="shell-file-menu-trigger"]').click();
       cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
       waitForE2eApiCall('/workspace/files', 'GET');
-      cy.get('[data-workspace-path="models/orders_model.sql"]').should('not.exist');
+      cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+      cy.get('[data-slot="canvas-code-workspace-surface"]').should('be.visible');
+      cy.get(
+        '[data-slot="canvas-code-workspace-surface"] [data-workspace-path="models/orders_model.sql"]'
+      ).should('not.exist');
       cy.then(() => getE2eApiCalls('/workspace/files', 'GET').length).then((initialReadCount) => {
         clickPreviewExecutionPlanFromOperationalDrawer();
         waitForE2eApiCall('/workspace/dbt/graph-artifacts/publications', 'POST');
@@ -301,7 +322,11 @@ describe('Contextual project Code workflow files', () => {
       cy.contains(copy.planGraphDbtCompilationFailedMessage).should('be.visible');
       cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
       cy.contains(copy.planStatusPreviewRequiredMessage).should('be.visible');
-      cy.get('[data-workspace-path="models/orders_model.sql"]').should('be.visible').click();
+      cy.get(
+        '[data-slot="canvas-code-workspace-surface"] [data-workspace-path="models/orders_model.sql"]'
+      )
+        .should('be.visible')
+        .click();
       waitForE2eApiCall('/workspace/files/models%2Forders_model.sql', 'GET');
       for (const [width, height] of [
         [1440, 900],
@@ -309,7 +334,7 @@ describe('Contextual project Code workflow files', () => {
       ] as const) {
         cy.viewport(width, height);
         cy.get(
-          '[data-slot="canvas-contextual-workbench"] [data-slot="route-workbench-body"]'
+          '[data-slot="canvas-code-workspace-surface"] > [data-slot="route-workbench-frame"] > [data-slot="route-workbench-body"]'
         ).should(($body) => {
           const body = $body[0]!;
           const slots = body.querySelector('[data-slot="route-workbench-slot-stack"]')!;
@@ -319,7 +344,9 @@ describe('Contextual project Code workflow files', () => {
           ).to.be.closeTo(body.clientWidth, 1);
         });
       }
-      cy.get('[data-slot="workspace-file-code-editor"][data-file-path="models/orders_model.sql"]')
+      cy.get(
+        '[data-slot="canvas-code-workspace-surface"] [data-slot="workspace-file-code-editor"][data-file-path="models/orders_model.sql"]'
+      )
         .find('[data-testid="monaco-code-viewer"] .view-lines')
         .invoke('text')
         .should((renderedCode) => {
@@ -327,6 +354,9 @@ describe('Contextual project Code workflow files', () => {
             "source('raw', 'orders')"
           );
         });
+      cy.get(
+        '[data-slot="canvas-code-workspace-surface"] [data-testid="monaco-code-viewer"] textarea.inputarea'
+      ).should('have.prop', 'readOnly', true);
       cy.then(() => {
         const publications = getE2eApiCalls('/workspace/dbt/graph-artifacts/publications', 'POST');
         expect(publications).to.have.length(1);
@@ -342,6 +372,7 @@ describe('Contextual project Code workflow files', () => {
         ).to.have.length(1);
         expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
         expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
+        expect(getE2eApiCalls(/^\/workspace\/files\//, 'POST')).to.have.length(0);
       });
       cy.screenshot(`confirmed-files-after-compilation-rejection-${language}`);
     });

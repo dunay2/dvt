@@ -62,6 +62,7 @@ export function buildDbtWorkspaceFileCodeContributions({
       placement: 'before-body',
       content: (
         <WorkspaceFileCodeEditor
+          access="read-only"
           key={`${node.id}:${workspaceFilePath}`}
           ref={editorRef}
           authority="dbt-project-files"

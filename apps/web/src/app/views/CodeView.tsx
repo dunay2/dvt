@@ -1,4 +1,4 @@
-/** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
+/** Owned concern: compose scoped file inspection, references and accepted-file metadata. */
 import { FileCode2, PanelRight } from 'lucide-react';
 import type { DbtProjectGraphProjection } from '@dvt/contracts';
 import {
@@ -378,6 +378,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         ) : undefined,
         primarySurface: (
           <WorkspaceFileCodeEditor
+            access="read-only"
             ref={workspaceFileEditorRef}
             fillAvailableSpace
             headerActions={

@@ -16,6 +16,7 @@ import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQu
 import { mockGraphDraftAuthoringAuthority } from '../../../testing/workspacePortDoubles';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import CodeView, { type CodeViewHandle } from '../CodeView';
+import { WorkspaceFileCodeEditor } from './WorkspaceFileCodeEditor';
 import { useCodeWorkspaceFileContext } from './useCodeWorkspaceFileContext';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import { queryKeys } from '../../queries/queryKeys';
@@ -49,14 +50,16 @@ vi.mock('../../components/monaco/MonacoCodeViewer', () => ({
   MonacoCodeViewer: ({
     value,
     inlineReferences,
+    onInspectReference,
   }: {
     value: string;
     inlineReferences?: { items: readonly { id: string; label: string }[] };
+    onInspectReference?: (id: string) => void;
   }) => (
     <>
-      <pre>{value}</pre>
+      <pre data-testid="code-file-viewer">{value}</pre>
       {inlineReferences?.items.map((r) => (
-        <button key={r.id} data-reference={r.id}>
+        <button key={r.id} data-reference={r.id} onClick={() => onInspectReference?.(r.id)}>
           {r.label}
         </button>
       ))}
@@ -131,21 +134,24 @@ function contextFixture(
       })),
     dependencies: [],
     diagnostics: [],
-    regions: ['clientes', 'pedidos'].map((name, i) => {
+    regions: ['clientes', 'pedidos'].flatMap((name, i) => {
       const source = `{{ ref('${name}') }}`;
       const start = sql.indexOf(source);
-      return {
-        regionId: `region-${i}`,
-        path: 'models/ventas.sql',
-        kind: 'ref',
-        classification: 'supported',
-        targetUniqueId: `model.demo.${name}`,
-        range: {
-          startByte: new TextEncoder().encode(sql.slice(0, start)).length,
-          endByte: new TextEncoder().encode(sql.slice(0, start + source.length)).length,
+      if (start < 0) return [];
+      return [
+        {
+          regionId: `region-${i}`,
+          path: 'models/ventas.sql',
+          kind: 'ref',
+          classification: 'supported',
+          targetUniqueId: `model.demo.${name}`,
+          range: {
+            startByte: new TextEncoder().encode(sql.slice(0, start)).length,
+            endByte: new TextEncoder().encode(sql.slice(0, start + source.length)).length,
+          },
+          sourceSha256: sha256HexUtf8(source),
         },
-        sourceSha256: sha256HexUtf8(source),
-      };
+      ];
     }),
   });
   return {
@@ -186,7 +192,15 @@ describe('Code workspace file context through normal Code entry', () => {
   let graphSnapshot: Promise<WorkspaceGraphSnapshot> | undefined;
   let fileRead: Promise<FileContent> | undefined;
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const render = async (): Promise<void> => {
+  const render = async ({
+    editableFile = false,
+    directFile = false,
+    dbtProject,
+  }: Readonly<{
+    editableFile?: boolean;
+    directFile?: boolean;
+    dbtProject?: DbtProjectGraphProjection;
+  }> = {}): Promise<void> => {
     const ui = (
       <AppServicesProvider
         overrides={{
@@ -236,12 +250,22 @@ describe('Code workspace file context through normal Code entry', () => {
           dbtSelectedModelAnalysisQueryPort: { analyzeSelectedModel: analysis },
         }}
       >
-        <CodeView
-          ref={handle}
-          publishRouteBootstrap={false}
-          fileScope={{ kind: 'workspace-files' }}
-          initialPath={fixture.file.path}
-        />
+        {editableFile || directFile ? (
+          <WorkspaceFileCodeEditor
+            ref={handle}
+            access={editableFile ? 'editable' : 'read-only'}
+            authority="dbt-project-files"
+            path={fixture.file.path}
+            dbtProject={dbtProject}
+          />
+        ) : (
+          <CodeView
+            ref={handle}
+            publishRouteBootstrap={false}
+            fileScope={{ kind: 'workspace-files' }}
+            initialPath={fixture.file.path}
+          />
+        )}
       </AppServicesProvider>
     );
     if (mounted) {
@@ -267,20 +291,166 @@ describe('Code workspace file context through normal Code entry', () => {
     save.mockClear();
   });
 
-  it('loads two references from FileContent metadata without explicit dbt props or route parameters', async () => {
+  it('inspects normal project Code read-only without saving or reconciling', async () => {
     await render();
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     expect(graph).toHaveBeenCalledWith(fixture.project.authorityBinding);
     expect(analysis).toHaveBeenCalledWith(fixture.project.authorityBinding, 'model.demo.ventas');
-    expect(container.querySelector('textarea')?.value).toBe(fixture.file.content);
+    expect(container.querySelector('textarea')).toBeNull();
+    const viewer = container.querySelector('[data-testid="code-file-viewer"]');
+    expect(viewer?.textContent).toBe(fixture.file.content);
+    expect(container.querySelector('[data-phase="read_only"]')).not.toBeNull();
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-reference="region-0"]')?.click()
+    );
+    await waitFor(
+      () =>
+        container.querySelector('section[aria-label="clientes"] code')?.textContent === 'select 1'
+    );
+    expect(container.querySelector('[data-testid="code-file-viewer"]')).toBe(viewer);
+    expect(graph).toHaveBeenCalledTimes(1);
+    expect(analysis).toHaveBeenCalledTimes(1);
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['schema.yml', 'yaml'],
+    ['schema.yaml', 'YAML'],
+    ['manifest.json', 'json'],
+    ['README.md', 'markdown'],
+  ])('reads %s without reference queries or reference status', async (name, language) => {
+    fixture.file = { ...fixture.file, path: `inline_code_demo/${name}`, name, language };
+    await render();
+    await waitFor(() => container.querySelector('[data-testid="code-file-viewer"]') != null);
+    expect(container.querySelector('pre')?.textContent).toBe(fixture.file.content);
+    expect(container.querySelector('[data-phase="read_only"]')).not.toBeNull();
+    expect(container.querySelector('textarea')).toBeNull();
+    expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+    expect(graph).not.toHaveBeenCalled();
+    expect(analysis).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+    const copy = resolveCodeInlineReferenceCopy('en-US');
+    expect(container.textContent).not.toContain(copy.checkingMessage);
+    expect(container.textContent).not.toContain(copy.unavailableMessage);
+  });
+
+  it.each(['discovered', 'provided'] as const)(
+    'reads plain SQL with %s project context without reference queries or status',
+    async (context) => {
+      fixture = contextFixture('select client_id, country from raw.client');
+      await render({
+        directFile: context === 'provided',
+        dbtProject: context === 'provided' ? fixture.project : undefined,
+      });
+      await waitFor(() => container.querySelector('[data-testid="code-file-viewer"]') != null);
+      expect(container.querySelector('pre')?.textContent).toBe(fixture.file.content);
+      expect(container.querySelector('[data-phase="read_only"]')).not.toBeNull();
+      expect(container.querySelector('textarea')).toBeNull();
+      expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+      expect(graph).not.toHaveBeenCalled();
+      expect(analysis).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+      const copy = resolveCodeInlineReferenceCopy('en-US');
+      expect(container.textContent).not.toContain(copy.checkingMessage);
+      expect(container.textContent).not.toContain(copy.unavailableMessage);
+    }
+  );
+
+  it('keeps SQL eligibility case insensitive for a server-selected model', async () => {
+    fixture.file.language = 'SQL';
+    await render();
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    expect(graph).toHaveBeenCalledTimes(1);
+    expect(analysis).toHaveBeenCalledTimes(1);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['late', 'YAML'],
+    ['cached', 'YAML'],
+    ['late', 'plain SQL'],
+    ['cached', 'plain SQL'],
+  ] as const)('ignores %s SQL evidence after selecting %s', async (mode, target) => {
+    const first = { ...fixture };
+    let finishGraph: ((projection: DbtProjectGraphProjection) => void) | undefined;
+    const pending = new Promise<DbtProjectGraphProjection>((resolve) => {
+      finishGraph = resolve;
+    });
+    if (mode === 'late') graph.mockImplementationOnce(() => pending);
+    try {
+      await render({ directFile: true });
+      await waitFor(() => graph.mock.calls.length === 1);
+      if (mode === 'cached')
+        await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+      fixture.file =
+        target === 'YAML'
+          ? {
+              ...first.file,
+              path: 'inline_code_demo/models/schema.yml',
+              name: 'schema.yml',
+              language: 'yaml',
+            }
+          : {
+              ...contextFixture('select client_id, country from raw.client').file,
+              path: 'inline_code_demo/models/clientes.sql',
+              name: 'clientes.sql',
+            };
+      const targetFile = fixture.file;
+      await render({ directFile: true });
+      await act(async () => finishGraph?.(first.project));
+      await waitFor(() => container.querySelector('pre')?.textContent === targetFile.content);
+      await waitFor(() => client.isFetching() === 0);
+      expect(container.querySelector('pre')?.textContent).toBe(targetFile.content);
+      expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+      expect(container.querySelector('[data-phase="read_only"]')).not.toBeNull();
+      const copy = resolveCodeInlineReferenceCopy('en-US');
+      expect(container.textContent).not.toContain(copy.checkingMessage);
+      expect(container.textContent).not.toContain(copy.unavailableMessage);
+      expect(graph).toHaveBeenCalledTimes(1);
+      expect(analysis).toHaveBeenCalledTimes(mode === 'late' ? 0 : 1);
+      expect(save).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => finishGraph?.(first.project));
+    }
+  });
+
+  it('keeps checking, ready, and unavailable in the same read-only status band', async () => {
+    const copy = resolveCodeInlineReferenceCopy('en-US');
+    let finishGraph: ((projection: DbtProjectGraphProjection) => void) | undefined;
+    const pending = new Promise<DbtProjectGraphProjection>((resolve) => {
+      finishGraph = resolve;
+    });
+    graph.mockImplementationOnce(() => pending);
+    try {
+      await render();
+      await waitFor(() => container.textContent?.includes(copy.checkingMessage) === true);
+      const band = container.querySelector('[data-slot="code-working-tree-status"]');
+      const viewer = container.querySelector('[data-testid="code-file-viewer"]');
+      expect(band?.textContent).toContain(copy.checkingMessage);
+      expect(band?.getAttribute('data-phase')).toBe('read_only');
+      await act(async () => finishGraph?.(fixture.project));
+      await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+      expect(container.querySelector('[data-slot="code-working-tree-status"]')).toBe(band);
+      expect(band?.textContent).not.toContain(copy.checkingMessage);
+      graph.mockRejectedValueOnce(new Error('Project analysis is unavailable.'));
+      await act(async () =>
+        client.refetchQueries({ queryKey: queryKeys.workspace.dbtProjectGraphRoot() })
+      );
+      await waitFor(() => band?.textContent?.includes(copy.unavailableMessage) === true);
+      expect(container.querySelector('[data-slot="code-working-tree-status"]')).toBe(band);
+      expect(container.querySelector('[data-testid="code-file-viewer"]')).toBe(viewer);
+      expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+      expect(save).not.toHaveBeenCalled();
+    } finally {
+      await act(async () => finishGraph?.(fixture.project));
+    }
   });
 
   it('withholds cached authority and definition while the file read is being revalidated', async () => {
     const inlineCopy = resolveCodeInlineReferenceCopy('en-US');
     await render();
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
-    const editor = container.querySelector('textarea');
+    const viewer = container.querySelector('[data-testid="code-file-viewer"]');
     const original = fixture.file.content;
     await act(async () =>
       container.querySelector<HTMLButtonElement>('[data-reference="region-0"]')?.click()
@@ -328,8 +498,9 @@ describe('Code workspace file context through normal Code entry', () => {
       expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
       expect(container.querySelector('section[aria-label="clientes"]')).toBeNull();
       expect(graph).toHaveBeenCalledTimes(2);
-      expect(container.querySelector('textarea')).toBe(editor);
-      expect(editor?.value).toBe(original);
+      expect(container.querySelector('[data-testid="code-file-viewer"]')).toBe(viewer);
+      expect(viewer?.textContent).toBe(original);
+      expect(container.querySelector('textarea')).toBeNull();
       expect(save).not.toHaveBeenCalled();
       await act(async () => {
         finishFile?.(mixed);
@@ -409,7 +580,7 @@ describe('Code workspace file context through normal Code entry', () => {
   });
 
   it('hides dirty references and restores a saved revision in the same editor through existing reconciliation', async () => {
-    await render();
+    await render({ editableFile: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     const editor = container.querySelector('textarea')!;
     const next = `${fixture.file.content}\n-- edited`;
@@ -434,8 +605,67 @@ describe('Code workspace file context through normal Code entry', () => {
     ).toBe('synchronized');
   });
 
+  it.each([
+    ['YAML', 'models/schema.yml', 'yaml', 'version: 2', '# accepted legacy edit'],
+    ['plain SQL', 'models/ventas.sql', 'sql', 'select 1 as value', '-- accepted legacy edit'],
+  ] as const)(
+    'reconciles an accepted legacy %s edit without automatic reference work',
+    async (_kind, path, language, content, comment) => {
+      fixture.file = {
+        ...fixture.file,
+        path: `inline_code_demo/${path}`,
+        name: path.split('/').at(-1)!,
+        language,
+        content,
+        contentSha256: sha256HexUtf8(content),
+      };
+      await render({ editableFile: true });
+      await waitFor(() => container.querySelector('textarea') != null);
+      expect(graph).not.toHaveBeenCalled();
+      const editor = container.querySelector('textarea')!;
+      const next = `${content}\n${comment}`;
+      save.mockImplementationOnce(async (input) => {
+        fixture.file = {
+          ...fixture.file,
+          content: input.content,
+          contentSha256: sha256HexUtf8(input.content),
+        };
+        fixture.project = DbtProjectGraphProjectionSchema.parse({
+          ...fixture.project,
+          analysisSha256: sha256HexUtf8(`analysis:${input.content}`),
+          projectRevision: {
+            ...fixture.project.projectRevision,
+            contentSetSha256: sha256HexUtf8(input.content),
+          },
+        });
+        return {
+          kind: 'saved' as const,
+          disposition: 'updated' as const,
+          path: input.path,
+          contentSha256: fixture.file.contentSha256,
+          lastModified: fixture.file.lastModified,
+        };
+      });
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(
+          editor,
+          next
+        );
+        editor.dispatchEvent(new Event('input', { bubbles: true }));
+        await handle.current?.flush();
+      });
+      await waitFor(() => container.querySelector('[data-phase="synchronized"]') != null);
+      expect(container.querySelector('textarea')).toBe(editor);
+      expect(editor.value).toBe(next);
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(graph).toHaveBeenCalledTimes(1);
+      expect(analysis).not.toHaveBeenCalled();
+      expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+    }
+  );
+
   it('keeps cards hidden and exposes reconciliation failure after bytes persist', async () => {
-    await render();
+    await render({ editableFile: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     graph.mockRejectedValue(new Error('analysis offline'));
     const editor = container.querySelector('textarea')!;
@@ -472,7 +702,6 @@ describe('accepted file context query lifetime', () => {
     const getProjectGraph = vi
       .fn()
       .mockResolvedValueOnce(first.project)
-      .mockResolvedValueOnce(nextProject)
       .mockImplementationOnce(() => returning);
     let observed: ReturnType<typeof useCodeWorkspaceFileContext> | undefined;
     function Probe(): null {
@@ -504,10 +733,12 @@ describe('accepted file context query lifetime', () => {
         contentSha256: sha256HexUtf8('version: 2'),
       };
       await mounted.render(ui());
-      await waitForReactQuery(() => observed?.project === nextProject);
+      expect(observed?.project).toBeUndefined();
+      expect(observed?.status).toBe('inactive');
+      expect(getProjectGraph).toHaveBeenCalledTimes(1);
       file = first.file;
       await mounted.render(ui());
-      expect(getProjectGraph).toHaveBeenCalledTimes(3);
+      expect(getProjectGraph).toHaveBeenCalledTimes(2);
       expect(observed?.project).toBeUndefined();
       expect(observed?.status).toBe('checking');
       await act(async () => finishReturn?.(nextProject));

@@ -94,7 +94,7 @@ describe('Canonical operation discovery', () => {
           condition == null ||
           condition.kind === 'group' ||
           condition.left.kind !== 'field' ||
-          condition.right.kind !== 'field'
+          condition.right?.kind !== 'field'
         )
           throw new Error('Missing field predicate');
         const types = new Map(

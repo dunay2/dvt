@@ -222,7 +222,9 @@ describe('Protected model save and readiness', () => {
       cy.get(tabSelector).should('have.attr', 'aria-selected', 'true');
       cy.get('[data-slot="bottom-operational-data-grid"]').should('have.attr', 'data-wrap', 'true');
       cy.get('[data-slot="live-preview-facts"]').should(($facts) => {
-        expect($facts[0].textContent, 'same SQL query provenance').to.equal(queriedAt);
+        const facts = $facts[0];
+        if (facts === undefined) throw new Error('Expected the loaded query provenance.');
+        expect(facts.textContent, 'same SQL query provenance').to.equal(queriedAt);
       });
       cy.then(() => {
         expect(sourceRequests, 'no repeated warehouse Source query').to.equal(1);

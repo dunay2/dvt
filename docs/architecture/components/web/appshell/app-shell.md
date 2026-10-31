@@ -636,9 +636,10 @@ Current and expected consumers:
 - `AdminView`
 - future route workbenches such as `Templates`
 
-`CodeView` maps its file explorer to `leftPanel` and its local-buffer banner
-plus Monaco file preview to `primarySurface`. It does not provide `rightPanel`
-or `bottomDrawer` yet.
+`CodeView` maps its file explorer to `leftPanel` and the shared read-only file
+session to `primarySurface`. Its optional `rightPanel` shows accepted-file or
+reference metadata in project Code, or file history for existing standalone
+consumers. It provides no route-level `bottomDrawer`; the shell retains its console.
 
 Canvas can continue using its specialized shell while adopting the same slot
 vocabulary through future component extraction.

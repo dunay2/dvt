@@ -1,10 +1,10 @@
 /**
  * Owned concern: prove the governed dbt YAML description transaction through
  * protected HTTP, file authority, project analysis, Preview, Run, and reopen.
- * @baseline GH-3610: node Code uses Properties; project Code owns its separate file tree.
- * @decision Inspect the real model title and expose the project command before its normal click.
- * @consequence Lossless YAML/SQL writes retain their existing authority without a node-code clone.
- * @version 1.0.1
+ * @baseline GH-3747: node and project Code inspect saved files in read-only mode.
+ * @decision Apply and revert YAML through the governed form; attempt SQL paste through the viewer.
+ * @consequence YAML transactions remain lossless while Code preserves the original SQL revision.
+ * @version 2.0.0
  */
 import { APPLICATION_LANGUAGE_STORAGE_KEY } from '../../../src/app/stores/applicationLanguageStore';
 import {
@@ -25,7 +25,6 @@ import {
   readLiveRunSnapshot,
   readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
-  waitForLiveWorkspaceFileContent,
 } from '../../support/liveProtectedRuntime';
 
 const PROJECT_ROOT = 'analytics-description-edit';
@@ -36,10 +35,8 @@ const MODEL_SQL_PATH = `${PROJECT_ROOT}/models/orders.sql`;
 const ORIGINAL_DESCRIPTION = 'Curated orders model';
 const REVERT_PROOF_DESCRIPTION = 'Curated orders with governed ownership';
 const RUN_DESCRIPTION = 'Curated orders approved for downstream reporting';
-const UPDATED_MODEL_SQL = `select 1::integer as order_id
--- edited through the node Code workbench`;
-const INVALID_MODEL_SQL = `select * from {{ ref('orders') }
--- intentionally invalid until the user corrects it`;
+const BLOCKED_MODEL_SQL = `select * from {{ ref('orders') }
+-- blocked read-only paste`;
 
 const SCHEMA_CONTENT = `version: 2
 # This comment and the unrelated resource must survive focused edits.
@@ -136,7 +133,7 @@ function openModelWorkbench(): void {
   cy.get('[data-slot="dbt-yaml-description-editor"]', { timeout: 20_000 }).should('be.visible');
 }
 
-function openModelCodeEditor(): void {
+function openModelCodeViewer(): void {
   cy.get('.react-flow__controls-fitview').click();
   cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
     .should('be.visible')
@@ -148,7 +145,9 @@ function openModelCodeEditor(): void {
   cy.get('[data-slot="workspace-file-code-editor"]', { timeout: 30_000 })
     .should('be.visible')
     .and('have.attr', 'data-file-path', MODEL_SQL_PATH);
-  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 }).should('be.visible');
+  cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+  cy.get('[data-slot="code-working-tree-status"]').should('have.attr', 'data-phase', 'read_only');
 }
 
 function proveFixedModelWorkbench(): void {
@@ -230,20 +229,25 @@ function waitForCompletedRun(runId: string, attempt = 0): Cypress.Chainable<Live
   });
 }
 
-function replaceOpenCodeContent(content: string): void {
-  cy.get('[data-testid="monaco-code-editor"]').find('.view-lines').click({ force: true });
-  cy.focused()
-    .should(($editor) => {
-      expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true);
-    })
-    .type('{ctrl+a}{backspace}', { force: true, delay: 0 });
+function attemptOpenCodeEdit(content: string): void {
+  cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+  cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
+    .should('have.prop', 'readOnly', true)
+    .and('be.focused');
   cy.window().then((window) => {
     const clipboardData = new window.DataTransfer();
     clipboardData.setData('text/plain', content);
-    cy.focused().trigger('paste', {
-      clipboardData,
-      force: true,
-    });
+    cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
+      .should('be.focused')
+      .then(($input) => {
+        $input[0]!.dispatchEvent(
+          new window.ClipboardEvent('paste', {
+            clipboardData,
+            bubbles: true,
+            cancelable: true,
+          })
+        );
+      });
   });
 }
 
@@ -265,7 +269,15 @@ describe('dbt YAML description edit live vertical', () => {
 
   it('applies, reverts, runs, and reopens one lossless file-authoritative edit', () => {
     const observedRequests: ObservedRequest[] = [];
+    let originalSqlRevision: string;
     visitProject(observedRequests);
+    readLiveWorkspaceFile(MODEL_SQL_PATH).then((response) => {
+      expect(response.status).to.equal(200);
+      const file = response.body as { content: string; contentSha256: string };
+      expect(file.content).to.equal(PROJECT_FILES[MODEL_SQL_PATH]);
+      expect(file.contentSha256).to.match(/^[a-f0-9]{64}$/);
+      originalSqlRevision = file.contentSha256;
+    });
 
     openModelWorkbench();
     proveFixedModelWorkbench();
@@ -290,39 +302,31 @@ describe('dbt YAML description edit live vertical', () => {
     expectAuthoritativeDescription(RUN_DESCRIPTION);
     closeModelWorkbench();
 
-    openModelCodeEditor();
+    openModelCodeViewer();
     cy.get('[data-slot="workspace-file-code-editor"]')
       .should('be.visible')
       .and('have.attr', 'data-file-path', MODEL_SQL_PATH);
-    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+    cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
       .should((renderedCode) => {
         expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain('select 1::integer as order_id');
       });
-    replaceOpenCodeContent(INVALID_MODEL_SQL);
-    waitForLiveWorkspaceFileContent(MODEL_SQL_PATH, INVALID_MODEL_SQL);
-    cy.get('[data-slot="code-working-tree-status"]', { timeout: 60_000 }).should(
-      'have.attr',
-      'data-phase',
-      'persisted_invalid'
-    );
-
-    replaceOpenCodeContent(UPDATED_MODEL_SQL);
-    cy.get('[data-testid="monaco-code-editor"]')
+    attemptOpenCodeEdit(BLOCKED_MODEL_SQL);
+    cy.get('[data-testid="monaco-code-viewer"]')
       .find('.view-lines')
       .invoke('text')
       .should((renderedCode) => {
-        expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain(
-          'edited through the node Code workbench'
-        );
+        expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain('select 1::integer as order_id');
+        expect(renderedCode).not.to.contain('blocked read-only paste');
       });
-    waitForLiveWorkspaceFileContent(MODEL_SQL_PATH, UPDATED_MODEL_SQL);
-    cy.get('[data-slot="code-working-tree-status"]', { timeout: 60_000 }).should(
-      'have.attr',
-      'data-phase',
-      'synchronized'
-    );
+    cy.get('[data-slot="code-working-tree-status"]').should('have.attr', 'data-phase', 'read_only');
+    readLiveWorkspaceFile(MODEL_SQL_PATH).then((response) => {
+      expect(response.status).to.equal(200);
+      const file = response.body as { content: string; contentSha256: string };
+      expect(file.content).to.equal(PROJECT_FILES[MODEL_SQL_PATH]);
+      expect(file.contentSha256).to.equal(originalSqlRevision);
+    });
     closeModelWorkbench();
 
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
@@ -347,7 +351,13 @@ describe('dbt YAML description edit live vertical', () => {
         cy.get(
           `[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_SQL_PATH}"]`
         ).should('be.visible');
-        cy.get('[data-testid="monaco-code-editor"]').should('be.visible').and('have.length', 1);
+        cy.get('[data-testid="monaco-code-viewer"]').should('be.visible').and('have.length', 1);
+        cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
+        cy.get('[data-slot="code-working-tree-status"]').should(
+          'have.attr',
+          'data-phase',
+          'read_only'
+        );
       });
     cy.get('[data-slot="canvas-workspace-tab"]')
       .should('be.visible')
@@ -403,21 +413,21 @@ describe('dbt YAML description edit live vertical', () => {
     cy.get('[data-slot="canvas-node-workbench-tab-code"]').should('be.visible');
     expectAuthoritativeDescription(RUN_DESCRIPTION);
     closeModelWorkbench();
-    openModelCodeEditor();
+    openModelCodeViewer();
     cy.get('[data-slot="workspace-file-code-editor"]')
       .should('be.visible')
       .and('have.attr', 'data-file-path', MODEL_SQL_PATH);
-    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+    cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 })
       .find('.view-lines')
       .invoke('text')
       .should((renderedCode) => {
-        expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain(
-          'edited through the node Code workbench'
-        );
+        expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain('select 1::integer as order_id');
       });
     readLiveWorkspaceFile(MODEL_SQL_PATH).then((response) => {
       expect(response.status).to.equal(200);
-      expect((response.body as { content: string }).content).to.equal(UPDATED_MODEL_SQL);
+      const file = response.body as { content: string; contentSha256: string };
+      expect(file.content).to.equal(PROJECT_FILES[MODEL_SQL_PATH]);
+      expect(file.contentSha256).to.equal(originalSqlRevision);
     });
     closeModelWorkbench();
 
@@ -429,6 +439,11 @@ describe('dbt YAML description edit live vertical', () => {
       expect(successfulPosts('/workspace/dbt/description-edits/proposals')).to.have.length(2);
       expect(successfulPosts('/workspace/dbt/description-edits/applications')).to.have.length(2);
       expect(successfulPosts('/workspace/dbt/description-edits/reverts')).to.have.length(1);
+      expect(
+        observedRequests.some(
+          ({ method, url }) => method === 'POST' && url.includes('/workspace/files/')
+        )
+      ).to.equal(false);
       expect(
         observedRequests.some(
           ({ method, status, url }) =>

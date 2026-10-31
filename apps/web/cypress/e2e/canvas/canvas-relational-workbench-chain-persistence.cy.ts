@@ -39,13 +39,15 @@ describe('Workbench chain-persistence', () => {
       let savedOccurrence: unknown;
       let writeCount = 0;
       const pendingWrite = (): ReturnType<typeof getE2eApiCalls>[number] | undefined =>
-        getE2eApiCalls('/workspace/graph/draft', 'PUT').findLast((call) => {
-          const { draft } = call.body as { draft: WorkspaceGraphAuthoringDraft };
-          return draft.nodes.some(
-            (node) =>
-              node.id === 'join-transform' && node.metadata?.relationalAuthoringDraft != null
-          );
-        });
+        getE2eApiCalls('/workspace/graph/draft', 'PUT')
+          .reverse()
+          .find((call) => {
+            const { draft } = call.body as { draft: WorkspaceGraphAuthoringDraft };
+            return draft.nodes.some(
+              (node) =>
+                node.id === 'join-transform' && node.metadata?.relationalAuthoringDraft != null
+            );
+          });
       cy.wrap(null).should(() => {
         expect(pendingWrite(), 'Apply persists the incomplete authoring snapshot').not.to.equal(
           undefined

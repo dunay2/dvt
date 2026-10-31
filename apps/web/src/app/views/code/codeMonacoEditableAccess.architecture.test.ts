@@ -1,145 +1,65 @@
-/** Owned concern: guard Code Monaco working-tree synchronization boundaries. */
+/** Owned concern: guard semantic dependency boundaries for workspace Code and shared Monaco. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '../..');
-const REPO_ROOT = path.resolve(APP_ROOT, '../../../..');
 
-function readAppSource(relativePathFromApp: string): string {
-  return readFileSync(path.join(APP_ROOT, relativePathFromApp), 'utf8');
+function importsOf(relativePath: string): ReadonlySet<string> {
+  const source = ts.createSourceFile(
+    relativePath,
+    readFileSync(path.join(APP_ROOT, relativePath), 'utf8'),
+    ts.ScriptTarget.Latest,
+    false,
+    ts.ScriptKind.TSX
+  );
+  return new Set(
+    source.statements.flatMap((statement) =>
+      ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)
+        ? [statement.moduleSpecifier.text]
+        : []
+    )
+  );
 }
 
-function readRepoDoc(relativePathFromRepo: string): string {
-  return readFileSync(path.join(REPO_ROOT, relativePathFromRepo), 'utf8');
-}
-
-describe('Code Monaco editable access architecture', () => {
-  it('documents working-tree synchronization through the existing command rail', () => {
-    const componentGuide = readRepoDoc(
-      'docs/architecture/components/web/code-workbench-workspace-files-component.md'
-    );
-    const userStories = readRepoDoc(
-      'docs/architecture/components/web/code-workbench-workspace-files-component.md'
-    );
-    const authorityDecision = readRepoDoc('docs/adr/ADR-0060-dbt-project-authoring-authority.md');
-
-    for (const requiredText of [
-      'CodeWorkingTreeSync',
-      'MonacoCodeEditor',
-      'project working tree',
-      'SaveWorkspaceFileContent',
-      'ListWorkspaceFiles',
-      'GetWorkspaceFileContent',
-      'expectedRevision',
-      'no Save button',
-    ]) {
-      expect(componentGuide).toContain(requiredText);
-    }
-
-    for (const requiredStory of [
-      'CODE-FILES-2',
-      'CODE-FILES-6',
-      'revision-guarded sync',
-      'no Save UI',
-    ]) {
-      expect(userStories).toContain(requiredStory);
-    }
-
-    expect(authorityDecision).toContain('It is not a user-facing `Save` action');
-    expect(authorityDecision).toContain('does not imply staging, committing, pushing');
+describe('Code workspace ownership boundaries', () => {
+  it('composes the shared file-session owner instead of a second Monaco or writer', () => {
+    const imports = importsOf('views/CodeView.tsx');
+    expect(imports.has('./code/WorkspaceFileCodeEditor')).toBe(true);
+    for (const forbidden of [
+      './code/useCodeWorkingTreeSync',
+      '../components/monaco/MonacoCodeEditor',
+      '../components/monaco/MonacoCodeViewer',
+      '../services/workspace/workspacePorts.api',
+    ])
+      expect(imports.has(forbidden)).toBe(false);
   });
 
-  it('keeps Code editable and delegates conditional writes to one orchestrator', () => {
-    const codeView = readAppSource('views/CodeView.tsx');
-    const codeEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
-    const codeViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
-    const codeSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
-    const workspaceFileCodeEditor = readAppSource('views/code/WorkspaceFileCodeEditor.tsx');
-    const workingTreeSync = readAppSource('views/code/useCodeWorkingTreeSync.ts');
-    const workingTreeStatus = readAppSource('views/code/CodeWorkingTreeStatus.tsx');
-    const canvasShell = readAppSource('views/canvas/CanvasShell.tsx');
-    const codeWorkbench = readAppSource('views/canvas/useCanvasCodeWorkbench.tsx');
-    const sqlContextWorkbench = readAppSource('views/canvas/SqlContextWorkbench.tsx');
-    const dbtContributions = readAppSource('plugins/dbt/dbtContributions.ts');
-    const cypressSpec = readFileSync(
-      path.join(APP_ROOT, '../../cypress/e2e/canvas/code-workbench-workspace-files.cy.ts'),
-      'utf8'
-    );
+  it.each([
+    'views/canvas/dbtWorkspaceFileCodeContribution.tsx',
+    'views/canvas/graphDraftWorkspaceFileCodeContribution.tsx',
+  ])('%s shares the existing known-file owner', (consumer) => {
+    const imports = importsOf(consumer);
+    expect(imports.has('../code/WorkspaceFileCodeEditor')).toBe(true);
+    expect(imports.has('../code/useCodeWorkingTreeSync')).toBe(false);
+    expect(imports.has('../../components/monaco/MonacoCodeEditor')).toBe(false);
+  });
 
-    for (const [modulePath, source] of [
-      ['views/CodeView.tsx', codeView],
-      ['components/monaco/MonacoCodeEditor.tsx', codeEditor],
-      ['components/monaco/MonacoCodeViewer.tsx', codeViewer],
-      ['components/monaco/MonacoCodeSurface.tsx', codeSurface],
-      ['views/code/WorkspaceFileCodeEditor.tsx', workspaceFileCodeEditor],
-      ['views/code/useCodeWorkingTreeSync.ts', workingTreeSync],
-      ['views/code/CodeWorkingTreeStatus.tsx', workingTreeStatus],
-      ['views/canvas/SqlContextWorkbench.tsx', sqlContextWorkbench],
-    ] as const) {
-      expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
-    }
+  it('keeps access policy and pending-write recovery at their existing owners', () => {
+    const imports = importsOf('views/code/WorkspaceFileCodeEditor.tsx');
+    expect(imports.has('./codeWorkspaceFileEditPosture')).toBe(true);
+    expect(imports.has('./useCodeWorkingTreeSync')).toBe(true);
+    expect(imports.has('../../services/workspace/workspacePorts.api')).toBe(false);
+    expect(imports.has('./CodeWorkspaceFileSurface')).toBe(true);
+  });
 
-    expect(dbtContributions).toContain("id: 'dbt.canvas'");
-    expect(dbtContributions).not.toContain("id: 'dbt.code'");
-    expect(dbtContributions).not.toContain("scope: 'workspace'");
-
-    expect(codeView).toContain('WorkspaceFileCodeEditor');
-    expect(codeView).toContain('publishRouteBootstrap = true');
-    expect(codeView).toContain('resolveCodeViewCopy');
-    expect(codeView).not.toContain('CodeWorkspaceFileSurface');
-    expect(codeView).not.toContain('resolveCodeWorkspaceFileEditPosture');
-    expect(codeView).not.toContain('useCodeWorkingTreeSync');
-    expect(codeView).not.toContain('CodeWorkingTreeStatus');
-    expect(codeView).not.toContain('useState<Record<string, string>>');
-    expect(codeView).not.toContain('useCodeEditableBuffer');
-    expect(codeView).not.toContain('MonacoCodeEditor');
-    expect(codeView).not.toContain('MonacoCodeViewer');
-    expect(codeView).not.toContain('function flattenFiles');
-    expect(codeView).not.toContain('function firstFilePath');
-    expect(codeView).not.toContain('Editing ');
-    expect(codeView).not.toContain('SaveWorkspaceFileContent');
-    expect(codeView).not.toContain('saveFileContent');
-
-    expect(workspaceFileCodeEditor).toContain('CodeWorkspaceFileSurface');
-    expect(workspaceFileCodeEditor).toContain('resolveCodeWorkspaceFileEditPosture');
-    expect(workspaceFileCodeEditor).toContain('useCodeWorkingTreeSync');
-    expect(workspaceFileCodeEditor).toContain('CodeWorkingTreeStatus');
-    expect(workspaceFileCodeEditor).not.toContain('SaveWorkspaceFileContent');
-
-    expect(workingTreeSync).toMatch(/commandPort\s*\.saveFileContent/);
-    expect(workingTreeSync).toContain("kind: 'content_sha256'");
-    expect(workingTreeSync).toContain('WorkspaceFileRevisionConflictError');
-    expect(workingTreeStatus).not.toContain('Save');
-
-    expect(codeEditor).toContain('useMonacoCodeSurface');
-    expect(codeEditor).toContain('readOnly = false');
-    expect(codeEditor).toContain('readOnly={readOnly}');
-    expect(codeEditor).toContain('onChange');
-    expect(codeEditor).not.toContain('Cargando');
-    expect(codeEditor).not.toContain('Loading Monaco editor');
-
-    expect(codeViewer).toContain('readOnly={true}');
-    expect(codeViewer).not.toContain('onChange');
-    expect(codeViewer).not.toContain('Cargando');
-    expect(codeViewer).not.toContain('Loading Monaco viewer');
-
-    expect(codeSurface).toContain('readOnly = true');
-    expect(codeSurface).toContain('onChange');
-    expect(codeSurface).not.toContain('save');
-
-    expect(canvasShell).toContain('useCanvasCodeWorkbench(');
-    expect(canvasShell).not.toContain('<SqlContextWorkbench');
-    expect(codeWorkbench).toContain('<SqlContextWorkbench');
-    expect(sqlContextWorkbench).toContain('publishRouteBootstrap={false}');
-    expect(sqlContextWorkbench).not.toContain('useCodeWorkingTreeSync');
-
-    expect(cypressSpec).toContain(
-      'Owned concern: prove canonical Canvas Project Code working-tree synchronization'
-    );
-    expect(cypressSpec).toContain("visitWithE2eWorkspaceSession('/canvas')");
-    expect(cypressSpec).toContain('canvas-workspace-open-project-code-command');
-    expect(cypressSpec).toContain('code-working-tree-status');
+  it('keeps shared Monaco independent of workspace persistence', () => {
+    const imports = importsOf('components/monaco/MonacoCodeSurface.tsx');
+    expect(
+      [...imports].filter((dependency) =>
+        /(?:^|\/)services(?:\/|$)|(?:^|\/)ports(?:\/|$)|useCodeWorkingTreeSync/.test(dependency)
+      )
+    ).toEqual([]);
   });
 });

@@ -1,10 +1,37 @@
-import { describe, expect, it } from 'vitest';
+import { promises as fsPromises, readdirSync, statSync, type Dirent } from 'node:fs';
+import path from 'node:path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { readArchitectureSources } from '../../../testing/vitestSuites.architecture.support';
 import {
   listCanvasSourceFiles,
   readAppSource,
   readRepoFile,
 } from './canvasStartupAndDraftRecovery.architecture.support';
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>();
+  return {
+    ...actual,
+    readdirSync: vi.fn(actual.readdirSync),
+    statSync: vi.fn(actual.statSync),
+  };
+});
+
+afterEach(async () => {
+  vi.restoreAllMocks();
+  const actual = await vi.importActual<typeof import('node:fs')>('node:fs');
+  vi.mocked(readdirSync).mockReset().mockImplementation(actual.readdirSync);
+  vi.mocked(statSync).mockReset().mockImplementation(actual.statSync);
+});
+
+function sourceEntry(name: string, kind: 'file' | 'directory' | 'symlink'): Dirent {
+  return {
+    name,
+    isDirectory: () => kind === 'directory',
+    isSymbolicLink: () => kind === 'symlink',
+  } as Dirent;
+}
 
 describe('canvas draft recovery boundary architecture', () => {
   it('documents and guards protected-runtime token refresh and layout persistence semantics', () => {
@@ -90,12 +117,32 @@ describe('canvas draft recovery boundary architecture', () => {
     );
   });
 
-  it('keeps Canvas authoring draft persistence on aggregate-native types', () => {
-    const workspacePortSource = readAppSource('../../ports/workspace.ts');
-    const workspacePortsSource = readAppSource('../../services/workspace/workspacePorts.ts');
-    const repositorySource = readAppSource('canvasDraftRepository.ts');
-    const authoringSource = readAppSource('canvasDraftAuthoring.ts');
-    const structuralSignatureSource = readAppSource('canvasDraftStructuralSignature.ts');
+  it('keeps Canvas authoring draft persistence on aggregate-native types', async () => {
+    const canvasFiles = listCanvasSourceFiles();
+    const explicitPaths = [
+      '../../ports/workspace.ts',
+      '../../services/workspace/workspacePorts.ts',
+      'canvasDraftRepository.ts',
+      'canvasDraftAuthoring.ts',
+      'canvasDraftStructuralSignature.ts',
+    ].map((relativePath) => path.resolve(import.meta.dirname, relativePath));
+    const sourcePaths = [
+      ...new Set([
+        ...explicitPaths,
+        ...canvasFiles.map((relativePath) => path.resolve(import.meta.dirname, relativePath)),
+      ]),
+    ];
+    const read = vi.spyOn(fsPromises, 'readFile');
+    const sources = await readArchitectureSources(sourcePaths);
+    expect([...sources.keys()]).toEqual(sourcePaths);
+    expect(read).toHaveBeenCalledTimes(sourcePaths.length);
+    const [
+      workspacePortSource,
+      workspacePortsSource,
+      repositorySource,
+      authoringSource,
+      structuralSignatureSource,
+    ] = explicitPaths.map((filePath) => sources.get(filePath));
 
     for (const retiredExport of [
       'export type WorkspaceGraphDraft',
@@ -120,8 +167,8 @@ describe('canvas draft recovery boundary architecture', () => {
 
     const bannedWorkspaceDraftImport =
       /import\s+type\s+\{[^}]*\b(?:WorkspaceGraphDraft|WorkspaceGraphDraftRecord)\b[^}]*\}\s+from\s+['"]\.\.\/\.\.\/ports\/workspace['"]/;
-    for (const relativePath of listCanvasSourceFiles()) {
-      const source = readAppSource(relativePath);
+    for (const relativePath of canvasFiles) {
+      const source = sources.get(path.resolve(import.meta.dirname, relativePath));
       expect(source, relativePath).not.toMatch(bannedWorkspaceDraftImport);
     }
   });
@@ -161,5 +208,91 @@ describe('canvas draft recovery boundary architecture', () => {
     expect(recoveryTemplateSource).toContain('function CanvasRecoveryBannerTemplate(');
     expect(recoveryTemplateSource).not.toContain('CanvasDraftPresentationState');
     expect(recoveryTemplateSource).not.toContain('canvasViewCopy');
+  });
+});
+
+describe('Canvas source inventory', () => {
+  it('retains nested TypeScript, tests, and sorted paths without stat calls for normal entries', () => {
+    const root = import.meta.dirname;
+    const tree = new Map<string, Dirent[]>([
+      [
+        root,
+        [
+          sourceEntry('z.tsx', 'file'),
+          sourceEntry('nested', 'directory'),
+          sourceEntry('ignored.md', 'file'),
+          sourceEntry('boundary.architecture.test.ts', 'file'),
+          sourceEntry('a.ts', 'file'),
+        ],
+      ],
+      [
+        path.join(root, 'nested'),
+        [sourceEntry('inner.ts', 'file'), sourceEntry('deeper', 'directory')],
+      ],
+      [path.join(root, 'nested/deeper'), [sourceEntry('fixture.test.tsx', 'file')]],
+    ]);
+    vi.mocked(readdirSync).mockImplementation((directory, options) => {
+      expect(options).toEqual({ withFileTypes: true });
+      const entries = tree.get(String(directory));
+      if (entries === undefined) throw new Error(`Unexpected directory: ${String(directory)}`);
+      return entries as unknown as ReturnType<typeof readdirSync>;
+    });
+
+    expect(listCanvasSourceFiles()).toEqual([
+      'a.ts',
+      'boundary.architecture.test.ts',
+      'nested/deeper/fixture.test.tsx',
+      'nested/inner.ts',
+      'z.tsx',
+    ]);
+    expect(readdirSync).toHaveBeenCalledTimes(3);
+    expect(statSync).not.toHaveBeenCalled();
+  });
+
+  it('follows directory and file symlinks using metadata only for those links', () => {
+    const root = import.meta.dirname;
+    vi.mocked(readdirSync).mockImplementation((directory, options) => {
+      expect(options).toEqual({ withFileTypes: true });
+      return (String(directory) === root
+        ? [
+            sourceEntry('linked', 'symlink'),
+            sourceEntry('linked.ts', 'symlink'),
+            sourceEntry('a.ts', 'file'),
+          ]
+        : [sourceEntry('nested.tsx', 'file')]) as unknown as ReturnType<typeof readdirSync>;
+    });
+    vi.mocked(statSync).mockImplementation(
+      (file) =>
+        ({ isDirectory: () => String(file) === path.join(root, 'linked') }) as ReturnType<
+          typeof statSync
+        >
+    );
+
+    expect(listCanvasSourceFiles()).toEqual(['a.ts', 'linked.ts', 'linked/nested.tsx']);
+    expect(readdirSync).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(statSync).mock.calls.map(([file]) => String(file))).toEqual([
+      path.join(root, 'linked'),
+      path.join(root, 'linked.ts'),
+    ]);
+  });
+
+  it('propagates directory enumeration failure', () => {
+    const failure = new Error('Directory read denied');
+    vi.mocked(readdirSync).mockImplementation(() => {
+      throw failure;
+    });
+    expect(() => listCanvasSourceFiles()).toThrow(failure);
+    expect(statSync).not.toHaveBeenCalled();
+  });
+
+  it('propagates symlink metadata failure', () => {
+    const failure = new Error('Symlink metadata denied');
+    vi.mocked(readdirSync).mockReturnValue([
+      sourceEntry('linked', 'symlink'),
+    ] as unknown as ReturnType<typeof readdirSync>);
+    vi.mocked(statSync).mockImplementation(() => {
+      throw failure;
+    });
+    expect(() => listCanvasSourceFiles()).toThrow(failure);
   });
 });

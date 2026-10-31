@@ -10,6 +10,7 @@ export type CodeViewCopy = Readonly<{
   explorerTitle: string;
   editorLoadingMessage: string;
   editorAriaLabelPrefix: string;
+  viewerAriaLabelPrefix: string;
   workingTreeSynchronizedLabel: string;
   workingTreeSynchronizedMessage: string;
   workingTreeModifiedLabel: string;
@@ -73,7 +74,7 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
   title: { key: 'code.title', fallback: 'Code' },
   subtitle: {
     key: 'code.subtitle',
-    fallback: 'Browse workspace files and edit a local Monaco buffer.',
+    fallback: 'Inspect project files, model references and metadata.',
   },
   explorerTitle: { key: 'code.explorerTitle', fallback: 'Explorer' },
   editorLoadingMessage: {
@@ -81,6 +82,7 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
     fallback: 'Loading Monaco editor...',
   },
   editorAriaLabelPrefix: { key: 'code.editorAriaLabelPrefix', fallback: 'Editing' },
+  viewerAriaLabelPrefix: { key: 'code.viewerAriaLabelPrefix', fallback: 'Viewing' },
   workingTreeSynchronizedLabel: {
     key: 'code.workingTreeSynchronizedLabel',
     fallback: 'Synchronized',
@@ -176,8 +178,7 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
   },
   workingTreeGraphOwnedReadOnlyMessage: {
     key: 'code.workingTreeGraphOwnedReadOnlyMessage',
-    fallback:
-      'This graph-draft file is generated from the Canvas and is read-only in Properties > Code. Use a file-authoritative DBT project for direct editing.',
+    fallback: 'This file is generated from the Canvas and is read-only in Properties > Code.',
   },
   workingTreeRetryLabel: { key: 'code.workingTreeRetryLabel', fallback: 'Retry' },
   workingTreeReloadLabel: { key: 'code.workingTreeReloadLabel', fallback: 'Reload file' },
@@ -266,10 +267,11 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
 
 const SPANISH_COPY: CodeViewCopy = {
   title: 'Código',
-  subtitle: 'Explora archivos del workspace y edita el árbol de trabajo en Monaco.',
+  subtitle: 'Consulta archivos del proyecto, referencias de modelos y metadatos.',
   explorerTitle: 'Explorador',
   editorLoadingMessage: 'Cargando editor Monaco...',
   editorAriaLabelPrefix: 'Editando',
+  viewerAriaLabelPrefix: 'Consultando',
   workingTreeSynchronizedLabel: 'Sincronizado',
   workingTreeSynchronizedMessage: 'El árbol de trabajo coincide con el editor.',
   workingTreeModifiedLabel: 'Modificado',
@@ -305,7 +307,7 @@ const SPANISH_COPY: CodeViewCopy = {
   workingTreeReadOnlyMessage: 'Este archivo no se puede modificar.',
   workingTreeGraphOwnedReadOnlyLabel: 'Generado por el Canvas',
   workingTreeGraphOwnedReadOnlyMessage:
-    'Este archivo del borrador de grafo se genera desde el Canvas y es de solo lectura en Propiedades > Código. Usa un proyecto DBT con autoridad de archivos para editarlo directamente.',
+    'Este archivo se genera desde el Canvas y es de solo lectura en Propiedades > Código.',
   workingTreeRetryLabel: 'Reintentar',
   workingTreeReloadLabel: 'Recargar archivo',
   routeLoadingMessage: 'Cargando archivos del workspace...',

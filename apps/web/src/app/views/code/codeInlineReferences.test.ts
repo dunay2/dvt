@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import type { FileContent } from '../../ports/workspace';
 
 import {
+  isCodeInlineReferenceFile,
   projectCodeInlineReferences,
   resolveCodeSelectedModel,
   type CodeInlineIneligibilityReason,
@@ -147,6 +148,49 @@ function expectReason(
   expect(projectCodeInlineReferences(input)).toEqual({ kind: 'text-only', reason });
 }
 describe('Code inline reference authority', () => {
+  it.each(['sql', 'SQL', 'Sql'])('admits %s files for reference inspection', (language) => {
+    expect(isCodeInlineReferenceFile({ language, content: "{{ ref('orders') }}" })).toBe(true);
+  });
+
+  it.each([
+    "{{ source('raw', 'client') }}",
+    '{{ custom_macro() }}',
+    '{% set relation = custom_macro() %}',
+    '{{- custom_macro() -}}',
+    "\uFEFF-- depends_on: {{ ref('orders') }}\nselect 1",
+    "{{ config(materialized='view') }}\nselect 1",
+  ])('keeps Jinja candidates for authoritative analysis: %s', (content) => {
+    expect(isCodeInlineReferenceFile({ language: 'sql', content })).toBe(true);
+  });
+
+  it.each([
+    'select client_id, country from raw.client where client_id is not null',
+    '',
+    "select ref('orders')",
+    '{# A Jinja comment #}\nselect 1',
+  ])('reads plain SQL without inline reference analysis: %s', (content) => {
+    expect(isCodeInlineReferenceFile({ language: 'sql', content })).toBe(false);
+  });
+
+  it.each(['yaml', 'YAML', 'json', 'markdown', 'python', ''])(
+    'keeps %s files outside reference inspection',
+    (language) => {
+      expect(isCodeInlineReferenceFile({ language, content: "{{ ref('orders') }}" })).toBe(false);
+    }
+  );
+
+  it('does not infer SQL eligibility before an accepted file is available', () => {
+    expect(isCodeInlineReferenceFile(undefined)).toBe(false);
+  });
+
+  it('resolves a model in a custom model path without classifying its directory name', () => {
+    const input = fixture();
+    input.project.nodes[0]!.originalFilePath = 'warehouse/report.sql';
+    expect(resolveCodeSelectedModel(input.project, 'dbt/warehouse/report.sql')).toBe(
+      'model.demo.report'
+    );
+  });
+
   it.each([true, false])(
     'projects exact Monaco UTF-16 ranges while retaining raw revisions (BOM=%s)',
     (hasBom) => {

@@ -1,8 +1,9 @@
 /** Owned concern: drive real browser pointer capture, including the Cypress iframe scale. */
 function browserPoint(
-  element: HTMLElement,
+  element: HTMLElement | undefined,
   verticalFraction = 0.5
 ): { x: number; y: number; scale: number } {
+  if (element === undefined) throw new Error('Expected a browser pointer target.');
   const bounds = element.getBoundingClientRect();
   const window = element.ownerDocument.defaultView!;
   const frame = window.parent.document.querySelector('iframe.aut-iframe')!.getBoundingClientRect();
@@ -67,9 +68,11 @@ export function moveWorkbenchCard(
             }) as Promise<unknown>
         );
         if (params.type === 'mouseMoved' && params.buttons === 1 && observe != null) {
-          cy.get(selector).should(($held) =>
-            observe($held[0], (params.x - x) / scale, (params.y - y) / scale)
-          );
+          cy.get(selector).should(($held) => {
+            const held = $held[0];
+            if (held === undefined) throw new Error('Expected the held workbench card.');
+            observe(held, (params.x - x) / scale, (params.y - y) / scale);
+          });
         }
       });
     });

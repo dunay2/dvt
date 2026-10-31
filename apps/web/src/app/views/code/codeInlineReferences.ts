@@ -41,6 +41,15 @@ export type CodeInlineReferenceProjection =
     }>
   | Readonly<{ kind: 'text-only'; reason: CodeInlineIneligibilityReason }>;
 
+export function isCodeInlineReferenceFile(
+  file: Pick<FileContent, 'language' | 'content'> | undefined
+): boolean {
+  return (
+    file?.language.toLowerCase() === 'sql' &&
+    (file.content.includes('{{') || file.content.includes('{%'))
+  );
+}
+
 function normalizedRelativePath(path: string | undefined): string | undefined {
   if (!path || path.includes('\0') || path.includes(':')) return undefined;
   const physical = path.replace(/\\/gu, '/');

@@ -129,7 +129,7 @@ export function stubE2eJsonApi(
   }));
 }
 
-export function installE2eApiFetchStub(window: Window): void {
+export function installE2eApiFetchStub(window: Cypress.AUTWindow): void {
   const originalFetch = window.fetch.bind(window);
 
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {

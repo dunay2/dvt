@@ -68,8 +68,8 @@ function clickCommandSlotNatively(slot: string): void {
     });
 }
 
-function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft().then((response) => {
+function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable<unknown> {
+  return readLiveGraphDraft().then<unknown>((response) => {
     expect(response.status).to.equal(200);
     const nodes = (
       response.body as {
@@ -102,8 +102,8 @@ function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable
   });
 }
 
-function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
-  return readLiveGraphDraft().then((response) => {
+function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<unknown> {
+  return readLiveGraphDraft().then<unknown>((response) => {
     expect(response.status).to.equal(200);
     const nodes = (
       response.body as {
@@ -135,7 +135,7 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
   });
 }
 
-function openEditableDbtProjectCodeFile(path: string): void {
+function openReadOnlyDbtProjectCodeFile(path: string): void {
   cy.get('[data-slot="shell-file-menu-trigger"]', { timeout: 20_000 }).click();
   cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
     .scrollIntoView()
@@ -156,13 +156,13 @@ function openEditableDbtProjectCodeFile(path: string): void {
       })
         .should('be.visible')
         .click();
-      cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+      cy.get('[data-testid="monaco-code-viewer"]', { timeout: 30_000 })
         .should('be.visible')
         .and('have.length', 1);
-      cy.get('[data-testid="monaco-code-viewer"]').should('not.exist');
+      cy.get('[data-testid="monaco-code-editor"]').should('not.exist');
       cy.get('[data-slot="code-working-tree-status"]')
         .should('be.visible')
-        .and('contain.text', resolveCodeViewCopy().workingTreeSynchronizedLabel);
+        .and('contain.text', resolveCodeViewCopy().workingTreeReadOnlyLabel);
     });
 }
 
@@ -255,6 +255,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('[data-slot="run-detail-tabs"]', { timeout: 20_000 }).should('exist');
 
     const workingTreePath = 'models/payments_model.sql';
+    let inspectedRevision: string;
 
     visitWithLiveWorkspaceSession('/canvas');
     cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
@@ -267,13 +268,19 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     );
     expectGeneratedModelSql();
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    openEditableDbtProjectCodeFile(workingTreePath);
+    readLiveWorkspaceFile(workingTreePath).then(({ status, body }) => {
+      expect(status).to.equal(200);
+      inspectedRevision = (body as { contentSha256: string }).contentSha256;
+      expect(inspectedRevision).to.match(/^[a-f0-9]{64}$/);
+    });
+    cy.intercept({ method: 'POST', pathname: '/workspace/files/**' }).as('projectCodeWrites');
+    openReadOnlyDbtProjectCodeFile(workingTreePath);
     cy.get('[data-slot="canvas-code-workspace-surface"]').within(() => {
       cy.get('button').should(($buttons) => {
         const labels = [...$buttons].map((button) => button.textContent?.trim());
         expect(labels).not.to.include.members(['Save', 'Guardar']);
       });
-      cy.get('[data-testid="monaco-code-editor"]')
+      cy.get('[data-testid="monaco-code-viewer"]')
         .find('.view-lines')
         .should(($lines) => {
           const renderedCode = $lines
@@ -283,13 +290,29 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
           expect(renderedCode).to.contain(GENERATED_ORDER_ID_PROJECTION);
           expect(renderedCode).to.contain(GENERATED_AMOUNT_PROJECTION);
         });
+      cy.get('[data-testid="monaco-code-viewer"] .view-line').first().click();
+      cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea')
+        .should('have.prop', 'readOnly', true)
+        .and('be.focused');
+      cy.get('[data-testid="monaco-code-viewer"] textarea.inputarea').type(
+        'blocked_generated_code_edit',
+        { force: true, delay: 0 }
+      );
+      cy.get('[data-testid="monaco-code-viewer"] .view-lines').should(
+        'not.contain.text',
+        'blocked_generated_code_edit'
+      );
     });
     readLiveWorkspaceFile(workingTreePath).then((response) => {
       expect(response.status).to.equal(200);
       const content = String((response.body as { content?: unknown }).content ?? '');
+      expect((response.body as { contentSha256: string }).contentSha256).to.equal(
+        inspectedRevision
+      );
       expect(content).to.contain(GENERATED_ORDER_ID_PROJECTION);
       expect(content).to.contain(GENERATED_AMOUNT_PROJECTION);
     });
+    cy.get('@projectCodeWrites.all').should('have.length', 0);
     cy.get('[data-slot="canvas-workspace-tab"]')
       .should('be.visible')
       .click()

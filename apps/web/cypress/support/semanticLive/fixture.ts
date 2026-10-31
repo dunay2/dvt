@@ -90,25 +90,31 @@ export function importSemanticModel(
   });
   const sourceTemplate = base.nodes.find((node) => node.role === 'input')!;
   const transformTemplate = base.nodes.find((node) => node.role === 'transform')!;
-  const sources = document.sidecar.relations.flatMap((relation) =>
-    !('sourceRef' in relation)
-      ? []
-      : [
-          {
-            ...sourceTemplate,
-            id: `source-${relation.displayName}`,
-            name: relation.displayName,
-            metadata: {
-              schema: 'raw',
-              tableName: relation.displayName,
-              connectedSourceRef: relation.sourceRef,
-              columns: document.sidecar.fields
-                .filter((field) => field.relationId === relation.relationId)
-                .map((field) => ({ name: field.displayName, type: 'text' })),
-            },
-          },
-        ]
-  );
+  const sources = document.sidecar.relations.flatMap((relation) => {
+    if (!('sourceRef' in relation)) return [];
+    const sourceRef = relation.sourceRef;
+    const name = relation.displayName;
+    if (sourceRef === undefined || name === undefined) {
+      throw new Error('The semantic fixture source requires its binding and name.');
+    }
+    return [
+      {
+        ...sourceTemplate,
+        id: `source-${name}`,
+        name,
+        metadata: {
+          schema: 'raw',
+          tableName: name,
+          connectedSourceRef: sourceRef,
+          columns: document.sidecar.fields
+            .filter((field) => field.relationId === relation.relationId)
+            .map((field) => ({ name: field.displayName, type: 'text' })),
+        },
+      },
+    ];
+  });
+  const firstSource = sources[0];
+  if (firstSource === undefined) throw new Error('The semantic fixture requires a source.');
   const model = {
     ...transformTemplate,
     id: modelId,
@@ -118,7 +124,7 @@ export function importSemanticModel(
         materialized: 'table',
         resultTarget: {
           schemaVersion: 'dvt-transform-result-target.v1',
-          connectionRef: sources[0]!.metadata.connectedSourceRef.connectionRef,
+          connectionRef: firstSource.metadata.connectedSourceRef.connectionRef,
           schema,
           relation: options?.resultRelation ?? resultRelation,
         },

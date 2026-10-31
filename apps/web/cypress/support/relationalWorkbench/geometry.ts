@@ -2,8 +2,10 @@
 export function verifyCompleteTreeFit(viewportSelector: string): void {
   cy.get('[data-slot="canvas-relational-tree-fit"]').click();
   cy.get(viewportSelector).should(($viewport) => {
-    const viewport = $viewport[0].getBoundingClientRect();
-    const cards = $viewport[0].querySelectorAll(
+    const element = $viewport[0];
+    if (element === undefined) throw new Error('Expected the relational tree viewport.');
+    const viewport = element.getBoundingClientRect();
+    const cards = element.querySelectorAll(
       '[data-slot="canvas-relational-tree-node"], [data-slot="canvas-relational-tree-output"]'
     );
     expect(cards.length).to.be.greaterThan(1);
@@ -23,7 +25,9 @@ export function verifyWheelZoom(viewportSelector: string): void {
     .invoke('text')
     .then((initial) => {
       cy.get(viewportSelector).then(($viewport) => {
-        const bounds = $viewport[0].getBoundingClientRect();
+        const element = $viewport[0];
+        if (element === undefined) throw new Error('Expected the relational tree viewport.');
+        const bounds = element.getBoundingClientRect();
         cy.wrap($viewport).trigger('wheel', {
           eventConstructor: 'WheelEvent',
           deltaY: -120,

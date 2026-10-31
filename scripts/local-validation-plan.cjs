@@ -501,6 +501,25 @@ function ciToolingTestSteps(changedFiles) {
     .map((testPath) =>
       testStep(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
     );
+  if (
+    changedFiles.some((filePath) =>
+      [
+        'docs/architecture/components/web/code-workbench-workspace-files-component.md',
+        'docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md',
+        'docs/evidence/ED-20260410-contract-mapper-boundary-option-a.md',
+      ].includes(filePath)
+    )
+  ) {
+    pushStepOnce(
+      plan,
+      testStep(
+        'test-docs-disposition-canon',
+        'node',
+        '--test',
+        'tools/ci/docs-disposition-canon.test.mjs'
+      )
+    );
+  }
   if (changedFiles.includes('tools/ci/scope-config.mjs')) {
     for (const suite of [
       'ci-tool-routing',
@@ -658,6 +677,7 @@ function buildVerifyChangedPlan(files) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
   }
   pushSteps(plan, VERIFY_CHANGED_PRE_TEST_STEPS.slice(1));
+  pushSteps(plan, ciToolingTestSteps(changedFiles));
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }

@@ -5,7 +5,10 @@
  * @consequence No duplicated drag engine, mocked query or alternative acceptance path.
  * @version 1.0.0
  */
-import type { DvtSubstraitSemanticDocumentV1 } from '@dvt/contracts';
+import {
+  WorkspaceGraphDraftReadSuccessSchema,
+  type DvtSubstraitSemanticDocumentV1,
+} from '@dvt/contracts';
 
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
@@ -163,7 +166,10 @@ describe('Progressive SQL verticals', () => {
         });
       cy.screenshot(`sql-vertical-${scenario.level}-preview`);
       readLiveGraphDraft().then(({ body }) => {
-        cy.writeFile(`../../tmp/sql-vertical-3456/level-${scenario.level}-draft.json`, body);
+        cy.writeFile(
+          `../../tmp/sql-vertical-3456/level-${scenario.level}-draft.json`,
+          WorkspaceGraphDraftReadSuccessSchema.parse(body)
+        );
       });
       cy.get('[data-slot="canvas-model-tab-close"]').click();
       cy.then(() =>

@@ -46,7 +46,7 @@ export function resolveLiveWorkspaceSession(): E2eWorkspaceSession {
 export function visitWithLiveWorkspaceSession(
   path: string,
   options: {
-    onBeforeLoad?: (window: Window) => void;
+    onBeforeLoad?: (window: Cypress.AUTWindow) => void;
   } = {}
 ): void {
   const session = resolveLiveWorkspaceSession();
@@ -135,8 +135,8 @@ export function waitForLiveWorkspaceFileContent(
   path: string,
   expectedContent: string,
   attempt = 0
-): Cypress.Chainable<void> {
-  return readLiveWorkspaceFile(path).then((response) => {
+): Cypress.Chainable<unknown> {
+  return readLiveWorkspaceFile(path).then<unknown>((response) => {
     expect(response.status).to.equal(200);
     const content = String((response.body as { content?: unknown }).content ?? '');
 

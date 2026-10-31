@@ -53,7 +53,12 @@ export function CodeWorkingTreeStatus({
       className={`${routeWorkbenchHeaderBandClassName} flex min-h-11 items-center gap-3 px-4 py-2`}
     >
       <StatusIndicator state={STATUS_TONE[phase]} label={statusCopy.label} />
-      <span className="min-w-0 flex-1 text-xs text-[var(--text-muted)]">{statusCopy.message}</span>
+      <span
+        className="min-w-0 flex-1 truncate text-xs text-[var(--text-muted)]"
+        title={statusCopy.message}
+      >
+        {statusCopy.message}
+      </span>
       {phase === 'failed' ||
       phase === 'reconciliation_failed' ||
       phase === 'persisted_stale' ||

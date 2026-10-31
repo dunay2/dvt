@@ -20,7 +20,7 @@ describe('CodeView authority', () => {
   } = harness;
   afterEach(harness.cleanup);
 
-  it('opens authorized project files outside the graph without making generated files editable', async () => {
+  it('keeps both authorized project files and generated graph files read-only', async () => {
     const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>();
     const getGraphSnapshot = vi.fn(async (): Promise<WorkspaceGraphSnapshot> => ({
       authoringAuthority: mockGraphDraftAuthoringAuthority,
@@ -59,12 +59,12 @@ describe('CodeView authority', () => {
     await waitFor(
       () =>
         getContainer().querySelector(
-          '[data-testid="monaco-code-editor"], [data-slot="code-route-empty-state"]'
+          '[data-testid="monaco-code-viewer"], [data-slot="code-route-empty-state"]'
         ) != null
     );
     expect(getGraphSnapshot).toHaveBeenCalled();
     expect(
-      getContainer().querySelector('[data-testid="monaco-code-editor"]')?.getAttribute('data-path')
+      getContainer().querySelector('[data-testid="monaco-code-viewer"]')?.getAttribute('data-path')
     ).toBe('README.md');
     const generated = getContainer().querySelector<HTMLButtonElement>(
       '[data-slot="code-workspace-file-entry"][data-workspace-path="models/graph_model.sql"]'
@@ -146,15 +146,14 @@ describe('CodeView authority', () => {
 
     await waitFor(() => getContainer()?.textContent?.includes('sales_pipeline.yaml') === true);
     await waitFor(
-      () => getContainer()?.querySelector('[data-testid="monaco-code-editor"]') != null
+      () => getContainer()?.querySelector('[data-testid="monaco-code-viewer"]') != null
     );
 
-    const editor = getContainer().querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
-    );
-    expect(editor?.getAttribute('data-path')).toBe('pipelines/sales_pipeline.yaml');
-    expect(editor?.getAttribute('data-language')).toBe('yaml');
-    expect(editor?.value).toContain('entrypoint: "models/analytics/model_orders.sql"');
+    const viewer = getContainer().querySelector<HTMLElement>('[data-testid="monaco-code-viewer"]');
+    expect(viewer?.getAttribute('data-path')).toBe('pipelines/sales_pipeline.yaml');
+    expect(viewer?.getAttribute('data-language')).toBe('yaml');
+    expect(viewer?.textContent).toContain('entrypoint: "models/analytics/model_orders.sql"');
+    expect(getContainer().querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('scopes the explorer to files that represent the active graph', async () => {
@@ -240,8 +239,8 @@ describe('CodeView authority', () => {
     );
     expect(viewer?.getAttribute('data-path')).toBe('models/payments_model.sql');
     expect(viewer?.textContent).toContain("{{ source('finance_warehouse', 'payments_final') }}");
-    expect(currentContainer.textContent).not.toContain(copy.workingTreeGraphOwnedReadOnlyLabel);
-    expect(currentContainer.querySelector('[data-slot="code-working-tree-status"]')).toBeNull();
+    expect(currentContainer.textContent).toContain(copy.workingTreeReadOnlyLabel);
+    expect(currentContainer.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
 
   it('opens a project-scoped resource without querying the graph-draft snapshot', async () => {
@@ -273,7 +272,7 @@ describe('CodeView authority', () => {
     await waitFor(
       () =>
         getContainer()
-          .querySelector('[data-testid="monaco-code-editor"]')
+          .querySelector('[data-testid="monaco-code-viewer"]')
           ?.getAttribute('data-path') === 'models/orders.sql'
     );
     expect(getGraphSnapshot).not.toHaveBeenCalled();

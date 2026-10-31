@@ -139,7 +139,7 @@ describe('Model card field flow', () => {
       expect(saved).to.exist;
       expect(saved?.metadata ?? {}).not.to.have.property('transformAuthoring');
       const edge = body?.draft?.edges.find((entry) => entry.targetId === 'orphan-transform-1');
-      expect(edge?.metadata?.inputBindings?.fields).to.have.length(2);
+      expect(edge?.metadata).to.have.nested.property('inputBindings.fields').with.length(2);
     });
     cy.get('.react-flow__controls-fitview').click();
     cy.screenshot('model-chain-input-output');
