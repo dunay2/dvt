@@ -1,0 +1,103 @@
+---
+title: Native dbt Project Analysis
+status: Accepted
+owner: API / dbt Project Analysis
+last_reviewed: 2026-10-31
+planning_type: architecture
+---
+
+# Native dbt project analysis
+
+`SYS-API-DBT-ANALYZER` implements the existing `IDbtProjectAnalyzerPort` and
+`IDbtProjectSourceRevisionReader`. It owns isolated native analysis and bounded
+reuse of eligible parse evidence. Authorization, Canvas authority, writes, graph
+projection, selected-model selection and execution admission retain their owners.
+
+Governing sources: [ADR-0060](../../../adr/ADR-0060-dbt-project-authoring-authority.md),
+the [command/query rule](../../command-query-rail-governance.md), and the
+[prospective design and test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6550249113).
+Planning DB owns the exact responsibilities, files, symbols and rail relations
+under `GH-3747-DBT-PARSE-ANALYSIS-REUSE`.
+
+## Existing rails and boundaries
+
+| Owner                                                    | Responsibility                                                                          |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `ProjectDbtGraphFromFiles` / `DbtProjectGraphProjection` | Current file authority, graph and current connection capabilities                       |
+| `AnalyzeSelectedDbtModel` / `DbtProjectAnalysis`         | Current file authority and selected-resource projection                                 |
+| `DbtCliProjectAnalyzer`                                  | Authorized snapshot, native parse/compile, manifest projection and private-file cleanup |
+| Context and eligibility collaborators                    | Effective input identity and safe reuse admission                                       |
+| `DbtParseAnalysisReuse`                                  | Bounded sharing of in-flight work and valid results                                     |
+
+Both consumers call the same adapter instance through the unchanged application
+port. Their authorization, binding, connection and CAS checks remain independent
+on every request. An analysis grants no permission.
+
+```mermaid
+flowchart LR
+  G[Graph / current authority] --> A[Existing analyzer port]
+  M[Model / current authority] --> A
+  A --> S[Authorized snapshot and context]
+  S --> E{Eligible parse?}
+  E -->|No / compile| P[Native process]
+  E -->|Yes| R[Bounded shared evidence]
+  R -->|Miss| P
+  P --> V[Recheck revision and context]
+  R --> V
+  V --> O[Original evidence / separate projections]
+```
+
+## Validity and lifecycle
+
+Identity includes tenant/project/environment, canonical directory, requested root,
+complete executable source revision, exact managed profile bytes and sanitized
+effective environment. The existing source policy includes configuration and
+project dependencies. An open file hash alone is insufficient.
+
+Python, dbt and installed runtime dependencies are immutable for the API runtime
+generation. Upgrades require restart/recomposition, discarding retained analyses.
+Hot installation replacement is unsupported; launcher timestamps and TTLs do not
+establish library identity. Retention is neither persistent nor cross-process.
+
+Eligible execution reads a private copy of the profile bytes used in its identity.
+After shared work or a retained lookup, source and context are checked again.
+Changed or unreadable inputs produce an unavailable analysis, never stale success.
+Only valid parse results are retained. Original `analyzedAt` and `analysisSha256`
+are preserved. Isolated caller copies prevent corruption of later reads. Entry
+and serialized-result-byte limits bound retention; eviction causes fresh work.
+Invalid, unavailable and rejected work releases its pending entry.
+
+## Conservative eligibility
+
+Every snapshot file is examined, including ownerless files and project
+dependencies. SQL may contain complete literal `ref` and `source` expressions,
+using the existing semantic-region recognizer. Other files and managed profiles
+must contain no Jinja. Python, blocks, macros, unknown expressions and incomplete
+delimiters bypass reuse while retaining full native analysis support.
+
+YAML can decode backslash escapes into Jinja delimiters after this raw-source
+check. Therefore `.yml` and `.yaml` files (case-insensitive), including managed
+profiles, bypass reuse whenever they contain a backslash. This deliberately
+conservative rule covers keys and values without adding a YAML parser or claiming
+to validate decoded configuration. Plain YAML remains eligible; escaped YAML
+retains normal native analysis support. SQL keeps the literal-reference policy.
+
+Eligibility is not dependency analysis or SQL validation: the native manifest
+remains authoritative. Volatile Jinja context can alter parse-time attributes;
+see [dbt project parsing](https://docs.getdbt.com/reference/parsing). Compile and
+its selectors always execute normally. Warehouse results are not retained here.
+
+## Observation and validation
+
+Numeric request/snapshot/process/projection durations, source counts, operation,
+status and reuse disposition go to the existing logger. SQL, profiles, environment
+values, credentials and private context fingerprints do not. Timing values are
+diagnostics, not pass thresholds.
+
+Tests cover repeated/concurrent requests, scope/root separation, secondary-file,
+profile and environment changes, in-flight drift, dynamic/compile bypass,
+failures/recovery, bounded retention and caller mutation. Composition and route
+tests preserve independent authority, including successful reads followed by
+revocation. Real proof uses an isolated synthetic project and the native runner:
+cold/warm, concurrent fresh-instance calls and a relevant source change. Compare
+actual process counts, identities and measured durations before and after.

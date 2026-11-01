@@ -82,10 +82,15 @@ describe('DbtCliProjectAnalyzer', () => {
     let isolatedProjectDirectory = '';
     let isolatedTargetPath = '';
     let isolatedLogPath = '';
+    let isolatedProfilesDirectory = '';
     const run = vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {
       isolatedProjectDirectory = readFlag(input.args, '--project-dir');
       isolatedTargetPath = readFlag(input.args, '--target-path');
       isolatedLogPath = readFlag(input.args, '--log-path');
+      isolatedProfilesDirectory = readFlag(input.args, '--profiles-dir');
+      await expect(
+        readFile(path.join(isolatedProfilesDirectory, 'profiles.yml'), 'utf8')
+      ).resolves.toBe(await readFile(path.join(profilesDirectory, 'profiles.yml'), 'utf8'));
       await mkdir(isolatedTargetPath, { recursive: true });
       await writeFile(
         path.join(isolatedTargetPath, 'manifest.json'),
@@ -168,7 +173,7 @@ describe('DbtCliProjectAnalyzer', () => {
           '--project-dir',
           isolatedProjectDirectory,
           '--profiles-dir',
-          profilesDirectory,
+          isolatedProfilesDirectory,
         ]),
         env: expect.not.objectContaining({
           DATABASE_URL: expect.anything(),
@@ -179,9 +184,12 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(path.relative(projectDirectory, isolatedTargetPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedLogPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedProjectDirectory)).toMatch(/^\.\./);
+    expect(isolatedProfilesDirectory).not.toBe(profilesDirectory);
+    expect(path.dirname(isolatedProfilesDirectory)).toBe(path.dirname(isolatedProjectDirectory));
     await expect(stat(path.join(isolatedProjectDirectory, 'target'))).rejects.toThrow();
     await expect(stat(isolatedTargetPath)).rejects.toThrow();
     await expect(stat(isolatedProjectDirectory)).rejects.toThrow();
+    await expect(stat(isolatedProfilesDirectory)).rejects.toThrow();
   });
 
   it('runs selected model compilation through the same isolated DBT boundary', async () => {
@@ -259,7 +267,7 @@ describe('DbtCliProjectAnalyzer', () => {
       projectRoot: 'analytics',
     });
     expect(readRevision).toBe(first.projectRevision.contentSetSha256);
-    expect(processRunner.run).toHaveBeenCalledTimes(2);
+    expect(processRunner.run).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -451,7 +459,7 @@ describe('DbtCliProjectAnalyzer', () => {
     );
   });
 
-  it('hashes and parses the same isolated project snapshot', async () => {
+  it('hashes and parses the same isolated snapshot but refuses evidence after live source drift', async () => {
     const originalSql = "select * from {{ source('raw', 'orders') }}\n";
     const changedSql = 'select 1 as changed_while_parsing\n';
     let analyzedProjectDirectory = '';
@@ -491,7 +499,10 @@ describe('DbtCliProjectAnalyzer', () => {
 
     const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
 
-    expect(result.status).toBe('valid');
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({ code: 'dbt_project_changed_during_analysis' }),
+    ]);
     expect(result.projectRevision.contentSetSha256).toBe(expectedRevision.sha256);
     expect(analyzedSql).toBe(originalSql);
     expect(analyzedProjectDirectory).not.toBe(projectDirectory);

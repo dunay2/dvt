@@ -6,6 +6,8 @@ import type {
   DbtProjectSemanticRegion,
 } from '../../application/ports/dbtProjectAnalysis.js';
 
+import { readDbtLiteralReference } from './dbtLiteralReference.js';
+
 type SemanticRegionProjection = Readonly<{
   regions: readonly DbtProjectSemanticRegion[];
   diagnostics: readonly DbtProjectSemanticDiagnostic[];
@@ -14,9 +16,6 @@ type SemanticRegionProjection = Readonly<{
 type FileContent = Readonly<{ path: string; content: string }>;
 
 const JINJA_REGION_PATTERN = /\{\{[\s\S]*?\}\}|\{%[\s\S]*?%\}|\{#[\s\S]*?#\}/gu;
-const REF_LITERAL_PATTERN = /^\s*ref\s*\(\s*(['"])([^'"]+)\1(?:\s*,\s*(['"])([^'"]+)\3)?\s*\)\s*$/u;
-const SOURCE_LITERAL_PATTERN =
-  /^\s*source\s*\(\s*(['"])([^'"]+)\1\s*,\s*(['"])([^'"]+)\3\s*\)\s*$/u;
 
 export function projectDbtSemanticRegions(
   input: Readonly<{
@@ -103,17 +102,13 @@ function resolveRegion(
   }
 
   const expression = input.source.slice(2, -2);
-  const refMatch = REF_LITERAL_PATTERN.exec(expression);
-  if (refMatch !== null) {
-    const firstName = refMatch[2];
-    const secondName = refMatch[4];
-    if (firstName === undefined) {
-      return { kind: 'ref', classification: 'code_only', reasonCode: 'dbt_ref_invalid' };
-    }
+  const literalReference = readDbtLiteralReference(expression);
+  if (literalReference?.kind === 'ref') {
     const candidates = dependencyCandidates(input.owners, input.identityById).filter((identity) =>
-      secondName === undefined
-        ? identity.name === firstName
-        : identity.packageName === firstName && identity.name === secondName
+      literalReference.packageName === undefined
+        ? identity.name === literalReference.name
+        : identity.packageName === literalReference.packageName &&
+          identity.name === literalReference.name
     );
     return resolveCandidates('ref', candidates);
   }
@@ -121,18 +116,12 @@ function resolveRegion(
     return { kind: 'jinja', classification: 'code_only', reasonCode: 'dbt_jinja_dynamic_argument' };
   }
 
-  const sourceMatch = SOURCE_LITERAL_PATTERN.exec(expression);
-  if (sourceMatch !== null) {
-    const sourceName = sourceMatch[2];
-    const tableName = sourceMatch[4];
-    if (sourceName === undefined || tableName === undefined) {
-      return { kind: 'source', classification: 'code_only', reasonCode: 'dbt_source_invalid' };
-    }
+  if (literalReference?.kind === 'source') {
     const candidates = dependencyCandidates(input.owners, input.identityById).filter(
       (identity) =>
         identity.resourceType === 'source' &&
-        identity.sourceName === sourceName &&
-        identity.name === tableName
+        identity.sourceName === literalReference.sourceName &&
+        identity.name === literalReference.name
     );
     return resolveCandidates('source', candidates);
   }

@@ -81,8 +81,9 @@ describe('dbtSelectedModelAnalysisRoutes', () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it('denies analysis when workspace files are not readable', async () => {
-    const execute = vi.fn();
+  it('denies repeated analysis after workspace file access is revoked', async () => {
+    let canReadFiles = true;
+    const execute = vi.fn().mockResolvedValue(projection());
     const app = Fastify({ logger: false });
     registerDbtSelectedModelAnalysisRoutes(app, {
       authenticator: {
@@ -90,7 +91,7 @@ describe('dbtSelectedModelAnalysisRoutes', () => {
       } as never,
       authorizer: {
         authorize: vi.fn().mockImplementation((_principal, requestedScope) =>
-          requestedScope.action.name === 'workspace:graph-draft:view'
+          requestedScope.action.name === 'workspace:graph-draft:view' || canReadFiles
             ? {
                 ok: true,
                 context: {
@@ -108,13 +109,19 @@ describe('dbtSelectedModelAnalysisRoutes', () => {
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
+    const warm = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/analysis/selected-model?${VALID_QUERY}`,
+    });
+    expect(warm.statusCode).toBe(200);
+    canReadFiles = false;
     const response = await app.inject({
       method: 'GET',
       url: `/workspace/dbt/analysis/selected-model?${VALID_QUERY}`,
     });
 
     expect(response.statusCode).toBe(403);
-    expect(execute).not.toHaveBeenCalled();
+    expect(execute).toHaveBeenCalledTimes(1);
   });
 
   it('returns a conflict when the Canvas has no file authority', async () => {

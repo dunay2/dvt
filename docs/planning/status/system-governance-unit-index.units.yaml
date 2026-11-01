@@ -310,6 +310,54 @@ units:
       - docs/architecture/command-query-rail-governance.md
     fowlerSignals:
       - coverage refinement
+  - id: SYS-API-DBT-ANALYZER
+    name: Native dbt project analyzer
+    parent: SYS-API-INFRASTRUCTURE
+    level: component
+    status: review
+    childrenRequired: false
+    ownedConcern:
+      Adapt the existing application analyzer port to isolated native execution and bounded reuse of
+      eligible scoped parse evidence.
+    owns:
+      - apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts
+      - apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts
+      - apps/api/src/infrastructure/dbt/dbtLiteralReference.ts
+      - apps/api/src/infrastructure/dbt/dbtParseReuseEligibility.ts
+      - apps/api/src/infrastructure/dbt/dbtParseAnalysisContext.ts
+      - apps/api/src/infrastructure/dbt/dbtParseAnalysisReuse.ts
+    excludes: []
+    responsibilities:
+      - Execute an isolated native dbt parse or compile and project validated analysis evidence with
+        numeric phase measurements.
+      - Derive complete scoped parse context and conservatively admit only literal deterministic
+        inputs for reuse.
+      - Share equivalent eligible in-flight work and retain bounded successful evidence while
+        isolating readers and rejecting changed contexts.
+    nonGoals:
+      - Own application-port definition, authorization, project roots, native-model publication, Git
+        or frontend state.
+    reasonsToChange:
+      - Native dbt analysis mechanics and safe context-bound reuse policy.
+    dddOwner: DbtProjectAnalysis / ScopedDbtProjectAnalysis
+    cqRails: '`ProjectDbtGraphFromFiles`, `AnalyzeSelectedDbtModel`'
+    publicApi:
+      - DbtCliProjectAnalyzer.analyze implements IDbtProjectAnalyzerPort
+    invariants:
+      - No reuse across scope, root, complete source revision, profile, environment or runtime
+        generation.
+      - Authorization and authoring binding remain per-request in current application owners.
+      - Compile, dynamic inputs, invalid results and failures retain normal native execution; no
+        stale success fallback.
+    transitions:
+      - Cold or changed context executes; eligible equivalent work joins; bounded successful
+        evidence may be reused.
+    consumers:
+      - ProjectDbtGraphFromFilesUseCase
+      - selectedDbtModelAnalysisResolver
+    governance:
+      - docs/architecture/components/api/dbt-project-analysis-component.md
+    fowlerSignals: []
   - id: SYS-API-INFRASTRUCTURE
     name: API infrastructure adapters
     owns:
@@ -322,6 +370,12 @@ units:
     cqRails: API adapter-backed command/query support
     dddOwner: ADP
     excludes:
+      - apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts
+      - apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts
+      - apps/api/src/infrastructure/dbt/dbtLiteralReference.ts
+      - apps/api/src/infrastructure/dbt/dbtParseReuseEligibility.ts
+      - apps/api/src/infrastructure/dbt/dbtParseAnalysisContext.ts
+      - apps/api/src/infrastructure/dbt/dbtParseAnalysisReuse.ts
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
       - apps/api/src/infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.ts
       - >-
