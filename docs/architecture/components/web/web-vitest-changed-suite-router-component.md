@@ -2,7 +2,7 @@
 title: Web Vitest Changed Suite Router Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-27
+last_reviewed: 2026-11-01
 planning_type: architecture
 ---
 
@@ -94,8 +94,8 @@ Tests` pull-request lane while preserving full primary-suite coverage on
   without running a Vitest suite.
 - Pull-request CI may use `test:web:changed` only when the test scope is web
   and not root-build-sensitive.
-- `main`, manual workflow runs, and root-build-sensitive PRs still use
-  `test:web:ci`.
+- `main`, manual workflow runs, and root-build-sensitive PRs use the complete
+  `test:web:ci` composition, distributed across the hosted full Vitest groups.
 
 ## Transitions
 
@@ -417,9 +417,10 @@ flowchart LR
   sanitized failure/cancellation screenshots have capability-specific names.
   The existing required aggregate requires the
   complete matrix result; cancelled, failed or absent evidence still rejects.
-- `main`, manual and root-sensitive runs retain `test:web:ci` and execute the
-  admitted browser baseline with `--full --phase=browser`, partitioned by the
-  same capability selector in CI. `--full` only adds
+- `main`, manual and root-sensitive runs distribute the existing `test:web:ci`
+  delegates across `unit-architecture` and `presentation`, and execute the admitted
+  browser baseline with `--full --phase=browser`, partitioned by the same
+  capability selector in CI. `--full` only adds
   browser baseline obligations to the router: executing it with the Vitest
   phase is invalid, and cannot replace `test:web:ci`. Required check
   names and the Test Suite aggregate stay unchanged.
@@ -1263,12 +1264,13 @@ Acceptance:
 - Given a pull request with web-relevant files and no root-build-sensitive
   changes
 - When the `Web Frontend Tests` job runs
-- Then both fixed matrix phases execute `pnpm test:web:changed` with the
+- Then the existing matrix phases execute `pnpm test:web:changed` with the
   pull-request base ref and their `--phase=vitest` / `--phase=browser` selection.
 - Given a push to `main`, a manual run, or a root-build-sensitive pull request
 - When the `Web Frontend Tests` job runs
-- Then the Vitest phase executes `pnpm test:web:ci` and the browser phase
-  executes `pnpm test:web:changed --full --phase=browser`.
+- Then the two full Vitest groups execute every primary-suite delegate exactly
+  once, while the browser phase executes
+  `pnpm test:web:changed --full --phase=browser`.
 - Either phase failing or being cancelled prevents the required aggregate
   from succeeding. Neither phase cancels its sibling on failure.
 

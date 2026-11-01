@@ -2,7 +2,7 @@
 title: Testing and CI Capabilities
 status: Active
 owner: engineering
-last_reviewed: 2026-10-29
+last_reviewed: 2026-11-01
 ---
 
 # Testing and CI Capabilities
@@ -26,7 +26,7 @@ See also:
 | -------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Full workspace build             | `pnpm build`                           | [`package.json`](../../package.json)                                                                                                 |
 | Full recursive test run          | `pnpm test`                            | [`package.json`](../../package.json)                                                                                                 |
-| Web PR CI test partition         | `pnpm test:web:ci`                     | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                 |
+| Web full Vitest composition      | `pnpm test:web:ci`                     | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                 |
 | Web changed-file test routing    | `pnpm test:web:changed`                | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                 |
 | Web E2E test run                 | `pnpm test:web:e2e`                    | [`package.json`](../../package.json)                                                                                                 |
 | Full type-check gate             | `pnpm type-check`                      | [`package.json`](../../package.json)                                                                                                 |
@@ -107,6 +107,20 @@ evidence; a separate Web Vitest linter bootstrap is unnecessary.
 
 These changes reduce repeated acquisition without narrowing inspected sources,
 adding a cache, prewarming tests, or changing worker isolation or required gates.
+
+## Hosted Vitest Groups
+
+Full Test Suite runs distribute the existing Web primary-suite composition across
+two concurrent jobs: `unit-architecture` runs unit then architecture; `presentation`
+runs presentation. Each uses the existing package delegates and catalog configs.
+Local `pnpm test:web:ci` still runs the complete composition. Ordinary web PRs
+allocate one Vitest `changed` group using the existing affected-suite router.
+
+`tools/ci/test-suite-outcome.test.mjs` evaluates the workflow matrix and requires
+the full groups' command union to match the canonical package composition exactly
+once. Every selected group remains merge-blocking. Per-file isolation, worker
+and memory limits, and per-job deadlines stay unchanged. Separate runners repeat
+setup, so compare the critical path and summed runner durations when measuring.
 
 ## Browser Evidence Partitions
 
@@ -846,7 +860,8 @@ this exemption. Pushes to `main` and manual full validation remain unchanged.
   preparation once, and delegates to the routed Vitest suite command from the
   web suite catalog. Local users and ordinary web pull requests use this route.
   Pushes to `main`, manual workflow runs, and root-build-sensitive pull
-  requests keep using `pnpm test:web:ci`.
+  requests distribute the complete composition through the
+  [hosted Vitest groups](#hosted-vitest-groups).
 - Canvas has narrower local focus lanes for changed-file routing:
   `test:canvas-unit`, `test:canvas-presentation`, and
   `test:canvas-architecture`. The broad `test:canvas` command remains available
@@ -965,18 +980,18 @@ Current workflow consumers:
   focused commands remain available. `Test Suite Required for Merge` requires
   success for each selected lane and accepts skipped only for justified scope
   or draft posture. Missing scope/results and cancelled/failed jobs reject.
-  The web job uses fixed `vitest` and `browser` matrix phases, each with the
-  unchanged 25-minute deadline and an isolated existing Turbo-cache variant.
+  The web job keeps separate Vitest and browser obligations; each producer retains
+  the 25-minute deadline and its own Turbo-cache variant.
   For ordinary web PRs, both execute the same `pnpm test:web:changed` plan with
   their `--phase=vitest` / `--phase=browser` selector and `GIT_BASE` pointing at
   the pull-request base ref. Local default execution still runs both. Browser
   dependencies and disposable PostgreSQL are provisioned only in the browser
   phase when the complete plan requires them. Cancellation or failure of either
   phase rejects the existing required aggregate; fail-fast is disabled so the
-  sibling can finish. Pushes to `main`, manual runs and root-sensitive PRs keep
-  `pnpm test:web:ci` in the Vitest phase and run
+  sibling can finish. Pushes to `main`, manual runs and root-sensitive PRs use the
+  [hosted Vitest groups](#hosted-vitest-groups) and run
   `pnpm test:web:changed --full --phase=browser` in the browser phase. The router's
-  `--full` is not a full-Vitest selector. `test:web:ci` expands to
+  `--full` is not a full-Vitest selector. Local `test:web:ci` expands to
   `@dvt/web` `test:deps` followed by the unit, presentation, and architecture
   Vitest delegates. `pnpm test:web` and `pnpm --filter @dvt/web test` use the
   same primary-suite delegate sequence through the package `pretest` lifecycle,

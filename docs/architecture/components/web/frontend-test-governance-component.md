@@ -2,7 +2,7 @@
 title: Frontend Test Governance Component
 status: Active
 owner: Frontend / CI
-last_reviewed: 2026-10-05
+last_reviewed: 2026-11-01
 planning_type: architecture
 ---
 
@@ -71,14 +71,18 @@ contract validation, or engine determinism tests.
   ten-file shared-fork batches introduce presentation-test interference; bounded
   memory alone is not sufficient evidence to remove isolation. See the
   [benchmark evidence and closeout in issue #2900](https://github.com/dunay2/dvt/issues/2900).
-- The `Web Frontend Tests` job has fixed `vitest` and `browser` variants;
-  the existing required aggregate requires both. Each variant uses its own
-  existing Turbo-cache producer identity, with matrix fail-fast disabled.
+- The `Web Frontend Tests` matrix keeps separate Vitest and browser obligations.
+  Full hosted Vitest coverage uses two independent groups: `unit-architecture`
+  and `presentation`. Ordinary PRs allocate one `changed` group. Each group has
+  a distinct job/cache identity; matrix fail-fast remains disabled and the
+  existing required aggregate requires every selected result.
 - Ordinary web pull requests route through the same `pnpm test:web:changed`
   plan with `--phase=vitest` or `--phase=browser`. Local default execution
   remains both phases, and browser admission is never replaced by Vitest.
-- Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route
-  through `pnpm test:web:ci`.
+- Pushes to `main`, manual workflow runs, and root-build-sensitive PRs distribute
+  the existing `test:web:ci` primary-suite composition across the two groups.
+  The workflow invokes the existing package delegates; their union must execute
+  each primary suite exactly once. Local `pnpm test:web:ci` remains complete.
 - The package default `test` command delegates to the same primary-suite
   composition as `test:web:ci`, so root `turbo run test` and the dedicated web
   CI lane exercise the same governed coverage instead of parallel web routes.
@@ -88,7 +92,7 @@ contract validation, or engine determinism tests.
 - Hosted CI web Vitest routes must also export the same Node old-space value as
   `NODE_OPTIONS` at the workflow step boundary. That keeps the actual Vitest
   parent and forked worker processes aligned when GitHub runners execute
-  `pnpm test:web:ci` or root `turbo run test` through `pnpm ci:full`.
+  the primary-suite delegates or root `turbo run test` through `pnpm ci:full`.
 - Each `Web Frontend Tests` variant retains a 25-minute budget: Vitest no
   longer consumes the browser lifecycle's deadline. The CI worker cap still
   trades parallelism for memory and process-exit stability; ordinary PRs remain
@@ -118,8 +122,9 @@ stateDiagram-v2
 - Local developers use `pnpm --filter @dvt/web test:unit`,
   `test:presentation`, `test:architecture`, `test:canvas`, `test:monaco`, and
   `test:shell-session`, and `test:workspace-services`.
-- GitHub Actions uses `pnpm test:web:changed` for ordinary web pull requests
-  and `pnpm test:web:ci` for full web coverage routes.
+- GitHub Actions uses `pnpm test:web:changed` once per selected phase/partition
+  for ordinary web pull requests. Full hosted Vitest groups consume the same
+  primary-suite delegates as local `pnpm test:web:ci`.
 - Architecture tests use `classifyWebVitestFile` to prevent suite drift.
 - Planning and closeout evidence cite the named web test lane instead of an
   implicit generic test step.
@@ -131,9 +136,10 @@ flowchart LR
   Tests["apps/web/src/**/*.test.*"] --> Catalog["WebVitestSuiteCatalog"]
   Catalog --> Configs["vitest*.config.ts"]
   Configs --> Scripts["apps/web package scripts"]
-  Scripts --> Root["pnpm test:web:ci"]
+  Scripts --> Root["Local pnpm test:web:ci"]
+  Scripts --> Full["Hosted unit + architecture / presentation"]
   Scripts --> Changed["pnpm test:web:changed"]
-  Root --> CI["Web Frontend Tests"]
+  Full --> CI["Web Frontend Tests"]
   Changed --> CI
   Support["apps/web/src/testing/**"] --> Tests
 ```
@@ -173,8 +179,8 @@ Acceptance:
 
 - `.github/workflows/test.yml` contains a `web-frontend-tests` job.
 - The job runs `pnpm test:web:changed` for ordinary web pull requests.
-- The job runs `pnpm test:web:ci` for pushes to `main`, manual runs, and
-  root-build-sensitive pull requests.
+- Full hosted routes run every delegate in `pnpm test:web:ci` exactly once
+  across `unit-architecture` and `presentation`, retaining their existing configs.
 - The generic affected-package job no longer owns the web test step.
 
 #### Story 3 - Test support remains test-only
