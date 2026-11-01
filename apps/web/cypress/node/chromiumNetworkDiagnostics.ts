@@ -6,7 +6,14 @@ import { basename, isAbsolute, join } from 'node:path';
 
 import type {} from 'cypress';
 
-import { finalizeChromiumCapture, stageChromiumObservation } from './chromiumNetworkEvidence';
+import {
+  ChromiumDiagnosticsError,
+  classifyChromiumFailure,
+  finalizeChromiumCapture,
+  publishChromiumLifecycleFailures,
+  stageChromiumObservation,
+  type ChromiumLifecycleFailure,
+} from './chromiumNetworkEvidence';
 import {
   startChromiumProcessObserver,
   type ChromiumProcessObserverBinding,
@@ -28,12 +35,14 @@ function diagnosticsEnabled(): boolean {
   return flag === '1';
 }
 
-function browserCaptures(directory: string): string[] {
-  return readdirSync(directory, { withFileTypes: true }).map((capture) => {
-    if (!capture.isDirectory() || !/^chrome-[A-Za-z0-9]+$/u.test(capture.name))
-      throw new Error('Unexpected Chromium capture entry');
-    return join(directory, capture.name);
-  });
+function browserCaptures(
+  directory: string
+): Readonly<{ directories: string[]; unexpected: boolean }> {
+  const entries = readdirSync(directory, { withFileTypes: true });
+  const directories = entries
+    .filter((capture) => capture.isDirectory() && /^chrome-[A-Za-z0-9]+$/u.test(capture.name))
+    .map((capture) => join(directory, capture.name));
+  return { directories, unexpected: entries.length !== directories.length };
 }
 
 export function createChromiumNetworkDiagnostics(
@@ -47,21 +56,29 @@ export function createChromiumNetworkDiagnostics(
       return attachChromiumCapture(directory, browser, launch).launch;
     },
     afterRun() {
-      const captures = browserCaptures(directory);
-      let failed = captures.length === 0;
+      const failures: ChromiumLifecycleFailure[] = [];
+      let captures: string[] = [];
+      try {
+        const inventory = browserCaptures(directory);
+        captures = inventory.directories;
+        if (inventory.unexpected) failures.push({ phase: 'capture-enumeration', code: 'invalid' });
+        if (captures.length === 0) failures.push({ phase: 'capture-enumeration', code: 'missing' });
+      } catch (error) {
+        failures.push(...classifyChromiumFailure('capture-enumeration', error));
+      }
       for (const browserDirectory of captures) {
         try {
           finalizeChromiumCapture(browserDirectory, options.workspaceRoot);
-        } catch {
-          failed = true;
+        } catch (error) {
+          failures.push(...classifyChromiumFailure('capture-enumeration', error));
         }
       }
       try {
         rmdirSync(directory);
-      } catch {
-        failed = true;
+      } catch (error) {
+        failures.push(...classifyChromiumFailure('capture-cleanup', error));
       }
-      if (failed) throw new Error('Chromium network diagnostics failed');
+      if (failures.length > 0) throw new ChromiumDiagnosticsError(failures);
     },
   };
 }
@@ -104,9 +121,26 @@ export async function withChromiumNetworkDiagnostics<T>(
     ]);
     const stopped = await Promise.allSettled([Promise.resolve().then(() => observer?.stop())]);
     const finalized = await Promise.allSettled([Promise.resolve().then(() => binding.afterRun())]);
-    const failures = [...completion, ...stopped, ...finalized]
-      .filter((outcome) => outcome.status === 'rejected')
-      .map((outcome) => outcome.reason);
+    const outcomes = [
+      ['native-operation', completion[0]],
+      ['observer-stop', stopped[0]],
+      ['capture-enumeration', finalized[0]],
+    ] as const;
+    const failures = outcomes.flatMap(([, outcome]) =>
+      outcome.status === 'rejected' ? [outcome.reason] : []
+    );
+    if (failures.length > 0) {
+      const classified = outcomes.flatMap(([phase, outcome]) =>
+        outcome.status === 'rejected' ? classifyChromiumFailure(phase, outcome.reason) : []
+      );
+      try {
+        publishChromiumLifecycleFailures(workspaceRoot, classified);
+      } catch (error) {
+        failures.push(
+          new ChromiumDiagnosticsError(classifyChromiumFailure('capture-publication', error))
+        );
+      }
+    }
     if (failures.length > 1)
       throw new AggregateError(failures, 'Chromium diagnostics completion failed');
     if (failures.length === 1) throw failures[0];

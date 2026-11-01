@@ -175,22 +175,13 @@ describe('web Vitest suite catalog', () => {
     );
     expect(rootPackageJson.scripts['test:web:changed']).toBe('pnpm --filter @dvt/web test:changed');
     expect(rootPackageJson.scripts['test:web:ci']).toBe('pnpm --filter @dvt/web test:ci');
-    expect(workflow).toContain('detect_test_matrix:');
-    expect(workflow).toContain('node tools/ci/emit-scope.mjs');
-    expect(workflow).toContain('matrix: ${{ steps.scope.outputs.test_matrix }}');
-    expect(workflow).toContain(
-      "if: github.event_name != 'pull_request' || needs.detect_test_matrix.outputs.any_tests == 'true'"
-    );
-    expect(workflow).toContain('matrix: ${{ fromJSON(needs.detect_test_matrix.outputs.matrix) }}');
-    expect(workflow).toContain('run: ${{ matrix.command }}');
-    expect(workflow).toContain('pnpm test:web:ci');
-    expect(workflow).toContain('web-frontend-tests:');
+    // test-suite-outcome.test.mjs owns event routing and exactly-once hosted
+    // primary coverage; this catalog guard owns delegates, configs and heap parity.
     const webJob = (
       load(workflow) as {
         jobs: Record<
           string,
           {
-            name: string;
             env?: Record<string, string>;
             steps: Array<{
               run?: string;
@@ -201,26 +192,8 @@ describe('web Vitest suite catalog', () => {
       }
     ).jobs['web-frontend-tests'];
     if (!webJob) throw new Error('Missing governed Web test job');
-    expect(webJob.name).toMatch(/^Web Frontend Tests \(/);
-    const executionSteps = webJob.steps.filter(
-      (step) => step.run?.includes('pnpm test:web:') && !step.run.includes('--plan')
-    );
-    expect(executionSteps.some((step) => step.run === 'pnpm test:web:ci')).toBe(true);
-    expect(
-      executionSteps.some(
-        (step) =>
-          step.run?.trim() ===
-          "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
-      )
-    ).toBe(true);
-    expect(
-      executionSteps.some(
-        (step) =>
-          step.run?.trim() ===
-          "pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
-      )
-    ).toBe(true);
-    for (const step of executionSteps) {
+    expect(webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
+    for (const step of webJob.steps.filter((step) => step.run)) {
       expect(step.env?.NODE_OPTIONS ?? webJob.env?.NODE_OPTIONS).toBe(WEB_VITEST_CI_NODE_OPTIONS);
     }
     expect(ciWorkflow).toContain(ciNodeOptionsLine);

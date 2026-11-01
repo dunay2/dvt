@@ -118,8 +118,8 @@ jobs:
 
   web-frontend-tests:
     name:
-      Web Frontend Tests (${{ matrix.capability || matrix.phase }}${{ matrix.shard && format('
-      {0}/3', matrix.shard) || '' }})
+      Web Frontend Tests (${{ matrix.capability || matrix.vitest_group || matrix.phase }}${{
+      matrix.shard && format(' {0}/3', matrix.shard) || '' }})
     runs-on: >-
       ${{ matrix.phase == 'browser' && matrix.capability == 'available' && 'ubuntu-24.04' ||
       'ubuntu-latest' }}
@@ -132,9 +132,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        phase: [vitest]
+        vitest_group: >-
+          ${{ fromJSON((github.event_name != 'pull_request' ||
+          needs.detect_test_matrix.outputs.root_build_sensitive == 'true') &&
+          '["unit-architecture","presentation"]' || '["changed"]') }}
         include:
-          - phase: vitest
-            capability: ''
           - phase: browser
             capability: controlled
             shard: 1
@@ -167,8 +170,8 @@ jobs:
         github.event_name == 'push' && github.event.before || github.sha }}
       GIT_HEAD: ${{ github.sha }}
       PROOF_OWNER:
-        ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}-${{
-        matrix.shard || 0 }}
+        ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.vitest_group
+        || matrix.phase }}-${{ matrix.shard || 0 }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -191,7 +194,8 @@ jobs:
           node-version: >-
             ${{ matrix.phase == 'browser' && matrix.capability == 'available' && '22.23.3' || '22.x'
             }}
-          turbo-cache-variant: ${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}
+          turbo-cache-variant:
+            ${{ matrix.capability || matrix.vitest_group || matrix.phase }}-${{ matrix.shard || 0 }}
         env:
           CYPRESS_INSTALL_BINARY: '0'
 
@@ -289,11 +293,16 @@ jobs:
           format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard &&
           format('--browser-shard={0}/3', matrix.shard) || '' }}
 
-      - name: Run governed web Vitest primary suites
-        if:
-          matrix.phase == 'vitest' && (github.event_name != 'pull_request' ||
-          needs.detect_test_matrix.outputs.root_build_sensitive == 'true')
-        run: pnpm test:web:ci
+      - name: Run governed web unit and architecture suites
+        if: matrix.vitest_group == 'unit-architecture'
+        run: >-
+          pnpm --filter @dvt/web run test:deps && pnpm --filter @dvt/web run test:unit:run && pnpm
+          --filter @dvt/web run test:architecture:run
+
+      - name: Run governed web presentation suite
+        if: matrix.vitest_group == 'presentation'
+        run: >-
+          pnpm --filter @dvt/web run test:deps && pnpm --filter @dvt/web run test:presentation:run
 
       - name: Run admitted live browser baseline
         if:

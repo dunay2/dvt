@@ -11,8 +11,7 @@ import yaml from 'js-yaml';
 
 const workflow = yaml.load(readFileSync('.github/workflows/test.yml', 'utf8'));
 const aggregate = workflow.jobs['test-suite-required'];
-const webMatrix = [
-  { phase: 'vitest', capability: '' },
+const browserMatrix = [
   { phase: 'browser', capability: 'controlled', shard: 1 },
   { phase: 'browser', capability: 'controlled', shard: 2 },
   { phase: 'browser', capability: 'controlled', shard: 3 },
@@ -36,6 +35,53 @@ const scopeKeys = [
   'postgres_capability_changed',
   'coverage_relevant',
 ];
+const webMatrix = expandWebMatrix(webScenarioContext());
+
+function webScenarioContext(event = 'workflow_dispatch', root = false, draft = false) {
+  return {
+    github: {
+      event_name: event,
+      event: { pull_request: { draft } },
+      run_id: 'run',
+      run_attempt: '1',
+    },
+    needs: { detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } } },
+    fromJSON: JSON.parse,
+    format: (template, value) => template.replace('{0}', value),
+  };
+}
+
+function renderWebCommand(value, context) {
+  return value
+    .replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) => String(runInNewContext(expression, context)))
+    .trim()
+    .replace(/\s+/gu, ' ');
+}
+
+function expandWebMatrix(context) {
+  const { include = [], exclude, ...axes } = workflow.jobs['web-frontend-tests'].strategy.matrix;
+  assert.equal(exclude, undefined, 'Web evidence must not be removed through matrix excludes');
+  const dimensions = Object.entries(axes);
+  const rows = dimensions.reduce(
+    (combinations, [key, value]) => {
+      const values =
+        typeof value === 'string' ? runInNewContext(value.slice(3, -2), context) : value;
+      assert.ok(Array.isArray(values) && values.length > 0, `Nonempty matrix axis: ${key}`);
+      return combinations.flatMap((row) => values.map((entry) => ({ ...row, [key]: entry })));
+    },
+    [{}]
+  );
+  if (dimensions.length === 0) return include;
+  const added = [];
+  for (const entry of include) {
+    const matches = rows.filter((row) =>
+      dimensions.every(([key]) => !(key in entry) || row[key] === entry[key])
+    );
+    if (matches.length === 0) added.push(entry);
+    else for (const row of matches) Object.assign(row, entry);
+  }
+  return [...rows, ...added];
+}
 
 test('only available native browser shards use the admitted hosted platform and Node', () => {
   const web = workflow.jobs['web-frontend-tests'];
@@ -219,25 +265,43 @@ test('PostgreSQL integration files run once in the full suite with the real data
 
 test('Web keeps every bounded obligation with disjoint controlled and available producers', () => {
   const web = workflow.jobs['web-frontend-tests'];
-  assert.equal(
-    web.name,
-    "Web Frontend Tests (${{ matrix.capability || matrix.phase }}${{ matrix.shard && format(' {0}/3', matrix.shard) || '' }})"
-  );
-  assert.deepEqual(web.strategy, {
-    'fail-fast': false,
-    matrix: { include: webMatrix },
-  });
+  assert.equal(web.strategy['fail-fast'], false);
   assert.equal(web['timeout-minutes'], 25);
   assert.notEqual(web['continue-on-error'], true);
   const install = web.steps.find((step) => step.uses === './.github/actions/setup-node-pnpm');
-  assert.equal(
-    install.with['turbo-cache-variant'],
-    '${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}'
-  );
-  assert.equal(
-    web.env.PROOF_OWNER,
-    '${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.capability || matrix.phase }}-${{ matrix.shard || 0 }}'
-  );
+  for (const [event, root, draft, groups] of [
+    ['pull_request', false, false, ['changed']],
+    ['pull_request', true, false, ['unit-architecture', 'presentation']],
+    ['push', false, false, ['unit-architecture', 'presentation']],
+    ['workflow_dispatch', false, false, ['unit-architecture', 'presentation']],
+    ['pull_request', true, true, []],
+  ]) {
+    const context = webScenarioContext(event, root, draft);
+    assert.equal(runInNewContext(`Boolean(${web.if})`, context), !draft);
+    if (draft) continue;
+    const rows = expandWebMatrix(context);
+    assert.deepEqual(
+      rows.filter((row) => row.phase === 'browser'),
+      browserMatrix
+    );
+    assert.deepEqual(
+      rows
+        .filter((row) => row.phase === 'vitest')
+        .map((row) => row.vitest_group)
+        .sort(),
+      [...groups].sort()
+    );
+    assert.equal(rows.length, browserMatrix.length + groups.length);
+    for (const identity of [web.name, install.with['turbo-cache-variant'], web.env.PROOF_OWNER]) {
+      const values = rows.map((matrix) => renderWebCommand(identity, { ...context, matrix }));
+      assert.equal(
+        new Set(values).size,
+        rows.length,
+        `${event}: each producer needs a distinct identity`
+      );
+      assert.ok(values.every((value) => value && !value.includes('undefined')));
+    }
+  }
 });
 
 test('Web phases resolve one plan and execute disjoint changed or full obligations', () => {
@@ -245,70 +309,69 @@ test('Web phases resolve one plan and execute disjoint changed or full obligatio
   const plan = web.steps.find((step) => step.id === 'web_plan');
   assert.ok(plan, 'Resolve the existing Web plan before allocating browser infrastructure');
   assert.equal(web.services, undefined, 'Ordinary Web-only changes must not allocate PostgreSQL');
-  const primary = web.steps.find((step) => step.run === 'pnpm test:web:ci');
-  const changed = web.steps.find(
-    (step) =>
-      step.run ===
-      "pnpm test:web:changed --phase=${{ matrix.phase }} ${{ matrix.capability && format('--browser-capability={0}', matrix.capability) || '' }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
-  );
-  const browser = web.steps.find(
-    (step) =>
-      step.run ===
-      "pnpm test:web:changed --full --phase=browser --browser-capability=${{ matrix.capability }} ${{ matrix.shard && format('--browser-shard={0}/3', matrix.shard) || '' }}"
-  );
-  assert.ok(primary && changed && browser);
   const executions = web.steps.filter(
-    (step) => step.run?.startsWith('pnpm test:web:') && step !== plan
+    (step) =>
+      step.run &&
+      /^pnpm (?:test:web:|--filter @dvt\/web (?:run )?test:)/u.test(step.run.trim()) &&
+      step !== plan
   );
-  assert.equal(executions.length, 3, 'No duplicate or legacy Web execution command');
+  const scripts = JSON.parse(readFileSync('apps/web/package.json', 'utf8')).scripts;
+  const dependencies = 'pnpm run test:deps';
+  const primary = scripts['test:ci']
+    .split(/\s*&&\s*/u)
+    .filter((command) => command !== dependencies);
   for (const [event, root, full] of [
     ['pull_request', false, false],
     ['pull_request', true, true],
     ['push', false, true],
     ['workflow_dispatch', false, true],
   ]) {
-    for (const matrix of webMatrix) {
+    const scenario = webScenarioContext(event, root);
+    const primaryExecutions = [];
+    for (const matrix of expandWebMatrix(scenario)) {
       const { phase, capability, shard } = matrix;
-      const context = {
-        matrix,
-        format: (template, value) => template.replace('{0}', value),
-        github: { event_name: event },
-        needs: {
-          detect_test_matrix: { outputs: { web: 'true', root_build_sensitive: String(root) } },
-        },
-      };
-      const planned = plan.run.replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
-        String(runInNewContext(expression, context))
-      );
+      const context = { ...scenario, matrix };
+      const planned = renderWebCommand(plan.run, context);
       assert.equal(
-        planned.trim().replace(/ +/gu, ' '),
+        planned,
         `pnpm test:web:changed --plan --phase=${phase}${capability ? ` --browser-capability=${capability}` : ''}${shard ? ` --browser-shard=${shard}/3` : ''}${full ? ' --full' : ''}`
       );
-      const expected = full ? (phase === 'vitest' ? primary : browser) : changed;
-      assert.deepEqual(
-        executions.filter((step) => runInNewContext(step.if, context)),
-        [expected],
+      const selected = executions.filter((step) => !step.if || runInNewContext(step.if, context));
+      assert.equal(
+        selected.length,
+        1,
         `${event}: root=${root}, phase=${phase}, capability=${capability}`
       );
+      const [expected] = selected;
       assert.notEqual(expected['continue-on-error'], true);
-      if (expected !== primary) {
-        const executed = expected.run
-          .replace(/\$\{\{(.*?)\}\}/gsu, (_, expression) =>
-            String(runInNewContext(expression, context))
-          )
-          .trim()
-          .split(/\s+/u)
-          .sort();
+      const executed = renderWebCommand(expected.run, context);
+      if (full && phase === 'vitest') {
+        const commands = executed
+          .replace(/pnpm --filter @dvt\/web (?:run )?/gu, 'pnpm run ')
+          .split(/\s*&&\s*/u);
+        assert.equal(
+          commands.shift(),
+          dependencies,
+          'Each runner prepares its own dependencies first'
+        );
+        assert.ok(commands.length > 0);
+        primaryExecutions.push(...commands);
+      } else {
         assert.deepEqual(
-          executed,
+          executed.split(/\s+/u).sort(),
           planned
-            .trim()
             .split(/\s+/u)
             .filter((arg) => arg !== '--plan')
             .sort()
         );
       }
     }
+    assert.deepEqual(primaryExecutions.sort(), full ? [...primary].sort() : []);
+    assert.equal(
+      new Set(primaryExecutions).size,
+      primaryExecutions.length,
+      'No primary suite runs twice'
+    );
   }
 });
 
