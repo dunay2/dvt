@@ -21,7 +21,6 @@ export function CanvasRelationalTreeLayout({
   onRemove,
   semanticContext,
   zoom = 1,
-  panMode = false,
   onManualLayout,
   onOpenOutput,
   occurrences,
@@ -60,7 +59,6 @@ export function CanvasRelationalTreeLayout({
   onRemove?: (relationId: string) => void;
   semanticContext?: CanvasRelationalSemanticContext;
   zoom?: number;
-  panMode?: boolean;
   onManualLayout?: () => void;
   onOpenOutput?: () => void;
 }>): JSX.Element {
@@ -72,7 +70,6 @@ export function CanvasRelationalTreeLayout({
       stagedOperations,
       pendingSources: occurrences?.pending,
       zoom,
-      panMode,
       onManualLayout,
     });
   const [selectedConnectionSource, setSelectedConnectionSource] = useState<string | null>(null);
@@ -115,7 +112,7 @@ export function CanvasRelationalTreeLayout({
                 }
           }
           onDisconnect={onDisconnectOutput}
-          movable={!panMode}
+          movable
         />
       )}
       <CanvasRelationalTreeNodes
@@ -129,7 +126,6 @@ export function CanvasRelationalTreeLayout({
         selectedStagedOperationId={selectedStagedOperationId}
         selectedLocator={selectedLocator}
         selectedConnectionSource={selectedConnectionSource}
-        panMode={panMode}
         copy={copy}
         actions={{
           select: onSelect,

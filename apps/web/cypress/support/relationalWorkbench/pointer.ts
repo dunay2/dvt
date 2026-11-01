@@ -1,5 +1,5 @@
 /** Owned concern: drive real browser pointer capture, including the Cypress iframe scale. */
-export function browserPoint(
+function browserPoint(
   element: HTMLElement | undefined,
   verticalFraction = 0.5
 ): { x: number; y: number; scale: number } {
@@ -30,12 +30,13 @@ export function moveWorkbenchCard(
   dx: number,
   dy: number,
   observe?: (element: HTMLElement, dx: number, dy: number) => void,
-  beforeRelease?: () => void
+  beforeRelease?: () => void,
+  verticalFraction = 0.5
 ): void {
   cy.get(selector)
     .should('be.visible')
     .then(($card) => {
-      const { x, y, scale } = browserPoint($card[0]);
+      const { x, y, scale } = browserPoint($card[0], verticalFraction);
       const events = [
         { type: 'mouseMoved', x, y, buttons: 0 },
         { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },

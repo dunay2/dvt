@@ -36,6 +36,7 @@ import { CanvasColumnLineageEdge } from './CanvasColumnLineageEdge';
 import { CanvasDependencyEdge } from './CanvasDependencyEdge';
 import { useCanvasAlgebraicDrop } from './useCanvasAlgebraicDrop';
 import styles from './CanvasViewportSurfaceView.module.css';
+import interactionStyles from './canvasViewportInteraction.module.css';
 
 const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
 const CANVAS_EDGE_TYPES = {
@@ -240,7 +241,7 @@ function CanvasViewportReactFlowSurface({
         onDrop={onDrop}
         onDragOver={onDragOver}
         onEdgeContextMenu={handleEdgeContextMenu}
-        className={styles.flow}
+        className={`${styles.flow} ${interactionStyles.surface}`}
         ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}
       >
         <Controls {...interaction.controls} fitViewOptions={CANVAS_FIT_VIEW_OPTIONS} />

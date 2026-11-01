@@ -32,7 +32,7 @@ import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
-import { browserPoint, moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench viewport', () => {
@@ -69,33 +69,17 @@ describe('Workbench viewport', () => {
           bounds.top + bounds.height * 0.9
         )
       ).to.equal(element);
-      const { x, y, scale } = browserPoint(element, 0.9);
-      const events = [
-        { type: 'mouseMoved', x, y, buttons: 0 },
-        { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },
-        { type: 'mouseMoved', x: x + 48 * scale, y: y + 24 * scale, buttons: 1 },
-        {
-          type: 'mouseReleased',
-          x: x + 48 * scale,
-          y: y + 24 * scale,
-          buttons: 0,
-          button: 'left',
-          clickCount: 1,
-        },
-      ];
-      events.forEach((params) => {
-        cy.then(
-          () =>
-            Cypress.automation('remote:debugger:protocol', {
-              command: 'Input.dispatchMouseEvent',
-              params,
-            }) as Promise<unknown>
-        );
-        if (params.type === 'mouseMoved' && params.buttons === 1) {
-          cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
-        }
-      });
     });
+    moveWorkbenchCard(
+      pane,
+      48,
+      24,
+      undefined,
+      () => {
+        cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
+      },
+      0.9
+    );
     cy.get(pane).should('not.have.class', 'dragging').and('have.css', 'cursor', 'default');
     cy.get(viewport).should(($viewport) => {
       const moved = new DOMMatrixReadOnly($viewport[0]!.style.transform);

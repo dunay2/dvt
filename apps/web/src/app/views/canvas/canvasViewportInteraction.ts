@@ -41,13 +41,26 @@ export function resolveCanvasKeyboardAction(
   return undefined;
 }
 
-export function isCanvasKeyboardControlTarget(target: EventTarget | null): boolean {
+export function isCanvasInteractionControlTarget(target: EventTarget | null): boolean {
   return (
     isCanvasNodeEmbeddedControlTarget(target) ||
     (target instanceof Element &&
       target.closest(
-        'input, textarea, select, button, a[href], [role="textbox"], [contenteditable]:not([contenteditable="false"])'
+        'input, textarea, select, button, summary, a[href], [role="button"], [role="textbox"], [contenteditable]:not([contenteditable="false"])'
       ) != null)
+  );
+}
+
+export function canStartCanvasBackgroundPan(
+  event: Pick<PointerEvent, 'button' | 'target' | 'currentTarget'>
+): boolean {
+  return (
+    event.button === CANVAS_POINTER_OPTIONS.panOnDrag[0] &&
+    event.target instanceof Element &&
+    event.currentTarget instanceof Element &&
+    event.currentTarget.contains(event.target) &&
+    !isCanvasInteractionControlTarget(event.target) &&
+    event.target.closest('[data-relational-card-id], .react-flow__node') == null
   );
 }
 
@@ -66,7 +79,7 @@ export function activateFocusedCanvasNodeFromKeyboard(
 ): boolean {
   if (
     resolveCanvasKeyboardAction(event) !== 'activate' ||
-    isCanvasKeyboardControlTarget(event.target) ||
+    isCanvasInteractionControlTarget(event.target) ||
     !(event.target instanceof Element)
   ) {
     return false;

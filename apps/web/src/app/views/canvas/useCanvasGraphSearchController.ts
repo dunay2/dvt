@@ -10,7 +10,7 @@ import {
 import { searchCanvasGraph } from './canvasGraphSearch';
 import type { CanvasGraphSearchViewportBinding } from './canvasGraphSearchControl.binding';
 import {
-  isCanvasKeyboardControlTarget,
+  isCanvasInteractionControlTarget,
   resolveCanvasKeyboardAction,
 } from './canvasViewportInteraction';
 
@@ -105,7 +105,7 @@ export function useCanvasGraphSearchController({
   const onViewportKeyDown = useCallback<KeyboardEventHandler<HTMLElement>>((event) => {
     if (
       resolveCanvasKeyboardAction(event) !== 'search' ||
-      isCanvasKeyboardControlTarget(event.target)
+      isCanvasInteractionControlTarget(event.target)
     ) {
       return;
     }

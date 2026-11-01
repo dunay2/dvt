@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  isCanvasKeyboardControlTarget,
+  isCanvasInteractionControlTarget,
   resolveCanvasKeyboardAction,
   resolveCanvasViewportInteraction,
 } from './canvasViewportInteraction';
@@ -42,12 +42,12 @@ describe('Canvas viewport interaction policy', () => {
     expect(readOnly.flow).toEqual({ ...editable.flow, deleteKeyCode: null });
   });
 
-  it.each(['input', 'textarea', 'select', 'button', 'a'])(
+  it.each(['input', 'textarea', 'select', 'button', 'summary', 'a'])(
     'preserves input owned by a native %s control',
     (tag) => {
       const control = document.createElement(tag);
       if (tag === 'a') control.setAttribute('href', '#');
-      expect(isCanvasKeyboardControlTarget(control)).toBe(true);
+      expect(isCanvasInteractionControlTarget(control)).toBe(true);
     }
   );
 
@@ -57,9 +57,9 @@ describe('Canvas viewport interaction policy', () => {
       control.setAttribute(attribute, attribute === 'contenteditable' ? 'true' : '');
       const child = document.createElement('span');
       control.append(child);
-      expect(isCanvasKeyboardControlTarget(child)).toBe(true);
+      expect(isCanvasInteractionControlTarget(child)).toBe(true);
     }
-    expect(isCanvasKeyboardControlTarget(document.createElement('div'))).toBe(false);
-    expect(isCanvasKeyboardControlTarget(null)).toBe(false);
+    expect(isCanvasInteractionControlTarget(document.createElement('div'))).toBe(false);
+    expect(isCanvasInteractionControlTarget(null)).toBe(false);
   });
 });

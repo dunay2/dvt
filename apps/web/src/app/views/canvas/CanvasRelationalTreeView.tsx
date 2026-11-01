@@ -115,7 +115,6 @@ function TreeView({
               onExpand={onExpand}
               onRemove={onRemove}
               zoom={viewport.zoom}
-              panMode={viewport.panMode || viewport.panning}
               onManualLayout={viewport.stopAutoFit}
               onOpenOutput={onOpenOutput}
               onDisconnectOutput={onDisconnectOutput}
@@ -130,8 +129,6 @@ function TreeView({
             minimumZoom={viewport.minimumZoom}
             onChange={viewport.changeZoom}
             onFit={viewport.fit}
-            panMode={viewport.panMode}
-            onTogglePan={viewport.togglePanMode}
           />
         </div>
       </div>

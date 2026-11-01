@@ -2,6 +2,7 @@
 import type { DragEventHandler, ReactNode } from 'react';
 import type { useCanvasRelationalTreeViewport } from '../useCanvasRelationalTreeViewport';
 import { useCanvasRelationalFieldSelection } from '../CanvasRelationalFieldSelectionProvider';
+import styles from '../canvasViewportInteraction.module.css';
 
 export function RelationalViewportSurface({
   viewport,
@@ -24,14 +25,7 @@ export function RelationalViewportSurface({
         draft ? 'canvas-relational-tree-draft-viewport' : 'canvas-relational-tree-viewport'
       }
       data-panning={viewport.panning}
-      className={`absolute inset-0 overflow-auto p-5 ${draft ? 'pb-16' : ''}`}
-      style={{
-        cursor: viewport.panning ? 'grabbing' : viewport.panMode ? 'grab' : 'default',
-        backgroundColor: 'var(--surface-subtle)',
-        backgroundImage:
-          'radial-gradient(circle, color-mix(in srgb, var(--border-subtle) 72%, transparent) 1px, transparent 1px)',
-        backgroundSize: '18px 18px',
-      }}
+      className={`absolute inset-0 p-5 ${styles.surface} ${styles.relational} ${draft ? 'pb-16' : ''}`}
       onPointerDown={viewport.onPointerDown}
       onPointerMove={viewport.onPointerMove}
       onPointerUp={viewport.onPointerUp}

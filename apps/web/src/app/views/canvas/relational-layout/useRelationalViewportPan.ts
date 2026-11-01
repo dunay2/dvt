@@ -1,28 +1,18 @@
 /** Owned concern: pan the viewport background without capturing card gestures. */
 import { useRef, useState, type MouseEventHandler, type PointerEventHandler } from 'react';
+import { canStartCanvasBackgroundPan } from '../canvasViewportInteraction';
 
 type PanOrigin = Readonly<{ pointerId: number; x: number; y: number; left: number; top: number }>;
 
 export function useRelationalViewportPan() {
   const origin = useRef<PanOrigin | null>(null);
   const [panning, setPanning] = useState(false);
-  const [panMode, setPanMode] = useState(false);
   const suppressClick = useRef(false);
   const onPointerDown: PointerEventHandler<HTMLDivElement> = (event) => {
-    if (!event.currentTarget.contains(event.target as Node) || origin.current != null) return;
+    if (origin.current != null) return;
     suppressClick.current = false;
-    const control = (event.target as Element).closest(
-      'button, [role="button"], input, select, textarea, summary, a, [contenteditable="true"]'
-    );
-    if (
-      (event.button !== 0 && event.button !== 1) ||
-      (event.button === 0 &&
-        (!panMode ||
-          (control != null && control.getAttribute('data-slot') !== 'canvas-relational-tree-node')))
-    )
-      return;
+    if (!canStartCanvasBackgroundPan(event)) return;
     event.preventDefault();
-    suppressClick.current = event.button === 0;
     origin.current = {
       pointerId: event.pointerId,
       x: event.clientX,
@@ -36,6 +26,7 @@ export function useRelationalViewportPan() {
   const onPointerMove: PointerEventHandler<HTMLDivElement> = (event) => {
     const current = origin.current;
     if (current == null || current.pointerId !== event.pointerId) return;
+    suppressClick.current ||= event.clientX !== current.x || event.clientY !== current.y;
     event.currentTarget.scrollLeft = current.left - (event.clientX - current.x);
     event.currentTarget.scrollTop = current.top - (event.clientY - current.y);
   };
@@ -59,8 +50,6 @@ export function useRelationalViewportPan() {
   };
   return {
     panning,
-    panMode,
-    togglePanMode: () => setPanMode((current) => !current),
     onPointerDown,
     onPointerMove,
     onPointerUp,

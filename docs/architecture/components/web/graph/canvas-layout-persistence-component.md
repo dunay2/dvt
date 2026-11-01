@@ -72,6 +72,16 @@ govern the change and its behavioral/browser evidence.
 The [cursor clarification](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564196807)
 uses the native thin cross without adding a cursor asset.
 
+The [Model viewport extension](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564364345)
+applies the same policy inside the relational editor. The existing relational
+adapter consumes the shared pointer/control boundary and interaction CSS Module;
+it keeps its own layout, pointer capture, programmatic scroll offsets and zoom.
+Canvas viewports hide native scrollbars and pan directly from empty background
+with the left button. Cards remain independently movable. The separate Hand mode,
+middle-button pan, mode-dependent card disabling and local card cursor rules are
+retired. Arrange, Fit, zoom, fields, ports and form controls retain their existing
+owners. Inspector and result panels retain their own scrolling.
+
 ## Public API
 
 | API                                          | Owner                                 | Responsibility                                                                               |

@@ -124,7 +124,6 @@ function DraftViewport({
             selectedLocator={selectedLocator}
             copy={copy}
             zoom={viewport.zoom}
-            panMode={viewport.panMode || viewport.panning}
             onManualLayout={viewport.stopAutoFit}
             semanticContext={{ transformNode, draft: joinDraft ?? undefined }}
             onExpand={(locator) => onExpandRelation(relationIdFor(locator))}
@@ -140,8 +139,6 @@ function DraftViewport({
           minimumZoom={viewport.minimumZoom}
           onChange={viewport.changeZoom}
           onFit={viewport.fit}
-          panMode={viewport.panMode}
-          onTogglePan={viewport.togglePanMode}
         />
       </div>
     </div>

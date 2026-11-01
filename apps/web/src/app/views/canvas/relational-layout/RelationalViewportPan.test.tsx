@@ -1,25 +1,32 @@
 // @vitest-environment jsdom
-/** Owned concern: primary canvas panning requires the visible hand mode. */
+/** Owned concern: background pan shares the Canvas policy without capturing local controls. */
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRelationalViewportPan } from './useRelationalViewportPan';
 
 function Surface(): JSX.Element {
-  const { panning, panMode, togglePanMode, ...handlers } = useRelationalViewportPan();
+  const viewport = useRelationalViewportPan();
   return (
-    <>
-      <button onClick={togglePanMode} aria-pressed={panMode}>
-        Hand
-      </button>
-      <div data-testid="surface" data-panning={panning} {...handlers}>
-        <button data-slot="canvas-relational-tree-node">Card</button>
-        <input />
-        <svg>
-          <path role="button" tabIndex={0} aria-label="Disconnect" />
-        </svg>
+    <div
+      data-testid="surface"
+      data-panning={viewport.panning}
+      onPointerDown={viewport.onPointerDown}
+      onPointerMove={viewport.onPointerMove}
+      onPointerUp={viewport.onPointerUp}
+      onPointerCancel={viewport.onPointerCancel}
+      onLostPointerCapture={viewport.onLostPointerCapture}
+      onClickCapture={viewport.onClickCapture}
+    >
+      <button data-slot="canvas-relational-tree-node">Card</button>
+      <div data-relational-card-id="output">
+        <span>Output</span>
       </div>
-    </>
+      <input />
+      <svg>
+        <path role="button" tabIndex={0} aria-label="Disconnect" />
+      </svg>
+    </div>
   );
 }
 describe('Relational viewport pan', () => {
@@ -59,41 +66,68 @@ describe('Relational viewport pan', () => {
     act(() => root.unmount());
     container.remove();
   });
-  it('leaves the background inert in selection mode', () => {
-    expect(pointer('pointerdown', 100).defaultPrevented).toBe(false);
+  it('pans empty background directly with the left button in both axes', () => {
+    expect(pointer('pointerdown', 100).defaultPrevented).toBe(true);
     pointer('pointermove', 50);
-    expect(surface.scrollLeft).toBe(100);
-    expect(surface.setPointerCapture).not.toHaveBeenCalled();
-  });
-  it('pans over cards in hand mode, but leaves form controls alone', () => {
-    act(() => container.querySelector('button')!.click());
-    expect(pointer('pointerdown', 100, 0, surface.querySelector('input')!).defaultPrevented).toBe(
-      false
-    );
-    pointer('pointerdown', 100, 0, surface.querySelector('button')!);
-    pointer('pointermove', 50);
-    expect(surface.scrollLeft).toBe(150);
+    expect([surface.scrollLeft, surface.scrollTop]).toEqual([150, 150]);
     expect(surface.dataset.panning).toBe('true');
     pointer('pointerup', 50);
     expect(surface.dataset.panning).toBe('false');
+    expect(surface.releasePointerCapture).toHaveBeenCalledOnce();
   });
-  it('leaves the disconnect action clickable in hand mode', () => {
-    act(() => container.querySelector('button')!.click());
-    expect(pointer('pointerdown', 100, 0, surface.querySelector('path')!).defaultPrevented).toBe(
-      false
-    );
-    expect(surface.setPointerCapture).not.toHaveBeenCalled();
-  });
-  it.each(['pointercancel', 'lostpointercapture'])(
-    'retains middle pan and releases on %s',
-    (ending) => {
-      pointer('pointerdown', 100, 1);
-      pointer('pointermove', 50, 1);
-      expect(surface.scrollLeft).toBe(150);
-      pointer(ending, 50, 1);
-      expect(surface.dataset.panning).toBe('false');
-      pointer('pointermove', 0, 1);
-      expect(surface.scrollLeft).toBe(150);
+  it.each(['button', 'input', 'path', '[data-relational-card-id] span'])(
+    'leaves %s under its own interaction owner',
+    (selector) => {
+      expect(
+        pointer('pointerdown', 100, 0, surface.querySelector(selector)!).defaultPrevented
+      ).toBe(false);
+      pointer('pointermove', 50);
+      expect([surface.scrollLeft, surface.scrollTop]).toEqual([100, 100]);
+      expect(surface.setPointerCapture).not.toHaveBeenCalled();
     }
   );
+  it.each([1, 2])('does not introduce a pan mode for mouse button %s', (button) => {
+    expect(pointer('pointerdown', 100, button).defaultPrevented).toBe(false);
+    pointer('pointermove', 50, button);
+    expect([surface.scrollLeft, surface.scrollTop]).toEqual([100, 100]);
+    expect(surface.setPointerCapture).not.toHaveBeenCalled();
+  });
+  it.each(['pointercancel', 'lostpointercapture'])('releases left pan on %s', (ending) => {
+    pointer('pointerdown', 100);
+    pointer('pointermove', 50);
+    expect(surface.scrollLeft).toBe(150);
+    pointer(ending, 50);
+    expect(surface.dataset.panning).toBe('false');
+    pointer('pointermove', 0);
+    expect(surface.scrollLeft).toBe(150);
+  });
+  it('keeps plain clicks and suppresses only the click following a drag', () => {
+    const click = (): MouseEvent => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      act(() => {
+        surface.dispatchEvent(event);
+      });
+      return event;
+    };
+    pointer('pointerdown', 100);
+    pointer('pointerup', 100);
+    expect(click().defaultPrevented).toBe(false);
+    pointer('pointerdown', 100);
+    pointer('pointermove', 50);
+    pointer('pointerup', 50);
+    expect(click().defaultPrevented).toBe(true);
+    expect(click().defaultPrevented).toBe(false);
+  });
+  it('does not swallow the next control activation if a drag produced no click', () => {
+    pointer('pointerdown', 100);
+    pointer('pointermove', 50);
+    pointer('pointerup', 50);
+    const input = surface.querySelector('input')!;
+    pointer('pointerdown', 50, 0, input);
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    act(() => {
+      input.dispatchEvent(click);
+    });
+    expect(click.defaultPrevented).toBe(false);
+  });
 });

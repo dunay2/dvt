@@ -206,7 +206,7 @@ describe('relational-tree mouse navigation', () => {
     expect(viewport.scrollLeft).toBe(180);
     expect(viewport.scrollTop).toBe(90);
   });
-  it('pans with the middle button over a card without capturing right-click', () => {
+  it('pans empty background with the left button without capturing alternate buttons', () => {
     viewport.setPointerCapture = vi.fn();
     viewport.releasePointerCapture = vi.fn();
     viewport.hasPointerCapture = () => true;
@@ -214,21 +214,22 @@ describe('relational-tree mouse navigation', () => {
     viewport.scrollTop = 100;
     const event = (name: string, button: number, x: number, y: number): MouseEvent =>
       new MouseEvent(name, { button, clientX: x, clientY: y, bubbles: true, cancelable: true });
-    const start = event('pointerdown', 1, 100, 100);
+    const start = event('pointerdown', 0, 100, 100);
     act(() => {
-      content.querySelector('button')!.dispatchEvent(start);
+      viewport.dispatchEvent(start);
     });
     expect(start.defaultPrevented).toBe(true);
     act(() => {
-      viewport.dispatchEvent(event('pointermove', 1, 70, 60));
+      viewport.dispatchEvent(event('pointermove', 0, 70, 60));
     });
     expect(viewport.scrollLeft).toBe(230);
     expect(viewport.scrollTop).toBe(140);
     act(() => {
-      viewport.dispatchEvent(event('pointerup', 1, 70, 60));
+      viewport.dispatchEvent(event('pointerup', 0, 70, 60));
     });
     expect(viewport.releasePointerCapture).toHaveBeenCalledOnce();
     act(() => {
+      viewport.dispatchEvent(event('pointerdown', 1, 100, 100));
       viewport.dispatchEvent(event('pointerdown', 2, 100, 100));
     });
     expect(viewport.setPointerCapture).toHaveBeenCalledOnce();

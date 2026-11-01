@@ -15,18 +15,6 @@
   z-index: 10;
 }
 
-.root[data-movable='true'] {
-  cursor: grab;
-}
-
-.root[data-movable='true'][data-dragging='true'] {
-  cursor: grabbing;
-}
-
-.root[data-movable='false'] {
-  cursor: inherit;
-}
-
 .icon {
   color: var(--status-success);
   flex-shrink: 0;

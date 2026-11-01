@@ -34,8 +34,7 @@ export function useRelationalCardMovement(
     ReturnType<typeof useRelationalCardPlacement>,
     'setPosition' | 'previewPosition' | 'finishMovement'
   >,
-  onManualLayout?: () => void,
-  enabled = true
+  onManualLayout?: () => void
 ) {
   const drag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
@@ -75,7 +74,7 @@ export function useRelationalCardMovement(
   useEffect(() => () => cancelOnUnmount.current(true), []);
   return {
     onPointerDown: (event: PointerEvent<HTMLDivElement>) => {
-      if (!enabled || event.button !== 0 || drag.current != null) return;
+      if (event.button !== 0 || drag.current != null) return;
       suppressClick.current = false;
       const hit = locate(event.target);
       if (hit == null) return;
@@ -135,7 +134,6 @@ export function useRelationalCardMovement(
       }
       suppressClick.current = false;
       if (
-        !enabled ||
         drag.current != null ||
         !event.altKey ||
         !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)

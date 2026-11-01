@@ -14,16 +14,12 @@ export function CanvasRelationalTreeZoomControls({
   minimumZoom = CANVAS_RELATIONAL_TREE_MIN_ZOOM,
   onChange,
   onFit,
-  panMode,
-  onTogglePan,
 }: Readonly<{
   copy: CanvasRelationalTreeWorkbenchCopy;
   zoom: number;
   minimumZoom?: number;
   onChange: (delta: number) => void;
   onFit: () => void;
-  panMode: boolean;
-  onTogglePan: () => void;
 }>): JSX.Element {
   return (
     <div className="flex items-center gap-1">
@@ -61,7 +57,7 @@ export function CanvasRelationalTreeZoomControls({
       >
         <Plus className="size-4" />
       </button>
-      <RelationalNavigationControls panMode={panMode} onTogglePan={onTogglePan} />
+      <RelationalNavigationControls />
     </div>
   );
 }

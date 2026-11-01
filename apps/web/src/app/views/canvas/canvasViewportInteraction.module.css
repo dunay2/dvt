@@ -1,0 +1,34 @@
+/* Owned concern: one Canvas pointer vocabulary and a scrollbar-free navigation surface. */
+.surface {
+  cursor: default;
+  overflow: hidden;
+}
+
+.surface:global(.react-flow) :global(.react-flow__pane) {
+  cursor: default;
+}
+
+.surface[data-panning='true'],
+.surface:global(.react-flow) :global(.react-flow__pane.dragging) {
+  cursor: grabbing;
+}
+
+.surface :global([data-movable='true']),
+.surface:global(.react-flow) :global(.react-flow__node.draggable) {
+  cursor: crosshair;
+}
+
+.surface :global([data-movable='false']),
+.surface:global(.react-flow) :global(.react-flow__node:not(.draggable)) {
+  cursor: default;
+}
+
+.relational {
+  background-color: var(--surface-subtle);
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--border-subtle) 72%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+}
