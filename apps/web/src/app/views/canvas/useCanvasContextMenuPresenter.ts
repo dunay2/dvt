@@ -7,6 +7,7 @@ import { flushSync } from 'react-dom';
 import type { ContextMenuEvent } from './canvasContextMenuPresenter.types';
 import { resolveCanvasViewportContextMenuRequest } from './canvasContextMenuTargetPolicy';
 import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
+import { isCanvasElement } from '../../components/canvas/canvasNodeInteractionBoundary';
 import {
   buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
@@ -171,7 +172,7 @@ export function useCanvasContextMenuPresenter({
   const handleViewportContextMenuEvent = useCallback(
     (event: ContextMenuEvent) => {
       const targetsNodeShell =
-        event.target instanceof Element &&
+        isCanvasElement(event.target) &&
         event.target.closest('[data-slot="canvas-node-shell"]') != null;
       if (targetsNodeShell) {
         return;
@@ -184,7 +185,7 @@ export function useCanvasContextMenuPresenter({
       }
 
       const targetsEdge =
-        event.target instanceof Element && event.target.closest('.react-flow__edge') != null;
+        isCanvasElement(event.target) && event.target.closest('.react-flow__edge') != null;
       if (targetsEdge) {
         return;
       }

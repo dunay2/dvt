@@ -1,5 +1,6 @@
 /** Owned concern: translate viewport-local wheel input into cursor-anchored presentation zoom. */
 import { useLayoutEffect, useRef, type RefObject } from 'react';
+import { isCanvasTextEditingTarget } from './canvasViewportInteraction';
 import {
   CANVAS_RELATIONAL_TREE_MIN_ZOOM,
   CANVAS_RELATIONAL_TREE_MAX_ZOOM,
@@ -43,8 +44,7 @@ export function useCanvasRelationalTreeWheelZoom(
         content == null ||
         event.deltaY === 0 ||
         !Number.isFinite(event.deltaY) ||
-        (event.target instanceof Element &&
-          event.target.closest('input, select, textarea, [contenteditable="true"]') != null)
+        isCanvasTextEditingTarget(event.target)
       )
         return;
       event.preventDefault();

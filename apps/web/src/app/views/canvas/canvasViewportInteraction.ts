@@ -1,10 +1,13 @@
 /** Owned concern: define Canvas pointer options and map shared keys to existing UI intents. */
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 
-import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canvasNodeInteractionBoundary';
+import {
+  isCanvasElement,
+  isCanvasNodeEmbeddedControlTarget,
+} from '../../components/canvas/canvasNodeInteractionBoundary';
 
 type CanvasKeyboardEvent = Pick<KeyboardEvent, 'key'> &
-  Partial<Pick<KeyboardEvent, 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey'>>;
+  Partial<Pick<KeyboardEvent, 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey' | 'repeat'>>;
 
 const CANVAS_POINTER_OPTIONS = {
   panOnDrag: [0],
@@ -29,6 +32,7 @@ export function resolveCanvasViewportInteraction(canDeleteWithKeyboard: boolean)
 export function resolveCanvasKeyboardAction(
   event: CanvasKeyboardEvent
 ): 'activate' | 'search' | 'dismiss' | 'context-menu' | undefined {
+  if (event.repeat) return undefined;
   if (event.key === 'Escape') return 'dismiss';
   if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f') {
     return 'search';
@@ -41,13 +45,35 @@ export function resolveCanvasKeyboardAction(
   return undefined;
 }
 
+export function isCanvasTextEditingTarget(target: EventTarget | null): boolean {
+  return (
+    isCanvasElement(target) &&
+    target.closest(
+      'input, textarea, select, [role="textbox"], [contenteditable]:not([contenteditable="false"])'
+    ) != null
+  );
+}
+
 export function isCanvasInteractionControlTarget(target: EventTarget | null): boolean {
   return (
     isCanvasNodeEmbeddedControlTarget(target) ||
-    (target instanceof Element &&
-      target.closest(
-        'input, textarea, select, button, summary, a[href], [role="button"], [role="textbox"], [contenteditable]:not([contenteditable="false"])'
-      ) != null)
+    isCanvasTextEditingTarget(target) ||
+    (isCanvasElement(target) && target.closest('button, summary, a[href], [role="button"]') != null)
+  );
+}
+
+export function isCanvasBackgroundTarget(
+  target: EventTarget | null,
+  boundary: EventTarget | null
+): boolean {
+  return (
+    isCanvasElement(target) &&
+    isCanvasElement(boundary) &&
+    boundary.contains(target) &&
+    !isCanvasInteractionControlTarget(target) &&
+    target.closest(
+      '[data-relational-card-id], [data-slot="canvas-relational-card"], .react-flow__node'
+    ) == null
   );
 }
 
@@ -56,11 +82,7 @@ export function canStartCanvasBackgroundPan(
 ): boolean {
   return (
     event.button === CANVAS_POINTER_OPTIONS.panOnDrag[0] &&
-    event.target instanceof Element &&
-    event.currentTarget instanceof Element &&
-    event.currentTarget.contains(event.target) &&
-    !isCanvasInteractionControlTarget(event.target) &&
-    event.target.closest('[data-relational-card-id], .react-flow__node') == null
+    isCanvasBackgroundTarget(event.target, event.currentTarget)
   );
 }
 
@@ -80,7 +102,7 @@ export function activateFocusedCanvasNodeFromKeyboard(
   if (
     resolveCanvasKeyboardAction(event) !== 'activate' ||
     isCanvasInteractionControlTarget(event.target) ||
-    !(event.target instanceof Element)
+    !isCanvasElement(event.target)
   ) {
     return false;
   }

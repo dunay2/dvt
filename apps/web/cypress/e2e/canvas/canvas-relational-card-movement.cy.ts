@@ -28,7 +28,7 @@ describe('Relational card movement', () => {
     openWorkbenchModel();
     verifyCompleteTreeFit(viewport);
     cy.get(viewport).should('have.css', 'cursor', 'default');
-    cy.get(join).should('have.css', 'cursor', 'grab');
+    cy.get(join).should('have.css', 'cursor', 'crosshair');
   });
 
   it('moves a JOIN and its ports at the actual zoom without opening properties or saving', () => {

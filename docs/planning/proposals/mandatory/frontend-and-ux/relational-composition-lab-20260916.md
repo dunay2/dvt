@@ -19,6 +19,18 @@ input for the REL1 laboratory at `main@0c848e3e5` and pinned Substrait
 This document is a source-backed reasoning map. It is not another capability
 catalog, relational IR, persisted model, or product route.
 
+## Shared Input Boundary
+
+The laboratory reuses the pure Canvas interaction options and scoped cursor
+stylesheet. Its only allowed Canvas view dependencies are
+`canvasViewportInteraction.ts` and `canvasViewportInteraction.module.css`.
+The policy may depend on React types and the shared DOM control marker; it must
+not acquire stores, services, command/query ports, semantic editors or network I/O.
+The laboratory retains synthetic scenarios and receives no authoring authority.
+This explicit UI dependency replaces implicit React Flow gesture defaults; it
+does not admit general imports from Canvas application views. The architecture
+guard checks import declarations rather than prototype label/source snapshots.
+
 ## Governing Sources
 
 - [ADR-0064](../../../../adr/ADR-0064-substrait-semantic-reference-and-bounded-logical-profile.md)

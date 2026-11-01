@@ -115,7 +115,6 @@ export function layoutGraph(
         fontWeight: 700,
         letterSpacing: '0.07em',
         textAlign: 'left',
-        cursor: 'grab',
       },
     });
     positionedNodes.push(

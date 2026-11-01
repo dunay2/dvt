@@ -97,6 +97,41 @@ describe('Workbench viewport', () => {
       .and(($card) => {
         expect($card[0]!.style.transform).not.to.equal(cardPosition);
       });
+    cy.get(`${main} .react-flow__handle.source`)
+      .first()
+      .as('sourcePort')
+      .should('have.css', 'cursor', 'grab');
+    moveWorkbenchCard('@sourcePort', 24, -30, undefined, () => {
+      cy.get('@sourcePort')
+        .should('have.class', 'connectingfrom')
+        .and('have.css', 'cursor', 'grabbing');
+      cy.get(pane).should('have.css', 'cursor', 'default');
+      cy.get('@movableCard').should('have.css', 'cursor', 'crosshair');
+    });
+    cy.get(pane).should('have.css', 'cursor', 'default');
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+    });
+  });
+  it('uses the same pointer policy in the synthetic composition laboratory', () => {
+    cy.visit('/lab/relational-composition');
+    cy.get('.react-flow__node.draggable').first().should('have.css', 'cursor', 'crosshair');
+    cy.get('.react-flow__pane').should('have.css', 'cursor', 'default');
+    moveWorkbenchCard(
+      '.react-flow__pane',
+      24,
+      16,
+      undefined,
+      () => {
+        cy.get('.react-flow__pane')
+          .should('have.class', 'dragging')
+          .and('have.css', 'cursor', 'grabbing');
+      },
+      0.9
+    );
+    cy.get('.react-flow__pane')
+      .should('not.have.class', 'dragging')
+      .and('have.css', 'cursor', 'default');
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
     });

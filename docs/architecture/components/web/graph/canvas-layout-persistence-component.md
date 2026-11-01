@@ -82,6 +82,29 @@ middle-button pan, mode-dependent card disabling and local card cursor rules are
 retired. Arrange, Fit, zoom, fields, ports and form controls retain their existing
 owners. Inspector and result panels retain their own scrolling.
 
+The [competition audit](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564633401)
+also covers synthetic and inactive consumers. The laboratory renderer consumes
+the same pure input policy. Node shells delegate keyboard entry to the viewport;
+they do not define a fallback Enter action. Repeated or modified activation keys
+do not reopen cards. Connection ports keep local cursor feedback without forcing
+a cursor across the pane or unrelated cards.
+
+Shared target predicates identify text editing, local controls and owned
+background. Context menus add their menu/popover exclusions, wheel zoom preserves
+wheel-over-card behavior, and field drops retain their existing command admission.
+These effects remain separate; only their equivalent target checks are shared.
+The shared DOM boundary resolves `Element` from each node's own window, preserving
+iframe/portal presentation while rejecting targets outside the owning surface.
+
+Planning DB separates the existing relational local-layout implementation as
+`SYS-CANVAS-RELATIONAL-VIEWPORT`, a child of the relational Workbench. It owns
+pointer capture, local placement, fit, zoom and settled layout callbacks. The
+parent owns graph/inspector composition and delegates semantic changes through
+its existing command adapters. The zero-binding proposed tree-composition
+responsibility is retired as a duplicate of the implemented composition concern.
+The [ownership review](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564854173)
+records the concrete source boundary; it does not declare the feature implemented.
+
 ## Public API
 
 | API                                          | Owner                                 | Responsibility                                                                               |
