@@ -33,6 +33,7 @@ export function useDbtSelectedModelAnalysisQuery(
 
   return useQuery({
     enabled: hasContext && (options.enabled ?? true),
+    retry: false,
     queryKey: queryKeys.workspace.dbtSelectedModelAnalysis(
       scope.tenantId,
       scope.projectId,

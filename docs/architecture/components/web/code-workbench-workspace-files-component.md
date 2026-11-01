@@ -170,6 +170,15 @@ separately from this bounded inspection rule. The
 and [plain-SQL refinement](https://github.com/dunay2/dvt/issues/3747#issuecomment-6532334252)
 govern its implementation and validation.
 
+The existing project-graph and selected-model query hooks set `retry: false`:
+a transport rejection reaches the query error state after one attempt instead of
+inheriting the application's automatic retry. Existing explicit refetch,
+invalidation and later admitted reads remain available. A successful response
+carrying typed `unavailable` data keeps its existing meaning. This policy changes
+neither query identity, freshness nor authorization, and does not shorten the
+first native parse. The [bounded retry design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6562423355)
+governs the real-QueryClient failure and explicit-recovery tests.
+
 File-authoritative Canvas supplies its confirmed DbtProjectGraphProjection.
 Normal project Code resolves optional authoringAuthority from the accepted
 GetWorkspaceFileContent read. The API matches persisted roots within the granted
