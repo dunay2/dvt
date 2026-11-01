@@ -2,9 +2,9 @@
 import { useRef, useState, type MouseEventHandler, type PointerEventHandler } from 'react';
 import { canStartCanvasBackgroundPan } from '../canvasViewportInteraction';
 
-type PanOrigin = Readonly<{ pointerId: number; x: number; y: number; left: number; top: number }>;
+type PanOrigin = Readonly<{ pointerId: number; x: number; y: number }>;
 
-export function useRelationalViewportPan() {
+export function useRelationalViewportPan(onPan: (dx: number, dy: number) => void) {
   const origin = useRef<PanOrigin | null>(null);
   const [panning, setPanning] = useState(false);
   const suppressClick = useRef(false);
@@ -13,12 +13,11 @@ export function useRelationalViewportPan() {
     suppressClick.current = false;
     if (!canStartCanvasBackgroundPan(event)) return;
     event.preventDefault();
+    event.stopPropagation();
     origin.current = {
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
-      left: event.currentTarget.scrollLeft,
-      top: event.currentTarget.scrollTop,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
     setPanning(true);
@@ -26,12 +25,16 @@ export function useRelationalViewportPan() {
   const onPointerMove: PointerEventHandler<HTMLDivElement> = (event) => {
     const current = origin.current;
     if (current == null || current.pointerId !== event.pointerId) return;
-    suppressClick.current ||= event.clientX !== current.x || event.clientY !== current.y;
-    event.currentTarget.scrollLeft = current.left - (event.clientX - current.x);
-    event.currentTarget.scrollTop = current.top - (event.clientY - current.y);
+    event.stopPropagation();
+    const dx = event.clientX - current.x;
+    const dy = event.clientY - current.y;
+    suppressClick.current ||= dx !== 0 || dy !== 0;
+    origin.current = { pointerId: current.pointerId, x: event.clientX, y: event.clientY };
+    onPan(dx, dy);
   };
   const onPointerUp: PointerEventHandler<HTMLDivElement> = (event) => {
     if (origin.current?.pointerId !== event.pointerId) return;
+    event.stopPropagation();
     origin.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId))
       event.currentTarget.releasePointerCapture(event.pointerId);

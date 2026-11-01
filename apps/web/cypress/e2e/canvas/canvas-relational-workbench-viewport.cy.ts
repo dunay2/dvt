@@ -31,6 +31,7 @@ import {
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
@@ -306,9 +307,8 @@ describe('Workbench viewport', () => {
     verifyWheelZoom('[data-slot="canvas-relational-tree-viewport"]');
     revealCardDetails(1);
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
-    cy.get('[data-slot="canvas-relational-card-detail"]')
-      .scrollIntoView()
-      .should('contain.text', 'EQUAL');
+    revealWorkbenchCard('[data-slot="canvas-relational-card-detail"]');
+    cy.get('[data-slot="canvas-relational-card-detail"]').should('contain.text', 'EQUAL');
     cy.screenshot('semantic-editor-card-expressions');
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', 1);

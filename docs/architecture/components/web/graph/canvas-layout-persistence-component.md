@@ -75,8 +75,26 @@ uses the native thin cross without adding a cursor asset.
 The [Model viewport extension](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564364345)
 applies the same policy inside the relational editor. The existing relational
 adapter consumes the shared pointer/control boundary and interaction CSS Module;
-it keeps its own layout, pointer capture, programmatic scroll offsets and zoom.
-Canvas viewports hide native scrollbars and pan directly from empty background
+it keeps its own layout, pointer capture, local camera position and zoom.
+The camera translates content independently of its extent, so background drag
+also works when the complete diagram fits below 100% zoom. Pointer deltas, wheel
+anchoring, explicit Fit and keyboard focus reveal use the same position owner;
+native Canvas scrolling is clipped rather than retained as a second camera.
+Nested viewports consume only their own gestures. Pointer property activation
+does not reveal or recenter a card. The session retains camera and zoom across
+inspection/editing; camera movement never changes card world coordinates.
+
+```mermaid
+flowchart LR
+  Pointer[Background pointer delta] --> Camera[Local viewport camera]
+  Wheel[Wheel anchor correction] --> Camera
+  Fit[Explicit Fit] --> Camera
+  Focus[Keyboard focus reveal] --> Camera
+  Camera --> Projection[Content translation and zoom]
+  Cards[Card world positions] --> Projection
+```
+
+Canvas viewports have no native scrollbars and pan directly from empty background
 with the left button. Cards remain independently movable. The separate Hand mode,
 middle-button pan, mode-dependent card disabling and local card cursor rules are
 retired. Arrange, Fit, zoom, fields, ports and form controls retain their existing

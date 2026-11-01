@@ -1,4 +1,5 @@
 /** Owned concern: assert actual graph fit, wheel zoom and semantic detail without changing the draft. */
+import { revealWorkbenchCard } from './navigation';
 export function verifyCompleteTreeFit(viewportSelector: string): void {
   cy.get('[data-slot="canvas-relational-tree-fit"]').click();
   cy.get(viewportSelector).should(($viewport) => {
@@ -58,6 +59,8 @@ export function revealCardDetails(joinCount: number): void {
   cy.get('[data-slot="canvas-relational-tree-fit"]').click();
   cy.get('[data-slot="canvas-relational-card-detail"]').should('not.exist');
   cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').each(($card) => {
+    cy.wrap($card).as('detailCard');
+    revealWorkbenchCard('@detailCard');
     cy.wrap($card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
   });
   cy.get('[data-slot="canvas-relational-card-detail"]').should('have.length', joinCount);

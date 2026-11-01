@@ -3,6 +3,7 @@ import type { DragEventHandler, ReactNode } from 'react';
 import type { useCanvasRelationalTreeViewport } from '../useCanvasRelationalTreeViewport';
 import { useCanvasRelationalFieldSelection } from '../CanvasRelationalFieldSelectionProvider';
 import styles from '../canvasViewportInteraction.module.css';
+import { canvasViewportScopeProps } from '../canvasViewportInteraction';
 
 export function RelationalViewportSurface({
   viewport,
@@ -20,12 +21,14 @@ export function RelationalViewportSurface({
   const fields = useCanvasRelationalFieldSelection();
   return (
     <div
+      {...canvasViewportScopeProps}
       ref={viewport.viewportRef}
       data-slot={
         draft ? 'canvas-relational-tree-draft-viewport' : 'canvas-relational-tree-viewport'
       }
       data-panning={viewport.panning}
-      className={`absolute inset-0 p-5 ${styles.surface} ${styles.relational} ${draft ? 'pb-16' : ''}`}
+      className={`absolute inset-0 p-5 ${styles.surface} ${styles.local} ${styles.relational} ${draft ? 'pb-16' : ''}`}
+      onFocusCapture={viewport.onFocusCapture}
       onPointerDown={viewport.onPointerDown}
       onPointerMove={viewport.onPointerMove}
       onPointerUp={viewport.onPointerUp}

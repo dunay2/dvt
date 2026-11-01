@@ -5,11 +5,29 @@ import {
   isCanvasInteractionControlTarget,
   isCanvasTextEditingTarget,
   isCanvasBackgroundTarget,
+  isCanvasViewportTarget,
+  canvasViewportScopeProps,
   resolveCanvasKeyboardAction,
   resolveCanvasViewportInteraction,
 } from './canvasViewportInteraction';
 
 describe('Canvas viewport interaction policy', () => {
+  it('assigns nested viewport gestures to the nearest marked surface only', () => {
+    const outer = document.createElement('div');
+    const inner = document.createElement('div');
+    const background = document.createElement('span');
+    for (const surface of [outer, inner])
+      surface.setAttribute(
+        'data-canvas-viewport',
+        canvasViewportScopeProps['data-canvas-viewport']
+      );
+    outer.append(inner);
+    inner.append(background);
+    expect(isCanvasViewportTarget(background, inner)).toBe(true);
+    expect(isCanvasViewportTarget(background, outer)).toBe(false);
+    expect(isCanvasBackgroundTarget(background, inner)).toBe(true);
+    expect(isCanvasBackgroundTarget(background, outer)).toBe(false);
+  });
   it.each([
     [{ key: 'Enter' }, 'activate'],
     [{ key: 'Enter', shiftKey: true }, 'activate'],

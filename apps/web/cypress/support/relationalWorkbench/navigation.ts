@@ -12,6 +12,20 @@ import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 import { workbenchOperation } from './operationMenu';
 import { hoverWorkbenchCard } from './pointer';
 
+/** Reveal through the production keyboard-focus camera, without assigning Canvas scroll. */
+export function revealWorkbenchCard(selector: string): void {
+  cy.get(selector)
+    .first()
+    .then(($card) => {
+      const focusable = 'button, input, select, textarea, [tabindex="0"], a[href]';
+      const target = $card.is(focusable) ? $card : $card.find(focusable).first();
+      expect(target.length, 'existing keyboard target on the card').to.equal(1);
+      cy.wrap(target).focus();
+      cy.press(Cypress.Keyboard.Keys.TAB);
+      cy.wrap(target).focus().should('be.visible');
+    });
+}
+
 export function visitWorkbenchCanvas(language: 'en' | 'es' = 'en'): void {
   visitWithE2eWorkspaceSession('/canvas', {
     onBeforeLoad(window) {

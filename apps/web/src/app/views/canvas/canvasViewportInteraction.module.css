@@ -4,6 +4,10 @@
   overflow: hidden;
 }
 
+.local {
+  overflow: clip;
+}
+
 .surface:global(.react-flow) :global(.react-flow__pane) {
   cursor: default;
 }

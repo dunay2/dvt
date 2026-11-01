@@ -62,7 +62,9 @@ export function isCanvasInteractionControlTarget(target: EventTarget | null): bo
   );
 }
 
-export function isCanvasBackgroundTarget(
+export const canvasViewportScopeProps = { 'data-canvas-viewport': '' } as const;
+
+export function isCanvasViewportTarget(
   target: EventTarget | null,
   boundary: EventTarget | null
 ): boolean {
@@ -70,6 +72,18 @@ export function isCanvasBackgroundTarget(
     isCanvasElement(target) &&
     isCanvasElement(boundary) &&
     boundary.contains(target) &&
+    (!boundary.matches('[data-canvas-viewport]') ||
+      target.closest('[data-canvas-viewport]') === boundary)
+  );
+}
+
+export function isCanvasBackgroundTarget(
+  target: EventTarget | null,
+  boundary: EventTarget | null
+): boolean {
+  return (
+    isCanvasViewportTarget(target, boundary) &&
+    isCanvasElement(target) &&
     !isCanvasInteractionControlTarget(target) &&
     target.closest(
       '[data-relational-card-id], [data-slot="canvas-relational-card"], .react-flow__node'

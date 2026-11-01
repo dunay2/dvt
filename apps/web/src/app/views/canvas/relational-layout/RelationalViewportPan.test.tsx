@@ -5,8 +5,9 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRelationalViewportPan } from './useRelationalViewportPan';
 
+const panBy = vi.fn();
 function Surface(): JSX.Element {
-  const viewport = useRelationalViewportPan();
+  const viewport = useRelationalViewportPan(panBy);
   return (
     <div
       data-testid="surface"
@@ -48,6 +49,7 @@ describe('Relational viewport pan', () => {
     return event;
   };
   beforeEach(() => {
+    panBy.mockClear();
     Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
     container = document.createElement('div');
     document.body.append(container);
@@ -55,8 +57,6 @@ describe('Relational viewport pan', () => {
     act(() => root.render(<Surface />));
     surface = container.querySelector('[data-testid="surface"]')!;
     Object.assign(surface, {
-      scrollLeft: 100,
-      scrollTop: 100,
       setPointerCapture: vi.fn(),
       releasePointerCapture: vi.fn(),
       hasPointerCapture: () => true,
@@ -69,11 +69,22 @@ describe('Relational viewport pan', () => {
   it('pans empty background directly with the left button in both axes', () => {
     expect(pointer('pointerdown', 100).defaultPrevented).toBe(true);
     pointer('pointermove', 50);
-    expect([surface.scrollLeft, surface.scrollTop]).toEqual([150, 150]);
+    expect(panBy).toHaveBeenLastCalledWith(-50, -50);
+    pointer('pointermove', 70);
+    expect(panBy).toHaveBeenLastCalledWith(20, 20);
     expect(surface.dataset.panning).toBe('true');
     pointer('pointerup', 50);
     expect(surface.dataset.panning).toBe('false');
     expect(surface.releasePointerCapture).toHaveBeenCalledOnce();
+  });
+  it('does not bubble an admitted pan into an enclosing card or viewport', () => {
+    const enclosingDrag = vi.fn();
+    container.addEventListener('pointerdown', enclosingDrag);
+    pointer('pointerdown', 100);
+    pointer('pointermove', 80);
+    pointer('pointerup', 80);
+    expect(panBy).toHaveBeenCalledWith(-20, -20);
+    expect(enclosingDrag).not.toHaveBeenCalled();
   });
   it.each(['button', 'input', 'path', '[data-relational-card-id] span'])(
     'leaves %s under its own interaction owner',
@@ -82,24 +93,24 @@ describe('Relational viewport pan', () => {
         pointer('pointerdown', 100, 0, surface.querySelector(selector)!).defaultPrevented
       ).toBe(false);
       pointer('pointermove', 50);
-      expect([surface.scrollLeft, surface.scrollTop]).toEqual([100, 100]);
+      expect(panBy).not.toHaveBeenCalled();
       expect(surface.setPointerCapture).not.toHaveBeenCalled();
     }
   );
   it.each([1, 2])('does not introduce a pan mode for mouse button %s', (button) => {
     expect(pointer('pointerdown', 100, button).defaultPrevented).toBe(false);
     pointer('pointermove', 50, button);
-    expect([surface.scrollLeft, surface.scrollTop]).toEqual([100, 100]);
+    expect(panBy).not.toHaveBeenCalled();
     expect(surface.setPointerCapture).not.toHaveBeenCalled();
   });
   it.each(['pointercancel', 'lostpointercapture'])('releases left pan on %s', (ending) => {
     pointer('pointerdown', 100);
     pointer('pointermove', 50);
-    expect(surface.scrollLeft).toBe(150);
+    expect(panBy).toHaveBeenCalledOnce();
     pointer(ending, 50);
     expect(surface.dataset.panning).toBe('false');
     pointer('pointermove', 0);
-    expect(surface.scrollLeft).toBe(150);
+    expect(panBy).toHaveBeenCalledOnce();
   });
   it('keeps plain clicks and suppresses only the click following a drag', () => {
     const click = (): MouseEvent => {

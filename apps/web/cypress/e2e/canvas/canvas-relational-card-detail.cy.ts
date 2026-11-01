@@ -6,6 +6,7 @@ import { getE2eApiCalls } from '../../support/e2eApiStub';
 import {
   visitWorkbenchCanvas,
   connectWorkbenchProducer,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -63,6 +64,8 @@ describe('Relational card detail', () => {
       writes = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
     cy.get('[data-slot="canvas-relational-tree-node"]').each(($card) => {
+      cy.wrap($card).as('detailCard');
+      revealWorkbenchCard('@detailCard');
       cy.wrap($card).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
       cy.wrap($card)
         .closest('li')
@@ -79,7 +82,7 @@ describe('Relational card detail', () => {
       .closest('li')
       .should('contain.text', 'ORDER BY')
       .and('contain.text', 'NULLS');
-    cy.get('[data-operator="sort"]').scrollIntoView();
+    revealWorkbenchCard('[data-operator="sort"]');
     cy.screenshot('relational-card-details');
     cy.get('[data-slot="canvas-relational-tree-layout"]').then(($layout) => {
       const layout = $layout[0];

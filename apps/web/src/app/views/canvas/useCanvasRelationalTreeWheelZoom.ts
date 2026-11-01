@@ -1,10 +1,7 @@
 /** Owned concern: translate viewport-local wheel input into cursor-anchored presentation zoom. */
 import { useLayoutEffect, useRef, type RefObject } from 'react';
-import { isCanvasTextEditingTarget } from './canvasViewportInteraction';
-import {
-  CANVAS_RELATIONAL_TREE_MIN_ZOOM,
-  CANVAS_RELATIONAL_TREE_MAX_ZOOM,
-} from './canvasRelationalTreeViewport';
+import { isCanvasTextEditingTarget, isCanvasViewportTarget } from './canvasViewportInteraction';
+import { CANVAS_RELATIONAL_TREE_MAX_ZOOM } from './canvasRelationalTreeViewport';
 
 type WheelAnchor = Readonly<{
   clientX: number;
@@ -18,7 +15,8 @@ export function useCanvasRelationalTreeWheelZoom(
   contentRef: RefObject<HTMLDivElement>,
   zoom: number,
   setZoom: (value: number) => void,
-  minimumZoom = CANVAS_RELATIONAL_TREE_MIN_ZOOM
+  minimumZoom: number,
+  panBy: (dx: number, dy: number) => void
 ): void {
   const anchor = useRef<WheelAnchor | null>(null);
   const pendingZoom = useRef(zoom);
@@ -31,9 +29,11 @@ export function useCanvasRelationalTreeWheelZoom(
     anchor.current = null;
     if (viewport == null || content == null || point == null) return;
     const bounds = content.getBoundingClientRect();
-    viewport.scrollLeft += bounds.left + point.contentX * zoom - point.clientX;
-    viewport.scrollTop += bounds.top + point.contentY * zoom - point.clientY;
-  }, [zoom, viewportRef, contentRef]);
+    panBy(
+      point.clientX - bounds.left - point.contentX * zoom,
+      point.clientY - bounds.top - point.contentY * zoom
+    );
+  }, [zoom, viewportRef, contentRef, panBy]);
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
@@ -42,12 +42,15 @@ export function useCanvasRelationalTreeWheelZoom(
       const content = contentRef.current;
       if (
         content == null ||
+        event.defaultPrevented ||
+        !isCanvasViewportTarget(event.target, viewport) ||
         event.deltaY === 0 ||
         !Number.isFinite(event.deltaY) ||
         isCanvasTextEditingTarget(event.target)
       )
         return;
       event.preventDefault();
+      event.stopPropagation();
       const unit =
         event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? Math.max(1, viewport.clientHeight) : 1;
       const nextZoom = Math.min(

@@ -4,6 +4,7 @@ import { verifyCompleteTreeFit } from '../../support/relationalWorkbench/geometr
 import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
 import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
@@ -222,7 +223,7 @@ describe('Relational card movement', () => {
   });
 
   for (const axis of ['horizontal', 'vertical'] as const) {
-    it(`keeps the held card under the pointer when the ${axis} scrollable bounds contract`, () => {
+    it(`keeps the held card under the pointer when the ${axis} layout bounds contract`, () => {
       cy.get(join).click();
       cy.get(source).closest('li').find('[data-slot="canvas-relational-node-expand"]').click();
       for (let step = 0; step < 5; step++)
@@ -236,18 +237,7 @@ describe('Relational card movement', () => {
             .find('[data-slot="canvas-relational-tree-output-open"]')
             .trigger('keydown', { key: 'ArrowDown', altKey: true, shiftKey: true });
       }
-      cy.get(output).scrollIntoView();
-      cy.get(viewport).then(($viewport) => {
-        const surface = $viewport[0];
-        if (surface === undefined) throw new Error('Expected the scrollable relational viewport.');
-        if (axis === 'horizontal') {
-          expect(surface.scrollWidth).to.be.greaterThan(surface.clientWidth);
-          surface.scrollLeft = surface.scrollWidth;
-        } else {
-          expect(surface.scrollHeight).to.be.greaterThan(surface.clientHeight);
-          surface.scrollTop = surface.scrollHeight;
-        }
-      });
+      revealWorkbenchCard(output);
       cy.get(output).then(($card) => {
         const held = $card[0];
         if (held === undefined) throw new Error('Expected the held relational Output card.');
@@ -260,13 +250,14 @@ describe('Relational card movement', () => {
           expect(element).to.equal(held);
           const bounds = element.getBoundingClientRect();
           const surface = element.closest(viewport)!;
-          const layout = element.closest<HTMLElement>(
-            '[data-slot="canvas-relational-tree-layout"]'
-          )!;
           expect(
-            bounds.left,
-            `held card follows pointer ${JSON.stringify({ stepX, scroll: surface.scrollLeft, width: surface.scrollWidth, layout: layout.style.width, left: element.style.left, dragging: element.dataset.dragging })}`
-          ).to.be.closeTo(before.left + stepX, 1);
+            [surface.scrollLeft, surface.scrollTop],
+            'no competing native camera'
+          ).to.deep.equal([0, 0]);
+          expect(bounds.left, 'held card follows horizontal pointer').to.be.closeTo(
+            before.left + stepX,
+            1
+          );
           expect(bounds.top, 'held card follows vertical pointer').to.be.closeTo(
             before.top + stepY,
             1
@@ -290,42 +281,59 @@ describe('Relational card movement', () => {
     });
   }
 
-  it('pans empty background directly without scrollbars or changing card positions', () => {
-    for (let step = 0; step < 5; step++)
-      cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom in"]').click();
-    cy.get(source).scrollIntoView();
+  it('pans a completely fitting diagram in both directions without scroll or changing card positions', () => {
+    cy.get('[data-slot="canvas-relational-tree"]').should(($tree) => {
+      expect(Number($tree[0]!.style.zoom), 'fit below 100%').to.be.lessThan(1);
+    });
     cy.get('[data-slot="canvas-relational-tree-pan"]').should('not.exist');
     cy.get(viewport)
       .should('have.css', 'cursor', 'default')
-      .and('have.css', 'overflow-x', 'hidden')
-      .and('have.css', 'overflow-y', 'hidden');
+      .and('have.css', 'overflow-x', 'clip')
+      .and('have.css', 'overflow-y', 'clip');
     cy.get(source).should('have.css', 'cursor', 'crosshair');
     cy.get(source).then(($card) => {
       const before = position($card[0]);
+      const bounds = $card[0]!.getBoundingClientRect();
       const writes = semanticWrites('join-transform').length;
-      cy.get(viewport).then(($viewport) => {
-        const initialViewport = $viewport[0];
-        if (initialViewport === undefined)
-          throw new Error('Expected the panning relational viewport.');
-        const scrollLeft = initialViewport.scrollLeft;
-        const scrollTop = initialViewport.scrollTop;
-        panWorkbenchViewport(viewport, -40, -24, () => {
+      let x = 0,
+        y = 0;
+      for (const [dx, dy] of [
+        [40, 24],
+        [-40, -24],
+      ] as const) {
+        x += dx;
+        y += dy;
+        const expectedX = x,
+          expectedY = y;
+        panWorkbenchViewport(viewport, dx, dy, () => {
           cy.get(viewport)
             .should('have.attr', 'data-panning', 'true')
             .and('have.css', 'cursor', 'grabbing');
         });
-        cy.get(viewport).should(($panned) => {
-          const panned = $panned[0];
-          if (panned === undefined) throw new Error('Expected the panned relational viewport.');
-          expect(panned.scrollLeft).to.be.greaterThan(scrollLeft);
-          expect(panned.scrollTop).to.be.greaterThan(scrollTop);
+        cy.get(source).should(($panned) => {
+          const after = $panned[0]!.getBoundingClientRect();
+          expect(after.left).to.be.closeTo(bounds.left + expectedX, 1);
+          expect(after.top).to.be.closeTo(bounds.top + expectedY, 1);
         });
+      }
+      cy.get(viewport).should(($panned) => {
+        expect([$panned[0]!.scrollLeft, $panned[0]!.scrollTop]).to.deep.equal([0, 0]);
       });
       cy.get(source).should(($same) => expect(position($same[0])).to.deep.equal(before));
       cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('not.exist');
       cy.get(viewport).should('have.css', 'cursor', 'default');
       cy.get(source).should('have.css', 'cursor', 'crosshair');
       cy.then(() => expect(semanticWrites('join-transform')).to.have.length(writes));
+      cy.get(join).then(($join) => {
+        const beforeClick = $join[0]!.getBoundingClientRect();
+        moveWorkbenchCard(join, 0, 0);
+        cy.get('[data-slot="canvas-relational-tree-inline-editor"]').should('be.visible');
+        cy.get(join).should(($selected) => {
+          const after = $selected[0]!.getBoundingClientRect();
+          expect(after.left, 'properties preserve camera x').to.be.closeTo(beforeClick.left, 1);
+          expect(after.top, 'properties preserve camera y').to.be.closeTo(beforeClick.top, 1);
+        });
+      });
     });
   });
 });
