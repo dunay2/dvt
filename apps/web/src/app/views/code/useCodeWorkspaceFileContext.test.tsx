@@ -684,6 +684,48 @@ describe('Code workspace file context through normal Code entry', () => {
 });
 
 describe('accepted file context query lifetime', () => {
+  it('does not retry a rejected graph analysis automatically and permits explicit recovery', async () => {
+    const { project } = contextFixture();
+    const authority = project.authorityBinding.authority;
+    if (authority.kind !== 'dbt-project-files') throw new Error('Expected file-backed fixture.');
+    const binding = { ...project.authorityBinding, authority };
+    const failure = new Error('Project graph analysis request failed.');
+    const getProjectGraph = vi.fn(async () => project).mockRejectedValue(failure);
+    let observed: ReturnType<typeof useDbtProjectGraphQuery> | undefined;
+    function Probe(): null {
+      observed = useDbtProjectGraphQuery(binding);
+      return null;
+    }
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: 1, retryDelay: 0 } },
+    });
+    const mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          dbtProjectGraphQueryPort: { getProjectGraph },
+        }}
+      >
+        <Probe />
+      </AppServicesProvider>,
+      client
+    );
+    try {
+      await waitForReactQuery(() => observed?.isError === true);
+      expect(observed?.error).toBe(failure);
+      expect(getProjectGraph).toHaveBeenCalledTimes(1);
+      getProjectGraph.mockResolvedValue(project);
+      await act(async () => {
+        await observed?.refetch();
+      });
+      await waitForReactQuery(() => observed?.isSuccess === true);
+      expect(observed?.data).toEqual(project);
+      expect(getProjectGraph).toHaveBeenCalledTimes(2);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('revalidates the project when returning to an unchanged file after another file changed', async () => {
     const first = contextFixture();
     const nextProject = DbtProjectGraphProjectionSchema.parse({

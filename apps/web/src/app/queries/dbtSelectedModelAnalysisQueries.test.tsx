@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { DbtSelectedModelAnalysisSchema, type DbtSelectedModelAnalysis } from '@dvt/contracts';
+import { QueryClient } from '@tanstack/react-query';
 import { act, createElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -60,6 +61,44 @@ function analysisWithRevision(digest: string): DbtSelectedModelAnalysis {
 }
 
 describe('selected dbt model analysis query', () => {
+  it('does not retry a rejected analysis automatically and permits explicit recovery', async () => {
+    const result = analysisWithRevision('1'.repeat(64));
+    const failure = new Error('Selected model analysis request failed.');
+    const analyzeSelectedModel = vi.fn(async () => result).mockRejectedValue(failure);
+    let observed: ReturnType<typeof useDbtSelectedModelAnalysisQuery> | undefined;
+    function Probe(): null {
+      observed = useDbtSelectedModelAnalysisQuery(binding, selectedUniqueId);
+      return null;
+    }
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: 1, retryDelay: 0 } },
+    });
+    const mounted = await withTestQueryClient(
+      createElement(AppServicesProvider, {
+        overrides: {
+          ...createAppServicesTestOverrides(),
+          dbtSelectedModelAnalysisQueryPort: { analyzeSelectedModel },
+        },
+        children: createElement(Probe),
+      }),
+      client
+    );
+    try {
+      await waitForReactQuery(() => observed?.isError === true);
+      expect(observed?.error).toBe(failure);
+      expect(analyzeSelectedModel).toHaveBeenCalledTimes(1);
+      analyzeSelectedModel.mockResolvedValue(result);
+      await act(async () => {
+        await observed?.refetch();
+      });
+      await waitForReactQuery(() => observed?.isSuccess === true);
+      expect(observed?.data).toEqual(result);
+      expect(analyzeSelectedModel).toHaveBeenCalledTimes(2);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it.each([
     [undefined, selectedUniqueId, true],
     [binding, undefined, true],

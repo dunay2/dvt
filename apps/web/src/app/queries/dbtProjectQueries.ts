@@ -27,6 +27,7 @@ export function useDbtProjectGraphQuery(
 
   return useQuery({
     enabled: hasContext && (options.enabled ?? true),
+    retry: false,
     queryKey: queryKeys.workspace.dbtProjectGraph(
       scope.tenantId,
       scope.projectId,
