@@ -34,7 +34,7 @@
 }
 
 .flow:global(.react-flow) :global(.react-flow__node.draggable) {
-  cursor: move;
+  cursor: crosshair;
 }
 
 .flow:global(.react-flow) :global(.react-flow__node:not(.draggable)) {

@@ -52,7 +52,7 @@ Canonical local C&Q catalog:
 
 `SYS-WEB-CANVAS-VIEWPORT` owns the shared `canvasViewportInteraction` policy.
 The empty Canvas shows the normal pointer; holding the left mouse button and
-moving pans the viewport. Movable cards show the four-direction `move` cursor
+moving pans the viewport. Movable cards show the arrowless `crosshair` cursor
 and retain their existing card-drag behavior. The viewport CSS Module owns these
 cursor states; the old global card pointer rule is removed.
 
@@ -69,6 +69,8 @@ retain their own input handling. Consumers own their state and actions; they do
 not define competing key bindings. The
 [prospective design and finite scope](https://github.com/dunay2/dvt/issues/3747#issuecomment-6563740702)
 govern the change and its behavioral/browser evidence.
+The [cursor clarification](https://github.com/dunay2/dvt/issues/3747#issuecomment-6564196807)
+uses the native thin cross without adding a cursor asset.
 
 ## Public API
 

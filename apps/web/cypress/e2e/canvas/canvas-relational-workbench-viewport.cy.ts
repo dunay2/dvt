@@ -39,7 +39,7 @@ describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
   });
-  it('uses the arrow and left drag for the background and a movement cursor for cards', () => {
+  it('uses the arrow and left drag for the background and an arrowless cross for cards', () => {
     cy.viewport(1280, 800);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
@@ -49,7 +49,7 @@ describe('Workbench viewport', () => {
     let cardPosition = '';
     let camera: DOMMatrixReadOnly;
 
-    cy.get(card).first().as('movableCard').should('have.css', 'cursor', 'move');
+    cy.get(card).first().as('movableCard').should('have.css', 'cursor', 'crosshair');
     cy.get('@movableCard').then(($card) => {
       cardPosition = $card[0]!.style.transform;
     });
@@ -106,9 +106,10 @@ describe('Workbench viewport', () => {
     cy.get('@movableCard').should(($card) => {
       expect($card[0]!.style.transform).to.equal(cardPosition);
     });
-    moveWorkbenchCard('@movableCard', 30, 15);
+    cy.get('@movableCard').find('[data-slot="graph-node-card-header"]').as('cardDragTarget');
+    moveWorkbenchCard('@cardDragTarget', 30, 15);
     cy.get('@movableCard')
-      .should('have.css', 'cursor', 'move')
+      .should('have.css', 'cursor', 'crosshair')
       .and(($card) => {
         expect($card[0]!.style.transform).not.to.equal(cardPosition);
       });
