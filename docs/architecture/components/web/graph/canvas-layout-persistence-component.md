@@ -48,6 +48,28 @@ Canonical local C&Q catalog:
 - Fowler mailbox:
   [Historical record](https://github.com/dunay2/dvt/blob/2df68680de46b9104282a58fd203a7eef551ca38/buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md)
 
+## Viewport input policy
+
+`SYS-WEB-CANVAS-VIEWPORT` owns the shared `canvasViewportInteraction` policy.
+The empty Canvas shows the normal pointer; holding the left mouse button and
+moving pans the viewport. Movable cards show the four-direction `move` cursor
+and retain their existing card-drag behavior. The viewport CSS Module owns these
+cursor states; the old global card pointer rule is removed.
+
+React Flow receives explicit pointer and keyboard options from this policy.
+Space does not enable a second pan mode, and Shift does not enable a background
+selection rectangle. Shift still adds cards to a selection. The interaction-mode
+toggle is hidden so it cannot change these rules independently. Native Tab and
+arrow-key accessibility, permission-gated deletion and settled layout callbacks
+retain their existing owners.
+
+The same module maps Enter, Ctrl/Cmd+F, Escape and ContextMenu/Shift+F10 to the
+existing node, search, popup and menu intents. Text fields and embedded controls
+retain their own input handling. Consumers own their state and actions; they do
+not define competing key bindings. The
+[prospective design and finite scope](https://github.com/dunay2/dvt/issues/3747#issuecomment-6563740702)
+govern the change and its behavioral/browser evidence.
+
 ## Public API
 
 | API                                          | Owner                                 | Responsibility                                                                               |

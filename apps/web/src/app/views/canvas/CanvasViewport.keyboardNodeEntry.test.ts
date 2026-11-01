@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { activateFocusedCanvasNodeFromKeyboard } from './CanvasViewportSurfaceView';
+import { activateFocusedCanvasNodeFromKeyboard } from './canvasViewportInteraction';
 
 type KeyboardEventDouble = Readonly<{
   key: string;
@@ -89,4 +89,29 @@ describe('CanvasViewport keyboard node entry', () => {
     ).toBe(false);
     expect(event.preventDefault).not.toHaveBeenCalled();
   });
+
+  it.each(['input', 'textarea', 'select', 'button'])(
+    'leaves Enter on a native %s to that control without opening its card',
+    (tag) => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'react-flow__node';
+      const shell = document.createElement('div');
+      shell.setAttribute('data-slot', 'canvas-node-shell');
+      const control = document.createElement(tag);
+      shell.append(control);
+      wrapper.append(shell);
+      const open = vi.fn();
+      shell.addEventListener('dblclick', open);
+      const event = buildKeyboardEvent(control);
+
+      expect(
+        activateFocusedCanvasNodeFromKeyboard(
+          event as unknown as Parameters<typeof activateFocusedCanvasNodeFromKeyboard>[0]
+        )
+      ).toBe(false);
+      expect(open).not.toHaveBeenCalled();
+      expect(event.preventDefault).not.toHaveBeenCalled();
+      expect(event.stopPropagation).not.toHaveBeenCalled();
+    }
+  );
 });

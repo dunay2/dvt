@@ -1,5 +1,5 @@
 /** Owned concern: drive real browser pointer capture, including the Cypress iframe scale. */
-function browserPoint(
+export function browserPoint(
   element: HTMLElement | undefined,
   verticalFraction = 0.5
 ): { x: number; y: number; scale: number } {

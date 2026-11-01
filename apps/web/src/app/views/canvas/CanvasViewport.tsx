@@ -31,6 +31,7 @@ import {
   reduceCanvasNodeContextSurface,
 } from './canvasNodeContextSurfaceModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
+import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
@@ -427,7 +428,7 @@ function CanvasViewportWithPresenter({
       }
     };
     const closeOnEscape = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
+      if (resolveCanvasKeyboardAction(event) === 'dismiss') {
         closeNodeHealthPopover(true);
       }
     };

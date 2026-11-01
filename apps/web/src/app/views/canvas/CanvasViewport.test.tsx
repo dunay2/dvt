@@ -249,12 +249,16 @@ describe('CanvasViewport', () => {
     });
   });
 
-  it('preserves the governed Shift multi-selection gesture for canvas node selection', async () => {
+  it('uses left-button pan without alternate pointer modes and retains Shift card selection', async () => {
     await renderViewport();
 
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       multiSelectionKeyCode: 'Shift',
       selectNodesOnDrag: true,
+      panOnDrag: [0],
+      panActivationKeyCode: null,
+      selectionOnDrag: false,
+      selectionKeyCode: null,
     });
   });
 

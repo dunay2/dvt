@@ -1,12 +1,6 @@
 /** Owned concern: own ephemeral Canvas graph search state and keyboard navigation. */
 import type { Node } from '@xyflow/react';
-import {
-  useCallback,
-  useMemo,
-  useState,
-  type KeyboardEvent,
-  type KeyboardEventHandler,
-} from 'react';
+import { useCallback, useMemo, useState, type KeyboardEventHandler } from 'react';
 
 import { CORE_NODE_ROLES, type CoreNodeRole, type PluginNodeKind } from '../../types/canonical';
 import {
@@ -15,6 +9,10 @@ import {
 } from './canvasGraphSearch.contract';
 import { searchCanvasGraph } from './canvasGraphSearch';
 import type { CanvasGraphSearchViewportBinding } from './canvasGraphSearchControl.binding';
+import {
+  isCanvasKeyboardControlTarget,
+  resolveCanvasKeyboardAction,
+} from './canvasViewportInteraction';
 
 export type CanvasGraphSearchController = CanvasGraphSearchViewportBinding &
   Readonly<{
@@ -58,10 +56,6 @@ function toSearchNode(node: Node): CanvasGraphSearchNode {
     role: asNodeRole(data.role),
     tags: asTags(data.tags),
   };
-}
-
-function isOpenShortcut(event: KeyboardEvent<HTMLElement>): boolean {
-  return (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === 'f';
 }
 
 export function useCanvasGraphSearchController({
@@ -109,7 +103,10 @@ export function useCanvasGraphSearchController({
   const showPrevious = useCallback(() => navigate(-1), [navigate]);
   const showNext = useCallback(() => navigate(1), [navigate]);
   const onViewportKeyDown = useCallback<KeyboardEventHandler<HTMLElement>>((event) => {
-    if (!isOpenShortcut(event)) {
+    if (
+      resolveCanvasKeyboardAction(event) !== 'search' ||
+      isCanvasKeyboardControlTarget(event.target)
+    ) {
       return;
     }
     event.preventDefault();
@@ -117,12 +114,12 @@ export function useCanvasGraphSearchController({
   }, []);
   const onControlKeyDown = useCallback<KeyboardEventHandler<HTMLElement>>(
     (event) => {
-      if (event.key === 'Escape') {
+      if (resolveCanvasKeyboardAction(event) === 'dismiss') {
         event.preventDefault();
         close();
         return;
       }
-      if (isOpenShortcut(event)) {
+      if (resolveCanvasKeyboardAction(event) === 'search') {
         event.preventDefault();
         setFocusRequestId((currentRequestId) => currentRequestId + 1);
       }
@@ -131,7 +128,7 @@ export function useCanvasGraphSearchController({
   );
   const onQueryKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
     (event) => {
-      if (event.key !== 'Enter' || result.status !== 'matched') {
+      if (resolveCanvasKeyboardAction(event) !== 'activate' || result.status !== 'matched') {
         return;
       }
       event.preventDefault();

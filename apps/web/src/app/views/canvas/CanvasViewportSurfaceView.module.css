@@ -25,6 +25,22 @@
   background-color: var(--canvas-surface);
 }
 
+.flow:global(.react-flow) :global(.react-flow__pane) {
+  cursor: default;
+}
+
+.flow:global(.react-flow) :global(.react-flow__pane.dragging) {
+  cursor: grabbing;
+}
+
+.flow:global(.react-flow) :global(.react-flow__node.draggable) {
+  cursor: move;
+}
+
+.flow:global(.react-flow) :global(.react-flow__node:not(.draggable)) {
+  cursor: default;
+}
+
 .minimap {
   border-radius: var(--radius-lg);
 }

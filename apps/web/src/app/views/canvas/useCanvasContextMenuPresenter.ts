@@ -6,6 +6,7 @@ import { flushSync } from 'react-dom';
 
 import type { ContextMenuEvent } from './canvasContextMenuPresenter.types';
 import { resolveCanvasViewportContextMenuRequest } from './canvasContextMenuTargetPolicy';
+import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 import {
   buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
@@ -143,8 +144,7 @@ export function useCanvasContextMenuPresenter({
 
   const handleViewportContextMenuKeyDown = useCallback(
     (event: ContextMenuKeyboardEvent) => {
-      const opensContextMenu =
-        event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
+      const opensContextMenu = resolveCanvasKeyboardAction(event) === 'context-menu';
       if (!opensContextMenu || event.target !== event.currentTarget) {
         return;
       }

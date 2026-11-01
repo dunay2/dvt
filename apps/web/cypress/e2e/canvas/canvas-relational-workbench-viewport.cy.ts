@@ -32,11 +32,89 @@ import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
+import { browserPoint, moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench viewport', () => {
   beforeEach(() => {
     stubWorkbenchScenario('saved-join');
+  });
+  it('uses the arrow and left drag for the background and a movement cursor for cards', () => {
+    cy.viewport(1280, 800);
+    visitWorkbenchCanvas();
+    const main = '[data-slot="canvas-workspace-surface"]';
+    const pane = `${main} .react-flow__pane`;
+    const viewport = `${main} .react-flow__viewport`;
+    const card = `${main} .react-flow__node.draggable`;
+    let cardPosition = '';
+    let camera: DOMMatrixReadOnly;
+
+    cy.get(card).first().as('movableCard').should('have.css', 'cursor', 'move');
+    cy.get('@movableCard').then(($card) => {
+      cardPosition = $card[0]!.style.transform;
+    });
+    cy.get(pane).should('have.css', 'cursor', 'default');
+    cy.get(`${main} .react-flow__controls-interactive`).should('not.exist');
+    cy.get(`${main} .react-flow__controls-fitview`).click();
+    cy.get(viewport).should(($viewport) => {
+      camera = new DOMMatrixReadOnly($viewport[0]!.style.transform);
+      expect(camera.a).to.be.lessThan(1);
+    });
+    cy.get(pane).then(($pane) => {
+      const element = $pane[0]!;
+      const bounds = element.getBoundingClientRect();
+      expect(
+        element.ownerDocument.elementFromPoint(
+          bounds.left + bounds.width / 2,
+          bounds.top + bounds.height * 0.9
+        )
+      ).to.equal(element);
+      const { x, y, scale } = browserPoint(element, 0.9);
+      const events = [
+        { type: 'mouseMoved', x, y, buttons: 0 },
+        { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },
+        { type: 'mouseMoved', x: x + 48 * scale, y: y + 24 * scale, buttons: 1 },
+        {
+          type: 'mouseReleased',
+          x: x + 48 * scale,
+          y: y + 24 * scale,
+          buttons: 0,
+          button: 'left',
+          clickCount: 1,
+        },
+      ];
+      events.forEach((params) => {
+        cy.then(
+          () =>
+            Cypress.automation('remote:debugger:protocol', {
+              command: 'Input.dispatchMouseEvent',
+              params,
+            }) as Promise<unknown>
+        );
+        if (params.type === 'mouseMoved' && params.buttons === 1) {
+          cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
+        }
+      });
+    });
+    cy.get(pane).should('not.have.class', 'dragging').and('have.css', 'cursor', 'default');
+    cy.get(viewport).should(($viewport) => {
+      const moved = new DOMMatrixReadOnly($viewport[0]!.style.transform);
+      expect(moved.m41).to.be.closeTo(camera.m41 + 48, 2);
+      expect(moved.m42).to.be.closeTo(camera.m42 + 24, 2);
+      expect(moved.a).to.equal(camera.a);
+    });
+    cy.get('@movableCard').should(($card) => {
+      expect($card[0]!.style.transform).to.equal(cardPosition);
+    });
+    moveWorkbenchCard('@movableCard', 30, 15);
+    cy.get('@movableCard')
+      .should('have.css', 'cursor', 'move')
+      .and(($card) => {
+        expect($card[0]!.style.transform).not.to.equal(cardPosition);
+      });
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
+    });
   });
   it('retains the Canvas while browsing Git and opening a project file', () => {
     stubE2eJsonApi('GET', '/workspace/files', [
