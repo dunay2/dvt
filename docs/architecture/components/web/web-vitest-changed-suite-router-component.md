@@ -743,6 +743,79 @@ are removed at native completion, including rejection paths. Malformed or
 unreadable captures still fail explicitly. Test error/result payloads are never
 serialized. This repairs evidence lifecycle, not a demonstrated transport cause.
 
+##### Safe completion failures — GH-3747
+
+The prospective admission
+[#3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6559965266)
+keeps `RunWebCypressNative` and `SYS-WEB-CHROMIUM-DIAGNOSTICS`. Full Test Suite
+run `41319380778`, available shard 3, reported 17 passing assertions before the
+selected-closure runner failed. Its retained process report is complete and
+records browser and network-service exits with code zero, but no projected
+network capture was retained. The corresponding PR shard passed at the same
+revision. These observations do not establish the original failing subphase or
+a product defect. The generic runner catch covers the native operation,
+observer retirement and capture finalization; private raw capture is removed
+even when finalization rejects.
+
+```mermaid
+flowchart LR
+  Operation[Cypress operation] --> Stop[Owned observer stop]
+  Stop --> Finalize[Capture finalization and exact cleanup]
+  Operation --> Generic[Generic sanitized failure]
+  Stop --> Generic
+  Finalize --> Generic
+  Finalize --> Evidence[Safe report only when projection succeeds]
+```
+
+The admitted improvement retains a bounded diagnostic value at the existing
+lifecycle boundary. Closed phases distinguish native operation, observer stop,
+capture enumeration, read, projection, publication and cleanup. Closed reasons
+are missing, denied, invalid or failed; an unknown
+exception becomes failed. An independent UUID names the receipt in the existing
+diagnostics evidence directory as `lifecycle-<uuid>.json`, containing
+`{ schemaVersion: 1, failures: [...] }`. At most 16 failure records contain only
+`phase` and `code`. Cleanup or receipt-publication failures cannot erase earlier
+classified failures. The lifecycle publishes this safe receipt; the existing
+runner preserves its generic rejection and exact-spec acceptance boundary.
+Raw exception messages,
+stacks, causes, Cypress results or configuration, net-log text, paths, URLs and
+credentials remain private. Multiple independent failures must remain visible
+without allowing successful cleanup to replace a failed operation.
+
+```mermaid
+flowchart LR
+  Operation[Existing native operation] --> Stop[Existing observer stop]
+  Stop --> Finalize[Existing finalization and cleanup]
+  Operation --> Failure[Closed phase and reason]
+  Stop --> Failure
+  Finalize --> Failure
+  Failure --> Receipt[Lifecycle publishes safe failure receipt]
+  Receipt --> Evidence[Existing safe evidence location]
+  Failure --> Runner[Unchanged runner rejects generically]
+  Runner --> Reject[No proof acceptance after failure]
+```
+
+| Scenario                                                              | Opportunity                                       | Fowler pattern                                                        | DDD owner                                                                       | Command/query rail  | Implementation surfaces                                       | Unit or package test                                                                                            | Architecture test                                                          | User-flow test                                              | Out of scope                                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Passing assertions precede an opaque finalization failure             | Primitive obsession and hidden lifecycle evidence | Closed diagnostic value at the existing Gateway boundary              | Owned Chromium capture lifecycle                                                | RunWebCypressNative | Existing Diagnostics and Evidence modules and lifecycle tests | Successful operation plus invalid or unreadable capture rejects with a safe phase; cleanup remains exact        | Allowlisted metadata only; hostile exception payload stays private         | Affected hosted available shard with existing literal specs | Transport fixes without evidence, native observer or projection changes |
+| Generic runner rejection must remain private without losing diagnosis | Responsibility boundary                           | Publish safe evidence in lifecycle, retain proof acceptance in runner | Owned Chromium capture lifecycle and Web Cypress native runner support boundary | RunWebCypressNative | Existing lifecycle modules and selected-closure runner tests  | Failure receipt retained and no proof acceptance after finalization failure; arbitrary Cypress errors sanitized | Runner rejection remains generic; only lifecycle publishes closed metadata | Existing providers, assertions and authentication           | Runner production changes, workflow, catalog, timeout or retry changes  |
+
+The implementation uses five of the six admitted paths:
+`chromiumNetworkDiagnostics.ts`, `chromiumNetworkEvidence.ts`,
+`scripts/chromium-network-diagnostics.test.cjs`,
+`scripts/run-selected-closure-cypress.test.cjs` and this guide. The admitted
+selected-closure runner needs no production change. The pure projection,
+process observer, Cypress configuration, both runners and workflow retain their
+existing behavior. No new service, rail, formatter or retry policy is required. The
+selected-closure adapter remains outside the diagnostics component; its current
+`SYS-CI-GOVERNANCE-ROOT` fallback is not an SRP completion claim.
+
+The lifecycle and runner guards must prove both disclosure and rejection before
+the affected hosted proof is repeated. Existing exact-spec acceptance, cleanup,
+required evidence, lint/typecheck, committed prepush and native implementation
+validation remain required. This section records the admitted change before
+implementation; completion evidence belongs to the issue and actual checks.
+
 ##### Retained process evidence and ownership — GH-3735
 
 The baseline at `v0.20.0` captures transport observations but has no Linux process

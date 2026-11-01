@@ -343,3 +343,53 @@ test('native observer capability denial cannot admit Cypress or publish proof', 
     else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previous;
   }
 });
+
+test('native proof stays rejected with a safe receipt when passing Cypress cannot finalize capture', async () => {
+  const fs = require('node:fs');
+  const previousFlag = process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+  const previousCapture = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+  const evidence = path.resolve(__dirname, '../.dvt/evidence/chromium-network');
+  const before = new Set(fs.existsSync(evidence) ? fs.readdirSync(evidence) : []);
+  const messages = [];
+  let ownedRoot;
+  let completed = false;
+  let receipts = [];
+  process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = '1';
+  try {
+    await assert.rejects(
+      main(['--spec', spec], {
+        observeProcesses: async () => null,
+        run: async () => {
+          ownedRoot = process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT;
+          const capture = fs.mkdtempSync(path.join(ownedRoot, 'chrome-'));
+          fs.writeFileSync(
+            path.join(capture, 'netlog.json'),
+            'https://private.example/?api_key=secret-token private-output'
+          );
+          completed = true;
+          return successful();
+        },
+        log: (value) => messages.push(value),
+      }),
+      /^Error: Cypress native execution failed$/
+    );
+    assert.equal(completed, true);
+    assert.deepEqual(messages, [], 'a passing result is not acceptance after failed finalization');
+    assert.equal(fs.existsSync(ownedRoot), false);
+    assert.equal(process.env.DVT_CHROMIUM_NETWORK_CAPTURE_ROOT, previousCapture);
+    receipts = fs
+      .readdirSync(evidence)
+      .filter((name) => name.startsWith('lifecycle-') && !before.has(name));
+    assert.equal(receipts.length, 1);
+    const text = fs.readFileSync(path.join(evidence, receipts[0]), 'utf8');
+    assert.deepEqual(JSON.parse(text), {
+      schemaVersion: 1,
+      failures: [{ phase: 'capture-projection', code: 'failed' }],
+    });
+    assert.doesNotMatch(text, /private|api_key|secret-token|apiBearerToken|output|stack|cause/iu);
+  } finally {
+    if (previousFlag === undefined) delete process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS;
+    else process.env.DVT_CYPRESS_NETWORK_DIAGNOSTICS = previousFlag;
+    for (const receipt of receipts) fs.unlinkSync(path.join(evidence, receipt));
+  }
+});
