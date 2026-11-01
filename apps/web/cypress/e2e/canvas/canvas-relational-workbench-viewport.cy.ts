@@ -32,7 +32,7 @@ import {
   visitWorkbenchCanvas,
   openWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
-import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Workbench viewport', () => {
@@ -60,26 +60,9 @@ describe('Workbench viewport', () => {
       camera = new DOMMatrixReadOnly($viewport[0]!.style.transform);
       expect(camera.a).to.be.lessThan(1);
     });
-    cy.get(pane).then(($pane) => {
-      const element = $pane[0]!;
-      const bounds = element.getBoundingClientRect();
-      expect(
-        element.ownerDocument.elementFromPoint(
-          bounds.left + bounds.width / 2,
-          bounds.top + bounds.height * 0.9
-        )
-      ).to.equal(element);
+    panWorkbenchViewport(pane, 48, 24, () => {
+      cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
     });
-    moveWorkbenchCard(
-      pane,
-      48,
-      24,
-      undefined,
-      () => {
-        cy.get(pane).should('have.class', 'dragging').and('have.css', 'cursor', 'grabbing');
-      },
-      0.9
-    );
     cy.get(pane).should('not.have.class', 'dragging').and('have.css', 'cursor', 'default');
     cy.get(viewport).should(($viewport) => {
       const moved = new DOMMatrixReadOnly($viewport[0]!.style.transform);
@@ -117,18 +100,11 @@ describe('Workbench viewport', () => {
     cy.visit('/lab/relational-composition');
     cy.get('.react-flow__node.draggable').first().should('have.css', 'cursor', 'crosshair');
     cy.get('.react-flow__pane').should('have.css', 'cursor', 'default');
-    moveWorkbenchCard(
-      '.react-flow__pane',
-      24,
-      16,
-      undefined,
-      () => {
-        cy.get('.react-flow__pane')
-          .should('have.class', 'dragging')
-          .and('have.css', 'cursor', 'grabbing');
-      },
-      0.9
-    );
+    panWorkbenchViewport('.react-flow__pane', 24, 16, () => {
+      cy.get('.react-flow__pane')
+        .should('have.class', 'dragging')
+        .and('have.css', 'cursor', 'grabbing');
+    });
     cy.get('.react-flow__pane')
       .should('not.have.class', 'dragging')
       .and('have.css', 'cursor', 'default');

@@ -6,7 +6,7 @@ import {
   openWorkbenchModel,
 } from '../../support/relationalWorkbench/navigation';
 import { semanticWrites } from '../../support/relationalWorkbench/persistence';
-import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 const viewport = '[data-slot="canvas-relational-tree-viewport"]';
@@ -309,18 +309,11 @@ describe('Relational card movement', () => {
           throw new Error('Expected the panning relational viewport.');
         const scrollLeft = initialViewport.scrollLeft;
         const scrollTop = initialViewport.scrollTop;
-        moveWorkbenchCard(
-          viewport,
-          -40,
-          -24,
-          undefined,
-          () => {
-            cy.get(viewport)
-              .should('have.attr', 'data-panning', 'true')
-              .and('have.css', 'cursor', 'grabbing');
-          },
-          0.9
-        );
+        panWorkbenchViewport(viewport, -40, -24, () => {
+          cy.get(viewport)
+            .should('have.attr', 'data-panning', 'true')
+            .and('have.css', 'cursor', 'grabbing');
+        });
         cy.get(viewport).should(($panned) => {
           const panned = $panned[0];
           if (panned === undefined) throw new Error('Expected the panned relational viewport.');
