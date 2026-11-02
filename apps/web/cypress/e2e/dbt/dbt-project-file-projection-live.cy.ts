@@ -8,6 +8,7 @@ import {
   requestLiveDbtProjectGraph,
   seedLiveWorkspaceFiles,
 } from '../../support/dbtProjectLive';
+import { seedLiveSelectedClosureDraft } from '../../support/liveCanvasDraftAuthoring';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveWorkspaceFile,
@@ -168,9 +169,9 @@ describe('dbt project file projection live vertical', () => {
       return;
     }
 
-    return seedLiveWorkspaceFiles(PROJECT_FILES).then(() =>
-      adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID)
-    );
+    return seedLiveSelectedClosureDraft()
+      .then(() => seedLiveWorkspaceFiles(PROJECT_FILES))
+      .then(() => adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID));
   });
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
