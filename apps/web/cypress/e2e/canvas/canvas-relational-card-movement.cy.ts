@@ -205,7 +205,9 @@ describe('Relational card movement', () => {
     cy.get('[data-slot="canvas-relational-output-edge-action"]').click();
     cy.get('[data-slot="canvas-relational-output-edge"]').should('exist');
     cy.get('[data-slot="canvas-model-output-inspector"]').should('be.visible');
-    cy.get('[data-slot="canvas-relational-output-edge-action"]').type('{del}');
+    cy.get('[data-slot="canvas-relational-output-edge-action"]').focus();
+    cy.focused().should('have.attr', 'data-slot', 'canvas-relational-output-edge-action');
+    cy.press(Cypress.Keyboard.Keys.DELETE);
     cy.get('[data-slot="canvas-relational-output-edge"]').should('not.exist');
     cy.get('[data-slot="canvas-relational-output-input-port"]').should(
       'not.have.attr',
@@ -231,11 +233,10 @@ describe('Relational card movement', () => {
           .siblings('button[aria-label="Zoom in"]')
           .click();
       if (axis === 'vertical') {
-        cy.get(output).find('[data-slot="canvas-relational-tree-output-open"]').focus();
-        for (let step = 0; step < 20; step++)
-          cy.get(output)
-            .find('[data-slot="canvas-relational-tree-output-open"]')
-            .trigger('keydown', { key: 'ArrowDown', altKey: true, shiftKey: true });
+        revealWorkbenchCard(output);
+        cy.get(output)
+          .find('[data-slot="canvas-relational-tree-output-open"]')
+          .type('{alt}{shift}' + '{downarrow}'.repeat(20));
       }
       revealWorkbenchCard(output);
       cy.get(output).then(($card) => {
@@ -282,6 +283,8 @@ describe('Relational card movement', () => {
   }
 
   it('pans a completely fitting diagram in both directions without scroll or changing card positions', () => {
+    for (let step = 0; step < 2; step++)
+      cy.get('[data-slot="canvas-model-editor"] button[aria-label="Zoom out"]').click();
     cy.get('[data-slot="canvas-relational-tree"]').should(($tree) => {
       expect(Number($tree[0]!.style.zoom), 'fit below 100%').to.be.lessThan(1);
     });
