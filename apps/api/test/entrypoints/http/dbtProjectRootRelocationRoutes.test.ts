@@ -25,15 +25,14 @@ const plan = createDbtProjectRootRelocationPlan({
   ],
 });
 
-function setup(
-  authenticated = true,
-  authorized = true
-): {
+type RouteFixture = {
   app: ReturnType<typeof Fastify>;
   preview: ReturnType<typeof vi.fn>;
   relocate: ReturnType<typeof vi.fn>;
   authorize: ReturnType<typeof vi.fn>;
-} {
+};
+
+function setup(authenticated = true, authorized = true): RouteFixture {
   const app = Fastify();
   const preview = vi.fn().mockResolvedValue({ kind: 'ready', plan });
   const relocate = vi.fn().mockResolvedValue({ kind: 'refused', reason: 'stale_files' });
@@ -44,26 +43,24 @@ function setup(
     );
   registerDbtProjectRootRelocationRoutes(app, {
     authenticator: {
-      authenticateBearerToken: vi
-        .fn()
-        .mockResolvedValue(
-          authenticated
-            ? {
-                ok: true,
-                principal: {
-                  principalId: 'user',
-                  subjectId: 'user',
-                  issuer: 'issuer',
-                  audience: 'audience',
-                  principalType: 'user',
-                  expiresAt: new Date('2030-01-01'),
-                  rawScopes: [],
-                  assertedTenantIds: ['tenant'],
-                  assertedProjectIds: ['project'],
-                },
-              }
-            : { ok: false, code: 'missing_token' }
-        ),
+      authenticateBearerToken: vi.fn().mockResolvedValue(
+        authenticated
+          ? {
+              ok: true,
+              principal: {
+                principalId: 'user',
+                subjectId: 'user',
+                issuer: 'issuer',
+                audience: 'audience',
+                principalType: 'user',
+                expiresAt: new Date('2030-01-01'),
+                rawScopes: [],
+                assertedTenantIds: ['tenant'],
+                assertedProjectIds: ['project'],
+              },
+            }
+          : { ok: false, code: 'missing_token' }
+      ),
     } as never,
     authorizer: { authorize } as never,
     previewQuery: { execute: preview } as never,
