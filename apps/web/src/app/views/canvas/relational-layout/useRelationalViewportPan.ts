@@ -1,6 +1,10 @@
 /** Owned concern: pan the viewport background without capturing card gestures. */
 import { useRef, useState, type MouseEventHandler, type PointerEventHandler } from 'react';
-import { canStartCanvasBackgroundPan } from '../canvasViewportInteraction';
+import {
+  canStartCanvasBackgroundPan,
+  consumeCanvasDragClick,
+  isCanvasBackgroundTarget,
+} from '../canvasViewportInteraction';
 
 type PanOrigin = Readonly<{ pointerId: number; x: number; y: number }>;
 
@@ -41,10 +45,11 @@ export function useRelationalViewportPan(onPan: (dx: number, dy: number) => void
     setPanning(false);
   };
   const onClickCapture: MouseEventHandler<HTMLDivElement> = (event) => {
-    if (!suppressClick.current || !event.currentTarget.contains(event.target as Node)) return;
-    suppressClick.current = false;
-    event.preventDefault();
-    event.stopPropagation();
+    consumeCanvasDragClick(
+      event,
+      suppressClick,
+      isCanvasBackgroundTarget(event.target, event.currentTarget)
+    );
   };
   const onPointerCancel: PointerEventHandler<HTMLDivElement> = (event) => {
     if (origin.current?.pointerId !== event.pointerId) return;

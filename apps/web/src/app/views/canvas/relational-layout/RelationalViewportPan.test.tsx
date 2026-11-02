@@ -6,27 +6,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useRelationalViewportPan } from './useRelationalViewportPan';
 
 const panBy = vi.fn();
-function Surface(): JSX.Element {
+function Surface({ insideCard = false }: Readonly<{ insideCard?: boolean }>): JSX.Element {
   const viewport = useRelationalViewportPan(panBy);
   return (
-    <div
-      data-testid="surface"
-      data-panning={viewport.panning}
-      onPointerDown={viewport.onPointerDown}
-      onPointerMove={viewport.onPointerMove}
-      onPointerUp={viewport.onPointerUp}
-      onPointerCancel={viewport.onPointerCancel}
-      onLostPointerCapture={viewport.onLostPointerCapture}
-      onClickCapture={viewport.onClickCapture}
-    >
-      <button data-slot="canvas-relational-tree-node">Card</button>
-      <div data-relational-card-id="output">
-        <span>Output</span>
+    <div data-slot={insideCard ? 'canvas-relational-card' : undefined}>
+      <div
+        data-testid="surface"
+        data-panning={viewport.panning}
+        onPointerDown={viewport.onPointerDown}
+        onPointerMove={viewport.onPointerMove}
+        onPointerUp={viewport.onPointerUp}
+        onPointerCancel={viewport.onPointerCancel}
+        onLostPointerCapture={viewport.onLostPointerCapture}
+        onClickCapture={viewport.onClickCapture}
+      >
+        <button data-slot="canvas-relational-tree-node">Card</button>
+        <div data-relational-card-id="output">
+          <span>Output</span>
+        </div>
+        <input />
+        <svg>
+          <path role="button" tabIndex={0} aria-label="Disconnect" />
+        </svg>
       </div>
-      <input />
-      <svg>
-        <path role="button" tabIndex={0} aria-label="Disconnect" />
-      </svg>
     </div>
   );
 }
@@ -79,12 +81,23 @@ describe('Relational viewport pan', () => {
   });
   it('does not bubble an admitted pan into an enclosing card or viewport', () => {
     const enclosingDrag = vi.fn();
-    container.addEventListener('pointerdown', enclosingDrag);
-    pointer('pointerdown', 100);
-    pointer('pointermove', 80);
-    pointer('pointerup', 80);
-    expect(panBy).toHaveBeenCalledWith(-20, -20);
-    expect(enclosingDrag).not.toHaveBeenCalled();
+    document.addEventListener('pointerdown', enclosingDrag);
+    try {
+      pointer('pointerdown', 100);
+      pointer('pointermove', 80);
+      pointer('pointerup', 80);
+      expect(panBy).toHaveBeenCalledWith(-20, -20);
+      expect(enclosingDrag).not.toHaveBeenCalled();
+    } finally {
+      document.removeEventListener('pointerdown', enclosingDrag);
+    }
+  });
+  it('pans its own background when the viewport is nested inside a card', () => {
+    act(() => root.render(<Surface insideCard />));
+    expect(pointer('pointerdown', 100).defaultPrevented).toBe(true);
+    pointer('pointermove', 60);
+    pointer('pointerup', 60);
+    expect(panBy).toHaveBeenCalledWith(-40, -40);
   });
   it.each(['button', 'input', 'path', '[data-relational-card-id] span'])(
     'leaves %s under its own interaction owner',
@@ -114,7 +127,7 @@ describe('Relational viewport pan', () => {
   });
   it('keeps plain clicks and suppresses only the click following a drag', () => {
     const click = (): MouseEvent => {
-      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
       act(() => {
         surface.dispatchEvent(event);
       });
@@ -134,11 +147,26 @@ describe('Relational viewport pan', () => {
     pointer('pointermove', 50);
     pointer('pointerup', 50);
     const input = surface.querySelector('input')!;
+    input.addEventListener('pointerdown', (event) => event.stopPropagation());
     pointer('pointerdown', 50, 0, input);
-    const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
     act(() => {
       input.dispatchEvent(click);
     });
     expect(click.defaultPrevented).toBe(false);
+  });
+  it('preserves a keyboard activation after a drag produced no pointer click', () => {
+    pointer('pointerdown', 100);
+    pointer('pointermove', 50);
+    pointer('pointerup', 50);
+    const button = surface.querySelector('button')!;
+    const activate = vi.fn();
+    button.addEventListener('click', activate);
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 0 });
+    act(() => {
+      button.dispatchEvent(click);
+    });
+    expect(click.defaultPrevented).toBe(false);
+    expect(activate).toHaveBeenCalledOnce();
   });
 });

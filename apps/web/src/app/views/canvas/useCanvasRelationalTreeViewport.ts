@@ -112,7 +112,12 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     const viewport = event.currentTarget;
     if (!isCanvasElement(target) || !target.matches(':focus-visible')) return;
     target.ownerDocument.defaultView?.requestAnimationFrame(() => {
-      if (viewportRef.current !== viewport || target.ownerDocument.activeElement !== target) return;
+      if (
+        viewportRef.current !== viewport ||
+        !viewport.contains(target) ||
+        target.ownerDocument.activeElement !== target
+      )
+        return;
       const nested = target.closest('[data-canvas-viewport]');
       const anchor =
         nested != null && nested !== viewport && viewport.contains(nested) ? nested : target;

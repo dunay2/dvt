@@ -1,4 +1,4 @@
-/** Owned concern: define Canvas pointer options and map shared keys to existing UI intents. */
+/** Owned concern: share Canvas gesture admission and key-to-intent mapping. */
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 
 import {
@@ -84,11 +84,25 @@ export function isCanvasBackgroundTarget(
   return (
     isCanvasViewportTarget(target, boundary) &&
     isCanvasElement(target) &&
+    isCanvasElement(boundary) &&
     !isCanvasInteractionControlTarget(target) &&
-    target.closest(
-      '[data-relational-card-id], [data-slot="canvas-relational-card"], .react-flow__node'
-    ) == null
+    !boundary.contains(
+      target.closest(
+        '[data-relational-card-id], [data-slot="canvas-relational-card"], .react-flow__node'
+      )
+    )
   );
+}
+
+export function consumeCanvasDragClick(
+  event: Pick<MouseEvent, 'detail' | 'preventDefault' | 'stopPropagation'>,
+  pending: { current: boolean },
+  ownsTarget: boolean
+): void {
+  if (!pending.current || event.detail <= 0 || !ownsTarget) return;
+  pending.current = false;
+  event.preventDefault();
+  event.stopPropagation();
 }
 
 export function canStartCanvasBackgroundPan(

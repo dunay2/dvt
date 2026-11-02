@@ -1,6 +1,7 @@
 /** Owned concern: translate pointer/keyboard gestures to local card positions only. */
 import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type PointerEvent } from 'react';
 import type { CardPosition } from '../canvasRelationalTreeGeometry';
+import { consumeCanvasDragClick } from '../canvasViewportInteraction';
 import type { useRelationalCardPlacement } from './useRelationalCardPlacement';
 
 export type RelationalMovableCard = Readonly<
@@ -120,10 +121,12 @@ export function useRelationalCardMovement(
       if (drag.current?.pointerId === event.pointerId) finish(true);
     },
     onClickCapture: (event: MouseEvent<HTMLDivElement>) => {
-      if (!suppressClick.current || locate(event.target) == null) return;
-      suppressClick.current = false;
-      event.preventDefault();
-      event.stopPropagation();
+      consumeCanvasDragClick(
+        event,
+        suppressClick,
+        event.currentTarget.contains(event.target as Node) &&
+          locate(event.target)?.element === event.target
+      );
     },
     onKeyDownCapture: (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Escape' && drag.current != null) {

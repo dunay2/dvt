@@ -32,7 +32,12 @@ function ViewportHarness({
           <button type="button">JOIN</button>
           <input aria-label="Value" />
         </div>
-        {createPortal(<div role="menuitem">Open operation</div>, document.body)}
+        {createPortal(
+          <div role="menuitem" tabIndex={0}>
+            Open operation
+          </div>,
+          document.body
+        )}
       </div>
     </>
   );
@@ -187,6 +192,35 @@ describe('relational-tree mouse navigation', () => {
     });
     expect(content.style.translate).toBe('-100px -75px');
     expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
+  });
+  it('keeps camera position when a portalled menu receives keyboard focus', () => {
+    const menu = document.querySelector<HTMLElement>('[role="menuitem"]')!;
+    vi.spyOn(menu, 'matches').mockReturnValue(true);
+    vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 200,
+      bottom: 100,
+      width: 200,
+      height: 100,
+    } as DOMRect);
+    vi.spyOn(menu, 'getBoundingClientRect').mockReturnValue({
+      left: 250,
+      top: 150,
+      right: 300,
+      bottom: 175,
+      width: 50,
+      height: 25,
+    } as DOMRect);
+    const before = content.style.translate;
+    act(() => {
+      menu.focus();
+    });
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+    expect(document.activeElement).toBe(menu);
+    expect(content.style.translate).toBe(before);
   });
   it('restores the same camera and zoom when inspection remounts inside its layout session', () => {
     wheel(-120);

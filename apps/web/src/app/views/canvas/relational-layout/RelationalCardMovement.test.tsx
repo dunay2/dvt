@@ -118,7 +118,7 @@ describe('Relational card movement', () => {
     pointer('pointerup', 130, 120);
     expect(card().dataset.dragging).toBeUndefined();
     act(() => {
-      card().click();
+      card().dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 }));
     });
     expect(position()).toEqual({ x: before.x + 60, y: before.y + 40 });
     expect(paths()).not.toEqual(edges);
@@ -128,6 +128,16 @@ describe('Relational card movement', () => {
     expect(manual).toHaveBeenCalled();
     render('editing');
     expect(position()).toEqual({ x: before.x + 60, y: before.y + 40 });
+  });
+
+  it('preserves keyboard activation when the preceding drag produced no pointer click', () => {
+    pointer('pointerdown', 100, 100);
+    pointer('pointermove', 130, 120);
+    pointer('pointerup', 130, 120);
+    act(() => {
+      card().click();
+    });
+    expect(select).toHaveBeenCalledExactlyOnceWith('employee');
   });
 
   it('restores the position on pointer cancellation', () => {
