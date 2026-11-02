@@ -49,7 +49,7 @@
     "test:watch": "vitest --config vitest.config.ts"
   },
   "dependencies": {
-    "@buf/substrait_substrait.bufbuild_es": "2.14.0-20260816025439-ce0808dab3ac.1",
+    "@buf/substrait_substrait.bufbuild_es": "2.14.0-20261018065323-491f514ff422.2",
     "@bufbuild/protobuf": "2.14.0",
     "@dvt/contracts": "workspace:*",
     "@dvt/crypto": "workspace:*",
