@@ -14,14 +14,8 @@ import {
 import { buildDbtProjectFileCanvasPath } from '../canvasRouteAuthority';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerItem } from './canvasExplorerItems';
+import type { CanvasProjectElementsInput } from './CanvasExplorer';
 import styles from './CanvasExplorer.module.css';
-
-export type CanvasProjectElementsInput = Readonly<{
-  enabled: boolean;
-  items: readonly CanvasExplorerItem[];
-  onSelect: (id: string) => void;
-}>;
 
 export function CanvasProjectElementsExplorer({
   enabled,

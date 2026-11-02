@@ -13,6 +13,7 @@ code_refs:
   - apps/api/src/application/services/dbtProjectRootRelocation/RelocateDbtProjectRootCommand.ts
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceRootInventory.ts
   - apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
+  - apps/web/src/app/views/canvas/explorer/CanvasProjectElementsExplorer.tsx
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -104,6 +105,26 @@ the final prepush outcome belong in the governing issue's final acceptance recor
 Ignored local receipts and logs reside under `.dvt/project-root-3747/`. Task
 completion in the governing issue records exact final Git identities and final
 gate results; this document does not substitute for that acceptance.
+
+## Project Model Navigation
+
+The follow-up [Elements slice](https://github.com/dunay2/dvt/issues/3747#issuecomment-6588421440)
+adds project model navigation through the existing scoped file and dbt graph
+queries. `SYS-WEB-PROJECT-ELEMENTS-EXPLORER` owns the bounded adapter and its source
+responsibility; the passive explorer owns its extension contract. No model is
+copied into GraphDraft. Native selection remains local; an external model opens
+the existing owning file Canvas route through the router's navigation guards.
+
+The focused Explorer run passed 42 cases across three suites. The eleven new
+cases cover model visibility, identity deduplication, native versus external
+navigation, closed-panel suppression, graph-cache reuse, rejected authority and
+tenant/project/environment isolation. Web lint and TypeScript passed. The live
+protected configuration read returned the persisted file Canvas binding at `.`.
+The exact final prepush and native browser outcomes are recorded in GH-3747;
+the preceding f2986a1b5 run was stopped for this user-requested behavior change
+and is not final acceptance. The Code guide's five existing documentary source
+identities were reconciled with native row CAS and read-back proved that semantic
+declarations were unchanged. No Planning DB import or rebuild was performed.
 
 ## Limits
 

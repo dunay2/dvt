@@ -21,7 +21,13 @@ import {
   type CanvasExplorerPanel,
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasProjectElementsInput } from './CanvasProjectElementsExplorer';
+import type { CanvasExplorerItem } from './canvasExplorerItems';
+
+export type CanvasProjectElementsInput = Readonly<{
+  enabled: boolean;
+  items: readonly CanvasExplorerItem[];
+  onSelect: (id: string) => void;
+}>;
 
 export type CanvasExplorerProjectWorkspace = Readonly<{
   onActivate: () => Promise<boolean>;
