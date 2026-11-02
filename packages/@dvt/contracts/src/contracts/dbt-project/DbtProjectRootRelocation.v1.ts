@@ -74,8 +74,8 @@ export const DbtProjectRootRelocationPlanSchema = PlanData.extend({
     if (
       !file.sourcePath.startsWith(`${plan.sourceRoot}/`) ||
       file.targetPath !== file.sourcePath.slice(plan.sourceRoot.length + 1) ||
-      sources.has(file.sourcePath) ||
-      targets.has(file.targetPath) ||
+      sources.has(file.sourcePath.toLowerCase()) ||
+      targets.has(file.targetPath.toLowerCase()) ||
       (file.targetContentSha256 !== null && file.targetContentSha256 !== file.contentSha256)
     )
       context.addIssue({
@@ -83,17 +83,17 @@ export const DbtProjectRootRelocationPlanSchema = PlanData.extend({
         path: ['files', index],
         message: 'Moves must be unique, byte-preserving and relative to the original project root.',
       });
-    sources.add(file.sourcePath);
-    targets.add(file.targetPath);
+    sources.add(file.sourcePath.toLowerCase());
+    targets.add(file.targetPath.toLowerCase());
   });
-  if (plan.files.some((file) => sources.has(file.targetPath))) {
+  if (plan.files.some((file) => sources.has(file.targetPath.toLowerCase()))) {
     context.addIssue({
       code: 'custom',
       path: ['files'],
-      message: 'Source and destination file sets must not overlap.',
+      message: 'Source and destination file sets must not overlap, including case aliases.',
     });
   }
-  if (!targets.has('dbt_project.yml'))
+  if (!plan.files.some((file) => file.targetPath === 'dbt_project.yml'))
     context.addIssue({
       code: 'custom',
       path: ['files'],

@@ -175,7 +175,11 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     const entries = await readdir(absoluteDirectoryPath, { withFileTypes: true }).catch(() => []);
     const result: WorkspaceFileEntry[] = [];
 
-    for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    for (const entry of entries.sort(
+      (left, right) =>
+        Number(right.isDirectory()) - Number(left.isDirectory()) ||
+        left.name.localeCompare(right.name)
+    )) {
       if (counter.value >= this.maxListedFiles || EXCLUDED_NAMES.has(entry.name)) {
         continue;
       }

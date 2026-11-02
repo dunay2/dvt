@@ -106,6 +106,8 @@ export async function inspectDbtProjectRootRelocation(
     if (inspection.diagnostics.some((item) => item.severity === 'error'))
       throw new RootRelocationRefusedError('unsafe_project');
     const paths = [...(await deps.inventory.listFiles(input.scope, sourceRoot))].sort();
+    const sourceKeys = new Set(paths.map((file) => file.toLowerCase()));
+    if (sourceKeys.size !== paths.length) throw new RootRelocationRefusedError('unsafe_project');
     if (paths.length === 0 || paths.length > DBT_PROJECT_ROOT_RELOCATION_MAX_FILES)
       throw new RootRelocationRefusedError('limit_exceeded');
     if (!paths.includes(`${sourceRoot}/dbt_project.yml`))
@@ -115,7 +117,7 @@ export async function inspectDbtProjectRootRelocation(
     let bytes = 0;
     for (const sourcePath of paths) {
       const targetPath = sourcePath.slice(sourceRoot.length + 1);
-      if (paths.includes(targetPath))
+      if (sourceKeys.has(targetPath.toLowerCase()))
         throw new RootRelocationRefusedError('unsafe_project', [targetPath]);
       const source = await deps.workspaceFiles.getFileContent(input.scope, sourcePath);
       bytes += Buffer.byteLength(source.content, 'utf8');

@@ -65,22 +65,25 @@ describe('dbt project root relocation contract', () => {
     });
     expect(plan.files.every((file) => file.targetContentSha256 === file.contentSha256)).toBe(true);
   });
-  it('rejects overlapping source and destination sets', () => {
-    const value = input();
-    expect(() =>
-      createDbtProjectRootRelocationPlan({
-        ...value,
-        files: [
-          ...value.files,
-          {
-            ...value.files[0]!,
-            sourcePath: 'imported/imported/dbt_project.yml',
-            targetPath: 'imported/dbt_project.yml',
-          },
-        ],
-      })
-    ).toThrow();
-  });
+  it.each(['imported', 'IMPORTED'])(
+    'rejects overlapping source and destination sets, including %s aliases',
+    (nested) => {
+      const value = input();
+      expect(() =>
+        createDbtProjectRootRelocationPlan({
+          ...value,
+          files: [
+            ...value.files,
+            {
+              ...value.files[0]!,
+              sourcePath: `imported/${nested}/dbt_project.yml`,
+              targetPath: `${nested}/dbt_project.yml`,
+            },
+          ],
+        })
+      ).toThrow();
+    }
+  );
   it('rejects duplicate moves, paths outside the source and a missing project configuration', () => {
     const value = input();
     expect(() =>

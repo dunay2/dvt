@@ -56,8 +56,8 @@ empty former source directories.
 
 ## Executed Evidence
 
-- Contracts: 79 files, 1,011 cases passed.
-- API unit suite with isolated PostgreSQL: 249 files, 1,862 cases passed. One
+- Contracts: 79 files, 1,012 cases passed after the case-alias refinement.
+- Earlier API unit suite with isolated PostgreSQL: 249 files, 1,862 cases passed. One
   existing DuckDB recovery file, two cases, was skipped by its environment guard;
   this is not a claim that those cases ran.
 - Focused application, inventory, batch and HTTP boundary: 39 cases passed.
@@ -77,6 +77,29 @@ workspace. Five imported files moved from `inline_code_demo/` into the root; the
 two existing source YAML files remained. All seven SHA-256 values were preserved.
 The Canvas remained `ce23643b-69fa-46d0-a902-361af7582335`, now bound to `.`. The
 user's SQL, including its existing text, was not normalized or repaired.
+
+The follow-up screenshot exposed mixed folder/file ordering. The existing
+`ListWorkspaceFiles` adapter now groups directories first and sorts names within
+each group at every depth. Both passive explorers reuse that result without UI
+sorting or CSS changes. A real-filesystem regression proves nested order, scope
+isolation and unchanged bytes. Planning DB records the existing repository as
+`SYS-API-LOCAL-WORKSPACE-FILES`; the
+[prospective refinement](https://github.com/dunay2/dvt/issues/3747#issuecomment-6587297304)
+reuses the existing query rail. The preceding prepush was stopped only in its
+verified owned process tree to refreeze this user-requested revision; its partial
+results are not a successful final gate.
+
+Root-relocation plans also reject case-aliased source/destination overlaps before
+publication. This avoids treating two spellings of the same Windows path as
+independent files; the same conservative rule keeps plans portable.
+
+After these refinements, the full API run reported 1,843 passing cases, 21
+failures and the same two existing skips. Twenty failures were 5-second test
+timeouts, including two relocation cases; one parse-reuse assertion received
+`unavailable` instead of `invalid`. This run is not green and is not attributed to
+the environment without further evidence. The real PostgreSQL/filesystem
+integration passed again, as did both API TypeScript checks. Isolated reruns and
+the final prepush outcome belong in the governing issue's final acceptance record.
 
 Ignored local receipts and logs reside under `.dvt/project-root-3747/`. Task
 completion in the governing issue records exact final Git identities and final

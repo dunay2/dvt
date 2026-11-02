@@ -194,4 +194,16 @@ describe('dbt project root relocation', () => {
     });
     expect(publications).toBe(0);
   });
+  it('refuses nested paths that alias the old root on case-insensitive filesystems', async () => {
+    await seed(
+      'imported/IMPORTED/dbt_project.yml',
+      await readFile(path.join(directory, 'imported/dbt_project.yml'), 'utf8')
+    );
+    expect(await preview.execute({ scope, canvasId: 'files' })).toMatchObject({
+      kind: 'refused',
+      reason: 'unsafe_project',
+    });
+    expect(publications).toBe(0);
+    expect(await readFile(path.join(directory, 'imported/models/orders.sql'), 'utf8')).toBe(sql);
+  });
 });

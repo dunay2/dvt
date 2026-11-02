@@ -75,6 +75,41 @@ describe('LocalWorkspaceFileRepository', () => {
     expect(path.isAbsolute(namespaceRelativePath)).toBe(false);
   });
 
+  it('lists directories before files and sorts names within each kind at every depth', async () => {
+    const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const files = [
+      'models/ventas.sql',
+      'models/sources/z.yml',
+      'models/clientes.sql',
+      'dbt_project.yml',
+      'models/sources/a.yml',
+      'models/schema.yml',
+    ];
+    for (const file of files) {
+      await repository.saveFileContent(SCOPE_A, {
+        path: file,
+        content: file,
+        expectedRevision: { kind: 'absent' },
+      });
+    }
+    const tree = await repository.listFiles(SCOPE_A);
+    expect(tree.map((entry) => entry.path)).toEqual(['models', 'dbt_project.yml']);
+    const models = tree[0]!.children!;
+    expect(models.map((entry) => entry.path)).toEqual([
+      'models/sources',
+      'models/clientes.sql',
+      'models/schema.yml',
+      'models/ventas.sql',
+    ]);
+    expect(models[0]!.children!.map((entry) => entry.path)).toEqual([
+      'models/sources/a.yml',
+      'models/sources/z.yml',
+    ]);
+    for (const file of files)
+      expect((await repository.getFileContent(SCOPE_A, file)).content).toBe(file);
+    expect(await repository.listFiles(SCOPE_B)).toEqual([]);
+  });
+
   it('returns a stable SHA-256 revision for the exact file content', async () => {
     const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
     const content = 'select 1 as order_id\n';
