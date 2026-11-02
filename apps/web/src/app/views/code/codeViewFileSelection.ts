@@ -10,7 +10,9 @@ const DEFAULT_TRANSFORMATION_WORKFLOW_ARTIFACT_PATH =
 const DBT_PROJECT_FILE_PATH = 'dbt_project.yml';
 const DBT_SCHEMA_FILE_PATH = 'models/schema.yml';
 
-function flattenCodeWorkspaceFiles(entries: readonly WorkspaceFileEntry[]): WorkspaceFileEntry[] {
+export function flattenCodeWorkspaceFiles(
+  entries: readonly WorkspaceFileEntry[]
+): WorkspaceFileEntry[] {
   return entries.flatMap((entry) => {
     if (entry.kind === 'file') {
       return [entry];

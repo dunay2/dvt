@@ -40,6 +40,36 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('enables project discovery only in the open Elements panel without remounting its list or graph', () => {
+    const renderElements = vi.fn(({ enabled }: { enabled: boolean }) => (
+      <input aria-label="Retained project search" data-enabled={enabled} />
+    ));
+    render(
+      <CanvasGraphExplorer
+        nodes={[]}
+        onSelect={() => undefined}
+        projectFiles={{ onActivate: async () => true, onCanvas: () => undefined, renderElements }}
+      >
+        <input aria-label="Retained graph" />
+      </CanvasGraphExplorer>
+    );
+    const search = screen.getByLabelText('Retained project search');
+    const graph = screen.getByLabelText('Retained graph');
+    expect(search.dataset.enabled).toBe('false');
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
+    expect(search.dataset.enabled).toBe('true');
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
+    expect(search.dataset.enabled).toBe('false');
+    expect(screen.getByLabelText('Retained project search')).toBe(search);
+    expect(screen.getByLabelText('Retained graph')).toBe(graph);
+    act(() => useUiLayoutStore.getState().hideCanvasExplorer());
+    expect(search.dataset.enabled).toBe('false');
+  });
+
   it('waits for the shared rail host without moving retained content or creating an inline rail', () => {
     const host = document.createElement('div');
     document.body.append(host);

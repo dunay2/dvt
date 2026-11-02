@@ -105,6 +105,35 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 
 ## Inline Model References
 
+### Project Models In Elements
+
+Elements combines active Canvas navigation rows with models from the existing
+file-authoritative project graph. The bounded project-elements adapter enables
+the existing scoped queries only while Elements is open. It discovers the actual
+configuration in ListWorkspaceFiles, reads its persisted authority through
+GetWorkspaceFileContent, then reuses ProjectDbtGraphFromFiles and its cache.
+Filenames never establish model identity. Missing or ambiguous configuration,
+unresolved authority, errors and stale analysis cannot admit external model rows.
+
+```mermaid
+flowchart LR
+  T[Scoped file tree] --> A[Configuration persisted authority]
+  A --> G[Existing cached dbt graph query]
+  G --> E[Shared Elements list]
+  N[Active Canvas rows] --> E
+  E -->|Native row| S[Existing node selection]
+  E -->|External model| R[Existing owning file Canvas route]
+```
+
+Rows are deduplicated by node identity, preserving distinct same-name elements.
+External model navigation uses the existing router and its unsaved-change guards;
+it does not copy models into GraphDraft or change semantic ownership. The passive
+list retains the shared typography, search and selection behavior. No new CSS,
+transport, analyzer or authoring command is introduced.
+
+The prospective scope, rationale and negative tests are recorded in
+[GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6588421440).
+
 Code consumes ProjectDbtGraphFromFiles and AnalyzeSelectedDbtModel through their
 existing scoped ports. codeInlineReferences owns projection policy;
 useCodeInlineReferences joins it to accepted file evidence. There is no frontend

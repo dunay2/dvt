@@ -91,13 +91,6 @@ PT,Portugal
 select * from {{ ref('orders') }}
 {% endsnapshot %}
 `,
-  [`${INVALID_PROJECT_ROOT}/dbt_project.yml`]: `
-name: analytics_invalid
-version: '1.0.0'
-config-version: 2
-profile: dvt_live_proof
-model-paths: ['models']
-`,
 };
 
 type DragPoint = Readonly<{ x: number; y: number }>;
@@ -175,12 +168,9 @@ describe('dbt project file projection live vertical', () => {
       return;
     }
 
-    return seedLiveWorkspaceFiles(PROJECT_FILES)
-      .then(() => adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID))
-      .then(() => adoptLiveDbtProjectFileAuthority(INVALID_PROJECT_ROOT, INVALID_CANVAS_ID))
-      .then(() =>
-        replaceLiveWorkspaceFile(`${INVALID_PROJECT_ROOT}/dbt_project.yml`, INVALID_PROJECT_CONFIG)
-      );
+    return seedLiveWorkspaceFiles(PROJECT_FILES).then(() =>
+      adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID)
+    );
   });
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
@@ -405,7 +395,46 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   });
 
+  it('lists an imported model from the native Canvas and opens its owning file Canvas without copying it', () => {
+    const writes: string[] = [];
+    cy.intercept({ method: '+(POST|PUT|DELETE)', url: '**/workspace/**' }, (request) => {
+      writes.push(request.url);
+    });
+    visitWithLiveWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-application-language',
+          JSON.stringify({ state: { language: 'en' }, version: 0 })
+        );
+      },
+    });
+    cy.get('button[title="Elements"]').click();
+    cy.get('[data-element-id="model.analytics.orders"]', { timeout: 60_000 })
+      .should('be.visible')
+      .and('have.length', 1)
+      .click();
+    cy.location('search')
+      .should('contain', `canvasId=${CANVAS_ID}`)
+      .and('contain', 'authority=dbt-project-files');
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
+      'be.visible'
+    );
+    cy.then(() => {
+      expect(writes, 'navigation does not persist copied semantics').to.deep.equal([]);
+    });
+  });
+
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {
+    seedLiveWorkspaceFiles({
+      [`${INVALID_PROJECT_ROOT}/dbt_project.yml`]: INVALID_PROJECT_CONFIG.replace(
+        "model-paths: ['../outside-project']",
+        "model-paths: ['models']"
+      ),
+    })
+      .then(() => adoptLiveDbtProjectFileAuthority(INVALID_PROJECT_ROOT, INVALID_CANVAS_ID))
+      .then(() =>
+        replaceLiveWorkspaceFile(`${INVALID_PROJECT_ROOT}/dbt_project.yml`, INVALID_PROJECT_CONFIG)
+      );
     const observedRequests: string[] = [];
     cy.intercept('GET', '**/workspace/dbt/graph?*', (request) => {
       observedRequests.push(request.url);

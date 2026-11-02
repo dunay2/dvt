@@ -17,6 +17,9 @@ const en = {
   resize: 'Resize explorer',
   collapse: 'Collapse explorer',
   close: 'Close explorer',
+  dbtModel: 'dbt model',
+  projectModelsLoading: 'Loading project models…',
+  projectModelsUnavailable: 'Project models are unavailable. Canvas elements remain accessible.',
 };
 const es: typeof en = {
   navigation: 'Explorador del Canvas',
@@ -30,6 +33,10 @@ const es: typeof en = {
   resize: 'Ajustar ancho del explorador',
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',
+  dbtModel: 'Modelo dbt',
+  projectModelsLoading: 'Cargando modelos del proyecto…',
+  projectModelsUnavailable:
+    'Los modelos del proyecto no están disponibles. Puedes seguir consultando los elementos del Canvas.',
 };
 export function resolveCanvasExplorerCopy(language: string): typeof en {
   return language === 'es' ? es : en;

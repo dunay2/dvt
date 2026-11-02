@@ -81,7 +81,13 @@ export function CanvasGraphExplorer({
           onImport={onImport}
         />
       }
-      elements={<CanvasExplorerList items={items} onSelect={onSelect} />}
+      elements={
+        projectFiles?.renderElements == null ? (
+          <CanvasExplorerList items={items} onSelect={onSelect} />
+        ) : (
+          (enabled) => projectFiles.renderElements?.({ enabled, items, onSelect })
+        )
+      }
     >
       {children}
     </CanvasExplorer>

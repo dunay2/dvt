@@ -21,10 +21,12 @@ import {
   type CanvasExplorerPanel,
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
+import type { CanvasProjectElementsInput } from './CanvasProjectElementsExplorer';
 
 export type CanvasExplorerProjectWorkspace = Readonly<{
   onActivate: () => Promise<boolean>;
   onCanvas: () => void;
+  renderElements?: (input: CanvasProjectElementsInput) => ReactNode;
 }>;
 
 export function CanvasExplorer({
@@ -37,7 +39,7 @@ export function CanvasExplorer({
   activityRail,
 }: Readonly<{
   sources: ReactNode;
-  elements: ReactNode;
+  elements: ReactNode | ((enabled: boolean) => ReactNode);
   projectFiles?: CanvasExplorerProjectWorkspace;
   children: ReactNode;
   rootRef?: RefObject<HTMLDivElement>;
@@ -83,7 +85,16 @@ export function CanvasExplorer({
       workspaceTask={workspaceTask}
       activityRail={activityRail}
       sources={sources}
-      elements={elements}
+      elements={
+        typeof elements === 'function'
+          ? elements(
+              visible &&
+                expanded &&
+                selectedPanel === 'elements' &&
+                activityRail?.codeVisible !== true
+            )
+          : elements
+      }
       hasProjectFiles={hasProjectFiles}
       onToggle={toggle}
       onKeyToggle={onKeyToggle}
