@@ -323,6 +323,65 @@ describeWithPostgres('PostgresCanvasAuthoringAuthorityStore', () => {
     const draftWon = binding.kind === 'canvas_occupied' && draft.kind === 'saved';
     expect(authorityWon || draftWon).toBe(true);
   });
+
+  it('relocates a sole file root once under concurrent requests and preserves scope isolation', async () => {
+    await bindOrders();
+    const input = {
+      key: KEY,
+      sourceRoot: 'analytics',
+      expectedRevision: 'authority-1',
+      newRevision: 'root-revision',
+      nowIso: '2026-11-02T11:00:00.000Z',
+    };
+    let publications = 0;
+    const results = await Promise.all([
+      store!.commitRootRelocation(input, async () => {
+        publications++;
+      }),
+      store!.commitRootRelocation(input, async () => {
+        publications++;
+      }),
+    ]);
+    expect(results).toMatchObject([{ kind: 'relocated' }, { kind: 'relocated' }]);
+    expect(publications).toBe(1);
+    expect(await store!.readProjectFileAuthorities(KEY)).toMatchObject([
+      {
+        revision: 'root-revision',
+        binding: { authority: { kind: 'dbt-project-files', projectRoot: '.' } },
+      },
+    ]);
+    expect(await store!.readProjectFileAuthorities({ ...KEY, projectId: 'other' })).toEqual([]);
+  });
+
+  it('keeps the old authority after a failed publication and refuses stale or ambiguous roots', async () => {
+    await bindOrders();
+    const input = {
+      key: KEY,
+      sourceRoot: 'analytics',
+      expectedRevision: 'authority-1',
+      newRevision: 'root-revision',
+      nowIso: '2026-11-02T11:00:00.000Z',
+    };
+    await expect(
+      store!.commitRootRelocation(input, async () => {
+        throw new Error('file failure');
+      })
+    ).rejects.toThrow('file failure');
+    expect(await store!.read(KEY)).toMatchObject({ revision: 'authority-1', binding: BINDING });
+    let publications = 0;
+    expect(
+      await store!.commitRootRelocation({ ...input, expectedRevision: 'stale' }, async () => {
+        publications++;
+      })
+    ).toEqual({ kind: 'refused', reason: 'stale_authority' });
+    await bindFileRoot('second', 'second');
+    expect(
+      await store!.commitRootRelocation(input, async () => {
+        publications++;
+      })
+    ).toEqual({ kind: 'refused', reason: 'multiple_projects' });
+    expect(publications).toBe(0);
+  });
 });
 
 async function bindOrders(): Promise<void> {

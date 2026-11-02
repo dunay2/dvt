@@ -10,6 +10,7 @@ import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFile
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
+import { registerDbtProjectRootRelocationRoutes } from './dbtProjectRootRelocationRoutes.js';
 import { registerWorkspaceFilesRoutes } from './workspaceFilesRoutes.js';
 
 type RuntimeAuth = {
@@ -21,6 +22,7 @@ export type ProtectedWorkspaceFilesRouteGroupOptions = {
   readonly env: Env;
   readonly runtimeAuth: RuntimeAuth;
   readonly workspaceFilesRoot: string;
+  readonly dbtProjectRootRelocation: ProtectedRuntimeModule['dbtProjectRootRelocation'];
   readonly canvasAuthoringAuthorityPolicy: ProtectedRuntimeModule['canvasAuthoringAuthorityPolicy'];
 };
 
@@ -28,6 +30,14 @@ export function registerProtectedWorkspaceFilesRouteGroup(
   app: FastifyInstance,
   options: ProtectedWorkspaceFilesRouteGroupOptions
 ): void {
+  registerDbtProjectRootRelocationRoutes(app, {
+    ...options.runtimeAuth,
+    ...options.dbtProjectRootRelocation,
+    rateLimit: {
+      max: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
+      timeWindow: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
+    },
+  });
   const repository = new LocalWorkspaceFileRepository({
     root: options.workspaceFilesRoot,
   });

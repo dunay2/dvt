@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 
+import { WorkspaceRelativeProjectRootSchema } from '@dvt/contracts';
+
 import {
   InvalidWorkspaceFileBatchMutationError,
   InvalidWorkspaceFileBatchReceiptError,
@@ -12,6 +14,11 @@ import { resolveWorkspaceFileStoragePath } from './workspaceScopeStoragePath.js'
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/u;
 const MAX_IDEMPOTENCY_KEY_LENGTH = 256;
+export const DEFAULT_LOCAL_WORKSPACE_FILE_BATCH_LIMITS = Object.freeze({
+  maxBatchFiles: 500,
+  maxFileBytes: 1_000_000,
+  maxBatchBytes: 5_000_000,
+});
 
 export type ResolvedWorkspaceFileBatchExpectedFile = Readonly<{
   workspacePath: string;
@@ -27,6 +34,7 @@ export type ResolvedWorkspaceFileBatchWrite = Readonly<{
 }>;
 
 export type ResolvedWorkspaceFileBatchMutation = Readonly<{
+  expectedInventory?: Readonly<{ root: string; paths: readonly string[] }>;
   idempotencyKey: string;
   expectedFiles: readonly ResolvedWorkspaceFileBatchExpectedFile[];
   writes: readonly ResolvedWorkspaceFileBatchWrite[];
@@ -142,6 +150,9 @@ export function resolveLocalWorkspaceFileBatchMutation(input: {
 
   return {
     idempotencyKey,
+    ...(input.mutation.expectedInventory === undefined
+      ? {}
+      : { expectedInventory: resolveExpectedInventory(input) }),
     expectedFiles: sortByWorkspacePath(expectedFiles),
     writes: sortByWorkspacePath(writes),
     deletes: sortByWorkspacePath(deletes),
@@ -153,6 +164,9 @@ export function hashLocalWorkspaceFileBatchRequest(
 ): string {
   return workspaceFileBatchSha256(
     JSON.stringify({
+      ...(mutation.expectedInventory === undefined
+        ? {}
+        : { expectedInventory: mutation.expectedInventory }),
       expectedFiles: mutation.expectedFiles.map((file) => ({
         path: file.workspacePath,
         expectedContentSha256: file.expectedContentSha256,
@@ -164,6 +178,29 @@ export function hashLocalWorkspaceFileBatchRequest(
       deletes: mutation.deletes.map((file) => file.workspacePath),
     })
   );
+}
+
+function resolveExpectedInventory(
+  input: Parameters<typeof resolveLocalWorkspaceFileBatchMutation>[0]
+): NonNullable<ResolvedWorkspaceFileBatchMutation['expectedInventory']> {
+  const inventory = input.mutation.expectedInventory!;
+  const root = WorkspaceRelativeProjectRootSchema.safeParse(inventory.root);
+  if (
+    !root.success ||
+    root.data !== inventory.root ||
+    inventory.paths.length > input.limits.maxBatchFiles
+  ) {
+    throw new InvalidWorkspaceFileBatchMutationError('Invalid complete subtree inventory.');
+  }
+  const paths = inventory.paths.map((file) => {
+    const resolved = resolveWorkspaceFileStoragePath(input.root, input.scope, file);
+    if (inventory.root !== '.' && !resolved.workspacePath.startsWith(`${inventory.root}/`)) {
+      throw new InvalidWorkspaceFileBatchMutationError('Inventory path is outside its subtree.');
+    }
+    return resolved.workspacePath;
+  });
+  assertUniquePaths(paths, 'inventory');
+  return { root: inventory.root, paths: paths.sort() };
 }
 
 export function buildStoredWorkspaceFileBatchReceipt(
