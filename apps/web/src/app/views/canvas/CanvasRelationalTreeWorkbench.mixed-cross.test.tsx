@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /** Owned concern: relational workbench mixed-cross behavior. */
 import React, { act } from 'react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { JoinRel_JoinType } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { createCustomerOrdersJoin } from './canvasJoin.test-support';
@@ -29,7 +29,10 @@ import {
 
 describe('Canvas relational-tree Workbench mixed-cross', () => {
   setupWorkbenchTest();
-  it('preserves an existing LEFT JOIN while a staged CROSS consumes it and a new Source', async () => {
+  let applied: CanvasInspectorNodeDraft[];
+  let staged: HTMLElement;
+
+  beforeEach(async () => {
     const customers = sourceNode('customers', 'customers');
     const orders = sourceNode('orders', 'orders');
     const countries = {
@@ -59,7 +62,7 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
       transformNode(),
       encodeDvtSubstraitSemanticDocument(leftJoin)
     );
-    const applied: CanvasInspectorNodeDraft[] = [];
+    applied = [];
 
     await act(async () => {
       root.render(
@@ -78,7 +81,6 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
         />
       );
     });
-
     await act(async () =>
       container
         .querySelector<HTMLButtonElement>(
@@ -98,9 +100,12 @@ describe('Canvas relational-tree Workbench mixed-cross', () => {
     expect(crossButton).not.toBeNull();
     expect(crossButton?.getAttribute('aria-disabled')).toBe('false');
     await act(async () => crossButton?.click());
-    const staged = Array.from(
+    staged = Array.from(
       container.querySelectorAll<HTMLElement>('[data-pending-operation="true"]')
     ).find((card) => card.querySelector('[data-operator="cross"]') != null)!;
+  });
+
+  it('preserves an existing LEFT JOIN while a staged CROSS consumes it and a new Source', async () => {
     const [left, right] = Array.from(
       staged.querySelectorAll<HTMLElement>('[data-slot="canvas-relational-input-port"]')
     );
