@@ -119,6 +119,24 @@ misplaced test-support modules and no export cleanup candidates. The post-cleanu
 store/menu unit run passed 18 cases, the placement-hook run passed five cases,
 and web package lint and TypeScript passed at `b3f2cf119`.
 
+The `43e8f3911` local prepush again passed Monaco (16 cases) and all 431 unit
+files / 3,362 cases. Its partial presentation run exposed a Viewport fixture
+missing the newly required file-authority metadata and a five-second JOIN-chain
+timeout. The owned run was stopped after those two confirmed failures; its logs
+are retained and it is not a successful final gate.
+
+The [prospective fixture refinement](https://github.com/dunay2/dvt/issues/3747#issuecomment-6614712224)
+is recorded as `GH-3747-CANONICAL-PRESENTATION-FIXTURES`, referencing the existing
+`RenderCanvasContextualGraphSurface` rail and the two existing component owners.
+Both test paths now have explicit ownership. The Viewport fixture uses actual
+file-resource metadata. JOIN-chain starts with a validated persisted draft from
+the production factories and reuses existing render/port helpers, removing
+repeated setup gestures and selector code. Its real connection gestures, final
+card/edge counts, no-write-before-Apply and saved-draft assertions remain; input
+model immutability is asserted before and after Apply. The focused repeat passed
+all 18 cases, including after helper reuse. No timeout, retry, runtime mock or
+skip was added.
+
 Before this refinement, the exact `923c92cfb` prepush passed Monaco (one file,
 16 cases) and the complete unit suite (431 files, 3,362 cases). Only its owned
 process tree was stopped when presentation began, following the new cleanup

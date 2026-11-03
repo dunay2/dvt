@@ -98,6 +98,7 @@ describe('CanvasViewport', () => {
           role: 'input',
           status: 'idle',
           tags: [],
+          metadata: { authority: 'dbt-project-files', resourceType: 'source' },
         },
         {
           id: 'model',
@@ -107,6 +108,7 @@ describe('CanvasViewport', () => {
           role: 'transform',
           status: 'idle',
           tags: [],
+          metadata: { authority: 'dbt-project-files', resourceType: 'model' },
         },
       ],
       onInspectSource: vi.fn(),
