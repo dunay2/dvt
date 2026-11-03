@@ -11,6 +11,7 @@ import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   clickCanvasContextMenuItem,
+  openCanvasNodeOperations,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { dragCanvasNodeByViewportDelta } from '../../support/canvasGraphAuthoring';
@@ -74,6 +75,37 @@ describe('Canvas happy path remains writable after create/save', () => {
         cy.contains(copy.draftProjectionGapTitle).should('not.exist');
         cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
         cy.screenshot('canvas-happy-path-after-drag');
+        cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($button) => {
+          if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
+        });
+        cy.get('[data-slot="canvas-explorer-retained-surface"]')
+          .contains('button', /^Model 1$/)
+          .click();
+        cy.get('.react-flow__node').should('have.length', 2);
+        cy.wrap(null).should(() => {
+          const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+            { draft: unknown } | undefined;
+          const graph = WorkspaceGraphAuthoringDraftSchema.parse(saved?.draft);
+          const instance = graph.nodes.find((node) => node.definitionId === nodeId);
+          expect(instance, 'independent reference to the original model').to.exist;
+          expect(instance!.id).not.to.equal(nodeId);
+          expect(instance!.metadata, 'configuration is owned by the definition').to.be.undefined;
+          expect(graph.edges, 'creating an instance adds no dependency').to.have.length(0);
+        });
+        revisitWorkbenchCanvas();
+        cy.get('.react-flow__node').should('have.length', 2);
+        cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+        openCanvasNodeOperations('Model 1 2');
+        clickCanvasContextMenuItem('Delete');
+        cy.get('.react-flow__node').should('have.length', 1).and('have.attr', 'data-id', nodeId);
+        cy.wrap(null).should(() => {
+          const saved = getE2eApiCalls('/workspace/graph/draft', 'PUT').at(-1)?.body as
+            { draft: unknown } | undefined;
+          const graph = WorkspaceGraphAuthoringDraftSchema.parse(saved?.draft);
+          expect(graph.nodeIds).to.deep.equal([nodeId]);
+          expect(graph.nodes.map((node) => node.id)).to.deep.equal([nodeId]);
+          expect(graph.edges).to.have.length(0);
+        });
       });
   });
 });
