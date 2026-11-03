@@ -211,7 +211,7 @@ describe('Canvas explorer', () => {
     useApplicationLanguageStore.setState({ language });
     render(
       <CanvasExplorer
-        sources={null}
+        sources={<p>Source catalogue</p>}
         elements={null}
         projectFiles={{ onActivate: async () => true, onCanvas: () => undefined }}
       >
@@ -318,7 +318,7 @@ describe('Canvas explorer', () => {
   });
   it('toggles once with Enter or Space and ignores held-key repeats', () => {
     render(
-      <CanvasExplorer sources={null} elements={null}>
+      <CanvasExplorer sources={<p>Source catalogue</p>} elements={null}>
         <p>Graph</p>
       </CanvasExplorer>
     );
