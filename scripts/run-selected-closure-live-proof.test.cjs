@@ -18,6 +18,7 @@ const {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofWebEnv,
   buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
@@ -454,6 +455,22 @@ test('Cypress adapters forward only an explicitly declared file-project fixture 
   assert.ok(
     buildLiveProofCypressDockerInvocation(isolated).includes('CYPRESS_projectFilesEnvironmentId')
   );
+});
+
+test('compiled proof web admits both declared fixture environments and retains the base default', () => {
+  const env = buildLiveProofWebEnv({
+    apiBaseUrl: 'http://127.0.0.1:3300',
+    webEnv: { VITE_API_BEARER_TOKEN: 'proof-token', VITE_ENVIRONMENT_OPTIONS: 'ungranted' },
+    workspaceScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'proof' },
+    projectFilesEnvironmentId: 'project-files-proof',
+  });
+  assert.equal(env.VITE_DEFAULT_ENVIRONMENT_ID, 'proof');
+  assert.deepEqual(
+    new Set(env.VITE_ENVIRONMENT_OPTIONS.split(',')),
+    new Set(['proof', 'project-files-proof'])
+  );
+  assert.equal(env.VITE_API_BASE_URL, 'http://127.0.0.1:3300');
+  assert.equal(env.VITE_API_BEARER_TOKEN, 'proof-token');
 });
 
 test('native and manual Docker browser children are registered before awaiting and keep tokens out of argv', async () => {

@@ -512,6 +512,22 @@ function buildLiveProofApiEnv({
   };
 }
 
+function buildLiveProofWebEnv({ apiBaseUrl, webEnv, workspaceScope, projectFilesEnvironmentId }) {
+  return {
+    ...webEnv,
+    VITE_API_BASE_URL: apiBaseUrl,
+    VITE_DEFAULT_TENANT_ID: workspaceScope.tenantId,
+    VITE_DEFAULT_PROJECT_ID: workspaceScope.projectId,
+    VITE_DEFAULT_ENVIRONMENT_ID: workspaceScope.environmentId,
+    VITE_ENVIRONMENT_OPTIONS: [workspaceScope.environmentId, projectFilesEnvironmentId].join(','),
+    VITE_GIT_BRANCH: 'main',
+    VITE_GIT_SHA: 'local',
+    VITE_GIT_REPO: 'dunay2/dvt',
+    VITE_GRAPH_ARTIFACT_PATH: 'pipelines/sales_pipeline.yaml',
+    VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
+  };
+}
+
 function buildLiveProofOutboxWorkerEnv(apiEnv, adminPort) {
   return {
     ...apiEnv,
@@ -833,20 +849,14 @@ async function main() {
         port: DEFAULT_WEB_PORT,
         timeout: DEFAULT_READY_TIMEOUT_MS,
         interval: DEFAULT_POLL_INTERVAL_MS,
-        environment: {
-          VITE_API_BASE_URL: `http://${
+        environment: buildLiveProofWebEnv({
+          apiBaseUrl: `http://${
             cypressRuntime === 'native' ? '127.0.0.1' : 'host.docker.internal'
           }:${DEFAULT_API_PORT}`,
-          ...localProtectedRuntimeAuth.webEnv,
-          VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,
-          VITE_DEFAULT_PROJECT_ID: localProtectedRuntimeAuth.workspaceScope.projectId,
-          VITE_DEFAULT_ENVIRONMENT_ID: localProtectedRuntimeAuth.workspaceScope.environmentId,
-          VITE_GIT_BRANCH: 'main',
-          VITE_GIT_SHA: 'local',
-          VITE_GIT_REPO: 'dunay2/dvt',
-          VITE_GRAPH_ARTIFACT_PATH: 'pipelines/sales_pipeline.yaml',
-          VITE_PLATFORM_HEALTH_OPTIONAL_PROBES: '',
-        },
+          webEnv: localProtectedRuntimeAuth.webEnv,
+          workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+          projectFilesEnvironmentId,
+        }),
       },
       processHandles,
       { spawnProcess, waitForUrlOrProcessExit }
@@ -906,6 +916,7 @@ module.exports = {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofCypressNativeInvocation,
   buildLiveProofApiEnv,
+  buildLiveProofWebEnv,
   buildLiveProofOutboxWorkerEnv,
   buildLiveProofTemporalWorkerEnv,
   buildLiveProofTemporalTimeSkippingOptions,
