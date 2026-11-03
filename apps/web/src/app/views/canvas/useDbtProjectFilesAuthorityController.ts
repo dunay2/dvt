@@ -480,6 +480,7 @@ export function useDbtProjectFilesAuthorityController(
     registeredPlugins: getRegisteredPluginIds(runtimeCapabilities),
     runtimeCapabilities,
     graphCommands: {
+      onInspectSource: openNodeWorkbench,
       onNodesChange: graphModel.onNodesChange,
       onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,

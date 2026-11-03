@@ -267,6 +267,29 @@ describe('dbt project file projection live vertical', () => {
       .and('contain.text', 'require code');
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
+    for (const activity of ['sources', 'elements']) {
+      cy.get(`[data-slot="canvas-explorer-${activity}-toggle"]`).click();
+      cy.get('[data-element-id="source.analytics.raw.orders"]')
+        .filter(':visible')
+        .should('be.enabled')
+        .and('have.prop', 'draggable', false)
+        .click();
+      cy.get('[data-slot="canvas-node-workbench-overlay"]')
+        .should('be.visible')
+        .and('contain.text', 'orders');
+      cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+      cy.get('[data-slot="canvas-node-workbench-overlay"]')
+        .should('contain.text', 'order_id')
+        .and('contain.text', 'customer_id');
+      cy.get('[data-slot="canvas-node-workbench-close"]').click();
+      cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+    }
+    cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__node').should(
+      'have.length',
+      7
+    );
+    cy.then(() => expect(observedFileWrites).to.deep.equal([]));
+
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').then(($node) => {
       const node = $node[0];
       if (node === undefined) throw new Error('Expected the projected model before movement.');
