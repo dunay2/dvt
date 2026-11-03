@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { isRecord } from '../types/canonicalGuards';
 
 import {
   createCanvasExecutionSelectionIntent,
@@ -59,10 +60,6 @@ function areCanvasNodePositionsEqual(
   });
 }
 
-function areSelectedNodeIdsEqual(left: readonly string[], right: readonly string[]): boolean {
-  return left.length === right.length && left.every((nodeId, index) => nodeId === right[index]);
-}
-
 function areOrderedIdsEqual(left: readonly string[], right: readonly string[]): boolean {
   return left.length === right.length && left.every((id, index) => id === right[index]);
 }
@@ -118,10 +115,6 @@ type CanvasInteractionPersistedState = Partial<
 
 export type { CanvasPosition, CanvasViewportState, WorkspaceCanvasLayout };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function mergeCanvasInteractionPersistedState(
   persistedState: unknown,
   currentState: CanvasInteractionState
@@ -165,7 +158,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
         set((state) => {
           const executionSelectionIntent = createCanvasExecutionSelectionIntent(nodes);
 
-          return areSelectedNodeIdsEqual(
+          return areOrderedIdsEqual(
             state.executionSelectionIntent.nodeIds,
             executionSelectionIntent.nodeIds
           ) && state.executionSelectionIntent.mode === executionSelectionIntent.mode
@@ -179,7 +172,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             intent.mode
           );
 
-          return areSelectedNodeIdsEqual(
+          return areOrderedIdsEqual(
             state.executionSelectionIntent.nodeIds,
             executionSelectionIntent.nodeIds
           ) && state.executionSelectionIntent.mode === executionSelectionIntent.mode

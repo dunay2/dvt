@@ -13,8 +13,6 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeModelerActionId = CanvasNodeContextMenuActionId;
-
 export type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
   label: string;
@@ -55,20 +53,6 @@ const DEFAULT_COPY: CanvasNodeContextMenuCopy = {
   deleteLabel: 'Delete',
 };
 
-export type CanvasNodeModelerAction = CanvasNodeContextMenuAction &
-  Readonly<{ id: CanvasNodeModelerActionId }>;
-
-export type CanvasNodeModelerActionGroup = Readonly<{
-  id: string;
-  label: string;
-  actions: readonly CanvasNodeModelerAction[];
-}>;
-
-export type CanvasNodeModelerActionModel = Readonly<{
-  target: CanvasNodeContextMenuTarget;
-  actionGroups: readonly CanvasNodeModelerActionGroup[];
-}>;
-
 type BuildCanvasNodeModelerActionModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
@@ -91,9 +75,9 @@ export function buildCanvasNodeModelerActionModel({
   canToggleNodeSelection,
   canRemoveNode,
   copy = DEFAULT_COPY,
-}: BuildCanvasNodeModelerActionModelArgs): CanvasNodeModelerActionModel {
-  const groups: CanvasNodeModelerActionGroup[] = [];
-  const editActions: CanvasNodeModelerAction[] = [];
+}: BuildCanvasNodeModelerActionModelArgs): CanvasNodeContextMenuModel {
+  const groups: CanvasNodeContextMenuActionGroup[] = [];
+  const editActions: CanvasNodeContextMenuAction[] = [];
 
   if (canInspectNode) {
     editActions.push({

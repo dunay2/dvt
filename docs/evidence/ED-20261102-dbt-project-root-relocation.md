@@ -88,6 +88,28 @@ pre-push attempt for `659239db6` was stopped only in its verified owned process
 tree before this refinement; its partial output is retained and is not accepted
 as the final gate.
 
+### Maintenance refinement
+
+The follow-up maintenance review removes the duplicate selected-ID comparator
+and local record guard from the interaction store. Selection and inspector order
+reuse `areOrderedIdsEqual`; persisted-value validation reuses the existing
+canonical primitive guard already consumed by the drop adapter. The native
+component command retired exactly two obsolete source associations using the
+current binding-set hash. No rail refers to either removed local helper.
+
+Four action-type aliases had no consumers outside their own module. The node
+action builder now returns the existing context-menu contract directly. Its
+public callable signature and command admission remain equivalent. The store
+test also drops its obsolete frozen-node API cast and checks the actual store
+type; the placement hook returns its filtered changes directly. No new utility,
+service, CSS rule or command/query rail is introduced.
+
+Before this refinement, the exact `923c92cfb` prepush passed Monaco (one file,
+16 cases) and the complete unit suite (431 files, 3,362 cases). Only its owned
+process tree was stopped when presentation began, following the new cleanup
+request. Those passing results are retained; the interrupted prepush is not final
+acceptance. The final committed refinement requires a fresh complete prepush.
+
 ### Actual user-session verification
 
 Browser-only control of the existing Edge Raven tab verified the real project

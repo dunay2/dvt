@@ -229,15 +229,11 @@ describe('useCanvasInteractionStore', () => {
   });
 
   it('toggles frozen canvas nodes per workspace without changing node positions', () => {
-    type FrozenCanvasInteractionState = ReturnType<typeof useCanvasInteractionStore.getState> & {
-      toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
-    };
-
     useCanvasInteractionStore.getState().setCanvasNodePositions(WORKSPACE_KEY, {
       source_node: { x: 40, y: 140 },
     });
 
-    const state = useCanvasInteractionStore.getState() as FrozenCanvasInteractionState;
+    const state = useCanvasInteractionStore.getState();
     state.toggleFrozenCanvasNode(WORKSPACE_KEY, 'source_node');
 
     expect(useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]).toEqual({

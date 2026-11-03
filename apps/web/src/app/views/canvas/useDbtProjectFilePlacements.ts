@@ -50,12 +50,11 @@ export function useDbtProjectFilePlacements({
   );
   const applyNodeChanges = useCallback(
     (changes: NodeChange[]): NodeChange[] => {
-      const retained = changes.filter((change) => {
+      return changes.filter((change) => {
         if (change.type !== 'remove') return true;
         removeInstance(change.id);
         return false;
       });
-      return retained;
     },
     [removeInstance]
   );
