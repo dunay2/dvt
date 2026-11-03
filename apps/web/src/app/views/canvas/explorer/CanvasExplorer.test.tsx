@@ -60,10 +60,14 @@ describe('Canvas explorer', () => {
       'true'
     );
     expect(screen.getAllByRole('searchbox')).toHaveLength(1);
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Import sources' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Import sources' }));
+    });
     expect(onImport).toHaveBeenCalledExactlyOnceWith();
     const addModel = screen.getByRole('button', { name: 'Add model' });
-    act(() => fireEvent.click(addModel));
+    act(() => {
+      fireEvent.click(addModel);
+    });
     expect(onAddModel).toHaveBeenCalledExactlyOnceWith(addModel);
     expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
@@ -89,7 +93,9 @@ describe('Canvas explorer', () => {
     const sources = screen.getByRole('button', { name: 'Elements: Sources' });
     const models = screen.getByRole('button', { name: 'Elements: Models' });
     const graph = screen.getByLabelText('Retained graph');
-    act(() => fireEvent.click(sources));
+    act(() => {
+      fireEvent.click(sources);
+    });
     expect(sources.getAttribute('aria-expanded')).toBe('false');
     expect(models.getAttribute('aria-expanded')).toBe('true');
     expect(screen.queryByRole('button', { name: 'Orders' })).toBeNull();
@@ -105,12 +111,18 @@ describe('Canvas explorer', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
     });
     expect(screen.queryByRole('searchbox')).toBeNull();
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
     const restoredSources = screen.getByRole('button', { name: 'Elements: Sources' });
     expect(restoredSources.getAttribute('aria-expanded')).toBe('false');
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements: Models' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements: Models' }));
+    });
     expect(screen.queryByRole('button', { name: 'Revenue' })).toBeNull();
-    act(() => fireEvent.click(restoredSources));
+    act(() => {
+      fireEvent.click(restoredSources);
+    });
     expect(screen.getByRole('button', { name: 'Orders' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Revenue' })).toBeNull();
     expect(screen.getByLabelText('Retained graph')).toBe(graph);
@@ -219,9 +231,13 @@ describe('Canvas explorer', () => {
     const search = screen.getByLabelText('Retained project search');
     const graph = screen.getByLabelText('Retained graph');
     expect(search.dataset.enabled).toBe('true');
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
     expect(search.dataset.enabled).toBe('false');
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
     expect(search.dataset.enabled).toBe('true');
     expect(screen.getByLabelText('Retained project search')).toBe(search);
     expect(screen.getByLabelText('Retained graph')).toBe(graph);

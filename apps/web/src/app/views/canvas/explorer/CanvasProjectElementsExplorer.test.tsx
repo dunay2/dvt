@@ -141,7 +141,9 @@ it('does not open a model whose declared file is unavailable', async () => {
   await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
   const row = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
   expect(row.disabled).toBe(true);
-  act(() => fireEvent.click(row));
+  act(() => {
+    fireEvent.click(row);
+  });
   expect(onOpenFile).not.toHaveBeenCalled();
   expect(onSelect).not.toHaveBeenCalled();
   expect(saveFileContent).not.toHaveBeenCalled();
