@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-10-30
+last_reviewed: 2026-11-03
 planning_type: architecture
 ---
 
@@ -54,6 +54,16 @@ Stale revisions are rejected. The read-only Code entry points do not accept new
 edits or invoke this command from browsing. Existing artifact publishers and
 previously accepted pending edits retain their command boundary. There is no Save
 button or second persistence lifecycle.
+
+`useDbtProjectFileWorkbenchSession` owns the refs and guarded handoff between
+project Code and node inspection. Unknown identities are refused before either
+editor is touched; a refused flush preserves the existing workbench. The shell's
+existing `useCanvasCodeWorkbench` owns tabs and focus, rather than another file
+session. The file-authority controller composes these owners with its projection
+and layout. Execution selection and recovery belong to the existing
+`useDbtProjectFileExecution`, which reuses the shared recovery query, command and
+fresh-authority adapter. Neither presentation boundary generates SQL or creates
+a second semantic graph.
 
 ### HTTP Adapter
 
