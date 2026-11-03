@@ -72,7 +72,7 @@ describe('Canvas relational-tree Workbench inspection', () => {
     expect(container.querySelector('[data-slot="canvas-relational-tree-detail"]')).toBeNull();
     const tree = container.querySelector('[data-slot="canvas-relational-tree"]');
     const toggle = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-explorer-sources-toggle"]'
+      '[data-slot="canvas-explorer-elements-toggle"]'
     );
     expect(toggle).not.toBeNull();
     await act(async () => {

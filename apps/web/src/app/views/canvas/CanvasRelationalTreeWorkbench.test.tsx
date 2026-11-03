@@ -67,7 +67,7 @@ describe('Canvas relational-tree Workbench ', () => {
       for (const selector of [
         '[data-slot="canvas-relational-tree-node"][data-operator="read"]',
         '[data-slot="canvas-relational-node-expand"]',
-        '[data-slot="canvas-explorer-sources-toggle"]',
+        '[data-slot="canvas-explorer-elements-toggle"]',
         'button[aria-label="Zoom in"]',
         '[data-slot="canvas-relational-tree-fit"]',
       ]) {
