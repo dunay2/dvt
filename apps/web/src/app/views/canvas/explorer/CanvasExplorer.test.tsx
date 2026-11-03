@@ -147,7 +147,7 @@ describe('Canvas explorer', () => {
     expect(screen.getByRole('button', { name: 'Orders' })).toBeTruthy();
   });
   it.each([true, false])(
-    'uses Elements as a definition catalogue with guarded instance drag (writable=%s)',
+    'activates definitions through creation and guards click and drag (writable=%s)',
     (writable) => {
       const source: CanonicalNode = {
         id: 'source',
@@ -165,7 +165,6 @@ describe('Canvas explorer', () => {
         kind: 'dvt:transform',
         role: 'transform',
       };
-      const onInspectSource = vi.fn();
       const onSelect = vi.fn();
       render(
         <CanvasGraphExplorer
@@ -180,21 +179,22 @@ describe('Canvas explorer', () => {
             source,
             { ...source, id: 'instance', name: 'Placed Orders', sourceDefinitionId: source.id },
             model,
+            { ...model, id: 'model-instance', name: 'Revenue 2', definitionId: model.id },
           ]}
           onSelect={onSelect}
-          onInspectSource={onInspectSource}
           canPlaceSource={writable}
         >
           <input aria-label="Retained graph" />
         </CanvasGraphExplorer>
       );
       expect(screen.queryByRole('button', { name: /Placed Orders/ })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Revenue 2' })).toBeNull();
       expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
       expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
       const row = screen.getByRole('button', { name: 'Orders' });
       expect(row.draggable).toBe(writable);
       expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(
-        false
+        writable
       );
       if (writable) {
         const transfer = { setData: vi.fn(), effectAllowed: '' };
@@ -210,8 +210,11 @@ describe('Canvas explorer', () => {
       act(() => {
         fireEvent.click(row);
       });
-      expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('source');
-      expect(onSelect).not.toHaveBeenCalled();
+      if (writable) expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
+      else expect(onSelect).not.toHaveBeenCalled();
+      act(() => fireEvent.click(screen.getByRole('button', { name: 'Revenue' })));
+      if (writable) expect(onSelect).toHaveBeenLastCalledWith('model');
+      else expect(onSelect).not.toHaveBeenCalled();
     }
   );
 
@@ -220,7 +223,6 @@ describe('Canvas explorer', () => {
       <CanvasGraphExplorer
         nodes={[]}
         onSelect={vi.fn()}
-        onInspectSource={vi.fn()}
         referencePlacementScope="scope"
         catalogue={[
           {
@@ -267,12 +269,10 @@ describe('Canvas explorer', () => {
 
   it('keeps unsupported file resources inspectable without offering a rejected drag', () => {
     const onSelect = vi.fn();
-    const onInspectSource = vi.fn();
     render(
       <CanvasGraphExplorer
         nodes={[]}
         onSelect={onSelect}
-        onInspectSource={onInspectSource}
         referencePlacementScope="scope"
         catalogue={[
           {
@@ -307,8 +307,7 @@ describe('Canvas explorer', () => {
         fireEvent.click(row);
       });
     }
-    expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('seed');
-    expect(onSelect).toHaveBeenCalledExactlyOnceWith('snapshot');
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
   it('enables project discovery only in the open Elements panel without remounting its list or graph', () => {
@@ -512,7 +511,7 @@ describe('Canvas explorer', () => {
     });
     expect(button.getAttribute('aria-expanded')).toBe('true');
   });
-  it('shows registered sources without graph cards; click inspects and drag carries only their identity', () => {
+  it('shows registered definitions without cards and uses their identity for creation gestures', () => {
     const catalogue: CanonicalNode[] = [
       {
         id: 'imported',
@@ -524,14 +523,12 @@ describe('Canvas explorer', () => {
         tags: [],
       },
     ];
-    const onInspectSource = vi.fn();
     const onSelect = vi.fn();
     const view = (ready: boolean): JSX.Element => (
       <CanvasGraphExplorer
         nodes={[]}
         catalogue={ready ? catalogue : []}
         onSelect={onSelect}
-        onInspectSource={onInspectSource}
         canPlaceSource
       >
         <input aria-label="Graph state" />
@@ -545,8 +542,7 @@ describe('Canvas explorer', () => {
     act(() => {
       fireEvent.click(source);
     });
-    expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('imported');
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('imported');
     const transfer = { setData: vi.fn(), effectAllowed: '' };
     act(() => {
       fireEvent.dragStart(source, { dataTransfer: transfer });
@@ -556,8 +552,7 @@ describe('Canvas explorer', () => {
       JSON.stringify({ id: 'imported' })
     );
     expect(transfer.effectAllowed).toBe('copy');
-    expect(onInspectSource).toHaveBeenCalledTimes(1);
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledTimes(1);
     expect(screen.getByLabelText('Graph state')).toBe(graph);
   });
 
@@ -577,15 +572,15 @@ describe('Canvas explorer', () => {
       metadata: { schema: 'raw', connectionName: 'Warehouse' },
     };
     const catalogue = [source];
-    const onInspectSource = vi.fn();
+    const onSelect = vi.fn();
     const view = (moved: boolean, sources = catalogue): JSX.Element => (
       <CanvasGraphExplorer
         nodes={
           moved ? [{ id: 'placed', position: { x: 200, y: 40 }, data: { name: 'Placed' } }] : []
         }
         catalogue={sources}
-        onSelect={() => {}}
-        onInspectSource={onInspectSource}
+        onSelect={onSelect}
+        canPlaceSource
       >
         <input aria-label="Retained graph" />
       </CanvasGraphExplorer>
@@ -593,7 +588,7 @@ describe('Canvas explorer', () => {
     render(view(false));
     expect(roleReads).toBeGreaterThan(0);
     const row = screen.getByRole('button', { name: 'Orders raw · Warehouse' });
-    expect(row.draggable).toBe(false);
+    expect(row.draggable).toBe(true);
     roleReads = 0;
     act(() => root.render(view(true)));
     expect(roleReads).toBe(0);
@@ -605,7 +600,7 @@ describe('Canvas explorer', () => {
     act(() => {
       fireEvent.click(row);
     });
-    expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('registered');
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('registered');
     act(() =>
       root.render(
         view(true, [{ ...source, metadata: { schema: 'reporting', connectionName: 'Warehouse' } }])

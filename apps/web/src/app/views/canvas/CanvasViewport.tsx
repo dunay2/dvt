@@ -33,6 +33,7 @@ import {
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { resolveCanvasKeyboardAction } from './canvasViewportInteraction';
 import { CanvasGraphExplorer } from './explorer/CanvasGraphExplorer';
+import { CANVAS_NODE_DROP_GRAPH_ANCHOR } from './canvasNodeDropPayload';
 import type { CanvasExplorerProjectWorkspace } from './explorer/CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './explorer/CanvasExplorer.templates';
 import { focusCanvasViewportNode } from './canvasViewportNodeFocus';
@@ -56,7 +57,7 @@ type CanvasViewportProps = {
   readonly canSelectNodes?: boolean;
   readonly nodesWithImpact: Node[];
   readonly sourceCatalogue?: readonly CanonicalNode[];
-  readonly onInspectSource?: (nodeId: string) => void;
+  readonly onInstantiateNode?: (nodeId: string, position: { x: number; y: number }) => void;
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
   readonly gridSize: number;
@@ -463,19 +464,22 @@ function CanvasViewportWithPresenter({
       activityRail={props.activityRail}
       nodes={props.nodesWithImpact}
       catalogue={props.sourceCatalogue}
-      onInspectSource={props.onInspectSource}
-      canPlaceSource={props.canEditEdges}
+      canPlaceSource={props.canEditEdges && props.onInstantiateNode != null}
       referencePlacementScope={props.referencePlacementScope}
       importedSourceIds={props.importedNodeFocusIds}
       onImportFocusComplete={props.onImportedNodeFocusComplete}
-      onSelect={(nodeId) =>
-        focusCanvasViewportNode({
-          nodeId,
-          nodes: props.nodesWithImpact,
-          selectNode: canSelectNodes,
-          port: graphSearchActivationPort,
-        })
-      }
+      onSelect={(nodeId) => {
+        const bounds = viewportRef.current?.getBoundingClientRect();
+        if (bounds == null) return;
+        const center = reactFlow.screenToFlowPosition({
+          x: bounds.left + bounds.width / 2,
+          y: bounds.top + bounds.height / 2,
+        });
+        props.onInstantiateNode?.(nodeId, {
+          x: center.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
+          y: center.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
+        });
+      }}
       onImport={props.canOpenSourceImport ? props.onOpenSourceImport : undefined}
       onAddModel={
         props.canEditEdges &&

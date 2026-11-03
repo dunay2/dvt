@@ -247,6 +247,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleNodeDrag'
   | 'handleNodeDragStop'
   | 'handleDrop'
+  | 'handleInstantiateNode'
   | 'handleInspectNode'
   | 'handleDragOver'
   | 'handleCreateAuthoringNode'
@@ -290,6 +291,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleNodeDrag: vi.fn(),
     handleNodeDragStop: vi.fn(),
     handleDrop: vi.fn(),
+    handleInstantiateNode: vi.fn(),
     handleInspectNode: vi.fn(),
     handleDragOver: vi.fn(),
     handleCreateAuthoringNode: vi.fn(),

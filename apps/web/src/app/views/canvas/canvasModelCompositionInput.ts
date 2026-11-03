@@ -12,7 +12,7 @@ import {
   type SubstraitRelationIndex,
   type RelationPublication,
 } from '@dvt/substrait-analysis';
-import type { ConnectionRef } from '@dvt/contracts';
+import { projectWorkspaceNodeInstanceEdges, type ConnectionRef } from '@dvt/contracts';
 import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
@@ -40,10 +40,11 @@ export function readCanvasModelCompositionPublication(
   if (node.pluginId !== 'dvt' || node.kind !== 'dvt:transform' || node.role !== 'transform')
     return null;
   try {
+    const contextEdges = projectWorkspaceNodeInstanceEdges(nodes, edges);
     const { document, connection, index } = resolveCanvasSubstraitGraphBindings({
       node,
       nodes,
-      edges,
+      edges: contextEdges,
     });
     const { schemas } = deriveSubstraitSchemas(document);
     const root = index.relations.get(index.rootId)!;
@@ -64,7 +65,12 @@ export function readCanvasModelCompositionPublication(
             type.value.nullability !== Type_Nullability.REQUIRED,
         };
       });
-    const denied = resolveUnmappedCanvasReadFields({ nodeId: node.id, nodes, edges, document });
+    const denied = resolveUnmappedCanvasReadFields({
+      nodeId: node.id,
+      nodes,
+      edges: contextEdges,
+      document,
+    });
     const publication = deriveSubstraitPublication(document, denied).get(index.rootId)!;
     const unavailable = new Set(publication.unavailableFieldIds);
     const publishedFieldIds = new Set(

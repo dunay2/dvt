@@ -78,7 +78,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringEdgeExecution.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDvtNodeFieldPolicy.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/WorkspaceSourceInstance.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceNodeInstance.v1.ts`
 
 ## Repository-local documents
 

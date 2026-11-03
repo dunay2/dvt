@@ -13,6 +13,7 @@ import type {
 import { resolveCanvasDraftNodes } from './canvasDraftNodeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import type { WorkspaceScope } from '../../ports/sessionContext';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { modelOutputDependencyRejection } from './canvasModelOutputDependencyPolicy';
 import { bindCanvasInputField } from './canvasInputBindingAuthoring';
 
@@ -47,18 +48,16 @@ export function applyCanvasInspectorNodeDraftToSession(args: {
     edges,
   });
   if (dependencyRejection != null) return dependencyRejection;
+  const definitionId = workspaceNodeDefinitionId(node);
   const definition =
-    node.sourceDefinitionId == null
+    definitionId == null
       ? null
-      : (draftSession.localNodeCatalog?.[node.sourceDefinitionId] ??
-        canonicalNodesById.get(node.sourceDefinitionId));
+      : (draftSession.localNodeCatalog?.[definitionId] ?? canonicalNodesById.get(definitionId));
   const nextSession =
     definition == null
       ? draftSession
       : canvasDraftSession.workingSet.updateNodeDefinition(draftSession, {
           ...definition,
-          metadata: updated.metadata,
-          path: updated.path,
         });
   return {
     outcome: 'applied',

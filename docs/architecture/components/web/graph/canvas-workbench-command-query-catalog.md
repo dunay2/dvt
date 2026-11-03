@@ -112,11 +112,26 @@ introduce a catalogue writer. Available connection objects, registered definitio
 and placed instances remain distinct. Repeated source placement uses the same
 guarded instance command and never creates a SQL file per placement.
 
+Activation in Elements requests creation, never file navigation or camera focus.
+Click uses the visible Canvas center and drag uses the dropped graph position;
+both reuse native node admission or the existing local reference-placement rail.
+Instances reference one registered definition and retain their own placement
+identity, name and position. They do not create a consumer Read, copy the model
+document or add a dependency edge to the original. The shared contract resolves
+configuration and query-time input context from the definition. Derived input
+context is neither persisted nor displayed as automatic Canvas connections.
+Occurrence references are excluded from definition discovery.
+
+Presentation invalidation follows changed nodes and their consumers through the
+previous and current dependency graph, including shared-definition references.
+Deleting or editing an unrelated card preserves the existing presentation object
+and does not query its schema again. Affected cards retain their displayed fields
+while pending; cancelled revisions cannot publish. This is local reuse within the
+existing contextual graph query, not a new cache or mutation rail.
 `ListWorkspaceFiles`, `GetWorkspaceFileContent` and `ProjectDbtGraphFromFiles`
-remain scoped queries. Fresh file model rows open an available declared file via
-the existing Code workbench guard, preserving the Canvas route and camera. Unknown
-or missing files, stale analysis and denied scopes cannot admit navigation.
-General external-model instantiation is not granted by this presentation change.
+remain scoped queries. File models without native instance admission are visible
+but disabled in the native catalogue; the Code explorer still opens their files.
+General external-model instantiation is not granted by this correction.
 The existing shared list and creation catalogue own search, category disclosure,
 capability gating and focus. [Prospective design and negative tests](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
 

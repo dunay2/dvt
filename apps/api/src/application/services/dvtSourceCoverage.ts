@@ -4,6 +4,7 @@ import type {
   ConnectedSourceRef,
   WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
 
 export function sameConnection(left: ConnectionRef, right: ConnectionRef): boolean {
   return (
@@ -27,7 +28,7 @@ export function distinctDvtSourceDefinitions<T extends { node: WorkspaceGraphAut
 ): T[] {
   return [
     ...new Map(
-      sources.map((source) => [source.node.sourceDefinitionId ?? source.node.id, source])
+      sources.map((source) => [workspaceNodeDefinitionId(source.node) ?? source.node.id, source])
     ).values(),
   ];
 }

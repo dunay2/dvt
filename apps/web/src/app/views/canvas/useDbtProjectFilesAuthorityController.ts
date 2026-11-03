@@ -399,7 +399,7 @@ export function useDbtProjectFilesAuthorityController(
     registeredPlugins: getRegisteredPluginIds(runtimeCapabilities),
     runtimeCapabilities,
     graphCommands: {
-      onInspectSource: openNodeWorkbench,
+      onInstantiateNode: placements.placeResource,
       onNodesChange: (changes: Parameters<typeof graphModel.onNodesChange>[0]) => {
         const accepted = placements.applyNodeChanges(changes);
         if (accepted.length > 0) graphModel.onNodesChange(accepted);

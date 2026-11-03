@@ -111,7 +111,7 @@ describe('CanvasViewport', () => {
           metadata: { authority: 'dbt-project-files', resourceType: 'model' },
         },
       ],
-      onInspectSource: vi.fn(),
+      onInstantiateNode: vi.fn(),
     });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' }).draggable).toBe(true);
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(true);
@@ -119,6 +119,38 @@ describe('CanvasViewport', () => {
       true
     );
   });
+
+  it.each([true, false])(
+    'creates at the visible center without focusing or opening a card (writable=%s)',
+    async (writable) => {
+      const onInstantiateNode = vi.fn();
+      await renderViewport({
+        canEditEdges: writable,
+        onInstantiateNode,
+        sourceCatalogue: [
+          {
+            id: 'orders',
+            name: 'Orders',
+            pluginId: 'dvt',
+            kind: 'dvt:source',
+            role: 'input',
+            status: 'idle',
+            tags: [],
+          },
+        ],
+      });
+      const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]')!;
+      vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 50, 800, 600));
+      xyflowState.fitView.mockClear();
+      xyflowState.setViewport.mockClear();
+      await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
+      if (writable)
+        expect(onInstantiateNode).toHaveBeenCalledExactlyOnceWith('orders', { x: 500, y: 270 });
+      else expect(onInstantiateNode).not.toHaveBeenCalled();
+      expect(xyflowState.fitView).not.toHaveBeenCalled();
+      expect(xyflowState.setViewport).not.toHaveBeenCalled();
+    }
+  );
 
   it('does not render fixed panel restore controls when side panels are hidden', async () => {
     await renderViewport();

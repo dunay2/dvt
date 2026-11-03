@@ -18,8 +18,72 @@ import {
 } from './useCanvasGraphHandlers.test.support';
 import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { sourceNode, projectedModel } from './canvasColumnOutputAuthoring.test-support';
 
 describe('useCanvasGraphHandlers node drop', () => {
+  it.each(['input', 'transform'] as const)(
+    'creates independent %s cards through shared click and drop admission',
+    async (role) => {
+      const source = sourceNode();
+      const definition = role === 'input' ? source : projectedModel(source, ['order_id', 'amount']);
+      const sourceEdge = { sourceId: source.id, targetId: definition.id };
+      const draftSession = buildDraftSession();
+      draftSession.workingSet = {
+        visibleNodeIds: [source.id, definition.id],
+        visibleEdges: role === 'transform' ? [sourceEdge] : [],
+        pendingExplicitNodeIds: [],
+      };
+      const before = JSON.stringify(definition);
+      const setNodes = vi.fn();
+      const setDraftSession = vi.fn();
+      const setEdges = vi.fn();
+      const harness = renderGraphHandlersHook({
+        canEditEdges: true,
+        nodes: [],
+        canonicalNodes: role === 'input' ? [definition] : [source, definition],
+        draftSession,
+        setNodes,
+        setDraftSession,
+        setEdges,
+      });
+      await harness.render();
+      const event = buildCanonicalDropEvent(definition);
+      Object.assign(event.dataTransfer, {
+        types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+        getData: () => JSON.stringify({ id: definition.id }),
+      });
+      act(() => {
+        harness.latest()?.handleInstantiateNode(definition.id, { x: 30, y: 60 });
+        harness.latest()?.handleDrop(event);
+        harness.latest()?.handleInstantiateNode('missing', { x: 0, y: 0 });
+      });
+      const placed = setNodes.mock.calls[1]?.[0] as Node[];
+      expect(placed).toHaveLength(2);
+      expect(new Set(placed.map((node) => node.id)).size).toBe(2);
+      expect(placed.every((node) => node.id !== definition.id)).toBe(true);
+      expect(placed[0]!.position).toEqual({ x: 30, y: 60 });
+      expect(setEdges).not.toHaveBeenCalled();
+      expect(setDraftSession).toHaveBeenCalledTimes(2);
+      expect(JSON.stringify(definition)).toBe(before);
+      harness.cleanup();
+    }
+  );
+  it('rejects readonly activation before any draft or viewport effect', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: false,
+      canonicalNodes: [buildCanonicalNode('source', 'input')],
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+    act(() => harness.latest()?.handleInstantiateNode('source', { x: 0, y: 0 }));
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+    expect(graphHandlerScreenToFlowPosition).not.toHaveBeenCalled();
+    harness.cleanup();
+  });
   it.each([
     { targetName: 'pane', left: 300, top: 200 },
     { targetName: 'nested card child', left: 650, top: 440 },

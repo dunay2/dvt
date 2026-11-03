@@ -1,7 +1,7 @@
 /**
  * Owned concern: adapt the main Canvas graph to the shared explorer.
  * @baseline GH-3610: registered sources need not have a placed card.
- * @decision Inspect source definitions on click; transfer only their identity on drag.
+ * @decision Activate admitted definitions to create; transfer the same identity on drag.
  * @consequence Catalogue affordances reuse the guarded drop adapter's admission rule.
  * @version 1.0.0
  */
@@ -9,6 +9,7 @@ import type { Node } from '@xyflow/react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
 import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
@@ -24,7 +25,6 @@ export function CanvasGraphExplorer({
   onImport,
   onAddModel,
   catalogue,
-  onInspectSource,
   canPlaceSource = false,
   referencePlacementScope,
   importedSourceIds = [],
@@ -43,7 +43,6 @@ export function CanvasGraphExplorer({
   projectFiles?: CanvasExplorerProjectWorkspace;
   activityRail?: CanvasExplorerActivityRail;
   catalogue?: readonly CanonicalNode[];
-  onInspectSource?: (id: string) => void;
   canPlaceSource?: boolean;
   referencePlacementScope?: string;
   importedSourceIds?: readonly string[];
@@ -53,26 +52,41 @@ export function CanvasGraphExplorer({
   const rootRef = useRef<HTMLDivElement>(null);
   const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
   const models = useMemo(
-    () => (catalogue ?? []).filter((node) => node.role === 'transform'),
+    () =>
+      (catalogue ?? []).filter(
+        (node) => node.role === 'transform' && workspaceNodeDefinitionId(node) == null
+      ),
     [catalogue]
   );
-  const sourceIds = new Set(sources.map((source) => source.id));
-  const referenceIds = useMemo(
-    () => new Set((catalogue ?? []).filter(isPlaceableCanvasResource).map((node) => node.id)),
-    [catalogue]
+  const placeableIds = useMemo(
+    () =>
+      new Set(
+        (catalogue ?? [])
+          .filter((node) =>
+            referencePlacementScope != null
+              ? isPlaceableCanvasResource(node)
+              : canPlaceSource &&
+                workspaceNodeDefinitionId(node) == null &&
+                node.metadata?.authority !== 'dbt-project-files' &&
+                (node.role === 'input' || node.kind === 'dvt:transform')
+          )
+          .map((node) => node.id)
+      ),
+    [catalogue, canPlaceSource, referencePlacementScope]
   );
   const items = [
     ...sources.map((source) => ({
       ...source,
       category: copy.sources,
-      draggable: referencePlacementScope == null ? canPlaceSource : referenceIds.has(source.id),
-      disabled: onInspectSource == null,
+      draggable: placeableIds.has(source.id),
+      disabled: !placeableIds.has(source.id),
     })),
     ...models.map((node) => ({
       id: node.id,
       label: node.name,
       category: copy.models,
-      draggable: referencePlacementScope != null && referenceIds.has(node.id),
+      draggable: placeableIds.has(node.id),
+      disabled: !placeableIds.has(node.id),
       selected: nodes.some((placed) => placed.id === node.id && placed.selected),
     })),
   ];
@@ -98,7 +112,6 @@ export function CanvasGraphExplorer({
           event.dataTransfer.effectAllowed = 'copy';
         }
       : undefined;
-  const inspect = (id: string) => (sourceIds.has(id) ? onInspectSource?.(id) : onSelect(id));
   useEffect(() => {
     if (importedSourceIds.length === 0) return;
     const registered = catalogue?.some((node) => importedSourceIds.includes(node.id));
@@ -120,7 +133,7 @@ export function CanvasGraphExplorer({
           <CanvasExplorerList
             items={items}
             categoryActions={categoryActions}
-            onSelect={inspect}
+            onSelect={onSelect}
             onDragStart={dragResource}
           />
         ) : (
@@ -128,7 +141,7 @@ export function CanvasGraphExplorer({
             projectFiles.renderElements?.({
               enabled,
               items,
-              onSelect: inspect,
+              onSelect,
               onDragStart: dragResource,
               categoryActions,
             })

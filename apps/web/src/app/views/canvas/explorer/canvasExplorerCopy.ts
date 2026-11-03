@@ -21,6 +21,8 @@ const en = {
   dbtModel: 'dbt model',
   models: 'Models',
   projectModelsLoading: 'Loading project models…',
+  externalModelInstanceUnavailable:
+    'File model: instance creation is not available in this editor.',
   projectModelsUnavailable: 'Project models are unavailable. Canvas elements remain accessible.',
 };
 const es: typeof en = {
@@ -39,6 +41,8 @@ const es: typeof en = {
   dbtModel: 'Modelo dbt',
   models: 'Modelos',
   projectModelsLoading: 'Cargando modelos del proyecto…',
+  externalModelInstanceUnavailable:
+    'Modelo de archivo: este editor aún no permite crear sus instancias.',
   projectModelsUnavailable:
     'Los modelos del proyecto no están disponibles. Puedes seguir consultando los elementos del Canvas.',
 };

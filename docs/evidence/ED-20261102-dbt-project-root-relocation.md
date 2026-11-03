@@ -30,6 +30,53 @@ evidence:
 
 # Lossless dbt Project Root Relocation
 
+## Native Instance And Incremental Presentation Correction
+
+The [instance correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6616425070)
+and [incremental presentation design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6617264511)
+reuse `CreateCanvasNode`, `SaveWorkspaceGraphDraft`,
+`RenderCanvasContextualGraphSurface` and `PreviewCanvasTransformRows`.
+`WorkspaceNodeInstance.v1` replaces the Source-only resolver and accepts saved
+`sourceDefinitionId` references. New native Source/Model instances use
+`definitionId`; metadata and path remain on the registered definition. Input
+dependencies are derived for queries, never persisted as definition-to-instance
+connections. One factory and admission callback serve click and drag.
+
+The four consumer cards created by the rejected experiment were corrected through
+the protected draft CAS command. Their IDs, names, positions and the original
+model were preserved; four automatic edges were removed. No permanent migration
+or prototype metadata handler was added. Obsolete factory bindings were removed
+from Planning DB and the shared contract received a focused owner.
+
+Deleting or disconnecting another card previously put unrelated models through
+`pending` again. The new tests reproduced that transition before the fix. The
+existing presentation owner now computes affected consumers, retains unrelated
+presentation objects and avoids repeating their schema queries. Cancellation and
+pending-field recovery tests remain enabled.
+
+Focused evidence: 54 Web presentation/admission cases passed; 55 native
+definition/draft/Inspector cases passed before adding the closed-gate variant;
+17 API cases passed, including a saved instance preview through `PlannerFacade`.
+The full Contracts run passed 79 files / 1,015 cases before the additional
+edge-ID collision case. API unit validation found one obsolete exact-import-count
+assertion; it was replaced with the same contracts-only dependency boundary.
+Final checks below supersede these intermediate counts when recorded.
+
+The live authorized API returned HTTP 200 for both the original and corrected
+instance: the same two output columns, five bounded rows and semantic-plan SHA.
+The browser proof used the actual application on port 5173: catalogue click
+created a new native instance with Input (4) / Output (2); removing that proof
+card preserved the original fields and added no diagram connection.
+
+This correction does not implement the outstanding adapter for consuming
+file-owned models inside native transformations. Disabled external-model rows
+are an unresolved product limitation, not an accepted prohibition from ADR-0060.
+
+Compatibility: old saved Source references remain readable. Writers using
+`definitionId` require the matching Contracts/API/Web release; strict older
+readers cannot accept the new field. Roll back application and affected draft
+data together from the pre-change snapshot rather than mixing reader versions.
+
 ## File Resource Placement Correction
 
 The [prospective correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6609571907)

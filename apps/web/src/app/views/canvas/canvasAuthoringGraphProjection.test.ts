@@ -20,7 +20,7 @@ function buildCanonicalNode(
 }
 
 describe('buildCanvasAuthoringGraphProjection', () => {
-  it('retains unplaced sources for inspection without retaining removed operations or edges', () => {
+  it('retains unplaced source and model definitions with their shared input context', () => {
     const source = buildCanonicalNode('catalogued', 'dvt:source', 'input');
     const removed = buildCanonicalNode('removed', 'dvt:transform', 'transform');
     const projection = buildCanvasAuthoringGraphProjection({
@@ -34,9 +34,11 @@ describe('buildCanvasAuthoringGraphProjection', () => {
       },
       localCanonicalNodes: [{ ...source, name: 'Configured source' }],
     });
-    expect(projection.canonicalNodes).toEqual([{ ...source, name: 'Configured source' }]);
+    expect(projection.canonicalNodes).toEqual([{ ...source, name: 'Configured source' }, removed]);
     expect(projection.canonicalNodesById.has(source.id)).toBe(true);
-    expect(projection.canonicalEdges).toEqual([]);
+    expect(projection.canonicalEdges).toEqual([
+      { id: 'old', sourceId: source.id, targetId: removed.id, relation: 'lineage' },
+    ]);
   });
 
   it('overlays local Input bindings on persisted and new dependencies without changing their identity', () => {

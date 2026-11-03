@@ -52,7 +52,6 @@ const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>();
 const getProjectGraph = vi.fn<IDbtProjectGraphQueryPort['getProjectGraph']>();
 const saveFileContent = vi.fn();
 const onSelect = vi.fn();
-const onOpenFile = vi.fn();
 const onDragStart = vi.fn();
 let services: AppServicesOverrides;
 let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
@@ -72,7 +71,6 @@ async function render(
           enabled={enabled}
           items={items}
           onSelect={onSelect}
-          onOpenFile={onOpenFile}
           onDragStart={onDragStart}
         />
         <Location />
@@ -115,7 +113,7 @@ afterEach(async () => {
   mounted = undefined;
 });
 
-it('opens an imported model in Code while retaining the Canvas context without writes', async () => {
+it('keeps native creation active and external models explicitly unavailable without navigation or writes', async () => {
   await render();
   await waitForReactQuery(
     () => screen.queryByRole('button', { name: /ventas_por_cliente/ }) != null
@@ -129,7 +127,9 @@ it('opens an imported model in Code while retaining the Canvas context without w
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: /pedidos/ }));
   });
-  expect(onOpenFile).toHaveBeenCalledExactlyOnceWith('models/pedidos.sql');
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).disabled).toBe(true);
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith('native');
+  expect(screen.getAllByText(/instance creation is not available/)).toHaveLength(3);
   expect(screen.getByLabelText('Location').textContent).toBe('/canvas');
   expect(getProjectGraph).toHaveBeenCalledExactlyOnceWith(binding);
   expect(saveFileContent).not.toHaveBeenCalled();
@@ -144,12 +144,11 @@ it('does not open a model whose declared file is unavailable', async () => {
   act(() => {
     fireEvent.click(row);
   });
-  expect(onOpenFile).not.toHaveBeenCalled();
   expect(onSelect).not.toHaveBeenCalled();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
-it('retains native catalogue drag while file-owned models remain inspection-only', async () => {
+it('retains native catalogue drag without advertising external model instance admission', async () => {
   await render(true, [{ id: 'source', label: 'Orders', category: 'Sources', draggable: true }]);
   await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
   const source = screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' });

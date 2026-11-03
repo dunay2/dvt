@@ -16,6 +16,7 @@ type UseCanvasAuthoringProjectionArgs = {
   visibleEdges: CanvasDraftEdge[];
   draftSemanticGraph: CanvasAuthoringSemanticGraph | null;
   localCanonicalNodes: readonly CanonicalNode[];
+  localDefinitionEdges?: readonly CanvasDraftEdge[];
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
   frozenNodeIds: ReadonlySet<string>;
@@ -48,6 +49,7 @@ export function useCanvasAuthoringProjection({
   visibleEdges,
   draftSemanticGraph,
   localCanonicalNodes,
+  localDefinitionEdges,
   columnLevelLineageEnabled,
   persistedNodePositions,
   frozenNodeIds,
@@ -59,8 +61,9 @@ export function useCanvasAuthoringProjection({
         visibleEdges,
         draftSemanticGraph,
         localCanonicalNodes,
+        localDefinitionEdges,
       }),
-    [draftSemanticGraph, localCanonicalNodes, visibleEdges, visibleNodeIds]
+    [draftSemanticGraph, localCanonicalNodes, localDefinitionEdges, visibleEdges, visibleNodeIds]
   );
   const viewportGraphModel = useCanvasViewportGraphModel({
     visibleNodeIds,

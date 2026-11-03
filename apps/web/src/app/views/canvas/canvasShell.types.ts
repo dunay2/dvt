@@ -132,7 +132,7 @@ export type CanvasShellGraphCommands = {
   onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
-  onInspectSource?: (nodeId: string) => void;
+  onInstantiateNode?: (nodeId: string, position: { x: number; y: number }) => void;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onToggleFrozenNode: (nodeId: string) => void;
   onCreateAuthoringNode?: CreateCanvasAuthoringNode;

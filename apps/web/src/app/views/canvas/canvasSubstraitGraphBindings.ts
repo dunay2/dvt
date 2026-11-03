@@ -6,7 +6,12 @@ import {
   type ResolvedProducer,
   type ProducerGraph,
 } from '@dvt/substrait-analysis';
-import { ConnectedSourceRefSchema, type ConnectedSourceRef } from '@dvt/contracts';
+import {
+  ConnectedSourceRefSchema,
+  resolveWorkspaceNodeInstances,
+  projectWorkspaceNodeInstanceEdges,
+  type ConnectedSourceRef,
+} from '@dvt/contracts';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveCanvasPhysicalCompositionInput } from './canvasPhysicalCompositionInput';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
@@ -26,8 +31,10 @@ export function resolveCanvasSubstraitGraphBindings(
 ): ResolvedProducer & Readonly<{ graph: ProducerGraph }> {
   const nodes = new Map(args.nodes.map((node) => [node.id, node]));
   nodes.set(args.node.id, args.node);
+  for (const node of resolveWorkspaceNodeInstances([...nodes.values()])) nodes.set(node.id, node);
+  const edges = projectWorkspaceNodeInstanceEdges([...nodes.values()], args.edges);
   const incoming = new Map<string, Set<string>>();
-  for (const edge of args.edges) {
+  for (const edge of edges) {
     const ids = incoming.get(edge.targetId) ?? new Set<string>();
     ids.add(edge.sourceId);
     incoming.set(edge.targetId, ids);
@@ -76,7 +83,7 @@ export function resolveCanvasSubstraitGraphBindings(
     targetId: args.node.id,
     documents,
     sources: physicalSources,
-    edges: args.edges.map((edge) => ({ ...edge, inputBindings: readCanvasInputBindings(edge) })),
+    edges: edges.map((edge) => ({ ...edge, inputBindings: readCanvasInputBindings(edge) })),
     sourcePublications: new Map(
       [...physicalSources.keys()].map(
         (id) =>

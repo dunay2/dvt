@@ -6,6 +6,7 @@
  * @version 1.0.0
  */
 import type { CanonicalNode } from '../../../types/canonical';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
 
 export type CanvasExplorerItem = Readonly<{
   id: string;
@@ -27,7 +28,7 @@ export function projectCanvasExplorerSources(
 ): CanvasExplorerItem[] {
   const items: CanvasExplorerItem[] = [];
   for (const node of catalogue) {
-    if (node.role !== 'input' || node.sourceDefinitionId != null) continue;
+    if (node.role !== 'input' || workspaceNodeDefinitionId(node) != null) continue;
     const context = [node.metadata?.schema, node.metadata?.connectionName]
       .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
       .map((value) => value.trim())

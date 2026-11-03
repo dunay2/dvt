@@ -36,6 +36,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleNodeDrag: persistence.handleNodeDrag,
     handleNodeDragStop: persistence.handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
+    handleInstantiateNode: graphHandlers.handleInstantiateNode,
     handleInspectNode: graphHandlers.handleInspectNode,
     handleDragOver: graphHandlers.handleDragOver,
     handleToggleFrozenNode: (nodeId: string) =>

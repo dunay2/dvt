@@ -3,7 +3,7 @@ import {
   DVT_SINK_NODE_KINDS,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   WorkspaceGraphAuthoringDraftSchema,
-  resolveWorkspaceSourceInstances,
+  resolveWorkspaceNodeInstances,
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
@@ -28,7 +28,7 @@ export function selectProtectedDvtTransforms(
 ): ProtectedTransformSelection {
   const draft = WorkspaceGraphAuthoringDraftSchema.parse(input.draft);
   const nodes = selectExact(
-    resolveWorkspaceSourceInstances(draft.nodes),
+    resolveWorkspaceNodeInstances(draft.nodes),
     input.selectedNodeIds,
     'node'
   );

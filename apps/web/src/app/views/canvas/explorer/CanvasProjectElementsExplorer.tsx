@@ -1,4 +1,4 @@
-/** Owned concern: expose authoritative project models through the existing Canvas navigation list. */
+/** Owned concern: expose authoritative project definitions without inventing instance admission. */
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileTreeQuery,
@@ -9,7 +9,6 @@ import type { DbtProjectFilesAuthorityBinding } from '../../../ports/dbtProjectG
 import {
   flattenCodeWorkspaceFiles,
   resolveProjectRootScopedCodeWorkspaceFileTree,
-  resolveDbtProjectWorkspaceFilePath,
 } from '../../code/codeViewFileSelection';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
@@ -23,9 +22,7 @@ export function CanvasProjectElementsExplorer({
   onDragStart,
   categoryActions,
   projectRoot,
-  onOpenFile,
-}: CanvasProjectElementsInput &
-  Readonly<{ projectRoot?: string; onOpenFile: (path: string) => void }>): JSX.Element {
+}: CanvasProjectElementsInput & Readonly<{ projectRoot?: string }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const tree = useWorkspaceFileTreeQuery({ enabled });
   const entries =
@@ -54,29 +51,18 @@ export function CanvasProjectElementsExplorer({
       ? graph.data
       : undefined;
   const currentIds = new Set(items.map((item) => item.id));
-  const filePaths = new Set(files.map((entry) => entry.path));
   const models =
     enabled && projection != null && binding != null
       ? projection.nodes
           .filter((node) => node.resourceType === 'model' && !currentIds.has(node.uniqueId))
-          .map((node) => {
-            const codePath =
-              node.originalFilePath == null
-                ? undefined
-                : resolveDbtProjectWorkspaceFilePath(
-                    binding.authority.projectRoot,
-                    node.originalFilePath
-                  );
-            return {
-              id: node.uniqueId,
-              label: node.name,
-              description: node.originalFilePath ?? copy.dbtModel,
-              category: copy.models,
-              draggable: false,
-              codePath,
-              disabled: codePath == null || !filePaths.has(codePath),
-            };
-          })
+          .map((node) => ({
+            id: node.uniqueId,
+            label: node.name,
+            description: copy.externalModelInstanceUnavailable,
+            category: copy.models,
+            draggable: false,
+            disabled: true,
+          }))
       : [];
   const unavailable =
     enabled &&
@@ -103,10 +89,6 @@ export function CanvasProjectElementsExplorer({
         onDragStart={onDragStart}
         onSelect={(id) => {
           if (currentIds.has(id)) onSelect(id);
-          else {
-            const model = models.find((candidate) => candidate.id === id);
-            if (model?.codePath != null && !model.disabled) onOpenFile(model.codePath);
-          }
         }}
       />
     </>

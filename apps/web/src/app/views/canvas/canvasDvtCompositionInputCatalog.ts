@@ -6,6 +6,7 @@
  * @version 1.1.0
  */
 import type { ConnectedSourceRef, ConnectionRef, DvtInputBindingsV1 } from '@dvt/contracts';
+import { projectWorkspaceNodeInstanceEdges } from '@dvt/contracts';
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
 
 import type { CanonicalNode } from '../../types/canonical';
@@ -60,13 +61,14 @@ export type CanvasDvtCompositionInputCatalog = Readonly<{
 export function readCanvasDvtCompositionInputCatalog(
   args: CatalogArgs
 ): CanvasDvtCompositionInputCatalog {
+  const edges = projectWorkspaceNodeInstanceEdges(args.nodes, args.edges);
   const sourceIds = new Set(
-    args.edges.filter((edge) => edge.targetId === args.targetNodeId).map((edge) => edge.sourceId)
+    edges.filter((edge) => edge.targetId === args.targetNodeId).map((edge) => edge.sourceId)
   );
   const inputs: CanvasDvtCompositionInput[] = [];
   const publicationsByProducerId = new Map<string, CanvasModelCompositionPublication>();
   for (const node of args.nodes.filter((candidate) => sourceIds.has(candidate.id))) {
-    const edge = args.edges.find(
+    const edge = edges.find(
       (candidate) => candidate.sourceId === node.id && candidate.targetId === args.targetNodeId
     )!;
     const physical = resolveCanvasPhysicalCompositionInput(node, edge);
@@ -74,7 +76,7 @@ export function readCanvasDvtCompositionInputCatalog(
       inputs.push(physical);
       continue;
     }
-    const publication = readCanvasModelCompositionPublication(node, args.nodes, args.edges);
+    const publication = readCanvasModelCompositionPublication(node, args.nodes, edges);
     if (publication == null) continue;
     publicationsByProducerId.set(node.id, publication);
     const input = projectCanvasModelCompositionInput(publication, edge);

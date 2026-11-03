@@ -1,5 +1,7 @@
 /** Owned concern: mutate explicit Canvas placement and source definitions without coupling registration to placement. */
 import type { CanonicalNode } from '../../types/canonical';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
+import { projectAuthoringNodeToCanonical } from '../../services/workspace/workspaceGraphDraftProjection';
 import type {
   CanvasDraftEdge,
   CanvasDraftSession,
@@ -74,8 +76,8 @@ function reconcileSnapshot(
     ...Object.values(currentLocalNodeCatalog)
       .filter(
         (node) =>
-          node.role === 'input' &&
-          node.sourceDefinitionId == null &&
+          (node.role === 'input' || node.role === 'transform') &&
+          workspaceNodeDefinitionId(node) == null &&
           snapshot.canonicalNodeIds.includes(node.id)
       )
       .map((node) => node.id),
@@ -118,7 +120,29 @@ function updateNodeDefinition(
   session: CanvasDraftSession,
   node: CanonicalNode
 ): CanvasDraftSession {
-  return withLocalNodeCatalog(session, { ...readLocalNodeCatalog(session), [node.id]: node });
+  const catalog = readLocalNodeCatalog(session);
+  const definitionId = workspaceNodeDefinitionId(node);
+  const savedDefinition =
+    definitionId == null
+      ? undefined
+      : session.baseline.record?.draft.nodes.find((candidate) => candidate.id === definitionId);
+  const definition =
+    definitionId == null
+      ? undefined
+      : (catalog[definitionId] ??
+        (savedDefinition == null ? undefined : projectAuthoringNodeToCanonical(savedDefinition)));
+  return withLocalNodeCatalog(session, {
+    ...catalog,
+    ...(definition == null
+      ? {}
+      : {
+          [definition.id]:
+            definition.metadata === node.metadata && definition.path === node.path
+              ? definition
+              : { ...definition, metadata: node.metadata, path: node.path },
+        }),
+    [node.id]: node,
+  });
 }
 
 function explicitNodeAlreadyTracked(
@@ -134,6 +158,13 @@ function explicitNodeAlreadyTracked(
   );
 }
 function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSession {
+  const removed =
+    readLocalNodeCatalog(session)[nodeId] ??
+    session.baseline.record?.draft.nodes.find((node) => node.id === nodeId);
+  const isDefinition =
+    removed != null &&
+    (removed.role === 'input' || removed.role === 'transform') &&
+    workspaceNodeDefinitionId(removed) == null;
   const nextSession = withWorkingSet(session, {
     visibleNodeIds: session.workingSet.visibleNodeIds.filter(
       (visibleNodeId) => visibleNodeId !== nodeId
@@ -146,8 +177,24 @@ function removeNode(session: CanvasDraftSession, nodeId: string): CanvasDraftSes
     ),
   });
   const { [nodeId]: _removedNode, ...nextLocalNodeCatalog } = readLocalNodeCatalog(nextSession);
-  if (_removedNode?.role === 'input' && _removedNode.sourceDefinitionId == null) return nextSession;
-  return withLocalNodeCatalog(nextSession, nextLocalNodeCatalog);
+  const retainedEdges = isDefinition
+    ? [
+        ...(session.localDefinitionEdges ?? []),
+        ...session.workingSet.visibleEdges.filter(
+          (edge) => edge.sourceId === nodeId || edge.targetId === nodeId
+        ),
+      ]
+    : (session.localDefinitionEdges ?? []).filter(
+        (edge) => edge.sourceId !== nodeId && edge.targetId !== nodeId
+      );
+  const localDefinitionEdges = [
+    ...new Map(retainedEdges.map((edge) => [`${edge.sourceId}::${edge.targetId}`, edge])).values(),
+  ];
+  const result =
+    localDefinitionEdges.length > 0 || session.localDefinitionEdges != null
+      ? { ...nextSession, localDefinitionEdges }
+      : nextSession;
+  return isDefinition ? result : withLocalNodeCatalog(result, nextLocalNodeCatalog);
 }
 function replaceEdges(session: CanvasDraftSession, edges: CanvasDraftEdge[]): CanvasDraftSession {
   return withWorkingSet(session, {

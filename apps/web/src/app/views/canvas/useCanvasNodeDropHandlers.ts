@@ -22,11 +22,13 @@ import {
 } from './canvasNodeDropPayload';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
-import { createCanvasSourceInstance } from './canvasSourceInstance';
+import { createCanvasNodeInstance } from './canvasNodeInstance';
+import { workspaceNodeDefinitionId } from '@dvt/contracts';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
 type UseCanvasNodeDropHandlersResult = {
+  handleInstantiateNode: (nodeId: string, position: { x: number; y: number }) => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
@@ -58,6 +60,47 @@ export function useCanvasNodeDropHandlers({
     },
   });
 
+  const admit = useCallback(
+    (canonicalNode: CanonicalNode, position: { x: number; y: number }) => {
+      const transaction = runAdmissionCommand({
+        canonicalNode,
+        position,
+        onNoop: (reason) => toast.info(reason),
+        onAdded: (addedNode) => toast.success(formatCanvasNodeAddedMessage(addedNode.name)),
+      });
+      if (transaction.outcome === 'added') latestNodesRef.current = transaction.nodes;
+    },
+    [runAdmissionCommand]
+  );
+  const handleInstantiateNode = useCallback(
+    (nodeId: string, position: { x: number; y: number }) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+      const definition = canonicalNodesById.get(nodeId);
+      if (
+        definition == null ||
+        workspaceNodeDefinitionId(definition) != null ||
+        definition.metadata?.authority === 'dbt-project-files' ||
+        (definition.role !== 'input' && definition.kind !== 'dvt:transform')
+      ) {
+        toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+        return;
+      }
+      try {
+        const node = createCanvasNodeInstance(
+          definition,
+          new Set(latestNodesRef.current.map((placed) => placed.data.name))
+        );
+        admit(node, position);
+      } catch {
+        toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+      }
+    },
+    [admit, canEditEdges, canonicalNodesById]
+  );
+
   const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>(
     (event) => {
       event.preventDefault();
@@ -72,21 +115,29 @@ export function useCanvasNodeDropHandlers({
       const reference = isCatalogueDrop
         ? readCanvasCatalogNodeDragReference(event.dataTransfer)
         : null;
-      const sourceId = reference?.id ?? '';
-      const registeredSource = sourceId ? canonicalNodesById.get(sourceId) : null;
-      if (
-        isCatalogueDrop &&
-        (reference == null ||
+      const position = () => {
+        const flowPosition = screenToFlowPosition(
+          { x: event.clientX, y: event.clientY },
+          { snapToGrid: false }
+        );
+        return {
+          x: flowPosition.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
+          y: flowPosition.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
+        };
+      };
+      if (isCatalogueDrop) {
+        if (
+          reference == null ||
           reference.scopeKey != null ||
-          registeredSource?.role !== 'input' ||
-          registeredSource.sourceDefinitionId != null)
-      ) {
-        toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+          !canonicalNodesById.has(reference.id)
+        )
+          toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+        else handleInstantiateNode(reference.id, position());
         return;
       }
-      const canonicalDragNode =
-        registeredSource ??
-        parseCanonicalNodeDragPayload(event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE));
+      const canonicalDragNode = parseCanonicalNodeDragPayload(
+        event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
+      );
       let pluginDragNode: CanonicalNode | null = null;
       if (canonicalDragNode == null && graphStrategy != null) {
         try {
@@ -102,35 +153,16 @@ export function useCanvasNodeDropHandlers({
         return;
       }
 
-      const flowPosition = screenToFlowPosition(
-        { x: event.clientX, y: event.clientY },
-        { snapToGrid: false }
-      );
-      const position = {
-        x: flowPosition.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
-        y: flowPosition.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
-      };
-
-      const admittedNode =
-        registeredSource == null
-          ? canonicalNode
-          : createCanvasSourceInstance(
-              registeredSource,
-              new Set(latestNodesRef.current.map((node) => node.data.name))
-            );
-      const transaction = runAdmissionCommand({
-        canonicalNode: admittedNode,
-        position,
-        onNoop: (reason) => {
-          toast.info(reason);
-        },
-        onAdded: (addedNode) => {
-          toast.success(formatCanvasNodeAddedMessage(addedNode.name));
-        },
-      });
-      if (transaction.outcome === 'added') latestNodesRef.current = transaction.nodes;
+      admit(canonicalNode, position());
     },
-    [canEditEdges, canonicalNodesById, graphStrategy, runAdmissionCommand, screenToFlowPosition]
+    [
+      admit,
+      canEditEdges,
+      canonicalNodesById,
+      graphStrategy,
+      handleInstantiateNode,
+      screenToFlowPosition,
+    ]
   );
 
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>(
@@ -154,7 +186,7 @@ export function useCanvasNodeDropHandlers({
 
       const normalizedSchemaName = schemaName.trim();
       const selectedNode = canonicalNodesById.get(nodeId);
-      const definitionId = selectedNode?.sourceDefinitionId ?? nodeId;
+      const definitionId = workspaceNodeDefinitionId(selectedNode) ?? nodeId;
       const targetNode =
         draftSession.localNodeCatalog?.[definitionId] ?? canonicalNodesById.get(definitionId);
       if (targetNode == null) {
@@ -192,7 +224,7 @@ export function useCanvasNodeDropHandlers({
         metadata: nextMetadata,
       };
       const nextNodes = latestNodesRef.current.map((node) =>
-        (canonicalNodesById.get(node.id)?.sourceDefinitionId ?? node.id) === definitionId
+        (workspaceNodeDefinitionId(canonicalNodesById.get(node.id)) ?? node.id) === definitionId
           ? {
               ...node,
               data: {
@@ -211,6 +243,7 @@ export function useCanvasNodeDropHandlers({
   );
 
   return {
+    handleInstantiateNode,
     handleDrop,
     handleDragOver,
     handleAttachSchemaToNode,

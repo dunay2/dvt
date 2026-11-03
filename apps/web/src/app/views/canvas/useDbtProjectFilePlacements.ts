@@ -68,6 +68,16 @@ export function useDbtProjectFilePlacements({
     },
     [canPlaceReferences]
   );
+  const placeResource = useCallback(
+    (resourceId: string, position: { x: number; y: number }): boolean => {
+      const resource = resourcesById.get(resourceId);
+      if (!canPlaceReferences || resource == null || !isPlaceableCanvasResource(resource))
+        return false;
+      place(layoutKey, { id: randomUuidV4(), resourceId }, position);
+      return true;
+    },
+    [canPlaceReferences, layoutKey, place, resourcesById]
+  );
   const onDrop = useCallback<DragEventHandler<HTMLDivElement>>(
     (event) => {
       event.preventDefault();
@@ -79,23 +89,19 @@ export function useDbtProjectFilePlacements({
         return;
       const reference = readCanvasCatalogNodeDragReference(event.dataTransfer);
       if (reference?.scopeKey !== layoutKey) return;
-      const resource = resourcesById.get(reference.id);
-      if (resource == null || !isPlaceableCanvasResource(resource)) return;
       const position = screenToFlowPosition(
         { x: event.clientX, y: event.clientY },
         { snapToGrid: false }
       );
-      place(
-        layoutKey,
-        { id: randomUuidV4(), resourceId: resource.id },
-        {
+      if (
+        placeResource(reference.id, {
           x: position.x - CANVAS_NODE_DROP_GRAPH_ANCHOR.x,
           y: position.y - CANVAS_NODE_DROP_GRAPH_ANCHOR.y,
-        }
-      );
-      event.dataTransfer.dropEffect = 'copy';
+        })
+      )
+        event.dataTransfer.dropEffect = 'copy';
     },
-    [canPlaceReferences, layoutKey, place, resourcesById, screenToFlowPosition]
+    [canPlaceReferences, layoutKey, placeResource, screenToFlowPosition]
   );
-  return { ...projection, removeInstance, applyNodeChanges, onDragOver, onDrop };
+  return { ...projection, placeResource, removeInstance, applyNodeChanges, onDragOver, onDrop };
 }

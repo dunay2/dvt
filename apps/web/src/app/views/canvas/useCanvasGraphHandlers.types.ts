@@ -34,6 +34,7 @@ export type UseCanvasGraphHandlersResult = {
   handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
+  handleInstantiateNode: (nodeId: string, position: { x: number; y: number }) => void;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
   handleDuplicateNode: (nodeId: string) => void;

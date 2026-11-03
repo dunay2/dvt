@@ -21,6 +21,20 @@ the previous authority root. A blind retry could then overwrite later user edits
 
 ## Controls
 
+Native node instances keep configuration on a registered definition and persist
+only the reference plus their own identity and presentation fields. The protected
+contract rejects missing, chained, self, type-mismatched and competing metadata
+references. Query-derived instance dependencies preserve existing execution
+metadata and never create a persisted connection to the original model.
+Definition context survives removal of its card; removing an instance preserves
+the shared definition. New reference writers and strict readers must be released
+together; saved Source references remain backward-readable.
+
+Presentation reuse follows both old and new dependency edges. Only unaffected
+cards may retain an accepted result, and stale asynchronous completions remain
+cancelled. Deletion, disconnection, changed input bindings and concurrent schema
+updates are covered independently from viewport geometry.
+
 File resource placement retains the same authority boundary after relocation.
 Only instance/resource IDs and coordinates enter scoped browser layout. A
 fresh authorized query resolves definitions; missing references do not render.

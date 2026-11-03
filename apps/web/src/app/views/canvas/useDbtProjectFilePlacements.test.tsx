@@ -114,6 +114,29 @@ describe('file resource placement admission', () => {
     expect(placements.nodes.map((n) => n.id)).toContain(model.id);
     expect(placements.nodes.map((n) => n.id)).not.toContain(modelInstance.id);
   });
+  it('shares click admission with drops and rejects denied or unknown definitions', () => {
+    const args = { layoutKey: 'scope::canvas::root', resources, canPlaceReferences: true };
+    renderPlacements(args);
+    const original = JSON.stringify(resources);
+    act(() => {
+      expect(placements.placeResource(model.id, { x: 20, y: 40 })).toBe(true);
+      placements.onDrop(drop(model.id));
+      expect(placements.placeResource('missing', { x: 0, y: 0 })).toBe(false);
+    });
+    const layout = useCanvasInteractionStore.getState().canvasLayouts[args.layoutKey]!;
+    expect(layout.resourceInstances).toHaveLength(2);
+    expect(new Set(layout.resourceInstances!.map((instance) => instance.id)).size).toBe(2);
+    expect(Object.values(layout.nodePositions)).toEqual([
+      { x: 20, y: 40 },
+      { x: 380, y: 220 },
+    ]);
+    renderPlacements({ ...args, canPlaceReferences: false });
+    act(() => expect(placements.placeResource(model.id, { x: 0, y: 0 })).toBe(false));
+    expect(
+      useCanvasInteractionStore.getState().canvasLayouts[args.layoutKey]!.resourceInstances
+    ).toHaveLength(2);
+    expect(JSON.stringify(resources)).toBe(original);
+  });
   it.each([
     ['missing', true, CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
     [model.id, false, CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],

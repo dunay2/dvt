@@ -33,7 +33,7 @@ import {
   DvtTransformAuthoringAuthorityV1Schema,
 } from './DvtTransformAuthoringAuthority.v1.js';
 import { addDvtNodeFieldPolicyIssues } from './WorkspaceGraphDvtNodeFieldPolicy.v1.js';
-import { validateWorkspaceSourceInstances } from './WorkspaceSourceInstance.v1.js';
+import { validateWorkspaceNodeInstances } from './WorkspaceNodeInstance.v1.js';
 
 const NonBlankStringSchema = z
   .string()
@@ -99,6 +99,7 @@ export interface WorkspaceGraphAuthoringNode {
   id: string;
   /** Same-canvas configuration owner; absent on registered source definitions. */
   sourceDefinitionId?: string | undefined;
+  definitionId?: string | undefined;
   name: string;
   pluginId: string;
   kind: string;
@@ -193,6 +194,7 @@ export const WorkspaceGraphAuthoringNodeSchema = z
   .object({
     id: NonBlankStringSchema,
     sourceDefinitionId: NonBlankStringSchema.optional(),
+    definitionId: NonBlankStringSchema.optional(),
     name: CanvasHumanNameV1Schema,
     pluginId: NonBlankStringSchema,
     kind: NonBlankStringSchema,
@@ -264,7 +266,7 @@ function addGraphShapeIssues(
   pathPrefix: Array<string | number> = []
 ): void {
   validateDvtGraphInputBindings(graph, ctx, pathPrefix);
-  validateWorkspaceSourceInstances(graph.nodes, ctx, pathPrefix);
+  validateWorkspaceNodeInstances(graph.nodes, ctx, pathPrefix);
   const visibleNodeIds = new Set<string>(graph.nodeIds);
   if (visibleNodeIds.size !== graph.nodeIds.length) {
     ctx.addIssue({

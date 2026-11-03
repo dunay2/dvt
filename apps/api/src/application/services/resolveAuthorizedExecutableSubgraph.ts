@@ -14,6 +14,7 @@ import type {
 import {
   WorkspaceGraphAuthoringDraftSchema,
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
+  projectWorkspaceNodeInstanceEdges,
 } from '@dvt/contracts';
 
 import type { AuthorizedExecutionContext } from '../ports/authContract.js';
@@ -170,13 +171,18 @@ function projectExecutionDependencyDraft(
 ): WorkspaceGraphAuthoringDraft {
   return {
     ...draft,
-    edges: draft.edges.filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable),
+    edges: projectWorkspaceNodeInstanceEdges(draft.nodes, draft.edges).filter(
+      isWorkspaceGraphAuthoringEdgeEffectivelyExecutable
+    ),
     ...(draft.canvases == null
       ? {}
       : {
           canvases: draft.canvases.map((canvasWorkspace) => ({
             ...canvasWorkspace,
-            edges: canvasWorkspace.edges.filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable),
+            edges: projectWorkspaceNodeInstanceEdges(
+              canvasWorkspace.nodes,
+              canvasWorkspace.edges
+            ).filter(isWorkspaceGraphAuthoringEdgeEffectivelyExecutable),
           })),
         }),
   };

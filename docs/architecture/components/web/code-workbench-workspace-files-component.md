@@ -155,8 +155,15 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 ### Project Models In Elements
 
 Elements presents registered definitions by category, excluding placed source
-instances. Source rows reuse the existing catalogue drag and guarded instance
-command; each drop creates a fresh identity referencing the same definition.
+instances. Catalogue clicks and drops reuse the same guarded placement command;
+clicks use the visible Canvas center without changing its camera. Sources create
+fresh identities referencing the same definition. Models use that same
+definition-reference mechanism, retaining their own name and position without
+copying operations or creating a dependency on the original card. Query-time
+input context resolves from the definition; no automatic connection is drawn or
+persisted for an instance. References exclude occurrences from the
+definition catalogue. File-owned placements use the
+existing scoped local reference command.
 Main Canvas and the Model editor share the single Elements activity. Fuentes /
 Models are independently collapsible categories, each with an accessible addition
 action even before definitions exist. The source action reuses the existing
@@ -168,9 +175,9 @@ placed-row projection and its automatic
 scroll-on-selection behavior are removed.
 
 File-owned model rows come from the existing file-authoritative project graph.
-They open their declared, available file through the existing guarded Code
-opener, retaining the Canvas context and route. They do not emit source drag
-payloads. Unavailable files cannot fall back to an unrelated file. Instantiating an external model on a native Canvas requires an admitted
+The additional native catalogue exposes these definitions as unavailable for
+creation, rather than opening Code on activation. Code's file explorer remains
+the file-navigation surface. Instantiating an external model on a native Canvas requires an admitted
 reference boundary; copying its SQL or semantic definition into GraphDraft is
 not that boundary. Existing Model producer occurrences retain their own semantics.
 The bounded project-elements adapter enables
@@ -186,13 +193,13 @@ flowchart LR
   A --> G[Existing cached dbt graph query]
   G --> E[Shared Elements list]
   N[Registered definitions] --> E
-  E -->|Source identity drop| S[Existing guarded instance command]
-  E -->|External model| R[Existing guarded Code opener; Canvas retained]
+  E -->|Admitted click or drag| S[Existing guarded instance command]
+  E -->|External model without native admission| R[Visible unavailable definition]
 ```
 
 Rows are deduplicated by node identity, preserving distinct same-name elements.
-External model navigation uses the existing workbench handoff guards. One shared
-project path resolver is reused by the catalogue and Properties Code. It does not
+Properties Code navigation uses the existing workbench handoff guards and shared
+project path resolver. It does not
 copy models into GraphDraft or change semantic ownership. The passive list retains
 the shared typography, search and selection behavior. The split Sources panel,
 card-only variant and their unused styles are retired; no transport, analyzer or

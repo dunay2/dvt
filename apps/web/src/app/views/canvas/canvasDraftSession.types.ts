@@ -31,6 +31,8 @@ export type CanvasDraftSession = {
   savingBaseRevision?: string | null;
   savingLocalNodeCatalog?: Record<string, CanonicalNode>;
   localNodeCatalog?: Record<string, CanonicalNode>;
+  /** Configuration edges retained for registered definitions without a visible card. */
+  localDefinitionEdges?: CanvasDraftEdge[];
 };
 
 export type BootstrapSessionArgs = {
