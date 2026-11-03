@@ -295,6 +295,18 @@ describe('Workbench viewport', () => {
         });
     });
     openWorkbenchModel();
+    cy.get('[data-slot="canvas-relational-tree-source-list"] > li').each(($row) => {
+      const [source, add] = Array.from($row[0]!.querySelectorAll('button'));
+      expect(source, 'source control').to.exist;
+      expect(add, 'instance control').to.exist;
+      const sourceBounds = source!.getBoundingClientRect();
+      const addBounds = add!.getBoundingClientRect();
+      const addCenter = addBounds.top + addBounds.height / 2;
+      expect(addCenter, 'instance control stays beside its source').to.be.within(
+        sourceBounds.top,
+        sourceBounds.bottom
+      );
+    });
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => {
       writesBeforeZoom = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
