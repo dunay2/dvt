@@ -430,6 +430,32 @@ test('buildLiveProofCypressNativeInvocation opens Chrome only when headed is exp
   ]);
 });
 
+test('Cypress adapters forward only an explicitly declared file-project fixture environment', () => {
+  const args = {
+    apiPort: 3300,
+    webPort: 4174,
+    apiBearerToken: 'proof-token',
+    specPaths: ['/repo/apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts'],
+    workspaceScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' },
+  };
+  assert.equal(
+    buildLiveProofCypressNativeInvocation(args).env.CYPRESS_projectFilesEnvironmentId,
+    undefined
+  );
+  assert.equal(
+    buildLiveProofCypressDockerInvocation(args).includes('CYPRESS_projectFilesEnvironmentId'),
+    false
+  );
+  const isolated = { ...args, projectFilesEnvironmentId: 'project-files-proof' };
+  assert.equal(
+    buildLiveProofCypressNativeInvocation(isolated).env.CYPRESS_projectFilesEnvironmentId,
+    'project-files-proof'
+  );
+  assert.ok(
+    buildLiveProofCypressDockerInvocation(isolated).includes('CYPRESS_projectFilesEnvironmentId')
+  );
+});
+
 test('native and manual Docker browser children are registered before awaiting and keep tokens out of argv', async () => {
   const args = {
     apiPort: 3300,

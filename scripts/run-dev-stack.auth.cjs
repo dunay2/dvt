@@ -281,11 +281,11 @@ async function seedLocalProtectedRuntimeGrant(
           projectId: args.workspaceScope.projectId,
           allowedActions: [],
           environmentAccess: [
-            {
-              environmentId: args.workspaceScope.environmentId,
-              allowedActions: [],
-            },
-          ],
+            ...new Set([
+              args.workspaceScope.environmentId,
+              ...(args.additionalEnvironmentIds ?? []),
+            ]),
+          ].map((environmentId) => ({ environmentId, allowedActions: [] })),
         },
       ],
     },

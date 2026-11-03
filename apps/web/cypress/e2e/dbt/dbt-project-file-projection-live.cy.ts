@@ -163,11 +163,15 @@ function expectProjectedCardsNotToOverlap(): void {
 }
 
 describe('dbt project file projection live vertical', () => {
-  before(function () {
+  before(() => {
     if (!hasLiveProtectedRuntimeEnv()) {
-      this.skip();
-      return;
+      throw new Error('The file-project proof requires its real protected runtime.');
     }
+    const environmentId = Cypress.env('projectFilesEnvironmentId');
+    if (typeof environmentId !== 'string' || environmentId.trim().length === 0) {
+      throw new Error('The file-project proof requires its dedicated fixture environment.');
+    }
+    Cypress.env('workspaceEnvironmentId', environmentId);
 
     return seedLiveSelectedClosureDraft()
       .then(() => seedLiveWorkspaceFiles(PROJECT_FILES))

@@ -86,6 +86,7 @@ test('seedLocalProtectedRuntimeGrant preserves the project catalog referent for 
         projectId: 'project-proof',
         environmentId: 'dev',
       },
+      additionalEnvironmentIds: ['project-files-proof', 'dev', 'project-files-proof'],
     },
     {
       createClient: () => client,
@@ -102,6 +103,22 @@ test('seedLocalProtectedRuntimeGrant preserves the project catalog referent for 
     'principal-proof',
   ]);
   assert.match(queries[2].sql, /INSERT INTO "proof_schema"\.principal_grants/);
+  assert.deepEqual(JSON.parse(queries[2].params[1]), [
+    {
+      tenantId: 'tenant-proof',
+      allowedActions: ['workspace:graph-draft:view'],
+      projectAccess: [
+        {
+          projectId: 'project-proof',
+          allowedActions: [],
+          environmentAccess: [
+            { environmentId: 'dev', allowedActions: [] },
+            { environmentId: 'project-files-proof', allowedActions: [] },
+          ],
+        },
+      ],
+    },
+  ]);
   assert.equal(queries[3].sql, 'COMMIT');
 });
 
