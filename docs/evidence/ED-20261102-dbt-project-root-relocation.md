@@ -14,6 +14,9 @@ code_refs:
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceRootInventory.ts
   - apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
   - apps/web/src/app/views/canvas/explorer/CanvasProjectElementsExplorer.tsx
+  - apps/web/src/app/views/canvas/useDbtProjectFilePlacements.ts
+  - apps/web/src/app/views/canvas/canvasResourcePlacements.ts
+  - apps/web/src/app/stores/canvasInteractionStore.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -21,6 +24,8 @@ evidence:
     - pnpm --filter dvt-api exec vitest run --config vitest.integration.config.ts test/integration/dbtProjectRootRelocation.integration.test.ts
     - pnpm --filter dvt-api exec tsc -p tsconfig.json --noEmit
     - pnpm --filter dvt-api exec tsc -p test/tsconfig.json --noEmit
+    - pnpm --filter @dvt/web typecheck
+    - pnpm --filter @dvt/web lint
 ---
 
 # Lossless dbt Project Root Relocation
@@ -54,6 +59,58 @@ Focused checks executed during implementation:
   Code capability. Shared source drop remains on its existing admission rail.
 - Strict root ESLint passed for the directly affected placement, store,
   controller, Viewport, menu and native browser consumer files.
+
+The final affected checks total 94 cases: 20 projection/store/menu, 11 file
+opening and 63 presentation cases. The scoped-envelope presentation run had one
+remaining old Explorer expectation; that file was corrected and repeated with
+25/25 passing. Web package lint and typecheck passed. The native implementation
+check accepted 701 DB manifests for base
+`650a6b24aadeaac755d5ffd4054afcfa85647c42` and head
+`93595cfccb936998bfe70838f0c3ef8ca4b6104a`, after six missing helper/type
+associations were admitted through the native rail.
+Four affected architecture files also passed all eight cases. Exact scope
+commands (including the presentation failure followed by the corrected repeat):
+
+```text
+pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasResourcePlacements.test.ts src/app/stores/canvasInteractionStore.test.ts src/app/components/canvas/canvasNodeContextMenuModel.test.ts --reporter=dot
+pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasShellNodeProjection.test.ts --reporter=dot
+pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/useDbtProjectFilePlacements.test.tsx src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx src/app/views/canvas/explorer/CanvasExplorer.test.tsx src/app/views/canvas/CanvasViewport.test.tsx --reporter=dot
+pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/explorer/CanvasExplorer.test.tsx --reporter=dot
+pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts src/app/views/canvas/canvasSourceInstance.architecture.test.ts src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts src/app/views/canvas/explorer/CanvasExplorer.architecture.test.ts --reporter=dot
+```
+
+### Actual user-session verification
+
+Browser-only control of the existing Edge Raven tab verified the real project
+at `localhost:5173`, Canvas `ce23643b-69fa-46d0-a902-361af7582335`, root `.`.
+Dragging onto empty Canvas created `Pedidos 2`, `client 2` and `Pedidos 3`.
+Removing only `Pedidos 3` preserved all eight original resources and the two
+other placements. `Pedidos 2` opened the original `models/pedidos.sql` in the
+read-only Code inspector. After closing the inspector and reloading, both
+placement IDs and world coordinates remained identical. `Pedidos 2` and
+`client 2` remain visible for review.
+
+The seven expected project files remain present, with only three model SQL
+files. `ventas_por_cliente.sql` still matches the earlier recorded SHA-256
+`08b449abda600b9f4b0d412ce5fa299e8d4ac5397442451481581c18e16dc2ba`.
+The observation record is
+`.dvt/project-root-3747/resource-placement-live-browser-evidence.json`.
+CDP image capture twice reached its existing five-second deadline; verification
+used accessible state and visible DOM. No desktop control or permission change
+was used.
+
+The automated live fixture is **not green**: attempt
+`20261103T171428513_26836` failed during the API migration `onReady` hook before
+the browser. Attempt `20261103T172431020_77140` started the real services and
+Chrome, then its `before all` reached the existing 30-second dbt import-analysis
+deadline; three subsequent cases were not executed. Those artifacts are
+retained. The direct user-session proof does not relabel either failed run.
+Main integration still requires the full pre-push acceptance baseline.
+
+No new debt entry, stub, fake product adapter, skipped gate or relaxed deadline
+was introduced. Commits used the helper with hooks enabled. Existing
+file-defined lineage remains read-only; these are local visual references to
+the authoritative resources, not new SQL model definitions.
 
 [Issue #3747](https://github.com/dunay2/dvt/issues/3747) owns delivery. Planning DB
 design `GH-3747-DBT-PROJECT-ROOT-RELOCATION` and its
