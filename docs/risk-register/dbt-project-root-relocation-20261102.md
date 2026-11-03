@@ -21,6 +21,15 @@ the previous authority root. A blind retry could then overwrite later user edits
 
 ## Controls
 
+File resource placement retains the same authority boundary after relocation.
+Only instance/resource IDs and coordinates enter scoped browser layout. A
+fresh authorized query resolves definitions; missing references do not render.
+Placement does not grant semantic edge or file writes. Inspector and execution
+callbacks resolve original resource IDs, so repeated cards cannot submit
+invented dbt identities. Removal rejects original resources and preserves
+sibling placements. Position persistence retains newly placed references while
+React Flow completes its first frame.
+
 - Preview binds exact tenant/project/environment, Canvas, authority revision,
   source paths and file hashes to a deterministic versioned plan.
 - Apply uses the existing protected workspace-file write capability. It refuses

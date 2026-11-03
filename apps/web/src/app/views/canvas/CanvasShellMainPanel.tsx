@@ -138,6 +138,7 @@ function CanvasShellViewport({
       inspector={inspector}
       canEditEdges={panels.userPermissions.canEditEdges}
       canMoveNodes={layout.canMoveNodes}
+      referencePlacementScope={layout.referencePlacementScope}
       canSelectNodes={layout.canSelectNodes}
       nodesWithImpact={graph.nodesWithImpact}
       sourceCatalogue={panels.inspectorGraphNodes}

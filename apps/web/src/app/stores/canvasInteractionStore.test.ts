@@ -8,6 +8,43 @@ const CANVAS_INTERACTION_STORAGE_KEY = 'dvt-web-canvas-interaction';
 const WORKSPACE_KEY = 'tenant-a::project-a::dev';
 
 describe('useCanvasInteractionStore', () => {
+  it('persists independent references atomically and retains them through every layout command', async () => {
+    localStorage.clear();
+    useCanvasInteractionStore.setState({ canvasLayouts: {} });
+    const commands = useCanvasInteractionStore.getState();
+    commands.placeCanvasResourceInstance(
+      WORKSPACE_KEY,
+      { id: 'first', resourceId: 'model.orders' },
+      { x: 120, y: 180 }
+    );
+    commands.placeCanvasResourceInstance(
+      WORKSPACE_KEY,
+      { id: 'second', resourceId: 'model.orders' },
+      { x: 220, y: 280 }
+    );
+    commands.setCanvasViewport(WORKSPACE_KEY, { x: 20, y: 40, zoom: 0.8 });
+    commands.setCanvasNodePositions(WORKSPACE_KEY, { first: { x: 130, y: 190 } });
+    commands.toggleFrozenCanvasNode(WORKSPACE_KEY, 'first');
+    commands.setCanvasInspectorListOrder(WORKSPACE_KEY, 'model.orders', 'columns', ['amount']);
+    await useCanvasInteractionStore.persist.rehydrate();
+    let layout = useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]!;
+    expect(layout.resourceInstances).toEqual([
+      { id: 'first', resourceId: 'model.orders' },
+      { id: 'second', resourceId: 'model.orders' },
+    ]);
+    expect(layout.nodePositions).toEqual({ first: { x: 130, y: 190 }, second: { x: 220, y: 280 } });
+    commands.removeCanvasResourceInstance(WORKSPACE_KEY, 'first');
+    layout = useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]!;
+    expect(layout.resourceInstances).toEqual([{ id: 'second', resourceId: 'model.orders' }]);
+    expect(layout.nodePositions).toEqual({ second: { x: 220, y: 280 } });
+    expect(layout.frozenNodeIds).toEqual([]);
+    expect(layout.viewport).toEqual({ x: 20, y: 40, zoom: 0.8 });
+    expect(layout.inspectorListOrdersByNode).toEqual({ 'model.orders': { columns: ['amount'] } });
+    const before = useCanvasInteractionStore.getState();
+    commands.removeCanvasResourceInstance(WORKSPACE_KEY, 'model.orders');
+    expect(useCanvasInteractionStore.getState()).toBe(before);
+    expect(useCanvasInteractionStore.getState().canvasLayouts['other-scope']).toBeUndefined();
+  });
   beforeEach(() => {
     localStorage.clear();
     useCanvasInteractionStore.setState({

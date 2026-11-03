@@ -7,7 +7,30 @@ import {
   isRecord,
 } from '../../types/canonicalGuards';
 
-export const CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE = 'application/x-dvt-source-catalog-id';
+export const CANVAS_CATALOG_NODE_DRAG_MIME_TYPE = 'application/x-dvt-catalog-node-id';
+
+export const CANVAS_NODE_DROP_GRAPH_ANCHOR = { x: 100, y: 40 } as const;
+
+export function readCanvasCatalogNodeDragReference(
+  transfer: Pick<DataTransfer, 'getData'>
+): Readonly<{ id: string; scopeKey?: string }> | null {
+  try {
+    const value: unknown = JSON.parse(transfer.getData(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE));
+    if (
+      !isRecord(value) ||
+      typeof value.id !== 'string' ||
+      !value.id ||
+      (value.scopeKey !== undefined && (typeof value.scopeKey !== 'string' || !value.scopeKey))
+    )
+      return null;
+    return {
+      id: value.id,
+      ...(typeof value.scopeKey === 'string' ? { scopeKey: value.scopeKey } : {}),
+    };
+  } catch {
+    return null;
+  }
+}
 
 type ParsedCanonicalDropPayload = {
   id: string;

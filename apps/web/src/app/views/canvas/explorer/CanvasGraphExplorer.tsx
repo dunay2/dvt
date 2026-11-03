@@ -9,7 +9,7 @@ import type { Node } from '@xyflow/react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
-import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
+import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
@@ -25,6 +25,7 @@ export function CanvasGraphExplorer({
   catalogue,
   onInspectSource,
   canPlaceSource = false,
+  referencePlacementScope,
   importedSourceIds = [],
   onImportFocusComplete,
   children,
@@ -43,9 +44,12 @@ export function CanvasGraphExplorer({
   catalogue?: readonly CanonicalNode[];
   onInspectSource?: (id: string) => void;
   canPlaceSource?: boolean;
+  referencePlacementScope?: string;
   importedSourceIds?: readonly string[];
   onImportFocusComplete?: () => void;
 }>): JSX.Element {
+  const canPlaceModel = referencePlacementScope != null;
+  const canPlaceInput = canPlaceSource || canPlaceModel;
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const rootRef = useRef<HTMLDivElement>(null);
   const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
@@ -54,18 +58,19 @@ export function CanvasGraphExplorer({
     [catalogue]
   );
   const sourceIds = new Set(sources.map((source) => source.id));
+  const modelIds = new Set(models.map((node) => node.id));
   const items = [
     ...sources.map((source) => ({
       ...source,
       category: copy.sources,
-      draggable: canPlaceSource,
+      draggable: canPlaceInput,
       disabled: onInspectSource == null,
     })),
     ...models.map((node) => ({
       id: node.id,
       label: node.name,
       category: copy.models,
-      draggable: false,
+      draggable: canPlaceModel,
       selected: nodes.some((placed) => placed.id === node.id && placed.selected),
     })),
   ];
@@ -76,13 +81,16 @@ export function CanvasGraphExplorer({
     ],
     [copy.models, { label: copy.addModel, onAdd: onAddModel }],
   ]);
-  const dragSource = canPlaceSource
+  const dragResource = canPlaceInput
     ? (id: string, event: DragEvent<HTMLButtonElement>) => {
-        if (!sourceIds.has(id)) {
+        if (!(canPlaceInput && sourceIds.has(id)) && !(canPlaceModel && modelIds.has(id))) {
           event.preventDefault();
           return;
         }
-        event.dataTransfer.setData(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE, id);
+        event.dataTransfer.setData(
+          CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+          JSON.stringify({ id, scopeKey: referencePlacementScope })
+        );
         event.dataTransfer.effectAllowed = 'copy';
       }
     : undefined;
@@ -109,7 +117,7 @@ export function CanvasGraphExplorer({
             items={items}
             categoryActions={categoryActions}
             onSelect={inspect}
-            onDragStart={dragSource}
+            onDragStart={dragResource}
           />
         ) : (
           (enabled) =>
@@ -117,7 +125,7 @@ export function CanvasGraphExplorer({
               enabled,
               items,
               onSelect: inspect,
-              onDragStart: dragSource,
+              onDragStart: dragResource,
               categoryActions,
             })
         )

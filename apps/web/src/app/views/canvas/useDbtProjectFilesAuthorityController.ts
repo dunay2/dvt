@@ -35,6 +35,7 @@ import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliat
 import { projectCanvasNodeAccessibleHealth } from './canvasNodeMapper';
 import { useDbtProjectFileInspector } from './useDbtProjectFileInspector';
 import { useDbtProjectFileWorkbenchSession } from './useDbtProjectFileWorkbenchSession';
+import { useDbtProjectFilePlacements } from './useDbtProjectFilePlacements';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -144,6 +145,18 @@ export function useDbtProjectFilesAuthorityController(
   );
   const canonicalNodes = projection?.nodes ?? EMPTY_CANONICAL_NODES;
   const canonicalEdges = projection?.edges ?? EMPTY_CANONICAL_EDGES;
+  const analysisFresh = query.isSuccess && query.data.freshness === 'fresh';
+  const canPlaceReferences = _hasHydrated && analysisFresh;
+  const placements = useDbtProjectFilePlacements({
+    layoutKey,
+    resources: canonicalNodes,
+    canPlaceReferences,
+  });
+  const placedNodesById = useMemo(
+    () => buildCanonicalNodeMap(placements.nodes),
+    [placements.nodes]
+  );
+  const placedNodeIds = useMemo(() => placements.nodes.map((node) => node.id), [placements.nodes]);
   const initialNodePositions = useMemo(
     () => buildDbtProjectFileInitialNodePositions(canonicalNodes, canonicalEdges),
     [canonicalEdges, canonicalNodes]
@@ -160,7 +173,6 @@ export function useDbtProjectFilesAuthorityController(
     hideInspectorPanel,
   });
   const { openNodeWorkbench } = workbenchSession;
-  const analysisFresh = query.isSuccess && query.data.freshness === 'fresh';
   const inspectorNode = useDbtProjectFileInspector({
     authorityKey: layoutKey,
     inspectorNodeId,
@@ -199,9 +211,9 @@ export function useDbtProjectFilesAuthorityController(
     [canonicalEdges]
   );
   const graphModel = useCanvasViewportGraphModel({
-    visibleNodeIds,
+    visibleNodeIds: placedNodeIds,
     visibleEdges,
-    canonicalNodesById,
+    canonicalNodesById: placedNodesById,
     canonicalEdgeIdBySignature,
     columnLevelLineageEnabled,
     persistedNodePositions: viewportNodePositions,
@@ -265,45 +277,52 @@ export function useDbtProjectFilesAuthorityController(
   const nodesWithCommands = useMemo<Node[]>(
     () =>
       graphModel.nodes.map((node) => {
+        const resourceId = placements.definitionIdByInstanceId.get(node.id) ?? node.id;
+        const isInstance = placements.definitionIdByInstanceId.has(node.id);
+        const placedNode = { ...node, deletable: isInstance };
         const data: DbtNodeData = {
           ...(node.data as DbtNodeData),
           runtimeCapabilities,
           canMutateGraph: false,
-          selectedForExecution: selectedNodeIds.includes(node.id),
-          onInspectNode: (nodeId, preferredTabId) => {
-            void openNodeWorkbench(nodeId, preferredTabId);
+          canRemovePlacement: isInstance,
+          onRemoveNode: isInstance ? placements.removeInstance : undefined,
+          selectedForExecution: selectedNodeIds.includes(resourceId),
+          onInspectNode: (_nodeId, preferredTabId) => {
+            void openNodeWorkbench(resourceId, preferredTabId);
           },
           canOpenNodeCode: node.data.path != null,
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
-              isExecutableRoot: executionSelectableNodeIds.has(node.id),
-              selectedForExecution: selectedNodeIds.includes(node.id),
+              isExecutableRoot: executionSelectableNodeIds.has(resourceId),
+              selectedForExecution: selectedNodeIds.includes(resourceId),
             })
-              ? (nodeId: string, shouldSelect: boolean) => {
+              ? (_nodeId: string, shouldSelect: boolean) => {
                   store.setExecutionSelectionIntent(
                     applyDbtExecutionSelectionToggle({
                       requestedNodeIds: executionScope.requestedNodeIds,
-                      nodeId,
+                      nodeId: resourceId,
                       shouldSelect,
                     })
                   );
                 }
               : undefined,
         };
-        const canonicalNode = canonicalNodesById.get(node.id);
+        const canonicalNode = placedNodesById.get(node.id);
 
         return canonicalNode == null
-          ? { ...node, data }
+          ? { ...placedNode, data }
           : projectCanvasNodeAccessibleHealth({
-              node,
+              node: placedNode,
               canonicalNode,
               data,
               graphNodeCardStrategies,
             });
       }),
     [
-      canonicalNodesById,
+      placedNodesById,
+      placements.definitionIdByInstanceId,
+      placements.removeInstance,
       execution.canSelectExecution,
       executionSelectableNodeIds,
       executionScope.requestedNodeIds,
@@ -323,13 +342,6 @@ export function useDbtProjectFilesAuthorityController(
     }
   }, [analysisFresh, hideInspectorPanel, inspectorNode, inspectorNodeId, setInspectorNode]);
 
-  const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
-    event.dataTransfer.dropEffect = 'none';
-  }, []);
-  const handleDrop = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'none';
-  }, []);
   const handleSourceImportComplete = useCallback(
     (result: ImportSourcesResult) => {
       const nextFocusIds = resolveDbtProjectFileSourceImportFocus(authorityBinding, result);
@@ -365,6 +377,7 @@ export function useDbtProjectFilesAuthorityController(
     nodeTypes: DBT_PROJECT_FILE_NODE_TYPES,
     persistedViewport,
     frozenNodeIds,
+    referencePlacementScope: canPlaceReferences ? layoutKey : undefined,
     importedNodeFocusIds,
     presentation: {
       focusMode,
@@ -387,13 +400,19 @@ export function useDbtProjectFilesAuthorityController(
     runtimeCapabilities,
     graphCommands: {
       onInspectSource: openNodeWorkbench,
-      onNodesChange: graphModel.onNodesChange,
+      onNodesChange: (changes: Parameters<typeof graphModel.onNodesChange>[0]) => {
+        const accepted = placements.applyNodeChanges(changes);
+        if (accepted.length > 0) graphModel.onNodesChange(accepted);
+      },
       onNodeDrag: persistence.handleNodeDrag,
       onNodeDragStop: persistence.handleNodeDragStop,
-      onEdgesChange: graphModel.onEdgesChange,
+      onEdgesChange: (changes: Parameters<typeof graphModel.onEdgesChange>[0]) => {
+        const accepted = changes.filter((change) => change.type !== 'remove');
+        if (accepted.length > 0) graphModel.onEdgesChange(accepted);
+      },
       onViewportChange: persistence.handleViewportChange,
-      onDrop: handleDrop,
-      onDragOver: handleDragOver,
+      onDrop: placements.onDrop,
+      onDragOver: placements.onDragOver,
       onToggleFrozenNode: (nodeId: string) => toggleFrozenCanvasNode(layoutKey, nodeId),
       onSourceImportComplete: handleSourceImportComplete,
       onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),

@@ -52,6 +52,7 @@ import type { CanonicalNode } from '../../types/canonical';
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
   readonly canMoveNodes?: boolean;
+  readonly referencePlacementScope?: string;
   readonly canSelectNodes?: boolean;
   readonly nodesWithImpact: Node[];
   readonly sourceCatalogue?: readonly CanonicalNode[];
@@ -464,6 +465,7 @@ function CanvasViewportWithPresenter({
       catalogue={props.sourceCatalogue}
       onInspectSource={props.onInspectSource}
       canPlaceSource={props.canEditEdges}
+      referencePlacementScope={props.referencePlacementScope}
       importedSourceIds={props.importedNodeFocusIds}
       onImportFocusComplete={props.onImportedNodeFocusComplete}
       onSelect={(nodeId) =>
@@ -498,7 +500,9 @@ function CanvasViewportWithPresenter({
         viewportRef={viewportRef}
         resolvedCanvasPalette={resolvedCanvasPalette}
         canEditEdges={props.canEditEdges}
-        canDeleteWithKeyboard={props.canEditEdges && !externalSurfaceActive}
+        canDeleteWithKeyboard={
+          (props.canEditEdges || props.referencePlacementScope != null) && !externalSurfaceActive
+        }
         canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
         canSelectNodes={canSelectNodes}
         nodesWithImpact={renderedNodes}

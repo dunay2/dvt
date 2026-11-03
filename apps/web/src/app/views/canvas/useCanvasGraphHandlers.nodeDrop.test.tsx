@@ -17,7 +17,7 @@ import {
   toastState,
 } from './useCanvasGraphHandlers.test.support';
 import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
-import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 
 describe('useCanvasGraphHandlers node drop', () => {
   it.each([
@@ -102,8 +102,9 @@ describe('useCanvasGraphHandlers node drop', () => {
     graphHandlerScreenToFlowPosition.mockReturnValue({ x: 800, y: 600 });
     const event = buildCanonicalDropEvent(source);
     Object.assign(event.dataTransfer, {
-      types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
-      getData: (type: string) => (type === CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE ? source.id : ''),
+      types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+      getData: (type: string) =>
+        type === CANVAS_CATALOG_NODE_DRAG_MIME_TYPE ? JSON.stringify({ id: source.id }) : '',
     });
     act(() => {
       harness.latest()?.handleDrop(event);
@@ -141,8 +142,9 @@ describe('useCanvasGraphHandlers node drop', () => {
       await harness.render();
       const event = buildCanonicalDropEvent(source);
       Object.assign(event.dataTransfer, {
-        types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE],
-        getData: (type: string) => (type === CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE ? source.id : ''),
+        types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE],
+        getData: (type: string) =>
+          type === CANVAS_CATALOG_NODE_DRAG_MIME_TYPE ? JSON.stringify({ id: source.id }) : '',
       });
       act(() => {
         harness.latest()?.handleDrop(event);
@@ -417,8 +419,8 @@ describe('useCanvasGraphHandlers node drop', () => {
 
   it.each([
     { canEditEdges: true, types: [], effect: 'move' },
-    { canEditEdges: true, types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE], effect: 'copy' },
-    { canEditEdges: false, types: [CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE], effect: 'none' },
+    { canEditEdges: true, types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE], effect: 'copy' },
+    { canEditEdges: false, types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE], effect: 'none' },
   ])(
     'marks drag-over as $effect for the admitted payload',
     async ({ canEditEdges, types, effect }) => {

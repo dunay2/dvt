@@ -221,6 +221,7 @@ export function useDbtProjectFilesAuthoritySurface({
       inspectorPanelVisible: controller.presentation.inspectorPanelVisible,
       canOpenSourceImport: true,
       canMoveNodes: true,
+      referencePlacementScope: controller.referencePlacementScope,
       canSelectNodes: true,
       surfaceStrategy: dbtCanvasSurfaceStrategy,
       contextualWorkbench,

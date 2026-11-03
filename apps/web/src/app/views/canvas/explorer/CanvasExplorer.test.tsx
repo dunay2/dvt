@@ -13,7 +13,7 @@ import { CanvasGraphExplorer } from './CanvasGraphExplorer';
 import { CanvasExplorer } from './CanvasExplorer';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import type { CanonicalNode } from '../../../types/canonical';
-import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
+import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 
 let root: Root;
 let container: HTMLDivElement;
@@ -202,8 +202,8 @@ describe('Canvas explorer', () => {
           fireEvent.dragStart(row, { dataTransfer: transfer });
         });
         expect(transfer.setData).toHaveBeenCalledExactlyOnceWith(
-          CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE,
-          'source'
+          CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+          JSON.stringify({ id: 'source' })
         );
         expect(transfer.effectAllowed).toBe('copy');
       }
@@ -214,6 +214,54 @@ describe('Canvas explorer', () => {
       expect(onSelect).not.toHaveBeenCalled();
     }
   );
+
+  it('allows source and model reference drops without authoring permission', () => {
+    render(
+      <CanvasGraphExplorer
+        nodes={[]}
+        onSelect={vi.fn()}
+        onInspectSource={vi.fn()}
+        referencePlacementScope="scope"
+        catalogue={[
+          {
+            id: 'source',
+            name: 'Orders',
+            role: 'input',
+            kind: 'dvt:source',
+            pluginId: 'dvt',
+            status: 'idle',
+            tags: [],
+          },
+          {
+            id: 'model',
+            name: 'Revenue',
+            role: 'transform',
+            kind: 'dvt:transform',
+            pluginId: 'dvt',
+            status: 'idle',
+            tags: [],
+          },
+        ]}
+      >
+        <input aria-label="Retained graph" />
+      </CanvasGraphExplorer>
+    );
+    for (const [name, id] of [
+      ['Orders', 'source'],
+      ['Revenue', 'model'],
+    ]) {
+      const row = screen.getByRole<HTMLButtonElement>('button', { name });
+      expect(row.draggable).toBe(true);
+      const transfer = { setData: vi.fn(), effectAllowed: '' };
+      act(() => {
+        fireEvent.dragStart(row, { dataTransfer: transfer });
+      });
+      expect(transfer.setData).toHaveBeenCalledExactlyOnceWith(
+        CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+        JSON.stringify({ id, scopeKey: 'scope' })
+      );
+    }
+  });
 
   it('enables project discovery only in the open Elements panel without remounting its list or graph', () => {
     const renderElements = vi.fn(({ enabled }: { enabled: boolean }) => (
@@ -456,7 +504,7 @@ describe('Canvas explorer', () => {
       fireEvent.dragStart(source, { dataTransfer: transfer });
     });
     expect(transfer.setData).toHaveBeenCalledExactlyOnceWith(
-      CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE,
+      CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
       'imported'
     );
     expect(transfer.effectAllowed).toBe('copy');

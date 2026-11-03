@@ -25,6 +25,36 @@ evidence:
 
 # Lossless dbt Project Root Relocation
 
+## File Resource Placement Correction
+
+The [prospective correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6609571907)
+is admitted as `GH-3747-RESOURCE-LAYOUT-INSTANCES`. Existing `PersistCanvasLayout`
+and `GetCanvasLayout` rails own independent visual references to Sources and
+Models; `InspectCanvasNode` retains the accepted file-opening policy from
+`GH-3610-FILE-MODEL-OPEN-AUTHORITY`. No file-authority transition or second
+semantic graph is introduced.
+
+The previous adapter linked all catalogue drops to edge editing, so it rejected
+placement even with a valid project definition. The correction uses the current
+authorized/fresh query and hydrated scoped layout. References carry independent
+IDs and resource IDs; definition metadata is resolved at render time. Repeated
+instances retain separate positions. Removal is limited to placements, and node
+inspection/execution resolve to the original definition. The shared catalogue
+MIME and graph-coordinate drop anchor are reused by native source placement.
+
+Focused checks executed during implementation:
+
+- Unit suite: resource projection, store retention/rehydration and backed node
+  actions, three files / 20 cases passed.
+- Presentation suite: Explorer and Viewport, two files / 42 cases passed; the
+  first placement-hook run failed on an unavailable test-library import. The
+  test now uses the repository's existing React root/act approach; five hook
+  cases passed without adding a dependency or changing a timeout.
+- File-node opening: 11 unit cases passed, including reference IDs and denied
+  Code capability. Shared source drop remains on its existing admission rail.
+- Strict root ESLint passed for the directly affected placement, store,
+  controller, Viewport, menu and native browser consumer files.
+
 [Issue #3747](https://github.com/dunay2/dvt/issues/3747) owns delivery. Planning DB
 design `GH-3747-DBT-PROJECT-ROOT-RELOCATION` and its
 [prospective admission](https://github.com/dunay2/dvt/issues/3747#issuecomment-6585557351)

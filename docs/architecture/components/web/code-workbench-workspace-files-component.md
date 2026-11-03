@@ -30,6 +30,43 @@ Governing sources:
 
 ## Owned Concern
 
+### Resource placements in Canvas
+
+`PersistCanvasLayout` and `GetCanvasLayout` own repeated visual placements of
+file-owned Sources and Models. Each placement contains a secure instance ID and
+the referenced resource ID; coordinates remain in the existing position map.
+The scoped, fresh project query supplies the definition. Local persistence
+contains no copied SQL, metadata, edges or executable graph.
+
+```mermaid
+flowchart LR
+  Before[Catalogue drop tied to edge editing] --> Block[All drops rejected]
+  Catalogue[Authorized project definitions] --> Drop[Validate ID and fresh analysis]
+  Drop --> Layout[Existing layout: instance and resource IDs]
+  Layout --> Card[Independent card position and removal]
+  Definition[Current file-owned definition] --> Card
+  Card --> Inspector[Inspect original resource]
+  Card --> Selection[Select original execution identity once]
+```
+
+The former adapter rejected every drop because it treated layout placement as
+semantic graph editing. Placement admission now has its own capability within
+the existing layout rail. It never enables `canEditEdges`. Source and Model
+placements resolve inspection and execution to the original definition. Removing
+a placement preserves its definition, sibling placements and files. Missing
+references are not rendered, and stale analysis, incomplete hydration, unknown
+IDs and resources outside Sources/Models reject new drops. Layout keys retain
+workspace, Canvas, authority and project-root scope.
+
+The store owns atomic reference/position persistence. A bounded placement
+adapter owns drop validation and reference projection; the file controller only
+composes it. Existing node menus and keyboard interaction remove admitted
+placements through that adapter. File-defined lineage remains file-owned.
+The shared catalogue envelope carries the resource ID and, for file placements,
+the scoped layout identity. A namesake resource in another project cannot accept
+an earlier drag. Layout setters use one patch constructor to preserve all other
+layout fields when viewport, coordinates, freeze state or list order change.
+
 The component owns accepted scoped file selection, the shared Code file surface,
 reference inspection and presentation access. It does not own authorization,
 project creation, native semantic editing, Git lifecycle or analysis semantics.

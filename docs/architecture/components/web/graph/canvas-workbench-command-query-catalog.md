@@ -10,6 +10,16 @@ planning_type: architecture
 
 ## Purpose
 
+File-owned Sources and Models may have repeated visual placements through
+`PersistCanvasLayout` / `GetCanvasLayout`. The layout stores instance/resource
+IDs and coordinates, never a copied semantic graph. The existing contextual
+graph query resolves current definitions; inspection and execution use the
+original resource identity. A fresh authorized project query and completed
+layout hydration admit drops; stale, missing, unsupported and foreign resource
+IDs reject. Removing one placement cannot remove a definition or a sibling.
+This layout capability does not grant edge editing or SQL writes. The rationale
+and current/target diagram are in the Code workspace component guide.
+
 This catalog is the Web Graph bounded-context C&Q list for the Canvas
 workbench, Canvas route placement, project resource discovery, route-local
 layout preferences, and project-snapshot file handoff.

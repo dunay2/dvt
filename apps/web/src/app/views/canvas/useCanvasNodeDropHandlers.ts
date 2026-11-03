@@ -15,14 +15,14 @@ import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
 import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 import {
-  CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE,
+  CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+  CANVAS_NODE_DROP_GRAPH_ANCHOR,
+  readCanvasCatalogNodeDragReference,
   parseCanonicalNodeDragPayload,
 } from './canvasNodeDropPayload';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 import { createCanvasSourceInstance } from './canvasSourceInstance';
-
-const CANVAS_NODE_DROP_GRAPH_ANCHOR = { x: 100, y: 40 } as const;
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
@@ -66,13 +66,20 @@ export function useCanvasNodeDropHandlers({
         return;
       }
 
-      const sourceId = event.dataTransfer.types?.includes(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
-        ? event.dataTransfer.getData(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
-        : '';
+      const isCatalogueDrop = event.dataTransfer.types?.includes(
+        CANVAS_CATALOG_NODE_DRAG_MIME_TYPE
+      );
+      const reference = isCatalogueDrop
+        ? readCanvasCatalogNodeDragReference(event.dataTransfer)
+        : null;
+      const sourceId = reference?.id ?? '';
       const registeredSource = sourceId ? canonicalNodesById.get(sourceId) : null;
       if (
-        sourceId &&
-        (registeredSource?.role !== 'input' || registeredSource.sourceDefinitionId != null)
+        isCatalogueDrop &&
+        (reference == null ||
+          reference.scopeKey != null ||
+          registeredSource?.role !== 'input' ||
+          registeredSource.sourceDefinitionId != null)
       ) {
         toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
         return;
@@ -131,7 +138,7 @@ export function useCanvasNodeDropHandlers({
       event.preventDefault();
       event.dataTransfer.dropEffect = !canEditEdges
         ? 'none'
-        : event.dataTransfer.types?.includes(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE)
+        : event.dataTransfer.types?.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)
           ? 'copy'
           : 'move';
     },

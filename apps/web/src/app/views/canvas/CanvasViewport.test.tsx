@@ -85,6 +85,39 @@ describe('CanvasViewport', () => {
     }
   );
 
+  it('keeps reference placement independent of edge authoring', async () => {
+    await renderViewport({
+      canEditEdges: false,
+      referencePlacementScope: 'scope',
+      sourceCatalogue: [
+        {
+          id: 'source',
+          name: 'Orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'model',
+          name: 'Revenue',
+          pluginId: 'dvt',
+          kind: 'dvt:transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      onInspectSource: vi.fn(),
+    });
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' }).draggable).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(true);
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Add model' }).disabled).toBe(
+      true
+    );
+  });
+
   it('does not render fixed panel restore controls when side panels are hidden', async () => {
     await renderViewport();
 

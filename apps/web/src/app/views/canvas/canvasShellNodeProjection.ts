@@ -26,7 +26,10 @@ function resolveNodeOpenAction(
   projection: CanvasShellNodeProjection,
   canOpenNodeCode: boolean
 ): DbtNodeData['onOpenNode'] {
-  if (data.presentationTruth?.code.kind === 'workspace-file' && projection.modelIds.has(nodeId)) {
+  if (
+    data.presentationTruth?.code.kind === 'workspace-file' &&
+    (data.role === 'transform' || projection.modelIds.has(nodeId))
+  ) {
     const inspect = data.onInspectNode;
     return inspect == null
       ? undefined

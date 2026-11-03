@@ -73,6 +73,7 @@ type BuildCanvasNodeModelerActionModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
   canMutateGraph: boolean;
+  canRemovePlacement?: boolean;
   canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
@@ -84,6 +85,7 @@ export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
   canMutateGraph,
+  canRemovePlacement = false,
   canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
@@ -128,7 +130,7 @@ export function buildCanvasNodeModelerActionModel({
     });
   }
 
-  if (canMutateGraph && canRemoveNode) {
+  if ((canMutateGraph || canRemovePlacement) && canRemoveNode) {
     groups.push({
       id: 'danger',
       label: copy.dangerGroupLabel,
