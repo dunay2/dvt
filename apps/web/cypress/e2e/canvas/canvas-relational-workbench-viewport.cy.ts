@@ -325,7 +325,7 @@ describe('Workbench viewport', () => {
           if (viewport === undefined) throw new Error('Expected the relational tree viewport.');
           const width = viewport.clientWidth;
           cy.get(
-            '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+            '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
           )
             .click()
             .should('have.attr', 'aria-expanded', 'false');
@@ -340,26 +340,21 @@ describe('Workbench viewport', () => {
     cy.get('[data-slot="canvas-relational-tree-source-list"]').should('not.be.visible');
     verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
     cy.screenshot('semantic-editor-sources-collapsed');
-    const sourcesToggle =
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]';
-    cy.get(sourcesToggle).focus();
+    const elementsToggle =
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]';
+    cy.get(elementsToggle).focus();
     cy.press(Cypress.Keyboard.Keys.ENTER);
     cy.get(
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
+      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
     ).should('have.attr', 'aria-expanded', 'true');
     cy.get('[data-slot="canvas-relational-tree-sources"] input')
       .should('have.value', 'customers')
       .clear();
-    cy.get(
-      '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-elements-toggle"]'
-    ).click();
-    cy.get('[data-slot="canvas-relational-tree-workbench"] [data-element-id]:visible').should(
-      'have.length',
-      3
-    );
+    cy.get('[data-slot="canvas-relational-tree-sources"]').should('have.length', 1);
+    cy.get('[data-slot="canvas-relational-tree-source"]').should('have.length', 2);
     cy.get(
       '[data-slot="canvas-relational-tree-workbench"] [data-slot="canvas-explorer-sources-toggle"]'
-    ).click();
+    ).should('not.exist');
     cy.get('[data-slot="canvas-relational-tree-detail"]').should('not.exist');
     // 1280x900 at 200% browser zoom has a 640x450 CSS viewport; this tests reflow,
     // independently of the graph's own zoom control.
