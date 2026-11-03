@@ -152,8 +152,7 @@ describe('Workbench viewport', () => {
     cy.get(`${main} .react-flow__viewport`).should(($viewport) => {
       expect($viewport[0]!.style.transform).to.contain('scale(0.82)');
     });
-    cy.then(() => expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(0));
-    cy.get(`${main} section[aria-labelledby$="-sources-button"] input[type="search"]`).type(
+    cy.get(`${main} section[aria-labelledby$="-elements-button"] input[type="search"]`).type(
       'customers'
     );
     cy.get(`${main} .react-flow__viewport`).then(($viewport) => {
@@ -199,15 +198,14 @@ describe('Workbench viewport', () => {
       cy.get(properties).should('contain.text', 'notes/first.md');
       cy.get(`${properties} time`).should('have.attr', 'datetime', '2026-10-28T00:00:00Z');
       cy.screenshot('canvas-git-project-files');
-      for (const panel of ['elements', 'sources']) {
-        cy.get('[data-slot="canvas-workspace-tab"]').click();
+      for (const panel of ['elements']) {
         cy.get(
           `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-${panel}-toggle"]`
         ).click();
         cy.get(code).should('not.be.visible');
         assertStationary();
       }
-      cy.get(`${main} section[aria-labelledby$="-sources-button"] input`).should(
+      cy.get(`${main} section[aria-labelledby$="-elements-button"] input`).should(
         'have.value',
         'customers'
       );
@@ -272,21 +270,18 @@ describe('Workbench viewport', () => {
     const main = '[data-slot="canvas-workspace-surface"]';
     cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
     cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
-    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-sources-toggle"]`)
+    cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`)
       .should('be.visible')
       .click();
     cy.get(`${main} button[aria-label="Close explorer"]:visible`).click();
     cy.get(
-      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-sources-toggle"]`
+      `[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`
     ).should('not.be.visible');
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="canvas-explorer-view-command"]')
       .should('have.attr', 'aria-checked', 'false')
       .click();
     cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
-    cy.get(
-      '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]'
-    ).click();
     cy.get(
       '[data-slot="canvas-workspace-surface"] [data-element-id="join-transform"]:visible'
     ).then(($item) => {

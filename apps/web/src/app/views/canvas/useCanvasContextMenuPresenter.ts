@@ -103,9 +103,17 @@ export function useCanvasContextMenuPresenter({
     ]
   );
 
-  const openAddNodeCatalog = useCallback(
-    (screenPosition: CanvasContextMenuPosition, opener?: HTMLElement) => {
-      const flowPosition = screenToFlowPosition(screenPosition);
+  const openAddNodeCatalog = useCallback<UseCanvasContextMenuPresenterResult['openAddNodeCatalog']>(
+    (screenPosition, opener, options) => {
+      const flowPosition = options?.flowPosition ?? screenToFlowPosition(screenPosition);
+      const roles = options?.roles;
+      const kinds =
+        roles == null
+          ? authoringNodeKinds
+          : authoringNodeKinds.filter((registration) => roles.includes(registration.role));
+      const offersSourceImport = Boolean(
+        canOpenSourceImport && onOpenSourceImport && (roles == null || roles.includes('input'))
+      );
       setKeyboardMenuOpen(false);
       const sourceModel = buildCanvasContextMenuModel({
         target: {
@@ -114,9 +122,9 @@ export function useCanvasContextMenuPresenter({
           flowPosition,
         },
         canMutateGraph: canEditEdges,
-        canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+        canOpenSourceImport: offersSourceImport,
         canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
-        authoringNodeKinds,
+        authoringNodeKinds: kinds,
       });
 
       markContextMenuOpened({ targetKind: 'pane', screenPosition, opener });
@@ -124,8 +132,8 @@ export function useCanvasContextMenuPresenter({
         setModel(
           buildCanvasAddNodeCatalogMenuModel({
             sourceModel,
-            authoringNodeKinds,
-            canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+            authoringNodeKinds: kinds,
+            canOpenSourceImport: offersSourceImport,
             canCreateAuthoringNodes: canEditEdges,
           })
         );

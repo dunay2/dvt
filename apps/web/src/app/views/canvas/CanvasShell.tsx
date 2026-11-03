@@ -231,6 +231,7 @@ export default function CanvasShell({
                   <CanvasProjectElementsExplorer
                     {...input}
                     projectRoot={workspaceCommands?.projectRoot}
+                    onOpenFile={(path) => void openProjectCode(path)}
                   />
                 ),
               }

@@ -9,10 +9,20 @@ import {
   resolveGraphScopedCodeWorkspaceFileTree,
   resolveInitialCodeFilePath,
   resolveInitialDbtProjectFilePath,
+  resolveDbtProjectWorkspaceFilePath,
   resolveProjectRootScopedCodeWorkspaceFileTree,
 } from './codeViewFileSelection';
 
 describe('codeViewFileSelection', () => {
+  it.each([
+    ['.', 'models/orders.sql', 'models/orders.sql'],
+    ['analytics/dbt', 'models/orders.sql', 'analytics/dbt/models/orders.sql'],
+    ['analytics/dbt', 'analytics/dbt/models/orders.sql', 'analytics/dbt/models/orders.sql'],
+    ['analytics/dbt/', './models/orders.sql', 'analytics/dbt/models/orders.sql'],
+  ])('resolves a resource path once within its project root (%s, %s)', (root, path, expected) => {
+    expect(resolveDbtProjectWorkspaceFilePath(root, path)).toBe(expected);
+  });
+
   it.each([
     { name: ' OrderItems / v2 ', expected: 'order_items_v2' },
     { name: 'Métric 名', expected: 'm_tric' },

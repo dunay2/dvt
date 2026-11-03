@@ -40,11 +40,39 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('offers one catalogue with category additions even before objects are registered', () => {
+    const onImport = vi.fn();
+    const onAddModel = vi.fn();
+    render(
+      <CanvasGraphExplorer
+        nodes={[]}
+        catalogue={[]}
+        onSelect={vi.fn()}
+        onImport={onImport}
+        onAddModel={onAddModel}
+        canPlaceSource
+      >
+        <input aria-label="Graph" />
+      </CanvasGraphExplorer>
+    );
+    expect(screen.queryByRole('button', { name: 'Sources' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')).toBe(
+      'true'
+    );
+    expect(screen.getAllByRole('searchbox')).toHaveLength(1);
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Import sources' })));
+    expect(onImport).toHaveBeenCalledExactlyOnceWith();
+    const addModel = screen.getByRole('button', { name: 'Add model' });
+    act(() => fireEvent.click(addModel));
+    expect(onAddModel).toHaveBeenCalledExactlyOnceWith(addModel);
+    expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
+  });
+
   it('collapses categories independently and retains disclosure through search and panel changes', () => {
     const onSelect = vi.fn();
     render(
       <CanvasExplorer
-        sources={null}
         elements={
           <CanvasExplorerList
             items={[
@@ -89,10 +117,9 @@ describe('Canvas explorer', () => {
     expect(onSelect).not.toHaveBeenCalled();
   });
 
-  it('defaults to one Elements catalogue when the context has no separate Sources surface', () => {
+  it('defaults to one Elements catalogue', () => {
     render(
       <CanvasExplorer
-        sources={null}
         elements={
           <CanvasExplorerList items={[{ id: 'orders', label: 'Orders' }]} onSelect={vi.fn()} />
         }
@@ -149,9 +176,6 @@ describe('Canvas explorer', () => {
           <input aria-label="Retained graph" />
         </CanvasGraphExplorer>
       );
-      act(() => {
-        fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
-      });
       expect(screen.queryByRole('button', { name: /Placed Orders/ })).toBeNull();
       expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
       expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
@@ -194,15 +218,11 @@ describe('Canvas explorer', () => {
     );
     const search = screen.getByLabelText('Retained project search');
     const graph = screen.getByLabelText('Retained graph');
-    expect(search.dataset.enabled).toBe('false');
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
-    });
     expect(search.dataset.enabled).toBe('true');
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
-    });
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
     expect(search.dataset.enabled).toBe('false');
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
+    expect(search.dataset.enabled).toBe('true');
     expect(screen.getByLabelText('Retained project search')).toBe(search);
     expect(screen.getByLabelText('Retained graph')).toBe(graph);
     act(() => useUiLayoutStore.getState().hideCanvasExplorer());
@@ -215,8 +235,7 @@ describe('Canvas explorer', () => {
     const view = (target: HTMLElement | null): JSX.Element => (
       <div aria-hidden="true" {...{ inert: '' }}>
         <CanvasExplorer
-          sources={<input aria-label="Retained source search" defaultValue="orders" />}
-          elements={null}
+          elements={<input aria-label="Retained source search" defaultValue="orders" />}
           activityRail={{ target, codeVisible: true }}
           projectFiles={{ onActivate: async () => true, onCanvas: () => undefined }}
         >
@@ -236,7 +255,7 @@ describe('Canvas explorer', () => {
       const rail = screen.getByRole('navigation');
       expect(host.contains(rail)).toBe(true);
       expect(rail.closest('[inert], [aria-hidden="true"]')).toBeNull();
-      expect(screen.getByRole('button', { name: 'Sources' }).getAttribute('aria-expanded')).toBe(
+      expect(screen.getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')).toBe(
         'false'
       );
       expect(screen.getByRole('button', { name: 'Git' }).getAttribute('aria-expanded')).toBe(
@@ -254,14 +273,13 @@ describe('Canvas explorer', () => {
   });
 
   it.each([
-    ['en', ['Sources', 'Elements', 'Git']],
-    ['es', ['Fuentes', 'Elementos', 'Git']],
+    ['en', ['Elements', 'Git']],
+    ['es', ['Elementos', 'Git']],
   ] as const)('keeps optional Git on the localized shared rail (%s)', (language, labels) => {
     useApplicationLanguageStore.setState({ language });
     render(
       <CanvasExplorer
-        sources={<p>Source catalogue</p>}
-        elements={null}
+        elements={<p>Source catalogue</p>}
         projectFiles={{ onActivate: async () => true, onCanvas: () => undefined }}
       >
         <p>Graph</p>
@@ -281,8 +299,7 @@ describe('Canvas explorer', () => {
       const onCanvas = vi.fn();
       render(
         <CanvasExplorer
-          sources={<input aria-label="Source search" defaultValue="orders" />}
-          elements={<p>Existing elements</p>}
+          elements={<input aria-label="Source search" defaultValue="orders" />}
           projectFiles={{ onActivate, onCanvas }}
         >
           <input aria-label="Graph state" defaultValue="camera and positions" />
@@ -304,14 +321,13 @@ describe('Canvas explorer', () => {
     }
   );
 
-  it.each(['Sources', 'Elements', 'Collapse explorer', 'Close explorer'])(
+  it.each(['Elements', 'Collapse explorer', 'Close explorer'])(
     'delegates a newer Canvas intent to the workspace owner (%s)',
     async (destination) => {
       const onCanvas = vi.fn();
       render(
         <CanvasExplorer
-          sources={<p>Catalogue</p>}
-          elements={<p>Existing elements</p>}
+          elements={<p>Catalogue</p>}
           projectFiles={{ onActivate: async () => false, onCanvas }}
         >
           <input aria-label="Graph state" />
@@ -327,8 +343,7 @@ describe('Canvas explorer', () => {
   it('withdraws only the Git command without replacing graph or source state', () => {
     const view = (available: boolean): JSX.Element => (
       <CanvasExplorer
-        sources={<input aria-label="Source search" defaultValue="orders" />}
-        elements={<p>Existing elements</p>}
+        elements={<input aria-label="Source search" defaultValue="orders" />}
         projectFiles={
           available ? { onActivate: async () => true, onCanvas: () => undefined } : undefined
         }
@@ -347,7 +362,7 @@ describe('Canvas explorer', () => {
 
   it('retains graph state while an inline task temporarily owns its surface', () => {
     const view = (task: React.ReactNode): JSX.Element => (
-      <CanvasExplorer sources={<p>Catalogue</p>} elements={null} workspaceTask={task}>
+      <CanvasExplorer elements={<p>Catalogue</p>} workspaceTask={task}>
         <input aria-label="Retained graph state" defaultValue="zoom and selection" />
       </CanvasExplorer>
     );
@@ -367,11 +382,11 @@ describe('Canvas explorer', () => {
   });
   it('toggles once with Enter or Space and ignores held-key repeats', () => {
     render(
-      <CanvasExplorer sources={<p>Source catalogue</p>} elements={null}>
+      <CanvasExplorer elements={<p>Source catalogue</p>}>
         <p>Graph</p>
       </CanvasExplorer>
     );
-    const button = screen.getByRole('button', { name: 'Sources' });
+    const button = screen.getByRole('button', { name: 'Elements' });
     act(() => {
       expect(fireEvent.keyDown(button, { key: 'Enter' })).toBe(false);
     });
@@ -384,14 +399,6 @@ describe('Canvas explorer', () => {
       expect(fireEvent.keyDown(button, { key: ' ' })).toBe(false);
     });
     expect(button.getAttribute('aria-expanded')).toBe('true');
-  });
-  it('dispatches import without passing a DOM event as graph coordinates', () => {
-    const onImport = vi.fn();
-    render(<CanvasExplorerList items={[]} onSelect={() => {}} onImport={onImport} />);
-    act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Import sources' }));
-    });
-    expect(onImport.mock.calls).toEqual([[]]);
   });
   it('shows registered sources without graph cards; click inspects and drag carries only their identity', () => {
     const catalogue: CanonicalNode[] = [
@@ -475,7 +482,6 @@ describe('Canvas explorer', () => {
     expect(roleReads).toBeGreaterThan(0);
     const row = screen.getByRole('button', { name: 'Orders raw · Warehouse' });
     expect(row.draggable).toBe(false);
-    expect(row.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
     roleReads = 0;
     act(() => root.render(view(true)));
     expect(roleReads).toBe(0);
@@ -506,10 +512,7 @@ describe('Canvas explorer', () => {
             <CanvasExplorerViewMenu />
           </DropdownMenuContent>
         </DropdownMenu>
-        <CanvasExplorer
-          sources={<CanvasExplorerList items={[]} onSelect={() => {}} />}
-          elements={null}
-        >
+        <CanvasExplorer elements={<CanvasExplorerList items={[]} onSelect={() => {}} />}>
           <input aria-label="Graph state" />
         </CanvasExplorer>
       </MemoryRouter>
@@ -525,7 +528,7 @@ describe('Canvas explorer', () => {
     expect(screen.queryByRole('searchbox')).toBeNull();
     expect(screen.getByRole('navigation', { name: 'Canvas explorer' })).toBeTruthy();
     act(() => {
-      fireEvent.click(screen.getByRole('button', { name: 'Sources' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
     });
     act(() => {
       fireEvent.click(screen.getByRole('button', { name: 'Close explorer' }));
@@ -549,41 +552,6 @@ describe('Canvas explorer', () => {
       </MemoryRouter>
     );
     expect(screen.queryByText('Canvas explorer')).toBeNull();
-  });
-
-  it('switches and collapses retained panels without remounting the graph or losing search', () => {
-    render(
-      <CanvasExplorer
-        sources={
-          <CanvasExplorerList items={[{ id: 'source', label: 'Orders' }]} onSelect={() => {}} />
-        }
-        elements={<p>Existing instances</p>}
-      >
-        <input aria-label="Graph state" defaultValue="unchanged draft" />
-      </CanvasExplorer>
-    );
-    const graph = screen.getByLabelText('Graph state');
-    const search = screen.getByRole('searchbox');
-    act(() => {
-      fireEvent.change(search, { target: { value: 'ord' } });
-    });
-    const sources = screen.getByRole('button', { name: 'Sources' });
-    const elements = screen.getByRole('button', { name: 'Elements' });
-    act(() => {
-      fireEvent.click(elements);
-    });
-    expect(elements.getAttribute('aria-expanded')).toBe('true');
-    expect(screen.queryByRole('searchbox')).toBeNull();
-    act(() => {
-      fireEvent.click(elements);
-    });
-    expect(elements.getAttribute('aria-expanded')).toBe('false');
-    act(() => {
-      fireEvent.click(sources);
-    });
-    expect(screen.getByRole('searchbox')).toBe(search);
-    expect((search as HTMLInputElement).value).toBe('ord');
-    expect(screen.getByLabelText('Graph state')).toBe(graph);
   });
 
   it('filters names but selects by identity, keeping duplicate labels', () => {

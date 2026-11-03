@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { act } from 'react';
+import { fireEvent, screen } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
@@ -9,6 +10,7 @@ vi.mock(
   () => import('./canvasViewportNodeTypeRegistryTestAdapter')
 );
 
+import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
 import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';
@@ -45,6 +47,43 @@ describe('CanvasViewport', () => {
     unmountViewport();
     vi.useRealTimers();
   });
+
+  it.each([true, false])(
+    'delegates model addition at the Canvas center only when writable=%s',
+    async (writable) => {
+      const registration = {
+        ...buildTestNodeKind('dvt:transform', 'Model'),
+        role: 'transform' as const,
+        allowsIncoming: true,
+      };
+      const props = await renderViewport({
+        canEditEdges: writable,
+        authoringNodeKinds: [registration],
+      });
+      const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]')!;
+      vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 50, 800, 600));
+      xyflowState.fitView.mockClear();
+      const add = screen.getByRole<HTMLButtonElement>('button', { name: 'Add model' });
+      expect(add.disabled).toBe(!writable);
+      await act(async () => fireEvent.click(add));
+      const item = document.querySelector<HTMLButtonElement>(
+        '[data-registration-kind="dvt:transform"]'
+      );
+      if (writable) {
+        expect(item).not.toBeNull();
+        expect(document.querySelector('[data-registration-kind="dvt:source"]')).toBeNull();
+        await act(async () => fireEvent.click(item!));
+        expect(props.onCreateAuthoringNode).toHaveBeenCalledExactlyOnceWith(registration, {
+          x: 600,
+          y: 310,
+        });
+      } else {
+        expect(item).toBeNull();
+        expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+      }
+      expect(xyflowState.fitView).not.toHaveBeenCalled();
+    }
+  );
 
   it('does not render fixed panel restore controls when side panels are hidden', async () => {
     await renderViewport();

@@ -52,6 +52,7 @@ const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>();
 const getProjectGraph = vi.fn<IDbtProjectGraphQueryPort['getProjectGraph']>();
 const saveFileContent = vi.fn();
 const onSelect = vi.fn();
+const onOpenFile = vi.fn();
 const onDragStart = vi.fn();
 let services: AppServicesOverrides;
 let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
@@ -71,6 +72,7 @@ async function render(
           enabled={enabled}
           items={items}
           onSelect={onSelect}
+          onOpenFile={onOpenFile}
           onDragStart={onDragStart}
         />
         <Location />
@@ -83,7 +85,14 @@ async function render(
 beforeEach(() => {
   vi.resetAllMocks();
   useApplicationLanguageStore.setState({ language: 'en' });
-  listFiles.mockResolvedValue([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
+  listFiles.mockResolvedValue([
+    { name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' },
+    ...['clientes', 'pedidos', 'ventas_por_cliente'].map((name) => ({
+      name: `${name}.sql`,
+      path: `models/${name}.sql`,
+      kind: 'file' as const,
+    })),
+  ]);
   getFileContent.mockResolvedValue({
     path: 'dbt_project.yml',
     name: 'dbt_project.yml',
@@ -106,7 +115,7 @@ afterEach(async () => {
   mounted = undefined;
 });
 
-it('shows imported models alongside native rows and navigates to the existing file owner without writes', async () => {
+it('opens an imported model in Code while retaining the Canvas context without writes', async () => {
   await render();
   await waitForReactQuery(
     () => screen.queryByRole('button', { name: /ventas_por_cliente/ }) != null
@@ -120,9 +129,21 @@ it('shows imported models alongside native rows and navigates to the existing fi
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: /pedidos/ }));
   });
-  expect(screen.getByLabelText('Location').textContent).toContain('canvasId=file-owner');
-  expect(screen.getByLabelText('Location').textContent).toContain('authority=dbt-project-files');
+  expect(onOpenFile).toHaveBeenCalledExactlyOnceWith('models/pedidos.sql');
+  expect(screen.getByLabelText('Location').textContent).toBe('/canvas');
   expect(getProjectGraph).toHaveBeenCalledExactlyOnceWith(binding);
+  expect(saveFileContent).not.toHaveBeenCalled();
+});
+
+it('does not open a model whose declared file is unavailable', async () => {
+  listFiles.mockResolvedValue([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
+  await render();
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  const row = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
+  expect(row.disabled).toBe(true);
+  act(() => fireEvent.click(row));
+  expect(onOpenFile).not.toHaveBeenCalled();
+  expect(onSelect).not.toHaveBeenCalled();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
@@ -136,7 +157,7 @@ it('retains native catalogue drag while file-owned models remain inspection-only
   });
   expect(onDragStart.mock.calls[0]?.[0]).toBe('source');
   expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).draggable).toBe(false);
-  expect(screen.getByRole('heading', { name: 'dbt models' })).toBeTruthy();
+  expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 

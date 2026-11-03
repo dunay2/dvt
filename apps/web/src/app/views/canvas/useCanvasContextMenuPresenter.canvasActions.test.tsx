@@ -28,7 +28,10 @@ function PresenterHarness({
     canEditEdges: true,
     canOpenSourceImport: true,
     canOpenCanvasSettings: true,
-    authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    authoringNodeKinds: [
+      buildTestNodeKind('dvt:source', 'Source'),
+      { ...buildTestNodeKind('dvt:transform', 'Model'), role: 'transform', allowsIncoming: true },
+    ],
     screenToFlowPosition: ({ x, y }) => ({ x: x + 100, y: y - 40 }),
     onCreateAuthoringNode: callbacks.onCreateAuthoringNode,
     onEdgesChange: callbacks.onEdgesChange,
@@ -111,9 +114,51 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
           label: 'Add source',
           registration: expect.objectContaining({ kind: 'dvt:source' }),
         },
+        expect.objectContaining({
+          action: 'create-node',
+          registration: expect.objectContaining({ kind: 'dvt:transform' }),
+        }),
       ],
-      createNodeActions: [],
+      createNodeActions: [
+        expect.objectContaining({
+          registration: expect.objectContaining({ kind: 'dvt:transform' }),
+        }),
+      ],
     });
+  });
+
+  it('reuses the creation catalogue for Models with separate menu and graph coordinates', async () => {
+    const current = await renderAndOpenPaneMenu();
+    const opener = document.createElement('button');
+    await act(async () =>
+      current.openAddNodeCatalog({ x: 20, y: 30 }, opener, {
+        roles: ['transform'],
+        flowPosition: { x: 600, y: 400 },
+      })
+    );
+    expect(presenter?.model).toMatchObject({
+      surface: 'add-node-catalog',
+      screenPosition: { x: 20, y: 30 },
+      flowPosition: { x: 600, y: 400 },
+      catalogActions: [
+        expect.objectContaining({
+          action: 'create-node',
+          registration: expect.objectContaining({ kind: 'dvt:transform' }),
+        }),
+      ],
+      createNodeActions: [
+        expect.objectContaining({
+          registration: expect.objectContaining({ kind: 'dvt:transform' }),
+        }),
+      ],
+    });
+    const action = presenter!.model!.createNodeActions[0]!;
+    await act(async () => presenter!.handleCreateNodeAction(action));
+    expect(callbacks.onCreateAuthoringNode).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ kind: 'dvt:transform' }),
+      { x: 600, y: 400 }
+    );
+    expect(callbacks.onOpenSourceImport).not.toHaveBeenCalled();
   });
 
   it('routes source import from inside the add-node catalog with the captured flow position', async () => {

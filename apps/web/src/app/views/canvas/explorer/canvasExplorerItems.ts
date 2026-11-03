@@ -14,6 +14,12 @@ export type CanvasExplorerItem = Readonly<{
   selected?: boolean;
   category?: string;
   draggable?: boolean;
+  disabled?: boolean;
+}>;
+
+export type CanvasExplorerCategoryAction = Readonly<{
+  label: string;
+  onAdd?: (opener: HTMLButtonElement) => void;
 }>;
 
 export function projectCanvasExplorerSources(

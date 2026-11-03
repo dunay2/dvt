@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-10-24
+last_reviewed: 2026-11-03
 planning_type: architecture
 ---
 
@@ -92,6 +92,23 @@ flowchart LR
   Model --> Focus[Shared opener focus]
   Code --> Focus
 ```
+
+## Single project catalogue
+
+The single Elements activity presents project definitions under independently
+collapsible Sources and Models categories. Category additions delegate to the
+existing `ImportWarehouseSources` and `CreateCanvasNode` adapters; they do not
+introduce a catalogue writer. Available connection objects, registered definitions
+and placed instances remain distinct. Repeated source placement uses the same
+guarded instance command and never creates a SQL file per placement.
+
+`ListWorkspaceFiles`, `GetWorkspaceFileContent` and `ProjectDbtGraphFromFiles`
+remain scoped queries. Fresh file model rows open an available declared file via
+the existing Code workbench guard, preserving the Canvas route and camera. Unknown
+or missing files, stale analysis and denied scopes cannot admit navigation.
+General external-model instantiation is not granted by this presentation change.
+The existing shared list and creation catalogue own search, category disclosure,
+capability gating and focus. [Prospective design and negative tests](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
 
 ## C&Q Summary
 

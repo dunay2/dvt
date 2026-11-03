@@ -112,11 +112,13 @@ function filterCodeWorkspaceFilesByPathScope(
   });
 }
 
-function resolveProjectPath(projectRoot: string, path: string): string {
-  if (projectRoot === '.' || path === projectRoot || path.startsWith(`${projectRoot}/`)) {
-    return path;
+export function resolveDbtProjectWorkspaceFilePath(projectRoot: string, path: string): string {
+  const root = projectRoot.replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  const relativePath = path.replaceAll('\\', '/').replace(/^\.\//, '');
+  if (!root || root === '.' || relativePath === root || relativePath.startsWith(`${root}/`)) {
+    return relativePath;
   }
-  return `${projectRoot}/${path}`;
+  return `${root}/${relativePath}`;
 }
 
 function filterCodeWorkspaceFilesByProjectRoot(
@@ -161,9 +163,12 @@ export function resolveInitialDbtProjectFilePath(
 ): string | undefined {
   const files = flattenCodeWorkspaceFiles(entries);
   const preferredPath = options.preferredPath
-    ? resolveProjectPath(options.projectRoot, options.preferredPath)
+    ? resolveDbtProjectWorkspaceFilePath(options.projectRoot, options.preferredPath)
     : undefined;
-  const projectFilePath = resolveProjectPath(options.projectRoot, DBT_PROJECT_FILE_PATH);
+  const projectFilePath = resolveDbtProjectWorkspaceFilePath(
+    options.projectRoot,
+    DBT_PROJECT_FILE_PATH
+  );
 
   return (
     files.find((entry) => entry.path === preferredPath) ??

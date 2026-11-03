@@ -221,7 +221,7 @@ describe('Canvas Source Import live', () => {
       placedDraft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
       expect(placedDraft.nodes.filter((node) => node.sourceDefinitionId != null)).to.have.length(2);
     });
-    cy.contains('button', 'Import sources').should('be.visible').click();
+    cy.get('button[aria-label="Import sources"]').should('be.visible').click();
     importLivePostgresSource({ kind: 'graph-draft' }, 'after-placement');
     cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
       const saved = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;

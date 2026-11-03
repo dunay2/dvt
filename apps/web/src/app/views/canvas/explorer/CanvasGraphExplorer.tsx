@@ -6,7 +6,6 @@
  * @version 1.0.0
  */
 import type { Node } from '@xyflow/react';
-import { Table2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
@@ -16,13 +15,13 @@ import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { projectCanvasExplorerSources } from './canvasExplorerItems';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-
-const sourceIcon = <Table2 aria-hidden="true" />;
+import type { CanvasExplorerCategoryAction } from './canvasExplorerItems';
 
 export function CanvasGraphExplorer({
   nodes,
   onSelect,
   onImport,
+  onAddModel,
   catalogue,
   onInspectSource,
   canPlaceSource = false,
@@ -36,6 +35,7 @@ export function CanvasGraphExplorer({
   nodes: readonly Node[];
   onSelect: (id: string) => void;
   onImport?: () => void;
+  onAddModel?: (opener: HTMLButtonElement) => void;
   children: ReactNode;
   workspaceTask?: ReactNode;
   projectFiles?: CanvasExplorerProjectWorkspace;
@@ -55,7 +55,12 @@ export function CanvasGraphExplorer({
   );
   const sourceIds = new Set(sources.map((source) => source.id));
   const items = [
-    ...sources.map((source) => ({ ...source, category: copy.sources, draggable: canPlaceSource })),
+    ...sources.map((source) => ({
+      ...source,
+      category: copy.sources,
+      draggable: canPlaceSource,
+      disabled: onInspectSource == null,
+    })),
     ...models.map((node) => ({
       id: node.id,
       label: node.name,
@@ -64,6 +69,13 @@ export function CanvasGraphExplorer({
       selected: nodes.some((placed) => placed.id === node.id && placed.selected),
     })),
   ];
+  const categoryActions = new Map<string, CanvasExplorerCategoryAction>([
+    [
+      copy.sources,
+      { label: copy.importSources, onAdd: onImport == null ? undefined : () => onImport() },
+    ],
+    [copy.models, { label: copy.addModel, onAdd: onAddModel }],
+  ]);
   const dragSource = canPlaceSource
     ? (id: string, event: DragEvent<HTMLButtonElement>) => {
         if (!sourceIds.has(id)) {
@@ -91,20 +103,14 @@ export function CanvasGraphExplorer({
       workspaceTask={workspaceTask}
       projectFiles={projectFiles}
       activityRail={activityRail}
-      sources={
-        <CanvasExplorerList
-          items={sources}
-          presentation="cards"
-          itemIcon={sourceIcon}
-          onSelect={(id) => onInspectSource?.(id)}
-          disabled={onInspectSource == null}
-          onDragStart={dragSource}
-          onImport={onImport}
-        />
-      }
       elements={
         projectFiles?.renderElements == null ? (
-          <CanvasExplorerList items={items} onSelect={inspect} onDragStart={dragSource} />
+          <CanvasExplorerList
+            items={items}
+            categoryActions={categoryActions}
+            onSelect={inspect}
+            onDragStart={dragSource}
+          />
         ) : (
           (enabled) =>
             projectFiles.renderElements?.({
@@ -112,6 +118,7 @@ export function CanvasGraphExplorer({
               items,
               onSelect: inspect,
               onDragStart: dragSource,
+              categoryActions,
             })
         )
       }

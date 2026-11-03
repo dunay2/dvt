@@ -267,7 +267,8 @@ describe('dbt project file projection live vertical', () => {
       .and('contain.text', 'require code');
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
-    for (const activity of ['sources', 'elements']) {
+    cy.get('[data-slot="canvas-explorer-sources-toggle"]').should('not.exist');
+    for (const activity of ['elements']) {
       cy.get(`[data-slot="canvas-explorer-${activity}-toggle"]`).then(($toggle) => {
         if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
       });

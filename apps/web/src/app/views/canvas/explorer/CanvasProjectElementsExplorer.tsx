@@ -1,5 +1,4 @@
 /** Owned concern: expose authoritative project models through the existing Canvas navigation list. */
-import { useNavigate } from 'react-router';
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileTreeQuery,
@@ -10,8 +9,8 @@ import type { DbtProjectFilesAuthorityBinding } from '../../../ports/dbtProjectG
 import {
   flattenCodeWorkspaceFiles,
   resolveProjectRootScopedCodeWorkspaceFileTree,
+  resolveDbtProjectWorkspaceFilePath,
 } from '../../code/codeViewFileSelection';
-import { buildDbtProjectFileCanvasPath } from '../canvasRouteAuthority';
 import { CanvasExplorerList } from './CanvasExplorerList';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasProjectElementsInput } from './CanvasExplorer';
@@ -22,18 +21,19 @@ export function CanvasProjectElementsExplorer({
   items,
   onSelect,
   onDragStart,
+  categoryActions,
   projectRoot,
-}: CanvasProjectElementsInput & Readonly<{ projectRoot?: string }>): JSX.Element {
-  const navigate = useNavigate();
+  onOpenFile,
+}: CanvasProjectElementsInput &
+  Readonly<{ projectRoot?: string; onOpenFile: (path: string) => void }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const tree = useWorkspaceFileTreeQuery({ enabled });
   const entries =
     projectRoot == null
       ? (tree.data ?? [])
       : resolveProjectRootScopedCodeWorkspaceFileTree(tree.data ?? [], projectRoot);
-  const configurations = flattenCodeWorkspaceFiles(entries).filter(
-    (entry) => entry.name === 'dbt_project.yml'
-  );
+  const files = flattenCodeWorkspaceFiles(entries);
+  const configurations = files.filter((entry) => entry.name === 'dbt_project.yml');
   const configPath =
     enabled && tree.isSuccess && configurations.length === 1 ? configurations[0]?.path : undefined;
   const config = useWorkspaceFileContentQuery(configPath);
@@ -54,17 +54,29 @@ export function CanvasProjectElementsExplorer({
       ? graph.data
       : undefined;
   const currentIds = new Set(items.map((item) => item.id));
+  const filePaths = new Set(files.map((entry) => entry.path));
   const models =
-    enabled && projection != null
+    enabled && projection != null && binding != null
       ? projection.nodes
           .filter((node) => node.resourceType === 'model' && !currentIds.has(node.uniqueId))
-          .map((node) => ({
-            id: node.uniqueId,
-            label: node.name,
-            description: node.originalFilePath ?? copy.dbtModel,
-            category: copy.dbtModels,
-            draggable: false,
-          }))
+          .map((node) => {
+            const codePath =
+              node.originalFilePath == null
+                ? undefined
+                : resolveDbtProjectWorkspaceFilePath(
+                    binding.authority.projectRoot,
+                    node.originalFilePath
+                  );
+            return {
+              id: node.uniqueId,
+              label: node.name,
+              description: node.originalFilePath ?? copy.dbtModel,
+              category: copy.models,
+              draggable: false,
+              codePath,
+              disabled: codePath == null || !filePaths.has(codePath),
+            };
+          })
       : [];
   const unavailable =
     enabled &&
@@ -87,11 +99,14 @@ export function CanvasProjectElementsExplorer({
       ) : null}
       <CanvasExplorerList
         items={[...items, ...models]}
+        categoryActions={categoryActions}
         onDragStart={onDragStart}
         onSelect={(id) => {
           if (currentIds.has(id)) onSelect(id);
-          else if (binding != null && models.some((model) => model.id === id))
-            void navigate(buildDbtProjectFileCanvasPath(binding));
+          else {
+            const model = models.find((candidate) => candidate.id === id);
+            if (model?.codePath != null && !model.disabled) onOpenFile(model.codePath);
+          }
         }}
       />
     </>

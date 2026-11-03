@@ -33,9 +33,5 @@ export function CanvasRelationalExplorer({
       occurrences={model.authoringAvailable && !pending ? model.session.occurrences : undefined}
     />
   );
-  return (
-    <CanvasExplorer sources={null} elements={catalogue}>
-      {children}
-    </CanvasExplorer>
-  );
+  return <CanvasExplorer elements={catalogue}>{children}</CanvasExplorer>;
 }

@@ -120,14 +120,20 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 Elements presents registered definitions by category, excluding placed source
 instances. Source rows reuse the existing catalogue drag and guarded instance
 command; each drop creates a fresh identity referencing the same definition.
-The Model editor keeps one input catalogue under Elements and reuses its existing
-occurrence actions. It omits the redundant Sources activity. The obsolete
+Main Canvas and the Model editor share the single Elements activity. Fuentes /
+Models are independently collapsible categories, each with an accessible addition
+action even before definitions exist. The source action reuses the existing
+importer; the model action filters the existing node-kind creation catalogue to
+transformations. Menu anchoring and placement at the visible Canvas center are
+separate coordinates. Read-only capabilities cannot enable these actions. The
+Model editor reuses its existing occurrence actions. The obsolete
 placed-row projection and its automatic
 scroll-on-selection behavior are removed.
 
 File-owned model rows come from the existing file-authoritative project graph.
-They remain inspectable through their owning Canvas and do not emit source drag
-payloads. Instantiating an external model on a native Canvas requires an admitted
+They open their declared, available file through the existing guarded Code
+opener, retaining the Canvas context and route. They do not emit source drag
+payloads. Unavailable files cannot fall back to an unrelated file. Instantiating an external model on a native Canvas requires an admitted
 reference boundary; copying its SQL or semantic definition into GraphDraft is
 not that boundary. Existing Model producer occurrences retain their own semantics.
 The bounded project-elements adapter enables
@@ -144,14 +150,21 @@ flowchart LR
   G --> E[Shared Elements list]
   N[Registered definitions] --> E
   E -->|Source identity drop| S[Existing guarded instance command]
-  E -->|External model| R[Existing owning file Canvas route]
+  E -->|External model| R[Existing guarded Code opener; Canvas retained]
 ```
 
 Rows are deduplicated by node identity, preserving distinct same-name elements.
-External model navigation uses the existing router and its unsaved-change guards;
-it does not copy models into GraphDraft or change semantic ownership. The passive
-list retains the shared typography, search and selection behavior. No new CSS,
-transport, analyzer or authoring command is introduced.
+External model navigation uses the existing workbench handoff guards. One shared
+project path resolver is reused by the catalogue and Properties Code. It does not
+copy models into GraphDraft or change semantic ownership. The passive list retains
+the shared typography, search and selection behavior. The split Sources panel,
+card-only variant and their unused styles are retired; no transport, analyzer or
+parallel authoring command is introduced.
+
+Connection availability, project definitions and placed instances are separate:
+a definition may have no uses, while each source placement has its own identity.
+The categories list project definitions; they do not infer definitions from every
+placed card. See the [single-catalogue design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494).
 
 The prospective scope, rationale and negative tests are recorded in
 [GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6588421440).

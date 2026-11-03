@@ -475,6 +475,24 @@ function CanvasViewportWithPresenter({
         })
       }
       onImport={props.canOpenSourceImport ? props.onOpenSourceImport : undefined}
+      onAddModel={
+        props.canEditEdges &&
+        props.onCreateAuthoringNode != null &&
+        props.authoringNodeKinds.some((registration) => registration.role === 'transform')
+          ? (opener) => {
+              const bounds = viewportRef.current?.getBoundingClientRect();
+              if (bounds == null) return;
+              const anchor = opener.getBoundingClientRect();
+              contextMenuPresenter.openAddNodeCatalog({ x: anchor.right, y: anchor.top }, opener, {
+                roles: ['transform'],
+                flowPosition: reactFlow.screenToFlowPosition({
+                  x: bounds.left + bounds.width / 2,
+                  y: bounds.top + bounds.height / 2,
+                }),
+              });
+            }
+          : undefined
+      }
     >
       <CanvasViewportSurfaceView
         viewportRef={viewportRef}

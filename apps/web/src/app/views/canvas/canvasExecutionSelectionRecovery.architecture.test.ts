@@ -81,7 +81,7 @@ describe('canvas execution-selection recovery architecture', () => {
   });
 
   it('keeps file execution recovery in the existing execution owner', () => {
-    const imports = (source: string) =>
+    const imports = (source: string): string[] =>
       ts
         .createSourceFile('surface.ts', source, ts.ScriptTarget.Latest, true)
         .statements.filter(ts.isImportDeclaration)

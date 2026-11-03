@@ -11,6 +11,7 @@ import {
 } from '../code/WorkspaceFileCodeEditor';
 import type { CanvasNodeWorkbenchContribution } from './canvasNodeWorkbenchContribution';
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
+import { resolveDbtProjectWorkspaceFilePath } from '../code/codeViewFileSelection';
 
 type BuildDbtWorkspaceFileCodeContributionsOptions = Readonly<{
   node: CanonicalNode | null;
@@ -44,15 +45,7 @@ export function buildDbtWorkspaceFileCodeContributions({
   ) {
     return [];
   }
-  const normalizedProjectRoot = projectRoot
-    .replaceAll('\\', '/')
-    .replace(/^\.\//, '')
-    .replace(/\/+$/, '');
-  const normalizedNodePath = node.path.replaceAll('\\', '/').replace(/^\.\//, '');
-  const workspaceFilePath =
-    normalizedProjectRoot.length === 0 || normalizedProjectRoot === '.'
-      ? normalizedNodePath
-      : `${normalizedProjectRoot}/${normalizedNodePath}`;
+  const workspaceFilePath = resolveDbtProjectWorkspaceFilePath(projectRoot, node.path);
 
   return [
     {

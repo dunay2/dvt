@@ -34,7 +34,7 @@ describe('Workbench navigation', () => {
         const host = document.querySelector('[data-testid="canvas-viewport"]')!;
         const hostBounds = host.getBoundingClientRect();
         const explorerToggle = document.querySelector(
-          '[data-slot="canvas-explorer-sources-toggle"]'
+          '[data-slot="canvas-explorer-elements-toggle"]'
         )!;
         expect(explorerToggle.getAttribute('aria-expanded')).to.equal('true');
         const dock = document.getElementById(explorerToggle.getAttribute('aria-controls')!)!;

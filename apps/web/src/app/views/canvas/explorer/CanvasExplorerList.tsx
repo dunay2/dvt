@@ -1,26 +1,22 @@
 /** Owned concern: retain local list search and project matching rows, never mutate nodes. */
-import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
+import { useMemo, useState, type DragEvent } from 'react';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasExplorerListTemplate } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
-import type { CanvasExplorerItem } from './canvasExplorerItems';
+import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
 
 export function CanvasExplorerList({
   items,
   onSelect,
-  onImport,
   disabled,
   onDragStart,
-  presentation,
-  itemIcon,
+  categoryActions,
 }: Readonly<{
   items: readonly CanvasExplorerItem[];
   onSelect: (id: string) => void;
-  onImport?: () => void;
   disabled?: boolean;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
-  presentation?: 'list' | 'cards';
-  itemIcon?: ReactNode;
+  categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
 }>): JSX.Element {
   const [query, setQuery] = useState('');
   const [collapsedCategories, setCollapsedCategories] = useState<ReadonlySet<string>>(
@@ -46,13 +42,14 @@ export function CanvasExplorerList({
   }, [items, search, searchIndex]);
   const categories = useMemo(() => {
     const groups = new Map<string | undefined, CanvasExplorerItem[]>();
+    if (!search) for (const category of categoryActions?.keys() ?? []) groups.set(category, []);
     for (const item of matches) {
       const group = groups.get(item.category);
       if (group) group.push(item);
       else groups.set(item.category, [item]);
     }
     return groups;
-  }, [matches]);
+  }, [matches, search, categoryActions]);
   return (
     <CanvasExplorerListTemplate
       categories={categories}
@@ -68,11 +65,9 @@ export function CanvasExplorerList({
       query={query}
       onQuery={setQuery}
       onSelect={onSelect}
-      onImport={onImport}
       disabled={disabled}
       onDragStart={onDragStart}
-      presentation={presentation}
-      itemIcon={itemIcon}
+      categoryActions={categoryActions}
       copy={copy}
     />
   );
