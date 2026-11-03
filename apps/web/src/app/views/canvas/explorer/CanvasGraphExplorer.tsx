@@ -7,13 +7,15 @@
  */
 import type { Node } from '@xyflow/react';
 import { Table2 } from 'lucide-react';
-import { useEffect, useMemo, useRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'react';
+import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
 import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
-import { projectCanvasExplorerNodes, projectCanvasExplorerSources } from './canvasExplorerItems';
+import { projectCanvasExplorerSources } from './canvasExplorerItems';
+import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 
 const sourceIcon = <Table2 aria-hidden="true" />;
 
@@ -44,9 +46,35 @@ export function CanvasGraphExplorer({
   importedSourceIds?: readonly string[];
   onImportFocusComplete?: () => void;
 }>): JSX.Element {
-  const items = projectCanvasExplorerNodes(nodes);
+  const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const rootRef = useRef<HTMLDivElement>(null);
   const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
+  const models = useMemo(
+    () => (catalogue ?? []).filter((node) => node.role === 'transform'),
+    [catalogue]
+  );
+  const sourceIds = new Set(sources.map((source) => source.id));
+  const items = [
+    ...sources.map((source) => ({ ...source, category: copy.sources, draggable: canPlaceSource })),
+    ...models.map((node) => ({
+      id: node.id,
+      label: node.name,
+      category: copy.models,
+      draggable: false,
+      selected: nodes.some((placed) => placed.id === node.id && placed.selected),
+    })),
+  ];
+  const dragSource = canPlaceSource
+    ? (id: string, event: DragEvent<HTMLButtonElement>) => {
+        if (!sourceIds.has(id)) {
+          event.preventDefault();
+          return;
+        }
+        event.dataTransfer.setData(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE, id);
+        event.dataTransfer.effectAllowed = 'copy';
+      }
+    : undefined;
+  const inspect = (id: string) => (sourceIds.has(id) ? onInspectSource?.(id) : onSelect(id));
   useEffect(() => {
     if (importedSourceIds.length === 0) return;
     const registered = catalogue?.some((node) => importedSourceIds.includes(node.id));
@@ -70,22 +98,21 @@ export function CanvasGraphExplorer({
           itemIcon={sourceIcon}
           onSelect={(id) => onInspectSource?.(id)}
           disabled={onInspectSource == null}
-          onDragStart={
-            canPlaceSource
-              ? (id, event) => {
-                  event.dataTransfer.setData(CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE, id);
-                  event.dataTransfer.effectAllowed = 'copy';
-                }
-              : undefined
-          }
+          onDragStart={dragSource}
           onImport={onImport}
         />
       }
       elements={
         projectFiles?.renderElements == null ? (
-          <CanvasExplorerList items={items} onSelect={onSelect} />
+          <CanvasExplorerList items={items} onSelect={inspect} onDragStart={dragSource} />
         ) : (
-          (enabled) => projectFiles.renderElements?.({ enabled, items, onSelect })
+          (enabled) =>
+            projectFiles.renderElements?.({
+              enabled,
+              items,
+              onSelect: inspect,
+              onDragStart: dragSource,
+            })
         )
       }
     >

@@ -18,6 +18,8 @@ const en = {
   collapse: 'Collapse explorer',
   close: 'Close explorer',
   dbtModel: 'dbt model',
+  models: 'Models',
+  dbtModels: 'dbt models',
   projectModelsLoading: 'Loading project models…',
   projectModelsUnavailable: 'Project models are unavailable. Canvas elements remain accessible.',
 };
@@ -34,6 +36,8 @@ const es: typeof en = {
   collapse: 'Plegar explorador',
   close: 'Cerrar explorador',
   dbtModel: 'Modelo dbt',
+  models: 'Modelos',
+  dbtModels: 'Modelos dbt',
   projectModelsLoading: 'Cargando modelos del proyecto…',
   projectModelsUnavailable:
     'Los modelos del proyecto no están disponibles. Puedes seguir consultando los elementos del Canvas.',

@@ -21,6 +21,7 @@ export function CanvasProjectElementsExplorer({
   enabled,
   items,
   onSelect,
+  onDragStart,
   projectRoot,
 }: CanvasProjectElementsInput & Readonly<{ projectRoot?: string }>): JSX.Element {
   const navigate = useNavigate();
@@ -61,6 +62,8 @@ export function CanvasProjectElementsExplorer({
             id: node.uniqueId,
             label: node.name,
             description: node.originalFilePath ?? copy.dbtModel,
+            category: copy.dbtModels,
+            draggable: false,
           }))
       : [];
   const unavailable =
@@ -84,6 +87,7 @@ export function CanvasProjectElementsExplorer({
       ) : null}
       <CanvasExplorerList
         items={[...items, ...models]}
+        onDragStart={onDragStart}
         onSelect={(id) => {
           if (currentIds.has(id)) onSelect(id);
           else if (binding != null && models.some((model) => model.id === id))

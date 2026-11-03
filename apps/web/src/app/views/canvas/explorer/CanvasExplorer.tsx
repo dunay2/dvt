@@ -10,6 +10,7 @@ import {
   useId,
   useState,
   type KeyboardEvent,
+  type DragEvent,
   type ReactNode,
   type RefObject,
 } from 'react';
@@ -27,6 +28,7 @@ export type CanvasProjectElementsInput = Readonly<{
   enabled: boolean;
   items: readonly CanvasExplorerItem[];
   onSelect: (id: string) => void;
+  onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
 }>;
 
 export type CanvasExplorerProjectWorkspace = Readonly<{

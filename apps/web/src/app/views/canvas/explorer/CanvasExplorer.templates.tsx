@@ -231,29 +231,37 @@ export function CanvasExplorerListTemplate({
         </button>
       )}
       <ul className={styles.list} data-presentation={presentation}>
-        {items.map((item) => (
-          <li key={item.id}>
-            <button
-              type="button"
-              className={styles.item}
-              aria-pressed={item.selected === true}
-              title={item.description == null ? item.label : `${item.label} · ${item.description}`}
-              data-element-id={item.id}
-              disabled={disabled}
-              onClick={() => onSelect(item.id)}
-              draggable={!disabled && onDragStart != null}
-              onDragStart={onDragStart == null ? undefined : (event) => onDragStart(item.id, event)}
-            >
-              {itemIcon == null ? null : <span className={styles.itemIcon}>{itemIcon}</span>}
-              <span className={styles.itemText}>
-                <span className={styles.name}>{item.label}</span>{' '}
-                {item.description == null ? null : (
-                  <span className={styles.description}>{item.description}</span>
-                )}
-              </span>
-            </button>
-          </li>
-        ))}
+        {items.map((item, index) => {
+          const draggable = !disabled && item.draggable !== false && onDragStart != null;
+          return (
+            <li key={item.id}>
+              {item.category != null && item.category !== items[index - 1]?.category ? (
+                <h4 className={styles.heading}>{item.category}</h4>
+              ) : null}
+              <button
+                type="button"
+                className={styles.item}
+                aria-pressed={item.selected === true}
+                title={
+                  item.description == null ? item.label : `${item.label} · ${item.description}`
+                }
+                data-element-id={item.id}
+                disabled={disabled}
+                onClick={() => onSelect(item.id)}
+                draggable={draggable}
+                onDragStart={draggable ? (event) => onDragStart?.(item.id, event) : undefined}
+              >
+                {itemIcon == null ? null : <span className={styles.itemIcon}>{itemIcon}</span>}
+                <span className={styles.itemText}>
+                  <span className={styles.name}>{item.label}</span>{' '}
+                  {item.description == null ? null : (
+                    <span className={styles.description}>{item.description}</span>
+                  )}
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
       {items.length === 0 ? (
         <p className={styles.empty}>{query.trim() ? copy.noMatches : copy.empty}</p>

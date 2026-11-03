@@ -40,6 +40,78 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it.each([true, false])(
+    'uses Elements as a definition catalogue with guarded instance drag (writable=%s)',
+    (writable) => {
+      const source: CanonicalNode = {
+        id: 'source',
+        name: 'Orders',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: [],
+      };
+      const model: CanonicalNode = {
+        ...source,
+        id: 'model',
+        name: 'Revenue',
+        kind: 'dvt:transform',
+        role: 'transform',
+      };
+      const onInspectSource = vi.fn();
+      const onSelect = vi.fn();
+      render(
+        <CanvasGraphExplorer
+          nodes={[
+            {
+              id: 'instance',
+              position: { x: 0, y: 0 },
+              data: { name: 'Placed Orders', role: 'input' },
+            },
+          ]}
+          catalogue={[
+            source,
+            { ...source, id: 'instance', name: 'Placed Orders', sourceDefinitionId: source.id },
+            model,
+          ]}
+          onSelect={onSelect}
+          onInspectSource={onInspectSource}
+          canPlaceSource={writable}
+        >
+          <input aria-label="Retained graph" />
+        </CanvasGraphExplorer>
+      );
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+      });
+      expect(screen.queryByRole('button', { name: /Placed Orders/ })).toBeNull();
+      expect(screen.getByRole('heading', { name: 'Sources' })).toBeTruthy();
+      expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
+      const row = screen.getByRole('button', { name: 'Orders' });
+      expect(row.draggable).toBe(writable);
+      expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Revenue' }).draggable).toBe(
+        false
+      );
+      if (writable) {
+        const transfer = { setData: vi.fn(), effectAllowed: '' };
+        act(() => {
+          fireEvent.dragStart(row, { dataTransfer: transfer });
+        });
+        expect(transfer.setData).toHaveBeenCalledExactlyOnceWith(
+          CANVAS_SOURCE_CATALOG_DRAG_MIME_TYPE,
+          'source'
+        );
+        expect(transfer.effectAllowed).toBe('copy');
+      }
+      act(() => {
+        fireEvent.click(row);
+      });
+      expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('source');
+      expect(onSelect).not.toHaveBeenCalled();
+    }
+  );
+
   it('enables project discovery only in the open Elements panel without remounting its list or graph', () => {
     const renderElements = vi.fn(({ enabled }: { enabled: boolean }) => (
       <input aria-label="Retained project search" data-enabled={enabled} />

@@ -52,6 +52,7 @@ const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>();
 const getProjectGraph = vi.fn<IDbtProjectGraphQueryPort['getProjectGraph']>();
 const saveFileContent = vi.fn();
 const onSelect = vi.fn();
+const onDragStart = vi.fn();
 let services: AppServicesOverrides;
 let mounted: Awaited<ReturnType<typeof withTestQueryClient>> | undefined;
 
@@ -66,7 +67,12 @@ async function render(
   const view = (
     <AppServicesProvider overrides={services}>
       <MemoryRouter initialEntries={['/canvas']}>
-        <CanvasProjectElementsExplorer enabled={enabled} items={items} onSelect={onSelect} />
+        <CanvasProjectElementsExplorer
+          enabled={enabled}
+          items={items}
+          onSelect={onSelect}
+          onDragStart={onDragStart}
+        />
         <Location />
       </MemoryRouter>
     </AppServicesProvider>
@@ -117,6 +123,20 @@ it('shows imported models alongside native rows and navigates to the existing fi
   expect(screen.getByLabelText('Location').textContent).toContain('canvasId=file-owner');
   expect(screen.getByLabelText('Location').textContent).toContain('authority=dbt-project-files');
   expect(getProjectGraph).toHaveBeenCalledExactlyOnceWith(binding);
+  expect(saveFileContent).not.toHaveBeenCalled();
+});
+
+it('retains native catalogue drag while file-owned models remain inspection-only', async () => {
+  await render(true, [{ id: 'source', label: 'Orders', category: 'Sources', draggable: true }]);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  const source = screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' });
+  expect(source.draggable).toBe(true);
+  act(() => {
+    fireEvent.dragStart(source, { dataTransfer: {} });
+  });
+  expect(onDragStart.mock.calls[0]?.[0]).toBe('source');
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).draggable).toBe(false);
+  expect(screen.getByRole('heading', { name: 'dbt models' })).toBeTruthy();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 

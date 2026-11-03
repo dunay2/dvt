@@ -107,8 +107,19 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 
 ### Project Models In Elements
 
-Elements combines active Canvas navigation rows with models from the existing
-file-authoritative project graph. The bounded project-elements adapter enables
+Elements presents registered definitions by category, excluding placed source
+instances. Source rows reuse the existing catalogue drag and guarded instance
+command; each drop creates a fresh identity referencing the same definition.
+The Model editor reuses its existing input catalogue and occurrence actions in
+both explorer panels. The obsolete placed-row projection and its automatic
+scroll-on-selection behavior are removed.
+
+File-owned model rows come from the existing file-authoritative project graph.
+They remain inspectable through their owning Canvas and do not emit source drag
+payloads. Instantiating an external model on a native Canvas requires an admitted
+reference boundary; copying its SQL or semantic definition into GraphDraft is
+not that boundary. Existing Model producer occurrences retain their own semantics.
+The bounded project-elements adapter enables
 the existing scoped queries only while Elements is open. It discovers the actual
 configuration in ListWorkspaceFiles, reads its persisted authority through
 GetWorkspaceFileContent, then reuses ProjectDbtGraphFromFiles and its cache.
@@ -120,8 +131,8 @@ flowchart LR
   T[Scoped file tree] --> A[Configuration persisted authority]
   A --> G[Existing cached dbt graph query]
   G --> E[Shared Elements list]
-  N[Active Canvas rows] --> E
-  E -->|Native row| S[Existing node selection]
+  N[Registered definitions] --> E
+  E -->|Source identity drop| S[Existing guarded instance command]
   E -->|External model| R[Existing owning file Canvas route]
 ```
 
