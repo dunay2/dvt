@@ -367,6 +367,7 @@ describe('Workbench viewport', () => {
         expect(tab.right).to.be.at.most(bounds.right);
       });
     });
+    revealWorkbenchCard('[data-slot="canvas-relational-tree-node"][data-operator="join"]');
     cy.get('[data-slot="canvas-relational-tree-node"][data-operator="join"]').click();
     cy.get('[data-canvas-inspector="true"]:visible').should(($panel) => {
       const bounds = $panel[0]!.getBoundingClientRect();
