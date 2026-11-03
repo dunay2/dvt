@@ -112,8 +112,11 @@ The follow-up [Elements slice](https://github.com/dunay2/dvt/issues/3747#issueco
 adds project model navigation through the existing scoped file and dbt graph
 queries. `SYS-WEB-PROJECT-ELEMENTS-EXPLORER` owns the bounded adapter and its source
 responsibility; the passive explorer owns its extension contract. No model is
-copied into GraphDraft. Native selection remains local; an external model opens
-the existing owning file Canvas route through the router's navigation guards.
+copied into GraphDraft. Native selection remains local. The follow-up
+[single-catalogue design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6605746494)
+opens the declared available model file through the existing guarded Code opener,
+retaining the current Canvas route and authority. Sources and Models share one
+Elements activity with independent category disclosure and delegated additions.
 
 The focused Explorer run passed 42 cases across three suites. The eleven new
 cases cover model visibility, identity deduplication, native versus external
