@@ -20,7 +20,7 @@ type CanvasViewportState = CanvasPosition & {
 
 export type CanvasResourceInstance = Readonly<{ id: string; resourceId: string }>;
 
-export type CanvasContextualWorkbenchId = 'project-code';
+type CanvasContextualWorkbenchId = 'project-code';
 export type CanvasInspectorListId = 'columns' | 'outputs';
 
 type CanvasInspectorListOrders = Partial<Record<CanvasInspectorListId, string[]>>;

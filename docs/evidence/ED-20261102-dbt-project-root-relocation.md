@@ -104,6 +104,21 @@ test also drops its obsolete frozen-node API cast and checks the actual store
 type; the placement hook returns its filtered changes directly. No new utility,
 service, CSS rule or command/query rail is introduced.
 
+The additional read-only audit covered 76 changed production TypeScript files
+and found no further normalized function-body clone candidates after local
+identifier renaming. A textual consumer audit of 133 named exports in 55 changed
+web files found six implementation-only types, now private to their modules.
+`RelationalMovableCard` remains exported: Planning DB explicitly references it
+from the producer/consumer `PersistCanvasLayout` rail, so lack of a direct named
+import alone is insufficient retirement evidence. The shared explorer's
+`sourceRow` CSS is also retained because the internal source catalogue uses it.
+
+`pnpm arch:deps` passed: 412 API modules classified as 408 direct production,
+three conditional production and one declared null object, with zero orphan or
+misplaced test-support modules and no export cleanup candidates. The post-cleanup
+store/menu unit run passed 18 cases, the placement-hook run passed five cases,
+and web package lint and TypeScript passed at `b3f2cf119`.
+
 Before this refinement, the exact `923c92cfb` prepush passed Monaco (one file,
 16 cases) and the complete unit suite (431 files, 3,362 cases). Only its owned
 process tree was stopped when presentation began, following the new cleanup

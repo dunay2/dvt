@@ -1,6 +1,6 @@
 /** Owned concern: derive explicit Canvas node operations without owning node mutation. */
 
-export type CanvasNodeContextMenuTarget = Readonly<{
+type CanvasNodeContextMenuTarget = Readonly<{
   kind: 'node';
   nodeId: string;
   nodeName: string;
@@ -13,7 +13,7 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeContextMenuAction = Readonly<{
+type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
   label: string;
   intent: 'command' | 'query';
@@ -22,7 +22,7 @@ export type CanvasNodeContextMenuAction = Readonly<{
   disabledReason?: string;
 }>;
 
-export type CanvasNodeContextMenuActionGroup = Readonly<{
+type CanvasNodeContextMenuActionGroup = Readonly<{
   id: string;
   label: string;
   actions: readonly CanvasNodeContextMenuAction[];
@@ -135,7 +135,7 @@ export function buildCanvasNodeModelerActionModel({
     actionGroups: groups,
   };
 }
-export type CanvasColumnContextMenuTarget = Readonly<{
+type CanvasColumnContextMenuTarget = Readonly<{
   kind: 'column';
   nodeId: string;
   columnId: string;
@@ -166,7 +166,7 @@ export type CanvasColumnContextMenuAction =
       disabled: true;
     }>;
 
-export type CanvasColumnContextMenuModel = Readonly<{
+type CanvasColumnContextMenuModel = Readonly<{
   target: CanvasColumnContextMenuTarget;
   label: string;
   actions: readonly CanvasColumnContextMenuAction[];
