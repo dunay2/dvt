@@ -60,8 +60,8 @@ Focused checks executed during implementation:
 - Strict root ESLint passed for the directly affected placement, store,
   controller, Viewport, menu and native browser consumer files.
 
-The final affected checks total 94 cases: 20 projection/store/menu, 11 file
-opening and 63 presentation cases. The scoped-envelope presentation run had one
+The final affected checks total 95 cases: 20 projection/store/menu, 11 file
+opening and 64 presentation cases. The scoped-envelope presentation run had one
 remaining old Explorer expectation; that file was corrected and repeated with
 25/25 passing. Web package lint and typecheck passed. The native implementation
 check accepted 701 DB manifests for base
@@ -78,6 +78,15 @@ pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts sr
 pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/canvas/explorer/CanvasExplorer.test.tsx --reporter=dot
 pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts src/app/views/canvas/canvasSourceInstance.architecture.test.ts src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts src/app/views/canvas/explorer/CanvasExplorer.architecture.test.ts --reporter=dot
 ```
+
+The admission review found that file seeds and snapshots could advertise drag
+despite the drop adapter rejecting them. The catalogue now reuses
+`isPlaceableCanvasResource` and derives its drag-handler admission from the same
+visible item flags. Seeds and snapshots remain inspectable without offering
+unsupported placement. The refined Explorer suite passed 26/26 cases. The
+pre-push attempt for `659239db6` was stopped only in its verified owned process
+tree before this refinement; its partial output is retained and is not accepted
+as the final gate.
 
 ### Actual user-session verification
 

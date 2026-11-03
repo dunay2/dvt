@@ -231,6 +231,7 @@ describe('Canvas explorer', () => {
             pluginId: 'dvt',
             status: 'idle',
             tags: [],
+            metadata: { authority: 'dbt-project-files', resourceType: 'source' },
           },
           {
             id: 'model',
@@ -240,6 +241,7 @@ describe('Canvas explorer', () => {
             pluginId: 'dvt',
             status: 'idle',
             tags: [],
+            metadata: { authority: 'dbt-project-files', resourceType: 'model' },
           },
         ]}
       >
@@ -261,6 +263,52 @@ describe('Canvas explorer', () => {
         JSON.stringify({ id, scopeKey: 'scope' })
       );
     }
+  });
+
+  it('keeps unsupported file resources inspectable without offering a rejected drag', () => {
+    const onSelect = vi.fn();
+    const onInspectSource = vi.fn();
+    render(
+      <CanvasGraphExplorer
+        nodes={[]}
+        onSelect={onSelect}
+        onInspectSource={onInspectSource}
+        referencePlacementScope="scope"
+        catalogue={[
+          {
+            id: 'seed',
+            name: 'Countries',
+            role: 'input',
+            kind: 'dvt:source',
+            pluginId: 'dvt',
+            status: 'idle',
+            tags: [],
+            metadata: { authority: 'dbt-project-files', resourceType: 'seed' },
+          },
+          {
+            id: 'snapshot',
+            name: 'History',
+            role: 'transform',
+            kind: 'dvt:transform',
+            pluginId: 'dvt',
+            status: 'idle',
+            tags: [],
+            metadata: { authority: 'dbt-project-files', resourceType: 'snapshot' },
+          },
+        ]}
+      >
+        <input aria-label="Retained graph" />
+      </CanvasGraphExplorer>
+    );
+    for (const name of ['Countries', 'History']) {
+      const row = screen.getByRole<HTMLButtonElement>('button', { name });
+      expect(row.draggable).toBe(false);
+      act(() => {
+        fireEvent.click(row);
+      });
+    }
+    expect(onInspectSource).toHaveBeenCalledExactlyOnceWith('seed');
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith('snapshot');
   });
 
   it('enables project discovery only in the open Elements panel without remounting its list or graph', () => {

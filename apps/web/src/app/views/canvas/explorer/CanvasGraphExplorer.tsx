@@ -2,7 +2,7 @@
  * Owned concern: adapt the main Canvas graph to the shared explorer.
  * @baseline GH-3610: registered sources need not have a placed card.
  * @decision Inspect source definitions on click; transfer only their identity on drag.
- * @consequence The existing guarded drop command alone admits sources to the graph.
+ * @consequence Catalogue affordances reuse the guarded drop adapter's admission rule.
  * @version 1.0.0
  */
 import type { Node } from '@xyflow/react';
@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, type ReactNode, type DragEvent } from 'reac
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../../types/canonical';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from '../canvasNodeDropPayload';
+import { isPlaceableCanvasResource } from '../canvasResourcePlacements';
 import { CanvasExplorer, type CanvasExplorerProjectWorkspace } from './CanvasExplorer';
 import type { CanvasExplorerActivityRail } from './CanvasExplorer.templates';
 import { CanvasExplorerList } from './CanvasExplorerList';
@@ -48,8 +49,6 @@ export function CanvasGraphExplorer({
   importedSourceIds?: readonly string[];
   onImportFocusComplete?: () => void;
 }>): JSX.Element {
-  const canPlaceModel = referencePlacementScope != null;
-  const canPlaceInput = canPlaceSource || canPlaceModel;
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
   const rootRef = useRef<HTMLDivElement>(null);
   const sources = useMemo(() => projectCanvasExplorerSources(catalogue ?? []), [catalogue]);
@@ -58,19 +57,22 @@ export function CanvasGraphExplorer({
     [catalogue]
   );
   const sourceIds = new Set(sources.map((source) => source.id));
-  const modelIds = new Set(models.map((node) => node.id));
+  const referenceIds = useMemo(
+    () => new Set((catalogue ?? []).filter(isPlaceableCanvasResource).map((node) => node.id)),
+    [catalogue]
+  );
   const items = [
     ...sources.map((source) => ({
       ...source,
       category: copy.sources,
-      draggable: canPlaceInput,
+      draggable: referencePlacementScope == null ? canPlaceSource : referenceIds.has(source.id),
       disabled: onInspectSource == null,
     })),
     ...models.map((node) => ({
       id: node.id,
       label: node.name,
       category: copy.models,
-      draggable: canPlaceModel,
+      draggable: referencePlacementScope != null && referenceIds.has(node.id),
       selected: nodes.some((placed) => placed.id === node.id && placed.selected),
     })),
   ];
@@ -81,19 +83,21 @@ export function CanvasGraphExplorer({
     ],
     [copy.models, { label: copy.addModel, onAdd: onAddModel }],
   ]);
-  const dragResource = canPlaceInput
-    ? (id: string, event: DragEvent<HTMLButtonElement>) => {
-        if (!(canPlaceInput && sourceIds.has(id)) && !(canPlaceModel && modelIds.has(id))) {
-          event.preventDefault();
-          return;
+  const draggableIds = new Set(items.filter((item) => item.draggable).map((item) => item.id));
+  const dragResource =
+    draggableIds.size > 0
+      ? (id: string, event: DragEvent<HTMLButtonElement>) => {
+          if (!draggableIds.has(id)) {
+            event.preventDefault();
+            return;
+          }
+          event.dataTransfer.setData(
+            CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
+            JSON.stringify({ id, scopeKey: referencePlacementScope })
+          );
+          event.dataTransfer.effectAllowed = 'copy';
         }
-        event.dataTransfer.setData(
-          CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
-          JSON.stringify({ id, scopeKey: referencePlacementScope })
-        );
-        event.dataTransfer.effectAllowed = 'copy';
-      }
-    : undefined;
+      : undefined;
   const inspect = (id: string) => (sourceIds.has(id) ? onInspectSource?.(id) : onSelect(id));
   useEffect(() => {
     if (importedSourceIds.length === 0) return;
