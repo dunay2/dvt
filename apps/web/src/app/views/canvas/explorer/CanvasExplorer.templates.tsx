@@ -60,7 +60,9 @@ export function CanvasExplorerTemplate(
     onClose: () => void;
   }>
 ): JSX.Element {
-  const availablePanels = panels.filter(({ key }) => key !== 'git' || props.hasProjectFiles);
+  const availablePanels = panels.filter(({ key }) =>
+    key === 'sources' ? props.sources != null : key !== 'git' || props.hasProjectFiles
+  );
   const activityRail = (
     <nav className={styles.rail} aria-label={props.copy.navigation} hidden={!props.visible}>
       {availablePanels.map(({ key, icon }) => (

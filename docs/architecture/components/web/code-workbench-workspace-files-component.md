@@ -110,8 +110,9 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 Elements presents registered definitions by category, excluding placed source
 instances. Source rows reuse the existing catalogue drag and guarded instance
 command; each drop creates a fresh identity referencing the same definition.
-The Model editor reuses its existing input catalogue and occurrence actions in
-both explorer panels. The obsolete placed-row projection and its automatic
+The Model editor keeps one input catalogue under Elements and reuses its existing
+occurrence actions. It omits the redundant Sources activity. The obsolete
+placed-row projection and its automatic
 scroll-on-selection behavior are removed.
 
 File-owned model rows come from the existing file-authoritative project graph.

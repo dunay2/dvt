@@ -1,8 +1,8 @@
 /**
  * Owned concern: expose the existing Model input catalogue and guarded occurrence actions.
  * @baseline GH-3747: Elements generates instances rather than listing placed cards.
- * @decision Reuse the source catalogue in both panels and respect pending forms.
- * @consequence One occurrence rail owns identity and admission in either panel.
+ * @decision Keep one catalogue under Elements and respect pending forms.
+ * @consequence One occurrence rail owns identity and admission without duplicate controls.
  * @version 1.0.0
  */
 import type { ReactNode } from 'react';
@@ -34,7 +34,7 @@ export function CanvasRelationalExplorer({
     />
   );
   return (
-    <CanvasExplorer sources={catalogue} elements={catalogue}>
+    <CanvasExplorer sources={null} elements={catalogue}>
       {children}
     </CanvasExplorer>
   );

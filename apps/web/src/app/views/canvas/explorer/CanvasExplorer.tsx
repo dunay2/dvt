@@ -57,7 +57,7 @@ export function CanvasExplorer({
   const [selected, setSelected] = useState<CanvasExplorerPanel>('sources');
   const [expanded, setExpanded] = useState(true);
   const hasProjectFiles = projectFiles != null;
-  const selectedPanel = selected;
+  const selectedPanel = selected === 'sources' && sources == null ? 'elements' : selected;
   const visible = useUiLayoutStore((state) => state.canvasExplorerVisible);
   const close = useUiLayoutStore((state) => state.hideCanvasExplorer);
   // An explicit View-menu reopen must expand even a previously collapsed dock.

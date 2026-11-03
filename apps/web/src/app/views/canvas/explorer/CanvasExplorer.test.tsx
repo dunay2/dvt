@@ -40,6 +40,24 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('defaults to one Elements catalogue when the context has no separate Sources surface', () => {
+    render(
+      <CanvasExplorer
+        sources={null}
+        elements={
+          <CanvasExplorerList items={[{ id: 'orders', label: 'Orders' }]} onSelect={vi.fn()} />
+        }
+      >
+        <input aria-label="Graph" />
+      </CanvasExplorer>
+    );
+    expect(screen.queryByRole('button', { name: 'Sources' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Elements' }).getAttribute('aria-expanded')).toBe(
+      'true'
+    );
+    expect(container.querySelectorAll('input[type="search"]')).toHaveLength(1);
+    expect(screen.getByRole('button', { name: 'Orders' })).toBeTruthy();
+  });
   it.each([true, false])(
     'uses Elements as a definition catalogue with guarded instance drag (writable=%s)',
     (writable) => {
