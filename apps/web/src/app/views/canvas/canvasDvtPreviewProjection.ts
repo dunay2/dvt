@@ -4,6 +4,8 @@ import {
   parseExecutionSelection,
   type ExecutionSelection,
   ConnectedSourceRefSchema,
+  resolveWorkspaceNodeInstances,
+  projectWorkspaceNodeInstanceEdges,
 } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -138,9 +140,17 @@ export function buildProtectedDvtPreviewProjection(args: {
       ? args.workspaceNodeIds
       : args.canonicalNodes.map((node) => node.id)
   );
-  const nodes = args.canonicalNodes.filter((node) => workspaceNodeIds.has(node.id));
+  let resolvedNodes: readonly CanonicalNode[];
+  let contextEdges: readonly CanonicalEdge[];
+  try {
+    resolvedNodes = resolveWorkspaceNodeInstances(args.canonicalNodes);
+    contextEdges = projectWorkspaceNodeInstanceEdges(resolvedNodes, args.canonicalEdges);
+  } catch {
+    return { ok: false, cause: 'protected_path_required' };
+  }
+  const nodes = resolvedNodes.filter((node) => workspaceNodeIds.has(node.id));
   const nodesById = new Map(nodes.map((node) => [node.id, node]));
-  const edges = args.canonicalEdges.filter(
+  const edges = contextEdges.filter(
     (edge) =>
       workspaceNodeIds.has(edge.sourceId) &&
       workspaceNodeIds.has(edge.targetId) &&

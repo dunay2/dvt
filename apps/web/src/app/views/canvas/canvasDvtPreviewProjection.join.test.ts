@@ -7,6 +7,7 @@ import { buildProtectedDvtPreviewProjection } from './canvasDvtPreviewProjection
 import { applyDvtSubstraitSemanticDocument } from './canvasDvtTransformAuthoringAuthority';
 import { createSourceSet } from './canvasSourceSet';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { createCanvasNodeInstance } from './canvasNodeInstance';
 
 function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjection>[0] {
   const document = DvtSubstraitSemanticDocumentV1Schema.parse(
@@ -60,6 +61,46 @@ function fixture(count: 2 | 3): Parameters<typeof buildProtectedDvtPreviewProjec
 }
 
 describe('N-input protected Preview intent', () => {
+  it.each([true, false])(
+    'admits an instance without a diagram edge to its definition (definition visible=%s)',
+    (visible) => {
+      const input = fixture(2);
+      const definition = input.canonicalNodes.at(-1)!;
+      const instance = {
+        ...createCanvasNodeInstance(definition, new Set(), 'model-instance'),
+        metadata: undefined,
+      };
+      const args = {
+        ...input,
+        canonicalNodes: [...input.canonicalNodes, instance],
+        workspaceNodeIds: [
+          ...input.workspaceNodeIds.filter((id) => visible || id !== definition.id),
+          instance.id,
+        ],
+        selectionIntent: { mode: 'explicit' as const, nodeIds: [instance.id] },
+      };
+      const edges = JSON.stringify(input.canonicalEdges);
+      expect(buildProtectedDvtPreviewProjection(args)).toMatchObject({
+        ok: true,
+        selection: { mode: 'upstream', nodeIds: [instance.id] },
+        derivedDependencyNodeIds: input.workspaceNodeIds
+          .filter((id) => id !== definition.id)
+          .sort(),
+      });
+      expect(JSON.stringify(input.canonicalEdges)).toBe(edges);
+      expect(
+        buildProtectedDvtPreviewProjection({
+          ...args,
+          canonicalEdges: args.canonicalEdges.map((edge) => ({
+            ...edge,
+            metadata: { executionGate: 'closed' },
+          })),
+        }).ok
+      ).toBe(false);
+      instance.definitionId = 'missing';
+      expect(buildProtectedDvtPreviewProjection(args).ok).toBe(false);
+    }
+  );
   it.each([2, 3] as const)(
     'admits %i sources but sends only upstream selection intent',
     (count) => {
