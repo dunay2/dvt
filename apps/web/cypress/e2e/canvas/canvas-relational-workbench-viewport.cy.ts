@@ -287,18 +287,18 @@ describe('Workbench viewport', () => {
     cy.get(
       '[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]'
     ).click();
-    cy.get('[data-slot="canvas-workspace-surface"] [data-element-id]:visible')
-      .first()
-      .then(($item) => {
-        const id = $item.attr('data-element-id');
-        cy.get('.react-flow__node')
-          .its('length')
-          .then((count) => {
-            cy.wrap($item).click();
-            cy.get(`.react-flow__node[data-id="${id}"]`).should('have.class', 'selected');
-            cy.get('.react-flow__node').should('have.length', count);
-          });
-      });
+    cy.get(
+      '[data-slot="canvas-workspace-surface"] [data-element-id="join-transform"]:visible'
+    ).then(($item) => {
+      const id = $item.attr('data-element-id');
+      cy.get('.react-flow__node')
+        .its('length')
+        .then((count) => {
+          cy.wrap($item).click();
+          cy.get(`.react-flow__node[data-id="${id}"]`).should('have.class', 'selected');
+          cy.get('.react-flow__node').should('have.length', count);
+        });
+    });
     openWorkbenchModel();
     cy.get('[data-slot="canvas-model-save-status"]').should('have.text', 'Synced');
     cy.then(() => {

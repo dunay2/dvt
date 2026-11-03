@@ -41,8 +41,8 @@ export function moveWorkbenchCard(
       const events = [
         { type: 'mouseMoved', x, y, buttons: 0 },
         { type: 'mousePressed', x, y, buttons: 1, button: 'left', clickCount: 1 },
-        ...Array.from({ length: observe == null ? 1 : 10 }, (_, index) => {
-          const fraction = (index + 1) / (observe == null ? 1 : 10);
+        ...Array.from({ length: 10 }, (_, index) => {
+          const fraction = (index + 1) / 10;
           return {
             type: 'mouseMoved',
             x: x + dx * fraction * scale,
