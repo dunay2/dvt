@@ -426,7 +426,7 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-context-menu"]').should('not.exist');
   });
 
-  it('lists an imported model from the native Canvas and opens its owning file Canvas without copying it', () => {
+  it('opens an imported model in Code while retaining the native Canvas without copying it', () => {
     const writes: string[] = [];
     cy.intercept({ method: '+(POST|PUT|DELETE)', url: '**/workspace/**' }, (request) => {
       writes.push(request.url);
@@ -439,17 +439,27 @@ describe('dbt project file projection live vertical', () => {
         );
       },
     });
-    cy.get('button[title="Elements"]').click();
+    cy.get('[data-slot="canvas-explorer-elements-toggle"]').should(
+      'have.attr',
+      'aria-expanded',
+      'true'
+    );
     cy.get('[data-element-id="model.analytics.orders"]', { timeout: 60_000 })
       .should('be.visible')
       .and('have.length', 1)
       .click();
-    cy.location('search')
-      .should('contain', `canvasId=${CANVAS_ID}`)
-      .and('contain', 'authority=dbt-project-files');
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]', { timeout: 60_000 }).should(
-      'be.visible'
+    cy.location('search').should('eq', '');
+    cy.get('[data-slot="canvas-code-main-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.get(
+      '[data-slot="canvas-code-workspace-surface"] [data-slot="workspace-file-code-editor"]'
+    ).should('have.attr', 'data-file-path', `${PROJECT_ROOT}/models/orders.sql`);
+    cy.get('[data-slot="canvas-workspace-tab"]').click();
+    cy.get('[data-slot="canvas-explorer-elements-toggle"]').should(
+      'have.attr',
+      'aria-expanded',
+      'true'
     );
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]').should('not.exist');
     cy.then(() => {
       expect(writes, 'navigation does not persist copied semantics').to.deep.equal([]);
     });

@@ -97,7 +97,7 @@ flowchart LR
 
 The single Elements activity presents project definitions under independently
 collapsible Sources and Models categories. Category additions delegate to the
-existing `ImportWarehouseSources` and `CreateCanvasNode` adapters; they do not
+existing `ImportWarehouseSources` and `CreateCanvasAuthoringNode` adapters; they do not
 introduce a catalogue writer. Available connection objects, registered definitions
 and placed instances remain distinct. Repeated source placement uses the same
 guarded instance command and never creates a SQL file per placement.

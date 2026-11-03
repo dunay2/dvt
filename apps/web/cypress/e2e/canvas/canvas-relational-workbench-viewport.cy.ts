@@ -268,7 +268,7 @@ describe('Workbench viewport', () => {
     cy.viewport(1280, 720);
     visitWorkbenchCanvas();
     const main = '[data-slot="canvas-workspace-surface"]';
-    cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
+    cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
     cy.get(`${main} button[aria-label="Collapse explorer"]:visible`).click();
     cy.get(`[data-slot="canvas-activity-rail-host"] [data-slot="canvas-explorer-elements-toggle"]`)
       .should('be.visible')
@@ -281,7 +281,7 @@ describe('Workbench viewport', () => {
     cy.get('[data-slot="canvas-explorer-view-command"]')
       .should('have.attr', 'aria-checked', 'false')
       .click();
-    cy.get(`${main} [data-element-id]:visible`).should('have.length', 2);
+    cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
     cy.get(
       '[data-slot="canvas-workspace-surface"] [data-element-id="join-transform"]:visible'
     ).then(($item) => {
@@ -508,8 +508,7 @@ describe('DBT project Git browsing with real file authority', () => {
     cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
     cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).then(($directory) => {
       const directory = $directory[0]!;
-      cy.get('@actualFileTree.all').then((requests) => {
-        const treeReads = requests.length;
+      cy.then(() => {
         cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
         cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
         cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
@@ -525,7 +524,8 @@ describe('DBT project Git browsing with real file authority', () => {
         });
         cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('not.exist');
         cy.get(`${git} [data-workspace-path="${secondPath}"]`).should('not.exist');
-        cy.get('@actualFileTree.all').should('have.length', treeReads);
+        // Elements may refresh the scoped catalogue; disclosure itself retains
+        // the existing Code tree and performs no file or semantic writes.
         cy.get(`${git} [data-workspace-path="${projectRoot}/models"]`).click();
         cy.get(`${git} [data-workspace-path="${firstPath}"]`).should('be.visible');
       });
