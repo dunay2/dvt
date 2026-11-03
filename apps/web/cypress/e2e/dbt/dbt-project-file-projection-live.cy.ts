@@ -268,7 +268,9 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
     for (const activity of ['sources', 'elements']) {
-      cy.get(`[data-slot="canvas-explorer-${activity}-toggle"]`).click();
+      cy.get(`[data-slot="canvas-explorer-${activity}-toggle"]`).then(($toggle) => {
+        if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
+      });
       cy.get('[data-element-id="source.analytics.raw.orders"]')
         .filter(':visible')
         .should('be.enabled')

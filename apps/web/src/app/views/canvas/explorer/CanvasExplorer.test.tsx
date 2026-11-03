@@ -40,6 +40,55 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('collapses categories independently and retains disclosure through search and panel changes', () => {
+    const onSelect = vi.fn();
+    render(
+      <CanvasExplorer
+        sources={null}
+        elements={
+          <CanvasExplorerList
+            items={[
+              { id: 'orders', label: 'Orders', category: 'Sources' },
+              { id: 'revenue', label: 'Revenue', category: 'Models', selected: true },
+            ]}
+            onSelect={onSelect}
+          />
+        }
+      >
+        <input aria-label="Retained graph" />
+      </CanvasExplorer>
+    );
+    const sources = screen.getByRole('button', { name: 'Elements: Sources' });
+    const models = screen.getByRole('button', { name: 'Elements: Models' });
+    const graph = screen.getByLabelText('Retained graph');
+    act(() => fireEvent.click(sources));
+    expect(sources.getAttribute('aria-expanded')).toBe('false');
+    expect(models.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.queryByRole('button', { name: 'Orders' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Revenue' }).getAttribute('aria-pressed')).toBe(
+      'true'
+    );
+    act(() => {
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Revenue' } });
+    });
+    expect(screen.queryByRole('button', { name: 'Elements: Sources' })).toBeNull();
+    act(() => {
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: '' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Elements' }));
+    });
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements' })));
+    const restoredSources = screen.getByRole('button', { name: 'Elements: Sources' });
+    expect(restoredSources.getAttribute('aria-expanded')).toBe('false');
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Elements: Models' })));
+    expect(screen.queryByRole('button', { name: 'Revenue' })).toBeNull();
+    act(() => fireEvent.click(restoredSources));
+    expect(screen.getByRole('button', { name: 'Orders' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Revenue' })).toBeNull();
+    expect(screen.getByLabelText('Retained graph')).toBe(graph);
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
   it('defaults to one Elements catalogue when the context has no separate Sources surface', () => {
     render(
       <CanvasExplorer
