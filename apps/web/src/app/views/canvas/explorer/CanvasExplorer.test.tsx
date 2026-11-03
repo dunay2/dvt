@@ -505,7 +505,7 @@ describe('Canvas explorer', () => {
     });
     expect(transfer.setData).toHaveBeenCalledExactlyOnceWith(
       CANVAS_CATALOG_NODE_DRAG_MIME_TYPE,
-      'imported'
+      JSON.stringify({ id: 'imported' })
     );
     expect(transfer.effectAllowed).toBe('copy');
     expect(onInspectSource).toHaveBeenCalledTimes(1);
