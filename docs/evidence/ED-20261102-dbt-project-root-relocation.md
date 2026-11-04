@@ -712,3 +712,19 @@ immutability. Existing Model navigation and draft-layout suites pass seventeen
 cases, preserving rejection, Stay/Discard and manual-position behavior. Full Web
 lint and typecheck pass. These package results do not replace native UNION or
 complete prepush evidence.
+
+The native Close assertion remained RED after the geometry correction. A trial
+restoration-policy change then failed an existing legacy-default requirement and
+was fully reverted before commit; that requirement remains unchanged. The current
+fix reuses the already-restored draft as the semantic comparison baseline through
+the existing hydration/session binding. A focused legacy-baseline regression was
+RED against raw persisted comparison. Stored DTOs, legacy defaults, configured
+Output ownership, scoped Read validation and actual Apply requests are preserved;
+no second hydration algorithm or mutable baseline store was introduced. Native
+UNION and the complete gate remain pending evidence.
+
+The hydrated-baseline correction passes six unit files / 94 cases, four
+presentation files / 25 cases and the Workbench architecture suite / 17 cases.
+Full Web lint and typecheck complete without diagnostics. The legacy restoration
+requirement remains unchanged; native Cancel/Close progression still requires
+its committed browser run.

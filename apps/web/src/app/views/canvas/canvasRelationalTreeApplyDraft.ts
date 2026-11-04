@@ -44,6 +44,7 @@ export function prepareCanvasRelationalTreeApply(
     pending: Parameters<typeof createCanvasRelationalAuthoringDraft>[0];
     baselineOutputId: string | null;
     semanticRootId: string | null;
+    baselineAuthoringDraft?: DvtRelationalAuthoringDraftV1;
   }>
 ) {
   const { pending } = args;
@@ -73,12 +74,18 @@ export function prepareCanvasRelationalTreeApply(
         : undefined,
   };
   const draft = createCanvasRelationalTreeApplyDraft(request);
+  const baseline = {
+    ...createCanvasInspectorNodeDraft(args.transformNode),
+    ...(args.baselineAuthoringDraft == null
+      ? {}
+      : { relationalAuthoringDraft: args.baselineAuthoringDraft }),
+  };
   return {
     request,
     cleared,
     hasIncompleteGraph,
     hasDraftChanges: !areCanvasInspectorNodeDraftsEqual(
-      semanticInspectorDraft(createCanvasInspectorNodeDraft(args.transformNode)),
+      semanticInspectorDraft(baseline),
       semanticInspectorDraft(canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft))
     ),
   };

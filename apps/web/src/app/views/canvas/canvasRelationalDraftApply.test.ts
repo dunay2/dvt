@@ -11,37 +11,44 @@ import {
   canonicalizeCanvasInspectorNodeDraft,
   createCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
-import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import {
+  createCanvasRelationalAuthoringDraft,
+  restoreCanvasRelationalAuthoringDraft,
+} from './canvasRelationalAuthoringDraft';
 import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
 import { occurrenceInput } from './relational-source-occurrence/occurrence.test.fixtures';
 
 describe('canonical draft apply', () => {
-  it.each(['moved', 'retained'] as const)(
-    'does not treat %s layout as an unapplied semantic edit after restoration',
+  it.each(['moved layout', 'retained layout', 'legacy defaults'] as const)(
+    'does not treat %s as an unapplied semantic edit after restoration',
     (layout) => {
       const { document, session } = graphJoin();
-      const source = createPendingSourceOccurrence({
+      const input = {
         ...occurrenceInput.source,
         fields: occurrenceInput.fields.map((name) => ({
           name,
           dataType: 'bigint',
-          joinDataType: 'i64',
+          joinDataType: 'i64' as const,
         })),
-      });
+      };
+      const initial = createPendingSourceOccurrence(input);
+      const { initialOutputFieldIds: _initialSelection, ...configured } = initial;
+      const source = layout === 'legacy defaults' ? configured : initial;
       const positions = new Map([[source.read.binding.relationId, { x: 80, y: 120 }]]);
-      const pending = {
+      const saved = createCanvasRelationalAuthoringDraft({
         sources: [source],
         operations: [],
         outputRelationId: session.rootId,
         positions,
-      };
+      });
+      const pending = restoreCanvasRelationalAuthoringDraft(saved, [input], document)!;
+      expect(pending).not.toBeNull();
       const model = graphModel(document);
       const transformNode = {
         ...model,
         metadata: {
           ...model.metadata,
-          [DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY]:
-            createCanvasRelationalAuthoringDraft(pending),
+          [DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY]: saved,
         },
       };
       const before = JSON.stringify(transformNode);
@@ -52,15 +59,18 @@ describe('canonical draft apply', () => {
         operation: 'inner_join' as const,
         hasSelectedInputs: true,
         pending,
+        baselineAuthoringDraft:
+          layout === 'legacy defaults' ? createCanvasRelationalAuthoringDraft(pending) : undefined,
         baselineOutputId: session.rootId,
         semanticRootId: session.rootId,
       };
       expect(prepareCanvasRelationalTreeApply(args).hasDraftChanges).toBe(false);
       const retainedPositions = new Map(positions);
-      retainedPositions.set(
-        layout === 'moved' ? source.read.binding.relationId : 'discarded-edit-position',
-        { x: 240, y: 360 }
-      );
+      if (layout !== 'legacy defaults')
+        retainedPositions.set(
+          layout === 'moved layout' ? source.read.binding.relationId : 'discarded-edit-position',
+          { x: 240, y: 360 }
+        );
       const prepared = prepareCanvasRelationalTreeApply({
         ...args,
         pending: { ...pending, positions: retainedPositions },

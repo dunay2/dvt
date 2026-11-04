@@ -5,6 +5,7 @@ import type { SubstraitDocument } from '@dvt/substrait-analysis';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import type { useCanvasRelationalTreeDraftState } from './useCanvasRelationalTreeDraftState';
 import {
+  createCanvasRelationalAuthoringDraft,
   readCanvasRelationalAuthoringDraft,
   restoreCanvasRelationalAuthoringDraft,
 } from './canvasRelationalAuthoringDraft';
@@ -23,7 +24,11 @@ export function useCanvasRelationalAuthoringDraftHydration(
     hydrateExisting: () => boolean;
     state: DraftState;
   }>
-): Readonly<{ restorationUnavailable: boolean; restore: () => void }> {
+): Readonly<{
+  restorationUnavailable: boolean;
+  restore: () => void;
+  baselineAuthoringDraft: ReturnType<typeof createCanvasRelationalAuthoringDraft> | undefined;
+}> {
   const { reset, restoreIncomplete, setPositions } = args.state;
   const persisted = useMemo(
     () => readCanvasRelationalAuthoringDraft(args.transformNode),
@@ -35,6 +40,10 @@ export function useCanvasRelationalAuthoringDraftHydration(
         ? null
         : restoreCanvasRelationalAuthoringDraft(persisted, args.inputs, args.document),
     [args.document, args.inputs, persisted]
+  );
+  const baselineAuthoringDraft = useMemo(
+    () => (restored == null ? undefined : createCanvasRelationalAuthoringDraft(restored)),
+    [restored]
   );
   const restore = useCallback(() => {
     reset();
@@ -55,5 +64,9 @@ export function useCanvasRelationalAuthoringDraftHydration(
     setPositions,
   ]);
   useEffect(restore, [restore]);
-  return { restorationUnavailable: persisted != null && restored == null, restore };
+  return {
+    restorationUnavailable: persisted != null && restored == null,
+    restore,
+    baselineAuthoringDraft,
+  };
 }

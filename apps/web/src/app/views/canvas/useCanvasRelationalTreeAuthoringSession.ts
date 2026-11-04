@@ -34,15 +34,18 @@ export function useCanvasRelationalTreeAuthoringSession(
     projection: args.projection,
     onHydrate: state.hydrate,
   });
-  const { restorationUnavailable, restore: restoreSnapshot } =
-    useCanvasRelationalAuthoringDraftHydration({
-      enabled,
-      transformNode,
-      document: args.document,
-      inputs,
-      hydrateExisting,
-      state,
-    });
+  const {
+    restorationUnavailable,
+    restore: restoreSnapshot,
+    baselineAuthoringDraft,
+  } = useCanvasRelationalAuthoringDraftHydration({
+    enabled,
+    transformNode,
+    document: args.document,
+    inputs,
+    hydrateExisting,
+    state,
+  });
   const editable = authoring?.canEditNode === true && !restorationUnavailable;
   const effectiveDraft = !state.active && seed != null ? seed.draft : state.joinDraft;
   const sourceInputRecovery = useCanvasSourceInputRecovery({
@@ -76,6 +79,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     },
     baselineOutputId: seed?.outputRelationId ?? null,
     semanticRootId: analysis?.document == null ? null : analysis.session.rootId,
+    baselineAuthoringDraft,
   });
   const apply = createCanvasRelationalTreeApplyCommand({
     ...prepared.request,
