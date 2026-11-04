@@ -1,5 +1,10 @@
+import { PlanRelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/plan_pb.js';
+import { create } from '@bufbuild/protobuf';
 import {
   DbtProjectGraphProjectionSchema,
+  DVT_SUBSTRAIT_PROFILE_REF_V1,
+  DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+  encodeDvtSubstraitPlanV1,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   type DbtProjectGraphProjection,
   type WorkspaceGraphAuthoringDraft,
@@ -7,6 +12,7 @@ import {
 } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import { renderPostgresAst } from '@dvt/postgres-projection';
+import { createProducerInput } from '@dvt/substrait-analysis';
 import { describe, expect, it, vi, type Mock } from 'vitest';
 
 import {
@@ -20,11 +26,13 @@ import type {
   IDbtProjectAnalyzerPort,
 } from '../../../src/application/ports/dbtProjectAnalysis.js';
 import type { IWarehouseConnectionCatalog } from '../../../src/application/ports/warehouseSourceImport.js';
+import { DvtOperationalWorkloadProjector } from '../../../src/application/services/dvtOperationalWorkloadProjector.js';
 import { PreviewCanvasTransformRowsUseCase } from '../../../src/application/services/previewCanvasTransformRowsUseCase.js';
 import type { ProjectDbtGraphFromFilesUseCase } from '../../../src/application/services/projectDbtGraphFromFilesUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../../src/application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveDbtModelProducers } from '../../../src/application/services/resolveDbtModelProducers.js';
 import { TenantId, ProjectId, EnvironmentId } from '../../../src/domain/auth/types.js';
+import { publisherHarness } from '../../fixtures/dvtRepeatedSourcePublisher.js';
 
 const scope = { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' };
 const context: AuthorizedExecutionContext = {
@@ -235,6 +243,90 @@ describe('scoped dbt model producer binding', () => {
       context.requestId
     );
     expect(JSON.stringify(draft)).toBe(before);
+    const externalProducers = await f.resolver.resolve([{ ...node, id: instance.id }], context);
+    const isolated = {
+      scope,
+      draft,
+      selectedNodeIds: [instance.id],
+      selectedEdgeIds: [],
+      externalProducers,
+    };
+    const { publisher, publish } = publisherHarness();
+    await expect(publisher.publish(isolated)).rejects.toThrow();
+    expect(publish).not.toHaveBeenCalled();
+    const document = externalProducers.get(instance.id)!.document;
+    const input = createProducerInput({ nodeId: instance.id, name: instance.name, document }, 1);
+    const plan = {
+      ...document.plan,
+      relations: [
+        create(PlanRelSchema, {
+          relType: { case: 'root', value: { input: input.relation, names: ['client_id'] } },
+        }),
+      ],
+    };
+    const semanticPlan = encodeDvtSubstraitPlanV1(plan);
+    const consumer = {
+      ...node,
+      id: 'consumer',
+      metadata: {
+        transformAuthoring: {
+          version: 'v1',
+          mode: 'substrait',
+          semanticDocument: {
+            schemaVersion: DVT_SUBSTRAIT_SEMANTIC_DOCUMENT_SCHEMA_VERSION,
+            profile: DVT_SUBSTRAIT_PROFILE_REF_V1,
+            semanticPlan,
+            sidecar: {
+              ...document.sidecar,
+              semanticPlanSha256: semanticPlan.sha256,
+              relations: [input.binding],
+              fields: input.fields,
+            },
+          },
+        },
+      },
+    };
+    const edge = {
+      id: 'manual-use',
+      sourceId: instance.id,
+      targetId: consumer.id,
+      relation: 'lineage' as const,
+    };
+    const selected = {
+      ...isolated,
+      draft: {
+        ...draft,
+        nodes: [...draft.nodes, consumer],
+        nodeIds: [instance.id, consumer.id],
+        nodePositions: { ...draft.nodePositions, [consumer.id]: { x: 200, y: 80 } },
+        edges: [edge],
+      },
+      selectedNodeIds: [instance.id, consumer.id],
+      selectedEdgeIds: [edge.id],
+    };
+    const publication = await publisher.publish(selected);
+    if (!publication.ok) throw new Error(publication.cause);
+    const workload = new DvtOperationalWorkloadProjector().project({
+      ...selected,
+      canvasId: 'native',
+      draftRevision: 'saved-revision',
+      targetProjection: publication.value,
+    });
+    expect(workload).toMatchObject({
+      ok: true,
+      graphSource: {
+        nodes: [
+          {
+            nodeId: consumer.id,
+            stepTypeConfig: {
+              executionIntent: 'preview',
+              graph: { selectedNodeIds: [consumer.id, instance.id], selectedEdgeIds: [edge.id] },
+              connectionRef,
+            },
+          },
+        ],
+      },
+    });
   });
   it('compiles a repeated model once and keeps instance and assigned field identities', async () => {
     const f = fixture();

@@ -379,6 +379,15 @@ PostgreSQL AST and row-probe port. It caught and corrected an invalid requiremen
 for a nonempty edge set when sampling a standalone model instance. This test
 does not claim a native dbt process or live PostgreSQL execution.
 
+The operational consistency check exposed a separate boundary: the existing
+PostgreSQL workload profile requires a native consumer and its input dependency.
+A standalone file-model instance is directly sampleable through
+PreviewCanvasTransformRows, but does not invent an operational native consumer.
+Protected PreviewPlan must preserve that profile, accept the file-model instance
+as an input to a native consumer, and reject an isolated reference before
+publishing SQL artifacts. The Web admission projection must express the same
+condition. No workload cardinality rule is relaxed to admit an unsupported shape.
+
 Live acceptance remains pending: the user's API returned HTTP 500 with `EBUSY`
 while removing an analyzer-owned temporary project directory. Its preceding
 successful project response reported an unavailable server-owned dbt execution

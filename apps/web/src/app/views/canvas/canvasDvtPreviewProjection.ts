@@ -63,10 +63,9 @@ function resolveTerminalProjectionClosure(
   const incoming = edges
     .filter((edge) => edge.targetId === transform.id)
     .sort((a, b) => a.id.localeCompare(b.id));
-  const external = readWorkspaceDbtModelReference(transform) != null;
   if (
-    (!external && incoming.length === 0) ||
-    (external && incoming.length !== 0) ||
+    readWorkspaceDbtModelReference(transform) != null ||
+    incoming.length === 0 ||
     incoming.some((edge) => edge.relation !== 'lineage')
   )
     return null;
@@ -88,38 +87,33 @@ function resolveTerminalProjectionClosure(
   sources.sort((a, b) => a.id.localeCompare(b.id));
 
   try {
-    if (external) {
-      if (resolveCanvasDbtModelSignature(transform)?.connection.provider !== 'postgres')
-        return null;
-    } else {
-      const authority = readDvtTransformAuthoringAuthority(transform);
-      if (authority == null) return null;
-      const inputs = sources.map((source) => {
-        const signature = resolveCanvasDbtModelSignature(source);
-        return signature == null
-          ? { sourceRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef) }
-          : {
-              sourceRef: null,
-              producer: {
-                nodeId: source.id,
-                name: source.name,
-                document: signature.document,
-                connection: signature.connection,
-              },
-            };
-      });
-      const connections = inputs.map(
-        (input) => input.producer?.connection ?? input.sourceRef!.connectionRef
-      );
-      if (
-        connections.some((connection) => !hasSameConnectionRef(connections[0]!, connection)) ||
-        !hasConnectedRelationSources(
-          decodeDvtSubstraitSemanticDocument(authority.semanticDocument),
-          inputs
-        )
+    const authority = readDvtTransformAuthoringAuthority(transform);
+    if (authority == null) return null;
+    const inputs = sources.map((source) => {
+      const signature = resolveCanvasDbtModelSignature(source);
+      return signature == null
+        ? { sourceRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef) }
+        : {
+            sourceRef: null,
+            producer: {
+              nodeId: source.id,
+              name: source.name,
+              document: signature.document,
+              connection: signature.connection,
+            },
+          };
+    });
+    const connections = inputs.map(
+      (input) => input.producer?.connection ?? input.sourceRef!.connectionRef
+    );
+    if (
+      connections.some((connection) => !hasSameConnectionRef(connections[0]!, connection)) ||
+      !hasConnectedRelationSources(
+        decodeDvtSubstraitSemanticDocument(authority.semanticDocument),
+        inputs
       )
-        return null;
-    }
+    )
+      return null;
   } catch {
     return null;
   }

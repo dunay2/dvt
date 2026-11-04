@@ -119,6 +119,15 @@ describe('native file-model definitions and instances', () => {
     );
     const nodes = [definition, instance, configured];
     expect(
+      buildProtectedDvtPreviewProjection({
+        canvasId: 'native',
+        canonicalNodes: [definition, instance],
+        canonicalEdges: [],
+        workspaceNodeIds: [instance.id],
+        selectionIntent: { mode: 'explicit', nodeIds: [instance.id] },
+      }).ok
+    ).toBe(false);
+    expect(
       resolveCanvasSubstraitGraphBindings({ node: configured, nodes, edges: [edge] }).connection
         .connectionId
     ).toBe('warehouse');

@@ -56,12 +56,12 @@ export function selectProtectedDvtTransforms(
   const nativeTransforms = transforms.filter(
     (node) => readWorkspaceDbtModelReference(node) == null
   );
-  if (input.previewTargetId == null && nativeTransforms.length > 1) {
+  if (input.previewTargetId == null && nativeTransforms.length !== 1) {
     throw new Error('Operational workloads require exactly one Transform authority.');
   }
   const transform =
     input.previewTargetId == null
-      ? (nativeTransforms[0] ?? (transforms.length === 1 ? transforms[0] : undefined))
+      ? nativeTransforms[0]
       : transforms.find((node) => node.id === input.previewTargetId);
   if (
     (sources.length === 0 &&
