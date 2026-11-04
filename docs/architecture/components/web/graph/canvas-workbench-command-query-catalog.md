@@ -737,10 +737,12 @@ authoring presentation state. Cancel removes them without a semantic write.
 After admission, pending lines are discarded and the tree is rendered only from
 the canonical projection. Occupied-port replacement, cycles, incompatible
 arity, producer fan-out and read-only mutation fail closed. The terminal Model
-Output accepts one operation output, never a direct source/input card, and
-remains a passive publication boundary. Existing direct source-to-Output wires
-remain visible and removable; disconnecting preserves both cards and frees the
-producer without inserting an operation. This authoring admission change does
+Output accepts one admitted producer, including a Source occurrence or a dbt
+model reference, and remains a passive publication boundary. A complete direct
+publication uses its existing consumer-owned canonical Read and producer
+reference. It does not copy upstream operations or SQL, create a dependency on
+another placement, or require a visible intermediate operation. Disconnecting
+preserves both cards and frees the producer. This authoring admission change does
 not rewrite saved drafts or alter outer Canvas dependency rules. The old
 operation-drop behavior that mutated whichever relation happened to be selected
 is retired rather than kept as a fallback.
@@ -748,8 +750,10 @@ is retired rather than kept as a fallback.
 The connection command counts canonical tree consumers, staged operation ports
 and the terminal Output together; separate handlers must not admit a second
 consumer. Negative tests cover fan-out across operations and Output, reuse of
-one instance on both JOIN ports, direct source-to-Output admission and occupied
-ports. Disconnect/reconnect and two aliased instances remain positive cases.
+one instance on both JOIN ports, unknown producers and occupied ports. Direct
+source/model publication, disconnect/reconnect and two aliased instances remain
+positive cases. Apply and reopening retain the canonical producer identity and
+the protected Preview consumes that same publication.
 
 Once Apply absorbs every pending source and operation into the canonical tree,
 retire the completed authoring draft. A non-null terminal snapshot with no

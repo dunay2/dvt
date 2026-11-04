@@ -511,6 +511,32 @@ control or weakened browser confirmations.
 
 ## Final Instance And Inspector Regressions
 
+The user also exposed the former operation-only terminal admission: an admitted
+dbt model could feed an operator but its Read card could not feed Model Output.
+The correction reuses the existing producer inventory and terminal/consumer
+guards. A complete direct publication retains its consumer-owned Read and scoped
+producer reference through Apply and reopening; it copies neither dbt SQL nor
+upstream operations. The prospective rationale, diagrams and bounded negative
+cases are recorded in
+[GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6629062637).
+The two direct-publication assertions failed before the fix. The focused
+Workbench run passes four files / 14 cases, including physical and dbt inputs,
+Apply/reopen and the retained single-consumer/occupied-terminal guards. The
+shared live session applied `ventas_por_cliente` directly to `Model 1` Output;
+its protected sample returns HTTP 200 and the browser shows 20 rows, four
+columns and `LIVE` after returning to the Model tab. No intermediate operation
+or copied SQL is present. Full committed-tree integration validation remains a
+separate gate.
+
+The preceding Preview failure also required the authorized native dbt execution
+of `clientes` and `pedidos`: both report `CREATE VIEW` in the configured `dev`
+target, and the project's seven file hashes remain unchanged by that execution.
+Their absence had made the compiled downstream SELECT fail. Preview remains a
+read-only query; it does not create those dependencies implicitly. An earlier
+trailing invalid token in the user's `ventas_por_cliente.sql` was removed through
+the protected SHA-guarded file command and verified by readback; that intentional
+one-file project-data repair is separate from the tracked Raven changes.
+
 The first native browser drag reproduced a real admission failure: a fresh
 file-model definition offered a copy payload, but the Canvas drag-over adapter
 advertised move. Chrome rejected the incompatible drop. Both admitted catalogue

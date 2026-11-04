@@ -35,7 +35,7 @@ const pendingEdges = (): number =>
 describe('single-consumer internal connection boundary', () => {
   setupWorkbenchTest();
 
-  it('disconnects a legacy source-to-Output wire without deleting or transforming its source', async () => {
+  it('disconnects and reconnects a direct Output without deleting or transforming its source', async () => {
     const producer = graphSource('client');
     const read = createSourceRelation({ source: source('client'), fields: ['customer_id'] }, 1);
     const target = graphModel(createSourceDocument([read], read));
@@ -60,14 +60,19 @@ describe('single-consumer internal connection boundary', () => {
     expect(container.querySelector('[data-operator="project"]')).toBeNull();
     const producerPort = find('canvas-relational-output-port');
     await connect(producerPort, terminal());
-    expect(outputEdge()).toBeNull();
+    expect(outputEdge()).not.toBeNull();
     await stageWorkbenchOperation('inner-join');
+    await connect(producerPort, find('canvas-relational-input-port'));
+    expect(pendingEdges()).toBe(0);
+    await act(async () =>
+      terminal().dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+    );
     await connect(producerPort, find('canvas-relational-input-port'));
     expect(pendingEdges()).toBe(1);
     expect(apply).not.toHaveBeenCalled();
   });
 
-  it('requires operations between source cards and Output and releases disconnected instances', async () => {
+  it('admits direct Output while refusing a second consumer or occupied terminal', async () => {
     const source = sourceNode('customers', 'customers');
     const target = transformNode();
     await act(async () =>
@@ -96,6 +101,14 @@ describe('single-consumer internal connection boundary', () => {
       '[data-slot="canvas-relational-output-port"]'
     )!;
     await connect(reads[0]!, terminal());
+    expect(outputEdge()).not.toBeNull();
+    await connect(reads[0]!, inputs[1]!);
+    expect(pendingEdges()).toBe(0);
+    await connect(reads[1]!, terminal());
+    expect(outputEdge()).not.toBeNull();
+    await act(async () =>
+      terminal().dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }))
+    );
     expect(outputEdge()).toBeNull();
     await connect(reads[0]!, inputs[1]!);
     await connect(reads[0]!, inputs[0]!);

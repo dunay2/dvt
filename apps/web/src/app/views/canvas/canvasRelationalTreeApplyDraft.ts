@@ -79,6 +79,18 @@ function resolveAppliedSemantic(args: {
   document: SubstraitDocument | null;
   operation: CanvasRelationalOperation | null;
 }> {
+  const direct = args.relationalAuthoringDraft?.sources.some(
+    (source) => source.relationId === args.relationalAuthoringDraft?.outputRelationId
+  );
+  if (direct && args.joinDraft != null) {
+    const indexed = indexSubstraitRelations(args.joinDraft);
+    if (
+      indexed.ok &&
+      indexed.index.rootId === args.relationalAuthoringDraft?.outputRelationId &&
+      indexed.index.relations.get(indexed.index.rootId)?.relation.relType.case === 'read'
+    )
+      return { document: args.joinDraft, operation: 'projection' };
+  }
   const output = args.relationalAuthoringDraft?.operations.find(
     (candidate) =>
       candidate.relationId === args.relationalAuthoringDraft?.outputRelationId &&
