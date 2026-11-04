@@ -212,7 +212,9 @@ describe('Canvas explorer', () => {
       });
       if (writable) expect(onSelect).toHaveBeenCalledExactlyOnceWith('source');
       else expect(onSelect).not.toHaveBeenCalled();
-      act(() => fireEvent.click(screen.getByRole('button', { name: 'Revenue' })));
+      act(() => {
+        fireEvent.click(screen.getByRole('button', { name: 'Revenue' }));
+      });
       if (writable) expect(onSelect).toHaveBeenLastCalledWith('model');
       else expect(onSelect).not.toHaveBeenCalled();
     }
