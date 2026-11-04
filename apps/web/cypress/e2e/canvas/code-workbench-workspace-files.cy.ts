@@ -1,4 +1,5 @@
 /** Owned concern: prove read-only Canvas Project Code preserves inspection and Canvas position. */
+import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { FileContent } from '../../../src/app/ports/workspace';
@@ -105,13 +106,50 @@ describe('Canvas Project Code read-only inspection', () => {
       },
     ].map((file) => ({ ...file, contentSha256: sha256HexUtf8(file.content) }));
     stubContextualCodeWorkbenchApis(files);
-    for (const endpoint of ['/workspace/dbt/graph', '/workspace/dbt/analysis/selected-model']) {
-      stubE2eApi('GET', endpoint, () => {
-        throw new Error(`YAML and plain SQL inspection must not request ${endpoint}.`);
-      });
-    }
+    stubE2eJsonApi(
+      'GET',
+      '/workspace/dbt/graph',
+      DbtProjectGraphProjectionSchema.parse({
+        schemaVersion: 'dbt-project-graph-projection.v1',
+        authorityBinding: authoringAuthority.binding,
+        freshness: 'fresh',
+        analysisSha256: '1'.repeat(64),
+        projectRevision: {
+          projectRoot: 'inspection_project',
+          projectName: 'inspection_project',
+          contentSetSha256: '2'.repeat(64),
+          analyzedAt: '2026-11-04T00:00:00.000Z',
+          analyzerVersion: 'native-dbt',
+        },
+        nodes: [
+          {
+            uniqueId: 'model.inspection_project.clientes',
+            resourceType: 'model',
+            name: 'clientes',
+            packageName: 'inspection_project',
+            originalFilePath: 'models/clientes.sql',
+            columns: [
+              { name: 'client_id', dataType: 'text' },
+              { name: 'country', dataType: 'text' },
+            ],
+            tags: [],
+            visualEditability: { status: 'code_only', reasons: ['File authority'] },
+          },
+        ],
+        edges: [],
+        diagnostics: [],
+        capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 1 },
+      })
+    );
+    stubE2eApi('GET', '/workspace/dbt/analysis/selected-model', () => {
+      throw new Error('YAML and plain SQL inspection must not analyze model references.');
+    });
 
     visitWithE2eWorkspaceSession('/canvas');
+    cy.get(
+      '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:yaml-code-inspection:model.inspection_project.clientes"]'
+    ).should('be.visible');
+    cy.then(() => expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1));
     cy.get('[data-slot="shell-file-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
@@ -155,7 +193,7 @@ describe('Canvas Project Code read-only inspection', () => {
         decodeURIComponent(url.pathname.slice('/workspace/files/'.length))
       );
       expect(readPaths).to.include.members(files.map(({ path }) => path));
-      expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(0);
+      expect(getE2eApiCalls('/workspace/dbt/graph', 'GET')).to.have.length(1);
       expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0);
       expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
     });

@@ -18,7 +18,9 @@ describe('Workbench predicates', () => {
     cy.wrap(null).should(() => expect(semanticWrites('join-transform')).to.have.length(1));
     const cards = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
     const editor = '[data-slot="dvt-substrait-join-predicate-editors"]:visible';
-    cy.get(cards).first().click();
+    cy.get(cards).first().as('editedJoin');
+    revealWorkbenchCard('@editedJoin');
+    cy.get('@editedJoin').click();
     cy.get('[data-slot="canvas-relational-tree-inline-editor"]:visible').should('be.visible');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(1));
     cy.get('[data-slot="canvas-relational-edit"]:visible').click();
@@ -47,7 +49,8 @@ describe('Workbench predicates', () => {
     cy.get('[role="alertdialog"]').should('not.exist');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('not.exist');
     cy.then(() => expect(semanticWrites('join-transform')).to.have.length(1));
-    cy.get(cards).first().click();
+    revealWorkbenchCard('@editedJoin');
+    cy.get('@editedJoin').click();
     cy.get('[data-slot="canvas-relational-edit"]:visible').click();
     cy.get(`${editor} [aria-label="Editar condición"]`).first().click();
     cy.get(`${editor} [aria-label="Comparador de la condición"]`)

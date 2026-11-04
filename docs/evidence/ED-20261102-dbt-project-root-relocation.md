@@ -555,6 +555,13 @@ camera behavior, force pointer events or remove semantic/persistence assertions.
 The replacement-input journey drops its two source instances at distinct explicit
 positions; it must not depend on automatic reflow to separate overlapping drops.
 
+The plain-file Code proof separates the catalogue's one project discovery query
+from file inspection. It waits for a schema-validated catalogue projection before
+opening Code, then requires no additional graph queries, zero selected-model
+analysis and zero file writes while switching YAML and SQL files. Its geometry,
+read-only and absent-inline-reference assertions remain in place. The previous
+global zero-graph expectation predated the unified Elements catalogue.
+
 The preceding complete prepush attempt passed unit, presentation, architecture
 and build checks but failed browser journeys targeting covered controls. It was
 interrupted after the cancellation spec stalled and is not successful prepush
