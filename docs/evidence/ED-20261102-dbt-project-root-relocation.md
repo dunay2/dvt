@@ -420,7 +420,7 @@ The controlled catalogue browser flow must exercise the file-model DTO through
 the actual Elements, admission, save and reload surfaces. Its injected API
 responses establish the UI boundary only; they are not evidence of native dbt
 compilation or a live PostgreSQL query. That environment acceptance remains
-separate and pending below.
+separate and is recorded below.
 
 The controlled run reached create/save/reload and exposed a shared interaction
 helper defect: it selected a node by any descendant text, including connection
@@ -439,6 +439,24 @@ columns `client_id`/`country`, five live rows and identical row digests. Model
 provenance retained the file Canvas identity, `unique_id` and source/analysis
 digests. Compilation took approximately 16 seconds per request on this host;
 this is not evidence of a compilation performance improvement.
+
+The real browser opened the remaining `clientes` instance's sample and displayed
+20 rows, two columns and `LIVE`. Deleting only the second instance preserved the
+first. All seven project-file hashes remained unchanged, as did warehouse row
+counts: 202 clients, 1,003 orders and 3,003 detail rows.
+
+At code commit `75c50855ad14e34e7e1b46c8de44b1aa3f0327a7`, validation recorded:
+
+| Command or surface                                                           | Result                                                         |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `vitest run packages/@dvt/contracts/test/workspaceDbtModelReference.test.ts` | 15 passed                                                      |
+| API `test:unit test/application/services/resolveDbtModelProducers.test.ts`   | 15 passed                                                      |
+| Web `vitest.canvas-unit.config.ts` model-reference and draft-snapshot suites | 7 passed                                                       |
+| Controlled `canvas-happy-path-draggable.cy.ts`                               | 2 passed, no skipped cases                                     |
+| API and Web package `lint`                                                   | Passed, zero warnings                                          |
+| Web typecheck and API test typecheck                                         | Passed                                                         |
+| `pnpm governance:refresh`                                                    | Passed; Git-derived surfaces stable, not proof of DB ownership |
+| `pnpm verify:prepush`                                                        | Failed at native component responsibility/ownership validation |
 
 The earlier analyzer cleanup `EBUSY` did not recur in these samples. Its general
 cleanup behavior has not been changed or certified by this slice. Main readiness
