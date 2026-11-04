@@ -154,6 +154,13 @@ producer composition is internal to that rail and its existing `PreviewPlan`,
 `CompilePlan`, and `StartRun` consumers; it introduces no new command, query,
 authorization path, or public package API.
 
+Inside a native Model, Read cards in the existing canonical
+`connectedModelRelationIds` inventory use that same selected-relation query. This
+includes dbt model inputs. They retain the displayed model name and the existing
+saved-revision, output-plan, readiness and permission guards. Physical Source
+cards keep their governed physical-source query; missing source references never
+become guessed model inputs. Selecting a card does not execute either query.
+
 Producer composition builds AST and projection metadata first. Internal producer
 bindings carry AST, ordering, output, and source metadata without SQL text. SQL
 serialization occurs once for the requested target at the existing public async

@@ -22,6 +22,7 @@ export type CanvasOperationPreviewPorts = Readonly<{
     selectedFieldNames?: readonly string[]
   ) => void;
   sourceOutputFieldsByRelationId?: ReadonlyMap<string, readonly string[]>;
+  connectedModelRelationIds?: readonly string[];
   inputRevision?: string;
   unavailableRelationIds?: ReadonlySet<string>;
 }>;
@@ -48,7 +49,10 @@ export function CanvasOperationPreviewProvider({
   ports?: CanvasOperationPreviewPorts;
   scope?: Pick<
     CanvasOperationPreviewPorts,
-    'sourceOutputFieldsByRelationId' | 'inputRevision' | 'unavailableRelationIds'
+    | 'sourceOutputFieldsByRelationId'
+    | 'connectedModelRelationIds'
+    | 'inputRevision'
+    | 'unavailableRelationIds'
   >;
   nodeId: string;
   semanticDigest: string | null;

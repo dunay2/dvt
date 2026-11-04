@@ -151,6 +151,7 @@ export function useCanvasRelationalTreeWorkbenchModel(
       sourceInputRecovery.inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
     ),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
+    connectedModelRelationIds: analysis.connectedModelRelationIds,
     outputPlanRelationIds,
     authoringAvailable,
     catalogue,

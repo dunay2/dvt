@@ -79,6 +79,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       ports={preview}
       scope={{
         sourceOutputFieldsByRelationId: model.sourceOutputFieldsByRelationId,
+        connectedModelRelationIds: model.connectedModelRelationIds,
         inputRevision: model.inputRevision,
         unavailableRelationIds: model.unavailableRelationIds,
       }}

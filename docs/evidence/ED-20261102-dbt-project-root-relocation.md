@@ -618,3 +618,15 @@ fixture. Source recovery prepares its excluded-field document separately and
 disposes that analysis session in `finally`. All Stay/Discard, row identity/focus,
 Cancel-then-Apply, exact occurrence/sibling, source immutability and persistence
 assertions remain; no product behavior, assertion, retry or global limit changes.
+
+The next live report recovered the whole-Model sample through public Refresh:
+20 rows/four columns/LIVE. The protected diagnostic request took 24,801 ms; the
+original generic failure is not established as a frontend timeout. A separate
+deterministic fault disabled model-backed Read-card Preview by treating every
+Read as a physical Source. The existing `connectedModelRelationIds` inventory now
+selects the existing protected selected-relation query. Physical Source queries
+and missing-reference guards remain; shared node-copy projection supplies the
+model label. Five semantic regressions failed before this correction. The shared
+user page then proved Preview on `ventas_por_cliente` inside Model 1 returning
+20 rows/four columns/LIVE at 2026-11-04T14:22:20.420Z. No query, compiler, CSS,
+automatic retry, database mutation or timeout increase was introduced.

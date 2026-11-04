@@ -1,9 +1,15 @@
 // @vitest-environment jsdom
-/** Source occurrences connect to explicit operations and remain unavailable in read-only mode. */
+/** Producer occurrences retain publication and query identity through Apply and reopen. */
 import React, { act } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { waitFor } from '@testing-library/dom';
-import { allocateDvtFieldId, allocateDvtRelationId } from '@dvt/contracts';
+import {
+  allocateDvtFieldId,
+  allocateDvtRelationId,
+  asIsoUtcString,
+  TransformDataSampleResponseSchema,
+  type TransformDataSampleRequest,
+} from '@dvt/contracts';
 import { indexSubstraitRelations } from '@dvt/substrait-analysis';
 import { CanvasRelationalTreeWorkbench } from './CanvasRelationalTreeWorkbench';
 import {
@@ -58,6 +64,29 @@ describe('Canvas relational-tree source projection', () => {
       }
       const original = structuredClone(producer);
       const target = transformNode();
+      const dataHost = document.createElement('div');
+      const query = {
+        previewTransformRows: vi.fn(async (request: TransformDataSampleRequest) =>
+          TransformDataSampleResponseSchema.parse({
+            ...request,
+            contractVersion: 1,
+            draftRevision: 'saved-read',
+            columns: [
+              { name: 'customer_id', type: 'text', nullable: true },
+              { name: 'amount', type: 'numeric', nullable: true },
+            ],
+            rows: [{ values: ['C-1', '1.25'] }],
+            truncated: false,
+            provenance: {
+              mode: 'live',
+              sourceRefs: [sourceRef('customers')],
+              queriedAt: asIsoUtcString('2026-11-04T00:00:00.000Z'),
+              limit: 20,
+              navigation: 'bounded-first-page',
+            },
+          })
+        ),
+      };
       const apply = vi.fn((_id: string, _draft: CanvasInspectorNodeDraft) => ({
         outcome: 'no_changes' as const,
       }));
@@ -70,6 +99,17 @@ describe('Canvas relational-tree source projection', () => {
               edges={[edge(producer.id)]}
               copy={COPY}
               authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
+              preview={{
+                canvasId: 'canvas',
+                query,
+                dataHost,
+                preparePreview: async () => ({
+                  ok: true,
+                  canonicalNodes: [producer, node],
+                  canonicalEdges: [edge(producer.id)],
+                  workspaceNodeIds: [producer.id, node.id],
+                }),
+              }}
             />
           )
         );
@@ -87,10 +127,10 @@ describe('Canvas relational-tree source projection', () => {
       await act(async () => button().click());
       expect(apply).toHaveBeenCalledOnce();
       const saved = applyCanvasInspectorNodeDraft(target, apply.mock.calls[0]![1]);
-      const document = decodeDvtSubstraitSemanticDocument(
+      const semanticDocument = decodeDvtSubstraitSemanticDocument(
         readDvtTransformAuthoringAuthority(saved)!.semanticDocument
       );
-      const indexed = indexSubstraitRelations(document);
+      const indexed = indexSubstraitRelations(semanticDocument);
       if (!indexed.ok) throw indexed.error;
       expect(indexed.index.rootId).toBe(readId);
       expect(indexed.index.relations.size).toBe(1);
@@ -105,6 +145,23 @@ describe('Canvas relational-tree source projection', () => {
       expect(
         container.querySelector('[data-operator="read"]')?.getAttribute('data-relation-id')
       ).toBe(readId);
+      if (kind === 'dbt-model') {
+        const preview = container.querySelector<HTMLButtonElement>(
+          '[data-slot="canvas-node-execute"]'
+        )!;
+        expect(preview.disabled).toBe(false);
+        await act(async () => preview.click());
+        expect(query.previewTransformRows).toHaveBeenCalledExactlyOnceWith({
+          canvasId: 'canvas',
+          transformNodeId: target.id,
+          relationId: readId,
+          semanticPlanSha256: semanticDocument.sidecar.semanticPlanSha256,
+          limit: 20,
+        });
+        expect(dataHost.querySelector('table')?.textContent).toContain('C-1');
+        expect(dataHost.querySelector('table')?.textContent).toContain('1.25');
+        expect(apply).toHaveBeenCalledOnce();
+      }
     }
   );
 
