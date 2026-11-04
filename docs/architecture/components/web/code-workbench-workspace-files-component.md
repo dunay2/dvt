@@ -77,6 +77,15 @@ publication and recovery of edits accepted before the read-only restriction.
 
 ### Queries
 
+Native dbt `original_file_path` values and their Canvas node projections are
+project-relative. The shared path qualifier prepends the project root once to
+those values; matching directory names are preserved. A project named `models`
+can therefore contain `models/orders.sql` at workspace path
+`models/models/orders.sql`. Initial Code selection accepts an already qualified
+preference only through exact membership in the authorized workspace file tree,
+before trying a project-relative preference. A string prefix cannot establish a
+path's base or authorization.
+
 | Query                     | Input                              | Read model           | Negative paths                                                |
 | ------------------------- | ---------------------------------- | -------------------- | ------------------------------------------------------------- |
 | `ListWorkspaceFiles`      | tenantId, projectId, environmentId | WorkspaceFileTree    | Missing/denied scope, unavailable repository                  |

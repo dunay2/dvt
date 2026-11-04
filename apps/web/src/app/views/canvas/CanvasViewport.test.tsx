@@ -145,7 +145,11 @@ describe('CanvasViewport', () => {
       xyflowState.setViewport.mockClear();
       await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Orders' })));
       if (writable)
-        expect(onInstantiateNode).toHaveBeenCalledExactlyOnceWith('orders', { x: 500, y: 270 });
+        expect(onInstantiateNode).toHaveBeenCalledExactlyOnceWith(
+          'orders',
+          { x: 500, y: 270 },
+          undefined
+        );
       else expect(onInstantiateNode).not.toHaveBeenCalled();
       expect(xyflowState.fitView).not.toHaveBeenCalled();
       expect(xyflowState.setViewport).not.toHaveBeenCalled();

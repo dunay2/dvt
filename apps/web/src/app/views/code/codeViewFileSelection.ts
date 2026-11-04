@@ -112,10 +112,13 @@ function filterCodeWorkspaceFilesByPathScope(
   });
 }
 
-export function resolveDbtProjectWorkspaceFilePath(projectRoot: string, path: string): string {
+export function resolveDbtProjectWorkspaceFilePath(
+  projectRoot: string,
+  projectRelativePath: string
+): string {
   const root = projectRoot.replaceAll('\\', '/').replace(/^\.\//, '').replace(/\/+$/, '');
-  const relativePath = path.replaceAll('\\', '/').replace(/^\.\//, '');
-  if (!root || root === '.' || relativePath === root || relativePath.startsWith(`${root}/`)) {
+  const relativePath = projectRelativePath.replaceAll('\\', '/').replace(/^\.\//, '');
+  if (!root || root === '.') {
     return relativePath;
   }
   return `${root}/${relativePath}`;
@@ -171,6 +174,7 @@ export function resolveInitialDbtProjectFilePath(
   );
 
   return (
+    files.find((entry) => entry.path === options.preferredPath) ??
     files.find((entry) => entry.path === preferredPath) ??
     files.find((entry) => entry.path === projectFilePath) ??
     files.find((entry) => entry.path.toLowerCase().endsWith('.sql')) ??

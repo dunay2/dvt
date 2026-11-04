@@ -481,6 +481,15 @@ root file, leaving its existing runtime-composition responsibility intact.
 Negative tests must cover missing/stale revision, invalid source/target levels,
 missing/incompatible parent, failed transaction, and unchanged legacy replay.
 
+The final integration run exposed a path-base collision: a project named
+`models` with resource `models/orders.sql` must resolve to workspace
+`models/models/orders.sql`. The shared qualifier now consumes project-relative
+paths without prefix guessing. Initial Code selection recognizes a workspace
+preference through exact membership in the authorized file tree. The existing
+contribution regression and a direct root-name collision test cover the refusal
+to collapse legitimate directories; the optional instance-definition callback
+expectation is aligned without changing creation behavior.
+
 Code remains read-only. This migration does not publish a graph-authored native
 model into a file-owned root, change semantic authority, or implement Git
 staging/commit/push. Native publication refusals remain enforced. A filesystem and

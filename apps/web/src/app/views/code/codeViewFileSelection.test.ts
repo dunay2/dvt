@@ -17,9 +17,9 @@ describe('codeViewFileSelection', () => {
   it.each([
     ['.', 'models/orders.sql', 'models/orders.sql'],
     ['analytics/dbt', 'models/orders.sql', 'analytics/dbt/models/orders.sql'],
-    ['analytics/dbt', 'analytics/dbt/models/orders.sql', 'analytics/dbt/models/orders.sql'],
+    ['models', 'models/orders.sql', 'models/models/orders.sql'],
     ['analytics/dbt/', './models/orders.sql', 'analytics/dbt/models/orders.sql'],
-  ])('resolves a resource path once within its project root (%s, %s)', (root, path, expected) => {
+  ])('qualifies a project-relative resource path (%s, %s)', (root, path, expected) => {
     expect(resolveDbtProjectWorkspaceFilePath(root, path)).toBe(expected);
   });
 
@@ -98,6 +98,21 @@ describe('codeViewFileSelection', () => {
         preferredPath: 'models/orders.sql',
       })
     ).toBe('analytics/dbt/models/orders.sql');
+  });
+
+  it('preserves an authorized workspace preference when a project-relative namesake also exists', () => {
+    const tree: WorkspaceFileEntry[] = [
+      { path: 'models/dbt_project.yml', name: 'dbt_project.yml', kind: 'file' },
+      { path: 'models/orders.sql', name: 'orders.sql', kind: 'file' },
+      { path: 'models/models/orders.sql', name: 'orders.sql', kind: 'file' },
+    ];
+
+    expect(
+      resolveInitialDbtProjectFilePath(tree, {
+        projectRoot: 'models',
+        preferredPath: 'models/orders.sql',
+      })
+    ).toBe('models/orders.sql');
   });
 
   it('opens dbt_project.yml when a file-backed resource has no original path', () => {
