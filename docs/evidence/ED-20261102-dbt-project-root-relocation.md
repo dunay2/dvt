@@ -641,3 +641,15 @@ routes. The existing composition case deterministically rejected the pending
 registry before the fix; all 22 focused route, startup and operability cases pass
 afterward. No retry, timer, deadline, CSS or second readiness store was added.
 The interrupted committed-tree gate remains failed evidence, not a passing gate.
+
+The following gate passed all 3,374 unit, 1,994 presentation and 745 architecture
+cases and build, then reproduced the native wait after all three Model-session
+cases in the first partition. Partitioning did not resolve this wait. Browser
+CDP metadata responded while the page channel did not; no dialog was dismissed
+or application JavaScript injected during diagnosis. A documented Cypress
+`beforeunload`/native-keyboard issue matches this boundary but is not proof of
+every local wait's cause. The existing read-only journey now closes its Model
+through the public button, verifies Canvas selection and the absence of its tab
+and editor, and requires zero draft writes. All original assertions and cases
+remain. There is no global cleanup hook, guard removal, forced action, retry or
+deadline change. Native spec completion and progression must pass before merge.

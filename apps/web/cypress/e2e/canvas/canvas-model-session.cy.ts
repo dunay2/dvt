@@ -84,5 +84,10 @@ describe('model-session', () => {
       });
     });
     cy.get('[data-slot="canvas-relational-tree-source"]').should('have.attr', 'draggable', 'false');
+    cy.get('[data-slot="canvas-model-tab-close"]').click();
+    cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+    cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+    cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
+    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
   });
 });
