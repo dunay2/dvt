@@ -202,6 +202,9 @@ describe('Workbench UNION', () => {
         ]);
       });
       cy.get('[data-slot="canvas-model-tab-close"]').click();
+      cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+      cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+      cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
       revisitWorkbenchCanvas();
       openWorkbenchModel(modelId);
       cy.then(() => cy.get(relationCard(first.root.binding.relationId)).closest('li').as('union'));
@@ -249,6 +252,9 @@ describe('Workbench UNION', () => {
         });
       });
       cy.get('[data-slot="canvas-model-tab-close"]').click();
+      cy.get('[data-slot="canvas-model-editor"]').should('not.exist');
+      cy.get('[data-slot="canvas-model-main-tab"]').should('not.exist');
+      cy.get('[data-slot="canvas-workspace-tab"]').should('have.attr', 'aria-selected', 'true');
       revisitWorkbenchCanvas();
       openWorkbenchModel(modelId);
       cy.get(`${card}[data-operator="set"]`).should('have.length', 1);

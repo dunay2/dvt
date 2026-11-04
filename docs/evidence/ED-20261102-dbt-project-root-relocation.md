@@ -684,3 +684,14 @@ sample request and exactly one draft write. This completes the existing user
 flow without changing the navigation guard or adding a global cleanup hook.
 The stalled group is not passing evidence; affected native progression and the
 remaining group still require validation.
+
+All six viewport cases and both removal cases pass in the committed follow-up.
+UNION still waits without completing a case, including when isolated, so closing
+the preceding Model does not establish resolution of that wait. Existing Cypress
+DEBUG channels localize the wait to navigation after input removal, Apply, Cancel
+and an unchecked Close. The UNION journey now requires the Model editor/tab to
+be absent and Canvas selected after each existing Close, before revisiting.
+These stronger public-boundary assertions distinguish a still-open navigation
+decision from a browser handoff failure; no guard is cleared and no data is
+discarded automatically. The isolated wait remains failed evidence pending the
+result of those assertions and any separately admitted root-cause correction.
