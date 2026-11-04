@@ -14,6 +14,11 @@ import { hoverWorkbenchCard } from './pointer';
 
 /** Reveal through the production keyboard-focus camera, without assigning Canvas scroll. */
 export function revealWorkbenchCard(selector: string): void {
+  cy.get('body').then(($body) => {
+    const close = $body.find('[data-slot="canvas-relational-collapse"]:visible');
+    expect(close.length, 'at most one active Model inspector').to.be.at.most(1);
+    if (close.length === 1) cy.wrap(close).click();
+  });
   cy.get(selector)
     .first()
     .then(($card) => {

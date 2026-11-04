@@ -13,6 +13,7 @@ import {
   openWorkbenchModel,
   dragWorkbenchSource,
   connectWorkbenchProducer,
+  revealWorkbenchCard,
 } from '../../support/relationalWorkbench/navigation';
 import { workbenchOperation } from '../../support/relationalWorkbench/operationMenu';
 import {
@@ -62,6 +63,7 @@ describe('Workbench pending binary operations', () => {
       connectWorkbenchProducer('@original0', '@join', 0);
       connectWorkbenchProducer('@original1', '@join', 1);
       connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      revealWorkbenchCard('@original1');
       cy.get('@original1').find(read).rightclick();
       cy.get('[data-slot="canvas-relational-remove-source"]').click();
       cy.get('[data-slot="canvas-card-removal-confirm"]').click();

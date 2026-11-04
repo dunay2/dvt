@@ -544,6 +544,14 @@ conflicts. Full Web lint and typecheck pass. The three focused browser specs
 inspector or reveal the exact port through existing public controls; they retain
 actionability checks and persistence assertions.
 
+The remaining browser sweep exposed a horizontal SVG edge with a zero-height
+bounding box. Its keyboard action remains reachable; the append proof now uses
+the same focused native Delete key as the existing card-movement proof instead
+of `cy.type` on SVG. The shared reveal helper closes an active Model inspector
+through its public button before revealing a graph target. Saved-window and
+replacement-input journeys reuse that helper. These changes do not alter product
+camera behavior, force pointer events or remove semantic/persistence assertions.
+
 The preceding complete prepush attempt passed unit, presentation, architecture
 and build checks but failed browser journeys targeting covered controls. It was
 interrupted after the cancellation spec stalled and is not successful prepush
