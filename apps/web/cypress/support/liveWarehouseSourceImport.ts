@@ -1,11 +1,16 @@
 /**
- * Owned concern: drive the real warehouse Source Import dialog in live browser proofs.
+ * Owned concern: drive real warehouse registration and independent Source-instance journeys.
  * @baseline GH-3610: file-backed creation returns to Browse after its asynchronous response.
  * @decision Await the creation form closing, then visit Connections before its assertions.
- * @consequence Proofs retain exact connection identity and real import/file authority checks.
- * @version 1.0.2
+ * @decision Reuse the contract reference reader and scoped draft observation for placement.
+ * @consequence Registration and placement retain distinct identities and real authority checks.
+ * @version 1.0.3
  */
-import type { WorkspaceGraphDraftScope, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+import {
+  workspaceNodeDefinitionId,
+  type WorkspaceGraphDraftScope,
+  type WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
 import { sha256HexUtf8 } from '@dvt/crypto';
 
 import { readLiveGraphDraft } from './liveProtectedRuntime';
@@ -185,7 +190,7 @@ function waitForPlacedSource(
     const draft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
     const placed = draft.nodes.find(
       (node) =>
-        node.sourceDefinitionId === id &&
+        workspaceNodeDefinitionId(node) === id &&
         draft.nodeIds.includes(node.id) &&
         !previousIds.includes(node.id)
     );
@@ -199,32 +204,42 @@ function waitForPlacedSource(
 export function placeRegisteredSource(
   id: string,
   scope: WorkspaceGraphDraftScope,
-  position = { x: 220, y: 160 },
-  dropTarget?: HTMLElement
+  {
+    position = { x: 220, y: 160 },
+    dropTarget,
+    gesture = 'drag',
+  }: Readonly<{
+    position?: Readonly<{ x: number; y: number }>;
+    dropTarget?: HTMLElement;
+    gesture?: 'click' | 'drag';
+  }> = {}
 ): Cypress.Chainable<string> {
   let previousIds: string[] = [];
-  cy.get('body').then((body) => {
-    previousIds = Array.from(body[0]!.querySelectorAll('.react-flow__node')).map((node) =>
-      node.getAttribute('data-id')!
-    );
+  cy.then(() => readLiveGraphDraft(scope)).then(({ status, body }) => {
+    expect(status).to.equal(200);
+    previousIds = [
+      ...(body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft.nodeIds,
+    ];
   });
-  const dataTransfer = new DataTransfer();
-  cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`)
-    .should('have.attr', 'draggable', 'true')
-    .trigger('dragstart', { dataTransfer });
-  cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
-    const bounds = $pane[0]!.getBoundingClientRect();
-    cy.wrap(dropTarget ?? $pane)
-      .trigger('dragover', { dataTransfer })
-      .trigger('drop', {
-        dataTransfer,
-        clientX: bounds.left + position.x,
-        clientY: bounds.top + position.y,
-      });
-  });
-  cy.get(`[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`).trigger(
-    'dragend',
-    { dataTransfer }
-  );
+  const selector = `[data-slot="canvas-workspace-surface"] [data-element-id="${id}"]:visible`;
+  if (gesture === 'click') {
+    cy.get(selector).click();
+  } else {
+    const dataTransfer = new DataTransfer();
+    cy.get(selector)
+      .should('have.attr', 'draggable', 'true')
+      .trigger('dragstart', { dataTransfer });
+    cy.get('[data-testid="canvas-viewport"] .react-flow__pane').then(($pane) => {
+      const bounds = $pane[0]!.getBoundingClientRect();
+      cy.wrap(dropTarget ?? $pane)
+        .trigger('dragover', { dataTransfer })
+        .trigger('drop', {
+          dataTransfer,
+          clientX: bounds.left + position.x,
+          clientY: bounds.top + position.y,
+        });
+    });
+    cy.get(selector).trigger('dragend', { dataTransfer });
+  }
   return cy.then(() => waitForPlacedSource(id, scope, previousIds));
 }

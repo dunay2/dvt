@@ -653,3 +653,19 @@ through the public button, verifies Canvas selection and the absence of its tab
 and editor, and requires zero draft writes. All original assertions and cases
 remain. There is no global cleanup hook, guard removal, forced action, retry or
 deadline change. Native spec completion and progression must pass before merge.
+
+The committed closure proved three native Model-session cases and a following
+snapshot-roundtrip case with exit zero. The next full gate passed all 52
+controlled specs / 147 cases. Its real-services phase then exposed stale Source
+consumers: direct legacy-only reference reads missed newly persisted
+`definitionId` instances, and a catalogue click still expected pre-placement
+inspection. Those consumers now use the existing `workspaceNodeDefinitionId`
+reader. One scoped placement helper supports explicit click/drag options and
+observes previous placement IDs through the protected draft query, including
+offscreen instances. The journey creates an instance before inspecting it and
+retains registration, canceled drag, two independent placements, geometry,
+reload, additional import and YAML assertions. Transform producer connections
+reuse the existing reveal/connect gesture instead of duplicated drag blocks at
+an offscreen terminal. Trusted single-field drag, fan-out refusal and formula,
+identity, persistence and SQL assertions remain. The interrupted native group is
+red evidence; all remaining native consumers must pass before another full gate.

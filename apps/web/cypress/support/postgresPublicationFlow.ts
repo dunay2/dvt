@@ -252,7 +252,7 @@ export function createPublicationWorkspace(
       'orders',
     ]);
     draft.nodes.forEach((node, index) => {
-      placeRegisteredSource(node.id, scope, { x: 220, y: 140 + index * 240 });
+      placeRegisteredSource(node.id, scope, { position: { x: 220, y: 140 + index * 240 } });
     });
   });
   openCanvasContextMenuAt(1050, 400);

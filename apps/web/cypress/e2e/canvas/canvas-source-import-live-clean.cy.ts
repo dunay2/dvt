@@ -1,5 +1,9 @@
 /** Proves the active DVT Canvas imports a real PostgreSQL source into its governed draft. */
-import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftScope } from '@dvt/contracts';
+import {
+  workspaceNodeDefinitionId,
+  type WorkspaceGraphAuthoringDraft,
+  type WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
 
 import {
   clickCanvasAddCatalogAction,
@@ -19,6 +23,7 @@ import {
   livePostgresDatabaseName,
   placeRegisteredSource,
 } from '../../support/liveWarehouseSourceImport';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 function panCanvasViewport(): void {
@@ -94,12 +99,10 @@ function placeSourceOnExistingChild(
         const viewport = $pane[0]!.getBoundingClientRect();
         expect(point.x).to.be.within(viewport.left, viewport.right);
         expect(point.y).to.be.within(viewport.top, viewport.bottom);
-        return placeRegisteredSource(
-          sourceId,
-          scope,
-          { x: point.x - viewport.left, y: point.y - viewport.top },
-          target
-        ).then((secondId) => {
+        return placeRegisteredSource(sourceId, scope, {
+          position: { x: point.x - viewport.left, y: point.y - viewport.top },
+          dropTarget: target,
+        }).then((secondId) => {
           expect(secondId).not.to.equal(instanceId);
           assertSourceCoversDropPoint(secondId, point);
           return cy.wrap(secondId, { log: false });
@@ -183,10 +186,6 @@ describe('Canvas Source Import live', () => {
       );
       const id = sources[0]!.id;
       cy.get('.react-flow__node').should('not.exist');
-      cy.get(`[data-element-id="${id}"]:visible`).click();
-      cy.get('[data-slot="canvas-node-workbench-panel"]').should('be.visible');
-      cy.get('.react-flow__node').should('not.exist');
-      cy.get('[data-slot="canvas-node-workbench-close"]').click();
       cy.reload();
       cy.get(`[data-element-id="${id}"]:visible`, { timeout: 20_000 }).should('be.visible');
       cy.get('.react-flow__node').should('not.exist');
@@ -195,8 +194,11 @@ describe('Canvas Source Import live', () => {
         .trigger('dragstart', { dataTransfer: canceledTransfer })
         .trigger('dragend', { dataTransfer: canceledTransfer });
       cy.get('.react-flow__node').should('not.exist');
-      placeRegisteredSource(id, session).then((instanceId) => {
+      placeRegisteredSource(id, session, { gesture: 'click' }).then((instanceId) => {
         let firstSavedPosition: { x: number; y: number } | undefined;
+        cy.get(`.react-flow__node[data-id="${instanceId}"]`).should('be.visible');
+        openWorkbenchProperties(instanceId);
+        cy.get('[data-slot="canvas-node-workbench-close"]').click();
         cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
           const saved = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
           firstSavedPosition = saved.nodePositions[instanceId];
@@ -219,7 +221,9 @@ describe('Canvas Source Import live', () => {
 
     cy.then(() => readLiveGraphDraft(session)).then(({ body }) => {
       placedDraft = (body as { record: { draft: WorkspaceGraphAuthoringDraft } }).record.draft;
-      expect(placedDraft.nodes.filter((node) => node.sourceDefinitionId != null)).to.have.length(2);
+      expect(
+        placedDraft.nodes.filter((node) => workspaceNodeDefinitionId(node) != null)
+      ).to.have.length(2);
     });
     cy.get('button[aria-label="Import sources"]').should('be.visible').click();
     importLivePostgresSource({ kind: 'graph-draft' }, 'after-placement');
@@ -230,7 +234,7 @@ describe('Canvas Source Import live', () => {
       expect(saved.edges).to.deep.equal(placedDraft.edges);
       expect(saved.nodes.slice(0, placedDraft.nodes.length)).to.deep.equal(placedDraft.nodes);
       const definitions = saved.nodes.filter(
-        (node) => node.kind === 'dvt:source' && node.sourceDefinitionId == null
+        (node) => node.kind === 'dvt:source' && workspaceNodeDefinitionId(node) == null
       );
       expect(definitions).to.have.length(2);
       expect(saved.nodes).to.have.length(placedDraft.nodes.length + 1);
