@@ -3,7 +3,7 @@
  * @baseline SaveWorkspaceGraphDraft: viewport gestures do not persist draft changes.
  * @decision Measure all writes after the hydrated model has been durably synchronized.
  * @consequence Bootstrap normalization cannot race the viewport-only assertions.
- * @version 1.0.0
+ * @version 1.0.1
  */
 import { WorkspaceGraphDraftReadResponseSchema } from '@dvt/contracts';
 
@@ -282,19 +282,12 @@ describe('Workbench viewport', () => {
       .should('have.attr', 'aria-checked', 'false')
       .click();
     cy.get(`${main} [data-element-id]:visible`).should('have.length', 3);
-    cy.get(
-      '[data-slot="canvas-workspace-surface"] [data-element-id="join-transform"]:visible'
-    ).then(($item) => {
-      const id = $item.attr('data-element-id');
-      cy.get('.react-flow__node')
-        .its('length')
-        .then((count) => {
-          cy.wrap($item).click();
-          cy.get(`.react-flow__node[data-id="${id}"]`).should('have.class', 'selected');
-          cy.get('.react-flow__node').should('have.length', count);
-        });
-    });
-    openWorkbenchModel();
+    cy.get(`${main} .react-flow__node`)
+      .its('length')
+      .then((count) => {
+        openWorkbenchModel();
+        cy.get(`${main} .react-flow__node`).should('have.length', count);
+      });
     cy.get('[data-slot="canvas-relational-tree-source-list"] > li').each(($row) => {
       const [source, add] = Array.from($row[0]!.querySelectorAll('button'));
       expect(source, 'source control').to.exist;

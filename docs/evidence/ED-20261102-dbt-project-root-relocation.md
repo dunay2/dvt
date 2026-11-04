@@ -669,3 +669,18 @@ reuse the existing reveal/connect gesture instead of duplicated drag blocks at
 an offscreen terminal. Trusted single-field drag, fan-out refusal and formula,
 identity, persistence and SQL assertions remain. The interrupted native group is
 red evidence; all remaining native consumers must pass before another full gate.
+
+The committed Source/Transform consumer group completed three native specs / five
+cases with exit zero. The next available group completed twelve specs, with one
+obsolete viewport assertion: clicking the catalogue correctly created a new
+instance while the test expected selection of the original. That viewport-only
+journey now opens the existing placed Model through the shared navigation gesture
+and still requires an unchanged graph-card count, zoom, search, reflow and write
+invariants. Instance creation retains its separate native proof. The same group
+then stopped progressing before its first UNION case after the keyboard removal
+journey had reopened its Model. That journey now also closes through the public
+button and verifies Canvas selection, absent Model tab/editor, opener focus, no
+sample request and exactly one draft write. This completes the existing user
+flow without changing the navigation guard or adding a global cleanup hook.
+The stalled group is not passing evidence; affected native progression and the
+remaining group still require validation.
