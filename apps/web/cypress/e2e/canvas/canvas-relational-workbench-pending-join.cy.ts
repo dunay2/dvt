@@ -52,7 +52,7 @@ describe('Workbench pending binary operations', () => {
       const read = '[data-slot="canvas-relational-tree-node"][data-operator="read"]';
       const join = '[data-pending-operation="true"] [data-operator="join"]';
       for (const port of [0, 1]) {
-        dragWorkbenchSource('customers');
+        dragWorkbenchSource('customers', { x: 120, y: 120 + port * 160 });
         cy.get(read)
           .last()
           .closest('li')

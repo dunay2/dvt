@@ -551,6 +551,8 @@ of `cy.type` on SVG. The shared reveal helper closes an active Model inspector
 through its public button before revealing a graph target. Saved-window and
 replacement-input journeys reuse that helper. These changes do not alter product
 camera behavior, force pointer events or remove semantic/persistence assertions.
+The replacement-input journey drops its two source instances at distinct explicit
+positions; it must not depend on automatic reflow to separate overlapping drops.
 
 The preceding complete prepush attempt passed unit, presentation, architecture
 and build checks but failed browser journeys targeting covered controls. It was
