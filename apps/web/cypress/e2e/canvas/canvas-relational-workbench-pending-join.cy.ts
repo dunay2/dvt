@@ -63,11 +63,16 @@ describe('Workbench pending binary operations', () => {
       connectWorkbenchProducer('@original0', '@join', 0);
       connectWorkbenchProducer('@original1', '@join', 1);
       connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      cy.get('@original1').find(read).focus().should('be.focused');
       for (let step = 0; step < 4; step++) {
-        cy.get('@original1')
-          .find(read)
-          .focus()
-          .trigger('keydown', { key: 'ArrowDown', altKey: true, shiftKey: true });
+        for (const type of ['keyDown', 'keyUp']) {
+          cy.then(() =>
+            Cypress.automation('remote:debugger:protocol', {
+              command: 'Input.dispatchKeyEvent',
+              params: { type, key: 'ArrowDown', code: 'ArrowDown', modifiers: 9 },
+            })
+          );
+        }
       }
       revealWorkbenchCard('@original1');
       cy.get('@original1').find(read).rightclick();
