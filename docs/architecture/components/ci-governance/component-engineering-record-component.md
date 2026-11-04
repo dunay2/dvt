@@ -177,6 +177,31 @@ non-goals identify another owner's concern. Physical `excludes` patterns govern
 file ownership; dependency direction is enforced separately by the existing root
 dependency-cruiser gate.
 
+`ReviseGovernanceComponent --component-level component` explicitly reclassifies
+an existing `source` definition under the same identity. This requires an admitted
+design, an explicit matching revision and an existing compatible parent. Other
+level changes, missing parents and stale revisions reject before writes. Omitting
+the flag preserves the existing command, level and idempotency payload. This is
+an audited classification correction; it does not infer component status from a
+directory, import inventory, or relax the local definition's level constraint.
+
+Native component creation, reclassification and reparenting resolve parents and
+ancestor paths through the existing effective `governance_unit_query`. Reading
+the imported component-tree projection here would hide DB-created components and
+current classification/parent overrides from the write commands themselves.
+Reparenting also prefers the audited local target definition when an older
+imported definition exists, retaining the current classification and revision.
+
+```mermaid
+flowchart LR
+  Legacy[Existing source-classified definition] --> Revision[Explicit revision and admitted design]
+  Current[Effective DB unit and parent authority] --> Revision
+  Revision --> Native[Existing revise and reparent commands]
+  Native --> Same[Same component identity and audited metadata]
+  Same --> Ownership[Existing deepest-owner validation]
+  Revision -->|missing stale or incompatible| Refusal[Rollback without ownership changes]
+```
+
 The pilot covers five files: `buildLocalDataCaptureRuntime.ts`,
 `readLocalDataGenerationMetadataUseCase.ts`, `DuckDbGenerationStore.ts`,
 `duckDbGenerationMetadata.ts`, and `DuckDbLocalDataRuntime.ts`. It records their

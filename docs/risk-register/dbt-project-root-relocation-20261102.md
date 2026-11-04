@@ -77,6 +77,14 @@ React Flow completes its first frame.
 
 ## Evidence And Residual Boundary
 
+Ownership reconciliation uses native commands with the same component identity.
+Explicit source-to-component classification requires an admitted design, a
+matching revision and a compatible effective parent; it does not certify SRP or
+approve responsibilities automatically. Parent and target reads retain current
+local overrides. Missing parents, cycles, stale revisions and ambiguous file
+ownership remain refusals. No SQL level constraint or validation threshold is
+relaxed, and no inventory import is used to repair the integration candidate.
+
 [ED-20261102-dbt-project-root-relocation](../evidence/ED-20261102-dbt-project-root-relocation.md)
 records real filesystem/PostgreSQL integration, denied access, collision,
 concurrent authority, rollback/retry and native dbt materialization evidence.

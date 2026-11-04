@@ -137,7 +137,11 @@ function validateComponentReparentCommand(command) {
 }
 
 function validateComponentReviseCommand(command) {
+  if (command.componentLevel !== undefined && command.componentLevel !== 'component') {
+    throw new Error('--component-level supports only explicit source-to-component classification.');
+  }
   const changes = [
+    command.componentLevel,
     command.status,
     command.childrenRequired,
     command.ownedConcern,
@@ -218,6 +222,7 @@ function parseComponentCommand(action, args) {
       designId: validateArchitectureDesignId(requireOption(options, 'design')),
       componentId: validateComponentId(requireOption(options, 'component'), 'component'),
       status: options.status ? validateComponentStatus(options.status) : null,
+      ...(options.componentLevel === undefined ? {} : { componentLevel: options.componentLevel }),
       childrenRequired:
         options.childrenRequired === undefined
           ? null
@@ -426,7 +431,7 @@ function planComponentCreateOperation({
   const parent = normalizeGovernanceUnit(parentUnit);
   if (!parent) {
     throw new Error(
-      `Parent governance unit ${command.parentComponentId} was not imported into the planning DB.`
+      `Parent governance unit ${command.parentComponentId} is not present in current Planning DB authority.`
     );
   }
   if (!allowedComponentParentLevels.has(parent.level)) {
@@ -540,7 +545,7 @@ function planComponentReparentOperation({
   const parent = normalizeGovernanceUnit(parentUnit);
   if (!parent) {
     throw new Error(
-      `Parent governance unit ${command.parentComponentId} was not imported into the planning DB.`
+      `Parent governance unit ${command.parentComponentId} is not present in current Planning DB authority.`
     );
   }
   if (!allowedComponentParentLevels.has(parent.level)) {
@@ -674,6 +679,7 @@ function planComponentReviseOperation({
   design,
   designScopes,
   existingComponent,
+  parentUnit,
   latestOperation,
   operationId,
   now,
@@ -711,8 +717,25 @@ function planComponentReviseOperation({
 
   const resultingRevision = previousRevision + 1;
   const createdAt = toIso(now);
+  if (command.componentLevel !== undefined) {
+    if (component.level !== 'source') {
+      throw new Error('Explicit component classification requires an existing source definition.');
+    }
+    if (!Number.isInteger(command.expectedRevision)) {
+      throw new Error('Explicit component classification requires an explicit current revision.');
+    }
+    const parent = normalizeGovernanceUnit(parentUnit);
+    if (
+      parent == null ||
+      parent.unitId !== component.parentComponentId ||
+      !allowedComponentParentLevels.has(parent.level)
+    ) {
+      throw new Error('Explicit component classification requires a current compatible parent.');
+    }
+  }
   const definition = {
     ...component,
+    level: command.componentLevel ?? component.level,
     sourcePath: command.sourceRef,
     sourceContentSha256: command.sourceContentSha256,
     revision: resultingRevision,

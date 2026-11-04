@@ -1111,7 +1111,7 @@ test('component create planner rejects duplicate, missing parent, and weak seman
         operationId: 'op-missing-parent',
         now: new Date('2026-05-14T09:00:00.000Z'),
       }),
-    /Parent governance unit SYS-RUNTIME-ENGINE-CORE was not imported/
+    /Parent governance unit SYS-RUNTIME-ENGINE-CORE/u
   );
 
   assert.throws(

@@ -469,6 +469,18 @@ after the committed, hook-normalized tree is checked.
 
 ## Limits
 
+The integration repair extends the existing native component commands rather
+than importing or editing query-store data directly. A legacy PostgreSQL package
+definition is already registered with responsibilities and ownership but has
+level `source`; the local revision table correctly accepts component levels only.
+An explicit revision-guarded reclassification to `component` preserves its ID and
+metadata, then allows the existing producer component to become its child.
+Parent/path reads must use effective DB authority so the command sees that
+reclassification. The HTTP correction is one exact exclusion for the composition
+root file, leaving its existing runtime-composition responsibility intact.
+Negative tests must cover missing/stale revision, invalid source/target levels,
+missing/incompatible parent, failed transaction, and unchanged legacy replay.
+
 Code remains read-only. This migration does not publish a graph-authored native
 model into a file-owned root, change semantic authority, or implement Git
 staging/commit/push. Native publication refusals remain enforced. A filesystem and
