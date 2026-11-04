@@ -76,7 +76,10 @@ export function openCanvasContextMenuAt(x = 96, y = 220): void {
 }
 
 export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
-  cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
+  cy.contains(
+    '[data-slot="canvas-context-menu"] [role="menuitem"], [data-slot="canvas-node-context-menu"] [role="menuitem"]',
+    label
+  )
     .should('be.visible')
     .should(($item) => {
       expect($item.attr('data-disabled')).to.be.undefined;
