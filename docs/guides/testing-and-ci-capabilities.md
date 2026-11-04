@@ -127,8 +127,12 @@ setup, so compare the critical path and summed runner durations when measuring.
 The existing Test Suite workflow partitions both `controlled` and `available`
 browser obligations into three jobs through `selectWebCypressShard`. The policy
 preserves catalog order and assigns each selected spec exactly once. Planning and
-execution use the same capability and shard selectors; local execution without a
-shard remains complete. The `unavailable` obligation is not partitioned.
+execution use the same capability and shard selectors. The default local
+`phase=all` gate executes the three controlled partitions sequentially through
+the same selector and native runner, bounding each browser lifetime without local
+concurrency. Explicit `phase=browser` requests retain their selected or unsharded
+behavior. The selected union stays complete; local available and unavailable
+obligations are unchanged.
 
 The complete affected plan is validated before partition selection. A nonempty
 controlled selection can leave a job unassigned when only one or two specs are

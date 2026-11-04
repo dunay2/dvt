@@ -277,7 +277,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): void {
         args.phase !== 'vitest' &&
         (args.browserCapability === undefined || entry.capability === args.browserCapability)
     )
-    .map((entry) => selectWebCypressShard(entry, args.browserShard))
+    .flatMap((entry) =>
+      args.phase === 'all' && entry.capability === 'controlled'
+        ? [1, 2, 3].map((index) => selectWebCypressShard(entry, index))
+        : [selectWebCypressShard(entry, args.browserShard)]
+    )
     .filter((entry) => entry !== undefined);
 
   if (args.plan) {

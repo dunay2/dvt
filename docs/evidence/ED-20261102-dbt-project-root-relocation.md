@@ -597,3 +597,15 @@ be recorded on GH-3747 and the integration PR before merge.
 The [risk record](../risk-register/dbt-project-root-relocation-20261102.md)
 documents collision, recovery and deployment boundaries. No new debt, placeholder,
 fake adapter, skipped hook or relaxed quality rule was introduced.
+
+The direct-Output committed-tree gate passed all 3,374 unit, 1,990 presentation
+and 740 architecture cases and the Web build. Its unpartitioned controlled browser
+stalled after 18 complete specs and the three passing Model-session cases; the
+owned Chrome CDP connection also timed out. That interrupted gate is not a pass.
+The default local adapter now reuses the existing three controlled partitions
+sequentially, with a fresh native runner lifetime per partition. Explicit browser
+selectors, other capabilities, complete-plan admission, cases and limits remain
+unchanged. The red plan tests rejected the former single command for two and 52
+consumers; the corrected adapter must preserve the exact disjoint selected union.
+This bounds browser lifetime without claiming an established Chrome IPC cause
+or a speedup. Final complete prepush evidence remains an integration prerequisite.

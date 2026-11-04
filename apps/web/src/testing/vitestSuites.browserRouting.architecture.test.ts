@@ -1029,9 +1029,14 @@ describe('governed browser evidence routing', () => {
       expect(calls).toHaveLength(1);
       return calls;
     });
-    expect([...vitest, ...partitioned]).toEqual(complete);
+    const localControlled = [1, 2, 3].flatMap((index) =>
+      execute(['--phase=browser', '--browser-capability=controlled', `--browser-shard=${index}/3`])
+    );
+    const localBrowser = [...localControlled, ...partitioned.slice(1)];
+    expect([...vitest, ...localBrowser]).toEqual(complete);
     expect(partitioned).toEqual(execute(['--phase=browser']));
     expect(new Set(partitioned.map(([command]) => command)).size).toBe(3);
+    expect(new Set(localBrowser.map(([command]) => command)).size).toBe(5);
   });
 
   it.each([
