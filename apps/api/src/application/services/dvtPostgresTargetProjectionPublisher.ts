@@ -11,6 +11,8 @@ import {
 import { sha256Hex } from '@dvt/crypto';
 import { projectDvtPostgresOutputSchemaV1 } from '@dvt/postgres-projection';
 
+import type { DbtModelProducer } from '../ports/dbtModelProducer.js';
+
 import type { DvtTerminalTransformProjectionBinding } from './dvtOperationalWorkloadProjector.js';
 import { projectDvtPostgresTransform } from './dvtPostgresTransformProjection.js';
 import { resolveDvtWorkloadPublication } from './dvtWorkloadPublication.js';
@@ -31,6 +33,7 @@ export type DvtPostgresTargetProjectionPublishInput = {
   readonly draft: WorkspaceGraphAuthoringDraft;
   readonly selectedNodeIds: readonly string[];
   readonly selectedEdgeIds: readonly string[];
+  readonly externalProducers?: ReadonlyMap<string, DbtModelProducer>;
 };
 
 export class DvtPostgresTargetProjectionPublisher {
@@ -47,10 +50,10 @@ export class DvtPostgresTargetProjectionPublisher {
   public async publish(
     input: DvtPostgresTargetProjectionPublishInput
   ): Promise<DvtPostgresTargetProjectionPublishResult> {
-    const closure = resolveDvtTerminalTransformClosure(input);
+    const closure = resolveDvtTerminalTransformClosure(input, input.externalProducers);
     const publication = resolveDvtWorkloadPublication(closure);
     if (!publication.ok) return publication;
-    const semanticDocument = closure.authority.semanticDocument;
+    const semanticDocument = closure.semanticDocument;
     const projected = await projectDvtPostgresTransform(closure);
     const sql = projected.sql;
     const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);

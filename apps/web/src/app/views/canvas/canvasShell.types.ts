@@ -24,7 +24,10 @@ import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
-import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import type {
+  CreateCanvasAuthoringNode,
+  CanvasNodeInstantiationHandler,
+} from './canvasGraphHandlerContracts';
 import type { CanvasSourceImportCompletionContext } from './canvasMutationHandlerContracts';
 import type { CanvasContextMenuPosition } from './canvasInteractionCommandSurface';
 import type {
@@ -132,7 +135,7 @@ export type CanvasShellGraphCommands = {
   onSetEdgeExecutionGate?: CanvasEdgeCommandRunner['setExecutionGate'];
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
-  onInstantiateNode?: (nodeId: string, position: { x: number; y: number }) => void;
+  onInstantiateNode?: CanvasNodeInstantiationHandler;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onToggleFrozenNode: (nodeId: string) => void;
   onCreateAuthoringNode?: CreateCanvasAuthoringNode;

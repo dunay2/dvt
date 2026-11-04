@@ -19,6 +19,8 @@ import {
   type WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 
+import type { DbtModelProducer } from '../ports/dbtModelProducer.js';
+
 import { compareGraphIds } from './compareGraphIds.js';
 import { sameConnection } from './dvtSourceCoverage.js';
 import { resolveDvtWorkloadPublication } from './dvtWorkloadPublication.js';
@@ -41,6 +43,7 @@ export type DvtOperationalWorkloadProjectorInput = {
   readonly selectedNodeIds: readonly string[];
   readonly selectedEdgeIds: readonly string[];
   readonly targetProjection: DvtTerminalTransformProjectionBinding;
+  readonly externalProducers?: ReadonlyMap<string, DbtModelProducer>;
 };
 
 export type DvtOperationalWorkloadProjectionResult =
@@ -52,8 +55,8 @@ export class DvtOperationalWorkloadProjector {
     input: DvtOperationalWorkloadProjectorInput
   ): DvtOperationalWorkloadProjectionResult {
     try {
-      const closure = resolveDvtTerminalTransformClosure(input);
-      const semanticDocument = closure.authority.semanticDocument;
+      const closure = resolveDvtTerminalTransformClosure(input, input.externalProducers);
+      const semanticDocument = closure.semanticDocument;
       const projection = input.targetProjection;
       const target = resolveDvtWorkloadPublication(closure);
       if (!target.ok) return target;
@@ -79,7 +82,7 @@ export class DvtOperationalWorkloadProjector {
           canvasId: input.canvasId,
           selectedNodeIds: [
             ...closure.sources.map(({ node }) => node.id),
-            closure.transform.id,
+            ...closure.transformNodes.map((node) => node.id),
             ...(closure.sink === undefined ? [] : [closure.sink.id]),
           ].sort(compareGraphIds),
           selectedEdgeIds: closure.edges.map((edge) => edge.id).sort(compareGraphIds),

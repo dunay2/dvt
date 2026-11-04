@@ -13,14 +13,17 @@ import type {
 } from '../../application/ports/dbtProjectImport.js';
 import type { IWarehouseConnectionCatalog } from '../../application/ports/warehouseSourceImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../application/services/analyzeSelectedDbtModelQuery.js';
+import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { CanvasAuthoringAuthorityPolicy } from '../../application/services/canvasAuthoringAuthorityPolicy.js';
 import { CompileGraphDbtModelsQuery } from '../../application/services/compileGraphDbtModelsQuery.js';
 import { ImportDbtProjectUseCase } from '../../application/services/importDbtProjectUseCase.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../application/services/projectDbtGraphFromFilesUseCase.js';
+import { ResolveDbtModelProducers } from '../../application/services/resolveDbtModelProducers.js';
 import { SelectedDbtModelAnalysisResolver } from '../../application/services/selectedDbtModelAnalysisResolver.js';
 import { ValidateDbtProjectImportUseCase } from '../../application/services/validateDbtProjectImportUseCase.js';
 
 export type BuildDbtProjectImportRuntimeDeps = {
+  readonly authorizer: Pick<AuthorizeCommandScopeService, 'authorize'>;
   readonly analyzer: IDbtProjectAnalyzerPort;
   readonly sourceRevisionReader: IDbtProjectSourceRevisionReader;
   readonly executionConnectionBindingVerifier: IDbtExecutionConnectionBindingVerifier;
@@ -69,6 +72,12 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
   });
 
   return {
+    modelProducerResolver: new ResolveDbtModelProducers({
+      analyzer: deps.analyzer,
+      authorityPolicy: deps.authorityPolicy,
+      projectGraph: projectGraphUseCase,
+      authorizer: deps.authorizer,
+    }),
     projectGraphUseCase,
     selectedModelAnalysisQuery,
     selectedModelAnalysisResolver,

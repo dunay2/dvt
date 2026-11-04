@@ -35,6 +35,21 @@ cards may retain an accepted result, and stale asynchronous completions remain
 cancelled. Deletion, disconnection, changed input bindings and concurrent schema
 updates are covered independently from viewport geometry.
 
+Native references to file-owned models require both graph access and file-view
+authorization in the same tenant/project/environment. The server resolves the
+persisted file authority and current model schema/connection before binding a
+native dbt compiled result. A signature alone cannot become a warehouse table
+or execute browser-provided SQL. The existing PostgreSQL parser rejects multiple
+statements, nested writes, SELECT INTO and locking statements. Upstream relation
+availability remains a provider readiness requirement; creating a placement
+does not run `dbt build` or materialize its dependencies.
+
+Assigned relation/field IDs survive save/reload. Removed or changed declared
+fields refuse consumption; added fields do not silently widen existing output
+contracts. Model sample provenance names the actual model revision without
+inventing physical Source identities. Deploy its API writer and strict Web
+reader together. Existing physical Source samples retain their prior contract.
+
 File resource placement retains the same authority boundary after relocation.
 Only instance/resource IDs and coordinates enter scoped browser layout. A
 fresh authorized query resolves definitions; missing references do not render.

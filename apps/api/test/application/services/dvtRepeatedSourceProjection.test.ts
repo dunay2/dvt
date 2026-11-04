@@ -27,7 +27,7 @@ describe('protected repeated-source projection', () => {
 
   it('previews the selected JOIN without discarding its second logical use', async () => {
     const closure = resolveDvtTerminalTransformClosure(repeatedSourceInput());
-    const relations = closure.authority.semanticDocument.sidecar.relations;
+    const relations = closure.semanticDocument.sidecar.relations;
     const projected = await projectDvtPostgresTransform(closure, relations[2]!.relationId);
     expect(projected.outputs.map((f) => f.name)).toEqual([
       'id',

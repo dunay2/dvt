@@ -2,7 +2,7 @@
 title: Canvas Workbench Command And Query Catalog
 status: Proposed
 owner: Frontend / Architecture
-last_reviewed: 2026-11-03
+last_reviewed: 2026-11-04
 planning_type: architecture
 ---
 
@@ -20,6 +20,16 @@ IDs reject. Removing one placement cannot remove a definition or a sibling.
 This layout capability does not grant edge editing or SQL writes. The rationale
 and current/target diagram are in the Code workspace component guide.
 
+Native file-model instances use the existing `CreateCanvasNode` and
+`SaveWorkspaceGraphDraft` rails, distinct from resource layout placements.
+Definitions retain scoped references and assigned output IDs; placements are
+independent cards with no automatic dependencies. Protected
+`PreviewCanvasTransformRows` and `PreviewPlan` collaborate with the existing
+native dbt analyzer through a model-producer application port. File-view
+authorization, current authority/revision/schema and the provider connection
+must resolve before compiling selected producers. This adds no SQL write rail,
+file mutation, endpoint or second graph authority.
+
 This catalog is the Web Graph bounded-context C&Q list for the Canvas
 workbench, Canvas route placement, project resource discovery, route-local
 layout preferences, and project-snapshot file handoff.
@@ -35,7 +45,6 @@ product semantics.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
-- `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
 - `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
 - `docs/architecture/components/web/graph/canvas-shell-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`

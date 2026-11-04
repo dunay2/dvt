@@ -78,8 +78,8 @@ describe('Canvas happy path remains writable after create/save', () => {
         cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($button) => {
           if ($button.attr('aria-expanded') === 'false') cy.wrap($button).click();
         });
-        cy.get('[data-slot="canvas-explorer-retained-surface"]')
-          .find(`[data-element-id="${nodeId}"]`)
+        cy.get(`[data-slot="canvas-explorer"] [data-element-id="${nodeId}"]`)
+          .should('be.visible')
           .click();
         cy.get('.react-flow__node').should('have.length', 2);
         cy.wrap(null).should(() => {

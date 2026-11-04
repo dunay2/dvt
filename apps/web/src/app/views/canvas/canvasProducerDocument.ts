@@ -3,6 +3,7 @@ import { resolveProducerDocuments, type SubstraitDocument } from '@dvt/substrait
 import type { CanonicalNode } from '../../types/canonical';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export function resolveCanvasProducerDocument(
   node: CanonicalNode,
@@ -19,6 +20,11 @@ export function resolveCanvasProducerDocument(
     visited.add(id);
     const candidate = catalog.get(id);
     if (candidate == null) continue;
+    const external = resolveCanvasDbtModelSignature(candidate);
+    if (external != null) {
+      documents.set(id, external.document);
+      continue;
+    }
     const authority = readDvtTransformAuthoringAuthority(candidate);
     if (authority == null) continue;
     const document = decodeDvtSubstraitSemanticDocument(authority.semanticDocument);

@@ -327,6 +327,66 @@ and is not final acceptance. The Code guide's five existing documentary source
 identities were reconciled with native row CAS and read-back proved that semantic
 declarations were unchanged. No Planning DB import or rebuild was performed.
 
+## File Model Reference Admission
+
+The latest user screenshot exposed the missing native file-model consumer.
+The following design was recorded before the reference implementation. The
+[reference correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6618506223)
+reuses native node admission and producer Reads instead of copying SQL into a
+GraphDraft or creating another dbt model file.
+
+```mermaid
+flowchart LR
+  D[Current: discovered dbt model] --> U[Disabled native catalogue row]
+  F[Accepted file authority] --> Q[ProjectDbtGraphFromFiles]
+  Q --> R[Registered scoped model reference]
+  R --> I[Independent native instance]
+  I --> C[Existing consumer producerRef Read]
+  R --> A[Native dbt compile through analyzer cache]
+  A --> P[Validated PostgreSQL SELECT AST]
+  C --> B[Existing producer graph binding]
+  P --> B
+  B --> V[Protected preview and provider validation]
+```
+
+The reference owns only the accepted file Canvas and dbt resource identity,
+connection reference and assigned output-field identities. Field identities are
+allocated once and persisted, never derived from field names or SQL content.
+The current analyzer projection must verify the referenced field names/types
+and the server-owned connection before use. Missing fields, changed types,
+stale project revisions or different scope/connection are refusals. Added fields
+do not silently change an existing consumer's selected output contract.
+
+An external publication has a typed Substrait Read signature for composition;
+this signature is query data and is never lowered as a physical table. Only the
+server-resolved native dbt compilation binds its SQL result. Native parse reuse
+stays with the existing analyzer cache. Compilation runs once per distinct model
+group in a request and is deferred until data projection or execution needs it.
+Placement and rendering do not compile dbt.
+The original SQL remains file-authoritative and read-only in Code.
+
+The owning rails remain CreateCanvasNode, SaveWorkspaceGraphDraft,
+ProjectDbtGraphFromFiles, RenderCanvasContextualGraphSurface,
+PreviewCanvasTransformRows and protected PreviewPlan. The external binding is
+an application-port collaboration within these rails, not another endpoint,
+SQL interpreter, graph authority or unverified browser-provided SQL channel.
+
+Focused implementation evidence: 35 Web catalogue/admission cases pass,
+including repeated click/drop placement, persisted reference identity,
+read-only refusal and missing output refusal. The API selection test traverses
+the saved draft, real planner selection, scoped producer resolver, compiled
+PostgreSQL AST and row-probe port. It caught and corrected an invalid requirement
+for a nonempty edge set when sampling a standalone model instance. This test
+does not claim a native dbt process or live PostgreSQL execution.
+
+Live acceptance remains pending: the user's API returned HTTP 500 with `EBUSY`
+while removing an analyzer-owned temporary project directory. Its preceding
+successful project response reported an unavailable server-owned dbt execution
+target. The original SQL files were not changed to make these checks pass.
+These findings prevent claiming that the screenshot's complete product flow is
+fixed, or that the branch is ready for main. Exact final validation outcomes
+belong in GH-3747 after the committed, hook-normalized tree is checked.
+
 ## Limits
 
 Code remains read-only. This migration does not publish a graph-authored native

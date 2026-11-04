@@ -12,6 +12,11 @@ import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
 type CanvasNodeSetter = Dispatch<SetStateAction<Node[]>>;
 type CanvasEdgeSetter = Dispatch<SetStateAction<Edge[]>>;
 type CanvasDraftSessionSetter = Dispatch<SetStateAction<CanvasDraftSession>>;
+export type CanvasNodeInstantiationHandler = (
+  nodeId: string,
+  position: { x: number; y: number },
+  definition?: CanonicalNode
+) => void;
 
 export type CanvasGraphInteractionState = {
   canonicalNodesById: Map<string, CanonicalNode>;

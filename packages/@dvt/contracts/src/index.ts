@@ -212,3 +212,4 @@ export { CommonStepTypeConfigSchema } from './step-registry/CommonStepTypeConfig
 export * from './step-registry/StepTypeRegistry.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';
+export * from './contracts/planner/WorkspaceDbtModelReference.v1.js';

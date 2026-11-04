@@ -8,6 +8,7 @@ import {
 import { resolveCanvasEdgeType } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 import { createCanvasEdgeFromConnection } from './canvasNodeMapper';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 
 function mapEdgesToCanonicalEdges(edges: Edge[]) {
   return edges.map((edge) => ({
@@ -104,6 +105,14 @@ export function proposeConnection({
   if (!sourceNode || !targetNode) {
     return { outcome: 'rejected', rejection: { code: 'node_not_found_in_graph' } };
   }
+  if (readWorkspaceDbtModelReference(targetNode) != null)
+    return {
+      outcome: 'rejected',
+      rejection: {
+        code: 'plugin_rule_blocked',
+        reason: 'File-model inputs are owned by their dbt definition.',
+      },
+    };
 
   const canonicalEdges = mapEdgesToCanonicalEdges(edges);
   const connectionResult = evaluateConnection(

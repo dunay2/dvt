@@ -1,11 +1,7 @@
 /** Create one physical or published-producer Read; never copy producer operations. */
 import { create } from '@bufbuild/protobuf';
 import { RelSchema } from '@buf/substrait_substrait.bufbuild_es/substrait/algebra_pb.js';
-import {
-  TypeSchema,
-  Type_Nullability,
-  type Type,
-} from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
+import { Type_Nullability } from '@buf/substrait_substrait.bufbuild_es/substrait/type_pb.js';
 import {
   allocateDvtFieldId,
   allocateDvtRelationId,
@@ -15,6 +11,8 @@ import {
   type DvtInputBindingsV1,
 } from '@dvt/contracts';
 import type { DvtSubstraitJoinDataType } from '@dvt/postgres-projection';
+import { sourceFieldType } from '@dvt/postgres-projection';
+export { sourceFieldType } from '@dvt/postgres-projection';
 import type { CanvasDvtCompositionInput } from './canvasDvtCompositionInputCatalog';
 import { createProducerInput, type IndexedRelation } from '@dvt/substrait-analysis';
 
@@ -66,25 +64,6 @@ export function createCanvasInputRead(
 
 export function canvasInputConnection(source: CanvasRelationInputSource) {
   return source.sourceRef == null ? source.producer.connection : source.sourceRef.connectionRef;
-}
-
-export function sourceFieldType(
-  dataType: DvtSubstraitJoinDataType | null,
-  nullable: boolean
-): Type {
-  if (dataType === null) return create(TypeSchema, { kind: { case: 'unbound', value: {} } });
-  const nullability = nullable ? Type_Nullability.NULLABLE : Type_Nullability.REQUIRED;
-  const builders: Record<DvtSubstraitJoinDataType, () => Type> = {
-    string: () => create(TypeSchema, { kind: { case: 'string', value: { nullability } } }),
-    bool: () => create(TypeSchema, { kind: { case: 'bool', value: { nullability } } }),
-    i64: () => create(TypeSchema, { kind: { case: 'i64', value: { nullability } } }),
-    fp64: () => create(TypeSchema, { kind: { case: 'fp64', value: { nullability } } }),
-    precisionTimestampTz: () =>
-      create(TypeSchema, {
-        kind: { case: 'precisionTimestampTz', value: { nullability, precision: 3 } },
-      }),
-  };
-  return builders[dataType]();
 }
 
 export function createSourceRelation(

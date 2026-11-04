@@ -11,7 +11,10 @@ import { toast } from 'sonner';
 import { useReactFlow } from '@xyflow/react';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE, type CanonicalNode } from '../../types/canonical';
-import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
+import type {
+  CanvasNodeDropContracts,
+  CanvasNodeInstantiationHandler,
+} from './canvasGraphHandlerContracts';
 import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 import {
@@ -23,12 +26,12 @@ import {
 import { hasDbtCompatibilityMetadata } from './canvasDbtAuthoringModel';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
 import { createCanvasNodeInstance } from './canvasNodeInstance';
-import { workspaceNodeDefinitionId } from '@dvt/contracts';
+import { workspaceNodeDefinitionId, readWorkspaceDbtModelReference } from '@dvt/contracts';
 
 type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 
 type UseCanvasNodeDropHandlersResult = {
-  handleInstantiateNode: (nodeId: string, position: { x: number; y: number }) => void;
+  handleInstantiateNode: CanvasNodeInstantiationHandler;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
@@ -45,6 +48,8 @@ export function useCanvasNodeDropHandlers({
   const { screenToFlowPosition } = useReactFlow();
   const latestNodesRef = useRef(nodes);
   latestNodesRef.current = nodes;
+  const latestDraftSessionRef = useRef(draftSession);
+  latestDraftSessionRef.current = draftSession;
   const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
     state: {
       draftSession,
@@ -61,26 +66,38 @@ export function useCanvasNodeDropHandlers({
   });
 
   const admit = useCallback(
-    (canonicalNode: CanonicalNode, position: { x: number; y: number }) => {
+    (
+      canonicalNode: CanonicalNode,
+      position: { x: number; y: number },
+      definition?: CanonicalNode
+    ) => {
       const transaction = runAdmissionCommand({
         canonicalNode,
+        ...(definition == null ? {} : { definition }),
         position,
         onNoop: (reason) => toast.info(reason),
         onAdded: (addedNode) => toast.success(formatCanvasNodeAddedMessage(addedNode.name)),
       });
-      if (transaction.outcome === 'added') latestNodesRef.current = transaction.nodes;
+      if (transaction.outcome === 'added') {
+        latestNodesRef.current = transaction.nodes;
+        latestDraftSessionRef.current = transaction.draftSession;
+      }
     },
     [runAdmissionCommand]
   );
   const handleInstantiateNode = useCallback(
-    (nodeId: string, position: { x: number; y: number }) => {
+    (nodeId: string, position: { x: number; y: number }, discovered?: CanonicalNode) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
       }
-      const definition = canonicalNodesById.get(nodeId);
+      const definition =
+        latestDraftSessionRef.current.localNodeCatalog?.[nodeId] ??
+        canonicalNodesById.get(nodeId) ??
+        discovered;
       if (
         definition == null ||
+        definition.id !== nodeId ||
         workspaceNodeDefinitionId(definition) != null ||
         definition.metadata?.authority === 'dbt-project-files' ||
         (definition.role !== 'input' && definition.kind !== 'dvt:transform')
@@ -89,11 +106,17 @@ export function useCanvasNodeDropHandlers({
         return;
       }
       try {
+        if (
+          discovered != null &&
+          (readWorkspaceDbtModelReference(definition) == null ||
+            definition.metadata?.transformAuthoring != null)
+        )
+          throw new Error('External definitions require a file-model reference.');
         const node = createCanvasNodeInstance(
           definition,
           new Set(latestNodesRef.current.map((placed) => placed.data.name))
         );
-        admit(node, position);
+        admit(node, position, discovered == null ? undefined : definition);
       } catch {
         toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
       }
@@ -153,7 +176,13 @@ export function useCanvasNodeDropHandlers({
         return;
       }
 
-      admit(canonicalNode, position());
+      try {
+        if (readWorkspaceDbtModelReference(canonicalNode) != null)
+          handleInstantiateNode(canonicalNode.id, position(), canonicalNode);
+        else admit(canonicalNode, position());
+      } catch {
+        toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+      }
     },
     [
       admit,

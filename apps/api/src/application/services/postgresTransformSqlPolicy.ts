@@ -1,4 +1,5 @@
 /** Owned concern: enforce the PostgreSQL SQL-first structural policy with the PostgreSQL parser. */
+import type { PostgresAstNode } from '@dvt/postgres-projection';
 import { hasSqlDetails, parse } from 'libpg-query';
 import { deparse } from 'pgsql-deparser';
 
@@ -20,6 +21,18 @@ type PostgresTransformSqlStructuralResult =
 export async function validatePostgresTransformSqlStructure(
   sql: string
 ): Promise<PostgresTransformSqlStructuralResult> {
+  const result = await parsePostgresTransformSqlStructure(sql);
+  return result.status === 'invalid'
+    ? result
+    : { status: 'valid', canonicalSql: result.canonicalSql };
+}
+
+export async function parsePostgresTransformSqlStructure(
+  sql: string
+): Promise<
+  | Extract<PostgresTransformSqlValidationResult, { status: 'invalid' }>
+  | Readonly<{ status: 'valid'; canonicalSql: string; ast: PostgresAstNode }>
+> {
   if (sql.trim().length === 0) {
     return invalidPolicy(POSTGRES_TRANSFORM_SQL_DIAGNOSTIC_CODE.sqlRequired, 'SQL is required.');
   }
@@ -62,11 +75,29 @@ export async function validatePostgresTransformSqlStructure(
   return {
     status: 'valid',
     canonicalSql: await deparse(parsed as Parameters<typeof deparse>[0]),
+    ast: statements[0]!.stmt!,
   };
 }
 
 function hasSelectStatement(statement: Readonly<Record<string, unknown>> | undefined): boolean {
-  return statement !== undefined && Object.hasOwn(statement, 'SelectStmt');
+  if (statement === undefined || !Object.hasOwn(statement, 'SelectStmt')) return false;
+  const pending: unknown[] = [statement];
+  while (pending.length > 0) {
+    const value = pending.pop();
+    if (Array.isArray(value)) pending.push(...value);
+    else if (value != null && typeof value === 'object') {
+      for (const [key, child] of Object.entries(value)) {
+        if (
+          (key.endsWith('Stmt') && key !== 'SelectStmt') ||
+          (key === 'intoClause' && child != null) ||
+          (key === 'lockingClause' && Array.isArray(child) && child.length > 0)
+        )
+          return false;
+        pending.push(child);
+      }
+    }
+  }
+  return true;
 }
 
 function invalidPolicy(

@@ -107,7 +107,7 @@ describeIfPostgres('protected repeated-source PostgreSQL result semantics', () =
       const closure = resolveDvtTerminalTransformClosure(input);
       const selected = await projectDvtPostgresTransform(
         closure,
-        closure.authority.semanticDocument.sidecar.relations[2]!.relationId
+        closure.semanticDocument.sidecar.relations[2]!.relationId
       );
       const preview = await client.query(selected.sql);
       expect(preview.rows.map((row) => JSON.stringify(row)).sort()).toEqual(
@@ -143,7 +143,7 @@ describeIfPostgres('protected repeated-source PostgreSQL result semantics', () =
   it('keeps real PostgreSQL results unchanged when the two Read occurrences have independent aliases', async () => {
     const input = repeatedSourceInput();
     const before = resolveDvtTerminalTransformClosure(input);
-    const semanticDocument = globalThis.structuredClone(before.authority.semanticDocument);
+    const semanticDocument = globalThis.structuredClone(before.semanticDocument);
     const reads = semanticDocument.sidecar.relations.filter(
       (relation) => relation.sourceRef != null
     );
@@ -166,7 +166,7 @@ describeIfPostgres('protected repeated-source PostgreSQL result semantics', () =
     const original = await projectDvtPostgresTransform(before);
     const after = resolveDvtTerminalTransformClosure(aliased);
     expect(
-      after.authority.semanticDocument.sidecar.relations
+      after.semanticDocument.sidecar.relations
         .filter((relation) => relation.sourceRef != null)
         .map((relation) => relation.displayName)
     ).toEqual(['Records in this role', 'Related records in another role']);

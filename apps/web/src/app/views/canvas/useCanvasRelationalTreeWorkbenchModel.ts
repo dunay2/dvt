@@ -6,6 +6,7 @@
  * @version 1.1.0
  */
 import { useMemo } from 'react';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -30,7 +31,12 @@ import type {
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
 
 export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boolean {
-  return node.pluginId === 'dvt' && node.kind === 'dvt:transform' && node.role === 'transform';
+  return (
+    node.pluginId === 'dvt' &&
+    node.kind === 'dvt:transform' &&
+    node.role === 'transform' &&
+    readWorkspaceDbtModelReference(node) == null
+  );
 }
 
 export function useCanvasRelationalTreeWorkbenchModel(

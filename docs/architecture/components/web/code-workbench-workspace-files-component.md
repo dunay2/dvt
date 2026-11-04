@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-11-03
+last_reviewed: 2026-11-04
 planning_type: architecture
 ---
 
@@ -175,11 +175,13 @@ placed-row projection and its automatic
 scroll-on-selection behavior are removed.
 
 File-owned model rows come from the existing file-authoritative project graph.
-The additional native catalogue exposes these definitions as unavailable for
-creation, rather than opening Code on activation. Code's file explorer remains
-the file-navigation surface. Instantiating an external model on a native Canvas requires an admitted
-reference boundary; copying its SQL or semantic definition into GraphDraft is
-not that boundary. Existing Model producer occurrences retain their own semantics.
+Click and drag create independent native instances through `CreateCanvasNode`.
+A registered definition retains the scoped file Canvas, dbt unique ID,
+connection reference and assigned output identities. Placements retain their
+own identity, name and position. They neither copy SQL nor connect the original
+Model to the new card. Code's file explorer remains the file-navigation surface.
+File-defined inputs and SQL remain under their original authority; the native
+semantic editor cannot replace them.
 The bounded project-elements adapter enables
 the existing scoped queries only while Elements is open. It discovers the actual
 configuration in ListWorkspaceFiles, reads its persisted authority through
@@ -194,8 +196,28 @@ flowchart LR
   G --> E[Shared Elements list]
   N[Registered definitions] --> E
   E -->|Admitted click or drag| S[Existing guarded instance command]
-  E -->|External model without native admission| R[Visible unavailable definition]
+  S --> R[Scoped definition reference and independent placement]
+  R --> P[Existing producer Read composition]
+  P --> V[Authorized native dbt compilation and protected Preview]
 ```
+
+`PreviewCanvasTransformRows` and protected `PreviewPlan` resolve external
+producers through the existing native analyzer and its revision cache. The
+application port checks file-view permission independently of graph-view
+permission and revalidates current authority, revision, output schema and
+connection. Compilation is selected and shared across repeated instances of the
+same model within a request. Placement and rendering do not compile models.
+The provider projection binds the compiled read-only SELECT to the existing
+producer graph; a logical model name is never treated as a physical table.
+Missing bindings, changed fields/types, stale revisions and non-read-only SQL
+fail before a data probe. PostgreSQL remains responsible for execution and
+availability of the model's compiled upstream relations.
+
+Model-only samples carry `modelRefs` with the actual file Canvas, dbt identity
+and analyzed revision, while `sourceRefs` contains only real physical Sources.
+New response readers and writers must be deployed together: older strict
+readers do not accept this provenance extension. Source sample contracts retain
+their existing nonempty physical-source requirement.
 
 Rows are deduplicated by node identity, preserving distinct same-name elements.
 Properties Code navigation uses the existing workbench handoff guards and shared

@@ -107,6 +107,7 @@ export function buildProtectedRuntimeRouteDependencies(
   const previewCanvasTransformRowsUseCase = new PreviewCanvasTransformRowsUseCase({
     graphDraftResolver: previewGraphDraftResolver,
     connectionCatalog: protectedModule.warehouseConnectionCatalog,
+    modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
     probe: new PostgresCanvasTransformDataSampleProbe({
       credentialResolver: protectedModule.postgresCredentialResolver,
       now: () => new Date(),
@@ -117,6 +118,7 @@ export function buildProtectedRuntimeRouteDependencies(
     cas === undefined
       ? undefined
       : new ResolveAuthorizedDvtPreviewSelectionService({
+          modelProducers: protectedModule.dbtProjectImport.modelProducerResolver,
           graphDraftResolver: previewGraphDraftResolver,
           targetProjectionPublisher: new DvtPostgresTargetProjectionPublisher({
             artifactStore: cas.artifactStore,

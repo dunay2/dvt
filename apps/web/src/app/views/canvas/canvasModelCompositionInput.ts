@@ -20,6 +20,7 @@ import { resolveCanvasSubstraitGraphBindings } from './canvasSubstraitGraphBindi
 import { resolveCanvasDvtJoinDataType } from './canvasDvtJoinTypeAdmission';
 import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 import { resolveUnmappedCanvasReadFields } from './canvasInputFieldEligibility';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export type CanvasModelCompositionPublication = Readonly<{
   nodeId: string;
@@ -41,11 +42,14 @@ export function readCanvasModelCompositionPublication(
     return null;
   try {
     const contextEdges = projectWorkspaceNodeInstanceEdges(nodes, edges);
-    const { document, connection, index } = resolveCanvasSubstraitGraphBindings({
-      node,
-      nodes,
-      edges: contextEdges,
-    });
+    const external = resolveCanvasDbtModelSignature(node);
+    const { document, connection, index } =
+      external ??
+      resolveCanvasSubstraitGraphBindings({
+        node,
+        nodes,
+        edges: contextEdges,
+      });
     const { schemas } = deriveSubstraitSchemas(document);
     const root = index.relations.get(index.rootId)!;
     const schema = schemas.get(index.rootId)!;
@@ -65,12 +69,15 @@ export function readCanvasModelCompositionPublication(
             type.value.nullability !== Type_Nullability.REQUIRED,
         };
       });
-    const denied = resolveUnmappedCanvasReadFields({
-      nodeId: node.id,
-      nodes,
-      edges: contextEdges,
-      document,
-    });
+    const denied =
+      external == null
+        ? resolveUnmappedCanvasReadFields({
+            nodeId: node.id,
+            nodes,
+            edges: contextEdges,
+            document,
+          })
+        : new Set<string>();
     const publication = deriveSubstraitPublication(document, denied).get(index.rootId)!;
     const unavailable = new Set(publication.unavailableFieldIds);
     const publishedFieldIds = new Set(

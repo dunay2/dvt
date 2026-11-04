@@ -1,5 +1,6 @@
 /** Public DVT authoring dispatcher; kind-specific behavior lives in focused modules. */
 import type { CanonicalNode } from '../../types/canonical';
+import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import {
   applyDvtSinkAuthoringMetadata,
   createDvtSinkAuthoringMetadata,
@@ -39,6 +40,8 @@ export function resolveDvtNodeAuthoringMetadata(
   | Readonly<{ outcome: 'resolved'; metadata: DvtNodeAuthoringMetadata | undefined }>
   | Readonly<{ outcome: 'rejected'; reason: 'invalid_document' | 'unsupported_shape' }> {
   if (node.kind === 'dvt:transform' && node.pluginId === DVT_AUTHORING_PLUGIN_ID) {
+    if (readWorkspaceDbtModelReference(node) != null)
+      return { outcome: 'resolved', metadata: undefined };
     return resolveDvtTransformAuthoringMetadata(node);
   }
   try {

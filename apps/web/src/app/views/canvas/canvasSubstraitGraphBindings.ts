@@ -18,6 +18,7 @@ import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemantic
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
 import { bindCanvasSubstraitInputs, physicalReadMatches } from './canvasSubstraitInputBinding';
 import { readDvtSourceOutputProjection } from './canvasDvtSourceSemanticAuthoring';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 import { readCanvasInputBindings, type CanvasInputBindingEdge } from './canvasInputBindings';
 
 type Args = Readonly<{
@@ -41,6 +42,7 @@ export function resolveCanvasSubstraitGraphBindings(
   }
   const documents = new Map<string, SubstraitDocument>();
   const physicalSources = new Map<string, ConnectedSourceRef>();
+  const externalProducers = new Map<string, Pick<ResolvedProducer, 'document' | 'connection'>>();
   const visited = new Set<string>();
   const pending = [args.node.id];
   while (pending.length > 0) {
@@ -54,6 +56,11 @@ export function resolveCanvasSubstraitGraphBindings(
     pending.push(...inputIds);
     const physical = ConnectedSourceRefSchema.safeParse(node.metadata?.connectedSourceRef);
     if (node.role === 'input' && physical.success) physicalSources.set(id, physical.data);
+    const external = resolveCanvasDbtModelSignature(node);
+    if (external != null) {
+      externalProducers.set(id, external);
+      continue;
+    }
     const authority = readDvtTransformAuthoringAuthority(node);
     if (authority == null) {
       continue;
@@ -83,6 +90,7 @@ export function resolveCanvasSubstraitGraphBindings(
     targetId: args.node.id,
     documents,
     sources: physicalSources,
+    externalProducers,
     edges: edges.map((edge) => ({ ...edge, inputBindings: readCanvasInputBindings(edge) })),
     sourcePublications: new Map(
       [...physicalSources.keys()].map(

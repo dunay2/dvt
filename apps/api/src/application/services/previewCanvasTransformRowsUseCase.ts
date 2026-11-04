@@ -3,6 +3,7 @@ import {
   TRANSFORM_DATA_SAMPLE_CONTRACT_VERSION,
   TransformDataSampleResponseSchema,
   parseExecutionSelection,
+  resolveWorkspaceNodeInstances,
   type TransformDataSampleRequest,
   type TransformDataSampleResponse,
 } from '@dvt/contracts';
@@ -10,6 +11,7 @@ import {
 import type { AuthorizedExecutionContext } from '../ports/authContract.js';
 import type { ICanvasTransformDataSampleProbe } from '../ports/canvasTransformDataSample.js';
 import { CanvasTransformDataSampleUnavailableError } from '../ports/canvasTransformDataSample.js';
+import type { IDbtModelProducerResolver } from '../ports/dbtModelProducer.js';
 import type { IWarehouseConnectionCatalog } from '../ports/warehouseSourceImport.js';
 
 import { projectDvtPostgresTransform } from './dvtPostgresTransformProjection.js';
@@ -23,8 +25,9 @@ export class PreviewCanvasTransformRowsUseCase {
         ResolveAuthorizedExecutableSubgraphService,
         'executeWithAuthorizedDraft'
       >;
-      readonly connectionCatalog: IWarehouseConnectionCatalog;
+      readonly connectionCatalog: Pick<IWarehouseConnectionCatalog, 'getConnection'>;
       readonly probe: ICanvasTransformDataSampleProbe;
+      readonly modelProducers?: IDbtModelProducerResolver;
     }
   ) {}
 
@@ -51,21 +54,37 @@ export class PreviewCanvasTransformRowsUseCase {
       throw new CanvasTransformDataSampleUnavailableError('canvas_changed');
     }
 
+    const scope = {
+      tenantId: context.scope.tenantId.value,
+      projectId: context.scope.projectId?.value,
+      environmentId: context.scope.environmentId?.value,
+    };
+    if (scope.projectId === undefined || scope.environmentId === undefined)
+      throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
     let closure;
     let projection;
     try {
-      closure = resolveDvtTerminalTransformClosure({
-        draft: authorizedDraft.draft,
-        selectedNodeIds: resolved.value.nodeIds,
-        selectedEdgeIds: resolved.value.edgeIds,
-        previewTargetId: input.transformNodeId,
-      });
+      const externalProducers = await this.deps.modelProducers?.resolve(
+        resolveWorkspaceNodeInstances(authorizedDraft.draft.nodes).filter((node) =>
+          resolved.value.nodeIds.includes(node.id)
+        ),
+        context
+      );
+      closure = resolveDvtTerminalTransformClosure(
+        {
+          draft: authorizedDraft.draft,
+          selectedNodeIds: resolved.value.nodeIds,
+          selectedEdgeIds: resolved.value.edgeIds,
+          previewTargetId: input.transformNodeId,
+        },
+        externalProducers
+      );
       if (closure.transform.id !== input.transformNodeId) {
         throw new Error('Resolved closure does not target the requested Transform.');
       }
       if (
         input.semanticPlanSha256 !== undefined &&
-        input.semanticPlanSha256 !== closure.authority.semanticDocument.semanticPlan.sha256
+        input.semanticPlanSha256 !== closure.semanticDocument.semanticPlan.sha256
       ) {
         throw new CanvasTransformDataSampleUnavailableError('canvas_changed');
       }
@@ -74,7 +93,7 @@ export class PreviewCanvasTransformRowsUseCase {
       }
       if (
         input.relationId !== undefined &&
-        !closure.authority.semanticDocument.sidecar.relations.some(
+        !closure.semanticDocument.sidecar.relations.some(
           (relation) => relation.relationId === input.relationId
         )
       ) {
@@ -86,14 +105,6 @@ export class PreviewCanvasTransformRowsUseCase {
       throw new CanvasTransformDataSampleUnavailableError('projection_unsupported');
     }
 
-    const scope = {
-      tenantId: context.scope.tenantId.value,
-      projectId: context.scope.projectId?.value,
-      environmentId: context.scope.environmentId?.value,
-    };
-    if (scope.projectId === undefined || scope.environmentId === undefined) {
-      throw new CanvasTransformDataSampleUnavailableError('selection_unavailable');
-    }
     const connection = await this.deps.connectionCatalog.getConnection(
       {
         tenantId: scope.tenantId,
@@ -122,7 +133,7 @@ export class PreviewCanvasTransformRowsUseCase {
       transformNodeId: input.transformNodeId,
       ...(input.relationId === undefined ? {} : { relationId: input.relationId }),
       draftRevision: authorizedDraft.revision,
-      semanticPlanSha256: closure.authority.semanticDocument.semanticPlan.sha256,
+      semanticPlanSha256: closure.semanticDocument.semanticPlan.sha256,
       columns: sample.columns,
       rows: sample.rows,
       truncated: sample.truncated,
@@ -130,6 +141,13 @@ export class PreviewCanvasTransformRowsUseCase {
       provenance: {
         mode: 'live',
         sourceRefs: projection.sourceRefs,
+        ...(closure.externalProducers.size === 0
+          ? {}
+          : {
+              modelRefs: [...closure.externalProducers.values()].map(
+                (producer) => producer.provenance
+              ),
+            }),
         queriedAt: sample.queriedAt,
         navigation: sample.navigation,
         limit: input.limit,

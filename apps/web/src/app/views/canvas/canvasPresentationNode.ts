@@ -30,6 +30,7 @@ import { presentCanvasFilterSummary } from './canvasPresentationFilterSummary';
 import { resolveCanvasProducerDocument } from './canvasProducerDocument';
 import { projectCanvasInputBindings } from './canvasInputBindings';
 import { isDbtCompatibleModel } from './canvasDbtAuthoringModel';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export async function projectCanvasPresentationNode(
   args: CanvasPresentationQuery,
@@ -40,6 +41,22 @@ export async function projectCanvasPresentationNode(
 ): Promise<CanvasNodePresentationTruth> {
   signal?.throwIfAborted();
   const base = canvasNodePresentationBase(args);
+  const external = resolveCanvasDbtModelSignature(args.node);
+  if (external != null) {
+    const fields = external.reference.fields.map((field) => ({
+      name: field.name,
+      type: field.dataType,
+      nullable: field.nullable,
+      reference: field.fieldId,
+      selected: true,
+      provenance: 'declared' as const,
+    }));
+    return {
+      ...base,
+      columns: { ...canvasColumnTruth(fields, []), state: 'ready' },
+      inputBindingPosture: 'current',
+    };
+  }
   const inheritedReferences = new Map(
     base.columns.inherited.map((column) => [
       JSON.stringify([column.sourceNodeId, column.name]),

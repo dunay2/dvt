@@ -14,6 +14,12 @@ import { CanvasExplorerList } from './CanvasExplorerList';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasProjectElementsInput } from './CanvasExplorer';
 import styles from './CanvasExplorer.module.css';
+import { useState } from 'react';
+import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../../types/canonical';
+import {
+  canvasDbtModelDefinitionId,
+  createCanvasDbtModelDefinition,
+} from '../canvasDbtModelReference';
 
 export function CanvasProjectElementsExplorer({
   enabled,
@@ -22,8 +28,10 @@ export function CanvasProjectElementsExplorer({
   onDragStart,
   categoryActions,
   projectRoot,
+  canCreateInstances = false,
 }: CanvasProjectElementsInput & Readonly<{ projectRoot?: string }>): JSX.Element {
   const copy = resolveCanvasExplorerCopy(useApplicationLanguageStore((state) => state.language));
+  const [creationError, setCreationError] = useState(false);
   const tree = useWorkspaceFileTreeQuery({ enabled });
   const entries =
     projectRoot == null
@@ -54,14 +62,19 @@ export function CanvasProjectElementsExplorer({
   const models =
     enabled && projection != null && binding != null
       ? projection.nodes
-          .filter((node) => node.resourceType === 'model' && !currentIds.has(node.uniqueId))
+          .filter(
+            (node) =>
+              node.resourceType === 'model' &&
+              !currentIds.has(canvasDbtModelDefinitionId(binding.canvasId, node.uniqueId))
+          )
           .map((node) => ({
-            id: node.uniqueId,
+            id: canvasDbtModelDefinitionId(binding.canvasId, node.uniqueId),
             label: node.name,
-            description: copy.externalModelInstanceUnavailable,
+            description: node.originalFilePath,
             category: copy.models,
-            draggable: false,
-            disabled: true,
+            draggable: canCreateInstances,
+            disabled: !canCreateInstances,
+            uniqueId: node.uniqueId,
           }))
       : [];
   const unavailable =
@@ -78,6 +91,11 @@ export function CanvasProjectElementsExplorer({
       (binding != null && graph.isPending));
   return (
     <>
+      {creationError ? (
+        <p className={styles.empty} role="alert">
+          {copy.modelSchemaUnavailable}
+        </p>
+      ) : null}
       {unavailable || loading ? (
         <p className={styles.empty} role={unavailable ? 'alert' : 'status'}>
           {unavailable ? copy.projectModelsUnavailable : copy.projectModelsLoading}
@@ -86,9 +104,39 @@ export function CanvasProjectElementsExplorer({
       <CanvasExplorerList
         items={[...items, ...models]}
         categoryActions={categoryActions}
-        onDragStart={onDragStart}
+        onDragStart={(id, event) => {
+          const model = models.find((item) => item.id === id);
+          if (model == null) {
+            onDragStart?.(id, event);
+            return;
+          }
+          try {
+            if (!canCreateInstances || projection == null) throw new Error('Unavailable model.');
+            event.dataTransfer.setData(
+              CANONICAL_NODE_DRAG_MIME_TYPE,
+              JSON.stringify(createCanvasDbtModelDefinition(projection, model.uniqueId))
+            );
+            event.dataTransfer.effectAllowed = 'copy';
+            setCreationError(false);
+          } catch {
+            event.preventDefault();
+            setCreationError(true);
+          }
+        }}
         onSelect={(id) => {
-          if (currentIds.has(id)) onSelect(id);
+          if (currentIds.has(id)) {
+            onSelect(id);
+            return;
+          }
+          const model = models.find((item) => item.id === id);
+          try {
+            if (!canCreateInstances || projection == null || model == null)
+              throw new Error('Unavailable model.');
+            onSelect(id, createCanvasDbtModelDefinition(projection, model.uniqueId));
+            setCreationError(false);
+          } catch {
+            setCreationError(true);
+          }
         }}
       />
     </>

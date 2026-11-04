@@ -18,6 +18,7 @@ export async function projectSubstraitProducerGraph(
   args: ProducerGraph &
     Readonly<{
       relationId?: string;
+      externalProjections?: ReadonlyMap<string, SubstraitPostgresAstProjection>;
     }>
 ): Promise<SubstraitPostgresProjection> {
   const documents = new Map(args.documents);
@@ -32,6 +33,22 @@ export async function projectSubstraitProducerGraph(
     const previous = results.get(nodeId);
     if (previous != null) return previous;
     const { document, index } = graph.get(nodeId)!;
+    if (args.externalProducers?.has(nodeId)) {
+      const external = args.externalProjections?.get(nodeId);
+      const root = index.relations.get(index.rootId)!;
+      if (
+        external == null ||
+        external.projection.outputs.length !== root.fields.length ||
+        root.fields.some(
+          (field) => external.projection.outputs[field.outputOrdinal]?.name !== field.displayName
+        )
+      )
+        throw new Error(
+          'An external publication requires its authorized SQL result and exact output contract.'
+        );
+      results.set(nodeId, external);
+      return external;
+    }
     const producers = new Map<string, ProducerSqlBinding>();
     for (const entry of index.relations.values()) {
       const reference = entry.binding.producerRef;

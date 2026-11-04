@@ -19,6 +19,7 @@ import type {
   CanvasGraphInteractionPolicy,
   CanvasGraphInteractionState,
   CreateCanvasAuthoringNode,
+  CanvasNodeInstantiationHandler,
 } from './canvasGraphHandlerContracts';
 
 export type UseCanvasGraphHandlersParams = CanvasGraphInteractionState &
@@ -34,7 +35,7 @@ export type UseCanvasGraphHandlersResult = {
   handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
-  handleInstantiateNode: (nodeId: string, position: { x: number; y: number }) => void;
+  handleInstantiateNode: CanvasNodeInstantiationHandler;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
   handleDuplicateNode: (nodeId: string) => void;

@@ -7,6 +7,7 @@ import {
 } from '@dvt/substrait-analysis';
 
 import { pgQualifiedColumnRef } from '../postgresAst.js';
+import { pgRangeSubselect } from '../postgresAst.js';
 import type { PostgresAstNode } from '../postgresAst.js';
 import { renderPostgresAst } from '../renderPostgresAst.js';
 import type { DvtPostgresOrderKey } from '../sortFetchPostgresProjection.js';
@@ -34,6 +35,48 @@ export type SubstraitPostgresAstProjection = Readonly<{
 
 export type SubstraitPostgresProjection = SubstraitPostgresAstProjection &
   Readonly<{ sql: string }>;
+
+/** Bind a server-validated external SELECT to exactly its declared publication fields. */
+export function projectExternalProducerAst(
+  document: SubstraitDocument,
+  ast: PostgresAstNode
+): SubstraitPostgresAstProjection {
+  const { index, schemas } = deriveSubstraitSchemas(document);
+  const root = index.relations.get(index.rootId)!;
+  const fields = schemas.get(index.rootId)!;
+  if (
+    !Object.hasOwn(ast, 'SelectStmt') ||
+    index.relations.size !== 1 ||
+    root.relation.relType.case !== 'read' ||
+    root.binding.sourceRef != null ||
+    root.binding.producerRef != null
+  )
+    return unsupported(
+      'An external publication requires a leaf Read signature and a validated SELECT.'
+    );
+  const names = root.fields
+    .filter((field) => field.parentFieldId == null)
+    .sort((a, b) => a.outputOrdinal - b.outputOrdinal)
+    .map((field) => field.displayName!);
+  return {
+    ast: selectAst([], [pgRangeSubselect(ast, 'external_model')], {
+      targetList: names.map((name) => ({
+        ResTarget: { name, val: pgQualifiedColumnRef('external_model', name) },
+      })),
+    }),
+    orderBy: null,
+    projection: {
+      inputs: [],
+      resultRelationId: index.rootId,
+      outputs: fields.map((field, outputOrdinal) => ({
+        name: names[outputOrdinal]!,
+        outputOrdinal,
+        dataType: field.type.kind.case!,
+        nullable: isSchemaTypeNullable(field.type),
+      })),
+    },
+  };
+}
 
 export async function projectSubstraitToPostgresSql(
   document: SubstraitDocument,

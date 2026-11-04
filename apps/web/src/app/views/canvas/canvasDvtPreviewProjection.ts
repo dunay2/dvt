@@ -3,6 +3,7 @@ import {
   isWorkspaceGraphAuthoringEdgeEffectivelyExecutable,
   parseExecutionSelection,
   type ExecutionSelection,
+  readWorkspaceDbtModelReference,
   ConnectedSourceRefSchema,
   resolveWorkspaceNodeInstances,
   projectWorkspaceNodeInstanceEdges,
@@ -11,10 +12,11 @@ import {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { toCanvasAuthoringSerializableValue } from './canvasAuthoringMetadata';
-import { resolveEffectiveDvtConnectionRef } from './canvasDvtAuthoringModel';
-import { decodeDvtSubstraitProjectionDocument } from './canvasDvtSubstraitProjection';
-import { hasConnectedRelationSources } from './canvasConnectedRelationInputs';
 import { readDvtTransformAuthoringAuthority } from './canvasDvtTransformAuthoringAuthority';
+import { decodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
+import { hasConnectedRelationSources } from './canvasConnectedRelationInputs';
+import { hasSameConnectionRef } from '@dvt/postgres-projection';
+import { resolveCanvasDbtModelSignature } from './canvasDbtModelReference';
 
 export type ProtectedDvtPreviewProjection =
   | {
@@ -61,15 +63,22 @@ function resolveTerminalProjectionClosure(
   const incoming = edges
     .filter((edge) => edge.targetId === transform.id)
     .sort((a, b) => a.id.localeCompare(b.id));
-  if (incoming.length === 0 || incoming.some((edge) => edge.relation !== 'lineage')) return null;
+  const external = readWorkspaceDbtModelReference(transform) != null;
+  if (
+    (!external && incoming.length === 0) ||
+    (external && incoming.length !== 0) ||
+    incoming.some((edge) => edge.relation !== 'lineage')
+  )
+    return null;
   const sources = incoming
     .map((edge) => nodesById.get(edge.sourceId))
     .filter(
       (source): source is CanonicalNode =>
         source !== undefined &&
-        source.kind === 'dvt:source' &&
-        source.role === 'input' &&
-        (source.pluginId === 'dvt' || source.pluginId === 'dvt.warehouse-source')
+        ((source.kind === 'dvt:source' &&
+          source.role === 'input' &&
+          (source.pluginId === 'dvt' || source.pluginId === 'dvt.warehouse-source')) ||
+          readWorkspaceDbtModelReference(source) != null)
     );
   if (
     sources.length !== incoming.length ||
@@ -79,20 +88,38 @@ function resolveTerminalProjectionClosure(
   sources.sort((a, b) => a.id.localeCompare(b.id));
 
   try {
-    if (sources.some((source) => resolveEffectiveDvtConnectionRef(source) === undefined))
-      return null;
-    const authority = readDvtTransformAuthoringAuthority(transform);
-    if (authority === null) return null;
-    const draft = decodeDvtSubstraitProjectionDocument(authority.semanticDocument);
-    if (
-      !hasConnectedRelationSources(
-        draft,
-        sources.map((source) => ({
-          sourceRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef),
-        }))
+    if (external) {
+      if (resolveCanvasDbtModelSignature(transform)?.connection.provider !== 'postgres')
+        return null;
+    } else {
+      const authority = readDvtTransformAuthoringAuthority(transform);
+      if (authority == null) return null;
+      const inputs = sources.map((source) => {
+        const signature = resolveCanvasDbtModelSignature(source);
+        return signature == null
+          ? { sourceRef: ConnectedSourceRefSchema.parse(source.metadata?.connectedSourceRef) }
+          : {
+              sourceRef: null,
+              producer: {
+                nodeId: source.id,
+                name: source.name,
+                document: signature.document,
+                connection: signature.connection,
+              },
+            };
+      });
+      const connections = inputs.map(
+        (input) => input.producer?.connection ?? input.sourceRef!.connectionRef
+      );
+      if (
+        connections.some((connection) => !hasSameConnectionRef(connections[0]!, connection)) ||
+        !hasConnectedRelationSources(
+          decodeDvtSubstraitSemanticDocument(authority.semanticDocument),
+          inputs
+        )
       )
-    )
-      return null;
+        return null;
+    }
   } catch {
     return null;
   }
@@ -169,7 +196,13 @@ export function buildProtectedDvtPreviewProjection(args: {
             (node.kind === 'dvt:sink' && node.role === 'output')
         );
   const closures = candidates
-    .map((candidate) => resolveTerminalProjectionClosure(candidate, nodesById, edges))
+    .map((candidate) => {
+      try {
+        return resolveTerminalProjectionClosure(candidate, nodesById, edges);
+      } catch {
+        return null;
+      }
+    })
     .filter((closure): closure is TerminalProjectionClosure => closure !== null);
 
   if (closures.length !== 1) {

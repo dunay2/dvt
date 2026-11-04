@@ -19,8 +19,69 @@ import {
 import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
 import { sourceNode, projectedModel } from './canvasColumnOutputAuthoring.test-support';
+import { readWorkspaceDbtModelReference, resolveWorkspaceNodeInstances } from '@dvt/contracts';
 
 describe('useCanvasGraphHandlers node drop', () => {
+  it('registers one file definition for rapid click and drop placements without copying it or connecting cards', async () => {
+    const definition = {
+      ...buildCanonicalNode('dbt-definition', 'transform'),
+      metadata: {
+        dbtModelReference: {
+          schemaVersion: 'workspace-dbt-model-reference.v1',
+          canvasId: 'files',
+          uniqueId: 'model.demo.clientes',
+          relationId: 'assigned-relation',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            provider: 'postgres',
+            connectionId: 'warehouse',
+          },
+          fields: [
+            { fieldId: 'assigned-client', name: 'client_id', dataType: 'text', nullable: true },
+          ],
+        },
+      },
+    };
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const setEdges = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      canonicalNodes: [],
+      setNodes,
+      setDraftSession,
+      setEdges,
+    });
+    await harness.render();
+    act(() => {
+      harness.latest()?.handleInstantiateNode(definition.id, { x: 30, y: 60 }, definition);
+      harness.latest()?.handleDrop(buildCanonicalDropEvent(definition));
+    });
+    const placed = setNodes.mock.calls[1]?.[0] as Node[];
+    expect(placed).toHaveLength(2);
+    expect(new Set(placed.map((node) => node.id)).size).toBe(2);
+    expect(placed.map((node) => node.data.name)).toEqual(['dbt-definition', 'dbt-definition 2']);
+    const persisted = setDraftSession.mock.calls.reduce(
+      (session, [update]) => applyStateUpdater(update, session),
+      buildDraftSession()
+    );
+    expect(
+      Object.keys(persisted.localNodeCatalog ?? {}).filter((id) => id === definition.id)
+    ).toHaveLength(1);
+    expect(persisted.workingSet.visibleNodeIds).not.toContain(definition.id);
+    const resolved = resolveWorkspaceNodeInstances(Object.values(persisted.localNodeCatalog ?? {}));
+    expect(
+      placed.every(
+        (node) =>
+          readWorkspaceDbtModelReference(resolved.find((item) => item.id === node.id)!)?.fields[0]
+            ?.fieldId === 'assigned-client'
+      )
+    ).toBe(true);
+    expect(setEdges).not.toHaveBeenCalled();
+    expect(toastState.error).not.toHaveBeenCalled();
+    harness.cleanup();
+  });
   it.each(['input', 'transform'] as const)(
     'creates independent %s cards through shared click and drop admission',
     async (role) => {

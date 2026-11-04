@@ -35,7 +35,7 @@ export function CanvasGraphExplorer({
   activityRail,
 }: Readonly<{
   nodes: readonly Node[];
-  onSelect: (id: string) => void;
+  onSelect: (id: string, definition?: CanonicalNode) => void;
   onImport?: () => void;
   onAddModel?: (opener: HTMLButtonElement) => void;
   children: ReactNode;
@@ -141,6 +141,7 @@ export function CanvasGraphExplorer({
             projectFiles.renderElements?.({
               enabled,
               items,
+              canCreateInstances: canPlaceSource && referencePlacementScope == null,
               onSelect,
               onDragStart: dragResource,
               categoryActions,

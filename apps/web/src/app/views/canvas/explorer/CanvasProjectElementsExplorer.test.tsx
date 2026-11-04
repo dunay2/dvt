@@ -15,6 +15,7 @@ import type { IDbtProjectGraphQueryPort } from '../../../ports/dbtProjectGraph';
 import { useApplicationLanguageStore } from '../../../stores/applicationLanguageStore';
 import { CanvasProjectElementsExplorer } from './CanvasProjectElementsExplorer';
 import type { CanvasExplorerItem } from './canvasExplorerItems';
+import { canvasDbtModelDefinitionId } from '../canvasDbtModelReference';
 
 const binding = {
   schemaVersion: 'canvas-authoring-authority-binding.v1',
@@ -25,6 +26,7 @@ const project = DbtProjectGraphProjectionSchema.parse({
   schemaVersion: 'dbt-project-graph-projection.v1',
   authorityBinding: binding,
   freshness: 'fresh',
+  adapterType: 'postgres',
   analysisSha256: '1'.repeat(64),
   projectRevision: {
     projectRoot: '.',
@@ -32,6 +34,7 @@ const project = DbtProjectGraphProjectionSchema.parse({
     contentSetSha256: '2'.repeat(64),
     analyzedAt: '2026-11-02T00:00:00.000Z',
     analyzerVersion: 'dbt-cli-v1',
+    dbtVersion: '1.10.0',
   },
   nodes: ['clientes', 'pedidos', 'ventas_por_cliente'].map((name) => ({
     uniqueId: `model.demo.${name}`,
@@ -39,13 +42,25 @@ const project = DbtProjectGraphProjectionSchema.parse({
     name,
     packageName: 'demo',
     originalFilePath: `models/${name}.sql`,
-    columns: [],
+    columns: [{ name: 'id', dataType: 'text' }],
     tags: [],
     visualEditability: { status: 'code_only', reasons: ['File authority'] },
   })),
   edges: [],
   diagnostics: [],
-  capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 3 },
+  capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 3 },
+  executionTarget: {
+    provider: 'temporal',
+    adapter: 'postgres',
+    targetName: 'default',
+    connectionRef: {
+      schemaVersion: 'connection-ref.v1',
+      provider: 'postgres',
+      connectionId: 'warehouse',
+    },
+    resolutionSource: 'environment-default',
+    credentialRef: 'env:DBT_PROFILES_DIR',
+  },
 });
 const listFiles = vi.fn<IWorkspaceFilesQueryPort['listFiles']>();
 const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>();
@@ -62,7 +77,8 @@ function Location(): JSX.Element {
 }
 async function render(
   enabled = true,
-  items: readonly CanvasExplorerItem[] = [{ id: 'native', label: 'Model 1' }]
+  items: readonly CanvasExplorerItem[] = [{ id: 'native', label: 'Model 1' }],
+  canCreateInstances = true
 ): Promise<void> {
   const view = (
     <AppServicesProvider overrides={services}>
@@ -72,6 +88,7 @@ async function render(
           items={items}
           onSelect={onSelect}
           onDragStart={onDragStart}
+          canCreateInstances={canCreateInstances}
         />
         <Location />
       </MemoryRouter>
@@ -113,7 +130,7 @@ afterEach(async () => {
   mounted = undefined;
 });
 
-it('keeps native creation active and external models explicitly unavailable without navigation or writes', async () => {
+it('admits native and file-model definitions without navigation or file writes', async () => {
   await render();
   await waitForReactQuery(
     () => screen.queryByRole('button', { name: /ventas_por_cliente/ }) != null
@@ -127,28 +144,59 @@ it('keeps native creation active and external models explicitly unavailable with
   act(() => {
     fireEvent.click(screen.getByRole('button', { name: /pedidos/ }));
   });
-  expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).disabled).toBe(true);
-  expect(onSelect).toHaveBeenCalledExactlyOnceWith('native');
-  expect(screen.getAllByText(/instance creation is not available/)).toHaveLength(3);
+  expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).disabled).toBe(false);
+  expect(onSelect).toHaveBeenCalledTimes(2);
+  expect(onSelect.mock.calls[1]?.[1]?.metadata?.dbtModelReference).toMatchObject({
+    canvasId: binding.canvasId,
+    uniqueId: 'model.demo.pedidos',
+  });
   expect(screen.getByLabelText('Location').textContent).toBe('/canvas');
   expect(getProjectGraph).toHaveBeenCalledExactlyOnceWith(binding);
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
-it('does not open a model whose declared file is unavailable', async () => {
+it('uses the authoritative model identity rather than inferring existence from file-tree entries', async () => {
   listFiles.mockResolvedValue([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
   await render();
   await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
   const row = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
-  expect(row.disabled).toBe(true);
+  expect(row.disabled).toBe(false);
   act(() => {
     fireEvent.click(row);
+  });
+  expect(onSelect).toHaveBeenCalledOnce();
+  expect(saveFileContent).not.toHaveBeenCalled();
+});
+
+it('keeps file-model admission unavailable in a read-only workspace', async () => {
+  await render(true, [], false);
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  const model = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
+  expect(model.disabled).toBe(true);
+  expect(model.draggable).toBe(false);
+  act(() => {
+    fireEvent.click(model);
   });
   expect(onSelect).not.toHaveBeenCalled();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
-it('retains native catalogue drag without advertising external model instance admission', async () => {
+it('reports a missing published output without creating a partial instance', async () => {
+  getProjectGraph.mockResolvedValue({
+    ...project,
+    nodes: project.nodes.map((node) => ({ ...node, columns: [] })),
+  });
+  await render();
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
+  act(() => {
+    fireEvent.click(screen.getByRole('button', { name: /pedidos/ }));
+  });
+  expect(screen.getByRole('alert').textContent).toMatch(/output|schema/i);
+  expect(onSelect).not.toHaveBeenCalled();
+  expect(saveFileContent).not.toHaveBeenCalled();
+});
+
+it('retains native drag and transfers a typed external model definition through the same admission adapter', async () => {
   await render(true, [{ id: 'source', label: 'Orders', category: 'Sources', draggable: true }]);
   await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
   const source = screen.getByRole<HTMLButtonElement>('button', { name: 'Orders' });
@@ -157,7 +205,15 @@ it('retains native catalogue drag without advertising external model instance ad
     fireEvent.dragStart(source, { dataTransfer: {} });
   });
   expect(onDragStart.mock.calls[0]?.[0]).toBe('source');
-  expect(screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ }).draggable).toBe(false);
+  const model = screen.getByRole<HTMLButtonElement>('button', { name: /pedidos/ });
+  expect(model.draggable).toBe(true);
+  const setData = vi.fn();
+  act(() => {
+    fireEvent.dragStart(model, { dataTransfer: { setData } });
+  });
+  expect(JSON.parse(setData.mock.calls[0]![1]).metadata.dbtModelReference.uniqueId).toBe(
+    'model.demo.pedidos'
+  );
   expect(screen.getByRole('heading', { name: 'Models' })).toBeTruthy();
   expect(saveFileContent).not.toHaveBeenCalled();
 });
@@ -165,21 +221,29 @@ it('retains native catalogue drag without advertising external model instance ad
 it('deduplicates by identity while preserving a distinct native element with the same name', async () => {
   await render(true, [
     { id: 'native', label: 'clientes' },
-    { id: 'model.demo.clientes', label: 'clientes', selected: true },
+    {
+      id: canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes'),
+      label: 'clientes',
+      selected: true,
+    },
   ]);
   await waitForReactQuery(() => screen.queryByRole('button', { name: /pedidos/ }) != null);
   expect(
-    mounted!.container.querySelectorAll('[data-element-id="model.demo.clientes"]')
+    mounted!.container.querySelectorAll(
+      `[data-element-id="${canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes')}"]`
+    )
   ).toHaveLength(1);
   expect(mounted!.container.querySelectorAll('[data-element-id="native"]')).toHaveLength(1);
   act(() => {
     fireEvent.click(
       mounted!.container.querySelector<HTMLButtonElement>(
-        '[data-element-id="model.demo.clientes"]'
+        `[data-element-id="${canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes')}"]`
       )!
     );
   });
-  expect(onSelect).toHaveBeenCalledExactlyOnceWith('model.demo.clientes');
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith(
+    canvasDbtModelDefinitionId(binding.canvasId, 'model.demo.clientes')
+  );
 });
 
 it('does no discovery while closed and reuses graph analysis across close and reopen', async () => {

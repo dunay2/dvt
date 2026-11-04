@@ -8,6 +8,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
+import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import {
   resolveCanvasNodeAdmissionTransaction,
   type CanvasNodeAdmissionTransaction,
@@ -36,6 +37,7 @@ type UseCanvasNodeAdmissionCommandRunnerArgs = {
 
 type RunCanvasNodeAdmissionCommandArgs = {
   canonicalNode: CanonicalNode;
+  definition?: CanonicalNode;
   position: { x: number; y: number };
   onNoop?: (reason: string) => void;
   onAdded?: (canonicalNode: CanonicalNode) => void;
@@ -59,7 +61,7 @@ export function useCanvasNodeAdmissionCommandRunner({
   latestDraftSessionRef.current = draftSession;
 
   return useCallback<RunCanvasNodeAdmissionCommand>(
-    ({ canonicalNode, position, onNoop, onAdded }) => {
+    ({ canonicalNode, definition, position, onNoop, onAdded }) => {
       if (!allowsCanonicalNode(canonicalNode)) {
         const transaction: CanvasNodeAdmissionTransaction = {
           outcome: 'noop',
@@ -69,9 +71,13 @@ export function useCanvasNodeAdmissionCommandRunner({
         return transaction;
       }
 
+      const registerDefinition = (session: CanvasDraftSession) =>
+        definition == null
+          ? session
+          : canvasDraftSessionWorkingSet.updateNodeDefinition(session, definition);
       const transaction = resolveCanvasNodeAdmissionTransaction({
         canonicalNode,
-        draftSession: latestDraftSessionRef.current,
+        draftSession: registerDefinition(latestDraftSessionRef.current),
         existingNodes: latestNodesRef.current,
         position,
         columnLevelLineageEnabled,
@@ -87,7 +93,7 @@ export function useCanvasNodeAdmissionCommandRunner({
           setNodes(transaction.nodes);
           setDraftSession((currentDraftSession) => {
             const nextDraftSession = canvasGraphLifecycle.node.admitExplicit(
-              currentDraftSession,
+              registerDefinition(currentDraftSession),
               transaction.canonicalNode
             );
             latestDraftSessionRef.current = nextDraftSession;

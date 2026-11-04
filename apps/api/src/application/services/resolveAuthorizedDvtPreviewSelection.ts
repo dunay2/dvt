@@ -8,8 +8,10 @@ import type {
   GenericGraphSourceV1,
 } from '@dvt/contracts';
 import { DVT_REJECTIONS, type DvtOperationalRejection } from '@dvt/contracts';
+import { resolveWorkspaceNodeInstances } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
+import type { IDbtModelProducerResolver } from '../ports/dbtModelProducer.js';
 
 import type { DvtOperationalWorkloadProjector } from './dvtOperationalWorkloadProjector.js';
 import type { DvtPostgresTargetProjectionPublisher } from './dvtPostgresTargetProjectionPublisher.js';
@@ -42,6 +44,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
       >;
       readonly targetProjectionPublisher: Pick<DvtPostgresTargetProjectionPublisher, 'publish'>;
       readonly workloadProjector: Pick<DvtOperationalWorkloadProjector, 'project'>;
+      readonly modelProducers?: IDbtModelProducerResolver;
     }
   ) {}
 
@@ -77,12 +80,20 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
     };
 
     let targetProjection;
+    let externalProducers;
     try {
+      externalProducers = await this.deps.modelProducers?.resolve(
+        resolveWorkspaceNodeInstances(authorizedDraft.draft.nodes).filter((node) =>
+          resolved.value.nodeIds.includes(node.id)
+        ),
+        context
+      );
       const publication = await this.deps.targetProjectionPublisher.publish({
         scope,
         draft: authorizedDraft.draft,
         selectedNodeIds: resolved.value.nodeIds,
         selectedEdgeIds: resolved.value.edgeIds,
+        ...(externalProducers == null ? {} : { externalProducers }),
       });
       if (!publication.ok) return reject(publication);
       targetProjection = publication.value;
@@ -98,6 +109,7 @@ export class ResolveAuthorizedDvtPreviewSelectionService {
       selectedNodeIds: resolved.value.nodeIds,
       selectedEdgeIds: resolved.value.edgeIds,
       targetProjection,
+      ...(externalProducers == null ? {} : { externalProducers }),
     });
     if (!workload.ok) {
       return reject(workload);

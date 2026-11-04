@@ -23,11 +23,13 @@ import {
 } from './CanvasExplorer.templates';
 import { resolveCanvasExplorerCopy } from './canvasExplorerCopy';
 import type { CanvasExplorerItem, CanvasExplorerCategoryAction } from './canvasExplorerItems';
+import type { CanonicalNode } from '../../../types/canonical';
 
 export type CanvasProjectElementsInput = Readonly<{
   enabled: boolean;
   items: readonly CanvasExplorerItem[];
-  onSelect: (id: string) => void;
+  canCreateInstances?: boolean;
+  onSelect: (id: string, definition?: CanonicalNode) => void;
   onDragStart?: (id: string, event: DragEvent<HTMLButtonElement>) => void;
   categoryActions?: ReadonlyMap<string, CanvasExplorerCategoryAction>;
 }>;
