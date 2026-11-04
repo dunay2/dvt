@@ -422,6 +422,13 @@ responses establish the UI boundary only; they are not evidence of native dbt
 compilation or a live PostgreSQL query. That environment acceptance remains
 separate and pending below.
 
+The controlled run reached create/save/reload and exposed a shared interaction
+helper defect: it selected a node by any descendant text, including connection
+choices naming other cards, then right-clicked the card center over embedded
+controls. The shared helper must match the shell's exact accessible name or
+node ID and right-click its visible title. Actionability checks remain enabled;
+no forced context click is introduced.
+
 The user authorized `local-postgres-proof` as the server-owned `dev` execution
 target. After configuring the existing native analyzer/profile and restarting
 the same development checkout without reseeding, the project returned HTTP 200,
