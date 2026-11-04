@@ -12,20 +12,20 @@ import type {
   IDbtProjectSourceRevisionReader,
 } from '../../application/ports/dbtProjectAnalysis.js';
 
+import {
+  readDbtAnalysisContext,
+  writeDbtProfilesSnapshot,
+  type DbtAnalysisContext,
+} from './dbtAnalysisContext.js';
 import { deriveDbtAnalysisSha256 } from './dbtAnalysisIdentity.js';
+import { DbtAnalysisReuse, type DbtAnalysisReuseDisposition } from './dbtAnalysisReuse.js';
+import { isDbtAnalysisReuseEligible } from './dbtAnalysisReuseEligibility.js';
 import {
   buildSanitizedProcessEnvironment,
   NODE_DBT_PROCESS_RUNNER,
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
-import {
-  readDbtParseAnalysisContext,
-  writeDbtParseProfilesSnapshot,
-  type DbtParseAnalysisContext,
-} from './dbtParseAnalysisContext.js';
-import { DbtParseAnalysisReuse, type DbtParseReuseDisposition } from './dbtParseAnalysisReuse.js';
-import { isDbtParseReuseEligible } from './dbtParseReuseEligibility.js';
 import type { ProjectContentLimits, ProjectContentRevision } from './dbtProjectContentRevision.js';
 import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
 import {
@@ -50,7 +50,7 @@ const INVALID_COMPILE_DIAGNOSTIC_MESSAGE =
   'dbt compile rejected the selected models. Review them in a trusted dbt environment.';
 
 type AnalysisWork = {
-  reuse: DbtParseReuseDisposition;
+  reuse: DbtAnalysisReuseDisposition;
   snapshotMs: number;
   processMs: number;
   projectionMs: number;
@@ -106,7 +106,7 @@ export class DbtCliProjectAnalyzer
   private readonly processRunner: DbtProcessRunner;
   private readonly processEnvironment: NodeJS.ProcessEnv;
   private readonly now: () => Date;
-  private readonly reuse: DbtParseAnalysisReuse;
+  private readonly reuse: DbtAnalysisReuse;
   private readonly onAnalysis: DbtCliProjectAnalyzerOptions['onAnalysis'];
 
   public constructor(options: DbtCliProjectAnalyzerOptions) {
@@ -126,10 +126,7 @@ export class DbtCliProjectAnalyzer
     this.processRunner = options.processRunner ?? NODE_DBT_PROCESS_RUNNER;
     this.processEnvironment = options.processEnvironment ?? process.env;
     this.now = options.now ?? (() => new Date());
-    this.reuse = new DbtParseAnalysisReuse(
-      options.maxCachedAnalyses,
-      options.maxCachedAnalysisBytes
-    );
+    this.reuse = new DbtAnalysisReuse(options.maxCachedAnalyses, options.maxCachedAnalysisBytes);
     this.onAnalysis = options.onAnalysis;
   }
 
@@ -251,10 +248,7 @@ export class DbtCliProjectAnalyzer
         );
       }
 
-      const context =
-        operation.kind === 'parse'
-          ? await readDbtParseAnalysisContext(profilesDirectory, this.processEnvironment)
-          : null;
+      const context = await readDbtAnalysisContext(profilesDirectory, this.processEnvironment);
       const snapshot: SnapshotAnalysisInput = {
         input,
         analysisRoot,
@@ -266,14 +260,12 @@ export class DbtCliProjectAnalyzer
         environment: this.processEnvironment,
         work,
       };
-      const eligible =
-        context !== null &&
-        (await isDbtParseReuseEligible({
-          snapshotDirectory,
-          contentRevision,
-          profileContents: context.profiles.map((profile) => profile.contents.toString('utf8')),
-        }));
-      if (!eligible || context === null) return await this.analyzeSnapshot(snapshot);
+      const eligible = await isDbtAnalysisReuseEligible({
+        snapshotDirectory,
+        contentRevision,
+        profileContents: context.profiles.map((profile) => profile.contents.toString('utf8')),
+      });
+      if (!eligible) return await this.analyzeSnapshot(snapshot);
       const key = JSON.stringify([
         input.scope.tenantId,
         input.scope.projectId,
@@ -283,6 +275,8 @@ export class DbtCliProjectAnalyzer
         contentSetSha256,
         context.identity,
         ANALYZER_VERSION,
+        operation.kind,
+        operation.kind === 'compile' ? [...new Set(operation.selectors)].sort() : null,
       ]);
       const verifyCurrent = async (analysis: DbtProjectAnalysis) => {
         if (
@@ -301,7 +295,7 @@ export class DbtCliProjectAnalyzer
         verifyCurrent(
           await this.analyzeSnapshot({
             ...snapshot,
-            profilesDirectory: await writeDbtParseProfilesSnapshot(analysisRoot, context),
+            profilesDirectory: await writeDbtProfilesSnapshot(analysisRoot, context),
             environment: context.environment,
           })
         )
@@ -326,7 +320,7 @@ export class DbtCliProjectAnalyzer
     input: AnalyzeDbtProjectInput,
     projectDirectory: string,
     contentSetSha256: string,
-    context: DbtParseAnalysisContext
+    context: DbtAnalysisContext
   ): Promise<boolean> {
     try {
       if ((await this.resolveProjectDirectory(input)) !== projectDirectory) return false;
@@ -334,7 +328,7 @@ export class DbtCliProjectAnalyzer
       if (profilesDirectory === null) return false;
       const [revision, currentContext] = await Promise.all([
         hashDbtProjectSource({ projectDirectory, limits: this.sourceLimits }),
-        readDbtParseAnalysisContext(profilesDirectory, this.processEnvironment),
+        readDbtAnalysisContext(profilesDirectory, this.processEnvironment),
       ]);
       return revision.sha256 === contentSetSha256 && currentContext.identity === context.identity;
     } catch {

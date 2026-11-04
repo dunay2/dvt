@@ -34,11 +34,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     projection: args.projection,
     onHydrate: state.hydrate,
   });
-  const {
-    restorationUnavailable,
-    restore: restoreSnapshot,
-    baselineAuthoringDraft,
-  } = useCanvasRelationalAuthoringDraftHydration({
+  const hydration = useCanvasRelationalAuthoringDraftHydration({
     enabled,
     transformNode,
     document: args.document,
@@ -46,7 +42,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     hydrateExisting,
     state,
   });
-  const editable = authoring?.canEditNode === true && !restorationUnavailable;
+  const editable = authoring?.canEditNode === true && !hydration.restorationUnavailable;
   const effectiveDraft = !state.active && seed != null ? seed.draft : state.joinDraft;
   const sourceInputRecovery = useCanvasSourceInputRecovery({
     state,
@@ -79,7 +75,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     },
     baselineOutputId: seed?.outputRelationId ?? null,
     semanticRootId: analysis?.document == null ? null : analysis.session.rootId,
-    baselineAuthoringDraft,
+    baselineAuthoringDraft: hydration.baselineAuthoringDraft,
   });
   const apply = createCanvasRelationalTreeApplyCommand({
     ...prepared.request,
@@ -141,10 +137,10 @@ export function useCanvasRelationalTreeAuthoringSession(
   });
   const restore = () => {
     sourceInputRecovery.cancel();
-    restoreSnapshot();
+    hydration.restore();
   };
   return {
-    restorationUnavailable,
+    restorationUnavailable: hydration.restorationUnavailable,
     analysis,
     ...graph,
     removal,

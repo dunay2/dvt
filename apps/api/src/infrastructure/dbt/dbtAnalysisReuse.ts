@@ -1,9 +1,9 @@
 import type { DbtProjectAnalysis } from '../../application/ports/dbtProjectAnalysis.js';
 
-export type DbtParseReuseDisposition = 'executed' | 'joined' | 'reused' | 'bypassed';
+export type DbtAnalysisReuseDisposition = 'executed' | 'joined' | 'reused' | 'bypassed';
 
 /** Instance-local, bounded evidence retention; authorization stays with each caller. */
-export class DbtParseAnalysisReuse {
+export class DbtAnalysisReuse {
   private readonly completed = new Map<string, string>();
   private readonly pending = new Map<string, Promise<string>>();
   private retainedBytes = 0;
@@ -22,7 +22,7 @@ export class DbtParseAnalysisReuse {
   public async getOrAnalyze(
     key: string,
     analyze: () => Promise<DbtProjectAnalysis>
-  ): Promise<Readonly<{ analysis: DbtProjectAnalysis; disposition: DbtParseReuseDisposition }>> {
+  ): Promise<Readonly<{ analysis: DbtProjectAnalysis; disposition: DbtAnalysisReuseDisposition }>> {
     const retained = this.completed.get(key);
     if (retained !== undefined) {
       this.completed.delete(key);

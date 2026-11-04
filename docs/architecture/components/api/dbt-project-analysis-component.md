@@ -2,7 +2,7 @@
 title: Native dbt Project Analysis
 status: Accepted
 owner: API / dbt Project Analysis
-last_reviewed: 2026-10-31
+last_reviewed: 2026-11-04
 planning_type: architecture
 ---
 
@@ -10,14 +10,16 @@ planning_type: architecture
 
 `SYS-API-DBT-ANALYZER` implements the existing `IDbtProjectAnalyzerPort` and
 `IDbtProjectSourceRevisionReader`. It owns isolated native analysis and bounded
-reuse of eligible parse evidence. Authorization, Canvas authority, writes, graph
+reuse of eligible native parse and compile evidence. Authorization, Canvas authority, writes, graph
 projection, selected-model selection and execution admission retain their owners.
 
 Governing sources: [ADR-0060](../../../adr/ADR-0060-dbt-project-authoring-authority.md),
 the [command/query rule](../../command-query-rail-governance.md), and the
 [prospective design and test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6550249113).
 Planning DB owns the exact responsibilities, files, symbols and rail relations
-under `GH-3747-DBT-PARSE-ANALYSIS-REUSE`.
+under `GH-3747-DBT-PARSE-ANALYSIS-REUSE`, extended by the
+[static compilation reuse design](https://github.com/dunay2/dvt/issues/3747#issuecomment-6644101801)
+and `GH-3747-STATIC-DBT-COMPILE-REUSE`.
 
 ## Existing rails and boundaries
 
@@ -27,9 +29,9 @@ under `GH-3747-DBT-PARSE-ANALYSIS-REUSE`.
 | `AnalyzeSelectedDbtModel` / `DbtProjectAnalysis`         | Current file authority and selected-resource projection                                 |
 | `DbtCliProjectAnalyzer`                                  | Authorized snapshot, native parse/compile, manifest projection and private-file cleanup |
 | Context and eligibility collaborators                    | Effective input identity and safe reuse admission                                       |
-| `DbtParseAnalysisReuse`                                  | Bounded sharing of in-flight work and valid results                                     |
+| `DbtAnalysisReuse`                                       | Bounded sharing of in-flight work and valid results                                     |
 
-Both consumers call the same adapter instance through the unchanged application
+Graph, selected-model and model-producer consumers call the same adapter instance through the unchanged application
 port. Their authorization, binding, connection and CAS checks remain independent
 on every request. An analysis grants no permission.
 
@@ -37,12 +39,13 @@ on every request. An analysis grants no permission.
 flowchart LR
   G[Graph / current authority] --> A[Existing analyzer port]
   M[Model / current authority] --> A
+  P[Preview / current producer binding] --> A
   A --> S[Authorized snapshot and context]
-  S --> E{Eligible parse?}
-  E -->|No / compile| P[Native process]
+  S --> E{Eligible static inputs?}
+  E -->|No| N[Native process]
   E -->|Yes| R[Bounded shared evidence]
-  R -->|Miss| P
-  P --> V[Recheck revision and context]
+  R -->|Miss| N
+  N --> V[Recheck revision and context]
   R --> V
   V --> O[Original evidence / separate projections]
 ```
@@ -51,7 +54,9 @@ flowchart LR
 
 Identity includes tenant/project/environment, canonical directory, requested root,
 complete executable source revision, exact managed profile bytes and sanitized
-effective environment. The existing source policy includes configuration and
+effective environment, operation kind and normalized compile selectors. Parse
+evidence cannot satisfy a compile request; different model selections cannot
+share a compiled result. The existing source policy includes configuration and
 project dependencies. An open file hash alone is insufficient.
 
 Python, dbt and installed runtime dependencies are immutable for the API runtime
@@ -62,7 +67,7 @@ establish library identity. Retention is neither persistent nor cross-process.
 Eligible execution reads a private copy of the profile bytes used in its identity.
 After shared work or a retained lookup, source and context are checked again.
 Changed or unreadable inputs produce an unavailable analysis, never stale success.
-Only valid parse results are retained. Original `analyzedAt` and `analysisSha256`
+Only valid eligible native results are retained. Original `analyzedAt` and `analysisSha256`
 are preserved. Isolated caller copies prevent corruption of later reads. Entry
 and serialized-result-byte limits bound retention; eviction causes fresh work.
 Invalid, unavailable and rejected work releases its pending entry.
@@ -84,8 +89,11 @@ retains normal native analysis support. SQL keeps the literal-reference policy.
 
 Eligibility is not dependency analysis or SQL validation: the native manifest
 remains authoritative. Volatile Jinja context can alter parse-time attributes;
-see [dbt project parsing](https://docs.getdbt.com/reference/parsing). Compile and
-its selectors always execute normally. Warehouse results are not retained here.
+see [dbt project parsing](https://docs.getdbt.com/reference/parsing). Eligible
+static compilation uses the same bounded evidence mechanism. Dynamic inputs
+always execute natively; a miss still uses an isolated native process with full
+parsing. Warehouse results are never retained here: every Preview queries current
+rows after its current authority, producer and connection checks.
 
 ## Observation and validation
 
@@ -95,7 +103,8 @@ values, credentials and private context fingerprints do not. Timing values are
 diagnostics, not pass thresholds.
 
 Tests cover repeated/concurrent requests, scope/root separation, secondary-file,
-profile and environment changes, in-flight drift, dynamic/compile bypass,
+profile and environment changes, in-flight drift, dynamic bypass, operation and
+selector separation, shared static compilation,
 failures/recovery, bounded retention and caller mutation. Composition and route
 tests preserve independent authority, including successful reads followed by
 revocation. Real proof uses an isolated synthetic project and the native runner:

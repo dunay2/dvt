@@ -44,6 +44,14 @@ statements, nested writes, SELECT INTO and locking statements. Upstream relation
 availability remains a provider readiness requirement; creating a placement
 does not run `dbt build` or materialize its dependencies.
 
+Compilation reuse is local to one immutable analyzer runtime generation and
+bounded by entries and serialized bytes. Only the existing conservative static
+subset is eligible. Identity includes the full scoped project revision, managed
+profile and effective environment, operation and selected models. Every hit
+rechecks current source and context; authorization, model binding and connection
+checks remain per request. Dynamic inputs execute normally. Errors are not
+retained, eviction causes fresh work and row samples are always queried again.
+
 Assigned relation/field IDs survive save/reload. Removed or changed declared
 fields refuse consumption; added fields do not silently widen existing output
 contracts. Model sample provenance names the actual model revision without

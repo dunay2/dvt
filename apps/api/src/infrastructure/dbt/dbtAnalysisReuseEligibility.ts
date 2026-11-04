@@ -1,4 +1,4 @@
-/** Owned concern: admit parse reuse only for the bounded static source subset. */
+/** Owned concern: admit native analysis reuse only for the bounded static source subset. */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -8,7 +8,7 @@ import type { ProjectContentRevision } from './dbtProjectContentRevision.js';
 const TEMPLATE_MARKER = /\{\{|\}\}|\{%|%\}|\{#|#\}/u;
 const EXPRESSION_PATTERN = /\{\{([\s\S]*?)\}\}/gu;
 
-export async function isDbtParseReuseEligible(
+export async function isDbtAnalysisReuseEligible(
   input: Readonly<{
     snapshotDirectory: string;
     contentRevision: ProjectContentRevision;

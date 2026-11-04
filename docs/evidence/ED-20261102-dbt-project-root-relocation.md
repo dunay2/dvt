@@ -179,6 +179,14 @@ remains read-only and does not materialize missing dependencies implicitly.
 Synthetic warehouse counts remained 202 clients, 1,003 orders and 3,003 details
 during the instance verification.
 
+The local static-compilation candidate reused the same bounded native analysis
+mechanism across Canvas and internal Read Preview. In the shared Raven session,
+Model1 took 14,517 ms cold, 203 ms on Refresh and 122 ms for its internal Read.
+Both warm queries had zero dbt subprocess time and new data timestamps, with
+20 rows / four columns / LIVE. These observations are not latency guarantees;
+cold and dynamic compilation still execute natively. Source/context and operation/
+selector guards govern reuse; warehouse rows are never retained.
+
 ## Validation Record And Acceptance Boundary
 
 | Verified revision/scope                     | Actual result                                                                                                                                                                                                                                                        |
@@ -191,6 +199,9 @@ during the instance verification.
 | Committed native UNION at `7feb478db`       | Both all/distinct cases completed with exit 0, including 3 → 4 → 3 inputs, Apply, Cancel, explicit Close, Canvas return and reopen; no pending/skipped cases.                                                                                                        |
 | Remaining available sweep at `7feb478db`    | 22 specs / 38 cases completed: 32 pass, six failures in five specs, zero pending/skipped. These exposed the execution-definition handoff and obsolete inspection/readiness consumers; this is RED evidence.                                                          |
 | Current execution handoff regression        | RED before correction; three controller presentation files / 11 cases pass afterward, including invalid-reference, executable-scope and no-write assertions.                                                                                                         |
+| Complete attempt at `46eab8920`             | Unit 432 / 3,377 and presentation 368 / 1,995 passed. Architecture had 744 passes and one failure: the session reached 181 lines against its unchanged <180 bound. Build/native phases did not run.                                                                  |
+| Shared static compilation candidate         | Six RED / 40 passing reuse cases before correction; three focused files / 104 cases, API source/test typecheck and full lint pass afterward. The session simplification passes 17 architecture and 25 navigation/state cases.                                        |
+| Native static compilation clone             | Seven actual native-analysis calls used three processes: cold, fresh concurrent instance and changed source. Repeats resolved in 48–54 ms; changed source compiled again. The original seven-file project hash remained unchanged.                                   |
 
 The final committed-tree native reruns, full `pnpm verify:prepush`, fresh exact
 base/head `pnpm docs:feature-mechanization:implementation`, PR checks/comments
@@ -210,7 +221,7 @@ groups. Those observations do not certify SRP by themselves.
 
 Real scoped Git initialization/status/history and native graph-to-dbt publication
 remain open acceptance in #3747. A file explorer does not deliver Git. Native
-compilation took roughly 11–17 seconds per sample on this host; no compilation
-speedup is claimed. Existing React-act/chart-dimension/Vite warnings remain
+compilation retains its cold-process cost; the measured warm improvement applies
+only to the admitted static subset. Existing React-act/chart-dimension/Vite warnings remain
 disclosed. No new debt, placeholder, fake adapter, bypassed hook or relaxed rule
 was introduced.
