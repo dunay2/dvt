@@ -3,6 +3,7 @@ import { decodeDvtSubstraitSemanticDocument } from '../../../src/app/views/canva
 import { CanvasRelationAnalysisSession } from '../../../src/app/views/canvas/canvasRelationAnalysisSession';
 import { querySelectedJoin } from '../../../src/app/views/canvas/canvasSelectedJoin';
 import { authorFourSourceChain } from '../../support/relationalWorkbench/joinChain';
+import { revealWorkbenchCard } from '../../support/relationalWorkbench/navigation';
 import {
   semanticWrites,
   semanticDocumentFromWrite,
@@ -27,7 +28,9 @@ describe('Workbench predicates', () => {
     cy.get('[data-slot="canvas-model-actions"] [role="status"]').should('be.visible');
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('have.value', 'not_equal');
-    cy.get(cards).last().click();
+    cy.get(cards).last().as('otherJoin');
+    revealWorkbenchCard('@otherJoin');
+    cy.get('@otherJoin').click();
     cy.get('[role="alertdialog"]').should('be.visible');
     cy.contains('[role="alertdialog"] button', 'Seguir editando').click();
     cy.get('[role="alertdialog"]').should('not.exist');
@@ -38,7 +41,8 @@ describe('Workbench predicates', () => {
     );
     cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.disabled');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('have.value', 'not_equal');
-    cy.get(cards).last().click();
+    revealWorkbenchCard('@otherJoin');
+    cy.get('@otherJoin').click();
     cy.get('[role="alertdialog"] [data-slot="canvas-draft-discard"]').click();
     cy.get('[role="alertdialog"]').should('not.exist');
     cy.get(`${editor} [aria-label="Comparador de la condición"]`).should('not.exist');

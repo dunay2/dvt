@@ -547,9 +547,10 @@ actionability checks and persistence assertions.
 The remaining browser sweep exposed a horizontal SVG edge with a zero-height
 bounding box. Its keyboard action remains reachable; the append proof now uses
 the same focused native Delete key as the existing card-movement proof instead
-of `cy.type` on SVG. The shared reveal helper closes an active Model inspector
-through its public button before revealing a graph target. Saved-window and
-replacement-input journeys reuse that helper. These changes do not alter product
+of `cy.type` on SVG. The shared reveal helper uses keyboard focus and the existing
+native background-pan driver when a panel covers the target, preserving pending
+inspectors. Saved-window, replacement-input and predicate journeys reuse that
+helper. These changes do not alter product
 camera behavior, force pointer events or remove semantic/persistence assertions.
 The replacement-input journey drops its two source instances at distinct explicit
 positions; it must not depend on automatic reflow to separate overlapping drops.

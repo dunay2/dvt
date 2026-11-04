@@ -10,15 +10,10 @@ import { getE2eApiCalls, waitForE2eApiCall } from '../e2eApiStub';
 import { visitWithE2eWorkspaceSession } from '../workspaceSession';
 
 import { workbenchOperation } from './operationMenu';
-import { hoverWorkbenchCard } from './pointer';
+import { hoverWorkbenchCard, panWorkbenchViewport } from './pointer';
 
-/** Reveal through the production keyboard-focus camera, without assigning Canvas scroll. */
+/** Reveal through keyboard focus and native background pan, preserving pending inspectors. */
 export function revealWorkbenchCard(selector: string): void {
-  cy.get('body').then(($body) => {
-    const close = $body.find('[data-slot="canvas-relational-collapse"]:visible');
-    expect(close.length, 'at most one active Model inspector').to.be.at.most(1);
-    if (close.length === 1) cy.wrap(close).click();
-  });
   cy.get(selector)
     .first()
     .then(($card) => {
@@ -28,6 +23,26 @@ export function revealWorkbenchCard(selector: string): void {
       cy.wrap(target).focus();
       cy.press(Cypress.Keyboard.Keys.TAB);
       cy.wrap(target).focus().should('be.visible');
+    });
+  cy.get(selector)
+    .first()
+    .then(($target) => {
+      const target = $target[0]!;
+      const bounds = target.getBoundingClientRect();
+      const x = bounds.left + bounds.width / 2;
+      const y = bounds.top + bounds.height / 2;
+      const hit = target.ownerDocument.elementFromPoint(x, y);
+      if (hit != null && target.contains(hit)) return;
+      const viewport =
+        '[data-slot="canvas-relational-tree-draft-viewport"], [data-slot="canvas-relational-tree-viewport"]';
+      cy.get(viewport).then(($viewport) => {
+        const frame = $viewport[0]!.getBoundingClientRect();
+        panWorkbenchViewport(
+          viewport,
+          frame.left + frame.width / 2 - x,
+          frame.top + frame.height / 2 - y
+        );
+      });
     });
 }
 

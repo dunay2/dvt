@@ -69,6 +69,7 @@ describe('Workbench pending binary operations', () => {
           cy.then(() =>
             Cypress.automation('remote:debugger:protocol', {
               command: 'Input.dispatchKeyEvent',
+              // Chromium modifier bits: Alt (1) + Shift (8).
               params: { type, key: 'ArrowDown', code: 'ArrowDown', modifiers: 9 },
             })
           );
