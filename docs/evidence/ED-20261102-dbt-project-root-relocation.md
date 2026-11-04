@@ -459,13 +459,13 @@ At code commit `75c50855ad14e34e7e1b46c8de44b1aa3f0327a7`, validation recorded:
 | `pnpm verify:prepush`                                                        | Failed at native component responsibility/ownership validation |
 
 The earlier analyzer cleanup `EBUSY` did not recur in these samples. Its general
-cleanup behavior has not been changed or certified by this slice. Main readiness
-remains blocked by unresolved Planning DB ownership conflicts in the HTTP
-composition and PostgreSQL producer surfaces. The native ownership commands
-refused to reparent under a source-classified unit or revise that unit as a
-component. No import, DB rebuild, ownership tie-break or relaxed validation was
-used to hide those findings. Exact final validation outcomes belong in GH-3747
-after the committed, hook-normalized tree is checked.
+cleanup behavior has not been changed or certified by this slice. The HTTP
+composition and PostgreSQL producer ownership conflicts are reconciled through
+the revision-guarded native commands described below. The authority integrity
+check reports no blockers or errors; 102 historical warnings remain within the
+unchanged baseline. No import, DB rebuild, ownership tie-break or relaxed
+validation was used. Exact final validation outcomes belong in GH-3747 after the
+committed, hook-normalized tree is checked.
 
 ## Limits
 
@@ -489,6 +489,16 @@ preference through exact membership in the authorized file tree. The existing
 contribution regression and a direct root-name collision test cover the refusal
 to collapse legitimate directories; the optional instance-definition callback
 expectation is aligned without changing creation behavior.
+
+The complete Web suites pass at the path-corrected candidate (432 unit files /
+3,373 cases and 368 presentation files / 1,982 cases). The remaining architecture
+finding identifies mixed camera DOM and measured-fit concerns in the viewport
+hook. The camera adapter is extracted without changing the existing size bound,
+public behavior, session camera, pointer policy or focus guards. Existing public
+viewport and architecture tests cover the separation; no size check is removed.
+The Workbench model also reuses the existing `CanvasRelationalTreeWorkbenchProps`
+input contract instead of repeating its shape. All 45 existing component size
+bounds remain unchanged.
 
 Code remains read-only. This migration does not publish a graph-authored native
 model into a file-owned root, change semantic authority, or implement Git

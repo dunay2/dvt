@@ -84,6 +84,12 @@ Nested viewports consume only their own gestures. Pointer property activation
 does not reveal or recenter a card. The session retains camera and zoom across
 inspection/editing; camera movement never changes card world coordinates.
 
+`useCanvasRelationalTreeViewport` owns measured fit and zoom orchestration.
+`useRelationalViewportCamera` adapts the existing session camera to content
+translation, pan deltas and guarded keyboard-focus reveal. Pointer pan remains
+in its input adapter. This split keeps one camera and the original viewport
+size boundary; it adds no scroll owner, persistence path or keyboard mode.
+
 ```mermaid
 flowchart LR
   Pointer[Background pointer delta] --> Camera[Local viewport camera]

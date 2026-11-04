@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 import { readWorkspaceDbtModelReference } from '@dvt/contracts';
 import { useCanvasRelationalSelection } from './useCanvasRelationalSelection';
 
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanonicalNode } from '../../types/canonical';
 
 import { createCanvasRelationalAnalysisReader } from './canvasRelationalAnalysisMemo';
 import { projectCanvasRelationalComposition } from './canvasRelationalCompositionTruth';
@@ -24,9 +24,8 @@ import {
   unavailableCanvasRelationIds,
 } from './canvasRelationalTreeWorkbenchModel';
 import type {
-  CanvasRelationalTreeAuthoringContract,
   CanvasRelationalTreeCatalogueItem,
-  CanvasRelationalTreeWorkbenchCopy,
+  CanvasRelationalTreeWorkbenchProps,
 } from './canvasRelationalTreeWorkbench.types';
 import { useCanvasRelationalTreeAuthoringSession } from './useCanvasRelationalTreeAuthoringSession';
 
@@ -40,13 +39,10 @@ export function canOpenCanvasRelationalTreeWorkbench(node: CanonicalNode): boole
 }
 
 export function useCanvasRelationalTreeWorkbenchModel(
-  args: Readonly<{
-    transformNode: CanonicalNode;
-    nodes: readonly CanonicalNode[];
-    edges: readonly CanonicalEdge[];
-    copy: CanvasRelationalTreeWorkbenchCopy;
-    authoring?: CanvasRelationalTreeAuthoringContract;
-  }>
+  args: Pick<
+    CanvasRelationalTreeWorkbenchProps,
+    'transformNode' | 'nodes' | 'edges' | 'copy' | 'authoring'
+  >
 ) {
   const readAnalysis = useMemo(createCanvasRelationalAnalysisReader, []);
   const analysis = readAnalysis({ node: args.transformNode, nodes: args.nodes, edges: args.edges });
