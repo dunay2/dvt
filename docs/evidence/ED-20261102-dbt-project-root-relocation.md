@@ -609,3 +609,12 @@ unchanged. The red plan tests rejected the former single command for two and 52
 consumers; the corrected adapter must preserve the exact disjoint selected union.
 This bounds browser lifetime without claiming an established Chrome IPC cause
 or a speedup. Final complete prepush evidence remains an integration prerequisite.
+
+The following complete gate passed 1,988 presentation cases but timed out in two
+unchanged tests that combined setup with full interaction transactions. Their
+canonical preparation now uses explicit five-second native hooks; the behavioral
+test deadlines remain five seconds. Model navigation shares one opened two-model
+fixture. Source recovery prepares its excluded-field document separately and
+disposes that analysis session in `finally`. All Stay/Discard, row identity/focus,
+Cancel-then-Apply, exact occurrence/sibling, source immutability and persistence
+assertions remain; no product behavior, assertion, retry or global limit changes.
