@@ -1,4 +1,4 @@
-import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+import { workspaceNodeDefinitionId, type WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -125,11 +125,18 @@ export function isCurrentDraftProjectable(
   draftSession: CanvasDraftSession
 ): boolean {
   const semanticNodeIds = new Set(currentDraftPayload.nodes.map((node) => node.id));
+  const visibleNodeIds = new Set(draftSession.workingSet.visibleNodeIds);
+  const referencedDefinitionIds = new Set(
+    currentDraftPayload.nodes
+      .filter((node) => visibleNodeIds.has(node.id))
+      .map(workspaceNodeDefinitionId)
+  );
   return (
     currentDraftPayload.nodeIds.length === draftSession.workingSet.visibleNodeIds.length &&
     draftSession.workingSet.visibleNodeIds.every((nodeId) => semanticNodeIds.has(nodeId)) &&
     currentDraftPayload.nodes.every(
-      (node) => node.role === 'input' || draftSession.workingSet.visibleNodeIds.includes(node.id)
+      (node) =>
+        node.role === 'input' || visibleNodeIds.has(node.id) || referencedDefinitionIds.has(node.id)
     ) &&
     currentDraftPayload.edges.length === draftSession.workingSet.visibleEdges.length
   );

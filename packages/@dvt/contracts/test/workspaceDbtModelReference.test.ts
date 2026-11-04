@@ -80,6 +80,7 @@ describe('file-model reference identity', () => {
     { uniqueId: 'source.demo.raw.client' },
     { canvasId: '' },
     { fields: [] },
+    { fields: [{ ...reference.fields[0], nullable: false }] },
     { fields: [...reference.fields, reference.fields[0]] },
     { fields: [...reference.fields, { ...reference.fields[0], name: 'other' }] },
     { fields: [...reference.fields, { ...reference.fields[0], fieldId: 'other' }] },

@@ -356,6 +356,8 @@ The current analyzer projection must verify the referenced field names/types
 and the server-owned connection before use. Missing fields, changed types,
 stale project revisions or different scope/connection are refusals. Added fields
 do not silently change an existing consumer's selected output contract.
+Nullability remains conservative: the current file-model publication does not
+prove NOT NULL, so reference fields cannot claim a non-nullable output.
 
 An external publication has a typed Substrait Read signature for composition;
 this signature is query data and is never lowered as a physical table. Only the
@@ -388,13 +390,57 @@ as an input to a native consumer, and reject an isolated reference before
 publishing SQL artifacts. The Web admission projection must express the same
 condition. No workload cardinality rule is relaxed to admit an unsupported shape.
 
-Live acceptance remains pending: the user's API returned HTTP 500 with `EBUSY`
-while removing an analyzer-owned temporary project directory. Its preceding
-successful project response reported an unavailable server-owned dbt execution
-target. The original SQL files were not changed to make these checks pass.
-These findings prevent claiming that the screenshot's complete product flow is
-fixed, or that the branch is ready for main. Exact final validation outcomes
-belong in GH-3747 after the committed, hook-normalized tree is checked.
+Live admission found a persistence mismatch before acceptance: a file-model
+definition is registered once and intentionally has no placement, while the
+draft projectability predicate required every non-source definition to have a
+visible card. The result was a visible local instance without an autosave.
+The existing draft projection must recognize definitions referenced by visible
+instances. Unreferenced hidden transforms, missing visible nodes and edge gaps
+must continue to block persistence. This is the existing CreateCanvasNode and
+SaveWorkspaceGraphDraft path, with no second persistence command.
+
+```mermaid
+flowchart LR
+  Instance[Visible independent instance] --> Definition[Shared model definition]
+  Definition --> Projection[Existing draft payload projection]
+  Instance --> Projection
+  Projection --> Guard[Referenced definitions allowed; unrelated hidden transforms rejected]
+  Guard --> Save[Existing protected autosave]
+```
+
+Live compilation also exposed a boundary mistake: a manifest `unique_id` such
+as `model.code_inline_demo.clientes` was sent directly as a CLI selector. The
+producer resolver must retain that identifier for result matching and provenance,
+and pass the package-qualified model name to the existing analyzer. This adapts
+the reference to dbt's [documented selection syntax](https://docs.getdbt.com/reference/node-selection/syntax);
+it does not implement dbt selection or Jinja evaluation. An otherwise successful
+compile with no matching compiled model remains a refusal.
+
+The controlled catalogue browser flow must exercise the file-model DTO through
+the actual Elements, admission, save and reload surfaces. Its injected API
+responses establish the UI boundary only; they are not evidence of native dbt
+compilation or a live PostgreSQL query. That environment acceptance remains
+separate and pending below.
+
+The user authorized `local-postgres-proof` as the server-owned `dev` execution
+target. After configuring the existing native analyzer/profile and restarting
+the same development checkout without reseeding, the project returned HTTP 200,
+eight resources and no diagnostics. Two independently clicked `clientes`
+instances persisted with different placement IDs, one shared definition and no
+automatic edges. Their protected sample queries both returned HTTP 200, the
+columns `client_id`/`country`, five live rows and identical row digests. Model
+provenance retained the file Canvas identity, `unique_id` and source/analysis
+digests. Compilation took approximately 16 seconds per request on this host;
+this is not evidence of a compilation performance improvement.
+
+The earlier analyzer cleanup `EBUSY` did not recur in these samples. Its general
+cleanup behavior has not been changed or certified by this slice. Main readiness
+remains blocked by unresolved Planning DB ownership conflicts in the HTTP
+composition and PostgreSQL producer surfaces. The native ownership commands
+refused to reparent under a source-classified unit or revise that unit as a
+component. No import, DB rebuild, ownership tie-break or relaxed validation was
+used to hide those findings. Exact final validation outcomes belong in GH-3747
+after the committed, hook-normalized tree is checked.
 
 ## Limits
 

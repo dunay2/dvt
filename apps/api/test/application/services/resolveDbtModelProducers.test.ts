@@ -336,7 +336,7 @@ describe('scoped dbt model producer binding', () => {
     expect(f.analyze).toHaveBeenCalledWith({
       scope,
       projectRoot: '.',
-      operation: { kind: 'compile', selectors: [reference.uniqueId] },
+      operation: { kind: 'compile', selectors: ['demo.clientes'] },
     });
     expect(result.get(node.id)?.document.sidecar.fields[0]?.fieldId).toBe('assigned-client');
     expect(await renderPostgresAst(result.get(node.id)!.projection.ast)).toContain(

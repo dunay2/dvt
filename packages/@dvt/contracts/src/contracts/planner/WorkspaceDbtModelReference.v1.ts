@@ -24,7 +24,7 @@ export const WorkspaceDbtModelReferenceSchema = z
             fieldId: Identity,
             name: Identity,
             dataType: Identity,
-            nullable: z.boolean(),
+            nullable: z.literal(true),
           })
           .strict()
       )

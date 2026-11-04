@@ -73,7 +73,10 @@ export class ResolveDbtModelProducers implements IDbtModelProducerResolver {
       const analysis = await this.deps.analyzer.analyze({
         scope,
         projectRoot: binding.authority.projectRoot,
-        operation: { kind: 'compile', selectors },
+        operation: {
+          kind: 'compile',
+          selectors: selectors.map((uniqueId) => uniqueId.slice('model.'.length)),
+        },
       });
       const projection = await this.deps.projectGraph.projectValidatedAnalysis(
         { scope, canvasId },
