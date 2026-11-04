@@ -14,6 +14,7 @@ import {
   readLiveWorkspaceFile,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
+import { openWorkbenchProperties } from '../../support/relationalWorkbench/navigation';
 
 const PROJECT_ROOT = 'analytics-file-projection';
 const INVALID_PROJECT_ROOT = 'analytics-invalid';
@@ -305,25 +306,21 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="bottom-operational-drawer-tab"]').should('not.exist');
 
     cy.get('[data-slot="canvas-explorer-sources-toggle"]').should('not.exist');
-    for (const activity of ['elements']) {
-      cy.get(`[data-slot="canvas-explorer-${activity}-toggle"]`).then(($toggle) => {
-        if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
-      });
-      cy.get('[data-element-id="source.analytics.raw.orders"]')
-        .filter(':visible')
-        .should('be.enabled')
-        .and('have.prop', 'draggable', true)
-        .click();
-      cy.get('[data-slot="canvas-node-workbench-overlay"]')
-        .should('be.visible')
-        .and('contain.text', 'orders');
-      cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
-      cy.get('[data-slot="canvas-node-workbench-overlay"]')
-        .should('contain.text', 'order_id')
-        .and('contain.text', 'customer_id');
-      cy.get('[data-slot="canvas-node-workbench-close"]').click();
-      cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-    }
+    cy.get('[data-slot="canvas-explorer-elements-toggle"]').then(($toggle) => {
+      if ($toggle.attr('aria-expanded') !== 'true') cy.wrap($toggle).click();
+    });
+    cy.get('[data-element-id="source.analytics.raw.orders"]')
+      .filter(':visible')
+      .should('be.enabled')
+      .and('have.prop', 'draggable', true);
+    openWorkbenchProperties('source.analytics.raw.orders');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('contain.text', 'orders');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]')
+      .should('contain.text', 'order_id')
+      .and('contain.text', 'customer_id');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
     cy.get('[data-slot="canvas-viewport-context-surface"] .react-flow__node').should(
       'have.length',
       7
@@ -567,7 +564,11 @@ describe('dbt project file projection live vertical', () => {
       'aria-expanded',
       'true'
     );
-    cy.get('[data-element-id="model.analytics.orders"]', { timeout: 60_000 })
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get(
+      `[data-slot="canvas-code-workspace-surface"] [data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
+    )
       .should('be.visible')
       .and('have.length', 1)
       .click();

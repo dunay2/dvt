@@ -140,7 +140,7 @@ export function useCanvasController() {
     graphDbtWorkspaceArtifactPublicationCommand,
     graphDbtModelCompilationQuery,
     executionStrategy,
-    canonicalNodes: visibleScope.canonicalNodes,
+    canonicalNodes: graphModel.canonicalNodes,
     canonicalEdges: visibleScope.canonicalEdges,
     selectionIntent: executionSelectionIntent,
     workspaceNodeIds: executionScope.workspaceNodeIds,

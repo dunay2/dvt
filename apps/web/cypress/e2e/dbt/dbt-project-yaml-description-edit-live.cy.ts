@@ -119,8 +119,11 @@ function visitProject(observedRequests: ObservedRequest[]): void {
 }
 
 function openModelWorkbench(): void {
+  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 }).should(
+    'be.visible'
+  );
   cy.get('.react-flow__controls-fitview', { timeout: 20_000 }).click();
-  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
+  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
     .should('be.visible')
     .find('[data-slot="graph-node-card-title"]')
     .dblclick();
@@ -134,8 +137,11 @@ function openModelWorkbench(): void {
 }
 
 function openModelCodeViewer(): void {
+  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 }).should(
+    'be.visible'
+  );
   cy.get('.react-flow__controls-fitview').click();
-  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
+  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
     .should('be.visible')
     .find('[data-slot="graph-node-card-title"]')
     .dblclick();
