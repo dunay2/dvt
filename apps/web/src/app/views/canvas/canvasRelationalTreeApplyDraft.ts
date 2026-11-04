@@ -1,4 +1,4 @@
-/** Project the exact node draft submitted by the relational authoring transaction. */
+/** Project the submitted draft and compare semantic edits independently of layout. */
 import {
   DvtRelationalAuthoringDraftV1Schema,
   type DvtRelationalAuthoringDraftV1,
@@ -19,6 +19,19 @@ import {
   createCanvasRelationalAuthoringDraft,
   retainIncompleteCanvasRelationalAuthoringDraft,
 } from './canvasRelationalAuthoringDraft';
+
+function semanticInspectorDraft(draft: CanvasInspectorNodeDraft): CanvasInspectorNodeDraft {
+  const pending = draft.relationalAuthoringDraft;
+  return pending == null
+    ? draft
+    : {
+        ...draft,
+        relationalAuthoringDraft: retainIncompleteCanvasRelationalAuthoringDraft({
+          ...pending,
+          positions: {},
+        }),
+      };
+}
 
 /** Decide what Apply means before a React coordinator dispatches the existing command. */
 export function prepareCanvasRelationalTreeApply(
@@ -65,8 +78,8 @@ export function prepareCanvasRelationalTreeApply(
     cleared,
     hasIncompleteGraph,
     hasDraftChanges: !areCanvasInspectorNodeDraftsEqual(
-      createCanvasInspectorNodeDraft(args.transformNode),
-      canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft)
+      semanticInspectorDraft(createCanvasInspectorNodeDraft(args.transformNode)),
+      semanticInspectorDraft(canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft))
     ),
   };
 }

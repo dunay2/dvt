@@ -695,3 +695,20 @@ These stronger public-boundary assertions distinguish a still-open navigation
 decision from a browser handoff failure; no guard is cleared and no data is
 discarded automatically. The isolated wait remains failed evidence pending the
 result of those assertions and any separately admitted root-cause correction.
+
+The stronger UNION assertion is RED before the third visit: after Cancel, Close
+leaves the Model and its Keep-your-changes decision open. Two focused regressions
+also reject the prior dirty mapper: moved or retained presentation positions alone
+are treated as semantic edits despite identical pending Read authority. The mapper
+now projects layout out only for its existing semantic equality comparison. The
+real Apply request retains those positions; explicit Read Output withdrawal and
+terminal disconnection remain dirty, and the input model remains immutable. The
+existing global inspector equality and layout state are unchanged. Native UNION
+progression still requires a committed rerun before claiming that wait resolved.
+
+The focused Apply-draft suite passes eleven cases, including both prior RED layout
+regressions, explicit field/terminal changes, unchanged Apply geometry and model
+immutability. Existing Model navigation and draft-layout suites pass seventeen
+cases, preserving rejection, Stay/Discard and manual-position behavior. Full Web
+lint and typecheck pass. These package results do not replace native UNION or
+complete prepush evidence.

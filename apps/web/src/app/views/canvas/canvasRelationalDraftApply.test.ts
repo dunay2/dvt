@@ -1,4 +1,5 @@
 /** Apply persists the edited document; it never silently authors a replacement. */
+import { DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 import { graphJoin, graphModel } from './canvasRelationGraph.test-support';
 import { encodeDvtSubstraitSemanticDocument } from './canvasDvtSubstraitSemanticDocument';
@@ -10,8 +11,80 @@ import {
   canonicalizeCanvasInspectorNodeDraft,
   createCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
+import { createCanvasRelationalAuthoringDraft } from './canvasRelationalAuthoringDraft';
+import { createPendingSourceOccurrence } from './relational-source-occurrence/pendingSourceOccurrence';
+import { occurrenceInput } from './relational-source-occurrence/occurrence.test.fixtures';
 
 describe('canonical draft apply', () => {
+  it.each(['moved', 'retained'] as const)(
+    'does not treat %s layout as an unapplied semantic edit after restoration',
+    (layout) => {
+      const { document, session } = graphJoin();
+      const source = createPendingSourceOccurrence({
+        ...occurrenceInput.source,
+        fields: occurrenceInput.fields.map((name) => ({
+          name,
+          dataType: 'bigint',
+          joinDataType: 'i64',
+        })),
+      });
+      const positions = new Map([[source.read.binding.relationId, { x: 80, y: 120 }]]);
+      const pending = {
+        sources: [source],
+        operations: [],
+        outputRelationId: session.rootId,
+        positions,
+      };
+      const model = graphModel(document);
+      const transformNode = {
+        ...model,
+        metadata: {
+          ...model.metadata,
+          [DVT_RELATIONAL_AUTHORING_DRAFT_METADATA_KEY]:
+            createCanvasRelationalAuthoringDraft(pending),
+        },
+      };
+      const before = JSON.stringify(transformNode);
+      const args = {
+        transformNode,
+        active: true,
+        joinDraft: document,
+        operation: 'inner_join' as const,
+        hasSelectedInputs: true,
+        pending,
+        baselineOutputId: session.rootId,
+        semanticRootId: session.rootId,
+      };
+      expect(prepareCanvasRelationalTreeApply(args).hasDraftChanges).toBe(false);
+      const retainedPositions = new Map(positions);
+      retainedPositions.set(
+        layout === 'moved' ? source.read.binding.relationId : 'discarded-edit-position',
+        { x: 240, y: 360 }
+      );
+      const prepared = prepareCanvasRelationalTreeApply({
+        ...args,
+        pending: { ...pending, positions: retainedPositions },
+      });
+      expect(prepared.hasDraftChanges).toBe(false);
+      expect(prepared.request.relationalAuthoringDraft?.positions).toEqual(
+        Object.fromEntries(retainedPositions)
+      );
+      expect(
+        prepareCanvasRelationalTreeApply({
+          ...args,
+          pending: { ...pending, sources: [{ ...source, initialOutputFieldIds: [] }] },
+        }).hasDraftChanges
+      ).toBe(true);
+      expect(
+        prepareCanvasRelationalTreeApply({
+          ...args,
+          pending: { ...pending, outputRelationId: null },
+        }).hasDraftChanges
+      ).toBe(true);
+      expect(JSON.stringify(transformNode)).toBe(before);
+    }
+  );
+
   it('does not clear an untouched session but detects an explicitly cleared model', () => {
     const { document, session } = graphJoin();
     const args = {
