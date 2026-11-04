@@ -630,3 +630,14 @@ model label. Five semantic regressions failed before this correction. The shared
 user page then proved Preview on `ventas_por_cliente` inside Model 1 returning
 20 rows/four columns/LIVE at 2026-11-04T14:22:20.420Z. No query, compiler, CSS,
 automatic retry, database mutation or timeout increase was introduced.
+
+The subsequent one-worker gate passed all 3,374 unit cases but exposed a real
+startup error publication race in an unchanged CSS-import recovery test. The
+route error boundary updated the startup DOM while the route registry remained
+pending; later capability settlement could demote the visible error to loading.
+The existing boundary now publishes the failure through that same registry and
+retires its publication on cleanup, retaining the direct fallback for unregistered
+routes. The existing composition case deterministically rejected the pending
+registry before the fix; all 22 focused route, startup and operability cases pass
+afterward. No retry, timer, deadline, CSS or second readiness store was added.
+The interrupted committed-tree gate remains failed evidence, not a passing gate.

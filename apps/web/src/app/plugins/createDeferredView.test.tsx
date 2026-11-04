@@ -19,6 +19,8 @@ import { createTestQueryClient, withTestQueryClient } from '../../testing/reactQ
 import AppProviders from '../AppProviders';
 import { setBootstrapStepStatus, startBootstrapScreen } from '../bootstrap/appBootstrapScreen';
 import { createCompleteRouteBootstrapPresentation } from '../bootstrap/routeBootstrapContract';
+import { getRouteBootstrapRegistration } from '../bootstrap/routeBootstrapRegistration';
+import { getPublishedRouteBootstrapPresentation } from '../bootstrap/routeBootstrapRegistry';
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { queryKeys } from '../queries/queryKeys';
 import { resetRootShellStores } from '../Root.test.support';
@@ -341,6 +343,11 @@ describe('deferred route bootstrap composition', () => {
   it('preserves a rejected CSS import as a visible startup error through later capability settlement', async () => {
     const pendingModule = createPendingModule();
     await mountDeferredRoute(pendingModule);
+    const routeView = pluginRegistry
+      .getRouteViews()
+      .find((view) => view.id === 'monitoring.run-detail');
+    const registration = getRouteBootstrapRegistration(routeView?.id, routeView?.handle);
+    if (!registration) throw new Error('Production run route registration is missing');
     await waitFor(() => {
       expect(
         mounted?.container.querySelector('[data-slot="plugin-route-module-loading"]')
@@ -353,6 +360,10 @@ describe('deferred route bootstrap composition', () => {
     });
 
     await waitFor(() => expect(screen.dataset.state).toBe('error'));
+    expect(getPublishedRouteBootstrapPresentation(registration)).toEqual({
+      status: 'error',
+      detail: cssFailureMessage,
+    });
     expect(screen.querySelector('#app-loading-message')?.textContent).toBe(cssFailureMessage);
     expect(screen.querySelector('[data-bootstrap-step="route"]')?.getAttribute('data-status')).toBe(
       'error'
