@@ -63,6 +63,12 @@ describe('Workbench pending binary operations', () => {
       connectWorkbenchProducer('@original0', '@join', 0);
       connectWorkbenchProducer('@original1', '@join', 1);
       connectWorkbenchProducer('@join', '[data-slot="canvas-relational-output-input-port"]', null);
+      for (let step = 0; step < 4; step++) {
+        cy.get('@original1')
+          .find(read)
+          .focus()
+          .trigger('keydown', { key: 'ArrowDown', altKey: true, shiftKey: true });
+      }
       revealWorkbenchCard('@original1');
       cy.get('@original1').find(read).rightclick();
       cy.get('[data-slot="canvas-relational-remove-source"]').click();
