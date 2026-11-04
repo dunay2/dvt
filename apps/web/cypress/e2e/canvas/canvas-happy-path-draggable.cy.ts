@@ -23,6 +23,7 @@ import {
   revisitWorkbenchCanvas,
   visitWorkbenchCanvas,
 } from '../../support/relationalWorkbench/navigation';
+import { dragWorkbenchField } from '../../support/relationalWorkbench/pointer';
 import { E2E_PROJECT_WORKSPACE, stubShellBootstrapApis } from '../../support/workspaceSession';
 
 describe('Canvas happy path remains writable after create/save', () => {
@@ -109,8 +110,14 @@ describe('Canvas happy path remains writable after create/save', () => {
     visitWorkbenchCanvas('en');
     const modelRow =
       '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:file-owner:model.demo.clientes"]';
-    cy.get(modelRow).should('be.visible').and('not.be.disabled').click();
+    cy.get(modelRow)
+      .should('be.visible')
+      .and('not.be.disabled')
+      .and('contain.text', 'models/clientes.sql');
+    dragWorkbenchField(modelRow, '[data-testid="canvas-viewport"]');
     cy.get('.react-flow__node').should('have.length', 1);
+    cy.get('.react-flow__node').invoke('attr', 'data-id').as('firstFileInstance');
+    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
     cy.get(modelRow).click();
     cy.get('.react-flow__node').should('have.length', 2);
     cy.get('#canvas-code-main-tab').should('have.attr', 'aria-selected', 'false');
@@ -137,6 +144,16 @@ describe('Canvas happy path remains writable after create/save', () => {
     });
     revisitWorkbenchCanvas();
     cy.get('.react-flow__node').should('have.length', 2);
+    cy.get<string>('@firstFileInstance').then((nodeId) => {
+      cy.get(`.react-flow__node[data-id="${nodeId}"]`).should(
+        'contain.text',
+        'models/clientes.sql'
+      );
+      dragCanvasNodeByViewportDelta('clientes', { x: 110, y: 80 }, { nodeId });
+    });
+    revisitWorkbenchCanvas();
+    cy.get('.react-flow__node').should('have.length', 2);
+    cy.get(modelRow).should('contain.text', 'models/clientes.sql');
     openCanvasNodeOperations('clientes 2');
     clickCanvasContextMenuItem('Delete');
     cy.get('.react-flow__node').should('have.length', 1);

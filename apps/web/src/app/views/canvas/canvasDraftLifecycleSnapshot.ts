@@ -131,12 +131,25 @@ export function isCurrentDraftProjectable(
       .filter((node) => visibleNodeIds.has(node.id))
       .map(workspaceNodeDefinitionId)
   );
+  const registeredModelDefinitions = new Set(
+    [
+      ...Object.values(draftSession.localNodeCatalog ?? {}),
+      ...(draftSession.baseline.record?.draft.nodes ?? []),
+    ]
+      .filter((node) => node.role === 'transform' && workspaceNodeDefinitionId(node) == null)
+      .map((node) => node.id)
+  );
   return (
     currentDraftPayload.nodeIds.length === draftSession.workingSet.visibleNodeIds.length &&
     draftSession.workingSet.visibleNodeIds.every((nodeId) => semanticNodeIds.has(nodeId)) &&
     currentDraftPayload.nodes.every(
       (node) =>
-        node.role === 'input' || visibleNodeIds.has(node.id) || referencedDefinitionIds.has(node.id)
+        node.role === 'input' ||
+        visibleNodeIds.has(node.id) ||
+        referencedDefinitionIds.has(node.id) ||
+        (node.role === 'transform' &&
+          workspaceNodeDefinitionId(node) == null &&
+          registeredModelDefinitions.has(node.id))
     ) &&
     currentDraftPayload.edges.length === draftSession.workingSet.visibleEdges.length
   );

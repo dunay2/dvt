@@ -164,12 +164,18 @@ export function connectWorkbenchProducer(
     const dataTransfer = new window.DataTransfer();
     cy.get(producer)
       .find('[data-slot="canvas-relational-output-port"]')
-      .trigger('dragstart', { dataTransfer });
+      .as('workbenchProducerPort');
+    revealWorkbenchCard('@workbenchProducerPort');
+    cy.get('@workbenchProducerPort').trigger('dragstart', { dataTransfer });
     const target =
       port == null
         ? cy.get(consumer)
         : cy.get(consumer).find('[data-slot="canvas-relational-input-port"]').eq(port);
-    target.trigger('dragover', { dataTransfer }).trigger('drop', { dataTransfer });
+    target.as('workbenchConsumerPort');
+    revealWorkbenchCard('@workbenchConsumerPort');
+    cy.get('@workbenchConsumerPort')
+      .trigger('dragover', { dataTransfer })
+      .trigger('drop', { dataTransfer });
   });
 }
 

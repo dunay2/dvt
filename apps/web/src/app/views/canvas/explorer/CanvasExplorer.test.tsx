@@ -40,6 +40,27 @@ afterEach(() => {
 });
 
 describe('Canvas explorer', () => {
+  it('keeps the file path on a registered model definition after placement', () => {
+    const model: CanonicalNode = {
+      id: 'file-model-definition',
+      name: 'clientes',
+      pluginId: 'dvt',
+      kind: 'dvt:transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      path: 'models/clientes.sql',
+    };
+    render(
+      <CanvasGraphExplorer nodes={[]} catalogue={[model]} onSelect={vi.fn()} canPlaceSource>
+        <input aria-label="Graph" />
+      </CanvasGraphExplorer>
+    );
+    expect(screen.getByRole('button', { name: 'clientes models/clientes.sql' }).title).toBe(
+      'clientes · models/clientes.sql'
+    );
+  });
+
   it('offers one catalogue with category additions even before objects are registered', () => {
     const onImport = vi.fn();
     const onAddModel = vi.fn();

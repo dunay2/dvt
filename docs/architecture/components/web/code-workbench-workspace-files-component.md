@@ -10,6 +10,22 @@ planning_type: architecture
 
 ## Purpose
 
+Properties Code for a placed dbt model reference uses the existing file-authority
+contribution and `WorkspaceFileCodeEditor`, including its inline reference cards.
+Placement does not make the referenced SQL graph-owned. Such references are
+excluded from graph-owned path discovery; actual graph-generated paths retain
+their existing conflict guard. A reference path is already workspace-qualified,
+whereas a file-graph node path is project-relative and uses the explicit root.
+
+```mermaid
+flowchart LR
+  Reference[Placed file-model reference] --> Adapter[Existing dbt file Code contribution]
+  FileGraph[File-graph node and project root] --> Adapter
+  Adapter --> Editor[Shared read-only workspace editor]
+  Editor --> Context[Accepted file authority and version]
+  Context --> Cards[Existing native inline-reference query and cards]
+```
+
 Code presents authorized project files, verified model references and accepted-file
 metadata through the existing shared Monaco surface. Project Code and node
 Properties Code request explicit read-only access. Canvas forms remain the editing

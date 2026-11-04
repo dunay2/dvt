@@ -18,6 +18,7 @@ import {
   dragWorkbenchSource,
   editWorkbenchInspector,
   openWorkbenchModel,
+  revealWorkbenchCard,
   revisitWorkbenchCanvas,
   stageWorkbenchUnary,
   visitWorkbenchCanvas,
@@ -31,6 +32,7 @@ import {
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 function inspectSavedWindow(relationId: string, language: 'en' | 'es'): void {
+  revealWorkbenchCard(`[data-operator="project"][data-relation-id="${relationId}"]`);
   cy.get(`[data-operator="project"][data-relation-id="${relationId}"]`).rightclick();
   activateMenu('canvas-relational-edit-operation');
   cy.get('[data-canvas-inspector="true"]')
@@ -115,6 +117,9 @@ describe('measure-pipeline', () => {
       cy.get('[data-slot="canvas-relational-tree-fit"]').click();
       cy.screenshot(`operators-${union ? 'union' : 'join'}-count-window`);
       cy.then(() => inspectSavedWindow(savedRootId, 'en'));
+      cy.then(() =>
+        revealWorkbenchCard(`[data-operator="project"][data-relation-id="${savedRootId}"]`)
+      );
       cy.then(() =>
         cy.get(`[data-operator="project"][data-relation-id="${savedRootId}"]`).rightclick()
       );

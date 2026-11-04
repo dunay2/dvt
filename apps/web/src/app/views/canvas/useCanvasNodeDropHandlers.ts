@@ -199,7 +199,11 @@ export function useCanvasNodeDropHandlers({
       event.preventDefault();
       event.dataTransfer.dropEffect = !canEditEdges
         ? 'none'
-        : event.dataTransfer.types?.includes(CANVAS_CATALOG_NODE_DRAG_MIME_TYPE)
+        : event.dataTransfer.types?.some(
+              (type) =>
+                type === CANVAS_CATALOG_NODE_DRAG_MIME_TYPE ||
+                type === CANONICAL_NODE_DRAG_MIME_TYPE
+            )
           ? 'copy'
           : 'move';
     },

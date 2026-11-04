@@ -62,29 +62,41 @@ describe('canvas draft lifecycle snapshot', () => {
     ).toBe(false);
   });
 
-  it('persists an unplaced source and its configuration without admitting it to the graph', () => {
-    const source = buildNode({ id: 'registered', kind: 'dvt:source', role: 'input' });
+  it.each([
+    { kind: 'dvt:source', role: 'input' },
+    { kind: 'dvt:transform', role: 'transform' },
+  ] as const)('persists a registered $role without a placed card', ({ kind, role }) => {
+    const definition = buildNode({ id: 'registered', pluginId: 'dvt', kind, role });
     const draftSession: CanvasDraftSession = {
       syncState: 'editing',
       baseline: { record: null },
       draftRevision: 'rev-1',
       workingSet: { visibleNodeIds: [], visibleEdges: [], pendingExplicitNodeIds: [] },
-      localNodeCatalog: { [source.id]: { ...source, name: 'Configured source' } },
+      localNodeCatalog: { [definition.id]: { ...definition, name: 'Configured definition' } },
     };
     const payload = buildCurrentDraftPayload(
       {},
       draftSession,
       { kind: 'transformation', title: 'Canvas' },
       null,
-      [source],
+      [definition],
       []
     );
     expect(payload.nodeIds).toEqual([]);
     expect(payload.nodePositions).toEqual({});
     expect(payload.nodes).toEqual([
-      expect.objectContaining({ id: source.id, name: 'Configured source' }),
+      expect.objectContaining({ id: definition.id, name: 'Configured definition' }),
     ]);
     expect(isCurrentDraftProjectable(payload, draftSession)).toBe(true);
+    expect(
+      isCurrentDraftProjectable(payload, {
+        ...draftSession,
+        localNodeCatalog: undefined,
+        baseline: {
+          record: { draft: payload, revision: 'confirmed', savedAt: '2026-11-04T00:00:00Z' },
+        },
+      })
+    ).toBe(true);
   });
 
   it('projects locally authored catalog nodes into the persisted graph draft payload', () => {

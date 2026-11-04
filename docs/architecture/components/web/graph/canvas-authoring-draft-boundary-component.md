@@ -167,6 +167,32 @@ not current architecture; protected contract and port names still use
 
 ### Source definitions and explicit instances
 
+The Elements catalogue uses the existing `CreateCanvasNode` ingress for both
+registered definitions and newly discovered file models. Both drag MIME types
+negotiate `copy`: a canonical file-model source publishes `effectAllowed=copy`,
+so the receiver must not request `move`. Click and drop reach the same guarded
+admission; a drag flag or callback alone is not acceptance evidence.
+
+```mermaid
+flowchart LR
+  Discovery[File model discovery] --> Copy[Copy-compatible drag]
+  Registered[Registered definition] --> Copy
+  Copy --> Admission[Existing CreateCanvasNode]
+  Admission --> Instance[Independent instance and shared definition]
+  Instance --> Reload[Persist, move and reload]
+```
+
+The model row retains its authoritative workspace file path before and after
+registration. Acceptance must show a final card with its own instance identity,
+the same definition reference after reload, movement of that card, and no
+automatic edge, SQL copy or new project file.
+
+A registered Model definition remains projectable without a placed card when
+its identity is present in the local catalogue or confirmed draft record. Removing
+the card updates visible `nodeIds` and persists that change while retaining the
+definition for future instances. An unregistered hidden model still blocks
+projectability; registration does not admit a model to execution.
+
 A registered input owns source configuration. Each explicit catalogue drop
 creates a fresh input identity referencing it via `sourceDefinitionId`. The
 instance persists no metadata or path override. The shared contracts resolver

@@ -8,6 +8,7 @@ import { useApplicationLanguageStore } from '../../../stores/applicationLanguage
 import type { DbtProjectFilesAuthorityBinding } from '../../../ports/dbtProjectGraph';
 import {
   flattenCodeWorkspaceFiles,
+  resolveDbtProjectWorkspaceFilePath,
   resolveProjectRootScopedCodeWorkspaceFileTree,
 } from '../../code/codeViewFileSelection';
 import { CanvasExplorerList } from './CanvasExplorerList';
@@ -70,7 +71,13 @@ export function CanvasProjectElementsExplorer({
           .map((node) => ({
             id: canvasDbtModelDefinitionId(binding.canvasId, node.uniqueId),
             label: node.name,
-            description: node.originalFilePath,
+            description:
+              node.originalFilePath == null
+                ? undefined
+                : resolveDbtProjectWorkspaceFilePath(
+                    binding.authority.projectRoot,
+                    node.originalFilePath
+                  ),
             category: copy.models,
             draggable: canCreateInstances,
             disabled: !canCreateInstances,

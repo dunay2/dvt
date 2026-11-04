@@ -505,8 +505,50 @@ model into a file-owned root, change semantic authority, or implement Git
 staging/commit/push. Native publication refusals remain enforced. A filesystem and
 PostgreSQL transaction do not form one atomic storage transaction: the retained
 snapshot and explicit conflict behavior cover interrupted publication. Browser
-Bridge returned `Transport closed`, so the live verification used the protected
-API and file hashes, without desktop control or weakened browser confirmations.
+Bridge returned `Transport closed` during the initial live verification. The
+later browser-only Edge connection reached the shared user page without desktop
+control or weakened browser confirmations.
+
+## Final Instance And Inspector Regressions
+
+The first native browser drag reproduced a real admission failure: a fresh
+file-model definition offered a copy payload, but the Canvas drag-over adapter
+advertised move. Chrome rejected the incompatible drop. Both admitted catalogue
+MIME types now retain copy semantics; read-only refusal is unchanged. A registered
+model row also retains its workspace file path instead of losing the description
+after first placement. The native browser regression starts with the first drag,
+then proves a second independent instance, persistence, movement after reload and
+deletion of only the second instance. Both browser cases pass.
+
+The missing `clientes` and `pedidos` cards in an instance's Code inspector had a
+different root cause: an external file reference was classified as graph-owned
+SQL. The existing editor correctly refused file-context inspection under that
+classification. The inspector now delegates valid file references to the existing
+dbt file contribution, excluding only those references from graph-owned paths.
+Genuine graph path conflicts remain enforced. The shared user page on port 5173
+shows both inline cards again; its existing SQL bytes were not changed. There is
+no second editor, Jinja evaluator or analysis query.
+
+Deleting the last placed native Model exposed a persistence mismatch. The
+serializer and contract retain registered definitions independently of placement,
+but the Web readiness guard rejected a registered model with no cards. The guard
+now accepts model definitions already present in the local catalogue or confirmed
+draft; an unregistered hidden model remains rejected. The red regression failed
+only for the registered Model, and all five snapshot cases pass after correction.
+
+The focused Web presentation run passes five files / 75 cases, including path
+base collisions, first-drag effect, inspector authority and true ownership
+conflicts. Full Web lint and typecheck pass. The three focused browser specs
+`canvas-card-field-lifecycle`, `canvas-ready-node-authoring` and
+`canvas-relational-card-cancellation` pass all 23 cases. Their journeys close the
+inspector or reveal the exact port through existing public controls; they retain
+actionability checks and persistence assertions.
+
+The preceding complete prepush attempt passed unit, presentation, architecture
+and build checks but failed browser journeys targeting covered controls. It was
+interrupted after the cancellation spec stalled and is not successful prepush
+evidence. The final committed-tree prepush and exact base/head DB acceptance must
+be recorded on GH-3747 and the integration PR before merge.
 
 The [risk record](../risk-register/dbt-project-root-relocation-20261102.md)
 documents collision, recovery and deployment boundaries. No new debt, placeholder,

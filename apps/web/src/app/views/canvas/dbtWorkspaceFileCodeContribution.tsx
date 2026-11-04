@@ -1,6 +1,6 @@
 /** Owned concern: adapt a file-backed dbt node to the shared Properties Code contribution port. */
 import type { RefObject } from 'react';
-import type { DbtProjectGraphProjection } from '@dvt/contracts';
+import { readWorkspaceDbtModelReference, type DbtProjectGraphProjection } from '@dvt/contracts';
 
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
@@ -15,10 +15,11 @@ import { resolveDbtProjectWorkspaceFilePath } from '../code/codeViewFileSelectio
 
 type BuildDbtWorkspaceFileCodeContributionsOptions = Readonly<{
   node: CanonicalNode | null;
-  projectRoot: string;
+  projectRoot?: string;
   dbtProject?: DbtProjectGraphProjection;
-  editorRef: RefObject<WorkspaceFileCodeEditorHandle>;
-  reconcilePersistedFile: (
+  editorRef?: RefObject<WorkspaceFileCodeEditorHandle>;
+  graphOwnedPaths?: ReadonlySet<string>;
+  reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
 }>;
@@ -29,7 +30,9 @@ export function buildDbtWorkspaceFileCodeContributions({
   editorRef,
   reconcilePersistedFile,
   dbtProject,
+  graphOwnedPaths,
 }: BuildDbtWorkspaceFileCodeContributionsOptions): readonly CanvasNodeWorkbenchContribution[] {
+  if (node == null) return [];
   const visualEditability = node?.metadata?.visualEditability;
   const isExternalPackage =
     typeof visualEditability === 'object' &&
@@ -37,15 +40,21 @@ export function buildDbtWorkspaceFileCodeContributions({
     'reasons' in visualEditability &&
     Array.isArray(visualEditability.reasons) &&
     visualEditability.reasons.includes('external_package');
+  const fileReference = readWorkspaceDbtModelReference(node);
   if (
-    node == null ||
-    !hasDbtCompatibilityMetadata(node) ||
+    (!hasDbtCompatibilityMetadata(node) && fileReference == null) ||
     node.path == null ||
     isExternalPackage
   ) {
     return [];
   }
-  const workspaceFilePath = resolveDbtProjectWorkspaceFilePath(projectRoot, node.path);
+  const workspaceFilePath =
+    fileReference != null
+      ? node.path
+      : projectRoot == null
+        ? undefined
+        : resolveDbtProjectWorkspaceFilePath(projectRoot, node.path);
+  if (workspaceFilePath == null) return [];
 
   return [
     {
@@ -63,6 +72,7 @@ export function buildDbtWorkspaceFileCodeContributions({
           path={workspaceFilePath}
           reconcilePersistedFile={reconcilePersistedFile}
           dbtProject={dbtProject}
+          graphOwnedPaths={graphOwnedPaths}
         />
       ),
     },

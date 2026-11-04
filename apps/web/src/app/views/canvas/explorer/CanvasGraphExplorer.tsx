@@ -84,6 +84,7 @@ export function CanvasGraphExplorer({
     ...models.map((node) => ({
       id: node.id,
       label: node.name,
+      description: node.path,
       category: copy.models,
       draggable: placeableIds.has(node.id),
       disabled: !placeableIds.has(node.id),

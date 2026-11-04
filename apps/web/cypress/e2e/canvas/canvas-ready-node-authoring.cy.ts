@@ -434,6 +434,7 @@ describe('Canvas ready node authoring', () => {
       );
       inputTypes = model.types;
     });
+    cy.get('[data-slot="canvas-relational-collapse"]').should('be.visible').click();
     cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
     cy.get(
       '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'

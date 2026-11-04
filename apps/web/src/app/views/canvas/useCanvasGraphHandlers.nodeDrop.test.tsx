@@ -18,6 +18,7 @@ import {
 } from './useCanvasGraphHandlers.test.support';
 import { buildCanonicalDropEvent } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
 import { CANVAS_CATALOG_NODE_DRAG_MIME_TYPE } from './canvasNodeDropPayload';
+import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
 import { sourceNode, projectedModel } from './canvasColumnOutputAuthoring.test-support';
 import { readWorkspaceDbtModelReference, resolveWorkspaceNodeInstances } from '@dvt/contracts';
 
@@ -545,7 +546,9 @@ describe('useCanvasGraphHandlers node drop', () => {
   it.each([
     { canEditEdges: true, types: [], effect: 'move' },
     { canEditEdges: true, types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE], effect: 'copy' },
+    { canEditEdges: true, types: [CANONICAL_NODE_DRAG_MIME_TYPE], effect: 'copy' },
     { canEditEdges: false, types: [CANVAS_CATALOG_NODE_DRAG_MIME_TYPE], effect: 'none' },
+    { canEditEdges: false, types: [CANONICAL_NODE_DRAG_MIME_TYPE], effect: 'none' },
   ])(
     'marks drag-over as $effect for the admitted payload',
     async ({ canEditEdges, types, effect }) => {

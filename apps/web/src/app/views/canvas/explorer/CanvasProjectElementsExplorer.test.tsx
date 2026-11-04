@@ -155,6 +155,32 @@ it('admits native and file-model definitions without navigation or file writes',
   expect(saveFileContent).not.toHaveBeenCalled();
 });
 
+it('shows the workspace path when the project root repeats a model directory', async () => {
+  const nestedBinding = { ...binding, authority: { ...binding.authority, projectRoot: 'models' } };
+  listFiles.mockResolvedValue([
+    { name: 'dbt_project.yml', path: 'models/dbt_project.yml', kind: 'file' },
+  ]);
+  getFileContent.mockResolvedValue({
+    path: 'models/dbt_project.yml',
+    name: 'dbt_project.yml',
+    language: 'yaml',
+    content: 'name: demo',
+    contentSha256: '3'.repeat(64),
+    lastModified: '2026-11-02T00:00:00.000Z',
+    authoringAuthority: { kind: 'resolved', binding: nestedBinding },
+  });
+  getProjectGraph.mockResolvedValue({
+    ...project,
+    authorityBinding: nestedBinding,
+    projectRevision: { ...project.projectRevision, projectRoot: 'models' },
+  });
+  await render();
+  await waitForReactQuery(() => screen.queryByRole('button', { name: /clientes/ }) != null);
+  expect(screen.getByRole('button', { name: /clientes/ }).title).toBe(
+    'clientes · models/models/clientes.sql'
+  );
+});
+
 it('uses the authoritative model identity rather than inferring existence from file-tree entries', async () => {
   listFiles.mockResolvedValue([{ name: 'dbt_project.yml', path: 'dbt_project.yml', kind: 'file' }]);
   await render();

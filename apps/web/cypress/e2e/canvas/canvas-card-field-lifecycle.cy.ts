@@ -310,6 +310,8 @@ describe('Canvas field lifecycle', () => {
         expect(restored.operands).to.deep.equal(excluded.operands);
         expect(restored.predicates).to.deep.equal(excluded.predicates);
       });
+      cy.get('[data-slot="canvas-relational-collapse"]').should('be.visible').click();
+      cy.get(rows).should('not.exist');
       cy.get('[data-slot="canvas-relational-tree-output-open"]').click();
       cy.get(
         '[data-slot="canvas-model-output-inspector"] [data-slot="canvas-operation-output-tab"]'
