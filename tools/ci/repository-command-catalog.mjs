@@ -122,7 +122,7 @@ const PACKAGE_PREFIX_DOMAINS = [
 
 const SCRIPT_FILE_RULES = [
   [
-    /^scripts\/(run-selected-closure-cypress|live-proof-process|live-proof-web-runtime)\.cjs$/u,
+    /^scripts\/(run-selected-closure-cypress|live-proof-process|live-proof-web-runtime|prefixed-process-output)\.cjs$/u,
     'test-tooling',
   ],
   [/^scripts\/build-workspace-runtime-deps\.cjs$/u, 'runtime-root'],

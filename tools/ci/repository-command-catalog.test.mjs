@@ -56,6 +56,7 @@ test('admitted browser child and process lifecycle remain test tooling, without 
     'scripts/run-selected-closure-cypress.cjs',
     'scripts/live-proof-process.cjs',
     'scripts/live-proof-web-runtime.cjs',
+    'scripts/prefixed-process-output.cjs',
   ]) {
     const classification = classifyScriptFilePath(file);
     assert.equal(classification.domain, 'test-tooling', file);
@@ -64,6 +65,10 @@ test('admitted browser child and process lifecycle remain test tooling, without 
     assert.equal(classification.changedFileValidationRelevant, true, file);
   }
   assert.equal(classifyScriptFilePath('scripts/unadmitted-proof-runner.cjs').domain, 'unknown');
+  assert.equal(
+    classifyScriptFilePath('scripts/prefixed-process-output-extra.cjs').domain,
+    'unknown'
+  );
   assert.equal(
     classifyScriptFilePath('scripts/live-proof-web-runtime-extra.cjs').domain,
     'unknown'
