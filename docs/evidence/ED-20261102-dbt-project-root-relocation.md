@@ -284,3 +284,23 @@ action before the fix and passes afterwards; 17 Preview/producer cases pass.
 Apply/Cancel/navigation still retain the complete draft, and changed output,
 pending active edits, stale inputs and outside-plan relations keep their guards.
 Native browser evidence and the final committed gate remain required.
+
+The [saved sample input-revision correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6665353876)
+uses only the existing canonical projected input identities for sample invalidation.
+Declaring an unused physical Source no longer removes an unchanged saved dbt Read
+sample. The regression first fails on the removed table, then passes; 24 existing
+Preview, producer, analysis and connection cases pass, including used-input changes
+and withdrawal. The composition-count hypothesis was rejected without changing
+composition admission. The existing relation index also replaces a redundant
+reconstruction of plan relation identifiers, and the authoring state predicate
+uses one explicit set of admitted states.
+
+The [test-harness cleanup](https://github.com/dunay2/dvt/issues/3747#issuecomment-6665700461)
+removes both private document-normalization functions from the route harness and
+its second normalization call. The existing controller builder remains the single
+owner. Native consultation found no explicit source bindings or implementation
+references to the removed support symbols; existing route tests remain the proof
+consumers. Current-source inspection of the complete changed Web production slice
+finds zero exact-body duplicate groups, and the native rail duplicate query returns
+no rows. These bounded results do not claim absence of all semantic duplication
+throughout the repository. Final committed validation and integration remain pending.

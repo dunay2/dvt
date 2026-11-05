@@ -49,19 +49,14 @@ export function useCanvasRelationalTreeWorkbenchModel(
   const result = useMemo(() => projectAnalyzedCanvasRelationalTree(analysis), [analysis]);
   const projection = result.ok ? result.projection : null;
   const outputPlanRelationIds = useMemo(
-    () =>
-      new Set(
-        analysis.semantic?.document.sidecar.relations.map(({ relationId }) => relationId) ?? []
-      ),
+    () => new Set(analysis.semantic?.index.relations.keys()),
     [analysis.semantic]
   );
   const composition = useMemo(() => projectCanvasRelationalComposition(analysis), [analysis]);
-  const { inputs } = analysis;
+  const { inputs, projectedInputs } = analysis;
   const pendingAuthoring =
     args.authoring != null &&
-    (composition?.state === 'pending' ||
-      composition?.state === 'single-input' ||
-      composition?.state === 'canonical') &&
+    ['pending', 'single-input', 'canonical'].includes(composition?.state ?? '') &&
     inputs.length >= 1;
   const session = useCanvasRelationalTreeAuthoringSession({
     enabled: pendingAuthoring,
@@ -148,7 +143,11 @@ export function useCanvasRelationalTreeWorkbenchModel(
 
   return {
     inputRevision: JSON.stringify(
-      sourceInputRecovery.inputs.map((input) => [input.nodeId, input.fields, input.inputBindings])
+      sourceInputRecovery.inputs
+        .filter(({ nodeId }) =>
+          projectedInputs.some((read) => read.sourceNodeId === nodeId && read.relationId != null)
+        )
+        .map((input) => [input.nodeId, input.fields, input.inputBindings])
     ),
     unavailableRelationIds: unavailableCanvasRelationIds(projection?.root),
     connectedModelRelationIds: analysis.connectedModelRelationIds,

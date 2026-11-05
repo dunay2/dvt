@@ -16,6 +16,8 @@ import {
   dropWorkbenchSource,
   stageWorkbenchOperation,
   connectWorkbenchOutput,
+  disconnectWorkbenchOutput,
+  connectStagedWorkbenchBinaryOperation,
 } from './CanvasRelationalTreeWorkbench.gestures.test-support';
 import { pendingSourceOutputPorts } from './CanvasRelationalTreeWorkbench.operation-drag.test-support';
 import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -63,6 +65,7 @@ describe('Canvas relational-tree source projection', () => {
         };
       }
       const original = structuredClone(producer);
+      const additional = sourceNode('clients', 'clients');
       const target = transformNode();
       const dataHost = document.createElement('div');
       const query = {
@@ -90,13 +93,15 @@ describe('Canvas relational-tree source projection', () => {
       const apply = vi.fn((_id: string, _draft: CanvasInspectorNodeDraft) => ({
         outcome: 'no_changes' as const,
       }));
-      const render = async (node = target): Promise<void> => {
+      const render = async (node = target, includeAdditional = false): Promise<void> => {
+        const nodes = [producer, ...(includeAdditional ? [additional] : []), node];
+        const edges = [edge(producer.id), ...(includeAdditional ? [edge(additional.id)] : [])];
         await act(async () =>
           root.render(
             <CanvasRelationalTreeWorkbench
               transformNode={node}
-              nodes={[producer, node]}
-              edges={[edge(producer.id)]}
+              nodes={nodes}
+              edges={edges}
               copy={COPY}
               authoring={{ canEditNode: true, onApplyNodeDraft: apply }}
               preview={{
@@ -105,9 +110,9 @@ describe('Canvas relational-tree source projection', () => {
                 dataHost,
                 preparePreview: async () => ({
                   ok: true,
-                  canonicalNodes: [producer, node],
-                  canonicalEdges: [edge(producer.id)],
-                  workspaceNodeIds: [producer.id, node.id],
+                  canonicalNodes: nodes,
+                  canonicalEdges: edges,
+                  workspaceNodeIds: nodes.map((input) => input.id),
                 }),
               }}
             />
@@ -162,7 +167,9 @@ describe('Canvas relational-tree source projection', () => {
         expect(dataHost.querySelector('table')?.textContent).toContain('1.25');
         expect(apply).toHaveBeenCalledOnce();
         const retainedTable = dataHost.querySelector('table');
-        await dropWorkbenchSource(producer.id);
+        await render(saved, true);
+        expect(dataHost.querySelector('table')).toBe(retainedTable);
+        await dropWorkbenchSource(additional.id);
         expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
         const retainedPreview = container
           .querySelector<HTMLButtonElement>(`[data-relation-id="${readId}"]`)
@@ -170,6 +177,15 @@ describe('Canvas relational-tree source projection', () => {
           ?.querySelector<HTMLButtonElement>('[data-slot="canvas-node-execute"]');
         expect(retainedPreview?.disabled).toBe(false);
         expect(dataHost.querySelector('table')).toBe(retainedTable);
+        expect(query.previewTransformRows).toHaveBeenCalledTimes(1);
+        expect(apply).toHaveBeenCalledTimes(1);
+        await disconnectWorkbenchOutput(container);
+        await stageWorkbenchOperation('inner-join');
+        await connectStagedWorkbenchBinaryOperation();
+        expect(
+          container.querySelectorAll('[data-slot="canvas-relational-pending-edge"]')
+        ).toHaveLength(2);
+        expect(container.querySelector(`[data-relation-id="${readId}"]`)).not.toBeNull();
         expect(query.previewTransformRows).toHaveBeenCalledTimes(1);
         expect(apply).toHaveBeenCalledTimes(1);
       }

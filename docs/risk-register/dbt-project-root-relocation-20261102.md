@@ -143,3 +143,10 @@ terminal, semantic document or active output edit must still block that sample.
 The existing canonicalized draft comparator and saved output-plan membership
 checks own this distinction. No detached relation is executed, no implicit Apply
 is added and no second cache or compiler state is introduced.
+
+Saved sample input revisions exclude catalogue entries without a canonical Read
+identity. They still include the current fields and input bindings of used
+producers; missing or changed used inputs retain invalidation and admission
+guards. The complete catalogue remains available for authoring. The route test
+harness consumes the existing normalized controller once; removing its duplicate
+normalizers does not change product document admission or introduce a test adapter.
