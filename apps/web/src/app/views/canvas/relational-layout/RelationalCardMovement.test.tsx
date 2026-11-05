@@ -173,10 +173,10 @@ describe('Relational card movement', () => {
     expect(position()).toEqual(before);
   });
 
-  it('moves left and above the world origin with the same keyboard policy', () => {
+  it('moves left and above the world origin with the same keyboard policy', async () => {
     const before = position();
     for (const key of ['ArrowLeft', 'ArrowLeft', 'ArrowUp', 'ArrowUp']) {
-      act(() =>
+      await act(async () => {
         card().dispatchEvent(
           new KeyboardEvent('keydown', {
             bubbles: true,
@@ -184,8 +184,8 @@ describe('Relational card movement', () => {
             shiftKey: true,
             key,
           })
-        )
-      );
+        );
+      });
     }
     expect(position()).toEqual({ x: before.x - 80, y: before.y - 80 });
     expect(select).not.toHaveBeenCalled();
