@@ -275,3 +275,12 @@ file, contextual workbench visibility and Model session camera remain transient
 presentation state; they are not claims of durable document or analysis state.
 Native browser reload and the final committed gate remain required closeout
 evidence.
+
+The [saved Output Preview correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6664514981)
+separates authoring transaction dirtiness from output-affecting changes in the
+existing Apply mapper. A detached Source no longer blocks or clears an unchanged
+saved dbt-model Read sample. The existing regression fails on the disabled Play
+action before the fix and passes afterwards; 17 Preview/producer cases pass.
+Apply/Cancel/navigation still retain the complete draft, and changed output,
+pending active edits, stale inputs and outside-plan relations keep their guards.
+Native browser evidence and the final committed gate remain required.

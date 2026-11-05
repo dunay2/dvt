@@ -161,6 +161,17 @@ describe('Canvas relational-tree source projection', () => {
         expect(dataHost.querySelector('table')?.textContent).toContain('C-1');
         expect(dataHost.querySelector('table')?.textContent).toContain('1.25');
         expect(apply).toHaveBeenCalledOnce();
+        const retainedTable = dataHost.querySelector('table');
+        await dropWorkbenchSource(producer.id);
+        expect(container.querySelectorAll('[data-operator="read"]')).toHaveLength(2);
+        const retainedPreview = container
+          .querySelector<HTMLButtonElement>(`[data-relation-id="${readId}"]`)
+          ?.closest('[data-slot="canvas-relational-card"]')
+          ?.querySelector<HTMLButtonElement>('[data-slot="canvas-node-execute"]');
+        expect(retainedPreview?.disabled).toBe(false);
+        expect(dataHost.querySelector('table')).toBe(retainedTable);
+        expect(query.previewTransformRows).toHaveBeenCalledTimes(1);
+        expect(apply).toHaveBeenCalledTimes(1);
       }
     }
   );

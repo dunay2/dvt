@@ -8,7 +8,6 @@ import {
   type CanvasRelationalTreeNodeSize,
   type CardPosition,
   type CanvasRelationalTreePlacedNode,
-  type CanvasRelationalTreePlacedEdge,
 } from './canvasRelationalTreeGeometryMetrics';
 import { projectCanvasRelationalCardExpansion } from './canvasRelationalCardExpansion';
 import { projectCanonicalRelationEdges } from './relational-layout/relationalTreeEdgeProjection';
@@ -25,18 +24,16 @@ const OUTPUT_GAP = 64;
 const OUTPUT_WIDTH = 156;
 const BOTTOM_PADDING = 36;
 
-export type CanvasRelationalTreeLayout = Readonly<{
-  expansionFrame?: Readonly<{ key: string }> &
-    Readonly<{ offsets: ReadonlyMap<string, CardPosition> }>;
-  origin: CardPosition;
-  width: number;
-  height: number;
-  output:
-    | (CardPosition & CanvasRelationalTreeNodeSize & Readonly<{ inputLocator: string | null }>)
-    | null;
-  nodes: readonly CanvasRelationalTreePlacedNode[];
-  edges: readonly CanvasRelationalTreePlacedEdge[];
-}>;
+export type CanvasRelationalTreeLayout = CanvasRelationalTreeNodeSize &
+  Readonly<{
+    expansionFrame?: Readonly<{ key: string; offsets: ReadonlyMap<string, CardPosition> }>;
+    origin: CardPosition;
+    output:
+      | (CardPosition & CanvasRelationalTreeNodeSize & { readonly inputLocator: string | null })
+      | null;
+    nodes: readonly CanvasRelationalTreePlacedNode[];
+    edges: Readonly<ReturnType<typeof projectCanonicalRelationEdges>>;
+  }>;
 
 function measureCanvasRelationalBounds(
   cards: readonly (CardPosition & CanvasRelationalTreeNodeSize)[]

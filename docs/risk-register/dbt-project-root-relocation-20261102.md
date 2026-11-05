@@ -136,3 +136,10 @@ produce a cache miss. Such a miss must not claim compiled evidence or discard th
 live query result. No credentials, row samples, compiled boolean or parallel
 reactive store are introduced. UI session navigation and the Model camera remain
 transient; saved document/layout data use their existing persistence rails.
+
+Transaction dirtiness and output dirtiness are derived for different consumers.
+Disconnected authoring work must not clear a valid saved output sample; a changed
+terminal, semantic document or active output edit must still block that sample.
+The existing canonicalized draft comparator and saved output-plan membership
+checks own this distinction. No detached relation is executed, no implicit Apply
+is added and no second cache or compiler state is introduced.

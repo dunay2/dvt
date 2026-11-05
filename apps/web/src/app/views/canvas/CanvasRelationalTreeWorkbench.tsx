@@ -87,7 +87,7 @@ export const CanvasRelationalTreeWorkbench = forwardRef<
       semanticDigest={model.projection?.semanticDigest ?? null}
       outputPlanRelationIds={model.outputPlanRelationIds}
       canEditModel={model.authoringAvailable}
-      unapplied={sessionHandle.hasUnappliedChanges}
+      unapplied={pending || model.session.hasOutputChanges}
     >
       <RelationalLayoutSession
         initialPositions={model.session.positions}

@@ -171,6 +171,7 @@ export function useCanvasRelationalTreeAuthoringSession(
     positions: state.positions,
     setPositions: state.setPositions,
     hasIncompleteGraph: prepared.hasIncompleteGraph,
+    hasOutputChanges: prepared.hasOutputChanges || sourceInputRecovery.additions.length > 0,
     hasDraftChanges: prepared.hasDraftChanges || sourceInputRecovery.additions.length > 0,
   } as const;
 }

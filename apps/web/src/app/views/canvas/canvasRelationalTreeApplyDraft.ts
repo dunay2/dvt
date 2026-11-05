@@ -80,13 +80,20 @@ export function prepareCanvasRelationalTreeApply(
       ? {}
       : { relationalAuthoringDraft: args.baselineAuthoringDraft }),
   };
+  const current = canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft);
   return {
     request,
     cleared,
     hasIncompleteGraph,
+    hasOutputChanges:
+      outputChanged ||
+      !areCanvasInspectorNodeDraftsEqual(
+        { ...baseline, relationalAuthoringDraft: undefined },
+        { ...current, relationalAuthoringDraft: undefined }
+      ),
     hasDraftChanges: !areCanvasInspectorNodeDraftsEqual(
       semanticInspectorDraft(baseline),
-      semanticInspectorDraft(canonicalizeCanvasInspectorNodeDraft(args.transformNode, draft))
+      semanticInspectorDraft(current)
     ),
   };
 }
