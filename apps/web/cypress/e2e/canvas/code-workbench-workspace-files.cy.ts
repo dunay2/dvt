@@ -10,6 +10,7 @@ import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
   getE2eApiCalls,
   getLastE2eApiCall,
+  installE2eApiFetchStub,
   stubE2eApi,
   stubE2eJsonApi,
   waitForE2eApiCall,
@@ -72,7 +73,7 @@ function stubContextualCodeWorkbenchApis(
 }
 
 describe('Canvas Project Code read-only inspection', () => {
-  it('compiles references only on request and retains the result across file navigation', () => {
+  it('compiles once and retains verified references across navigation and full reload', () => {
     const { file, project, analysis } = contextFixture();
     const plainFile: FileContent = {
       ...file,
@@ -152,6 +153,17 @@ describe('Canvas Project Code read-only inspection', () => {
       cy.get(compile).should('not.exist');
       cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
       cy.get(editor).should('have.attr', 'data-file-path', file.path);
+      cy.get(editor).should('contain.text', copy.compiledMessage);
+      cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
+      cy.then(() => {
+        expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(1);
+        expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+      });
+      cy.on('window:before:load', installE2eApiFetchStub);
+      cy.reload();
+      cy.get('[data-slot="shell-file-menu-trigger"]').click();
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+      cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
       cy.get(editor).should('contain.text', copy.compiledMessage);
       cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
       cy.then(() => {

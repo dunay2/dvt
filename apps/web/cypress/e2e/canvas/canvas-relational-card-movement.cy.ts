@@ -32,6 +32,41 @@ describe('Relational card movement', () => {
     cy.get(join).should('have.css', 'cursor', 'crosshair');
   });
 
+  it('moves through the world origin after panning and Fits signed cards without writes', () => {
+    cy.get(source).then(($card) => {
+      const held = $card[0]!;
+      const before = position(held);
+      const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0]!;
+      const zoom = Number(tree.style.zoom);
+      const otherCards = Cypress.$(`${viewport} [data-slot="canvas-relational-tree-node"]`)
+        .toArray()
+        .filter((card) => card !== held)
+        .map((card) => ({ card, position: position(card) }));
+      const outputStyle = Cypress.$(output).attr('style');
+      const writes = semanticWrites('join-transform').length;
+      const queries = /\/(data-sample|preview|runs|execute)(\/|$)/;
+      const requests = getE2eApiCalls(queries).length;
+      panWorkbenchViewport(viewport, 240, 160);
+      moveWorkbenchCard(source, -(before[0] + 80) * zoom, -(before[1] + 60) * zoom);
+      cy.get(source).should(($moved) => {
+        expect($moved[0]).to.equal(held);
+        expect(position($moved[0])[0]).to.be.closeTo(-80, 2);
+        expect(position($moved[0])[1]).to.be.closeTo(-60, 2);
+        for (const other of otherCards) expect(position(other.card)).to.deep.equal(other.position);
+        expect(Cypress.$(output).attr('style')).to.equal(outputStyle);
+      });
+      verifyCompleteTreeFit(viewport);
+      cy.get(source).should(($moved) => {
+        expect(position($moved[0])[0]).to.be.closeTo(-80, 2);
+        expect(position($moved[0])[1]).to.be.closeTo(-60, 2);
+      });
+      cy.then(() => {
+        expect(semanticWrites('join-transform')).to.have.length(writes);
+        expect(getE2eApiCalls(queries)).to.have.length(requests);
+      });
+    });
+  });
+
   it('moves a JOIN and its ports at the actual zoom without opening properties or saving', () => {
     cy.get(join).then(($card) => {
       const before = position($card[0]);

@@ -80,6 +80,13 @@ The camera translates content independently of its extent, so background drag
 also works when the complete diagram fits below 100% zoom. Pointer deltas, wheel
 anchoring, explicit Fit and keyboard focus reveal use the same position owner;
 native Canvas scrolling is clipped rather than retained as a second camera.
+Card and drop positions are signed finite world coordinates. Pointer movement,
+keyboard movement and both relational views use the same coordinate policy;
+visible space left or above the origin must remain usable. Detail expansion is
+an invertible offset, and explicit Fit measures the signed content origin and
+extent through the existing session camera. Movement does not shift unrelated
+cards or create semantic writes. Persistence uses the same admitted v1 position
+contract, with non-finite values still rejected.
 Nested viewports consume only their own gestures. Pointer property activation
 does not reveal or recenter a card. The session retains camera and zoom across
 inspection/editing; camera movement never changes card world coordinates.
@@ -99,6 +106,11 @@ flowchart LR
   Camera --> Projection[Content translation and zoom]
   Cards[Card world positions] --> Projection
 ```
+
+The [signed-coordinate rationale and test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6662240499)
+retire the old nonnegative gesture/drop floors and origin-dependent expansion
+state. The camera adapter owns one screen-to-world conversion shared by source
+and operation drops in both relational views.
 
 Canvas viewports have no native scrollbars and pan directly from empty background
 with the left button. Cards remain independently movable. The separate Hand mode,

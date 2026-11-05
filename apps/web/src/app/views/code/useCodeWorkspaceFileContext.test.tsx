@@ -9,7 +9,7 @@ import {
 import { sha256HexUtf8 } from '@dvt/crypto';
 import { QueryClient } from '@tanstack/react-query';
 import { act, createRef } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { waitForReactQuery, withTestQueryClient } from '../../../testing/reactQueryHarness';
@@ -24,6 +24,8 @@ import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionCont
 import type { FileContent, WorkspaceGraphSnapshot } from '../../ports/workspace';
 import { resolveCodeInlineReferenceCopy } from './codeViewCopy';
 import { contextFixture } from './codeWorkspaceFileContext.test-support';
+
+beforeEach(() => localStorage.clear());
 
 vi.mock('../../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({

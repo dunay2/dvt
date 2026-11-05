@@ -18,6 +18,7 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   changeZoom: (delta: number) => void;
   fit: () => void;
   stopAutoFit: () => void;
+  projectPointer: ReturnType<typeof useRelationalViewportCamera>['projectPointer'];
   onFocusCapture: FocusEventHandler<HTMLDivElement>;
 }> &
   ReturnType<typeof useRelationalViewportPan> {
@@ -25,7 +26,11 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   const contentRef = useRef<HTMLDivElement>(null);
   const { autoFit, camera, zoom, setZoom, minimumZoom, setMinimumZoom, contentSize, setExtent } =
     useRelationalLayout();
-  const { panBy, onFocusCapture } = useRelationalViewportCamera(viewportRef, contentRef, zoom);
+  const { panBy, onFocusCapture, projectPointer } = useRelationalViewportCamera(
+    viewportRef,
+    contentRef,
+    zoom
+  );
   const pan = useRelationalViewportPan(panBy);
   const setManualZoom = useCallback(
     (value: number) => {
@@ -54,8 +59,13 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
       const x =
         (viewport.clientWidth - (contentSize.current?.width ?? content.offsetWidth) * nextZoom) /
           2 -
-        padding;
-      panBy(x - camera.current.x, -camera.current.y, nextZoom);
+        padding -
+        (contentSize.current?.origin.x ?? 0) * nextZoom;
+      panBy(
+        x - camera.current.x,
+        -(contentSize.current?.origin.y ?? 0) * nextZoom - camera.current.y,
+        nextZoom
+      );
     },
     [camera, contentSize, panBy]
   );
@@ -118,6 +128,7 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
       autoFit.current = false;
     },
     onFocusCapture,
+    projectPointer,
     ...pan,
   };
 }

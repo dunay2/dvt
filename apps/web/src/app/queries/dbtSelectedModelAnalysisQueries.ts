@@ -8,6 +8,10 @@ import {
   useSessionContext,
 } from '../services/AppServicesContext';
 import { queryKeys } from './queryKeys';
+import {
+  persistDbtSelectedModelAnalysis,
+  restoreDbtSelectedModelAnalysis,
+} from './dbtSelectedModelAnalysisCache';
 
 export function useDbtSelectedModelAnalysisQuery(
   binding: DbtProjectFilesAuthorityBinding | undefined,
@@ -31,23 +35,27 @@ export function useDbtSelectedModelAnalysisQuery(
     selectedUniqueId?.trim()
   );
 
+  const key = queryKeys.workspace.dbtSelectedModelAnalysis(
+    scope.tenantId,
+    scope.projectId,
+    scope.environmentId,
+    binding?.canvasId,
+    binding?.authority.projectRoot,
+    selectedUniqueId,
+    options.revisionToken
+  );
   return useQuery({
     enabled: hasContext && (options.enabled ?? true),
     retry: false,
-    queryKey: queryKeys.workspace.dbtSelectedModelAnalysis(
-      scope.tenantId,
-      scope.projectId,
-      scope.environmentId,
-      binding?.canvasId,
-      binding?.authority.projectRoot,
-      selectedUniqueId,
-      options.revisionToken
-    ),
-    queryFn: () => {
+    queryKey: key,
+    initialData: () => (hasContext ? restoreDbtSelectedModelAnalysis(key) : undefined),
+    queryFn: async () => {
       if (!hasContext || !binding || !selectedUniqueId) {
         throw new Error('AnalyzeSelectedDbtModel requires a complete accepted model context.');
       }
-      return port.analyzeSelectedModel(binding, selectedUniqueId);
+      const result = await port.analyzeSelectedModel(binding, selectedUniqueId);
+      persistDbtSelectedModelAnalysis(key, result);
+      return result;
     },
     staleTime: 15_000,
   });

@@ -120,3 +120,19 @@ Controlled browser evidence uses the same schema-validated fixture as the Code
 presentation tests. It proves public interaction and transport scope, while the
 native analyzer tests and real-system proof cover dbt execution; a controlled
 response alone does not certify native compilation.
+Signed card coordinates widen the existing presentation DTO admission without
+changing its shape or semantic authority. Existing nonnegative snapshots remain
+valid. A consumer that admits signed finite coordinates must be deployed before
+the emitting UI; an old validator rejects such positions rather than clamping or
+discarding them. Non-finite values stay invalid. Explicit Fit, detail expansion,
+drop projection and save/read must share this boundary so a free camera does not
+conceal another coordinate floor.
+
+Browser reload recovery stores only ready selected-model evidence under the full
+scoped revision key. Fresh authorized file/project context and the existing
+byte/hash projector remain necessary; the cache is not authorization. Its eight
+entry / 4 MiB bound, browser storage denial or quota, and malformed storage can
+produce a cache miss. Such a miss must not claim compiled evidence or discard the
+live query result. No credentials, row samples, compiled boolean or parallel
+reactive store are introduced. UI session navigation and the Model camera remain
+transient; saved document/layout data use their existing persistence rails.

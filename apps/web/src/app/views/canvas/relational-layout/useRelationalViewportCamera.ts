@@ -35,6 +35,16 @@ export function useRelationalViewportCamera(
     projectCamera(zoom);
   }, [projectCamera, zoom]);
 
+  const projectPointer = useCallback(
+    (point: Pick<MouseEvent, 'clientX' | 'clientY'>) => {
+      const surface = contentRef.current ?? viewportRef.current;
+      if (surface == null) return undefined;
+      const bounds = surface.getBoundingClientRect();
+      return { x: (point.clientX - bounds.left) / zoom, y: (point.clientY - bounds.top) / zoom };
+    },
+    [contentRef, viewportRef, zoom]
+  );
+
   const latestPan = useRef(panBy);
   useLayoutEffect(() => {
     latestPan.current = panBy;
@@ -65,5 +75,5 @@ export function useRelationalViewportCamera(
     });
   };
 
-  return { panBy, onFocusCapture };
+  return { panBy, onFocusCapture, projectPointer };
 }

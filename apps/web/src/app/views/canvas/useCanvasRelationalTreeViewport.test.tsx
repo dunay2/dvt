@@ -5,12 +5,22 @@ import { createPortal } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useCanvasRelationalTreeViewport } from './useCanvasRelationalTreeViewport';
-import { RelationalLayoutSession } from './relational-layout/RelationalLayoutSession';
+import {
+  RelationalLayoutSession,
+  useRelationalLayout,
+} from './relational-layout/RelationalLayoutSession';
+import type { CanvasRelationalTreeLayout } from './canvasRelationalTreeGeometry';
 import { canvasViewportScopeProps } from './canvasViewportInteraction';
 
 function ViewportHarness({
   semanticRevision = 'initial',
-}: Readonly<{ semanticRevision?: string }>): JSX.Element {
+  bounds,
+}: Readonly<{
+  semanticRevision?: string;
+  bounds?: Pick<CanvasRelationalTreeLayout, 'origin' | 'width' | 'height'>;
+}>): JSX.Element {
+  const layout = useRelationalLayout();
+  if (bounds != null) layout.contentSize.current = bounds;
   const viewport = useCanvasRelationalTreeViewport();
   return (
     <>
@@ -112,6 +122,37 @@ describe('relational-tree mouse navigation', () => {
     container.remove();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it('fits negative world bounds through the same camera without native scrolling', () => {
+    const bounds = { origin: { x: -400, y: -200 }, width: 1000, height: 600 };
+    act(() =>
+      root.render(
+        <RelationalLayoutSession>
+          <ViewportHarness bounds={bounds} />
+        </RelationalLayoutSession>
+      )
+    );
+    Object.defineProperties(viewport, {
+      clientWidth: { value: 800 },
+      clientHeight: { value: 400 },
+    });
+    Object.defineProperties(content, {
+      offsetWidth: { value: 1000 },
+      offsetHeight: { value: 600 },
+    });
+    act(() => container.querySelector<HTMLButtonElement>('[data-testid="fit"]')!.click());
+    act(() => {
+      while (frames.length > 0) frames.shift()!(0);
+    });
+    const [tx, ty] = content.style.translate.split(' ').map(Number.parseFloat);
+    const left = (bounds.origin.x + tx!) * zoom();
+    const top = (bounds.origin.y + ty!) * zoom();
+    expect(left).toBeGreaterThanOrEqual(0);
+    expect(top).toBeGreaterThanOrEqual(0);
+    expect(left + bounds.width * zoom()).toBeLessThanOrEqual(800);
+    expect(top + bounds.height * zoom()).toBeLessThanOrEqual(400);
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
   });
 
   it('zooms in and out with the wheel and cancels native scrolling', () => {

@@ -231,8 +231,14 @@ Completed relational authoring retains nonempty `positions` in the existing v1
 DTO but omits `outputRelationId`. Absence is allowed only when `sources` and
 `operations` are empty: the current canonical semantic root owns Output.
 `outputRelationId: null` means explicitly disconnected, while a string denotes
-pending explicit wiring. Coordinates remain finite and nonnegative and confer no
-semantic authority. No new version, migration or compatibility reader is added.
+pending explicit wiring. Coordinates are signed finite numbers and confer no
+semantic authority. Crossing the world origin is valid; Infinity, -Infinity and
+NaN remain invalid. This widens admission without changing the v1 JSON shape.
+All previously valid nonnegative snapshots remain valid. Deploy the admitting
+consumer before emitting signed coordinates: older validators reject them and
+must not clamp, drop or reinterpret them. No migration or compatibility reader
+is added. The decision is governed by ADR-0064 and
+[GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6662240499).
 An empty completed snapshot is omitted entirely. Operation completion and
 subsequent inspector saves preserve positions by stable card ID. Movement alone
 does not become a save command.

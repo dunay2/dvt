@@ -26,9 +26,7 @@ const NonBlankStringSchema = z
     (value) => value.length > 0 && value === value.trim(),
     'Expected a non-blank string without exterior whitespace.'
   );
-const PositionSchema = z
-  .object({ x: z.number().finite().nonnegative(), y: z.number().finite().nonnegative() })
-  .strict();
+const PositionSchema = z.object({ x: z.number().finite(), y: z.number().finite() }).strict();
 const OperationSchema = z.enum(
   Object.keys(DVT_RELATIONAL_OPERATION_INPUTS) as [
     DvtRelationalOperationKind,

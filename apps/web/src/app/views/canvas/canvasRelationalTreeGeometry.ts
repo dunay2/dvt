@@ -27,7 +27,8 @@ const BOTTOM_PADDING = 36;
 
 export type CanvasRelationalTreeLayout = Readonly<{
   expansionFrame?: Readonly<{ key: string }> &
-    Readonly<Record<'offsets' | 'origins', ReadonlyMap<string, CardPosition>>>;
+    Readonly<{ offsets: ReadonlyMap<string, CardPosition> }>;
+  origin: CardPosition;
   width: number;
   height: number;
   output:
@@ -36,6 +37,20 @@ export type CanvasRelationalTreeLayout = Readonly<{
   nodes: readonly CanvasRelationalTreePlacedNode[];
   edges: readonly CanvasRelationalTreePlacedEdge[];
 }>;
+
+function measureCanvasRelationalBounds(
+  cards: readonly (CardPosition & CanvasRelationalTreeNodeSize)[]
+) {
+  const origin = {
+    x: Math.min(0, ...cards.map((card) => card.x - HORIZONTAL_PADDING)),
+    y: Math.min(0, ...cards.map((card) => card.y - BOTTOM_PADDING)),
+  };
+  return {
+    origin,
+    width: Math.max(...cards.map((card) => card.x + card.width)) + HORIZONTAL_PADDING - origin.x,
+    height: Math.max(...cards.map((card) => card.y + card.height)) + BOTTOM_PADDING - origin.y,
+  };
+}
 
 export function layoutCanvasRelationalTree(
   root: CanvasRelationalTreeNode | null,
@@ -61,7 +76,8 @@ export function layoutCanvasRelationalTree(
     height: NODE_HEIGHT,
     inputLocator: null as string | null,
   };
-  if (first == null) return { width: 512, height: 148, output, nodes: [], edges: [] };
+  if (first == null)
+    return { ...measureCanvasRelationalBounds([output]), output, nodes: [], edges: [] };
   const { depths, rootDepth, rows, columnLeft, sizeFor } = measureCanvasRelationalTree(
     first,
     sizes
@@ -127,8 +143,7 @@ export function layoutCanvasRelationalTree(
   const bounds = [...nodes, output];
   return {
     expansionFrame: expanded?.frame,
-    width: Math.max(...bounds.map((node) => node.x + node.width)) + HORIZONTAL_PADDING,
-    height: Math.max(...bounds.map((node) => node.y + node.height)) + BOTTOM_PADDING,
+    ...measureCanvasRelationalBounds(bounds),
     output,
     nodes,
     edges: projectCanonicalRelationEdges(nodes),

@@ -25,6 +25,61 @@ function relation(
 }
 
 describe('canvas relational-tree graph geometry', () => {
+  it('measures signed bounds without moving authored cards or Output', () => {
+    const positions = new Map([
+      ['orders', { x: -400, y: -200 }],
+      [CANVAS_RELATIONAL_OUTPUT_POSITION_ID, { x: -80, y: -100 }],
+    ]);
+    const before = [...positions];
+    const layout = layoutCanvasRelationalTree(relation('orders'), new Map(), positions);
+    expect(layout.origin.x).toBeLessThan(-400);
+    expect(layout.origin.y).toBeLessThan(-200);
+    for (const card of [...layout.nodes, layout.output!]) {
+      expect(card.x).toBeGreaterThanOrEqual(layout.origin.x);
+      expect(card.y).toBeGreaterThanOrEqual(layout.origin.y);
+      expect(card.x + card.width).toBeLessThanOrEqual(layout.origin.x + layout.width);
+      expect(card.y + card.height).toBeLessThanOrEqual(layout.origin.y + layout.height);
+    }
+    expect([...positions]).toEqual(before);
+  });
+
+  it('keeps detail expansion invertible while crossing the origin', () => {
+    const root = relation('join', [
+      { role: 'left', ordinal: 0, node: relation('orders') },
+      { role: 'right', ordinal: 1, node: relation('clients') },
+    ]);
+    const sizes = new Map([['orders', { width: 420, height: 240 }]]);
+    const compact = layoutCanvasRelationalTree(root);
+    const initial = new Map(
+      compact.nodes.map((node) => [node.node.locator, { x: node.x, y: node.y }])
+    );
+    initial.set(CANVAS_RELATIONAL_OUTPUT_POSITION_ID, {
+      x: compact.output!.x,
+      y: compact.output!.y,
+    });
+    const expanded = layoutCanvasRelationalTree(root, sizes, initial);
+    const before = compact.nodes.find((node) => node.node.locator === 'join')!;
+    const displayed = expanded.nodes.find((node) => node.node.locator === 'join')!;
+    const position = { x: -500, y: -200 };
+    const positions = new Map(initial).set('join', position);
+    const moved = layoutCanvasRelationalTree(root, sizes, positions, [], expanded.expansionFrame);
+    expect(moved.nodes.find((node) => node.node.locator === 'join')).toMatchObject({
+      x: displayed.x + position.x - before.x,
+      y: displayed.y + position.y - before.y,
+    });
+    for (const card of expanded.nodes.filter((node) => node.node.locator !== 'join')) {
+      expect(moved.nodes.find((node) => node.node.locator === card.node.locator)).toMatchObject({
+        x: card.x,
+        y: card.y,
+      });
+    }
+    expect(
+      layoutCanvasRelationalTree(root, new Map(), positions).nodes.find(
+        (node) => node.node.locator === 'join'
+      )
+    ).toMatchObject(position);
+  });
+
   it('reserves zoom detail around restored positions, terminal and detached cards without rewriting them', () => {
     const root = relation('join', [
       { role: 'left', ordinal: 0, node: relation('orders') },

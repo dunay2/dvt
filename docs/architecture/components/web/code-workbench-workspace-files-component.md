@@ -185,7 +185,9 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 Opening an eligible template SQL file does not start selected-model compilation.
 Code and Properties Code share the existing `WorkspaceFileCodeEditor` action:
 **Compile** invokes `AnalyzeSelectedDbtModel`, with visible pending, compiling,
-compiled and failure states. Matching retained query evidence is reused on return.
+compiled and failure states. Matching retained query evidence is reused on return
+and after a full browser reload. The selected-model resolver uses native dbt parse
+and semantic-region analysis; this action does not introduce a Jinja compiler.
 A changed accepted project revision withholds old cards and waits for an explicit
 request. Ordinary SQL without template references and YAML remain passive text.
 
@@ -211,7 +213,17 @@ flowchart LR
 The existing scope/root/selection/revision query key and native analyzer evidence
 remain the sole owners. A SQL AST alone cannot establish equivalence after a
 macro, Jinja, profile or environment change; this cut retains conservative full
-input identities and adds no parser, compiler, cache or persisted status authority.
+input identities and adds no parser, compiler or persisted status authority.
+`dbtSelectedModelAnalysisCache` is the bounded durable backing of the existing
+selected-model query: at most eight ready results / 4 MiB in browser storage,
+without a time-based expiry. It stores evidence, never a compiled boolean, other
+query data, row samples or credentials. Schema, binding, selection and revision
+must match the complete scoped query key on write and recovery. Fresh authorized
+file/project reads and the existing byte/hash projector still admit every card;
+storage cannot grant authority or revive stale evidence. Corrupt, unsupported or
+unavailable storage is a cache miss. The
+[reload rationale](https://github.com/dunay2/dvt/issues/3747#issuecomment-6663362701)
+defines the negative paths and full reload proof.
 Preview remains its existing explicit protected sampling query, sharing native
 compilation evidence. See the [prospective rationale and negative test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6657808041).
 

@@ -253,3 +253,25 @@ symbol records point to these actual consumers; the existing Runs assertion help
 records its Cypress spec as its isolation-test consumer. The extracted fixture
 passes the existing 35 presentation cases; committed browser and full-gate results
 remain separate closeout obligations.
+
+The [signed Model movement correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6662240499)
+addresses a hidden world-origin boundary exposed by free panning. The existing
+gesture/drop projection, signed finite authoring coordinates, invertible detail
+offset and explicit Fit bounds must agree. The previous exact-head full gate was
+interrupted before edits for this correction: architecture 717 and Web unit
+432 files / 3,379 cases passed, while presentation was incomplete. It is not a
+passing full gate; current committed proof remains required before integration.
+
+The [durable Code analysis correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6663362701)
+backs the existing scoped selected-model query with schema-validated ready
+evidence, rather than a persisted compiled flag. A fresh query client restores an
+unchanged result without requesting analysis. Changed scope, binding, selection
+or project digests cannot restore it. The cache is bounded and has no elapsed-time
+expiry; storage failures preserve the live query result. The persistence audit
+passes 82 cases across seven files, including existing instance/layout, saved
+authoring draft, workspace, language and panel preference recovery. Main Canvas
+layout and saved authoring coordinates retain their existing owners. Active Code
+file, contextual workbench visibility and Model session camera remain transient
+presentation state; they are not claims of durable document or analysis state.
+Native browser reload and the final committed gate remain required closeout
+evidence.

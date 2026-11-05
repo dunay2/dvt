@@ -15,118 +15,138 @@ import {
   semanticDocumentFromWrite,
   semanticWrites,
 } from '../../support/relationalWorkbench/persistence';
-import { moveWorkbenchCard } from '../../support/relationalWorkbench/pointer';
+import { moveWorkbenchCard, panWorkbenchViewport } from '../../support/relationalWorkbench/pointer';
 import { stubWorkbenchScenario } from '../../support/relationalWorkbench/scenario';
 
 describe('Completed relational layout persistence', () => {
-  it('keeps moved cards through Apply, reload and a later canonical root insertion', () => {
-    stubWorkbenchScenario('saved-join');
-    cy.viewport(1200, 680);
-    visitWorkbenchCanvas();
-    openWorkbenchModel();
-    verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
-    cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
-    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
-    const join = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
-    let relationId = '';
-    let moved = { x: 0, y: 0 };
-    let persistedPosition: unknown;
-    let rootId = '';
-    moveWorkbenchCard(join, 40, 48);
-    cy.get(join).then(($card) => {
-      const container = $card[0]?.parentElement;
-      if (container == null) throw new Error('Expected the moved card position container.');
-      relationId = $card.attr('data-relation-id')!;
-      moved = {
-        x: parseFloat(container.style.left),
-        y: parseFloat(container.style.top),
-      };
-    });
-    cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
-
-    for (const iteration of [1, 2]) {
-      // Each new root must supersede the previous root; retained layout has no terminal authority.
-      cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
-      workbenchOperation('filter').click();
-      if (iteration === 1) cy.get(join).closest('li').as('producer');
-      else
-        cy.then(() =>
-          cy
-            .get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`)
-            .closest('li')
-            .as('producer')
-        );
-      cy.get('[data-pending-operation="true"]').last().as('filter');
-      connectWorkbenchProducer('@producer', '@filter');
-      cy.get('[data-slot="canvas-relational-operator-form"] input').type('active');
-      cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
-      connectWorkbenchProducer(
-        '@filter',
-        '[data-slot="canvas-relational-output-input-port"]',
-        null
-      );
-      cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
-      cy.wrap(null).should(() => {
-        const writes = semanticWrites('join-transform');
-        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(iteration);
-        expect(writes).to.have.length(iteration);
-        const { draft } = writes.at(-1)!.body as { draft: WorkspaceGraphAuthoringDraft };
-        const retained = draft.nodes.find((node) => node.id === 'join-transform')?.metadata
-          ?.relationalAuthoringDraft;
-        expect(retained).to.deep.equal({
-          version: 'v1',
-          sources: [],
-          operations: [],
-          positions: (retained as { positions: unknown }).positions,
-        });
-        const position = (retained as { positions: Record<string, { x: number; y: number }> })
-          .positions[relationId]!;
-        expect(position.x).to.be.closeTo(moved.x, 0.001);
-        expect(position.y).to.be.closeTo(moved.y, 0.001);
-        if (iteration === 1) persistedPosition = position;
-        else expect(position).to.deep.equal(persistedPosition);
-        expect(
-          Object.keys((retained as { positions: Record<string, unknown> }).positions)
-        ).to.deep.equal([relationId]);
-        const { index } = deriveSubstraitSchemas(
-          decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(writes.at(-1)!))
-        );
-        expect(
-          [...index.relations.values()].filter((entry) => entry.relation.relType.case === 'filter')
-        ).to.have.length(iteration);
-        rootId = index.rootId;
-      });
-      cy.get('[data-slot="canvas-model-tab-close"]').click();
+  for (const signed of [false, true]) {
+    it(`keeps ${signed ? 'signed' : 'nonnegative'} moved cards through Apply, reload and a later canonical root insertion`, () => {
+      stubWorkbenchScenario('saved-join');
+      cy.viewport(1200, 680);
       visitWorkbenchCanvas();
       openWorkbenchModel();
-      cy.get(join).should(($card) => {
+      verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+      cy.get('[data-slot="canvas-model-save-status"]').should('contain.text', 'Synced');
+      cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+      const join = '[data-slot="canvas-relational-tree-node"][data-operator="join"]';
+      let relationId = '';
+      let moved = { x: 0, y: 0 };
+      let persistedPosition: unknown;
+      let rootId = '';
+      if (signed) {
+        panWorkbenchViewport('[data-slot="canvas-relational-tree-viewport"]', 240, 160);
+        cy.get(join).then(($card) => {
+          const host = $card[0]!.parentElement!;
+          const tree = Cypress.$('[data-slot="canvas-relational-tree"]')[0]!;
+          const zoom = Number(tree.style.zoom);
+          moveWorkbenchCard(
+            join,
+            -(parseFloat(host.style.left) + 80) * zoom,
+            -(parseFloat(host.style.top) + 60) * zoom
+          );
+        });
+      } else moveWorkbenchCard(join, 40, 48);
+      cy.get(join).then(($card) => {
         const container = $card[0]?.parentElement;
-        if (container == null) throw new Error('Expected the restored card position container.');
-        expect(parseFloat(container.style.left)).to.be.closeTo(moved.x, 1);
-        expect(parseFloat(container.style.top)).to.be.closeTo(moved.y, 1);
+        if (container == null) throw new Error('Expected the moved card position container.');
+        relationId = $card.attr('data-relation-id')!;
+        moved = {
+          x: parseFloat(container.style.left),
+          y: parseFloat(container.style.top),
+        };
+        if (signed) {
+          expect(moved.x).to.be.lessThan(0);
+          expect(moved.y).to.be.lessThan(0);
+        }
       });
-      cy.get('[data-slot="canvas-relational-tree-node"][data-operator="filter"]').should(
-        'have.length',
-        iteration
-      );
-      cy.get('[data-slot="canvas-relational-output-edge"]').should('exist');
-      cy.get('[data-slot="canvas-relational-tree-output"]').should(($output) => {
-        const output = $output[0];
-        if (output === undefined) throw new Error('Expected the relational Output card.');
-        const root = output.ownerDocument.querySelector(
-          `[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`
+      cy.then(() => expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0));
+
+      for (const iteration of [1, 2]) {
+        // Each new root must supersede the previous root; retained layout has no terminal authority.
+        cy.get('[data-slot="canvas-relational-output-input-port"]').focus().type('{del}');
+        workbenchOperation('filter').click();
+        if (iteration === 1) cy.get(join).closest('li').as('producer');
+        else
+          cy.then(() =>
+            cy
+              .get(`[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`)
+              .closest('li')
+              .as('producer')
+          );
+        cy.get('[data-pending-operation="true"]').last().as('filter');
+        connectWorkbenchProducer('@producer', '@filter');
+        cy.get('[data-slot="canvas-relational-operator-form"] input').type('active');
+        cy.get('[data-slot="canvas-relational-operator-form"] button[type="submit"]').click();
+        connectWorkbenchProducer(
+          '@filter',
+          '[data-slot="canvas-relational-output-input-port"]',
+          null
         );
-        if (root === null) throw new Error('Expected the current canonical root card.');
-        expect(output.getBoundingClientRect().left).to.be.greaterThan(
-          root.getBoundingClientRect().right
+        cy.get('[data-slot="canvas-relational-tree-apply"]').should('be.enabled').click();
+        cy.wrap(null).should(() => {
+          const writes = semanticWrites('join-transform');
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(iteration);
+          expect(writes).to.have.length(iteration);
+          const { draft } = writes.at(-1)!.body as { draft: WorkspaceGraphAuthoringDraft };
+          const retained = draft.nodes.find((node) => node.id === 'join-transform')?.metadata
+            ?.relationalAuthoringDraft;
+          expect(retained).to.deep.equal({
+            version: 'v1',
+            sources: [],
+            operations: [],
+            positions: (retained as { positions: unknown }).positions,
+          });
+          const position = (retained as { positions: Record<string, { x: number; y: number }> })
+            .positions[relationId]!;
+          expect(position.x).to.be.closeTo(moved.x, 0.001);
+          expect(position.y).to.be.closeTo(moved.y, 0.001);
+          if (iteration === 1) persistedPosition = position;
+          else expect(position).to.deep.equal(persistedPosition);
+          expect(
+            Object.keys((retained as { positions: Record<string, unknown> }).positions)
+          ).to.deep.equal([relationId]);
+          const { index } = deriveSubstraitSchemas(
+            decodeDvtSubstraitSemanticDocument(semanticDocumentFromWrite(writes.at(-1)!))
+          );
+          expect(
+            [...index.relations.values()].filter(
+              (entry) => entry.relation.relType.case === 'filter'
+            )
+          ).to.have.length(iteration);
+          rootId = index.rootId;
+        });
+        cy.get('[data-slot="canvas-model-tab-close"]').click();
+        visitWorkbenchCanvas();
+        openWorkbenchModel();
+        cy.get(join).should(($card) => {
+          const container = $card[0]?.parentElement;
+          if (container == null) throw new Error('Expected the restored card position container.');
+          expect(parseFloat(container.style.left)).to.be.closeTo(moved.x, 1);
+          expect(parseFloat(container.style.top)).to.be.closeTo(moved.y, 1);
+        });
+        cy.get('[data-slot="canvas-relational-tree-node"][data-operator="filter"]').should(
+          'have.length',
+          iteration
         );
-      });
-      cy.then(() => {
-        expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(iteration);
-        expect(getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/)).to.have.length(0);
-      });
-    }
-    verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
-    cy.screenshot('layout-retained-canonical-root', { capture: 'viewport' });
-  });
+        cy.get('[data-slot="canvas-relational-output-edge"]').should('exist');
+        cy.get('[data-slot="canvas-relational-tree-output"]').should(($output) => {
+          const output = $output[0];
+          if (output === undefined) throw new Error('Expected the relational Output card.');
+          const root = output.ownerDocument.querySelector(
+            `[data-slot="canvas-relational-tree-node"][data-relation-id="${rootId}"]`
+          );
+          if (root === null) throw new Error('Expected the current canonical root card.');
+          expect(output.getBoundingClientRect().left).to.be.greaterThan(
+            root.getBoundingClientRect().right
+          );
+        });
+        cy.then(() => {
+          expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(iteration);
+          expect(getE2eApiCalls(/\/(data-sample|preview|runs|execute)(\/|$)/)).to.have.length(0);
+        });
+      }
+      verifyCompleteTreeFit('[data-slot="canvas-relational-tree-viewport"]');
+      cy.screenshot('layout-retained-canonical-root', { capture: 'viewport' });
+    });
+  }
 });

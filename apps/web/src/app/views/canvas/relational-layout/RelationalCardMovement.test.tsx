@@ -164,13 +164,31 @@ describe('Relational card movement', () => {
     expect(select).toHaveBeenCalledExactlyOnceWith('employee');
   });
 
-  it('cancels lost capture and never moves a card outside the drawable area', () => {
+  it('crosses the world origin and restores the original position on lost capture', () => {
     const before = position();
     pointer('pointerdown', 100, 100);
     pointer('pointermove', -1000, -1000);
-    expect(position()).toEqual({ x: 0, y: 0 });
+    expect(position()).toEqual({ x: before.x - 2200, y: before.y - 2200 });
     pointer('lostpointercapture', -1000, -1000);
     expect(position()).toEqual(before);
+  });
+
+  it('moves left and above the world origin with the same keyboard policy', () => {
+    const before = position();
+    for (const key of ['ArrowLeft', 'ArrowLeft', 'ArrowUp', 'ArrowUp']) {
+      act(() =>
+        card().dispatchEvent(
+          new KeyboardEvent('keydown', {
+            bubbles: true,
+            altKey: true,
+            shiftKey: true,
+            key,
+          })
+        )
+      );
+    }
+    expect(position()).toEqual({ x: before.x - 80, y: before.y - 80 });
+    expect(select).not.toHaveBeenCalled();
   });
 
   it('keeps a simple click and supports keyboard movement without semantic edits', () => {
