@@ -225,3 +225,22 @@ compilation retains its cold-process cost; the measured warm improvement applies
 only to the admitted static subset. Existing React-act/chart-dimension/Vite warnings remain
 disclosed. No new debt, placeholder, fake adapter, bypassed hook or relaxed rule
 was introduced.
+
+The explicit Code compilation extension is prospectively recorded in
+[GH-3747](https://github.com/dunay2/dvt/issues/3747#issuecomment-6657808041).
+The existing selected-model query now runs on the shared Compile action; matching
+revision-bound results remain reusable on navigation. Pending, compiling,
+recompiling and compiled states describe actual query work. Full input identities
+remain conservative; SQL AST equality does not replace native macro/Jinja/profile
+invalidation. Plain SQL and YAML remain passive text. Focused evidence before
+closeout includes 50 presentation cases and 71 unit cases; subsequent committed
+results and the full gate must be recorded on the issue/PR.
+
+Real application inspection also exposed typed file-model references being treated
+as graph-generated paths. The [bounded classification correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6658545036)
+uses the existing contract schema, preserving genuine graph ownership and malformed
+metadata protection. In the actual shared application, the model moves from Pending
+compilation to Compiled on the explicit action and displays both verified inline
+references. Plain SQL stays passive; returning to the model retains Compiled. A
+clipped visual capture succeeds. This working-tree proof does not replace the
+committed native gate or integration evidence.

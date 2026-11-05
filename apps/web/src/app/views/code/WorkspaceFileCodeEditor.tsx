@@ -16,6 +16,7 @@ import { useWorkspaceFileContentQuery } from '../../queries/workspaceQueries';
 import { useWorkspaceFileContentCommandPort } from '../../services/AppServicesContext';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { cn } from '../../components/ui/utils';
+import { Button } from '../../components/ui/button';
 import { routeWorkbenchPanelHeaderClassName } from '../../components/workbench/RouteWorkbenchFrame';
 import { CodePreviewEmptyStateView, CodePreviewErrorStateView } from './CodeStateViews';
 import { CodeWorkingTreeNavigationGuard } from './CodeWorkingTreeNavigationGuard';
@@ -137,7 +138,7 @@ export const WorkspaceFileCodeEditor = forwardRef<
   const inlineState: CodeInlineReferenceState =
     context.status === 'checking' || context.status === 'unavailable'
       ? { kind: context.status }
-      : references;
+      : references.state;
   const inlineReferences = useMemo(
     () =>
       inlineState.kind === 'ready' ? { ...inlineState.references, copy: inlineCopy } : undefined,
@@ -169,17 +170,24 @@ export const WorkspaceFileCodeEditor = forwardRef<
     [clearReference, posture.kind, workingTreeSync.updateValue]
   );
   const inlineMessage =
-    inlineState.kind === 'checking'
-      ? inlineCopy.checkingMessage
-      : inlineState.kind === 'unavailable'
-        ? inlineCopy.unavailableMessage
-        : inlineState.kind === 'text-only'
-          ? inlineState.reason === 'dirty-buffer'
-            ? inlineCopy.dirtyMessage
-            : inlineState.reason === 'no-supported-references'
-              ? inlineCopy.unsupportedMessage
-              : inlineCopy.unavailableMessage
-          : undefined;
+    inlineState.kind === 'text-only'
+      ? inlineState.reason === 'dirty-buffer'
+        ? inlineCopy.dirtyMessage
+        : inlineState.reason === 'no-supported-references'
+          ? inlineCopy.unsupportedMessage
+          : inlineCopy.unavailableMessage
+      : {
+          inactive: undefined,
+          pending: inlineCopy.pendingCompilationMessage,
+          checking:
+            context.status === 'checking'
+              ? inlineCopy.contextCheckingMessage
+              : references.isRecompiling
+                ? inlineCopy.recompilingMessage
+                : inlineCopy.compilingMessage,
+          ready: inlineCopy.compiledMessage,
+          unavailable: inlineCopy.unavailableMessage,
+        }[inlineState.kind];
   const hasReadOnlyStatus =
     posture.kind !== 'editable' &&
     posture.kind !== 'graph_owned_read_only' &&
@@ -301,6 +309,18 @@ export const WorkspaceFileCodeEditor = forwardRef<
       />
       <div className={routeWorkbenchPanelHeaderClassName}>
         <code className="min-w-0 flex-1 truncate text-(--text-secondary)">{path}</code>
+        {context.status !== 'ready' ? null : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            data-slot="code-compile-model"
+            disabled={!references.canCompile}
+            onClick={references.compile}
+          >
+            {inlineCopy.compileLabel}
+          </Button>
+        )}
         {headerActions}
       </div>
       {inlineMessage == null || hasReadOnlyStatus ? null : (

@@ -14,6 +14,47 @@ import {
 } from './codeViewFileSelection';
 
 describe('codeViewFileSelection', () => {
+  it.each([false, true])(
+    'exempts only valid file-model references from graph file ownership (malformed=%s)',
+    (malformed) => {
+      const reference = {
+        schemaVersion: 'workspace-dbt-model-reference.v1',
+        canvasId: 'file-owner',
+        uniqueId: 'model.demo.clientes',
+        relationId: 'reference-relation',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          provider: 'postgres',
+          connectionId: 'warehouse',
+        },
+        fields: [{ fieldId: 'client-field', name: 'client_id', dataType: 'text', nullable: true }],
+      };
+      const paths = deriveCodeGraphFilePaths({
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
+        nodes: [
+          {
+            id: 'placed-model',
+            name: 'clientes',
+            type: 'MODEL',
+            package: 'dbt',
+            path: 'models/clientes.sql',
+            tags: [],
+            status: 'idle',
+            dependencies: [],
+            metadata: { dbtModelReference: malformed ? { ...reference, fields: [] } : reference },
+          },
+        ],
+        edges: [],
+      });
+      if (malformed) {
+        expect(paths.has('models/clientes.sql')).toBe(true);
+        expect(paths.has('dbt_project.yml')).toBe(true);
+      } else {
+        expect([...paths]).toEqual([]);
+      }
+    }
+  );
+
   it.each([
     ['.', 'models/orders.sql', 'models/orders.sql'],
     ['analytics/dbt', 'models/orders.sql', 'analytics/dbt/models/orders.sql'],

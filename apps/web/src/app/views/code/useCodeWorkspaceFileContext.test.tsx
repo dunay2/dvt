@@ -196,10 +196,12 @@ describe('Code workspace file context through normal Code entry', () => {
     editableFile = false,
     directFile = false,
     dbtProject,
+    compileAfterOpen = false,
   }: Readonly<{
     editableFile?: boolean;
     directFile?: boolean;
     dbtProject?: DbtProjectGraphProjection;
+    compileAfterOpen?: boolean;
   }> = {}): Promise<void> => {
     const ui = (
       <AppServicesProvider
@@ -274,6 +276,16 @@ describe('Code workspace file context through normal Code entry', () => {
       mounted = await withTestQueryClient(ui, client);
       container = mounted.container;
     }
+    if (compileAfterOpen) {
+      await waitForReactQuery(
+        () =>
+          container.querySelector<HTMLButtonElement>('[data-slot="code-compile-model"]')
+            ?.disabled === false
+      );
+      await act(async () =>
+        container.querySelector<HTMLButtonElement>('[data-slot="code-compile-model"]')?.click()
+      );
+    }
   };
   const waitFor = waitForReactQuery;
   afterEach(async () => {
@@ -293,6 +305,16 @@ describe('Code workspace file context through normal Code entry', () => {
 
   it('inspects normal project Code read-only without saving or reconciling', async () => {
     await render();
+    await waitFor(() => container.querySelector('[data-testid="code-file-viewer"]') !== null);
+    expect(analysis).not.toHaveBeenCalled();
+    await waitFor(
+      () =>
+        container.querySelector<HTMLButtonElement>('[data-slot="code-compile-model"]')?.disabled ===
+        false
+    );
+    await act(async () =>
+      container.querySelector<HTMLButtonElement>('[data-slot="code-compile-model"]')?.click()
+    );
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     expect(graph).toHaveBeenCalledWith(fixture.project.authorityBinding);
     expect(analysis).toHaveBeenCalledWith(fixture.project.authorityBinding, 'model.demo.ventas');
@@ -311,6 +333,83 @@ describe('Code workspace file context through normal Code entry', () => {
     expect(graph).toHaveBeenCalledTimes(1);
     expect(analysis).toHaveBeenCalledTimes(1);
     expect(save).not.toHaveBeenCalled();
+  });
+
+  it('reuses compiled evidence when returning to a file without compiling on navigation', async () => {
+    const original = fixture.file;
+    await render({ directFile: true, compileAfterOpen: true });
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    fixture.file = {
+      ...original,
+      path: 'inline_code_demo/models/other.sql',
+      name: 'other.sql',
+      content: 'select 1',
+      contentSha256: sha256HexUtf8('select 1'),
+    };
+    await render({ directFile: true });
+    await waitFor(() => container.querySelector('pre')?.textContent === 'select 1');
+    expect(analysis).toHaveBeenCalledTimes(1);
+    fixture.file = original;
+    await render({ directFile: true });
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    expect(container.textContent).toContain(
+      resolveCodeInlineReferenceCopy('en-US').compiledMessage
+    );
+    expect(analysis).toHaveBeenCalledTimes(1);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('shows compilation progress, prevents duplicate clicks and retries only on request', async () => {
+    let rejectCompilation: ((error: Error) => void) | undefined;
+    analysis.mockImplementationOnce(
+      () =>
+        new Promise<DbtSelectedModelAnalysis>((_resolve, reject) => {
+          rejectCompilation = reject;
+        })
+    );
+    const copy = resolveCodeInlineReferenceCopy('en-US');
+    await render({ directFile: true, compileAfterOpen: true });
+    await waitFor(() => container.textContent?.includes(copy.compilingMessage) === true);
+    const button = container.querySelector<HTMLButtonElement>('[data-slot="code-compile-model"]');
+    expect(button?.disabled).toBe(true);
+    await act(async () => button?.click());
+    expect(analysis).toHaveBeenCalledTimes(1);
+    await act(async () => rejectCompilation?.(new Error('Native compilation failed')));
+    await waitFor(() => container.textContent?.includes(copy.unavailableMessage) === true);
+    expect(button?.disabled).toBe(false);
+    expect(analysis).toHaveBeenCalledTimes(1);
+    await act(async () => button?.click());
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    expect(analysis).toHaveBeenCalledTimes(2);
+  });
+
+  it('requires explicit compilation after a dependency revision changes without changing this file', async () => {
+    await render({ directFile: true, compileAfterOpen: true });
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    fixture.project = DbtProjectGraphProjectionSchema.parse({
+      ...fixture.project,
+      analysisSha256: 'c'.repeat(64),
+      projectRevision: { ...fixture.project.projectRevision, contentSetSha256: 'd'.repeat(64) },
+    });
+    fixture.analysis = DbtSelectedModelAnalysisSchema.parse({
+      ...fixture.analysis,
+      analysisSha256: fixture.project.analysisSha256,
+      projectRevision: fixture.project.projectRevision,
+    });
+    await act(async () =>
+      client.refetchQueries({ queryKey: queryKeys.workspace.dbtProjectGraphRoot() })
+    );
+    await waitFor(
+      () =>
+        container.textContent?.includes(
+          resolveCodeInlineReferenceCopy('en-US').pendingCompilationMessage
+        ) === true
+    );
+    expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
+    expect(analysis).toHaveBeenCalledTimes(1);
+    await render({ directFile: true, compileAfterOpen: true });
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    expect(analysis).toHaveBeenCalledTimes(2);
   });
 
   it.each([
@@ -358,7 +457,7 @@ describe('Code workspace file context through normal Code entry', () => {
 
   it('keeps SQL eligibility case insensitive for a server-selected model', async () => {
     fixture.file.language = 'SQL';
-    await render();
+    await render({ compileAfterOpen: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     expect(graph).toHaveBeenCalledTimes(1);
     expect(analysis).toHaveBeenCalledTimes(1);
@@ -378,7 +477,7 @@ describe('Code workspace file context through normal Code entry', () => {
     });
     if (mode === 'late') graph.mockImplementationOnce(() => pending);
     try {
-      await render({ directFile: true });
+      await render({ directFile: true, compileAfterOpen: mode === 'cached' });
       await waitFor(() => graph.mock.calls.length === 1);
       if (mode === 'cached')
         await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
@@ -423,15 +522,16 @@ describe('Code workspace file context through normal Code entry', () => {
     graph.mockImplementationOnce(() => pending);
     try {
       await render();
-      await waitFor(() => container.textContent?.includes(copy.checkingMessage) === true);
+      await waitFor(() => container.textContent?.includes(copy.contextCheckingMessage) === true);
       const band = container.querySelector('[data-slot="code-working-tree-status"]');
       const viewer = container.querySelector('[data-testid="code-file-viewer"]');
-      expect(band?.textContent).toContain(copy.checkingMessage);
+      expect(band?.textContent).toContain(copy.contextCheckingMessage);
       expect(band?.getAttribute('data-phase')).toBe('read_only');
       await act(async () => finishGraph?.(fixture.project));
+      await render({ compileAfterOpen: true });
       await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
       expect(container.querySelector('[data-slot="code-working-tree-status"]')).toBe(band);
-      expect(band?.textContent).not.toContain(copy.checkingMessage);
+      expect(band?.textContent).toContain(copy.compiledMessage);
       graph.mockRejectedValueOnce(new Error('Project analysis is unavailable.'));
       await act(async () =>
         client.refetchQueries({ queryKey: queryKeys.workspace.dbtProjectGraphRoot() })
@@ -448,7 +548,7 @@ describe('Code workspace file context through normal Code entry', () => {
 
   it('withholds cached authority and definition while the file read is being revalidated', async () => {
     const inlineCopy = resolveCodeInlineReferenceCopy('en-US');
-    await render();
+    await render({ compileAfterOpen: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     const viewer = container.querySelector('[data-testid="code-file-viewer"]');
     const original = fixture.file.content;
@@ -483,7 +583,7 @@ describe('Code workspace file context through normal Code entry', () => {
       });
       await waitFor(() => graph.mock.calls.length === 2);
       await waitFor(() => container.querySelectorAll('[data-reference]').length === 0);
-      expect(container.textContent).toContain(inlineCopy.checkingMessage);
+      expect(container.textContent).toContain(inlineCopy.contextCheckingMessage);
       await act(async () => {
         fileRefresh = client.refetchQueries({
           queryKey: ['workspace', 'file-content'],
@@ -494,7 +594,7 @@ describe('Code workspace file context through normal Code entry', () => {
         finishGraph?.(fixture.project);
         await graphRefresh;
       });
-      await waitFor(() => !container.textContent?.includes(inlineCopy.checkingMessage));
+      await waitFor(() => !container.textContent?.includes(inlineCopy.contextCheckingMessage));
       expect(container.querySelectorAll('[data-reference]')).toHaveLength(0);
       expect(container.querySelector('section[aria-label="clientes"]')).toBeNull();
       expect(graph).toHaveBeenCalledTimes(2);
@@ -539,12 +639,52 @@ describe('Code workspace file context through normal Code entry', () => {
 
   it('inspects server-authorized dbt references without granting editing when parent authority is missing', async () => {
     parentMissing = true;
-    await render();
+    await render({ compileAfterOpen: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     expect(container.querySelector('textarea')).toBeNull();
     expect(container.querySelector('pre')?.textContent).toBe(fixture.file.content);
     expect(save).not.toHaveBeenCalled();
     expect(container.querySelector('[data-phase="read_only"]')).not.toBeNull();
+  });
+
+  it('compiles a server-authorized file reference without claiming its SQL as graph-generated', async () => {
+    graphSnapshot = Promise.resolve({
+      authoringAuthority: mockGraphDraftAuthoringAuthority,
+      nodes: [
+        {
+          id: 'placed-model',
+          name: 'ventas',
+          type: 'MODEL',
+          package: 'dvt',
+          path: fixture.file.path,
+          tags: [],
+          status: 'idle',
+          dependencies: [],
+          metadata: {
+            dbtModelReference: {
+              schemaVersion: 'workspace-dbt-model-reference.v1',
+              canvasId: fixture.project.authorityBinding.canvasId,
+              uniqueId: 'model.demo.ventas',
+              relationId: 'reference-relation',
+              connectionRef: {
+                schemaVersion: 'connection-ref.v1',
+                provider: 'postgres',
+                connectionId: 'warehouse',
+              },
+              fields: [
+                { fieldId: 'client-field', name: 'client_id', dataType: 'text', nullable: true },
+              ],
+            },
+          },
+        },
+      ],
+      edges: [],
+    });
+    await render({ compileAfterOpen: true });
+    await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
+    expect(analysis).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('textarea')).toBeNull();
+    expect(save).not.toHaveBeenCalled();
   });
 
   it('waits for a pending graph ownership read before allowing file context queries', async () => {
@@ -580,7 +720,7 @@ describe('Code workspace file context through normal Code entry', () => {
   });
 
   it('hides dirty references and restores a saved revision in the same editor through existing reconciliation', async () => {
-    await render({ editableFile: true });
+    await render({ editableFile: true, compileAfterOpen: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     const editor = container.querySelector('textarea')!;
     const next = `${fixture.file.content}\n-- edited`;
@@ -595,6 +735,14 @@ describe('Code workspace file context through normal Code entry', () => {
     await act(async () => {
       await handle.current?.flush();
     });
+    await waitFor(
+      () =>
+        container.textContent?.includes(
+          resolveCodeInlineReferenceCopy('en-US').pendingCompilationMessage
+        ) === true
+    );
+    expect(analysis).toHaveBeenCalledTimes(1);
+    await render({ editableFile: true, compileAfterOpen: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     expect(container.querySelector('textarea')).toBe(editor);
     expect(editor.value).toBe(next);
@@ -665,7 +813,7 @@ describe('Code workspace file context through normal Code entry', () => {
   );
 
   it('keeps cards hidden and exposes reconciliation failure after bytes persist', async () => {
-    await render({ editableFile: true });
+    await render({ editableFile: true, compileAfterOpen: true });
     await waitFor(() => container.querySelectorAll('[data-reference]').length === 2);
     graph.mockRejectedValue(new Error('analysis offline'));
     const editor = container.querySelector('textarea')!;

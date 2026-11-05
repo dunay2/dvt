@@ -108,3 +108,11 @@ historical; the current persisted authority is the active root reference.
 Git lifecycle and graph-to-dbt publication are separate governed intents. This
 location migration does not remove their authority checks or claim those features
 are delivered. These are explicit design boundaries, not accepted hidden debt.
+
+Explicit Code compilation projects the existing scoped, revision-bound query
+evidence. It does not add a persisted status authority or promise that private
+cache contents survive an API restart. A changed project/configuration context
+requires a new explicit request; old and late evidence stays withheld. SQL AST
+equivalence alone cannot validate Jinja, macro, profile or environment changes.
+Valid typed file-model references are excluded from graph-generated path ownership;
+malformed metadata and actual graph-owned files retain their existing guards.

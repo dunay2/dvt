@@ -2,7 +2,7 @@
 title: Code Workbench Workspace Files Component
 status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-11-04
+last_reviewed: 2026-11-05
 planning_type: architecture
 ---
 
@@ -14,7 +14,10 @@ Properties Code for a placed dbt model reference uses the existing file-authorit
 contribution and `WorkspaceFileCodeEditor`, including its inline reference cards.
 Placement does not make the referenced SQL graph-owned. Such references are
 excluded from graph-owned path discovery; actual graph-generated paths retain
-their existing conflict guard. A reference path is already workspace-qualified,
+their existing conflict guard. The classifier validates the existing typed model
+reference schema; malformed metadata retains graph-owned protection. It does not
+infer ownership from a shared SQL path. See the [real-admission correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6658545036).
+A reference path is already workspace-qualified,
 whereas a file-graph node path is project-relative and uses the explicit root.
 
 ```mermaid
@@ -177,6 +180,34 @@ Generated model paths reuse the dbt plugin's normalizeDbtIdentifier policy.
 
 ## Inline Model References
 
+### Explicit compilation
+
+Opening an eligible template SQL file does not start selected-model compilation.
+Code and Properties Code share the existing `WorkspaceFileCodeEditor` action:
+**Compile** invokes `AnalyzeSelectedDbtModel`, with visible pending, compiling,
+compiled and failure states. Matching retained query evidence is reused on return.
+A changed accepted project revision withholds old cards and waits for an explicit
+request. Ordinary SQL without template references and YAML remain passive text.
+
+```mermaid
+flowchart LR
+  Open[Accepted Code file] --> Evidence{Matching retained evidence?}
+  Evidence -->|Yes| Compiled[Compiled and verified cards]
+  Evidence -->|No| Pending[Pending compilation]
+  Pending --> Action[Explicit Compile]
+  Action --> Query[Existing selected-model query]
+  Query --> Busy[Visible compilation progress]
+  Busy --> Compiled
+  Revision[Changed project revision] --> Pending
+```
+
+The existing scope/root/selection/revision query key and native analyzer evidence
+remain the sole owners. A SQL AST alone cannot establish equivalence after a
+macro, Jinja, profile or environment change; this cut retains conservative full
+input identities and adds no parser, compiler, cache or persisted status authority.
+Preview remains its existing explicit protected sampling query, sharing native
+compilation evidence. See the [prospective rationale and negative test matrix](https://github.com/dunay2/dvt/issues/3747#issuecomment-6657808041).
+
 ### Project Models In Elements
 
 Elements presents registered definitions by category, excluding placed source
@@ -268,9 +299,9 @@ directory names.
 
 ### Inspection Eligibility And Stable Status
 
-The shared predicate in codeInlineReferences admits automatic reference work only
-for accepted SQL content containing a Jinja opening (`{{` or `{%`). Both
-file-context and selected-model hooks use it. Plain or empty SQL, YAML, JSON and
+The shared predicate in codeInlineReferences admits project-context discovery and
+the explicit Compile action only for accepted SQL content containing a Jinja
+opening (`{{` or `{%`). Selected-model analysis does not run on mount. Plain or empty SQL, YAML, JSON and
 Markdown remain readable without either inline reference query, cards or a
 reference-verification message. Custom model paths and case-insensitive SQL
 language names retain their existing scope, revision, hash and range checks.
@@ -281,41 +312,17 @@ dependency comments. Only the existing dbt analysis can authorize a supported
 region. Canvas, lineage, Preview and Run retain their own analysis behavior;
 plain SQL is not a claim of dependency absence or SQL validity.
 
-The previous flow started project analysis for every accepted file and inserted
-or removed a checking paragraph above Monaco:
-
-```mermaid
-flowchart LR
-  F[Accepted file] --> B[Authorized binding]
-  B --> G[Project query for every file SHA]
-  G --> P[Conditional status paragraph]
-  P --> J[Editor moves when the paragraph disappears]
-```
-
-The admitted flow separates eligibility from authority and uses the existing
-status band:
-
-```mermaid
-flowchart LR
-  F[Accepted file] --> E[SQL with a Jinja opening]
-  E -->|No| V[Read-only content without inline reference queries]
-  E -->|Yes| G[Existing revision-bound reference queries]
-  V --> S[Existing stable status band]
-  G --> S
-  P[Previously accepted pending edit] --> R[Explicit authorized reconciliation]
-  R --> G
-```
-
-Read-only checking, unavailable and ready messages share CodeWorkingTreeStatus;
+The flow separates eligibility from authority and uses the existing status band.
+Read-only pending, compiling, unavailable and ready messages share CodeWorkingTreeStatus;
 they do not create an extra layout row. Its existing global text utilities keep
 the band stable at narrow widths while retaining the full accessible message and
 title. File loading must not relabel old content as the newly requested file.
 
-Eligibility disables only automatic reference work. The accepted binding and
+Eligibility bounds context discovery and explicit compilation. The accepted binding and
 explicit reconciliation callback remain available for recovery of a previously
 accepted edit, including YAML or plain SQL. Navigating to noncandidate content
 must ignore late or cached reference evidence even when cache keys share a
-content hash; returning to candidate SQL retains revalidation.
+content hash; returning to candidate SQL reuses only matching retained analysis.
 
 This correction removes unused analysis and presentation movement. It introduces
 no parser, timer, stylesheet, cache or project-admission workflow. Global analysis

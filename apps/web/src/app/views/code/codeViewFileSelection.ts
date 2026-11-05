@@ -1,5 +1,6 @@
 /** Owned concern: project workspace file trees into Code route file-selection state. */
 import { normalizeDbtIdentifier } from '../../plugins/dbt/dbtIdentifier';
+import { WorkspaceDbtModelReferenceSchema } from '@dvt/contracts';
 import type { WorkspaceFileEntry, WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { DbtNode } from '../../types/dbt';
 
@@ -74,9 +75,14 @@ export function deriveCodeGraphFilePaths(
     return paths;
   }
 
-  const hasDbtNodes = graph.nodes.some(isDbtNode);
+  const ownedNodes = graph.nodes.filter(
+    (node) =>
+      !WorkspaceDbtModelReferenceSchema.safeParse(node.metadata?.['dbtModelReference']).success
+  );
+  if (ownedNodes.length === 0) return paths;
+  const hasDbtNodes = ownedNodes.some(isDbtNode);
 
-  for (const node of graph.nodes) {
+  for (const node of ownedNodes) {
     addGraphNodeFilePath(paths, node);
   }
 
