@@ -14,7 +14,7 @@ export function useRelationalViewportCamera(
   contentRef: RefObject<HTMLDivElement>,
   zoom: number
 ) {
-  const { autoFit, camera } = useRelationalLayout();
+  const { autoFit, camera, contentSize } = useRelationalLayout();
   const projectCamera = useCallback(
     (scale: number) => {
       if (contentRef.current != null)
@@ -43,6 +43,29 @@ export function useRelationalViewportCamera(
       return { x: (point.clientX - bounds.left) / zoom, y: (point.clientY - bounds.top) / zoom };
     },
     [contentRef, viewportRef, zoom]
+  );
+
+  const center = useCallback(
+    (nextZoom: number) => {
+      const viewport = viewportRef.current;
+      const content = contentRef.current;
+      if (viewport == null || content == null) return;
+      const padding =
+        Number.parseFloat(
+          viewport.ownerDocument.defaultView?.getComputedStyle(viewport).paddingLeft ?? '0'
+        ) || 0;
+      const x =
+        (viewport.clientWidth - (contentSize.current?.width ?? content.offsetWidth) * nextZoom) /
+          2 -
+        padding -
+        (contentSize.current?.origin.x ?? 0) * nextZoom;
+      panBy(
+        x - camera.current.x,
+        -(contentSize.current?.origin.y ?? 0) * nextZoom - camera.current.y,
+        nextZoom
+      );
+    },
+    [camera, contentRef, contentSize, panBy, viewportRef]
   );
 
   const latestPan = useRef(panBy);
@@ -75,5 +98,5 @@ export function useRelationalViewportCamera(
     });
   };
 
-  return { panBy, onFocusCapture, projectPointer };
+  return { panBy, onFocusCapture, projectPointer, center };
 }

@@ -24,9 +24,9 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
   ReturnType<typeof useRelationalViewportPan> {
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { autoFit, camera, zoom, setZoom, minimumZoom, setMinimumZoom, contentSize, setExtent } =
+  const { autoFit, zoom, setZoom, minimumZoom, setMinimumZoom, contentSize, setExtent } =
     useRelationalLayout();
-  const { panBy, onFocusCapture, projectPointer } = useRelationalViewportCamera(
+  const { panBy, onFocusCapture, projectPointer, center } = useRelationalViewportCamera(
     viewportRef,
     contentRef,
     zoom
@@ -47,29 +47,6 @@ export function useCanvasRelationalTreeViewport(fitPadding = 32): Readonly<{
     minimumZoom,
     panBy
   );
-  const center = useCallback(
-    (nextZoom: number) => {
-      const viewport = viewportRef.current;
-      const content = contentRef.current;
-      if (viewport == null || content == null) return;
-      const padding =
-        Number.parseFloat(
-          viewport.ownerDocument.defaultView?.getComputedStyle(viewport).paddingLeft ?? '0'
-        ) || 0;
-      const x =
-        (viewport.clientWidth - (contentSize.current?.width ?? content.offsetWidth) * nextZoom) /
-          2 -
-        padding -
-        (contentSize.current?.origin.x ?? 0) * nextZoom;
-      panBy(
-        x - camera.current.x,
-        -(contentSize.current?.origin.y ?? 0) * nextZoom - camera.current.y,
-        nextZoom
-      );
-    },
-    [camera, contentSize, panBy]
-  );
-
   const fit = useCallback(() => {
     const viewport = viewportRef.current;
     const content = contentRef.current;
