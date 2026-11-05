@@ -6,7 +6,7 @@ const { once } = require('node:events');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
-const readline = require('node:readline');
+const { pipePrefixedOutput } = require('./prefixed-process-output.cjs');
 const { defaultPgUrl, defaultWarehousePgUrl } = require('./run-local-postgres.cjs');
 const buildLocalPostgresProofSeedSql = require('./run-dev-stack.postgres-seed.cjs');
 const {
@@ -295,14 +295,6 @@ async function seedLocalPostgresProofData(databaseUrl) {
   } finally {
     await client.end();
   }
-}
-
-function pipePrefixedOutput(stream, prefix) {
-  const lineReader = readline.createInterface({ input: stream });
-  lineReader.on('line', (line) => {
-    console.log(`${prefix} ${line}`);
-  });
-  return lineReader;
 }
 
 function spawnProcess(name, args, envOverrides = {}) {

@@ -11,7 +11,7 @@ const { spawnSync } = require('node:child_process');
 const { existsSync, readdirSync } = require('node:fs');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
 const path = require('node:path');
-const readline = require('node:readline');
+const { pipePrefixedOutput } = require('./prefixed-process-output.cjs');
 const { pathToFileURL } = require('node:url');
 const yaml = require('js-yaml');
 const { spawnLiveProofProcess, terminateLiveProofProcess } = require('./live-proof-process.cjs');
@@ -66,14 +66,6 @@ const LOCAL_TEMPORAL_TEST_SERVER_ROOT = path.resolve(__dirname, '../.dvt/tempora
 
 function allocateLiveProofSchema() {
   return `dvt_live_selected_closure_${Date.now()}_${process.pid}`;
-}
-
-function pipePrefixedOutput(stream, prefix) {
-  const lineReader = readline.createInterface({ input: stream });
-  lineReader.on('line', (line) => {
-    console.log(`${prefix} ${line}`);
-  });
-  return lineReader;
 }
 
 function spawnProcess(name, args, envOverrides = {}) {

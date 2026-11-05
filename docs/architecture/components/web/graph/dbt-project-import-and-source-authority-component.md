@@ -558,6 +558,13 @@ rather than represented by duplicate adapter-level logs.
     feature-mechanization, and `pnpm verify:prepush` pass with no disabled rule,
     stub, fake adapter, placeholder, or hidden skipped check.
 
+The protected workspace-file and Source Import adapters share required
+tenant/project/environment parsing through `routeParserPrimitives.ts`. Its
+existing typed scalar parsers own ID validation; the shared scope projection
+preserves missing versus invalid reasons and tenant-first error precedence.
+Each route retains its own authorization action and application port. The dbt
+project parser keeps its distinct combined-query error contract.
+
 ## Explicit Non-Goals
 
 - ZIP, Git, and dbt Cloud import adapters.

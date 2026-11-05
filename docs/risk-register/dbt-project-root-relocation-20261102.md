@@ -150,3 +150,10 @@ producers; missing or changed used inputs retain invalidation and admission
 guards. The complete catalogue remains available for authoring. The route test
 harness consumes the existing normalized controller once; removing its duplicate
 normalizers does not change product document admission or introduce a test adapter.
+
+Shared HTTP scope parsing must preserve the different dbt combined-query error
+contract and the existing action at each authorization boundary. Output formatting
+must return the same caller-owned reader and leave process retirement unchanged.
+The nine older runner method duplicates discovered by the complete scan are
+existing code, not a new fallback or competing implementation introduced here;
+their consolidation needs proof of bootstrap, lease and shutdown equivalence.

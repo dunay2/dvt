@@ -9,7 +9,7 @@ const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
 const { Client } = require('pg');
-const readline = require('node:readline');
+const { pipePrefixedOutput } = require('./prefixed-process-output.cjs');
 const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-local-postgres.cjs');
@@ -64,14 +64,6 @@ class CanvasFirstAuthoringLiveProofRunner {
     return scopes.map((scope) => `${scope[key]}|${scope[key]}`).join(',');
   }
 
-  pipePrefixedOutput(stream, prefix) {
-    const lineReader = readline.createInterface({ input: stream });
-    lineReader.on('line', (line) => {
-      console.log(`${prefix} ${line}`);
-    });
-    return lineReader;
-  }
-
   spawnProcess(name, args, envOverrides = {}) {
     const child = spawn(this.pnpmCommand, args, {
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -83,8 +75,8 @@ class CanvasFirstAuthoringLiveProofRunner {
     return {
       name,
       child,
-      stdoutReader: this.pipePrefixedOutput(child.stdout, `[${name}]`),
-      stderrReader: this.pipePrefixedOutput(child.stderr, `[${name}]`),
+      stdoutReader: pipePrefixedOutput(child.stdout, `[${name}]`),
+      stderrReader: pipePrefixedOutput(child.stderr, `[${name}]`),
     };
   }
 

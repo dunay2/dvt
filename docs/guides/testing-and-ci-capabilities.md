@@ -1213,3 +1213,7 @@ aborts startup; a previous local build is not a runtime prerequisite.
 - For slices that change code, config, tests, CI, or docs, include
   `pnpm verify:prepush` in the end-of-task validation baseline before claiming
   the work is ready.
+- Process runners share `scripts/prefixed-process-output.cjs` for line-prefixed
+  output. It returns the readline handle to the caller, which retains reader
+  closure and process lifetime ownership. Chunked, blank and trailing lines keep
+  the same formatting; output adaptation does not own process termination.

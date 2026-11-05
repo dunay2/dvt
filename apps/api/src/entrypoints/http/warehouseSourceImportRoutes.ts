@@ -48,28 +48,25 @@ import type { PreviewWarehouseSourceObjectRowsUseCase } from '../../application/
 import type { RenameWarehouseConnectionUseCase } from '../../application/services/renameWarehouseConnectionUseCase.js';
 import type { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import type { ValidatePostgresTransformSqlUseCase } from '../../application/services/validatePostgresTransformSqlUseCase.js';
-import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue, type RouteParseResult } from './routeParseIssue.js';
+import {
+  parseRequiredEnvironmentScope,
+  type EnvironmentScopeQuery,
+} from './routeParserPrimitives.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 
-type WarehouseSourceImportQuery = {
-  readonly tenantId?: string;
-  readonly projectId?: string;
-  readonly environmentId?: string;
-};
-
-type WarehouseSourceDataSampleQuery = WarehouseSourceImportQuery & {
+type WarehouseSourceDataSampleQuery = EnvironmentScopeQuery & {
   readonly objectId?: string;
   readonly limit?: string;
   readonly expectedPublicationToken?: string;
 };
 
-type WarehouseSourceObjectCatalogQuery = WarehouseSourceImportQuery & {
+type WarehouseSourceObjectCatalogQuery = EnvironmentScopeQuery & {
   readonly kind?: string;
   readonly catalog?: string;
   readonly schema?: string;
@@ -129,7 +126,7 @@ export function registerWarehouseSourceImportRoutes(
   deps: WarehouseSourceImportRouteDeps
 ): void {
   app.post<{
-    Querystring: WarehouseSourceImportQuery;
+    Querystring: EnvironmentScopeQuery;
     Body: ValidatePostgresTransformSqlBody;
   }>(
     RUNTIME_ROUTE_PATH.warehousePostgresSqlValidation,
@@ -148,7 +145,7 @@ export function registerWarehouseSourceImportRoutes(
     }
   );
 
-  app.get<{ Querystring: WarehouseSourceImportQuery }>(
+  app.get<{ Querystring: EnvironmentScopeQuery }>(
     RUNTIME_ROUTE_PATH.warehouseConnections,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
@@ -161,7 +158,7 @@ export function registerWarehouseSourceImportRoutes(
     }
   );
 
-  app.get<{ Params: WarehouseConnectionParams; Querystring: WarehouseSourceImportQuery }>(
+  app.get<{ Params: WarehouseConnectionParams; Querystring: EnvironmentScopeQuery }>(
     RUNTIME_ROUTE_PATH.warehouseConnectionSourceObjects,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
@@ -266,7 +263,7 @@ export function registerWarehouseSourceImportRoutes(
     }
   );
 
-  app.post<{ Querystring: WarehouseSourceImportQuery; Body: CreateWarehouseConnectionBody }>(
+  app.post<{ Querystring: EnvironmentScopeQuery; Body: CreateWarehouseConnectionBody }>(
     RUNTIME_ROUTE_PATH.warehouseConnections,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
@@ -309,7 +306,7 @@ export function registerWarehouseSourceImportRoutes(
     }
   );
 
-  app.post<{ Params: WarehouseConnectionParams; Querystring: WarehouseSourceImportQuery }>(
+  app.post<{ Params: WarehouseConnectionParams; Querystring: EnvironmentScopeQuery }>(
     RUNTIME_ROUTE_PATH.warehouseConnectionTest,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
@@ -339,7 +336,7 @@ export function registerWarehouseSourceImportRoutes(
 
   app.patch<{
     Params: WarehouseConnectionParams;
-    Querystring: WarehouseSourceImportQuery;
+    Querystring: EnvironmentScopeQuery;
     Body: RenameWarehouseConnectionBody;
   }>(
     RUNTIME_ROUTE_PATH.warehouseConnection,
@@ -387,7 +384,7 @@ export function registerWarehouseSourceImportRoutes(
     }
   );
 
-  app.post<{ Querystring: WarehouseSourceImportQuery; Body: ImportWarehouseSourcesBody }>(
+  app.post<{ Querystring: EnvironmentScopeQuery; Body: ImportWarehouseSourcesBody }>(
     RUNTIME_ROUTE_PATH.warehouseSourcesImport,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
@@ -495,7 +492,7 @@ export function registerWarehouseSourceImportRoutes(
 }
 
 async function authorizeWarehouseSourceImportRequest(
-  request: FastifyRequest<{ Querystring: WarehouseSourceImportQuery }>,
+  request: FastifyRequest<{ Querystring: EnvironmentScopeQuery }>,
   reply: FastifyReply,
   deps: Pick<WarehouseSourceImportRouteDeps, 'authenticator' | 'authorizer'>,
   options: {
@@ -507,7 +504,7 @@ async function authorizeWarehouseSourceImportRequest(
       | typeof AUTHORIZATION_ACTION.workspaceSourceImportImport;
   } = {}
 ): Promise<{ readonly scope: ReturnType<typeof buildEnvironmentAccessScope> } | false> {
-  const parsed = parseRequestedScope(request.query);
+  const parsed = parseRequiredEnvironmentScope(request.query);
   if (!parsed.ok) {
     httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return false;
@@ -708,74 +705,4 @@ function invalidBody(): RouteParseResult<never> {
     ok: false,
     issue: badRequestIssue(HTTP_ERROR_REASON.invalidBody, { target: 'body' }),
   };
-}
-
-function parseRequestedScope(
-  input: WarehouseSourceImportQuery
-): RouteParseResult<ReturnType<typeof buildEnvironmentAccessScope>> {
-  const tenant = parseRequiredTenantId(input.tenantId);
-  if (!tenant.ok) return { ok: false, issue: tenant.issue };
-
-  const project = parseRequiredProjectId(input.projectId);
-  if (!project.ok) return { ok: false, issue: project.issue };
-
-  const environment = parseRequiredEnvironmentId(input.environmentId);
-  if (!environment.ok) return { ok: false, issue: environment.issue };
-
-  return {
-    ok: true,
-    value: buildEnvironmentAccessScope(tenant.value, project.value, environment.value),
-  };
-}
-
-function parseRequiredTenantId(value: string | undefined): RouteParseResult<TenantId> {
-  if (value === undefined) {
-    return {
-      ok: false,
-      issue: badRequestIssue(HTTP_ERROR_REASON.missingTenantId, { target: 'tenantId' }),
-    };
-  }
-  const parsed = TenantId.parse(value);
-  return parsed.ok
-    ? { ok: true, value: parsed.value }
-    : {
-        ok: false,
-        issue: badRequestIssue(HTTP_ERROR_REASON.invalidTenantId, { target: 'tenantId' }),
-      };
-}
-
-function parseRequiredProjectId(value: string | undefined): RouteParseResult<ProjectId> {
-  if (value === undefined) {
-    return {
-      ok: false,
-      issue: badRequestIssue(HTTP_ERROR_REASON.missingProjectId, { target: 'projectId' }),
-    };
-  }
-  const parsed = ProjectId.parse(value);
-  return parsed.ok
-    ? { ok: true, value: parsed.value }
-    : {
-        ok: false,
-        issue: badRequestIssue(HTTP_ERROR_REASON.invalidProjectId, { target: 'projectId' }),
-      };
-}
-
-function parseRequiredEnvironmentId(value: string | undefined): RouteParseResult<EnvironmentId> {
-  if (value === undefined) {
-    return {
-      ok: false,
-      issue: badRequestIssue(HTTP_ERROR_REASON.missingEnvironmentId, {
-        target: 'environmentId',
-      }),
-    };
-  }
-  const parsed = EnvironmentId.parse(value);
-  return parsed.ok
-    ? { ok: true, value: parsed.value }
-    : {
-        ok: false,
-        issue: badRequestIssue(HTTP_ERROR_REASON.invalidEnvironmentId, {
-          target: 'environmentId',
-        }),
-      };
 }

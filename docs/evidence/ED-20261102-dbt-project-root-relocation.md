@@ -304,3 +304,20 @@ consumers. Current-source inspection of the complete changed Web production slic
 finds zero exact-body duplicate groups, and the native rail duplicate query returns
 no rows. These bounded results do not claim absence of all semantic duplication
 throughout the repository. Final committed validation and integration remain pending.
+
+The [adapter duplicate cleanup](https://github.com/dunay2/dvt/issues/3747#issuecomment-6665946079)
+removes sixteen copied scope-parsing functions from four HTTP adapters. One
+required-scope projection reuses the existing typed scalar parsers and preserves
+field errors and failure precedence. The affected HTTP tests pass 80 cases;
+five neighbouring Run parser cases pass. Four output-reader copies now consume
+one stream adapter; 86 process/runner tests pass with no skipped cases. Two
+focused native components own the shared implementations. Five obsolete source
+bindings are removed, and both root-relocation manifests reference the real
+shared parser instead of the deleted helpers.
+
+The broader current-source scan also exposes nine pre-existing duplicated
+methods in the two older protected-runtime proof runners, including bootstrap
+and shutdown. These are recorded for a distinct runtime-consolidation cut;
+this extraction preserves process termination and fixture ownership rather than
+silently widening that boundary. No claim of repository-wide zero duplication
+or completed integration is made by the bounded cleanup.
