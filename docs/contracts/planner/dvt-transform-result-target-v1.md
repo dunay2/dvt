@@ -54,6 +54,13 @@ Non-lineage edges do not confer connection authority. Traversal is iterative and
 performs no provider I/O or draft mutation. A Source is a terminal authority
 boundary; incoming lineage on a Source is invalid, including cycles through it.
 
+A validated `WorkspaceDbtModelReference.v1` is also a terminal producer boundary.
+Its existing governed `connectionRef` participates in the same equality check;
+its lack of incoming Canvas edges is not an incomplete branch. Malformed model
+references, unsupported plugins and incoming lineage on a model reference reject.
+The projection never copies SQL, traverses the referenced file's implementation,
+queries a provider or invents a connection when inspecting that producer.
+
 The same read model supplies the terminal Sink's connection-confirmation candidate
 and Transform Inputs/Outputs context. A proven common connection is shown on
 every lineage input, never attributed to one arbitrary branch. An unresolved

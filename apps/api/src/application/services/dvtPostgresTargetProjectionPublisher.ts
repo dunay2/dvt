@@ -4,6 +4,7 @@
  */
 import type { IContentAddressedArtifactStore } from '@dvt/artifacts';
 import {
+  DVT_REJECTIONS,
   createDvtPostgresOutputSchemaDigestV1,
   type DvtOperationalRejection,
   type WorkspaceGraphAuthoringDraft,
@@ -57,6 +58,8 @@ export class DvtPostgresTargetProjectionPublisher {
     const projected = await projectDvtPostgresTransform(closure);
     const sql = projected.sql;
     const outputSchema = projectDvtPostgresOutputSchemaV1(projected.outputs);
+    if (publication.intent !== null && outputSchema === null)
+      return { ok: false, ...DVT_REJECTIONS.runSchemaDigestRequired };
     const bytes = Buffer.from(sql, 'utf8');
     const sha256 = sha256Hex(bytes);
     const storageUri = this.deps.locateArtifact({

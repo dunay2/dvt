@@ -6,9 +6,93 @@ import {
   source,
   transform,
   permutations,
+  dbtModel,
 } from './canvasDvtConnectionProvenance.test-support';
 
 describe('Canvas connection provenance graph invariants', () => {
+  it.each([false, true])('resolves a sealed dbt producer with physical input %s', (physical) => {
+    const model = dbtModel();
+    const producers = physical ? [source, model] : [model];
+    for (const nodes of permutations([...producers, transform])) {
+      for (const edges of permutations(producers.map(({ id }) => edge(id, transform.id)))) {
+        const snapshot = JSON.stringify({ nodes, edges });
+        expect(resolve({ node: transform, nodes, edges })).toEqual({
+          kind: 'resolved',
+          connectionRef,
+          sourceNodeIds: producers.map(({ id }) => id).sort(),
+        });
+        expect(JSON.stringify({ nodes, edges })).toBe(snapshot);
+      }
+    }
+  });
+
+  it('keeps independent occurrences of the same dbt definition as sealed producers', () => {
+    const models = [dbtModel(connectionRef, 'first'), dbtModel(connectionRef, 'second')];
+    expect(
+      resolve({
+        node: transform,
+        nodes: [...models, transform],
+        edges: models.map(({ id }) => edge(id, 't')),
+      })
+    ).toEqual({
+      kind: 'resolved',
+      connectionRef,
+      sourceNodeIds: ['first', 'second'],
+    });
+  });
+
+  it('rejects incompatible physical and dbt producer connections', () => {
+    const model = dbtModel({ ...connectionRef, connectionId: 'other' });
+    expect(
+      resolve({
+        node: transform,
+        nodes: [source, model, transform],
+        edges: [edge('s', 't'), edge(model.id, 't')],
+      })
+    ).toEqual({
+      kind: 'ambiguous',
+      sourceNodeIds: [model.id, 's'],
+    });
+  });
+
+  it.each([undefined, null, {}])('rejects a malformed dbt producer marker: %j', (reference) => {
+    const model = { ...dbtModel(), metadata: { dbtModelReference: reference } };
+    expect(
+      resolve({
+        node: transform,
+        nodes: [source, model, transform],
+        edges: [edge('s', 't'), edge(model.id, 't')],
+      })
+    ).toMatchObject({
+      kind: 'invalid',
+      reasons: ['invalid-model-connection'],
+    });
+  });
+
+  it('rejects incoming lineage on a sealed dbt producer', () => {
+    const model = dbtModel();
+    expect(
+      resolve({
+        node: transform,
+        nodes: [source, model, transform],
+        edges: [edge('s', model.id), edge(model.id, 't')],
+      })
+    ).toMatchObject({
+      kind: 'invalid',
+      reasons: ['model-has-inputs'],
+    });
+  });
+
+  it('cannot admit an unsupported plugin through a dbt reference', () => {
+    const model = { ...dbtModel(), pluginId: 'foreign' };
+    expect(
+      resolve({ node: transform, nodes: [model, transform], edges: [edge(model.id, 't')] })
+    ).toMatchObject({
+      kind: 'invalid',
+      reasons: ['unsupported-node'],
+    });
+  });
+
   it.each([false, true])(
     'is invariant under every three-input and node permutation (conflict %s)',
     (conflict) => {

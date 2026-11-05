@@ -1,5 +1,5 @@
 /** Resolves connection provenance from the complete scoped Canvas lineage, without effects. */
-import type { ConnectionRef } from '@dvt/contracts';
+import { readWorkspaceDbtModelReference, type ConnectionRef } from '@dvt/contracts';
 import { hasSameConnectionRef } from '@dvt/postgres-projection';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -15,7 +15,9 @@ type InvalidLineageReason =
   | 'missing-node'
   | 'unsupported-node'
   | 'source-has-inputs'
+  | 'model-has-inputs'
   | 'invalid-source-connection'
+  | 'invalid-model-connection'
   | 'incomplete-lineage';
 
 export type DvtInheritedConnectionResolution =
@@ -76,25 +78,33 @@ export function resolveDvtConnectionProvenance(
       completed.add(frame.id);
       continue;
     }
-    if (node.kind === 'dvt:source') {
+    const model =
+      node.kind === 'dvt:transform' &&
+      node.metadata != null &&
+      Object.hasOwn(node.metadata, 'dbtModelReference');
+    if (node.kind === 'dvt:source' || model) {
       sources.add(node.id);
       completed.add(node.id);
-      if ((inputs.get(node.id)?.length ?? 0) > 0) reasons.add('source-has-inputs');
+      if ((inputs.get(node.id)?.length ?? 0) > 0)
+        reasons.add(model ? 'model-has-inputs' : 'source-has-inputs');
       if (
         node.pluginId !== DVT_AUTHORING_PLUGIN_ID &&
-        node.pluginId !== DVT_WAREHOUSE_SOURCE_PLUGIN_ID
+        (model || node.pluginId !== DVT_WAREHOUSE_SOURCE_PLUGIN_ID)
       ) {
         reasons.add('unsupported-node');
         continue;
       }
+      const invalidConnection = model ? 'invalid-model-connection' : 'invalid-source-connection';
       try {
-        const candidate = resolveEffectiveDvtConnectionRef(node);
-        if (candidate == null) reasons.add('invalid-source-connection');
+        const candidate = model
+          ? readWorkspaceDbtModelReference(node)?.connectionRef
+          : resolveEffectiveDvtConnectionRef(node);
+        if (candidate == null) reasons.add(invalidConnection);
         else if (connection == null) connection = candidate;
         else if (!hasSameConnectionRef(connection, candidate)) conflicting = true;
       } catch {
-        // Only Source authority validation can reject here; never conceal traversal errors.
-        reasons.add('invalid-source-connection');
+        // Only producer authority validation can reject here; never conceal traversal errors.
+        reasons.add(invalidConnection);
       }
       continue;
     }

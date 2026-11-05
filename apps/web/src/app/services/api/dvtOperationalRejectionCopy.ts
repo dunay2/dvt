@@ -38,7 +38,7 @@ const COPY: Record<
     [DVT_REJECTIONS.projectionStale.messageKey]:
       'The model or its connection changed. Preview again before Run.',
     [DVT_REJECTIONS.runSchemaDigestRequired.messageKey]:
-      'The output schema has not been verified. Preview again before Run.',
+      'Publication requires supported, resolved output types. Check the model’s output schema.',
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'The model configuration is invalid. Review its properties.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:
@@ -79,7 +79,7 @@ const COPY: Record<
     [DVT_REJECTIONS.projectionStale.messageKey]:
       'El modelo o su conexión cambió. Repite la vista previa antes de ejecutar.',
     [DVT_REJECTIONS.runSchemaDigestRequired.messageKey]:
-      'El esquema de salida no está verificado. Repite la vista previa antes de ejecutar.',
+      'La publicación requiere tipos de salida admitidos y resueltos. Revisa el esquema de salida del modelo.',
     [DVT_REJECTIONS.runConfigInvalid.messageKey]:
       'La configuración del modelo no es válida. Revisa sus propiedades.',
     [DVT_REJECTIONS.runDispositionUnsupported.messageKey]:

@@ -321,3 +321,26 @@ and shutdown. These are recorded for a distinct runtime-consolidation cut;
 this extraction preserves process termination and fixture ownership rather than
 silently widening that boundary. No claim of repository-wide zero duplication
 or completed integration is made by the bounded cleanup.
+
+The [producer destination correction](https://github.com/dunay2/dvt/issues/3747#issuecomment-6670520400)
+extends the existing pure connection-provenance projection to validated dbt model
+references. Physical Sources and sealed model producers share the same traversal
+and connection equality rule; unsupported plugins, malformed references, incoming
+lineage on sealed models and conflicting connections still reject. Native
+component `SYS-WEB-CANVAS-CONNECTION-PROVENANCE` owns the single resolver, its
+inspector call relation and required graph regression. No new product rail or
+connection authority is introduced. Provenance unit/graph tests pass 29 cases,
+authoring presentation passes six and import/retirement architecture tests pass two.
+
+The [publication admission cleanup](https://github.com/dunay2/dvt/issues/3747#issuecomment-6671058356)
+rejects a configured publication without a canonical output schema before artifact
+storage. The real publisher regression fails before the change and passes with
+the existing selection suite: 16 cases. A separate ephemeral projection may still
+serve a sample without manufacturing a publication fingerprint. In the shared
+application, the destination can now be selected and saved. Protected Model 1
+sampling returns five rows and six columns in 122 ms. Execution Preview remains
+rejected because `amount` is `numeric`, outside the existing publication type
+contract. The UI now explains unsupported/unresolved types instead of asking for
+an ineffective Preview retry. No numeric-to-float conversion, invented digest,
+target write or successful Execution Preview is claimed. The complete committed
+prepush and main integration remain separate, pending acceptance evidence.

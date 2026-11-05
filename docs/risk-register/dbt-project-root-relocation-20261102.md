@@ -157,3 +157,19 @@ must return the same caller-owned reader and leave process retirement unchanged.
 The nine older runner method duplicates discovered by the complete scan are
 existing code, not a new fallback or competing implementation introduced here;
 their consolidation needs proof of bootstrap, lease and shutdown equivalence.
+
+Destination provenance treats validated dbt references as sealed producers in the
+same pure resolver as physical Sources. Incoming lineage, unsupported plugins,
+malformed references and conflicting connections cannot supply destination
+options. The result is a scoped read model, not authorization or an automatic
+target choice. Native source ownership and the required graph test use the
+existing inspector component and InspectCanvasNode/ConfigureCanvasDvtNode rails.
+
+The live sales model includes PostgreSQL `numeric`, which the existing bounded
+publication schema cannot fingerprint. Sampling is available, but Execution
+Preview for configured publication remains rejected. Admission now rejects before
+artifact storage and does not recommend an ineffective retry. Supporting numeric
+requires a coherent provider/profile contract extension; silently converting to
+floating point or inventing a digest would risk precision and CAS correctness.
+This is an exposed existing limitation, not newly accepted debt or delivered
+numeric publication support.
