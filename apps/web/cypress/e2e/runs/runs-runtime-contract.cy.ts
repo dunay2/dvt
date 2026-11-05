@@ -1,6 +1,6 @@
 import { resolveCopyLanguage } from '../../../src/app/copyLanguage';
 import { resolveRunStatesCopy } from '../../../src/app/views/runs/runStatesCopy';
-import { stubE2eJsonApi } from '../../support/e2eApiStub';
+import { getLastE2eApiCall, stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -19,6 +19,29 @@ function stubRunsRouteBootstrapApis(): void {
     defaultWorkspace: E2E_PROJECT_WORKSPACE,
     availableWorkspaces: [E2E_PROJECT_WORKSPACE],
   });
+  stubE2eJsonApi('GET', '/runs', {
+    items: [
+      {
+        runId: 'run_e2e_1',
+        planId: 'plan_e2e_1',
+        status: 'RUNNING',
+        environmentId: 'e2e-env',
+        startedAt: '2026-04-07T00:00:00.000Z',
+      },
+    ],
+  });
+}
+
+function expectScopedRunRequest(path: string): void {
+  cy.wrap(null, { timeout: 5_000 }).should(() => {
+    const request = getLastE2eApiCall(path, 'GET');
+    expect(request, `GET ${path}`).not.to.equal(null);
+    expect(request?.url.searchParams.get('tenantId')).to.equal('e2e-tenant');
+    if (path === '/runs') {
+      expect(request?.url.searchParams.get('projectId')).to.equal('e2e-project');
+      expect(request?.url.searchParams.get('environmentId')).to.equal('e2e-env');
+    }
+  });
 }
 
 describe('Runs runtime contract', () => {
@@ -28,57 +51,22 @@ describe('Runs runtime contract', () => {
   });
 
   it('sends tenant scope in list, detail, and events requests', () => {
-    cy.intercept('GET', '**/runs?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-      expect(req.url).to.include('projectId=e2e-project');
-      expect(req.url).to.include('environmentId=e2e-env');
+    stubE2eJsonApi('GET', '/runs/run_e2e_1', {
+      runId: 'run_e2e_1',
+      planId: 'plan_e2e_1',
+      status: 'RUNNING',
+      environmentId: 'e2e-env',
+      startedAt: '2026-04-07T00:00:00.000Z',
+    });
 
-      req.reply({
-        statusCode: 200,
-        body: {
-          items: [
-            {
-              runId: 'run_e2e_1',
-              planId: 'plan_e2e_1',
-              status: 'RUNNING',
-              environmentId: 'e2e-env',
-              startedAt: '2026-04-07T00:00:00.000Z',
-            },
-          ],
-        },
-      });
-    }).as('listRuns');
-
-    cy.intercept('GET', '**/runs/run_e2e_1?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-
-      req.reply({
-        statusCode: 200,
-        body: {
-          runId: 'run_e2e_1',
-          planId: 'plan_e2e_1',
-          status: 'RUNNING',
-          environmentId: 'e2e-env',
-          startedAt: '2026-04-07T00:00:00.000Z',
-        },
-      });
-    }).as('getRun');
-
-    cy.intercept('GET', '**/runs/run_e2e_1/events?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-
-      req.reply({
-        statusCode: 200,
-        body: {
-          items: [],
-          nextCursor: null,
-        },
-      });
-    }).as('getRunEvents');
+    stubE2eJsonApi('GET', '/runs/run_e2e_1/events', {
+      items: [],
+      nextCursor: null,
+    });
 
     visitWithE2eWorkspaceSession('/runs');
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
-    cy.wait('@listRuns');
+    expectScopedRunRequest('/runs');
 
     cy.window().then((window) => {
       const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
@@ -87,54 +75,41 @@ describe('Runs runtime contract', () => {
         cy.contains('button', copy.viewDetails).click();
       });
     });
-    cy.wait('@getRun');
-    cy.wait('@getRunEvents');
+    expectScopedRunRequest('/runs/run_e2e_1');
+    expectScopedRunRequest('/runs/run_e2e_1/events');
   });
 
   it('renders completed result evidence from the snapshot read model', () => {
-    cy.intercept('GET', '**/runs/run_completed?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-
-      req.reply({
-        statusCode: 200,
-        body: {
-          runId: 'run_completed',
-          planId: 'plan_e2e_1',
-          status: 'COMPLETED',
+    stubE2eJsonApi('GET', '/runs/run_completed', {
+      runId: 'run_completed',
+      planId: 'plan_e2e_1',
+      status: 'COMPLETED',
+      executor: 'postgres',
+      environmentId: 'e2e-env',
+      startedAt: '2026-04-07T00:00:00.000Z',
+      completedAt: '2026-04-07T00:00:10.000Z',
+      execution: {
+        materialization: {
           executor: 'postgres',
           environmentId: 'e2e-env',
-          startedAt: '2026-04-07T00:00:00.000Z',
+          sinkTable: 'analytics.orders_daily',
+          rowsWritten: 42,
+          startedAt: '2026-04-07T00:00:01.000Z',
           completedAt: '2026-04-07T00:00:10.000Z',
-          execution: {
-            materialization: {
-              executor: 'postgres',
-              environmentId: 'e2e-env',
-              sinkTable: 'analytics.orders_daily',
-              rowsWritten: 42,
-              startedAt: '2026-04-07T00:00:01.000Z',
-              completedAt: '2026-04-07T00:00:10.000Z',
-              durationMs: 9000,
-            },
-          },
+          durationMs: 9000,
         },
-      });
-    }).as('getCompletedRun');
+      },
+    });
 
-    cy.intercept('GET', '**/runs/run_completed/events?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-      req.reply({
-        statusCode: 200,
-        body: {
-          items: [],
-          nextCursor: null,
-        },
-      });
-    }).as('getCompletedRunEvents');
+    stubE2eJsonApi('GET', '/runs/run_completed/events', {
+      items: [],
+      nextCursor: null,
+    });
 
     visitWithE2eWorkspaceSession('/runs/run_completed');
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
-    cy.wait('@getCompletedRun');
-    cy.wait('@getCompletedRunEvents');
+    expectScopedRunRequest('/runs/run_completed');
+    expectScopedRunRequest('/runs/run_completed/events');
 
     cy.window().then((window) => {
       const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
@@ -151,47 +126,34 @@ describe('Runs runtime contract', () => {
   });
 
   it('renders failed result diagnostics from the snapshot read model', () => {
-    cy.intercept('GET', '**/runs/run_failed?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-
-      req.reply({
-        statusCode: 200,
-        body: {
-          runId: 'run_failed',
-          planId: 'plan_e2e_1',
-          status: 'FAILED',
-          executor: 'postgres',
-          environmentId: 'e2e-env',
-          startedAt: '2026-04-07T00:00:00.000Z',
-          completedAt: '2026-04-07T00:00:10.000Z',
-          failedStepId: 'step-transform',
-          errorReason: 'STEP_FAILURE',
-          execution: {
-            failure: {
-              stepId: 'step-transform',
-              reason: 'STEP_FAILURE',
-              failedAt: '2026-04-07T00:00:08.000Z',
-            },
-          },
+    stubE2eJsonApi('GET', '/runs/run_failed', {
+      runId: 'run_failed',
+      planId: 'plan_e2e_1',
+      status: 'FAILED',
+      executor: 'postgres',
+      environmentId: 'e2e-env',
+      startedAt: '2026-04-07T00:00:00.000Z',
+      completedAt: '2026-04-07T00:00:10.000Z',
+      failedStepId: 'step-transform',
+      errorReason: 'STEP_FAILURE',
+      execution: {
+        failure: {
+          stepId: 'step-transform',
+          reason: 'STEP_FAILURE',
+          failedAt: '2026-04-07T00:00:08.000Z',
         },
-      });
-    }).as('getFailedRun');
+      },
+    });
 
-    cy.intercept('GET', '**/runs/run_failed/events?tenantId=*', (req) => {
-      expect(req.url).to.include('tenantId=e2e-tenant');
-      req.reply({
-        statusCode: 200,
-        body: {
-          items: [],
-          nextCursor: null,
-        },
-      });
-    }).as('getFailedRunEvents');
+    stubE2eJsonApi('GET', '/runs/run_failed/events', {
+      items: [],
+      nextCursor: null,
+    });
 
     visitWithE2eWorkspaceSession('/runs/run_failed');
     cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
-    cy.wait('@getFailedRun');
-    cy.wait('@getFailedRunEvents');
+    expectScopedRunRequest('/runs/run_failed');
+    expectScopedRunRequest('/runs/run_failed/events');
 
     cy.window().then((window) => {
       const copy = resolveRunStatesCopy(resolveCopyLanguage(window.document.documentElement.lang));
