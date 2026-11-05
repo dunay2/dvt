@@ -244,3 +244,12 @@ compilation to Compiled on the explicit action and displays both verified inline
 references. Plain SQL stays passive; returning to the model retains Compiled. A
 clipped visual capture succeeds. This working-tree proof does not replace the
 committed native gate or integration evidence.
+
+The [shared browser evidence extension](https://github.com/dunay2/dvt/issues/3747#issuecomment-6659613118)
+extracts the existing schema-validated fixture for both presentation and controlled
+Code browser tests. The public journey exercises explicit compilation, its busy
+state and scoped request, retained cards on return and zero file writes. Native
+symbol records point to these actual consumers; the existing Runs assertion helper
+records its Cypress spec as its isolation-test consumer. The extracted fixture
+passes the existing 35 presentation cases; committed browser and full-gate results
+remain separate closeout obligations.

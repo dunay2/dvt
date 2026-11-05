@@ -4,6 +4,7 @@ import { sha256HexUtf8 } from '@dvt/crypto';
 
 import type { FileContent } from '../../../src/app/ports/workspace';
 import { resolveCodeInlineReferenceCopy } from '../../../src/app/views/code/codeViewCopy';
+import { contextFixture } from '../../../src/app/views/code/codeWorkspaceFileContext.test-support';
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import {
   getE2eApiCalls,
@@ -70,6 +71,81 @@ function stubContextualCodeWorkbenchApis(
 }
 
 describe('Canvas Project Code read-only inspection', () => {
+  it('compiles references only on request and retains the result across file navigation', () => {
+    const { file, project, analysis } = contextFixture();
+    const plainFile: FileContent = {
+      ...file,
+      path: 'inline_code_demo/models/clientes.sql',
+      name: 'clientes.sql',
+      content: 'select 1',
+      contentSha256: sha256HexUtf8('select 1'),
+    };
+    stubContextualCodeWorkbenchApis([file, plainFile]);
+    stubE2eJsonApi('GET', '/workspace/dbt/graph', project);
+    let completeCompilation: (() => void) | undefined;
+    stubE2eApi(
+      'GET',
+      '/workspace/dbt/analysis/selected-model',
+      () =>
+        new Promise((resolve) => {
+          completeCompilation = () => resolve({ body: analysis });
+        })
+    );
+
+    visitWithE2eWorkspaceSession('/canvas');
+    cy.get(
+      '[data-slot="canvas-explorer"] [data-element-id="dbt-model-reference:canvas-inline_code_demo:model.demo.ventas"]'
+    ).should('be.visible');
+    cy.get('[data-slot="shell-file-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    const surface = '[data-slot="canvas-code-workspace-surface"]';
+    const editor = `${surface} [data-slot="workspace-file-code-editor"]`;
+    const compile = `${editor} [data-slot="code-compile-model"]`;
+    const copy = resolveCodeInlineReferenceCopy('en');
+    cy.get(editor).should('have.attr', 'data-file-path', file.path);
+    cy.get(`${editor} [data-slot="code-working-tree-status"]`).should(
+      'contain.text',
+      copy.pendingCompilationMessage
+    );
+    cy.get(compile).should('be.enabled');
+    cy.then(() =>
+      expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(0)
+    );
+    cy.get(compile).click();
+    cy.get(compile).should('be.disabled');
+    cy.get(`${editor} [data-slot="code-working-tree-status"]`).should(
+      'contain.text',
+      copy.compilingMessage
+    );
+    waitForE2eApiCall('/workspace/dbt/analysis/selected-model', 'GET');
+    cy.then(() => {
+      const requests = getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET');
+      expect(requests).to.have.length(1);
+      const params = requests[0]!.url.searchParams;
+      expect(params.get('tenantId')).to.equal('e2e-tenant');
+      expect(params.get('projectId')).to.equal('e2e-project');
+      expect(params.get('environmentId')).to.equal('e2e-env');
+      expect(params.get('canvasId')).to.equal(project.authorityBinding.canvasId);
+      expect(params.get('projectRoot')).to.equal(project.projectRevision.projectRoot);
+      expect(params.get('selectedUniqueId')).to.equal(analysis.selectedUniqueId);
+      expect(completeCompilation).to.be.a('function');
+      completeCompilation!();
+    });
+    cy.get(editor).should('contain.text', copy.compiledMessage);
+    cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
+    cy.get(`${surface} [data-workspace-path="${plainFile.path}"]`).click();
+    cy.get(editor).should('have.attr', 'data-file-path', plainFile.path);
+    cy.get(compile).should('not.exist');
+    cy.get(`${surface} [data-workspace-path="${file.path}"]`).click();
+    cy.get(editor).should('have.attr', 'data-file-path', file.path);
+    cy.get(editor).should('contain.text', copy.compiledMessage);
+    cy.get(`${editor} [data-reference-id]`).should('have.length', 2);
+    cy.then(() => {
+      expect(getE2eApiCalls('/workspace/dbt/analysis/selected-model', 'GET')).to.have.length(1);
+      expect(getE2eApiCalls(/\/workspace\/files\/.+/, 'POST')).to.have.length(0);
+    });
+  });
+
   it('reads authorized YAML and plain SQL without reference analysis or editor movement', () => {
     const authoringAuthority: FileContent['authoringAuthority'] = {
       kind: 'resolved',

@@ -189,6 +189,13 @@ compiled and failure states. Matching retained query evidence is reused on retur
 A changed accepted project revision withholds old cards and waits for an explicit
 request. Ordinary SQL without template references and YAML remain passive text.
 
+The controlled Code browser spec and presentation unit tests share the pure,
+schema-validated `codeWorkspaceFileContext.test-support.ts` fixture. The public
+browser journey checks pending/progress/compiled states, scope, single-request
+compilation, retained cards across navigation and zero file writes. It uses the
+existing controlled transport; native dbt compilation remains covered by the
+analyzer tests and real-system evidence.
+
 ```mermaid
 flowchart LR
   Open[Accepted Code file] --> Evidence{Matching retained evidence?}

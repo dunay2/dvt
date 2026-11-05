@@ -116,3 +116,7 @@ requires a new explicit request; old and late evidence stays withheld. SQL AST
 equivalence alone cannot validate Jinja, macro, profile or environment changes.
 Valid typed file-model references are excluded from graph-generated path ownership;
 malformed metadata and actual graph-owned files retain their existing guards.
+Controlled browser evidence uses the same schema-validated fixture as the Code
+presentation tests. It proves public interaction and transport scope, while the
+native analyzer tests and real-system proof cover dbt execution; a controlled
+response alone does not certify native compilation.
