@@ -1,6 +1,6 @@
 import { resolveCopyLanguage } from '../../../src/app/copyLanguage';
 import { resolveRunStatesCopy } from '../../../src/app/views/runs/runStatesCopy';
-import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import { stubE2eJsonApi } from '../../support/e2eApiStub';
 import {
   E2E_PROJECT_WORKSPACE,
   stubShellBootstrapApis,
@@ -77,10 +77,7 @@ describe('Runs runtime contract', () => {
     }).as('getRunEvents');
 
     visitWithE2eWorkspaceSession('/runs');
-    waitForE2eApiCall('/healthz', 'GET');
-    waitForE2eApiCall('/readyz', 'GET');
-    waitForE2eApiCall('/version', 'GET');
-    waitForE2eApiCall('/db/ready', 'GET');
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     cy.wait('@listRuns');
 
     cy.window().then((window) => {
@@ -135,10 +132,7 @@ describe('Runs runtime contract', () => {
     }).as('getCompletedRunEvents');
 
     visitWithE2eWorkspaceSession('/runs/run_completed');
-    waitForE2eApiCall('/healthz', 'GET');
-    waitForE2eApiCall('/readyz', 'GET');
-    waitForE2eApiCall('/version', 'GET');
-    waitForE2eApiCall('/db/ready', 'GET');
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     cy.wait('@getCompletedRun');
     cy.wait('@getCompletedRunEvents');
 
@@ -195,10 +189,7 @@ describe('Runs runtime contract', () => {
     }).as('getFailedRunEvents');
 
     visitWithE2eWorkspaceSession('/runs/run_failed');
-    waitForE2eApiCall('/healthz', 'GET');
-    waitForE2eApiCall('/readyz', 'GET');
-    waitForE2eApiCall('/version', 'GET');
-    waitForE2eApiCall('/db/ready', 'GET');
+    cy.get('#app-loading-screen', { timeout: 30_000 }).should('not.exist');
     cy.wait('@getFailedRun');
     cy.wait('@getFailedRunEvents');
 
